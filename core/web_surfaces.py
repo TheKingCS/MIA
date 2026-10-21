@@ -207,6 +207,28 @@ QUICK_ACTIONS = (
 )
 
 
+# The five places MIA's frame leads (DEC-0044); every app is reachable from World.
+DESTINATIONS = (
+    {"id": "web_home", "name": "Presence", "icon": "✨", "href": "index.html", "line": "What matters now."},
+    {"id": "assistant", "name": "Conversation", "icon": "🗨", "href": "assistant.html", "line": "Ask, plan, tell MIA."},
+    {"id": "path", "name": "My Hero's Path", "icon": "⚔", "href": "path.html", "line": "Missions, skills, progress."},
+    {"id": "world", "name": "World", "icon": "🌐", "href": "world.html", "line": "Every part of your life."},
+    {"id": "system", "name": "System", "icon": "⚙", "href": "system.html", "line": "Model, connections, settings."},
+)
+
+
+def _pinned(context, apps: list) -> list[dict]:
+    """The apps this person starred, that they can open on the web."""
+    from core.focus_presets import favorite_apps
+
+    try:
+        starred = favorite_apps(context)
+    except Exception:
+        starred = []
+    by_id = {a.module_id: a for a in apps if a.page}
+    return [{"id": i, "name": by_id[i].name, "icon": by_id[i].icon, "page": by_id[i].page} for i in starred if i in by_id]
+
+
 def _visible(context, app: App) -> bool:
     from core.child_accounts import app_allowed
 
@@ -267,6 +289,9 @@ def shell(context, today: Optional[date] = None) -> dict:
         "apps": [{"id": a.module_id, "name": a.name, "icon": a.icon, "tagline": a.tagline, "page": a.page}
                  for a in apps if a.page],
         "on_pc_only": [a.name for a in apps if not a.page],
+        # DEC-0044: navigation by intent, then the apps the person starred.
+        "destinations": [dict(d) for d in DESTINATIONS],
+        "pinned": _pinned(context, apps),
         "weather": {"status": "PLANNED", "text": None},
         "sound": _sound(context),
         "places": _places(context),
@@ -385,10 +410,25 @@ def dashboard(context, now: Optional[datetime] = None) -> dict:
         "saying": SAYINGS[today.toordinal() % len(SAYINGS)],
         "quick_actions": list(QUICK_ACTIONS),
         "glance": _glance(state),
-        "wins": ((state.get("recent_wins") or {}).get("latest") or [])[:5],
+        "wins": [e for e in ((state.get("recent_wins") or {}).get("latest") or []) if e.get("type") in _WINS][:5],
         "child": bool((state.get("person") or {}).get("child")),
         "remember": _remember(context, today),
+        # DEC-0044: what matters now, across everything (core/presence.py).
+        "presence": _presence(context, today),
     }
+
+
+from core.life_events import WINS as _WINS  # noqa: E402  ("latest" is every event; wins are these)
+
+
+def _presence(context, today: date) -> dict:
+    from core.presence import presence
+
+    try:
+        return presence(context, today)
+    except Exception:
+        log.exception("Presence failed")
+        return {"now": [], "path": [], "next": None, "quiet": True, "more": 0, "line": ""}
 
 
 def _remember(context, today: date) -> list[dict]:

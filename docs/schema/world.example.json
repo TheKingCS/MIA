@@ -1,0 +1,476 @@
+{
+  "as_of": "2026-10-21",
+  "areas": [
+    {
+      "name": "Life, goals & self",
+      "cards": [
+        {
+          "id": "calendar",
+          "name": "Calendar",
+          "icon": "📅",
+          "href": "calendar.html",
+          "on_web": true,
+          "line": "Everything with a date.",
+          "needs": 0,
+          "favorite": false,
+          "ask": "What's on my calendar this week?"
+        },
+        {
+          "id": "workout",
+          "name": "Workout",
+          "icon": "🏋",
+          "href": "workout.html",
+          "on_web": true,
+          "line": "Stronger body. Clearer mind.",
+          "needs": 0,
+          "favorite": false,
+          "ask": "Log a 30 minute workout."
+        },
+        {
+          "id": "missions",
+          "name": "Missions",
+          "icon": "🏆",
+          "href": "missions.html",
+          "on_web": true,
+          "line": "Explore. Complete. Level up.",
+          "needs": 0,
+          "favorite": false,
+          "ask": "Add a mission to build a chicken coop."
+        },
+        {
+          "id": "skills",
+          "name": "Skills",
+          "icon": "⚔",
+          "href": "skills.html",
+          "on_web": true,
+          "line": "Do the thing. Earn the level. Unlock the next thing.",
+          "needs": 0,
+          "favorite": false,
+          "ask": "Which skills am I growing?"
+        },
+        {
+          "id": "character",
+          "name": "Character",
+          "icon": "👤",
+          "href": "character.html",
+          "on_web": true,
+          "line": "Your story so far.",
+          "needs": 0,
+          "favorite": false,
+          "ask": "What have I done this week?"
+        },
+        {
+          "id": "reward_shop",
+          "name": "Reward Shop",
+          "icon": "🎁",
+          "href": "shop.html",
+          "on_web": true,
+          "line": "Spend what you earn.",
+          "needs": 0,
+          "favorite": false,
+          "ask": "What can I buy with my credits?"
+        },
+        {
+          "id": "relationships",
+          "name": "People & Pets",
+          "icon": "👥",
+          "href": "people.html",
+          "on_web": true,
+          "line": "The ones who matter.",
+          "needs": 0,
+          "favorite": false,
+          "ask": "When is the next birthday?"
+        },
+        {
+          "id": "notes",
+          "name": "Journal",
+          "icon": "📓",
+          "href": "journal.html",
+          "on_web": true,
+          "line": "Write it down.",
+          "needs": 0,
+          "favorite": false,
+          "ask": "Make a note: call the plumber Friday."
+        },
+        {
+          "id": "vault",
+          "name": "Memory Vault",
+          "icon": "🗄",
+          "href": "vault.html",
+          "on_web": true,
+          "line": "Your photos, kept safe.",
+          "needs": 0,
+          "favorite": false,
+          "ask": "Are my photos backed up?"
+        },
+        {
+          "id": "observations",
+          "name": "Observations",
+          "icon": "🔍",
+          "href": null,
+          "on_web": false,
+          "line": "What MIA noticed.",
+          "needs": 0,
+          "favorite": false,
+          "ask": "What have you noticed lately?"
+        },
+        {
+          "id": "classroom",
+          "name": "Classroom",
+          "icon": "🎓",
+          "href": null,
+          "on_web": false,
+          "line": "Keep learning.",
+          "needs": 0,
+          "favorite": false,
+          "ask": "Quiz me on chapter 2."
+        }
+      ],
+      "needs": 0
+    },
+    {
+      "name": "Money & business",
+      "cards": [
+        {
+          "id": "compliance",
+          "name": "Compliance",
+          "icon": "📋",
+          "href": "compliance.html",
+          "on_web": true,
+          "line": "3 things need you: Sales and use tax return",
+          "needs": 3,
+          "favorite": false,
+          "ask": "What's due for taxes?"
+        },
+        {
+          "id": "workshop",
+          "name": "Workshop",
+          "icon": "🔩",
+          "href": "workshop.html",
+          "on_web": true,
+          "line": "1 thing needs you: Sell the oldest Banana bread first",
+          "needs": 1,
+          "favorite": false,
+          "ask": "How much plywood do I have?"
+        },
+        {
+          "id": "freedom",
+          "name": "Freedom",
+          "icon": "🌄",
+          "href": "freedom.html",
+          "on_web": true,
+          "line": "About 422 days to go · 36.1% of the fund",
+          "needs": 0,
+          "favorite": false,
+          "ask": "When can I work from home?"
+        },
+        {
+          "id": "real_estate",
+          "name": "Real Estate",
+          "icon": "🏘",
+          "href": "real-estate.html",
+          "on_web": true,
+          "line": "Cash flow. Equity. Freedom.",
+          "needs": 0,
+          "favorite": false,
+          "ask": "How are my rentals doing this month?"
+        },
+        {
+          "id": "budget",
+          "name": "Money",
+          "icon": "💰",
+          "href": "money.html",
+          "on_web": true,
+          "line": "Know where it goes.",
+          "needs": 0,
+          "favorite": false,
+          "ask": "Which debt should I pay first?"
+        },
+        {
+          "id": "business",
+          "name": "Orders & Quotes",
+          "icon": "🧾",
+          "href": "business.html",
+          "on_web": true,
+          "line": "Customers, quotes and orders.",
+          "needs": 0,
+          "favorite": false,
+          "ask": "What do customers still owe me?"
+        },
+        {
+          "id": "insurance",
+          "name": "Insurance",
+          "icon": "☂️",
+          "href": "insurance.html",
+          "on_web": true,
+          "line": "Covered, for less.",
+          "needs": 0,
+          "favorite": false,
+          "ask": "When does my car insurance renew?"
+        },
+        {
+          "id": "inbox",
+          "name": "Inbox",
+          "icon": "📥",
+          "href": "inbox.html",
+          "on_web": true,
+          "line": "Paperwork, handled.",
+          "needs": 0,
+          "favorite": false,
+          "ask": "What's waiting in my inbox?"
+        }
+      ],
+      "needs": 4
+    },
+    {
+      "name": "Home, homestead & equipment",
+      "cards": [
+        {
+          "id": "flock",
+          "name": "Chickens",
+          "icon": "🐔",
+          "href": "flock.html",
+          "on_web": true,
+          "line": "1 thing needs you: 14 loose eggs from Layers",
+          "needs": 1,
+          "favorite": false,
+          "ask": "How many eggs this week?"
+        },
+        {
+          "id": "greenhouse",
+          "name": "Greenhouse",
+          "icon": "🌱",
+          "href": "greenhouse.html",
+          "on_web": true,
+          "line": "Grow food. Grow freedom.",
+          "needs": 0,
+          "favorite": false,
+          "ask": "What needs doing in the greenhouse?"
+        },
+        {
+          "id": "garage",
+          "name": "Garage",
+          "icon": "🚗",
+          "href": "garage.html",
+          "on_web": true,
+          "line": "Keep it running. Keep it ready.",
+          "needs": 0,
+          "favorite": false,
+          "ask": "What's overdue on my vehicles?"
+        },
+        {
+          "id": "kitchen",
+          "name": "Kitchen",
+          "icon": "🍳",
+          "href": "kitchen.html",
+          "on_web": true,
+          "line": "Good food. Good mood.",
+          "needs": 0,
+          "favorite": false,
+          "ask": "What can I make with what's in the pantry?"
+        },
+        {
+          "id": "security",
+          "name": "Security",
+          "icon": "🛡️",
+          "href": "security.html",
+          "on_web": true,
+          "line": "Your cameras, at home.",
+          "needs": 0,
+          "favorite": false,
+          "ask": "Show me the front door."
+        },
+        {
+          "id": "household",
+          "name": "Household",
+          "icon": "🧺",
+          "href": null,
+          "on_web": false,
+          "line": "A home that runs itself.",
+          "needs": 0,
+          "favorite": false,
+          "ask": "I did the dishes."
+        },
+        {
+          "id": "power",
+          "name": "Power",
+          "icon": "🔋",
+          "href": null,
+          "on_web": false,
+          "line": "Energy, tracked.",
+          "needs": 0,
+          "favorite": false,
+          "ask": "How's the battery?"
+        }
+      ],
+      "needs": 1
+    },
+    {
+      "name": "Outdoors & field",
+      "cards": [
+        {
+          "id": "expeditions",
+          "name": "Expeditions",
+          "icon": "🏕",
+          "href": "expeditions.html",
+          "on_web": true,
+          "line": "Plan the trip.",
+          "needs": 0,
+          "favorite": false,
+          "ask": "Plan a weekend camping trip."
+        },
+        {
+          "id": "memories",
+          "name": "Memories",
+          "icon": "📸",
+          "href": null,
+          "on_web": false,
+          "line": "Remember the trip.",
+          "needs": 0,
+          "favorite": false,
+          "ask": "Show me my last trip."
+        },
+        {
+          "id": "maps",
+          "name": "Maps",
+          "icon": "🗺",
+          "href": null,
+          "on_web": false,
+          "line": "Know the ground.",
+          "needs": 0,
+          "favorite": false,
+          "ask": "Which trail maps do I have?"
+        },
+        {
+          "id": "navigation",
+          "name": "Navigation",
+          "icon": "🧭",
+          "href": null,
+          "on_web": false,
+          "line": "Find the way.",
+          "needs": 0,
+          "favorite": false,
+          "ask": "How far is camp from the trailhead?"
+        }
+      ],
+      "needs": 0
+    },
+    {
+      "name": "Knowledge, tools & system",
+      "cards": [
+        {
+          "id": "passwords",
+          "name": "Passwords",
+          "icon": "🔐",
+          "href": "passwords.html",
+          "on_web": true,
+          "line": "Every login, locked.",
+          "needs": 0,
+          "favorite": false,
+          "ask": ""
+        },
+        {
+          "id": "files",
+          "name": "Files",
+          "icon": "🗂",
+          "href": "files.html",
+          "on_web": true,
+          "line": "Your files.",
+          "needs": 0,
+          "favorite": false,
+          "ask": ""
+        },
+        {
+          "id": "music",
+          "name": "Music",
+          "icon": "🎵",
+          "href": "music.html",
+          "on_web": true,
+          "line": "Your music.",
+          "needs": 0,
+          "favorite": false,
+          "ask": "Play something relaxing."
+        },
+        {
+          "id": "module_browser",
+          "name": "Apps",
+          "icon": "🧩",
+          "href": "apps.html",
+          "on_web": true,
+          "line": "Everything MIA can do.",
+          "needs": 0,
+          "favorite": false,
+          "ask": ""
+        },
+        {
+          "id": "knowledge",
+          "name": "Knowledge",
+          "icon": "📚",
+          "href": null,
+          "on_web": false,
+          "line": "The offline library.",
+          "needs": 0,
+          "favorite": false,
+          "ask": "How do I purify water?"
+        },
+        {
+          "id": "toolbox",
+          "name": "Toolbox",
+          "icon": "🧰",
+          "href": null,
+          "on_web": false,
+          "line": "Quick tools.",
+          "needs": 0,
+          "favorite": false,
+          "ask": "Convert 5 gallons to liters."
+        },
+        {
+          "id": "lab",
+          "name": "The Lab",
+          "icon": "🧪",
+          "href": null,
+          "on_web": false,
+          "line": "Experiments and sensors.",
+          "needs": 0,
+          "favorite": false,
+          "ask": "Start a temperature experiment."
+        },
+        {
+          "id": "field_kit",
+          "name": "Field Kit",
+          "icon": "🛠",
+          "href": null,
+          "on_web": false,
+          "line": "Devices and scripts.",
+          "needs": 0,
+          "favorite": false,
+          "ask": "What devices are connected?"
+        },
+        {
+          "id": "diagnostics",
+          "name": "Diagnostics",
+          "icon": "🩺",
+          "href": null,
+          "on_web": false,
+          "line": "How MIA is doing.",
+          "needs": 0,
+          "favorite": false,
+          "ask": "How is the computer doing?"
+        },
+        {
+          "id": "settings",
+          "name": "Settings",
+          "icon": "⚙",
+          "href": null,
+          "on_web": false,
+          "line": "Make MIA yours.",
+          "needs": 0,
+          "favorite": false,
+          "ask": "Make the text bigger."
+        }
+      ],
+      "needs": 0
+    }
+  ],
+  "favorites": []
+}

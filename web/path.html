@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>My Hero's Path — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
+</head>
+<body data-app="path" class="mod-path">
+  <!--
+    My Hero's Path (claude, 2026-10-21, DEC-0044): level, active missions and their next step, skills growing
+    this week, recent wins, and the Path's screens. MIA.path() (core/web_hubs.py); web/hubs.js.
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <header class="hero">
+        <h1><span aria-hidden="true" id="hero-icon">⚔</span> <span id="hero-name">My Hero's Path</span></h1>
+        <p class="tagline" id="hero-tagline">Every step counts.</p>
+      </header>
+      <div id="panel"></div>
+    </main>
+  </div>
+  <script src="mia.js"></script>
+  <script src="icons.js"></script>
+  <script src="sound.js"></script>
+  <script src="places-watch.js"></script>
+  <script src="shell.js"></script>
+  <script src="hubs.js"></script>
+</body>
+</html>

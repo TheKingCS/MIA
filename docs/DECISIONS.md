@@ -739,3 +739,38 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   state, specs, guides) answering "how does X work?" with the passage
   and its file.
 - Related: docs/INTELLIGENCE_AUDIT.md, docs/specs/INTELLIGENCE.md
+
+### DEC-0042: Business OS, the rest of the plan
+- Status: APPROVED
+- Proposed by: claude, 2026-10-21 (`docs/BUSINESS_OS_AUDIT.md` section 7) · Approved by: zac, 2026-10-21 ("OK to both of those")
+- Decision: after the obligations calendar, in order: transaction kinds
+  and own-account transfers never counted as income, workshop sales
+  matched to their deposit so they count once, edit history kept (P0-2);
+  legal entities vs. activities (P0-3); then P1 (deductions with
+  evidence and review states, receipt ↔ transaction matching, email
+  notices, accountant exports), P2 and P3 as the audit lists, each
+  increment tested before the next.
+- Related: docs/BUSINESS_OS_AUDIT.md
+
+### DEC-0043: Intelligence, the rest of the plan
+- Status: APPROVED
+- Proposed by: claude, 2026-10-21 (`docs/INTELLIGENCE_AUDIT.md` section 5) · Approved by: zac, 2026-10-21 ("OK to both of those")
+- Decision: in order: code retrieval (symbols and docstrings, cited by
+  file; never data/ or config/), "why did that fail?" from the log and
+  the action history, multi-step turns (reads freely, changes only as
+  proposals), and the dev workflow (MIA writes proposals for Claude;
+  MIA never changes her own code).
+- Related: docs/INTELLIGENCE_AUDIT.md
+
+### DEC-0044: One system, not a collection of apps
+- Status: APPROVED
+- Proposed by: zac, 2026-10-21 (Chat's handoff, `docs/specs/UX_SYSTEM.md`: "MIA ... feels like a collection of apps instead of a second smarter and more organized consciousness") · Approved by: zac, 2026-10-21 (the same request)
+- Decision: navigation by intent: Presence, Conversation, My Hero's
+  Path, World, System, then the person's pinned apps (every app stays
+  reachable through World); Presence synthesizes what matters now across
+  everything, each item with why, whether it's a fact, a deadline or a
+  suggestion, and its next useful action; then context in every turn,
+  objectives across modules with proposed plans, and verification after
+  every change (`docs/UX_SYSTEM_AUDIT.md` section 4). One engine; no
+  device gets its own logic. MIA never claims awareness she doesn't have.
+- Related: docs/UX_SYSTEM_AUDIT.md, docs/specs/UX_SYSTEM.md

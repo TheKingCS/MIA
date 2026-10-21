@@ -1,0 +1,121 @@
+{
+  "me": {
+    "level": 1,
+    "xp_into_level": 2,
+    "xp_for_level": 100,
+    "total_xp": 2,
+    "credits": 0,
+    "prestige_tier": 0,
+    "prestige_color": null,
+    "next_prestige_color": "green",
+    "can_prestige": false,
+    "name": "Robin"
+  },
+  "missions": [],
+  "active_count": 0,
+  "focus_skill": {
+    "id": "animal_care",
+    "name": "Animal Care",
+    "icon": "🐔",
+    "to_next": 18
+  },
+  "growing": [
+    {
+      "name": "Animal Care",
+      "icon": "🐔",
+      "level": 1,
+      "this_week": 2
+    }
+  ],
+  "wins": [
+    {
+      "at": "2026-10-21T04:43:54",
+      "type": "expense_added",
+      "summary": "Spent $180.00: Groceries",
+      "refs": [
+        "expense:cb3d1e928e"
+      ],
+      "source": "manual"
+    },
+    {
+      "at": "2026-10-21T04:43:54",
+      "type": "expense_added",
+      "summary": "Spent $3,000.00: Living",
+      "refs": [
+        "expense:8e4dcb46e2"
+      ],
+      "source": "manual"
+    },
+    {
+      "at": "2026-10-21T04:43:54",
+      "type": "income_added",
+      "summary": "Earned $4,200.00: Paycheck",
+      "refs": [
+        "income:d21e4cbfbf"
+      ],
+      "source": "manual"
+    },
+    {
+      "at": "2026-10-21T04:43:54",
+      "type": "expense_added",
+      "summary": "Spent $3,000.00: Living",
+      "refs": [
+        "expense:6ffe194e2a"
+      ],
+      "source": "manual"
+    },
+    {
+      "at": "2026-10-21T04:43:54",
+      "type": "income_added",
+      "summary": "Earned $4,200.00: Paycheck",
+      "refs": [
+        "income:8c677e6c08"
+      ],
+      "source": "manual"
+    }
+  ],
+  "screens": [
+    {
+      "name": "Missions",
+      "icon": "🏆",
+      "href": "missions.html",
+      "line": "Explore. Complete. Level up."
+    },
+    {
+      "name": "Skills",
+      "icon": "⚔",
+      "href": "skills.html",
+      "line": "Do the thing. Earn the level. Unlock the next thing."
+    },
+    {
+      "name": "Character",
+      "icon": "👤",
+      "href": "character.html",
+      "line": "Your story so far."
+    },
+    {
+      "name": "Reward Shop",
+      "icon": "🎁",
+      "href": "shop.html",
+      "line": "Spend what you earn."
+    },
+    {
+      "name": "Chronicle",
+      "icon": "📜",
+      "href": "chronicle.html",
+      "line": "Your story, week by week."
+    },
+    {
+      "name": "Party",
+      "icon": "🤝",
+      "href": "party.html",
+      "line": "Raids and the household together."
+    },
+    {
+      "name": "World Map",
+      "icon": "🗺",
+      "href": "worldmap.html",
+      "line": "Where you've been."
+    }
+  ]
+}

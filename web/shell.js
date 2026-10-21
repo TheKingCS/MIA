@@ -3,9 +3,10 @@
  *
  * Function first; the look is Muse's (components.css). Gives each page:
  *   - sign-in when nobody is signed in on this tab;
- *   - the sidebar: the person's own apps from the engine (MIA.shell(): child-safe,
- *     tucked-away apps hidden), the current page highlighted, level and XP at the
- *     bottom, and how many apps are still only in the PC app;
+ *   - the sidebar (DEC-0044, navigation by intent): Presence, Conversation,
+ *     My Hero's Path, World, System, then the apps the person starred
+ *     (MIA.shell(); every app is in World); the current place highlighted,
+ *     level and XP at the bottom. Phones: the same five in the bottom bar;
  *   - MIA, everywhere: the orb button opens a Talk panel (MIA.talk);
  *   - MIAShell.act(action): the one way a screen changes anything —
  *     propose → the engine's sentence in a confirm → approve → undo toast.
@@ -160,8 +161,17 @@
   }
 
   // ---------------------------------------------------------------- navigation
-  // Desktop: the concept's sidebar. Phones: the bottom bar (Home, Apps,
-  // Dashboard). No More menu: every app is on the Apps page (Zac, 2026-10-06).
+  // DEC-0044: five places, not forty apps. Desktop: the sidebar with the
+  // person's pinned apps under them. Phones: the bottom bar. Every app is
+  // in World; an app's own page highlights the place it belongs to.
+  const PATH_APPS = new Set(["path", "missions", "skills", "character", "reward_shop", "chronicle", "party", "worldmap", "quests"]);
+  const SYSTEM_APPS = new Set(["system", "settings", "module_browser", "profile", "passwords", "files", "model_test", "glasses"]);
+  function placeOf(here) {
+    if (here === "web_home" || here === "assistant") return here;
+    if (PATH_APPS.has(here)) return "path";
+    if (SYSTEM_APPS.has(here)) return "system";
+    return "world";
+  }
   function levelBlock(p) {
     const pct = p.xp_for_level ? Math.round((100 * p.xp_into_level) / p.xp_for_level) : 0;
     return el("div", { class: "nav-level" },
@@ -190,17 +200,21 @@
     return (window.MIAIcons && MIAIcons.svg(id)) || fallback || "";
   }
 
-  function appLinks(shell, cls) {
-    const here = document.body.dataset.app || "web_home";
-    return shell.apps.map((a) => el("a", { class: cls, href: a.page, "aria-current": a.id === here ? "page" : null },
-      el("span", { class: "ico", "aria-hidden": "true" }, icon(a.id, a.icon)), el("span", { class: "label" }, a.name)));
+  function placeLinks(shell, cls) {
+    const place = placeOf(document.body.dataset.app || "web_home");
+    return (shell.destinations || []).map((d) => el("a", { class: cls + " nav-place", href: d.href, title: d.line,
+      "aria-current": d.id === place ? "page" : null },
+      el("span", { class: "ico", "aria-hidden": "true" }, icon(d.id === "web_home" ? "home" : d.id, d.icon)),
+      el("span", { class: "label" }, d.name)));
   }
 
-  function more(shell) {
-    return shell.on_pc_only.length
-      ? el("a", { class: "side-more", href: "apps.html", title: shell.on_pc_only.join(", ") },
-        shell.on_pc_only.length + " more apps in the PC app for now")
-      : null;
+  function pinnedLinks(shell, cls) {
+    const here = document.body.dataset.app || "web_home";
+    const pins = shell.pinned || [];
+    if (!pins.length) return [el("a", { class: "side-more", href: "world.html" }, "Star apps in World to pin them here")];
+    return [el("div", { class: "side-label" }, "Pinned")].concat(pins.map((a) => el("a", { class: cls, href: a.page,
+      "aria-current": a.id === here ? "page" : null },
+      el("span", { class: "ico", "aria-hidden": "true" }, icon(a.id, a.icon)), el("span", { class: "label" }, a.name))));
   }
 
   function renderNav(shell) {
@@ -217,8 +231,9 @@
       side.replaceChildren(
         el("a", { class: "brand", href: "index.html" }, el("span", { class: "brand-mark brand-reactor", "aria-hidden": "true" }),
           el("span", {}, "MIA", el("small", {}, "Your Life. In Sync."))),
-        ...appLinks(shell, "nav"),
-        el("div", { class: "side-foot" }, levelBlock(shell.person), more(shell)));
+        ...placeLinks(shell, "nav"),
+        ...pinnedLinks(shell, "nav nav-pin"),
+        el("div", { class: "side-foot" }, levelBlock(shell.person)));
     }
     // Phone: the concept's bottom bar.
     let bar = $("#mia-bottom-bar");
@@ -226,12 +241,10 @@
       bar = el("nav", { id: "mia-bottom-bar", class: "bottom-bar", "aria-label": "Main" });
       document.body.append(bar);
     }
-    const here = document.body.dataset.app || "web_home";
-    const tab = (href, id, glyph, emoji, label) => el("a", { href, "aria-current": here === id ? "page" : null },
-      el("span", { class: "ico", "aria-hidden": "true" }, icon(glyph, emoji)), label);
-    bar.replaceChildren(
-      tab("index.html", "web_home", "home", "🏠", "Home"),
-      tab("apps.html", "module_browser", "apps", "▦", "Apps"));
+    const place = placeOf(document.body.dataset.app || "web_home");
+    const short = { web_home: "Presence", assistant: "Talk", path: "Path", world: "World", system: "System" };
+    bar.replaceChildren(...(shell.destinations || []).map((d) => el("a", { href: d.href, "aria-current": place === d.id ? "page" : null },
+      el("span", { class: "ico", "aria-hidden": "true" }, icon(d.id === "web_home" ? "home" : d.id, d.icon)), short[d.id] || d.name)));
   }
 
   // ---------------------------------------------------------------- MIA, everywhere
