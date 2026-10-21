@@ -70,7 +70,8 @@
       el("p", { class: "dim ins-terms" }, [fmt(p.premium) + " every " + p.every.toLowerCase(),
         p.deductible ? fmt(p.deductible) + " deductible" : null, p.renews ? "renews " + day(p.renews) : "no renewal date yet"].filter(Boolean).join(" · ")),
       p.coverage_lines.length ? el("div", { class: "ins-cover" }, p.coverage_lines.map((c) =>
-        el("span", { class: "ins-tag" + (c.included ? "" : " off") }, c.name + ": " + c.limit))) : null,
+        el("span", { class: "ins-tag" + (c.included ? "" : " off"), "aria-label": (c.included ? "" : "Not covered: ") + c.name + ": " + c.limit },
+          c.name + ": " + c.limit))) : null,
       checksOf(p),
       chosen ? el("p", { class: "ins-switch" }, "Switching to " + chosen.insurer + ".",
         btn("I Switched", "btn-amber btn-small", () => act({ kind: "insurance.switched", params: { quote_id: chosen.id } }))) : null,
@@ -98,14 +99,15 @@
         const differs = c.rows.map((r, i) => ({ name: r.name, now: r.current, theirs: r.quotes[c.quotes.indexOf(q)] }))
           .filter((r) => r.theirs !== r.now && !(r.theirs === "—" && /^(no|none|excluded|declined|—)/i.test(r.now)))
           .map((r) => Object.assign(r, { theirs: r.theirs === "—" ? "not listed" : r.theirs }));
-        return el("article", { class: "ins-quote" + (q.id === c.best ? " best" : "") },
+        // H-0066: coverage first, then the money (DEC-0034: a cheaper quote that covers less says so).
+        return el("article", { class: "ins-quote" + (q.id === c.best ? " best" : q.covers_less.length ? " less" : "") },
           el("div", { class: "ins-head" }, el("div", { class: "row-title" }, (q.id === c.best ? "★ " : "") + q.insurer),
             el("div", { class: "ins-cost" }, el("strong", {}, fmt(q.per_year)), el("span", { class: "dim" }, " a year"))),
-          el("p", { class: q.saves > 0 ? "ins-same" : "dim" }, q.saves > 0 ? "Saves " + fmt(q.saves) + " a year" :
-            q.saves < 0 ? fmt(-q.saves) + " more a year" : "The same price"),
           q.covers_less.length ? el("p", { class: "ins-less" }, "⚠ Covers less: " + q.covers_less.join("; ")) :
             q.unknown_coverage ? el("p", { class: "dim" }, "Coverage not put in: check it covers the same before you switch.") :
             el("p", { class: "ins-same" }, "✓ Same coverage as now"),
+          el("p", { class: q.saves > 0 ? "ins-same" : "dim" }, q.saves > 0 ? "Saves " + fmt(q.saves) + " a year" :
+            q.saves < 0 ? fmt(-q.saves) + " more a year" : "The same price"),
           !q.unknown_coverage && differs.length ? el("ul", { class: "ins-diff" }, differs.map((r) =>
             el("li", {}, r.name + ": " + r.theirs + " (you have " + r.now + ")"))) : null,
           el("div", { class: "row-buttons" },
@@ -143,7 +145,7 @@
       el("div", { class: "cell ok" }, el("span", { class: "n" }, s.policies), el("span", { class: "t" }, "Policies")),
       el("div", { class: "cell ok" }, el("span", { class: "n" }, fmt(s.per_year)), el("span", { class: "t" }, "A Year")),
       el("div", { class: "cell " + (s.renewing_soon ? "soon" : "ok") }, el("span", { class: "n" }, s.renewing_soon), el("span", { class: "t" }, "Renewing Soon")),
-      el("div", { class: "cell ok" }, el("span", { class: "n" }, fmt(s.could_save)), el("span", { class: "t" }, "Could Save")));
+      el("div", { class: "cell " + (s.could_save > 0 ? "ok" : "") }, el("span", { class: "n" }, fmt(s.could_save)), el("span", { class: "t" }, "Could Save")));
     $("tabs").hidden = false;
     $("tabs").replaceChildren(...TABS.map(([id, l]) => el("button", { type: "button", role: "tab", "aria-selected": String(id === tab),
       onclick: () => { tab = id; history.replaceState(null, "", "#" + id); draw(); } }, l)));

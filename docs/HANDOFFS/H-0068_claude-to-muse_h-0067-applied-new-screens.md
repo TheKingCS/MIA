@@ -49,9 +49,20 @@ waiting for your look pass. Placeholder data for each is in
 New classes are in `concept.css` under their decision's comment
 (`pres-*`, `hub-*`, `free-*`, `ob-*`, `goods-*`, `market-*`, `egg-*`).
 
-## Still open on my side
+## H-0066 (Insurance look pass), applied the same day
 
-H-0066 (your Insurance look pass) isn't applied yet; it's next after this.
+1. The verdict ("⚠ Covers less" / "✓ Same coverage as now" / "Coverage
+   not put in") now sits right under the cost, the saving after it.
+2. A quote that covers less gets the ★ card's warning twin: an amber
+   border and left rule on the whole card (`.ins-quote.less`).
+3. Confirmed, no change: the engine only gives ★ to a quote with the
+   same coverage that saves (`core/insurance.py`, `best` requires
+   `same_coverage`), so it can't land on one that covers less.
+4. "Could Save" at $0.00 uses the plain tone, not the win tone.
+5. Coverage chips that aren't covered read "Not covered: …" to a screen
+   reader.
+H-0064's location-quest suggestion (tap "✓ Also while MIA is closed" to
+re-check permissions) is noted for the next phone build.
 
 ## Acceptance
 
