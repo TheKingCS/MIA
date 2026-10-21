@@ -1,6 +1,7 @@
 # Homestead goods (DEC-0036)
 
-Things you make in batches and sell (hot honey, salve, sourdough), on
+Things you make in batches and sell (banana bread, cookies, bread,
+honey), on
 the Workshop's own loop: **recipe → stock check → Bought It → Begin
 Crafting → goods on hand → market day → the day's tally**. Built
 2026-10-21. One-off builds (a bench) work the same as before.
@@ -10,8 +11,8 @@ Crafting → goods on hand → market day → the day's tally**. Built
 1. **Workshop → Recipes → Add Recipe.** Materials one per line, in
    whatever units you think in: `2 cups Raw honey`, `500 g Bread flour`,
    `3 Chili peppers`, `6 Glass jar 8oz`. Fill in **One batch makes**
-   (6) and **Of what** (jars), **Sells for, each**, and **Keeps for**
-   (days; 0 for honey that keeps). The card shows what a batch costs,
+   (2) and **Of what** (loaves), **Sells for, each**, and **Keeps for**
+   (days; 0 for honey, which keeps). The card shows what a batch costs,
    what each one costs, and from what to what each material goes.
 2. **Materials** can be kept in any unit. A recipe line converts to it
    when both measure the same thing: weight to weight (g, oz, lb),
@@ -56,22 +57,24 @@ What we found when building this, to check with the health department
   the net amount, the date it was made, the ingredients heaviest first,
   allergens, and the statement "This product is home-produced and
   processed" (in at least 10-point type; MIA prints it that size).
-- **Hot honey:** plain honey has its own exemption, but honey with
-  fresh garlic or peppers in it is a different product, and fresh
-  garlic in honey is a known botulism risk. Ask the health department
-  before selling it (dried peppers are the usual approach).
-- **Herbal salve** isn't food: it's a cosmetic under the FDA's rules
-  (its own labeling, and no health claims like "heals").
+- **Zac's line (2026-10-21): only what those rules allow**: banana
+  bread and other quick breads, cookies, breads, honey and the like.
+  No infused honey, salves or anything needing refrigeration. Watch
+  the toppings: cream cheese frosting or cream fillings make a baked
+  good perishable, which the rules don't allow.
+- Tip: write baking recipes in grams (or all in cups). When every
+  line is a weight, the label lists the ingredients heaviest first by
+  itself; mixed units need the recipe's "Label: ingredients" line.
 
 Sources: forrager.com/laws/kentucky, the National Agricultural Law
 Center's Kentucky cottage food summary.
 
 ## What's next (not built yet)
 
-- Saying it: "sold 3 jars of hot honey", "I baked 6 loaves" (the
+- Saying it: "sold 3 jars of honey", "I baked 2 banana breads" (the
   Assistant's tools, with the live check kept at 213/213).
 - MIA's morning plan from what's low and what usually sells ("craft 12
-  hot honey, bake 6 loaves").
+  cookies, bake 2 banana breads").
 - A harvest from the Grow Lab going straight into Materials.
 - Quotes for custom orders by the piece from a batch recipe (an order
   for 3 dozen rolls).

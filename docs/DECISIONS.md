@@ -654,5 +654,8 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Honest limits: MIA prints what the person enters for their own rules
   and never says a product is legal to sell; it can't convert cups to
   pounds (no densities), it says so instead.
+- Note (zac, 2026-10-21): the household's own goods stay within
+  Kentucky's home-based processor rules: banana bread, cookies, breads,
+  honey and the like (no infused honey or salves).
 - Related: core/craft_recipes.py, core/units.py, core/craft_actions.py,
   core/web_craft.py, web/workshop.*, docs/HOMESTEAD_GOODS.md
