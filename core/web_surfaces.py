@@ -104,7 +104,7 @@ APPS: tuple[App, ...] = (
         "At-a-glance status for the house, appliances, and tools.", HOME, (),
         "Do I have any furnace filters left?"),
     App("workshop", "Workshop", "🔩", "Parts, jobs and products.", "workshop.html",
-        "Component inventory, fabrication materials/jobs/products, and a sales ledger.", MONEY,
+        "Recipes and builds, materials, homestead goods in batches, market days, labels, and the shop's sales.", MONEY,
         ("components", "materials", "jobs", "products", "ledger"), "How much plywood do I have?"),
     App("business", "Orders & Quotes", "🧾", "Customers, quotes and orders.", "business.html",
         "Quotes from your recipes, customers, orders and payments, and a portfolio of what you've built (DEC-0030).",

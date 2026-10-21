@@ -185,7 +185,7 @@ def format_expense_row(entry: ExpenseEntry) -> str:
 class WorkshopModule(ModuleBase):
     module_id = "workshop"
     display_name = "Workshop & Electronics"
-    description = "Component inventory, fabrication materials/jobs/products, and a sales ledger."
+    description = "Recipes and builds, materials, homestead goods in batches, market days, labels, and the shop's sales."
     icon = "\U0001F529"  # nut and bolt
 
     def __init__(self, context) -> None:

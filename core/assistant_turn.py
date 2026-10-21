@@ -66,7 +66,7 @@ def _direct_lookup(context, prompt: str) -> Optional[str]:
     if registry is None or looks_like_how_to_question(prompt) or looks_like_teaching_request(prompt):
         return None
     action = registry.direct_lookup(prompt, context)
-    return registry.execute(context, action.name, {}) if action is not None else None
+    return registry.execute(context, action.name, action.direct_arguments(prompt)) if action is not None else None
 
 
 def _personal(conversation) -> bool:

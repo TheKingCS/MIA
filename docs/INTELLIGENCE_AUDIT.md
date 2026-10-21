@@ -77,12 +77,12 @@ home link for routing between the phone and the PC.
 ## 5. Plan, in increments (each its own approval)
 
 1. ✅ **Slice 1, built: MIA knows her model** (section 6).
-2. **Capability registry**: `core/capabilities.py` builds, from the code,
+2. ✅ **Capability registry** (built 2026-10-21, DEC-0041): `core/capabilities.py` builds, from the code,
    each app's status, tools (read / change), permissions and known
    limits (from `docs/WEB_PARITY.md` and the apps list); a
    `what_can_you_do` / `can_you` tool answers from it; a test fails when
    a feature is added without an entry.
-3. **Docs retrieval for MIA about herself**: index `docs/` (decisions,
+3. ✅ **Docs retrieval for MIA about herself** (built 2026-10-21, DEC-0041): index `docs/` (decisions,
    current state, the specs, the guides) by heading; `how_does_mia_work`
    answers with the passage and its file; current state ranked above
    history, plans labelled as plans.

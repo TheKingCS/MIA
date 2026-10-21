@@ -331,7 +331,7 @@
           "name": "Workshop",
           "icon": "🔩",
           "tagline": "Parts, jobs and products.",
-          "description": "Component inventory, fabrication materials/jobs/products, and a sales ledger.",
+          "description": "Recipes and builds, materials, homestead goods in batches, market days, labels, and the shop's sales.",
           "page": "workshop.html",
           "on_web": true,
           "shown": true,

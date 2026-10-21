@@ -120,6 +120,15 @@ class AssistantAction:
     # Words that say what the action is about, beyond its own name ("chore"
     # for list_household_routines): see _names_its_subject().
     subjects: tuple[str, ...] = ()
+    # 2026-10-21 (DEC-0041): a lookup whose one detail is the question
+    # itself ("can you track my chickens?", "what did we decide about
+    # eggs?") can still be answered in code: direct_lookup() passes the
+    # person's words as this parameter.
+    prompt_arg: str = ""
+
+    def direct_arguments(self, prompt: str) -> dict:
+        """The arguments a direct lookup runs with: none, or the person's words."""
+        return {self.prompt_arg: prompt} if self.prompt_arg else {}
 
     def to_ollama_tool(self) -> dict:
         return {
@@ -282,7 +291,8 @@ class AssistantActionRegistry:
         # No details at all (a search word, a date, a filter needs the model to
         # pick it out), and never the journals: their answers stay out of the
         # chat history, which only the model's path handles.
-        lookups = [a for a in matched if not ((a.parameters or {}).get("properties"))
+        lookups = [a for a in matched if (not ((a.parameters or {}).get("properties"))
+                                          or set((a.parameters or {}).get("properties")) == {a.prompt_arg})
                    and "journal" not in a.name and "journal" not in a.domain and _names_its_subject(a, prompt)]
         return lookups[0] if len(lookups) == 1 and len(matched) == 1 else None
 

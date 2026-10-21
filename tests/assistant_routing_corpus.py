@@ -21,6 +21,9 @@ CORPUS: list[tuple[str, str]] = [
     ("What AI model are you using?", "get_model_info"),
     ("Which model are you running on?", "get_model_info"),
     ("What LLM does MIA use?", "get_model_info"),
+    ("What can you do?", "what_can_you_do"),
+    ("Can you track my chickens?", "get_capability"),
+    ("What did we decide about eggs?", "get_mia_docs"),
     # ---- Each person's Apps screen (core/focus_presets.py) --------------
     ("Switch me to student mode", "set_app_focus"),
     ("Set my apps up for my business", "set_app_focus"),
@@ -235,7 +238,6 @@ CORPUS: list[tuple[str, str]] = [
     ("How can I add a recipe?", INFO),
     ("Where do I see my debts?", INFO),
     ("Teach me how missions work", INFO),
-    ("What can you do?", INFO),
     ("What does the Greenhouse module do?", INFO),
 ]
 

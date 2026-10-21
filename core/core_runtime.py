@@ -90,7 +90,7 @@ from core.talk_it_out import register_journal_actions
 from core.voice_manager import VoiceManager
 from core.waypoint_manager import WAYPOINT_CATEGORIES, WaypointManager
 from core.assistant_why_actions import register_why_actions
-from core.assistant_self_actions import register_self_actions
+from core.assistant_self_actions import register_capability_actions, register_self_actions
 from core.budget_manager import BudgetManager
 from core.intent_manager import IntentManager
 from core.personal_data import PersonalData
@@ -262,6 +262,7 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     register_journal_actions(registry)
     register_why_actions(registry)
     register_self_actions(registry)  # "what model are you?" from the runtime
+    register_capability_actions(registry)  # what MIA can do, how she's built (DEC-0041)
 
     registry.register(AssistantAction(
         name="add_alarm",
