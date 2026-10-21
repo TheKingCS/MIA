@@ -82,6 +82,11 @@
   --soon-deep: #9a6512;
   --soon-bg: rgba(var(--rgb-amber), 0.10);
 
+  /* Printed labels (DEC-0036): ink on paper whatever the theme, they go on jars */
+  --label-paper: #ffffff;
+  --label-ink: #000000;
+  --label-edge: #9a9a9a;
+
   /* XP is measurable progress: cyan, like every other meter */
   --xp: var(--accent);
   --xp-glow: var(--accent-glow);

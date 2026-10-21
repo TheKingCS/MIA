@@ -1,11 +1,11 @@
 {
   "available": true,
-  "as_of": "2026-10-16",
+  "as_of": "2026-10-21",
   "parts": [
     {
-      "id": "824720506c",
+      "id": "e4a36ff06f",
       "name": "Hinge",
-      "detail": "Hardware · 2 in",
+      "detail": "Hardware \u00b7 2 in",
       "quantity": 12,
       "location": "Drawer 3",
       "empty": false,
@@ -22,42 +22,147 @@
   ],
   "materials": [
     {
-      "id": "213ae765f6",
-      "name": "Plywood 3/4 in",
-      "unit": "sheet",
-      "on_hand": 0.0,
-      "reorder_at": 2.0,
-      "low": true,
-      "cost": "$54.00",
+      "id": "2d96bc6285",
+      "name": "2x4 8ft",
+      "unit": "board",
+      "on_hand": 2,
+      "reorder_at": 0.0,
+      "low": false,
+      "cost": "$3.98",
       "supplier": "",
       "location": "",
       "values": {
-        "name": "Plywood 3/4 in",
-        "unit": "sheet",
-        "quantity_on_hand": 0.0,
-        "reorder_threshold": 2.0,
-        "unit_cost": 54.0,
+        "name": "2x4 8ft",
+        "unit": "board",
+        "quantity_on_hand": 2,
+        "reorder_threshold": 0.0,
+        "unit_cost": 3.98,
         "supplier": "",
         "location": "",
         "notes": ""
       }
     },
     {
-      "id": "ecd838651c",
-      "name": "Wood screws",
-      "unit": "box",
-      "on_hand": 6.0,
-      "reorder_at": 1.0,
+      "id": "485251f40f",
+      "name": "Beeswax",
+      "unit": "oz",
+      "on_hand": 4,
+      "reorder_at": 0.0,
       "low": false,
-      "cost": "$9.00",
+      "cost": "$0.90",
       "supplier": "",
       "location": "",
       "values": {
-        "name": "Wood screws",
-        "unit": "box",
-        "quantity_on_hand": 6.0,
-        "reorder_threshold": 1.0,
-        "unit_cost": 9.0,
+        "name": "Beeswax",
+        "unit": "oz",
+        "quantity_on_hand": 4,
+        "reorder_threshold": 0.0,
+        "unit_cost": 0.9,
+        "supplier": "",
+        "location": "",
+        "notes": ""
+      }
+    },
+    {
+      "id": "161d2b1c10",
+      "name": "Bread flour",
+      "unit": "lb",
+      "on_hand": 13.3862,
+      "reorder_at": 0.0,
+      "low": false,
+      "cost": "$0.60",
+      "supplier": "",
+      "location": "",
+      "values": {
+        "name": "Bread flour",
+        "unit": "lb",
+        "quantity_on_hand": 13.3862,
+        "reorder_threshold": 0.0,
+        "unit_cost": 0.6,
+        "supplier": "",
+        "location": "",
+        "notes": ""
+      }
+    },
+    {
+      "id": "38a0ca92bf",
+      "name": "Chili peppers",
+      "unit": "",
+      "on_hand": 9.0,
+      "reorder_at": 0.0,
+      "low": false,
+      "cost": "$0.25",
+      "supplier": "",
+      "location": "",
+      "values": {
+        "name": "Chili peppers",
+        "unit": "",
+        "quantity_on_hand": 9.0,
+        "reorder_threshold": 0.0,
+        "unit_cost": 0.25,
+        "supplier": "",
+        "location": "",
+        "notes": ""
+      }
+    },
+    {
+      "id": "8d3d4370e9",
+      "name": "Garlic",
+      "unit": "cloves",
+      "on_hand": 4.0,
+      "reorder_at": 0.0,
+      "low": false,
+      "cost": "$0.10",
+      "supplier": "",
+      "location": "",
+      "values": {
+        "name": "Garlic",
+        "unit": "cloves",
+        "quantity_on_hand": 4.0,
+        "reorder_threshold": 0.0,
+        "unit_cost": 0.1,
+        "supplier": "",
+        "location": "",
+        "notes": ""
+      }
+    },
+    {
+      "id": "303f4e4d8a",
+      "name": "Glass jar 8oz",
+      "unit": "",
+      "on_hand": 4.0,
+      "reorder_at": 0.0,
+      "low": false,
+      "cost": "$1.10",
+      "supplier": "",
+      "location": "",
+      "values": {
+        "name": "Glass jar 8oz",
+        "unit": "",
+        "quantity_on_hand": 4.0,
+        "reorder_threshold": 0.0,
+        "unit_cost": 1.1,
+        "supplier": "",
+        "location": "",
+        "notes": ""
+      }
+    },
+    {
+      "id": "4ecd1b4581",
+      "name": "Raw honey",
+      "unit": "cups",
+      "on_hand": 6.199999999999999,
+      "reorder_at": 0.0,
+      "low": false,
+      "cost": "$4.00",
+      "supplier": "",
+      "location": "",
+      "values": {
+        "name": "Raw honey",
+        "unit": "cups",
+        "quantity_on_hand": 6.199999999999999,
+        "reorder_threshold": 0.0,
+        "unit_cost": 4.0,
         "supplier": "",
         "location": "",
         "notes": ""
@@ -66,90 +171,118 @@
   ],
   "products": [
     {
-      "id": "6da43d8fd6",
-      "name": "Cedar birdhouse",
-      "price": "$35.00",
+      "id": "04f5962c65",
+      "name": "Hot honey",
+      "price": "$8.00",
       "stock": 3.0,
       "description": "",
       "listings": [],
       "values": {
-        "name": "Cedar birdhouse",
-        "base_price": 35.0,
+        "name": "Hot honey",
+        "base_price": 8.0,
         "quantity_in_stock": 3.0,
         "description": "",
         "notes": ""
       }
-    }
-  ],
-  "jobs": [
+    },
     {
-      "id": "c9e9d9bc1d",
-      "name": "Birdhouse batch",
-      "status": "In Progress",
+      "id": "25391acf62",
+      "name": "Sourdough loaf",
+      "price": "$5.00",
+      "stock": 8.0,
       "description": "",
-      "hours": 3.0,
-      "cost": "$108.00",
-      "used": [
-        "2 sheet Plywood 3/4 in"
-      ],
-      "made": [],
+      "listings": [],
       "values": {
-        "name": "Birdhouse batch",
-        "status": "In Progress",
-        "labor_hours": 3.0,
+        "name": "Sourdough loaf",
+        "base_price": 5.0,
+        "quantity_in_stock": 8.0,
         "description": "",
         "notes": ""
       }
     }
   ],
+  "jobs": [],
   "money": [
     {
-      "id": "f1a88b68ad",
+      "id": "921550e6e3",
       "kind": "sale",
-      "amount": "$35.00",
-      "value": 35.0,
-      "what": "1 × Cedar birdhouse",
-      "date": "2026-10-16"
+      "amount": "$16.00",
+      "value": 16.0,
+      "what": "Sold Hot honey",
+      "date": "2026-10-21"
     },
     {
-      "id": "19ea5ecd66",
-      "kind": "cost",
-      "amount": "$14.50",
-      "value": -14.5,
-      "what": "Postage",
-      "category": "Shipping",
-      "date": "2026-10-16"
+      "id": "9099ce3e15",
+      "kind": "sale",
+      "amount": "$20.00",
+      "value": 20.0,
+      "what": "Sold Sourdough loaf",
+      "date": "2026-10-21"
+    },
+    {
+      "id": "e10a7870cc",
+      "kind": "sale",
+      "amount": "$8.00",
+      "value": 8.0,
+      "what": "Sold Hot honey",
+      "date": "2026-10-21"
     }
   ],
   "totals": {
-    "sales": "$35.00",
-    "costs": "$14.50",
-    "profit": "$20.50",
-    "profit_value": 20.5
+    "sales": "$44.00",
+    "costs": "$0.00",
+    "profit": "$44.00",
+    "profit_value": 44.0
   },
   "counts": {
     "parts": 1,
-    "materials": 2,
-    "low": 1,
-    "products": 1,
+    "materials": 7,
+    "low": 0,
+    "products": 2,
     "open_jobs": 1,
-    "recipes": 1
+    "recipes": 4,
+    "goods": 11.0,
+    "sell_first": 1
   },
   "picks": {
     "materials": [
       {
-        "id": "213ae765f6",
-        "name": "Plywood 3/4 in"
+        "id": "2d96bc6285",
+        "name": "2x4 8ft"
       },
       {
-        "id": "ecd838651c",
-        "name": "Wood screws"
+        "id": "485251f40f",
+        "name": "Beeswax"
+      },
+      {
+        "id": "161d2b1c10",
+        "name": "Bread flour"
+      },
+      {
+        "id": "38a0ca92bf",
+        "name": "Chili peppers"
+      },
+      {
+        "id": "8d3d4370e9",
+        "name": "Garlic"
+      },
+      {
+        "id": "303f4e4d8a",
+        "name": "Glass jar 8oz"
+      },
+      {
+        "id": "4ecd1b4581",
+        "name": "Raw honey"
       }
     ],
     "products": [
       {
-        "id": "6da43d8fd6",
-        "name": "Cedar birdhouse"
+        "id": "04f5962c65",
+        "name": "Hot honey"
+      },
+      {
+        "id": "25391acf62",
+        "name": "Sourdough loaf"
       }
     ]
   },
@@ -518,7 +651,7 @@
         },
         {
           "name": "category",
-          "label": "Kind (bench, planter, shelf…)",
+          "label": "Kind (bench, planter, shelf\u2026)",
           "type": "text",
           "required": false,
           "options": [],
@@ -582,8 +715,56 @@
         },
         {
           "name": "price",
-          "label": "Sells for (0 if it's not for sale)",
+          "label": "Sells for, each (0 if it's not for sale)",
           "type": "money",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "makes",
+          "label": "One batch makes (how many)",
+          "type": "amount",
+          "required": false,
+          "options": [],
+          "default": 1
+        },
+        {
+          "name": "makes_unit",
+          "label": "Of what (jars, loaves; blank for one-offs)",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "shelf_days",
+          "label": "Keeps for (days; 0 if it keeps)",
+          "type": "amount",
+          "required": false,
+          "options": [],
+          "default": 0
+        },
+        {
+          "name": "net_amount",
+          "label": "Label: net amount (8 oz, 1 loaf 24 oz)",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "allergens",
+          "label": "Label: allergens (Contains: wheat, milk)",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "label_ingredients",
+          "label": "Label: ingredients, heaviest first (blank: from the recipe)",
+          "type": "textarea",
           "required": false,
           "options": [],
           "default": null
@@ -601,37 +782,41 @@
   },
   "recipes": [
     {
-      "id": "63f4e559ee",
-      "name": "Farmhouse Bench",
-      "category": "bench",
+      "id": "a7aacf4857",
+      "name": "Farmhouse bench",
+      "category": "furniture",
       "description": "",
-      "dimensions": "48 x 14 x 18 in",
-      "cut_list": "4 legs 17 1/4\n2 aprons 41\n2 stretchers 11",
+      "dimensions": "",
+      "cut_list": "",
       "tools": "",
-      "steps": [
-        "Cut all pieces",
-        "Drill pocket holes",
-        "Assemble frame",
-        "Attach top",
-        "Sand and stain"
-      ],
+      "steps": [],
       "notes": "",
       "est_hours": 6.0,
       "price": 180.0,
       "price_text": "$180.00",
+      "is_batch": false,
+      "makes_text": "Farmhouse bench",
+      "per_piece_text": "",
+      "mismatched": 0,
+      "shelf_days": 0,
       "rows": [
         {
           "index": 0,
           "name": "2x4 8ft",
           "unit": "board",
           "need": 6.0,
-          "have": 0.0,
-          "short": 6.0,
+          "have": 2.0,
+          "short": 4.0,
           "unit_cost": 3.98,
-          "material_id": "55aa93ddaf",
-          "status": "missing",
+          "material_id": "2d96bc6285",
+          "recipe_text": "6 boards",
+          "have_text": "2 boards",
+          "after": -4.0,
+          "mismatch": false,
+          "status": "short",
           "unit_cost_text": "$3.98",
-          "line_text": "6 board 2x4 8ft"
+          "line_text": "6 board 2x4 8ft",
+          "after_text": "-4 boards"
         },
         {
           "index": 1,
@@ -641,43 +826,40 @@
           "have": 0.0,
           "short": 1.0,
           "unit_cost": 54.98,
-          "material_id": "f21aefe0d3",
+          "material_id": "",
+          "recipe_text": "1 sheet",
+          "have_text": "0 sheets",
+          "after": null,
+          "mismatch": false,
           "status": "missing",
           "unit_cost_text": "$54.98",
-          "line_text": "1 sheet Plywood 3/4"
-        },
-        {
-          "index": 2,
-          "name": "Pocket screws",
-          "unit": "pcs",
-          "need": 24.0,
-          "have": 0.0,
-          "short": 24.0,
-          "unit_cost": 0.25,
-          "material_id": "22ce01a49f",
-          "status": "missing",
-          "unit_cost_text": "$0.25",
-          "line_text": "24 pcs Pocket screws"
+          "line_text": "1 sheet Plywood 3/4",
+          "after_text": ""
         }
       ],
       "ready": false,
-      "short": 3,
+      "short": 2,
       "unpriced": 0,
-      "est_cost_text": "$84.86",
-      "shopping_text": "$84.86",
+      "est_cost_text": "$78.86",
+      "shopping_text": "$70.90",
       "shopping": [
         {
           "index": 0,
           "name": "2x4 8ft",
           "unit": "board",
           "need": 6.0,
-          "have": 0.0,
-          "short": 6.0,
+          "have": 2.0,
+          "short": 4.0,
           "unit_cost": 3.98,
-          "material_id": "55aa93ddaf",
-          "status": "missing",
+          "material_id": "2d96bc6285",
+          "recipe_text": "6 boards",
+          "have_text": "2 boards",
+          "after": -4.0,
+          "mismatch": false,
+          "status": "short",
           "unit_cost_text": "$3.98",
-          "line_text": "6 board 2x4 8ft"
+          "line_text": "6 board 2x4 8ft",
+          "after_text": "-4 boards"
         },
         {
           "index": 1,
@@ -687,26 +869,18 @@
           "have": 0.0,
           "short": 1.0,
           "unit_cost": 54.98,
-          "material_id": "f21aefe0d3",
+          "material_id": "",
+          "recipe_text": "1 sheet",
+          "have_text": "0 sheets",
+          "after": null,
+          "mismatch": false,
           "status": "missing",
           "unit_cost_text": "$54.98",
-          "line_text": "1 sheet Plywood 3/4"
-        },
-        {
-          "index": 2,
-          "name": "Pocket screws",
-          "unit": "pcs",
-          "need": 24.0,
-          "have": 0.0,
-          "short": 24.0,
-          "unit_cost": 0.25,
-          "material_id": "22ce01a49f",
-          "status": "missing",
-          "unit_cost_text": "$0.25",
-          "line_text": "24 pcs Pocket screws"
+          "line_text": "1 sheet Plywood 3/4",
+          "after_text": ""
         }
       ],
-      "shopping_list": "6 board 2x4 8ft (~$23.88)\n1 sheet Plywood 3/4 (~$54.98)\n24 pcs Pocket screws (~$6.00)",
+      "shopping_list": "4 board 2x4 8ft (~$15.92)\n1 sheet Plywood 3/4 (~$54.98)",
       "receive_fields": [
         {
           "name": "q_0",
@@ -714,7 +888,7 @@
           "type": "amount",
           "required": false,
           "options": [],
-          "default": 6.0
+          "default": 4.0
         },
         {
           "name": "c_0",
@@ -722,7 +896,7 @@
           "type": "money",
           "required": false,
           "options": [],
-          "default": 23.88
+          "default": 15.92
         },
         {
           "name": "q_1",
@@ -739,107 +913,971 @@
           "required": false,
           "options": [],
           "default": 54.98
+        }
+      ],
+      "est_profit_text": "$101.14",
+      "est_profit": 101.14,
+      "built": 0,
+      "sold": 0,
+      "actual": {
+        "cost": "",
+        "profit": "",
+        "hours": null,
+        "per_hour": ""
+      },
+      "values": {
+        "name": "Farmhouse bench",
+        "category": "furniture",
+        "description": "",
+        "dimensions": "",
+        "materials": "6 board 2x4 8ft @ 3.98\n1 sheet Plywood 3/4 @ 54.98",
+        "cut_list": "",
+        "tools": "",
+        "steps": "",
+        "est_hours": 6.0,
+        "price": 180.0,
+        "makes": 1.0,
+        "makes_unit": "",
+        "shelf_days": 0,
+        "net_amount": "",
+        "allergens": "",
+        "label_ingredients": "",
+        "notes": ""
+      }
+    },
+    {
+      "id": "3076c0ff53",
+      "name": "Herbal salve",
+      "category": "body care",
+      "description": "",
+      "dimensions": "",
+      "cut_list": "",
+      "tools": "",
+      "steps": [],
+      "notes": "",
+      "est_hours": 0.0,
+      "price": 6.0,
+      "price_text": "$6.00",
+      "is_batch": true,
+      "makes_text": "4 tins",
+      "per_piece_text": "",
+      "mismatched": 1,
+      "shelf_days": 0,
+      "rows": [
+        {
+          "index": 0,
+          "name": "Beeswax",
+          "unit": "cup",
+          "need": 1.0,
+          "have": 4.0,
+          "short": 0.0,
+          "unit_cost": null,
+          "material_id": "485251f40f",
+          "recipe_text": "1 cup",
+          "have_text": "4 oz",
+          "after": null,
+          "mismatch": true,
+          "status": "check",
+          "unit_cost_text": "",
+          "line_text": "1 cup Beeswax",
+          "after_text": ""
         },
         {
-          "name": "q_2",
-          "label": "Pocket screws: how many pcs",
+          "index": 1,
+          "name": "Salve tin",
+          "unit": "tins",
+          "need": 4.0,
+          "have": 0.0,
+          "short": 4.0,
+          "unit_cost": null,
+          "material_id": "",
+          "recipe_text": "4 tins",
+          "have_text": "0 tins",
+          "after": null,
+          "mismatch": false,
+          "status": "missing",
+          "unit_cost_text": "",
+          "line_text": "4 tins Salve tin",
+          "after_text": ""
+        }
+      ],
+      "ready": false,
+      "short": 1,
+      "unpriced": 2,
+      "est_cost_text": "$0.00",
+      "shopping_text": "",
+      "shopping": [
+        {
+          "index": 1,
+          "name": "Salve tin",
+          "unit": "tins",
+          "need": 4.0,
+          "have": 0.0,
+          "short": 4.0,
+          "unit_cost": null,
+          "material_id": "",
+          "recipe_text": "4 tins",
+          "have_text": "0 tins",
+          "after": null,
+          "mismatch": false,
+          "status": "missing",
+          "unit_cost_text": "",
+          "line_text": "4 tins Salve tin",
+          "after_text": ""
+        }
+      ],
+      "shopping_list": "4 tins Salve tin",
+      "receive_fields": [
+        {
+          "name": "q_1",
+          "label": "Salve tin: how many tins",
           "type": "amount",
           "required": false,
           "options": [],
-          "default": 24.0
+          "default": 4.0
         },
         {
-          "name": "c_2",
-          "label": "Pocket screws: what you paid (total)",
+          "name": "c_1",
+          "label": "Salve tin: what you paid (total)",
           "type": "money",
           "required": false,
           "options": [],
-          "default": 6.0
+          "default": null
         }
       ],
-      "est_profit_text": "$95.14",
-      "est_profit": 95.14,
+      "est_profit_text": "$24.00",
+      "est_profit": 24.0,
+      "built": 0,
+      "sold": 0,
+      "actual": {
+        "cost": "",
+        "profit": "",
+        "hours": null,
+        "per_hour": ""
+      },
+      "values": {
+        "name": "Herbal salve",
+        "category": "body care",
+        "description": "",
+        "dimensions": "",
+        "materials": "1 cup Beeswax\n4 tins Salve tin",
+        "cut_list": "",
+        "tools": "",
+        "steps": "",
+        "est_hours": 0.0,
+        "price": 6.0,
+        "makes": 4.0,
+        "makes_unit": "tins",
+        "shelf_days": 0,
+        "net_amount": "2 oz",
+        "allergens": "",
+        "label_ingredients": "",
+        "notes": ""
+      }
+    },
+    {
+      "id": "2286ab89ff",
+      "name": "Hot honey",
+      "category": "pantry",
+      "description": "",
+      "dimensions": "",
+      "cut_list": "",
+      "tools": "",
+      "steps": [
+        "Warm the honey",
+        "Steep the peppers",
+        "Strain and jar"
+      ],
+      "notes": "",
+      "est_hours": 0.0,
+      "price": 8.0,
+      "price_text": "$8.00",
+      "is_batch": true,
+      "makes_text": "6 jars",
+      "per_piece_text": "$2.59",
+      "mismatched": 0,
+      "shelf_days": 0,
+      "rows": [
+        {
+          "index": 0,
+          "name": "Raw honey",
+          "unit": "cups",
+          "need": 2.0,
+          "have": 6.199999999999999,
+          "short": 0.0,
+          "unit_cost": 4.0,
+          "material_id": "4ecd1b4581",
+          "recipe_text": "2 cups",
+          "have_text": "6.2 cups",
+          "after": 4.2,
+          "mismatch": false,
+          "status": "ok",
+          "unit_cost_text": "$4.00",
+          "line_text": "2 cups Raw honey",
+          "after_text": "4.2 cups"
+        },
+        {
+          "index": 1,
+          "name": "Chili peppers",
+          "unit": "",
+          "need": 3.0,
+          "have": 9.0,
+          "short": 0.0,
+          "unit_cost": 0.25,
+          "material_id": "38a0ca92bf",
+          "recipe_text": "3",
+          "have_text": "9",
+          "after": 6.0,
+          "mismatch": false,
+          "status": "ok",
+          "unit_cost_text": "$0.25",
+          "line_text": "3 Chili peppers",
+          "after_text": "6"
+        },
+        {
+          "index": 2,
+          "name": "Garlic",
+          "unit": "cloves",
+          "need": 2.0,
+          "have": 4.0,
+          "short": 0.0,
+          "unit_cost": 0.1,
+          "material_id": "8d3d4370e9",
+          "recipe_text": "2 cloves",
+          "have_text": "4 cloves",
+          "after": 2.0,
+          "mismatch": false,
+          "status": "ok",
+          "unit_cost_text": "$0.10",
+          "line_text": "2 cloves Garlic",
+          "after_text": "2 cloves"
+        },
+        {
+          "index": 3,
+          "name": "Glass jar 8oz",
+          "unit": "",
+          "need": 6.0,
+          "have": 4.0,
+          "short": 2.0,
+          "unit_cost": 1.1,
+          "material_id": "303f4e4d8a",
+          "recipe_text": "6",
+          "have_text": "4",
+          "after": -2.0,
+          "mismatch": false,
+          "status": "short",
+          "unit_cost_text": "$1.10",
+          "line_text": "6 Glass jar 8oz",
+          "after_text": "-2"
+        }
+      ],
+      "ready": false,
+      "short": 1,
+      "unpriced": 0,
+      "est_cost_text": "$15.55",
+      "shopping_text": "$2.20",
+      "shopping": [
+        {
+          "index": 3,
+          "name": "Glass jar 8oz",
+          "unit": "",
+          "need": 6.0,
+          "have": 4.0,
+          "short": 2.0,
+          "unit_cost": 1.1,
+          "material_id": "303f4e4d8a",
+          "recipe_text": "6",
+          "have_text": "4",
+          "after": -2.0,
+          "mismatch": false,
+          "status": "short",
+          "unit_cost_text": "$1.10",
+          "line_text": "6 Glass jar 8oz",
+          "after_text": "-2"
+        }
+      ],
+      "shopping_list": "2 Glass jar 8oz (~$2.20)",
+      "receive_fields": [
+        {
+          "name": "q_3",
+          "label": "Glass jar 8oz: how many",
+          "type": "amount",
+          "required": false,
+          "options": [],
+          "default": 2.0
+        },
+        {
+          "name": "c_3",
+          "label": "Glass jar 8oz: what you paid (total)",
+          "type": "money",
+          "required": false,
+          "options": [],
+          "default": 2.2
+        }
+      ],
+      "est_profit_text": "$32.45",
+      "est_profit": 32.45,
       "built": 1,
       "sold": 1,
       "actual": {
-        "cost": "$84.86",
-        "profit": "$90.14",
-        "hours": 6.5,
-        "per_hour": "$13.87/h"
+        "cost": "$15.55",
+        "profit": "$8.45",
+        "hours": 1.0,
+        "per_hour": "$8.45/h"
       },
       "values": {
-        "name": "Farmhouse Bench",
-        "category": "bench",
+        "name": "Hot honey",
+        "category": "pantry",
         "description": "",
-        "dimensions": "48 x 14 x 18 in",
-        "materials": "6 board 2x4 8ft @ 3.98\n1 sheet Plywood 3/4 @ 54.98\n24 pcs Pocket screws @ 0.25",
-        "cut_list": "4 legs 17 1/4\n2 aprons 41\n2 stretchers 11",
+        "dimensions": "",
+        "materials": "2 cups Raw honey\n3 Chili peppers\n2 cloves Garlic\n6 Glass jar 8oz",
+        "cut_list": "",
         "tools": "",
-        "steps": "Cut all pieces\nDrill pocket holes\nAssemble frame\nAttach top\nSand and stain",
-        "est_hours": 6.0,
-        "price": 180.0,
+        "steps": "Warm the honey\nSteep the peppers\nStrain and jar",
+        "est_hours": 0.0,
+        "price": 8.0,
+        "makes": 6.0,
+        "makes_unit": "jars",
+        "shelf_days": 0,
+        "net_amount": "8 oz",
+        "allergens": "",
+        "label_ingredients": "Honey, dried chili peppers",
+        "notes": ""
+      }
+    },
+    {
+      "id": "cb027ee4d6",
+      "name": "Sourdough loaf",
+      "category": "bread",
+      "description": "",
+      "dimensions": "",
+      "cut_list": "",
+      "tools": "",
+      "steps": [],
+      "notes": "",
+      "est_hours": 0.0,
+      "price": 5.0,
+      "price_text": "$5.00",
+      "is_batch": true,
+      "makes_text": "6 loaves",
+      "per_piece_text": "$0.33",
+      "mismatched": 0,
+      "shelf_days": 3,
+      "rows": [
+        {
+          "index": 0,
+          "name": "Bread flour",
+          "unit": "lb",
+          "need": 3.3069,
+          "have": 13.3862,
+          "short": 0.0,
+          "unit_cost": 0.6,
+          "material_id": "161d2b1c10",
+          "recipe_text": "1500 g",
+          "have_text": "13.39 lb",
+          "after": 10.0793,
+          "mismatch": false,
+          "status": "ok",
+          "unit_cost_text": "$0.60",
+          "line_text": "3.3069 lb Bread flour",
+          "after_text": "10.08 lb"
+        },
+        {
+          "index": 1,
+          "name": "Water",
+          "unit": "g",
+          "need": 1050.0,
+          "have": 0.0,
+          "short": 1050.0,
+          "unit_cost": null,
+          "material_id": "",
+          "recipe_text": "1050 g",
+          "have_text": "0 g",
+          "after": null,
+          "mismatch": false,
+          "status": "missing",
+          "unit_cost_text": "",
+          "line_text": "1050 g Water",
+          "after_text": ""
+        },
+        {
+          "index": 2,
+          "name": "Starter",
+          "unit": "g",
+          "need": 300.0,
+          "have": 0.0,
+          "short": 300.0,
+          "unit_cost": null,
+          "material_id": "",
+          "recipe_text": "300 g",
+          "have_text": "0 g",
+          "after": null,
+          "mismatch": false,
+          "status": "missing",
+          "unit_cost_text": "",
+          "line_text": "300 g Starter",
+          "after_text": ""
+        },
+        {
+          "index": 3,
+          "name": "Salt",
+          "unit": "g",
+          "need": 30.0,
+          "have": 0.0,
+          "short": 30.0,
+          "unit_cost": null,
+          "material_id": "",
+          "recipe_text": "30 g",
+          "have_text": "0 g",
+          "after": null,
+          "mismatch": false,
+          "status": "missing",
+          "unit_cost_text": "",
+          "line_text": "30 g Salt",
+          "after_text": ""
+        }
+      ],
+      "ready": false,
+      "short": 3,
+      "unpriced": 3,
+      "est_cost_text": "$1.98",
+      "shopping_text": "",
+      "shopping": [
+        {
+          "index": 1,
+          "name": "Water",
+          "unit": "g",
+          "need": 1050.0,
+          "have": 0.0,
+          "short": 1050.0,
+          "unit_cost": null,
+          "material_id": "",
+          "recipe_text": "1050 g",
+          "have_text": "0 g",
+          "after": null,
+          "mismatch": false,
+          "status": "missing",
+          "unit_cost_text": "",
+          "line_text": "1050 g Water",
+          "after_text": ""
+        },
+        {
+          "index": 2,
+          "name": "Starter",
+          "unit": "g",
+          "need": 300.0,
+          "have": 0.0,
+          "short": 300.0,
+          "unit_cost": null,
+          "material_id": "",
+          "recipe_text": "300 g",
+          "have_text": "0 g",
+          "after": null,
+          "mismatch": false,
+          "status": "missing",
+          "unit_cost_text": "",
+          "line_text": "300 g Starter",
+          "after_text": ""
+        },
+        {
+          "index": 3,
+          "name": "Salt",
+          "unit": "g",
+          "need": 30.0,
+          "have": 0.0,
+          "short": 30.0,
+          "unit_cost": null,
+          "material_id": "",
+          "recipe_text": "30 g",
+          "have_text": "0 g",
+          "after": null,
+          "mismatch": false,
+          "status": "missing",
+          "unit_cost_text": "",
+          "line_text": "30 g Salt",
+          "after_text": ""
+        }
+      ],
+      "shopping_list": "1050 g Water\n300 g Starter\n30 g Salt",
+      "receive_fields": [
+        {
+          "name": "q_1",
+          "label": "Water: how many g",
+          "type": "amount",
+          "required": false,
+          "options": [],
+          "default": 1050.0
+        },
+        {
+          "name": "c_1",
+          "label": "Water: what you paid (total)",
+          "type": "money",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "q_2",
+          "label": "Starter: how many g",
+          "type": "amount",
+          "required": false,
+          "options": [],
+          "default": 300.0
+        },
+        {
+          "name": "c_2",
+          "label": "Starter: what you paid (total)",
+          "type": "money",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "q_3",
+          "label": "Salt: how many g",
+          "type": "amount",
+          "required": false,
+          "options": [],
+          "default": 30.0
+        },
+        {
+          "name": "c_3",
+          "label": "Salt: what you paid (total)",
+          "type": "money",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ],
+      "est_profit_text": "$28.02",
+      "est_profit": 28.02,
+      "built": 2,
+      "sold": 1,
+      "actual": {
+        "cost": "$1.98",
+        "profit": "$18.02",
+        "hours": 1.0,
+        "per_hour": "$18.02/h"
+      },
+      "values": {
+        "name": "Sourdough loaf",
+        "category": "bread",
+        "description": "",
+        "dimensions": "",
+        "materials": "1500 g Bread flour\n1050 g Water\n300 g Starter\n30 g Salt",
+        "cut_list": "",
+        "tools": "",
+        "steps": "",
+        "est_hours": 0.0,
+        "price": 5.0,
+        "makes": 6.0,
+        "makes_unit": "loaves",
+        "shelf_days": 3,
+        "net_amount": "1 loaf (24 oz)",
+        "allergens": "Contains: wheat",
+        "label_ingredients": "",
         "notes": ""
       }
     }
   ],
   "builds": [
     {
-      "id": "655b021c83",
-      "name": "Farmhouse Bench",
-      "recipe_id": "63f4e559ee",
-      "recipe": "Farmhouse Bench",
+      "id": "a42d2a11f4",
+      "name": "Hot honey",
+      "recipe_id": "2286ab89ff",
+      "recipe": "Hot honey",
       "times": 1,
       "status": "Complete",
       "finished": true,
-      "started": "2026-10-17",
+      "started": "2026-10-21",
       "steps": [
         {
           "index": 0,
-          "text": "Cut all pieces",
-          "done": true
+          "text": "Warm the honey",
+          "done": false
         },
         {
           "index": 1,
-          "text": "Drill pocket holes",
+          "text": "Steep the peppers",
           "done": false
         },
         {
           "index": 2,
-          "text": "Assemble frame",
-          "done": false
-        },
-        {
-          "index": 3,
-          "text": "Attach top",
-          "done": false
-        },
-        {
-          "index": 4,
-          "text": "Sand and stain",
+          "text": "Strain and jar",
           "done": false
         }
       ],
-      "steps_done": 1,
-      "hours": 6.5,
+      "steps_done": 0,
+      "hours": 1.0,
       "photos": [],
       "result": {
-        "sold": 175.0,
-        "materials": 84.86,
+        "sold": 24.0,
+        "materials": 15.55,
         "other": 0,
-        "cost": 84.86,
-        "profit": 90.14,
-        "hours": 6.5,
-        "per_hour": 13.87,
+        "cost": 15.55,
+        "profit": 8.45,
+        "hours": 1.0,
+        "per_hour": 8.45,
         "is_sold": true,
-        "sold_text": "$175.00",
-        "cost_text": "$84.86",
-        "materials_text": "$84.86",
+        "sold_text": "$24.00",
+        "cost_text": "$15.55",
+        "materials_text": "$15.55",
         "other_text": "$0.00",
-        "profit_text": "$90.14",
-        "per_hour_text": "$13.87/h",
+        "profit_text": "$8.45",
+        "per_hour_text": "$8.45/h",
         "after_labor_text": ""
       },
       "in_stock": false
+    },
+    {
+      "id": "b716e9bf28",
+      "name": "Sourdough loaf",
+      "recipe_id": "cb027ee4d6",
+      "recipe": "Sourdough loaf",
+      "times": 1,
+      "status": "Complete",
+      "finished": true,
+      "started": "2026-10-21",
+      "steps": [],
+      "steps_done": 0,
+      "hours": 1.0,
+      "photos": [],
+      "result": {
+        "sold": 20.0,
+        "materials": 1.98,
+        "other": 0,
+        "cost": 1.98,
+        "profit": 18.02,
+        "hours": 1.0,
+        "per_hour": 18.02,
+        "is_sold": true,
+        "sold_text": "$20.00",
+        "cost_text": "$1.98",
+        "materials_text": "$1.98",
+        "other_text": "$0.00",
+        "profit_text": "$18.02",
+        "per_hour_text": "$18.02/h",
+        "after_labor_text": ""
+      },
+      "in_stock": false
+    },
+    {
+      "id": "ace08e03d4",
+      "name": "Sourdough loaf",
+      "recipe_id": "cb027ee4d6",
+      "recipe": "Sourdough loaf",
+      "times": 1,
+      "status": "Complete",
+      "finished": true,
+      "started": "2026-10-21",
+      "steps": [],
+      "steps_done": 0,
+      "hours": 1.0,
+      "photos": [],
+      "result": {
+        "sold": 0,
+        "materials": 1.98,
+        "other": 0,
+        "cost": 1.98,
+        "profit": -1.98,
+        "hours": 1.0,
+        "per_hour": null,
+        "is_sold": false,
+        "sold_text": "$0.00",
+        "cost_text": "$1.98",
+        "materials_text": "$1.98",
+        "other_text": "$0.00",
+        "profit_text": "$-1.98",
+        "per_hour_text": "",
+        "after_labor_text": ""
+      },
+      "in_stock": true
+    },
+    {
+      "id": "d17c5cea22",
+      "name": "Farmhouse bench",
+      "recipe_id": "a7aacf4857",
+      "recipe": "Farmhouse bench",
+      "times": 1,
+      "status": "In Progress",
+      "finished": false,
+      "started": "2026-10-21",
+      "steps": [],
+      "steps_done": 0,
+      "hours": 0.0,
+      "photos": [],
+      "result": {
+        "sold": 0,
+        "materials": 0,
+        "other": 0,
+        "cost": 0,
+        "profit": 0,
+        "hours": 0.0,
+        "per_hour": null,
+        "is_sold": false,
+        "sold_text": "$0.00",
+        "cost_text": "$0.00",
+        "materials_text": "$0.00",
+        "other_text": "$0.00",
+        "profit_text": "$0.00",
+        "per_hour_text": "",
+        "after_labor_text": ""
+      },
+      "in_stock": false
+    }
+  ],
+  "receipts": [],
+  "goods": [
+    {
+      "recipe_id": "cb027ee4d6",
+      "name": "Sourdough loaf",
+      "unit": "loaves",
+      "price": 5.0,
+      "price_text": "$5.00",
+      "on_hand": 8.0,
+      "on_hand_text": "8 loaves",
+      "lots": [
+        {
+          "job_id": "b716e9bf28",
+          "made": "2026-10-19",
+          "sell_by": "2026-10-22",
+          "left": 2.0,
+          "left_text": "2 loaves",
+          "state": "sell first",
+          "days_left": 1,
+          "unit_cost_text": "$0.33",
+          "label": {
+            "name": "Sourdough loaf",
+            "ingredients": "Bread flour, Water, Starter, Salt",
+            "allergens": "Contains: wheat",
+            "net": "1 loaf (24 oz)",
+            "made": "2026-10-19",
+            "business": "Example Homestead",
+            "address": "123 Example Road\nSomewhere, KY 00000",
+            "statement": "This product is home-produced and processed",
+            "ordered": true,
+            "missing": []
+          }
+        },
+        {
+          "job_id": "ace08e03d4",
+          "made": "2026-10-21",
+          "sell_by": "2026-10-24",
+          "left": 6.0,
+          "left_text": "6 loaves",
+          "state": "fresh",
+          "days_left": 3,
+          "unit_cost_text": "$0.33",
+          "label": {
+            "name": "Sourdough loaf",
+            "ingredients": "Bread flour, Water, Starter, Salt",
+            "allergens": "Contains: wheat",
+            "net": "1 loaf (24 oz)",
+            "made": "2026-10-21",
+            "business": "Example Homestead",
+            "address": "123 Example Road\nSomewhere, KY 00000",
+            "statement": "This product is home-produced and processed",
+            "ordered": true,
+            "missing": []
+          }
+        }
+      ],
+      "sell_first": 1,
+      "usual": {
+        "markets": 1,
+        "avg_sold": 4.0,
+        "sold_out": 1,
+        "bring": 5,
+        "text": "usually sells 4 a market, sold out 1 of 1; bring 5"
+      },
+      "label": {
+        "name": "Sourdough loaf",
+        "ingredients": "Bread flour, Water, Starter, Salt",
+        "allergens": "Contains: wheat",
+        "net": "1 loaf (24 oz)",
+        "made": "2026-10-21",
+        "business": "Example Homestead",
+        "address": "123 Example Road\nSomewhere, KY 00000",
+        "statement": "This product is home-produced and processed",
+        "ordered": true,
+        "missing": []
+      }
+    },
+    {
+      "recipe_id": "2286ab89ff",
+      "name": "Hot honey",
+      "unit": "jars",
+      "price": 8.0,
+      "price_text": "$8.00",
+      "on_hand": 3.0,
+      "on_hand_text": "3 jars",
+      "lots": [
+        {
+          "job_id": "a42d2a11f4",
+          "made": "2026-10-21",
+          "sell_by": "",
+          "left": 3.0,
+          "left_text": "3 jars",
+          "state": "keeps",
+          "days_left": null,
+          "unit_cost_text": "$2.59",
+          "label": {
+            "name": "Hot honey",
+            "ingredients": "Honey, dried chili peppers",
+            "allergens": "",
+            "net": "8 oz",
+            "made": "2026-10-21",
+            "business": "Example Homestead",
+            "address": "123 Example Road\nSomewhere, KY 00000",
+            "statement": "This product is home-produced and processed",
+            "ordered": true,
+            "missing": []
+          }
+        }
+      ],
+      "sell_first": 0,
+      "usual": {
+        "markets": 1,
+        "avg_sold": 2.0,
+        "sold_out": 0,
+        "bring": 2,
+        "text": "usually sells 2 a market; bring 2"
+      },
+      "label": {
+        "name": "Hot honey",
+        "ingredients": "Honey, dried chili peppers",
+        "allergens": "",
+        "net": "8 oz",
+        "made": "2026-10-21",
+        "business": "Example Homestead",
+        "address": "123 Example Road\nSomewhere, KY 00000",
+        "statement": "This product is home-produced and processed",
+        "ordered": true,
+        "missing": []
+      }
+    },
+    {
+      "recipe_id": "3076c0ff53",
+      "name": "Herbal salve",
+      "unit": "tins",
+      "price": 6.0,
+      "price_text": "$6.00",
+      "on_hand": 0,
+      "on_hand_text": "0 tins",
+      "lots": [],
+      "sell_first": 0,
+      "usual": null,
+      "label": {
+        "name": "Herbal salve",
+        "ingredients": "Beeswax",
+        "allergens": "",
+        "net": "2 oz",
+        "made": "2026-10-21",
+        "business": "Example Homestead",
+        "address": "123 Example Road\nSomewhere, KY 00000",
+        "statement": "This product is home-produced and processed",
+        "ordered": true,
+        "missing": []
+      }
+    }
+  ],
+  "market": {
+    "id": "4fbae6d33d",
+    "place": "The roadside stand",
+    "date": "2026-10-21",
+    "status": "open",
+    "rows": [
+      {
+        "recipe_id": "2286ab89ff",
+        "brought": 4.0,
+        "sold": 1.0,
+        "revenue": 8.0,
+        "cost": 2.59,
+        "left": 3.0,
+        "name": "Hot honey",
+        "revenue_text": "$8.00"
+      },
+      {
+        "recipe_id": "cb027ee4d6",
+        "brought": 6.0,
+        "sold": 0.0,
+        "revenue": 0.0,
+        "cost": 0.0,
+        "left": 6.0,
+        "name": "Sourdough loaf",
+        "revenue_text": "$0.00"
+      }
+    ],
+    "revenue_text": "$8.00",
+    "cost_text": "$2.59",
+    "profit_text": "$5.41",
+    "profit": 5.41,
+    "sold": 1.0
+  },
+  "markets": [
+    {
+      "id": "3071966817",
+      "place": "Saturday market",
+      "date": "2026-10-18",
+      "status": "closed",
+      "rows": [
+        {
+          "recipe_id": "2286ab89ff",
+          "brought": 4.0,
+          "sold": 2.0,
+          "revenue": 16.0,
+          "cost": 5.18,
+          "left": 2.0,
+          "name": "Hot honey",
+          "revenue_text": "$16.00"
+        },
+        {
+          "recipe_id": "cb027ee4d6",
+          "brought": 4.0,
+          "sold": 4.0,
+          "revenue": 20.0,
+          "cost": 1.32,
+          "left": 0.0,
+          "name": "Sourdough loaf",
+          "revenue_text": "$20.00"
+        }
+      ],
+      "revenue_text": "$36.00",
+      "cost_text": "$6.50",
+      "profit_text": "$29.50",
+      "profit": 29.5,
+      "sold": 6.0
+    }
+  ],
+  "label": {
+    "business": "Example Homestead",
+    "address": "123 Example Road\nSomewhere, KY 00000",
+    "statement": "This product is home-produced and processed"
+  },
+  "label_form": [
+    {
+      "name": "business",
+      "label": "Business name",
+      "type": "text",
+      "required": false,
+      "options": [],
+      "default": null
+    },
+    {
+      "name": "address",
+      "label": "Address (as it goes on the label)",
+      "type": "textarea",
+      "required": false,
+      "options": [],
+      "default": null
+    },
+    {
+      "name": "statement",
+      "label": "Required statement (your state's or county's exact wording)",
+      "type": "textarea",
+      "required": false,
+      "options": [],
+      "default": null
     }
   ]
 }

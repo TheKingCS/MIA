@@ -7,12 +7,16 @@
  * core/craft_actions.py), Jobs, Materials (low ones first), Products
  * (stock, Sell), Parts, and Money (sales and costs). Every button proposes
  * an action. Formatting only.
+ * Goods (DEC-0036, homestead goods; core/web_craft.py goods_section,
+ * core/goods_actions.py): what's made and not sold, batch by batch with its
+ * sell-by, the market day (one tap per sale: the tap is the approval, Undo in
+ * the toast), the day's tally, and labels to print (web/label.html).
  */
 (function () {
   "use strict";
   const { el, act, form } = MIAShell;
   const $ = (id) => document.getElementById(id);
-  const TABS = [["recipes", "Recipes"], ["builds", "Builds"], ["materials", "Materials"], ["products", "Products"],
+  const TABS = [["recipes", "Recipes"], ["goods", "Goods"], ["builds", "Builds"], ["materials", "Materials"], ["products", "Products"],
     ["jobs", "Jobs"], ["parts", "Parts"], ["money", "Money"]];
   let page = null;
   let tab = TABS.some(([t]) => t === location.hash.slice(1)) ? location.hash.slice(1) : "recipes";
@@ -67,7 +71,8 @@
   const TAG = { before: "Before", during: "Progress", after: "After" };
 
   async function startBuild(r) {
-    const v = await form("Build " + r.name, [{ name: "times", label: "How many", type: "int", required: true, options: [], default: 1 }], {});
+    const v = await form((r.is_batch ? "Craft " : "Build ") + r.name,
+      [{ name: "times", label: r.is_batch ? "How many batches (one makes " + r.makes_text + ")" : "How many", type: "int", required: true, options: [], default: 1 }], {});
     if (v && await act({ kind: "craft.start", params: { recipe_id: r.id, times: v.times } })) { tab = "builds"; history.replaceState(null, "", "#builds"); }
   }
   async function bought(r) {
@@ -165,12 +170,18 @@
       onclick: () => { openRecipe = open ? null : r.id; draw(); } },
       el("div", {}, el("h3", {}, r.name), el("p", { class: "dim" }, [r.category, r.dimensions, r.est_hours ? r.est_hours + " h" : null].filter(Boolean).join(" · "))),
       status);
-    const summary = tiles(["Materials", r.est_cost_text + (r.unpriced ? "+" : "")], r.price_text ? ["Sells For", r.price_text] : null,
-      r.est_profit_text ? ["Est. Profit", r.est_profit_text, r.est_profit < 0 ? "bad" : "ok"] : null,
+    const summary = tiles(["Materials", r.est_cost_text + (r.unpriced ? "+" : "")],
+      r.is_batch ? ["Makes", r.makes_text] : null, r.per_piece_text ? ["Each Costs", r.per_piece_text] : null,
+      r.price_text ? [r.is_batch ? "Sells For, Each" : "Sells For", r.price_text] : null,
+      r.est_profit_text ? [r.is_batch ? "Est. Profit, Batch" : "Est. Profit", r.est_profit_text, r.est_profit < 0 ? "bad" : "ok"] : null,
       r.built ? ["Built", String(r.built)] : null);
     if (!open) return el("article", { class: "glass craft-card" }, head, summary);
+    // The resources a craft takes, from what to what (the "system" readout).
     const needs = el("ul", { class: "craft-needs" }, r.rows.map((x) => el("li", { class: x.status },
-      el("span", {}, x.line_text), el("span", { class: "dim" }, x.short ? "have " + x.have + " · need " + x.short + " more" : "✓ have it"))));
+      el("span", {}, x.recipe_text + " " + x.name),
+      el("span", { class: "dim" }, x.mismatch ? "kept in " + (x.have_text || "another unit") + ": can't compare, change one unit"
+        : x.short ? "have " + x.have_text + " · need " + n(x.short) + " more"
+        : x.after_text ? "✓ " + x.have_text + " → " + x.after_text : "✓ have it"))));
     return el("article", { class: "glass craft-card open" }, head, summary,
       r.description ? el("p", {}, r.description) : null,
       el("h4", {}, "What It Needs"), r.rows.length ? needs : el("p", { class: "dim" }, "Edit the recipe to list its materials, one per line."),
@@ -186,7 +197,7 @@
         r.actual.cost ? ["Avg. Cost", r.actual.cost] : null, r.actual.profit ? ["Avg. Profit", r.actual.profit] : null,
         r.actual.per_hour ? ["Per Hour", r.actual.per_hour] : null)] : null,
       r.notes ? el("p", { class: "dim" }, r.notes) : null,
-      buttons(btn("Start Build", "btn-amber", () => startBuild(r)), btn("Edit", "btn-ghost btn-small", () => edit("craft_recipe", r)),
+      buttons(btn(r.is_batch ? "Begin Crafting" : "Start Build", "btn-amber", () => startBuild(r)), btn("Edit", "btn-ghost btn-small", () => edit("craft_recipe", r)),
         btn("Delete", "btn-ghost btn-small", () => del("craft_recipe", r))));
   }
 
@@ -211,10 +222,93 @@
         btn("Add Cost", "btn-ghost btn-small", () => cost(b))));
   }
 
+  // ------------------------------------------------------------ homestead goods (DEC-0036)
+  const FRESH = { fresh: ["Fresh", "chip-ok"], "sell first": ["Sell First", "chip-soon"], past: ["Past Sell-By", "chip-bad"], keeps: ["Keeps", ""] };
+  const num = (name, def) => ({ name, type: "amount", required: false, options: [], default: def });
+
+  const quickSell = (g, q) => act({ kind: "goods.sell", params: { recipe_id: g.recipe_id, quantity: q || 1 } }, { quick: true });
+  async function sellSome(g) {
+    const v = await form("Sold " + g.name, [
+      { name: "quantity", label: "How many" + (g.unit ? " " + g.unit : ""), type: "amount", required: true, options: [], default: 1 },
+      { name: "amount", label: "What they sold for in all (blank: " + (g.price_text || "the price") + " each)", type: "money", required: false, options: [], default: null }], {});
+    if (v) act({ kind: "goods.sell", params: Object.assign({ recipe_id: g.recipe_id }, v) });
+  }
+  async function toss(g, lot) {
+    const v = await form("Toss From The " + day(lot.made) + " Batch", [
+      { name: "quantity", label: "How many (" + lot.left_text + " left)", type: "amount", required: true, options: [], default: lot.left }], {});
+    if (v) act({ kind: "goods.toss", params: { job_id: lot.job_id, quantity: v.quantity } });
+  }
+  async function openMarket() {
+    const fields = [{ name: "place", label: "Where (the stand, the farmers market…)", type: "text", required: false, options: [], default: null }]
+      .concat(page.goods.filter((g) => g.on_hand > 0).map((g) => Object.assign(num("b_" + g.recipe_id, g.usual ? Math.min(g.usual.bring, g.on_hand) : g.on_hand),
+        { label: g.name + ": how many you're taking (" + g.on_hand_text + " on hand" + (g.usual ? ", " + g.usual.text : "") + ")" })));
+    const v = await form("Open A Market Day", fields, {});
+    if (v) act({ kind: "market.start", params: v });
+  }
+  async function closeMarket(m) {
+    const left = m.rows.filter((r) => r.left > 0);
+    const fields = left.map((r) => Object.assign(num("t_" + r.recipe_id, null),
+      { label: r.name + ": " + n(r.left) + " left; how many to toss (blank keeps them in stock)" }));
+    const v = fields.length ? await form("Close The Day", fields, {}) : {};
+    if (v) act({ kind: "market.close", params: Object.assign({ market_id: m.id }, v) });
+  }
+  async function labelSettings() {
+    const v = await form("What Every Label Says", page.label_form, page.label || {});
+    if (v) act({ kind: "goods.label", params: v });
+  }
+  const printLabels = (g, lot) => window.open("label.html?recipe=" + encodeURIComponent(g.recipe_id) + (lot ? "&job=" + encodeURIComponent(lot.job_id) : ""), "_blank");
+
+  function marketPanel() {
+    const m = page.market;
+    if (!m) return section("Market Day", btn("Open Market Day", "btn-amber", openMarket),
+      el("p", { class: "dim" }, "Taking goods to the stand or the market? Open the day, tap what sells, and close it for the tally."));
+    const forSale = page.goods.filter((g) => g.on_hand > 0);
+    return section("Market Day" + (m.place ? " · " + m.place : ""), btn("Close The Day", "btn-amber", () => closeMarket(m)),
+      tiles(["Sold", n(m.sold)], ["Took In", m.revenue_text], ["Profit", m.profit_text, m.profit < 0 ? "bad" : "ok"]),
+      el("div", { class: "market-taps" }, forSale.map((g) => {
+        const today = m.rows.find((r) => r.recipe_id === g.recipe_id);
+        return el("div", { class: "glass market-tap" },
+          el("div", {}, el("strong", {}, g.name), el("div", { class: "dim" },
+            (today ? n(today.sold) + " sold · " : "") + g.on_hand_text + " left" + (g.price_text ? " · " + g.price_text : ""))),
+          buttons(btn("+1 Sold", "btn-green", () => quickSell(g, 1)), btn("Other…", "btn-ghost btn-small", () => sellSome(g))));
+      })),
+      !forSale.length ? el("p", { class: "empty" }, "Nothing left to sell. Close the day for the tally.") : null);
+  }
+
+  function goodsCard(g) {
+    return el("article", { class: "glass craft-card open" },
+      el("div", { class: "craft-head static" },
+        el("div", {}, el("h3", {}, g.name), el("p", { class: "dim" }, [g.on_hand_text + " on hand", g.price_text ? g.price_text + " each" : null,
+          g.usual ? g.usual.text : null].filter(Boolean).join(" · "))),
+        g.sell_first ? chip("Sell First", "chip-soon") : g.on_hand ? chip("In Stock", "chip-ok") : chip("None Made")),
+      g.lots.length ? el("ul", { class: "goods-lots" }, g.lots.map((lot) => el("li", { class: "goods-lot " + lot.state.replace(" ", "-") },
+        el("div", {}, el("strong", {}, lot.left_text), el("span", { class: "dim" }, " · made " + day(lot.made) +
+          (lot.sell_by ? " · sell by " + day(lot.sell_by) : "") + (lot.unit_cost_text ? " · " + lot.unit_cost_text + " each to make" : ""))),
+        chip(...FRESH[lot.state]),
+        buttons(btn("Labels", "btn-ghost btn-small", () => printLabels(g, lot)), btn("Toss", "btn-ghost btn-small", () => toss(g, lot))))))
+        : el("p", { class: "dim" }, "None on hand. Open the recipe and Begin Crafting."),
+      g.on_hand ? buttons(btn("Sold Some", "btn-green", () => sellSome(g))) : null);
+  }
+
+  function pastMarkets() {
+    if (!page.markets.length) return null;
+    return section("Past Market Days", null, el("div", { class: "rows" }, page.markets.map((m) => row(
+      (m.place || "Market day") + " · " + day(m.date),
+      m.rows.filter((r) => r.sold || r.brought).map((r) => r.name + " " + n(r.sold) + (r.brought ? "/" + n(r.brought) : "")).join(", "),
+      [chip(m.revenue_text, "chip-ok")], el("span", { class: "dim" }, "profit " + m.profit_text)))));
+  }
+
   const VIEWS = {
     recipes: () => section("Recipes", btn("Add Recipe", "btn-amber", () => add("craft_recipe", "Add A Recipe")),
       page.recipes.length ? el("div", { class: "craft-grid" }, page.recipes.map(recipeCard))
         : el("p", { class: "empty" }, "Save something you build as a recipe: what it needs, the cut list, the steps and what it sells for. MIA checks your materials and makes the shopping list.")),
+    goods: () => [
+      marketPanel(),
+      section("Goods On Hand", btn("Label Info", "btn-ghost btn-small", labelSettings),
+        page.goods.length ? el("div", { class: "craft-grid" }, page.goods.map(goodsCard))
+          : el("p", { class: "empty" }, "Things you make in batches show here: hot honey, salve, bread. Add a recipe with what one batch makes (12 jars), then Begin Crafting.")),
+      pastMarkets(),
+    ].filter(Boolean),
     builds: () => {
       const active = page.builds.filter((b) => !b.finished), done = page.builds.filter((b) => b.finished);
       return [
@@ -270,11 +364,13 @@
 
   function draw() {
     const c = page.counts;
-    $("strip").replaceChildren(
+    $("strip").replaceChildren(...[
       el("div", { class: "cell ok" }, el("span", { class: "n" }, c.recipes || 0), el("span", { class: "t" }, "Recipes")),
       el("div", { class: "cell soon" }, el("span", { class: "n" }, c.open_jobs), el("span", { class: "t" }, "Building")),
       el("div", { class: "cell " + (c.low ? "bad" : "ok") }, el("span", { class: "n" }, c.low), el("span", { class: "t" }, "Low Materials")),
-    );
+      c.goods ? el("div", { class: "cell " + (c.sell_first ? "soon" : "ok") }, el("span", { class: "n" }, n(c.goods)),
+        el("span", { class: "t" }, c.sell_first ? c.sell_first + " To Sell First" : "Goods On Hand")) : null,
+    ].filter(Boolean));
     $("tabs").hidden = false;
     $("tabs").replaceChildren(...TABS.map(([id, l]) => el("button", { type: "button", role: "tab", "aria-selected": String(id === tab),
       onclick: () => { tab = id; history.replaceState(null, "", "#" + id); draw(); } }, l)));

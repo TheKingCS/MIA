@@ -15,6 +15,10 @@ business loop on top of crafting recipes (core/craft_recipes.py), builds
   workshop ledger; **Start Build** makes the recipe's build and ties the
   payments to it, so the build's profit counts what the customer paid.
 - **Portfolio**: finished builds with their photos, featured ones first.
+- **Market days** (DEC-0036): a day at the stand or the market, with
+  how many of each recipe's goods you took. Its sales are the Ledger's,
+  noted with the day (core/goods.py's market_tag), so the day's tally is
+  read from the books, never kept twice.
 
 A household store (shared between partners), written through
 atomic_write_text so every change can be undone.
@@ -92,6 +96,21 @@ class Order:
     created_at: str = ""
 
 
+@dataclass
+class MarketDay:
+    market_id: str
+    place: str = ""
+    date: str = ""  # YYYY-MM-DD
+    brought: dict = field(default_factory=dict)  # recipe_id → how many you took
+    status: str = "open"  # open | closed
+    notes: str = ""
+    created_at: str = ""
+    closed_at: str = ""
+
+
+LABEL_FIELDS = ("business", "address", "statement")
+
+
 def suggested_price(materials: float, hours: float, rate: float, extras: float, margin: float) -> float:
     """Pure logic. (materials + hours × rate + extras) plus the margin,
     rounded up to a whole dollar."""
@@ -111,6 +130,8 @@ class BusinessBook:
         self.quotes: list[Quote] = []
         self.orders: list[Order] = []
         self.featured: list[str] = []
+        self.markets: list[MarketDay] = []
+        self.label: dict = {}  # DEC-0036: business, address, statement (the person's own words)
         if not self._file.exists():
             return
         try:
@@ -120,6 +141,8 @@ class BusinessBook:
             self.quotes = [pick(Quote, d) for d in raw.get("quotes", [])]
             self.orders = [pick(Order, d) for d in raw.get("orders", [])]
             self.featured = [str(j) for j in raw.get("featured", [])]
+            self.markets = [pick(MarketDay, d) for d in raw.get("markets", [])]
+            self.label = {k: str(v) for k, v in (raw.get("label") or {}).items() if k in LABEL_FIELDS}
         except (json.JSONDecodeError, OSError, TypeError, AttributeError):
             log.exception("business.json unreadable — starting empty.")
             notify_data_corruption(self.context, _FILE)
@@ -131,7 +154,8 @@ class BusinessBook:
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._file, json.dumps({
             "customers": [asdict(c) for c in self.customers], "quotes": [asdict(q) for q in self.quotes],
-            "orders": [asdict(o) for o in self.orders], "featured": self.featured}, indent=2))
+            "orders": [asdict(o) for o in self.orders], "featured": self.featured,
+            "markets": [asdict(m) for m in self.markets], "label": self.label}, indent=2))
 
     # ---------------------------------------------------------------- shared CRUD
 
@@ -242,3 +266,46 @@ class BusinessBook:
             self.featured.insert(0, job_id)
         self._save()
         return job_id in self.featured
+
+    # market days (DEC-0036)
+    def get_market(self, market_id: str) -> Optional[MarketDay]:
+        return self._get(self.markets, "market_id", market_id)
+
+    def open_market(self) -> Optional[MarketDay]:
+        """The market day under way, if one is."""
+        return next((m for m in reversed(self.markets) if m.status == "open"), None)
+
+    def start_market(self, place: str, date: str, brought: dict, notes: str = "") -> MarketDay:
+        if self.open_market() is not None:
+            raise ValueError("A market day is already open: close it first.")
+        m = MarketDay(market_id=uuid.uuid4().hex[:10], place=str(place or "").strip(), date=str(date or _now()[:10]),
+                      brought={str(k): float(v) for k, v in (brought or {}).items() if float(v) > 0},
+                      notes=str(notes or ""), created_at=_now())
+        self.markets.append(m)
+        self._save()
+        return m
+
+    def update_market(self, market_id: str, **fields) -> MarketDay:
+        m = self.get_market(market_id)
+        if m is None:
+            raise ValueError("That market day isn't there anymore.")
+        for name, value in fields.items():
+            if name not in ("place", "date", "brought", "status", "notes", "closed_at"):
+                raise ValueError(f"No field '{name}'.")
+            if name == "status" and value not in ("open", "closed"):
+                raise ValueError("Unknown status.")
+            setattr(m, name, dict(value) if name == "brought" else value)
+        self._save()
+        return m
+
+    def delete_market(self, market_id: str) -> None:
+        self.markets = [m for m in self.markets if m.market_id != market_id]
+        self._save()
+
+    def set_label(self, **fields) -> dict:
+        for name, value in fields.items():
+            if name not in LABEL_FIELDS:
+                raise ValueError(f"No field '{name}'.")
+            self.label[name] = str(value or "").strip()
+        self._save()
+        return dict(self.label)

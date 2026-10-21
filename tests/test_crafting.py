@@ -85,7 +85,7 @@ def test_a_furniture_build_end_to_end(shop):
     assert [m["tag"] for m in media(w, build["id"])] == ["before", "after"]
 
     p = do(w, "craft.finish", job_id=build["id"], hours=6)
-    assert "use 6 board 2x4 8ft, 1 sheet Plywood 3/4, 24 pcs Pocket screws" in p.summary
+    assert "use 2x4 8ft: 6 → 0 boards, Plywood 3/4: 1 → 0 sheets, Pocket screws: 24 → 0" in p.summary
     assert all(m.quantity_on_hand == 0 for m in w.materials.all_materials())  # used exactly what it needed
     product = w.products.get_product(w.craft_recipes.get_recipe(recipe.recipe_id).product_id)
     assert (product.name, product.quantity_in_stock, product.base_price) == ("Farmhouse bench", 1, 180)

@@ -106,9 +106,10 @@ def workshop_page(context, today: Optional[date] = None) -> dict:
                  "listings": [{"platform": li.platform, "price": money(li.price), "status": li.status} for li in p.listings],
                  "values": {f: getattr(p, f) for f in ("name", "base_price", "quantity_in_stock", "description", "notes")}}
                 for p in sorted(stores["products"].all_products(), key=lambda p: p.name.lower())] if stores["products"] else []
-    from core.web_craft import craft_section
+    from core.web_craft import craft_section, goods_section
 
     craft = craft_section(context)
+    goods = goods_section(context, today)
     jobs = []
     if stores["jobs"]:
         material_names = {m["id"]: (m["name"], m["unit"]) for m in materials}
@@ -144,12 +145,15 @@ def workshop_page(context, today: Optional[date] = None) -> dict:
         "money": money_rows[:60], "totals": totals,
         "counts": {"parts": len(parts), "materials": len(materials), "low": sum(1 for m in materials if m["low"]),
                    "products": len(products), "open_jobs": sum(1 for j in jobs if j["status"] in ("Planned", "In Progress"))
-                   + sum(1 for b in craft["builds"] if not b["finished"]), "recipes": len(craft["recipes"])},
+                   + sum(1 for b in craft["builds"] if not b["finished"]), "recipes": len(craft["recipes"]),
+                   "goods": round(sum(g["on_hand"] for g in goods["goods"]), 4),
+                   "sell_first": sum(g["sell_first"] for g in goods["goods"])},
         "picks": {"materials": [{"id": m["id"], "name": m["name"]} for m in materials],
                   "products": [{"id": p["id"], "name": p["name"]} for p in products]},
         "forms": {**{k: v for k, v in _forms().items() if k in ("component", "material", "product", "job", "sale",
                                                                 "shop_expense", "product_sale")}, **craft["forms"]},
         "recipes": craft["recipes"], "builds": craft["builds"], "receipts": craft["receipts"],
+        **goods,
     }
 
 

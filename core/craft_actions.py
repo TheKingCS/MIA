@@ -35,7 +35,14 @@ CRAFT_RECIPE = Record(
         Field("tools", "Tools", "textarea"),
         Field("steps", "Steps, one per line", "textarea", say="steps"),
         Field("est_hours", "About how many hours", "amount", say="hours"),
-        Field("price", "Sells for (0 if it's not for sale)", "money", say="price"),
+        Field("price", "Sells for, each (0 if it's not for sale)", "money", say="price"),
+        Field("makes", "One batch makes (how many)", "amount", default=1, say="batch size", quiet_default=True),
+        Field("makes_unit", "Of what (jars, loaves; blank for one-offs)", "text", say="unit"),
+        Field("shelf_days", "Keeps for (days; 0 if it keeps)", "amount", default=0, say="shelf life", quiet_default=True),
+        Field("net_amount", "Label: net amount (8 oz, 1 loaf 24 oz)", "text", say="net amount"),
+        Field("allergens", "Label: allergens (Contains: wheat, milk)", "text", say="allergens"),
+        Field("label_ingredients", "Label: ingredients, heaviest first (blank: from the recipe)", "textarea",
+              say="label ingredients"),
         Field("notes", "Notes", "textarea"),
     ))
 
@@ -150,9 +157,19 @@ def _start_describe(context, params) -> str:
     recipe = _recipe(context, params)
     times = _times(params)
     materials = getattr(context, "materials", None)
+    from core.craft_recipes import makes_text
+
     short = len(check(recipe, materials.all_materials() if materials else [], times)["shopping"])
+    tail = f" (you're still short {short} {'thing' if short == 1 else 'things'})" if short else ""
+    if _is_batch(recipe):
+        batches = f"{times} batches" if times > 1 else "a batch"
+        return f"Begin crafting {batches} of {recipe.name}: {makes_text(recipe, times)}" + tail
     what = f"{times} × {recipe.name}" if times > 1 else recipe.name
-    return f"Start building {what}" + (f" (you're still short {short} {'thing' if short == 1 else 'things'})" if short else "")
+    return f"Start building {what}" + tail
+
+
+def _is_batch(recipe) -> bool:
+    return bool(getattr(recipe, "makes_unit", "")) or float(getattr(recipe, "makes", 1) or 1) != 1
 
 
 def _start(context, params) -> str:
@@ -162,6 +179,8 @@ def _start(context, params) -> str:
     name = f"{recipe.name} ×{times}" if times > 1 else recipe.name
     job = jobs.add_job(name, description=recipe.description, status="In Progress")
     jobs.update_job(job.job_id, recipe_id=recipe.recipe_id, times=times)
+    if _is_batch(recipe):
+        return f"Crafting {name}. Tick the steps as you go."
     return f"Started {name}. Tick the steps as you go."
 
 
@@ -205,7 +224,7 @@ def _step(context, params) -> str:
 
 
 def _finishing(context, params) -> tuple:
-    from core.craft_recipes import key
+    from core.craft_recipes import uses as recipe_uses
 
     job = _build(context, params)
     if job.status == "Complete":
@@ -213,27 +232,36 @@ def _finishing(context, params) -> tuple:
     recipe = _build_recipe(context, job)
     hours = _num(params, "hours", "Hours")
     materials = _need(context, "materials")
-    by_name = {key(m.name): m for m in materials.all_materials()}
-    uses, missing = [], []
-    for line in recipe.lines:
-        found = by_name.get(key(line.name))
-        (uses.append((found, line.quantity * job.times)) if found is not None else missing.append(line.name))
-    return job, recipe, hours, uses, missing
+    taken = recipe_uses(recipe, materials.all_materials(), job.times)
+    return job, recipe, hours, taken["used"], taken["missing"] + taken["mismatched"]
 
 
 def _finish_describe(context, params) -> str:
+    from core.craft_recipes import makes_text
+    from core.units import amount_text
+
     job, recipe, hours, uses, missing = _finishing(context, params)
-    used = ", ".join(f"{_qty(q)} {m.unit + ' ' if m.unit else ''}{m.name}" for m, q in uses) or "no materials"
+    # The resources it takes, from what to what (the "system" readout, DEC-0036).
+    def readout(m, q) -> str:
+        after = m.quantity_on_hand - q
+        to = amount_text(after, m.unit) if after >= 0 else f"{amount_text(0, m.unit)} ({_qty(round(-after, 2))} short)"
+        return f"{m.name}: {_qty(round(m.quantity_on_hand, 2))} → {to}"
+
+    used = ", ".join(readout(m, q) for m, q in uses) or "no materials"
     bits = [f"Finish {job.name}: use {used}"]
     if hours:
         bits.append(f"{_qty(hours)} hours")
-    bits.append(f"make {job.times} {recipe.name}")
-    note = f" ({', '.join(missing)} not in Materials, so not counted)" if missing else ""
+    bits.append(f"make {makes_text(recipe, job.times)}")
+    note = f" ({', '.join(missing)} not counted)" if missing else ""
     return "; ".join(bits) + note
 
 
 def _finish(context, params) -> str:
+    from datetime import datetime
+
     from core import life_events
+    from core.craft_recipes import makes_count, makes_text
+    from core.gamification import grant_xp
 
     job, recipe, hours, uses, _missing = _finishing(context, params)
     jobs = context.jobs
@@ -244,10 +272,15 @@ def _finish(context, params) -> str:
     if product is None:
         product = products.add_product(recipe.name, description=recipe.description, base_price=recipe.price)
         context.craft_recipes.update_recipe(recipe.recipe_id, product_id=product.product_id)
-    jobs.produce_product(job.job_id, product.product_id, job.times)
-    jobs.update_job(job.job_id, status="Complete", labor_hours=hours or job.labor_hours)
+    jobs.produce_product(job.job_id, product.product_id, makes_count(recipe, job.times))
+    jobs.update_job(job.job_id, status="Complete", labor_hours=hours or job.labor_hours,
+                    finished_at=datetime.now().isoformat(timespec="seconds"))
     life_events.record(jobs, "build_finished", f"Built {job.name}", [f"job:{job.job_id}", f"recipe:{recipe.recipe_id}"],
                        {"hours": hours, "recipe": recipe.name})
+    made = makes_text(recipe, job.times)
+    if _is_batch(recipe):
+        grant_xp(context, 10, "🛠️ Crafted!", f"{made} of {recipe.name}, into stock.")
+        return f"Crafted {made}. They're in stock."
     return f"{job.name} is finished and in stock. Nice work."
 
 

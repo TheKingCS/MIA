@@ -1480,6 +1480,17 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
   border-left: 3px solid rgb(var(--rgb-ok)); background: rgba(var(--rgb-panel-2), 0.6); border-radius: 6px; }
 .craft-needs li.short { border-left-color: rgb(var(--rgb-amber)); }
 .craft-needs li.missing { border-left-color: rgb(var(--rgb-bad)); }
+.craft-needs li.check { border-left-color: rgb(var(--rgb-amber)); border-left-style: dashed; }
+/* Homestead goods (DEC-0036): batches on hand and the market day's taps */
+.goods-lots { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.goods-lot { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding: 6px 8px;
+  border-left: 3px solid rgb(var(--rgb-ok)); background: rgba(var(--rgb-panel-2), 0.6); border-radius: 6px; }
+.goods-lot.sell-first { border-left-color: rgb(var(--rgb-amber)); }
+.goods-lot.past { border-left-color: rgb(var(--rgb-bad)); }
+.goods-lot.keeps { border-left-color: var(--line-strong); }
+.market-taps { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; margin-top: 8px; }
+.market-tap { display: grid; gap: 8px; padding: 10px; border-radius: 10px; }
+.market-tap .btn-green { min-height: 48px; font-size: var(--text-md, 1rem); }
 .craft-list { margin: 0; padding: 8px 10px; white-space: pre-wrap; font-family: var(--font-mono); font-size: var(--text-sm);
   background: rgba(var(--rgb-panel-2), 0.6); border-radius: 8px; border: 1px solid var(--line); }
 .craft-steps { margin: 0; padding-left: 20px; display: grid; gap: 4px; }

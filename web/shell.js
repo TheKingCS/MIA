@@ -72,18 +72,22 @@
     });
   }
 
-  /** Propose → confirm → approve → undo toast. Returns the executed proposal, or null. */
-  async function act(action) {
+  /**
+   * Propose → confirm → approve → undo toast. Returns the executed proposal, or null.
+   * `opts.quick` (a tap at the market stand, DEC-0036): pressing the button is the
+   * approval, so no confirm box; the toast says what was done, with Undo.
+   */
+  async function act(action, opts) {
     if (!action) return null;
     try {
       const proposal = await MIA.propose(action.kind, action.params);
-      if (!(await confirmBox(proposal.summary))) {
+      if (!(opts && opts.quick) && !(await confirmBox(proposal.summary))) {
         MIA.reject(proposal.proposal_id).catch(() => {});
         return null;
       }
       const done = await MIA.approve(proposal.proposal_id);
       if (window.MIASound && done.status === "executed") MIASound.celebrate(done.reward);  // DEC-0028 #11
-      say(done.result || "Done.", done.undoable ? async () => {
+      say((opts && opts.quick ? proposal.summary + "." : done.result) || "Done.", done.undoable ? async () => {
         try { await MIA.undo(done.proposal_id); say("Undone."); refresh(); } catch (e) { say(e.message); }
       } : null);
       refresh();

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Labels — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <style>
+    /* Labels print black on white whatever the theme: they go on jars. */
+    body { background: var(--bg); color: var(--text); margin: 0; padding: 16px; font-family: var(--font); }
+    .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 16px; }
+    .bar label { display: flex; gap: 6px; align-items: center; }
+    .bar input { width: 4.5em; }
+    .note { margin: 0 0 12px; opacity: 0.8; }
+    .note.warn { color: var(--attention); opacity: 1; }
+    .sheet { display: grid; grid-template-columns: repeat(auto-fill, minmax(2.6in, 1fr)); gap: 0.15in; }
+    .label { background: var(--label-paper); color: var(--label-ink); border: 1px dashed var(--label-edge); border-radius: 6px; padding: 0.12in 0.14in;
+      font: 9pt/1.25 Georgia, "Times New Roman", serif; break-inside: avoid; }
+    .label h2 { font-size: 13pt; margin: 0 0 4px; }
+    .label p { margin: 0 0 3px; }
+    .label .statement { font-size: 10pt; font-weight: bold; margin-top: 5px; }
+    .label .small { font-size: 8pt; }
+    @media print {
+      body { background: var(--label-paper); padding: 0; }
+      .bar, .note { display: none; }
+      .label { border-color: var(--label-edge); }
+    }
+  </style>
+</head>
+<body>
+  <!--
+    Labels (claude, 2026-10-21, DEC-0036): one product's label, printed from
+    what the person entered (core/goods.py label(): name, ingredients,
+    allergens, net amount, the batch's made date, the business's name and
+    address, their statement). MIA never says what the law requires: the
+    statement is their own words. web/label.js; formatting only.
+  -->
+  <div class="bar">
+    <a class="btn btn-ghost btn-small" href="workshop.html#goods">← Goods</a>
+    <label>How many <input id="count" type="number" min="1" max="200" value="12"></label>
+    <button type="button" class="btn btn-green" id="print">Print</button>
+  </div>
+  <p class="note" id="note"></p>
+  <div class="sheet" id="sheet"></div>
+  <script src="mia.js"></script>
+  <script src="label.js"></script>
+</body>
+</html>

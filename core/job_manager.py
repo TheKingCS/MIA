@@ -133,6 +133,10 @@ class Job:
     recipe_id: str = ""
     times: int = 1
     steps_done: list[int] = field(default_factory=list)
+    # 2026-10-21 (DEC-0036, homestead goods): when a batch was finished
+    # (its made date, for the sell-by) and how many were tossed (a loss).
+    finished_at: str = ""
+    tossed: float = 0.0
 
     def to_dict(self) -> dict:
         return {
@@ -149,6 +153,8 @@ class Job:
             "recipe_id": self.recipe_id,
             "times": self.times,
             "steps_done": list(self.steps_done),
+            "finished_at": self.finished_at,
+            "tossed": self.tossed,
         }
 
     @staticmethod
@@ -171,6 +177,8 @@ class Job:
             recipe_id=data.get("recipe_id", ""),
             times=int(data.get("times", 1) or 1),
             steps_done=[int(i) for i in data.get("steps_done", [])],
+            finished_at=data.get("finished_at", ""),
+            tossed=float(data.get("tossed", 0) or 0),
         )
 
 

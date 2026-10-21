@@ -27,6 +27,14 @@ Workshop that already exists, never beside it:
   folded in. Receiving materials is cash spent on inventory, so it's not
   counted against a build twice.
 
+Batches (DEC-0036, homestead goods): a recipe can make more than one
+("12 jars" of hot honey, "6 loaves"), and its lines can be in kitchen
+units ("1 cup honey", "500 g flour"). A line is compared with the stock
+in the stock's own unit (core/units.py), so the honey kept in cups and
+the flour kept in pounds still add up; a line that can't convert (cups
+against pounds) says so instead of guessing. `shelf_days` is how long
+one keeps (0: it keeps), for the sell-by on each batch.
+
 The store is a household's (both partners share recipes), and writes
 through atomic_write_text so every change can be undone.
 """
@@ -44,6 +52,8 @@ from typing import Optional
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
 from core.logger import get_logger
+from core.units import WORDS as KITCHEN_UNITS
+from core.units import amount_text, convert
 
 log = get_logger(__name__)
 
@@ -53,7 +63,7 @@ _FILE = "craft_recipes.json"
 UNITS = {"sheet", "sheets", "board", "boards", "ft", "foot", "feet", "in", "inch", "inches", "lb", "lbs", "oz",
          "gal", "gallon", "gallons", "qt", "quart", "box", "boxes", "pack", "packs", "pc", "pcs", "piece", "pieces",
          "bag", "bags", "can", "cans", "tube", "tubes", "roll", "rolls", "yd", "sqft", "set", "sets", "pair", "pairs",
-         "bottle", "bottles", "stick", "sticks", "panel", "panels", "length", "lengths"}
+         "bottle", "bottles", "stick", "sticks", "panel", "panels", "length", "lengths"} | KITCHEN_UNITS
 # "4 board 2x4 8ft @ 3.98": a quantity only when a space follows it ("2x4"
 # alone is a name), an optional "x", then the rest, then an optional "@ price".
 _LINE = re.compile(r"^\s*(?:(?P<qty>\d+/\d+|\d+(?:\.\d+)?)\s+(?:x\s+)?)?(?P<rest>.*?)\s*"
@@ -89,6 +99,9 @@ def parse_lines(text: str) -> list[Line]:
         rest = (m.group("rest") if m else raw).strip()
         unit = ""
         first, _, after = rest.partition(" ")
+        second, _, after_two = after.partition(" ")
+        if first.lower() in ("fl", "fl.") and second.lower().rstrip(".") == "oz" and after_two:
+            unit, rest, after = "fl oz", after_two.strip(), ""
         if after and first.lower().rstrip(".") in UNITS:
             unit, rest = first.lower().rstrip("."), after.strip()
         cost = float(m.group("cost")) if m and m.group("cost") else None
@@ -117,6 +130,14 @@ class CraftRecipe:
     price: float = 0.0  # what one sells for (0: not for sale)
     notes: str = ""
     product_id: str = ""  # the finished-goods product its builds make
+    # DEC-0036 (batches): one build or batch makes this many ("12" "jars"),
+    # keeps this many days (0: it keeps), and its label's parts.
+    makes: float = 1.0
+    makes_unit: str = ""
+    shelf_days: int = 0
+    net_amount: str = ""  # on the label: "8 oz", "1 loaf (24 oz)"
+    allergens: str = ""  # on the label: "Contains: wheat, milk"
+    label_ingredients: str = ""  # on the label, when not the recipe's own lines
     created_at: str = ""
     updated_at: str = ""
 
@@ -195,36 +216,99 @@ class CraftRecipeBook:
                 raise ValueError(f"A recipe has no '{name}'.")
             if name in ("est_hours", "price"):
                 value = max(0.0, float(value or 0))
+            elif name == "makes":
+                value = float(value or 0) or 1.0
+                if value <= 0:
+                    raise ValueError("A recipe makes at least one.")
+            elif name == "shelf_days":
+                value = max(0, int(float(value or 0)))
             setattr(recipe, name, value if value is not None else "")
 
 
 # ---------------------------------------------------------------- the math (pure)
 
 
+def _stock_amount(line: Line, quantity: float, material) -> Optional[float]:
+    """Pure logic. `quantity` of the line in the material's own unit, or
+    None when they can't be compared (cups against pounds)."""
+    if material is None:
+        return quantity
+    return convert(quantity, line.unit, material.unit or "")
+
+
 def check(recipe: CraftRecipe, materials: list, times: int = 1) -> dict:
     """Pure logic. Each line against the inventory: needed, on hand,
     short, and what the short part costs (the material's cost, else the
-    recipe's estimate). `materials` are Material records."""
+    recipe's estimate). `materials` are Material records. Amounts are in
+    the material's unit when it's in stock (converted from the recipe's
+    unit); a line whose unit can't convert is a `mismatch` and counts as
+    neither had nor short."""
     by_name = {key(m.name): m for m in materials}
-    rows, est_total, short_total, unpriced = [], 0.0, 0.0, 0
+    rows, est_total, short_total, unpriced, mismatched = [], 0.0, 0.0, 0, 0
     for i, line in enumerate(recipe.lines):
         material = by_name.get(key(line.name))
-        need = round(line.quantity * max(1, times), 4)
+        recipe_need = round(line.quantity * max(1, times), 4)
+        converted = _stock_amount(line, recipe_need, material)
+        mismatch = converted is None
+        need = round(recipe_need if mismatch else converted, 4)
+        unit = line.unit if (mismatch or material is None) else (material.unit or line.unit)
         have = float(material.quantity_on_hand) if material is not None else 0.0
-        short = round(max(0.0, need - have), 4)
-        price = material.unit_cost if material is not None and material.unit_cost else line.unit_cost
+        short = 0.0 if mismatch else round(max(0.0, need - have), 4)
+        stock_priced = material is not None and bool(material.unit_cost) and not mismatch
+        price = material.unit_cost if stock_priced else line.unit_cost  # else the recipe's estimate, per its unit
         if price is None:
             unpriced += 1
-        cost = need * (price or 0.0)
-        est_total += cost
-        short_total += short * (price or 0.0)
-        rows.append({"index": i, "name": line.name, "unit": line.unit or (material.unit if material else ""),
-                     "need": need, "have": have, "short": short, "unit_cost": price,
+        # A stock price is per the stock's unit; the recipe's own is per the line's.
+        est_total += (need if stock_priced else recipe_need) * (price or 0.0)
+        short_total += (short if stock_priced else (short / need * recipe_need if need else 0.0)) * (price or 0.0)
+        mismatched += 1 if mismatch else 0
+        status = "check" if mismatch else ("ok" if short == 0 else ("short" if material is not None and have > 0 else "missing"))
+        rows.append({"index": i, "name": line.name, "unit": unit, "need": need, "have": have, "short": short,
+                     "unit_cost": price if stock_priced or price is None or need == recipe_need
+                     else round(price * recipe_need / need, 4),
                      "material_id": material.material_id if material is not None else "",
-                     "status": "ok" if short == 0 else ("short" if material is not None and have > 0 else "missing")})
-    return {"times": max(1, times), "rows": rows, "ready": all(r["short"] == 0 for r in rows),
+                     "recipe_text": amount_text(recipe_need, line.unit),
+                     "have_text": amount_text(have, material.unit if material is not None else unit),
+                     "after": round(have - need, 4) if material is not None and not mismatch else None,
+                     "mismatch": mismatch, "status": status})
+    makes = max(float(getattr(recipe, "makes", 1) or 1), 0.0001) * max(1, times)
+    return {"times": max(1, times), "rows": rows, "ready": all(r["short"] == 0 for r in rows) and not mismatched,
             "est_material_cost": round(est_total, 2), "shopping_cost": round(short_total, 2), "unpriced": unpriced,
+            "mismatched": mismatched, "makes": makes,
+            "per_piece": round(est_total / makes, 2) if est_total else 0.0,
             "shopping": [r for r in rows if r["short"] > 0]}
+
+
+def uses(recipe: CraftRecipe, materials: list, times: int = 1) -> dict:
+    """Pure logic. What a batch takes out of stock: (material, amount in
+    its unit) for each line that's in stock and converts; the names of
+    lines not in stock, and of lines whose units can't convert."""
+    by_name = {key(m.name): m for m in materials}
+    used, missing, mismatched = [], [], []
+    for line in recipe.lines:
+        material = by_name.get(key(line.name))
+        if material is None:
+            missing.append(line.name)
+            continue
+        amount = _stock_amount(line, line.quantity * max(1, times), material)
+        if amount is None:
+            mismatched.append(f"{line.name} ({line.unit or 'count'} vs {material.unit or 'count'})")
+        else:
+            used.append((material, round(amount, 4)))
+    return {"used": used, "missing": missing, "mismatched": mismatched}
+
+
+def makes_count(recipe: CraftRecipe, times: int = 1) -> float:
+    return float(getattr(recipe, "makes", 1) or 1) * max(1, times)
+
+
+def makes_text(recipe: CraftRecipe, times: int = 1) -> str:
+    """"24 jars", "2 × Bench": what this many builds or batches make."""
+    count = makes_count(recipe, times)
+    unit = getattr(recipe, "makes_unit", "") or ""
+    if unit:
+        return amount_text(count, unit)
+    return f"{count:g} × {recipe.name}" if count != 1 else recipe.name
 
 
 def average_cost(have: float, old_cost: float, bought: float, paid_each: float) -> float:

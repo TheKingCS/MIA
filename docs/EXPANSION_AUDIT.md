@@ -119,13 +119,13 @@ second backup of the vault.
 |---|---|---|
 | Separate businesses, shared costs | ✅ | Budget `BusinessEntity` (LLCs, sole props), expense/income per entity, auto-tagging, Business Report (per entity and consolidated), business-use share of equipment |
 | Product catalog and stock | ✅ | Products + listings (platforms) |
-| Production batches, finished goods | 🟡 | Jobs make products. Food batches don't exist (§5) |
+| Production batches, finished goods | ✅ 2026-10-21 | DEC-0036: a recipe makes a batch (12 jars), kitchen units convert to the stock's, each batch is stock with a made date and sell-by, sold oldest first, tossed as a loss; market days with the day's tally (`docs/HOMESTEAD_GOODS.md`) |
 | Purchasing | 🟡 | Expenses, receipts, line items. No purchase order |
 | Customer orders, sales | ✅ 2026-10-17 | Orders & Quotes app: orders, payments into the workshop ledger, Start Build from the recipe, delivered (`core/business_book.py`) |
 | Quotes and estimates for custom builds | ✅ 2026-10-17 | A recipe's materials + hours × rate + extras + margin, or a hand price; Draft / Sent / Accepted (→ order) / Declined |
 | Customer history (private) | ✅ 2026-10-17 | Customers (household store, never a child's): their orders and what they've paid |
 | Portfolio, case studies | ✅ 2026-10-17 | Portfolio tab: finished builds with their photos, featured first. Case-study write-ups: later |
-| Legal/safety limits (cottage food, licensing) | ⛔ policy | MIA can hold the person's own notes on their rules. It doesn't give legal advice |
+| Legal/safety limits (cottage food, licensing) | ⛔ policy | MIA prints labels from the person's own words (business, address, their rules' statement, allergens, made date, ingredients heaviest first). It doesn't give legal advice |
 
 ## 7. The business flywheel
 

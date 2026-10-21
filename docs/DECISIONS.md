@@ -632,3 +632,27 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   loses the vault: by design, nobody can get in.
 - Related: core/password_vault.py, web/passwords.*, server/app.py
   (`/api/passwords/*`), core/sync.py (`password_vault.json`)
+
+### DEC-0036: Homestead goods: batches, freshness, market day, labels
+- Status: APPROVED
+- Proposed by: claude, 2026-10-21 (Zac: "the business side ... crafting recipes and inventory management for things like the woodworking business or the homestead bakery") · Approved by: zac, 2026-10-21 ("build the bakery and we will fix later if needed"; sells at a mix of stand, market and orders; Kentucky's home-based processor rules)
+- Decision: the Workshop's recipes grow into anything the household
+  makes in batches (hot honey, salve, sourdough), on the same loop and
+  stores (Materials, Jobs, Products, Ledger), never a second system:
+  a recipe says what one batch makes ("12 jars"); ingredients in kitchen
+  units (g, cup, tsp...) convert to the unit the stock is kept in when
+  they measure the same thing (weight to weight, volume to volume); cost
+  per piece; each finished batch is stock with its made date and a
+  sell-by (the recipe's shelf life), oldest sold first, leftovers tossed
+  as a recorded loss; a market day (take goods, tap what sold on the
+  phone, close the day: revenue, leftovers, profit, XP); labels printed
+  from the person's own business name, address, statement, allergens and
+  net amount, with the batch's date and the ingredients heaviest first.
+  The concept (Zac, 2026-10-21) is an anime "system" running a homestead:
+  MIA shows the resources a craft will use, from what to what, before
+  you begin, and a sale's tally after.
+- Honest limits: MIA prints what the person enters for their own rules
+  and never says a product is legal to sell; it can't convert cups to
+  pounds (no densities), it says so instead.
+- Related: core/craft_recipes.py, core/units.py, core/craft_actions.py,
+  core/web_craft.py, web/workshop.*, docs/HOMESTEAD_GOODS.md
