@@ -1,0 +1,336 @@
+{
+  "available": true,
+  "as_of": "2026-10-21",
+  "flocks": [
+    {
+      "id": "60ce821d99",
+      "name": "The layers",
+      "breed": "Buff Orpington",
+      "hens": 12,
+      "roosters": 0,
+      "started": "2026-04-04",
+      "notes": "",
+      "figures": {
+        "today": 7.0,
+        "week": 65.0,
+        "month": 131.0,
+        "collected": 131.0,
+        "lay_rate": 0.77,
+        "loose": 15.0,
+        "feed_cost_month": 21.5,
+        "feed_per_dozen": 1.97,
+        "feed_per_egg": 0.1642,
+        "used": {
+          "carton": 96.0,
+          "baking": 8.0,
+          "home": 12.0
+        },
+        "feed_per_dozen_text": "$1.97",
+        "feed_month_text": "$21.50",
+        "lay_rate_text": "77%"
+      },
+      "series": [
+        {
+          "date": "2026-10-08",
+          "eggs": 8.0
+        },
+        {
+          "date": "2026-10-09",
+          "eggs": 9.0
+        },
+        {
+          "date": "2026-10-10",
+          "eggs": 10.0
+        },
+        {
+          "date": "2026-10-11",
+          "eggs": 9.0
+        },
+        {
+          "date": "2026-10-12",
+          "eggs": 11.0
+        },
+        {
+          "date": "2026-10-13",
+          "eggs": 10.0
+        },
+        {
+          "date": "2026-10-14",
+          "eggs": 9.0
+        },
+        {
+          "date": "2026-10-15",
+          "eggs": 10.0
+        },
+        {
+          "date": "2026-10-16",
+          "eggs": 8.0
+        },
+        {
+          "date": "2026-10-17",
+          "eggs": 11.0
+        },
+        {
+          "date": "2026-10-18",
+          "eggs": 10.0
+        },
+        {
+          "date": "2026-10-19",
+          "eggs": 9.0
+        },
+        {
+          "date": "2026-10-20",
+          "eggs": 10.0
+        },
+        {
+          "date": "2026-10-21",
+          "eggs": 7.0
+        }
+      ],
+      "good": {
+        "id": "92e9f7f063",
+        "name": "Eggs",
+        "unit": "dozen",
+        "on_hand_text": "5 dozen",
+        "on_hand": 5.0,
+        "price_text": "$5.00",
+        "oldest": {
+          "state": "fresh",
+          "days_left": 21
+        },
+        "oldest_made": "2026-10-21"
+      },
+      "log": [
+        {
+          "id": "b608d6510b",
+          "date": "2026-10-21",
+          "kind": "use",
+          "text": "12 eggs eaten at home",
+          "note": ""
+        },
+        {
+          "id": "8187a6f4e9",
+          "date": "2026-10-21",
+          "kind": "use",
+          "text": "8 eggs into the bakery",
+          "note": ""
+        },
+        {
+          "id": "d525df8fa4",
+          "date": "2026-10-21",
+          "kind": "use",
+          "text": "96 eggs into cartons",
+          "note": ""
+        },
+        {
+          "id": "60bec5c1cb",
+          "date": "2026-10-21",
+          "kind": "eggs",
+          "text": "7 eggs collected",
+          "note": ""
+        },
+        {
+          "id": "0ac7faa171",
+          "date": "2026-10-20",
+          "kind": "eggs",
+          "text": "10 eggs collected",
+          "note": ""
+        },
+        {
+          "id": "264aaa67d2",
+          "date": "2026-10-19",
+          "kind": "eggs",
+          "text": "9 eggs collected",
+          "note": ""
+        },
+        {
+          "id": "b94048768f",
+          "date": "2026-10-18",
+          "kind": "eggs",
+          "text": "10 eggs collected",
+          "note": ""
+        },
+        {
+          "id": "6cdbf1422a",
+          "date": "2026-10-17",
+          "kind": "eggs",
+          "text": "11 eggs collected",
+          "note": ""
+        },
+        {
+          "id": "3b69ff008b",
+          "date": "2026-10-16",
+          "kind": "eggs",
+          "text": "8 eggs collected",
+          "note": ""
+        },
+        {
+          "id": "b1ccc548d1",
+          "date": "2026-10-15",
+          "kind": "eggs",
+          "text": "10 eggs collected",
+          "note": ""
+        },
+        {
+          "id": "686e3a61ba",
+          "date": "2026-10-14",
+          "kind": "eggs",
+          "text": "9 eggs collected",
+          "note": ""
+        },
+        {
+          "id": "872b99c636",
+          "date": "2026-10-13",
+          "kind": "eggs",
+          "text": "10 eggs collected",
+          "note": ""
+        },
+        {
+          "id": "f33d7da6c1",
+          "date": "2026-10-12",
+          "kind": "eggs",
+          "text": "11 eggs collected",
+          "note": ""
+        },
+        {
+          "id": "66340cc8ba",
+          "date": "2026-10-11",
+          "kind": "feed",
+          "text": "feed bought ($21.50)",
+          "note": ""
+        },
+        {
+          "id": "3e5937c769",
+          "date": "2026-10-11",
+          "kind": "eggs",
+          "text": "9 eggs collected",
+          "note": ""
+        },
+        {
+          "id": "4ec03770c1",
+          "date": "2026-10-10",
+          "kind": "eggs",
+          "text": "10 eggs collected",
+          "note": ""
+        },
+        {
+          "id": "d9f432ea7d",
+          "date": "2026-10-09",
+          "kind": "eggs",
+          "text": "9 eggs collected",
+          "note": ""
+        },
+        {
+          "id": "0bef277089",
+          "date": "2026-10-08",
+          "kind": "eggs",
+          "text": "8 eggs collected",
+          "note": ""
+        }
+      ],
+      "values": {
+        "name": "The layers",
+        "breed": "Buff Orpington",
+        "hens": 12,
+        "roosters": 0,
+        "started": "2026-04-04",
+        "egg_recipe_id": "92e9f7f063",
+        "notes": ""
+      }
+    }
+  ],
+  "total": {
+    "hens": 12,
+    "today": 7.0,
+    "week": 65.0,
+    "loose": 15.0
+  },
+  "forms": {
+    "flock": {
+      "noun": "flock",
+      "id_param": "flock_id",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name (the coop, the layers…)",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "breed",
+          "label": "Breed",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "hens",
+          "label": "Hens",
+          "type": "int",
+          "required": false,
+          "options": [],
+          "default": 0
+        },
+        {
+          "name": "roosters",
+          "label": "Roosters",
+          "type": "int",
+          "required": false,
+          "options": [],
+          "default": 0
+        },
+        {
+          "name": "started",
+          "label": "When they came",
+          "type": "date",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "egg_recipe_id",
+          "label": "Cartons go into (a good under Workshop → Recipes)",
+          "type": "pick",
+          "required": false,
+          "options": [
+            "egg_goods"
+          ],
+          "default": null
+        },
+        {
+          "name": "notes",
+          "label": "Notes",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    }
+  },
+  "picks": {
+    "egg_goods": [
+      {
+        "id": "92e9f7f063",
+        "name": "Eggs"
+      }
+    ]
+  },
+  "uses": [
+    {
+      "id": "carton",
+      "label": "into cartons"
+    },
+    {
+      "id": "baking",
+      "label": "into the bakery"
+    },
+    {
+      "id": "home",
+      "label": "eaten at home"
+    }
+  ]
+}

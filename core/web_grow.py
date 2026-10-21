@@ -112,6 +112,10 @@ def grow_page(context, today: Optional[date] = None) -> dict:
             "measures": [{"id": k, "label": v[0], "unit": v[1]} for k, v in MEASURES.items()],
             "counts": {"growing": sum(1 for b in batches if b["status"] == "Growing"), "alerts": len(alerts),
                        "experiments": sum(1 for e in experiments if e["status"] == "Running"), "places": len(places)},
+            # DEC-0037: a harvest can go into goods on hand (never offered to a child: it's selling).
+            "goods": [] if child or getattr(context, "craft_recipes", None) is None else
+            [{"id": r.recipe_id, "name": r.name + (f" ({r.makes_unit})" if r.makes_unit else "")}
+             for r in context.craft_recipes.all_recipes()],
             "picks": {"places": [{"id": p["id"], "name": p["name"]} for p in places],
                       "batches": [{"id": b["id"], "name": b["crop"] + (" (" + b["variety"] + ")" if b["variety"] else "")
                                    + (" · " + b["system"] if b["system"] else "")} for b in batches]},

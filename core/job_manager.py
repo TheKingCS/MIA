@@ -137,6 +137,9 @@ class Job:
     # (its made date, for the sell-by) and how many were tossed (a loss).
     finished_at: str = ""
     tossed: float = 0.0
+    # DEC-0037: what one cost when the batch didn't come from Materials
+    # (eggs cartoned at the feed cost per dozen, a harvest at the batch's cost).
+    cost_each: float = 0.0
 
     def to_dict(self) -> dict:
         return {
@@ -155,6 +158,7 @@ class Job:
             "steps_done": list(self.steps_done),
             "finished_at": self.finished_at,
             "tossed": self.tossed,
+            "cost_each": self.cost_each,
         }
 
     @staticmethod
@@ -179,6 +183,7 @@ class Job:
             steps_done=[int(i) for i in data.get("steps_done", [])],
             finished_at=data.get("finished_at", ""),
             tossed=float(data.get("tossed", 0) or 0),
+            cost_each=float(data.get("cost_each", 0) or 0),
         )
 
 

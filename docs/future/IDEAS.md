@@ -56,6 +56,119 @@ presented as a licensed agent's.
 
 ---
 
+## Homestead business
+
+*Claude's list, 2026-10-21, after homestead goods (DEC-0036); Zac picked
+the first four to build the same day ("start working on chickens,
+microgreens and plant starts, small wood goods, and seasonings and
+spices / dry goods in jars"). Everything stays within Kentucky's rules
+for what a household may sell; check each with the health department.*
+
+### 2. Eggs from your own hens ✅
+
+*Built 2026-10-21 (DEC-0037): see `docs/HOMESTEAD_GOODS.md`.*
+
+*Claude, 2026-10-21; Zac picked it (DEC-0037).* A flock log that turns
+eggs into money you can see: what the hens lay, what their feed costs
+per dozen, cartons into stock for the stand, eggs into the bakery.
+
+**What it would do:** each flock (hens, breed, started); eggs collected
+each day; feed bought; birds added or lost; the lay rate, eggs a week,
+feed cost per dozen; **Carton** puts dozens into goods on hand (with
+their date and sell-by) and **For baking** puts eggs into Materials at
+what they cost you, so the banana bread's cost is real.
+**Builds on:** homestead goods (batches, market day, labels), Materials,
+the game layer (an animal-care skill).
+**Needs from outside:** nothing.
+**Guardrails:** Kentucky has its own rules for selling eggs (storage
+temperature, cartons, labels): MIA holds your notes, never legal advice.
+
+### 3. Microgreens, seedlings and plant starts ✅
+
+*Built 2026-10-21 (DEC-0037): see `docs/HOMESTEAD_GOODS.md`.*
+
+*Claude, 2026-10-21; Zac picked it (DEC-0037).* The greenhouse grows
+something to sell every week: microgreens all year, tomato and pepper
+starts in spring.
+
+**What it would do:** a Grow Lab batch's harvest (or the starts that are
+ready) goes straight into goods on hand, at what the batch cost per
+unit, or into Materials when it's an ingredient (herbs for a spice
+blend). Then the market day sells it like anything else.
+**Builds on:** the Grow Lab (batches, harvests, yield, losses),
+homestead goods.
+**Needs from outside:** nothing.
+**Guardrails:** raw produce and plants aren't cottage food; check
+whether anything you sell needs a nursery or produce permit.
+
+### 4. Small wood goods for the stand ✅
+
+*Built 2026-10-21 (DEC-0037): see `docs/HOMESTEAD_GOODS.md`.*
+
+*Claude, 2026-10-21; Zac picked it (DEC-0037).* Cutting and bread
+boards, trays, planters, birdhouses, signs: sell beside the bread.
+
+**What it would do:** workshop recipes in batches (a run of 10 boards),
+cost and profit each, the market day. Starter recipes to copy and
+change.
+**Builds on:** the Workshop, homestead goods. Nothing new needed.
+**Needs from outside:** nothing (a laser engraver later, for names).
+**Guardrails:** food-contact finishes are the maker's call; MIA keeps
+your notes on them.
+
+### 5. Seasonings, spices and dry goods in jars ✅
+
+*Built 2026-10-21 (DEC-0037): see `docs/HOMESTEAD_GOODS.md`.*
+
+*Claude, 2026-10-21; Zac picked it (DEC-0037).* Dried herbs, spice
+and tea blends, baking mixes in a jar, candy (fudge, brittle, kettle
+corn): on Kentucky's allowed list, shelf-stable, cheap to make.
+
+**What it would do:** recipes in grams so labels order the ingredients
+by themselves; dried herbs from the Grow Lab into Materials; starter
+recipes to copy.
+**Builds on:** homestead goods, the Grow Lab.
+**Needs from outside:** nothing.
+**Guardrails:** labels print the person's own words.
+
+### 6. Beekeeping beyond honey 💡
+
+*Claude, 2026-10-21.* Beeswax candles (not food), comb honey; a hive
+log: inspections, treatments and harvests per hive.
+**Builds on:** Maintenance's assets and schedules, homestead goods.
+
+### 7. Jams and jellies 💡
+
+*Claude, 2026-10-21.* Allowed in Kentucky with standard recipes
+(low-sugar ones may not be); a canning batch log with the lot on each
+jar. **Builds on:** homestead goods.
+
+### 8. Subscriptions: weekly bread, eggs or a veggie box 💡
+
+*Claude, 2026-10-21.* Steady money you know in advance: repeating
+orders, and "what to bake for subscribers this week".
+**Builds on:** Orders & Quotes, homestead goods.
+
+### 9. Classes and experiences 💡
+
+*Claude, 2026-10-21.* Sourdough or woodworking classes, farm tours: a
+booking calendar and a sign-up list per class.
+**Builds on:** the Calendar, customers.
+
+### 10. Seasonal goods 💡
+
+*Claude, 2026-10-21.* Pumpkins and fall decor, Christmas wreaths,
+firewood bundles: a seasonal plan saying when to start each.
+**Builds on:** seasonal questlines, the Calendar, homestead goods.
+
+### 11. Later, bigger 💡
+
+*Claude, 2026-10-21.* A farm stay or campsite (Real Estate's rentals),
+compost and worm castings by the bag, dog treats (Kentucky registers
+these separately).
+
+---
+
 ## Add the next idea here
 
 Copy this shape:

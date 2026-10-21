@@ -659,3 +659,25 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   honey and the like (no infused honey or salves).
 - Related: core/craft_recipes.py, core/units.py, core/craft_actions.py,
   core/web_craft.py, web/workshop.*, docs/HOMESTEAD_GOODS.md
+
+### DEC-0037: Eggs, the greenhouse's harvests, wood goods and dry goods for sale
+- Status: APPROVED
+- Proposed by: claude, 2026-10-21 (`docs/future/IDEAS.md` #2-#5) · Approved by: zac, 2026-10-21 ("start working on chickens, microgreens and plant starts, small wood goods, and seasonings and spices / dry goods in jars")
+- Decision: on homestead goods (DEC-0036), never beside it:
+  - **Into stock** from anywhere that isn't a crafted batch (gathered,
+    harvested, potted up), as a batch with its date and a cost each.
+  - **Chickens**: a flock log (birds, eggs collected each day, feed
+    bought, birds added or lost); lay rate, eggs a week and feed cost per
+    dozen; **Carton** puts dozens into goods on hand at that cost, **For
+    baking** puts eggs into Materials at what they cost, eaten at home is
+    counted too. A web screen of its own (Chickens).
+  - **The greenhouse's harvests**: a Grow Lab harvest (microgreens, the
+    starts that are ready) goes into goods on hand, or into Materials
+    when it's an ingredient (dried herbs for a blend).
+  - **Wood goods and dry goods**: no new machinery; starter recipes to
+    copy (cutting board, planter, spice and herb blends, mixes in a jar)
+    that the person changes to their own.
+- Honest limits: selling eggs and plants has its own rules; MIA keeps the
+  person's notes and never says what's legal.
+- Related: core/goods_actions.py, core/flock.py, core/grow_actions.py,
+  core/goods_starters.py, web/flock.*, docs/HOMESTEAD_GOODS.md

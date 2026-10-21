@@ -66,6 +66,9 @@ APPS: tuple[App, ...] = (
     App("greenhouse", "Greenhouse", "🌱", "Grow food. Grow freedom.", "greenhouse.html",
         "At-a-glance status for garden, greenhouse, and aquaponics assets.", HOME, ("maintenance",),
         "What needs doing in the greenhouse?"),
+    App("flock", "Chickens", "🐔", "Eggs, every day.", "flock.html",
+        "Your flock: eggs collected, the lay rate, feed cost per dozen, and cartons for the stand (DEC-0037).", HOME,
+        (), "How many eggs this week?"),
     App("garage", "Garage", "🚗", "Keep it running. Keep it ready.", "garage.html",
         "At-a-glance status for vehicles and motorized equipment.", HOME, ("maintenance", "ownership"),
         "What's overdue on my vehicles?"),
@@ -165,7 +168,7 @@ APPS: tuple[App, ...] = (
 )
 APPS_BY_ID = {a.module_id: a for a in APPS}
 # Apps that exist only as web screens (no PySide6 module of their own).
-WEB_ONLY = frozenset({"calendar", "reward_shop", "business", "security", "vault", "insurance", "passwords"})
+WEB_ONLY = frozenset({"calendar", "reward_shop", "business", "security", "vault", "insurance", "passwords", "flock"})
 # Apps folded into others (Zac, 2026-10-16): Garage holds vehicles, equipment
 # and tools; Real Estate holds buildings and appliances; the Calendar shows all
 # upkeep. Shown nowhere; the desktop keeps their modules loaded only because

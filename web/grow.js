@@ -35,9 +35,19 @@
     if (v) act({ kind: key + ".edit", params: Object.assign({ [page.forms[key].id_param]: item.id }, v) });
   }
   async function harvest(b) {
-    const v = await form("Harvest " + b.crop, [f("amount", "How much", "amount", { required: true }), f("unit", "Unit (lb, heads, bunches…)", "text", { default: b.harvests[0] ? b.harvests[0].unit : "" }),
-      f("note", "Notes", "text"), f("done", "Was that the last of it?", "choice", { options: ["no", "yes"], default: "no" })], {});
-    if (v) act({ kind: "batch.harvest", params: Object.assign({ batch_id: b.id }, v) });
+    const fields = [f("amount", "How much", "amount", { required: true }), f("unit", "Unit (lb, heads, bunches…)", "text", { default: b.harvests[0] ? b.harvests[0].unit : "" }),
+      f("note", "Notes", "text"), f("done", "Was that the last of it?", "choice", { options: ["no", "yes"], default: "no" })];
+    // DEC-0037: straight into stock: goods to sell (microgreens, starts) or an ingredient (dried herbs).
+    const goods = page.goods || [];
+    if (goods.length) fields.push(f("into", "Also into stock? (goods = to sell, materials = an ingredient)", "choice", { options: ["no", "goods", "materials"], default: "no" }),
+      f("recipe_id", "Goods: which one", "pick", { options: ["goods"], default: goods[0].id }),
+      f("stock_qty", "Goods: how many of them (blank: work it out from the amount)", "amount"),
+      f("material", "Materials: its name (blank: " + b.crop + ")", "text"));
+    const v = await form("Harvest " + b.crop, fields, {}, { goods });
+    if (!v) return;
+    if (v.into !== "goods") { delete v.recipe_id; delete v.stock_qty; }
+    if (v.into === "no") delete v.into;
+    act({ kind: "batch.harvest", params: Object.assign({ batch_id: b.id }, v) });
   }
   async function lost(b) {
     const v = await form("Lost Some " + b.crop, [f("how_many", "How many", "int"), f("why", "Why (if you know)", "text"),

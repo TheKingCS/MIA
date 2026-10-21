@@ -14,6 +14,12 @@ core/actions.py: proposed in plain words, approved, run, undoable.
   each you're taking (`b_<recipe_id>`).
 - `market.close`: the day's tally (sold, left, money, what it cost),
   leftovers you're tossing (`t_<recipe_id>`), and XP for the day.
+- `goods.add`: into stock from anywhere that isn't a crafted batch
+  (DEC-0037: gathered, harvested, potted up), as a batch with its date
+  and what one cost; `add_to_stock()` is what the flock's Carton and the
+  Grow Lab's harvest use too.
+- `craft_recipe.starter`: a starter recipe (core/goods_starters.py) copied
+  into the person's recipes, to change to their own.
 - `goods.label`: what every label says about the business: its name,
   address and the statement the person's own rules require (MIA prints
   what they enter; it never says what the law is).
@@ -142,6 +148,92 @@ def _toss(context, params) -> str:
     if product_id and products is not None and products.get_product(product_id) is not None:
         products.adjust_stock(product_id, -quantity)
     return f"Tossed {quantity:g} of {lot.name}."
+
+
+# ---------------------------------------------------------------- into stock (DEC-0037)
+
+
+def add_to_stock(context, recipe, quantity: float, cost_each: float = 0.0, made: str = "", source: str = ""):
+    """A finished batch of `recipe` that didn't come from Materials: the
+    product made (created the first time), its date and its cost each.
+    Returns the batch (a Job)."""
+    from datetime import datetime
+
+    from core import life_events
+
+    jobs, products = _need(context, "jobs"), _need(context, "products")
+    product = products.get_product(recipe.product_id) if recipe.product_id else None
+    if product is None:
+        product = products.add_product(recipe.name, description=recipe.description, base_price=recipe.price)
+        context.craft_recipes.update_recipe(recipe.recipe_id, product_id=product.product_id)
+    name = f"{recipe.name} ({source})" if source else recipe.name
+    job = jobs.add_job(name, description=recipe.description, status="In Progress")
+    jobs.update_job(job.job_id, recipe_id=recipe.recipe_id)
+    jobs.produce_product(job.job_id, product.product_id, quantity)
+    when = (made or date.today().isoformat())[:10]
+    stamp = datetime.now().isoformat(timespec="seconds")
+    jobs.update_job(job.job_id, status="Complete", cost_each=round(max(0.0, cost_each), 4),
+                    finished_at=stamp if when == stamp[:10] else when + "T12:00:00")
+    life_events.record(jobs, "goods_stocked", f"{_units(recipe, quantity)} of {recipe.name} into stock",
+                       [f"job:{job.job_id}", f"recipe:{recipe.recipe_id}"], {"source": source})
+    return job
+
+
+def _adding(context, params) -> tuple:
+    recipe = _recipe(context, params.get("recipe_id"))
+    quantity = _number(params, "quantity", "How many")
+    if quantity <= 0:
+        raise ActionError("How many are going into stock?")
+    made = str(params.get("made") or "").strip()
+    if made:
+        try:
+            date.fromisoformat(made[:10])
+        except ValueError:
+            raise ActionError("The date has to look like 2026-10-21.") from None
+    return recipe, quantity, _number(params, "cost_each", "What one cost"), made, str(params.get("source") or "").strip()
+
+
+def _add_describe(context, params) -> str:
+    recipe, quantity, cost_each, made, source = _adding(context, params)
+    bits = f"{_units(recipe, quantity)} of {recipe.name} into stock"
+    if source:
+        bits += f" ({source})"
+    if made and made[:10] != date.today().isoformat():
+        bits += f", made {made[:10]}"
+    return bits.capitalize()[0] + bits[1:] + (f", at {_money(cost_each)} each" if cost_each else "")
+
+
+def _add(context, params) -> str:
+    recipe, quantity, cost_each, made, source = _adding(context, params)
+    add_to_stock(context, recipe, quantity, cost_each, made, source)
+    return f"{_units(recipe, quantity)} of {recipe.name} in stock."
+
+
+# ---------------------------------------------------------------- starters (DEC-0037)
+
+
+def _starter(context, params) -> dict:
+    from core.goods_starters import starter_fields
+
+    _need(context, "craft_recipes")
+    try:
+        return starter_fields(str(params.get("starter_id") or ""))
+    except KeyError:
+        raise ActionError("Pick a starter.") from None
+
+
+def _starter_describe(context, params) -> str:
+    fields = _starter(context, params)
+    taken = {r.name.lower() for r in context.craft_recipes.all_recipes()}
+    note = " (you have one by that name already; this is a second)" if fields["name"].lower() in taken else ""
+    return f"Add the starter recipe “{fields['name']}” to your recipes, to change to your own{note}"
+
+
+def _starter_add(context, params) -> str:
+    fields = _starter(context, params)
+    name = fields.pop("name")
+    context.craft_recipes.add_recipe(name, **fields)
+    return f"{name} is in your recipes. Set your price, and change anything to how you make it."
 
 
 # ---------------------------------------------------------------- market days
@@ -298,6 +390,10 @@ def _register() -> None:
         ActionType("market.start", "Open Market Day", {"place": "where", "date": "the day (blank: today)",
                                                        "b_<recipe_id>": "how many you're taking"},
                    _market_start_describe, _market_start),
+        ActionType("goods.add", "Into Stock", {"recipe_id": "the good", "quantity": "how many",
+                                               "cost_each": "what one cost (optional)", "made": "the day (blank: today)",
+                                               "source": "where it came from (optional)"}, _add_describe, _add),
+        ActionType("craft_recipe.starter", "Add", {"starter_id": "the starter"}, _starter_describe, _starter_add),
         ActionType("goods.label", "Save", {"business": "business name", "address": "address", "statement": "required statement"},
                    _label_describe, _label),
         ActionType("market.close", "Close The Day", {"market_id": "the day (blank: the open one)",

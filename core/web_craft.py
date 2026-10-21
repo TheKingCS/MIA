@@ -139,7 +139,7 @@ def goods_section(context, today=None) -> dict:
     ledger = getattr(context, "ledger", None)
     business = getattr(context, "business", None)
     if book is None or jobs is None:
-        return {"goods": [], "market": None, "markets": [], "label": {}, "label_form": LABEL_FORM}
+        return {"goods": [], "market": None, "markets": [], "label": {}, "label_form": LABEL_FORM, "starters": []}
     recipes = {r.recipe_id: r for r in book.all_recipes()}
     sales = ledger.all_revenue() if ledger is not None else []
     settings = dict(business.label) if business is not None else {}
@@ -186,5 +186,8 @@ def goods_section(context, today=None) -> dict:
     open_day = business.open_market() if business is not None else None
     closed = [m for m in markets if m.status == "closed"]
     closed.sort(key=lambda m: (m.date, m.created_at), reverse=True)
+    from core.goods_starters import starter_list
+
     return {"goods": goods, "market": card(open_day) if open_day is not None else None,
-            "markets": [card(m) for m in closed[:8]], "label": settings, "label_form": LABEL_FORM}
+            "markets": [card(m) for m in closed[:8]], "label": settings, "label_form": LABEL_FORM,
+            "starters": starter_list()}

@@ -82,6 +82,9 @@ class Batch:
     loss_note: str = ""
     notes: str = ""
     created_at: str = ""
+    # DEC-0037: how much of `cost` is already on stock it went into (so a
+    # second harvest from the same batch isn't charged the seeds again).
+    stocked_cost: float = 0.0
 
 
 @dataclass

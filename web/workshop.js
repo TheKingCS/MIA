@@ -252,6 +252,12 @@
     const v = fields.length ? await form("Close The Day", fields, {}) : {};
     if (v) act({ kind: "market.close", params: Object.assign({ market_id: m.id }, v) });
   }
+  async function fromStarter() {
+    const list = (page.starters || []).map((s) => ({ id: s.id, name: s.group + ": " + s.name + (s.makes ? " (" + s.makes + ")" : "") }));
+    const v = await form("Start From A Starter Recipe", [{ name: "starter_id", label: "Which one (you change it to your own after)", type: "pick",
+      required: true, options: ["starters"], default: list.length ? list[0].id : null }], {}, { starters: list });
+    if (v) act({ kind: "craft_recipe.starter", params: v });
+  }
   async function labelSettings() {
     const v = await form("What Every Label Says", page.label_form, page.label || {});
     if (v) act({ kind: "goods.label", params: v });
@@ -299,7 +305,8 @@
   }
 
   const VIEWS = {
-    recipes: () => section("Recipes", btn("Add Recipe", "btn-amber", () => add("craft_recipe", "Add A Recipe")),
+    recipes: () => section("Recipes", buttons(btn("Add Recipe", "btn-amber", () => add("craft_recipe", "Add A Recipe")),
+      btn("From A Starter", "btn-ghost btn-small", fromStarter)),
       page.recipes.length ? el("div", { class: "craft-grid" }, page.recipes.map(recipeCard))
         : el("p", { class: "empty" }, "Save something you build as a recipe: what it needs, the cut list, the steps and what it sells for. MIA checks your materials and makes the shopping list.")),
     goods: () => [

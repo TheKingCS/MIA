@@ -54,6 +54,8 @@ and sync with the linked phone; (3) the voices (install.bat again);
 
 - [ ] **Homestead goods (DEC-0036, 2026-10-21):** in MIA (PC or phone) → Workshop → Recipes → Add Recipe: one real thing you make in batches (materials in your own units, "One batch makes", the price each, how many days it keeps). Add its materials under Materials, Begin Crafting, Finish, then the **Goods** tab: Label Info (your business name, address and Kentucky's statement), print a label, and try a market day. Zac's line stays within Kentucky's home-based processor rules (banana bread, cookies, breads, honey; `docs/HOMESTEAD_GOODS.md`). Tell Claude what's clumsy.
 
+- [ ] **Chickens, greenhouse goods and starters (DEC-0037, 2026-10-21):** Workshop → Recipes → **From A Starter** → Eggs (set your price and how many days they keep). Apps → **Chickens** → Add A Flock (pick Eggs for the cartons), tap the eggs in each day, log feed when you buy it, and put a dozen Into Cartons. In the Grow Lab, harvest a batch "Also into stock". Tell Claude what's clumsy.
+
 ### From your phone, now (you're phone-only for the moment)
 
 Everything here works from a phone: the GitHub app (or github.com) for

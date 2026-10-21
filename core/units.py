@@ -50,7 +50,7 @@ _ALIASES = {
 WORDS = set(_MASS) | set(_VOLUME) | set(_COUNT) | {a for a in _ALIASES if a and " " not in a and a not in ("t", "c")} | {
     "clove", "cloves", "jar", "jars", "loaf", "loaves", "stick", "sticks", "pinch", "pinches", "dash", "dashes",
     "slice", "slices", "head", "heads", "bunch", "bunches", "sprig", "sprigs", "tin", "tins", "lid", "lids",
-    "label", "labels", "bulb", "bulbs"}
+    "label", "labels", "bulb", "bulbs", "tray", "trays", "packet", "packets"}
 
 
 def canonical(unit: str) -> str:

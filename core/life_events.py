@@ -76,6 +76,8 @@ TYPES = {
     "mission_missed": "missed days (no points lost)",
     "caught_up": "people caught up with",
     "build_finished": "builds finished",
+    "goods_stocked": "goods into stock",
+    "eggs_collected": "eggs collected",
     "batch_planted": "batches planted",
     "harvest": "harvests",
     "questline_finished": "questlines finished",

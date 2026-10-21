@@ -6,6 +6,9 @@ The grow lab's actions (DEC-0030 phase D, core/grow_lab.py) on the action
 contract: proposed in plain words, approved, run, undoable.
 
 - `batch.add/edit/delete`; `batch.harvest`; `batch.lost`.
+- A harvest can go into stock (DEC-0037): `into` = "goods" (a recipe's
+  goods on hand, `recipe_id`, `stock_qty` in its unit) or "materials" (an
+  ingredient, `material`). It carries the batch's cost the first time.
 - `grow.reading`: a measurement into the Data Logger; the sentence says
   when it's outside the range (MIA only ever warns).
 - `grow.range`: the person's own safe range for a measure in a system.
@@ -64,20 +67,92 @@ def _yes(value) -> bool:
     return str(value).lower() in ("1", "true", "yes", "on")
 
 
+def _into(context, params, b, amount: float, unit: str):
+    """Where a harvest goes besides the record: None, or (kind, target,
+    quantity, cost_each) with kind "goods" (a recipe) or "materials" (a name)."""
+    from core.units import convert
+
+    into = str(params.get("into") or "").strip().lower()
+    if not into or into in ("none", "no"):
+        return None
+    from core.child_accounts import is_child
+
+    if is_child(context):  # a child helps harvest; stock and its money are a grown-up's
+        raise ActionError("Ask a grown-up to put it into stock.")
+    left =max(0.0, float(b.cost or 0) - float(b.stocked_cost or 0))
+    if into == "goods":
+        recipe = _need(context, "craft_recipes").get_recipe(str(params.get("recipe_id") or ""))
+        if recipe is None:
+            raise ActionError("Which good is it? Pick one (add it under Workshop → Recipes first).")
+        qty = _num(params, "stock_qty", "How many", required=False)
+        if not qty:
+            qty = convert(amount, unit, recipe.makes_unit) if recipe.makes_unit else None
+        if not qty:
+            raise ActionError(f"How many {recipe.makes_unit or 'of them'} is that?")
+        return "goods", recipe, qty, round(left / qty, 4) if left else 0.0
+    if into == "materials":
+        name = str(params.get("material") or "").strip() or b.crop
+        return "materials", name, amount, round(left / amount, 4) if left else 0.0
+    raise ActionError("Into goods or materials?")
+
+
 def _harvest_describe(context, params) -> str:
     b = _batch(context, params)
     amount = _num(params, "amount", "How much")
     if not amount:
         raise ActionError("How much was harvested?")
     unit = str(params.get("unit") or "").strip()
-    return f"Harvest {amount:g} {unit + ' ' if unit else ''}of {b.crop}" + (" (the last of it)" if _yes(params.get("done")) else "")
+    text = f"Harvest {amount:g} {unit + ' ' if unit else ''}of {b.crop}" + (" (the last of it)" if _yes(params.get("done")) else "")
+    into = _into(context, params, b, amount, unit)
+    if into is not None:
+        from core.units import amount_text
+
+        kind, target, qty, each = into
+        cost = f" at {_money(each)} each (the batch's cost)" if each else ""
+        if kind == "goods":
+            text += f"; {amount_text(qty, target.makes_unit) if target.makes_unit else f'{qty:g}'} of {target.name} into stock{cost}"
+        else:
+            text += f"; into Materials as {target}{cost}"
+    return text
 
 
 def _harvest(context, params) -> str:
     b = _batch(context, params)
-    _lab(context).harvest(b.batch_id, _num(params, "amount", "How much"), str(params.get("unit") or ""),
-                          str(params.get("note") or ""), _yes(params.get("done")))
-    return f"Harvest of {b.crop} recorded."
+    amount = _num(params, "amount", "How much")
+    unit = str(params.get("unit") or "").strip()
+    into = _into(context, params, b, amount, unit)
+    lab = _lab(context)
+    lab.harvest(b.batch_id, amount, unit, str(params.get("note") or ""), _yes(params.get("done")))
+    if into is None:
+        return f"Harvest of {b.crop} recorded."
+    kind, target, qty, each = into
+    if kind == "goods":
+        from core.goods_actions import add_to_stock
+
+        add_to_stock(context, target, qty, each, source=f"harvest of {b.crop}")
+        where = f"{target.name} in stock"
+    else:
+        from core.craft_recipes import average_cost, key
+
+        materials = _need(context, "materials")
+        found = next((m for m in materials.all_materials() if key(m.name) == key(target)), None)
+        if found is None:
+            materials.add_material(target, unit=unit, unit_cost=each, quantity_on_hand=qty)
+        else:
+            if each:
+                materials.update_material(found.material_id,
+                                          unit_cost=average_cost(found.quantity_on_hand, found.unit_cost, qty, each))
+            materials.adjust_quantity(found.material_id, qty)
+        where = f"{target} in Materials"
+    if each:
+        lab.update_batch(b.batch_id, stocked_cost=round(float(b.cost or 0), 2))
+    return f"Harvest of {b.crop} recorded; {where}."
+
+
+def _money(x: float) -> str:
+    from core.region import money
+
+    return money(x)
 
 
 def _lost_describe(context, params) -> str:
@@ -207,7 +282,9 @@ def _conclude(context, params) -> str:
 def _register() -> None:
     kinds = list(record_kinds(BATCH)) + list(record_kinds(EXPERIMENT)) + [
         ActionType("batch.harvest", "Harvest", {"batch_id": "the batch", "amount": "how much", "unit": "lb, heads…",
-                                                "note": "notes", "done": "the last of it"}, _harvest_describe, _harvest),
+                                                "note": "notes", "done": "the last of it", "into": "goods or materials (optional)",
+                                                "recipe_id": "the good", "stock_qty": "how many of the good",
+                                                "material": "the material's name"}, _harvest_describe, _harvest),
         ActionType("batch.lost", "Lost Some", {"batch_id": "the batch", "how_many": "how many", "why": "why", "all": "all of it"},
                    _lost_describe, _lost),
         ActionType("grow.reading", "Log Reading", {"place": "the tank or bed", "measure": "what", "value": "the reading", "note": "notes"},

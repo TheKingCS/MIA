@@ -374,6 +374,20 @@
           "favorite": false
         },
         {
+          "id": "flock",
+          "name": "Chickens",
+          "icon": "🐔",
+          "tagline": "Eggs, every day.",
+          "description": "Your flock: eggs collected, the lay rate, feed cost per dozen, and cartons for the stand (DEC-0037).",
+          "page": "flock.html",
+          "on_web": true,
+          "shown": true,
+          "can_hide": true,
+          "ask": "How many eggs this week?",
+          "tools": [],
+          "favorite": false
+        },
+        {
           "id": "garage",
           "name": "Garage",
           "icon": "🚗",

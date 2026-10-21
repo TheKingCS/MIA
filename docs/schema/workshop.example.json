@@ -3,7 +3,7 @@
   "as_of": "2026-10-21",
   "parts": [
     {
-      "id": "39b270757e",
+      "id": "a694837991",
       "name": "Hinge",
       "detail": "Hardware \u00b7 2 in",
       "quantity": 12,
@@ -22,7 +22,7 @@
   ],
   "materials": [
     {
-      "id": "b407971f41",
+      "id": "3022d50c14",
       "name": "2x4 8ft",
       "unit": "board",
       "on_hand": 2,
@@ -43,7 +43,7 @@
       }
     },
     {
-      "id": "46d6b1d455",
+      "id": "19e7b12771",
       "name": "Bananas",
       "unit": "",
       "on_hand": 0.0,
@@ -64,7 +64,7 @@
       }
     },
     {
-      "id": "17786f8a6c",
+      "id": "228c0a8e20",
       "name": "Butter",
       "unit": "lb",
       "on_hand": 2.9858000000000002,
@@ -85,7 +85,7 @@
       }
     },
     {
-      "id": "88592cfcfe",
+      "id": "566b84c38e",
       "name": "Chocolate chips",
       "unit": "oz",
       "on_hand": 24,
@@ -106,7 +106,7 @@
       }
     },
     {
-      "id": "d830a7d80a",
+      "id": "32d18dce0e",
       "name": "Eggs",
       "unit": "",
       "on_hand": 10.0,
@@ -127,7 +127,7 @@
       }
     },
     {
-      "id": "78486affa3",
+      "id": "d9a0b285a8",
       "name": "Flour",
       "unit": "lb",
       "on_hand": 17.7954,
@@ -148,7 +148,7 @@
       }
     },
     {
-      "id": "46596b9e6e",
+      "id": "80ee287b09",
       "name": "Glass jar 1lb",
       "unit": "",
       "on_hand": 4.0,
@@ -169,7 +169,7 @@
       }
     },
     {
-      "id": "752de4dc19",
+      "id": "83ba629976",
       "name": "Raw honey",
       "unit": "lb",
       "on_hand": 24.0,
@@ -190,7 +190,7 @@
       }
     },
     {
-      "id": "e85a8e768e",
+      "id": "ec5270b434",
       "name": "Sugar",
       "unit": "lb",
       "on_hand": 6.677199999999999,
@@ -213,7 +213,7 @@
   ],
   "products": [
     {
-      "id": "72b7d15462",
+      "id": "562db0892f",
       "name": "Banana bread",
       "price": "$9.00",
       "stock": 3.0,
@@ -228,7 +228,7 @@
       }
     },
     {
-      "id": "74c5fc559b",
+      "id": "035335fbd6",
       "name": "Raw honey",
       "price": "$12.00",
       "stock": 3.0,
@@ -246,7 +246,7 @@
   "jobs": [],
   "money": [
     {
-      "id": "a71e3176c6",
+      "id": "5cee5ce7a3",
       "kind": "sale",
       "amount": "$24.00",
       "value": 24.0,
@@ -254,7 +254,7 @@
       "date": "2026-10-21"
     },
     {
-      "id": "d2dbaaddef",
+      "id": "78752698cb",
       "kind": "sale",
       "amount": "$9.00",
       "value": 9.0,
@@ -262,7 +262,7 @@
       "date": "2026-10-21"
     },
     {
-      "id": "07d26a525a",
+      "id": "b0fd1edb08",
       "kind": "sale",
       "amount": "$12.00",
       "value": 12.0,
@@ -289,49 +289,49 @@
   "picks": {
     "materials": [
       {
-        "id": "b407971f41",
+        "id": "3022d50c14",
         "name": "2x4 8ft"
       },
       {
-        "id": "46d6b1d455",
+        "id": "19e7b12771",
         "name": "Bananas"
       },
       {
-        "id": "17786f8a6c",
+        "id": "228c0a8e20",
         "name": "Butter"
       },
       {
-        "id": "88592cfcfe",
+        "id": "566b84c38e",
         "name": "Chocolate chips"
       },
       {
-        "id": "d830a7d80a",
+        "id": "32d18dce0e",
         "name": "Eggs"
       },
       {
-        "id": "78486affa3",
+        "id": "d9a0b285a8",
         "name": "Flour"
       },
       {
-        "id": "46596b9e6e",
+        "id": "80ee287b09",
         "name": "Glass jar 1lb"
       },
       {
-        "id": "752de4dc19",
+        "id": "83ba629976",
         "name": "Raw honey"
       },
       {
-        "id": "e85a8e768e",
+        "id": "ec5270b434",
         "name": "Sugar"
       }
     ],
     "products": [
       {
-        "id": "72b7d15462",
+        "id": "562db0892f",
         "name": "Banana bread"
       },
       {
-        "id": "74c5fc559b",
+        "id": "035335fbd6",
         "name": "Raw honey"
       }
     ]
@@ -832,7 +832,7 @@
   },
   "recipes": [
     {
-      "id": "62280267e9",
+      "id": "4a2414b32b",
       "name": "Banana bread",
       "category": "quick bread",
       "description": "",
@@ -858,7 +858,7 @@
           "have": 17.7954,
           "short": 0.0,
           "unit_cost": 0.6,
-          "material_id": "78486affa3",
+          "material_id": "d9a0b285a8",
           "recipe_text": "500 g",
           "have_text": "17.8 lb",
           "after": 16.6931,
@@ -876,7 +876,7 @@
           "have": 0.0,
           "short": 6.0,
           "unit_cost": 0.25,
-          "material_id": "46d6b1d455",
+          "material_id": "19e7b12771",
           "recipe_text": "6",
           "have_text": "0",
           "after": -6.0,
@@ -894,7 +894,7 @@
           "have": 6.677199999999999,
           "short": 0.0,
           "unit_cost": 0.9,
-          "material_id": "e85a8e768e",
+          "material_id": "ec5270b434",
           "recipe_text": "300 g",
           "have_text": "6.68 lb",
           "after": 6.0158,
@@ -912,7 +912,7 @@
           "have": 2.9858000000000002,
           "short": 0.0,
           "unit_cost": 4.5,
-          "material_id": "17786f8a6c",
+          "material_id": "228c0a8e20",
           "recipe_text": "230 g",
           "have_text": "2.99 lb",
           "after": 2.4787,
@@ -930,7 +930,7 @@
           "have": 10.0,
           "short": 0.0,
           "unit_cost": 0.35,
-          "material_id": "d830a7d80a",
+          "material_id": "32d18dce0e",
           "recipe_text": "4",
           "have_text": "10",
           "after": 6.0,
@@ -955,7 +955,7 @@
           "have": 0.0,
           "short": 6.0,
           "unit_cost": 0.25,
-          "material_id": "46d6b1d455",
+          "material_id": "19e7b12771",
           "recipe_text": "6",
           "have_text": "0",
           "after": -6.0,
@@ -1016,7 +1016,7 @@
       }
     },
     {
-      "id": "233ba8cf62",
+      "id": "d9413dec82",
       "name": "Chocolate chip cookies",
       "category": "cookies",
       "description": "",
@@ -1042,7 +1042,7 @@
           "have": 17.7954,
           "short": 0.0,
           "unit_cost": 0.6,
-          "material_id": "78486affa3",
+          "material_id": "d9a0b285a8",
           "recipe_text": "560 g",
           "have_text": "17.8 lb",
           "after": 16.5608,
@@ -1060,7 +1060,7 @@
           "have": 2.9858000000000002,
           "short": 0.0,
           "unit_cost": 4.5,
-          "material_id": "17786f8a6c",
+          "material_id": "228c0a8e20",
           "recipe_text": "450 g",
           "have_text": "2.99 lb",
           "after": 1.9937,
@@ -1078,7 +1078,7 @@
           "have": 6.677199999999999,
           "short": 0.0,
           "unit_cost": 0.9,
-          "material_id": "e85a8e768e",
+          "material_id": "ec5270b434",
           "recipe_text": "400 g",
           "have_text": "6.68 lb",
           "after": 5.7954,
@@ -1096,7 +1096,7 @@
           "have": 24.0,
           "short": 0.0,
           "unit_cost": 0.3,
-          "material_id": "88592cfcfe",
+          "material_id": "566b84c38e",
           "recipe_text": "340 g",
           "have_text": "24 oz",
           "after": 12.0069,
@@ -1146,7 +1146,7 @@
       }
     },
     {
-      "id": "549856c189",
+      "id": "b6e4af92b6",
       "name": "Farmhouse bench",
       "category": "furniture",
       "description": "",
@@ -1172,7 +1172,7 @@
           "have": 2.0,
           "short": 4.0,
           "unit_cost": 3.98,
-          "material_id": "b407971f41",
+          "material_id": "3022d50c14",
           "recipe_text": "6 boards",
           "have_text": "2 boards",
           "after": -4.0,
@@ -1215,7 +1215,7 @@
           "have": 2.0,
           "short": 4.0,
           "unit_cost": 3.98,
-          "material_id": "b407971f41",
+          "material_id": "3022d50c14",
           "recipe_text": "6 boards",
           "have_text": "2 boards",
           "after": -4.0,
@@ -1310,7 +1310,7 @@
       }
     },
     {
-      "id": "70af0a970a",
+      "id": "463e44a48b",
       "name": "Raw honey",
       "category": "honey",
       "description": "",
@@ -1340,7 +1340,7 @@
           "have": 24.0,
           "short": 0.0,
           "unit_cost": 6.0,
-          "material_id": "752de4dc19",
+          "material_id": "83ba629976",
           "recipe_text": "6 lb",
           "have_text": "24 lb",
           "after": 18.0,
@@ -1358,7 +1358,7 @@
           "have": 4.0,
           "short": 2.0,
           "unit_cost": 1.1,
-          "material_id": "46596b9e6e",
+          "material_id": "80ee287b09",
           "recipe_text": "6",
           "have_text": "4",
           "after": -2.0,
@@ -1383,7 +1383,7 @@
           "have": 4.0,
           "short": 2.0,
           "unit_cost": 1.1,
-          "material_id": "46596b9e6e",
+          "material_id": "80ee287b09",
           "recipe_text": "6",
           "have_text": "4",
           "after": -2.0,
@@ -1446,9 +1446,9 @@
   ],
   "builds": [
     {
-      "id": "f0b1f64912",
+      "id": "e22f762170",
       "name": "Raw honey",
-      "recipe_id": "70af0a970a",
+      "recipe_id": "463e44a48b",
       "recipe": "Raw honey",
       "times": 1,
       "status": "Complete",
@@ -1494,9 +1494,9 @@
       "in_stock": false
     },
     {
-      "id": "b87f3839e9",
+      "id": "93446a77c6",
       "name": "Banana bread",
-      "recipe_id": "62280267e9",
+      "recipe_id": "4a2414b32b",
       "recipe": "Banana bread",
       "times": 1,
       "status": "Complete",
@@ -1526,9 +1526,9 @@
       "in_stock": false
     },
     {
-      "id": "7f73c6597b",
+      "id": "4497b09ad6",
       "name": "Banana bread",
-      "recipe_id": "62280267e9",
+      "recipe_id": "4a2414b32b",
       "recipe": "Banana bread",
       "times": 1,
       "status": "Complete",
@@ -1558,9 +1558,9 @@
       "in_stock": true
     },
     {
-      "id": "230ddf33f5",
+      "id": "a21b01b568",
       "name": "Farmhouse bench",
-      "recipe_id": "549856c189",
+      "recipe_id": "b6e4af92b6",
       "recipe": "Farmhouse bench",
       "times": 1,
       "status": "In Progress",
@@ -1593,7 +1593,7 @@
   "receipts": [],
   "goods": [
     {
-      "recipe_id": "62280267e9",
+      "recipe_id": "4a2414b32b",
       "name": "Banana bread",
       "unit": "loaves",
       "price": 9.0,
@@ -1602,7 +1602,7 @@
       "on_hand_text": "3 loaves",
       "lots": [
         {
-          "job_id": "b87f3839e9",
+          "job_id": "93446a77c6",
           "made": "2026-10-18",
           "sell_by": "2026-10-22",
           "left": 1.0,
@@ -1624,7 +1624,7 @@
           }
         },
         {
-          "job_id": "7f73c6597b",
+          "job_id": "4497b09ad6",
           "made": "2026-10-21",
           "sell_by": "2026-10-25",
           "left": 2.0,
@@ -1668,7 +1668,7 @@
       }
     },
     {
-      "recipe_id": "70af0a970a",
+      "recipe_id": "463e44a48b",
       "name": "Raw honey",
       "unit": "jars",
       "price": 12.0,
@@ -1677,7 +1677,7 @@
       "on_hand_text": "3 jars",
       "lots": [
         {
-          "job_id": "f0b1f64912",
+          "job_id": "e22f762170",
           "made": "2026-10-21",
           "sell_by": "",
           "left": 3.0,
@@ -1721,7 +1721,7 @@
       }
     },
     {
-      "recipe_id": "233ba8cf62",
+      "recipe_id": "d9413dec82",
       "name": "Chocolate chip cookies",
       "unit": "dozen",
       "price": 6.0,
@@ -1746,13 +1746,13 @@
     }
   ],
   "market": {
-    "id": "98b7f52679",
+    "id": "fccceaed81",
     "place": "The roadside stand",
     "date": "2026-10-21",
     "status": "open",
     "rows": [
       {
-        "recipe_id": "70af0a970a",
+        "recipe_id": "463e44a48b",
         "brought": 4.0,
         "sold": 1.0,
         "revenue": 12.0,
@@ -1762,7 +1762,7 @@
         "revenue_text": "$12.00"
       },
       {
-        "recipe_id": "62280267e9",
+        "recipe_id": "4a2414b32b",
         "brought": 3.0,
         "sold": 0.0,
         "revenue": 0.0,
@@ -1780,13 +1780,13 @@
   },
   "markets": [
     {
-      "id": "3004884ca3",
+      "id": "11a896fabd",
       "place": "Saturday market",
       "date": "2026-10-18",
       "status": "closed",
       "rows": [
         {
-          "recipe_id": "70af0a970a",
+          "recipe_id": "463e44a48b",
           "brought": 3.0,
           "sold": 2.0,
           "revenue": 24.0,
@@ -1796,7 +1796,7 @@
           "revenue_text": "$24.00"
         },
         {
-          "recipe_id": "62280267e9",
+          "recipe_id": "4a2414b32b",
           "brought": 1.0,
           "sold": 1.0,
           "revenue": 9.0,
@@ -1842,6 +1842,104 @@
       "required": false,
       "options": [],
       "default": null
+    }
+  ],
+  "starters": [
+    {
+      "id": "cutting_board",
+      "name": "Cutting board",
+      "group": "Wood goods",
+      "makes": "2 boards"
+    },
+    {
+      "id": "bread_board",
+      "name": "Bread board with handle",
+      "group": "Wood goods",
+      "makes": "2 boards"
+    },
+    {
+      "id": "planter_box",
+      "name": "Cedar planter box",
+      "group": "Wood goods",
+      "makes": "1 planters"
+    },
+    {
+      "id": "birdhouse",
+      "name": "Birdhouse",
+      "group": "Wood goods",
+      "makes": "4 birdhouses"
+    },
+    {
+      "id": "wood_sign",
+      "name": "Wooden sign",
+      "group": "Wood goods",
+      "makes": "1 signs"
+    },
+    {
+      "id": "taco_seasoning",
+      "name": "Taco seasoning",
+      "group": "Seasonings & dry goods",
+      "makes": "6 jars"
+    },
+    {
+      "id": "herb_blend",
+      "name": "Italian herb blend",
+      "group": "Seasonings & dry goods",
+      "makes": "6 jars"
+    },
+    {
+      "id": "tea_blend",
+      "name": "Chamomile mint tea",
+      "group": "Seasonings & dry goods",
+      "makes": "6 jars"
+    },
+    {
+      "id": "cookie_mix_jar",
+      "name": "Cookie mix in a jar",
+      "group": "Seasonings & dry goods",
+      "makes": "4 jars"
+    },
+    {
+      "id": "brownie_mix_jar",
+      "name": "Brownie mix in a jar",
+      "group": "Seasonings & dry goods",
+      "makes": "4 jars"
+    },
+    {
+      "id": "kettle_corn",
+      "name": "Kettle corn",
+      "group": "Seasonings & dry goods",
+      "makes": "10 bags"
+    },
+    {
+      "id": "banana_bread",
+      "name": "Banana bread",
+      "group": "Baked goods",
+      "makes": "2 loaves"
+    },
+    {
+      "id": "choc_chip_cookies",
+      "name": "Chocolate chip cookies",
+      "group": "Baked goods",
+      "makes": "4 dozen"
+    },
+    {
+      "id": "eggs",
+      "name": "Eggs",
+      "group": "From the coop & greenhouse",
+      "makes": "1 dozen"
+    },
+    {
+      "id": "microgreens",
+      "name": "Microgreens",
+      "group": "From the coop & greenhouse",
+      "makes": "8 clamshells"
+    },
+    {
+      "id": "tomato_starts",
+      "name": "Tomato starts",
+      "group": "From the coop & greenhouse",
+      "makes": "36 pots"
     }
   ]
 }

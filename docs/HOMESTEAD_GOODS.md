@@ -40,6 +40,32 @@ Crafting → goods on hand → market day → the day's tally**. Built
    recipe's lines aren't all weights (MIA can only order by weight or
    volume), and leaves out packaging.
 
+## Chickens, the greenhouse, wood goods, dry goods (DEC-0037)
+
+- **Chickens** (Apps → Chickens): add your flock (hens, breed, when they
+  came). Log eggs with one tap (+1 … +12); the screen shows eggs today
+  and this week, the lay rate, loose eggs and two weeks as bars. **Bought
+  Feed** (pounds and cost; also a cost in the business's books) gives the
+  feed cost per dozen over the last 30 days. Loose eggs go **Into
+  Cartons** (dozens into goods on hand at the feed cost; first add an
+  "Eggs" recipe from the starters and pick it on the flock), **For
+  Baking** (into Materials as Eggs at the feed cost each, so the banana
+  bread's cost includes them) or **Eaten At Home**. **Hens Came Or
+  Went** keeps the count. Any log line can be taken back.
+- **The greenhouse**: Grow Lab → a batch → **Harvest** → "Also into
+  stock?": **goods** (microgreens, starts that are ready: how many
+  clamshells or pots) or **materials** (dried herbs for a blend). The
+  first time, it carries the batch's cost (seed, trays); later cuts
+  don't pay for the seed again.
+- **Into stock by hand**: anything else that isn't crafted (a flat of
+  starts you potted up) goes in with its date and what one cost.
+- **Starter recipes** (Workshop → Recipes → **From A Starter**): cutting
+  board, bread board, cedar planter, birdhouse, wooden sign, taco
+  seasoning, Italian herb blend, chamomile mint tea, cookie and brownie
+  mix in a jar, kettle corn, banana bread, chocolate chip cookies, eggs,
+  microgreens, tomato starts. Each is a starting point with no price:
+  set yours and change it to how you make it.
+
 ## Kentucky notes (Zac, 2026-10-21; not legal advice)
 
 What we found when building this, to check with the health department

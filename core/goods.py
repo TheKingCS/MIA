@@ -70,9 +70,10 @@ def lots(jobs: list, recipes: dict, sales: list, include_empty: bool = False) ->
         made_day = _day(made)
         sell_by = (made_day + timedelta(days=shelf)).isoformat() if shelf and made_day else ""
         materials = sum(e.quantity_used * (e.unit_cost or 0.0) for e in job.material_consumption)
+        each = materials / produced if materials else float(getattr(job, "cost_each", 0) or 0)
         lot = Lot(job_id=job.job_id, recipe_id=job.recipe_id, name=recipe.name if recipe is not None else job.name,
                   made=made, sell_by=sell_by, produced=produced, sold=sold_by_job.get(job.job_id, 0.0),
-                  tossed=float(job.tossed or 0), unit_cost=round(materials / produced, 4))
+                  tossed=float(job.tossed or 0), unit_cost=round(each, 4))
         if include_empty or lot.left > 0:
             out.append(lot)
     return sorted(out, key=lambda lot: (lot.made, lot.job_id))

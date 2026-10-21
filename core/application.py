@@ -341,6 +341,9 @@ class MIAApplication:
         from core.insurance import InsuranceBook
 
         self.context.insurance = InsuranceBook(self.context)  # the insurance check-up (DEC-0034)
+        from core.flock import FlockBook
+
+        self.context.flock = FlockBook(self.context)  # chickens (DEC-0037)
         self.context.reference_library = ReferenceLibraryManager(self.context)
         self.context.llm = LLMManager(self.context)
         # Online/offline awareness — first check starts now in the

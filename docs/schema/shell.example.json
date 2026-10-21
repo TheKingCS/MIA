@@ -32,6 +32,13 @@
       "page": "greenhouse.html"
     },
     {
+      "id": "flock",
+      "name": "Chickens",
+      "icon": "🐔",
+      "tagline": "Eggs, every day.",
+      "page": "flock.html"
+    },
+    {
       "id": "garage",
       "name": "Garage",
       "icon": "🚗",

@@ -241,6 +241,8 @@
     party: () => read("/api/party", "party"),
     places: () => read("/api/places", "places"),
     security: () => read("/api/security", "security"),
+    // Chickens (core/web_flock.py, DEC-0037): eggs, lay rate, feed cost per dozen, cartons.
+    flock: () => read("/api/flock", "flock"),
     // The insurance check-up (core/insurance.py): policies, checks, quotes side by side.
     insurance: () => read("/api/insurance", "insurance"),
     // Passwords (core/password_vault.py): never through actions; a password comes back only from reveal.
