@@ -4,6 +4,8 @@
  * fund is, progress today / this week / this month, what a shift buys, how
  * the fund adds up (each number with where it came from), what moves the
  * day, the builds, six months of history and the person's own reasons.
+ * H-0067: the estimate as a range, the green-week streak, which accounts
+ * are the fund, builds in the person's order with the next one marked.
  * Formatting only: every number is the engine's.
  */
 (function () {
@@ -63,8 +65,10 @@
   function hero() {
     const p = page.plan, t = p.text;
     const big = p.ready ? "You're there." : p.days != null ? "~" + p.days.toLocaleString() + " days" : "—";
+    const r = page.range || {};
     const sub = p.ready ? "The fund is full. Time to plan the jump."
-      : p.date ? "Estimated " + longDay(p.date) + " at your pace (" + (t.pace || "") + " a month)"
+      : r.earliest ? "Between " + longDay(r.earliest) + " and " + (r.latest ? longDay(r.latest) : "later") +
+        " at your pace (" + (t.pace || "") + " a month). An estimate, not a promise."
       : p.why_no_date;
     return el("section", { class: "glass free-hero" },
       el("div", { class: "free-ring-wrap" }, ring(p.progress_pct),
@@ -76,6 +80,17 @@
         p.covered_pct != null ? el("div", { class: "free-cover" },
           el("div", { class: "free-cover-bar" }, el("span", { style: "width:" + Math.min(100, p.covered_pct) + "%" })),
           el("span", { class: "dim" }, "The homestead covers " + p.covered_pct + "% of a month")) : null));
+  }
+
+  function streakLine() {
+    const weeks = page.weeks || [];
+    if (!weeks.length) return null;
+    const last = weeks[weeks.length - 1];
+    const text = page.streak ? page.streak + (page.streak === 1 ? " green week" : " green weeks in a row") +
+      ". Keep it going." : last < 0 ? "Last week went red. It happens; this week is a fresh one." : "Last week was flat.";
+    return el("div", { class: "free-streak" },
+      el("span", { class: "free-weeks", "aria-hidden": "true" }, weeks.map((w) => el("span", { class: w > 0 ? "g" : w < 0 ? "r" : "" }))),
+      el("span", { class: "dim" }, text));
   }
 
   function periodTiles() {
@@ -112,14 +127,32 @@
         el("p", { class: "dim" }, "+" + lv.amount_text + " " + lv.what + " → ", el("strong", {}, lv.days_sooner + " days sooner")))) : null);
   }
 
+  const move = (b, direction) => act({ kind: "freedom.build_move", params: { project_id: b.id, direction } }, { quick: true });
   function buildsSection() {
+    const nextId = page.next_build && page.next_build.id;
     return section("The Builds", btn("Add A Build", "btn-amber", addBuild),
-      page.builds.length ? el("div", { class: "rows" }, page.builds.map((b) => el("div", { class: "row money-row" },
-        el("div", { class: "free-build" }, el("div", { class: "row-title" }, b.name, " ", el("span", { class: "chip" }, b.status)),
+      page.builds.length ? el("div", { class: "rows" }, page.builds.map((b, i) => el("div", { class: "row money-row" },
+        el("div", { class: "free-build" }, el("div", { class: "row-title" }, b.name, " ", el("span", { class: "chip" }, b.status),
+          b.id === nextId ? el("span", { class: "chip chip-ok" }, "Next") : null),
           el("div", { class: "free-cover-bar" }, el("span", { style: "width:" + Math.min(100, b.budget ? (b.spent / b.budget) * 100 : 0) + "%" })),
           el("div", { class: "row-sub" }, b.spent_text + " of " + b.budget_text + " · " + b.left_text + " to go")),
-        btn("Edit", "btn-ghost btn-small", () => editBuild(b)))))
+        el("div", { class: "row-buttons" },
+          i > 0 ? btn("↑", "btn-ghost btn-small", () => move(b, "up")) : null,
+          i < page.builds.length - 1 ? btn("↓", "btn-ghost btn-small", () => move(b, "down")) : null,
+          btn("Edit", "btn-ghost btn-small", () => editBuild(b))))))
         : el("p", { class: "empty" }, "Add what you're building toward: the greenhouse, the coop, solar, the root cellar, with about what each costs. Tag spending to a build in Money and it counts down."));
+  }
+
+  function accountsSection() {
+    const list = page.accounts || [];
+    if (!list.length) return null;
+    const toggle = (a) => act({ kind: "freedom.fund_account", params: { account_id: a.id, in_fund: !a.in_fund } }, { quick: true });
+    return section("Which Accounts Are The Fund", null,
+      el("p", { class: "dim" }, page.accounts_picked ? "Only these count toward what you've saved." : "All checking and savings count until you pick."),
+      el("ul", { class: "pres-list" }, list.map((a) => el("li", { class: "pres-item" + (a.in_fund ? " progress" : "") },
+        el("span", { class: "pres-kind" }, a.in_fund ? "fund" : "not"),
+        el("span", { class: "what" }, (a.bank ? a.bank + " · " : "") + a.name + (a.mask ? " ····" + a.mask : ""), el("small", {}, a.balance_text)),
+        btn(a.in_fund ? "Leave Out" : "Count It", "btn-ghost btn-small", () => toggle(a))))));
   }
 
   function historySection() {
@@ -145,7 +178,8 @@
   }
 
   function draw() {
-    $("panel").replaceChildren(...[hero(), periodTiles(), shiftCard(), breakdown(), buildsSection(), historySection(), whySection(),
+    $("panel").replaceChildren(...[hero(), periodTiles(), streakLine(), shiftCard(), breakdown(), buildsSection(), accountsSection(),
+      historySection(), whySection(),
       !page.bank_connected ? el("p", { class: "dim free-small" }, "Your bank isn't connected yet: the numbers fill in by themselves once it is (Money → Bank). Until then, Your Plan takes your own.") : null]
       .filter(Boolean));
   }

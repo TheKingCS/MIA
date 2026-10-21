@@ -1545,6 +1545,11 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
 .free-cover-bar { height: 8px; border-radius: 4px; background: rgba(var(--rgb-line), 0.14); overflow: hidden; }
 .free-cover-bar span { display: block; height: 100%; background: rgb(var(--rgb-ok)); border-radius: 4px; }
 .free-small { font-size: var(--text-xs); }
+.free-streak { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 6px 2px; }
+.free-weeks { display: inline-flex; gap: 3px; }
+.free-weeks span { width: 12px; height: 12px; border-radius: 3px; background: rgba(var(--rgb-line), 0.2); }
+.free-weeks span.g { background: rgb(var(--rgb-ok)); }
+.free-weeks span.r { background: rgba(var(--rgb-bad), 0.7); }
 .mod-freedom .fact-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .mod-freedom .fact-tiles .nw-tile { padding: 10px; min-width: 0; }
 .mod-freedom .fact-tiles strong { font-size: clamp(0.95rem, 4vw, 1.4rem); overflow-wrap: anywhere; }

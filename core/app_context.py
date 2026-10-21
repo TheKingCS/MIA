@@ -107,6 +107,7 @@ if TYPE_CHECKING:
     from core.insurance import InsuranceBook
     from core.flock import FlockBook
     from core.obligations import ObligationBook
+    from core.freedom import FreedomLog
     from core.boss_battles import BossBook
     from core.questlines import QuestBook
     from core.world_map import WorldMap
@@ -255,6 +256,7 @@ class AppContext:
     insurance: Optional["InsuranceBook"] = field(default=None, repr=False)  # DEC-0034 the insurance check-up
     flock: Optional["FlockBook"] = field(default=None, repr=False)  # DEC-0037 chickens: eggs, feed, birds
     obligations: Optional["ObligationBook"] = field(default=None, repr=False)  # DEC-0040 tax and compliance deadlines
+    freedom_log: Optional["FreedomLog"] = field(default=None, repr=False)  # H-0067 the fund's balance, once a day
     # Each person's own stores (core/personal_data.py): conversations,
     # memories, journal, notes, reasons, message log, online reminders.
     personal_data: Optional["PersonalData"] = field(default=None, repr=False)

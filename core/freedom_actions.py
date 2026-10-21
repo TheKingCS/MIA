@@ -9,6 +9,9 @@ proposed in plain words, approved, run.
   takes, the cushion in months, saved so far (until the bank says),
   saved a month, take-home pay an hour and hours a shift. A blank or 0
   goes back to what MIA works out.
+- `freedom.fund_account`: whether a bank account is part of the fund
+  (H-0067; until one is picked, all checking and savings count).
+- `freedom.build_move`: a build up or down in the person's own order.
 - `freedom.build` / `freedom.build_edit`: a homestead build to pay for
   (a Project with a budget, core/homestead_costs.py): the greenhouse,
   the coop, solar, the root cellar. Spending tagged to it counts toward
@@ -158,9 +161,76 @@ def _build_edit(context, params) -> str:
     return "Build updated."
 
 
+def _account(context, params):
+    from core.freedom import bank_accounts, settings
+
+    _grown_up(context)
+    wanted = str(params.get("account_id") or "")
+    accounts = bank_accounts(context)
+    found = next((a for a in accounts if a["id"] == wanted), None)
+    if found is None:
+        raise ActionError("That account isn't in your latest bank sync.")
+    on = str(params.get("in_fund", "yes")).lower() not in ("no", "false", "0", "off")
+    picked = [str(a) for a in (settings(context).get("freedom.fund_accounts") or [])] or [a["id"] for a in accounts]
+    picked = [a for a in picked if a != wanted] + ([wanted] if on else [])
+    if not picked:
+        raise ActionError("Keep at least one account in the fund.")
+    return found, on, picked
+
+
+def _account_describe(context, params) -> str:
+    found, on, _picked = _account(context, params)
+    name = found["name"] + (f" ····{found['mask']}" if found["mask"] else "")
+    return f"{'Count' if on else 'Leave out'} {name} {'in' if on else 'of'} your freedom fund"
+
+
+def _account_run(context, params) -> str:
+    from core import person_settings
+
+    _found, _on, picked = _account(context, params)
+    person_settings.put(context, "freedom.fund_accounts", picked)
+    return "Fund accounts updated."
+
+
+def _moving(context, params):
+    from core.freedom import gather, settings
+    from datetime import date
+
+    _grown_up(context)
+    builds = gather(context, date.today())[0].builds
+    ids = [b["id"] for b in builds]
+    wanted = str(params.get("project_id") or "")
+    if wanted not in ids:
+        raise ActionError("That build isn't in the plan.")
+    up = str(params.get("direction") or "up").lower() == "up"
+    i = ids.index(wanted)
+    j = i - 1 if up else i + 1
+    if not 0 <= j < len(ids):
+        raise ActionError("It's already " + ("first." if up else "last."))
+    ids[i], ids[j] = ids[j], ids[i]
+    return builds[i]["name"], up, ids
+
+
+def _move_describe(context, params) -> str:
+    name, up, _ids = _moving(context, params)
+    return f"Move {name} {'up' if up else 'down'} in your builds"
+
+
+def _move(context, params) -> str:
+    from core import person_settings
+
+    _name, _up, ids = _moving(context, params)
+    person_settings.put(context, "freedom.build_order", ids)
+    return "Order saved."
+
+
 def _register() -> None:
     for kind in (
         ActionType("freedom.plan", "Save", {param: said for _k, param, said in PLAN_FIELDS}, _plan_describe, _plan),
+        ActionType("freedom.fund_account", "Fund", {"account_id": "the bank account", "in_fund": "yes or no"},
+                   _account_describe, _account_run),
+        ActionType("freedom.build_move", "Move", {"project_id": "the build", "direction": "up or down"},
+                   _move_describe, _move),
         ActionType("freedom.build", "Add Build", {"name": "the build", "budget": "about what it costs",
                                                   "description": "notes"}, _build_describe, _build),
         ActionType("freedom.build_edit", "Save", {"project_id": "the build", "name": "the build",

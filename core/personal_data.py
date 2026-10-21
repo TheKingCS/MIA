@@ -90,6 +90,7 @@ from core.security_cams import SecurityBook
 from core.insurance import InsuranceBook
 from core.flock import FlockBook
 from core.obligations import ObligationBook
+from core.freedom import FreedomLog
 from core.boss_battles import BossBook
 from core.questlines import QuestBook
 from core.world_map import WorldMap
@@ -142,6 +143,7 @@ PERSONAL_STORES: tuple[tuple[str, type], ...] = (
     ("world_map", WorldMap),
     ("memory_vault", MemoryVault),
     ("passwords", PasswordVault),
+    ("freedom_log", FreedomLog),
     ("places", Places),
     ("workout", WorkoutManager),
     ("fitness", FitnessManager),

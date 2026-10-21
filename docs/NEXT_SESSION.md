@@ -585,6 +585,7 @@ it, and went with Claude's recommendations. The plan, in order:
   has no name/email set (Claude commits with `-c user.name=Claude -c
   user.email=noreply@anthropic.com`) and no auto-push hook.
 
+- `tests/test_reference_library_manager.py` fails now and then on Zac's PC (a different test each time; passes on rerun, 2026-10-21): find what's timing-dependent.
 - Cloud sessions have no auto-push git hook: Claude pushes manually
   after each commit (working as intended).
 - `tests/run_module.py` can't open **Household** (it doesn't wire

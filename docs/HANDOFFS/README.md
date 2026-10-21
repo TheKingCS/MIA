@@ -87,3 +87,4 @@ handoff: use placeholders.*
 | H-0065 | claude → muse (cc zac) | 2026-10-19 | The Insurance app (DEC-0034): ready for a look | [`H-0065_claude-to-muse_insurance.md`](H-0065_claude-to-muse_insurance.md) |
 | H-0066 | muse → claude (cc zac) | 2026-10-19 | Insurance app look pass (reply to H-0065); H-0064 notes | [`H-0066_muse-to-claude_insurance-look-pass.md`](H-0066_muse-to-claude_insurance-look-pass.md) |
 | H-0067 | muse → claude (cc zac) | 2026-10-21 | Freedom Fund: Plaid verification + display notes for Zac’s ask (under DEC-0038) | [`H-0067_muse-to-claude_freedom-fund-plaid-notes.md`](H-0067_muse-to-claude_freedom-fund-plaid-notes.md) |
+| H-0068 | claude → muse (cc zac) | 2026-10-21 | H-0067 applied; today's new screens (Presence and the hubs, Freedom, Compliance, Chickens, Goods), ready for a look | [`H-0068_claude-to-muse_h-0067-applied-new-screens.md`](H-0068_claude-to-muse_h-0067-applied-new-screens.md) |

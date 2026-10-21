@@ -444,6 +444,47 @@ def _money_month(context, today):
     return _panel("This month", lines, "")
 
 
+def _freedom(context, today):
+    from core.freedom import freedom_page
+
+    return freedom_page(context, today)
+
+
+def _freedom_glance(context, today):
+    """The work-night glance (H-0067): the fund, this week, the streak, what tonight's shift buys. Read-only."""
+    page = _freedom(context, today)
+    if not page.get("available"):
+        return _panel("Freedom", [], "Freedom is a grown-up's plan.")
+    p, t = page["plan"], page["plan"]["text"]
+    if not p["goal"]:
+        return _panel("Freedom", [], "Set up your plan on the phone: Freedom → Your Plan.")
+    week = next((x for x in page["periods"] if x["id"] == "week"), {})
+    lines = [_line(f"{t['saved']} of {t['goal']}", f"{p['progress_pct']:g}% of the fund" if p["progress_pct"] is not None else ""),
+             _line(f"This week {week.get('total_text', '—')}", (f"{page['streak']} green weeks in a row"
+                                                                 if page["streak"] else ""),
+                   "ok" if (week.get("total") or 0) > 0 else "")]
+    if page["range"]["earliest"]:
+        latest = page["range"]["latest"]
+        lines.append(_line("Free between " + page["range"]["earliest"][:7] + (" and " + latest[:7] if latest else " and later"),
+                           "an estimate at your pace"))
+    if page.get("shift"):
+        sh = page["shift"]
+        lines.append(_line(f"Tonight buys {sh['days_of_living']:g} days" if sh.get("days_of_living") else f"Tonight: {sh['pay_text']}",
+                           sh["pay_text"]))
+    return _panel("Freedom", lines, "")
+
+
+def _freedom_next(context, today):
+    page = _freedom(context, today)
+    if not page.get("available"):
+        return _panel("Next Build", [], "Freedom is a grown-up's plan.")
+    b = page.get("next_build")
+    if not b:
+        return _panel("Next Build", [], "No builds in the plan yet.")
+    return _panel("Next Build", [_line(b["name"], f"{b['pct']}% · {b['left_text']} to go"),
+                                 _line(f"{b['spent_text']} of {b['budget_text']}", "")], "")
+
+
 def _money_due(context, today):
     from core.region import money
 
@@ -648,6 +689,7 @@ PANELS: dict[str, tuple[tuple[str, str, Panel], ...]] = {
                 ("pantry", "My Pantry", _kitchen_pantry), ("grocery", "Grocery List", _kitchen_grocery)),
     "workout": (("training", "Today's Training", _workout_training), ("practice", "Skill Practice", _workout_practice),
                 ("weight", "Weight", _workout_weight), ("milestones", "Milestones", _workout_milestones)),
+    "freedom": (("tonight", "Tonight", _freedom_glance), ("next", "Next Build", _freedom_next)),
     "budget": (("month", "This Month", _money_month), ("due", "What's Due", _money_due),
                ("debts", "Debts", _money_debts)),
     "garage": _equipment_menu(_GARAGE),

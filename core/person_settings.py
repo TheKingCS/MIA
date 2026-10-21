@@ -58,6 +58,8 @@ PERSONAL_SETTINGS = (
     "freedom.monthly_saving",
     "freedom.hourly",
     "freedom.shift_hours",
+    "freedom.fund_accounts",
+    "freedom.build_order",
 )
 
 

@@ -96,3 +96,63 @@ def test_bank_cash_counts_checking_and_savings_only(shop):  # noqa: F811
     assert bank_cash(shop) is None
     shop.finance = Finance()
     assert bank_cash(shop) == 4200.5
+
+
+def test_the_range_streak_and_fund_log(tmp_path):
+    from datetime import timedelta
+
+    from core.freedom import FreedomLog, streak
+
+    i = Inputs(needs=3000, saved=10000, pace=1000, pace_low=500, pace_high=1500, cushion_months=6, builds_left=8000)
+    p = plan(i, TODAY)
+    assert p["earliest"] < p["date"] < p["latest"]
+    assert plan(Inputs(needs=3000, saved=100, pace=800, pace_low=-200, pace_high=1500), TODAY)["latest"] is None
+    assert streak([100, -5, 20, 30, 1]) == 3 and streak([10, -1]) == 0 and streak([]) == 0
+
+    log = FreedomLog(None, data_dir=tmp_path)
+    log.record(TODAY - timedelta(days=8), 1000)
+    log.record(TODAY - timedelta(days=1), 1200)
+    log.record(TODAY, 1250)
+    assert log.change(TODAY, TODAY) == 50  # today: from yesterday's close
+    assert log.change(TODAY - timedelta(days=7), TODAY) == 250
+    assert log.change(TODAY - timedelta(days=30), TODAY) is None  # nothing logged before the month began
+    assert FreedomLog(None, data_dir=tmp_path).balance_on(TODAY) == 1250  # kept on disk
+
+
+def test_fund_accounts_and_build_order(shop):  # noqa: F811
+    from core.freedom import freedom_page
+    from core.glasses import _freedom_glance, _freedom_next
+
+    class Snap:
+        data = {"institution_name": "Example Bank", "accounts": [
+            {"account_id": "chk", "name": "Checking", "mask": "1111", "type": "depository", "balances": {"current": 1200}},
+            {"account_id": "sav", "name": "Savings", "mask": "2222", "type": "depository", "balances": {"current": 8000}},
+            {"account_id": "card", "name": "Card", "type": "credit", "balances": {"current": 300}}]}
+
+    w = shop
+    w.finance = type("F", (), {"all_latest_snapshots": lambda self: [Snap()]})()
+    from core.freedom import FreedomLog
+
+    w.freedom_log = FreedomLog(w, data_dir=w.my_dir)
+    do(w, "freedom.plan", monthly_needs=3000)
+    page = freedom_page(w, TODAY)
+    assert page["plan"]["saved"] == 9200 and page["sources"]["saved"] == "your bank accounts"
+    p = do(w, "freedom.fund_account", account_id="chk", in_fund="no")
+    assert p.summary == "Leave out Checking ····1111 of your freedom fund"
+    page = freedom_page(w, TODAY)
+    assert page["plan"]["saved"] == 8000 and page["sources"]["saved"] == "the accounts you picked as the fund"
+    assert [a["in_fund"] for a in page["accounts"]] == [False, True]
+    assert w.freedom_log.balance_on(TODAY) == 8000  # logged today
+    with pytest.raises(Exception, match="at least one account"):
+        w.actions.propose(w, "freedom.fund_account", {"account_id": "sav", "in_fund": "no"})
+
+    do(w, "freedom.build", name="Greenhouse", budget=8000)
+    do(w, "freedom.build", name="Chicken coop", budget=1500)
+    first = [b["name"] for b in freedom_page(w, TODAY)["builds"]]
+    coop = next(b for b in freedom_page(w, TODAY)["builds"] if b["name"] == "Chicken coop")
+    do(w, "freedom.build_move", project_id=coop["id"], direction="up" if first[1] == "Chicken coop" else "down")
+    page = freedom_page(w, TODAY)
+    assert [b["name"] for b in page["builds"]] == list(reversed(first))
+    assert page["next_build"]["name"] == page["builds"][0]["name"]
+    glance = _freedom_glance(w, TODAY)
+    assert glance["lines"][0]["text"].startswith("$8,000.00 of ") and _freedom_next(w, TODAY)["lines"]

@@ -29,14 +29,31 @@ the whole month, the gap is gone.
 
 `plan()` and the period sums are pure; `freedom_page()` gathers the
 inputs from the stores and is served as /api/freedom.
+
+**H-0067 (Muse, 2026-10-21):** the fund is the accounts the person picks
+(`freedom.fund_accounts`; all checking and savings until they pick); a
+small daily log of the fund's balance (`FreedomLog`, their own file)
+gives the pace today / this week / this month from real balance changes
+and a **green-week streak** (a red week is said plainly, never
+punished); the estimate is a **range** (from the best and the slowest of
+the last three months), never one promised date; the builds keep the
+person's own order (`freedom.build_order`), the first unfinished one is
+the next target.
 """
 
 from __future__ import annotations
 
+import json
 import math
 from dataclasses import dataclass, field
 from datetime import date, timedelta
+from pathlib import Path
 from typing import Optional
+
+from core.atomic_write import atomic_write_text
+from core.logger import get_logger
+
+log = get_logger(__name__)
 
 # The person's own settings (core/person_settings.py), with defaults.
 SETTINGS = {
@@ -46,6 +63,8 @@ SETTINGS = {
     "freedom.monthly_saving": 0.0,  # saved a month (0: from income minus spending)
     "freedom.hourly": 0.0,  # take-home pay an hour at the job
     "freedom.shift_hours": 0.0,  # hours in a shift
+    "freedom.fund_accounts": [],  # the bank accounts that are the fund (account ids); [] = all checking and savings
+    "freedom.build_order": [],  # the builds in the person's own order (project ids)
 }
 DAYS_A_MONTH = 30.44
 WINDOW_MONTHS = 3
@@ -61,6 +80,8 @@ class Inputs:
     saved_source: str = ""
     pace: float = 0.0
     pace_source: str = ""
+    pace_low: Optional[float] = None  # the slowest of the last three months (for the range)
+    pace_high: Optional[float] = None  # the best
     cushion_months: int = 6
     builds_left: float = 0.0
     builds: list = field(default_factory=list)
@@ -80,6 +101,7 @@ def plan(i: Inputs, today: date) -> dict:
     out = {"gap": _r(gap), "cushion": _r(cushion), "builds_left": _r(i.builds_left), "goal": _r(goal),
            "saved": _r(i.saved), "covered": round(covered, 3) if covered is not None else None,
            "progress": None, "left": None, "months": None, "date": None, "days": None, "ready": False,
+           "earliest": None, "latest": None,
            "levers": [], "why_no_date": ""}
     if i.needs <= 0:
         out["why_no_date"] = "Set what a month of living takes (or let the bank sync show it)."
@@ -97,6 +119,13 @@ def plan(i: Inputs, today: date) -> dict:
     months = left / i.pace
     days = math.ceil(months * DAYS_A_MONTH)
     out.update(months=round(months, 1), days=days, date=(today + timedelta(days=days)).isoformat())
+    # The range (H-0067): at the best month's pace, and at the slowest; never one promised day.
+    high = i.pace_high if i.pace_high and i.pace_high > 0 else None
+    low = i.pace_low if i.pace_low and i.pace_low > 0 else None
+    out["earliest"] = (today + timedelta(days=math.ceil(left / max(high, i.pace) * DAYS_A_MONTH))).isoformat() \
+        if high else out["date"]
+    out["latest"] = (today + timedelta(days=math.ceil(left / min(low, i.pace) * DAYS_A_MONTH))).isoformat() \
+        if low else None  # a month that saved nothing: no latest day can be promised
 
     def sooner(pace: float, homestead: float) -> int:
         g = max(0.0, i.needs - homestead) * max(0, int(i.cushion_months)) + max(0.0, i.builds_left)
@@ -154,9 +183,27 @@ def _homestead(ledger, start: str, end: str) -> float:
     return ledger.total_revenue(start, end) - ledger.total_expenses(start, end)
 
 
-def bank_cash(context) -> Optional[float]:
+def bank_accounts(context) -> list[dict]:
+    """The checking and savings accounts in the latest bank snapshots:
+    id, name, last four digits, balance (for picking the fund)."""
+    finance = getattr(context, "finance", None)
+    out = []
+    if finance is None:
+        return out
+    for snapshot in finance.all_latest_snapshots():
+        for account in (snapshot.data or {}).get("accounts", []) or []:
+            if str(account.get("type") or "").lower() != "depository":
+                continue
+            out.append({"id": str(account.get("account_id") or ""), "name": account.get("name") or "Account",
+                        "mask": account.get("mask") or "", "bank": (snapshot.data or {}).get("institution_name") or "",
+                        "balance": (account.get("balances") or {}).get("current")})
+    return out
+
+
+def bank_cash(context, only: Optional[list] = None) -> Optional[float]:
     """Cash in bank accounts (checking, savings) from the latest
-    snapshots: None when no bank is connected."""
+    snapshots, only the accounts in `only` when given: None when no bank
+    is connected."""
     finance = getattr(context, "finance", None)
     if finance is None:
         return None
@@ -164,6 +211,8 @@ def bank_cash(context) -> Optional[float]:
     for snapshot in finance.all_latest_snapshots():
         for account in (snapshot.data or {}).get("accounts", []) or []:
             if str(account.get("type") or "").lower() != "depository":
+                continue
+            if only and str(account.get("account_id") or "") not in only:
                 continue
             current = (account.get("balances") or {}).get("current")
             if current is not None:
@@ -205,9 +254,13 @@ def gather(context, today: date) -> tuple[Inputs, dict]:
         i.needs, i.needs_source = sum(h["spent"] for h in recent) / len(recent), "your spending, 3-month average"
     if has_ledger:
         i.homestead, i.homestead_source = sum(h["homestead"] for h in recent) / len(recent), "the business's books, 3-month average"
-    cash = bank_cash(context)
+    picked = [str(a) for a in (s.get("freedom.fund_accounts") or [])]
+    cash = bank_cash(context, picked or None)
     if cash is not None:
-        i.saved, i.saved_source = cash, "your bank accounts"
+        i.saved, i.saved_source = cash, ("the accounts you picked as the fund" if picked else "your bank accounts")
+        fund_log = getattr(context, "freedom_log", None)
+        if fund_log is not None:
+            fund_log.record(today, cash)
     elif float(s["freedom.saved"] or 0) > 0:
         i.saved, i.saved_source = float(s["freedom.saved"]), "your number"
     if float(s["freedom.monthly_saving"] or 0) > 0:
@@ -215,6 +268,7 @@ def gather(context, today: date) -> tuple[Inputs, dict]:
     elif has_budget:
         # The homestead's money counts once it's in the bank (as income), never added twice.
         i.pace, i.pace_source = sum(h["saved"] for h in recent) / len(recent), "your income minus spending, 3-month average"
+        i.pace_low, i.pace_high = min(h["saved"] for h in recent), max(h["saved"] for h in recent)
 
     builds = []
     if getattr(context, "projects", None) is not None:
@@ -223,24 +277,114 @@ def gather(context, today: date) -> tuple[Inputs, dict]:
                 continue
             builds.append({"id": cost.project_id, "name": cost.name, "budget": _r(cost.budget), "spent": _r(cost.spent),
                            "left": _r(max(0.0, cost.budget - cost.spent)), "status": cost.status})
+    order = [str(x) for x in (s.get("freedom.build_order") or [])]
+    builds.sort(key=lambda b: (order.index(b["id"]) if b["id"] in order else len(order), b["name"].lower()))
     i.builds = builds
     i.builds_left = sum(b["left"] for b in builds)
     return i, {"history": history, "window": [(a.isoformat(), b.isoformat()) for a, b in window], "settings": s}
 
 
 def periods(context, today: date) -> list[dict]:
-    """Progress today, this week and this month: personal income minus
-    spending (builds aside), plus the homestead's profit."""
+    """Progress today, this week and this month: the fund's own balance
+    change when MIA has logged its balance since the period began
+    (H-0067: "from snapshot deltas"), else personal income minus spending
+    (builds aside) plus the homestead's profit. Each says which."""
     budget = getattr(context, "budget", None)
     ledger = getattr(context, "ledger", None)
+    fund_log = getattr(context, "freedom_log", None)
     out = []
     for key, label, start in (("today", "Today", today), ("week", "This Week", week_start(today)),
                               ("month", "This Month", today.replace(day=1))):
         a, b = start.isoformat(), today.isoformat()
-        saved = (_personal_income(budget, a, b) - _personal_spending(budget, a, b)) if budget is not None else 0.0
+        change = fund_log.change(start, today) if fund_log is not None else None
         home = _homestead(ledger, a, b) if ledger is not None else 0.0
-        out.append({"id": key, "label": label, "saved": _r(saved), "homestead": _r(home), "total": _r(saved + home)})
+        if change is not None:
+            out.append({"id": key, "label": label, "saved": _r(change), "homestead": _r(home), "total": _r(change),
+                        "source": "the fund's balance"})
+            continue
+        saved = (_personal_income(budget, a, b) - _personal_spending(budget, a, b)) if budget is not None else 0.0
+        out.append({"id": key, "label": label, "saved": _r(saved), "homestead": _r(home), "total": _r(saved + home),
+                    "source": "income minus spending"})
     return out
+
+
+def streak(weeks: list[float]) -> int:
+    """Pure logic. Green weeks in a row, the latest last: how many of the
+    most recent full weeks saved something."""
+    n = 0
+    for saved in reversed(weeks):
+        if saved <= 0:
+            break
+        n += 1
+    return n
+
+
+def week_totals(context, today: date, count: int = 12) -> list[float]:
+    """What each of the last `count` full weeks saved, oldest first: the
+    fund's balance change when logged, else income minus spending."""
+    budget = getattr(context, "budget", None)
+    fund_log = getattr(context, "freedom_log", None)
+    out = []
+    this_week = week_start(today)
+    for k in range(count, 0, -1):
+        start = this_week - timedelta(days=7 * k)
+        end = start + timedelta(days=6)
+        change = fund_log.change(start, end) if fund_log is not None else None
+        if change is None and budget is not None:
+            a, b = start.isoformat(), end.isoformat()
+            change = _personal_income(budget, a, b) - _personal_spending(budget, a, b)
+        out.append(round(change or 0.0, 2))
+    return out
+
+
+class FreedomLog:
+    """The fund's balance, once a day (H-0067): the person's own file,
+    `freedom_log.json` in their folder. Written when the Freedom figures
+    are read with a bank balance; read for balance changes."""
+
+    FILE = "freedom_log.json"
+    KEEP = 800  # days
+
+    def __init__(self, context, data_dir: Optional[Path] = None) -> None:
+        self.context = context
+        self.data_dir = Path(data_dir) if data_dir is not None else Path(__file__).resolve().parent.parent / "data"
+        self._file = self.data_dir / self.FILE
+        self._load()
+
+    def _load(self) -> None:
+        self.balances: dict[str, float] = {}
+        if self._file.exists():
+            try:
+                raw = json.loads(self._file.read_text(encoding="utf-8"))
+                self.balances = {str(k): float(v) for k, v in (raw.get("balances") or {}).items()}
+            except (json.JSONDecodeError, OSError, TypeError, ValueError, AttributeError):
+                log.exception("freedom_log.json unreadable — starting empty.")
+
+    def reload(self) -> None:
+        self._load()
+
+    def record(self, day: date, balance: float) -> None:
+        key = day.isoformat()
+        if self.balances.get(key) == round(float(balance), 2):
+            return
+        self.balances[key] = round(float(balance), 2)
+        for old in sorted(self.balances)[:-self.KEEP]:
+            del self.balances[old]
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._file, json.dumps({"balances": self.balances}, indent=1))
+
+    def balance_on(self, day: date) -> Optional[float]:
+        """The latest balance logged on or before `day`."""
+        key = day.isoformat()
+        earlier = [k for k in self.balances if k <= key]
+        return self.balances[max(earlier)] if earlier else None
+
+    def change(self, start: date, end: date) -> Optional[float]:
+        """The balance change from the end of the day before `start` to
+        `end`; None when there's no balance from before `start`."""
+        before = self.balance_on(start - timedelta(days=1))
+        after = self.balance_on(end)
+        return round(after - before, 2) if before is not None and after is not None else None
 
 
 def _money(x) -> str:
@@ -275,6 +419,10 @@ def freedom_page(context, today: Optional[date] = None) -> dict:
         wins = sheet.wins[:3]
     except Exception:  # reasons are a bonus here, never a reason the screen fails
         wins = []
+    weeks = _safe_weeks(context, today)
+    accounts = bank_accounts(context)
+    picked = set(str(a) for a in (s.get("freedom.fund_accounts") or []))
+    nxt = next((b for b in i.builds if b["left"] > 0), None)
     words = {
         "needs": _money(i.needs) if i.needs else "", "homestead": _money(i.homestead) if i.homestead else _money(0),
         "saved": _money(p["saved"]), "goal": _money(p["goal"]), "gap": _money(p["gap"]), "left": _money(p["left"] or 0),
@@ -296,5 +444,22 @@ def freedom_page(context, today: Optional[date] = None) -> dict:
         "levers": [{**lv, "amount_text": _money(lv["amount"])} for lv in p["levers"]],
         "why": why, "wins": wins,
         "settings": s,
-        "bank_connected": i.saved_source == "your bank accounts",
+        "bank_connected": i.saved_source in ("your bank accounts", "the accounts you picked as the fund"),
+        # H-0067
+        "accounts": [{**a, "in_fund": (a["id"] in picked) if picked else True,
+                      "balance_text": _money(a["balance"]) if a["balance"] is not None else ""} for a in accounts],
+        "accounts_picked": bool(picked),
+        "streak": streak(weeks), "weeks": weeks[-8:],
+        "range": {"earliest": p.get("earliest"), "latest": p.get("latest")},
+        "next_build": {**nxt, "pct": round(100 * nxt["spent"] / nxt["budget"]) if nxt["budget"] else 0,
+                       "left_text": _money(nxt["left"]), "spent_text": _money(nxt["spent"]),
+                       "budget_text": _money(nxt["budget"])} if nxt else None,
     }
+
+
+def _safe_weeks(context, today: date) -> list[float]:
+    try:
+        return week_totals(context, today)
+    except Exception:
+        log.exception("Freedom: week totals failed")
+        return []
