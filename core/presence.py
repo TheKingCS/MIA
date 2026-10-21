@@ -222,3 +222,36 @@ def presence(context, today: Optional[date] = None) -> dict:
             "line": ("Nothing needs you right now." if quiet else
                      f"{len(now)} {'thing needs' if len(now) == 1 else 'things need'} you; "
                      f"start with: {now[0].title}.")}
+
+
+def context_lines(context, today: Optional[date] = None, limit: int = 3) -> str:
+    """A few lines for MIA's system message (DEC-0044, context in every
+    turn): what the person is working toward (their primary goal and
+    why, in their words), their active missions, and the top of Presence.
+    Short on purpose: a small model reads all of it every turn. "" when
+    there's nothing to say."""
+    lines = []
+    intents = getattr(context, "intents", None)
+    goal = _safe_value(lambda: intents.primary_intent()) if intents is not None else None
+    if goal is not None:
+        lines.append(f"Working toward: {goal.name}" + (f" (why, in their words: {goal.reason})" if goal.reason else ""))
+    missions = getattr(context, "missions", None)
+    if missions is not None:
+        active = [m.name for m in _safe_value(lambda: missions.all_missions()) or [] if m.status == "active"][:3]
+        if active:
+            lines.append("Active missions: " + "; ".join(active))
+    now = (_safe_value(lambda: presence(context, today)) or {}).get("now") or []
+    if now:
+        lines.append("Needs them now: " + "; ".join(f"{i['title']} ({i['why'].rstrip('.')})" for i in now[:limit]))
+    if not lines:
+        return ""
+    return "Their world right now (from MIA's records; use it when it's relevant, never invent beyond it):\n" + \
+        "\n".join(f"- {line}" for line in lines)
+
+
+def _safe_value(get):
+    try:
+        return get()
+    except Exception:
+        log.exception("Presence context failed")
+        return None

@@ -523,6 +523,13 @@ def build_system_message(context, is_action_request: bool, is_teaching_request: 
 
     closing_instruction = _TEACHING_INSTRUCTION if is_teaching_request else GROUNDING_INSTRUCTION
     parts = [_IDENTITY_LINE + _IDENTITY_WARMTH + _IDENTITY_APP_FLUENCY, build_user_context_block(context, prompt)]
+    # DEC-0044: what they're working toward and what needs them now, so a
+    # request is understood in context (core/presence.py).
+    from core.presence import context_lines
+
+    world = context_lines(context)
+    if world:
+        parts.append(world)
     # 2026-09-27: online/offline awareness. Info questions only — every
     # Assistant action runs offline, so the action path stays lean.
     connectivity = getattr(context, "connectivity", None)

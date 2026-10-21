@@ -79,3 +79,19 @@ def test_the_path_shows_wins_not_spending(life):
     p = path_page(life)
     assert all("Spent" not in (w.get("summary") or "") for w in p["wins"])
     assert any(s["href"] == "missions.html" for s in p["screens"])
+
+
+def test_every_turn_knows_their_world(life):
+    from core.assistant_chat import build_system_message
+    from core.presence import context_lines
+
+    w = life
+    goal = w.intents.add_intent("Time back on the homestead")
+    w.intents.set_primary(goal.intent_id)
+    w.intents.update_intent(goal.intent_id, reason="So the days are mine")
+    w.obligations.add("Licence renewal", kind="licence", due_date=(date.today() + timedelta(days=2)).isoformat())
+    block = context_lines(w)
+    assert "- Working toward: Time back on the homestead (why, in their words: So the days are mine)" in block
+    assert "Licence renewal (Due in 2 days" in block
+    assert block in build_system_message(w, is_action_request=False, prompt="What should I focus on?")
+    assert block not in build_system_message(w, is_action_request=True, prompt="Add milk")  # the action path stays lean

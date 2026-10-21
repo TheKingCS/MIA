@@ -111,6 +111,9 @@ class WhySheet:
         if self.wins:
             lines.append("Recent wins:")
             lines.extend(f"- {w}" for w in self.wins)
+        elif not self.changes and not any(link.evidence for chain in self.chains for link in chain):
+            # Said outright (2026-10-21): with nothing here, the model invented "a workspace" and "projects".
+            lines.append("Progress recorded so far: none yet. Don't mention any progress, wins or past steps.")
         return "\n".join(lines)
 
 

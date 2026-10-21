@@ -81,7 +81,8 @@ MODE_INSTRUCTIONS = {
     PERSPECTIVE: (
         "The user needs perspective on why they're doing what they're doing. Using ONLY the facts below, "
         "connect what they're doing today to what it's building toward, following their own reasons in order. "
-        "Name one or two real numbers or wins from the facts. Never invent a number, a goal or a reason. If a "
+        "Name one or two real numbers or wins from the facts. Never invent a number, a goal, a reason, a win or "
+        "anything they've done; if the facts hold no wins yet, say the reason alone is enough. If a "
         "reason is marked DONE, tell them honestly that it used to be a reason and it's complete now. It's fine "
         "that today is hard; don't tell them how to feel. Five sentences at most."
     ),

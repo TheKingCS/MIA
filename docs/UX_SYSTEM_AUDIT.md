@@ -59,7 +59,7 @@ as Conversation; the cyan Stark tokens (`web/tokens.css`).
    active mission's next step), ranked, each with **why** and whether
    it's a fact, a deadline or a suggestion, and its next useful action.
    Home leads with it.
-3. **Context in every turn**: a short "what Zac is working toward" block
+3. ✅ **Context in every turn** (built 2026-10-21): a short "what Zac is working toward" block
    (the primary goal, the active mission, the top of Presence) in Talk's
    system message, so requests are understood in context.
 4. **Objectives across modules**: one objective view joining an Intent,
