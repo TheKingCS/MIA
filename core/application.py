@@ -76,6 +76,7 @@ from core.assistant_life_event_actions import register_life_event_actions
 from core.assistant_link_actions import register_link_actions
 from core.assistant_ownership_actions import register_ownership_actions
 from core.assistant_today_actions import register_today_actions
+from core.assistant_self_actions import register_self_actions
 from core.assistant_undo_actions import register_undo_actions
 from core.assistant_homestead_actions import register_homestead_actions
 from core.assistant_textbook_actions import register_textbook_actions
@@ -1321,6 +1322,7 @@ class MIAApplication:
         register_email_actions(self.context.assistant_actions)
         register_undo_actions(self.context.assistant_actions)
         register_today_actions(self.context.assistant_actions)
+        register_self_actions(self.context.assistant_actions)  # "what model are you?" from the runtime
         register_ownership_actions(self.context.assistant_actions)
         register_accessibility_actions(self.context.assistant_actions)
         register_starter_actions(self.context.assistant_actions)

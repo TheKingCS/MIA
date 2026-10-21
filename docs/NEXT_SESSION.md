@@ -102,6 +102,8 @@ tokens.
 
 - [ ] **Freedom (DEC-0038, 2026-10-21), from the phone now:** Apps → **Freedom** → **Your Plan**: what a month of living takes, saved so far, about what you save a month, your take-home an hour and your shift length. Then **Add A Build** for each: greenhouse, chicken coop, solar, root cellar (about what each costs). Tell MIA your reasons ("remind me why") so they show at the bottom. Once Plaid is linked, the numbers fill in by themselves.
 
+- [ ] **Zac's two specs (2026-10-21): approve the next steps.** Read `docs/BUSINESS_OS_AUDIT.md` and `docs/INTELLIGENCE_AUDIT.md` (sections 7-8 / 7 say what Claude needs). Approve DEC-0040 (the obligations calendar; and give MIA your addresses, how each activity is owned and whether you file jointly, in MIA, not in a chat that gets committed) and DEC-0041 (capability registry, then docs retrieval). Then ask your phone "What AI model are you using?" again.
+
 ### From your phone, now (you're phone-only for the moment)
 
 Everything here works from a phone: the GitHub app (or github.com) for

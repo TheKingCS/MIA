@@ -703,3 +703,39 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   three months' pace continues; MIA isn't a financial adviser.
 - Related: core/freedom.py, web/freedom.*, core/why_graph.py,
   core/homestead_costs.py, docs/COGNITIVE_EXTENSION_PROPOSAL.md (slice E)
+
+### DEC-0039: MIA knows her own model (the intelligence spec's first slice)
+- Status: APPROVED
+- Proposed by: zac, 2026-10-21 (`docs/specs/INTELLIGENCE.md`; the phone answered "What AI model are you using?" with "I don't have that kind of technical information") · Approved by: zac, 2026-10-21 (the spec's own first vertical slice)
+- Decision: which model answers is asked of the runtime (Ollama's
+  /api/show, /api/ps, /api/version; llama.cpp's /props; the home
+  computer's /api/model/info), each fact saying where it came from, and
+  the Assistant answers it in code (`get_model_info`, a direct lookup),
+  never from the model's guess.
+- Related: core/model_registry.py, core/assistant_self_actions.py,
+  server/app.py (/api/model/info), docs/INTELLIGENCE_AUDIT.md
+
+### DEC-0040: Business OS, first increment: the obligations calendar
+- Status: PROPOSED
+- Proposed by: claude, 2026-10-21 (`docs/BUSINESS_OS_AUDIT.md` section 7, from Zac's `docs/specs/BUSINESS_OS.md`)
+- Decision (if approved): one store for tax and compliance obligations
+  (authority, what, entity or activity, period, due date, the rule and
+  its official source with a verified date, status, proof, next action);
+  reminders at 90/60/30/14/7 days, on the day and overdue, through the
+  communication gate and on the Calendar; a Compliance screen. Starts
+  empty; a starter list of obligations *to verify* is offered as
+  unverified tasks with their official sources, never as confirmed law.
+  Needs from Zac: the real addresses, how each activity is owned, and
+  whether taxes are filed jointly.
+- Related: docs/BUSINESS_OS_AUDIT.md, docs/specs/BUSINESS_OS.md
+
+### DEC-0041: Intelligence, next increments: capability registry, then docs retrieval
+- Status: PROPOSED
+- Proposed by: claude, 2026-10-21 (`docs/INTELLIGENCE_AUDIT.md` section 5)
+- Decision (if approved): a capability registry built from the code
+  (apps, tools, action kinds, status and limits; a test fails when a
+  feature has no entry) answering "what can you do?" / "can you…?"
+  truthfully; then retrieval over MIA's own docs (decisions, current
+  state, specs, guides) answering "how does X work?" with the passage
+  and its file.
+- Related: docs/INTELLIGENCE_AUDIT.md, docs/specs/INTELLIGENCE.md

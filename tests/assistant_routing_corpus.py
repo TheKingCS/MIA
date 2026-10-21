@@ -17,6 +17,10 @@ from __future__ import annotations
 INFO = "INFO"
 
 CORPUS: list[tuple[str, str]] = [
+    # ---- MIA about herself (core/model_registry.py, 2026-10-21) ---------
+    ("What AI model are you using?", "get_model_info"),
+    ("Which model are you running on?", "get_model_info"),
+    ("What LLM does MIA use?", "get_model_info"),
     # ---- Each person's Apps screen (core/focus_presets.py) --------------
     ("Switch me to student mode", "set_app_focus"),
     ("Set my apps up for my business", "set_app_focus"),

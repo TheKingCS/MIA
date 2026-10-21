@@ -433,8 +433,12 @@ def create_app(context: AppContext) -> FastAPI:
     def model_info(profile_id: str = Depends(require_profile_id)) -> dict:
         llm = context.llm
         backend = getattr(llm, "backend", None)
+        from core.model_registry import runtime_info
+
         return {"available": bool(llm is not None and llm.is_available()),
-                "model": getattr(backend, "_model", "") or ""}
+                "model": getattr(backend, "_model", "") or "",
+                # 2026-10-21: what the runtime says about it, for the phone's "what model are you?"
+                "details": runtime_info(context)}
 
     @app.post("/api/model/chat")
     def model_chat(body: ModelChatRequest, profile_id: str = Depends(require_profile_id)) -> dict:
