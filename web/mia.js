@@ -241,6 +241,8 @@
     party: () => read("/api/party", "party"),
     places: () => read("/api/places", "places"),
     security: () => read("/api/security", "security"),
+    // Compliance (core/web_compliance.py, DEC-0040): tax and compliance deadlines.
+    compliance: () => read("/api/compliance", "compliance"),
     // Freedom (core/freedom.py, DEC-0038): the plan, the date, progress, the shift, the builds.
     freedom: () => read("/api/freedom", "freedom"),
     // Chickens (core/web_flock.py, DEC-0037): eggs, lay rate, feed cost per dozen, cartons.

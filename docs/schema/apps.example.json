@@ -264,6 +264,20 @@
           "favorite": false
         },
         {
+          "id": "compliance",
+          "name": "Compliance",
+          "icon": "📋",
+          "tagline": "Every deadline, on time.",
+          "description": "Tax filings and payments, permits, licences and renewals, each with its official source (DEC-0040).",
+          "page": "compliance.html",
+          "on_web": true,
+          "shown": true,
+          "can_hide": true,
+          "ask": "What's due for taxes?",
+          "tools": [],
+          "favorite": false
+        },
+        {
           "id": "real_estate",
           "name": "Real Estate",
           "icon": "🏘",

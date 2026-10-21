@@ -25,6 +25,13 @@
       "page": "freedom.html"
     },
     {
+      "id": "compliance",
+      "name": "Compliance",
+      "icon": "📋",
+      "tagline": "Every deadline, on time.",
+      "page": "compliance.html"
+    },
+    {
       "id": "calendar",
       "name": "Calendar",
       "icon": "📅",

@@ -155,6 +155,9 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
     from core.flock import FlockBook
 
     context.flock = FlockBook(context)
+    from core.obligations import ObligationBook
+
+    context.obligations = ObligationBook(context)
     context.music = MusicManager(context)
     # The document inbox, so the phone can take in what's shared to MIA
     # (its Inbox screen reads the folder; no mail checker here).

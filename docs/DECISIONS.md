@@ -716,8 +716,8 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   server/app.py (/api/model/info), docs/INTELLIGENCE_AUDIT.md
 
 ### DEC-0040: Business OS, first increment: the obligations calendar
-- Status: PROPOSED
-- Proposed by: claude, 2026-10-21 (`docs/BUSINESS_OS_AUDIT.md` section 7, from Zac's `docs/specs/BUSINESS_OS.md`)
+- Status: APPROVED
+- Proposed by: claude, 2026-10-21 (`docs/BUSINESS_OS_AUDIT.md` section 7, from Zac's `docs/specs/BUSINESS_OS.md`) · Approved by: zac, 2026-10-21 ("Lets begin")
 - Decision (if approved): one store for tax and compliance obligations
   (authority, what, entity or activity, period, due date, the rule and
   its official source with a verified date, status, proof, next action);
@@ -730,8 +730,8 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: docs/BUSINESS_OS_AUDIT.md, docs/specs/BUSINESS_OS.md
 
 ### DEC-0041: Intelligence, next increments: capability registry, then docs retrieval
-- Status: PROPOSED
-- Proposed by: claude, 2026-10-21 (`docs/INTELLIGENCE_AUDIT.md` section 5)
+- Status: APPROVED
+- Proposed by: claude, 2026-10-21 (`docs/INTELLIGENCE_AUDIT.md` section 5) · Approved by: zac, 2026-10-21 ("Lets begin")
 - Decision (if approved): a capability registry built from the code
   (apps, tools, action kinds, status and limits; a test fails when a
   feature has no entry) answering "what can you do?" / "can you…?"

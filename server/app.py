@@ -1586,6 +1586,13 @@ def create_app(context: AppContext) -> FastAPI:
         return _vault_call(profile_id, lambda v: {"message": f"Brought in {v.import_csv(body.text)} logins. "
                                                              "Now delete the export file: it isn't encrypted."})
 
+    # ------------------------------------------------------------ Compliance (core/web_compliance.py, DEC-0040)
+    @app.get("/api/compliance")
+    def web_compliance(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.web_compliance import compliance_page
+
+        return _screen(profile_id, "compliance", compliance_page)
+
     # ------------------------------------------------------------ Freedom (core/freedom.py, DEC-0038)
     @app.get("/api/freedom")
     def web_freedom(profile_id: str = Depends(require_profile_id)) -> dict:

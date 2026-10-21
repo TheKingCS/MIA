@@ -89,6 +89,7 @@ from core.grow_lab import GrowLab
 from core.security_cams import SecurityBook
 from core.insurance import InsuranceBook
 from core.flock import FlockBook
+from core.obligations import ObligationBook
 from core.boss_battles import BossBook
 from core.questlines import QuestBook
 from core.world_map import WorldMap
@@ -168,6 +169,7 @@ HOUSEHOLD_STORES: tuple[tuple[str, type], ...] = (
     ("security", SecurityBook),
     ("insurance", InsuranceBook),
     ("flock", FlockBook),
+    ("obligations", ObligationBook),
     ("waypoints", WaypointManager),
     ("scripts", ScriptLibraryManager),
     ("expeditions", ExpeditionManager),

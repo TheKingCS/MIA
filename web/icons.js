@@ -35,6 +35,7 @@
     workshop: '<path d="M13 2.5 5 13.5h6l-1 8 8-11h-6Z"/>',
     reward_shop: '<rect x="3.5" y="8.5" width="17" height="4" rx="1"/><path d="M5 12.5V20.5h14v-8M12 8.5v12"/><path d="M12 8.5C10.5 5 7.5 4.5 7 6.5s3 2 5 2c2 0 5.5-.5 5-2s-3.5-1.5-5 2Z"/>',
     passwords: '<rect x="4.5" y="10.5" width="15" height="10" rx="1.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3M12 14.5v2.5"/>',
+    compliance: '<rect x="5" y="3.5" width="14" height="17.5" rx="1.5"/><path d="M9 3.5V2h6v1.5M8.5 9.5l1.5 1.5 3-3M8.5 15.5h7"/>',
     freedom: '<path d="M2.5 18.5h19"/><path d="M5 18.5a7 7 0 0 1 14 0"/><path d="M12 6.5V4M6.3 8.8 4.6 7.1M17.7 8.8l1.7-1.7M3.5 14H2M22 14h-1.5"/><path d="M8 21.5h8"/>',
     flock: '<path d="M7 20.5h10M9 20.5l1-3M15 20.5l-1-3"/><path d="M6 11.5a6 6 0 0 0 12 0c0-2-1-3.5-2.5-4.5l1-3-3 1.5A5 5 0 0 0 8 8.5c-1.3 1-2 2-2 3Z"/><path d="M14.5 9h.01M18 8.5l2.5.5-2.5 1"/>',
     insurance: '<path d="M3 12a9 9 0 0 1 18 0Z"/><path d="M12 3v1M12 12v6.5a2 2 0 0 1-4 0"/>',

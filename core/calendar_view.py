@@ -45,6 +45,7 @@ KINDS = {
     "prep": ("Meal Prep", "kitchen"),
     "training": ("Training", "workout"),
     "birthday": ("Birthday", "relationships"),
+    "obligation": ("Deadline", "compliance"),  # DEC-0040: tax and compliance obligations
 }
 
 
@@ -181,6 +182,28 @@ def _birthdays(context, start: date, end: date) -> list[dict]:
     return out
 
 
+def _obligations(context, start: date, end: date, today: date) -> list[dict]:
+    """Tax and compliance deadlines (core/obligations.py), never a child's."""
+    from core.child_accounts import is_child
+    from core.obligations import CLOSED, next_due, state
+
+    book = getattr(context, "obligations", None)
+    if book is None or is_child(context):
+        return []
+    out = []
+    for o in book.obligations:
+        due = next_due(o)
+        if o.status in CLOSED or due is None:
+            continue
+        overdue = due < today
+        if not (start <= due <= end or overdue):
+            continue
+        st = state(o, today)
+        detail = " · ".join(b for b in (o.authority, "not verified yet" if not st["verified"] else "") if b)
+        out.append(_item(due, "obligation", o.title, detail, due=overdue or (due - today).days <= 14))
+    return out
+
+
 def calendar_items(context, start: date, end: date, today: Optional[date] = None) -> list[dict]:
     """Every dated thing between `start` and `end` (and anything past due), sorted."""
     today = today or date.today()
@@ -189,7 +212,8 @@ def calendar_items(context, start: date, end: date, today: Optional[date] = None
                          ("upkeep", lambda: _upkeep(context, start, end, today)),
                          ("money", lambda: _money(context, start, end, today)),
                          ("fitness", lambda: _fitness(context, start, end, today)),
-                         ("birthdays", lambda: _birthdays(context, start, end))):
+                         ("birthdays", lambda: _birthdays(context, start, end)),
+                         ("obligations", lambda: _obligations(context, start, end, today))):
         try:
             found.extend(source())
         except Exception:  # one store failing never empties the calendar

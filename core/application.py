@@ -345,6 +345,9 @@ class MIAApplication:
         from core.flock import FlockBook
 
         self.context.flock = FlockBook(self.context)  # chickens (DEC-0037)
+        from core.obligations import ObligationBook
+
+        self.context.obligations = ObligationBook(self.context)  # tax and compliance deadlines (DEC-0040)
         self.context.reference_library = ReferenceLibraryManager(self.context)
         self.context.llm = LLMManager(self.context)
         # Online/offline awareness — first check starts now in the
@@ -691,6 +694,7 @@ class MIAApplication:
             ("grow_alert", self._check_grow_alerts),
             ("season", self._check_season),
             ("insurance_renewal", self._check_insurance),
+            ("obligation_reminders", self._check_obligations),
         ]
         # 2026-09-27, Cognitive Extension slice C: checks no longer notify
         # directly. Each one offers what it would say (_offer()), and the
@@ -862,6 +866,19 @@ class MIAApplication:
             if not self.context.insurance.note_given(fingerprint):
                 continue
             self._offer(topic="insurance_renewal", title=title, message=message, urgency=AMBIENT, source="system",
+                        fingerprint=fingerprint)
+
+    def _check_obligations(self, now: datetime, today_iso: str) -> None:
+        """Tax and compliance deadlines (core/obligations.py, DEC-0040): at
+        90/60/30/14/7 days, on the day and weekly while overdue, each once."""
+        if getattr(self.context, "obligations", None) is None:
+            return
+        from core.obligations import reminder_notes
+
+        for title, message, fingerprint, urgency in reminder_notes(self.context, now.date()):
+            if not self.context.obligations.note_given(fingerprint):
+                continue
+            self._offer(topic="obligation_deadline", title=title, message=message, urgency=urgency, source="system",
                         fingerprint=fingerprint)
 
     def _check_memory_callbacks(self, now: datetime, today_iso: str) -> None:

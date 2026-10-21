@@ -1,0 +1,644 @@
+{
+  "available": true,
+  "as_of": "2026-10-21",
+  "groups": {
+    "overdue": [
+      {
+        "id": "ab3a696f8a",
+        "title": "Federal income tax return (Form 1040)",
+        "kind": "tax filing",
+        "authority": "IRS",
+        "jurisdiction": "federal",
+        "applies_to": "",
+        "period": "",
+        "status": "extended",
+        "where": "overdue",
+        "due": "2026-08-24",
+        "days": -58,
+        "verified": true,
+        "stale": false,
+        "file_on": "2027-02-08",
+        "pay_on": "2026-08-24",
+        "moved": [
+          "payment"
+        ],
+        "stated_due": "2026-08-22",
+        "extended_to": "2027-02-08",
+        "fee_text": "",
+        "estimate_text": "",
+        "documents": "",
+        "next_action": "",
+        "source_url": "https://www.irs.gov/filing",
+        "source_title": "IRS: Filing",
+        "rule": "",
+        "verified_on": "2026-08-12",
+        "proof": "",
+        "recurrence": "",
+        "notes": "",
+        "values": {
+          "title": "Federal income tax return (Form 1040)",
+          "kind": "tax filing",
+          "authority": "IRS",
+          "jurisdiction": "federal",
+          "applies_to": "",
+          "period": "",
+          "due_date": "2026-08-22",
+          "pay_date": "",
+          "extended_to": "2027-02-08",
+          "recurrence": "",
+          "fee": 0.0,
+          "estimate": 0.0,
+          "documents": "",
+          "next_action": "",
+          "source_url": "https://www.irs.gov/filing",
+          "rule": "",
+          "reminders": "90 60 30 14 7 0",
+          "notes": ""
+        }
+      },
+      {
+        "id": "875d56a68e",
+        "title": "Sales and use tax return",
+        "kind": "tax filing",
+        "authority": "State revenue department",
+        "jurisdiction": "state",
+        "applies_to": "",
+        "period": "",
+        "status": "applies",
+        "where": "overdue",
+        "due": "2026-10-19",
+        "days": -2,
+        "verified": true,
+        "stale": false,
+        "file_on": "2026-10-19",
+        "pay_on": "",
+        "moved": [],
+        "stated_due": "2026-10-19",
+        "extended_to": "",
+        "fee_text": "",
+        "estimate_text": "",
+        "documents": "",
+        "next_action": "File and pay online.",
+        "source_url": "https://example.gov/sales-tax",
+        "source_title": "State: sales and use tax",
+        "rule": "",
+        "verified_on": "2026-07-23",
+        "proof": "",
+        "recurrence": "",
+        "notes": "",
+        "values": {
+          "title": "Sales and use tax return",
+          "kind": "tax filing",
+          "authority": "State revenue department",
+          "jurisdiction": "state",
+          "applies_to": "",
+          "period": "",
+          "due_date": "2026-10-19",
+          "pay_date": "",
+          "extended_to": "",
+          "recurrence": "",
+          "fee": 0.0,
+          "estimate": 0.0,
+          "documents": "",
+          "next_action": "File and pay online.",
+          "source_url": "https://example.gov/sales-tax",
+          "rule": "",
+          "reminders": "90 60 30 14 7 0",
+          "notes": ""
+        }
+      }
+    ],
+    "soon": [
+      {
+        "id": "6064221dad",
+        "title": "City business licence renewal",
+        "kind": "licence",
+        "authority": "City clerk",
+        "jurisdiction": "city",
+        "applies_to": "The workshop",
+        "period": "",
+        "status": "applies",
+        "where": "upcoming",
+        "due": "2026-11-02",
+        "days": 12,
+        "verified": true,
+        "stale": false,
+        "file_on": "2026-11-02",
+        "pay_on": "",
+        "moved": [],
+        "stated_due": "2026-11-02",
+        "extended_to": "",
+        "fee_text": "$50.00",
+        "estimate_text": "",
+        "documents": "Last year's licence, gross receipts",
+        "next_action": "Renew online or at the clerk's office.",
+        "source_url": "https://example.gov/business-licence",
+        "source_title": "City: business licences",
+        "rule": "",
+        "verified_on": "2026-09-11",
+        "proof": "",
+        "recurrence": "",
+        "notes": "",
+        "values": {
+          "title": "City business licence renewal",
+          "kind": "licence",
+          "authority": "City clerk",
+          "jurisdiction": "city",
+          "applies_to": "The workshop",
+          "period": "",
+          "due_date": "2026-11-02",
+          "pay_date": "",
+          "extended_to": "",
+          "recurrence": "",
+          "fee": 50.0,
+          "estimate": 0.0,
+          "documents": "Last year's licence, gross receipts",
+          "next_action": "Renew online or at the clerk's office.",
+          "source_url": "https://example.gov/business-licence",
+          "rule": "",
+          "reminders": "90 60 30 14 7 0",
+          "notes": ""
+        }
+      }
+    ],
+    "later": [
+      {
+        "id": "e259d00ac8",
+        "title": "Federal estimated tax, payment 4 (Form 1040-ES)",
+        "kind": "tax payment",
+        "authority": "IRS",
+        "jurisdiction": "federal",
+        "applies_to": "",
+        "period": "",
+        "status": "applies",
+        "where": "later",
+        "due": "2027-01-15",
+        "days": 86,
+        "verified": true,
+        "stale": false,
+        "file_on": "",
+        "pay_on": "2027-01-15",
+        "moved": [],
+        "stated_due": "2027-01-15",
+        "extended_to": "",
+        "fee_text": "",
+        "estimate_text": "$640.00",
+        "documents": "",
+        "next_action": "Pay through IRS Direct Pay; keep the confirmation.",
+        "source_url": "https://www.irs.gov/forms-pubs/about-form-1040-es",
+        "source_title": "IRS: About Form 1040-ES",
+        "rule": "",
+        "verified_on": "2026-10-18",
+        "proof": "",
+        "recurrence": "yearly",
+        "notes": "",
+        "values": {
+          "title": "Federal estimated tax, payment 4 (Form 1040-ES)",
+          "kind": "tax payment",
+          "authority": "IRS",
+          "jurisdiction": "federal",
+          "applies_to": "",
+          "period": "",
+          "due_date": "2027-01-15",
+          "pay_date": "",
+          "extended_to": "",
+          "recurrence": "yearly",
+          "fee": 0.0,
+          "estimate": 640.0,
+          "documents": "",
+          "next_action": "Pay through IRS Direct Pay; keep the confirmation.",
+          "source_url": "https://www.irs.gov/forms-pubs/about-form-1040-es",
+          "rule": "",
+          "reminders": "90 60 30 14 7 0",
+          "notes": ""
+        }
+      }
+    ],
+    "check": [
+      {
+        "id": "7dad2a7eed",
+        "title": "Home-based processor registration",
+        "kind": "registration",
+        "authority": "State health department, food safety",
+        "jurisdiction": "state",
+        "applies_to": "",
+        "period": "",
+        "status": "to verify",
+        "where": "undated",
+        "due": "",
+        "days": null,
+        "verified": false,
+        "stale": false,
+        "file_on": "",
+        "pay_on": "",
+        "moved": [],
+        "stated_due": "",
+        "extended_to": "",
+        "fee_text": "",
+        "estimate_text": "",
+        "documents": "",
+        "next_action": "Search their site for \"home-based processor\": registration, fee, renewal, label rules.",
+        "source_url": "https://example.gov/food-safety",
+        "source_title": "State health department",
+        "rule": "",
+        "verified_on": "",
+        "proof": "",
+        "recurrence": "",
+        "notes": "",
+        "values": {
+          "title": "Home-based processor registration",
+          "kind": "registration",
+          "authority": "State health department, food safety",
+          "jurisdiction": "state",
+          "applies_to": "",
+          "period": "",
+          "due_date": "",
+          "pay_date": "",
+          "extended_to": "",
+          "recurrence": "",
+          "fee": 0.0,
+          "estimate": 0.0,
+          "documents": "",
+          "next_action": "Search their site for \"home-based processor\": registration, fee, renewal, label rules.",
+          "source_url": "https://example.gov/food-safety",
+          "rule": "",
+          "reminders": "90 60 30 14 7 0",
+          "notes": ""
+        }
+      },
+      {
+        "id": "1f522227f9",
+        "title": "Rental registration",
+        "kind": "registration",
+        "authority": "Your city or county",
+        "jurisdiction": "city",
+        "applies_to": "",
+        "period": "",
+        "status": "to verify",
+        "where": "undated",
+        "due": "",
+        "days": null,
+        "verified": false,
+        "stale": false,
+        "file_on": "",
+        "pay_on": "",
+        "moved": [],
+        "stated_due": "",
+        "extended_to": "",
+        "fee_text": "",
+        "estimate_text": "",
+        "documents": "",
+        "next_action": "Ask whether rentals must be registered or inspected.",
+        "source_url": "",
+        "source_title": "",
+        "rule": "",
+        "verified_on": "",
+        "proof": "",
+        "recurrence": "",
+        "notes": "",
+        "values": {
+          "title": "Rental registration",
+          "kind": "registration",
+          "authority": "Your city or county",
+          "jurisdiction": "city",
+          "applies_to": "",
+          "period": "",
+          "due_date": "",
+          "pay_date": "",
+          "extended_to": "",
+          "recurrence": "",
+          "fee": 0.0,
+          "estimate": 0.0,
+          "documents": "",
+          "next_action": "Ask whether rentals must be registered or inspected.",
+          "source_url": "",
+          "rule": "",
+          "reminders": "90 60 30 14 7 0",
+          "notes": ""
+        }
+      }
+    ],
+    "done": [
+      {
+        "id": "e8de5b3067",
+        "title": "Property tax, rental A",
+        "kind": "tax payment",
+        "authority": "County sheriff",
+        "jurisdiction": "county",
+        "applies_to": "",
+        "period": "",
+        "status": "paid",
+        "where": "closed",
+        "due": "2026-10-01",
+        "days": -20,
+        "verified": true,
+        "stale": false,
+        "file_on": "",
+        "pay_on": "2026-10-01",
+        "moved": [],
+        "stated_due": "2026-10-01",
+        "extended_to": "",
+        "fee_text": "",
+        "estimate_text": "",
+        "documents": "",
+        "next_action": "",
+        "source_url": "",
+        "source_title": "",
+        "rule": "",
+        "verified_on": "2026-07-13",
+        "proof": "Receipt 4471",
+        "recurrence": "",
+        "notes": "",
+        "values": {
+          "title": "Property tax, rental A",
+          "kind": "tax payment",
+          "authority": "County sheriff",
+          "jurisdiction": "county",
+          "applies_to": "",
+          "period": "",
+          "due_date": "2026-10-01",
+          "pay_date": "",
+          "extended_to": "",
+          "recurrence": "",
+          "fee": 0.0,
+          "estimate": 0.0,
+          "documents": "",
+          "next_action": "",
+          "source_url": "",
+          "rule": "",
+          "reminders": "90 60 30 14 7 0",
+          "notes": ""
+        }
+      }
+    ]
+  },
+  "counts": {
+    "overdue": 2,
+    "soon": 1,
+    "unverified": 2,
+    "open": 6
+  },
+  "fees_soon_text": "$50.00",
+  "forms": {
+    "obligation": {
+      "noun": "obligation",
+      "id_param": "obligation_id",
+      "fields": [
+        {
+          "name": "title",
+          "label": "What it is",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "kind",
+          "label": "Kind",
+          "type": "choice",
+          "required": false,
+          "options": [
+            "tax filing",
+            "tax payment",
+            "permit",
+            "licence",
+            "registration",
+            "inspection",
+            "annual report",
+            "renewal",
+            "insurance",
+            "other"
+          ],
+          "default": "other"
+        },
+        {
+          "name": "authority",
+          "label": "Owed to (IRS, the state, the county clerk…)",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "jurisdiction",
+          "label": "Level",
+          "type": "choice",
+          "required": false,
+          "options": [
+            "federal",
+            "state",
+            "county",
+            "city",
+            "other"
+          ],
+          "default": "other"
+        },
+        {
+          "name": "applies_to",
+          "label": "For (the household, the rental, the homestead…)",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "period",
+          "label": "Period (2026 Q3, tax year 2026)",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "due_date",
+          "label": "Due (as the rule states it)",
+          "type": "date",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "pay_date",
+          "label": "Money due (if different)",
+          "type": "date",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "extended_to",
+          "label": "Extended to (filing only; never moves the money's date)",
+          "type": "date",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "recurrence",
+          "label": "Repeats",
+          "type": "choice",
+          "required": false,
+          "options": [
+            "",
+            "monthly",
+            "quarterly",
+            "yearly"
+          ],
+          "default": ""
+        },
+        {
+          "name": "fee",
+          "label": "Fee",
+          "type": "money",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "estimate",
+          "label": "Expected to owe",
+          "type": "money",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "documents",
+          "label": "Documents needed",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "next_action",
+          "label": "Next step",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "source_url",
+          "label": "Official source (link)",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "rule",
+          "label": "The rule (form, statute, guidance)",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "reminders",
+          "label": "Remind me this many days before (e.g. 90 60 30 14 7 0)",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "notes",
+          "label": "Notes",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    }
+  },
+  "statuses": [
+    "applies",
+    "ready to file",
+    "submitted",
+    "payment due",
+    "paid",
+    "extended",
+    "done",
+    "needs a professional",
+    "not applicable"
+  ],
+  "starters": [
+    {
+      "id": "fed_1040",
+      "name": "Federal income tax return (Form 1040)",
+      "jurisdiction": "federal"
+    },
+    {
+      "id": "fed_es_q1",
+      "name": "Federal estimated tax, payment 1 (Form 1040-ES)",
+      "jurisdiction": "federal"
+    },
+    {
+      "id": "fed_es_q2",
+      "name": "Federal estimated tax, payment 2 (Form 1040-ES)",
+      "jurisdiction": "federal"
+    },
+    {
+      "id": "fed_es_q3",
+      "name": "Federal estimated tax, payment 3 (Form 1040-ES)",
+      "jurisdiction": "federal"
+    },
+    {
+      "id": "fed_es_q4",
+      "name": "Federal estimated tax, payment 4 (Form 1040-ES)",
+      "jurisdiction": "federal"
+    },
+    {
+      "id": "fed_1099_nec",
+      "name": "1099-NEC to contractors you paid",
+      "jurisdiction": "federal"
+    },
+    {
+      "id": "state_income",
+      "name": "State income tax return",
+      "jurisdiction": "state"
+    },
+    {
+      "id": "ky_740",
+      "name": "Kentucky individual income tax return (Form 740)",
+      "jurisdiction": "state"
+    },
+    {
+      "id": "ky_sales_tax",
+      "name": "Kentucky sales and use tax: registration and returns",
+      "jurisdiction": "state"
+    },
+    {
+      "id": "ky_home_processor",
+      "name": "Kentucky home-based processor registration",
+      "jurisdiction": "state"
+    },
+    {
+      "id": "ky_eggs",
+      "name": "Selling eggs: Kentucky's rules",
+      "jurisdiction": "state"
+    },
+    {
+      "id": "ky_annual_report",
+      "name": "Kentucky LLC annual report",
+      "jurisdiction": "state"
+    },
+    {
+      "id": "local_occupational",
+      "name": "Local occupational licence tax",
+      "jurisdiction": "county"
+    },
+    {
+      "id": "property_tax",
+      "name": "Property tax",
+      "jurisdiction": "county"
+    },
+    {
+      "id": "rental_registration",
+      "name": "Rental registration or landlord licence",
+      "jurisdiction": "city"
+    }
+  ]
+}
