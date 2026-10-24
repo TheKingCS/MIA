@@ -1586,25 +1586,6 @@ def create_app(context: AppContext) -> FastAPI:
         return _vault_call(profile_id, lambda v: {"message": f"Brought in {v.import_csv(body.text)} logins. "
                                                              "Now delete the export file: it isn't encrypted."})
 
-    # ------------------------------------------------------------ The hubs (core/web_hubs.py, DEC-0044)
-    @app.get("/api/path")
-    def web_path(profile_id: str = Depends(require_profile_id)) -> dict:
-        from core.web_hubs import path_page
-
-        return _screen(profile_id, "missions", path_page)
-
-    @app.get("/api/world")
-    def web_world(profile_id: str = Depends(require_profile_id)) -> dict:
-        from core.web_hubs import world_page
-
-        return _screen(profile_id, "module_browser", world_page)
-
-    @app.get("/api/system")
-    def web_system(profile_id: str = Depends(require_profile_id)) -> dict:
-        from core.web_hubs import system_page
-
-        return _screen(profile_id, "module_browser", system_page)
-
     # ------------------------------------------------------------ Compliance (core/web_compliance.py, DEC-0040)
     @app.get("/api/compliance")
     def web_compliance(profile_id: str = Depends(require_profile_id)) -> dict:

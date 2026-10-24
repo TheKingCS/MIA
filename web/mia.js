@@ -241,10 +241,6 @@
     party: () => read("/api/party", "party"),
     places: () => read("/api/places", "places"),
     security: () => read("/api/security", "security"),
-    // The hubs (core/web_hubs.py, DEC-0044): My Hero's Path, World, System.
-    path: () => read("/api/path", "path"),
-    world: () => read("/api/world", "world"),
-    system: () => read("/api/system", "system"),
     // Compliance (core/web_compliance.py, DEC-0040): tax and compliance deadlines.
     compliance: () => read("/api/compliance", "compliance"),
     // Freedom (core/freedom.py, DEC-0038): the plan, the date, progress, the shift, the builds.

@@ -351,6 +351,12 @@ every step below in order, from a blank machine, with Windows notes.
 
 ## 2. Build queue (Claude), in order
 
+**Zac, 2026-10-24 (DEC-0045): the apps stay the layout; make MIA smarter
+at using them.** The five-places frame is undone. Next AI work: MIA
+working the apps for you in Talk and by voice (understand what you mean,
+do it across apps, say what she did), not new navigation. Then Muse's
+H-0070 Freedom look pass.
+
 **Game layer (DEC-0028, `docs/GAME_LAYER.md`), 2026-10-17:** all built
 except the watch HUD (waits for the watch): Reward Shop, gear bars,
 bosses, stats, buffs, the Chronicle, and (DEC-0032) questlines, kitchen

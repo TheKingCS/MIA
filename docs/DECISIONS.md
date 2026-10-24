@@ -763,7 +763,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: docs/INTELLIGENCE_AUDIT.md
 
 ### DEC-0044: One system, not a collection of apps
-- Status: APPROVED
+- Status: PARTLY REVERSED by DEC-0045 (zac, 2026-10-24): the five-places frame, Presence as Home and the World/Path/System hubs are undone; context in every turn stays
 - Proposed by: zac, 2026-10-21 (Chat's handoff, `docs/specs/UX_SYSTEM.md`: "MIA ... feels like a collection of apps instead of a second smarter and more organized consciousness") · Approved by: zac, 2026-10-21 (the same request)
 - Decision: navigation by intent: Presence, Conversation, My Hero's
   Path, World, System, then the person's pinned apps (every app stays
@@ -774,3 +774,18 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   every change (`docs/UX_SYSTEM_AUDIT.md` section 4). One engine; no
   device gets its own logic. MIA never claims awareness she doesn't have.
 - Related: docs/UX_SYSTEM_AUDIT.md, docs/specs/UX_SYSTEM.md
+
+### DEC-0045: The apps stay the layout; the smarts go into MIA
+- Status: APPROVED
+- Proposed by: zac, 2026-10-24 · Approved by: zac, 2026-10-24 ("I dont like how we tried to fix MIA from just being a collection of apps. It was better before and I think that the old form was better. I really just wanted to fix MIAs feel of being a smart AI capable of using all those apps without the user digging through everything and her being more intuitive")
+- Decision: the frame goes back to how it was before DEC-0044: the
+  sidebar of the person's apps, the phone's Home and Apps bar, Home with
+  Today's Focus and Upcoming. The five places, Presence as Home and the
+  World / My Hero's Path / System pages are removed. What stays, and
+  where the work goes now, is MIA herself: every question carries the
+  person's world (`core/presence.py` `context_lines`: their goal and
+  why, active missions, what needs them now), she knows what she can do
+  (DEC-0041), and she works the apps for the person by voice and in
+  Talk so they don't have to dig. A change to the layout itself is
+  Zac's call, asked first, never part of a handoff about something else.
+- Related: DEC-0044, docs/UX_SYSTEM_AUDIT.md (kept as history)

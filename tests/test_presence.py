@@ -1,6 +1,7 @@
-"""One system, not a collection of apps (DEC-0044): Presence ranks what
-matters now across everything with why; the frame leads to five places;
-World shows each app's status; the Path shows real wins only."""
+"""What matters now across every app, with why (core/presence.py): it
+feeds every turn so MIA answers knowing the person's world. The
+five-places frame it came with (DEC-0044) was undone by Zac, 2026-10-24;
+the apps are the layout again."""
 
 from datetime import date, timedelta
 
@@ -50,35 +51,11 @@ def test_a_failing_source_never_empties_presence(life, monkeypatch):
     assert presence_module.presence(life)["now"][0]["title"] == "Licence"
 
 
-def test_the_frame_leads_to_five_places_and_pins(life):
-    from core.web_surfaces import shell
-
-    s = shell(life)
-    assert [d["name"] for d in s["destinations"]] == ["Presence", "Conversation", "My Hero's Path", "World", "System"]
-    assert s["pinned"] == []
-    do(life, "app.favorite", module_id="flock", favorite=True)
-    assert [p["id"] for p in shell(life)["pinned"]] == ["flock"]
-
-
-def test_world_shows_what_needs_you_per_app(life):
-    from core.web_hubs import system_page, world_page
-
-    life.obligations.add("Licence", kind="licence", due_date=(date.today() + timedelta(days=3)).isoformat())
-    w = world_page(life)
-    cards = {c["id"]: c for area in w["areas"] for c in area["cards"]}
-    assert "web_home" not in cards and "assistant" not in cards
-    assert cards["compliance"]["needs"] == 2 and cards["compliance"]["line"] == "2 things need you: Licence"
-    s = system_page(life)
-    assert s["capabilities"]["apps"] > 30 and any(x["href"] == "settings.html" for x in s["screens"])
-
-
-def test_the_path_shows_wins_not_spending(life):
-    from core.web_hubs import path_page
+def test_home_wins_are_wins_not_spending(life):
+    from core.web_surfaces import dashboard
 
     life.budget.add_expense(amount=40, category="Groceries", description="Milk", date=date.today().isoformat())
-    p = path_page(life)
-    assert all("Spent" not in (w.get("summary") or "") for w in p["wins"])
-    assert any(s["href"] == "missions.html" for s in p["screens"])
+    assert all("Spent" not in (w.get("summary") or "") for w in dashboard(life)["wins"])
 
 
 def test_every_turn_knows_their_world(life):
