@@ -42,7 +42,7 @@ def test_execute_calls_the_registered_handler():
 def test_execute_unknown_action_returns_message_not_raise():
     registry = AssistantActionRegistry()
     result = registry.execute("fake-context", "does_not_exist", {})
-    assert "does_not_exist" in result
+    assert "does_not_exist" not in result and result.startswith("I got that mixed up")  # said like a person, logged for the fix
 
 
 def test_execute_handler_exception_returns_message_not_raise():
@@ -53,7 +53,7 @@ def test_execute_handler_exception_returns_message_not_raise():
     registry.register(_make_action(handler=broken_handler))
 
     result = registry.execute("fake-context", "test_action", {})
-    assert "test_action" in result
+    assert "test_action" not in result and result.startswith("Something on my side broke")  # no internal names
 
 
 def test_to_ollama_tools_shape():

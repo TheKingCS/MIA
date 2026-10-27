@@ -357,10 +357,11 @@ Build order (Zac said begin, 2026-10-27): 1) the Loop ✅ built
 (`core/weekly_checkin.py`). 3) the **Fix-It Log** ✅ built (DEC-0049, `docs/FAILURE_LOG.md`).
 **Claude on the PC, every session: read `data/profiles/<id>/fix_report.md`
 (or Apps → Fix-It Log) first, turn the worst open issues into failing
-tests and bench cases, fix, mark fixed.** Order agreed with Zac: let the
-log gather real data, then the **design audit** (DEC-0048, start from the
-log's evidence), then **User Sync** (`docs/USER_SYNC.md`, its open
-questions), then adventures. Was: the Sunday morning
+tests and bench cases, fix, mark fixed.** **2026-10-27, Zac + Chat's direction:
+the Brain, the Body, the Relationship.** The audit and the order are in
+`docs/BODY_AND_RELATIONSHIP_PLAN.md` (section 8), with four questions
+for Zac (section 9) waiting: the routing change that stops "I don't
+know", EULA facts, User Sync defaults, quiet hours. Start there. Was: the Sunday morning
 check-in, 3) adventures from the day's project with real-gain rewards
 (the craft, the recipe unlock) and guild ranks, 4) pattern noticing,
 titles, the emergent class, 5) the Codex, seasons as quarters,

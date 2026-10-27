@@ -334,7 +334,14 @@ class AssistantActionRegistry:
         action = self._actions.get(name)
         if action is None:
             log.warning("Assistant tried to call unknown action '%s'", name)
-            return f"(I tried to do something I don't know how to do: '{name}'.)"
+            from core.failure_log import observe_tool_error
+
+            try:
+                observe_tool_error(context, name, "unknown tool", arguments)
+            except Exception:
+                log.exception("The failure log couldn't record '%s'", name)
+            # Like a person who misheard: say so and ask, never "I don't know what to do".
+            return "I got that mixed up on my end. Could you say it another way? I've noted it so it gets fixed."
         from core.child_accounts import ASK_A_PARENT, tool_allowed
 
         if not tool_allowed(context, action.domain):
@@ -365,7 +372,8 @@ class AssistantActionRegistry:
                 observe_tool_error(context, name, f"{type(exc).__name__}: {exc}", arguments)
             except Exception:
                 log.exception("The failure log couldn't record '%s'", name)
-            return f"(Sorry, '{name}' didn't work.)"
+            return ("Something on my side broke while I was doing that, sorry. I've logged it so it gets fixed. "
+                    "You can try again, or do it from its page for now.")
         # Open screens re-read their data (core/main_thread.py), also when
         # the change came from the phone, on the server's thread.
         records_changed(context, name)

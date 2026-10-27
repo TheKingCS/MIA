@@ -102,7 +102,10 @@ _bearer_scheme = HTTPBearer(auto_error=False)
 # ~2.5 minutes of 16 kHz mono 16-bit audio — far longer than one spoken turn.
 MAX_VOICE_UPLOAD_BYTES = 5 * 1024 * 1024
 MAX_DOCUMENT_UPLOAD_BYTES = 25 * 1024 * 1024
-LLM_UNAVAILABLE_REPLY = "I can't think right now. My language model at home isn't responding."
+# Said like a person, with a way forward (Zac, 2026-10-27: "avoid her saying I don't know what to do").
+LLM_UNAVAILABLE_REPLY = ("I'm having trouble thinking that one through right now: my home computer isn't answering "
+                         "(it might be asleep or restarting). Quick things still work, like “add milk to the list” "
+                         "or “what's on today”.")
 NOT_HEARD_REPLY = "Sorry, I didn't catch that."
 
 
