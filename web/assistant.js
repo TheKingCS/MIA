@@ -27,6 +27,7 @@
     try {
       const turn = await MIA.talk(text);
       reply.textContent = turn.reply_text || "Done.";
+      reply.after(MIAShell.notRight(text, turn.reply_text));  // the Fix-It Log (DEC-0049)
       MIAShell.refresh();
     } catch (e) {
       reply.textContent = e.message;

@@ -59,7 +59,7 @@ from typing import Optional
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 
 from core.email_drafts import as_dict as draft_as_dict
@@ -119,6 +119,11 @@ def validate_voice_wav(audio: bytes) -> None:
                 raise ValueError("Audio is empty.")
     except (wave.Error, EOFError) as exc:
         raise ValueError(f"Not a valid WAV file: {exc or 'too short'}") from exc
+
+
+class PageErrorRequest(BaseModel):
+    page: str = Field(default="", max_length=120)
+    message: str = Field(default="", max_length=400)
 
 
 class VoiceTextRequest(BaseModel):
@@ -1599,6 +1604,22 @@ def create_app(context: AppContext) -> FastAPI:
         from core.freedom import freedom_page
 
         return _screen(profile_id, "freedom", freedom_page)
+
+    # ------------------------------------------------------------ The Fix-It Log (core/failure_log.py, DEC-0049)
+    @app.get("/api/failures")
+    def web_failures(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.failure_actions import failures_page
+
+        return _screen(profile_id, "issues", failures_page)
+
+    @app.post("/api/failures/page")
+    def web_page_error(body: PageErrorRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        """A page that broke reports itself (web/shell.js); never more than a line."""
+        from core.failure_actions import page_error
+
+        with app.state.turn_lock:
+            page_error(view_for(context, profile_id), body.page, body.message)
+        return {"logged": True}
 
     # ------------------------------------------------------------ The Sunday check-in (core/weekly_checkin.py, DEC-0047)
     @app.get("/api/checkin")

@@ -264,6 +264,7 @@
           if (used) thinking.after(used);
           // Which brain answered (DEC-0022): the home computer's model or this device's.
           if (turn.level) thinking.append(el("small", { class: "talk-level", title: "Answered by the model on " + turn.level.toLowerCase() }, turn.level));
+          thinking.append(notRight(text, turn.reply_text));
           refresh();
         } catch (err) {
           thinking.textContent = err.message;
@@ -275,6 +276,30 @@
       onclick: () => toggleTalk() }, el("span", { class: "mia-orb-core", "aria-hidden": "true" }));
     document.body.append(panel, orb);
   }
+
+  // The Fix-It Log (DEC-0049): a 👎 under a reply logs it as wrong, with what
+  // was wrong if the person wants to say; it's fixed from the log.
+  function notRight(asked, reply) {
+    const b = el("button", { type: "button", class: "talk-thumb", title: "That wasn't right", "aria-label": "That wasn't right" }, "👎");
+    b.onclick = async () => {
+      const v = await form("What Was Wrong?", [{ name: "note", label: "What should she have done? (optional)", type: "textarea" }], {});
+      if (!v) return;
+      if (await act({ kind: "failures.thumbs", params: { prompt: asked, reply: reply || "", note: v.note } }, { quick: true })) {
+        b.replaceWith(el("small", { class: "talk-thumb done" }, "Logged ✓"));
+      }
+    };
+    return b;
+  }
+
+  // A page that breaks says so itself (the Fix-It Log), a few times per visit at most.
+  let pageErrors = 0;
+  function reportPageError(message) {
+    if (pageErrors >= 3 || !message || !window.MIA || !MIA.pageError) return;
+    pageErrors += 1;
+    MIA.pageError(location.pathname.split("/").pop() || "index.html", String(message).slice(0, 300)).catch(() => {});
+  }
+  window.addEventListener("error", (e) => reportPageError(e.message + (e.filename ? " @" + e.filename.split("/").pop() + ":" + e.lineno : "")));
+  window.addEventListener("unhandledrejection", (e) => reportPageError("Unhandled: " + ((e.reason && e.reason.message) || e.reason)));
 
   // What I Used (DEC-0029): the memories MIA's answer was given, under the
   // reply; each can be fixed or forgotten (memory.fix / memory.forget).
@@ -475,7 +500,8 @@
         el("small", { class: "buff-left" }, b.lasts))));
   }
 
-  window.MIAShell = { start, act, say, el, refresh, frame, form, levelCard, conditionBar, buffChips, showDraft, confirm: confirmBox, talk: toggleTalk };
+  window.MIAShell = { start, act, say, el, refresh, frame, form, levelCard, conditionBar, buffChips, showDraft, confirm: confirmBox, talk: toggleTalk,
+    notRight };
 
   // <script src="shell.js" data-frame="garage">: frame an existing page as soon
   // as someone is signed in (now, or when its own sign-in form succeeds).

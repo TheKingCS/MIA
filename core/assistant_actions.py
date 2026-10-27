@@ -238,6 +238,14 @@ class AssistantActionRegistry:
                     break
         return domains
 
+    def _learned_domains(self, prompt: str, context: Optional["AppContext"]) -> set[str]:
+        """What this person taught MIA they mean (core/failure_log.py, tier 1):
+        a remembered phrase brings its tool's domain along."""
+        book = getattr(context, "failures", None) if context is not None else None
+        if book is None:
+            return set()
+        return {self._actions[p["tool"]].domain for p in book.phrases_in(prompt) if p["tool"] in self._actions}
+
     def matching_actions(self, prompt: str, context: Optional["AppContext"] = None) -> list[AssistantAction]:
         """
         Actions to actually attach as tools for this specific prompt —
@@ -255,6 +263,7 @@ class AssistantActionRegistry:
                 matched_domains.add(action.domain)
         matched_domains |= self._keyword_domains(lowered)
         matched_domains |= self._entity_domains(prompt, context)
+        matched_domains |= self._learned_domains(prompt, context)
 
         if not matched_domains:
             return []
@@ -348,8 +357,14 @@ class AssistantActionRegistry:
                     undo.add(change)
                 else:
                     result = action.handler(context, arguments)
-        except Exception:
+        except Exception as exc:
             log.exception("Assistant action '%s' failed", name)
+            from core.failure_log import observe_tool_error
+
+            try:
+                observe_tool_error(context, name, f"{type(exc).__name__}: {exc}", arguments)
+            except Exception:
+                log.exception("The failure log couldn't record '%s'", name)
             return f"(Sorry, '{name}' didn't work.)"
         # Open screens re-read their data (core/main_thread.py), also when
         # the change came from the phone, on the server's thread.

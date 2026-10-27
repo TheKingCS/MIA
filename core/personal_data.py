@@ -94,6 +94,7 @@ from core.freedom import FreedomLog
 from core.boss_battles import BossBook
 from core.work_dungeon import DungeonBook
 from core.the_loop import LoopBook
+from core.failure_log import FailureLog
 from core.questlines import QuestBook
 from core.world_map import WorldMap
 from core.memory_vault import MemoryVault
@@ -143,6 +144,7 @@ PERSONAL_STORES: tuple[tuple[str, type], ...] = (
     ("boss_book", BossBook),
     ("dungeon", DungeonBook),
     ("loop", LoopBook),
+    ("failures", FailureLog),
     ("quest_book", QuestBook),
     ("world_map", WorldMap),
     ("memory_vault", MemoryVault),

@@ -1519,6 +1519,18 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
 .dg-affix[aria-pressed="true"] { color: var(--text); border-color: rgb(var(--rgb-amber)); background: rgba(var(--rgb-amber), 0.14); }
 .dg-gm p { margin: 6px 0; }
 .dg-ot { margin: 8px 2px; color: var(--text-dim); }
+/* The Fix-It Log (DEC-0049) */
+.talk-thumb { margin-left: 8px; border: 0; background: transparent; cursor: pointer; opacity: 0.55; font-size: 0.9em; min-height: 32px; }
+.talk-thumb:hover, .talk-thumb:focus-visible { opacity: 1; }
+.talk-thumb.done { opacity: 0.8; color: var(--text-dim); }
+.fx-issue { border-left: 3px solid var(--line-strong); }
+.fx-issue.open { border-left-color: rgb(var(--rgb-amber)); }
+.fx-issue.fixed { border-left-color: rgb(var(--rgb-ok)); opacity: 0.85; }
+.fx-issue.ignored { opacity: 0.6; }
+.fx-example { margin: 6px 0; padding: 8px 10px; border-radius: 6px; background: rgba(var(--rgb-panel-2), 0.6); font-size: var(--text-sm); }
+.fx-example b { color: var(--text-dim); font-weight: 600; }
+.fx-report { white-space: pre-wrap; font-family: var(--font-mono); font-size: var(--text-xs); max-height: 320px; overflow: auto;
+  padding: 10px; border-radius: 8px; background: rgba(var(--rgb-panel-2), 0.6); }
 /* The Sunday check-in (DEC-0047) */
 .ci-scores { display: grid; gap: 10px; margin: 10px 0; }
 .ci-score .bar { margin: 4px 0 0; }

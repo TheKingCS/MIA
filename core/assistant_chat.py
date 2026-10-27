@@ -588,7 +588,13 @@ def build_chat_request(context, conversation: "Conversation", prompt: str) -> tu
         llm_prompt = context.device_help.build_grounded_prompt(prompt)
 
     history = trim_history(conversation.messages) if conversation is not None else []
-    messages = [{"role": "system", "content": build_system_message(context, is_action_request, is_teaching_request, prompt)}]
+    system = build_system_message(context, is_action_request, is_teaching_request, prompt)
+    learned = getattr(context, "failures", None)
+    said = learned.phrases_in(prompt) if learned is not None else []
+    if said:  # what this person taught MIA they mean (core/failure_log.py)
+        system += "\n\nIn this person's own words: " + "; ".join(
+            f"“{p['said']}” means {p['meaning'] or p['tool']}" for p in said) + "."
+    messages = [{"role": "system", "content": system}]
     messages.extend({"role": m.role, "content": m.content} for m in history)
     messages.append({"role": "user", "content": llm_prompt})
 

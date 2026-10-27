@@ -19,6 +19,7 @@ full latency to every answer. Callers speak/send first, then call
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Optional
@@ -109,12 +110,16 @@ def run_assistant_turn(context: AppContext, conversation: Conversation, prompt: 
         notices.append(prepared.notice)
 
     if context.llm is None:
+        _observe(context, conversation, prompt, [], llm_available=False)
         return AssistantTurn(replies=notices, llm_available=False)
+    started = time.monotonic()
     messages, tools = build_chat_request(context, conversation, prompt)
     used = memories_used(context, prompt, messages)
     reply = context.llm.chat_with_tools(messages, tools)
     reply = settle_on_named_tool(named_tool(context, prompt, tools), messages, tools, reply, context.llm.chat_with_tools)
+    offered = [t.get("function", {}).get("name", "") for t in tools]
     if reply is None:
+        _observe(context, conversation, prompt, offered, llm_available=False)
         return AssistantTurn(replies=notices, llm_available=False)
 
     if reply.tool_calls:
@@ -127,11 +132,38 @@ def run_assistant_turn(context: AppContext, conversation: Conversation, prompt: 
             confirmation = context.assistant_actions.execute(context, tool_call.name, tool_call.arguments)
             add_message(conversation, "assistant", confirmation)
             replies.append(confirmation)
+        called = calls_to_execute[0].name if calls_to_execute else ""
+        offer = _observe(context, conversation, prompt, offered, tool_called=called, reply=" ".join(replies),
+                         seconds=time.monotonic() - started)
+        if offer:
+            replies.append(offer)
         return AssistantTurn(replies=replies, used=used)
 
     content = with_offer(conversation, reply.content)
     add_message(conversation, "assistant", content)
+    _observe(context, conversation, prompt, offered, reply=content, seconds=time.monotonic() - started,
+             garbled=_garbled(reply.content))
     return AssistantTurn(replies=notices + [content], followup=plan_followup(context, conversation, prompt), used=used)
+
+
+def _garbled(content: str) -> bool:
+    from core.llm_manager import _looks_like_malformed_tool_call
+
+    try:
+        return bool(_looks_like_malformed_tool_call(content))
+    except Exception:
+        return False
+
+
+def _observe(context, conversation, prompt: str, offered: list, **outcome) -> Optional[str]:
+    """Where MIA stumbled this turn (core/failure_log.py); never in the way of the answer."""
+    from core.failure_log import observe_turn
+
+    try:
+        return observe_turn(context, conversation, prompt, tools_offered=offered, **outcome)
+    except Exception:
+        log.exception("The failure log couldn't record this turn")
+        return None
 
 
 def memories_used(context, prompt: str, messages: list[dict]) -> list[dict]:

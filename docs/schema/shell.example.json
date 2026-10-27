@@ -25,6 +25,13 @@
       "page": "dungeon.html"
     },
     {
+      "id": "issues",
+      "name": "Fix-It Log",
+      "icon": "🛠",
+      "tagline": "Where MIA stumbled, so it gets fixed.",
+      "page": "issues.html"
+    },
+    {
       "id": "freedom",
       "name": "Freedom",
       "icon": "🌄",

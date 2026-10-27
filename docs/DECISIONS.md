@@ -848,3 +848,20 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   changes; the layout of the apps stays his call (DEC-0045).
 - Related: DEC-0045, DEC-0047, docs/USER_SYNC.md
 
+### DEC-0049: The Fix-It Log, and three tiers of self-improvement
+- Status: APPROVED
+- Proposed by: zac, 2026-10-27 · Approved by: zac, 2026-10-27 ("Yes, build the failure log first and go with your recommendations")
+- Decision: MIA records where she stumbles (`docs/FAILURE_LOG.md`):
+  what the person says (corrections, reports, 👎) and what she can see
+  (tool errors, the model down, no tool matched, the right tool offered
+  but ignored, rephrasing, a quick undo, slow answers, broken pages);
+  each person's own, never private turns, redacted. Grouped into
+  ranked issues (Apps → Fix-It Log; "what's been going wrong?") and a
+  fix report Claude reads on the PC. Tier 1: she learns phrasings
+  herself only after the person says yes. Tier 2: settings are asked
+  first. Tier 3: she never changes her own code; each issue becomes a
+  failing test and bench case first, then the fix, full suite and bench
+  green, Zac approving. Built before the design audit (DEC-0048) so the
+  audit starts from real evidence.
+- Related: DEC-0048, docs/FAILURE_LOG.md
+

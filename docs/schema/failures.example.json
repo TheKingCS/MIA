@@ -1,0 +1,208 @@
+{
+  "available": true,
+  "days": 30,
+  "summary": {
+    "open": 6,
+    "this_week": 8,
+    "fixed": 1,
+    "learned": 1
+  },
+  "issues": [
+    {
+      "key": "tool:log_shift",
+      "title": "The log shift tool broke",
+      "count": 2,
+      "kinds": [
+        "tool_error"
+      ],
+      "said": [
+        "a tool broke"
+      ],
+      "first": "2026-10-27T07:09:02+00:00",
+      "last": "2026-10-27T07:09:02+00:00",
+      "weight": 8,
+      "status": "open",
+      "reopened": false,
+      "examples": [
+        {
+          "at": "2026-10-27T07:09:02+00:00",
+          "kind": "tool_error",
+          "note": "day=yesterday",
+          "error": "KeyError: 'hours'",
+          "tool": "log_shift"
+        },
+        {
+          "at": "2026-10-27T07:09:02+00:00",
+          "kind": "tool_error",
+          "note": "day=last night",
+          "error": "KeyError: 'hours'",
+          "tool": "log_shift"
+        }
+      ]
+    },
+    {
+      "key": "turn:get_eggs",
+      "title": "Wrong result from get eggs",
+      "count": 1,
+      "kinds": [
+        "said_wrong"
+      ],
+      "said": [
+        "you said she got it wrong"
+      ],
+      "first": "2026-10-27T07:09:02+00:00",
+      "last": "2026-10-27T07:09:02+00:00",
+      "weight": 4,
+      "status": "open",
+      "reopened": false,
+      "examples": [
+        {
+          "at": "2026-10-27T07:09:02+00:00",
+          "kind": "said_wrong",
+          "prompt": "no, I meant this week's loot",
+          "reply": "You have 13 loose eggs.",
+          "before": "what's my loot",
+          "tool": "get_eggs"
+        }
+      ]
+    },
+    {
+      "key": "turn:chat",
+      "title": "Wrong answer in chat",
+      "count": 1,
+      "kinds": [
+        "thumbs_down"
+      ],
+      "said": [
+        "a 👎 on her reply"
+      ],
+      "first": "2026-10-27T07:09:02+00:00",
+      "last": "2026-10-27T07:09:02+00:00",
+      "weight": 4,
+      "status": "open",
+      "reopened": false,
+      "examples": [
+        {
+          "at": "2026-10-27T07:09:02+00:00",
+          "kind": "thumbs_down",
+          "prompt": "when do I work next",
+          "reply": "I don't have that.",
+          "note": "It's on the Loop tab"
+        }
+      ]
+    },
+    {
+      "key": "routing:log_shift",
+      "title": "Offered log shift but only talked",
+      "count": 1,
+      "kinds": [
+        "talked_instead"
+      ],
+      "said": [
+        "the right tool was there but she only talked"
+      ],
+      "first": "2026-10-27T07:09:02+00:00",
+      "last": "2026-10-27T07:09:02+00:00",
+      "weight": 3,
+      "status": "open",
+      "reopened": false,
+      "examples": [
+        {
+          "at": "2026-10-27T07:09:02+00:00",
+          "kind": "talked_instead",
+          "prompt": "put 9 hours down for tonight",
+          "reply": "Sounds like a long night!",
+          "tools": [
+            "log_shift",
+            "plan_shift"
+          ],
+          "tool": "log_shift"
+        }
+      ]
+    },
+    {
+      "key": "no_tool",
+      "title": "Requests MIA couldn't match to anything",
+      "count": 1,
+      "kinds": [
+        "no_tool"
+      ],
+      "said": [
+        "a request no tool matched"
+      ],
+      "first": "2026-10-27T07:09:02+00:00",
+      "last": "2026-10-27T07:09:02+00:00",
+      "weight": 2,
+      "status": "open",
+      "reopened": false,
+      "examples": [
+        {
+          "at": "2026-10-27T07:09:02+00:00",
+          "kind": "no_tool",
+          "prompt": "add the drill to the garage",
+          "reply": "I can't do that yet."
+        }
+      ]
+    },
+    {
+      "key": "slow",
+      "title": "Slow answers",
+      "count": 1,
+      "kinds": [
+        "slow"
+      ],
+      "said": [
+        "a slow answer"
+      ],
+      "first": "2026-10-27T07:09:02+00:00",
+      "last": "2026-10-27T07:09:02+00:00",
+      "weight": 1,
+      "status": "open",
+      "reopened": false,
+      "examples": [
+        {
+          "at": "2026-10-27T07:09:02+00:00",
+          "kind": "slow",
+          "prompt": "how did my week go",
+          "seconds": 31.4
+        }
+      ]
+    },
+    {
+      "key": "page:dungeon.html:TypeError: cannot read 'loot_text' @dungeon.js:88",
+      "title": "A page broke: dungeon.html",
+      "count": 1,
+      "kinds": [
+        "page_error"
+      ],
+      "said": [
+        "a page broke"
+      ],
+      "first": "2026-10-27T07:09:02+00:00",
+      "last": "2026-10-27T07:09:02+00:00",
+      "weight": 3,
+      "status": "fixed",
+      "reopened": false,
+      "examples": [
+        {
+          "at": "2026-10-27T07:09:02+00:00",
+          "kind": "page_error",
+          "error": "TypeError: cannot read 'loot_text' @dungeon.js:88",
+          "page": "dungeon.html"
+        }
+      ]
+    }
+  ],
+  "phrases": [
+    {
+      "phrase_id": "010bda299f",
+      "said": "got off work",
+      "tool": "log_shift",
+      "meaning": "log my shift",
+      "created_at": "2026-10-27T07:09:02",
+      "does": "log_shift"
+    }
+  ],
+  "report": "# MIA fix report\n\nGenerated 2026-10-27 07:09, last 30 days. Open issues, worst first. Personal: keep out of the repo; turn each into a test, not a copy of these words.\n\n## 1. The log shift tool broke (2×, a tool broke)\n\n- key: `tool:log_shift` · first 2026-10-27T07:09 · last 2026-10-27T07:09\n- 2026-10-27T07:09 tool_error | note: day=yesterday | error: KeyError: 'hours'\n- 2026-10-27T07:09 tool_error | note: day=last night | error: KeyError: 'hours'\n\nTest to write first: call the `log_shift` handler with the example's arguments and assert it returns a sentence, not an error.\n\n## 2. Wrong result from get eggs (1×, you said she got it wrong)\n\n- key: `turn:get_eggs` · first 2026-10-27T07:09 · last 2026-10-27T07:09\n- 2026-10-27T07:09 said_wrong | before: what's my loot | prompt: no, I meant this week's loot | reply: You have 13 loose eggs.\n\nTest to write first: reproduce “what's my loot” and assert the right tool or answer; add it to the live-model bench.\n\n## 3. Wrong answer in chat (1×, a 👎 on her reply)\n\n- key: `turn:chat` · first 2026-10-27T07:09 · last 2026-10-27T07:09\n- 2026-10-27T07:09 thumbs_down | prompt: when do I work next | reply: I don't have that. | note: It's on the Loop tab\n\nTest to write first: reproduce “when do I work next” and assert the right tool or answer; add it to the live-model bench.\n\n## 4. Offered log shift but only talked (1×, the right tool was there but she only talked)\n\n- key: `routing:log_shift` · first 2026-10-27T07:09 · last 2026-10-27T07:09\n- 2026-10-27T07:09 talked_instead | prompt: put 9 hours down for tonight | reply: Sounds like a long night! | tools: ['log_shift', 'plan_shift']\n\nTest to write first: a routing case in tests/test_assistant_routing.py and a bench case in data/model_bench_cases.json: “put 9 hours down for tonight” → the right tool.\n\n## 5. Requests MIA couldn't match to anything (1×, a request no tool matched)\n\n- key: `no_tool` · first 2026-10-27T07:09 · last 2026-10-27T07:09\n- 2026-10-27T07:09 no_tool | prompt: add the drill to the garage | reply: I can't do that yet.\n\nTest to write first: a routing case in tests/test_assistant_routing.py and a bench case in data/model_bench_cases.json: “add the drill to the garage” → the right tool.\n\n## 6. Slow answers (1×, a slow answer)\n\n- key: `slow` · first 2026-10-27T07:09 · last 2026-10-27T07:09\n- 2026-10-27T07:09 slow | prompt: how did my week go | seconds: 31.4\n\nTest to write first: check the model and its settings on the PC (python -m tools.pc_check); time the example on the bench.\n\n## Learned phrasings (tier 1, confirmed by the person)\n\n- “got off work” → `log_shift` (log my shift)\n\nIf a phrasing is common, consider a trigger phrase for that tool (with a routing test).\n",
+  "since": "2026-10-20"
+}

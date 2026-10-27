@@ -354,10 +354,13 @@ every step below in order, from a blank machine, with Windows notes.
 **The mission system is locked in (DEC-0047, `docs/MISSION_SYSTEM.md`).**
 Build order (Zac said begin, 2026-10-27): 1) the Loop ✅ built
 (`core/the_loop.py`), 2) the Sunday check-in ✅ built
-(`core/weekly_checkin.py`). Ask Zac what's next among: the rest of the
-mission order below, **User Sync** (DEC-0048, `docs/USER_SYNC.md`, its
-open questions), and the **design audit** of every page (DEC-0048: agree
-the organization with Zac and Muse before changing layouts). Was: the Sunday morning
+(`core/weekly_checkin.py`). 3) the **Fix-It Log** ✅ built (DEC-0049, `docs/FAILURE_LOG.md`).
+**Claude on the PC, every session: read `data/profiles/<id>/fix_report.md`
+(or Apps → Fix-It Log) first, turn the worst open issues into failing
+tests and bench cases, fix, mark fixed.** Order agreed with Zac: let the
+log gather real data, then the **design audit** (DEC-0048, start from the
+log's evidence), then **User Sync** (`docs/USER_SYNC.md`, its open
+questions), then adventures. Was: the Sunday morning
 check-in, 3) adventures from the day's project with real-gain rewards
 (the craft, the recipe unlock) and guild ranks, 4) pattern noticing,
 titles, the emergent class, 5) the Codex, seasons as quarters,
@@ -584,18 +587,6 @@ it, and went with Claude's recommendations. The plan, in order:
 
 ## 3. Ideas parked for later (need their own planning pass)
 
-- **MIA's failure log and safe self-improvement (Zac, 2026-10-27).** A log
-  of where MIA fails and why (errors, wrong tools, rephrasings, undos
-  right after an action, "no, I meant…", rejected proposals, slow or
-  missing answers, page errors), grouped into issues, sent to Claude to
-  fix. Claude's proposal in chat: three tiers. Data-only fixes she makes
-  herself after the person confirms ("when you say X you mean Y", per
-  person, undoable). Setting changes she proposes. Code changes never
-  by herself: each issue becomes a failing test and a live-model bench
-  case, then fixed, full suite and bench green, Zac approves. The log is
-  personal (data/, never the repo; never passwords or off-the-record
-  turns). Waiting on Zac's OK and its place in the order (design audit,
-  User Sync, adventures).
 
 
 - **The ideas list: `docs/future/IDEAS.md`** (Zac, 2026-10-18): future
