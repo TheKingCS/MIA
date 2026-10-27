@@ -351,6 +351,15 @@ every step below in order, from a blank machine, with Windows notes.
 
 ## 2. Build queue (Claude), in order
 
+**The mission system is locked in (DEC-0047, `docs/MISSION_SYSTEM.md`).**
+Build order to agree with Zac (Claude's suggestion): 1) the Loop from
+what recurs + missed days as the share cleared, 2) the Sunday morning
+check-in, 3) adventures from the day's project with real-gain rewards
+(the craft, the recipe unlock) and guild ranks, 4) pattern noticing,
+titles, the emergent class, 5) the Codex, seasons as quarters,
+cutscenes. Muse's H-0074 Dungeon tweaks (chip labels, overtime on its
+own line) are waiting too.
+
 **Zac, at the PC (2026-10-27, DEC-0046):** Apps → The Dungeon → Set Up
 Your Dungeon: the job, pay an hour, when overtime starts, the day the pay
 week starts, and the words the paycheck shows in the bank (look at one
@@ -569,18 +578,6 @@ it, and went with Claude's recommendations. The plan, in order:
 
 ## 3. Ideas parked for later (need their own planning pass)
 
-- **The mission system, to lock in with Zac before any change (Zac,
-  2026-10-27).** His shape: a standard **loop** (the weekly dungeon grind
-  and progression checks, learned from his schedule) and **adventure
-  mode** when he does something outside the norm, the quest built from
-  that day's project ("New Mission: Woodworkers Guild Apprentice
-  Quest"). Open questions put to him in chat: who creates missions (MIA
-  proposes and he accepts, or automatic), where they come from, how big,
-  how rewards are set, how one is completed (evidence or a tap), daily
-  limits, guilds as skill trees with ranks. Then more gamification ideas
-  (his ask: MIA as a super-intelligent assistant that lives in his mind,
-  gamifies and organizes his life). Muse's H-0074 Dungeon tweaks are
-  waiting too (chip labels, overtime on its own line).
 
 - **The ideas list: `docs/future/IDEAS.md`** (Zac, 2026-10-18): future
   features that automate life and save money, each written up the same

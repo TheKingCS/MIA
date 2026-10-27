@@ -814,3 +814,20 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   nothing.
 - Related: DEC-0028 (the game layer), DEC-0038 (Freedom), DEC-0014
 
+### DEC-0047: How missions work (the loop, adventures, real-gain rewards)
+- Status: APPROVED
+- Proposed by: claude, 2026-10-27 (from Zac's loop / adventure idea) · Approved by: zac, 2026-10-27 ("Take note of all your suggestions because I like them all", and his answers to the six questions)
+- Decision: the mission system in `docs/MISSION_SYSTEM.md`. Loop missions
+  appear automatically from what recurs; adventures are proposed from the
+  day's project (guild quests, ranks, rank-up trials). A mission completes
+  by evidence, a tap, or telling MIA. Rewards are what's actually gained
+  (the finished craft, the recipe unlocked, the pay), with XP, ranks and
+  titles beside them. No cap on missions (unprompted messages still go
+  through the gate). Sunday morning check-in: last week's recap and this
+  week's planned missions. A missed loop day shows plainly as nothing
+  earned and the week's share cleared, with nothing taken away. Also
+  approved to build: pattern noticing, titles, an emergent class, New
+  Game+, the Codex, rest as camp, party quests, quarterly seasons,
+  cutscenes, rare finds from real milestones only.
+- Related: DEC-0014, DEC-0028, DEC-0046, docs/MISSION_SYSTEM.md
+
