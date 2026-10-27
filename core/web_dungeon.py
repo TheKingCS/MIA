@@ -159,7 +159,7 @@ def dungeon_view(context, d, runs: list, today: date) -> dict:
         "runs": [_run_row(r, cleared, d) for r in done[:30]],
         "hard_mode": record,
         "values": {f: getattr(d, f) for f in ("name", "hourly", "overtime_multiplier", "overtime_after", "week_starts",
-                                              "take_home_pct", "payer", "shift_hours", "notes")},
+                                              "take_home_pct", "payer", "shift_hours", "break_minutes", "notes")},
         "share": share,
     }
 

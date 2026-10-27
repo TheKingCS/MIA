@@ -1600,6 +1600,13 @@ def create_app(context: AppContext) -> FastAPI:
 
         return _screen(profile_id, "freedom", freedom_page)
 
+    # ------------------------------------------------------------ The Sunday check-in (core/weekly_checkin.py, DEC-0047)
+    @app.get("/api/checkin")
+    def web_checkin(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.weekly_checkin import checkin
+
+        return _screen(profile_id, "missions", checkin)
+
     # ------------------------------------------------------------ The Dungeon (core/web_dungeon.py, DEC-0046)
     @app.get("/api/dungeon")
     def web_dungeon(profile_id: str = Depends(require_profile_id)) -> dict:

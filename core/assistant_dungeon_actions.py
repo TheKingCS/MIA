@@ -167,6 +167,7 @@ def _get_loop(context, arguments: dict) -> str:
         return "The loop isn't set up on this MIA."
     ensure_rhythms(context)
     page = loop_page(context)
+    page["rhythms"] = [r for r in page["rhythms"] if r["kind"] != "checkin"]
     if not page["rhythms"]:
         return "Nothing in your loop yet: set up your dungeon (the job) or a household routine, or tell me when something happens."
     said = []
@@ -205,7 +206,38 @@ def register_loop_actions(registry: AssistantActionRegistry) -> None:
         name="get_loop", domain="loop",
         description="The normal week (the loop): work and chores, their days and times, and this week's runs cleared or missed.",
         parameters={"type": "object", "properties": {}, "required": []}, handler=_get_loop,
-        trigger_phrases=("my loop", "my week look", "when do i work", "what's my week",
-                         "whats my week", "this week's grind", "the grind"),
+        trigger_phrases=("my loop", "when do i work", "this week's grind", "the grind"),
         subjects=("loop", "schedule", "week", "routine"),
+    ))
+
+
+def _get_checkin(context, arguments: dict) -> str:
+    from core.weekly_checkin import checkin
+
+    c = checkin(context)
+    last, ahead = c["last"], c["ahead"]
+    said = [f"Last week ({last['span']}): {last['chapter']}."]
+    for row in last["loop"]:
+        if row["scheduled"]:
+            said.append(f"{row['name']}: {row['cleared']} of {row['scheduled']} cleared.")
+    if last["loot"] and last["loot"]["loot_text"]:
+        said.append(f"Loot: {last['loot']['loot_text']} from {last['loot']['runs']} runs"
+                    + (f", {last['loot']['banked_text']} banked." if last["loot"]["banked_text"] else "."))
+    said += last["noticed"][:2]
+    said.append(f"This week: {ahead['runs']} run{'s' if ahead['runs'] != 1 else ''} planned"
+                + (f", {ahead['projected_text']} projected" if ahead["projected_text"] else "") + ".")
+    if ahead["quests"]:
+        said.append("Quests in progress: " + ", ".join(q["name"] for q in ahead["quests"][:3]) + ".")
+    return " ".join(said)
+
+
+def register_checkin_actions(registry: AssistantActionRegistry) -> None:
+    registry.register(AssistantAction(
+        name="get_weekly_checkin", domain="loop",
+        description="The weekly check-in: last week's recap (loop cleared, loot, what MIA noticed) and this week laid out.",
+        parameters={"type": "object", "properties": {}, "required": []}, handler=_get_checkin,
+        trigger_phrases=("weekly check in", "weekly check-in", "sunday check in", "sunday check-in", "my check-in",
+                         "how did my week go", "how was my week", "weekly recap",
+                         "week ahead", "what's my week", "whats my week", "my week look", "recap my week"),
+        subjects=("week", "check", "recap"),
     ))

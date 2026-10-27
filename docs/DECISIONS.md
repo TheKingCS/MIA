@@ -831,3 +831,20 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   cutscenes, rare finds from real milestones only.
 - Related: DEC-0014, DEC-0028, DEC-0046, docs/MISSION_SYSTEM.md
 
+### DEC-0048: User Sync, and a design audit before more features
+- Status: APPROVED (to plan; not built)
+- Proposed by: zac, 2026-10-27 · Approved by: zac, 2026-10-27
+- Decision: (1) **User Sync** (`docs/USER_SYNC.md`): handing MIA to a new
+  person starts a deep getting-to-know-you conversation that fills their
+  loop, first missions, garage, kitchen, workouts and goals, each record
+  confirmed; then MIA stays curious and surveys what's working, switching
+  features on and off to suit them. The person signs in to confirm it's
+  them; their data is their own. (2) **A design audit**: Zac, "I have
+  just kind of thrown my every idea at you to build her brain but not
+  really worried about the design and flow of utilizing MIA or the apps
+  pages and layouts". Every function and page gets audited for how it's
+  organized and laid out to be the most intuitive, easy to use and easy
+  to read, and the organization is agreed with Zac (and Muse) before the
+  changes; the layout of the apps stays his call (DEC-0045).
+- Related: DEC-0045, DEC-0047, docs/USER_SYNC.md
+

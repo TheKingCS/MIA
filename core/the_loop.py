@@ -53,7 +53,7 @@ _DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 _FILE = "loop.json"
 
 DAY_NAMES = ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-KINDS = ("work", "routine", "custom")
+KINDS = ("work", "routine", "custom", "checkin")
 LEARN_WEEKS = 6
 MIN_TIMES = 3  # completions before a time is learned
 CHORE_LEAD = 30  # chores are learned from when they're done: they start about this many minutes before
@@ -237,6 +237,7 @@ class LoopBook:
         self.made: dict[str, list[str]] = {}  # rhythm_id -> days its work run was planned (never planned again)
         self.fired: dict[str, str] = {}  # rhythm_id -> the last day its reminder went out
         self.learned_on = ""
+        self.checkins: list[str] = []  # the Sundays whose check-in was done
         if not self._file.exists():
             return
         try:
@@ -246,6 +247,7 @@ class LoopBook:
             self.made = {str(k): list(v) for k, v in (raw.get("made") or {}).items()}
             self.fired = {str(k): str(v) for k, v in (raw.get("fired") or {}).items()}
             self.learned_on = str(raw.get("learned_on") or "")
+            self.checkins = [str(x) for x in raw.get("checkins") or []]
         except (json.JSONDecodeError, OSError, TypeError, AttributeError):
             log.exception("loop.json unreadable — starting empty.")
             notify_data_corruption(self.context, _FILE)
@@ -258,7 +260,8 @@ class LoopBook:
         cutoff = (date.today() - timedelta(days=60)).isoformat()
         self.made = {k: [d for d in v if d >= cutoff] for k, v in self.made.items()}
         atomic_write_text(self._file, json.dumps({"rhythms": [asdict(r) for r in self.rhythms], "made": self.made,
-                                                  "fired": self.fired, "learned_on": self.learned_on}, indent=2))
+                                                  "fired": self.fired, "learned_on": self.learned_on,
+                                                  "checkins": self.checkins[-60:]}, indent=2))
 
     def get(self, rhythm_id: str) -> Optional[Rhythm]:
         return next((r for r in self.rhythms if r.rhythm_id == rhythm_id), None)
@@ -353,6 +356,10 @@ def ensure_rhythms(context) -> list[Rhythm]:
     for d in (dungeons.dungeons if dungeons else []):
         if book.find("work", d.dungeon_id) is None:
             made.append(book.add(d.name, "work", d.dungeon_id, "⚔", lead_minutes=30))
+    if book.find("checkin") is None:
+        # DEC-0047 rule 5: Sunday morning, last week's recap and this week's missions.
+        made.append(book.add("Sunday Check-In", "checkin", "", "📜", days=[6], start="09:00", lead_minutes=0,
+                             days_source="yours", start_source="yours"))
     store = getattr(context, "recurring_missions", None)
     if store is not None and any(t.active and t.category == "Household" for t in store.all_templates()) \
             and book.find("routine", "Household") is None:
@@ -378,6 +385,8 @@ def learn(context, today: Optional[date] = None) -> None:
         starts: list[int] = []
         ends: list[int] = []
         if r.kind == "work" and dungeons is not None:
+            dg = dungeons.get_dungeon(r.ref)
+            unpaid = float(getattr(dg, "break_minutes", 0) or 0) if dg else 0.0
             for run in dungeons.runs:
                 d = _day(run.date)
                 if run.dungeon_id != r.ref or run.status != "cleared" or d is None or d < since:
@@ -387,7 +396,7 @@ def learn(context, today: Optional[date] = None) -> None:
                 if at is not None and timedelta(0) <= at - datetime.combine(d, time()) <= timedelta(hours=36):
                     end = at.hour * 60 + at.minute
                     ends.append(end)
-                    starts.append((end - int(round(run.hours * 60))) % 1440)
+                    starts.append((end - int(round(run.hours * 60 + unpaid))) % 1440)
         elif r.kind == "routine":
             for m in _routine_missions(context, r):
                 at = _stamp(m.updated_at)
@@ -439,7 +448,7 @@ def plan_week(context, today: Optional[date] = None, ahead: int = 7) -> int:
         d = dungeons.get_dungeon(r.ref) if r.kind == "work" else None
         if d is None or not r.active or not r.days:
             continue
-        hours = span_hours(r.start, r.end) or float(d.shift_hours or 0)
+        hours = paid_hours(r, d)
         if not hours:
             continue
         for i in range(ahead + 1):
@@ -455,6 +464,16 @@ def plan_week(context, today: Optional[date] = None, ahead: int = 7) -> int:
             count += 1
     book.save()
     return count
+
+
+def paid_hours(r: Rhythm, d) -> float:
+    """Pure logic. A work run's paid hours: time at work minus the unpaid
+    break (9:30 PM – 6 AM with a 30-minute break pays 8), else the
+    dungeon's usual shift."""
+    span = span_hours(r.start, r.end)
+    if not span:
+        return float(d.shift_hours or 0)
+    return round(max(0.0, span - float(getattr(d, "break_minutes", 0) or 0) / 60), 2)
 
 
 def shift_day_for(context, dungeon_id: str, now: Optional[datetime] = None) -> date:
@@ -506,8 +525,10 @@ def _reminder(context, r: Rhythm, today: date, start: datetime) -> Optional[tupl
         run = next((x for x in dungeons.runs if x.dungeon_id == d.dungeon_id and x.date == today.isoformat()), None)
         if run is not None and run.status == "cleared":
             return None
-        hours = run.hours if run else (span_hours(r.start, r.end) or d.shift_hours)
-        text = f"{d.name} opens at {when}" + (f" until {clock_text(r.end)}" if r.end else "") + f": a {hours:g}-hour run"
+        hours = run.hours if run else paid_hours(r, d)
+        text = f"{d.name} opens at {when}" + (f" until {clock_text(r.end)}" if r.end else "") + f": {_a(hours)} {hours:g}-hour run"
+        if d.break_minutes:
+            text += f" (plus your {d.break_minutes:g}-minute break)"
         if d.hourly and run is not None:
             from core.region import money
             from core.work_dungeon import loot, split_hours
@@ -521,7 +542,16 @@ def _reminder(context, r: Rhythm, today: date, start: datetime) -> Optional[tupl
             return None
         names = ", ".join(m.name.split(" — ")[0] for m in open_[:4])
         return f"{r.icon} {r.name} time", f"Usually around {when}: {len(open_)} to do today ({names})."
+    if r.kind == "checkin":
+        from core.weekly_checkin import reminder_line
+
+        return reminder_line(context, today)
     return f"{r.icon} {r.name}", f"{r.name} at {when}."
+
+
+def _a(hours: float) -> str:
+    """Pure logic. "an 8-hour", "an 11-hour", "a 10-hour"."""
+    return "an" if f"{hours:g}".startswith(("8", "11", "18")) else "a"
 
 
 def tick(context, now: Optional[datetime] = None) -> int:
@@ -549,20 +579,21 @@ def tick(context, now: Optional[datetime] = None) -> int:
 # ---------------------------------------------------------------- the week
 
 
-def week(context, today: Optional[date] = None) -> dict:
-    """This week's loop (Monday first): each rhythm's scheduled days and
-    how each went. A past scheduled day with nothing done earned nothing
-    (shown plainly); the share cleared is the week's honest score."""
+def week(context, today: Optional[date] = None, start: Optional[date] = None) -> dict:
+    """This week's loop (Monday first, or any seven days from `start`):
+    each rhythm's scheduled days and how each went. A past scheduled day
+    with nothing done earned nothing (shown plainly); the share cleared
+    is the week's honest score."""
     from core.region import money
 
     book = getattr(context, "loop", None)
     today = today or date.today()
-    monday = today - timedelta(days=today.weekday())
+    monday = start or today - timedelta(days=today.weekday())
     days = [monday + timedelta(days=i) for i in range(7)]
     rows = []
     dungeons = getattr(context, "dungeon", None)
     for r in (book.rhythms if book else []):
-        if not r.active:
+        if not r.active or r.kind == "checkin":
             continue
         cells, scheduled, done = [], 0, 0
         split = {}
@@ -629,4 +660,13 @@ def loop_page(context, today: Optional[date] = None) -> dict:
     if book is None:
         return {"available": False}
     ensure_rhythms(context)
-    return {"available": True, "rhythms": [rhythm_view(r) for r in book.rhythms], "week": week(context, today)}
+    dungeons = getattr(context, "dungeon", None)
+    views = []
+    for r in book.rhythms:
+        v = rhythm_view(r)
+        d = dungeons.get_dungeon(r.ref) if (r.kind == "work" and dungeons) else None
+        if d is not None and v["hours"]:
+            v["paid_hours"] = paid_hours(r, d)
+            v["break_minutes"] = d.break_minutes
+        views.append(v)
+    return {"available": True, "rhythms": views, "week": week(context, today)}

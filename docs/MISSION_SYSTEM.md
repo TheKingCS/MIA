@@ -117,7 +117,7 @@ sound, the glasses, the communication gate.
 | Adventures from the day's project, guild quests | to build |
 | Real-gain rewards (the craft, recipe unlocks) | to build |
 | Completion by evidence, tap or telling her | partly (tap, telling her) |
-| Sunday morning check-in | to build |
+| Sunday morning check-in | ✅ built 2026-10-27 (`core/weekly_checkin.py`, `web/checkin.html`): last week's story, the loop's score, loot, what MIA noticed; this week day by day; a rhythm of its own (Sundays 9:00, movable); Debrief Done +15 XP |
 | Missed loop days shown as the share cleared | ✅ built (the week grid: cleared ✓, missed ✗ earning nothing, "3 of 4 cleared so far") |
 | Guilds, ranks, rank-up trials, unlocks | to build |
 | Morning quest log, evening debrief | to build |

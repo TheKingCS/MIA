@@ -12,6 +12,8 @@ what the person says about when things happen, in plain words, undoable.
 - `loop.forget`: let MIA learn the days or the times again.
 - `loop.delete`: remove a rhythm of their own (work and chores come back
   by themselves; turn their reminder off instead).
+- `loop.checkin_done`: the Sunday check-in read (core/weekly_checkin.py):
+  +15 XP once a week, and its reminder stops for the day.
 """
 
 from __future__ import annotations
@@ -147,6 +149,29 @@ def _delete_execute(context, params) -> str:
     return "Removed."
 
 
+def _checkin_describe(context, params) -> str:
+    from datetime import date
+
+    from core.weekly_checkin import DONE_XP
+
+    if date.today().isoformat() in _book(context).checkins:
+        raise ActionError("This week's check-in is already done.")
+    return f"Check-in done: on to the week. +{DONE_XP} XP"
+
+
+def _checkin_execute(context, params) -> str:
+    from datetime import date
+
+    from core.gamification import SkillWeight, grant_xp
+    from core.weekly_checkin import DONE_XP
+
+    book = _book(context)
+    book.checkins.append(date.today().isoformat())
+    book.save()
+    grant_xp(context, DONE_XP, "📜 Weekly debrief done", "On to the week.", skill_weights=[SkillWeight("organization", 3)])
+    return f"Debrief done. +{DONE_XP} XP. Have a good week."
+
+
 def _register() -> None:
     names = {"rhythm_id": "the rhythm", "name": "work, chores, or a name"}
     for kind in (
@@ -155,6 +180,7 @@ def _register() -> None:
                                        "remind": "yes / no"}, _set_describe, _set_execute),
         ActionType("loop.forget", "Learn Again", {**names, "what": "times or days"}, _forget_describe, _forget_execute),
         ActionType("loop.delete", "Remove", names, _delete_describe, _delete_execute),
+        ActionType("loop.checkin_done", "Check-In Done", {}, _checkin_describe, _checkin_execute, True),
     ):
         ACTION_TYPES[kind.kind] = kind
 

@@ -3,7 +3,7 @@
   "as_of": "2026-10-27",
   "dungeons": [
     {
-      "id": "557b244914",
+      "id": "53d2d923af",
       "name": "The warehouse",
       "hourly": 21.5,
       "set_up": true,
@@ -15,7 +15,7 @@
         "week_starts": "Monday"
       },
       "today": {
-        "id": "89c0ea3ac5",
+        "id": "ca6dd4699c",
         "date": "2026-10-27",
         "hours": 9.0,
         "status": "planned",
@@ -84,7 +84,7 @@
       },
       "planned": [
         {
-          "id": "c5289628a3",
+          "id": "09e32a81af",
           "date": "2026-10-28",
           "hours": 9.0,
           "status": "planned",
@@ -99,7 +99,7 @@
           "note": ""
         },
         {
-          "id": "05ec0961e1",
+          "id": "7fc6bae260",
           "date": "2026-10-29",
           "hours": 9.0,
           "status": "planned",
@@ -114,7 +114,7 @@
           "note": ""
         },
         {
-          "id": "23a3c21a59",
+          "id": "b6be2f60ea",
           "date": "2026-10-31",
           "hours": 8.0,
           "status": "planned",
@@ -132,7 +132,7 @@
       "waiting": [],
       "runs": [
         {
-          "id": "a6d6f66b07",
+          "id": "b132274ed3",
           "date": "2026-10-26",
           "hours": 9.0,
           "status": "cleared",
@@ -153,7 +153,7 @@
           "note": ""
         },
         {
-          "id": "aaa66e82af",
+          "id": "35d2f410ec",
           "date": "2026-10-23",
           "hours": 8.0,
           "status": "cleared",
@@ -174,7 +174,7 @@
           "note": ""
         },
         {
-          "id": "f86ba50bee",
+          "id": "ee037b4099",
           "date": "2026-10-22",
           "hours": 9.0,
           "status": "cleared",
@@ -189,7 +189,7 @@
           "note": ""
         },
         {
-          "id": "2c55e5523e",
+          "id": "acbbe6f132",
           "date": "2026-10-21",
           "hours": 9.0,
           "status": "cleared",
@@ -204,7 +204,7 @@
           "note": ""
         },
         {
-          "id": "63c63b2d78",
+          "id": "7c7bec2fa4",
           "date": "2026-10-20",
           "hours": 9.0,
           "status": "cleared",
@@ -225,7 +225,7 @@
           "note": ""
         },
         {
-          "id": "7454aa1cb0",
+          "id": "c7ba7d2142",
           "date": "2026-10-19",
           "hours": 9.0,
           "status": "cleared",
@@ -240,7 +240,7 @@
           "note": ""
         },
         {
-          "id": "9a291e82d4",
+          "id": "73752c3273",
           "date": "2026-10-16",
           "hours": 8.0,
           "status": "cleared",
@@ -261,7 +261,7 @@
           "note": ""
         },
         {
-          "id": "c29d13d2ae",
+          "id": "94a84fcf6f",
           "date": "2026-10-15",
           "hours": 9.0,
           "status": "cleared",
@@ -276,7 +276,7 @@
           "note": ""
         },
         {
-          "id": "03d6153006",
+          "id": "4b3092d489",
           "date": "2026-10-14",
           "hours": 9.0,
           "status": "cleared",
@@ -291,7 +291,7 @@
           "note": ""
         },
         {
-          "id": "e4326adb21",
+          "id": "02336a2516",
           "date": "2026-10-13",
           "hours": 9.0,
           "status": "cleared",
@@ -317,7 +317,7 @@
           "note": ""
         },
         {
-          "id": "1178a4041e",
+          "id": "b1ea632a20",
           "date": "2026-10-12",
           "hours": 9.0,
           "status": "cleared",
@@ -332,7 +332,7 @@
           "note": ""
         },
         {
-          "id": "8859cd6e85",
+          "id": "9216ef9f12",
           "date": "2026-10-09",
           "hours": 8.0,
           "status": "cleared",
@@ -347,7 +347,7 @@
           "note": ""
         },
         {
-          "id": "b7063b93a5",
+          "id": "f6434bbfd3",
           "date": "2026-10-08",
           "hours": 9.0,
           "status": "cleared",
@@ -362,7 +362,7 @@
           "note": ""
         },
         {
-          "id": "1a735ebe84",
+          "id": "5a23a24f98",
           "date": "2026-10-07",
           "hours": 9.0,
           "status": "cleared",
@@ -377,7 +377,7 @@
           "note": ""
         },
         {
-          "id": "ce8298a2f2",
+          "id": "79d96bc449",
           "date": "2026-10-06",
           "hours": 9.0,
           "status": "cleared",
@@ -398,7 +398,7 @@
           "note": ""
         },
         {
-          "id": "41daf27f50",
+          "id": "4fd833173f",
           "date": "2026-10-05",
           "hours": 9.0,
           "status": "cleared",
@@ -413,7 +413,7 @@
           "note": ""
         },
         {
-          "id": "55f53a7c99",
+          "id": "a23ce974be",
           "date": "2026-10-02",
           "hours": 8.0,
           "status": "cleared",
@@ -428,7 +428,7 @@
           "note": ""
         },
         {
-          "id": "d8cc58f7ab",
+          "id": "730722cb43",
           "date": "2026-10-01",
           "hours": 9.0,
           "status": "cleared",
@@ -443,7 +443,7 @@
           "note": ""
         },
         {
-          "id": "7fa9bee259",
+          "id": "d528d22805",
           "date": "2026-09-30",
           "hours": 9.0,
           "status": "cleared",
@@ -458,7 +458,7 @@
           "note": ""
         },
         {
-          "id": "44def63ac7",
+          "id": "764787aa57",
           "date": "2026-09-29",
           "hours": 9.0,
           "status": "cleared",
@@ -479,7 +479,7 @@
           "note": ""
         },
         {
-          "id": "aadb91a1b8",
+          "id": "eeed4e60c9",
           "date": "2026-09-28",
           "hours": 9.0,
           "status": "cleared",
@@ -545,6 +545,7 @@
         "take_home_pct": 0.0,
         "payer": "EXAMPLE CO PAYROLL",
         "shift_hours": 9.0,
+        "break_minutes": 0.0,
         "notes": ""
       },
       "share": 0.8708
@@ -564,7 +565,7 @@
     "available": true,
     "rhythms": [
       {
-        "id": "e4f1f461bb",
+        "id": "29b4a4d42d",
         "name": "The warehouse",
         "kind": "work",
         "icon": "⚔",
@@ -588,10 +589,35 @@
         "lead_minutes": 30,
         "remind": true,
         "active": true,
-        "line": "Mon–Fri · 9:30 PM – 6:00 AM"
+        "line": "Mon–Fri · 9:30 PM – 6:00 AM",
+        "paid_hours": 8.5,
+        "break_minutes": 0.0
       },
       {
-        "id": "85b3e840ae",
+        "id": "a8324530b7",
+        "name": "Sunday Check-In",
+        "kind": "checkin",
+        "icon": "📜",
+        "days": [
+          6
+        ],
+        "days_text": "Sun",
+        "start": "09:00",
+        "end": "",
+        "start_text": "9:00 AM",
+        "end_text": "",
+        "hours": null,
+        "days_source": "yours",
+        "start_source": "yours",
+        "end_source": "",
+        "learned_from": 0,
+        "lead_minutes": 0,
+        "remind": true,
+        "active": true,
+        "line": "Sun · 9:00 AM"
+      },
+      {
+        "id": "a4203eab6f",
         "name": "Chores",
         "kind": "routine",
         "icon": "🧹",
@@ -661,7 +687,7 @@
       ],
       "rows": [
         {
-          "id": "e4f1f461bb",
+          "id": "29b4a4d42d",
           "name": "The warehouse",
           "icon": "⚔",
           "kind": "work",
@@ -717,7 +743,7 @@
           "missed": 0
         },
         {
-          "id": "85b3e840ae",
+          "id": "a4203eab6f",
           "name": "Chores",
           "icon": "🧹",
           "kind": "routine",
@@ -886,6 +912,14 @@
           "required": false,
           "options": [],
           "default": 8
+        },
+        {
+          "name": "break_minutes",
+          "label": "Unpaid break each shift (minutes)",
+          "type": "amount",
+          "required": false,
+          "options": [],
+          "default": 0
         },
         {
           "name": "payer",

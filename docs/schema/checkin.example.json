@@ -1,0 +1,231 @@
+{
+  "available": true,
+  "as_of": "2026-11-01",
+  "title": "Sunday Check-In",
+  "last": {
+    "span": "Oct 25 – 31",
+    "chapter": "The Week In The Dungeon",
+    "story": [
+      "You went into the dungeon and came back with loot.",
+      "You cleared 4 runs at work."
+    ],
+    "highlights": [
+      "Cleared a 8-hour run at The warehouse",
+      "Cleared a 9-hour run at The warehouse",
+      "Cleared a 9-hour run at The warehouse on hard mode (Bare Shelves)"
+    ],
+    "loop": [
+      {
+        "id": "29b4a4d42d",
+        "name": "The warehouse",
+        "icon": "⚔",
+        "kind": "work",
+        "scheduled": 6,
+        "cleared": 5,
+        "so_far": 6,
+        "to_go": 0,
+        "pct": 83,
+        "missed": 1
+      },
+      {
+        "id": "a4203eab6f",
+        "name": "Chores",
+        "icon": "🧹",
+        "kind": "routine",
+        "scheduled": 7,
+        "cleared": 6,
+        "so_far": 7,
+        "to_go": 0,
+        "pct": 86,
+        "missed": 1
+      }
+    ],
+    "loot": {
+      "loot": 989.0,
+      "hours": 44.0,
+      "runs": 5,
+      "bosses": 1,
+      "bonus": 43.0,
+      "hard": {
+        "Bare Shelves": 2
+      },
+      "banked": 0.0,
+      "paychecks": 0,
+      "hourly": true,
+      "loot_text": "$989.00",
+      "bonus_text": "$43.00",
+      "banked_text": ""
+    },
+    "quests": [],
+    "noticed": [
+      "Bare Shelves came up 2 times: the dates are in the hard-mode record if you want them.",
+      "1 overtime boss: $43.00 of bonus loot.",
+      "The warehouse: 1 missed, nothing earned that day.",
+      "Chores: 6 of 7 days done."
+    ]
+  },
+  "ahead": {
+    "span": "Nov 1 – 7",
+    "days": [
+      {
+        "date": "2026-11-01",
+        "label": "Sun, Nov 1",
+        "today": true,
+        "items": [
+          {
+            "kind": "routine",
+            "icon": "🧹",
+            "text": "Chores",
+            "time": "2:30 PM"
+          }
+        ]
+      },
+      {
+        "date": "2026-11-02",
+        "label": "Mon, Nov 2",
+        "today": false,
+        "items": [
+          {
+            "kind": "routine",
+            "icon": "🧹",
+            "text": "Chores",
+            "time": "2:30 PM"
+          },
+          {
+            "kind": "run",
+            "icon": "⚔",
+            "boss": false,
+            "text": "The warehouse: 8.5 h",
+            "time": "9:30 PM",
+            "loot_text": "$182.75",
+            "status": "planned"
+          }
+        ]
+      },
+      {
+        "date": "2026-11-03",
+        "label": "Tue, Nov 3",
+        "today": false,
+        "items": [
+          {
+            "kind": "routine",
+            "icon": "🧹",
+            "text": "Chores",
+            "time": "2:30 PM"
+          },
+          {
+            "kind": "run",
+            "icon": "⚔",
+            "boss": false,
+            "text": "The warehouse: 8.5 h",
+            "time": "9:30 PM",
+            "loot_text": "$182.75",
+            "status": "planned"
+          }
+        ]
+      },
+      {
+        "date": "2026-11-04",
+        "label": "Wed, Nov 4",
+        "today": false,
+        "items": [
+          {
+            "kind": "routine",
+            "icon": "🧹",
+            "text": "Chores",
+            "time": "2:30 PM"
+          },
+          {
+            "kind": "run",
+            "icon": "⚔",
+            "boss": false,
+            "text": "The warehouse: 8.5 h",
+            "time": "9:30 PM",
+            "loot_text": "$182.75",
+            "status": "planned"
+          }
+        ]
+      },
+      {
+        "date": "2026-11-05",
+        "label": "Thu, Nov 5",
+        "today": false,
+        "items": [
+          {
+            "kind": "routine",
+            "icon": "🧹",
+            "text": "Chores",
+            "time": "2:30 PM"
+          },
+          {
+            "kind": "run",
+            "icon": "⚔",
+            "boss": false,
+            "text": "The warehouse: 8.5 h",
+            "time": "9:30 PM",
+            "loot_text": "$182.75",
+            "status": "planned"
+          }
+        ]
+      },
+      {
+        "date": "2026-11-06",
+        "label": "Fri, Nov 6",
+        "today": false,
+        "items": [
+          {
+            "kind": "routine",
+            "icon": "🧹",
+            "text": "Chores",
+            "time": "2:30 PM"
+          },
+          {
+            "kind": "run",
+            "icon": "⚔",
+            "boss": true,
+            "text": "The warehouse: 8.5 h (overtime boss)",
+            "time": "9:30 PM",
+            "loot_text": "$209.62",
+            "status": "planned"
+          }
+        ]
+      },
+      {
+        "date": "2026-11-07",
+        "label": "Sat, Nov 7",
+        "today": false,
+        "items": [
+          {
+            "kind": "routine",
+            "icon": "🧹",
+            "text": "Chores",
+            "time": "2:30 PM"
+          }
+        ]
+      }
+    ],
+    "runs": 5,
+    "projected": 940.62,
+    "projected_text": "$940.62",
+    "quests": [
+      {
+        "id": "0c8758bd07",
+        "name": "Hard Mode: Bare Shelves",
+        "icon": "⚔",
+        "pct": 0
+      },
+      {
+        "id": "78111ab86d",
+        "name": "Woodworkers Guild: Apprentice Quest",
+        "icon": "🪚",
+        "pct": 0
+      }
+    ],
+    "next_dungeon": {
+      "ready": false,
+      "line": "Set up Freedom (Apps → Freedom) and the next dungeon shows here."
+    }
+  },
+  "done": false,
+  "xp": 15
+}

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Sunday Check-In — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
+</head>
+<body data-app="missions" data-icon="missions" class="mod-checkin">
+  <!--
+    The Sunday check-in (claude, 2026-10-27, DEC-0047 rule 5): last week's
+    recap (the story, the loop's score, loot, what MIA noticed) and this
+    week laid out day by day. MIA.checkin() (core/weekly_checkin.py);
+    "Debrief Done" is loop.checkin_done.
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <header class="hero">
+        <h1><span aria-hidden="true" id="hero-icon">📜</span> <span id="hero-name">Sunday Check-In</span></h1>
+        <p class="tagline" id="hero-tagline">Last week, then the week ahead.</p>
+      </header>
+      <section class="strip" id="strip" aria-label="Status"></section>
+      <div id="panel"></div>
+    </main>
+  </div>
+  <script src="mia.js"></script>
+  <script src="icons.js"></script>
+  <script src="sound.js"></script>
+  <script src="places-watch.js"></script>
+  <script src="shell.js"></script>
+  <script src="checkin.js"></script>
+</body>
+</html>

@@ -37,6 +37,8 @@ DUNGEON = Record("dungeon", "dungeon", "dungeon_id", "get_dungeon", "add_dungeon
                            say="pay week starts", quiet_default=True),
                      Field("shift_hours", "A usual shift (hours)", "amount", default=8, say="usual shift",
                            quiet_default=True),
+                     Field("break_minutes", "Unpaid break each shift (minutes)", "amount", default=0,
+                           say="unpaid break", quiet_default=True),
                      Field("payer", "What the paycheck says in the bank", "text", say="paycheck words"),
                      Field("take_home_pct", "Take-home share, % (blank: MIA learns it from the bank)", "amount",
                            default=0, say="take-home share"),

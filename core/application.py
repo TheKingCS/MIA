@@ -78,7 +78,7 @@ from core.assistant_ownership_actions import register_ownership_actions
 from core.assistant_today_actions import register_today_actions
 from core.assistant_self_actions import register_capability_actions, register_self_actions
 from core.assistant_goods_actions import register_goods_actions
-from core.assistant_dungeon_actions import register_dungeon_actions, register_loop_actions
+from core.assistant_dungeon_actions import register_checkin_actions, register_dungeon_actions, register_loop_actions
 from core.assistant_undo_actions import register_undo_actions
 from core.assistant_homestead_actions import register_homestead_actions
 from core.assistant_textbook_actions import register_textbook_actions
@@ -1356,6 +1356,7 @@ class MIAApplication:
         register_goods_actions(self.context.assistant_actions)  # eggs, goods, freedom, deadlines by voice
         register_dungeon_actions(self.context.assistant_actions)  # the Dungeon: shifts, loot, quests (DEC-0046)
         register_loop_actions(self.context.assistant_actions)  # the loop: when things happen (DEC-0047)
+        register_checkin_actions(self.context.assistant_actions)  # the Sunday check-in (DEC-0047)
         register_ownership_actions(self.context.assistant_actions)
         register_accessibility_actions(self.context.assistant_actions)
         register_starter_actions(self.context.assistant_actions)

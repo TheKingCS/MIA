@@ -113,7 +113,8 @@ class Dungeon:
     week_starts: str = "Monday"  # the pay week's first day
     take_home_pct: float = 0.0  # share kept after taxes, if known (0: learn it from the bank)
     payer: str = ""  # words the paycheck deposit has in the bank ("ACME PAYROLL")
-    shift_hours: float = 8.0  # a usual run
+    shift_hours: float = 8.0  # a usual run (paid hours)
+    break_minutes: float = 0.0  # an unpaid break in each shift (Zac, 2026-10-27: 30 minutes, so 8.5 h at work pays 8)
     notes: str = ""
     created_at: str = ""
 
@@ -298,10 +299,12 @@ class DungeonBook:
         for name, value in fields.items():
             if name in ("dungeon_id", "created_at") or not hasattr(d, name):
                 raise ValueError(f"A dungeon has no '{name}'.")
-            if name in ("hourly", "overtime_multiplier", "overtime_after", "take_home_pct", "shift_hours"):
+            if name in ("hourly", "overtime_multiplier", "overtime_after", "take_home_pct", "shift_hours", "break_minutes"):
                 value = max(0.0, float(value or 0))
             if name == "overtime_multiplier" and value and value < 1:
                 raise ValueError("Overtime pays at least the regular rate (1.5 is time and a half).")
+            if name == "break_minutes" and value > 240:
+                raise ValueError("An unpaid break is up to 240 minutes.")
             if name == "take_home_pct" and value > 100:
                 raise ValueError("Take-home is a share of the pay: 0 to 100.")
             if name == "week_starts" and value not in DAYS:

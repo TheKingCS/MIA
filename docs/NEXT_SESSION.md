@@ -353,12 +353,17 @@ every step below in order, from a blank machine, with Windows notes.
 
 **The mission system is locked in (DEC-0047, `docs/MISSION_SYSTEM.md`).**
 Build order (Zac said begin, 2026-10-27): 1) the Loop ✅ built
-(`core/the_loop.py`), 2) next: the Sunday morning
+(`core/the_loop.py`), 2) the Sunday check-in ✅ built
+(`core/weekly_checkin.py`). Ask Zac what's next among: the rest of the
+mission order below, **User Sync** (DEC-0048, `docs/USER_SYNC.md`, its
+open questions), and the **design audit** of every page (DEC-0048: agree
+the organization with Zac and Muse before changing layouts). Was: the Sunday morning
 check-in, 3) adventures from the day's project with real-gain rewards
 (the craft, the recipe unlock) and guild ranks, 4) pattern noticing,
 titles, the emergent class, 5) the Codex, seasons as quarters,
 cutscenes. **Zac, at the PC:** The Dungeon → Loop → Change on your
-work: Sun–Thu (or your days), 9:30 pm to 6 am; Chores: 2:30 pm. Or just
+work: Sun–Thu (or your days), 9:30 pm to 6 am, and in Setup the
+30-minute unpaid break; Chores: 2:30 pm. Or just
 tell MIA. Reminders come from the PC app (it has to be running).
 
 **Zac, at the PC (2026-10-27, DEC-0046):** Apps → The Dungeon → Set Up

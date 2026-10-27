@@ -126,7 +126,7 @@ def test_reminders_go_out_at_the_time_once(life):
     at = early.replace(hour=21, minute=5)  # 30 minutes' lead for work
     assert tick(w, at) == 1 and tick(w, at.replace(minute=20)) == 0
     note = next(n for n in w.notifications.list_all() if n.source == "loop")
-    assert "opens at 9:30 PM until 6:00 AM: a 8.5-hour run, about" in note.message and "loot" in note.message
+    assert "opens at 9:30 PM until 6:00 AM: an 8.5-hour run, about" in note.message and "loot" in note.message
 
 
 def test_chores_and_your_own_rhythms(life):
@@ -175,3 +175,73 @@ def test_the_loop_by_voice(life):
     assert said == "Got it. MIA will remind you 30 min before."
     assert "The plant: Sun–Thu · 9:30 PM – 6:00 AM" in _get_loop(w, {})
     assert "isn't a time" in _set_schedule(w, {"name": "work", "start": "half past nine-ish"})
+
+
+def test_the_unpaid_break_isnt_loot(life):
+    from core.the_loop import learn, loop_page, reminders
+
+    w = life
+    do(w, "dungeon.add", name="The plant", hourly=20, break_minutes=30)
+    do(w, "loop.set", name="work", days="every day", start="9:30 pm", end="6 am")
+    planned = [r for r in w.dungeon.runs if r.status == "planned"]
+    assert planned and all(r.hours == 8 for r in planned)  # 8.5 hours there, 8 paid
+    view = loop_page(w)["rhythms"][0]
+    assert (view["hours"], view["paid_hours"], view["break_minutes"]) == (8.5, 8, 30)
+    at = datetime.combine(date.today(), datetime.min.time()).replace(hour=21, minute=5)
+    said = reminders(w, at)[0][2]
+    assert "an 8-hour run (plus your 30-minute break), about" in said
+    # Learning: cleared at 6:05 after 8 paid hours and a 30-minute break started at 9:35.
+    do(w, "loop.forget", name="work", what="times")
+    d = w.dungeon.dungeons[0]
+    w.dungeon.runs.clear()
+    for k in range(1, 4):
+        day = date.today() - timedelta(days=k)
+        run = w.dungeon.add_run(d.dungeon_id, day.isoformat(), 8)
+        run.created_at = datetime.combine(day + timedelta(days=1), datetime.min.time()).replace(hour=6, minute=5).isoformat()
+    learn(w)
+    assert w.loop.rhythms[0].start == "21:35"
+
+
+def test_the_sunday_check_in(life):
+    from core.the_loop import ensure_rhythms, reminders
+    from core.weekly_checkin import checkin
+
+    w = life
+    do(w, "dungeon.add", name="The plant", hourly=20)
+    do(w, "loop.set", name="work", days="every day", start="9:30 pm", end="6 am")
+    ensure_rhythms(w)
+    r = w.loop.find("work", w.dungeon.dungeons[0].dungeon_id)
+    today = date.today()
+    r.created_at = (today - timedelta(days=10)).isoformat() + "T00:00:00"
+    d = w.dungeon.dungeons[0]
+    for k in (2, 3, 4):
+        w.dungeon.add_run(d.dungeon_id, (today - timedelta(days=k)).isoformat(), 8, affixes=["unstocked"])
+    c = checkin(w, today)
+    row = next(x for x in c["last"]["loop"] if x["kind"] == "work")
+    assert (row["cleared"], row["scheduled"]) == (3, 7) and row["missed"] == 4
+    assert c["last"]["loot"]["runs"] == 3 and c["last"]["loot"]["hours"] == 24
+    assert any(n.startswith("Bare Shelves came up 3 times") for n in c["last"]["noticed"])
+    assert any("4 missed, nothing earned those days" in n for n in c["last"]["noticed"])
+    assert c["ahead"]["runs"] >= 7 and c["ahead"]["projected"] > 0 and len(c["ahead"]["days"]) == 7
+    # It's a rhythm: Sundays at 9:00, until the person moves it; the reminder says the week in one line.
+    checkin_rhythm = w.loop.find("checkin")
+    assert checkin_rhythm.days == [6] and checkin_rhythm.start == "09:00"
+    sunday = today + timedelta(days=(6 - today.weekday()) % 7)
+    said = [x for x in reminders(w, datetime.combine(sunday, datetime.min.time()).replace(hour=9)) if x[0].kind == "checkin"]
+    assert said and said[0][1] == "📜 Your Sunday check-in" and "This week:" in said[0][2]
+    # Done once a week, for XP.
+    xp = w.profiles.get_active_profile().total_xp
+    do(w, "loop.checkin_done")
+    assert w.profiles.get_active_profile().total_xp == xp + 15 and checkin(w, today)["done"]
+    with pytest.raises(Exception, match="already done"):
+        do(w, "loop.checkin_done")
+
+
+def test_the_check_in_by_voice(life):
+    from core.assistant_dungeon_actions import _get_checkin
+
+    w = life
+    do(w, "dungeon.add", name="The plant", hourly=20)
+    do(w, "loop.set", name="work", days="every day", start="9:30 pm", end="6 am")
+    said = _get_checkin(w, {})
+    assert said.startswith("Last week (") and "This week: 7 runs planned" in said

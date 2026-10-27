@@ -1519,6 +1519,21 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
 .dg-affix[aria-pressed="true"] { color: var(--text); border-color: rgb(var(--rgb-amber)); background: rgba(var(--rgb-amber), 0.14); }
 .dg-gm p { margin: 6px 0; }
 .dg-ot { margin: 8px 2px; color: var(--text-dim); }
+/* The Sunday check-in (DEC-0047) */
+.ci-scores { display: grid; gap: 10px; margin: 10px 0; }
+.ci-score .bar { margin: 4px 0 0; }
+.ci-noticed h3 { margin: 12px 0 4px; font-size: var(--text-sm); color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; }
+.ci-noticed ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.ci-days { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; }
+.ci-day { padding: 10px 12px; border-radius: 8px; background: rgba(var(--rgb-panel-2), 0.6); border-left: 3px solid var(--line-strong); }
+.ci-day.today { border-left-color: var(--accent); }
+.ci-day-name { font-weight: 700; margin-bottom: 4px; }
+.ci-day ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.ci-item { display: grid; grid-template-columns: 74px 1fr auto; gap: 8px; align-items: baseline; }
+.ci-item.boss { color: var(--accent); }
+.ci-time { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-faint); }
+.ci-day p { margin: 0; }
+.ci-done { margin: 16px 0 24px; }
 /* Compliance (DEC-0040): deadlines by urgency; unverified always says so */
 .ob-card { border-left: 3px solid var(--line-strong); }
 .ob-card.overdue { border-left-color: rgb(var(--rgb-bad)); }

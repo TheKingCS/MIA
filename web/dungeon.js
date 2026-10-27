@@ -225,13 +225,14 @@
           c.text && row.kind !== "work" ? el("small", {}, c.text) : null)))));
     const scores = w.rows.filter((r) => r.scheduled).map((r) => el("p", { class: "dim" }, r.icon + " " + r.name + ": " +
       (r.so_far ? r.cleared + " of " + r.so_far + " cleared so far (" + r.pct + "%)" : "the week's just starting") +
-      (r.to_go ? ", " + r.to_go + " to go" : "") + (r.missed ? ". " + r.missed + " missed: nothing earned " + (r.missed === 1 ? "that day" : "those days") + "." : ".")));
-    return [section("This Week's Loop", null, w.rows.length ? grid : el("p", { class: "empty" }, "Nothing recurring yet."), ...scores),
+      (r.to_go ? ", " + r.to_go + " to go" : "") + (r.missed ? ". " + r.missed + " missed" + (r.kind === "work" ? ": nothing earned " + (r.missed === 1 ? "that day" : "those days") : "") + "." : ".")));
+    return [section("This Week's Loop", el("a", { class: "btn btn-ghost btn-small", href: "checkin.html" }, "Sunday Check-In"), w.rows.length ? grid : el("p", { class: "empty" }, "Nothing recurring yet."), ...scores),
       section("When Things Happen", buttons(btn("Add Something", "btn-ghost btn-small", addRhythm)),
         el("p", { class: "dim" }, "MIA learns the days and times from what you actually do. What you set is yours; she never overwrites it."),
         el("ul", { class: "dg-runs" }, L.rhythms.map((r) => el("li", { class: "dg-run dg-rhythm" },
           el("div", {}, el("div", { class: "row-title" }, r.icon + " " + r.name),
-            el("div", { class: "row-sub" }, r.line + (r.hours ? " · " + r.hours + " h" : "")),
+            el("div", { class: "row-sub" }, r.line + (r.paid_hours != null ? " · " + r.paid_hours + " h paid" +
+              (r.break_minutes ? " (" + r.break_minutes + "-min break)" : "") : r.hours ? " · " + r.hours + " h" : "")),
             el("div", { class: "row-sub dim" }, "Days " + source(r.days_source) + " · times " + source(r.start_source) +
               (r.learned_from ? " (from " + r.learned_from + " times)" : "") + " · " +
               (r.remind && r.start ? "reminder " + r.lead_minutes + " min before" : "no reminder"))),

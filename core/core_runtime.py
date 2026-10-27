@@ -92,7 +92,7 @@ from core.waypoint_manager import WAYPOINT_CATEGORIES, WaypointManager
 from core.assistant_why_actions import register_why_actions
 from core.assistant_self_actions import register_capability_actions, register_self_actions
 from core.assistant_goods_actions import register_goods_actions
-from core.assistant_dungeon_actions import register_dungeon_actions, register_loop_actions
+from core.assistant_dungeon_actions import register_checkin_actions, register_dungeon_actions, register_loop_actions
 from core.budget_manager import BudgetManager
 from core.intent_manager import IntentManager
 from core.personal_data import PersonalData
@@ -268,6 +268,7 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     register_goods_actions(registry)  # eggs, goods, freedom, deadlines by voice
     register_dungeon_actions(registry)  # the Dungeon: shifts, loot, quests (DEC-0046)
     register_loop_actions(registry)  # the loop: when things happen (DEC-0047)
+    register_checkin_actions(registry)  # the Sunday check-in (DEC-0047)
 
     registry.register(AssistantAction(
         name="add_alarm",
