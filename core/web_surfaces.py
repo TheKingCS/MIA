@@ -62,7 +62,7 @@ APPS: tuple[App, ...] = (
         ("today", "alarms", "projects", "life_events", "links", "why"), "What's on today?"),
     App("dungeon", "The Dungeon", "🏰", "Clear the run. Bank the loot.", "dungeon.html",
         "Work as a dungeon you loot every day: runs, hard mode, overtime bosses, projected and banked loot (DEC-0046).",
-        MONEY, ("dungeon",), "How much loot this week?"),
+        MONEY, ("dungeon", "loop"), "How much loot this week?"),
     App("freedom", "Freedom", "🌄", "Your way out, in numbers.", "freedom.html",
         "What you're saving toward, how far along you are, and the day it's within reach (DEC-0038).", MONEY,
         ("freedom",), "When can I work from home?"),

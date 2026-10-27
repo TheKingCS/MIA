@@ -123,7 +123,13 @@ def _loot_words(d, regular: float, overtime: float) -> str:
 
 def _run_plan(context, params):
     d = _dungeon(context, params)
-    day = _day(params)
+    if str(params.get("date") or "").strip().lower() in ("", "today"):
+        # A night shift cleared after midnight counts for the day it started (core/the_loop.py).
+        from core.the_loop import shift_day_for
+
+        day = shift_day_for(context, d.dungeon_id).isoformat()
+    else:
+        day = _day(params)
     planned = _book(context).planned_on(d.dungeon_id, day)
     hours = _hours(params, d, needed=planned is None) or (planned.hours if planned else 0.0)
     affixes = parse_affixes(params.get("hard_mode") or params.get("affixes") or "")

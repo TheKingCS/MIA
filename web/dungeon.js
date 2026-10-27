@@ -11,7 +11,7 @@
   "use strict";
   const { el, act, form, say } = MIAShell;
   const $ = (id) => document.getElementById(id);
-  const TABS = [["today", "Today"], ["loot", "Loot"], ["record", "Record"], ["setup", "Setup"]];
+  const TABS = [["today", "Today"], ["loop", "Loop"], ["loot", "Loot"], ["record", "Record"], ["setup", "Setup"]];
   let page = null;
   let tab = TABS.some(([t]) => t === location.hash.slice(1)) ? location.hash.slice(1) : "today";
   const picked = new Set();  // today's hard-mode modifiers, before the run is cleared
@@ -76,7 +76,7 @@
     const chips = page.affixes.map((a) => {
       const b = el("button", { type: "button", class: "chip-button dg-affix", "aria-pressed": String(picked.has(a.id)), title: a.line,
         onclick: () => { picked.has(a.id) ? picked.delete(a.id) : picked.add(a.id); b.setAttribute("aria-pressed", String(picked.has(a.id))); lines(); } },
-        a.name + " · " + a.real);
+        a.name);
       return b;
     });
     const boss = el("button", { type: "button", class: "chip-button dg-affix", "aria-pressed": String(calledIn),
@@ -84,14 +84,15 @@
     const gm = el("div", { class: "dg-gm", "aria-live": "polite" });
     function lines() {
       const on = page.affixes.filter((a) => picked.has(a.id));
-      gm.replaceChildren(...on.map((a) => el("p", {}, el("strong", {}, a.name + ": "), a.line, el("span", { class: "dim" }, " +" + a.xp + " XP"))),
+      gm.replaceChildren(...on.map((a) => el("p", {}, el("strong", {}, a.name + " (" + a.real + "): "), a.line, el("span", { class: "dim" }, " +" + a.xp + " XP"))),
         on.length ? buttons(...on.map((a) => btn("Make " + a.name + " A Quest", "btn-ghost btn-small", () => quest(a)))) : "");
     }
     lines();
     return section(t ? "Today's Planned Run" : "Enter The Dungeon", null,
       el("label", { class: "form-row", for: "dg-hours" }, el("span", {}, "Hours"), hours),
       el("p", { class: "dim" }, "Hard mode today? Tap what made it hard: MIA keeps the dates, and it's worth more XP."),
-      el("div", { class: "dg-affixes" }, ...chips, boss), gm,
+      el("div", { class: "dg-affixes" }, ...chips), gm,
+      el("div", { class: "dg-affixes dg-overtime" }, boss),
       el("label", { class: "form-row", for: "dg-note" }, el("span", {}, "Note (optional)"), note),
       buttons(btn("Clear The Run", "btn-amber", () => clearToday(d, hours, note))));
   }
@@ -187,7 +188,59 @@
       el("p", { class: "dim" }, "Loot is pay before taxes, worked out from your hours. What reaches the bank comes from the bank sync, never a guess.")];
   }
 
-  const VIEWS = { today, loot, record, setup };
+  // ------------------------------------------------------------ the loop (DEC-0047, core/the_loop.py)
+  const MARK = { cleared: "✓", missed: "✗", today: "●", planned: "○", off: "" };
+  const SAID = { cleared: "Cleared", missed: "Missed", today: "Today", planned: "Planned", off: "Off" };
+  const source = (s) => s === "yours" ? "yours" : s === "learned" ? "learned" : "not known yet";
+
+  async function editRhythm(r) {
+    const v = await form(r.name, [field("days", "Days (mon-fri, sun-thu, every day…)", "text", r.days_text, false),
+      field("start", "Starts (like 9:30 pm)", "text", r.start_text), field("end", "Ends (like 6 am; blank: none)", "text", r.end_text),
+      field("lead_minutes", "Remind this many minutes before", "int", r.lead_minutes),
+      field("remind", "Remind me?", "choice", r.remind ? "yes" : "no", false, ["yes", "no"])], {});
+    if (!v) return;
+    if (v.days === r.days_text) delete v.days;  // unchanged: keep it learned
+    if (v.start === r.start_text) delete v.start;
+    if (v.end === r.end_text) delete v.end;
+    act({ kind: "loop.set", params: Object.assign({ rhythm_id: r.id }, v) });
+  }
+  async function addRhythm() {
+    const v = await form("Something Else That Recurs", [field("name", "What (a walk, the gym, feeding the animals…)", "text", null, true),
+      field("days", "Days (mon-fri, every day…)", "text", null, true), field("start", "Starts (like 7 pm)", "text", null, true),
+      field("end", "Ends (optional)", "text")], {});
+    if (v) act({ kind: "loop.set", params: v });
+  }
+
+  function loop() {
+    const L = page.loop;
+    if (!L || !L.available) return [el("p", { class: "empty" }, "The loop isn't set up on this MIA.")];
+    const w = L.week;
+    const grid = el("div", { class: "dg-week", role: "table", "aria-label": "This week's loop" },
+      el("div", { class: "dg-week-row head", role: "row" }, el("span", { role: "columnheader" }, ""),
+        ...w.days.map((d) => el("span", { role: "columnheader", class: d.today ? "now" : "" }, d.label))),
+      ...w.rows.map((row) => el("div", { class: "dg-week-row", role: "row" },
+        el("span", { role: "rowheader", class: "dg-week-name" }, row.icon + " " + row.name),
+        ...row.cells.map((c) => el("span", { role: "cell", class: "dg-cell " + c.status, title: SAID[c.status] + (c.text ? " · " + c.text : ""),
+          "aria-label": c.date + ": " + SAID[c.status] + (c.text ? ", " + c.text : "") }, MARK[c.status],
+          c.text && row.kind !== "work" ? el("small", {}, c.text) : null)))));
+    const scores = w.rows.filter((r) => r.scheduled).map((r) => el("p", { class: "dim" }, r.icon + " " + r.name + ": " +
+      (r.so_far ? r.cleared + " of " + r.so_far + " cleared so far (" + r.pct + "%)" : "the week's just starting") +
+      (r.to_go ? ", " + r.to_go + " to go" : "") + (r.missed ? ". " + r.missed + " missed: nothing earned " + (r.missed === 1 ? "that day" : "those days") + "." : ".")));
+    return [section("This Week's Loop", null, w.rows.length ? grid : el("p", { class: "empty" }, "Nothing recurring yet."), ...scores),
+      section("When Things Happen", buttons(btn("Add Something", "btn-ghost btn-small", addRhythm)),
+        el("p", { class: "dim" }, "MIA learns the days and times from what you actually do. What you set is yours; she never overwrites it."),
+        el("ul", { class: "dg-runs" }, L.rhythms.map((r) => el("li", { class: "dg-run dg-rhythm" },
+          el("div", {}, el("div", { class: "row-title" }, r.icon + " " + r.name),
+            el("div", { class: "row-sub" }, r.line + (r.hours ? " · " + r.hours + " h" : "")),
+            el("div", { class: "row-sub dim" }, "Days " + source(r.days_source) + " · times " + source(r.start_source) +
+              (r.learned_from ? " (from " + r.learned_from + " times)" : "") + " · " +
+              (r.remind && r.start ? "reminder " + r.lead_minutes + " min before" : "no reminder"))),
+          buttons(btn("Change", "btn-ghost btn-small", () => editRhythm(r)),
+            r.start_source === "yours" ? btn("Learn Again", "btn-ghost btn-small", () => act({ kind: "loop.forget", params: { rhythm_id: r.id, what: "times" } })) : null,
+            r.kind === "custom" ? btn("Remove", "btn-ghost btn-small", () => act({ kind: "loop.delete", params: { rhythm_id: r.id } })) : null)))))];
+  }
+
+  const VIEWS = { today, loop, loot, record, setup };
 
   function draw() {
     const s = page.summary;

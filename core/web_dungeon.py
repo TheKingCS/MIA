@@ -111,7 +111,11 @@ def dungeon_view(context, d, runs: list, today: date) -> dict:
     upcoming = sorted((r for r in mine if r.status == "planned" and r.date > today.isoformat()), key=lambda r: r.date)
     waiting = sorted((r for r in mine if r.status == "planned" and r.date < today.isoformat()), key=lambda r: r.date)
     done = sorted((r for r in mine if r.status == "cleared"), key=lambda r: (r.date, r.created_at), reverse=True)
-    today_run = next((r for r in mine if r.date == today.isoformat()), None)
+    # A night shift after midnight is still the run that started yesterday (core/the_loop.py).
+    from core.the_loop import shift_day_for
+
+    shift = shift_day_for(context, d.dungeon_id).isoformat() if today == date.today() else today.isoformat()
+    today_run = next((r for r in mine if r.date == shift), None)
 
     # The hard-mode record: this month's and last month's, by modifier, with the dates.
     since = (month0 - timedelta(days=1)).replace(day=1)
@@ -194,6 +198,16 @@ def next_dungeon(context, view: Optional[dict], today: date) -> Optional[dict]:
     return out
 
 
+def _loop(context, today: date) -> dict:
+    from core.the_loop import loop_page
+
+    try:
+        return loop_page(context, today)
+    except Exception:
+        log.exception("Dungeon: the loop couldn't be read")
+        return {"available": False}
+
+
 def dungeon_page(context, today: Optional[date] = None) -> dict:
     from core.child_accounts import is_child
     from core.dungeon_actions import DUNGEON
@@ -214,6 +228,7 @@ def dungeon_page(context, today: Optional[date] = None) -> dict:
                     "banked_text": _money(sum(v["banked"]["month"] for v in views)),
                     "hard_this_month": sum(x["this_month"] for v in views for x in v["hard_mode"])},
         "next_dungeon": next_dungeon(context, first, today),
+        "loop": _loop(context, today),
         "affixes": [{"id": a.affix_id, "name": a.name, "real": a.real, "line": a.line, "xp": a.xp} for a in AFFIXES],
         "forms": {"dungeon": record_form(DUNGEON)}, "picks": {"days": [{"id": x, "name": x} for x in DAYS]},
     }

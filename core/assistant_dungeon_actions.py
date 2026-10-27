@@ -149,3 +149,63 @@ def register_dungeon_actions(registry: AssistantActionRegistry) -> None:
                          "take the quest"),
         subjects=("quest",),
     ))
+
+
+# ---------------------------------------------------------------- the loop (DEC-0047)
+
+
+def _set_schedule(context, arguments: dict) -> str:
+    params = {k: arguments.get(k) for k in ("name", "days", "start", "end", "lead_minutes") if arguments.get(k) not in (None, "")}
+    params.setdefault("name", "work")
+    return _run(context, "loop.set", params)
+
+
+def _get_loop(context, arguments: dict) -> str:
+    from core.the_loop import ensure_rhythms, loop_page
+
+    if getattr(context, "loop", None) is None:
+        return "The loop isn't set up on this MIA."
+    ensure_rhythms(context)
+    page = loop_page(context)
+    if not page["rhythms"]:
+        return "Nothing in your loop yet: set up your dungeon (the job) or a household routine, or tell me when something happens."
+    said = []
+    rows = {r["id"]: r for r in page["week"]["rows"]}
+    for r in page["rhythms"]:
+        line = f"{r['name']}: {r['line']}"
+        if r["start_source"] == "learned":
+            line += f" (learned from {r['learned_from']} times)"
+        row = rows.get(r["id"])
+        if row and row["scheduled"]:
+            line += f"; this week {row['cleared']} of {row['scheduled']} cleared"
+            if row["missed"]:
+                line += f", {row['missed']} missed"
+        said.append(line + ".")
+    return " ".join(said)
+
+
+def register_loop_actions(registry: AssistantActionRegistry) -> None:
+    registry.register(AssistantAction(
+        name="set_schedule", domain="loop",
+        description=("Tell MIA when part of the normal week happens, so she plans it and reminds you: the workday's "
+                     "days and hours (a night shift ends the next morning), when chores start, or anything else."),
+        parameters={"type": "object", "properties": {
+            "name": {"type": "string", "description": "work, chores, or the thing's name."},
+            "days": {"type": "string", "description": "mon-fri, sun-thu, every day..., only if they said."},
+            "start": {"type": "string", "description": "When it starts, like 9:30 pm."},
+            "end": {"type": "string", "description": "When it ends, like 6 am, only if they said."},
+            "lead_minutes": {"type": "integer", "description": "Remind this many minutes before, only if they said."}},
+            "required": ["name"]},
+        handler=_set_schedule,
+        trigger_phrases=("my workday", "my work day", "my shift is", "my shift starts", "i work from", "i work nights",
+                         "i work sun", "i work mon", "chores start", "my chores", "remind me before", "usually start"),
+        subjects=("shift", "schedule", "chores", "workday"),
+    ))
+    registry.register(AssistantAction(
+        name="get_loop", domain="loop",
+        description="The normal week (the loop): work and chores, their days and times, and this week's runs cleared or missed.",
+        parameters={"type": "object", "properties": {}, "required": []}, handler=_get_loop,
+        trigger_phrases=("my loop", "my week look", "when do i work", "what's my week",
+                         "whats my week", "this week's grind", "the grind"),
+        subjects=("loop", "schedule", "week", "routine"),
+    ))

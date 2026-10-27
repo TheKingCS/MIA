@@ -113,12 +113,12 @@ sound, the glasses, the communication gate.
 | Piece | Status |
 |---|---|
 | Layers: questlines, bosses, side quests | ✅ built |
-| The Loop, auto-generated from what recurs | to build |
+| The Loop, auto-generated from what recurs | ✅ built 2026-10-27 (`core/the_loop.py`, The Dungeon → Loop): work and chores get a rhythm by themselves, days and times learned (yours win), the week's runs planned, reminders at the time, night shifts counted for the night they started |
 | Adventures from the day's project, guild quests | to build |
 | Real-gain rewards (the craft, recipe unlocks) | to build |
 | Completion by evidence, tap or telling her | partly (tap, telling her) |
 | Sunday morning check-in | to build |
-| Missed loop days shown as the share cleared | to build |
+| Missed loop days shown as the share cleared | ✅ built (the week grid: cleared ✓, missed ✗ earning nothing, "3 of 4 cleared so far") |
 | Guilds, ranks, rank-up trials, unlocks | to build |
 | Morning quest log, evening debrief | to build |
 | Pattern noticing (beyond abandonment) | to build |

@@ -352,13 +352,14 @@ every step below in order, from a blank machine, with Windows notes.
 ## 2. Build queue (Claude), in order
 
 **The mission system is locked in (DEC-0047, `docs/MISSION_SYSTEM.md`).**
-Build order to agree with Zac (Claude's suggestion): 1) the Loop from
-what recurs + missed days as the share cleared, 2) the Sunday morning
+Build order (Zac said begin, 2026-10-27): 1) the Loop ✅ built
+(`core/the_loop.py`), 2) next: the Sunday morning
 check-in, 3) adventures from the day's project with real-gain rewards
 (the craft, the recipe unlock) and guild ranks, 4) pattern noticing,
 titles, the emergent class, 5) the Codex, seasons as quarters,
-cutscenes. Muse's H-0074 Dungeon tweaks (chip labels, overtime on its
-own line) are waiting too.
+cutscenes. **Zac, at the PC:** The Dungeon → Loop → Change on your
+work: Sun–Thu (or your days), 9:30 pm to 6 am; Chores: 2:30 pm. Or just
+tell MIA. Reminders come from the PC app (it has to be running).
 
 **Zac, at the PC (2026-10-27, DEC-0046):** Apps → The Dungeon → Set Up
 Your Dungeon: the job, pay an hour, when overtime starts, the day the pay

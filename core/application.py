@@ -78,7 +78,7 @@ from core.assistant_ownership_actions import register_ownership_actions
 from core.assistant_today_actions import register_today_actions
 from core.assistant_self_actions import register_capability_actions, register_self_actions
 from core.assistant_goods_actions import register_goods_actions
-from core.assistant_dungeon_actions import register_dungeon_actions
+from core.assistant_dungeon_actions import register_dungeon_actions, register_loop_actions
 from core.assistant_undo_actions import register_undo_actions
 from core.assistant_homestead_actions import register_homestead_actions
 from core.assistant_textbook_actions import register_textbook_actions
@@ -697,6 +697,7 @@ class MIAApplication:
             ("season", self._check_season),
             ("insurance_renewal", self._check_insurance),
             ("obligation_reminders", self._check_obligations),
+            ("loop", self._check_loop),
         ]
         # 2026-09-27, Cognitive Extension slice C: checks no longer notify
         # directly. Each one offers what it would say (_offer()), and the
@@ -869,6 +870,15 @@ class MIAApplication:
                 continue
             self._offer(topic="insurance_renewal", title=title, message=message, urgency=AMBIENT, source="system",
                         fingerprint=fingerprint)
+
+    def _check_loop(self, now: datetime, today_iso: str) -> None:
+        """The Loop (DEC-0047, core/the_loop.py): new recurring things get a
+        rhythm, days and times are learned once a day, the week's runs are
+        planned, and each rhythm's reminder goes out at its time (direct,
+        like an alarm the person set up)."""
+        from core.the_loop import tick
+
+        tick(self.context, now)
 
     def _check_obligations(self, now: datetime, today_iso: str) -> None:
         """Tax and compliance deadlines (core/obligations.py, DEC-0040): at
@@ -1345,6 +1355,7 @@ class MIAApplication:
         register_capability_actions(self.context.assistant_actions)  # what MIA can do, how she's built (DEC-0041)
         register_goods_actions(self.context.assistant_actions)  # eggs, goods, freedom, deadlines by voice
         register_dungeon_actions(self.context.assistant_actions)  # the Dungeon: shifts, loot, quests (DEC-0046)
+        register_loop_actions(self.context.assistant_actions)  # the loop: when things happen (DEC-0047)
         register_ownership_actions(self.context.assistant_actions)
         register_accessibility_actions(self.context.assistant_actions)
         register_starter_actions(self.context.assistant_actions)
