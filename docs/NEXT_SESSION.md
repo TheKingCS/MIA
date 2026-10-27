@@ -584,6 +584,19 @@ it, and went with Claude's recommendations. The plan, in order:
 
 ## 3. Ideas parked for later (need their own planning pass)
 
+- **MIA's failure log and safe self-improvement (Zac, 2026-10-27).** A log
+  of where MIA fails and why (errors, wrong tools, rephrasings, undos
+  right after an action, "no, I meant…", rejected proposals, slow or
+  missing answers, page errors), grouped into issues, sent to Claude to
+  fix. Claude's proposal in chat: three tiers. Data-only fixes she makes
+  herself after the person confirms ("when you say X you mean Y", per
+  person, undoable). Setting changes she proposes. Code changes never
+  by herself: each issue becomes a failing test and a live-model bench
+  case, then fixed, full suite and bench green, Zac approves. The log is
+  personal (data/, never the repo; never passwords or off-the-record
+  turns). Waiting on Zac's OK and its place in the order (design audit,
+  User Sync, adventures).
+
 
 - **The ideas list: `docs/future/IDEAS.md`** (Zac, 2026-10-18): future
   features that automate life and save money, each written up the same
