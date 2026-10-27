@@ -83,6 +83,7 @@ TYPES = {
     "questline_finished": "questlines finished",
     "explored": "new ground explored",
     "insurance_switched": "insurance switched (money saved)",
+    "dungeon_cleared": "dungeon runs cleared",
     "safety_escalation": "safety alerts",
 }
 # Kept for audit, never shown in a feed (wins, "what happened?").
@@ -93,7 +94,7 @@ MONEY_TYPES = frozenset({"bill_paid", "income_received", "expense_added", "incom
 # What counts as getting something done ("what did I get done?").
 WINS = ("bill_paid", "debt_payment", "mission_completed", "workout_logged", "maintenance_done", "task_done",
         "project_completed", "rent_received", "income_received", "meal_logged", "build_finished", "harvest",
-        "questline_finished", "insurance_switched")
+        "questline_finished", "insurance_switched", "dungeon_cleared")
 
 _lock = threading.Lock()
 _local = threading.local()

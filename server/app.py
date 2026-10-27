@@ -1600,6 +1600,13 @@ def create_app(context: AppContext) -> FastAPI:
 
         return _screen(profile_id, "freedom", freedom_page)
 
+    # ------------------------------------------------------------ The Dungeon (core/web_dungeon.py, DEC-0046)
+    @app.get("/api/dungeon")
+    def web_dungeon(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.web_dungeon import dungeon_page
+
+        return _screen(profile_id, "dungeon", dungeon_page)
+
     # ------------------------------------------------------------ Chickens (core/web_flock.py, DEC-0037)
     @app.get("/api/flock")
     def web_flock(profile_id: str = Depends(require_profile_id)) -> dict:

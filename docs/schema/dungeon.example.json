@@ -1,0 +1,734 @@
+{
+  "available": true,
+  "as_of": "2026-10-27",
+  "dungeons": [
+    {
+      "id": "0e5d943901",
+      "name": "The warehouse",
+      "hourly": 21.5,
+      "set_up": true,
+      "rates": {
+        "hourly_text": "$21.50",
+        "overtime_text": "$32.25",
+        "multiplier": 1.5,
+        "after": 40.0,
+        "week_starts": "Monday"
+      },
+      "today": {
+        "id": "e07a0aa5b8",
+        "date": "2026-10-27",
+        "hours": 9.0,
+        "status": "planned",
+        "affixes": [],
+        "boss": false,
+        "regular": 9.0,
+        "overtime": 0.0,
+        "loot": 193.5,
+        "loot_text": "$193.50",
+        "bonus_text": "",
+        "xp": 19,
+        "note": ""
+      },
+      "week": {
+        "start": "2026-10-26",
+        "end": "2026-11-01",
+        "hours": 9.0,
+        "overtime": 0.0,
+        "earned": 193.5,
+        "earned_text": "$193.50",
+        "bonus_text": "",
+        "projected": 989.0,
+        "projected_text": "$989.00",
+        "projected_hours": 44.0,
+        "projected_overtime": 4.0,
+        "projected_bonus_text": "$43.00",
+        "projected_net_text": "$861.22"
+      },
+      "month": {
+        "earned": 3569.0,
+        "earned_text": "$3,569.00",
+        "projected": 4364.5,
+        "projected_text": "$4,364.50",
+        "projected_net_text": "$3,800.61"
+      },
+      "pace": {
+        "weekly": 989.0,
+        "weekly_text": "$989.00",
+        "yearly": 51428.0,
+        "yearly_text": "$51,428.00",
+        "weeks": 4,
+        "yearly_net_text": "$44,783.50"
+      },
+      "overtime_now": {
+        "hours_to_overtime": 31.0,
+        "hour_text": "$32.25",
+        "in_overtime": false,
+        "boss_shift_hours": 9.0,
+        "boss_shift_text": "$193.50"
+      },
+      "banked": {
+        "month": 2920.72,
+        "month_text": "$2,920.72",
+        "count_month": 2,
+        "last_30": 2920.72,
+        "last_30_text": "$2,920.72",
+        "latest": {
+          "date": "2026-10-23",
+          "amount_text": "$1,418.62",
+          "description": "EXAMPLE CO PAYROLL DIR DEP",
+          "from_bank": true
+        },
+        "matching": "deposits that say “EXAMPLE CO PAYROLL”",
+        "share_pct": 87,
+        "share_source": "your deposits"
+      },
+      "planned": [
+        {
+          "id": "b1ae0efffb",
+          "date": "2026-10-28",
+          "hours": 9.0,
+          "status": "planned",
+          "affixes": [],
+          "boss": false,
+          "regular": 9.0,
+          "overtime": 0.0,
+          "loot": 193.5,
+          "loot_text": "$193.50",
+          "bonus_text": "",
+          "xp": 19,
+          "note": ""
+        },
+        {
+          "id": "11767f6908",
+          "date": "2026-10-29",
+          "hours": 9.0,
+          "status": "planned",
+          "affixes": [],
+          "boss": false,
+          "regular": 9.0,
+          "overtime": 0.0,
+          "loot": 193.5,
+          "loot_text": "$193.50",
+          "bonus_text": "",
+          "xp": 19,
+          "note": ""
+        },
+        {
+          "id": "7b6f1f500a",
+          "date": "2026-10-31",
+          "hours": 8.0,
+          "status": "planned",
+          "affixes": [],
+          "boss": true,
+          "regular": 4.0,
+          "overtime": 4.0,
+          "loot": 215.0,
+          "loot_text": "$215.00",
+          "bonus_text": "$43.00",
+          "xp": 33,
+          "note": ""
+        }
+      ],
+      "waiting": [],
+      "runs": [
+        {
+          "id": "1bc230cd71",
+          "date": "2026-10-26",
+          "hours": 9.0,
+          "status": "cleared",
+          "affixes": [
+            {
+              "id": "unstocked",
+              "name": "Bare Shelves",
+              "real": "came in unstocked"
+            }
+          ],
+          "boss": false,
+          "regular": 9.0,
+          "overtime": 0.0,
+          "loot": 193.5,
+          "loot_text": "$193.50",
+          "bonus_text": "",
+          "xp": 25,
+          "note": ""
+        },
+        {
+          "id": "8ecd5d6407",
+          "date": "2026-10-23",
+          "hours": 8.0,
+          "status": "cleared",
+          "affixes": [
+            {
+              "id": "unstocked",
+              "name": "Bare Shelves",
+              "real": "came in unstocked"
+            }
+          ],
+          "boss": true,
+          "regular": 4.0,
+          "overtime": 4.0,
+          "loot": 215.0,
+          "loot_text": "$215.00",
+          "bonus_text": "$43.00",
+          "xp": 39,
+          "note": ""
+        },
+        {
+          "id": "a42c46c88e",
+          "date": "2026-10-22",
+          "hours": 9.0,
+          "status": "cleared",
+          "affixes": [],
+          "boss": false,
+          "regular": 9.0,
+          "overtime": 0.0,
+          "loot": 193.5,
+          "loot_text": "$193.50",
+          "bonus_text": "",
+          "xp": 19,
+          "note": ""
+        },
+        {
+          "id": "e6053e4b32",
+          "date": "2026-10-21",
+          "hours": 9.0,
+          "status": "cleared",
+          "affixes": [],
+          "boss": false,
+          "regular": 9.0,
+          "overtime": 0.0,
+          "loot": 193.5,
+          "loot_text": "$193.50",
+          "bonus_text": "",
+          "xp": 19,
+          "note": ""
+        },
+        {
+          "id": "69d6399482",
+          "date": "2026-10-20",
+          "hours": 9.0,
+          "status": "cleared",
+          "affixes": [
+            {
+              "id": "short_staffed",
+              "name": "Thin Party",
+              "real": "short-staffed"
+            }
+          ],
+          "boss": false,
+          "regular": 9.0,
+          "overtime": 0.0,
+          "loot": 193.5,
+          "loot_text": "$193.50",
+          "bonus_text": "",
+          "xp": 25,
+          "note": ""
+        },
+        {
+          "id": "1e18b460c7",
+          "date": "2026-10-19",
+          "hours": 9.0,
+          "status": "cleared",
+          "affixes": [],
+          "boss": false,
+          "regular": 9.0,
+          "overtime": 0.0,
+          "loot": 193.5,
+          "loot_text": "$193.50",
+          "bonus_text": "",
+          "xp": 19,
+          "note": ""
+        },
+        {
+          "id": "c04dd4c27d",
+          "date": "2026-10-16",
+          "hours": 8.0,
+          "status": "cleared",
+          "affixes": [
+            {
+              "id": "unstocked",
+              "name": "Bare Shelves",
+              "real": "came in unstocked"
+            }
+          ],
+          "boss": true,
+          "regular": 4.0,
+          "overtime": 4.0,
+          "loot": 215.0,
+          "loot_text": "$215.00",
+          "bonus_text": "$43.00",
+          "xp": 39,
+          "note": ""
+        },
+        {
+          "id": "4b4a2b2546",
+          "date": "2026-10-15",
+          "hours": 9.0,
+          "status": "cleared",
+          "affixes": [],
+          "boss": false,
+          "regular": 9.0,
+          "overtime": 0.0,
+          "loot": 193.5,
+          "loot_text": "$193.50",
+          "bonus_text": "",
+          "xp": 19,
+          "note": ""
+        },
+        {
+          "id": "12858bfd85",
+          "date": "2026-10-14",
+          "hours": 9.0,
+          "status": "cleared",
+          "affixes": [],
+          "boss": false,
+          "regular": 9.0,
+          "overtime": 0.0,
+          "loot": 193.5,
+          "loot_text": "$193.50",
+          "bonus_text": "",
+          "xp": 19,
+          "note": ""
+        },
+        {
+          "id": "3661d25754",
+          "date": "2026-10-13",
+          "hours": 9.0,
+          "status": "cleared",
+          "affixes": [
+            {
+              "id": "unstocked",
+              "name": "Bare Shelves",
+              "real": "came in unstocked"
+            },
+            {
+              "id": "truck",
+              "name": "Supply Raid",
+              "real": "a truck to unload"
+            }
+          ],
+          "boss": false,
+          "regular": 9.0,
+          "overtime": 0.0,
+          "loot": 193.5,
+          "loot_text": "$193.50",
+          "bonus_text": "",
+          "xp": 29,
+          "note": ""
+        },
+        {
+          "id": "75e0b43e3a",
+          "date": "2026-10-12",
+          "hours": 9.0,
+          "status": "cleared",
+          "affixes": [],
+          "boss": false,
+          "regular": 9.0,
+          "overtime": 0.0,
+          "loot": 193.5,
+          "loot_text": "$193.50",
+          "bonus_text": "",
+          "xp": 19,
+          "note": ""
+        },
+        {
+          "id": "c5fc071812",
+          "date": "2026-10-09",
+          "hours": 8.0,
+          "status": "cleared",
+          "affixes": [],
+          "boss": true,
+          "regular": 4.0,
+          "overtime": 4.0,
+          "loot": 215.0,
+          "loot_text": "$215.00",
+          "bonus_text": "$43.00",
+          "xp": 33,
+          "note": ""
+        },
+        {
+          "id": "14c8fe1952",
+          "date": "2026-10-08",
+          "hours": 9.0,
+          "status": "cleared",
+          "affixes": [],
+          "boss": false,
+          "regular": 9.0,
+          "overtime": 0.0,
+          "loot": 193.5,
+          "loot_text": "$193.50",
+          "bonus_text": "",
+          "xp": 19,
+          "note": ""
+        },
+        {
+          "id": "6bd8d5221a",
+          "date": "2026-10-07",
+          "hours": 9.0,
+          "status": "cleared",
+          "affixes": [],
+          "boss": false,
+          "regular": 9.0,
+          "overtime": 0.0,
+          "loot": 193.5,
+          "loot_text": "$193.50",
+          "bonus_text": "",
+          "xp": 19,
+          "note": ""
+        },
+        {
+          "id": "1e903d1a15",
+          "date": "2026-10-06",
+          "hours": 9.0,
+          "status": "cleared",
+          "affixes": [
+            {
+              "id": "rush",
+              "name": "Swarm",
+              "real": "slammed"
+            }
+          ],
+          "boss": false,
+          "regular": 9.0,
+          "overtime": 0.0,
+          "loot": 193.5,
+          "loot_text": "$193.50",
+          "bonus_text": "",
+          "xp": 24,
+          "note": ""
+        },
+        {
+          "id": "f3211aaad9",
+          "date": "2026-10-05",
+          "hours": 9.0,
+          "status": "cleared",
+          "affixes": [],
+          "boss": false,
+          "regular": 9.0,
+          "overtime": 0.0,
+          "loot": 193.5,
+          "loot_text": "$193.50",
+          "bonus_text": "",
+          "xp": 19,
+          "note": ""
+        },
+        {
+          "id": "f3b5e506fc",
+          "date": "2026-10-02",
+          "hours": 8.0,
+          "status": "cleared",
+          "affixes": [],
+          "boss": true,
+          "regular": 4.0,
+          "overtime": 4.0,
+          "loot": 215.0,
+          "loot_text": "$215.00",
+          "bonus_text": "$43.00",
+          "xp": 33,
+          "note": ""
+        },
+        {
+          "id": "07b4258421",
+          "date": "2026-10-01",
+          "hours": 9.0,
+          "status": "cleared",
+          "affixes": [],
+          "boss": false,
+          "regular": 9.0,
+          "overtime": 0.0,
+          "loot": 193.5,
+          "loot_text": "$193.50",
+          "bonus_text": "",
+          "xp": 19,
+          "note": ""
+        },
+        {
+          "id": "863a07b849",
+          "date": "2026-09-30",
+          "hours": 9.0,
+          "status": "cleared",
+          "affixes": [],
+          "boss": false,
+          "regular": 9.0,
+          "overtime": 0.0,
+          "loot": 193.5,
+          "loot_text": "$193.50",
+          "bonus_text": "",
+          "xp": 19,
+          "note": ""
+        },
+        {
+          "id": "94b9bbe0c1",
+          "date": "2026-09-29",
+          "hours": 9.0,
+          "status": "cleared",
+          "affixes": [
+            {
+              "id": "unstocked",
+              "name": "Bare Shelves",
+              "real": "came in unstocked"
+            }
+          ],
+          "boss": false,
+          "regular": 9.0,
+          "overtime": 0.0,
+          "loot": 193.5,
+          "loot_text": "$193.50",
+          "bonus_text": "",
+          "xp": 25,
+          "note": ""
+        },
+        {
+          "id": "fdac91a1b0",
+          "date": "2026-09-28",
+          "hours": 9.0,
+          "status": "cleared",
+          "affixes": [],
+          "boss": false,
+          "regular": 9.0,
+          "overtime": 0.0,
+          "loot": 193.5,
+          "loot_text": "$193.50",
+          "bonus_text": "",
+          "xp": 19,
+          "note": ""
+        }
+      ],
+      "hard_mode": [
+        {
+          "id": "unstocked",
+          "name": "Bare Shelves",
+          "real": "came in unstocked",
+          "this_month": 4,
+          "dates": [
+            "2026-09-29",
+            "2026-10-13",
+            "2026-10-16",
+            "2026-10-23",
+            "2026-10-26"
+          ]
+        },
+        {
+          "id": "short_staffed",
+          "name": "Thin Party",
+          "real": "short-staffed",
+          "this_month": 1,
+          "dates": [
+            "2026-10-20"
+          ]
+        },
+        {
+          "id": "truck",
+          "name": "Supply Raid",
+          "real": "a truck to unload",
+          "this_month": 1,
+          "dates": [
+            "2026-10-13"
+          ]
+        },
+        {
+          "id": "rush",
+          "name": "Swarm",
+          "real": "slammed",
+          "this_month": 1,
+          "dates": [
+            "2026-10-06"
+          ]
+        }
+      ],
+      "values": {
+        "name": "The warehouse",
+        "hourly": 21.5,
+        "overtime_multiplier": 1.5,
+        "overtime_after": 40.0,
+        "week_starts": "Monday",
+        "take_home_pct": 0.0,
+        "payer": "EXAMPLE CO PAYROLL",
+        "shift_hours": 9.0,
+        "notes": ""
+      },
+      "share": 0.8708
+    }
+  ],
+  "summary": {
+    "week_text": "$193.50",
+    "projected_text": "$989.00",
+    "banked_text": "$2,920.72",
+    "hard_this_month": 7
+  },
+  "next_dungeon": {
+    "ready": false,
+    "line": "Set up Freedom (Apps → Freedom) and the next dungeon shows here."
+  },
+  "affixes": [
+    {
+      "id": "unstocked",
+      "name": "Bare Shelves",
+      "real": "came in unstocked",
+      "line": "The stage preparers left you the advanced map: restock first, then clear the run.",
+      "xp": 6
+    },
+    {
+      "id": "short_staffed",
+      "name": "Thin Party",
+      "real": "short-staffed",
+      "line": "Fewer heroes on the floor today: every role you cover is a class you're leveling.",
+      "xp": 6
+    },
+    {
+      "id": "mess",
+      "name": "Cursed Room",
+      "real": "left a mess",
+      "line": "The last party left the room cursed: cleansing it first is part of the clear.",
+      "xp": 4
+    },
+    {
+      "id": "truck",
+      "name": "Supply Raid",
+      "real": "a truck to unload",
+      "line": "A supply drop landed: break it down and the whole dungeon is stocked for the next run.",
+      "xp": 4
+    },
+    {
+      "id": "breakdown",
+      "name": "Broken Gear",
+      "real": "equipment down",
+      "line": "Your gear's out of action: improvising around it is how veterans are made.",
+      "xp": 5
+    },
+    {
+      "id": "rush",
+      "name": "Swarm",
+      "real": "slammed",
+      "line": "A swarm wave: hold the line one wave at a time.",
+      "xp": 5
+    },
+    {
+      "id": "new_task",
+      "name": "Uncharted Room",
+      "real": "something new",
+      "line": "A room you've never cleared: first clears teach the most.",
+      "xp": 4
+    }
+  ],
+  "forms": {
+    "dungeon": {
+      "noun": "dungeon",
+      "id_param": "dungeon_id",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name (the job, the store, the plant…)",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "hourly",
+          "label": "Pay an hour (before taxes)",
+          "type": "money",
+          "required": false,
+          "options": [],
+          "default": 0
+        },
+        {
+          "name": "overtime_multiplier",
+          "label": "Overtime pays (1.5 = time and a half)",
+          "type": "amount",
+          "required": false,
+          "options": [],
+          "default": 1.5
+        },
+        {
+          "name": "overtime_after",
+          "label": "Overtime after (hours a week; 0 = none)",
+          "type": "amount",
+          "required": false,
+          "options": [],
+          "default": 40
+        },
+        {
+          "name": "week_starts",
+          "label": "The pay week starts on",
+          "type": "choice",
+          "required": false,
+          "options": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday"
+          ],
+          "default": "Monday"
+        },
+        {
+          "name": "shift_hours",
+          "label": "A usual shift (hours)",
+          "type": "amount",
+          "required": false,
+          "options": [],
+          "default": 8
+        },
+        {
+          "name": "payer",
+          "label": "What the paycheck says in the bank",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "take_home_pct",
+          "label": "Take-home share, % (blank: MIA learns it from the bank)",
+          "type": "amount",
+          "required": false,
+          "options": [],
+          "default": 0
+        },
+        {
+          "name": "notes",
+          "label": "Notes",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    }
+  },
+  "picks": {
+    "days": [
+      {
+        "id": "Monday",
+        "name": "Monday"
+      },
+      {
+        "id": "Tuesday",
+        "name": "Tuesday"
+      },
+      {
+        "id": "Wednesday",
+        "name": "Wednesday"
+      },
+      {
+        "id": "Thursday",
+        "name": "Thursday"
+      },
+      {
+        "id": "Friday",
+        "name": "Friday"
+      },
+      {
+        "id": "Saturday",
+        "name": "Saturday"
+      },
+      {
+        "id": "Sunday",
+        "name": "Sunday"
+      }
+    ]
+  }
+}

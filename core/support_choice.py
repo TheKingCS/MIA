@@ -26,19 +26,20 @@ import re
 from typing import Optional
 
 from core import person_settings
-from core.conversation_modes import COMPANION, LISTEN, PERSPECTIVE, PLAN
+from core.conversation_modes import COMPANION, GAME_MASTER, LISTEN, PERSPECTIVE, PLAN
 
 ASK_EVERY_HOURS = 3
 HABIT_COUNT = 3
 _MAX_REMEMBERED = 6
 
 QUESTION = ("That sounds like a lot. Do you want me to just listen, help you figure out what to do, "
-            "or remind you why you're doing all this?")
+            "remind you why you're doing all this, or turn it into the game (Game Master)?")
 
 HABIT_NOTICE = {
     LISTEN: "I'm listening. (Say \"help me figure it out\" if you want more than that.)",
     PLAN: "Okay, let's make it smaller. (Say \"just listen\" if you'd rather vent.)",
     PERSPECTIVE: "Let's zoom out for a second. (Say \"just listen\" if you'd rather vent.)",
+    GAME_MASTER: "Game on. (Say \"just listen\" if you'd rather vent.)",
 }
 
 _HEAVY = re.compile(
@@ -55,7 +56,8 @@ _QUESTION_WORDS = re.compile(r"^\s*(?:what|how|when|where|who|which|can you|coul
 _ANSWERS = (
     (LISTEN, re.compile(r"\b(?:listen|listening|vent|venting|hear me|the first(?: one)?|first one)\b")),
     (PLAN, re.compile(r"\b(?:figure|plan|help|fix|advice|next step|the second(?: one)?|second one)\b")),
-    (PERSPECTIVE, re.compile(r"\b(?:why|remind|perspective|zoom out|the (?:third|last)(?: one)?|third one|last one)\b")),
+    (PERSPECTIVE, re.compile(r"\b(?:why|remind|perspective|zoom out|the third(?: one)?|third one)\b")),
+    (GAME_MASTER, re.compile(r"\b(?:game|gm|quest|dungeon|play|the (?:fourth|last)(?: one)?|fourth one)\b")),
     (COMPANION, re.compile(r"\b(?:just talk|neither|none|nah|no thanks|normal|whatever|nothing)\b")),
 )
 

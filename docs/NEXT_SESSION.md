@@ -351,6 +351,13 @@ every step below in order, from a blank machine, with Windows notes.
 
 ## 2. Build queue (Claude), in order
 
+**Zac, at the PC (2026-10-27, DEC-0046):** Apps → The Dungeon → Set Up
+Your Dungeon: the job, pay an hour, when overtime starts, the day the pay
+week starts, and the words the paycheck shows in the bank (look at one
+deposit under Money). Then clear today's run and try "GM this" in Talk
+after a rough shift. Live-model check of Game Master mode on the 14b is
+owed (tone, no invented numbers).
+
 **Zac, 2026-10-24 (DEC-0045): the apps stay the layout; make MIA smarter
 at using them.** The five-places frame is undone. Next AI work: MIA
 working the apps for you in Talk and by voice (understand what you mean,

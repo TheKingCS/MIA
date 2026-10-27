@@ -31,6 +31,7 @@ from typing import Optional
 LIMITS = {
     "web_home": "",
     "dashboard": "Retired: Home shows what it showed.",
+    "dungeon": "Loot is pay before taxes, worked out from your hours; what reaches the bank comes from the bank sync. Shift differentials and tips aren't counted yet.",
     "freedom": "The estimate assumes the last three months' pace; transfers between your own accounts can look like spending until the bank sync sorts them.",
     "compliance": "MIA keeps the list and reminds you; she never files, pays or signs anything, and a deadline isn't confirmed until you verify it.",
     "calendar": "",

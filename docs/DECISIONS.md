@@ -789,3 +789,28 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   Talk so they don't have to dig. A change to the layout itself is
   Zac's call, asked first, never part of a handoff about something else.
 - Related: DEC-0044, docs/UX_SYSTEM_AUDIT.md (kept as history)
+
+### DEC-0046: MIA as Game Master, and work as a dungeon you loot
+- Status: APPROVED
+- Proposed by: zac, 2026-10-27 (MIA as "my personal kind of dungeon master for playing the game of life": turning real-life trouble, like coming in unstocked after another shift, into the game instead of the negative way of thinking about it) · Approved by: zac, 2026-10-27 ("Lets create it. Then i could treat work like a dungeon that I visit and loot every day to stack resources until I can advance to the next dungeon and track my resource gain with Plaid ... Overtime can be boss battles that gain me increased loot. We can do a projected loot thing based on my hourly pay and overtime pay too")
+- Decision: **Game Master mode** in Talk ("GM this", "game master",
+  "make it a game", or the fourth answer when MIA asks what kind of
+  support someone wants): she says plainly that the trouble is real, then
+  frames it as the game from facts built in code (`core/game_master.py`):
+  the hard-mode modifier's game name, what clearing it earns, the day's
+  run, the loot, the next dungeon. She offers one quest ("make it a
+  quest" → a HARD mission with its reward). Other people are characters,
+  never villains, never named; she never invents loot, XP or wins.
+  **The Dungeon** (`core/work_dungeon.py`, `web/dungeon.html`): a job is a
+  dungeon, a shift a run, cleared or planned; hard-mode modifiers (Bare
+  Shelves, Thin Party, Supply Raid...) add XP and are kept as a plain
+  dated record, nobody's name, for if the person ever raises it at work;
+  loot is gross pay with overtime by the pay week, a run with overtime is
+  a boss whose bonus is the overtime premium; projected loot (week,
+  month, year at this pace); banked loot is the paychecks from the bank
+  (Plaid imports, matched by the paycheck's words), which also teach the
+  take-home share; the next dungeon is the Freedom plan. Personal store,
+  never a child's (money). Non-punitive: a missed planned run costs
+  nothing.
+- Related: DEC-0028 (the game layer), DEC-0038 (Freedom), DEC-0014
+

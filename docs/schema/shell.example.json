@@ -18,6 +18,13 @@
       "page": "index.html"
     },
     {
+      "id": "dungeon",
+      "name": "The Dungeon",
+      "icon": "🏰",
+      "tagline": "Clear the run. Bank the loot.",
+      "page": "dungeon.html"
+    },
+    {
       "id": "freedom",
       "name": "Freedom",
       "icon": "🌄",

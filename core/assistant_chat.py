@@ -53,6 +53,7 @@ from core.connectivity import connectivity_prompt_block
 from core.conversation_modes import (
     AGENCY_LINE,
     COMPANION,
+    GAME_MASTER,
     LISTEN,
     MODE_INSTRUCTIONS,
     PERSONAL_MODES,
@@ -627,6 +628,11 @@ def build_personal_system_message(context, mode: str, conversation=None, prompt:
             parts.append(NO_WHY_YET_INSTRUCTION + " Answer in plain conversational text.")
             return "\n\n".join(parts)
         parts.append("The user's reasons and the facts behind them:\n" + sheet.to_text())
+    if mode == GAME_MASTER:
+        # DEC-0046: the game's names, the loot and the next dungeon come from code; the model only phrases them.
+        from core.game_master import game_facts
+
+        parts.append(game_facts(context, prompt, conversation))
     instruction = MODE_INSTRUCTIONS.get(mode, MODE_INSTRUCTIONS[LISTEN])
     parts.append(instruction + " Answer in plain conversational text.")
     return "\n\n".join(parts)

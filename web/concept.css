@@ -1490,6 +1490,19 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
 .goods-lot.keeps { border-left-color: var(--line-strong); }
 .market-taps { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; margin-top: 8px; }
 .market-tap { display: grid; gap: 8px; padding: 10px; border-radius: 10px; }
+/* The Dungeon (DEC-0046): runs, hard mode, overtime bosses */
+.dg-name { margin: 12px 0 4px; }
+.dg-runs, .dg-record { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.dg-run, .dg-record li { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; padding: 10px 12px;
+  border-left: 3px solid var(--line-strong); background: rgba(var(--rgb-panel-2), 0.6); border-radius: 8px; }
+.dg-record li { grid-template-columns: 1fr; border-left-color: rgb(var(--rgb-amber)); }
+.dg-run.hard { border-left-color: rgb(var(--rgb-amber)); }
+.dg-run.boss { border-left-color: var(--accent); box-shadow: 0 0 14px var(--accent-glow); }
+.dg-affixes { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+.dg-affix { min-height: 40px; }
+.dg-affix[aria-pressed="true"] { color: var(--text); border-color: rgb(var(--rgb-amber)); background: rgba(var(--rgb-amber), 0.14); }
+.dg-gm p { margin: 6px 0; }
+.dg-ot { margin: 8px 2px; color: var(--text-dim); }
 /* Compliance (DEC-0040): deadlines by urgency; unverified always says so */
 .ob-card { border-left: 3px solid var(--line-strong); }
 .ob-card.overdue { border-left-color: rgb(var(--rgb-bad)); }

@@ -245,6 +245,8 @@
     compliance: () => read("/api/compliance", "compliance"),
     // Freedom (core/freedom.py, DEC-0038): the plan, the date, progress, the shift, the builds.
     freedom: () => read("/api/freedom", "freedom"),
+    // The Dungeon (core/web_dungeon.py, DEC-0046): runs, loot earned / projected / banked, bosses, hard mode.
+    dungeon: () => read("/api/dungeon", "dungeon"),
     // Chickens (core/web_flock.py, DEC-0037): eggs, lay rate, feed cost per dozen, cartons.
     flock: () => read("/api/flock", "flock"),
     // The insurance check-up (core/insurance.py): policies, checks, quotes side by side.

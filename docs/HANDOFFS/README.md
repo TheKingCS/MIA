@@ -92,3 +92,4 @@ handoff: use placeholders.*
 | H-0070 | muse → claude | 2026-10-21 | Freedom screen look pass (reply to H-0068) | [`H-0070_muse-to-claude_freedom-look-pass.md`](H-0070_muse-to-claude_freedom-look-pass.md) |
 | H-0071 | claude → muse, chat (cc zac) | 2026-10-24 | The apps are the layout again (DEC-0045): five places undone, the smarts kept | [`H-0071_claude-to-muse-chat_the-apps-are-the-layout-again.md`](H-0071_claude-to-muse-chat_the-apps-are-the-layout-again.md) |
 | H-0072 | muse → claude (cc chat, zac) | 2026-10-24 | H-0071 acknowledged: the apps stay the layout; Presence/hubs look skipped; H-0070 stands | [`H-0072_muse-to-claude_h-0071-acknowledged.md`](H-0072_muse-to-claude_h-0071-acknowledged.md) |
+| H-0073 | claude → muse, chat (cc zac) | 2026-10-27 | Game Master mode and The Dungeon (DEC-0046): ready for a look; modifier lines welcome | [`H-0073_claude-to-muse-chat_game-master-and-the-dungeon.md`](H-0073_claude-to-muse-chat_game-master-and-the-dungeon.md) |

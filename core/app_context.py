@@ -109,6 +109,7 @@ if TYPE_CHECKING:
     from core.obligations import ObligationBook
     from core.freedom import FreedomLog
     from core.boss_battles import BossBook
+    from core.work_dungeon import DungeonBook
     from core.questlines import QuestBook
     from core.world_map import WorldMap
     from core.memory_vault import MemoryVault
@@ -244,6 +245,7 @@ class AppContext:
     online_reminders: Optional["OnlineReminders"] = field(default=None, repr=False)
     reward_shop: Optional["RewardShop"] = field(default=None, repr=False)  # DEC-0028
     boss_book: Optional["BossBook"] = field(default=None, repr=False)  # DEC-0028
+    dungeon: Optional["DungeonBook"] = field(default=None, repr=False)  # DEC-0046 work as a dungeon: runs, loot
     quest_book: Optional["QuestBook"] = field(default=None, repr=False)  # DEC-0028 questlines
     world_map: Optional["WorldMap"] = field(default=None, repr=False)  # DEC-0028 fog of war
     passwords: Optional["PasswordVault"] = field(default=None, repr=False)  # DEC-0035 logins, master-password locked

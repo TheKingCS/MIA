@@ -92,6 +92,7 @@ from core.flock import FlockBook
 from core.obligations import ObligationBook
 from core.freedom import FreedomLog
 from core.boss_battles import BossBook
+from core.work_dungeon import DungeonBook
 from core.questlines import QuestBook
 from core.world_map import WorldMap
 from core.memory_vault import MemoryVault
@@ -139,6 +140,7 @@ PERSONAL_STORES: tuple[tuple[str, type], ...] = (
     ("online_reminders", OnlineReminders),
     ("reward_shop", RewardShop),
     ("boss_book", BossBook),
+    ("dungeon", DungeonBook),
     ("quest_book", QuestBook),
     ("world_map", WorldMap),
     ("memory_vault", MemoryVault),
