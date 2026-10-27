@@ -257,7 +257,14 @@ places.
 | 9 | User Sync's other chapters; the rest of the pages | 5, 8 | per page |
 | 10 | User Guide in the app; EULA reviewed | 3 | ⚖ EULA |
 
-## 9. Questions for Zac
+## 9. Questions for Zac (answered 2026-10-27, DEC-0050)
+
+Answers: 1 yes (built; verify on the PC); 2 MIA will eventually be
+offered to others, business structure undecided (placeholders, lawyer
+review before release); 3 yes to all three defaults; 4 quiet hours off
+until each person sets them.
+
+The questions were:
 
 1. **Step 0:** go ahead with the routing change (only how-to questions
    use the reference material; otherwise she answers as a person and

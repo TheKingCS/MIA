@@ -865,3 +865,20 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   audit starts from real evidence.
 - Related: DEC-0048, docs/FAILURE_LOG.md
 
+### DEC-0050: She talks like a person; User Sync defaults; quiet hours; the EULA's facts
+- Status: APPROVED
+- Proposed by: claude, 2026-10-27 (`docs/BODY_AND_RELATIONSHIP_PLAN.md` section 9) · Approved by: zac, 2026-10-27 ("Yes, go ahead with the I don't know fix … Yes to 3 and 4 off until set")
+- Decision: (1) Only a how-to or teach-me question about MIA is held to
+  her own docs; everything else is answered as a person (the person's
+  context, her own knowledge, the offline reference packs when they
+  match), never "I don't know what to do": one short question or two
+  concrete offers instead; facts about the person's data still come only
+  from their data. Verified on the PC's model with
+  `tests/live_model_check.py` (PERSON_CASES) before it's trusted.
+  (2) User Sync: voice and typing, in chapters over days, and Zac can
+  run it too. (3) Quiet hours: off until each person sets them. (4) The
+  EULA: MIA will eventually be offered to others; the business structure
+  isn't decided yet, so the draft uses placeholders for the licensor and
+  governing law and gets a lawyer's review before release.
+- Related: DEC-0048, DEC-0049, docs/BODY_AND_RELATIONSHIP_PLAN.md
+

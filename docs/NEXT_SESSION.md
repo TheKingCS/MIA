@@ -360,8 +360,10 @@ Build order (Zac said begin, 2026-10-27): 1) the Loop ✅ built
 tests and bench cases, fix, mark fixed.** **2026-10-27, Zac + Chat's direction:
 the Brain, the Body, the Relationship.** The audit and the order are in
 `docs/BODY_AND_RELATIONSHIP_PLAN.md` (section 8), with four questions
-for Zac (section 9) waiting: the routing change that stops "I don't
-know", EULA facts, User Sync defaults, quiet hours. Start there. Was: the Sunday morning
+for Zac (section 9), answered (DEC-0050). **At the PC first: run
+`python tests/live_model_check.py` (its new PERSON_CASES check MIA never
+dead-ends with "I don't know") on the 14b; fix any FAIL before going on.**
+Then plan step 1, the About Me page. Was: the Sunday morning
 check-in, 3) adventures from the day's project with real-gain rewards
 (the craft, the recipe unlock) and guild ranks, 4) pattern noticing,
 titles, the emergent class, 5) the Codex, seasons as quarters,

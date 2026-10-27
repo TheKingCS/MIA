@@ -136,12 +136,14 @@ _MODULE_NAME_MATCH_BONUS = 10
 #: to be its own system message so it doesn't get repeated/confused
 #: with actual conversation content.
 GROUNDING_INSTRUCTION = (
-    "Answer the user's question using ONLY the reference material below. "
-    "If the answer isn't contained in it, say you don't know rather than "
-    "guessing — do not use outside knowledge. Answer in plain "
-    "conversational text — no markdown links, citations, or bracketed "
-    "source names."
+    "Answer the user's question from the reference material below when it covers it. If it's about MIA "
+    "herself and the material doesn't cover it, say honestly that it may not be something MIA does yet and "
+    "offer the closest thing she can do; never invent a feature. For anything else, use your own knowledge "
+    "and say when you're not sure. Never just say you don't know. Answer in plain conversational text, no "
+    "markdown links, citations, or bracketed source names."
 )
+# 2026-10-27 (Zac: she should feel like a person): "say you don't know"
+# became "offer the closest thing"; verified on the PC's 14b, not the old 3B.
 # A longer version of this preamble (explicitly describing the material as
 # possibly including "reference library... encyclopedia articles, repair/
 # how-to guides") was tried first and found, via real testing against the
@@ -497,8 +499,8 @@ class DeviceHelpManager:
         chunks = doc_chunks + reference_chunks
         if not chunks:
             return (
-                "No reference material matched this question. Say that you "
-                "don't have information about this in MIA's documentation or reference library."
+                "No reference material matched this question. If it's about MIA, say it may not be something "
+                "she does yet and offer the closest thing she can do; otherwise answer from what you know."
                 f"\n\nQuestion: {query}"
             )
 
