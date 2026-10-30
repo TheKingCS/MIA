@@ -1,8 +1,8 @@
 # MIA's Reasoning: one owner per fact, answers that combine, findings, continuity
 
 *Claude, 2026-10-30, at Zac's request ("the Brain is developing faster
-than the reasoning layer"). Proposed as DEC-0052; nothing here is built
-until Zac approves it. Builds on `docs/INTELLIGENCE_AUDIT.md` (DEC-0043's
+than the reasoning layer"). DEC-0052, approved by Zac 2026-10-30
+(answers in section 8). Builds on `docs/INTELLIGENCE_AUDIT.md` (DEC-0043's
 multi-step turns), `docs/BODY_AND_RELATIONSHIP_PLAN.md` (the duplicates
 and the user model) and `docs/ENGINE_PHASE1_PLAN.md` (life events, links,
 Life State v2).*
@@ -109,7 +109,7 @@ When no plan matches, the turn becomes a short loop:
    is rewritten once from the fact sheet alone; if that fails too, MIA
    gives the plain results instead. She never says a number she didn't
    look up.
-5. **A time budget** (about 30 s on the PC), with what she's looking at
+5. **A time budget** (up to 60 s on the PC when it's needed, faster preferred; Zac, DEC-0052), with what she's looking at
    shown while she works ("Checking your bills and your pay…"); past it,
    she answers with what she has and says what she couldn't check.
 
@@ -206,7 +206,7 @@ gets its own plan when steps 2 to 4 are in.
 |---|---|---|---|
 | 1 | One owner per fact (section 2) | nothing | ⚖ the data move |
 | 2a | Question plans, the first six (3a) | step 1 (pay has one owner) | — |
-| 2b | The tool loop, N from the bench (3b, 3c) | the PC for the bench | ⚖ N and the time budget |
+| 2b | The tool loop, N from the bench (3b, 3c) | the PC for the bench | N from the bench; time budget set (60 s at most) |
 | 3 | Findings, the first ten (section 4) | step 1 | ⚖ which go through the gate unprompted |
 | 4 | Conversation state (section 5) | step 2 | — |
 | 5 | The companion layer (section 6) | 2 to 4 | per piece |
@@ -215,6 +215,12 @@ Every step keeps its tests, is checked on the PC's model before it's
 trusted, and shows up in the Fix-It Log when it stumbles.
 
 ## 8. Questions for Zac
+
+**Answered 2026-10-30:** 1 yes; 3 up to 60 seconds when needed, faster
+preferred; 4 Zac is sending his own list of questions. 2 is open: asked
+again in plain words.
+
+The questions were:
 
 1. Approve the order above, and step 1's data move (Freedom's hourly
    rate becomes the Dungeon's)?

@@ -7,10 +7,11 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 *Last updated: 2026-10-30*
 
-**2026-10-30: DEC-0052 proposed, waiting on Zac** (`docs/REASONING_PLAN.md`):
-one owner per fact, answers that combine several lookups (question plans,
-then a tool loop), findings across apps, conversation state. Section 8
-has four questions for Zac. Nothing is built until he approves.
+**2026-10-30: DEC-0052 approved** (`docs/REASONING_PLAN.md`): one owner
+per fact (step 1, next to build), answers that combine several lookups
+(question plans from Zac's own list, then a tool loop with up to 60 s),
+findings across apps, conversation state. Still open: which findings may
+reach Zac unprompted.
 
 **2026-10-29 (Claude on the PC): her voice, and how she describes herself.**
 - Zac: restart MIA, listen to Kokoro's Heart (now your saved voice), and
