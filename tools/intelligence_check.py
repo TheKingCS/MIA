@@ -91,6 +91,10 @@ def main() -> None:
     parser.add_argument("--model", default="", help="another model on this computer's Ollama")
     args = parser.parse_args()
     logging.disable(logging.INFO)
+    import sys
+
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # a piped Windows console is cp1252
     from tests.intelligence_bench import CATEGORIES, QUESTIONS
 
     context = build_context(args.model)
@@ -109,12 +113,13 @@ def main() -> None:
             row = {"route": "error", "answer": "", "seconds": 0, "lookups": [], "note": f"{type(exc).__name__}: {exc}"}
         row.update(id=qid, question=question, warnings=list(watcher.seen))
         rows.append(row)
-        print(f"{qid:4} {row['seconds']:5.1f}s  {row['route'][:28]:28}  {'⚠ ' if row['warnings'] or row.get('note') else ''}"
+        print(f"{qid:4} {row['seconds']:5.1f}s  {row['route'][:28]:28}  {'! ' if row['warnings'] or row.get('note') else ''}"
               f"{question[:60]}", flush=True)
+        write(rows, model, quiet=True)  # after every question: a crash never loses the run
     write(rows, model)
 
 
-def write(rows: list[dict], model: str) -> None:
+def write(rows: list[dict], model: str, quiet: bool = False) -> None:
     from tests.intelligence_bench import CATEGORIES
 
     out = ROOT / "pc-check"
@@ -141,7 +146,8 @@ def write(rows: list[dict], model: str) -> None:
         lines += [f"> ⚠ {w}" for w in r["warnings"]] + ([""] if r["warnings"] else [])
         lines += [r["answer"].strip() or "(no answer)", ""]
     (out / f"{stem}.md").write_text("\n".join(lines), encoding="utf-8")
-    print(f"\nWrote pc-check/{stem}.md and .json")
+    if not quiet:
+        print(f"\nWrote pc-check/{stem}.md and .json")
 
 
 if __name__ == "__main__":
