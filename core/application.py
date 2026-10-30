@@ -259,6 +259,16 @@ def _console_or_nothing() -> None:
             setattr(sys, name, open(os.devnull, "w", encoding="utf-8"))
 
 
+# A word for a kind of thing -> its maintenance category (list_maintenance_tasks' query).
+MAINTENANCE_QUERY_CATEGORIES = {
+    "vehicle": "Vehicle", "car": "Vehicle", "truck": "Vehicle", "auto": "Vehicle", "motorcycle": "Vehicle",
+    "power equipment": "Power Equipment", "equipment": "Power Equipment", "mower": "Power Equipment",
+    "appliance": "Appliance", "property": "Property", "house": "Property", "home": "Property",
+    "garden": "Garden/Plant", "greenhouse": "Garden/Plant", "plant": "Garden/Plant", "garden/plant": "Garden/Plant",
+    "tool": "Tool",
+}
+
+
 class MIAApplication:
     """Owns the Qt application object and the startup sequence."""
 
@@ -4703,14 +4713,17 @@ class MIAApplication:
     @staticmethod
     def _action_list_maintenance_tasks(context: AppContext, arguments: dict) -> str:
         query = str(arguments.get("query", "") or "").strip().lower()
-        garden_query = query in ("greenhouse", "garden", "plants", "plant", "garden/plant")
+        # A query that names a kind of thing matches everything of that kind (2026-10-30, live: "vehicle"
+        # found nothing because the truck has its own name, and MIA said nothing was overdue).
+        category = MAINTENANCE_QUERY_CATEGORIES.get(query.rstrip("s") if query.endswith("s") else query) \
+            or MAINTENANCE_QUERY_CATEGORIES.get(query)
         today = date.today()
         lines = []
         for task in context.maintenance.all_tasks():
             asset = context.maintenance.get_asset(task.asset_id)
             asset_name = asset.name if asset is not None else "Unknown asset"
-            if garden_query:
-                if asset is None or asset.category != "Garden/Plant":
+            if category:
+                if asset is None or asset.category != category:
                     continue
             elif query and query not in task.title.lower() and query not in asset_name.lower():
                 continue

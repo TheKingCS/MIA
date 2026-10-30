@@ -88,7 +88,30 @@ routing (no model), the same decision a turn makes:
 | G Cross-domain | 15 | 0 | 2 | 13 |
 | **All** | **112** | **4** | **31** | **77** |
 
-**What this says:**
+**After the question plans (2026-10-30, the home computer):**
+
+| Category | Questions | Question plan | Answered by code | Tools offered | No tools at all |
+|---|---|---|---|---|---|
+| A Personal operations | 12 | 10 | 0 | 0 | 2 |
+| B Money | 20 | 19 | 0 | 0 | 1 |
+| C Business and homestead | 20 | 12 | 1 | 2 | 5 |
+| D Personal development | 15 | 9 | 0 | 0 | 6 |
+| E Memory | 15 | 2 | 0 | 2 | 11 |
+| F Research and learning | 15 | 0 | 0 | 6 | 9 |
+| G Cross-domain | 15 | 5 | 0 | 2 | 8 |
+| **All** | **112** | **57** | **1** | **12** | **42** |
+
+The plans take the 58 questions section 4 gives them (C9 stays a direct
+lookup) and nothing else: the questions no plan answers are examples of
+"not a plan" (`core/question_plans.NOT_A_PLAN`). These questions are the
+plans' own examples, so this table shows the routing, not how well a new
+phrasing does: on 36 phrasings that aren't in the bank (25 for a plan,
+11 that shouldn't get one: small talk, memory, "how does this work"),
+all 36 went where they should. On the phone (no embedding model, plans
+by their words) 52 reach a plan. The 42 left are the tool loop's,
+findings', memory's and research's (section 3).
+
+**What this said before the plans:**
 
 1. **The biggest gap is retrieval, not data.** 77 of 112 questions reach
    the model with no tools at all, so it answers from the few lines of

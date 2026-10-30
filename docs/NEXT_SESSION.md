@@ -7,6 +7,17 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 *Last updated: 2026-10-30*
 
+**2026-10-30 (later): built.** Step 1 (one owner per fact:
+`core/fact_owners.py`), the question plans (`core/question_plans.py`, 15
+plans, by meaning with `core/meaning.py` and nomic-embed-text, in every
+chat surface), the debt payoff math (`core/debt_math.py`), `llm.num_ctx`.
+Live on the PC: plan answers in 3 to 7 seconds. Zac: ask MIA the
+benchmark questions in your own words and say which answers are off.
+Next to build: the tool loop (DEC-0052 2b), then findings, then
+conversation state. Note: the desktop's chat panels don't use
+`run_assistant_turn` (no quick commands or direct lookups there); unify
+them when conversation state is built.
+
 **2026-10-30: DEC-0052 approved** (`docs/REASONING_PLAN.md`): one owner
 per fact (step 1, next to build), answers that combine several lookups
 (question plans from Zac's own list, then a tool loop with up to 60 s),

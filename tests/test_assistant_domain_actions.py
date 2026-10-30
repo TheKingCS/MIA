@@ -157,6 +157,18 @@ def test_greenhouse_query_lists_only_plant_care(ctx):
     assert "Water (Tomato Bed)" in reply and "Oil change" not in reply
 
 
+def test_a_kind_of_thing_finds_everything_of_that_kind(ctx):
+    """2026-10-30, live: "vehicle" found nothing because the truck has its
+    own name, and MIA said nothing was overdue."""
+    car = ctx.maintenance.add_asset("Baelien", "Vehicle")
+    ctx.maintenance.add_task(car.asset_id, "Oil change", interval_days=90)
+    bed = ctx.maintenance.add_asset("Tomato Bed", "Garden/Plant")
+    ctx.maintenance.add_task(bed.asset_id, "Water", interval_days=2)
+    for query in ("vehicle", "vehicles", "car", "truck"):
+        reply = say(ctx, "list_maintenance_tasks", query=query)
+        assert "Oil change (Baelien)" in reply and "Water" not in reply, query
+
+
 def test_watered_the_tomatoes(ctx):
     bed = ctx.maintenance.add_asset("Tomato Bed", "Garden/Plant")
     ctx.maintenance.add_task(bed.asset_id, "Water", interval_days=2)

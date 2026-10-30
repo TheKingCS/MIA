@@ -33,6 +33,13 @@ Chat is inherently one-reply-in-flight-at-a-time, so a fresh
 `ChatWorker` per prompt (rather than a persistent worker + queue) is
 enough; each caller disables its own input while a worker is running
 instead of managing a queue.
+
+2026-10-30 (DEC-0052, the tool loop): given the `context` and the
+`prompt`, the worker runs `core.tool_loop.run()`: when the model asks
+only to look things up, those lookups run here, off the GUI thread
+(read-only, as the web server's turns already do), and the model writes
+one answer from them. A reply that changes anything still comes back
+unexecuted, for the caller's slot to run on the GUI thread as before.
 """
 
 from __future__ import annotations
@@ -49,16 +56,25 @@ class ChatWorker(QThread):
 
     result_ready = Signal(object)  # Optional[ChatReply]
 
-    def __init__(self, llm: LLMManager, messages: list[dict], tools: list[dict], named: Optional[str] = None) -> None:
+    def __init__(self, llm: LLMManager, messages: list[dict], tools: list[dict], named: Optional[str] = None,
+                 context=None, prompt: str = "") -> None:
         super().__init__()
         self._llm = llm
         self._messages = messages
         self._tools = tools
         self._named = named  # the tool the message names (core/assistant_chat.settle_on_named_tool)
+        self._context = context  # given: the tool loop (core/tool_loop.py)
+        self._prompt = prompt
 
     def run(self) -> None:
         from core.assistant_chat import settle_on_named_tool
 
+        if self._context is not None:
+            from core.tool_loop import run as run_loop
+
+            self.result_ready.emit(run_loop(self._context, self._llm, self._messages, self._tools, self._prompt,
+                                            self._named))
+            return
         reply: Optional[ChatReply] = self._llm.chat_with_tools(self._messages, self._tools)
         reply = settle_on_named_tool(self._named, self._messages, self._tools, reply, self._llm.chat_with_tools)
         self.result_ready.emit(reply)

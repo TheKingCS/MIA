@@ -118,6 +118,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from core.question_plans import finish as plan_finish, request as plan_request
 from core.activity_log_manager import ActivityLogEntry
 from core.app_context import AppContext
 from core.assistant_chat import (
@@ -1774,13 +1775,18 @@ class HomeDashboard(QFrame):
             return
         self._set_busy(True)
 
-        messages, tools = build_chat_request(self.context, conversation, prompt)
-        self._worker = ChatWorker(self.context.llm, messages, tools)
+        planned = plan_request(self.context, conversation, prompt)  # DEC-0052: a question a plan answers
+        self._plan = (planned[1], prompt) if planned else None
+        messages, tools = (planned[0], []) if planned else build_chat_request(self.context, conversation, prompt)
+        self._worker = ChatWorker(self.context.llm, messages, tools, context=self.context, prompt=prompt)
         self._worker.result_ready.connect(self._on_reply)
         self._worker.finished.connect(self._on_worker_finished)
         self._worker.start()
 
     def _on_reply(self, reply: Optional[ChatReply]) -> None:
+        plan, self._plan = getattr(self, "_plan", None), None
+        if plan is not None:  # never a number MIA didn't look up (core/question_plans.finish)
+            reply = ChatReply(content=plan_finish(reply.content if reply is not None else "", *plan), tool_calls=[])
         if reply is None:
             return
 

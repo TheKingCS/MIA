@@ -20,4 +20,4 @@ def test_the_routing_audit_covers_every_question():
 
     rows = audit()
     assert [r["id"] for r in rows] == list(QUESTIONS)
-    assert all(r["route"] in ("code", "tools", "model only") for r in rows)
+    assert all(r["route"] in ("plan", "code", "tools", "model only") for r in rows)

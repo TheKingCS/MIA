@@ -25,7 +25,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from core.app_context import AppContext
-from core.assistant_chat import build_chat_request, named_tool, settle_on_named_tool, split_safe_tool_calls
+from core.assistant_chat import build_chat_request, named_tool, split_safe_tool_calls
 from core.conversation_manager import Conversation, ConversationMessage
 from core.logger import get_logger
 from core.talk_it_out import Followup, after_fixed_reply, apply_followup, plan_followup, pre_turn, with_offer
@@ -100,6 +100,14 @@ def run_assistant_turn(context: AppContext, conversation: Conversation, prompt: 
 
         quick = handle(context, prompt)
         if quick is None:
+            # A detailed question a plan answers: lookups by code, one answer (DEC-0052, core/question_plans.py).
+            from core.question_plans import answer as plan_answer
+
+            planned = plan_answer(context, conversation, prompt)
+            if planned is not None:
+                said, _sheet = planned
+                add_message(conversation, "assistant", said)
+                return AssistantTurn(replies=([prepared.notice] if prepared.notice else []) + [said])
             quick = _direct_lookup(context, prompt)
         if quick is not None:
             add_message(conversation, "assistant", quick)
@@ -115,8 +123,9 @@ def run_assistant_turn(context: AppContext, conversation: Conversation, prompt: 
     started = time.monotonic()
     messages, tools = build_chat_request(context, conversation, prompt)
     used = memories_used(context, prompt, messages)
-    reply = context.llm.chat_with_tools(messages, tools)
-    reply = settle_on_named_tool(named_tool(context, prompt, tools), messages, tools, reply, context.llm.chat_with_tools)
+    from core.tool_loop import run as run_loop  # lookups combined into one answer (DEC-0052)
+
+    reply = run_loop(context, context.llm, messages, tools, prompt, named_tool(context, prompt, tools))
     offered = [t.get("function", {}).get("name", "") for t in tools]
     if reply is None:
         _observe(context, conversation, prompt, offered, llm_available=False)
