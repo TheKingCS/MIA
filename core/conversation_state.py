@@ -15,8 +15,14 @@ questions, so the follow-up is answered from the same records, not a
 guess. Kept in memory for the session: it's about the conversation
 happening now, never stored as a fact about the person.
 
+**What came earlier** (`earlier_topics`): the model only sees the last
+few messages, so in a long conversation the start was simply gone. The
+questions asked before that window go into the system message, in the
+person's own words, built by code (no summary written by the model, so
+nothing in it can be made up).
+
 Not yet (the rest of section 5): which single record "it" means across
-any turn, open questions MIA asked, and a running summary.
+any turn, and open questions MIA asked.
 """
 
 from __future__ import annotations
@@ -58,6 +64,23 @@ def remember_plan(conversation, plan: str, question: str) -> None:
 
 def forget(conversation) -> None:
     _states.pop(_key(conversation) or "", None)
+
+
+EARLIER_SHOWN = 6
+EARLIER_CHARS = 90
+
+
+def earlier_topics(messages: list, kept: int) -> str:
+    """Pure logic. The person's questions from before the last `kept`
+    messages (the ones the model sees), most recent last; "" when nothing
+    was cut."""
+    before = messages[:-kept] if kept > 0 else list(messages)
+    asked = [str(getattr(m, "content", "") or "").strip() for m in before if getattr(m, "role", "") == "user"]
+    asked = [a if len(a) <= EARLIER_CHARS else a[:EARLIER_CHARS].rsplit(" ", 1)[0] + "…" for a in asked if a]
+    if not asked:
+        return ""
+    return ("Earlier in this conversation (older than the messages below) they asked: "
+            + "; ".join(f"“{a}”" for a in asked[-EARLIER_SHOWN:]) + ".")
 
 
 def looks_like_follow_up(text: str) -> bool:

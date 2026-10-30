@@ -615,6 +615,12 @@ def build_chat_request(context, conversation: "Conversation", prompt: str) -> tu
 
     history = trim_history(conversation.messages) if conversation is not None else []
     system = build_system_message(context, is_action_request, is_teaching_request, prompt, is_help_question)
+    if conversation is not None and not is_action_request:  # what fell out of the window (DEC-0052 step 4)
+        from core.conversation_state import earlier_topics
+
+        earlier = earlier_topics(conversation.messages, len(history))
+        if earlier:
+            system += "\n\n" + earlier
     learned = getattr(context, "failures", None)
     said = learned.phrases_in(prompt) if learned is not None else []
     if said:  # what this person taught MIA they mean (core/failure_log.py)

@@ -595,7 +595,15 @@ def request(context, conversation, prompt: str, today: Optional[date] = None) ->
     # The question was just added to the conversation by the caller; the history before it.
     if history and history[-1].role == "user" and history[-1].content == prompt:
         history = history[:-1]
-    messages.extend({"role": m.role, "content": m.content} for m in history[-4:])
+    shown = history[-4:]
+    if conversation is not None:  # what's older than the messages shown (core/conversation_state.py)
+        before = list(conversation.messages)
+        if before and before[-1].role == "user" and before[-1].content == prompt:
+            before = before[:-1]
+        earlier = conversation_state.earlier_topics(before, len(shown))
+        if earlier:
+            messages[0]["content"] += "\n\n" + earlier
+    messages.extend({"role": m.role, "content": m.content} for m in shown)
     messages.append({"role": "user", "content": prompt})
     log.info("Question plan %s: %d facts from %s", plan.name, len(sheet.facts), ", ".join(sheet.looked_up))
     return messages, sheet

@@ -62,3 +62,24 @@ def test_the_desktop_gets_the_same_instant_answers(life):
     assert instant_answer(life, talk, "Tell me a joke.") is None  # for the model
     listening = SimpleNamespace(conversation_id="d2", messages=[], mode="listen", journal=False)
     assert instant_answer(life, listening, "What are you capable of?") is None
+
+
+def test_what_fell_out_of_the_window_is_still_known():
+    said = [SimpleNamespace(role=r, content=c) for r, c in (
+        ("user", "How's the truck?"), ("assistant", "Oil change is due."),
+        ("user", "And the mower?"), ("assistant", "Blades next week."),
+        ("user", "What's for dinner?"), ("assistant", "Chili."))]
+    assert cs.earlier_topics(said, 2) == ("Earlier in this conversation (older than the messages below) they asked: "
+                                          "“How's the truck?”; “And the mower?”.")
+    assert cs.earlier_topics(said, 6) == ""  # nothing was cut
+
+
+def test_the_model_is_told_what_came_earlier(life):
+    from core.assistant_chat import build_chat_request
+
+    talk = SimpleNamespace(conversation_id="w1", mode=None, journal=False, messages=[
+        SimpleNamespace(role="user" if i % 2 == 0 else "assistant", content=f"message {i}") for i in range(20)])
+    messages, _tools = build_chat_request(life, talk, "Tell me a story")
+    system = messages[0]["content"]  # the last 12 are shown; 0 to 7 were cut, and their questions are named
+    assert "they asked: “message 0”; “message 2”; “message 4”; “message 6”." in system
+    assert "“message 8”" not in system  # still in the window, so not repeated
