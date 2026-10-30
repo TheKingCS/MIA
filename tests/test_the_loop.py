@@ -245,3 +245,28 @@ def test_the_check_in_by_voice(life):
     do(w, "loop.set", name="work", days="every day", start="9:30 pm", end="6 am")
     said = _get_checkin(w, {})
     assert said.startswith("Last week (") and "This week: 7 runs planned" in said
+
+
+def test_training_days_belong_to_the_loop(life):
+    """DEC-0052: the fitness plan's training days move to the Loop's
+    training rhythm once; the plan reads them from there and writes them
+    there; a training day done shows in the week."""
+    from core.the_loop import ensure_rhythms, training_rhythm, week
+
+    w = life
+    assert w.fitness.data_dir == w.loop.data_dir  # the same person's folder
+    w.fitness._data["plan"]["training"] = {"days": ["Mon", "Thu"], "rotation": [{"name": "Push", "exercises": []}]}
+    ensure_rhythms(w)
+    r = training_rhythm(w)
+    assert (r.days, r.days_source) == ([0, 3], "yours")
+    assert w.fitness._data["plan"]["training"]["days"] == []  # not kept twice
+    assert w.fitness.plan["training"]["days"] == ["Mon", "Thu"]
+
+    w.fitness.update_plan({"training": {"days": ["Tue", "Sat"]}})
+    assert training_rhythm(w).days == [1, 5] and w.fitness.plan["training"]["days"] == ["Tue", "Sat"]
+
+    tuesday = date(2026, 10, 27)
+    assert w.fitness.today_training(tuesday)["name"] == "Push"
+    w.fitness.complete_training(tuesday)
+    row = next(x for x in week(w, tuesday)["rows"] if x["kind"] == "training")
+    assert next(c for c in row["cells"] if c["date"] == "2026-10-27")["status"] == "cleared"

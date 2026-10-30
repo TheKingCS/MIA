@@ -75,6 +75,15 @@ pinned to 0 rather than left at Ollama's default. Verified directly
 against the real server: the exact prompt that flip-flopped between
 correct and "I don't know" across separate calls became reliably
 correct, identically, across repeated calls once temperature was 0.
+
+`num_ctx` (2026-10-30, docs/TOOL_CALLING_RESEARCH.md R1): the context
+window, sent as `options.num_ctx` on every request (`llm.num_ctx`,
+default 16384). Ollama never errors on a prompt longer than its window:
+it silently drops the start, which is where the instructions and tools
+are, and its own default is 2048 or 4096 depending on the version. A
+request asking for a different size than the loaded model has makes
+Ollama reload it, so set `llm.num_ctx` to what the server loads with
+(the home computer: 32768) and leave it.
 """
 
 from __future__ import annotations
@@ -132,10 +141,12 @@ class LLMBackend(Protocol):
 class OllamaBackend:
     """LLMBackend implementation for a local Ollama server."""
 
-    def __init__(self, base_url: str, model: str, keep_alive: str, temperature: float = _DEFAULT_TEMPERATURE) -> None:
+    def __init__(self, base_url: str, model: str, keep_alive: str, temperature: float = _DEFAULT_TEMPERATURE,
+                 num_ctx: int = 0) -> None:
         self._base_url = base_url.rstrip("/")
         self._model = model
         self._temperature = temperature
+        self._num_ctx = int(num_ctx or 0)  # 0: leave it to the server
         # Ollama's keep_alive must be a bare JSON number of seconds
         # (e.g. -1 to never unload) OR a Go duration *string* with a
         # unit suffix (e.g. "30m") — a quoted "-1" is rejected with
@@ -148,13 +159,19 @@ class OllamaBackend:
         except (TypeError, ValueError):
             self._keep_alive = keep_alive
 
+    def _options(self) -> dict:
+        options: dict = {"temperature": self._temperature}
+        if self._num_ctx > 0:
+            options["num_ctx"] = self._num_ctx
+        return options
+
     def generate(self, prompt: str, timeout: float) -> str:
         payload = json.dumps({
             "model": self._model,
             "prompt": prompt,
             "stream": False,
             "keep_alive": self._keep_alive,
-            "options": {"temperature": self._temperature},
+            "options": self._options(),
         }).encode("utf-8")
         request = urllib.request.Request(
             f"{self._base_url}/api/generate",
@@ -183,7 +200,7 @@ class OllamaBackend:
             "messages": messages,
             "stream": False,
             "keep_alive": self._keep_alive,
-            "options": {"temperature": self._temperature},
+            "options": self._options(),
         }
         if tools:
             payload_dict["tools"] = tools
@@ -301,7 +318,8 @@ def make_backend(config) -> "LLMBackend":
     temperature = float(config.get("llm.temperature", _DEFAULT_TEMPERATURE))
     if config.get("llm.backend", "ollama") == "openai":
         return OpenAIBackend(base_url, model, temperature)
-    return OllamaBackend(base_url, model, config.get("llm.keep_alive", _DEFAULT_KEEP_ALIVE), temperature)
+    return OllamaBackend(base_url, model, config.get("llm.keep_alive", _DEFAULT_KEEP_ALIVE), temperature,
+                         num_ctx=int(config.get("llm.num_ctx", 0) or 0))
 
 
 class LLMManager:

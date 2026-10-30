@@ -267,6 +267,28 @@ class RecurringMissionManager:
                 return template
         return None
 
+    def remove_written_calendar_copies(self) -> int:
+        """DEC-0052, once: before, each day's chore was also written as a
+        calendar event ("Push-ups: 20 today", "Laundry: 1 this week").
+        The calendar shows chores from here now, so those copies go: only
+        events MIA wrote, exactly as she wrote them (a template's name,
+        then a number and "today" or "this week"; no time, notes or
+        repeat). Returns how many."""
+        import re
+
+        calendar = getattr(self.context, "calendar", None)
+        if calendar is None or not self.all_templates():
+            return 0
+        names = "|".join(re.escape(t.name) for t in self.all_templates())
+        written = re.compile(rf"^(?:{names}): [0-9.]+ (?:today|this week)$")
+        gone = [e for e in calendar.all_events()
+                if written.match(e.title or "") and not e.time and not e.notes and not e.recurrence]
+        for event in gone:
+            calendar.delete_event(event.event_id)
+        if gone:
+            log.info("Removed %d chore copies from the calendar (DEC-0052).", len(gone))
+        return len(gone)
+
     def all_templates(self) -> list[RecurringMissionTemplate]:
         return list(self._templates)
 
@@ -326,11 +348,7 @@ class RecurringMissionManager:
             "tally",
             target,
         )
-        if self.context.calendar is not None:
-            self.context.calendar.add_event(
-                title=f"{template.name}: {target:g} this week",
-                date=today.isoformat(),
-            )
+        # Not written to the calendar: it shows chores from here (DEC-0052, core/calendar_view._chores).
         log.info("Created this week's recurring Mission: '%s' (target %.3g)", template.name, target)
         return mission
 
@@ -386,11 +404,6 @@ class RecurringMissionManager:
                 "tally",
                 target,
             )
-            if self.context.calendar is not None:
-                self.context.calendar.add_event(
-                    title=f"{template.name}: {target:g} today",
-                    date=today_key,
-                )
             log.info("Created today's recurring Mission: '%s' (target %.3g)", template.name, target)
 
         weekly_mission = self._find_occurrence(template.template_id, "weekly", week_key)

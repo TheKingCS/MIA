@@ -227,7 +227,36 @@ class FitnessManager:
     def plan(self) -> dict:
         plan = json.loads(json.dumps(self._data["plan"]))
         plan["units"] = plan.get("units") or self.default_units()
+        # DEC-0052: which days you train is the Loop's; the plan says what each day is.
+        rhythm = self._training_rhythm()
+        if rhythm is not None:
+            from core.the_loop import WEEKDAY_NAMES
+
+            plan["training"]["days"] = [WEEKDAY_NAMES[d] for d in sorted(rhythm.days)]
         return plan
+
+    def _training_rhythm(self):
+        try:
+            from core.the_loop import training_rhythm
+
+            return training_rhythm(self.context, store=self)
+        except Exception:  # the plan still works without the Loop
+            log.exception("Couldn't read the training rhythm")
+            return None
+
+    def move_training_days_to_loop(self) -> bool:
+        """DEC-0052: the plan's own training days become the Loop's
+        training rhythm, once, and stop being kept here."""
+        from core.the_loop import set_training_days
+
+        days = list(self._data["plan"]["training"].get("days") or [])
+        if not (days or self._data["plan"]["training"].get("rotation")):
+            return False
+        if not set_training_days(self.context, days, store=self):
+            return False
+        self._data["plan"]["training"]["days"] = []
+        self._save()
+        return True
 
     def default_units(self) -> str:
         from core.region import country_of
@@ -238,8 +267,17 @@ class FitnessManager:
             return "lb"
 
     def update_plan(self, changes: dict) -> dict:
-        """Merges `changes` into the plan (nested parts merge; lists replace)."""
-        self._data["plan"] = _merge(self._data["plan"], changes or {})
+        """Merges `changes` into the plan (nested parts merge; lists replace).
+        Training days go to the Loop when this person has one (DEC-0052)."""
+        changes = json.loads(json.dumps(changes or {}))
+        days = (changes.get("training") or {}).get("days") if isinstance(changes.get("training"), dict) else None
+        if days is not None:
+            from core.the_loop import set_training_days
+
+            if set_training_days(self.context, days, store=self):
+                changes["training"].pop("days")
+                changes["training"]["days"] = []  # kept by the Loop, not here
+        self._data["plan"] = _merge(self._data["plan"], changes)
         for milestone in self._data["plan"].get("milestones", []):
             milestone.setdefault("id", uuid.uuid4().hex[:8])
             milestone.setdefault("done_on", None)

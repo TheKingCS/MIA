@@ -26,10 +26,8 @@ PLAN_FIELDS = (  # setting, the parameter, how it's said
     ("freedom.cushion_months", "cushion_months", "the cushion"),
     ("freedom.saved", "saved", "saved so far"),
     ("freedom.monthly_saving", "monthly_saving", "saved a month"),
-    ("freedom.hourly", "hourly", "take-home an hour"),
-    ("freedom.shift_hours", "shift_hours", "hours a shift"),
 )
-MONEY_PARAMS = {"monthly_needs", "saved", "monthly_saving", "hourly"}
+MONEY_PARAMS = {"monthly_needs", "saved", "monthly_saving"}  # pay is the Dungeon's (DEC-0052)
 
 
 def _money(x: float) -> str:

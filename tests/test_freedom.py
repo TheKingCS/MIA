@@ -53,7 +53,11 @@ def test_the_page_from_real_records(shop):  # noqa: F811
     w.projects.update_project(greenhouse.project_id, budget=6000)
     w.budget.add_expense(amount=1000, category="Materials", description="Panels", date="2026-09-05",
                          project_id=greenhouse.project_id)
-    do(w, "freedom.plan", saved=12000, hourly=20, shift_hours=10)
+    do(w, "freedom.plan", saved=12000)
+    from core.work_dungeon import DungeonBook
+
+    w.dungeon = DungeonBook(w, data_dir=w.home_dir)
+    w.dungeon.add_dungeon("Work", hourly=20, take_home_pct=100, shift_hours=10)  # pay is the Dungeon's (DEC-0052)
 
     page = freedom_page(w, TODAY)
     p = page["plan"]
@@ -67,6 +71,7 @@ def test_the_page_from_real_records(shop):  # noqa: F811
     week = next(x for x in page["periods"] if x["id"] == "week")
     assert (week["saved"], week["homestead"], week["total_text"]) == (200, 40, "+$240.00")
     assert page["shift"]["pay"] == 200 and page["shift"]["days_of_living"] == round(200 / (3000 / 30.44), 1)
+    assert page["shift"]["source"] == "Work" and page["shift"]["take_home"] is True
     assert [m["label"] for m in page["history"]][-1] == "Sep" and len(page["history"]) == 6
 
     # Your own number wins; a build added from the screen counts.
@@ -156,3 +161,25 @@ def test_fund_accounts_and_build_order(shop):  # noqa: F811
     assert page["next_build"]["name"] == page["builds"][0]["name"]
     glance = _freedom_glance(w, TODAY)
     assert glance["lines"][0]["text"].startswith("$8,000.00 of ") and _freedom_next(w, TODAY)["lines"]
+
+
+def test_an_old_pay_rate_moves_to_the_dungeon_once(shop):  # noqa: F811
+    """DEC-0052: pay is the Dungeon's. Freedom's old take-home rate moves
+    into a dungeon with no rate (or a new one), and an existing rate wins."""
+    from core import person_settings
+    from core.freedom import RETIRED_PAY, freedom_page, move_pay_to_dungeon
+    from core.work_dungeon import DungeonBook
+
+    w = shop
+    w.dungeon = DungeonBook(w, data_dir=w.home_dir)
+    person_settings.put(w, "freedom.hourly", 18.5)
+    person_settings.put(w, "freedom.shift_hours", 10)
+    assert move_pay_to_dungeon(w) == "moved into a new dungeon, Work"
+    d = w.dungeon.dungeons[0]
+    assert (d.hourly, d.take_home_pct, d.shift_hours) == (18.5, 100, 10)
+    assert all(person_settings.get(w, key, 0.0) == 0.0 for key in RETIRED_PAY)
+    assert move_pay_to_dungeon(w) is None  # once
+    assert freedom_page(w, TODAY)["shift"]["pay"] == 185
+
+    person_settings.put(w, "freedom.hourly", 99)
+    assert move_pay_to_dungeon(w) == "kept the Dungeon's rate" and w.dungeon.dungeons[0].hourly == 18.5

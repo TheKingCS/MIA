@@ -30,7 +30,8 @@
         "model": "llama3.2",
         "timeout_seconds": 60,
         "keep_alive": "-1",
-        "temperature": 0.0
+        "temperature": 0.0,
+        "num_ctx": 16384
     },
     "voice": {
         "stt_model_path": "",

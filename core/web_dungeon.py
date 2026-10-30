@@ -208,6 +208,25 @@ def _loop(context, today: date) -> dict:
         return {"available": False}
 
 
+def job_pay(context, today: Optional[date] = None) -> Optional[dict]:
+    """The person's pay, for everything else that needs it (DEC-0052: the
+    Dungeon owns pay; Freedom and MIA's answers read it here, never keep
+    their own). The first dungeon with a rate: gross an hour, the share
+    that reaches the bank (theirs, or learned from deposits), take-home an
+    hour and a shift's paid hours. None when no dungeon has a rate."""
+    book = getattr(context, "dungeon", None)
+    d = next((x for x in (book.dungeons if book is not None else []) if x.hourly), None)
+    if d is None:
+        return None
+    view = dungeon_view(context, d, book.runs, today or date.today())
+    share = view["share"]
+    net = round(d.hourly * share, 2) if share is not None else None
+    return {"dungeon": d.name, "dungeon_id": d.dungeon_id, "hourly": d.hourly, "share": share,
+            "share_source": view["banked"]["share_source"], "take_home_hourly": net,
+            "shift_hours": float(d.shift_hours or 0),
+            "weekly_pace": view["pace"]["weekly"]}
+
+
 def dungeon_page(context, today: Optional[date] = None) -> dict:
     from core.child_accounts import is_child
     from core.dungeon_actions import DUNGEON

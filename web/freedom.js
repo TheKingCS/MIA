@@ -28,9 +28,7 @@
       field("monthly_needs", "What a month of living takes (blank: from your spending)", "money", s["freedom.monthly_needs"] || null),
       field("cushion_months", "Cushion: months of the gap to have saved", "int", s["freedom.cushion_months"]),
       field("saved", "Saved so far (until your bank is connected)", "money", s["freedom.saved"] || null),
-      field("monthly_saving", "Saved a month (blank: from income minus spending)", "money", s["freedom.monthly_saving"] || null),
-      field("hourly", "Take-home pay an hour at the job", "money", s["freedom.hourly"] || null),
-      field("shift_hours", "Hours in a shift", "amount", s["freedom.shift_hours"] || null)], {});
+      field("monthly_saving", "Saved a month (blank: from income minus spending)", "money", s["freedom.monthly_saving"] || null)], {});
     if (v) act({ kind: "freedom.plan", params: v });
   }
   async function addBuild() {
@@ -101,13 +99,14 @@
 
   function shiftCard() {
     const s = page.shift;
-    if (!s) return section("Tonight's Shift", btn("Set It Up", "btn-ghost btn-small", setPlan),
-      el("p", { class: "dim" }, "Put in your take-home an hour and your shift length, and MIA shows what each shift buys you."));
+    if (!s) return section("Tonight's Shift", el("a", { class: "btn btn-ghost btn-small", href: "dungeon.html" }, "Set Up Your Pay"),
+      el("p", { class: "dim" }, "Put your pay and shift length in the Dungeon, and MIA shows what each shift buys you."));
     return el("section", { class: "glass free-shift" },
       el("div", { class: "dim" }, "Tonight's shift · " + s.hours + " hours"),
       el("div", { class: "free-shift-line" }, el("strong", {}, s.pay_text),
         s.days_of_living != null ? [" → ", el("strong", {}, s.days_of_living + " days"), " of living"] : null),
-      s.of_goal != null ? el("p", { class: "dim" }, (Math.round(s.of_goal * 1000) / 10) + "% of the fund. Every shift is a step out.") : null);
+      s.of_goal != null ? el("p", { class: "dim" }, (Math.round(s.of_goal * 1000) / 10) + "% of the fund. Every shift is a step out.") : null,
+      el("p", { class: "dim" }, "Pay from " + s.source + (s.take_home ? ", take-home" : ", before taxes") + "."));
   }
 
   function breakdown() {

@@ -163,8 +163,14 @@ def test_ensure_current_missions_creates_daily_and_weekly(isolated_paths):
     assert weekly.occurrence_key == "2026-09-13-W0"
     assert weekly.objectives[0].target == 7
 
-    assert len(context.calendar.all_events()) == 1
-    assert context.calendar.all_events()[0].date == "2026-09-13"
+    # DEC-0052: nothing written to the calendar; it shows the chore from here.
+    from core.calendar_view import calendar_items
+
+    assert context.calendar.all_events() == []
+    shown = [i for i in calendar_items(context, date(2026, 9, 13), date(2026, 9, 14), today=date(2026, 9, 13))
+             if i["kind"] == "chore"]
+    assert [(i["date"], i["title"], i["detail"]) for i in shown] == [("2026-09-13", "Push-ups", ""),
+                                                                      ("2026-09-14", "Push-ups", "Planned")]
 
 
 def test_ensure_current_missions_is_idempotent(isolated_paths):
@@ -181,7 +187,7 @@ def test_ensure_current_missions_is_idempotent(isolated_paths):
     assert daily1.mission_id == daily2.mission_id
     assert weekly1.mission_id == weekly2.mission_id
     assert len(context.missions.all_missions()) == 2  # not 4
-    assert len(context.calendar.all_events()) == 1  # not 2
+    assert context.calendar.all_events() == []  # the calendar shows chores, never a copy (DEC-0052)
 
 
 def test_completing_daily_mission_increments_weekly_tally(isolated_paths):
@@ -255,7 +261,7 @@ def test_ensure_current_missions_weekly_creates_one_mission_no_daily_bonus(isola
     assert mission.objectives[0].target == 3
     assert mission.objectives[0].description == "Do 3 loads of laundry"
     assert len(context.missions.all_missions()) == 1  # not 2 — no daily bonus Mission
-    assert len(context.calendar.all_events()) == 1
+    assert context.calendar.all_events() == []
 
 
 def test_ensure_current_missions_weekly_is_idempotent_within_the_week(isolated_paths):
@@ -271,7 +277,7 @@ def test_ensure_current_missions_weekly_is_idempotent_within_the_week(isolated_p
 
     assert mission1.mission_id == mission2.mission_id
     assert len(context.missions.all_missions()) == 1
-    assert len(context.calendar.all_events()) == 1
+    assert context.calendar.all_events() == []
 
 
 def test_ensure_current_missions_weekly_creates_a_new_mission_next_week(isolated_paths):
@@ -333,3 +339,21 @@ def test_ensure_current_missions_without_calendar_does_not_crash(isolated_paths)
         start_date="2026-09-13",
     )
     context.recurring_missions.ensure_current_missions(template, date(2026, 9, 13))  # should not raise
+
+
+def test_the_old_calendar_copies_are_removed_once(isolated_paths):
+    """DEC-0052: chores used to be written into the calendar every day.
+    Only the copies MIA wrote go; the person's own events stay."""
+    context = _make_context()
+    context.recurring_missions.add_template(
+        name="Push-ups", objective_description_template="Do {target:g} push-ups",
+        base_target=20, target_increment_per_week=5, daily_reward_xp=10, weekly_bonus_reward_xp=15,
+        start_date="2026-09-13",
+    )
+    context.calendar.add_event(title="Push-ups: 20 today", date="2026-09-13")
+    context.calendar.add_event(title="Push-ups: 1 this week", date="2026-09-14")
+    context.calendar.add_event(title="Push-ups: 20 today", date="2026-09-15", time="07:00")  # theirs: has a time
+    context.calendar.add_event(title="Dentist", date="2026-09-15")
+    assert context.recurring_missions.remove_written_calendar_copies() == 2
+    assert sorted(e.title for e in context.calendar.all_events()) == ["Dentist", "Push-ups: 20 today"]
+    assert context.recurring_missions.remove_written_calendar_copies() == 0

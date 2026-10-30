@@ -907,7 +907,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   budget. The first question plans: from
   Zac's own list, coming.
 - Decision: in order: (1) one owner per fact, in
-  `core/ownership.py` with a test (pay → the Dungeon, the week's timing
+  `core/fact_owners.py` with a test (pay → the Dungeon, the week's timing
   → the Loop, repeating chores → recurring missions); (2) answers that
   combine: question plans in code for the commonest detailed questions,
   then a tool loop for the rest (results back to the model, up to N

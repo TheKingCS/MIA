@@ -52,7 +52,7 @@ never keeps its own copy.
 | Chores that repeat | recurring missions (`core/recurring_mission_manager.py`) | a calendar event written every day for each one | the calendar shows them derived from the missions, not written |
 | Money in and out | Money (`core/budget_manager.py`, the bank sync) | none known | stays; Freedom, Dungeon loot "banked" and Insurance read it |
 
-**How it stays fixed:** `core/ownership.py` holds this table (fact →
+**How it stays fixed:** `core/fact_owners.py` holds this table (fact →
 owner store → the field), and a test fails when a second store starts
 writing a fact that has an owner, the same way `LIMITS` in
 `core/capabilities.py` fails when an app has no entry.

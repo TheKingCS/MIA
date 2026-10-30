@@ -44,6 +44,7 @@ KINDS = {
     "meal": ("Meal", "kitchen"),
     "prep": ("Meal Prep", "kitchen"),
     "training": ("Training", "workout"),
+    "chore": ("Chore", "household"),  # DEC-0052: from the recurring missions, never written as events
     "birthday": ("Birthday", "relationships"),
     "obligation": ("Deadline", "compliance"),  # DEC-0040: tax and compliance obligations
 }
@@ -161,6 +162,38 @@ def _fitness(context, start: date, end: date, today: date) -> list[dict]:
     return out
 
 
+def _chores(context, start: date, end: date, today: date) -> list[dict]:
+    """Repeating chores and habits (DEC-0052: owned by the recurring
+    missions; the calendar shows them, it doesn't keep a copy). Past and
+    today: the missions that were made, done or not. Ahead: each active
+    daily one every day, each weekly one on the first day of its week."""
+    store = getattr(context, "recurring_missions", None)
+    missions = getattr(context, "missions", None)
+    if store is None or missions is None:
+        return []
+    templates = {t.template_id: t for t in store.all_templates()}
+    out = []
+    for m in missions.all_missions():
+        t = templates.get(m.recurring_template_id)
+        if t is None or m.recurring_kind not in ("daily", "weekly_standalone"):
+            continue
+        try:
+            day = date.fromisoformat(str(m.occurrence_key or "")[:10])
+        except ValueError:
+            continue
+        if start <= day <= min(end, today):
+            done = m.status == "completed"
+            out.append(_item(day, "chore", t.name, "Done" if done else "", due=not done and day == today,
+                             mission_id=m.mission_id, done=done))
+    for day in _days(max(start, today + timedelta(days=1)), end):
+        for t in templates.values():
+            if not t.active:
+                continue
+            if t.recurrence == "daily" or (t.recurrence == "weekly" and day.weekday() == date.fromisoformat(t.start_date).weekday()):
+                out.append(_item(day, "chore", t.name, "Planned"))
+    return out
+
+
 def _birthdays(context, start: date, end: date) -> list[dict]:
     store = getattr(context, "relationships", None)
     if store is None:
@@ -212,6 +245,7 @@ def calendar_items(context, start: date, end: date, today: Optional[date] = None
                          ("upkeep", lambda: _upkeep(context, start, end, today)),
                          ("money", lambda: _money(context, start, end, today)),
                          ("fitness", lambda: _fitness(context, start, end, today)),
+                         ("chores", lambda: _chores(context, start, end, today)),
                          ("birthdays", lambda: _birthdays(context, start, end)),
                          ("obligations", lambda: _obligations(context, start, end, today))):
         try:

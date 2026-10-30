@@ -1105,6 +1105,9 @@ class MIAApplication:
         config = self.context.config
         if should_run_once_daily(config.get("system.last_recurring_mission_check_date"), today_iso):
             if self.context.recurring_missions is not None:
+                if not config.get("system.chore_calendar_copies_removed"):  # DEC-0052, once
+                    self.context.recurring_missions.remove_written_calendar_copies()
+                    config.set("system.chore_calendar_copies_removed", True)
                 for template in self.context.recurring_missions.all_templates():
                     if template.active:
                         self.context.recurring_missions.ensure_current_missions(template, now.date())

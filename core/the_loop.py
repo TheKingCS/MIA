@@ -9,7 +9,9 @@ when to start each part and remind you.
 - **A rhythm** is something that recurs: the work dungeon's shifts
   (kind "work", one per dungeon), the household chores (kind "routine":
   the recurring missions of a category, "Household"), or anything the
-  person names (kind "custom"). Each has the days it happens, when it
+  person names (kind "custom"), and training (kind "training": the
+  fitness plan's training days, owned here since DEC-0052; the plan
+  keeps what each day is). Each has the days it happens, when it
   starts and ends (a night shift ends the next morning), and a reminder
   some minutes before it starts.
 - **Learned, or yours.** Days and times are learned from what actually
@@ -53,7 +55,8 @@ _DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 _FILE = "loop.json"
 
 DAY_NAMES = ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-KINDS = ("work", "routine", "custom", "checkin")
+KINDS = ("work", "routine", "custom", "checkin", "training")
+WEEKDAY_NAMES = ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")  # the fitness plan's way of saying days
 LEARN_WEEKS = 6
 MIN_TIMES = 3  # completions before a time is learned
 CHORE_LEAD = 30  # chores are learned from when they're done: they start about this many minutes before
@@ -345,6 +348,37 @@ def _routine_missions(context, r: Rhythm, day: Optional[date] = None) -> list:
             and (day is None or m.occurrence_key == day.isoformat())]
 
 
+def _same_person(book, store) -> bool:
+    """A store may only use the Loop kept in the same person's folder."""
+    return book is not None and store is not None and         Path(getattr(book, "data_dir", "")) == Path(getattr(store, "data_dir", "") or "")
+
+
+def training_rhythm(context, store=None) -> Optional[Rhythm]:
+    """The training rhythm (DEC-0052: the Loop owns which days you
+    train), if this person has one."""
+    book = getattr(context, "loop", None)
+    if book is None or (store is not None and not _same_person(book, store)):
+        return None
+    return book.find("training", "fitness")
+
+
+def set_training_days(context, names: list, store=None) -> bool:
+    """The person's training days ("Mon", "Wed"...) into their training
+    rhythm, made if it isn't there. False when there's no Loop for them
+    (the caller keeps the days itself then)."""
+    book = getattr(context, "loop", None)
+    if book is None or (store is not None and not _same_person(book, store)):
+        return False
+    days = sorted({WEEKDAY_NAMES.index(n) for n in names if n in WEEKDAY_NAMES})
+    r = book.find("training", "fitness")
+    if r is None:
+        book.add("Training", "training", "fitness", "🏋", days=days, days_source="yours" if days else "",
+                 lead_minutes=30)
+    else:
+        book.set(r.rhythm_id, days=days)  # marked yours (or cleared) by set()
+    return True
+
+
 def ensure_rhythms(context) -> list[Rhythm]:
     """Rule 1: what recurs gets a rhythm by itself. Each dungeon gets its
     work rhythm; household routines get "Chores"."""
@@ -366,6 +400,11 @@ def ensure_rhythms(context) -> list[Rhythm]:
         daily = any(t.active and t.category == "Household" and t.recurrence == "daily" for t in store.all_templates())
         made.append(book.add("Chores", "routine", "Household", "🧹", days=list(range(7)) if daily else [],
                              days_source="learned" if daily else ""))
+    fitness = getattr(context, "fitness", None)
+    if fitness is not None and book.find("training", "fitness") is None and _same_person(book, fitness):
+        fitness.move_training_days_to_loop()  # DEC-0052: once, the plan's own days become the rhythm's
+        if book.find("training", "fitness") is not None:
+            made.append(book.find("training", "fitness"))
     return made
 
 
@@ -546,6 +585,12 @@ def _reminder(context, r: Rhythm, today: date, start: datetime) -> Optional[tupl
         from core.weekly_checkin import reminder_line
 
         return reminder_line(context, today)
+    if r.kind == "training":
+        fitness = getattr(context, "fitness", None)
+        todays = fitness.today_training(today) if fitness is not None else None
+        if not todays or todays.get("done"):
+            return None
+        return f"{r.icon} Training day", f"{todays.get('name') or 'Training'} at {when}."
     return f"{r.icon} {r.name}", f"{r.name} at {when}."
 
 
@@ -624,6 +669,13 @@ def week(context, today: Optional[date] = None, start: Optional[date] = None) ->
                     status = "cleared" if finished == len(ms) else ("missed" if day < today else
                                                                      "today" if day == today else "planned")
                     cell.update(status=status, text=f"{finished}/{len(ms)}")
+                elif on:
+                    cell.update(status="missed" if day < today else ("today" if day == today else "planned"))
+            elif r.kind == "training":
+                fitness = getattr(context, "fitness", None)
+                trained = fitness is not None and any(t["date"] == key for t in fitness.training_days_done(key))
+                if trained:
+                    cell.update(status="cleared")
                 elif on:
                     cell.update(status="missed" if day < today else ("today" if day == today else "planned"))
             elif on:

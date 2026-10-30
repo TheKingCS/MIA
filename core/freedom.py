@@ -61,11 +61,12 @@ SETTINGS = {
     "freedom.cushion_months": 6,  # months of the gap to have saved
     "freedom.saved": 0.0,  # saved so far, until the bank says
     "freedom.monthly_saving": 0.0,  # saved a month (0: from income minus spending)
-    "freedom.hourly": 0.0,  # take-home pay an hour at the job
-    "freedom.shift_hours": 0.0,  # hours in a shift
     "freedom.fund_accounts": [],  # the bank accounts that are the fund (account ids); [] = all checking and savings
     "freedom.build_order": [],  # the builds in the person's own order (project ids)
 }
+# Retired 2026-10-30 (DEC-0052): pay is the Dungeon's (core/web_dungeon.job_pay).
+# Read only by move_pay_to_dungeon(), once, to carry an old value over.
+RETIRED_PAY = ("freedom.hourly", "freedom.shift_hours")
 DAYS_A_MONTH = 30.44
 WINDOW_MONTHS = 3
 
@@ -139,6 +140,36 @@ def plan(i: Inputs, today: date) -> dict:
          "days_sooner": sooner(i.pace + step, i.homestead + step)},  # it's saved too, and it shrinks the gap
     ]
     return out
+
+
+def move_pay_to_dungeon(context) -> Optional[str]:
+    """DEC-0052: Freedom used to keep its own take-home rate and shift.
+    Pay belongs to the Dungeon now, so an old value moves there once: into
+    the first dungeon that has no rate (made, named "Work", when there's
+    none), as take-home (100% kept, since that's what it was). A dungeon
+    that already has a rate keeps it: the owner wins. Then the old
+    settings are cleared. Returns what happened, for the log."""
+    from core import person_settings
+
+    hourly = float(person_settings.get(context, RETIRED_PAY[0], 0.0) or 0)
+    hours = float(person_settings.get(context, RETIRED_PAY[1], 0.0) or 0)
+    book = getattr(context, "dungeon", None)
+    if hourly <= 0 or book is None:
+        return None
+    target = next((d for d in book.dungeons if not d.hourly), None)
+    if any(d.hourly for d in book.dungeons):
+        said = "kept the Dungeon's rate"
+    elif target is not None:
+        book.update_dungeon(target.dungeon_id, hourly=hourly, take_home_pct=100,
+                            **({"shift_hours": hours} if hours > 0 else {}))
+        said = f"moved into {target.name}"
+    else:
+        book.add_dungeon("Work", hourly=hourly, take_home_pct=100, **({"shift_hours": hours} if hours > 0 else {}))
+        said = "moved into a new dungeon, Work"
+    for key in RETIRED_PAY:
+        person_settings.put(context, key, 0.0)
+    log.info("Freedom's own pay rate %s (DEC-0052).", said)
+    return said
 
 
 def shift(hourly: float, hours: float, needs: float, goal: float) -> Optional[dict]:
@@ -405,10 +436,21 @@ def freedom_page(context, today: Optional[date] = None) -> dict:
     today = today or date.today()
     if is_child(context):
         return {"available": False}
+    try:
+        move_pay_to_dungeon(context)
+    except Exception:  # never the reason the screen fails
+        log.exception("Couldn't move Freedom's pay rate to the Dungeon")
     i, extra = gather(context, today)
     p = plan(i, today)
     s = extra["settings"]
-    sh = shift(float(s["freedom.hourly"] or 0), float(s["freedom.shift_hours"] or 0), i.needs, p["goal"])
+    from core.web_dungeon import job_pay
+
+    pay = job_pay(context, today)
+    rate = (pay["take_home_hourly"] or pay["hourly"]) if pay else 0.0
+    sh = shift(float(rate or 0), pay["shift_hours"] if pay else 0.0, i.needs, p["goal"])
+    if sh is not None:  # where the pay came from, said plainly
+        sh["source"] = pay["dungeon"]
+        sh["take_home"] = pay["take_home_hourly"] is not None
     why = []
     try:
         from core.why_graph import build_why_sheet
