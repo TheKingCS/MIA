@@ -9,10 +9,13 @@ import android.media.AudioManager
 import android.media.ToneGenerator
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 import android.widget.Toast
 import org.json.JSONObject
@@ -27,32 +30,37 @@ import java.net.URL
  * (/api/glasses/voice: "open Kitchen" switches the glasses, anything else
  * is a Talk turn; a phone linked to the home computer asks it there), and
  * say her answer through their speakers. Without glasses it's the phone's
- * own mic and speaker. Started from the Quick Settings tile (ListenTile),
- * the app shortcut, a headset's voice button, or a screen (MIAAndroid.listen).
+ * own mic and speaker.
+ *
+ * Owned by ListenService, not a screen, so it works with the app closed
+ * and the phone locked (slice 0 of docs/GLASSES_FIRST_BOOT_PLAN.md). The
+ * microphone permission is asked by MainActivity before the service starts.
+ * `onState` reports what she's doing: "listening", "thinking", "speaking", "ready".
  */
-class Voice(private val activity: MainActivity) : RecognitionListener {
+class Voice(private val context: Context, private val onState: (String) -> Unit = {}) : RecognitionListener {
     private var recognizer: SpeechRecognizer? = null
     private var tts: TextToSpeech? = null
     private var token = ""
-    private var waitingForPermission = false
-    private val audio = activity.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    private val main = Handler(Looper.getMainLooper())
+    private val audio = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
+    /** Listen once. Call on the main thread (Android's recognizer needs it). */
     fun start(sessionToken: String) {
         token = sessionToken
-        if (activity.checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            waitingForPermission = true
-            activity.requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), VOICE_REQUEST)
+        if (context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            say("MIA needs the microphone. Open MIA once and allow it.")
             return
         }
-        if (!SpeechRecognizer.isRecognitionAvailable(activity)) {
+        if (!SpeechRecognizer.isRecognitionAvailable(context)) {
             say("This phone has no speech recognizer. Install Google's speech services to talk to MIA.")
             return
         }
         stop()
+        tts?.stop()  // a tap while she's talking interrupts her
         useHeadset(true)
-        val r = if (Build.VERSION.SDK_INT >= 31 && SpeechRecognizer.isOnDeviceRecognitionAvailable(activity))
-            SpeechRecognizer.createOnDeviceSpeechRecognizer(activity)
-        else SpeechRecognizer.createSpeechRecognizer(activity)
+        val r = if (Build.VERSION.SDK_INT >= 31 && SpeechRecognizer.isOnDeviceRecognitionAvailable(context))
+            SpeechRecognizer.createOnDeviceSpeechRecognizer(context)
+        else SpeechRecognizer.createSpeechRecognizer(context)
         recognizer = r
         r.setRecognitionListener(this)
         val ask = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
@@ -63,14 +71,7 @@ class Voice(private val activity: MainActivity) : RecognitionListener {
             ToneGenerator(AudioManager.STREAM_MUSIC, 60).startTone(ToneGenerator.TONE_PROP_BEEP, 120)
         } catch (e: RuntimeException) { /* no beep: fine */ }
         r.startListening(ask)
-        Toast.makeText(activity, "MIA is listening…", Toast.LENGTH_SHORT).show()
-    }
-
-    /** Android answered the microphone question. */
-    fun permissionAnswered(granted: Boolean) {
-        if (!waitingForPermission) return
-        waitingForPermission = false
-        if (granted) start(token) else say("MIA needs the microphone to hear you.")
+        onState("listening")
     }
 
     fun stop() {
@@ -104,6 +105,7 @@ class Voice(private val activity: MainActivity) : RecognitionListener {
         val heard = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull().orEmpty()
         stop()
         if (heard.isBlank()) { say("I didn't catch that."); return }
+        onState("thinking")
         Thread {
             val answer = try {
                 ask(heard)
@@ -111,7 +113,7 @@ class Voice(private val activity: MainActivity) : RecognitionListener {
                 Log.w(MainActivity.TAG, "glasses voice", e)
                 "I couldn't reach MIA just now."
             }
-            activity.runOnUiThread { say(answer) }
+            main.post { say(answer) }
         }.start()
     }
 
@@ -132,14 +134,25 @@ class Voice(private val activity: MainActivity) : RecognitionListener {
     }
 
     private fun say(text: String) {
-        Toast.makeText(activity, text, Toast.LENGTH_LONG).show()
+        Toast.makeText(context, text, Toast.LENGTH_LONG).show()
+        onState("speaking")
         val speaker = tts
         if (speaker != null) {
             speaker.speak(text, TextToSpeech.QUEUE_FLUSH, null, "mia")
             return
         }
-        tts = TextToSpeech(activity) { status ->
-            if (status == TextToSpeech.SUCCESS) tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "mia")
+        tts = TextToSpeech(context) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+                    override fun onStart(utteranceId: String?) {}
+                    override fun onDone(utteranceId: String?) { main.post { onState("ready") } }
+                    @Deprecated("Deprecated in Java")
+                    override fun onError(utteranceId: String?) { main.post { onState("ready") } }
+                })
+                tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "mia")
+            } else {
+                onState("ready")
+            }
         }
     }
 

@@ -9,7 +9,6 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.SystemClock
 import android.util.Log
 import android.view.Gravity
 import android.webkit.GeolocationPermissions
@@ -19,8 +18,6 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.TextView
 import android.widget.Toast
-import com.chaquo.python.Python
-import com.chaquo.python.android.AndroidPlatform
 import org.json.JSONObject
 
 /**
@@ -35,16 +32,27 @@ class MainActivity : Activity() {
     private var geoAsk: Pair<String, GeolocationPermissions.Callback>? = null
     // The memory vault's door to the camera roll (Gallery.kt), window.MIAAndroid on MIA's screens.
     private val gallery = Gallery(this)
-    // Talking through the glasses (Voice.kt) and location quests while MIA is closed (Places.kt).
-    private val voice by lazy { Voice(this) }
+    // Location quests while MIA is closed (Places.kt). Talking through the
+    // glasses is ListenService's, so it keeps working once this screen is gone.
     private val placesBridge = PlacesBridge(this)
 
     fun webView(): WebView? = web
 
-    /** Listen now (the tile, the shortcut, a headset's button, or a screen asking). */
+    /** Listen now (the tile, the shortcut, a headset's button, or a screen asking).
+     *  Asks for the microphone first; then ListenService takes over, and keeps
+     *  listening for a tap on the glasses after this screen closes. */
     fun listen() {
-        val token = started?.optString("token") ?: return
-        runOnUiThread { voice.start(token) }
+        if (Engine.started == null) return  // still starting: onCreate's thread takes it
+        runOnUiThread {
+            if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                ListenService.listen(this)
+            } else {
+                val ask = mutableListOf(Manifest.permission.RECORD_AUDIO)
+                // Its "MIA · Ready" notification (Android 13+ asks; saying no only hides it).
+                if (Build.VERSION.SDK_INT >= 33) ask += Manifest.permission.POST_NOTIFICATIONS
+                requestPermissions(ask.toTypedArray(), Voice.VOICE_REQUEST)
+            }
+        }
     }
 
     /** Where to open: a place just arrived at (its notification), a share, or Home. */
@@ -70,30 +78,15 @@ class MainActivity : Activity() {
         Places.register(applicationContext)  // the watched places' alerts (after an update, too)
         Thread {
             try {
-                // Once per app process: Android can recreate this screen while MIA
-                // is still starting (rotating the phone, the system); the second
-                // start waits for the first instead of starting Python twice.
-                val result = synchronized(START_LOCK) {
-                    started ?: run {
-                        val t0 = SystemClock.elapsedRealtime()
-                        val root = Unpack.ensure(applicationContext)
-                        val t1 = SystemClock.elapsedRealtime()
-                        if (!Python.isStarted()) Python.start(AndroidPlatform(applicationContext))
-                        val t2 = SystemClock.elapsedRealtime()
-                        val answer = JSONObject(Python.getInstance().getModule("mia_phone").callAttr("start", root.absolutePath, PORT, applicationInfo.nativeLibraryDir, lastExit()).toString())
-                        val t3 = SystemClock.elapsedRealtime()
-                        Log.i(TAG, "ready unpack_ms=${t1 - t0} python_ms=${t2 - t1} engine_ms=${answer.optInt("engine_ms")} " +
-                            "server_ms=${answer.optInt("server_ms")} total_ms=${t3 - t0} python=${answer.optString("python")}")
-                        answer.also { started = it }
-                    }
-                }
+                // Once per app process (Engine.kt), shared with the listening service.
+                val result = Engine.ensure(applicationContext, lastExit())
                 // Spike only: the CI check reads it to call the API. Local to this phone.
                 Log.d(TAG, "token=${result.optString("token")}")
                 // Opened from another app's Share menu: into the inbox, then show it.
                 val shared = if (Share.isShare(intent)) saveShare(intent) else false
                 runOnUiThread {
                     show(result.optString("token"), startPage(intent, shared))
-                    if (Voice.wanted(intent)) voice.start(result.optString("token"))
+                    if (Voice.wanted(intent)) listen()
                 }
             } catch (e: Throwable) {
                 Log.e(TAG, "failed", e)
@@ -121,8 +114,8 @@ class MainActivity : Activity() {
     override fun onNewIntent(newIntent: Intent) {
         super.onNewIntent(newIntent)
         setIntent(newIntent)
-        val token = started?.optString("token") ?: return  // still starting: onCreate's thread takes it
-        if (Voice.wanted(newIntent)) { voice.start(token); return }
+        val token = Engine.started?.optString("token") ?: return  // still starting: onCreate's thread takes it
+        if (Voice.wanted(newIntent)) { listen(); return }
         if (newIntent.getStringExtra("arrive") != null) { web?.loadUrl(page(startPage(newIntent, false), token)); return }
         if (!Share.isShare(newIntent)) return
         Thread {
@@ -192,7 +185,12 @@ class MainActivity : Activity() {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == Gallery.GALLERY_REQUEST) { gallery.accessChanged(); return }
-        if (requestCode == Voice.VOICE_REQUEST) { voice.permissionAnswered(grantResults.any { it == PackageManager.PERMISSION_GRANTED }); return }
+        if (requestCode == Voice.VOICE_REQUEST) {
+            val mic = permissions.indexOf(Manifest.permission.RECORD_AUDIO)
+            if (mic >= 0 && grantResults.getOrNull(mic) == PackageManager.PERMISSION_GRANTED) ListenService.listen(this)
+            else Toast.makeText(this, "MIA needs the microphone to hear you.", Toast.LENGTH_LONG).show()
+            return
+        }
         if (requestCode == PlacesBridge.PLACES_REQUEST) { placesBridge.answered(); return }
         if (requestCode != GEO_REQUEST) return
         val ask = geoAsk ?: return
@@ -208,11 +206,6 @@ class MainActivity : Activity() {
     override fun onPause() {
         Places.onScreen = false
         super.onPause()
-    }
-
-    override fun onDestroy() {
-        voice.close()
-        super.onDestroy()
     }
 
     @Deprecated("Activity.onActivityResult is fine for this spike")
@@ -232,7 +225,5 @@ class MainActivity : Activity() {
         const val TAG = "MIA_SPIKE"
         const val PORT = 8765
         const val GEO_REQUEST = 41
-        private val START_LOCK = Any()
-        @Volatile private var started: JSONObject? = null
     }
 }

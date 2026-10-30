@@ -25,6 +25,11 @@
          Bluetooth headset's; Android's speech recognizer hears you. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <!-- MIA ready with the app closed (ListenService.kt): a microphone service
+         with its "MIA · Ready" notification, and the CPU kept awake for one turn. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <!-- Android 11+: to find the phone's speech recognizer. -->
     <queries>
@@ -84,6 +89,12 @@
                 <action android:name="android.service.quicksettings.action.QS_TILE" />
             </intent-filter>
         </service>
+
+        <!-- Listening for a tap on the glasses with the app closed (ListenService.kt). -->
+        <service
+            android:name=".ListenService"
+            android:exported="false"
+            android:foregroundServiceType="microphone" />
 
         <!-- Arriving at a watched place (Places.kt), and setting the alerts again after a restart. -->
         <receiver android:name=".PlaceReceiver" android:exported="false" />
