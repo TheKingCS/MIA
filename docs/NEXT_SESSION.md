@@ -7,6 +7,11 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 *Last updated: 2026-10-30*
 
+**Zac's call: qwen3:14b or stay on qwen2.5:14b** (both measured
+2026-10-30: same speed, tool choice 212 vs 213 of 213, qwen3 reasons
+more on open questions; `docs/INTELLIGENCE_BENCHMARK.md` section 2,
+the answers in `pc-check/intelligence-*.md` on the PC).
+
 **Waiting on Zac: DEC-0053 (looking things up online, when asked) and
 DEC-0054 (remembering commitments, decisions, ideas and dropped goals),
 both PROPOSED in `docs/DECISIONS.md` with their open choices.** Built

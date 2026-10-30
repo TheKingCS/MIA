@@ -111,6 +111,28 @@ all 36 went where they should. On the phone (no embedding model, plans
 by their words) 52 reach a plan. The 42 left are the tool loop's,
 findings', memory's and research's (section 3).
 
+**Asked for real (2026-10-30, the home computer, `python -m
+tools.intelligence_check`, read-only; the answers stay in `pc-check/`,
+out of git):** all 112 answered, on qwen2.5:14b and on qwen3:14b.
+
+| | qwen2.5:14b | qwen3:14b (thinking off) |
+|---|---|---|
+| Median / mean / slowest answer | 3.7 / 5.0 / 15.0 s | 4.0 / 5.4 / 19.3 s |
+| Through the model (no plan): median | 6.2 s | 6.7 s |
+| Flagged | 2: a question reached for a change (E12 add_course, C19 add_inventory_item) | 0 |
+
+What it changed: a question that isn't a request can no longer make a
+change (`core/tool_loop.asks_not_tells`); answers lose their markdown
+(`core/plain_words.py`). Reading the answers: qwen3 reasons more on the
+open questions (C19's pros and cons, G10's concrete "what to stop", D4
+offering to help or to listen) and writes longer, formatted answers;
+qwen2.5 more often hands the question back. Which model MIA runs stays
+Zac's call (DEC-0022). MIA's golden set (choosing the right tool, 213
+questions, `tools/pc_model_check.py`): qwen2.5:14b 213/213, qwen3:14b
+212/213 (it chose the financial check-in for an overdue-bill question),
+both about 2.7 s. Switching would mean `llm.model` "qwen3:14b" and
+`llm.think` false in config/config.json; nothing is switched.
+
 **What this said before the plans:**
 
 1. **The biggest gap is retrieval, not data.** 77 of 112 questions reach
