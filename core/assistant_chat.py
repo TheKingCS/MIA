@@ -280,7 +280,7 @@ def looks_like_action_request(text: str, keywords: Iterable[str] = _ACTION_REQUE
 # real, previously-measured regression risk for llama3.2:3b, and why
 # the warmer clauses are only added to the info-question path.
 _IDENTITY_LINE = (
-    "You are MIA (Multifunctional Intelligent Assistant), the user's personal offline survival companion."
+    "You are MIA (Multifunctional Intelligent Assistant), the user's personal assistant, running on their own devices."
 )
 _IDENTITY_WARMTH = (
     " You're warm, encouraging, and genuinely curious about the user as a person — like a lifelong friend, "

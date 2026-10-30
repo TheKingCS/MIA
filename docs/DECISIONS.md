@@ -774,3 +774,13 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   every change (`docs/UX_SYSTEM_AUDIT.md` section 4). One engine; no
   device gets its own logic. MIA never claims awareness she doesn't have.
 - Related: docs/UX_SYSTEM_AUDIT.md, docs/specs/UX_SYSTEM.md
+
+### DEC-0045: Kokoro is MIA's voice on the computer
+- Status: APPROVED
+- Proposed by: claude, 2026-10-29 (her voice is Piper's low-quality models plus a robotic ring/chorus effect) · Approved by: zac, 2026-10-29 ("log the Kokoro voice decision. Lets get her voice sounding premium")
+- Decision: the home computer speaks with Kokoro-82M (Apache-2.0, offline,
+  24 kHz), run locally; nothing leaves the machine. Piper stays as the
+  fallback (Kokoro missing or failing) and for the phone and the later
+  Pi. The robotic voice effect is off by default for Kokoro. A custom
+  voice made just for MIA is a later step, not this one.
+- Related: core/voice_manager.py, core/voice_catalog.py

@@ -22,6 +22,8 @@ CORPUS: list[tuple[str, str]] = [
     ("Which model are you running on?", "get_model_info"),
     ("What LLM does MIA use?", "get_model_info"),
     ("What can you do?", "what_can_you_do"),
+    ("What are you capable of?", "what_can_you_do"),
+    ("Can you tell me about yourself?", "get_introduction"),
     ("Can you track my chickens?", "get_capability"),
     ("What did we decide about eggs?", "get_mia_docs"),
     # ---- Homestead by voice (core/assistant_goods_actions.py, 2026-10-21) -

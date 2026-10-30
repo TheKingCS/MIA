@@ -44,6 +44,12 @@ def _action_what_can_you_do(context, arguments: dict) -> str:
     return overview(context)
 
 
+def _action_about_yourself(context, arguments: dict) -> str:
+    from core.capabilities import introduction
+
+    return introduction(context)
+
+
 def _action_can_you(context, arguments: dict) -> str:
     from core.capabilities import can_i
 
@@ -63,7 +69,18 @@ def register_capability_actions(registry: AssistantActionRegistry) -> None:
         parameters={"type": "object", "properties": {}, "required": []},
         handler=_action_what_can_you_do,
         trigger_phrases=("what can you do", "what are you able to do", "what features do you", "what can mia do",
-                         "what apps do you have", "what all can you", "what do you do"),
+                         "what apps do you have", "what all can you", "what do you do", "you capable of",
+                         "mia capable of", "your capabilities", "mia's capabilities", "what are your features",
+                         "what are you good at", "what all do you"),
+        subjects=("you", "mia"),
+    ))
+    registry.register(AssistantAction(
+        name="get_introduction", domain="system",
+        description="Who MIA is, in her own words: where she runs, what she keeps track of, how she works.",
+        parameters={"type": "object", "properties": {}, "required": []},
+        handler=_action_about_yourself,
+        trigger_phrases=("about yourself", "who are you", "introduce yourself", "describe yourself", "who is mia",
+                         "what is mia", "what are you exactly", "what exactly are you"),
         subjects=("you", "mia"),
     ))
     registry.register(AssistantAction(

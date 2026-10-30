@@ -6,7 +6,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from core.capabilities import LIMITS, can_i, capability_map, overview
+from core.capabilities import AREAS, GIST, LIMITS, OVERVIEW_SKIP, can_i, capability_map, introduction, overview
 from core.self_docs import SelfDocs, answer, build
 from core.web_surfaces import APPS
 
@@ -25,6 +25,32 @@ def test_every_app_has_a_limits_entry():
     assert not set(LIMITS) - {a.module_id for a in APPS}  # no entries for apps that are gone
 
 
+def test_every_app_is_in_one_overview_area():
+    """Put a new app in core/capabilities.AREAS with a GIST (or in OVERVIEW_SKIP)."""
+    from core.web_surfaces import RETIRED
+
+    placed = [i for _area, ids in AREAS for i in ids]
+    assert len(placed) == len(set(placed)) and not set(placed) & OVERVIEW_SKIP
+    assert sorted(set(placed) | OVERVIEW_SKIP) == sorted(a.module_id for a in APPS if a.module_id not in RETIRED)
+    assert set(GIST) == set(placed)
+
+
+def test_the_overview_is_short_and_leaves_out_freedom(ctx):
+    said = overview(ctx)
+    assert "Money: bills, income, spending and debts" in said and "Try \"" in said
+    assert "freedom" not in said.lower() and "survival" not in said.lower()
+    assert len(said) < 1600
+
+
+def test_tell_me_about_yourself_is_scripted(ctx):
+    r = ctx.assistant_actions
+    for q in ("Can you tell me about yourself?", "Who are you?", "What is MIA?"):
+        assert r.direct_lookup(q).name == "get_introduction", q
+    said = introduction(ctx)
+    assert said.startswith("I'm MIA, your own assistant.") and "freedom" not in said.lower()
+    assert "feel" not in said.lower()  # facts, not feelings (docs/design/MIA_VOICE.md rule 10)
+
+
 def test_the_map_comes_from_the_code(ctx):
     apps = {a["id"]: a for a in capability_map(ctx)}
     assert apps["budget"]["where"] == "web and desktop" and "list_bills" in apps["budget"]["look_up"]
@@ -32,7 +58,7 @@ def test_the_map_comes_from_the_code(ctx):
     assert apps["compliance"]["where"] == "web" and apps["household"]["where"] == "desktop"
     assert apps["dashboard"]["where"] == "retired"
     said = overview(ctx)
-    assert said.startswith("I have ") and "Compliance:" in said and "Dashboard:" not in said
+    assert said.startswith("I have ") and "tax deadlines" in said and "Dashboard" not in said
 
 
 def test_can_you_answers_from_the_map_or_says_it_cant(ctx):
@@ -47,7 +73,8 @@ def test_the_questions_reach_the_tools(ctx):
     from tests.assistant_registry import demo_context, offered_tools
 
     r = ctx.assistant_actions
-    assert r.direct_lookup("What can you do?").name == "what_can_you_do"
+    for q in ("What can you do?", "What are you capable of?", "What are your capabilities?", "what is mia capable of"):
+        assert r.direct_lookup(q).name == "what_can_you_do", q
     for q in ("What did we decide about eggs?", "Why can't you connect my bank from the phone?"):
         assert r.named_action(q, offered_tools(r, q, demo_context())) == "get_mia_docs", q
     assert "get_capability" in offered_tools(r, "Can you track my chickens?", demo_context())

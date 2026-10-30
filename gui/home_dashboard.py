@@ -174,6 +174,8 @@ log = get_logger(__name__)
 
 _DATA_REFRESH_MS = 5000  # matches modules/power/module.py's own polling cadence
 _CLOCK_TICK_MS = 1000
+# Narrower than this, a card body is not laid out yet; see HomeDashboard._fit_body().
+_MIN_FIT_WIDTH = 120
 _ACTIVITY_LOG_LIMIT = 3
 
 # Widgets that should span more than one grid column — everything else
@@ -737,6 +739,19 @@ class HomeDashboard(QFrame):
         if self._avatar_camera_widget is not None:
             self._avatar_camera_widget.stop()
         self.context.events.unsubscribe("dashboard.widgets_changed", self._on_widgets_changed)
+
+    def hideEvent(self, event) -> None:
+        """Hidden, Home asks for no height, so it can't stretch the screen
+        shown instead (see _fit_body). showEvent() sizes it again."""
+        super().hideEvent(event)
+        for label in getattr(self, "_widget_bodies", {}).values():
+            label.setMinimumHeight(0)
+
+    def resizeEvent(self, event) -> None:
+        """Re-fit the cards to their new width now, not at the next refresh."""
+        super().resizeEvent(event)
+        for label in getattr(self, "_widget_bodies", {}).values():
+            self._fit_body(label)
 
     def showEvent(self, event) -> None:
         """
@@ -2004,9 +2019,22 @@ class HomeDashboard(QFrame):
         labels' text changes on every 5s refresh."""
         label = self._widget_bodies[widget_id]
         label.setText(text)
+        self._fit_body(label)
+
+    @staticmethod
+    def _fit_body(label: QLabel) -> None:
+        """2026-10-29: cards on Home and Missions stretched to several
+        times their height. A hidden or not-yet-laid-out label is narrow
+        (Qt's default width), so heightForWidth() there wraps the text
+        into a tall column, and that minimum stuck. It also stretched
+        every other screen: the main window's QStackedWidget takes the
+        tallest page's minimum. So only a visible label with a real width
+        sets a minimum; anything else clears it."""
         width = label.width()
-        if width > 0:
+        if label.isVisible() and width >= _MIN_FIT_WIDTH:
             label.setMinimumHeight(max(label.heightForWidth(width), label.sizeHint().height()) + 4)
+        else:
+            label.setMinimumHeight(0)
 
     def _refresh_data(self) -> None:
         """Only refreshes widgets that are actually currently built —

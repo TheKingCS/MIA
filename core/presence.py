@@ -241,6 +241,10 @@ def context_lines(context, today: Optional[date] = None, limit: int = 3) -> str:
         if active:
             lines.append("Active missions: " + "; ".join(active))
     now = (_safe_value(lambda: presence(context, today)) or {}).get("now") or []
+    # An invitation to set something up isn't something that needs them:
+    # given to the model every turn, it got pitched in every answer
+    # ("assist with your freedom plan", 2026-10-29). Home still shows it.
+    now = [i for i in now if not i["key"].endswith(":setup")]
     if now:
         lines.append("Needs them now: " + "; ".join(f"{i['title']} ({i['why'].rstrip('.')})" for i in now[:limit]))
     if not lines:
