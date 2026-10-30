@@ -43,7 +43,7 @@ FOLLOW_UP = (
     "Those are the results of the lookups. If one more lookup would answer the person's question better, call it. "
     "Otherwise answer the question now, from these results: the answer first, in a few short sentences; only numbers "
     "and names the results contain; say what's missing if something needed isn't there; one next step only if it "
-    "follows from the results. Talk like a person, not a report."
+    "follows from the results. Talk like a person, not a report, in plain text: no headings, bold or symbols."
 )
 LAST_WORD = ("That's all the looking up there's time for. Answer the person's question now from the results above, "
              "the answer first; say plainly what you couldn't check.")
@@ -204,4 +204,6 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
                     ", ".join(sorted(wrong)))
     if not said.strip() or wrong:
         return ChatReply(content=_plain(results), tool_calls=[])
-    return ChatReply(content=said.strip(), tool_calls=[])
+    from core.plain_words import strip_markdown
+
+    return ChatReply(content=strip_markdown(said), tool_calls=[])

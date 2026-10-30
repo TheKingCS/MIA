@@ -532,7 +532,8 @@ ANSWER_PROTOCOL = (
     "thing that matters most rather than listing everything. End with one next step only if it follows from the "
     "sheet; never suggest an app, feature or task the sheet doesn't mention. Each line names the app it came from: "
     "the Dungeon is their paid job, not a game or a workout. "
-    "Talk like a person, not a report. Never give legal or tax rulings; say to check with a professional."
+    "Talk like a person, not a report, in plain text: no headings, bold or symbols. Never give legal or tax "
+    "rulings; say to check with a professional."
 )
 _NUMBER = re.compile(r"\d[\d,]*(?:\.\d+)?")
 
@@ -613,7 +614,9 @@ def request(context, conversation, prompt: str, today: Optional[date] = None) ->
 def finish(content: str, sheet: Sheet, prompt: str) -> str:
     """The model's answer when it keeps to the sheet's numbers; else the
     sheet in plain words (never a number MIA didn't look up)."""
-    said = (content or "").strip()
+    from core.plain_words import strip_markdown
+
+    said = strip_markdown(content or "")
     if not said:
         return sheet.plain()
     wrong = invented_numbers(said, sheet.as_text(), prompt)

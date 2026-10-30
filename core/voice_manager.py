@@ -147,7 +147,9 @@ def prepare_text_for_speech(text: str) -> str:
     from one place, regardless of which piece of code composed the
     text. Word-boundary-safe so it doesn't touch "MIAMI" or similar.
     """
-    return _MIA_WORD_PATTERN.sub("Mia", text)
+    from core.plain_words import for_speech
+
+    return _MIA_WORD_PATTERN.sub("Mia", for_speech(text))  # no "asterisk asterisk" read aloud (2026-10-30)
 
 
 try:
