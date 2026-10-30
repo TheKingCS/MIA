@@ -55,6 +55,9 @@ Pillow>=10,<14
 # STT/TTS accelerator, per docs/HARDWARE.md.
 vosk>=0.3.45,<0.4
 piper-tts>=1.4,<2.0
+# MIA's voice on the computer (DEC-0051): Kokoro-82M through onnxruntime,
+# no PyTorch. Piper above stays the fallback and the Pi's voice.
+kokoro-onnx>=0.4,<1.0
 
 # Mic capture / speaker playback for the Voice interface. Wraps the
 # system PortAudio library rather than bundling it on Linux — install

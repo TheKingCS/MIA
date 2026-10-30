@@ -2,7 +2,16 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-10-27 (the Body and the Relationship: audit and plan), by claude.*
+session. Last updated: 2026-10-29 (Kokoro voice, how MIA describes herself, the stretched Home cards), by claude.*
+
+**2026-10-29, Claude on the PC:** MIA's voice on the computer is now
+Kokoro (DEC-0051, `core/voice_manager.KokoroBackend`, Heart by default;
+Piper is the fallback and the phone/Pi voice; the robotic effect is
+Piper-only). "What are you capable of?" and "tell me about yourself"
+are answered from code (`core/capabilities.overview()` / `introduction()`),
+and setup invitations ("Set up your freedom plan") no longer go to the
+model every turn. Home's cards no longer stretch Home and every other
+desktop screen (`gui/home_dashboard._fit_body`).
 
 ## Phase
 

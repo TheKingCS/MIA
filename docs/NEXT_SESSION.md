@@ -5,7 +5,23 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-10-21*
+*Last updated: 2026-10-29*
+
+**2026-10-29 (Claude on the PC): her voice, and how she describes herself.**
+- Zac: restart MIA, listen to Kokoro's Heart (now your saved voice), and
+  try the others in Settings → Voice (Emma, Bella, Nicole, Michael,
+  George...). `voice.kokoro_speed` (default 1.0) sets her pace. Then
+  check Home and Missions look right (the stretched-cards fix was tested
+  offscreen only).
+- A fresh install gets Kokoro from `deploy/finish_install.py` (about
+  350 MB in `voice_models/kokoro/`) and `kokoro-onnx` from requirements.
+- Next for the voice: the phone still speaks with Android's own voice
+  (`android-phone/.../Voice.kt`); it could fetch Kokoro audio from the
+  PC when linked. A custom voice just for MIA is a later step (DEC-0051).
+- Loose ends seen on this PC: 15 tests fail on master here (not checked
+  against CI): the inbox and textbook PDF tests when the full suite runs, OCR
+  because Tesseract is installed, and presence's out-of-date "Due in 2
+  days" expectation.
 
 **Collaboration hub (2026-10-05):** the team shares memory through
 `docs/COLLABORATION.md`, `CURRENT_STATE.md`, `DECISIONS.md`,

@@ -317,10 +317,10 @@ class SettingsModule(ModuleBase):
             voice_row.addWidget(self._voice_combo, stretch=1)
             outer.addLayout(voice_row)
 
-            self._ai_effect_checkbox = QCheckBox("✨ AI Voice Effect")
+            self._ai_effect_checkbox = QCheckBox("✨ AI Voice Effect (Piper voices)")
             self._ai_effect_checkbox.setToolTip(
-                "Subtle digital polish on MIA's voice — ring modulation + light chorus, "
-                "tuned to stay clearly intelligible. Turn off for the plain Piper voice."
+                "Subtle digital polish on the Piper voices — ring modulation + light chorus. "
+                "Kokoro voices always play clean (DEC-0051)."
             )
             self._ai_effect_checkbox.setChecked(self.context.config.get("voice.ai_voice_effect", True))
             self._ai_effect_checkbox.toggled.connect(self._on_ai_voice_effect_toggled)

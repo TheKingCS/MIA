@@ -45,11 +45,14 @@ def test_windows_installer_files():
 
 
 def test_voice_downloads_list_only_whats_missing(tmp_path):
-    from core.voice_catalog import VOICE_CATALOG
+    from core.voice_catalog import KOKORO_FILES, VOICE_CATALOG
 
     todo = finish_install.voice_downloads(tmp_path)
     assert todo[0] == (finish_install.VOSK_URL, tmp_path / finish_install.VOSK_MODEL)
-    assert len(todo) == 1 + 2 * len(VOICE_CATALOG)
+    assert len(todo) == 1 + 2 * len(VOICE_CATALOG) + len(KOKORO_FILES)
+    (tmp_path / "kokoro").mkdir()
+    for _url, name in KOKORO_FILES:
+        (tmp_path / "kokoro" / name).write_text("x")
     (tmp_path / finish_install.VOSK_MODEL).mkdir()
     assert finish_install.voice_downloads(tmp_path)[0][0] == finish_install.VOSK_URL  # empty folder: still needed
     (tmp_path / finish_install.VOSK_MODEL / "am").mkdir()

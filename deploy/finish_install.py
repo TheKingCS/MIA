@@ -50,7 +50,7 @@ def say(text: str) -> None:
 def voice_downloads(models_dir: Path) -> list[tuple[str, Path]]:
     """Pure logic. (url, target) for every voice file not downloaded yet.
     The speech-to-text model (a zip) is listed as its folder."""
-    from core.voice_catalog import VOICE_CATALOG
+    from core.voice_catalog import KOKORO_FILES, VOICE_CATALOG
 
     wanted: list[tuple[str, Path]] = []
     if not (models_dir / VOSK_MODEL / "am").is_dir():  # an empty or half-unpacked folder doesn't count
@@ -59,10 +59,14 @@ def voice_downloads(models_dir: Path) -> list[tuple[str, Path]]:
         for url, name in ((voice.onnx_url, f"{voice.voice_id}.onnx"), (voice.onnx_json_url, f"{voice.voice_id}.onnx.json")):
             if not (models_dir / name).exists():
                 wanted.append((url, models_dir / name))
+    for url, name in KOKORO_FILES:  # MIA's voice on the computer (DEC-0051)
+        if not (models_dir / "kokoro" / name).exists():
+            wanted.append((url, models_dir / "kokoro" / name))
     return wanted
 
 
 def _download(url: str, target: Path) -> None:
+    target.parent.mkdir(parents=True, exist_ok=True)  # Kokoro's files live in their own folder
     partial = target.with_name(target.name + ".part")
     with urllib.request.urlopen(url, timeout=60) as response, open(partial, "wb") as out:
         shutil.copyfileobj(response, out)

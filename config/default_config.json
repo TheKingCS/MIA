@@ -35,7 +35,8 @@
     "voice": {
         "stt_model_path": "",
         "tts_model_path": "",
-        "tts_voice_id": "en_US-lessac-low",
+        "tts_voice_id": "kokoro:af_heart",
+        "kokoro_speed": 1.0,
         "ai_voice_effect": true,
         "playback_volume": 1.4,
         "sample_rate": 16000,

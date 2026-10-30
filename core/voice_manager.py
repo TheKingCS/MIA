@@ -41,6 +41,15 @@ is true (default), toggleable in Settings next to the voice picker.
 Best-effort — a post-processing failure logs and falls back to the
 unprocessed audio rather than losing speech entirely.
 
+**2026-10-29 (DEC-0051): Kokoro is MIA's voice on the computer.**
+`KokoroBackend` speaks the `kokoro:*` voices in `core/voice_catalog.py`'s
+`KOKORO_CATALOG` (Kokoro-82M through `kokoro-onnx`, offline, 24 kHz,
+about five times faster than real time on the home computer). If Kokoro
+isn't installed or fails, `synthesize()` falls back to a Piper voice, so
+she never goes silent. The AI Voice Effect only ever applies to Piper:
+it was there to dress up Piper's low-quality voices, and on Kokoro it
+only makes her sound worse.
+
 Recording (mic capture) and playback both go through `sounddevice`,
 which wraps the system PortAudio library. Unlike the STT/TTS models,
 PortAudio is a *system* package (`libportaudio2` on Debian/Raspberry Pi
@@ -81,7 +90,15 @@ except ImportError:
 
 from core.app_context import AppContext
 from core.logger import get_logger
-from core.voice_catalog import DEFAULT_VOICE_ID, VOICE_CATALOG, VoiceOption
+from core.voice_catalog import (
+    DEFAULT_VOICE_ID,
+    KOKORO_CATALOG,
+    KOKORO_FILES,
+    PIPER_DEFAULT_VOICE_ID,
+    VOICE_CATALOG,
+    VoiceOption,
+    find_voice,
+)
 from core.voice_effects import apply_ai_voice_effect_to_wav_file
 
 log = get_logger(__name__)
@@ -256,6 +273,73 @@ class PiperBackend:
             raise VoiceUnavailableError(f"Piper synthesis failed: {exc}") from exc
 
 
+def _kokoro_dir() -> Path:
+    """Read at call time, so tests can point _VOICE_MODELS_DIR elsewhere."""
+    return _VOICE_MODELS_DIR / "kokoro"
+
+
+def kokoro_installed(models_dir: Optional[Path] = None) -> bool:
+    """Kokoro's package and both of its files are here (deploy/finish_install.py fetches them)."""
+    import importlib.util
+
+    models_dir = models_dir or _kokoro_dir()
+
+    return all((models_dir / name).exists() for _url, name in KOKORO_FILES) and \
+        importlib.util.find_spec("kokoro_onnx") is not None
+
+
+def float_to_int16(samples) -> "np.ndarray":
+    """Pure function. Kokoro's float samples (-1..1) as 16-bit PCM, clipped, not wrapped."""
+    return (np.clip(np.asarray(samples, dtype=np.float32), -1.0, 1.0) * 32767).astype(np.int16)
+
+
+class KokoroBackend:
+    """TTSBackend implementation using Kokoro (DEC-0051). Lazy-loaded like
+    the others; the model is loaded once and shared by every Kokoro voice,
+    so switching voices in Settings doesn't reload 300 MB."""
+
+    _loaded: dict[str, object] = {}  # models folder -> kokoro_onnx.Kokoro
+
+    def __init__(self, option: VoiceOption, models_dir: Optional[Path] = None, speed: float = 1.0) -> None:
+        self._option = option
+        self._models_dir = models_dir or _kokoro_dir()
+        self._speed = speed
+        self._load_failed = False
+
+    def _model(self):
+        key = str(self._models_dir)
+        if key in self._loaded or self._load_failed:
+            return self._loaded.get(key)
+        try:
+            from kokoro_onnx import Kokoro
+
+            model, voices = (self._models_dir / name for _url, name in KOKORO_FILES)
+            self._loaded[key] = Kokoro(str(model), str(voices))
+        except Exception as exc:
+            log.warning("Could not load Kokoro from %s: %s", self._models_dir, exc)
+            self._load_failed = True
+        return self._loaded.get(key)
+
+    @property
+    def available(self) -> bool:
+        return self._model() is not None
+
+    def synthesize(self, text: str, output_path: Path) -> None:
+        model = self._model()
+        if model is None:
+            raise VoiceUnavailableError("Kokoro is not loaded.")
+        try:
+            samples, sample_rate = model.create(text, voice=self._option.kokoro_name, speed=self._speed,
+                                                lang=self._option.kokoro_lang)
+            with wave.open(str(output_path), "wb") as wav_file:
+                wav_file.setnchannels(1)
+                wav_file.setsampwidth(2)
+                wav_file.setframerate(int(sample_rate))
+                wav_file.writeframes(float_to_int16(samples).tobytes())
+        except Exception as exc:
+            raise VoiceUnavailableError(f"Kokoro synthesis failed: {exc}") from exc
+
+
 class VoiceManager:
     """
     Core-level Voice service (`AppContext.voice`). Config-driven via
@@ -276,11 +360,15 @@ class VoiceManager:
         # An explicit voice.tts_model_path always wins (a pre-2026-07-15
         # escape hatch for a model file outside the curated catalog
         # entirely); otherwise resolve the configured voice_id against
-        # VOICE_CATALOG, falling back to the default voice.
+        # the catalogs, falling back to the default voice.
         explicit_tts_path = context.config.get("voice.tts_model_path", "")
         self._voice_id = context.config.get("voice.tts_voice_id", DEFAULT_VOICE_ID)
-        tts_model_path = Path(explicit_tts_path) if explicit_tts_path else self._model_path_for_voice(self._voice_id)
-        self._tts: TTSBackend = PiperBackend(tts_model_path)
+        if explicit_tts_path:
+            self._tts: TTSBackend = PiperBackend(Path(explicit_tts_path))
+            self._engine = "piper"
+        else:
+            self._tts, self._engine = self._backend_for(self._voice_id)
+        self._fallback: Optional[TTSBackend] = None  # Piper, built only if Kokoro fails
 
         self._recording_frames: list = []
         self._input_stream = None
@@ -293,7 +381,10 @@ class VoiceManager:
         return self._stt.available
 
     def is_tts_available(self) -> bool:
-        return self._tts.available
+        if self._tts.available:
+            return True
+        fallback = self._piper_fallback() if self._engine == "kokoro" else None
+        return fallback is not None and fallback.available
 
     @staticmethod
     def _model_path_for_voice(voice_id: str) -> Path:
@@ -301,27 +392,50 @@ class VoiceManager:
         filename = option.voice_id if option is not None else voice_id
         return _VOICE_MODELS_DIR / f"{filename}.onnx"
 
+    def _backend_for(self, voice_id: str) -> tuple[TTSBackend, str]:
+        option = find_voice(voice_id)
+        if option is not None and option.engine == "kokoro":
+            speed = float(self.context.config.get("voice.kokoro_speed", 1.0) or 1.0)
+            return KokoroBackend(option, speed=speed), "kokoro"
+        return PiperBackend(self._model_path_for_voice(voice_id)), "piper"
+
+    def _piper_fallback(self) -> Optional[TTSBackend]:
+        """The Piper voice to speak with when Kokoro can't: the default, or any that's here."""
+        if self._fallback is None:
+            ids = [PIPER_DEFAULT_VOICE_ID] + list(VOICE_CATALOG)
+            path = next((p for p in map(self._model_path_for_voice, ids) if p.exists()), None)
+            if path is not None:
+                self._fallback = PiperBackend(path)
+        return self._fallback
+
     @property
     def current_voice_id(self) -> str:
         return self._voice_id
 
     def list_available_voices(self) -> list[VoiceOption]:
-        """Catalog entries whose .onnx file is actually present in
-        voice_models/ — a fetch via deploy/download_voice_models.sh
-        isn't guaranteed to have run for every entry (see
-        docs/KNOWN_ISSUES.md)."""
-        return [option for option in VOICE_CATALOG.values() if self._model_path_for_voice(option.voice_id).exists()]
+        """Kokoro's voices first when Kokoro is installed, then the Piper
+        voices whose .onnx file is actually present in voice_models/ — a
+        fetch via deploy/finish_install.py isn't guaranteed to have run for
+        every entry (see docs/KNOWN_ISSUES.md)."""
+        kokoro = list(KOKORO_CATALOG.values()) if kokoro_installed() else []
+        return kokoro + [option for option in VOICE_CATALOG.values()
+                         if self._model_path_for_voice(option.voice_id).exists()]
 
     def set_voice(self, voice_id: str) -> bool:
         """Switches the active TTS voice and persists the choice.
-        Returns False (logged, no change made) if that voice's model
-        file isn't present locally."""
-        model_path = self._model_path_for_voice(voice_id)
-        if not model_path.exists():
-            log.warning("Cannot switch to voice '%s' — model file not found at %s", voice_id, model_path)
+        Returns False (logged, no change made) if that voice isn't
+        installed locally."""
+        option = find_voice(voice_id)
+        if option is not None and option.engine == "kokoro":
+            if not kokoro_installed():
+                log.warning("Cannot switch to voice '%s' — Kokoro isn't installed in %s", voice_id, _kokoro_dir())
+                return False
+        elif not self._model_path_for_voice(voice_id).exists():
+            log.warning("Cannot switch to voice '%s' — model file not found at %s",
+                        voice_id, self._model_path_for_voice(voice_id))
             return False
         self._voice_id = voice_id
-        self._tts = PiperBackend(model_path)
+        self._tts, self._engine = self._backend_for(voice_id)
         self.context.config.set("voice.tts_voice_id", voice_id)
         self.context.config.save()
         return True
@@ -334,22 +448,34 @@ class VoiceManager:
             return None
 
     def synthesize(self, text: str, output_path: Path) -> Optional[Path]:
+        output_path = Path(output_path)
+        spoken = prepare_text_for_speech(text)
+        engine = self._engine
         try:
-            output_path = Path(output_path)
-            self._tts.synthesize(prepare_text_for_speech(text), output_path)
-            if self.context.config.get("voice.ai_voice_effect", True):
-                # Best-effort — a post-processing failure shouldn't turn
-                # working speech into no speech at all. See
-                # core/voice_effects.py's docstring for what this does
-                # and why the defaults are deliberately conservative.
-                try:
-                    apply_ai_voice_effect_to_wav_file(output_path)
-                except Exception:
-                    log.exception("AI voice effect post-processing failed — using unprocessed audio instead.")
-            return output_path
+            self._tts.synthesize(spoken, output_path)
         except VoiceUnavailableError as exc:
-            log.warning("Text-to-speech unavailable: %s", exc)
-            return None
+            fallback = self._piper_fallback() if engine == "kokoro" else None
+            if fallback is None:
+                log.warning("Text-to-speech unavailable: %s", exc)
+                return None
+            log.warning("Kokoro couldn't speak (%s); using Piper instead.", exc)
+            try:
+                fallback.synthesize(spoken, output_path)
+            except VoiceUnavailableError as fallback_exc:
+                log.warning("Text-to-speech unavailable: %s", fallback_exc)
+                return None
+            engine = "piper"
+        if engine == "piper" and self.context.config.get("voice.ai_voice_effect", True):
+            # Best-effort — a post-processing failure shouldn't turn
+            # working speech into no speech at all. See
+            # core/voice_effects.py's docstring for what this does
+            # and why the defaults are deliberately conservative.
+            # Piper only (DEC-0051): see this module's docstring.
+            try:
+                apply_ai_voice_effect_to_wav_file(output_path)
+            except Exception:
+                log.exception("AI voice effect post-processing failed — using unprocessed audio instead.")
+        return output_path
 
     # ------------------------------------------------------------------
     # Recording / playback (sounddevice / PortAudio)
