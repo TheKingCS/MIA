@@ -144,9 +144,19 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
     if not results:
         return reply
     said = (reply.content if reply is not None else "") or ""
-    sources ="\n".join(text for _n, text in results)
-    if not said.strip() or invented_numbers(said, sources, prompt):
-        if said.strip():
-            log.warning("Tool loop answer had numbers the lookups didn't; saying the results instead.")
+    sources = "\n".join(text for _n, text in results)
+    wrong = invented_numbers(said, sources, prompt) if said.strip() else set()
+    if wrong:
+        # Often general knowledge ("every 5,000 miles"), not a misread record: one more try without those
+        # numbers before falling back to the bare results (2026-10-30, live).
+        retry = llm.chat_with_tools(talk + [{"role": "assistant", "content": said}, {"role": "system", "content": (
+            f"Your answer used numbers that aren't in their records: {', '.join(sorted(wrong))}. Answer again "
+            "without them: their records' numbers only; general advice is fine in words, without figures.")}], [])
+        again = (retry.content if retry is not None else "") or ""
+        if again.strip() and not invented_numbers(again, sources, prompt):
+            return ChatReply(content=again.strip(), tool_calls=[])
+        log.warning("Tool loop answer had numbers the lookups didn't (%s); saying the results instead.",
+                    ", ".join(sorted(wrong)))
+    if not said.strip() or wrong:
         return ChatReply(content=_plain(results), tool_calls=[])
     return ChatReply(content=said.strip(), tool_calls=[])

@@ -83,6 +83,34 @@ def earlier_topics(messages: list, kept: int) -> str:
             + "; ".join(f"“{a}”" for a in asked[-EARLIER_SHOWN:]) + ".")
 
 
+LOOK_BACK = 8  # messages searched for the last thing named
+
+
+def what_it_means(context, conversation, prompt: str) -> Optional[str]:
+    """What "it" / "that" in `prompt` most likely means: the last of the
+    person's own records named in the conversation (by them or by MIA),
+    when the message leans on a pronoun and names nothing itself."""
+    from core.assistant_actions import looks_like_question
+    from core.question_plans import CHANGE_VERBS
+
+    registry = getattr(context, "assistant_actions", None)
+    if registry is None or conversation is None or not _LEANS.search(prompt or ""):
+        return None
+    first = (prompt or "").strip().lower().split(" ", 1)[0].strip(",.!?")
+    if not (looks_like_question(prompt) or first in CHANGE_VERBS):
+        return None  # "That's cool." leans on "that" but asks nothing about a record
+    if registry.named_things(prompt, context):
+        return None  # it names its own subject
+    before = [m for m in getattr(conversation, "messages", []) if str(getattr(m, "content", "")) != prompt]
+    for m in reversed(before[-LOOK_BACK:]):
+        named = registry.named_things(str(getattr(m, "content", "") or ""), context)
+        if len(named) == 1:  # two things named in one message: too unsure to pick
+            return named[0]
+        if named:
+            return None
+    return None
+
+
 def looks_like_follow_up(text: str) -> bool:
     """Pure logic. A short message that leans on what came before."""
     said = (text or "").strip()

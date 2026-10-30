@@ -596,8 +596,13 @@ def build_chat_request(context, conversation: "Conversation", prompt: str) -> tu
         return _build_personal_request(context, conversation, prompt, mode)
 
     is_teaching_request = looks_like_teaching_request(prompt)
+    # "When did I last change it?": what "it" means, from the conversation (DEC-0052 step 4), so the
+    # right tools come along and the model is told.
+    from core.conversation_state import what_it_means
+
+    meant = what_it_means(context, conversation, prompt)
     matched_actions = (
-        context.assistant_actions.matching_actions(prompt, context)
+        context.assistant_actions.matching_actions(f"{prompt} ({meant})" if meant else prompt, context)
         if context.assistant_actions is not None and not is_teaching_request and not looks_like_how_to_question(prompt)
         else []
     )
@@ -621,6 +626,9 @@ def build_chat_request(context, conversation: "Conversation", prompt: str) -> tu
         earlier = earlier_topics(conversation.messages, len(history))
         if earlier:
             system += "\n\n" + earlier
+    if meant:
+        system += (f"\n\nIn their message, “it” or “that” most likely means {meant} (the last of their things "
+                   "named in this conversation); if that doesn't fit, ask which they mean.")
     learned = getattr(context, "failures", None)
     said = learned.phrases_in(prompt) if learned is not None else []
     if said:  # what this person taught MIA they mean (core/failure_log.py)

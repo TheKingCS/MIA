@@ -238,6 +238,34 @@ class AssistantActionRegistry:
                     break
         return domains
 
+    def named_things(self, text: str, context: Optional["AppContext"]) -> list[str]:
+        """The person's own records `text` names, by their full names
+        ("the truck" -> "Pickup Truck"), with the same matching as
+        _entity_domains. For what "it" means in a conversation
+        (core/conversation_state.py)."""
+        if context is None or not self._entity_providers or not text:
+            return []
+        from core.assistant_lookup import head_word, name_tokens
+
+        tokens, lowered, found = name_tokens(text), text.lower(), []
+        for domain, provider in self._entity_providers.items():
+            try:
+                names = list(provider(context))
+            except Exception:
+                continue
+            for name in names:
+                name_l = str(name).strip().lower()
+                if not name_l:
+                    continue
+                if domain in self._entity_match_all:
+                    significant = {t for t in name_tokens(name_l) if len(t) >= 4}
+                    hit = bool(significant) and significant <= tokens
+                else:
+                    hit = bool(head_word(name_l)) and head_word(name_l) in tokens
+                if (name_l in lowered or hit) and str(name).strip() not in found:
+                    found.append(str(name).strip())
+        return found
+
     def _learned_domains(self, prompt: str, context: Optional["AppContext"]) -> set[str]:
         """What this person taught MIA they mean (core/failure_log.py, tier 1):
         a remembered phrase brings its tool's domain along."""

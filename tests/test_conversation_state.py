@@ -83,3 +83,25 @@ def test_the_model_is_told_what_came_earlier(life):
     system = messages[0]["content"]  # the last 12 are shown; 0 to 7 were cut, and their questions are named
     assert "they asked: “message 0”; “message 2”; “message 4”; “message 6”." in system
     assert "“message 8”" not in system  # still in the window, so not repeated
+
+
+def test_what_it_means(life):
+    from core.assistant_chat import build_chat_request
+
+    truck = life.maintenance.add_asset("Pickup Truck", "Vehicle")
+    life.maintenance.add_task(truck.asset_id, "Oil change", interval_days=90)
+    life.maintenance.add_asset("Riding Mower", "Power Equipment")
+    talk = SimpleNamespace(conversation_id="i1", mode=None, journal=False, messages=[
+        SimpleNamespace(role="user", content="How's the truck doing?"),
+        SimpleNamespace(role="assistant", content="The Pickup Truck's oil change is due in 12 days.")])
+    assert cs.what_it_means(life, talk, "when did I last change it?") == "Pickup Truck"
+    assert cs.what_it_means(life, talk, "when did I last service the mower?") is None  # names its own subject
+    assert cs.what_it_means(life, talk, "What's for dinner?") is None  # leans on nothing
+    assert cs.what_it_means(life, talk, "That's cool.") is None  # small talk, not about a record
+    assert cs.what_it_means(life, talk, "move it to Saturday") == "Pickup Truck"  # a request about it
+    messages, tools = build_chat_request(life, talk, "when did I last change it?")
+    assert "most likely means Pickup Truck" in messages[0]["content"]
+    assert "list_maintenance_tasks" in [t["function"]["name"] for t in tools]  # the truck's tools came along
+    both = SimpleNamespace(conversation_id="i2", mode=None, journal=False, messages=[
+        SimpleNamespace(role="user", content="Compare the truck and the mower")])
+    assert cs.what_it_means(life, both, "which needs it more?") is None  # two things: too unsure

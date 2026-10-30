@@ -54,13 +54,22 @@ def test_lookups_go_back_and_one_answer_comes_out(life):
     assert any(m.get("role") == "tool" and m["content"].startswith("Electric") for m in second)
 
 
-def test_an_invented_number_falls_back_to_the_results(life):
-    model = _Model(call("list_bills"), ChatReply(content="You owe $95 this week.", tool_calls=[]))
+def test_an_invented_number_gets_one_retry_then_the_results(life):
+    said_twice = ChatReply(content="You owe $95 this week.", tool_calls=[])
+    model = _Model(call("list_bills"), said_twice, said_twice)
     reply = tool_loop.run(life, model, [], TOOLS, "what bills do I have?")
     assert reply.content == "Electric $80.00 due Friday."
+    assert "aren't in their records: 95" in model.sent[-1][0][-1]["content"]  # told which number, once
     # Arithmetic is code's job, so the model's own sum is refused too ($2,000 - $1,500 is never on a result).
-    model = _Model(call("get_budget_summary"), ChatReply(content="You have $500.00 left.", tool_calls=[]))
+    no_sum = ChatReply(content="You have $500.00 left.", tool_calls=[])
+    model = _Model(call("get_budget_summary"), no_sum, no_sum)
     assert tool_loop.run(life, model, [], TOOLS, "q").content == "Income: $2,000.00. Expenses: $1,500.00."
+
+
+def test_a_retry_without_the_number_is_kept(life):
+    model = _Model(call("list_bills"), ChatReply(content="Electric is due Friday; most bills run every 30 days.", tool_calls=[]),
+                   ChatReply(content="Electric is $80.00, due Friday.", tool_calls=[]))
+    assert tool_loop.run(life, model, [], TOOLS, "bills?").content == "Electric is $80.00, due Friday."
 
 
 def test_the_same_lookup_twice_stops_the_loop(life):
