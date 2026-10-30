@@ -22,6 +22,13 @@ only, a few minutes, never written anywhere.
 
 The glasses keep a cursor (`since`, an ISO time from the engine), so a
 card is shown once and nothing old is replayed when they start.
+
+Fourth, **what her orb is doing** (`set_orb()` / `orb()`, slice 1 of
+docs/GLASSES_FIRST_BOOT_PLAN.md): the phone's listening service says
+listening, thinking, speaking, interrupted or idle as each step starts,
+and the glasses' orb follows. In memory only, and a state nobody ended
+(a phone that lost its signal) runs out by itself, so she never stays
+stuck "listening". "Unavailable" is the glasses' own call: no answer here.
 """
 
 from __future__ import annotations
@@ -58,6 +65,11 @@ VOICE_KEEP = timedelta(minutes=5)
 _voice: deque = deque(maxlen=50)  # (when, profile id, card): what was said through the glasses
 _voice_lock = threading.Lock()
 _voice_n = 0
+# How long a state lasts if nothing follows it (the turn's own limits on the phone).
+ORB_LASTS = {"listening": timedelta(seconds=30), "thinking": timedelta(seconds=130),
+             "speaking": timedelta(seconds=120), "interrupted": timedelta(seconds=3)}
+ORB_STATES = frozenset(ORB_LASTS) | {"idle"}
+_orb: dict = {}  # profile id -> (state, when)
 
 
 def said(profile_id: str, turn: dict, now: Optional[datetime] = None) -> dict:
@@ -72,6 +84,24 @@ def said(profile_id: str, turn: dict, now: Optional[datetime] = None) -> dict:
             card["open"] = turn["open"]
         _voice.append((now, profile_id, card))
     return card
+
+
+def set_orb(profile_id: str, state: str, now: Optional[datetime] = None) -> Optional[dict]:
+    """What MIA is doing for this person now; None for a state there isn't."""
+    if state not in ORB_STATES:
+        return None
+    with _voice_lock:
+        _orb[profile_id] = (state, now or datetime.now())
+    return {"state": state}
+
+
+def orb(profile_id: Optional[str], now: Optional[datetime] = None) -> dict:
+    """{"state": ...}: idle unless a state was set and hasn't run out."""
+    with _voice_lock:
+        state, at = _orb.get(profile_id, ("idle", None))
+    if state == "idle" or (now or datetime.now()) - at > ORB_LASTS[state]:
+        return {"state": "idle"}
+    return {"state": state}
 
 
 def _voice_cards(profile_id: Optional[str], start: datetime, now: datetime) -> list[tuple[datetime, dict]]:

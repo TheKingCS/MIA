@@ -133,6 +133,10 @@ class VoiceTextRequest(BaseModel):
     text: str
 
 
+class OrbStateRequest(BaseModel):
+    state: str
+
+
 class ProposeRequest(BaseModel):
     kind: str
     params: dict = {}
@@ -813,6 +817,31 @@ def create_app(context: AppContext) -> FastAPI:
 
         with app.state.turn_lock:
             return feed(view_for(context, profile_id), since or None)
+
+    # What her orb is doing (core/glasses_feed.py). No turn lock: the orb
+    # has to keep answering "thinking" while a turn holds it.
+    @app.get("/api/glasses/orb")
+    def glasses_orb(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.glasses_feed import orb
+
+        return orb(profile_id)
+
+    @app.post("/api/glasses/orb")
+    def glasses_orb_set(body: OrbStateRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        """The phone's listening service: what she's doing now. A phone linked to
+        the home computer tells it too: that's where the glasses' screen is served from."""
+        from core.glasses_feed import set_orb
+        from core.home_link import HomeLinkError, home_call, linked
+
+        done = set_orb(profile_id, body.state)
+        if done is None:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "No such orb state.")
+        if linked(context):
+            try:
+                home_call(context, "/api/glasses/orb", {"state": body.state}, timeout=3)
+            except HomeLinkError:
+                pass  # the computer's out of reach: this phone's screen still follows
+        return done
 
     @app.post("/api/glasses/voice")
     def glasses_voice(body: VoiceTextRequest, background: BackgroundTasks,
@@ -2073,7 +2102,7 @@ def create_app(context: AppContext) -> FastAPI:
         return {"reset": True}
 
     @app.get("/api/talk/thread")
-    def talk_thread(profile_id: str = Depends(require_profile_id)) -> dict:
+    def talk_thread(limit: int = 20, profile_id: str = Depends(require_profile_id)) -> dict:
         """The conversation Talk continues (DEC-0029): its recent messages,
         so the phone, the web and the glasses show the same thread. Off-
         the-record messages are never kept, so never shown."""
@@ -2081,7 +2110,7 @@ def create_app(context: AppContext) -> FastAPI:
             view = view_for(context, profile_id)
             conversation = conversation_for(profile_id, view)
             messages = [{"role": m.role, "content": m.content} for m in conversation.messages
-                        if not getattr(m, "privacy", "")][-20:]
+                        if not getattr(m, "privacy", "")][-max(1, min(limit, 200)):]
             return {"conversation_id": conversation.conversation_id, "title": conversation.title, "messages": messages}
 
     # The web front end (web/, DEC-0012) and the schemas it's built on.

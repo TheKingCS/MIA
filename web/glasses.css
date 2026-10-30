@@ -106,6 +106,33 @@ body {
   display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
 }
 #home.answered #caption { opacity: 1; }
+/* stopped mid-word: everything holds still at once */
+#home.interrupted * { animation-play-state: paused !important; }
+/* can't reach MIA: quiet, grey, still; she says so underneath */
+#home.unavailable #orb-wrap { filter: grayscale(1) brightness(0.5); transform: translateY(-80px) scale(0.8); }
+#home.unavailable #orb-wrap *, #home.unavailable #orb { animation-play-state: paused !important; }
+#home.unavailable #caption { opacity: 1; color: var(--ink-dim); }
+
+/* ---------------- Ambient: the whole conversation ---------------- */
+.log { position: absolute; inset: 0; display: flex; flex-direction: column; padding: 34px 44px 26px; box-sizing: border-box; }
+.log-top { display: flex; align-items: center; gap: 12px; padding-bottom: 14px; }
+.log-orb { width: 26px; height: 26px; border-radius: 50%; animation: breathe 7s ease-in-out infinite;
+  background: radial-gradient(circle at 38% 30%, #f2fdff 0%, var(--accent-soft) 14%, var(--accent) 42%, #0b86ad 100%);
+  box-shadow: 0 0 16px var(--accent-dim); }
+.log-orb.listening { animation: listen 1.6s ease-in-out infinite; }
+.log-orb.thinking { animation: listen 0.9s ease-in-out infinite; }
+.log-orb.speaking { animation: speak 0.6s ease-in-out infinite; }
+.log-orb.interrupted { animation-play-state: paused; }
+.log-orb.unavailable { filter: grayscale(1) brightness(0.5); animation: none; }
+.log-state { font-size: 15px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent-soft); }
+.log-scroll { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: 18px; }
+.log-scroll .empty { margin: auto; }
+.msg { flex: none; display: flex; flex-direction: column; gap: 4px; max-width: 86%; }
+.msg p { margin: 0; font-size: 22px; line-height: 1.4; color: var(--ink); }
+.msg .who { font-size: 13px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-faint); }
+.msg.mia { align-self: flex-start; }
+.msg.you { align-self: flex-end; text-align: right; }
+.msg.you p { color: var(--ink-dim); }
 
 /* ---------------- every other screen ---------------- */
 #screen { position: absolute; inset: 0; padding: 40px 48px 34px; display: flex; flex-direction: column; }
@@ -177,7 +204,7 @@ body {
 .say.small { font-size: 26px; color: var(--ink-dim); }
 
 @media (prefers-reduced-motion: reduce) {
-  #orb, #orb-wrap .ring, #orb-wrap .p, .saturn .s::before { animation: none !important; }
+  #orb, #orb-wrap .ring, #orb-wrap .p, .saturn .s::before, .log-orb { animation: none !important; }
 }
 
 /* edge arrows for a touchscreen: faint, out of the way, big to tap */

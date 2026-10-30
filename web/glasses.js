@@ -1,8 +1,9 @@
 /* MIA on Display glasses (DEC-0016; Muse's composition H-0041/H-0043;
    Zac's layout, 2026-10-16; pins DEC-0024).
 
-   One fixed 600x600 composition scaled to the screen: nothing scrolls,
-   nothing is cut off. Two moves do everything:
+   One fixed 600x600 composition scaled to the screen: nothing is cut off,
+   and only the conversation log (Ambient presence, the card just before
+   the orb) scrolls. Two moves do everything:
      move   (swipe, ← → ↑ ↓, the Neural Band's scroll)  next / previous
      select (tap, Enter, the Band's pinch)              do what's selected
    Every list ends with a Back row, so those two are enough; Esc or a
@@ -49,7 +50,7 @@
     set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* private window: just don't remember */ } },
   };
   let data = null;           // MIA.glasses(): {apps, others, pinned, hint}
-  let view = "home";         // home | cards | menu | panel | confirm | result | reward | hud
+  let view = "home";         // home | cards | menu | panel | confirm | result | reward | hud | log
   let showingAll = false;    // browsing the apps that aren't pinned
   let appIndex = 0, row = 0;
   let panel = null, proposal = null, resultText = "", after = "menu", busy = false;
@@ -67,20 +68,34 @@
 
   const ALL = { id: "__all", name: "All Apps" };
   const BACK_CARD = { id: "__back", name: "Back", status: "To your pinned apps" };
+  const LOG_CARD = { id: "__log", name: "Conversation", status: "Everything you and MIA have said" };
   function cards() {
     const d = data || {};
     if (showingAll) return (d.others || []).concat([BACK_CARD]);
     const list = d.apps || [];
-    return d.pinned && (d.others || []).length
-      ? list.concat([Object.assign({}, ALL, { status: d.others.length + " more apps" })]) : list;
+    // The log comes last: one move back from the orb reaches it.
+    return (d.pinned && (d.others || []).length
+      ? list.concat([Object.assign({}, ALL, { status: d.others.length + " more apps" })]) : list).concat([LOG_CARD]);
   }
   function app() { return cards()[appIndex] || null; }
 
   // ------------------------------------------------------------ home: her orb
   let voiceState = "idle", recorder = null, chunks = [], captionTimer = null;
+  // Listening, thinking, speaking, interrupted, unavailable: the same states
+  // as the Presence System (docs/GLASSES_FIRST_BOOT_PLAN.md, slice 1).
+  const STATE_NAMES = { listening: "Listening", thinking: "Thinking", interrupted: "Stopped", unavailable: "Offline" };
+  let speaking = false;
+  function paintOrb() {
+    home.className = [voiceState === "idle" ? "" : voiceState, speaking ? "speaking" : ""].join(" ").trim();
+    const tag = document.querySelector(".log-state");
+    if (tag) {
+      tag.textContent = "MIA · " + (speaking ? "Speaking" : STATE_NAMES[voiceState] || "Ready");
+      tag.previousElementSibling.className = "log-orb " + home.className;
+    }
+  }
   function orbState(state) {
     voiceState = state;
-    home.className = state === "idle" ? "" : state;
+    paintOrb();
   }
   function answer(text, seconds) {
     clearTimeout(captionTimer);
@@ -111,7 +126,7 @@
   }
   // Start listening (select on the orb, or "Hey MIA" from the companion later); select again to stop.
   async function listen() {
-    if (view !== "home") show("home");
+    if (view !== "home" && view !== "log") show("home");
     if (voiceState === "listening") { if (recorder && recorder.state === "recording") recorder.stop(); return; }
     if (voiceState === "thinking") return;
     clearTimeout(captionTimer);
@@ -143,6 +158,7 @@
         }
         answer(turn.reply_text || "Done.", 9);
         load();
+        if (view === "log") openLog();
       } catch (err) { answer(err.message); }
     };
     recorder.start();
@@ -156,14 +172,48 @@
     if (recorder && recorder.state === "recording") { cancelled = true; recorder.stop(); }
     orbState("idle");
   }
-  window.MIAGlasses = { listen };
+
+  // The phone's listening service says what she's doing (core/glasses_feed.py);
+  // her orb follows it. No answer from MIA at all: the quiet offline orb.
+  const ORB_POLL_MS = 1200, OFFLINE_AFTER = 3, OFFLINE_SAY = "I can't reach your system right now. I'll be back as soon as I can.";
+  let phoneState = "idle", orbMisses = 0;
+  function followPhone(state) {
+    if (state === phoneState) return;
+    const was = phoneState;
+    phoneState = state;
+    speaking = state === "speaking";
+    if (recorder && recorder.state === "recording") return;  // this screen's own microphone turn
+    if (state === "listening" && view === "hud") show("home");
+    if (state === "listening" || state === "thinking" || state === "interrupted") { clearTimeout(captionTimer); orbState(state); }
+    else if (voiceState === "listening" || voiceState === "thinking" || voiceState === "interrupted") orbState("idle");
+    else paintOrb();
+    if (was === "thinking" || state === "idle") { hudFetch(); if (view === "log") openLog(); }  // her answer's card
+  }
+  async function orbPoll() {
+    try {
+      const got = await MIA.glassesOrb();
+      orbMisses = 0;
+      if (voiceState === "unavailable") { caption.textContent = ""; orbState("idle"); }
+      followPhone(got.state || "idle");
+    } catch (e) {
+      if (e && e.status && e.status < 500) return;  // MIA answered: that's not offline
+      if (++orbMisses >= OFFLINE_AFTER && voiceState !== "unavailable") {
+        clearTimeout(captionTimer);
+        caption.textContent = OFFLINE_SAY;
+        speaking = false;
+        orbState("unavailable");
+      }
+    }
+  }
+  setInterval(orbPoll, ORB_POLL_MS);
+  window.MIAGlasses = { listen, followPhone, orbState };
 
   // ------------------------------------------------------------ screens
   function hint(selectWhat) {
     return el("p", "hint", "<b>◀ ▶</b> move &nbsp;·&nbsp; <b>●</b> " + esc(selectWhat));
   }
   function badge(a) {
-    const icon = window.MIAIcons && MIAIcons.svg(a.id === "__all" ? "apps" : a.id === "__back" ? "mia" : a.id);
+    const icon = window.MIAIcons && MIAIcons.svg(a.id === "__all" ? "apps" : a.id === "__back" || a.id === "__log" ? "mia" : a.id);
     const b = el("div", "badge");
     if (icon) b.append(icon); else b.textContent = (a.name || "?").trim().charAt(0).toUpperCase();
     return b;
@@ -246,6 +296,35 @@
     home.hidden = v !== "home";
     screen.hidden = v === "home";
     if (v !== "home") render();
+    if (v === "log") paintOrb();
+  }
+
+  // ------------------------------------------------------------ Ambient: the whole conversation
+  // Her small orb in the corner and everything said, the same thread as the
+  // phone and the computer (/api/talk/thread). Move scrolls; select talks.
+  const LOG_STEP = 150;
+  let thread = [];
+  async function openLog() {
+    try { thread = ((await MIA.thread(200)).messages || []).filter((m) => m.role === "user" || m.role === "assistant"); }
+    catch (e) { /* keep what's showing */ }
+    show("log");
+    const box = document.querySelector(".log-scroll");
+    if (box) box.scrollTop = box.scrollHeight;  // newest at the bottom
+  }
+  function logScreen() {
+    const wrap = el("div", "log");
+    const top = el("div", "log-top");
+    top.append(el("i", "log-orb"), el("span", "log-state", "MIA"));
+    const box = el("div", "log-scroll");
+    if (!thread.length) box.append(el("p", "empty", "Nothing yet. Select to talk to her."));
+    thread.forEach((m) => {
+      const mine = m.role === "user";
+      const msg = el("div", "msg " + (mine ? "you" : "mia"));
+      msg.append(el("span", "who", mine ? "You" : "MIA"), el("p", "", esc(m.content)));
+      box.append(msg);
+    });
+    wrap.append(top, box, hint("talk"));
+    return wrap;
   }
 
   function render() {
@@ -334,6 +413,8 @@
       parts.push(rewardScreen(reward), hint("continue"));
     } else if (view === "hud") {
       parts.push(hudScreen());
+    } else if (view === "log") {
+      parts.push(logScreen());
     }
     screen.replaceChildren(...parts);
   }
@@ -400,6 +481,7 @@
       if (i >= 0) { appIndex = i; menuIndex = 0; row = 0; panel = null; show("menu"); return; }
     }
     if (view === "hud") { hudQueue.push(c); if (!hudCard) hudNext(); return; }
+    if (view === "log") { openLog(); load(); return; }
     show("home");
     answer(c.text, 9);
     load();  // a change you asked for shows on the cards
@@ -481,6 +563,11 @@
   function move(dir) {
     if (busy) return;
     if (view === "hud") { show("home"); return; }
+    if (view === "log") {
+      const box = document.querySelector(".log-scroll");
+      if (box) box.scrollTop += dir * LOG_STEP;
+      return;
+    }
     if (view === "home") {
       if (voiceState === "listening" || voiceState === "thinking") stopListening();
       const list = cards();
@@ -520,9 +607,10 @@
   async function doSelect() {
     const a = app();
     if (view === "hud") { show("home"); return; }
-    if (view === "home") { listen(); return; }
+    if (view === "home" || view === "log") { listen(); return; }
     if (view === "cards") {
       if (!a) return;
+      if (a.id === "__log") { await openLog(); return; }
       if (a.id === "__all") { showingAll = true; appIndex = 0; render(); return; }
       if (a.id === "__back") { showingAll = false; appIndex = Math.max(0, cards().length - 1); render(); return; }
       menuIndex = 0; row = 0; show("menu");
@@ -627,7 +715,7 @@
 
   function back() {
     if (busy) return;
-    if (view === "hud") { show("home"); return; }
+    if (view === "hud" || view === "log") { show("home"); return; }
     if (view === "home") {
       if (voiceState === "answered") { orbState("idle"); return; }
       hudStart();  // swipe down on the orb: Heads-Up

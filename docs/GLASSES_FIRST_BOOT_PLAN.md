@@ -251,7 +251,27 @@ screen, talking on the glasses alone breaks. So before slice 1:
 
 Build order becomes: 0 (voice without the app open), then 1–6 as above.
 
-### Slice 0: written 2026-10-29, not yet tested on a phone
+### Slice 1: built 2026-10-30, checked in a browser at 600×600
+
+- `core/glasses_feed.py`: `set_orb()` / `orb()`, in memory, per person; a
+  state nobody ended runs out, so she never stays stuck. Served as
+  `/api/glasses/orb` (GET for the screen, POST for the phone), with no
+  turn lock so "thinking" still answers during a turn. A phone linked to
+  the home computer passes the state on. The state names are listening,
+  thinking, speaking, interrupted, idle (the brief's "Processing" is
+  "thinking", the word `web/glasses.js` already used).
+- `Voice.kt` reports each step. `web/glasses.js` polls every 1.2 s and
+  the orb follows. Three missed answers in a row: the grey offline orb
+  and "I can't reach your system right now." It recovers by itself.
+- **Ambient:** the Conversation card, one move back from the orb, opens
+  the log (the shared thread, up to 200 messages, `/api/talk/thread?limit=`)
+  with the small orb in the corner. Move scrolls; select talks; back
+  returns to the orb. New turns appear in it.
+- Not covered by that check: the phone sending real states, since that
+  needs the app on a phone (a headset works; the glasses arrive
+  2026-11-04), and the real thread's look at full length.
+
+### Slice 0: written 2026-10-29, compiled and started on the emulator; not yet tested on a phone
 
 In `android-phone/` (the MIA phone app):
 

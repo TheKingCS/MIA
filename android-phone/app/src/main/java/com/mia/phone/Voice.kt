@@ -21,6 +21,7 @@ import android.widget.Toast
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.concurrent.Executors
 
 /**
  * Talking to MIA through the glasses (core/glasses_voice.py). The Display
@@ -35,7 +36,8 @@ import java.net.URL
  * Owned by ListenService, not a screen, so it works with the app closed
  * and the phone locked (slice 0 of docs/GLASSES_FIRST_BOOT_PLAN.md). The
  * microphone permission is asked by MainActivity before the service starts.
- * `onState` reports what she's doing: "listening", "thinking", "speaking", "ready".
+ * `onState` reports what she's doing: "listening", "thinking", "speaking",
+ * "ready"; MIA hears it too, so the glasses' orb follows (/api/glasses/orb).
  */
 class Voice(private val context: Context, private val onState: (String) -> Unit = {}) : RecognitionListener {
     private var recognizer: SpeechRecognizer? = null
@@ -43,6 +45,7 @@ class Voice(private val context: Context, private val onState: (String) -> Unit 
     private var token = ""
     private val main = Handler(Looper.getMainLooper())
     private val audio = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    private val orbLine = Executors.newSingleThreadExecutor()  // in order, never in the way
 
     /** Listen once. Call on the main thread (Android's recognizer needs it). */
     fun start(sessionToken: String) {
@@ -56,7 +59,10 @@ class Voice(private val context: Context, private val onState: (String) -> Unit 
             return
         }
         stop()
-        tts?.stop()  // a tap while she's talking interrupts her
+        if (tts?.isSpeaking == true) {  // a tap while she's talking interrupts her
+            tts?.stop()
+            report("interrupted")
+        }
         useHeadset(true)
         val r = if (Build.VERSION.SDK_INT >= 31 && SpeechRecognizer.isOnDeviceRecognitionAvailable(context))
             SpeechRecognizer.createOnDeviceSpeechRecognizer(context)
@@ -71,7 +77,7 @@ class Voice(private val context: Context, private val onState: (String) -> Unit 
             ToneGenerator(AudioManager.STREAM_MUSIC, 60).startTone(ToneGenerator.TONE_PROP_BEEP, 120)
         } catch (e: RuntimeException) { /* no beep: fine */ }
         r.startListening(ask)
-        onState("listening")
+        report("listening")
     }
 
     fun stop() {
@@ -105,7 +111,7 @@ class Voice(private val context: Context, private val onState: (String) -> Unit 
         val heard = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull().orEmpty()
         stop()
         if (heard.isBlank()) { say("I didn't catch that."); return }
-        onState("thinking")
+        report("thinking")
         Thread {
             val answer = try {
                 ask(heard)
@@ -115,6 +121,29 @@ class Voice(private val context: Context, private val onState: (String) -> Unit 
             }
             main.post { say(answer) }
         }.start()
+    }
+
+    /** What she's doing: the notification, and MIA, for the glasses' orb. Best effort. */
+    private fun report(state: String) {
+        onState(state)
+        if (token.isEmpty() || orbLine.isShutdown) return
+        orbLine.execute {
+            try {
+                val connection = URL("http://127.0.0.1:${MainActivity.PORT}/api/glasses/orb").openConnection() as HttpURLConnection
+                connection.requestMethod = "POST"
+                connection.connectTimeout = 2000
+                connection.readTimeout = 5000
+                connection.doOutput = true
+                connection.setRequestProperty("Content-Type", "application/json")
+                connection.setRequestProperty("Authorization", "Bearer $token")
+                val orb = if (state == "ready") "idle" else state
+                connection.outputStream.use { it.write(JSONObject().put("state", orb).toString().toByteArray()) }
+                connection.responseCode
+                connection.disconnect()
+            } catch (e: Exception) {
+                Log.d(MainActivity.TAG, "orb state", e)
+            }
+        }
     }
 
     /** The words to MIA on this phone; her answer back. */
@@ -135,7 +164,7 @@ class Voice(private val context: Context, private val onState: (String) -> Unit 
 
     private fun say(text: String) {
         Toast.makeText(context, text, Toast.LENGTH_LONG).show()
-        onState("speaking")
+        report("speaking")
         val speaker = tts
         if (speaker != null) {
             speaker.speak(text, TextToSpeech.QUEUE_FLUSH, null, "mia")
@@ -145,13 +174,13 @@ class Voice(private val context: Context, private val onState: (String) -> Unit 
             if (status == TextToSpeech.SUCCESS) {
                 tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
                     override fun onStart(utteranceId: String?) {}
-                    override fun onDone(utteranceId: String?) { main.post { onState("ready") } }
+                    override fun onDone(utteranceId: String?) { main.post { report("ready") } }
                     @Deprecated("Deprecated in Java")
-                    override fun onError(utteranceId: String?) { main.post { onState("ready") } }
+                    override fun onError(utteranceId: String?) { main.post { report("ready") } }
                 })
                 tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "mia")
             } else {
-                onState("ready")
+                report("ready")
             }
         }
     }
@@ -160,6 +189,7 @@ class Voice(private val context: Context, private val onState: (String) -> Unit 
         stop()
         tts?.shutdown()
         tts = null
+        orbLine.shutdown()
     }
 
     override fun onError(error: Int) {

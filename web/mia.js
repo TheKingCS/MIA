@@ -55,6 +55,12 @@
     try { token = sessionStorage.getItem("mia.token"); } catch (e) { token = null; }
   }
 
+  const DEMO_THREAD = [  // placeholder words for the demo's conversation log
+    { role: "user", content: "Hey MIA, what's on today?" },
+    { role: "assistant", content: "This is the demo, so here's a placeholder: two things on the calendar and one mission step." },
+    { role: "user", content: "Remind me about the step at lunch." },
+    { role: "assistant", content: "Placeholder answer: with MIA running, the whole conversation you've had shows here, and it's the same one on your phone and computer." },
+  ];
   class MiaError extends Error {
     constructor(status, message) { super(message); this.status = status; }
   }
@@ -168,6 +174,8 @@
     // In the demo every panel comes from one example file, keyed "app/item".
     // `mission`: the mission the glasses' Missions card shows (optional).
     glasses: (mission) => read("/api/glasses" + (mission ? "?mission=" + encodeURIComponent(mission) : ""), "glasses"),
+    // What her orb is doing (core/glasses_feed.py), polled while the glasses are on.
+    glassesOrb: () => demo ? Promise.resolve({ state: "idle" }) : call("GET", "/api/glasses/orb"),
     glassesPanel: (app, item, mission) => demo
       ? read("", "glasses_panels").then((all) => all[app + "/" + item] || Promise.reject(new MiaError(404, "No such menu item.")))
       : call("GET", "/api/glasses/" + encodeURIComponent(app) + "/" + encodeURIComponent(item) +
@@ -273,7 +281,8 @@
     vaultNow: () => demo ? demoOnly() : call("POST", "/api/vault/now"),
     saveCamera: (camera) => demo ? demoOnly() : call("POST", "/api/security/camera", camera),
     // One MIA everywhere (DEC-0029): the conversation Talk continues, and a fresh one.
-    thread: () => demo ? Promise.resolve({ messages: [] }) : call("GET", "/api/talk/thread"),
+    thread: (limit) => demo ? Promise.resolve({ messages: limit ? DEMO_THREAD : [] })
+      : call("GET", "/api/talk/thread" + (limit ? "?limit=" + limit : "")),
     homeConnect: (url, who, password) => demo ? demoOnly() : call("POST", "/api/home_pc/connect", { url, who, password }),
     homeDisconnect: () => demo ? demoOnly() : call("POST", "/api/home_pc/disconnect"),
     syncNow: () => demo ? demoOnly() : call("POST", "/api/sync/now"),
