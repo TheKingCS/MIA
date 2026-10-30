@@ -103,3 +103,29 @@ def test_without_this_computers_ollama_nothing_changes(life, monkeypatch):
     model = _Model(call("list_bills"))
     reply = tool_loop.run(life, model, [], TOOLS, "q")
     assert [c.name for c in reply.tool_calls] == ["list_bills"] and len(model.sent) == 1
+
+
+def test_a_question_never_makes_a_change_nobody_asked_for(life):
+    """The benchmark: "What lessons have I learned?" reached for add_course."""
+    model = _Model(call("add_bill"), ChatReply(content="No lessons are recorded yet. Want me to start a list?", tool_calls=[]))
+    reply = tool_loop.run(life, model, [], TOOLS, "What lessons have I learned from previous experiences?")
+    assert reply.tool_calls == [] and reply.content.startswith("No lessons")
+    assert all(t["function"]["name"] != "add_bill" for t in model.sent[1][1])  # the retry offered lookups only
+    asked = _Model(call("add_bill"))
+    for request in ("can you add my water bill?", "add my water bill"):
+        asked.replies = [call("add_bill")]
+        assert [c.name for c in tool_loop.run(life, asked, [], TOOLS, request).tool_calls] == ["add_bill"], request
+
+
+def test_asks_not_tells():
+    assert tool_loop.asks_not_tells("What lessons have I learned?")
+    assert tool_loop.asks_not_tells("Is it more profitable to make products to order or keep inventory?")
+    assert not tool_loop.asks_not_tells("Can you add milk to the list?")
+    assert not tool_loop.asks_not_tells("Add milk to the list")
+    assert not tool_loop.asks_not_tells("I spent 40 on gas")
+
+
+def test_after_looking_a_question_still_gets_an_answer_not_a_change(life):
+    model = _Model(call("list_bills"), call("add_bill"), ChatReply(content="Electric $80.00 is due Friday.", tool_calls=[]))
+    reply = tool_loop.run(life, model, [], TOOLS, "What bills do I have?")
+    assert reply.tool_calls == [] and reply.content == "Electric $80.00 is due Friday." and model.sent[-1][1] == []

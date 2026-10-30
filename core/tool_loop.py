@@ -85,6 +85,47 @@ def _look_first(context, llm, messages: list[dict], tools: list[dict], prompt: s
     return reply
 
 
+_REQUEST_STARTS = ("can you", "could you", "would you", "will you", "can u", "please", "i want you to",
+                   "i need you to", "go ahead", "let's", "lets")
+ANSWER_ONLY = ("They asked a question, not for a change: answer it, using lookups if you need them. Don't add, "
+               "change or delete anything; if a change would help, offer it in one short question at the end.")
+
+
+def asks_not_tells(prompt: str) -> bool:
+    """Pure logic. A question that isn't a request ("What lessons have I
+    learned?", not "can you add milk?" or "add milk")."""
+    from core.assistant_actions import looks_like_question
+    from core.question_plans import CHANGE_VERBS
+
+    said = (prompt or "").strip().lower()
+    first = said.split(" ", 1)[0].strip(",.!?") if said else ""
+    return looks_like_question(prompt) and not said.startswith(_REQUEST_STARTS) and first not in CHANGE_VERBS
+
+
+def _wants_change(context, reply: ChatReply) -> bool:
+    from core.assistant_actions import changes_records
+
+    return any(changes_records(c.name) for c in reply.tool_calls)
+
+
+def _answer_instead(context, llm, messages: list[dict], tools: list[dict], reply: ChatReply) -> ChatReply:
+    """A change nobody asked for (2026-10-30, the benchmark: "What lessons
+    have I learned?" reached for add_course, "make to order or keep
+    inventory?" for add_inventory_item): one more try, lookups only, told
+    to answer. Its answer (or its lookups) replaces the change; never the
+    change itself."""
+    from core.assistant_actions import changes_records
+
+    lookups = [t for t in tools if not changes_records(t.get("function", {}).get("name", ""))]
+    retry = llm.chat_with_tools(messages + [{"role": "system", "content": ANSWER_ONLY}], lookups)
+    log.info("Tool loop: a question reached for a change (%s); answered instead.",
+             ", ".join(c.name for c in reply.tool_calls))
+    if retry is not None and not _wants_change(context, retry) and (retry.content.strip() or retry.tool_calls):
+        return retry
+    return ChatReply(content="I can answer that, but I'd need to change something to do it. What would you like me to do?",
+                     tool_calls=[])
+
+
 def _short(text: str) -> str:
     text = str(text or "").strip()
     return text if len(text) <= RESULT_CHARS else text[:RESULT_CHARS].rsplit(" ", 1)[0] + " …(cut short)"
@@ -111,6 +152,8 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
     reply = settle_on_named_tool(named, messages, tools, reply, llm.chat_with_tools)
     if reply is not None and not reply.tool_calls and tools and loop_ok(context):
         reply = _look_first(context, llm, messages, tools, prompt, reply)
+    if reply is not None and tools and loop_ok(context) and _wants_change(context, reply) and asks_not_tells(prompt):
+        reply = _answer_instead(context, llm, messages, tools, reply)
     if reply is None or not tools or not loop_ok(context) or not _lookups_only(context, reply.tool_calls):
         return reply
 
@@ -140,7 +183,9 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
                                     [] if last else tools)
     log.info("Tool loop: %d round(s), %s, %.1fs", step, ", ".join(n for n, _ in results), time.monotonic() - started)
     if reply is not None and reply.tool_calls and not _lookups_only(context, reply.tool_calls):
-        return reply  # it wants a change: the caller's usual path (approval), after looking things up
+        if not asks_not_tells(prompt):
+            return reply  # a change they asked for: the caller's usual path (approval), after looking things up
+        reply = llm.chat_with_tools(talk + [{"role": "system", "content": ANSWER_ONLY}], [])  # never unasked
     if not results:
         return reply
     said = (reply.content if reply is not None else "") or ""

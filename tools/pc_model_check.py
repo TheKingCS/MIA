@@ -91,7 +91,8 @@ def main(argv: list[str]) -> int:
         if model not in have:
             print(f"Getting {model} first (one time; a big download)...")
             _ollama(base, "/api/pull", {"name": model, "stream": False}, timeout=7200)
-        backend = OllamaBackend(base, model, keep_alive="10m", temperature=0.0)
+        backend = OllamaBackend(base, model, keep_alive="10m", temperature=0.0,
+                                think=False if model.startswith("qwen3") else None)  # answer directly, as Talk does
         print(f"\n{model}: loading...")
         started = time.monotonic()
         backend.chat([{"role": "user", "content": "Say ready."}], [], 600)
