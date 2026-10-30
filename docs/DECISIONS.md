@@ -918,3 +918,45 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   what's open, a running summary); (5) the companion layer on top.
   Facts and arithmetic stay in code; the model chooses and phrases.
 - Related: DEC-0043, DEC-0050, docs/REASONING_PLAN.md, docs/INTELLIGENCE_AUDIT.md
+
+### DEC-0053: Looking things up online, when asked
+- Status: PROPOSED
+- Proposed by: claude, 2026-10-30 (`docs/INTELLIGENCE_BENCHMARK.md` section 5: questions F4 to F6, "compare these three products", "is this still accurate?", "the legal requirements for this business activity in my state", can't be answered from MIA's records or offline packs) · Approved by: —
+- Decision (proposed): MIA may look something up on the internet only
+  when (a) the computer is online, (b) the question needs current or
+  outside facts her records and offline packs don't have, and (c) the
+  person asked, or agreed when she offered ("I'd need to look that up
+  online. Want me to?"). What's sent is the search words only, never
+  their records or anything personal. Every researched fact is said with
+  its source and date, kept apart from her own reasoning, and never
+  presented as a legal or tax ruling. Results aren't saved as facts
+  about the person unless they ask. A local search engine they host
+  (SearXNG) is preferred over a company's search API, so no account and
+  no tracking; a hosted API is the fallback. Off on a child's account.
+- Open choices for Zac: offer-then-search (recommended) or search
+  without asking when it's clearly needed; SearXNG on this computer
+  (recommended) or a hosted search API.
+- Related: DEC-0015 (offline-first), DEC-0052, docs/INTELLIGENCE_BENCHMARK.md
+
+### DEC-0054: Remembering what you say you'll do, decide and want to try
+- Status: PROPOSED
+- Proposed by: claude, 2026-10-30 (`docs/INTELLIGENCE_BENCHMARK.md` section 5: questions A6, E3, E6, E10, E14, E15 need things MIA doesn't record) · Approved by: —
+- Decision (proposed): four kinds of note MIA picks up from normal
+  conversation, never a form, each shown back for a yes before it's kept
+  (Propose → Approve): a **commitment** ("I promised Sam I'd fix his
+  gate": who, what, by when), a **decision** ("we're going with the
+  metal roof": what, why, about which project), an **idea** ("I should
+  try selling honey": not acted on yet), and a **goal set aside** (a goal
+  marked dropped, with the reason in their words). Each is the person's
+  own (a personal store), with its date and the conversation it came
+  from, editable and forgettable like memories. They answer "what did I
+  promise?", "what did we decide about the roof?", "what ideas haven't I
+  tried?", "what goals have I dropped and why?"; a commitment with a date
+  can become a reminder. Also proposed, smaller: a best-by date on goods
+  lots (so the "goods before market day" finding can work) and a
+  "still using it?" mark on subscriptions (the unused-subscription
+  finding).
+- Open choices for Zac: pick up all four kinds, or start with
+  commitments and decisions; ask before keeping each one (recommended)
+  or keep them and let him review later.
+- Related: DEC-0052, core/user_memory_manager.py, docs/INTELLIGENCE_BENCHMARK.md

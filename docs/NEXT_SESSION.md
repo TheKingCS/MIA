@@ -7,6 +7,14 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 *Last updated: 2026-10-30*
 
+**Waiting on Zac: DEC-0053 (looking things up online, when asked) and
+DEC-0054 (remembering commitments, decisions, ideas and dropped goals),
+both PROPOSED in `docs/DECISIONS.md` with their open choices.** Built
+since the last note: the desktop panels get the instant code answers
+(`core.assistant_turn.instant_answer`), long conversations keep their
+start (`earlier_topics`), what "it" means (`what_it_means`), and a second
+try before a loop answer is thrown out for an unchecked number.
+
 **2026-10-30 (later): built.** Step 1 (one owner per fact:
 `core/fact_owners.py`), the question plans (`core/question_plans.py`, 15
 plans, by meaning with `core/meaning.py` and nomic-embed-text, in every
