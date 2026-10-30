@@ -44,27 +44,26 @@
         <p class="tagline" id="subtitle"></p>
       </header>
 
-      <!-- Presence (DEC-0044, core/presence.py): what matters now across everything, each with why. -->
       <div class="home-row">
         <section class="glass glow home-focus" aria-labelledby="focus-h">
-          <h2 id="focus-h">Now</h2>
-          <ul class="pres-list" id="focus"></ul>
-          <p class="dim" id="focus-more" hidden></p>
-          <p class="dim" id="focus-empty" hidden>Nothing needs you right now. Enjoy it.</p>
+          <h2 id="focus-h">Today's Focus</h2>
+          <ul class="focus-list" id="focus"></ul>
+          <p class="dim" id="focus-empty" hidden>Nothing needs you today. Enjoy it.</p>
         </section>
       </div>
-
-      <section class="glass home-path" id="path" aria-labelledby="path-h" hidden>
-        <h2 id="path-h">On Your Path</h2>
-        <ul class="pres-list" id="path-list"></ul>
-      </section>
 
       <section class="glass home-remember" id="remember" aria-labelledby="remember-h" hidden>
         <h2 id="remember-h">MIA Remembers</h2>
         <ul class="remember-list" id="remember-list"></ul>
       </section>
 
-      <a class="glass home-level" id="level" href="path.html"></a>
+      <section class="glass home-upcoming" aria-labelledby="up-h">
+        <h2 id="up-h">Upcoming</h2>
+        <ul class="focus-list" id="upcoming"></ul>
+        <p class="dim" id="upcoming-empty" hidden>Nothing in the next few days.</p>
+      </section>
+
+      <a class="glass home-level" id="level" href="skills.html"></a>
     </main>
   </div>
   <script src="mia.js"></script>

@@ -4,24 +4,27 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="dark">
-  <title>My Hero's Path — MIA</title>
+  <title>Sunday Check-In — MIA</title>
   <link rel="stylesheet" href="tokens.css">
   <link rel="stylesheet" href="components.css">
   <link rel="stylesheet" href="shell.css">
   <link rel="stylesheet" href="concept.css">
 </head>
-<body data-app="path" class="mod-path">
+<body data-app="missions" data-icon="missions" class="mod-checkin">
   <!--
-    My Hero's Path (claude, 2026-10-21, DEC-0044): level, active missions and their next step, skills growing
-    this week, recent wins, and the Path's screens. MIA.path() (core/web_hubs.py); web/hubs.js.
+    The Sunday check-in (claude, 2026-10-27, DEC-0047 rule 5): last week's
+    recap (the story, the loop's score, loot, what MIA noticed) and this
+    week laid out day by day. MIA.checkin() (core/weekly_checkin.py);
+    "Debrief Done" is loop.checkin_done.
   -->
   <div class="layout" id="app" hidden>
     <nav class="side" aria-label="Apps"></nav>
     <main class="layout-main">
       <header class="hero">
-        <h1><span aria-hidden="true" id="hero-icon">⚔</span> <span id="hero-name">My Hero's Path</span></h1>
-        <p class="tagline" id="hero-tagline">Every step counts.</p>
+        <h1><span aria-hidden="true" id="hero-icon">📜</span> <span id="hero-name">Sunday Check-In</span></h1>
+        <p class="tagline" id="hero-tagline">Last week, then the week ahead.</p>
       </header>
+      <section class="strip" id="strip" aria-label="Status"></section>
       <div id="panel"></div>
     </main>
   </div>
@@ -30,6 +33,6 @@
   <script src="sound.js"></script>
   <script src="places-watch.js"></script>
   <script src="shell.js"></script>
-  <script src="hubs.js"></script>
+  <script src="checkin.js"></script>
 </body>
 </html>

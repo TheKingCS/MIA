@@ -47,12 +47,14 @@ PERSPECTIVE = "perspective"
 # passages (core/textbook_manager.py); QUIZ asks and checks questions.
 STUDY = "study"
 QUIZ = "quiz"
+# DEC-0046: MIA as Game Master; the facts come from core/game_master.py.
+GAME_MASTER = "game_master"
 
-MODES = (COMPANION, LISTEN, DIRECT, MOMENTUM, PLAN, PERSPECTIVE, STUDY, QUIZ)
+MODES = (COMPANION, LISTEN, DIRECT, MOMENTUM, PLAN, PERSPECTIVE, STUDY, QUIZ, GAME_MASTER)
 # Modes where MIA is there for the person, not the records: the reply
 # skips help-doc grounding, and tools are offered only for a message
 # that reads as a direct command (see looks_like_direct_command()).
-PERSONAL_MODES = (LISTEN, DIRECT, MOMENTUM, PLAN, PERSPECTIVE, STUDY, QUIZ)
+PERSONAL_MODES = (LISTEN, DIRECT, MOMENTUM, PLAN, PERSPECTIVE, STUDY, QUIZ, GAME_MASTER)
 
 MODE_LABELS = {
     COMPANION: "Normal",
@@ -63,6 +65,7 @@ MODE_LABELS = {
     PERSPECTIVE: "Remember why",
     STUDY: "Studying",
     QUIZ: "Quiz",
+    GAME_MASTER: "Game Master",
 }
 
 # One sentence or two each, deliberately: every extra clause is prompt
@@ -104,6 +107,14 @@ MODE_INSTRUCTIONS = {
         "suggest one concrete next step. Offer, don't order."
     ),
 }
+
+def _game_master_instruction() -> str:
+    from core.game_master import INSTRUCTION
+
+    return INSTRUCTION
+
+
+MODE_INSTRUCTIONS[GAME_MASTER] = _game_master_instruction()
 
 # Always added on the personal path: the human-agency principle
 # (docs/COGNITIVE_EXTENSION.md section 14) in one line.
@@ -179,6 +190,15 @@ _PERSPECTIVE = _phrases(
     r"zoom (?:me )?out",
     r"what is all this for",
 )
+_GAME_MASTER = _phrases(
+    r"game ?master",
+    r"dungeon master",
+    r"gm (?:this|that|it|me|mode)",
+    r"(?:make|turn) (?:this|it|that|my (?:day|shift|life)) (?:into )?a game",
+    r"game ?ify (?:this|it|that|my (?:day|shift|life))",
+    r"(?:put|frame) (?:this|it|that) in game terms",
+    r"what'?s the game (?:here|today)",
+)
 _JOURNAL = _phrases(
     r"i (?:want|need|'?d like) to journal",
     r"let'?s journal",
@@ -231,7 +251,7 @@ def detect_mode_change(prompt: str) -> ModeChange:
         return ModeChange(mode=COMPANION, journal=False, off_record=False)
 
     # Perspective first: "no bullshit, remind me why" needs the facts more than a tone.
-    for pattern, mode in ((_QUIZ, QUIZ), (_STUDY, STUDY), (_PERSPECTIVE, PERSPECTIVE), (_DIRECT, DIRECT), (_MOMENTUM, MOMENTUM), (_PLAN, PLAN), (_LISTEN, LISTEN)):
+    for pattern, mode in ((_QUIZ, QUIZ), (_STUDY, STUDY), (_PERSPECTIVE, PERSPECTIVE), (_GAME_MASTER, GAME_MASTER), (_DIRECT, DIRECT), (_MOMENTUM, MOMENTUM), (_PLAN, PLAN), (_LISTEN, LISTEN)):
         if pattern.search(text):
             change.mode = mode
             break
@@ -250,9 +270,11 @@ def detect_mode_change(prompt: str) -> ModeChange:
 # model to "fix" a vent by logging maintenance. So in a personal mode,
 # tools are only offered when the message starts like a command.
 _COMMAND_START = re.compile(
-    r"^(?:(?:hey |ok |okay )?mia[,:]?\s+)?(?:please\s+)?"
+    r"^(?:(?:hey |ok |okay )?mia[,:]?\s+)?(?:(?:yes|yeah|yep|sure|ok|okay)[,!.]?\s+)?(?:please\s+)?"
     r"(?:add|log|remind(?! me (?:why|what i))|set|mark|put|record|delete|remove|open|play|pause|stop|resume|check off|"
-    r"start tracking|track|create|schedule|update|what'?s on|what is on|how much|list)\b"
+    r"start tracking|track|create|schedule|update|what'?s on|what is on|how much|list|"
+    r"(?:make|turn) (?:it|this|that) (?:into )?a (?:quest|mission)|accept the quest|i'?ll take the quest|"
+    r"(?:i )?(?:worked|cleared) (?:a |the |my |today'?s )?(?:\d+|run|shift))\b"
 )
 
 

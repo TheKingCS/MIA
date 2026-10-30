@@ -763,7 +763,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: docs/INTELLIGENCE_AUDIT.md
 
 ### DEC-0044: One system, not a collection of apps
-- Status: APPROVED
+- Status: PARTLY REVERSED by DEC-0045 (zac, 2026-10-24): the five-places frame, Presence as Home and the World/Path/System hubs are undone; context in every turn stays
 - Proposed by: zac, 2026-10-21 (Chat's handoff, `docs/specs/UX_SYSTEM.md`: "MIA ... feels like a collection of apps instead of a second smarter and more organized consciousness") · Approved by: zac, 2026-10-21 (the same request)
 - Decision: navigation by intent: Presence, Conversation, My Hero's
   Path, World, System, then the person's pinned apps (every app stays
@@ -775,7 +775,114 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   device gets its own logic. MIA never claims awareness she doesn't have.
 - Related: docs/UX_SYSTEM_AUDIT.md, docs/specs/UX_SYSTEM.md
 
-### DEC-0045: Kokoro is MIA's voice on the computer
+### DEC-0045: The apps stay the layout; the smarts go into MIA
+- Status: APPROVED
+- Proposed by: zac, 2026-10-24 · Approved by: zac, 2026-10-24 ("I dont like how we tried to fix MIA from just being a collection of apps. It was better before and I think that the old form was better. I really just wanted to fix MIAs feel of being a smart AI capable of using all those apps without the user digging through everything and her being more intuitive")
+- Decision: the frame goes back to how it was before DEC-0044: the
+  sidebar of the person's apps, the phone's Home and Apps bar, Home with
+  Today's Focus and Upcoming. The five places, Presence as Home and the
+  World / My Hero's Path / System pages are removed. What stays, and
+  where the work goes now, is MIA herself: every question carries the
+  person's world (`core/presence.py` `context_lines`: their goal and
+  why, active missions, what needs them now), she knows what she can do
+  (DEC-0041), and she works the apps for the person by voice and in
+  Talk so they don't have to dig. A change to the layout itself is
+  Zac's call, asked first, never part of a handoff about something else.
+- Related: DEC-0044, docs/UX_SYSTEM_AUDIT.md (kept as history)
+
+### DEC-0046: MIA as Game Master, and work as a dungeon you loot
+- Status: APPROVED
+- Proposed by: zac, 2026-10-27 (MIA as "my personal kind of dungeon master for playing the game of life": turning real-life trouble, like coming in unstocked after another shift, into the game instead of the negative way of thinking about it) · Approved by: zac, 2026-10-27 ("Lets create it. Then i could treat work like a dungeon that I visit and loot every day to stack resources until I can advance to the next dungeon and track my resource gain with Plaid ... Overtime can be boss battles that gain me increased loot. We can do a projected loot thing based on my hourly pay and overtime pay too")
+- Decision: **Game Master mode** in Talk ("GM this", "game master",
+  "make it a game", or the fourth answer when MIA asks what kind of
+  support someone wants): she says plainly that the trouble is real, then
+  frames it as the game from facts built in code (`core/game_master.py`):
+  the hard-mode modifier's game name, what clearing it earns, the day's
+  run, the loot, the next dungeon. She offers one quest ("make it a
+  quest" → a HARD mission with its reward). Other people are characters,
+  never villains, never named; she never invents loot, XP or wins.
+  **The Dungeon** (`core/work_dungeon.py`, `web/dungeon.html`): a job is a
+  dungeon, a shift a run, cleared or planned; hard-mode modifiers (Bare
+  Shelves, Thin Party, Supply Raid...) add XP and are kept as a plain
+  dated record, nobody's name, for if the person ever raises it at work;
+  loot is gross pay with overtime by the pay week, a run with overtime is
+  a boss whose bonus is the overtime premium; projected loot (week,
+  month, year at this pace); banked loot is the paychecks from the bank
+  (Plaid imports, matched by the paycheck's words), which also teach the
+  take-home share; the next dungeon is the Freedom plan. Personal store,
+  never a child's (money). Non-punitive: a missed planned run costs
+  nothing.
+- Related: DEC-0028 (the game layer), DEC-0038 (Freedom), DEC-0014
+
+### DEC-0047: How missions work (the loop, adventures, real-gain rewards)
+- Status: APPROVED
+- Proposed by: claude, 2026-10-27 (from Zac's loop / adventure idea) · Approved by: zac, 2026-10-27 ("Take note of all your suggestions because I like them all", and his answers to the six questions)
+- Decision: the mission system in `docs/MISSION_SYSTEM.md`. Loop missions
+  appear automatically from what recurs; adventures are proposed from the
+  day's project (guild quests, ranks, rank-up trials). A mission completes
+  by evidence, a tap, or telling MIA. Rewards are what's actually gained
+  (the finished craft, the recipe unlocked, the pay), with XP, ranks and
+  titles beside them. No cap on missions (unprompted messages still go
+  through the gate). Sunday morning check-in: last week's recap and this
+  week's planned missions. A missed loop day shows plainly as nothing
+  earned and the week's share cleared, with nothing taken away. Also
+  approved to build: pattern noticing, titles, an emergent class, New
+  Game+, the Codex, rest as camp, party quests, quarterly seasons,
+  cutscenes, rare finds from real milestones only.
+- Related: DEC-0014, DEC-0028, DEC-0046, docs/MISSION_SYSTEM.md
+
+### DEC-0048: User Sync, and a design audit before more features
+- Status: APPROVED (to plan; not built)
+- Proposed by: zac, 2026-10-27 · Approved by: zac, 2026-10-27
+- Decision: (1) **User Sync** (`docs/USER_SYNC.md`): handing MIA to a new
+  person starts a deep getting-to-know-you conversation that fills their
+  loop, first missions, garage, kitchen, workouts and goals, each record
+  confirmed; then MIA stays curious and surveys what's working, switching
+  features on and off to suit them. The person signs in to confirm it's
+  them; their data is their own. (2) **A design audit**: Zac, "I have
+  just kind of thrown my every idea at you to build her brain but not
+  really worried about the design and flow of utilizing MIA or the apps
+  pages and layouts". Every function and page gets audited for how it's
+  organized and laid out to be the most intuitive, easy to use and easy
+  to read, and the organization is agreed with Zac (and Muse) before the
+  changes; the layout of the apps stays his call (DEC-0045).
+- Related: DEC-0045, DEC-0047, docs/USER_SYNC.md
+
+### DEC-0049: The Fix-It Log, and three tiers of self-improvement
+- Status: APPROVED
+- Proposed by: zac, 2026-10-27 · Approved by: zac, 2026-10-27 ("Yes, build the failure log first and go with your recommendations")
+- Decision: MIA records where she stumbles (`docs/FAILURE_LOG.md`):
+  what the person says (corrections, reports, 👎) and what she can see
+  (tool errors, the model down, no tool matched, the right tool offered
+  but ignored, rephrasing, a quick undo, slow answers, broken pages);
+  each person's own, never private turns, redacted. Grouped into
+  ranked issues (Apps → Fix-It Log; "what's been going wrong?") and a
+  fix report Claude reads on the PC. Tier 1: she learns phrasings
+  herself only after the person says yes. Tier 2: settings are asked
+  first. Tier 3: she never changes her own code; each issue becomes a
+  failing test and bench case first, then the fix, full suite and bench
+  green, Zac approving. Built before the design audit (DEC-0048) so the
+  audit starts from real evidence.
+- Related: DEC-0048, docs/FAILURE_LOG.md
+
+### DEC-0050: She talks like a person; User Sync defaults; quiet hours; the EULA's facts
+- Status: APPROVED
+- Proposed by: claude, 2026-10-27 (`docs/BODY_AND_RELATIONSHIP_PLAN.md` section 9) · Approved by: zac, 2026-10-27 ("Yes, go ahead with the I don't know fix … Yes to 3 and 4 off until set")
+- Decision: (1) Only a how-to or teach-me question about MIA is held to
+  her own docs; everything else is answered as a person (the person's
+  context, her own knowledge, the offline reference packs when they
+  match), never "I don't know what to do": one short question or two
+  concrete offers instead; facts about the person's data still come only
+  from their data. Verified on the PC's model with
+  `tests/live_model_check.py` (PERSON_CASES) before it's trusted.
+  (2) User Sync: voice and typing, in chapters over days, and Zac can
+  run it too. (3) Quiet hours: off until each person sets them. (4) The
+  EULA: MIA will eventually be offered to others; the business structure
+  isn't decided yet, so the draft uses placeholders for the licensor and
+  governing law and gets a lawyer's review before release.
+- Related: DEC-0048, DEC-0049, docs/BODY_AND_RELATIONSHIP_PLAN.md
+
+### DEC-0051: Kokoro is MIA's voice on the computer
 - Status: APPROVED
 - Proposed by: claude, 2026-10-29 (her voice is Piper's low-quality models plus a robotic ring/chorus effect) · Approved by: zac, 2026-10-29 ("log the Kokoro voice decision. Lets get her voice sounding premium")
 - Decision: the home computer speaks with Kokoro-82M (Apache-2.0, offline,

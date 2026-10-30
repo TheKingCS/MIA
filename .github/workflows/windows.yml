@@ -45,9 +45,11 @@ jobs:
         shell: powershell
         run: ./install.ps1 -Yes -NoOllama -NoVoice -NoTesseract
       - name: Home-PC setup, dry run (setup_home_pc.ps1 says what it would do)
+        timeout-minutes: 10
         shell: powershell
         run: ./setup_home_pc.ps1 -DryRun
       - name: Home-PC readiness check runs (it reports what's missing here)
+        timeout-minutes: 10
         shell: pwsh
         run: |
           .venv\Scripts\python tools\pc_check.py

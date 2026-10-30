@@ -605,3 +605,31 @@ def test_suggested_prompts_for_multi_domain_module_spreads_across_domains():
 def test_suggested_prompts_never_exceeds_limit_of_four():
     for module_id in ["missions", "expeditions", "toolbox", "field_kit", None, "some_unknown_module"]:
         assert len(suggested_prompts_for_module(module_id)) <= 4
+
+
+def test_ordinary_conversation_is_answered_as_a_person_not_from_the_docs_only():
+    """2026-10-27 (Zac: "MIA should feel like talking to a person not a program"): only a how-to
+    question about MIA is held to her reference material; everything else gets the conversation
+    instruction, which never says "say you don't know"."""
+    from core.assistant_chat import CONVERSATION_INSTRUCTION, build_system_message
+    from core.device_help_manager import GROUNDING_INSTRUCTION
+
+    context = _FakeContext(assistant_actions=_FakeAssistantActions(keywords=[], tools=[]), device_help=None)
+    chat = build_system_message(context, is_action_request=False, prompt="What should I make for dinner?")
+    assert CONVERSATION_INSTRUCTION in chat and GROUNDING_INSTRUCTION not in chat
+    assert "Never say you don't know what to do" in chat and "ONLY the reference" not in chat
+    help_ = build_system_message(context, is_action_request=False, prompt="How do I add a bill?", is_help_question=True)
+    assert GROUNDING_INSTRUCTION in help_ and "never invent a feature" in help_
+    assert "say you don't know rather than" not in GROUNDING_INSTRUCTION and "Never just say you don't know" in GROUNDING_INSTRUCTION
+
+
+def test_a_question_with_no_matching_material_is_sent_as_itself():
+    class _NoMaterial:
+        def build_grounded_prompt(self, query):
+            return f"No reference material matched this question. ...\n\nQuestion: {query}"
+
+    context = _FakeContext(assistant_actions=_FakeAssistantActions(keywords=[], tools=[]), device_help=_NoMaterial())
+    messages, _ = build_chat_request(context, _empty_conversation(), "What should I make for dinner?")
+    assert messages[-1] == {"role": "user", "content": "What should I make for dinner?"}
+    messages, _ = build_chat_request(context, _empty_conversation(), "How do I make MIA fly a drone?")
+    assert messages[-1]["content"].startswith("No reference material matched")  # a how-to keeps its honest note

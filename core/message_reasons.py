@@ -35,6 +35,7 @@ REASONS: dict[str, tuple[str, str]] = {
     "grow_alert": ("greenhouse readings", "a tank or bed reading was outside the range set for it"),
     "season": ("seasonal questlines", "a new season started and MIA had questlines for it"),
     "insurance_renewal": ("insurance renewals", "a policy renews within about 45 days: a good time to shop it"),
+    "obligation_deadline": ("tax and compliance deadlines", "a filing, licence or renewal is coming due or past due"),
     "chronicle": ("the Chronicle", "on Sundays, your week's chapter of the Chronicle is ready"),
     "journal_reflection": ("the weekly reflection", "you turned on the weekly journal reflection"),
 }

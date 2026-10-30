@@ -53,6 +53,7 @@ from core.connectivity import connectivity_prompt_block
 from core.conversation_modes import (
     AGENCY_LINE,
     COMPANION,
+    GAME_MASTER,
     LISTEN,
     MODE_INSTRUCTIONS,
     PERSONAL_MODES,
@@ -373,6 +374,23 @@ _TEACHING_INSTRUCTION = (
     "actually cover this, say so honestly rather than inventing steps — do not use outside knowledge."
 )
 
+# 2026-10-27 (Zac: "MIA should feel like talking to a person not a program
+# ... avoid her saying I dont know what to do"): everything that isn't an
+# action, a how-to question about MIA, a teach-me request or a personal
+# mode gets this instead of the reference-material rule, which used to
+# catch ordinary conversation too ("what should I make for dinner?" ->
+# "I don't know"). Facts about the person's own life still come only
+# from what's above, never invented.
+CONVERSATION_INSTRUCTION = (
+    "Talk with the user the way a thoughtful, capable person who knows them would, not like a program. Use what "
+    "you know about them above and your own general knowledge. Never invent anything about their own life, "
+    "records or numbers that isn't above: for those, say what you'd need or offer to look it up or add it. If "
+    "you're not sure what they mean, ask one short question, or offer the two closest things you could do for "
+    "them. Never say you don't know what to do. When reference material comes with the question, use it where "
+    "it helps. Keep it brief and natural, in plain conversational text."
+)
+NO_MATERIAL_PREFIX = "No reference material matched"
+
 _MAX_HISTORY_MESSAGES = 12  # 6 exchanges — bounds prompt growth/latency on CPU-only Pi-class hardware
 
 _MAX_INJECTED_MEMORIES = 20  # most recent — bounds prompt growth as the memory store grows over months of use
@@ -502,7 +520,8 @@ def format_birthday(iso_date: str) -> str:
     return f"{parsed.strftime('%B')} {parsed.day}"
 
 
-def build_system_message(context, is_action_request: bool, is_teaching_request: bool = False, prompt: str = "") -> str:
+def build_system_message(context, is_action_request: bool, is_teaching_request: bool = False, prompt: str = "",
+                         is_help_question: bool = False) -> str:
     """
     The system-role message for one chat turn — pulled out as its own
     function so `build_chat_request()` stays readable and this is
@@ -521,7 +540,9 @@ def build_system_message(context, is_action_request: bool, is_teaching_request: 
     if is_action_request:
         return _IDENTITY_LINE
 
-    closing_instruction = _TEACHING_INSTRUCTION if is_teaching_request else GROUNDING_INSTRUCTION
+    # A how-to question about MIA answers from her own docs; anything else, as a person (2026-10-27).
+    closing_instruction = (_TEACHING_INSTRUCTION if is_teaching_request else
+                           GROUNDING_INSTRUCTION if is_help_question else CONVERSATION_INSTRUCTION)
     parts = [_IDENTITY_LINE + _IDENTITY_WARMTH + _IDENTITY_APP_FLUENCY, build_user_context_block(context, prompt)]
     # DEC-0044: what they're working toward and what needs them now, so a
     # request is understood in context (core/presence.py).
@@ -581,13 +602,25 @@ def build_chat_request(context, conversation: "Conversation", prompt: str) -> tu
         else []
     )
     is_action_request = bool(matched_actions)
+    # Only a question about using MIA (or a teach-me request) gets her reference material.
+    is_help_question = not is_action_request and (is_teaching_request or looks_like_how_to_question(prompt))
 
     llm_prompt = prompt
     if not is_action_request and context.device_help is not None:
-        llm_prompt = context.device_help.build_grounded_prompt(prompt)
+        # The offline reference packs (first aid, repair guides...) still come along when they match,
+        # as help to draw on; only a how-to question about MIA is held to her own docs.
+        grounded = context.device_help.build_grounded_prompt(prompt)
+        if is_help_question or not grounded.startswith(NO_MATERIAL_PREFIX):
+            llm_prompt = grounded
 
     history = trim_history(conversation.messages) if conversation is not None else []
-    messages = [{"role": "system", "content": build_system_message(context, is_action_request, is_teaching_request, prompt)}]
+    system = build_system_message(context, is_action_request, is_teaching_request, prompt, is_help_question)
+    learned = getattr(context, "failures", None)
+    said = learned.phrases_in(prompt) if learned is not None else []
+    if said:  # what this person taught MIA they mean (core/failure_log.py)
+        system += "\n\nIn this person's own words: " + "; ".join(
+            f"“{p['said']}” means {p['meaning'] or p['tool']}" for p in said) + "."
+    messages = [{"role": "system", "content": system}]
     messages.extend({"role": m.role, "content": m.content} for m in history)
     messages.append({"role": "user", "content": llm_prompt})
 
@@ -627,6 +660,11 @@ def build_personal_system_message(context, mode: str, conversation=None, prompt:
             parts.append(NO_WHY_YET_INSTRUCTION + " Answer in plain conversational text.")
             return "\n\n".join(parts)
         parts.append("The user's reasons and the facts behind them:\n" + sheet.to_text())
+    if mode == GAME_MASTER:
+        # DEC-0046: the game's names, the loot and the next dungeon come from code; the model only phrases them.
+        from core.game_master import game_facts
+
+        parts.append(game_facts(context, prompt, conversation))
     instruction = MODE_INSTRUCTIONS.get(mode, MODE_INSTRUCTIONS[LISTEN])
     parts.append(instruction + " Answer in plain conversational text.")
     return "\n\n".join(parts)

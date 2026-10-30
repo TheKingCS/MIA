@@ -80,7 +80,7 @@ def register_capability_actions(registry: AssistantActionRegistry) -> None:
         parameters={"type": "object", "properties": {}, "required": []},
         handler=_action_about_yourself,
         trigger_phrases=("about yourself", "who are you", "introduce yourself", "describe yourself", "who is mia",
-                         "what is mia", "what are you exactly", "what exactly are you"),
+                         "what is mia?", "what is mia exactly", "what are you exactly", "what exactly are you"),
         subjects=("you", "mia"),
     ))
     registry.register(AssistantAction(

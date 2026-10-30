@@ -3,10 +3,9 @@
  *
  * Function first; the look is Muse's (components.css). Gives each page:
  *   - sign-in when nobody is signed in on this tab;
- *   - the sidebar (DEC-0044, navigation by intent): Presence, Conversation,
- *     My Hero's Path, World, System, then the apps the person starred
- *     (MIA.shell(); every app is in World); the current place highlighted,
- *     level and XP at the bottom. Phones: the same five in the bottom bar;
+ *   - the sidebar: the person's own apps from the engine (MIA.shell(): child-safe,
+ *     tucked-away apps hidden), the current page highlighted, level and XP at the
+ *     bottom, and how many apps are still only in the PC app;
  *   - MIA, everywhere: the orb button opens a Talk panel (MIA.talk);
  *   - MIAShell.act(action): the one way a screen changes anything —
  *     propose → the engine's sentence in a confirm → approve → undo toast.
@@ -161,17 +160,8 @@
   }
 
   // ---------------------------------------------------------------- navigation
-  // DEC-0044: five places, not forty apps. Desktop: the sidebar with the
-  // person's pinned apps under them. Phones: the bottom bar. Every app is
-  // in World; an app's own page highlights the place it belongs to.
-  const PATH_APPS = new Set(["path", "missions", "skills", "character", "reward_shop", "chronicle", "party", "worldmap", "quests"]);
-  const SYSTEM_APPS = new Set(["system", "settings", "module_browser", "profile", "passwords", "files", "model_test", "glasses"]);
-  function placeOf(here) {
-    if (here === "web_home" || here === "assistant") return here;
-    if (PATH_APPS.has(here)) return "path";
-    if (SYSTEM_APPS.has(here)) return "system";
-    return "world";
-  }
+  // Desktop: the concept's sidebar. Phones: the bottom bar (Home, Apps,
+  // Dashboard). No More menu: every app is on the Apps page (Zac, 2026-10-06).
   function levelBlock(p) {
     const pct = p.xp_for_level ? Math.round((100 * p.xp_into_level) / p.xp_for_level) : 0;
     return el("div", { class: "nav-level" },
@@ -200,21 +190,17 @@
     return (window.MIAIcons && MIAIcons.svg(id)) || fallback || "";
   }
 
-  function placeLinks(shell, cls) {
-    const place = placeOf(document.body.dataset.app || "web_home");
-    return (shell.destinations || []).map((d) => el("a", { class: cls + " nav-place", href: d.href, title: d.line,
-      "aria-current": d.id === place ? "page" : null },
-      el("span", { class: "ico", "aria-hidden": "true" }, icon(d.id === "web_home" ? "home" : d.id, d.icon)),
-      el("span", { class: "label" }, d.name)));
+  function appLinks(shell, cls) {
+    const here = document.body.dataset.app || "web_home";
+    return shell.apps.map((a) => el("a", { class: cls, href: a.page, "aria-current": a.id === here ? "page" : null },
+      el("span", { class: "ico", "aria-hidden": "true" }, icon(a.id, a.icon)), el("span", { class: "label" }, a.name)));
   }
 
-  function pinnedLinks(shell, cls) {
-    const here = document.body.dataset.app || "web_home";
-    const pins = shell.pinned || [];
-    if (!pins.length) return [el("a", { class: "side-more", href: "world.html" }, "Star apps in World to pin them here")];
-    return [el("div", { class: "side-label" }, "Pinned")].concat(pins.map((a) => el("a", { class: cls, href: a.page,
-      "aria-current": a.id === here ? "page" : null },
-      el("span", { class: "ico", "aria-hidden": "true" }, icon(a.id, a.icon)), el("span", { class: "label" }, a.name))));
+  function more(shell) {
+    return shell.on_pc_only.length
+      ? el("a", { class: "side-more", href: "apps.html", title: shell.on_pc_only.join(", ") },
+        shell.on_pc_only.length + " more apps in the PC app for now")
+      : null;
   }
 
   function renderNav(shell) {
@@ -231,9 +217,8 @@
       side.replaceChildren(
         el("a", { class: "brand", href: "index.html" }, el("span", { class: "brand-mark brand-reactor", "aria-hidden": "true" }),
           el("span", {}, "MIA", el("small", {}, "Your Life. In Sync."))),
-        ...placeLinks(shell, "nav"),
-        ...pinnedLinks(shell, "nav nav-pin"),
-        el("div", { class: "side-foot" }, levelBlock(shell.person)));
+        ...appLinks(shell, "nav"),
+        el("div", { class: "side-foot" }, levelBlock(shell.person), more(shell)));
     }
     // Phone: the concept's bottom bar.
     let bar = $("#mia-bottom-bar");
@@ -241,10 +226,12 @@
       bar = el("nav", { id: "mia-bottom-bar", class: "bottom-bar", "aria-label": "Main" });
       document.body.append(bar);
     }
-    const place = placeOf(document.body.dataset.app || "web_home");
-    const short = { web_home: "Presence", assistant: "Talk", path: "Path", world: "World", system: "System" };
-    bar.replaceChildren(...(shell.destinations || []).map((d) => el("a", { href: d.href, "aria-current": place === d.id ? "page" : null },
-      el("span", { class: "ico", "aria-hidden": "true" }, icon(d.id === "web_home" ? "home" : d.id, d.icon)), short[d.id] || d.name)));
+    const here = document.body.dataset.app || "web_home";
+    const tab = (href, id, glyph, emoji, label) => el("a", { href, "aria-current": here === id ? "page" : null },
+      el("span", { class: "ico", "aria-hidden": "true" }, icon(glyph, emoji)), label);
+    bar.replaceChildren(
+      tab("index.html", "web_home", "home", "🏠", "Home"),
+      tab("apps.html", "module_browser", "apps", "▦", "Apps"));
   }
 
   // ---------------------------------------------------------------- MIA, everywhere
@@ -277,6 +264,7 @@
           if (used) thinking.after(used);
           // Which brain answered (DEC-0022): the home computer's model or this device's.
           if (turn.level) thinking.append(el("small", { class: "talk-level", title: "Answered by the model on " + turn.level.toLowerCase() }, turn.level));
+          thinking.append(notRight(text, turn.reply_text));
           refresh();
         } catch (err) {
           thinking.textContent = err.message;
@@ -288,6 +276,30 @@
       onclick: () => toggleTalk() }, el("span", { class: "mia-orb-core", "aria-hidden": "true" }));
     document.body.append(panel, orb);
   }
+
+  // The Fix-It Log (DEC-0049): a 👎 under a reply logs it as wrong, with what
+  // was wrong if the person wants to say; it's fixed from the log.
+  function notRight(asked, reply) {
+    const b = el("button", { type: "button", class: "talk-thumb", title: "That wasn't right", "aria-label": "That wasn't right" }, "👎");
+    b.onclick = async () => {
+      const v = await form("What Was Wrong?", [{ name: "note", label: "What should she have done? (optional)", type: "textarea" }], {});
+      if (!v) return;
+      if (await act({ kind: "failures.thumbs", params: { prompt: asked, reply: reply || "", note: v.note } }, { quick: true })) {
+        b.replaceWith(el("small", { class: "talk-thumb done" }, "Logged ✓"));
+      }
+    };
+    return b;
+  }
+
+  // A page that breaks says so itself (the Fix-It Log), a few times per visit at most.
+  let pageErrors = 0;
+  function reportPageError(message) {
+    if (pageErrors >= 3 || !message || !window.MIA || !MIA.pageError) return;
+    pageErrors += 1;
+    MIA.pageError(location.pathname.split("/").pop() || "index.html", String(message).slice(0, 300)).catch(() => {});
+  }
+  window.addEventListener("error", (e) => reportPageError(e.message + (e.filename ? " @" + e.filename.split("/").pop() + ":" + e.lineno : "")));
+  window.addEventListener("unhandledrejection", (e) => reportPageError("Unhandled: " + ((e.reason && e.reason.message) || e.reason)));
 
   // What I Used (DEC-0029): the memories MIA's answer was given, under the
   // reply; each can be fixed or forgotten (memory.fix / memory.forget).
@@ -488,7 +500,8 @@
         el("small", { class: "buff-left" }, b.lasts))));
   }
 
-  window.MIAShell = { start, act, say, el, refresh, frame, form, levelCard, conditionBar, buffChips, showDraft, confirm: confirmBox, talk: toggleTalk };
+  window.MIAShell = { start, act, say, el, refresh, frame, form, levelCard, conditionBar, buffChips, showDraft, confirm: confirmBox, talk: toggleTalk,
+    notRight };
 
   // <script src="shell.js" data-frame="garage">: frame an existing page as soon
   // as someone is signed in (now, or when its own sign-in form succeeds).

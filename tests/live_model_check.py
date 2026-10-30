@@ -666,6 +666,23 @@ PERSONAL_CASES = [
     ("perspective: no bullshit", "Hey MIA", "No bullshit, what's the point of all this?", None, 120, True),
 ]
 
+# 2026-10-27 (Zac: "MIA should feel like talking to a person not a program"):
+# ordinary conversation, vague asks and things she can't do yet. The reply
+# must never be a dead end: no "I don't know (what to do)", no "as an AI",
+# no "I can't help with that"; a question back or an offer is the way.
+PERSON_CASES = [
+    ("person: dinner idea", "What should I make for dinner tonight?"),
+    ("person: weekend", "Any ideas for what to do this weekend?"),
+    ("person: vague", "Can you sort out the thing from earlier?"),
+    ("person: not a feature yet", "Can you order me a pizza?"),
+    ("person: general knowledge", "Why does bread go stale?"),
+    ("person: how-to not covered", "How do I make MIA fly a drone?"),
+    ("person: half a thought", "the truck"),
+]
+_DEAD_END = re.compile(r"\b(?:i don'?t know(?: what to do| how to help)?|i'?m not sure (?:what to do|how to help)|"
+                       r"as an ai|i (?:can'?t|cannot) help with (?:that|this)|i don'?t have (?:any )?information)\b",
+                       re.IGNORECASE)
+
 _NUMBER = re.compile(r"\d[\d,]*(?:\.\d+)?")
 
 
@@ -904,7 +921,20 @@ def main() -> int:
         if not ok:
             failures.append(description)
 
-    total = len(GOLDEN_CASES) + len(PERSONAL_CASES)
+    for description, prompt in PERSON_CASES:
+        conversation = context.conversations.start_new_active_conversation()
+        messages, tools = build_chat_request(context, conversation, prompt)
+        reply = context.llm.chat_with_tools(messages, tools=tools)
+        text = (reply.content or "") if reply else ""
+        called = [tc.name for tc in reply.tool_calls] if reply and reply.tool_calls else []
+        ok = bool(called) or (bool(text.strip()) and not _DEAD_END.search(text))
+        detail = f"called {called}" if called else (f"dead end: {text[:120]!r}" if not ok else f"{len(text.split())} words")
+        status = "PASS" if ok else "FAIL"
+        print(f"[{status}] {description}: {prompt!r} — {detail}")
+        if not ok:
+            failures.append(description)
+
+    total = len(GOLDEN_CASES) + len(PERSONAL_CASES) + len(PERSON_CASES)
     print()
     print(f"{total - len(failures)}/{total} passed.")
     return 1 if failures else 0

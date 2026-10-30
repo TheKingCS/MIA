@@ -4,24 +4,26 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="dark">
-  <title>System — MIA</title>
+  <title>Fix-It Log — MIA</title>
   <link rel="stylesheet" href="tokens.css">
   <link rel="stylesheet" href="components.css">
   <link rel="stylesheet" href="shell.css">
   <link rel="stylesheet" href="concept.css">
 </head>
-<body data-app="system" class="mod-system">
+<body data-app="issues" class="mod-issues">
   <!--
-    System (claude, 2026-10-21, DEC-0044): the model (asked of the runtime), what MIA can do,
-    connections, and the advanced screens. MIA.system() (core/web_hubs.py); web/hubs.js.
+    The Fix-It Log (claude, 2026-10-27, DEC-0049): where MIA got it wrong,
+    broke or was slow, grouped into issues and ranked; what she learned you
+    mean; the fix report for Claude. MIA.failures() (core/failure_actions.py).
   -->
   <div class="layout" id="app" hidden>
     <nav class="side" aria-label="Apps"></nav>
     <main class="layout-main">
       <header class="hero">
-        <h1><span aria-hidden="true" id="hero-icon">⚙</span> <span id="hero-name">System</span></h1>
-        <p class="tagline" id="hero-tagline">How MIA runs.</p>
+        <h1><span aria-hidden="true" id="hero-icon">🛠</span> <span id="hero-name">Fix-It Log</span></h1>
+        <p class="tagline" id="hero-tagline">Where MIA stumbled, so it gets fixed.</p>
       </header>
+      <section class="strip" id="strip" aria-label="Status"></section>
       <div id="panel"></div>
     </main>
   </div>
@@ -30,6 +32,6 @@
   <script src="sound.js"></script>
   <script src="places-watch.js"></script>
   <script src="shell.js"></script>
-  <script src="hubs.js"></script>
+  <script src="issues.js"></script>
 </body>
 </html>

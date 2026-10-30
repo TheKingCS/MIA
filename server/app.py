@@ -59,7 +59,7 @@ from typing import Optional
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 
 from core.email_drafts import as_dict as draft_as_dict
@@ -102,7 +102,10 @@ _bearer_scheme = HTTPBearer(auto_error=False)
 # ~2.5 minutes of 16 kHz mono 16-bit audio — far longer than one spoken turn.
 MAX_VOICE_UPLOAD_BYTES = 5 * 1024 * 1024
 MAX_DOCUMENT_UPLOAD_BYTES = 25 * 1024 * 1024
-LLM_UNAVAILABLE_REPLY = "I can't think right now. My language model at home isn't responding."
+# Said like a person, with a way forward (Zac, 2026-10-27: "avoid her saying I don't know what to do").
+LLM_UNAVAILABLE_REPLY = ("I'm having trouble thinking that one through right now: my home computer isn't answering "
+                         "(it might be asleep or restarting). Quick things still work, like “add milk to the list” "
+                         "or “what's on today”.")
 NOT_HEARD_REPLY = "Sorry, I didn't catch that."
 
 
@@ -119,6 +122,11 @@ def validate_voice_wav(audio: bytes) -> None:
                 raise ValueError("Audio is empty.")
     except (wave.Error, EOFError) as exc:
         raise ValueError(f"Not a valid WAV file: {exc or 'too short'}") from exc
+
+
+class PageErrorRequest(BaseModel):
+    page: str = Field(default="", max_length=120)
+    message: str = Field(default="", max_length=400)
 
 
 class VoiceTextRequest(BaseModel):
@@ -1586,25 +1594,6 @@ def create_app(context: AppContext) -> FastAPI:
         return _vault_call(profile_id, lambda v: {"message": f"Brought in {v.import_csv(body.text)} logins. "
                                                              "Now delete the export file: it isn't encrypted."})
 
-    # ------------------------------------------------------------ The hubs (core/web_hubs.py, DEC-0044)
-    @app.get("/api/path")
-    def web_path(profile_id: str = Depends(require_profile_id)) -> dict:
-        from core.web_hubs import path_page
-
-        return _screen(profile_id, "missions", path_page)
-
-    @app.get("/api/world")
-    def web_world(profile_id: str = Depends(require_profile_id)) -> dict:
-        from core.web_hubs import world_page
-
-        return _screen(profile_id, "module_browser", world_page)
-
-    @app.get("/api/system")
-    def web_system(profile_id: str = Depends(require_profile_id)) -> dict:
-        from core.web_hubs import system_page
-
-        return _screen(profile_id, "module_browser", system_page)
-
     # ------------------------------------------------------------ Compliance (core/web_compliance.py, DEC-0040)
     @app.get("/api/compliance")
     def web_compliance(profile_id: str = Depends(require_profile_id)) -> dict:
@@ -1618,6 +1607,36 @@ def create_app(context: AppContext) -> FastAPI:
         from core.freedom import freedom_page
 
         return _screen(profile_id, "freedom", freedom_page)
+
+    # ------------------------------------------------------------ The Fix-It Log (core/failure_log.py, DEC-0049)
+    @app.get("/api/failures")
+    def web_failures(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.failure_actions import failures_page
+
+        return _screen(profile_id, "issues", failures_page)
+
+    @app.post("/api/failures/page")
+    def web_page_error(body: PageErrorRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        """A page that broke reports itself (web/shell.js); never more than a line."""
+        from core.failure_actions import page_error
+
+        with app.state.turn_lock:
+            page_error(view_for(context, profile_id), body.page, body.message)
+        return {"logged": True}
+
+    # ------------------------------------------------------------ The Sunday check-in (core/weekly_checkin.py, DEC-0047)
+    @app.get("/api/checkin")
+    def web_checkin(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.weekly_checkin import checkin
+
+        return _screen(profile_id, "missions", checkin)
+
+    # ------------------------------------------------------------ The Dungeon (core/web_dungeon.py, DEC-0046)
+    @app.get("/api/dungeon")
+    def web_dungeon(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.web_dungeon import dungeon_page
+
+        return _screen(profile_id, "dungeon", dungeon_page)
 
     # ------------------------------------------------------------ Chickens (core/web_flock.py, DEC-0037)
     @app.get("/api/flock")

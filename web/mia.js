@@ -241,14 +241,17 @@
     party: () => read("/api/party", "party"),
     places: () => read("/api/places", "places"),
     security: () => read("/api/security", "security"),
-    // The hubs (core/web_hubs.py, DEC-0044): My Hero's Path, World, System.
-    path: () => read("/api/path", "path"),
-    world: () => read("/api/world", "world"),
-    system: () => read("/api/system", "system"),
     // Compliance (core/web_compliance.py, DEC-0040): tax and compliance deadlines.
     compliance: () => read("/api/compliance", "compliance"),
     // Freedom (core/freedom.py, DEC-0038): the plan, the date, progress, the shift, the builds.
     freedom: () => read("/api/freedom", "freedom"),
+    // The Fix-It Log (core/failure_log.py, DEC-0049): where MIA stumbled; a page reports its own errors.
+    failures: () => read("/api/failures", "failures"),
+    pageError: (page, message) => demo || !token ? Promise.resolve(null) : call("POST", "/api/failures/page", { page, message }),
+    // The Sunday check-in (core/weekly_checkin.py, DEC-0047): last week's recap, this week laid out.
+    checkin: () => read("/api/checkin", "checkin"),
+    // The Dungeon (core/web_dungeon.py, DEC-0046): runs, loot earned / projected / banked, bosses, hard mode.
+    dungeon: () => read("/api/dungeon", "dungeon"),
     // Chickens (core/web_flock.py, DEC-0037): eggs, lay rate, feed cost per dozen, cartons.
     flock: () => read("/api/flock", "flock"),
     // The insurance check-up (core/insurance.py): policies, checks, quotes side by side.

@@ -56,6 +56,8 @@ THREADS = (
      lambda n: f"You caught up with {_n(n, 'person', 'people')}."),
     ("journal", (), "The Thoughtful Week", "You made time to think.",
      lambda n: f"You wrote {_n(n, 'journal entry', 'journal entries')}."),
+    ("dungeon", ("dungeon_cleared",), "The Week In The Dungeon", "You went into the dungeon and came back with loot.",
+     lambda n: f"You cleared {_n(n, 'run')} at work."),
     ("trips", ("explored",), "The Week Of Adventure", "Adventure called, and you answered.",
      lambda n: f"You finished {_n(n, 'expedition')}."),
 )

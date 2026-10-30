@@ -351,6 +351,40 @@ every step below in order, from a blank machine, with Windows notes.
 
 ## 2. Build queue (Claude), in order
 
+**The mission system is locked in (DEC-0047, `docs/MISSION_SYSTEM.md`).**
+Build order (Zac said begin, 2026-10-27): 1) the Loop ✅ built
+(`core/the_loop.py`), 2) the Sunday check-in ✅ built
+(`core/weekly_checkin.py`). 3) the **Fix-It Log** ✅ built (DEC-0049, `docs/FAILURE_LOG.md`).
+**Claude on the PC, every session: read `data/profiles/<id>/fix_report.md`
+(or Apps → Fix-It Log) first, turn the worst open issues into failing
+tests and bench cases, fix, mark fixed.** **2026-10-27, Zac + Chat's direction:
+the Brain, the Body, the Relationship.** The audit and the order are in
+`docs/BODY_AND_RELATIONSHIP_PLAN.md` (section 8), with four questions
+for Zac (section 9), answered (DEC-0050). **At the PC first: run
+`python tests/live_model_check.py` (its new PERSON_CASES check MIA never
+dead-ends with "I don't know") on the 14b; fix any FAIL before going on.**
+Then plan step 1, the About Me page. Was: the Sunday morning
+check-in, 3) adventures from the day's project with real-gain rewards
+(the craft, the recipe unlock) and guild ranks, 4) pattern noticing,
+titles, the emergent class, 5) the Codex, seasons as quarters,
+cutscenes. **Zac, at the PC:** The Dungeon → Loop → Change on your
+work: Sun–Thu (or your days), 9:30 pm to 6 am, and in Setup the
+30-minute unpaid break; Chores: 2:30 pm. Or just
+tell MIA. Reminders come from the PC app (it has to be running).
+
+**Zac, at the PC (2026-10-27, DEC-0046):** Apps → The Dungeon → Set Up
+Your Dungeon: the job, pay an hour, when overtime starts, the day the pay
+week starts, and the words the paycheck shows in the bank (look at one
+deposit under Money). Then clear today's run and try "GM this" in Talk
+after a rough shift. Live-model check of Game Master mode on the 14b is
+owed (tone, no invented numbers).
+
+**Zac, 2026-10-24 (DEC-0045): the apps stay the layout; make MIA smarter
+at using them.** The five-places frame is undone. Next AI work: MIA
+working the apps for you in Talk and by voice (understand what you mean,
+do it across apps, say what she did), not new navigation. Then Muse's
+H-0070 Freedom look pass.
+
 **Game layer (DEC-0028, `docs/GAME_LAYER.md`), 2026-10-17:** all built
 except the watch HUD (waits for the watch): Reward Shop, gear bars,
 bosses, stats, buffs, the Chronicle, and (DEC-0032) questlines, kitchen
@@ -555,6 +589,8 @@ it, and went with Claude's recommendations. The plan, in order:
      receipt across two builds.
 
 ## 3. Ideas parked for later (need their own planning pass)
+
+
 
 - **The ideas list: `docs/future/IDEAS.md`** (Zac, 2026-10-18): future
   features that automate life and save money, each written up the same

@@ -250,6 +250,20 @@
       "name": "Money & business",
       "apps": [
         {
+          "id": "dungeon",
+          "name": "The Dungeon",
+          "icon": "🏰",
+          "tagline": "Clear the run. Bank the loot.",
+          "description": "Work as a dungeon you loot every day: runs, hard mode, overtime bosses, projected and banked loot (DEC-0046).",
+          "page": "dungeon.html",
+          "on_web": true,
+          "shown": true,
+          "can_hide": true,
+          "ask": "How much loot this week?",
+          "tools": [],
+          "favorite": false
+        },
+        {
           "id": "freedom",
           "name": "Freedom",
           "icon": "🌄",
@@ -740,6 +754,20 @@
           "shown": true,
           "can_hide": true,
           "ask": "",
+          "tools": [],
+          "favorite": false
+        },
+        {
+          "id": "issues",
+          "name": "Fix-It Log",
+          "icon": "🛠",
+          "tagline": "Where MIA stumbled, so it gets fixed.",
+          "description": "Where MIA got it wrong, broke or was slow, grouped and ranked, ready to be fixed; what she learned you mean (DEC-0049).",
+          "page": "issues.html",
+          "on_web": true,
+          "shown": true,
+          "can_hide": true,
+          "ask": "What's been going wrong?",
           "tools": [],
           "favorite": false
         }

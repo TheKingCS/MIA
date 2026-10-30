@@ -1490,35 +1490,62 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
 .goods-lot.keeps { border-left-color: var(--line-strong); }
 .market-taps { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; margin-top: 8px; }
 .market-tap { display: grid; gap: 8px; padding: 10px; border-radius: 10px; }
-/* Navigation by intent (DEC-0044): five places, then pinned apps */
-.side-label { margin: 14px 12px 4px; font-family: var(--font-mono); font-size: var(--text-xs); letter-spacing: 0.12em;
-  text-transform: uppercase; color: var(--text-faint); }
-.nav.nav-pin { font-size: 0.92em; opacity: 0.9; }
-/* Presence and the hubs */
-.pres-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
-.pres-item { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 10px 12px;
+/* The Dungeon (DEC-0046): runs, hard mode, overtime bosses */
+.dg-name { margin: 12px 0 4px; }
+.dg-runs, .dg-record { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.dg-run, .dg-record li { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; padding: 10px 12px;
   border-left: 3px solid var(--line-strong); background: rgba(var(--rgb-panel-2), 0.6); border-radius: 8px; }
-.pres-item.deadline { border-left-color: rgb(var(--rgb-amber)); }
-.pres-item.deadline.urgent { border-left-color: rgb(var(--rgb-bad)); }
-.pres-item.suggestion { border-left-color: var(--accent); }
-.pres-item.progress { border-left-color: rgb(var(--rgb-ok)); }
-.pres-item .what a { color: var(--text); text-decoration: none; font-weight: 600; }
-.pres-item .what small { display: block; color: var(--text-dim); }
-.pres-kind { font-family: var(--font-mono); font-size: var(--text-xs); letter-spacing: 0.08em; text-transform: uppercase;
-  color: var(--text-faint); }
-.pres-next { border: 1px solid rgba(var(--rgb-accent), 0.45); box-shadow: 0 0 18px var(--accent-glow); }
-.hub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; }
-.hub-card { display: grid; gap: 4px; padding: 12px; border-radius: 10px; text-decoration: none; color: var(--text);
-  border: 1px solid var(--line); background: rgba(var(--rgb-panel-2), 0.55); }
-.hub-card:hover, .hub-card:focus-visible { border-color: rgba(var(--rgb-accent), 0.5); }
-.hub-card strong { display: flex; gap: 8px; align-items: center; }
-.hub-card small { color: var(--text-dim); }
-.hub-card.needs { border-left: 3px solid rgb(var(--rgb-amber)); }
-.hub-card.off { opacity: 0.7; }
-.hub-cell { position: relative; }
-.hub-cell .hub-card { height: 100%; padding-right: 44px; }
-.hub-star { position: absolute; top: 6px; right: 6px; min-width: 32px; }
-.hub-card strong svg { width: 18px; height: 18px; flex: none; }
+.dg-record li { grid-template-columns: 1fr; border-left-color: rgb(var(--rgb-amber)); }
+.dg-run.hard { border-left-color: rgb(var(--rgb-amber)); }
+.dg-run.boss { border-left-color: var(--accent); box-shadow: 0 0 14px var(--accent-glow); }
+.dg-run.boss.hard { border-left-color: rgb(var(--rgb-amber)); }  /* H-0074: both facts show */
+.dg-overtime { margin-top: 2px; }
+.dg-run.dg-rhythm { grid-template-columns: 1fr; }
+/* The loop's week (DEC-0047) */
+.dg-week { display: grid; gap: 4px; overflow-x: auto; }
+.dg-week-row { display: grid; grid-template-columns: minmax(84px, 1.4fr) repeat(7, minmax(30px, 1fr)); gap: 4px; align-items: center; }
+.dg-week-row.head span { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-faint); text-align: center; }
+.dg-week-row.head span.now { color: var(--accent); }
+.dg-week-name { font-size: var(--text-sm); overflow-wrap: anywhere; }
+.dg-cell { display: grid; place-items: center; min-height: 40px; border-radius: 6px; font-weight: 700;
+  background: rgba(var(--rgb-panel-2), 0.6); border: 1px solid var(--line); }
+.dg-cell small { font-size: 0.62rem; font-weight: 400; color: var(--text-dim); }
+.dg-cell.cleared { color: rgb(var(--rgb-ok)); border-color: rgba(var(--rgb-ok), 0.45); }
+.dg-cell.missed { color: var(--text-dim); border-style: dashed; }
+.dg-cell.today { color: var(--accent); border-color: rgba(var(--rgb-accent), 0.6); }
+.dg-cell.off { background: transparent; border-color: transparent; }
+.dg-affixes { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+.dg-affix { min-height: 40px; }
+.dg-affix[aria-pressed="true"] { color: var(--text); border-color: rgb(var(--rgb-amber)); background: rgba(var(--rgb-amber), 0.14); }
+.dg-gm p { margin: 6px 0; }
+.dg-ot { margin: 8px 2px; color: var(--text-dim); }
+/* The Fix-It Log (DEC-0049) */
+.talk-thumb { margin-left: 8px; border: 0; background: transparent; cursor: pointer; opacity: 0.55; font-size: 0.9em; min-height: 32px; }
+.talk-thumb:hover, .talk-thumb:focus-visible { opacity: 1; }
+.talk-thumb.done { opacity: 0.8; color: var(--text-dim); }
+.fx-issue { border-left: 3px solid var(--line-strong); }
+.fx-issue.open { border-left-color: rgb(var(--rgb-amber)); }
+.fx-issue.fixed { border-left-color: rgb(var(--rgb-ok)); opacity: 0.85; }
+.fx-issue.ignored { opacity: 0.6; }
+.fx-example { margin: 6px 0; padding: 8px 10px; border-radius: 6px; background: rgba(var(--rgb-panel-2), 0.6); font-size: var(--text-sm); }
+.fx-example b { color: var(--text-dim); font-weight: 600; }
+.fx-report { white-space: pre-wrap; font-family: var(--font-mono); font-size: var(--text-xs); max-height: 320px; overflow: auto;
+  padding: 10px; border-radius: 8px; background: rgba(var(--rgb-panel-2), 0.6); }
+/* The Sunday check-in (DEC-0047) */
+.ci-scores { display: grid; gap: 10px; margin: 10px 0; }
+.ci-score .bar { margin: 4px 0 0; }
+.ci-noticed h3 { margin: 12px 0 4px; font-size: var(--text-sm); color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; }
+.ci-noticed ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.ci-days { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; }
+.ci-day { padding: 10px 12px; border-radius: 8px; background: rgba(var(--rgb-panel-2), 0.6); border-left: 3px solid var(--line-strong); }
+.ci-day.today { border-left-color: var(--accent); }
+.ci-day-name { font-weight: 700; margin-bottom: 4px; }
+.ci-day ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.ci-item { display: grid; grid-template-columns: 74px 1fr auto; gap: 8px; align-items: baseline; }
+.ci-item.boss { color: var(--accent); }
+.ci-time { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-faint); }
+.ci-day p { margin: 0; }
+.ci-done { margin: 16px 0 24px; }
 /* Compliance (DEC-0040): deadlines by urgency; unverified always says so */
 .ob-card { border-left: 3px solid var(--line-strong); }
 .ob-card.overdue { border-left-color: rgb(var(--rgb-bad)); }

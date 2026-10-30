@@ -1,10 +1,6 @@
 /*
  * welcome.js — Home (DEC-0018, claude). Renders MIA.dashboard() and the
  * frame's shell data; ticking a focus item runs its action (confirm, undo).
- * DEC-0044: Home is Presence: what matters now across everything
- * (core/presence.py), ranked, each with why and what kind of thing it is
- * (a deadline, a fact, a suggestion), the next useful action marked; then
- * progress on your path.
  */
 (function () {
   "use strict";
@@ -12,34 +8,30 @@
   const $ = (id) => document.getElementById(id);
   if (window.MIAIcons) MIAIcons.badge($("gear"), "settings");  // the line icon (DEC-0023)
 
-  const KIND = { deadline: "deadline", fact: "fact", suggestion: "suggestion", progress: "progress" };
-  function presenceRow(item, next) {
-    return el("li", { class: "pres-item " + item.kind + (item.urgency >= 85 ? " urgent" : "") + (next ? " pres-next" : "") },
-      el("span", { class: "pres-kind" }, next ? "next" : KIND[item.kind] || item.kind),
-      el("span", { class: "what" }, item.href ? el("a", { href: item.href }, item.title) : item.title,
-        el("small", {}, [item.why, item.detail].filter(Boolean).join(" · "))),
-      item.action ? el("button", { type: "button", class: "btn btn-green btn-small", onclick: () => act(item.action) }, item.action.label)
-        : item.href ? el("a", { class: "btn btn-ghost btn-small", href: item.href }, "Open") : null);
+  function focusRow(item) {
+    return el("li", { class: item.when },
+      el("button", { type: "button", class: "tick", disabled: !item.action,
+        "aria-label": item.action ? item.action.label + ": " + item.title : item.title,
+        title: item.action ? item.action.label : "Open it to deal with this", onclick: () => act(item.action) }),
+      el("span", { class: "what" },
+        item.page ? el("a", { href: item.page }, item.title) : item.title,
+        item.detail ? el("small", {}, item.detail) : null));
   }
 
   async function render() {
     const [home, shell] = await Promise.all([MIA.dashboard(), MIA.shell()]);
     $("greeting").textContent = home.greeting;
-    const pres = home.presence || { now: [], path: [] };
-    $("subtitle").textContent = pres.line || home.subtitle;
-    const nextKey = pres.next && pres.next.key;
-    $("focus").replaceChildren(...pres.now.map((i) => presenceRow(i, i.key === nextKey)));
-    $("focus-empty").hidden = pres.now.length > 0;
-    $("focus-more").hidden = !pres.more;
-    $("focus-more").textContent = pres.more ? pres.more + " more in World." : "";
-    $("path").hidden = !pres.path.length;
-    $("path-list").replaceChildren(...pres.path.map((i) => presenceRow(i, false)));
+    $("subtitle").textContent = home.subtitle;
+    $("focus").replaceChildren(...home.focus.slice(0, 6).map(focusRow));
+    $("focus-empty").hidden = home.focus.length > 0;
     // MIA Remembers (DEC-0029): what you told her, as it's about to matter.
     const remember = home.remember || [];
     $("remember").hidden = !remember.length;
     $("remember-list").replaceChildren(...remember.map((r) => el("li", {},
       el("a", { href: r.page }, el("span", { "aria-hidden": "true" }, r.icon + " "), r.title),
       ...r.lines.map((line) => el("small", {}, line)))));
+    $("upcoming").replaceChildren(...home.upcoming.map(focusRow));
+    $("upcoming-empty").hidden = home.upcoming.length > 0;
     const p = shell.person;
     const pct = p.xp_for_level ? Math.round((100 * p.xp_into_level) / p.xp_for_level) : 0;
     $("level").replaceChildren(

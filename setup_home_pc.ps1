@@ -74,8 +74,7 @@ if (Test-Path $venvPython) { Note "MIA is installed." }
 else {
     Note "MIA isn't installed yet: running its installer first."
     Do-It "run install.ps1" {
-        $installArgs = @()
-        if ($Yes) { $installArgs += "-Yes" }
+        $installArgs = @{ Yes = [bool]$Yes }
         & (Join-Path $MiaDir "install.ps1") @installArgs
     }
 }
@@ -159,9 +158,8 @@ if (Ask "Start MIA when you sign in to Windows?") {
 if (Ask "Keep this computer awake while it's plugged in? (the screen can still turn off)") {
     Do-It "powercfg: never sleep on AC power" { powercfg /change standby-timeout-ac 0; Note "It won't sleep while plugged in." }
 }
-$stayUpArgs = @()
-if ($Yes) { $stayUpArgs += "-Yes" }
-if ($DryRun) { $stayUpArgs += "-DryRun" }
+# Named switches: an array of "-DryRun" strings can reach the script as plain text, and then it asks and waits.
+$stayUpArgs = @{ Yes = [bool]$Yes; DryRun = [bool]$DryRun }
 & (Join-Path $MiaDir "pc_stay_up.ps1") @stayUpArgs
 
 # ------------------------------------------------------------ 7. which model

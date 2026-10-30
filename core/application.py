@@ -78,6 +78,8 @@ from core.assistant_ownership_actions import register_ownership_actions
 from core.assistant_today_actions import register_today_actions
 from core.assistant_self_actions import register_capability_actions, register_self_actions
 from core.assistant_goods_actions import register_goods_actions
+from core.assistant_dungeon_actions import register_checkin_actions, register_dungeon_actions, register_loop_actions
+from core.failure_actions import register_failure_actions
 from core.assistant_undo_actions import register_undo_actions
 from core.assistant_homestead_actions import register_homestead_actions
 from core.assistant_textbook_actions import register_textbook_actions
@@ -696,6 +698,8 @@ class MIAApplication:
             ("season", self._check_season),
             ("insurance_renewal", self._check_insurance),
             ("obligation_reminders", self._check_obligations),
+            ("loop", self._check_loop),
+            ("fix_report", self._check_fix_report),
         ]
         # 2026-09-27, Cognitive Extension slice C: checks no longer notify
         # directly. Each one offers what it would say (_offer()), and the
@@ -868,6 +872,27 @@ class MIAApplication:
                 continue
             self._offer(topic="insurance_renewal", title=title, message=message, urgency=AMBIENT, source="system",
                         fingerprint=fingerprint)
+
+    def _check_loop(self, now: datetime, today_iso: str) -> None:
+        """The Loop (DEC-0047, core/the_loop.py): new recurring things get a
+        rhythm, days and times are learned once a day, the week's runs are
+        planned, and each rhythm's reminder goes out at its time (direct,
+        like an alarm the person set up)."""
+        from core.the_loop import tick
+
+        tick(self.context, now)
+
+    def _check_fix_report(self, now: datetime, today_iso: str) -> None:
+        """The Fix-It Log (DEC-0049): once a day, the fix report into the
+        person's own folder (fix_report.md, never the repo), where Claude
+        reads it on this computer."""
+        from core.failure_log import write_report
+
+        config = self.context.config
+        if should_run_once_daily(config.get("system.last_fix_report_date"), today_iso):
+            write_report(self.context)
+            config.set("system.last_fix_report_date", today_iso)
+            config.save()
 
     def _check_obligations(self, now: datetime, today_iso: str) -> None:
         """Tax and compliance deadlines (core/obligations.py, DEC-0040): at
@@ -1343,6 +1368,10 @@ class MIAApplication:
         register_self_actions(self.context.assistant_actions)  # "what model are you?" from the runtime
         register_capability_actions(self.context.assistant_actions)  # what MIA can do, how she's built (DEC-0041)
         register_goods_actions(self.context.assistant_actions)  # eggs, goods, freedom, deadlines by voice
+        register_dungeon_actions(self.context.assistant_actions)  # the Dungeon: shifts, loot, quests (DEC-0046)
+        register_loop_actions(self.context.assistant_actions)  # the loop: when things happen (DEC-0047)
+        register_checkin_actions(self.context.assistant_actions)  # the Sunday check-in (DEC-0047)
+        register_failure_actions(self.context.assistant_actions)  # the Fix-It Log (DEC-0049)
         register_ownership_actions(self.context.assistant_actions)
         register_accessibility_actions(self.context.assistant_actions)
         register_starter_actions(self.context.assistant_actions)

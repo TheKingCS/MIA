@@ -172,6 +172,19 @@ def pre_turn(context: AppContext, conversation: Conversation, prompt: str) -> Pr
             escalate(context, person_id(context))
         return result
 
+    # Where MIA stumbled (core/failure_log.py): what these words say about her
+    # last answer; a report or a taught phrase is answered right here.
+    from core.failure_log import observe_prompt
+
+    try:
+        said = observe_prompt(context, conversation, prompt)
+    except Exception:
+        log.exception("The failure log couldn't read this turn")
+        said = None
+    if said is not None:
+        result.fixed_reply = said
+        return result
+
     if not awaiting and change.is_empty and _may_ask_support(context, conversation, prompt):
         conversation.support_asked_at = time.time()
         usual = habit(remembered(context))

@@ -35,6 +35,8 @@ from typing import Optional
 LIMITS = {
     "web_home": "",
     "dashboard": "Retired: Home shows what it showed.",
+    "issues": "MIA finds and groups the problems; fixing her code is Claude's job, tested before it ships, never hers.",
+    "dungeon": "Loot is pay before taxes, worked out from your hours; what reaches the bank comes from the bank sync. Shift differentials and tips aren't counted yet.",
     "freedom": "The estimate assumes the last three months' pace; transfers between your own accounts can look like spending until the bank sync sorts them.",
     "compliance": "MIA keeps the list and reminds you; she never files, pays or signs anything, and a deadline isn't confirmed until you verify it.",
     "calendar": "",
@@ -85,16 +87,16 @@ LIMITS = {
 AREAS = (
     ("Money", ("budget", "insurance", "compliance", "business", "real_estate")),
     ("Home and land", ("kitchen", "household", "greenhouse", "flock", "garage", "security", "power")),
-    ("Health and growth", ("workout", "missions", "skills", "character", "reward_shop", "classroom")),
+    ("Health and growth", ("workout", "dungeon", "missions", "skills", "character", "reward_shop", "classroom")),
     ("Your days and people", ("calendar", "relationships", "notes", "inbox", "observations", "vault", "memories")),
     ("Making things", ("workshop", "lab", "field_kit", "toolbox")),
     ("Outdoors", ("expeditions", "maps", "navigation", "knowledge")),
     ("Everyday", ("music", "files", "passwords")),
 )
 # Not listed in the overview. MIA herself (Home, the chat, Apps, Settings,
-# Diagnostics) gets the closing line instead; Freedom stays out at the
+# Diagnostics, the Fix-It Log) gets the closing line instead; Freedom stays out at the
 # owner's request (2026-10-29), though "can you…?" still finds it.
-OVERVIEW_SKIP = {"web_home", "assistant", "module_browser", "settings", "diagnostics", "freedom"}
+OVERVIEW_SKIP = {"web_home", "assistant", "module_browser", "settings", "diagnostics", "issues", "freedom"}
 # Each app in a few words, for the overview.
 GIST = {
     "budget": "bills, income, spending and debts", "insurance": "your policies and quotes compared",
@@ -102,7 +104,7 @@ GIST = {
     "real_estate": "property values and rental income", "kitchen": "recipes, the pantry and the grocery list",
     "household": "chores and routines", "greenhouse": "the garden and greenhouse", "flock": "your chickens and eggs",
     "garage": "vehicle and equipment upkeep", "security": "your home cameras", "power": "battery and energy",
-    "workout": "workouts and records", "missions": "goals you're working toward", "skills": "a skill tree",
+    "workout": "workouts and records", "dungeon": "your work shifts, as loot you earn", "missions": "goals you're working toward", "skills": "a skill tree",
     "character": "a record of what you've done", "reward_shop": "rewards you earn",
     "classroom": "courses and lessons", "calendar": "your calendar", "relationships": "people, pets and birthdays",
     "notes": "notes and a journal", "inbox": "receipts and documents I file",
@@ -189,7 +191,7 @@ def overview(context) -> str:
         ask = next((a["ask"] for a in mine if a["ask"]), "")
         if ask and len(tries) < 3:
             tries.append(f"\"{ask.rstrip('.')}\"")
-    lines.append("I can also change my own settings, check how the computer is doing, and undo my last change.")
+    lines.append("I can also change my own settings, check how the computer is doing, keep a log of where I go wrong so I get fixed, and undo my last change.")
     if tries:
         lines.append("Try " + ", ".join(tries[:-1]) + (" or " if len(tries) > 1 else "") + tries[-1] + ".")
     lines.append("Ask \"can you…?\" about anything and I'll say whether I can, and what's missing if I can't.")

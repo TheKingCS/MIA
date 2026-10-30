@@ -53,7 +53,7 @@ Step "1/4 Python, Ollama and Tesseract"
 . (Join-Path $MiaDir "deploy\find_python.ps1")  # Find-Python: safe with the Microsoft Store's "python" placeholder
 $python = Find-Python
 if (-not $python) {
-    if (Ask "Python 3.10 or newer isn't installed. Install Python 3.12?") {
+    if (Ask "Python 3.10 to 3.14 isn't installed. Install Python 3.12?") {
         Winget-Install "Python.Python.3.12" "Python 3.12 (python.org)" | Out-Null
         $python = Find-Python
     }
