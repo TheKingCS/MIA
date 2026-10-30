@@ -891,3 +891,19 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   Pi. The robotic voice effect is off by default for Kokoro. A custom
   voice made just for MIA is a later step, not this one.
 - Related: core/voice_manager.py, core/voice_catalog.py
+
+### DEC-0052: MIA's reasoning: one owner per fact, answers that combine, findings, continuity
+- Status: PROPOSED
+- Proposed by: claude, 2026-10-30 (`docs/REASONING_PLAN.md`), at zac's request ("the Brain is developing faster than the reasoning layer"; "it may need to call more than one tool to answer a more detailed question") · Approved by: —
+- Decision (proposed): in order: (1) one owner per fact, in
+  `core/ownership.py` with a test (pay → the Dungeon, the week's timing
+  → the Loop, repeating chores → recurring missions); (2) answers that
+  combine: question plans in code for the commonest detailed questions,
+  then a tool loop for the rest (results back to the model, up to N
+  more lookups, changes only as proposals, every number checked against
+  what was looked up, a time budget; N from the PC's bench); (3)
+  findings across apps, worked out in code with evidence refs, the
+  first ten listed in the plan; (4) conversation state (what it's about,
+  what's open, a running summary); (5) the companion layer on top.
+  Facts and arithmetic stay in code; the model chooses and phrases.
+- Related: DEC-0043, DEC-0050, docs/REASONING_PLAN.md, docs/INTELLIGENCE_AUDIT.md

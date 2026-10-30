@@ -5,7 +5,12 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-10-29*
+*Last updated: 2026-10-30*
+
+**2026-10-30: DEC-0052 proposed, waiting on Zac** (`docs/REASONING_PLAN.md`):
+one owner per fact, answers that combine several lookups (question plans,
+then a tool loop), findings across apps, conversation state. Section 8
+has four questions for Zac. Nothing is built until he approves.
 
 **2026-10-29 (Claude on the PC): her voice, and how she describes herself.**
 - Zac: restart MIA, listen to Kokoro's Heart (now your saved voice), and
