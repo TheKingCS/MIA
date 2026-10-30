@@ -10,8 +10,13 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 **2026-10-30: DEC-0052 approved** (`docs/REASONING_PLAN.md`): one owner
 per fact (step 1, next to build), answers that combine several lookups
 (question plans from Zac's own list, then a tool loop with up to 60 s),
-findings across apps, conversation state. Still open: which findings may
-reach Zac unprompted.
+findings across apps, conversation state. Zac's Intelligence Benchmark
+(112 questions) is `docs/INTELLIGENCE_BENCHMARK.md`: today 77 reach the
+model with no tools at all (`python -m tools.bench_audit`). Build order:
+step 1 (pay owned by the Dungeon), then the 15 question plans in its
+section 4, then the tool loop. Outside research (F4-F6) and the data MIA
+doesn't record yet (commitments, decisions, ideas) need their own
+decisions (section 5).
 
 **2026-10-29 (Claude on the PC): her voice, and how she describes herself.**
 - Zac: restart MIA, listen to Kokoro's Heart (now your saved voice), and

@@ -69,6 +69,10 @@ This is the design.
 
 ### 3a. Question plans, in code (the fast, reliable path)
 
+*Updated 2026-10-30: the first plans now come from Zac's benchmark;
+the list is `docs/INTELLIGENCE_BENCHMARK.md` section 4 (15 plans
+covering about half the bank). The table below was the first draft.*
+
 The detailed questions people ask most get a **question plan**: the
 lookups it needs, run by code at once, their results put into one fact
 sheet, and the model phrases one answer from it. No guessing which tools
@@ -217,8 +221,10 @@ trusted, and shows up in the Fix-It Log when it stumbles.
 ## 8. Questions for Zac
 
 **Answered 2026-10-30:** 1 yes; 3 up to 60 seconds when needed, faster
-preferred; 4 Zac is sending his own list of questions. 2 is open: asked
-again in plain words.
+preferred; 4 Zac's list is `docs/INTELLIGENCE_BENCHMARK.md`. 2 (Zac,
+"go with that"): findings 1, 2, 6, 10 and 4 may reach him unprompted
+through the gate; 3, 5, 7, 8 and 9 only when he asks, and quietly on
+Home.
 
 The questions were:
 

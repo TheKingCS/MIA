@@ -897,8 +897,14 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Proposed by: claude, 2026-10-30 (`docs/REASONING_PLAN.md`), at zac's request ("the Brain is developing faster than the reasoning layer"; "it may need to call more than one tool to answer a more detailed question") · Approved by: zac, 2026-10-30 ("1. Yes … 3. 60 seconds is okay if necessary but faster is [preferable]")
 - Answers: the order and step 1's data move (Freedom's hourly rate
   becomes the Dungeon's): yes. Time budget: up to 60 s on the PC when
-  it's needed, faster preferred. Which findings may arrive unprompted:
-  open (asked again in plain words). The first question plans: from
+  it's needed, faster preferred. Which findings may arrive unprompted
+  (zac, 2026-10-30, "go with that"): told unprompted, through the gate:
+  a bill due before pay with money short, upkeep due on a vehicle a trip
+  uses, a deadline in a packed week, a cheaper insurance quote near
+  renewal, goods passing best-by before market day. Only when asked (and
+  quietly on Home): a meal missing an ingredient, overtime with training
+  skipped, an unused subscription, a goal that hasn't moved, a build over
+  budget. The first question plans: from
   Zac's own list, coming.
 - Decision: in order: (1) one owner per fact, in
   `core/ownership.py` with a test (pay → the Dungeon, the week's timing
