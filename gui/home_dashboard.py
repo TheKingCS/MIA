@@ -118,6 +118,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from core.assistant_turn import instant_answer
 from core.question_plans import finish as plan_finish, request as plan_request
 from core.activity_log_manager import ActivityLogEntry
 from core.app_context import AppContext
@@ -1771,6 +1772,11 @@ class HomeDashboard(QFrame):
         if prepared.notice:
             self.context.conversations.add_message(conversation.conversation_id, "assistant", prepared.notice)
             self._speak(prepared.notice)
+        quick = instant_answer(self.context, conversation, prompt)  # code answers first, as on the web and phone
+        if quick is not None:
+            self.context.conversations.add_message(conversation.conversation_id, "assistant", quick)
+            self._speak(quick)
+            return
         if self.context.llm is None:
             return
         self._set_busy(True)

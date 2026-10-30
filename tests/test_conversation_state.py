@@ -47,3 +47,18 @@ def test_a_follow_up_naming_another_plan_changes_the_subject(life, monkeypatch):
     assert qp.request(life, talk, "What's coming up in the next few weeks?")[1].plan == "coming up"
     assert qp.request(life, talk, "and what about tonight?")[1].plan == "tonight"  # "tonight": that plan's own word
     assert qp.request(life, talk, "why?")[1].plan == "tonight"  # and now the follow-ups are about tonight
+
+
+def test_the_desktop_gets_the_same_instant_answers(life):
+    """The desktop's chat panels build their own request; instant_answer gives
+    them what the web and phone already had: code answers, plan questions
+    left to the plan, nothing in a personal mode."""
+    from core.assistant_turn import instant_answer
+
+    talk = SimpleNamespace(conversation_id="d1", messages=[], mode=None, journal=False)
+    said = instant_answer(life, talk, "What are you capable of?")
+    assert said is not None and said.startswith("I have ")
+    assert instant_answer(life, talk, "Which debt should I prioritize?") is None  # the debts plan answers
+    assert instant_answer(life, talk, "Tell me a joke.") is None  # for the model
+    listening = SimpleNamespace(conversation_id="d2", messages=[], mode="listen", journal=False)
+    assert instant_answer(life, listening, "What are you capable of?") is None

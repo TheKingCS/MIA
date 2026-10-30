@@ -70,6 +70,28 @@ def _direct_lookup(context, prompt: str) -> Optional[str]:
     return registry.execute(context, action.name, action.direct_arguments(prompt)) if action is not None else None
 
 
+def instant_answer(context, conversation, prompt: str) -> Optional[str]:
+    """For the desktop's chat panels, which build their own model request
+    (2026-10-30: they never got these): a plain-word command done by code
+    ("workout complete", "undo that"), or a question one lookup answers,
+    run by code, no model; None when a question plan will answer (it comes
+    first, as in run_assistant_turn) or it's for the model. Never in a
+    personal mode or the journal."""
+    if _personal(conversation):
+        return None
+    from core.quick_commands import handle
+
+    quick = handle(context, prompt)
+    if quick is not None:
+        return quick
+    from core.conversation_state import follow_up
+    from core.question_plans import match
+
+    if match(context, prompt) is not None or follow_up(conversation, prompt) is not None:
+        return None
+    return _direct_lookup(context, prompt)
+
+
 def _personal(conversation) -> bool:
     from core.conversation_modes import PERSONAL_MODES
 

@@ -135,6 +135,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from core.assistant_turn import instant_answer
 from core.question_plans import finish as plan_finish, request as plan_request
 from core.assistant_chat import (
     build_chat_request,
@@ -420,6 +421,11 @@ class AssistantModule(ModuleBase):
         if prepared.notice:
             self.context.conversations.add_message(self._conversation.conversation_id, "assistant", prepared.notice)
             self._speak(prepared.notice)
+        quick = instant_answer(self.context, self._conversation, prompt)  # code answers first, as on the web and phone
+        if quick is not None:
+            self.context.conversations.add_message(self._conversation.conversation_id, "assistant", quick)
+            self._speak(quick)
+            return
         if self.context.llm is None:
             return
         self._set_busy(True)
