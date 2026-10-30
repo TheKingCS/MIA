@@ -193,6 +193,15 @@ def _missions(context, today: date) -> list[Item]:
     return out
 
 
+def _findings(context, today: date) -> list[Item]:
+    """What MIA noticed across apps (DEC-0052, core/findings.py): quietly
+    here, each with why; the ones Zac allowed unprompted rank higher."""
+    from core.findings import findings
+
+    return [Item(f"finding:{f.key}", f.claim, f.why, "suggestion", 32 if f.unprompted else 18, f.app,
+                 detail=f.next_step) for f in findings(context, today)]
+
+
 def presence(context, today: Optional[date] = None) -> dict:
     """What matters now ("now", ranked), progress ("path"), and the next
     useful action (the top item that has something to do)."""
@@ -201,7 +210,7 @@ def presence(context, today: Optional[date] = None) -> dict:
     today = today or date.today()
     items: list[Item] = []
     for name, source in (("today", _today), ("compliance", _compliance), ("goods", _goods), ("flock", _flock),
-                         ("freedom", _freedom), ("missions", _missions)):
+                         ("freedom", _freedom), ("missions", _missions), ("findings", _findings)):
         items.extend(_safe(name, lambda source=source: source(context, today)))
     page_of = {a.module_id: a.page for a in APPS if a.page}
     page_of["maintenance"] = "calendar.html"

@@ -280,6 +280,19 @@ def _tonight(context, sheet, prompt, today):
     _look(context, sheet, "get_loop", "the Loop")
 
 
+def _noticed(context, sheet, prompt, today):
+    """What MIA noticed across apps (core/findings.py), each with its why and next step."""
+    from core.findings import DERIVED, as_line, findings
+
+    found = findings(context, today)
+    for f in found:
+        sheet.add(CALCULATION if f.sureness == DERIVED else FACT, as_line(f), f.title)
+    if not found:
+        sheet.add(MISSING, "Nothing stands out across the apps right now: no bill before payday, no upkeep before a "
+                           "trip, no deadline in a packed week, no stalled mission.", "findings")
+    _look(context, sheet, "get_weekly_checkin", "the weekly check-in")
+
+
 def _open_loops(context, sheet, prompt, today):
     _look(context, sheet, "list_tasks", "Projects")
     _look(context, sheet, "list_projects", "Projects")
@@ -384,6 +397,10 @@ PLANS: tuple[Plan, ...] = (
     Plan("tonight", "Before bed",
          ("What should I take care of before going to bed?", "Anything I need to do tonight?", "What's tomorrow look like?"),
          r"\b(tonight|before bed|tomorrow)\b", _tonight),
+    Plan("noticed", "What MIA has noticed",
+         ("What have you noticed about me lately?", "Is there anything I should know?", "Anything I'm missing?",
+          "What patterns have you noticed?", "Anything I should be worried about?", "What stands out to you?"),
+         r"\b(noticed|should i know|anything i'm missing|stands? out|worried about)\b", _noticed),
     Plan("open loops", "What's unfinished",
          ("What commitments have I made that I haven't completed?", "What projects have I started but not completed?",
           "What have I left unfinished?", "What's still open?"),
@@ -438,7 +455,6 @@ NOT_A_PLAN = (
     'What is the most cost-effective way to accomplish this?',
     'Can you develop a complete project plan and bill of materials?',
     'What could go wrong, and how can I prevent it?',
-    'What have you noticed about me lately?',
     'Can you figure out the best way to accomplish this?',
     'Which of my current projects deserves the most attention?',
     'How can I use my available resources to generate more income?',

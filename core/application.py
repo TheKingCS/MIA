@@ -707,6 +707,7 @@ class MIAApplication:
             ("grow_alert", self._check_grow_alerts),
             ("season", self._check_season),
             ("insurance_renewal", self._check_insurance),
+            ("findings", self._check_findings),
             ("obligation_reminders", self._check_obligations),
             ("loop", self._check_loop),
             ("fix_report", self._check_fix_report),
@@ -882,6 +883,22 @@ class MIAApplication:
                 continue
             self._offer(topic="insurance_renewal", title=title, message=message, urgency=AMBIENT, source="system",
                         fingerprint=fingerprint)
+
+    def _check_findings(self, now: datetime, today_iso: str) -> None:
+        """What MIA notices across apps (DEC-0052, core/findings.py): only
+        the kinds Zac allowed unprompted go out, through the gate; each
+        situation once (its key is the fingerprint)."""
+        config = self.context.config
+        if not should_run_once_daily(config.get("system.last_findings_check_date"), today_iso):
+            return
+        from core.findings import as_line, findings
+
+        for f in findings(self.context, now.date()):
+            if f.unprompted:
+                self._offer(topic=f"finding_{f.key.split(':', 1)[0]}", title=f.title, message=as_line(f),
+                            urgency=TIMELY, source="system", fingerprint=f"finding|{f.key}")
+        config.set("system.last_findings_check_date", today_iso)
+        config.save()
 
     def _check_loop(self, now: datetime, today_iso: str) -> None:
         """The Loop (DEC-0047, core/the_loop.py): new recurring things get a
