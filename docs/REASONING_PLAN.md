@@ -206,6 +206,16 @@ gets its own plan when steps 2 to 4 are in.
 
 ## 7. Order
 
+**Status 2026-10-30:** step 1 built (`core/fact_owners.py`); 2a built
+(`core/question_plans.py`, 16 plans with "noticed"; `core/meaning.py`;
+`core/debt_math.py`); 2b built (`core/tool_loop.py`, 3 rounds, 60 s,
+look-first retry, number check); 3 built (`core/findings.py`, 8 of the
+10 rules; best-by and subscription use wait on data); 4 first slice built
+(`core/conversation_state.py`: a follow-up goes back to the last plan,
+or switches when it names another plan in its own words). Still to do in
+4: which record "it" means on any turn, open questions MIA asked, a
+running summary. Step 5 gets its own plans.
+
 | # | Step | Needs | Approval |
 |---|---|---|---|
 | 1 | One owner per fact (section 2) | nothing | ⚖ the data move |

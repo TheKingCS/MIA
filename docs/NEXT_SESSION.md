@@ -13,8 +13,15 @@ plans, by meaning with `core/meaning.py` and nomic-embed-text, in every
 chat surface), the debt payoff math (`core/debt_math.py`), `llm.num_ctx`.
 Live on the PC: plan answers in 3 to 7 seconds. Zac: ask MIA the
 benchmark questions in your own words and say which answers are off.
-Next to build: the tool loop (DEC-0052 2b), then findings, then
-conversation state. Note: the desktop's chat panels don't use
+Then built the same day: the tool loop (`core/tool_loop.py`), findings
+(`core/findings.py`: on Home, in a "noticed" plan, and the four kinds
+Zac allowed unprompted through the gate) and conversation state's first
+slice (`core/conversation_state.py`, follow-ups). Next: the rest of
+conversation state (what "it" is on any turn, open questions, a running
+summary), then propose outside research (benchmark F4-F6) and the data
+MIA doesn't record yet (commitments, decisions, ideas, best-by dates,
+subscription use) as their own decisions. Also try qwen3:14b on the
+bench (`tools/pc_model_check.py`, research R7) before any switch. Note: the desktop's chat panels don't use
 `run_assistant_turn` (no quick commands or direct lookups there); unify
 them when conversation state is built.
 

@@ -4,6 +4,17 @@
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
 session. Last updated: 2026-10-29 (Kokoro voice, how MIA describes herself, the stretched Home cards), by claude.*
 
+**2026-10-30, Claude on the PC (DEC-0052, approved):** MIA's reasoning
+layer. One owner per fact (pay → the Dungeon, training days → the Loop,
+chores → recurring missions; `core/fact_owners.py`). Detailed questions
+go to 16 question plans (lookups by code, a marked fact sheet, one answer
+that can't state a number she didn't look up), chosen by meaning with a
+local embedding model; other lookups get a loop (results back to the
+model, up to 3 rounds, 60 s). Findings across apps (`core/findings.py`).
+Follow-ups stay on topic. Zac's Intelligence Benchmark (112 questions)
+is the yardstick: `docs/INTELLIGENCE_BENCHMARK.md`, `python -m
+tools.bench_audit`.
+
 **2026-10-29, Claude on the PC:** MIA's voice on the computer is now
 Kokoro (DEC-0051, `core/voice_manager.KokoroBackend`, Heart by default;
 Piper is the fallback and the phone/Pi voice; the robotic effect is

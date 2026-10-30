@@ -480,6 +480,11 @@ PLAN_BY_NAME = {p.name: p for p in PLANS}
 
 
 def match(context, prompt: str) -> Optional[Plan]:
+    found = match_scored(context, prompt)
+    return found[0] if found else None
+
+
+def match_scored(context, prompt: str) -> Optional[tuple[Plan, Optional[float]]]:
     """The plan a question asks for, or None (then the normal turn runs).
     Never a how-to or teach-me question (those go to the help docs), never
     a request to change something. Spoken questions have no "?", so by
@@ -498,13 +503,13 @@ def match(context, prompt: str) -> Optional[Plan]:
     found = nearest(context, said, [(p.name, e) for p in PLANS for e in p.examples] + [("-", e) for e in NOT_A_PLAN])
     if found is not None:
         name, score = found
-        return PLAN_BY_NAME[name] if name in PLAN_BY_NAME and score >= MATCH_AT else None
+        return (PLAN_BY_NAME[name], score) if name in PLAN_BY_NAME and score >= MATCH_AT else None
     # No embedding model here (the phone): the plan's own words, when exactly one plan's match.
     if not looks_like_question(said):
         return None
     lowered = said.lower()
     hits = [p for p in PLANS if re.search(p.words, lowered)]
-    return hits[0] if len(hits) == 1 else None
+    return (hits[0], None) if len(hits) == 1 else None
 
 
 def gather(context, plan: Plan, prompt: str, today: Optional[date] = None) -> Sheet:
@@ -562,10 +567,23 @@ def request(context, conversation, prompt: str, today: Optional[date] = None) ->
     mode or the journal: those stay a conversation."""
     if conversation is not None and _personal(conversation):
         return None
-    plan = match(context, prompt)
-    if plan is None:
-        return None
-    sheet = gather(context, plan, prompt, today)
+    from core import conversation_state
+
+    # A short follow-up to the last plan ("why?", "what if I paid $300?", "what about last month?"):
+    # the same plan, gathered with both questions (DEC-0052 step 4, core/conversation_state.py).
+    # Unless it names another plan in that plan's own words ("and what about tonight?"): meaning
+    # alone can't tell (measured: "tonight" 0.741 to its plan, "last month" 0.748 to the wrong one).
+    before = conversation_state.follow_up(conversation, prompt)
+    found = match_scored(context, prompt)
+    switch = found is not None and bool(re.search(found[0].words, prompt.lower()))
+    if before is not None and before.plan in PLAN_BY_NAME and not (switch and found[0].name != before.plan):
+        plan, asked = PLAN_BY_NAME[before.plan], f"{before.question} {prompt}"
+    else:
+        if found is None:
+            return None
+        plan, asked = found[0], prompt
+        conversation_state.remember_plan(conversation, plan.name, prompt)
+    sheet = gather(context, plan, asked, today)
     if not sheet.facts:
         return None
     from core.assistant_chat import _IDENTITY_LINE, trim_history
