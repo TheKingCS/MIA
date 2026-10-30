@@ -291,6 +291,7 @@ def _noticed(context, sheet, prompt, today):
         sheet.add(MISSING, "Nothing stands out across the apps right now: no bill before payday, no upkeep before a "
                            "trip, no deadline in a packed week, no stalled mission.", "findings")
     _look(context, sheet, "get_weekly_checkin", "the weekly check-in")
+    _look(context, sheet, "list_maintenance_tasks", "upkeep")
 
 
 def _open_loops(context, sheet, prompt, today):
@@ -399,6 +400,7 @@ PLANS: tuple[Plan, ...] = (
          r"\b(tonight|before bed|tomorrow)\b", _tonight),
     Plan("noticed", "What MIA has noticed",
          ("What have you noticed about me lately?", "Is there anything I should know?", "Anything I'm missing?",
+          "What have I been neglecting?", "What have I let slide?",
           "What patterns have you noticed?", "Anything I should be worried about?", "What stands out to you?"),
          r"\b(noticed|should i know|anything i'm missing|stands? out|worried about)\b", _noticed),
     Plan("open loops", "What's unfinished",
@@ -410,7 +412,6 @@ PLANS: tuple[Plan, ...] = (
 # findings and open-ended ones, and small talk. When one of these is the
 # nearest example, no plan runs and the normal turn does.
 NOT_A_PLAN = (
-    'What have I been neglecting?',
     'What am I spending too much time on?',
     'Which of my assets are generating the best returns?',
     'What permits or registrations do I need to verify?',

@@ -142,11 +142,12 @@ class OllamaBackend:
     """LLMBackend implementation for a local Ollama server."""
 
     def __init__(self, base_url: str, model: str, keep_alive: str, temperature: float = _DEFAULT_TEMPERATURE,
-                 num_ctx: int = 0) -> None:
+                 num_ctx: int = 0, think: Optional[bool] = None) -> None:
         self._base_url = base_url.rstrip("/")
         self._model = model
         self._temperature = temperature
         self._num_ctx = int(num_ctx or 0)  # 0: leave it to the server
+        self._think = think  # None: the model's default; False: answer without a thinking pass (qwen3)
         # Ollama's keep_alive must be a bare JSON number of seconds
         # (e.g. -1 to never unload) OR a Go duration *string* with a
         # unit suffix (e.g. "30m") — a quoted "-1" is rejected with
@@ -158,6 +159,11 @@ class OllamaBackend:
             self._keep_alive: object = int(keep_alive)
         except (TypeError, ValueError):
             self._keep_alive = keep_alive
+
+    def _thinking(self) -> dict:
+        """Ollama's `think`, only when set (llm.think): a thinking model
+        (qwen3) otherwise reasons at length before every answer."""
+        return {} if self._think is None else {"think": bool(self._think)}
 
     def _options(self) -> dict:
         options: dict = {"temperature": self._temperature}
@@ -172,6 +178,7 @@ class OllamaBackend:
             "stream": False,
             "keep_alive": self._keep_alive,
             "options": self._options(),
+            **self._thinking(),
         }).encode("utf-8")
         request = urllib.request.Request(
             f"{self._base_url}/api/generate",
@@ -201,6 +208,7 @@ class OllamaBackend:
             "stream": False,
             "keep_alive": self._keep_alive,
             "options": self._options(),
+            **self._thinking(),
         }
         if tools:
             payload_dict["tools"] = tools
@@ -319,7 +327,7 @@ def make_backend(config) -> "LLMBackend":
     if config.get("llm.backend", "ollama") == "openai":
         return OpenAIBackend(base_url, model, temperature)
     return OllamaBackend(base_url, model, config.get("llm.keep_alive", _DEFAULT_KEEP_ALIVE), temperature,
-                         num_ctx=int(config.get("llm.num_ctx", 0) or 0))
+                         num_ctx=int(config.get("llm.num_ctx", 0) or 0), think=config.get("llm.think", None))
 
 
 class LLMManager:

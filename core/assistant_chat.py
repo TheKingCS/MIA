@@ -598,11 +598,15 @@ def build_chat_request(context, conversation: "Conversation", prompt: str) -> tu
     is_teaching_request = looks_like_teaching_request(prompt)
     # "When did I last change it?": what "it" means, from the conversation (DEC-0052 step 4), so the
     # right tools come along and the model is told.
-    from core.conversation_state import what_it_means
+    from core.conversation_state import agreed_to, what_it_means
 
     meant = what_it_means(context, conversation, prompt)
+    agreed = agreed_to(conversation, prompt)  # "yes" to her own offer: its tools come along
+    routed = f"{prompt} ({meant})" if meant else prompt
+    if agreed:
+        routed = agreed if not meant else f"{agreed} ({meant})"
     matched_actions = (
-        context.assistant_actions.matching_actions(f"{prompt} ({meant})" if meant else prompt, context)
+        context.assistant_actions.matching_actions(routed, context)
         if context.assistant_actions is not None and not is_teaching_request and not looks_like_how_to_question(prompt)
         else []
     )
@@ -626,6 +630,9 @@ def build_chat_request(context, conversation: "Conversation", prompt: str) -> tu
         earlier = earlier_topics(conversation.messages, len(history))
         if earlier:
             system += "\n\n" + earlier
+    if agreed:
+        system += (f"\n\nThey just said yes to your question “{agreed}”. Do exactly that now with the matching "
+                   "tool; if it needs a detail you don't have, ask for it.")
     if meant:
         system += (f"\n\nIn their message, “it” or “that” most likely means {meant} (the last of their things "
                    "named in this conversation); if that doesn't fit, ask which they mean.")

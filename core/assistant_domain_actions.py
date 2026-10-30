@@ -625,6 +625,8 @@ def register_domain_actions(registry: AssistantActionRegistry) -> None:
         "profile", "profiles", "account", "accounts", "theme", "dark mode", "light mode", "birthday",
         "battery", "system health", "wifi", "wi-fi", "internet", "connectivity", "offline",
     ))
+    # 2026-10-30: the calendar had only exact phrases, so "add it to your calendar" found no calendar tool.
+    registry.register_domain_keywords("calendar", ("calendar", "appointment", "appointments"))
     registry.register_domain_keywords("maintenance", (
         "maintenance", "oil change", "changed the oil", "mileage", "odometer", "miles on", "hours on",
         "engine hours", "serviced", "tune-up", "greenhouse", "watered", "fertilized", "pruned",

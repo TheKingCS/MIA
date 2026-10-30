@@ -164,7 +164,7 @@ DEC-0052 piece that closes it:
 |---|---|---|---|
 | A1 | Presence, the Loop today, calendar, deadlines, goals | Retrieval, Integration | QP: today |
 | A2 | Compliance deadlines, bills, upkeep, calendar | Integration (only Compliance today) | QP: today |
-| A3 | missions/goals without progress, overdue upkeep, Loop rhythms missed | Integration, Reasoning | FIND + QP: neglected |
+| A3 | missions/goals without progress, overdue upkeep, Loop rhythms missed | Integration, Reasoning | FIND + QP: noticed |
 | A4 | life events, workouts, shifts, missions, sales | Integration | QP: week review |
 | A5 | tomorrow's calendar and Loop, alarms, due-tonight items | Retrieval | QP: tonight |
 | A6 | open tasks and objectives, proposals not approved, things said ("I'll…") | Data (said commitments aren't recorded), Retrieval | QP: open loops + DATA |
@@ -332,6 +332,7 @@ estimate or missing. Between them they cover about half the bank:
 | **coming up** | deadlines, renewals, trips, events, two weeks to six months | A10, G14 |
 | **tonight** | tomorrow's calendar and Loop, alarms | A5 |
 | **open loops** | open tasks, objectives, unapproved proposals, builds | A6, E11 |
+| **noticed** (added with findings) | what MIA noticed across apps (core/findings.py), the weekly check-in, upkeep | A3, G4 |
 
 The tool loop takes the rest of what's in MIA's records; findings take
 the "what have you noticed" questions; conversation state takes every

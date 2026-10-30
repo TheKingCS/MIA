@@ -83,6 +83,28 @@ def earlier_topics(messages: list, kept: int) -> str:
             + "; ".join(f"“{a}”" for a in asked[-EARLIER_SHOWN:]) + ".")
 
 
+_YES = re.compile(r"^(yes|yeah|yep|yup|sure|ok|okay|please|please do|do it|go ahead|sounds good|that works|"
+                  r"yes please|sure thing|let's do it|absolutely|definitely)\b[\s!.,]*(please|thanks|thank you)?[\s!.]*$",
+                  re.IGNORECASE)
+
+
+def agreed_to(conversation, prompt: str) -> Optional[str]:
+    """Pure logic. When `prompt` is a plain yes to the question MIA just
+    asked ("Want me to add it to your calendar?" -> "yes please"), that
+    question; else None. Before, "yes" matched no tool, so the model had
+    nothing to do it with and could only say it had (2026-10-30)."""
+    if not _YES.match((prompt or "").strip()):
+        return None
+    before = [m for m in getattr(conversation, "messages", []) or []
+              if not (getattr(m, "role", "") == "user" and str(getattr(m, "content", "")) == prompt)]
+    last = before[-1] if before else None
+    said = str(getattr(last, "content", "") or "").strip() if last is not None else ""
+    if getattr(last, "role", "") != "assistant" or not said.endswith("?"):
+        return None
+    sentences = re.split(r"(?<=[.!])\s+", said)
+    return sentences[-1]
+
+
 LOOK_BACK = 8  # messages searched for the last thing named
 
 

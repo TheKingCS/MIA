@@ -105,3 +105,19 @@ def test_what_it_means(life):
     both = SimpleNamespace(conversation_id="i2", mode=None, journal=False, messages=[
         SimpleNamespace(role="user", content="Compare the truck and the mower")])
     assert cs.what_it_means(life, both, "which needs it more?") is None  # two things: too unsure
+
+
+def test_yes_to_her_own_offer_brings_its_tools(life):
+    from core.assistant_chat import build_chat_request
+
+    offer = "Baelien's oil change has never been done. Want me to add it to your calendar?"
+    talk = SimpleNamespace(conversation_id="y1", mode=None, journal=False, messages=[
+        SimpleNamespace(role="user", content="How's my truck?"), SimpleNamespace(role="assistant", content=offer)])
+    assert cs.agreed_to(talk, "yes please") == "Want me to add it to your calendar?"
+    assert cs.agreed_to(talk, "Sure!") is not None and cs.agreed_to(talk, "yes, but next week") is None
+    messages, tools = build_chat_request(life, talk, "yes please")
+    assert "add_calendar_event" in [t["function"]["name"] for t in tools]
+    assert "said yes to your question “Want me to add it to your calendar?”" in messages[0]["content"]
+    statement = SimpleNamespace(conversation_id="y2", mode=None, journal=False, messages=[
+        SimpleNamespace(role="assistant", content="Nice work on the bench.")])
+    assert cs.agreed_to(statement, "yes") is None  # nothing was asked
