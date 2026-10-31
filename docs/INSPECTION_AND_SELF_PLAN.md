@@ -134,9 +134,20 @@ a decision waiting, issues rising), and say what changed and why it
 matters; verified vs inferred kept apart. Also the test suite's last
 result recorded when it runs, so "do your tests pass?" is answerable.
 
-## 6. Self-Development (DEC-0058, PROPOSED)
+## 6. Self-Development (DEC-0058, approved 2026-10-30)
 
-**The conflicts first:** DEC-0049 tier 3 says MIA never changes her own
+**Built:** `core/dev_lab.py` (the lab: a worktree per proposal in
+`../MIA-lab/`, Claude Code headless and locked to it, the protected list,
+the suite against the starting commit, approval merging with a revert on
+a new failure), `tools/lab.py`, `core/lab_actions.py` (start, approve,
+reject; grown-ups only, not the glasses; long steps in the background),
+"what proposals are waiting?". **Not yet:** MIA drafting proposals by
+herself from the Fix-It Log and the self-check (today a person starts
+one), the benches in the check (only the suite so far), simulated
+failures as tests, restricting the lab's network beyond the coder's
+tool list, a screen for proposals.
+
+**The conflicts, as they stood:** DEC-0049 tier 3 says MIA never changes her own
 code; the ROADMAP stages it (she's at stage 1). The handoff asks for
 stages 2-3 under a PROPOSE boundary. And there's no Pi yet, so the lab
 and production share this PC.
@@ -175,10 +186,9 @@ and production share this PC.
    Network in the lab: off except the package index, when allowed.
 6. **Self-knowledge updates** after a merge (the next `mia` inspection).
 
-**Zac's questions (DEC-0058):** move to stages 2-3 (MIA proposes and
-tests in an isolated lab; tier 3's "never changes her own code" becomes
-"never changes production without your approval")? The lab on this PC
-until there's a Pi? Claude Code as the lab's coder, or her local model?
+**Zac's answers (DEC-0058):** yes to stages 2-3; tier 3 now reads "never
+changes production without your approval"; the lab on this PC until
+there's a Pi; Claude Code as the lab's coder.
 
 ## 7. The rest of the handoff, mapped
 

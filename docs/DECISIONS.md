@@ -862,7 +862,9 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   first. Tier 3: she never changes her own code; each issue becomes a
   failing test and bench case first, then the fix, full suite and bench
   green, Zac approving. Built before the design audit (DEC-0048) so the
-  audit starts from real evidence.
+  audit starts from real evidence. (Amended by DEC-0058, 2026-10-30:
+  tier 3 now reads "she never changes production without Zac's
+  approval"; changes are made and tested in the isolated lab.)
 - Related: DEC-0048, docs/FAILURE_LOG.md
 
 ### DEC-0050: She talks like a person; User Sync defaults; quiet hours; the EULA's facts
@@ -1017,9 +1019,13 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0041, DEC-0043, DEC-0049, DEC-0056
 
 ### DEC-0058: Self-Development: an isolated lab, proposals only
-- Status: PROPOSED
-- Proposed by: zac, 2026-10-30 (the Master Development Handoff, Part 3: autonomy PROPOSE, environment PC, testing software and simulation); written up by claude (`docs/INSPECTION_AND_SELF_PLAN.md` section 6) · Approved by: —
-- Decision (proposed): move from the ROADMAP's self-modification stage 1
+- Status: APPROVED
+- Proposed by: zac, 2026-10-30 (the Master Development Handoff, Part 3: autonomy PROPOSE, environment PC, testing software and simulation); written up by claude (`docs/INSPECTION_AND_SELF_PLAN.md` section 6) · Approved by: zac, 2026-10-30 ("I approve the updates and want the changes we stated")
+- Answers: stages 2-3 approved; DEC-0049 tier 3 now reads "she never
+  changes production without Zac's approval"; the lab lives on this PC
+  until there's a Pi; Claude Code writes the lab's code, MIA proposes
+  and checks.
+- Decision: move from the ROADMAP's self-modification stage 1
   to stages 2-3: MIA proposes improvements (from the Fix-It Log,
   introspection and the benchmarks); the code is written and tested in
   an isolated lab (a separate git worktree with made-up data and no

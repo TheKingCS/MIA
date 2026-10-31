@@ -85,7 +85,29 @@ def _action_inspect(context, arguments: dict) -> str:
     return inspection.summary(inspection.inspect(context, subject))
 
 
+def _action_lab_proposals(context, arguments: dict) -> str:
+    """The development lab's proposals (DEC-0058): what's waiting for the owner, and how each went."""
+    from core import dev_lab
+
+    proposals = dev_lab.all_proposals()
+    if not proposals:
+        return "No lab proposals yet."
+    waiting = [p for p in proposals if p.status == dev_lab.READY]
+    head = (f"{len(waiting)} ready for your approval. " if waiting else "Nothing waiting for your approval. ")
+    return head + " ".join(f"{p.proposal_id}: {dev_lab.describe(p)}" for p in proposals[-5:])
+
+
 def register_capability_actions(registry: AssistantActionRegistry) -> None:
+    registry.register(AssistantAction(
+        name="get_lab_proposals", domain="system",
+        description="MIA's development lab: the improvements she has proposed, how their tests went, which wait "
+                    "for the owner's approval.",
+        parameters={"type": "object", "properties": {}, "required": []},
+        handler=_action_lab_proposals,
+        trigger_phrases=("lab proposals", "proposals waiting", "what proposals", "development lab", "your lab",
+                         "improvements you've proposed", "what have you proposed"),
+        subjects=("lab", "proposal", "proposals", "proposed"),
+    ))
     registry.register(AssistantAction(
         name="get_inspection", domain="system",
         description=("Inspect this computer (hardware, operating system, drives, network adapters, firewall, the AI "
