@@ -960,3 +960,21 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   commitments and decisions; ask before keeping each one (recommended)
   or keep them and let him review later.
 - Related: DEC-0052, core/user_memory_manager.py, docs/INTELLIGENCE_BENCHMARK.md
+
+### DEC-0055: Active Training: one live workout session, reps counted by voice
+- Status: PROPOSED
+- Proposed by: claude, 2026-10-30 (`docs/ACTIVE_TRAINING_PLAN.md`, from Zac's "MIA – Active Training System" spec; Zac: reps by voice for now, "I want MIA to count with the user") · Approved by: —
+- Decision (proposed): one live workout session per person
+  (`core/training_session.py`), shared by the PC, phone, glasses and
+  voice, built on what exists: the fitness plan says what's prescribed,
+  the session records what was actually done (each set's reps and how
+  they were counted: said aloud, MIA's cadence confirmed, or told after),
+  and finishing writes one `workout_manager` session, so XP, skills,
+  stats, rewards, personal records and the fitness missions follow on
+  their existing paths. No new event system. Changes are `training.*`
+  action kinds; spoken controls are quick commands. It replaces the
+  desktop's in-memory session and the web's separate timer. Camera
+  counting, wearables and the glasses camera are later phases (section
+  2's limits).
+- Open choices for Zac: section 9 of the plan.
+- Related: DEC-0014, DEC-0020, DEC-0052, docs/ACTIVE_TRAINING_PLAN.md

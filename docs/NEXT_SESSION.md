@@ -12,6 +12,9 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 more on open questions; `docs/INTELLIGENCE_BENCHMARK.md` section 2,
 the answers in `pc-check/intelligence-*.md` on the PC).
 
+**Waiting on Zac: DEC-0055 (Active Training, `docs/ACTIVE_TRAINING_PLAN.md`,
+four questions in its section 9).**
+
 **Waiting on Zac: DEC-0053 (looking things up online, when asked) and
 DEC-0054 (remembering commitments, decisions, ideas and dropped goals),
 both PROPOSED in `docs/DECISIONS.md` with their open choices.** Built
