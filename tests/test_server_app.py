@@ -566,3 +566,14 @@ def test_one_recipe_opens_on_its_own_page(client, context):
     assert page["name"] == "Chili" and page["steps"] == ["Brown it.", "Simmer."] and page["to_buy"] == ["ground beef"]
     assert client.get("/api/kitchen/recipe/nope", headers=auth).status_code == 404
     assert client.get(f"/api/kitchen/recipe/{recipe.recipe_id}").status_code == 401
+
+
+def test_a_web_screen_counts_itself(client, context, tmp_path, monkeypatch):
+    import core.usage_tracker as usage_tracker_module
+
+    monkeypatch.setattr(usage_tracker_module, "_PAGE_FILE", tmp_path / "page_usage.json")
+    token = _login(client, context)
+    res = client.post("/api/usage/page", json={"page": "workout.html"}, headers={"Authorization": f"Bearer {token}"})
+    assert res.status_code == 200 and res.json() == {"counted": True}
+    assert context.usage_tracker.page_usage()["workout.html"]["count"] == 1
+    assert client.post("/api/usage/page", json={"page": "x.html"}).status_code == 401  # signed in only

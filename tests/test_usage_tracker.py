@@ -98,3 +98,17 @@ def test_starts_empty_when_no_file_exists(isolated_paths):
     tracker, _ = _make_tracker()
     assert tracker.all_usage() == []
     assert tracker.has_been_suggested("missions") is False
+
+
+def test_web_screens_are_counted_apart(isolated_paths, monkeypatch):
+    """The page-usage audit (2026-10-30): each web screen's opens, counts only."""
+    data_dir, _ = isolated_paths
+    monkeypatch.setattr(usage_tracker_module, "_PAGE_FILE", data_dir / "page_usage.json")
+    tracker, _ = _make_tracker()
+    tracker.record_page("workout.html", when="2026-10-30T08:00:00")
+    tracker.record_page("workout.html", when="2026-10-30T09:00:00")
+    tracker.record_page("../../etc/passwd")  # a name, never a path
+    pages = tracker.page_usage()
+    assert pages["workout.html"] == {"count": 2, "first": "2026-10-30T08:00:00", "last": "2026-10-30T09:00:00"}
+    assert "....etcpasswd" in pages and not any("/" in p for p in pages)
+    assert tracker.all_usage() == []  # the desktop's app opens stay their own

@@ -61,6 +61,15 @@
     { role: "user", content: "Remind me about the step at lunch." },
     { role: "assistant", content: "Placeholder answer: with MIA running, the whole conversation you've had shows here, and it's the same one on your phone and computer." },
   ];
+  const DEMO_BOOT = { done: false, phase: "awakening", beats: [  // the shape of /api/first-boot
+    { look: "swarm", say: "A new connection is forming…", seconds: 7, phase: "awakening" },
+    { look: "flare", say: "", seconds: 5, phase: "awakening" },
+    { look: "core", say: "", seconds: 6, phase: "connecting" },
+    { look: "voice", say: "Hello.", seconds: 4, speak: true, phase: "introduction" },
+    { look: "voice", say: "I'm MIA, your Multifunctional Intelligent Assistant.", seconds: 6, speak: true, phase: "introduction" },
+    { look: "voice", say: "I'm here to help you organize your life, reach your goals, and make the most of every day.", seconds: 9, speak: true, phase: "introduction" },
+    { look: "voice", say: "Whenever you want me, just tap and talk.", seconds: 6, speak: true, phase: "introduction" },
+  ] };
   class MiaError extends Error {
     constructor(status, message) { super(message); this.status = status; }
   }
@@ -174,6 +183,10 @@
     // In the demo every panel comes from one example file, keyed "app/item".
     // `mission`: the mission the glasses' Missions card shows (optional).
     glasses: (mission) => read("/api/glasses" + (mission ? "?mission=" + encodeURIComponent(mission) : ""), "glasses"),
+    // Meeting MIA (core/first_boot.py): what's left. In the demo, only with ?boot.
+    firstBoot: () => demo ? Promise.resolve(params.has("boot") ? DEMO_BOOT : { done: true, beats: [] }) : call("GET", "/api/first-boot"),
+    // Her voice saying one line; rejected where this MIA has none (the words still show).
+    speak: (text) => demo ? demoOnly() : call("POST", "/api/heavy/speak", { text }),
     // What her orb is doing (core/glasses_feed.py), polled while the glasses are on.
     glassesOrb: () => demo ? Promise.resolve({ state: "idle" }) : call("GET", "/api/glasses/orb"),
     glassesPanel: (app, item, mission) => demo
@@ -256,6 +269,7 @@
     // The Fix-It Log (core/failure_log.py, DEC-0049): where MIA stumbled; a page reports its own errors.
     failures: () => read("/api/failures", "failures"),
     pageError: (page, message) => demo || !token ? Promise.resolve(null) : call("POST", "/api/failures/page", { page, message }),
+    pageOpened: (page) => demo || !token ? Promise.resolve(null) : call("POST", "/api/usage/page", { page }),
     // The Sunday check-in (core/weekly_checkin.py, DEC-0047): last week's recap, this week laid out.
     checkin: () => read("/api/checkin", "checkin"),
     // The Dungeon (core/web_dungeon.py, DEC-0046): runs, loot earned / projected / banked, bosses, hard mode.

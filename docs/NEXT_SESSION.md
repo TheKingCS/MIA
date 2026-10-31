@@ -12,6 +12,12 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 more on open questions; `docs/INTELLIGENCE_BENCHMARK.md` section 2,
 the answers in `pc-check/intelligence-*.md` on the PC).
 
+**Usage audit and the design brief (2026-10-30):** `docs/UI_AUDIT.md`
+(web pages weren't counted anywhere; now every web screen counts its
+opens in `data/page_usage.json`; re-run the audit in a few weeks) and
+`docs/design/CLAUDE_DESIGN_PROMPT.md` (Zac pastes it into Claude Design).
+Retire-after-checking: `finances.html`, `grow.html`, `presence.html`.
+
 **Active Training (DEC-0055, approved): phases 1 and 2 built** (the live
 workout session, voice controls, Count With Me on the Workout screen,
 the glasses' Active Training card). Next for it: the phone app's native

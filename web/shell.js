@@ -433,6 +433,7 @@
       if (app) app.hidden = false;
       try { renderNav(await MIA.shell()); } catch (e) { say(e.message); }
       if (!options || options.talk !== false) mountTalk();
+      if (MIA.pageOpened) MIA.pageOpened(location.pathname.split("/").pop() || "index.html").catch(() => {});  // a count (page-usage audit)
       await refresh();
       if (!options || options.refreshOnChange !== false) {
         MIA.onChange(async () => {

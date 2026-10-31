@@ -129,6 +129,10 @@ class PageErrorRequest(BaseModel):
     message: str = Field(default="", max_length=400)
 
 
+class PageOpenedRequest(BaseModel):
+    page: str = Field(default="", max_length=120)
+
+
 class VoiceTextRequest(BaseModel):
     text: str
 
@@ -817,6 +821,15 @@ def create_app(context: AppContext) -> FastAPI:
 
         with app.state.turn_lock:
             return feed(view_for(context, profile_id), since or None)
+
+    # Meeting MIA (core/first_boot.py): what's left for this person.
+    # Finishing a part goes through /api/actions (firstboot.advance, .skip).
+    @app.get("/api/first-boot")
+    def first_boot_state(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.first_boot import state
+
+        with app.state.turn_lock:
+            return state(view_for(context, profile_id))
 
     # What her orb is doing (core/glasses_feed.py). No turn lock: the orb
     # has to keep answering "thinking" while a turn holds it.
@@ -1652,6 +1665,14 @@ def create_app(context: AppContext) -> FastAPI:
         with app.state.turn_lock:
             page_error(view_for(context, profile_id), body.page, body.message)
         return {"logged": True}
+
+    @app.post("/api/usage/page")
+    def web_page_opened(body: PageOpenedRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        """A web screen opened (web/shell.js): a count for the page-usage audit, nothing more."""
+        tracker = getattr(context, "usage_tracker", None)
+        if tracker is not None:
+            tracker.record_page(body.page)
+        return {"counted": tracker is not None}
 
     # ------------------------------------------------------------ The Sunday check-in (core/weekly_checkin.py, DEC-0047)
     @app.get("/api/checkin")

@@ -51,6 +51,7 @@ log = get_logger(__name__)
 
 _DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 _USAGE_FILE = _DATA_DIR / "module_usage.json"
+_PAGE_FILE = _DATA_DIR / "page_usage.json"  # the web screens (2026-10-30), counts only
 
 
 @dataclass
@@ -129,6 +130,32 @@ class UsageTracker:
         usage.last_opened = now
         usage.open_count += 1
         self._save()
+
+    def record_page(self, page: str, when: Optional[str] = None) -> None:
+        """A web screen opened (web/shell.js, on every surface: the PC, the
+        phone, the glasses): counts, first and last, nothing about what was
+        on it (2026-10-30, for the page-usage audit). Its own file, written
+        plainly: these are tallies, not records to undo, and
+        atomic_write_text would tell every open screen to re-read."""
+        page = "".join(ch for ch in str(page or "") if ch.isalnum() or ch in "-_.")[:60] or "index.html"
+        now = when or datetime.now().isoformat(timespec="seconds")
+        try:
+            pages = json.loads(_PAGE_FILE.read_text(encoding="utf-8")) if _PAGE_FILE.exists() else {}
+        except (OSError, ValueError):
+            pages = {}
+        row = pages.setdefault(page, {"count": 0, "first": now, "last": now})
+        row["count"], row["last"] = row.get("count", 0) + 1, now
+        try:
+            _PAGE_FILE.parent.mkdir(parents=True, exist_ok=True)
+            _PAGE_FILE.write_text(json.dumps(pages, indent=1), encoding="utf-8")
+        except OSError:
+            log.warning("Couldn't save page usage")
+
+    def page_usage(self) -> dict:
+        try:
+            return json.loads(_PAGE_FILE.read_text(encoding="utf-8")) if _PAGE_FILE.exists() else {}
+        except (OSError, ValueError):
+            return {}
 
     def mark_suggested(self, module_id: str) -> None:
         self._suggested_module_ids.add(module_id)
