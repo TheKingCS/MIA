@@ -35,6 +35,8 @@ class MainActivity : Activity() {
     // Location quests while MIA is closed (Places.kt). Talking through the
     // glasses is ListenService's, so it keeps working once this screen is gone.
     private val placesBridge = PlacesBridge(this)
+    // The workout's count, spoken here (DEC-0055); made when the page first needs it (after onCreate).
+    private val phoneVoice = lazy { PhoneVoice(this) }
 
     fun webView(): WebView? = web
 
@@ -173,6 +175,7 @@ class MainActivity : Activity() {
             }
             addJavascriptInterface(gallery, "MIAAndroid")
             addJavascriptInterface(placesBridge, "MIAPhonePlaces")
+            addJavascriptInterface(phoneVoice.value, "MIAPhoneVoice")
             // Signed in: straight to Home (or the Inbox, after a share). Not
             // yet: the screen asks to make an account (first start) or to
             // sign in (after logging out).
@@ -201,6 +204,11 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         Places.onScreen = true  // the screen's own watch asks while MIA is showing
+    }
+
+    override fun onDestroy() {
+        if (phoneVoice.isInitialized()) phoneVoice.value.shutdown()
+        super.onDestroy()
     }
 
     override fun onPause() {
