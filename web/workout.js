@@ -238,10 +238,111 @@
       all ? el("span", { class: "chip chip-ok" }, "✓ Workout complete") : btn("✓ Workout complete", "btn-green", () => act({ kind: "fitness.training_done", params: {} })));
   }
 
+  // ---------------------------------------------------------------- the live session (DEC-0055)
+  // core/training_session.py: the one workout going, shared with voice and the glasses. MIA counts the pace
+  // here (Zac: "count the pace"): spoken where this browser can speak, a tick where it can't; the phone app can
+  // hand its own voice in as window.MIAPhoneVoice.say. The count is confirmed before it's saved.
+  const live = { tick: null, beat: null, count: 0 };
+
+  function sayNow(text) {
+    try { if (window.MIAPhoneVoice && MIAPhoneVoice.say) { MIAPhoneVoice.say(String(text)); return; } } catch (e) { /* next */ }
+    try {
+      if (window.speechSynthesis) { speechSynthesis.cancel(); speechSynthesis.speak(new SpeechSynthesisUtterance(String(text))); return; }
+    } catch (e) { /* next */ }
+    try {  // no voice here: a short tick on each beat
+      const ctx = live.audio || (live.audio = new (window.AudioContext || window.webkitAudioContext)());
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination); g.gain.value = 0.08; o.start(); o.stop(ctx.currentTime + 0.06);
+    } catch (e) { /* silent is fine */ }
+  }
+
+  function stopCounting() { if (live.beat) clearInterval(live.beat); live.beat = null; }
+
+  async function confirmCount(n, counted) {
+    const hold = !!n.hold_seconds;
+    const v = await form(hold ? "How long did you hold it?" : "How many did you get?",
+      [{ name: hold ? "seconds" : "reps", label: hold ? "Seconds" : "Reps", type: "int", required: true, options: [], default: live.count || null },
+        ...(fit.child || hold ? [] : [{ name: "weight", label: "Weight (optional)", type: "amount", required: false, options: [], default: null }])], {});
+    if (v) act({ kind: "training.set", params: Object.assign({ counted }, v) });
+  }
+
+  function countWithMe(n) {
+    stopCounting();
+    const hold = !!n.hold_seconds, goal = hold ? n.hold_seconds : (n.reps || 0), pace = hold ? 1 : (n.cadence_seconds || 2);
+    live.count = 0;
+    sayNow(hold ? "Hold. Go." : "Ready. Go.");
+    live.beat = setInterval(() => {
+      live.count += 1;
+      const shown = $("count-now");
+      if (shown) shown.textContent = String(live.count);
+      if (!hold || live.count % 5 === 0 || (goal && live.count >= goal)) sayNow(live.count);
+      if (goal && live.count >= goal) { stopCounting(); sayNow(hold ? "Time. Nice." : "That's " + goal + ". Nice."); confirmCount(n, "cadence"); }
+    }, pace * 1000);
+    draw();
+  }
+
+  function restTicker(s) {
+    if (live.tick) clearInterval(live.tick);
+    live.tick = null;
+    if (s.status !== "resting" || s.rest_left == null) return;
+    const ends = Date.now() + s.rest_left * 1000;
+    live.tick = setInterval(async () => {
+      const left = Math.max(0, Math.ceil((ends - Date.now()) / 1000)), shown = $("rest-left");
+      if (shown) shown.textContent = left + " s";
+      if (left === 10) sayNow("Ten seconds.");
+      if (left === 0) {
+        clearInterval(live.tick); live.tick = null;
+        sayNow("Rest's over. " + (s.now ? s.now.name + ", set " + s.now.set + "." : ""));
+        fit = await MIA.fitness().catch(() => fit);
+        draw();
+      }
+    }, 1000);
+  }
+
+  function sessionCard() {
+    const s = fit.session;
+    if (!s) {
+      stopCounting(); restTicker({ status: "" });
+      if (!fit.today.training) return null;
+      return section("Active Training", buttons(btn("▶ Start Workout", "btn-green", () => act({ kind: "training.start", params: {} }))),
+        el("p", { class: "dim" }, "Or say “start my workout”. MIA counts the pace with you, starts your rest by itself, and logs what you actually did."));
+    }
+    const n = s.now || {}, resting = s.status === "resting", paused = s.status === "paused", counting = !!live.beat;
+    restTicker(s);
+    const clock = Math.floor(s.elapsed / 60) + ":" + String(s.elapsed % 60).padStart(2, "0");
+    const strip = el("div", { class: "strip" },
+      el("div", { class: "cell ok" }, el("span", { class: "n" }, n.set ? n.set + "/" + n.sets : "✓"), el("span", { class: "t" }, "Set")),
+      el("div", { class: "cell soon" }, el("span", { class: "n", id: counting ? "count-now" : null }, counting ? String(live.count) : (n.last != null ? String(n.last) : "–")),
+        el("span", { class: "t" }, counting ? "Counting" : "Last · target " + (n.target || ""))),
+      el("div", { class: "cell" }, el("span", { class: "n", id: resting ? "rest-left" : null }, resting ? s.rest_left + " s" : clock),
+        el("span", { class: "t" }, resting ? "Rest" : "Time")));
+    const controls = s.status === "complete"
+      ? buttons(btn("✓ Finish Workout", "btn-green", () => act({ kind: "training.finish", params: {} })))
+      : buttons(
+        counting ? btn("■ Stop Counting", "btn-ghost", () => { stopCounting(); confirmCount(n, "cadence"); })
+          : btn("🔊 Count With Me", "btn-green", () => countWithMe(n)),
+        btn("Set Done", "btn-ghost", () => confirmCount(n, "tapped")),
+        resting ? btn("Skip Rest", "btn-ghost", () => act({ kind: "training.skip_rest", params: {} })) : null,
+        paused ? btn("Resume", "btn-ghost", () => act({ kind: "training.resume", params: {} }))
+          : btn("Pause", "btn-ghost", () => { stopCounting(); act({ kind: "training.pause", params: {} }); }),
+        btn("Skip Exercise", "btn-ghost", () => act({ kind: "training.skip", params: {} })),
+        btn("Finish", "btn-ghost", () => { stopCounting(); act({ kind: "training.finish", params: {} }); }));
+    return section("Active Training: " + s.title, null,
+      el("p", { class: "row-title" }, s.status === "complete" ? "All done." : (paused ? "Paused · " : "") + (n.name || "") + " · " + (n.target || "")),
+      strip,
+      s.next ? el("p", { class: "dim" }, "Next: " + s.next) : null,
+      controls,
+      el("ol", { class: "train-steps" }, s.steps.map((x) => el("li", { class: x.done >= x.sets || x.skipped ? "done" : "" },
+        el("span", {}, el("strong", {}, x.name), el("span", { class: "dim" }, " " + x.done + " of " + x.sets
+          + (x.counts.length ? " · " + x.counts.join(", ") : "") + (x.skipped ? " · skipped" : "")))))),
+      el("p", { class: "dim" }, "Say “twelve”, “next set”, “pause”, “make that ten” or “I'm done”, here or on the glasses."));
+  }
+
   function todayView() {
     if (!fit) return [section("Today", null, el("p", { class: "dim" }, "Training plans aren't set up on this MIA."))];
     const missions = fit.missions.filter((m) => m.kind === "training" || m.kind === "week_workouts" || m.kind.startsWith("skill:"));
     return [
+      sessionCard(),
       el("div", { class: "two-up" }, trainingCard(),
         section("Missions", null, missions.length ? el("div", { class: "rows" }, missions.map((m) => el("div", { class: "row money-row" },
           el("div", {}, el("div", { class: "row-title" }, m.icon + " " + m.name), el("div", { class: "row-sub" }, m.done + " of " + m.total + (m.cadence === "weekly" ? " this week" : ""))),

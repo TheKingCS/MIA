@@ -47,6 +47,9 @@ GLASSES_KINDS = frozenset({
     "fitness.food", "fitness.step", "fitness.training_done", "fitness.skill", "fitness.milestone",
     "mission.complete", "objective.tick", "maintenance.done", "grocery.check",
     "task.done", "meal.prep_done", "routine.log", "app.favorite",
+    # the live workout (DEC-0055): moving it along, never a number to type (counts come by voice)
+    "training.start", "training.set", "training.skip_rest", "training.pause", "training.resume", "training.skip",
+    "training.finish",
 })
 
 # Apps the glasses don't show as cards: the orb *is* Home and Talk; the
@@ -167,6 +170,39 @@ def _kitchen_pantry(context, today):
         lines.append(_line(p.get("name") or "", " · ".join(b for b in (amount, when) if b),
                            "attention" if days is not None and days <= 2 else ""))
     return _panel("My Pantry", lines, "The pantry is empty.", limit=60)
+
+
+def _workout_live(context, today):
+    """The workout going right now (DEC-0055): where you are and the next move."""
+    from core.web_fitness import live_session
+
+    s = live_session(context)
+    if s is None:
+        t = (_fitness(context, today).get("today") or {})
+        if not t.get("training"):
+            return _panel("Active Training", [], "Rest day. Recovery counts too.")
+        return _panel("Active Training", [_line("Start today's workout", t["training"].get("name") or "", "",
+                                                 {"kind": "training.start", "label": "Start", "params": {}})], "")
+    n, lines = s.get("now") or {}, []
+    if s["status"] == "complete":
+        lines.append(_line("All done", s["title"], "ok", {"kind": "training.finish", "label": "Finish", "params": {}}))
+    else:
+        lines.append(_line(n.get("name") or "", f"Set {n.get('set')}/{n.get('sets')} · {n.get('target')}"
+                           + (f" · last {n['last']}" if n.get("last") is not None else ""), "attention"))
+        if s["status"] == "resting":
+            lines.append(_line(f"Rest {s['rest_left']} s", "then " + (n.get("name") or ""), "",
+                               {"kind": "training.skip_rest", "label": "Skip rest", "params": {}}))
+        else:
+            lines.append(_line("Set done", "say the count, or tap", "",
+                               {"kind": "training.set", "label": "Next set", "params": {"counted": "tapped"}}))
+        lines.append(_line("Paused" if s["status"] == "paused" else "Pause", "", "",
+                           {"kind": "training.resume" if s["status"] == "paused" else "training.pause",
+                            "label": "Resume" if s["status"] == "paused" else "Pause", "params": {}}))
+        if s.get("next"):
+            lines.append(_line("Next", s["next"], ""))
+        lines.append(_line("Finish", f"{s['done_exercises']}/{s['exercises']} exercises", "",
+                           {"kind": "training.finish", "label": "Finish", "params": {}}))
+    return _panel(f"Training: {s['title']}", lines, "")
 
 
 def _workout_training(context, today):
@@ -687,7 +723,7 @@ PANELS: dict[str, tuple[tuple[str, str, Panel], ...]] = {
                  ("claim", "Ready To Claim", _missions_claim)),
     "kitchen": (("recipes", "Recipes", _kitchen_recipes), ("meals", "Today's Meal Plan", _kitchen_meals),
                 ("pantry", "My Pantry", _kitchen_pantry), ("grocery", "Grocery List", _kitchen_grocery)),
-    "workout": (("training", "Today's Training", _workout_training), ("practice", "Skill Practice", _workout_practice),
+    "workout": (("live", "Active Training", _workout_live), ("training", "Today's Training", _workout_training), ("practice", "Skill Practice", _workout_practice),
                 ("weight", "Weight", _workout_weight), ("milestones", "Milestones", _workout_milestones)),
     "freedom": (("tonight", "Tonight", _freedom_glance), ("next", "Next Build", _freedom_next)),
     "budget": (("month", "This Month", _money_month), ("due", "What's Due", _money_due),

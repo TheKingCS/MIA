@@ -332,6 +332,8 @@ import core.business_actions  # noqa: E402,F401  (quotes, customers, orders, por
 import core.grow_actions  # noqa: E402,F401  (the grow lab, DEC-0030)
 import core.security_actions  # noqa: E402,F401  (Security cameras, DEC-0033)
 import core.insurance_actions  # noqa: E402,F401  (the insurance check-up, DEC-0034)
+import core.training_actions  # noqa: E402,F401  (the live workout session, DEC-0055)
+import core.first_boot  # noqa: E402,F401  (meeting MIA, docs/GLASSES_FIRST_BOOT_PLAN.md)
 
 
 # ------------------------------------------------------------------ the five steps

@@ -110,10 +110,48 @@ def parse(text: str, plan: Optional[dict] = None, today_training: Optional[dict]
     return None
 
 
+def _workout(context, text: str) -> Optional[str]:
+    """The live workout's spoken controls (DEC-0055, core/training_session.py):
+    "start my workout", "twelve", "next set", "pause", "make that 10",
+    "I'm done"... ahead of everything else while a workout is going."""
+    from datetime import datetime
+
+    from core import training_session as ts
+    from core.actions import ActionError
+
+    store = getattr(context, "training", None)
+    if store is None:
+        return None
+    live, now = store.live(), datetime.now()
+    if live is not None:
+        ts.settle(live, now)
+    found = ts.parse_training(text, live.status if live is not None else None)
+    if found is None:
+        return None
+    kind, params = found
+    if kind == "say":
+        return ts.say(live, now)
+    if kind == "ask":
+        return "How many did you get?"
+    actions = getattr(context, "actions", None)
+    if actions is None:
+        return None
+    try:
+        proposal = actions.propose(context, kind, params, proposed_by="mia")
+        done = actions.approve(context, proposal.proposal_id)
+    except ActionError as problem:
+        return str(problem)
+    return done.result if done.status == "executed" else (done.result or "That didn't work; nothing was changed.")
+
+
 def handle(context, text: str) -> Optional[str]:
     """Does it, if it's a quick command; returns MIA's reply, or None."""
     from core.actions import ActionError
     from core.person_settings import person_id
+
+    said = _workout(context, text)
+    if said is not None:
+        return said
 
     fit = getattr(context, "fitness", None)
     plan = fit.plan if fit is not None else None

@@ -133,11 +133,11 @@ def test_a_child_can_only_take_child_actions(world):
     # settings are theirs too (money settings and email refuse, see
     # core/account_actions.py).
     child_ok = {k for k, a in ACTION_TYPES.items() if a.child_ok}
-    kitchen_and_workout = ("recipe.", "pantry.", "grocery.", "meal.", "exercise.", "workout.",
+    kitchen_and_workout = ("recipe.", "pantry.", "grocery.", "meal.", "exercise.", "workout.", "training.",
                            "mission.", "objective.", "pathway.", "character.", "fitness.", "plan.")
     # Children also keep their own Journal and Music playlists (2026-10-16).
     # ...and their own Reward Shop and boss fights (DEC-0028).
-    assert {k for k in child_ok if not k.startswith(kitchen_and_workout + ("journal.", "playlist.", "shop", "boss.", "person.", "pet.", "memory.", "batch.", "grow.", "quest.", "map.", "raid.", "party.", "place."))} == {"task.done", "routine.log", "app.visibility",
+    assert {k for k in child_ok if not k.startswith(kitchen_and_workout + ("firstboot.", "journal.", "playlist.", "shop", "boss.", "person.", "pet.", "memory.", "batch.", "grow.", "quest.", "map.", "raid.", "party.", "place."))} == {"task.done", "routine.log", "app.visibility",
                                                                                  "app.favorite", "profile.edit",
                                                                                  "setting.set", "communication.resume",
                                                                                  "loop.checkin_done",  # their own weekly debrief (DEC-0047)

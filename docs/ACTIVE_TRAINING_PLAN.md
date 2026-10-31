@@ -200,7 +200,34 @@ existing personality rules, never punitive:
 | 5 | Wearables: Health Connect (heart rate, sessions) on Android | — |
 | 6 | Camera counting on the phone (on-device pose), when phases 1 to 4 are in use | per-exercise accuracy measured before it's offered |
 
-## 9. Questions for Zac
+## 9. Status (2026-10-30)
+
+**Built (phases 1 and 2, DEC-0055 approved):** `core/training_session.py`
+(the live session: pure transitions, rest by itself, pause/resume,
+corrections, prescribed vs actual, how each count was made, persisted,
+finish → one workout log; the counting rules `numbers_heard` and
+`follow_count`; `parse_training` for what's said); `core/training_actions.py`
+(the `training.*` kinds, child-safe, no weights for a child); spoken
+controls ahead of every other quick command ("start my workout",
+"twelve", "next set", "pause", "make that ten", "how am I doing?",
+"I'm done"); the day's training steps now follow the workout log
+(`FitnessManager._steps_from_workouts`, DEC-0052); the Workout screen's
+Today tab shows the live session with **Count With Me** (MIA speaks the
+pace in the browser, a tick where it can't speak, then asks the count);
+the glasses' Workout card has **Active Training**. Tested end to end by
+voice (`tests/test_training_session.py`).
+
+**Not yet:**
+- The phone app's part: the native voice for the count
+  (`window.MIAPhoneVoice.say`, the hook the web page already calls),
+  and the "workout listening" mode that follows a count said aloud
+  (`follow_count` is ready for it). Needs an Android build.
+- Retiring the desktop Qt Workout module's own in-memory session (it
+  still works on its own; the web Workout screen inside MIA has the new
+  one).
+- Phases 3 to 6 (mission blocks, adaptive coaching, wearables, camera).
+
+## 10. Questions for Zac (answered 2026-10-30, DEC-0055)
 
 1. Approve phase 1 and 2 as above (the live session replacing the
    desktop's in-memory one and the web's separate timer)?

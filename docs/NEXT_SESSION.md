@@ -12,8 +12,13 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 more on open questions; `docs/INTELLIGENCE_BENCHMARK.md` section 2,
 the answers in `pc-check/intelligence-*.md` on the PC).
 
-**Waiting on Zac: DEC-0055 (Active Training, `docs/ACTIVE_TRAINING_PLAN.md`,
-four questions in its section 9).**
+**Active Training (DEC-0055, approved): phases 1 and 2 built** (the live
+workout session, voice controls, Count With Me on the Workout screen,
+the glasses' Active Training card). Next for it: the phone app's native
+count voice and workout-listening mode (an Android build), retiring the
+Qt Workout module's old in-memory session; status in
+`docs/ACTIVE_TRAINING_PLAN.md` section 9. Zac, at the PC: say "start my
+workout" and try a set with Count With Me.
 
 **Waiting on Zac: DEC-0053 (looking things up online, when asked) and
 DEC-0054 (remembering commitments, decisions, ideas and dropped goals),

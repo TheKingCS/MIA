@@ -962,9 +962,17 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0052, core/user_memory_manager.py, docs/INTELLIGENCE_BENCHMARK.md
 
 ### DEC-0055: Active Training: one live workout session, reps counted by voice
-- Status: PROPOSED
-- Proposed by: claude, 2026-10-30 (`docs/ACTIVE_TRAINING_PLAN.md`, from Zac's "MIA – Active Training System" spec; Zac: reps by voice for now, "I want MIA to count with the user") · Approved by: —
-- Decision (proposed): one live workout session per person
+- Status: APPROVED
+- Proposed by: claude, 2026-10-30 (`docs/ACTIVE_TRAINING_PLAN.md`, from Zac's "MIA – Active Training System" spec; Zac: reps by voice for now, "I want MIA to count with the user") · Approved by: zac, 2026-10-30 ("1 yes, 2 count the pace, 3 yes, 4 yes but I will eventually go iphone and apple watch probably")
+- Answers: phases 1 and 2 approved (the live session replaces the
+  desktop's in-memory one and the web's separate timer); MIA counts the
+  pace and the person confirms the total; rest starts by itself after
+  each set, "skip rest" moves on; a watch through Health Connect first,
+  and since Zac will likely move to an iPhone and Apple Watch, the
+  wearable side sits behind one interface (Health Connect now, HealthKit
+  later) and the phone app's workout part is kept thin, so an iPhone
+  app can do the same with little new.
+- Decision: one live workout session per person
   (`core/training_session.py`), shared by the PC, phone, glasses and
   voice, built on what exists: the fitness plan says what's prescribed,
   the session records what was actually done (each set's reps and how

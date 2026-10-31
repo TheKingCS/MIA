@@ -61,6 +61,22 @@ def weight_series(fit, today: date, days: int = 90) -> list[dict]:
     return out
 
 
+def live_session(context) -> Optional[dict]:
+    """The workout going right now (DEC-0055, core/training_session.py), as
+    the screens and the glasses show it, with the line MIA would say; None
+    when there isn't one."""
+    from datetime import datetime
+
+    from core import training_session as ts
+
+    store = getattr(context, "training", None)
+    session = store.live() if store is not None else None
+    if session is None:
+        return None
+    now = datetime.now()
+    return {**ts.view(session, now), "say": ts.say(session, now)}
+
+
 def fitness_page(context, today: Optional[date] = None) -> dict:
     from core.meal_plan import day_plan
 
@@ -94,6 +110,7 @@ def fitness_page(context, today: Optional[date] = None) -> dict:
         "bests": skill_bests(fit, plan),
     }
     page["plan_text"] = plan_text(plan)
+    page["session"] = live_session(context)
     if not child:
         page["weight"] = {**fit.weight_trend(today), "series": weight_series(fit, today)}
     return page

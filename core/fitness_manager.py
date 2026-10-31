@@ -436,7 +436,33 @@ class FitnessManager:
         if any(t["date"] == day for t in self._data["training_done"]):
             todays = self.today_training(date.fromisoformat(day))
             return list(range(len((todays or {}).get("exercises") or []))) or [0]
-        return list(self._data["training_steps"].get(day, []))
+        ticked = set(self._data["training_steps"].get(day, []))
+        return sorted(ticked | self._steps_from_workouts(day))
+
+    def _steps_from_workouts(self, day: str) -> set[int]:
+        """DEC-0052/0055: what was performed is the workout log's. An
+        exercise of the day's training is done when that day's logged
+        workouts hold its prescribed number of sets (a live session, or a
+        session logged by hand); a tick still counts on its own."""
+        workout = getattr(self.context, "workout", None)
+        if workout is None or Path(getattr(workout, "data_dir", "") or "") != self.data_dir:
+            return set()
+        try:
+            todays = self.today_training(date.fromisoformat(day)) or {}
+            names = {e.exercise_id: e.name.strip().lower() for e in workout.all_exercises()}
+            sets: dict[str, int] = {}
+            for session in workout.all_sessions():
+                if session.date != day:
+                    continue
+                for entry in session.sets_logged:
+                    name = str(entry.get("name") or names.get(entry.get("exercise_id"), "")).strip().lower()
+                    if name and ((entry.get("reps") or 0) > 0 or entry.get("seconds") or entry.get("counted") == "tapped"):
+                        sets[name] = sets.get(name, 0) + 1
+        except Exception:
+            log.exception("Couldn't read the day's workouts for its training steps")
+            return set()
+        return {i for i, e in enumerate(todays.get("exercises") or [])
+                if sets.get(str(e.get("name", "")).strip().lower(), 0) >= max(1, int(e.get("sets") or 1))}
 
     def mark_habit(self, name: str, day: Optional[str] = None, done: bool = True) -> None:
         """A yes/no for a day (or a week, keyed by its Monday): "lunch", "prep", "protein"."""
