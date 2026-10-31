@@ -986,3 +986,52 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   2's limits).
 - Open choices for Zac: section 9 of the plan.
 - Related: DEC-0014, DEC-0020, DEC-0052, docs/ACTIVE_TRAINING_PLAN.md
+
+### DEC-0056: Universal Inspection
+- Status: APPROVED
+- Proposed by: zac, 2026-10-30 ("MIA — Universal Inspection System", architecture proposal) · Approved by: zac, 2026-10-30 ("I have 2 documents for you to implement back to back")
+- Decision: MIA investigates a subject with every relevant authorized
+  method, keeps every finding as evidence (source, time, confidence:
+  CONFIRMED / HIGH / PROBABLE / POSSIBLE / UNKNOWN), correlates methods
+  (agreement confirms, disagreement is kept and flagged), says what she
+  couldn't determine and why, and reports (`core/inspection.py`,
+  `docs/INSPECTION_AND_SELF_PLAN.md`). Methods carry a level: passive
+  runs unasked; authorized, active and disruptive are asked first, and
+  active scans stay on the person's own network. Never bypassing
+  security, harvesting credentials or reading personal files. Built:
+  phases 1-2 (the core, this computer, MIA herself); the rest in order.
+- Related: DEC-0057, DEC-0058, DEC-0053
+
+### DEC-0057: Self-Knowledge and Introspection
+- Status: APPROVED
+- Proposed by: zac, 2026-10-30 (the Master Development Handoff, Part 2) · Approved by: zac, 2026-10-30 (the same request)
+- Decision: MIA's understanding of herself is derived from the running
+  system, never a hand-written description: the `mia` inspection subject
+  (code, decisions, capabilities, health, model) on top of the
+  capability map (DEC-0041), her docs (`core/self_docs.py`), the model
+  registry and the Fix-It Log. Next: a status per capability
+  (implemented / partial / planned / unavailable here / malfunctioning,
+  never claiming a planned one) and a weekly self-check through the
+  communication gate. Verified, inferred and speculative findings kept
+  apart.
+- Related: DEC-0041, DEC-0043, DEC-0049, DEC-0056
+
+### DEC-0058: Self-Development: an isolated lab, proposals only
+- Status: PROPOSED
+- Proposed by: zac, 2026-10-30 (the Master Development Handoff, Part 3: autonomy PROPOSE, environment PC, testing software and simulation); written up by claude (`docs/INSPECTION_AND_SELF_PLAN.md` section 6) · Approved by: —
+- Decision (proposed): move from the ROADMAP's self-modification stage 1
+  to stages 2-3: MIA proposes improvements (from the Fix-It Log,
+  introspection and the benchmarks); the code is written and tested in
+  an isolated lab (a separate git worktree with made-up data and no
+  credentials), each change with a failing test first, the full suite
+  and the benches green; a proposal (branch + report) reaches production
+  only by Zac's approval (a merge, the suite again, `git revert` to roll
+  back); the lab can't touch its own safeguards (a protected-path list
+  kept outside its reach).
+- Conflicts to resolve: DEC-0049 tier 3 ("she never changes her own
+  code") would become "never changes production without approval";
+  DEC-0015 has no Pi yet, so the lab shares this PC with production.
+- Open choices for Zac: approve stages 2-3; the lab on this PC until
+  there's a Pi; Claude Code as the lab's coder (recommended) or her local
+  model.
+- Related: DEC-0043, DEC-0049, DEC-0057, docs/ROADMAP.md (Self-Modification)

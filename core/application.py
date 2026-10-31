@@ -4440,6 +4440,17 @@ class MIAApplication:
         host = str(arguments.get("host", "")).strip()
         if not host:
             return "I need a host or IP to scan."
+        import socket
+
+        from core.port_scanner import own_network
+
+        try:
+            socket.gethostbyname(host)
+        except (OSError, UnicodeError):
+            return f"Could not resolve '{host}'."
+        if not own_network(host):  # DEC-0056: active scans only on your own network
+            return (f"{host} isn't on your own network, so I won't scan it from a request. Scanning someone else's "
+                    "machine needs their permission; the Field Kit's scanner is there if you're authorized.")
         result = scan_ports(host, ports=list(_ASSISTANT_SCAN_PORTS), timeout=_ASSISTANT_SCAN_TIMEOUT_SECONDS)
         if result.error:
             return result.error

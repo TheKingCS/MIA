@@ -1782,3 +1782,13 @@ def test_get_life_state_reflects_a_real_active_mission(context):
     context.missions.add_mission("Real mission")
     result = MIAApplication._action_get_life_state(context, {})
     assert "1 active mission" in result
+
+
+def test_scan_ports_stays_on_your_own_network(context, monkeypatch):
+    """DEC-0056: an active scan of someone else's machine isn't done from a request."""
+    import core.application as application_module
+
+    called = []
+    monkeypatch.setattr(application_module, "scan_ports", lambda *a, **k: called.append(a))
+    result = MIAApplication._action_scan_ports(context, {"host": "8.8.8.8"})
+    assert "isn't on your own network" in result and called == []

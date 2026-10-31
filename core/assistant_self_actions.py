@@ -62,7 +62,44 @@ def _action_about_mia(context, arguments: dict) -> str:
     return answer(str(arguments.get("question") or ""))
 
 
+def inspection_subject(words: str) -> str:
+    """Pure logic. Which subject the words ask to inspect: MIA herself
+    ("yourself", "your system", "a self-check") or this computer."""
+    said = (words or "").lower()
+    return "mia" if any(w in said for w in ("yourself", "your own", "your system", "self-check", "self check",
+                                            "your code", "your health", "mia")) else "this_computer"
+
+
+def _action_inspect(context, arguments: dict) -> str:
+    """Universal Inspection (DEC-0056): this computer or MIA herself, every
+    passive method; a short summary, or the whole report when asked."""
+    from core import inspection
+
+    words = str(arguments.get("subject") or "")
+    subject = inspection_subject(words)
+    if "report" in words.lower() or "everything" in words.lower() or "full" in words.lower():
+        found = inspection.latest(subject)
+        if found is None or inspection.stale(found):
+            found = inspection.inspect(context, subject)
+        return inspection.report_text(found)
+    return inspection.summary(inspection.inspect(context, subject))
+
+
 def register_capability_actions(registry: AssistantActionRegistry) -> None:
+    registry.register(AssistantAction(
+        name="get_inspection", domain="system",
+        description=("Inspect this computer (hardware, operating system, drives, network adapters, firewall, the AI "
+                     "model) or MIA herself (her code, decisions, capabilities, health), with every fact's source and "
+                     "how sure it is, and what couldn't be determined. Read-only."),
+        parameters={"type": "object", "properties": {
+            "subject": {"type": "string", "description": "What to inspect, in the person's words."}}, "required": []},
+        handler=_action_inspect, prompt_arg="subject",
+        trigger_phrases=("inspect this computer", "inspect the computer", "inspect this pc", "inspect yourself",
+                         "inspect your", "investigate this computer", "self-check", "self check",
+                         "what hardware", "what's in this computer", "what is in this computer", "inspection report",
+                         "tell me everything about this computer"),
+        subjects=("computer", "pc", "yourself", "hardware", "inspect", "inspection", "self"),
+    ))
     registry.register(AssistantAction(
         name="what_can_you_do", domain="system",
         description="Everything MIA can do, app by app, from her own app list (never from memory).",

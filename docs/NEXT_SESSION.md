@@ -12,6 +12,13 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 more on open questions; `docs/INTELLIGENCE_BENCHMARK.md` section 2,
 the answers in `pc-check/intelligence-*.md` on the PC).
 
+**Inspection and self-knowledge (2026-10-30, DEC-0056/0057 approved):**
+`core/inspection.py` built (the core, this computer, MIA herself; "inspect
+this computer", "inspect yourself", "run a self-check"); assistant port
+scans limited to the own network. **Waiting on Zac: DEC-0058** (the
+self-development lab: stages 2-3, the lab on this PC, Claude Code as its
+coder?). Plan and next phases: `docs/INSPECTION_AND_SELF_PLAN.md`.
+
 **Usage audit and the design brief (2026-10-30):** `docs/UI_AUDIT.md`
 (web pages weren't counted anywhere; now every web screen counts its
 opens in `data/page_usage.json`; re-run the audit in a few weeks) and

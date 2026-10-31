@@ -61,3 +61,19 @@ def scan_ports(host: str, ports: Optional[list[int]] = None, timeout: float = _D
                 open_ports.append(port)
 
     return PortScanResult(host=host, open_ports=open_ports, scanned_count=len(target_ports))
+
+
+def own_network(host: str) -> bool:
+    """Whether `host` is on the person's own network: this computer, a
+    private home-network address, or a Tailscale device (100.64.0.0/10).
+    An active scan of anything else needs explicit permission
+    (DEC-0056: active discovery is asked first, never on a single request).
+    Resolves a name first; an unresolvable one isn't treated as own."""
+    import ipaddress
+    import socket
+
+    try:
+        address = ipaddress.ip_address(socket.gethostbyname(str(host or "").strip()))
+    except (OSError, ValueError, UnicodeError):
+        return False
+    return address.is_loopback or address.is_private or address in ipaddress.ip_network("100.64.0.0/10")
