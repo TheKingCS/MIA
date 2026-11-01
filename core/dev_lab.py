@@ -235,7 +235,7 @@ def write(proposal_id: str, coder: Optional[Callable] = None) -> Proposal:
         p.status, p.note = NOT_READY, "The coder changed nothing."
         return _put(p)
     _git("commit", "-m", f"lab: {p.title}\n\n{p.problem}", cwd=lab, author=LAB_AUTHOR)
-    p.status = WRITTEN
+    p.status, p.note = WRITTEN, ""
     return _put(p)
 
 
