@@ -922,9 +922,9 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0043, DEC-0050, docs/REASONING_PLAN.md, docs/INTELLIGENCE_AUDIT.md
 
 ### DEC-0053: Looking things up online, when asked
-- Status: PROPOSED
-- Proposed by: claude, 2026-10-30 (`docs/INTELLIGENCE_BENCHMARK.md` section 5: questions F4 to F6, "compare these three products", "is this still accurate?", "the legal requirements for this business activity in my state", can't be answered from MIA's records or offline packs) · Approved by: —
-- Decision (proposed): MIA may look something up on the internet only
+- Status: APPROVED
+- Proposed by: claude, 2026-10-30 (`docs/INTELLIGENCE_BENCHMARK.md` section 5: questions F4 to F6, "compare these three products", "is this still accurate?", "the legal requirements for this business activity in my state", can't be answered from MIA's records or offline packs) · Approved by: zac, 2026-10-31 ("Approve both as recommended" — via muse)
+- Decision: MIA may look something up on the internet only
   when (a) the computer is online, (b) the question needs current or
   outside facts her records and offline packs don't have, and (c) the
   person asked, or agreed when she offered ("I'd need to look that up
@@ -935,15 +935,14 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   about the person unless they ask. A local search engine they host
   (SearXNG) is preferred over a company's search API, so no account and
   no tracking; a hosted API is the fallback. Off on a child's account.
-- Open choices for Zac: offer-then-search (recommended) or search
-  without asking when it's clearly needed; SearXNG on this computer
-  (recommended) or a hosted search API.
+- Answers (zac, 2026-10-31): offer-then-search; SearXNG on this
+  computer (a hosted search API stays the fallback).
 - Related: DEC-0015 (offline-first), DEC-0052, docs/INTELLIGENCE_BENCHMARK.md
 
 ### DEC-0054: Remembering what you say you'll do, decide and want to try
-- Status: PROPOSED
-- Proposed by: claude, 2026-10-30 (`docs/INTELLIGENCE_BENCHMARK.md` section 5: questions A6, E3, E6, E10, E14, E15 need things MIA doesn't record) · Approved by: —
-- Decision (proposed): four kinds of note MIA picks up from normal
+- Status: APPROVED
+- Proposed by: claude, 2026-10-30 (`docs/INTELLIGENCE_BENCHMARK.md` section 5: questions A6, E3, E6, E10, E14, E15 need things MIA doesn't record) · Approved by: zac, 2026-10-31 ("Approve both as recommended" — via muse)
+- Decision: four kinds of note MIA picks up from normal
   conversation, never a form, each shown back for a yes before it's kept
   (Propose → Approve): a **commitment** ("I promised Sam I'd fix his
   gate": who, what, by when), a **decision** ("we're going with the
@@ -958,9 +957,8 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   lots (so the "goods before market day" finding can work) and a
   "still using it?" mark on subscriptions (the unused-subscription
   finding).
-- Open choices for Zac: pick up all four kinds, or start with
-  commitments and decisions; ask before keeping each one (recommended)
-  or keep them and let him review later.
+- Answers (zac, 2026-10-31): all four kinds; ask before keeping each
+  one (Propose → Approve, as in the decision text).
 - Related: DEC-0052, core/user_memory_manager.py, docs/INTELLIGENCE_BENCHMARK.md
 
 ### DEC-0055: Active Training: one live workout session, reps counted by voice
