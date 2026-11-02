@@ -11,6 +11,8 @@ the same split.
 
 from __future__ import annotations
 
+import os
+
 from datetime import date, datetime
 
 from core.activity_log_manager import ActivityLogEntry
@@ -456,3 +458,28 @@ def test_format_music_line_no_artist_omits_dash():
         position_seconds=0, duration_seconds=200, is_playing=True, volume_percent=70,
     )
     assert format_music_line(now_playing) == "Playing: Untitled Track"
+
+
+def test_fitting_a_card_again_does_not_grow_it():
+    """Every resize fits the cards, and this screen has no scroll area, so
+    any growth here grows the whole window, forever."""
+    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+    from PySide6.QtWidgets import QApplication, QFrame, QLabel, QVBoxLayout
+
+    from gui.home_dashboard import HomeDashboard
+
+    qapp = QApplication.instance() or QApplication([])
+    frame = QFrame()
+    label = QLabel("A body of text that wraps across a couple of lines at this card width for sure.")
+    label.setWordWrap(True)
+    QVBoxLayout(frame).addWidget(label)
+    frame.resize(300, 120)
+    frame.show()
+    qapp.processEvents()
+
+    heights = []
+    for _ in range(5):
+        HomeDashboard._fit_body(label)
+        qapp.processEvents()
+        heights.append(label.minimumHeight())
+    assert len(set(heights)) == 1

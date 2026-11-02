@@ -2041,12 +2041,20 @@ class HomeDashboard(QFrame):
         into a tall column, and that minimum stuck. It also stretched
         every other screen: the main window's QStackedWidget takes the
         tallest page's minimum. So only a visible label with a real width
-        sets a minimum; anything else clears it."""
+        sets a minimum; anything else clears it.
+
+        2026-11-02: QLabel measures no smaller than its current minimum,
+        so measuring with one set added 4px on every fit, and each resize
+        fitted again: the window grew without end. Measure with none."""
         width = label.width()
+        wanted = 0
         if label.isVisible() and width >= _MIN_FIT_WIDTH:
-            label.setMinimumHeight(max(label.heightForWidth(width), label.sizeHint().height()) + 4)
-        else:
+            current = label.minimumHeight()
             label.setMinimumHeight(0)
+            wanted = label.heightForWidth(width) + 4
+            label.setMinimumHeight(current)
+        if wanted != label.minimumHeight():
+            label.setMinimumHeight(wanted)
 
     def _refresh_data(self) -> None:
         """Only refreshes widgets that are actually currently built —
