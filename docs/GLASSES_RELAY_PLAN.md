@@ -71,9 +71,11 @@ but a picture is refused.
 ## What the phone allows
 
 `/voice/listen` makes her listen; she answers through the glasses, not the
-relay. `/glasses/home` is read-only (Zac approved it, 2026-11-02): the phone
-calls `/api/glasses` itself and sends only the name, status and tone of the
-apps in `HOME_APPS`, and blanks any line with a currency symbol. Changes come
+relay. Reads (Zac: read-only Home, 2026-11-02; "build her out according to
+the designs"): `/api/glasses`, each panel of the apps in `HOME_APPS`,
+`/api/glasses/orb` and `/api/glasses/feed`. Each must match an exact shape. The
+phone cuts the answer down: only approved apps, only panel menu items, every
+`action` removed, and any text with a currency symbol blanked. Changes come
 later, through `/api/actions` and the usual
 approval (Propose, Approve, Execute), each added on purpose. Nothing else
 passes, whatever the page asks: no financial or account paths.

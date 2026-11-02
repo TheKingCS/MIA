@@ -43,8 +43,8 @@ import kotlin.math.abs
 /**
  * The phone's side of the sealed relay (DEC-0062, docs/GLASSES_RELAY_PLAN.md).
  * It connects out to the relay, opens what the glasses send, and answers
- * only what's named below: the read-only Home Zac approved on 2026-11-02, cut
- * down to HOME_APPS here on the phone, so the glasses can't ask for more.
+ * only what's named below: the read-only screens of the apps in HOME_APPS,
+ * cut down here on the phone, so the glasses can't ask for more (DEC-0062).
  * Logs say why something was refused, never what it held.
  *
  * The page asks through window.MIARelay: state(), pair(), confirm(), cancel()
@@ -61,13 +61,15 @@ object Relay {
     private const val FRESH_MS = 30000L
     private const val PAGE_TO_PHONE = "page-to-phone"
     private const val PHONE_TO_PAGE = "phone-to-page"
-    private const val HOME = "/glasses/home"
-    private val ALLOWED = mapOf("/test/hello" to """{"hello":"This is a made-up answer, sealed by your phone."}""")
+    private const val ORB = "/api/glasses/orb"
+    private val CARDS = Regex("/api/glasses(\\?mission=[A-Za-z0-9_-]{1,64})?")
+    private val FEED = Regex("/api/glasses/feed(\\?since=[A-Za-z0-9:.%_-]{0,64})?")
+    private val PANEL = Regex("/api/glasses/([a-z_]{1,32})/([a-z0-9_-]{1,32})(\\?mission=[A-Za-z0-9_-]{1,64})?")
+    private val NOT_FOR_GLASSES = setOf("action", "actions", "ask")
     // By name, so a new app stays off the glasses until someone adds it. No
     // budget, property or account app belongs here.
     private val HOME_APPS = listOf("missions", "calendar", "workout", "kitchen", "maintenance")
     private val MONEY = Regex("[$€£¥]")
-    private const val MAX_LINE = 120
 
     private class Keys(val room: String, val send: ByteArray, val receive: ByteArray)
 
@@ -315,18 +317,14 @@ object Relay {
         prefs()?.edit()?.putLong("highest", highest)?.apply()
 
         val path = message.optString("path")
-        if (path == HOME) {
-            val id = message.opt("id")
-            Thread { answer(webSocket, id, home()) }.start()  // the engine can take a moment
+        val id = message.opt("id")
+        if (path != LISTEN) {
+            Thread { answer(webSocket, id, read(path)) }.start()  // the engine can take a moment
             return
         }
-        val answer = when {
-            path != LISTEN -> ALLOWED[path]
-            abs(System.currentTimeMillis() - number) <= FRESH_MS -> listen()
-            else -> null  // held back on the way: an old press never opens the mic
-        }
-        if (answer == null) Log.w(TAG, "Refused: a path that isn't allowed")
-        answer(webSocket, message.opt("id"), answer)
+        // Held back on the way: an old press never opens the mic.
+        val fresh = abs(System.currentTimeMillis() - number) <= FRESH_MS
+        answer(webSocket, id, if (fresh) listen() else null)
     }
 
     @Synchronized
@@ -338,30 +336,58 @@ object Relay {
         webSocket.send(seal(paired.send, reply.put("n", sent).toString().toByteArray()))
     }
 
-    /** Home for the glasses: only an approved app's name, status and tone, and
-     *  never a line with money in it. Nothing else of the engine's answer leaves. */
-    private fun home(): String? {
+    /** What the glasses may read. Only these shapes, only approved apps, and
+     *  the answer is cut down again in clean(). Anything else stays refused. */
+    private fun read(path: String): String? {
+        val panel = PANEL.matchEntire(path)
+        val allowed = path == ORB || FEED.matches(path) || CARDS.matches(path) ||
+            (panel != null && panel.groupValues[1] in HOME_APPS)
+        if (!allowed) {
+            Log.w(TAG, "Refused: a path that isn't allowed")
+            return null
+        }
         val context = appContext ?: return null
         return try {
             val token = Engine.ensure(context).optString("token")
-            val connection = URL("http://127.0.0.1:${MainActivity.PORT}/api/glasses").openConnection() as HttpURLConnection
+            val connection = URL("http://127.0.0.1:${MainActivity.PORT}$path").openConnection() as HttpURLConnection
             connection.connectTimeout = 5000
-            connection.readTimeout = 30000
+            connection.readTimeout = 7000
             connection.setRequestProperty("Authorization", "Bearer $token")
             val data = JSONObject(connection.inputStream.bufferedReader().use { it.readText() })
-            val apps = data.optJSONArray("apps") ?: JSONArray()
-            val shown = (0 until apps.length()).map { apps.getJSONObject(it) }.filter { it.optString("id") in HOME_APPS }
-            val cards = JSONArray()
-            shown.forEach { app ->
-                val line = app.optString("status").take(MAX_LINE)
-                cards.put(JSONObject().put("name", app.optString("name")).put("tone", app.optString("tone"))
-                    .put("status", if (MONEY.containsMatchIn(line)) "" else line))
-            }
-            JSONObject().put("cards", cards).toString()
+            (if (CARDS.matches(path)) cards(data) else clean(data) as JSONObject).toString()
         } catch (e: Exception) {
-            Log.w(TAG, "Couldn't read Home")
+            Log.w(TAG, "Couldn't read for the glasses")
             null
         }
+    }
+
+    /** Her app cards: approved apps only, their panels only. */
+    private fun cards(data: JSONObject): Any {
+        val out = JSONObject().put("hint", data.optString("hint")).put("pinned", data.optBoolean("pinned"))
+        for (list in listOf("apps", "others")) {
+            val all = data.optJSONArray(list) ?: JSONArray()
+            val kept = JSONArray()
+            (0 until all.length()).map { all.getJSONObject(it) }.filter { it.optString("id") in HOME_APPS }.forEach { app ->
+                val menu = app.optJSONArray("menu") ?: JSONArray()
+                val panels = JSONArray()
+                (0 until menu.length()).map { menu.getJSONObject(it) }
+                    .filter { it.optString("type") == "panel" }.forEach { panels.put(it) }
+                app.put("menu", panels)
+                kept.put(app)
+            }
+            out.put(list, kept)
+        }
+        return clean(out) ?: out
+    }
+
+    /** Whatever the engine sends: no actions, and no line with money in it. */
+    private fun clean(value: Any?): Any? = when (value) {
+        is JSONObject -> JSONObject().also { out ->
+            value.keys().forEach { key -> if (key !in NOT_FOR_GLASSES) out.put(key, clean(value.get(key))) }
+        }
+        is JSONArray -> JSONArray().also { out -> (0 until value.length()).forEach { out.put(clean(value.get(it))) } }
+        is String -> if (MONEY.containsMatchIn(value)) "" else value
+        else -> value
     }
 
     /** Her Listen button: she hears and answers through the glasses, not this relay. */

@@ -131,6 +131,11 @@
     if (voiceState === "listening") { if (recorder && recorder.state === "recording") recorder.stop(); return; }
     if (voiceState === "thinking") return;
     clearTimeout(captionTimer);
+    if (MIA.phoneListen) {  // the public page (DEC-0062): the phone hears, the orb follows it
+      orbState("listening");
+      try { await MIA.phoneListen(); } catch (err) { answer(err.message); }
+      return;
+    }
     if (demo) {
       orbState("listening");
       demoTimer = setTimeout(() => {
