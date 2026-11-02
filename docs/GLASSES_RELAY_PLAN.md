@@ -97,7 +97,9 @@ offline: it keeps none.
 - [x] Unpairing works (tested on the real pair: the glasses get no answer).
 - [x] Nothing is logged with message contents, on the relay or the phone. The
   engine's token is no longer logged either (`ci_smoke.sh` signs up instead).
-- [ ] Security review of the diff, then Zac's OK. Two reviews so far: the
+- [ ] Security review of the diff, then Zac's OK. A third review found the page gave up its key for an
+  empty commit, which undid the promise; fixed, and awaiting a last check.
+  Two reviews before it: the
   first found a relay could beat the check code, an unproved `ok` and an open
   bridge; the second found no person confirming on the glasses, a dialog not
   tied to its pairing, and answers not tied to questions. All fixed.
