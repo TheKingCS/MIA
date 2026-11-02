@@ -143,7 +143,9 @@ class OllamaBackend:
 
     def __init__(self, base_url: str, model: str, keep_alive: str, temperature: float = _DEFAULT_TEMPERATURE,
                  num_ctx: int = 0, think: Optional[bool] = None) -> None:
-        self._base_url = base_url.rstrip("/")
+        # Windows tries localhost's IPv6 address first, and Ollama isn't there:
+        # 2 seconds lost on every call, enough to read as "the computer's down".
+        self._base_url = base_url.rstrip("/").replace("://localhost", "://127.0.0.1")
         self._model = model
         self._temperature = temperature
         self._num_ctx = int(num_ctx or 0)  # 0: leave it to the server

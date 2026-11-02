@@ -320,3 +320,9 @@ def test_chat_with_tools_does_not_retry_when_json_content_has_no_name_key(monkey
 
     assert reply.content == '{"result": 42}'
     assert len(calls) == 1
+
+
+def test_ollama_never_goes_through_localhost():
+    """On Windows that name costs 2 seconds a call, on every call."""
+    backend = OllamaBackend("http://localhost:11434/", "a-model", "5m")
+    assert backend._base_url == "http://127.0.0.1:11434"
