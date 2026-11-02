@@ -79,6 +79,7 @@ class MainActivity : Activity() {
         }
         setContentView(status)
         Places.register(applicationContext)  // the watched places' alerts (after an update, too)
+        Relay.start(applicationContext)  // the glasses' way to her (DEC-0062)
         Thread {
             try {
                 // Once per app process (Engine.kt), shared with the listening service.
@@ -190,6 +191,7 @@ class MainActivity : Activity() {
             addJavascriptInterface(gallery, "MIAAndroid")
             addJavascriptInterface(placesBridge, "MIAPhonePlaces")
             addJavascriptInterface(phoneVoice.value, "MIAPhoneVoice")
+            addJavascriptInterface(Relay, "MIARelay")
             // Signed in: straight to Home (or the Inbox, after a share). Not
             // yet: the screen asks to make an account (first start) or to
             // sign in (after logging out).

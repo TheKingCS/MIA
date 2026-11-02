@@ -86,6 +86,7 @@ dependencies {
     implementation("com.meta.wearable:mwdat-core:1.0.1")
     implementation("com.meta.wearable:mwdat-display:1.0.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")  // the sealed relay (DEC-0062)
 }
 
 tasks.named("preBuild") { dependsOn(bundleMia) }

@@ -104,16 +104,38 @@
       h.linked ? el("button", { type: "button", class: "btn btn-ghost", onclick: disconnect }, "Unlink") : ""));
   }
 
-  // Meta's toolkit lives in the phone app (DEC-0059), so this shows only there.
+  // Pairing with the glasses' sealed relay (DEC-0062) lives in the phone app, so this shows only there.
   function glassesSection() {
-    const glasses = window.MIAMetaGlasses;
-    if (!glasses) return "";
-    const status = el("p", { class: "dim" }, "Glasses: " + glasses.state());
-    const refresh = () => { status.textContent = "Glasses: " + glasses.state(); };
-    const watch = setInterval(() => { if (status.isConnected) refresh(); else clearInterval(watch); }, 1000);
-    return section("Glasses", el("p", { class: "dim" }, "Show MIA on your Meta glasses, through this phone."), status,
-      el("div", { class: "acct-actions" },
-        el("button", { type: "button", class: "btn btn-amber", onclick: () => { glasses.connect(); refresh(); } }, "Connect Glasses")));
+    const relay = window.MIARelay;
+    if (!relay) return "";
+    const body = el("div", {});
+    const box = section("Glasses", body);
+    let drawn = "";
+    const draw = () => {
+      const state = JSON.parse(relay.state());
+      const key = state.stage + state.check + state.connected;
+      if (key === drawn) return;
+      drawn = key;
+      if (state.stage === "unpaired") {
+        const code = el("input", { type: "text", inputmode: "numeric", maxlength: "6", placeholder: "6 digits", "aria-label": "Code on your glasses" });
+        body.replaceChildren(el("p", { class: "dim" }, "Open MIA on your glasses and enter the code she shows."), code,
+          el("div", { class: "acct-actions" }, el("button", { type: "button", class: "btn btn-amber", onclick: () => relay.pair(code.value.trim()) }, "Pair")));
+      } else if (state.stage === "pairing") {
+        body.replaceChildren(el("p", { class: "dim" }, "Looking for your glasses..."),
+          el("div", { class: "acct-actions" }, el("button", { type: "button", class: "btn btn-ghost", onclick: () => relay.cancel() }, "Cancel")));
+      } else if (state.stage === "check") {
+        body.replaceChildren(el("p", {}, "Check this matches your glasses: " + state.check),
+          el("div", { class: "acct-actions" },
+            el("button", { type: "button", class: "btn btn-amber", onclick: () => relay.confirm() }, "They Match"),
+            el("button", { type: "button", class: "btn btn-ghost", onclick: () => relay.cancel() }, "They Don't")));
+      } else {
+        body.replaceChildren(el("p", { class: "dim" }, state.connected ? "Paired. Your glasses can reach MIA." : "Paired. Connecting..."),
+          el("div", { class: "acct-actions" }, el("button", { type: "button", class: "btn btn-ghost", onclick: () => relay.unpair() }, "Unpair Glasses")));
+      }
+    };
+    draw();
+    const watch = setInterval(() => { if (box.isConnected) draw(); else clearInterval(watch); }, 700);
+    return box;
   }
 
   function draw() {
