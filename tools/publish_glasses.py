@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 
 WEB = Path(__file__).resolve().parent.parent / "web"
-COPIED = ("glasses.js", "glasses.css", "icons.js")
+COPIED = ("glasses.js", "icons.js")
 
 HEAD = """  <meta name="application-name" content="MIA">
   <meta name="description" content="MIA on Meta Ray-Ban Display glasses">
@@ -57,10 +57,20 @@ def page() -> str:
     return html.replace("</body>", PAIRING + "</body>")
 
 
+def stylesheet() -> str:
+    """On the glasses, touch-action: none turns the page into drag mode, and
+    moving between buttons stops working. Her touchscreen preview wants it."""
+    css = (WEB / "glasses.css").read_text(encoding="utf-8")
+    assert "touch-action: none" in css
+    return css.replace("touch-action: none; ", "").replace("touch-action: none;", "")
+
+
 def main(folder: str) -> None:
     out = Path(folder)
     for name in COPIED:
         shutil.copyfile(WEB / name, out / name)
+    (out / "glasses.css").write_text(stylesheet(), encoding="utf-8", newline="
+")
     (out / "index.html").write_text(page(), encoding="utf-8", newline="\n")
     print("Published to", out)
 
