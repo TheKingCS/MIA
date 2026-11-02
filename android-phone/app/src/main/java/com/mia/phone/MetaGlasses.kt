@@ -18,10 +18,12 @@ import com.meta.wearable.dat.display.Display
 import com.meta.wearable.dat.display.addDisplay
 import com.meta.wearable.dat.display.types.DisplayState
 import com.meta.wearable.dat.display.views.ButtonStyle
+import com.meta.wearable.dat.display.views.CornerRadius
 import com.meta.wearable.dat.display.views.Direction
 import com.meta.wearable.dat.display.views.FlexBoxBackground
 import com.meta.wearable.dat.display.views.IconName
 import com.meta.wearable.dat.display.views.IconStyle
+import com.meta.wearable.dat.display.views.ImageSize
 import com.meta.wearable.dat.display.views.TextColor
 import com.meta.wearable.dat.display.views.TextStyle
 import kotlinx.coroutines.CoroutineScope
@@ -231,7 +233,7 @@ class MetaGlasses private constructor(private var activity: Activity) {
                             GlassesService.begin(activity.applicationContext)
                             ListenService.ready(activity.applicationContext)
                             if (voiceState != "STARTED") listenForVoice()  // it doesn't come back by itself after Meta AI restarts
-                            showHome()
+                            arrive()
                         }
                     }
                 }
@@ -247,6 +249,20 @@ class MetaGlasses private constructor(private var activity: Activity) {
 
     // ---------------------------------------------------------------- what's shown
 
+    /** Her orb for a moment, then Home. */
+    private fun arrive() {
+        val target = display ?: return
+        scope.launch {
+            target.sendContent {
+                flexBox(padding = 20, background = FlexBoxBackground.CARD) {
+                    image(uri = "$ART/orb-speaking.png", sizePreset = ImageSize.FILL, cornerRadius = CornerRadius.NONE)
+                }
+            }.onFailure { error, _ -> Log.w(TAG, error.description) }
+            delay(ARRIVE_MS)
+            showHome()
+        }
+    }
+
     /** The last Home right away, so Back never waits on the engine; fresh when it arrives. */
     private fun showHome() {
         onHome = true
@@ -260,7 +276,7 @@ class MetaGlasses private constructor(private var activity: Activity) {
     private fun drawHome(data: JSONObject) {
         val apps = data.optJSONArray("apps") ?: JSONArray()
         val cards = (0 until minOf(apps.length(), MAX_BUTTONS - 1)).map { apps.getJSONObject(it) }
-        screen("MIA", IconName.CIRCLE_8_RAYS_LARGE, listOf(data.optString("hint") to "")) {
+        screen("MIA", null, listOf(data.optString("hint") to "")) {
             cards.forEach { card -> add(card.optString("name"), appIcon(card)) { showApp(card) } }
             add("Close MIA", quiet = true) { close() }
         }
@@ -295,8 +311,8 @@ class MetaGlasses private constructor(private var activity: Activity) {
         }
     }
 
-    /** One screen: its icon and title, rows of words (with a smaller detail), and buttons. Each send replaces the last. */
-    private fun screen(title: String, mark: IconName, rows: List<Pair<String, String>>, buttons: Choices.() -> Unit) {
+    /** One screen: its icon (no icon: her orb) and title, rows of words (with a smaller detail), and buttons. Each send replaces the last. */
+    private fun screen(title: String, mark: IconName?, rows: List<Pair<String, String>>, buttons: Choices.() -> Unit) {
         val choices = Choices().apply(buttons).list
         val shown = rows.filter { (text, _) -> text.isNotEmpty() }
         val target = display ?: return
@@ -304,7 +320,8 @@ class MetaGlasses private constructor(private var activity: Activity) {
             target.sendContent {
                 flexBox(gap = 10, padding = 20, background = FlexBoxBackground.CARD) {
                     flexBox(direction = Direction.ROW, gap = 10) {
-                        icon(name = mark, style = IconStyle.FILLED)
+                        if (mark == null) image(uri = "$ART/orb-idle.png", sizePreset = ImageSize.ICON, cornerRadius = CornerRadius.NONE)
+                        else icon(name = mark, style = IconStyle.FILLED)
                         text(title, style = TextStyle.HEADING)
                     }
                     shown.forEach { (text, detail) ->
@@ -354,6 +371,8 @@ class MetaGlasses private constructor(private var activity: Activity) {
         private const val MAX_LINES = 5
         private const val MAX_RETRIES = 4
         private const val RETRY_MS = 6000L
+        private const val ARRIVE_MS = 1800L
+        private const val ART = "https://raw.githubusercontent.com/TheKingCS/mia-art/main"  // DEC-0061: artwork only
         private const val VOICE_RETRY_MS = 8000L
         private const val READ_TIMEOUT_MS = 30000
         const val BLUETOOTH_REQUEST = 7301

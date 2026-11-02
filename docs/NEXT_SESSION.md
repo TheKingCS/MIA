@@ -32,7 +32,8 @@ Developer Center the package and signature under Configuration, a version
 built to Ready, that version on the Beta channel, and Zac invited to it.
 A later signing key or package change needs a new version. Keep
 versionCode above the phone's when installing a local build (set
-GITHUB_RUN_NUMBER; last used 120).
+GITHUB_RUN_NUMBER; last used 122). Her art is public in `TheKingCS/mia-art`
+(DEC-0061, artwork only; `python -m tools.glasses_art <folder>` draws the orb).
 
 **Getting MIA on the glasses (2026-11-02):** opening the phone app connects
 her; a drop retries four times; Close MIA on her Home stays closed. **A tap
