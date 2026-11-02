@@ -15,8 +15,11 @@ import okhttp3.Request
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
+import org.json.JSONArray
 import org.json.JSONObject
 import java.math.BigInteger
+import java.net.HttpURLConnection
+import java.net.URL
 import java.nio.ByteBuffer
 import java.security.KeyFactory
 import java.security.KeyPair
@@ -40,7 +43,8 @@ import kotlin.math.abs
 /**
  * The phone's side of the sealed relay (DEC-0062, docs/GLASSES_RELAY_PLAN.md).
  * It connects out to the relay, opens what the glasses send, and answers
- * only what ALLOWED names. Fake data only until the plan's gate has passed.
+ * only what's named below: the read-only Home Zac approved on 2026-11-02, cut
+ * down to HOME_APPS here on the phone, so the glasses can't ask for more.
  * Logs say why something was refused, never what it held.
  *
  * The page asks through window.MIARelay: state(), pair(), confirm(), cancel()
@@ -57,7 +61,13 @@ object Relay {
     private const val FRESH_MS = 30000L
     private const val PAGE_TO_PHONE = "page-to-phone"
     private const val PHONE_TO_PAGE = "phone-to-page"
+    private const val HOME = "/glasses/home"
     private val ALLOWED = mapOf("/test/hello" to """{"hello":"This is a made-up answer, sealed by your phone."}""")
+    // By name, so a new app stays off the glasses until someone adds it. No
+    // budget, property or account app belongs here.
+    private val HOME_APPS = listOf("missions", "calendar", "workout", "kitchen", "maintenance")
+    private val MONEY = Regex("[$€£¥]")
+    private const val MAX_LINE = 120
 
     private class Keys(val room: String, val send: ByteArray, val receive: ByteArray)
 
@@ -305,16 +315,53 @@ object Relay {
         prefs()?.edit()?.putLong("highest", highest)?.apply()
 
         val path = message.optString("path")
+        if (path == HOME) {
+            val id = message.opt("id")
+            Thread { answer(webSocket, id, home()) }.start()  // the engine can take a moment
+            return
+        }
         val answer = when {
             path != LISTEN -> ALLOWED[path]
             abs(System.currentTimeMillis() - number) <= FRESH_MS -> listen()
             else -> null  // held back on the way: an old press never opens the mic
         }
         if (answer == null) Log.w(TAG, "Refused: a path that isn't allowed")
-        val reply = JSONObject().put("id", message.opt("id")).put("status", if (answer == null) 403 else 200)
-        if (answer != null) reply.put("body", JSONObject(answer))
+        answer(webSocket, message.opt("id"), answer)
+    }
+
+    @Synchronized
+    private fun answer(webSocket: WebSocket, id: Any?, body: String?) {
+        val paired = keys ?: return
+        val reply = JSONObject().put("id", id).put("status", if (body == null) 403 else 200)
+        if (body != null) reply.put("body", JSONObject(body))
         sent = maxOf(sent + 1, System.currentTimeMillis())
         webSocket.send(seal(paired.send, reply.put("n", sent).toString().toByteArray()))
+    }
+
+    /** Home for the glasses: only an approved app's name, status and tone, and
+     *  never a line with money in it. Nothing else of the engine's answer leaves. */
+    private fun home(): String? {
+        val context = appContext ?: return null
+        return try {
+            val token = Engine.ensure(context).optString("token")
+            val connection = URL("http://127.0.0.1:${MainActivity.PORT}/api/glasses").openConnection() as HttpURLConnection
+            connection.connectTimeout = 5000
+            connection.readTimeout = 30000
+            connection.setRequestProperty("Authorization", "Bearer $token")
+            val data = JSONObject(connection.inputStream.bufferedReader().use { it.readText() })
+            val apps = data.optJSONArray("apps") ?: JSONArray()
+            val shown = (0 until apps.length()).map { apps.getJSONObject(it) }.filter { it.optString("id") in HOME_APPS }
+            val cards = JSONArray()
+            shown.forEach { app ->
+                val line = app.optString("status").take(MAX_LINE)
+                cards.put(JSONObject().put("name", app.optString("name")).put("tone", app.optString("tone"))
+                    .put("status", if (MONEY.containsMatchIn(line)) "" else line))
+            }
+            JSONObject().put("cards", cards).toString()
+        } catch (e: Exception) {
+            Log.w(TAG, "Couldn't read Home")
+            null
+        }
     }
 
     /** Her Listen button: she hears and answers through the glasses, not this relay. */

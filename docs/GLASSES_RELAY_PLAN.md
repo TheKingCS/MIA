@@ -71,8 +71,10 @@ but a picture is refused.
 ## What the phone allows
 
 `/voice/listen` makes her listen; she answers through the glasses, not the
-relay. Then reads only: `/api/glasses`, `/api/glasses/{app}/{item}` and
-`/api/glasses/orb`. Changes come later, through `/api/actions` and the usual
+relay. `/glasses/home` is read-only (Zac approved it, 2026-11-02): the phone
+calls `/api/glasses` itself and sends only the name, status and tone of the
+apps in `HOME_APPS`, and blanks any line with a currency symbol. Changes come
+later, through `/api/actions` and the usual
 approval (Propose, Approve, Execute), each added on purpose. Nothing else
 passes, whatever the page asks: no financial or account paths.
 
@@ -100,8 +102,8 @@ offline: it keeps none.
 - [x] Unpairing works (tested on the real pair: the glasses get no answer).
 - [x] Nothing is logged with message contents, on the relay or the phone. The
   engine's token is no longer logged either (`ci_smoke.sh` signs up instead).
-- [ ] Security review of the diff, then Zac's OK. The fourth review (2026-11-02) found nothing at
-  confidence 8 or above, code read only; Zac's OK is still to come. The third
+- [x] Security review of the diff, then Zac's OK, given 2026-11-02 for read-only Home only. The fourth review (2026-11-02) found nothing at
+  confidence 8 or above, code read only. The third
   found the page gave up its key for an empty commit, which undid the promise.
   Two reviews before it: the
   first found a relay could beat the check code, an unproved `ok` and an open

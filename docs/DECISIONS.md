@@ -1082,6 +1082,10 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   show. This changes DEC-0059's route for the display only. Nothing personal
   crosses until a test page has proved it on the real glasses and the
   security review is done.
+- Update, 2026-11-02: the gate passed (four reviews, then the tests on the
+  real pair), and Zac approved read-only Home only ("yes start with read-only
+  Home information"). Money, accounts and changes stay off; each widening is
+  his call.
 - Related: DEC-0059, DEC-0060, DEC-0061, DEC-0002
 
 ### DEC-0063: Her icon opens her; a tap makes her listen
