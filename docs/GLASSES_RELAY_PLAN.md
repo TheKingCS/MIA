@@ -61,10 +61,12 @@ offline: it keeps none.
 
 ## Before anything personal crosses (the gate in DEC-0062)
 
-- [ ] Tested end to end with fake data.
-- [ ] Relay refuses other origins, oversized messages and floods.
-- [ ] Replay, tampering and a swapped key are all tested and refused.
-- [ ] A path outside the allowlist is refused on the phone.
+- [x] Tested end to end with fake data (real glasses and phone, 2026-11-02).
+- [x] Relay refuses other origins, oversized messages and floods (`relay/test.mjs`, live).
+- [x] Replay and tampering refused on the real pair; a swapped key shows different codes (`mia-art/test.mjs`).
+- [x] A path outside the allowlist is refused on the phone.
 - [ ] Unpairing works.
 - [ ] Nothing is logged with message contents, on the relay or the phone.
+  Relay messages aren't, but `MainActivity` logs the engine's token (a spike
+  line the CI check reads): it has to go first.
 - [ ] Security review of the diff, then Zac's OK.
