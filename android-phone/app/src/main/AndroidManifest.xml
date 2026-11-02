@@ -3,6 +3,9 @@
 
     <!-- Needed even for MIA's own server on 127.0.0.1 inside the app. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Meta's toolkit: the phone talks to the glasses (DEC-0059). -->
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <!-- Where the phone is, only when a screen asks and you allow it (World Map's
          I'm Here, location quests: DEC-0028). Checked on the phone, never sent off it. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -46,6 +49,9 @@
         android:icon="@android:drawable/star_big_on"
         android:allowBackup="false"
         android:networkSecurityConfig="@xml/network_security_config">
+        <!-- The app's id and token come from local.properties, never git. -->
+        <meta-data android:name="com.meta.wearable.mwdat.APPLICATION_ID" android:value="${mwdat_application_id}" />
+        <meta-data android:name="com.meta.wearable.mwdat.CLIENT_TOKEN" android:value="${mwdat_client_token}" />
 
         <activity
             android:name=".MainActivity"

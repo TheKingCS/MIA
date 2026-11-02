@@ -37,6 +37,7 @@ class MainActivity : Activity() {
     private val placesBridge = PlacesBridge(this)
     // The workout's count, spoken here (DEC-0055); made when the page first needs it (after onCreate).
     private val phoneVoice = lazy { PhoneVoice(this) }
+    private val metaGlasses = MetaGlasses(this)  // the glasses, through Meta's toolkit (DEC-0059)
 
     fun webView(): WebView? = web
 
@@ -70,6 +71,7 @@ class MainActivity : Activity() {
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        MetaGlasses.initialize(applicationContext)
         val status = TextView(this).apply {
             text = "Starting MIA on this phone…"
             textSize = 18f
@@ -176,6 +178,7 @@ class MainActivity : Activity() {
             addJavascriptInterface(gallery, "MIAAndroid")
             addJavascriptInterface(placesBridge, "MIAPhonePlaces")
             addJavascriptInterface(phoneVoice.value, "MIAPhoneVoice")
+            addJavascriptInterface(metaGlasses, "MIAMetaGlasses")
             // Signed in: straight to Home (or the Inbox, after a share). Not
             // yet: the screen asks to make an account (first start) or to
             // sign in (after logging out).

@@ -47,7 +47,7 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: "8.7"
+          gradle-version: "8.13"
 
       # llama.cpp's server for MIA's own model (docs/PHONE_MODEL_TEST.md),
       # for the phone and the emulator. Cached by its pinned version.

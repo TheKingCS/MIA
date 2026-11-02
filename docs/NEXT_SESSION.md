@@ -17,6 +17,17 @@ glasses go through the phone app's toolkit; no Web App, no Funnel.** The
 first-boot work in `web/glasses.*` is Claude Design's, still in progress:
 leave it to that session.
 
+**Toolkit in the phone app (2026-11-01):** `MetaGlasses.kt` connects from
+Settings (Glasses, phone app only), opens a session on display-capable
+glasses and draws `/api/glasses`: pinned apps, each app's panels, their
+readouts, Back. It builds; **it has never run on a phone or glasses.**
+Read-only so far: actions, Inputs, voice and the orb come next. The
+toolkit needs Android 10, so minSdk went 26 to 29; build tools are AGP
+8.11.1, Kotlin 2.2.21, Chaquopy 17, compileSdk 36. The app's id and token
+live in `android-phone/local.properties` (gitignored), never in the repo;
+CI builds get "0" unless the workflow is given them as secrets. Local
+build: `C:\Users\zacrh\Android\phone_build.ps1 assembleDebug`.
+
 **Zac's call: qwen3:14b or stay on qwen2.5:14b** (both measured
 2026-10-30: same speed, tool choice 212 vs 213 of 213, qwen3 reasons
 more on open questions; `docs/INTELLIGENCE_BENCHMARK.md` section 2,

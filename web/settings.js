@@ -104,6 +104,18 @@
       h.linked ? el("button", { type: "button", class: "btn btn-ghost", onclick: disconnect }, "Unlink") : ""));
   }
 
+  // Meta's toolkit lives in the phone app (DEC-0059), so this shows only there.
+  function glassesSection() {
+    const glasses = window.MIAMetaGlasses;
+    if (!glasses) return "";
+    const status = el("p", { class: "dim" }, "Glasses: " + glasses.state());
+    const refresh = () => { status.textContent = "Glasses: " + glasses.state(); };
+    const watch = setInterval(() => { if (status.isConnected) refresh(); else clearInterval(watch); }, 1000);
+    return section("Glasses", el("p", { class: "dim" }, "Show MIA on your Meta glasses, through this phone."), status,
+      el("div", { class: "acct-actions" },
+        el("button", { type: "button", class: "btn btn-amber", onclick: () => { glasses.connect(); refresh(); } }, "Connect Glasses")));
+  }
+
   function draw() {
     $("panel").replaceChildren(
       ...page.groups.map((g) => section(g.title, ...g.settings.map(setting), g.title === "Sound" ? soundCheck() : "")),
@@ -112,6 +124,7 @@
       page.model_test ? section("MIA's model on this phone",
         el("p", { class: "dim" }, "Download a small AI model, run it on this phone, and see how fast and how right it is. Talk uses it once it's running."),
         el("div", { class: "acct-actions" }, el("a", { class: "btn btn-ghost", href: "model-test.html" }, "Model test"))) : "",
+      glassesSection(),
       section("My Places", el("p", { class: "dim" }, "Places where arriving opens something: your workout at the gym, your grocery list at the store."),
         el("div", { class: "acct-actions" }, el("a", { class: "btn btn-ghost", href: "places.html" }, "My Places"))),
       section("Apps", el("p", { class: "dim" }, "Choose which apps you see, and your favorites."),

@@ -1,3 +1,5 @@
+import java.util.Properties
+
 // MIA on the phone (DEC-0019, the Phase 1 spike): MIA's own engine and
 // screens running inside this app, no computer needed. The engine is the
 // repo's Python (core/, server/), unchanged; the screens are web/,
@@ -9,6 +11,14 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.chaquo.python")
 }
+
+// Meta's toolkit (DEC-0059): the app's id and token stay out of git, in
+// local.properties here, or the environment on the build machine.
+val metaKeys = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
+}
+fun metaKey(name: String): String = metaKeys.getProperty(name) ?: System.getenv(name.uppercase()) ?: "0"
 
 val miaRoot: File = rootProject.projectDir.parentFile
 val miaAssets = layout.buildDirectory.dir("mia-assets")
@@ -28,16 +38,18 @@ val bundleMia by tasks.registering(Zip::class) {
 
 android {
     namespace = "com.mia.phone"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.mia.phone"
-        minSdk = 26
+        minSdk = 29
         targetSdk = 34
         versionCode = (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInt()
         versionName = "0.0.${System.getenv("GITHUB_RUN_NUMBER") ?: "0"}-spike"
         // Phones (arm64) and the CI emulator (x86_64).
         ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
+        manifestPlaceholders["mwdat_application_id"] = metaKey("mwdat_application_id")
+        manifestPlaceholders["mwdat_client_token"] = metaKey("mwdat_client_token")
         // A new bundle of MIA's files on every build, so an update unpacks it.
         buildConfigField("String", "MIA_BUNDLE", "\"${System.currentTimeMillis()}\"")
     }
@@ -67,6 +79,13 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions { jvmTarget = "17" }
+}
+
+dependencies {
+    // Meta's Device Access Toolkit: MIA on the glasses (DEC-0059).
+    implementation("com.meta.wearable:mwdat-core:1.0.1")
+    implementation("com.meta.wearable:mwdat-display:1.0.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
 }
 
 tasks.named("preBuild") { dependsOn(bundleMia) }
