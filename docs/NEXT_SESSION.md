@@ -39,7 +39,10 @@ GITHUB_RUN_NUMBER; last used 122). Her art is public in `TheKingCS/mia-art`
 App (test page live at thekingcs.github.io/mia-art, installed by QR; look,
 icon, key through the install link, crypto and speech all passed on the real
 glasses) joined to the phone by a sealed relay, not built yet. Her icon opens
-her; a tap makes her listen. The phone can't open a Web App. Still unknown:
+her; a tap makes her listen. The relay is live and passes `relay/test.mjs`
+(`docs/GLASSES_RELAY_PLAN.md`; deploy from `relay/` with Node in
+`C:\Users\zacrh\Android\node`). Next: the page's and phone's encryption and
+pairing, with fake data; nothing personal crosses until the plan's gate passes. The phone can't open a Web App. Still unknown:
 camera while the Web App shows. The tap works through the glasses (she heard
 Zac and answered there); her spoken answers there run long and should be short.
 
