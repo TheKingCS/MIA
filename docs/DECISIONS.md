@@ -1059,3 +1059,13 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   it brings her back; with her showing it selects. "Hey Meta, start MIA" is
   not the way in: the code stays, but chasing it with Meta isn't a priority.
 - Related: DEC-0059
+
+### DEC-0061: Fixed artwork for the glasses may be hosted publicly
+- Status: APPROVED
+- Proposed by: claude, 2026-11-02 · Approved by: zac, 2026-11-02 ("yes host the artwork publicly so she gets her orb and other designs")
+- Decision: Meta's display only loads images from public `https` addresses,
+  so MIA's orb and other fixed designs for the glasses live at one. Artwork
+  only: never a person's data, and nothing MIA generates about them. This
+  narrows DEC-0059's "no public address", which still holds for MIA herself.
+  `tools/glasses_art.py` draws the orb.
+- Related: DEC-0059, DEC-0002, DEC-0023
