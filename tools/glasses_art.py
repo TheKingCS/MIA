@@ -47,7 +47,7 @@ def orb(core, brightness, radii, turn, width) -> Image.Image:
     sparks = sum(np.exp(-(np.hypot(x - sx, y - sy) / 0.018) ** 2) for sx, sy in SPARKS)
 
     edge = np.clip((1 - r) / 0.08, 0, 1)  # nothing reaches the square's edge
-    light = np.clip((glow + rings * 0.9 + sparks * 0.8) * brightness * edge, 0, 1)
+    light = np.clip((centre + glow + rings * 0.9 + sparks * 0.8) * brightness * edge, 0, 1)
     white = np.clip(centre * brightness + rings * 0.35, 0, 1)
     pixels = ACCENT[None, None] * light[..., None] + (SOFT - ACCENT)[None, None] * (light * white)[..., None]
     return Image.fromarray(np.clip(pixels, 0, 255).astype("uint8"), "RGB").resize((SIZE, SIZE), Image.LANCZOS)
@@ -57,7 +57,7 @@ def main(folder: str) -> None:
     out = Path(folder)
     out.mkdir(parents=True, exist_ok=True)
     for name, shape in STATES.items():
-        orb(*shape).quantize(colors=128).save(out / f"orb-{name}.png", optimize=True)
+        orb(*shape).save(out / f"orb-{name}.png", optimize=True)
         print(f"orb-{name}.png", (out / f"orb-{name}.png").stat().st_size, "bytes")
 
 
