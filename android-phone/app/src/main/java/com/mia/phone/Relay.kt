@@ -35,6 +35,7 @@ import javax.crypto.Mac
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.SecretKeySpec
+import kotlin.math.abs
 
 /**
  * The phone's side of the sealed relay (DEC-0062, docs/GLASSES_RELAY_PLAN.md).
@@ -53,6 +54,7 @@ object Relay {
     private const val WRAP_KEY = "mia_relay_wrap"
     private const val RETRY_MS = 5000L
     private const val PROMISE_MS = 2000L
+    private const val FRESH_MS = 30000L
     private const val PAGE_TO_PHONE = "page-to-phone"
     private const val PHONE_TO_PAGE = "phone-to-page"
     private val ALLOWED = mapOf("/test/hello" to """{"hello":"This is a made-up answer, sealed by your phone."}""")
@@ -79,6 +81,7 @@ object Relay {
     private var confirmPhone: ByteArray? = null
     private var confirmPage: ByteArray? = null
     private var screen: Activity? = null
+    private var dialog: AlertDialog? = null
 
     /** The screen a pairing's question can show on. */
     fun showingOn(activity: Activity?) { screen = activity }
@@ -100,7 +103,7 @@ object Relay {
     @JavascriptInterface
     @Synchronized
     fun pair(code: String) {
-        if (!Regex("[0-9]{6}").matches(code)) return
+        if (!Regex("[0-9]{6}").matches(code) || keys != null) return
         cancel()
         stage = "pairing"
         val pair = KeyPairGenerator.getInstance("EC").apply { initialize(ECGenParameterSpec("secp256r1")) }.generateKeyPair()
@@ -175,30 +178,37 @@ object Relay {
         stage = "check"
     }
 
-    /** They Match opens this. Android's own dialog, so no page can answer it. */
+    /** They Match opens this. Android's own dialog, so no page can answer it,
+     *  and it only ever answers the pairing whose digits it shows. */
     @JavascriptInterface
+    @Synchronized
     fun confirm() {
-        val showing = check
         val here = screen ?: return
+        val shown = transcript ?: return
         if (stage != "check") return
+        val showing = check
         here.runOnUiThread {
-            AlertDialog.Builder(here)
-                .setTitle("Pair your glasses?")
-                .setMessage("Only say yes if your glasses show ${showing.take(4)} ${showing.drop(4)}.")
-                .setCancelable(false)
-                .setPositiveButton("They Match") { _, _ -> matched() }
-                .setNegativeButton("They Don't") { _, _ -> cancel() }
-                .show()
+            synchronized(this) {
+                if (dialog != null || transcript !== shown) return@runOnUiThread
+                dialog = AlertDialog.Builder(here)
+                    .setTitle("Pair your glasses?")
+                    .setMessage("Only say yes if your glasses show ${showing.take(4)} ${showing.drop(4)}.")
+                    .setCancelable(false)
+                    .setPositiveButton("They Match") { _, _ -> matched(shown) }
+                    .setNegativeButton("They Don't") { _, _ -> cancel() }
+                    .setOnDismissListener { dialog = null }
+                    .show()
+            }
         }
     }
 
     /** The person has seen the same digits on both: prove it to the glasses. */
     @Synchronized
-    private fun matched() {
+    private fun matched(shown: ByteArray) {
         val socket = pairing ?: return
         val key = confirmPhone ?: return
-        val said = transcript ?: return
-        socket.send(JSONObject().put("t", "ok").put("mac", encode(mac(key, said))).toString())
+        if (stage != "check" || transcript !== shown) return
+        socket.send(JSONObject().put("t", "ok").put("mac", encode(mac(key, shown))).toString())
         stage = "confirming"
     }
 
@@ -231,6 +241,7 @@ object Relay {
         confirmPhone = null
         confirmPage = null
         check = ""
+        dialog?.let { open -> main.post { open.dismiss() } }
     }
 
     @JavascriptInterface
@@ -239,7 +250,7 @@ object Relay {
         pairing?.close(1000, null)
         pairing = null
         clearPairing()
-        if (stage != "paired") stage = "unpaired"
+        stage = if (keys != null) "paired" else "unpaired"
     }
 
     /** Forget the glasses: their key reaches nothing from now on. */
@@ -294,7 +305,11 @@ object Relay {
         prefs()?.edit()?.putLong("highest", highest)?.apply()
 
         val path = message.optString("path")
-        val answer = if (path == LISTEN) listen() else ALLOWED[path]
+        val answer = when {
+            path != LISTEN -> ALLOWED[path]
+            abs(System.currentTimeMillis() - number) <= FRESH_MS -> listen()
+            else -> null  // held back on the way: an old press never opens the mic
+        }
         if (answer == null) Log.w(TAG, "Refused: a path that isn't allowed")
         val reply = JSONObject().put("id", message.opt("id")).put("status", if (answer == null) 403 else 200)
         if (answer != null) reply.put("body", JSONObject(answer))

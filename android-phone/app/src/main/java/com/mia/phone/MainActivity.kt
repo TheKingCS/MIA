@@ -16,12 +16,14 @@ import android.webkit.GeolocationPermissions
 import android.webkit.PermissionRequest
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.TextView
 import android.widget.Toast
 import org.json.JSONObject
+import java.io.ByteArrayInputStream
 
 /**
  * MIA on the phone (DEC-0019, the Phase 1 spike): starts MIA's own engine
@@ -171,6 +173,15 @@ class MainActivity : Activity() {
                         }
                     }
                     return true
+                }
+
+                // Frames, scripts and form posts never reach the check above.
+                // MIA's pages load nothing from outside but pictures.
+                override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? {
+                    val own = request.url.toString().startsWith("http://127.0.0.1:$PORT/")
+                    val picture = request.requestHeaders["Accept"]?.startsWith("image/") == true
+                    if (own || picture || request.url.scheme !in listOf("http", "https")) return null
+                    return WebResourceResponse("text/plain", "utf-8", 403, "Refused", emptyMap(), ByteArrayInputStream(ByteArray(0)))
                 }
             }
             // Without this, the web view silently answers "no" to any
