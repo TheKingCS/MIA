@@ -12,9 +12,10 @@ Claude Code on the PC (`mwdat-android`, DAT 1.0.1). It corrects MIA's
 docs: through the phone app the toolkit offers Display (a native UI on
 the glasses), a live camera stream and photos, Inputs, and experimental
 Speech, Motion and audio, plus "Hey Meta, start MIA" (Voice Invocations);
-MockDeviceKit tests without glasses. **Zac's call:** the glasses' route,
-DEC-0016's Web App (needs Funnel and a public link, not built) or Display
-through the phone app (no public address, a native UI to design for).
+MockDeviceKit tests without glasses. **DEC-0059 (Zac, 2026-11-01): the
+glasses go through the phone app's toolkit; no Web App, no Funnel.** The
+first-boot work in `web/glasses.*` is Claude Design's, still in progress:
+leave it to that session.
 
 **Zac's call: qwen3:14b or stay on qwen2.5:14b** (both measured
 2026-10-30: same speed, tool choice 212 vs 213 of 213, qwen3 reasons

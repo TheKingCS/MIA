@@ -1039,3 +1039,15 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   there's a Pi; Claude Code as the lab's coder (recommended) or her local
   model.
 - Related: DEC-0043, DEC-0049, DEC-0057, docs/ROADMAP.md (Self-Modification)
+
+### DEC-0059: The glasses go through the phone app's toolkit, not a Web App
+- Status: APPROVED
+- Proposed by: zac, 2026-11-01 · Approved by: zac, 2026-11-01 ("I think we will just do the phone app toolkit")
+- Decision: MIA reaches the Meta Ray-Ban Display through Meta's Device
+  Access Toolkit in MIA's Android app (Display, Inputs, Speech, camera,
+  Voice Invocations...), which replaces the Web App route of DEC-0016: no
+  Tailscale Funnel, no public address, no glasses-only link. The engine
+  keeps deciding what the glasses show (`core/glasses.py`), as DEC-0013
+  asks; the phone app draws it. `web/glasses.*` stays the design preview
+  in the browser while the native surface is built.
+- Related: DEC-0016 (its route, superseded), DEC-0029, DEC-0030 (phase F), DEC-0055, DEC-0056
