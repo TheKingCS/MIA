@@ -20,16 +20,19 @@ leave it to that session.
 **Toolkit in the phone app (2026-11-01):** `MetaGlasses.kt` connects from
 Settings (Glasses, phone app only), opens a session on display-capable
 glasses and draws `/api/glasses`: pinned apps, each app's panels, their
-readouts, Back. It builds; **it has never run on a phone or glasses.**
+readouts, Back. **It runs on Zac's real glasses (2026-11-02).**
 Read-only so far: actions, Inputs, voice and the orb come next. The
 toolkit needs Android 10, so minSdk went 26 to 29; build tools are AGP
 8.11.1, Kotlin 2.2.21, Chaquopy 17, compileSdk 36. The app's id and token
 live in `android-phone/local.properties` (gitignored), never in the repo;
 CI builds get "0" unless the workflow is given them as secrets. Developer Mode
-with 0/0 reached the glasses but stopped at
-DAT_APP_ON_THE_GLASSES_UPDATE_REQUIRED (firmware 129, glasses toolkit
-1.0.0; SDK 1.0.0 and 1.0.1 both fail, and Meta AI's update screen just
-bounces back), so the build now uses the real id and token. Local
+with 0/0 stopped at DAT_APP_ON_THE_GLASSES_UPDATE_REQUIRED. What fixed it
+(Meta's docs don't say): real id and token in the build, then in the
+Developer Center the package and signature under Configuration, a version
+built to Ready, that version on the Beta channel, and Zac invited to it.
+A later signing key or package change needs a new version. Keep
+versionCode above the phone's when installing a local build (set
+GITHUB_RUN_NUMBER; last used 113). Local
 build: `C:\Users\zacrh\Android\phone_build.ps1 assembleDebug`.
 
 **Zac's call: qwen3:14b or stay on qwen2.5:14b** (both measured
