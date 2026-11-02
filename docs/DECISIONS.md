@@ -1069,3 +1069,17 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   narrows DEC-0059's "no public address", which still holds for MIA herself.
   `tools/glasses_art.py` draws the orb.
 - Related: DEC-0059, DEC-0002, DEC-0023
+
+### DEC-0062: Her face is a Web App, her brain stays on the phone, joined by a sealed relay
+- Status: APPROVED
+- Proposed by: claude, 2026-11-02 · Approved by: zac, 2026-11-02 ("Go with the relay. If they have to take turns we have to make it appear seamless like one app working instead of 2.")
+- Decision: to give the glasses MIA's real look, what you see is a Web App
+  whose page is public but holds no data, and the phone app keeps the engine
+  and whatever needs the toolkit. They talk through a small public relay
+  that the phone connects out to, encrypted with a key only the phone and
+  glasses hold, so MIA opens no address to the internet. It must feel like
+  one app: if the two have to take turns on the display, the handoff can't
+  show. This changes DEC-0059's route for the display only. Nothing personal
+  crosses until a test page has proved it on the real glasses and the
+  security review is done.
+- Related: DEC-0059, DEC-0060, DEC-0061, DEC-0002
