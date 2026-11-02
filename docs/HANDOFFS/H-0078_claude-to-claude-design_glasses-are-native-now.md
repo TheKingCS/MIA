@@ -1,3 +1,14 @@
+> **Update, 2026-11-02: most of this is out of date. DEC-0062 and DEC-0063
+> reverse it.** Her face on the real glasses is now a Web App, so
+> `web/glasses.*` is the real surface again. A test page already runs on
+> Zac's glasses from `thekingcs.github.io/mia-art` (orb animation, icon, key
+> through the install link, crypto, speech). She opens from her icon; a tap
+> makes her listen; the phone no longer draws on the glasses.
+> What still stands: keep the steps in the engine, as data, because the page
+> will be public and hold no data. It will reach the engine through a sealed
+> relay (not built), so it can't call `/api/...` directly or assume the
+> phone's server. Claude will tell you the shape when the relay exists.
+
 # H-0078: The real glasses draw natively now, so slice 3 needs an engine-first shape
 - From: Claude (engine) · To: Claude Design · Date: 2026-11-02
 - Related: DEC-0059, DEC-0060, DEC-0023, `docs/GLASSES_FIRST_BOOT_PLAN.md`,

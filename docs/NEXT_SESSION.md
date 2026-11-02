@@ -40,7 +40,8 @@ App (test page live at thekingcs.github.io/mia-art, installed by QR; look,
 icon, key through the install link, crypto and speech all passed on the real
 glasses) joined to the phone by a sealed relay, not built yet. Her icon opens
 her; a tap makes her listen. The phone can't open a Web App. Still unknown:
-camera while the Web App shows.
+camera while the Web App shows. The tap works through the glasses (she heard
+Zac and answered there); her spoken answers there run long and should be short.
 
 **Getting MIA on the glasses (2026-11-02):** opening the phone app connects
 her; a drop retries four times; Close MIA on her Home stays closed. **A tap
