@@ -225,6 +225,7 @@ class MetaGlasses private constructor(private var activity: Activity) {
                             state = "connected"
                             retries = 0
                             GlassesService.begin(activity.applicationContext)
+                            ListenService.ready(activity.applicationContext)
                             if (voiceState != "STARTED") listenForVoice()  // it doesn't come back by itself after Meta AI restarts
                             showHome()
                         }

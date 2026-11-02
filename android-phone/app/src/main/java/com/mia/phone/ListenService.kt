@@ -203,10 +203,22 @@ class ListenService : Service() {
             KeyEvent.KEYCODE_MEDIA_PAUSE,
         )
 
+        private const val ACTION_READY = "com.mia.phone.READY"
+
         @Volatile var running = false
             private set
 
         fun intent(context: Context, action: String): Intent = Intent(context, ListenService::class.java).setAction(action)
+
+        /** Ready for a tap, without listening yet. Android may refuse from the background; the tap just waits. */
+        fun ready(context: Context) {
+            if (running || context.checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED) return
+            try {
+                context.startForegroundService(intent(context, ACTION_READY))
+            } catch (e: RuntimeException) {
+                Log.w(MainActivity.TAG, "listen service couldn't start", e)
+            }
+        }
 
         /** Listen now. Starts the service (only allowed while MIA's screen is showing) or asks the running one. */
         fun listen(context: Context) {

@@ -13,6 +13,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Gravity
 import android.webkit.GeolocationPermissions
+import android.webkit.PermissionRequest
 import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView
@@ -174,6 +175,19 @@ class MainActivity : Activity() {
                         geoAsk = origin to callback
                         requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION,
                             Manifest.permission.ACCESS_COARSE_LOCATION), GEO_REQUEST)
+                    }
+                }
+
+                // A screen's mic button: yes for MIA's own pages, once Android's microphone permission is given.
+                override fun onPermissionRequest(request: PermissionRequest) {
+                    val own = request.origin.toString().startsWith("http://127.0.0.1:$PORT")
+                    val microphone = PermissionRequest.RESOURCE_AUDIO_CAPTURE
+                    if (!own || request.resources.toList() != listOf(microphone)) { request.deny(); return }
+                    if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                        request.grant(arrayOf(microphone))
+                    } else {
+                        request.deny()
+                        requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), Voice.VOICE_REQUEST)
                     }
                 }
             }
