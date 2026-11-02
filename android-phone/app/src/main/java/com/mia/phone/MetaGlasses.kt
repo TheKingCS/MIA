@@ -81,6 +81,7 @@ class MetaGlasses private constructor(private var activity: Activity) {
         session?.stop()
         state = "closed"
         GlassesService.end(activity.applicationContext)
+        ListenService.ready(activity.applicationContext)  // the next tap brings her back
     }
 
     /** Meta: the permission comes first, then the toolkit starts, once. */

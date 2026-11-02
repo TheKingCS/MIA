@@ -32,7 +32,20 @@ Developer Center the package and signature under Configuration, a version
 built to Ready, that version on the Beta channel, and Zac invited to it.
 A later signing key or package change needs a new version. Keep
 versionCode above the phone's when installing a local build (set
-GITHUB_RUN_NUMBER; last used 113). Local
+GITHUB_RUN_NUMBER; last used 120).
+
+**Getting MIA on the glasses (2026-11-02):** opening the phone app connects
+her; a drop retries four times; Close MIA on her Home stays closed. **A tap
+on the glasses brings her back** (works, Zac tested): the glasses send
+KEYCODE_MEDIA_PLAY over Bluetooth, and ListenService plays a moment of
+silence to hold Android's media button. With her showing, the tap is Select.
+While the listener runs, a tap can't start paused music (Zac is fine with
+it; MIA will be his music app). Not yet tried with the phone in a pocket.
+**"Hey Meta, start MIA" doesn't work:** Meta says "no device called MIA",
+and on the phone the voice stream reaches STARTED then "Channel error
+occurred" within 100 ms, every time. Next step is Meta support checking the
+Voice Invocation permission (message drafted for Zac); the code's ready.
+Next: her look on the glasses, then approving actions. Local
 build: `C:\Users\zacrh\Android\phone_build.ps1 assembleDebug`.
 
 **Zac's call: qwen3:14b or stay on qwen2.5:14b** (both measured

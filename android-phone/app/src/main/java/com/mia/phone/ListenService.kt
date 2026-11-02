@@ -8,6 +8,9 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.media.AudioAttributes
+import android.media.AudioFormat
+import android.media.AudioTrack
 import android.media.session.MediaSession
 import android.media.session.PlaybackState
 import android.os.Build
@@ -63,6 +66,7 @@ class ListenService : Service() {
         }
         if (!running && !goForeground()) return START_NOT_STICKY
         if (intent.action == Voice.ACTION_LISTEN) listenNow()
+        if (intent.action == ACTION_READY) claimButtons()
         return START_NOT_STICKY
     }
 
@@ -153,6 +157,22 @@ class ListenService : Service() {
         mediaSession = session
     }
 
+    /** Android gives the media button to whichever app last played sound, so a moment
+     *  of silence takes it from the music app. It takes no audio focus: music playing
+     *  keeps playing and keeps its button; this only claims it when nothing is. */
+    private fun claimButtons() {
+        val silence = ByteArray(SILENCE_BYTES)
+        val track = AudioTrack.Builder()
+            .setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build())
+            .setAudioFormat(AudioFormat.Builder().setEncoding(AudioFormat.ENCODING_PCM_16BIT).setSampleRate(SILENCE_RATE).setChannelMask(AudioFormat.CHANNEL_OUT_MONO).build())
+            .setBufferSizeInBytes(SILENCE_BYTES)
+            .setTransferMode(AudioTrack.MODE_STATIC)
+            .build()
+        track.write(silence, 0, silence.size)
+        track.play()
+        main.postDelayed({ track.release() }, SILENCE_MS)
+    }
+
     // ------------------------------------------------------------ the notification
 
     private fun createChannel() {
@@ -200,10 +220,14 @@ class ListenService : Service() {
             KeyEvent.KEYCODE_HEADSETHOOK,
             KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE,
             KeyEvent.KEYCODE_MEDIA_PLAY,
+            KeyEvent.KEYCODE_MEDIA_PLAY,
             KeyEvent.KEYCODE_MEDIA_PAUSE,
         )
 
         private const val ACTION_READY = "com.mia.phone.READY"
+        private const val SILENCE_RATE = 8000
+        private const val SILENCE_BYTES = 8000
+        private const val SILENCE_MS = 1000L
 
         @Volatile var running = false
             private set
@@ -212,9 +236,10 @@ class ListenService : Service() {
 
         /** Ready for a tap, without listening yet. Android may refuse from the background; the tap just waits. */
         fun ready(context: Context) {
-            if (running || context.checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED) return
+            if (context.checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED) return
             try {
-                context.startForegroundService(intent(context, ACTION_READY))
+                if (running) context.startService(intent(context, ACTION_READY))
+                else context.startForegroundService(intent(context, ACTION_READY))
             } catch (e: RuntimeException) {
                 Log.w(MainActivity.TAG, "listen service couldn't start", e)
             }
