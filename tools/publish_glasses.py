@@ -69,8 +69,7 @@ def main(folder: str) -> None:
     out = Path(folder)
     for name in COPIED:
         shutil.copyfile(WEB / name, out / name)
-    (out / "glasses.css").write_text(stylesheet(), encoding="utf-8", newline="
-")
+    (out / "glasses.css").write_text(stylesheet(), encoding="utf-8", newline="\n")
     (out / "index.html").write_text(page(), encoding="utf-8", newline="\n")
     print("Published to", out)
 
