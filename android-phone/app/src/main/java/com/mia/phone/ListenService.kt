@@ -136,7 +136,7 @@ class ListenService : Service() {
                     mediaButtonIntent.getParcelableExtra(Intent.EXTRA_KEY_EVENT)
                 }
                 if (event?.action == KeyEvent.ACTION_UP && event.keyCode in HEADSET_KEYS) {
-                    listenNow()
+                    if (!MetaGlasses.wake()) listenNow()  // not on the glasses: the tap opens her there
                     return true
                 }
                 return super.onMediaButtonEvent(mediaButtonIntent)

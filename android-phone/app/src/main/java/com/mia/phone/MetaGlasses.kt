@@ -332,6 +332,15 @@ class MetaGlasses private constructor(private var activity: Activity) {
         const val BLUETOOTH_REQUEST = 7301
         private var only: MetaGlasses? = null
 
+        /** A tap on the glasses with MIA not showing on them. False: she's there, or never set up. */
+        fun wake(): Boolean {
+            val glasses = only ?: return false
+            if (glasses.display != null) return false
+            Log.i(TAG, "Woken by a tap")
+            glasses.autoConnect()
+            return true
+        }
+
         fun attach(activity: Activity): MetaGlasses =
             (only ?: MetaGlasses(activity).also { only = it }).also { it.activity = activity }
     }
