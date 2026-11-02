@@ -58,6 +58,8 @@ class MetaGlasses private constructor(private var activity: Activity) {
     private var voice: VoiceInvocationsStream? = null
     private val voiceJobs = mutableListOf<Job>()
     private var voiceState = ""
+    private var voiceRetried = false
+    private var closedByPerson = false
     private var lastHome: JSONObject? = null
     private var onHome = false
 
@@ -69,7 +71,16 @@ class MetaGlasses private constructor(private var activity: Activity) {
         if (activity.checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) return
         prepare()
         retries = 0
+        closedByPerson = false
         if (Wearables.registrationState.value == RegistrationState.REGISTERED) startSession()
+    }
+
+    /** Her Close button: the glasses go back to the person, and she stays away until asked. */
+    private fun close() {
+        closedByPerson = true
+        session?.stop()
+        state = "closed"
+        GlassesService.end(activity.applicationContext)
     }
 
     /** Meta: the permission comes first, then the toolkit starts, once. */
@@ -97,7 +108,16 @@ class MetaGlasses private constructor(private var activity: Activity) {
                 }
             }
         }
-        voiceJobs += scope.launch { stream.errors.collect { error -> Log.w(TAG, "Voice: ${error.description}") } }
+        voiceJobs += scope.launch {
+            stream.errors.collect { error ->
+                Log.w(TAG, "Voice: ${error.description}")
+                if (!voiceRetried) {  // once: it can fail if it opens while the glasses are still connecting
+                    voiceRetried = true
+                    delay(VOICE_RETRY_MS)
+                    listenForVoice()
+                }
+            }
+        }
         voiceJobs += scope.launch {
             stream.state.collect { now ->
                 Log.i(TAG, "Voice stream: $now")
@@ -123,6 +143,7 @@ class MetaGlasses private constructor(private var activity: Activity) {
             }
             prepare()
             retries = 0
+            closedByPerson = false
             if (Wearables.registrationState.value == RegistrationState.REGISTERED) startSession()
             else {
                 state = "finish connecting in the Meta AI app"
@@ -173,7 +194,7 @@ class MetaGlasses private constructor(private var activity: Activity) {
 
     /** The glasses come and go (taken off, a moment out of range): try a few times, then wait to be asked. */
     private fun retrySoon() {
-        if (glassesAppOutdated) return
+        if (glassesAppOutdated || closedByPerson) return
         if (retries >= MAX_RETRIES) {
             state = "not connected"
             GlassesService.end(activity.applicationContext)
@@ -233,9 +254,10 @@ class MetaGlasses private constructor(private var activity: Activity) {
 
     private fun drawHome(data: JSONObject) {
         val apps = data.optJSONArray("apps") ?: JSONArray()
-        val cards = (0 until minOf(apps.length(), MAX_BUTTONS)).map { apps.getJSONObject(it) }
-        screen("MIA", data.optString("hint")) {
-            cards.forEach { card -> it(card.optString("name"), { showApp(card) }) }
+        val cards = (0 until minOf(apps.length(), MAX_BUTTONS - 1)).map { apps.getJSONObject(it) }
+        screen("MIA", data.optString("hint")) { add ->
+            cards.forEach { card -> add(card.optString("name"), { showApp(card) }) }
+            add("Close MIA", { close() })
         }
     }
 
@@ -305,6 +327,7 @@ class MetaGlasses private constructor(private var activity: Activity) {
         private const val MAX_LINES = 5
         private const val MAX_RETRIES = 4
         private const val RETRY_MS = 6000L
+        private const val VOICE_RETRY_MS = 8000L
         private const val READ_TIMEOUT_MS = 30000
         const val BLUETOOTH_REQUEST = 7301
         private var only: MetaGlasses? = null
