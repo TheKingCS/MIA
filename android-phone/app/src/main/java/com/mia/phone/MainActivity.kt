@@ -90,7 +90,6 @@ class MainActivity : Activity() {
                 runOnUiThread {
                     show(result.optString("token"), startPage(intent, shared))
                     if (Voice.wanted(intent)) listen()
-                    ListenService.ready(this)  // a tap on the glasses talks to her (DEC-0063)
                 }
             } catch (e: Throwable) {
                 Log.e(TAG, "failed", e)
@@ -219,6 +218,7 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         Places.onScreen = true  // the screen's own watch asks while MIA is showing
+        ListenService.ready(this)  // a tap on the glasses talks to her (DEC-0063); only allowed while showing
     }
 
     override fun onDestroy() {
