@@ -93,9 +93,9 @@ offline: it keeps none.
 
 ## Before anything personal crosses (the gate in DEC-0062)
 
-- [ ] Tested end to end with fake data, on the second pairing version.
+- [x] Tested end to end with fake data, on the second pairing version (Zac, 2026-11-02).
 - [x] Relay refuses other origins, oversized messages and floods (`relay/test.mjs`, live).
-- [ ] Replay and tampering refused on the real pair, on the second version; a swapped key and an unproved `ok` are refused (`mia-art/test.mjs`).
+- [x] Replay and tampering refused on the real pair, on the second version; a swapped key and an unproved `ok` are refused (`mia-art/test.mjs`).
 - [x] A path outside the allowlist is refused on the phone.
 - [x] Unpairing works (tested on the real pair: the glasses get no answer).
 - [x] Nothing is logged with message contents, on the relay or the phone. The
