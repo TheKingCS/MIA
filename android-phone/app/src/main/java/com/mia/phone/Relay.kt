@@ -1,5 +1,7 @@
 package com.mia.phone
 
+import android.app.Activity
+import android.app.AlertDialog
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
@@ -47,8 +49,10 @@ object Relay {
     private const val TAG = "MIARelay"
     private const val URL = "wss://mia-relay.yhrhodes.workers.dev"
     private const val PREFS = "mia_relay"
+    private const val LISTEN = "/voice/listen"
     private const val WRAP_KEY = "mia_relay_wrap"
     private const val RETRY_MS = 5000L
+    private const val PROMISE_MS = 2000L
     private const val PAGE_TO_PHONE = "page-to-phone"
     private const val PHONE_TO_PAGE = "phone-to-page"
     private val ALLOWED = mapOf("/test/hello" to """{"hello":"This is a made-up answer, sealed by your phone."}""")
@@ -70,6 +74,14 @@ object Relay {
     private var pairing: WebSocket? = null
     private var ours: KeyPair? = null
     private var pending: Keys? = null
+    private var ourNonce: ByteArray? = null
+    private var transcript: ByteArray? = null
+    private var confirmPhone: ByteArray? = null
+    private var confirmPage: ByteArray? = null
+    private var screen: Activity? = null
+
+    /** The screen a pairing's question can show on. */
+    fun showingOn(activity: Activity?) { screen = activity }
 
     /** Once at start: a paired phone goes straight to its room. */
     @Synchronized
@@ -83,69 +95,127 @@ object Relay {
     @JavascriptInterface
     fun state(): String = JSONObject().put("stage", stage).put("check", check).put("connected", connected).toString()
 
-    /** The six digits the glasses are showing. */
+    /** The six digits the glasses are showing. Our key is only promised at first
+     *  (commit-then-reveal): nobody can pick theirs to match it. */
     @JavascriptInterface
     @Synchronized
     fun pair(code: String) {
         if (!Regex("[0-9]{6}").matches(code)) return
         cancel()
         stage = "pairing"
-        ours = KeyPairGenerator.getInstance("EC").apply { initialize(ECGenParameterSpec("secp256r1")) }.generateKeyPair()
+        val pair = KeyPairGenerator.getInstance("EC").apply { initialize(ECGenParameterSpec("secp256r1")) }.generateKeyPair()
+        ours = pair
+        val nonce = ByteArray(32).also { random.nextBytes(it) }
+        ourNonce = nonce
+        val promise = encode(MessageDigest.getInstance("SHA-256").digest(raw(pair.public as ECPublicKey) + nonce))
         val request = Request.Builder().url("$URL/pair-$code?role=phone").build()
-        pairing = client.newWebSocket(request, object : WebSocketListener() {
-            override fun onOpen(webSocket: WebSocket, response: Response) = sendHello(webSocket)
+        val opened = client.newWebSocket(request, object : WebSocketListener() {
+            override fun onOpen(webSocket: WebSocket, response: Response) = promiseUntilAnswered(webSocket, promise)
             override fun onMessage(webSocket: WebSocket, text: String) = onPairing(webSocket, text)
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
                 Log.w(TAG, "Pairing connection failed")
-                if (pairing === webSocket) { stage = "unpaired"; check = "" }
+                failPairing(webSocket)
             }
         })
+        pairing = opened
     }
 
-    private fun sendHello(webSocket: WebSocket) {
-        val pub = ours?.public as? ECPublicKey ?: return
-        webSocket.send(JSONObject().put("t", "hello").put("pub", encode(raw(pub))).toString())
+    @Synchronized
+    private fun failPairing(webSocket: WebSocket) {
+        if (pairing === webSocket) { cancel(); webSocket.cancel() }
+    }
+
+    /** The relay keeps nothing, so the glasses may not be there yet. */
+    @Synchronized
+    private fun promiseUntilAnswered(webSocket: WebSocket, promise: String) {
+        if (webSocket !== pairing || pending != null) return
+        webSocket.send(JSONObject().put("t", "commit").put("c", promise).toString())
+        main.postDelayed({ promiseUntilAnswered(webSocket, promise) }, PROMISE_MS)
     }
 
     @Synchronized
     private fun onPairing(webSocket: WebSocket, text: String) {
-        if (webSocket !== pairing || pending != null) return
+        if (webSocket !== pairing) return
         try {
             val message = JSONObject(text)
-            if (message.optString("t") != "hello") return
-            sendHello(webSocket)
-            val pair = ours ?: return
-            val pagePub = decode(message.getString("pub"))
-            val phonePub = raw(pair.public as ECPublicKey)
-            val agreement = KeyAgreement.getInstance("ECDH")
-            agreement.init(pair.private)
-            agreement.doPhase(publicKey(pagePub, pair.public as ECPublicKey), true)
-            val shared = agreement.generateSecret()
-            val salt = MessageDigest.getInstance("SHA-256").digest("mia-relay-v1".toByteArray() + pagePub + phonePub)
-            val number = ByteBuffer.wrap(expand(shared, salt, "check")).int.toLong() and 0xffffffffL
-            check = (number % 1000000).toString().padStart(6, '0')
-            pending = Keys(
-                expand(shared, salt, "room").joinToString("") { "%02x".format(it) },
-                expand(shared, salt, PHONE_TO_PAGE),
-                expand(shared, salt, PAGE_TO_PHONE),
-            )
-            stage = "check"
+            when (message.optString("t")) {
+                "hello" -> if (pending == null) answerHello(webSocket, message)
+                "ok" -> finishPairing(webSocket, message)
+            }
         } catch (e: Exception) {
-            Log.w(TAG, "Refused a bad hello")
+            Log.w(TAG, "Refused a bad pairing message")
+            failPairing(webSocket)
         }
     }
 
-    /** The person has seen the same six digits on both. Only now is the key kept. */
+    private fun answerHello(webSocket: WebSocket, message: JSONObject) {
+        val pair = ours ?: return
+        val nonce = ourNonce ?: return
+        val pagePub = decode(message.getString("pub"))
+        val pageNonce = decode(message.getString("nonce"))
+        require(pageNonce.size == 32)
+        val phonePub = raw(pair.public as ECPublicKey)
+        val agreement = KeyAgreement.getInstance("ECDH")
+        agreement.init(pair.private)
+        agreement.doPhase(publicKey(pagePub, pair.public as ECPublicKey), true)
+        val shared = agreement.generateSecret()
+        val salt = MessageDigest.getInstance("SHA-256")
+            .digest("mia-relay-v2".toByteArray() + pagePub + phonePub + pageNonce + nonce)
+        val number = ByteBuffer.wrap(expand(shared, salt, "check")).int.toLong() and 0xffffffffL
+        check = (number % 100000000).toString().padStart(8, '0')
+        pending = Keys(
+            expand(shared, salt, "room").joinToString("") { "%02x".format(it) },
+            expand(shared, salt, PHONE_TO_PAGE),
+            expand(shared, salt, PAGE_TO_PHONE),
+        )
+        transcript = salt
+        confirmPhone = expand(shared, salt, "confirm-phone")
+        confirmPage = expand(shared, salt, "confirm-page")
+        webSocket.send(JSONObject().put("t", "reveal").put("pub", encode(phonePub)).put("nonce", encode(nonce)).toString())
+        stage = "check"
+    }
+
+    /** They Match opens this. Android's own dialog, so no page can answer it. */
     @JavascriptInterface
-    @Synchronized
     fun confirm() {
+        val showing = check
+        val here = screen ?: return
+        if (stage != "check") return
+        here.runOnUiThread {
+            AlertDialog.Builder(here)
+                .setTitle("Pair your glasses?")
+                .setMessage("Only say yes if your glasses show ${showing.take(4)} ${showing.drop(4)}.")
+                .setCancelable(false)
+                .setPositiveButton("They Match") { _, _ -> matched() }
+                .setNegativeButton("They Don't") { _, _ -> cancel() }
+                .show()
+        }
+    }
+
+    /** The person has seen the same digits on both: prove it to the glasses. */
+    @Synchronized
+    private fun matched() {
+        val socket = pairing ?: return
+        val key = confirmPhone ?: return
+        val said = transcript ?: return
+        socket.send(JSONObject().put("t", "ok").put("mac", encode(mac(key, said))).toString())
+        stage = "confirming"
+    }
+
+    /** Only keeps the key once the glasses have proved they hold it too. */
+    private fun finishPairing(webSocket: WebSocket, message: JSONObject) {
+        if (stage != "confirming") return
         val chosen = pending ?: return
-        pairing?.send(JSONObject().put("t", "ok").toString())
-        pairing?.close(1000, null)
+        val key = confirmPage ?: return
+        val said = transcript ?: return
+        if (!MessageDigest.isEqual(mac(key, said), decode(message.getString("mac")))) {
+            Log.w(TAG, "Refused: the glasses' proof didn't match")
+            failPairing(webSocket)
+            return
+        }
+        webSocket.close(1000, null)
         pairing = null
-        pending = null
-        ours = null
-        check = ""
+        clearPairing()
         highest = 0
         keys = chosen
         save(chosen)
@@ -153,14 +223,22 @@ object Relay {
         connect()
     }
 
+    private fun clearPairing() {
+        pending = null
+        ours = null
+        ourNonce = null
+        transcript = null
+        confirmPhone = null
+        confirmPage = null
+        check = ""
+    }
+
     @JavascriptInterface
     @Synchronized
     fun cancel() {
         pairing?.close(1000, null)
         pairing = null
-        pending = null
-        ours = null
-        check = ""
+        clearPairing()
         if (stage != "paired") stage = "unpaired"
     }
 
@@ -215,12 +293,21 @@ object Relay {
         highest = number
         prefs()?.edit()?.putLong("highest", highest)?.apply()
 
-        val answer = ALLOWED[message.optString("path")]
+        val path = message.optString("path")
+        val answer = if (path == LISTEN) listen() else ALLOWED[path]
         if (answer == null) Log.w(TAG, "Refused: a path that isn't allowed")
         val reply = JSONObject().put("id", message.opt("id")).put("status", if (answer == null) 403 else 200)
         if (answer != null) reply.put("body", JSONObject(answer))
         sent = maxOf(sent + 1, System.currentTimeMillis())
         webSocket.send(seal(paired.send, reply.put("n", sent).toString().toByteArray()))
+    }
+
+    /** Her Listen button: she hears and answers through the glasses, not this relay. */
+    private fun listen(): String? {
+        val context = appContext ?: return null
+        if (!ListenService.running) return null
+        main.post { ListenService.listen(context) }
+        return "{}"
     }
 
     // ---------------------------------------------------------------- crypto
@@ -247,6 +334,9 @@ object Relay {
         return Mac.getInstance("HmacSHA256").apply { init(SecretKeySpec(extract, "HmacSHA256")) }
             .doFinal(info.toByteArray() + byteArrayOf(1))
     }
+
+    private fun mac(key: ByteArray, data: ByteArray): ByteArray =
+        Mac.getInstance("HmacSHA256").apply { init(SecretKeySpec(key, "HmacSHA256")) }.doFinal(data)
 
     private fun seal(key: ByteArray, plain: ByteArray): String {
         val nonce = ByteArray(12).also { random.nextBytes(it) }

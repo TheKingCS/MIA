@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.ActivityManager
 import android.Manifest
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -14,6 +15,7 @@ import android.view.Gravity
 import android.webkit.GeolocationPermissions
 import android.webkit.PermissionRequest
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -156,7 +158,21 @@ class MainActivity : Activity() {
             settings.cacheMode = WebSettings.LOAD_NO_CACHE
             settings.setGeolocationEnabled(true)
             clearCache(true)
-            webViewClient = WebViewClient()
+            // Only MIA's own pages stay in here, with their bridges: anything
+            // else opens in the browser, which has none.
+            webViewClient = object : WebViewClient() {
+                override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                    if (request.url.toString().startsWith("http://127.0.0.1:$PORT/")) return false
+                    if (request.isForMainFrame) {
+                        try {
+                            startActivity(Intent(Intent.ACTION_VIEW, request.url))
+                        } catch (e: ActivityNotFoundException) {
+                            Log.w(TAG, "Nothing can open that link")
+                        }
+                    }
+                    return true
+                }
+            }
             // Without this, the web view silently answers "no" to any
             // confirm/alert dialog a screen asks (the Model test's Delete did).
             // It also answers a screen asking where the phone is: yes only for
@@ -218,10 +234,12 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         Places.onScreen = true  // the screen's own watch asks while MIA is showing
+        Relay.showingOn(this)
         ListenService.ready(this)  // a tap on the glasses talks to her (DEC-0063); only allowed while showing
     }
 
     override fun onDestroy() {
+        Relay.showingOn(null)
         if (phoneVoice.isInitialized()) phoneVoice.value.shutdown()
         super.onDestroy()
     }

@@ -120,11 +120,11 @@
         const code = el("input", { type: "text", inputmode: "numeric", maxlength: "6", placeholder: "6 digits", "aria-label": "Code on your glasses" });
         body.replaceChildren(el("p", { class: "dim" }, "Open MIA on your glasses and enter the code she shows."), code,
           el("div", { class: "acct-actions" }, el("button", { type: "button", class: "btn btn-amber", onclick: () => relay.pair(code.value.trim()) }, "Pair")));
-      } else if (state.stage === "pairing") {
+      } else if (state.stage === "pairing" || state.stage === "confirming") {
         body.replaceChildren(el("p", { class: "dim" }, "Looking for your glasses..."),
           el("div", { class: "acct-actions" }, el("button", { type: "button", class: "btn btn-ghost", onclick: () => relay.cancel() }, "Cancel")));
       } else if (state.stage === "check") {
-        body.replaceChildren(el("p", {}, "Check this matches your glasses: " + state.check),
+        body.replaceChildren(el("p", {}, "Check this matches your glasses: " + state.check.slice(0, 4) + " " + state.check.slice(4)),
           el("div", { class: "acct-actions" },
             el("button", { type: "button", class: "btn btn-amber", onclick: () => relay.confirm() }, "They Match"),
             el("button", { type: "button", class: "btn btn-ghost", onclick: () => relay.cancel() }, "They Don't")));
