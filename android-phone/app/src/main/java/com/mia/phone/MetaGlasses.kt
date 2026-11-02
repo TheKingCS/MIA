@@ -9,6 +9,7 @@ import com.meta.wearable.dat.core.Wearables
 import com.meta.wearable.dat.core.selectors.AutoDeviceSelector
 import com.meta.wearable.dat.core.session.DeviceSession
 import com.meta.wearable.dat.core.session.DeviceSessionState
+import com.meta.wearable.dat.core.types.DeviceSessionError
 import com.meta.wearable.dat.core.types.RegistrationState
 import com.meta.wearable.dat.display.Display
 import com.meta.wearable.dat.display.addDisplay
@@ -44,6 +45,7 @@ class MetaGlasses(private val activity: Activity) {
     @Volatile private var state = "not connected"
     private var watching = false
     private var ready = false
+    private var glassesAppOutdated = false
 
     @JavascriptInterface
     fun state(): String = state
@@ -52,6 +54,12 @@ class MetaGlasses(private val activity: Activity) {
     @JavascriptInterface
     fun connect() {
         activity.runOnUiThread {
+            if (glassesAppOutdated) {
+                glassesAppOutdated = false
+                state = "finish the update, then tap Connect again"
+                Wearables.openDATGlassesAppUpdate(activity).onFailure { error, _ -> fail(error.description) }
+                return@runOnUiThread
+            }
             if (activity.checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
                 state = "needs the Nearby Devices permission; tap Connect again after allowing it"
                 activity.requestPermissions(arrayOf(Manifest.permission.BLUETOOTH_CONNECT), BLUETOOTH_REQUEST)
@@ -88,7 +96,7 @@ class MetaGlasses(private val activity: Activity) {
         Wearables.createSession(AutoDeviceSelector(filter = { device -> device.isDisplayCapable() })).fold(
             onSuccess = { opened ->
                 session = opened
-                scope.launch { opened.errors.collect { error -> fail(error.description) } }
+                scope.launch { opened.errors.collect { error -> sessionFailed(error) } }
                 scope.launch {
                     opened.state.collect { now ->
                         if (now == DeviceSessionState.STARTED && display == null) attach(opened)
@@ -97,8 +105,15 @@ class MetaGlasses(private val activity: Activity) {
                 }
                 opened.start()
             },
-            onFailure = { error, _ -> fail(error.description) },
+            onFailure = { error, _ -> sessionFailed(error) },
         )
+    }
+
+    /** Meta's own app on the glasses can fall behind the toolkit; only it can fix that. */
+    private fun sessionFailed(error: DeviceSessionError) {
+        if (error != DeviceSessionError.DAT_APP_ON_THE_GLASSES_UPDATE_REQUIRED) return fail(error.description)
+        glassesAppOutdated = true
+        fail("the toolkit's app on the glasses needs an update; tap Connect to update it")
     }
 
     private fun attach(opened: DeviceSession) {
