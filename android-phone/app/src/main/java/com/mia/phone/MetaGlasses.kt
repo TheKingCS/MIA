@@ -46,7 +46,9 @@ import java.net.URL
  * app's menu and readouts. Changes (an item's action) come next, through
  * /api/actions, with the second gesture the rules ask for.
  *
- * The page asks through window.MIAMetaGlasses: connect() and state(). There
+ * Not in use since DEC-0063: what you see on the glasses is the Web App, and
+ * nothing here may draw on them, so she stays one app. It's kept for the
+ * toolkit's camera. The page asks through window.MIAMetaGlasses: connect() and state(). There
  * is one per app process, so a session outlives the screen that started it
  * (GlassesService.kt keeps her awake meanwhile).
  */

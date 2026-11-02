@@ -1083,3 +1083,13 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   crosses until a test page has proved it on the real glasses and the
   security review is done.
 - Related: DEC-0059, DEC-0060, DEC-0061, DEC-0002
+
+### DEC-0063: Her icon opens her; a tap makes her listen
+- Status: APPROVED
+- Proposed by: claude, 2026-11-02 · Approved by: zac, 2026-11-02 ("I like opening her from the icon and a tap making her listen")
+- Decision: MIA opens from her icon on the glasses, as the Web App of
+  DEC-0062. A tap on the glasses makes her listen, with no screen of its
+  own. The phone can't open a Web App (tested: the deep link only works from
+  the glasses' QR scan), so the phone app no longer draws on the glasses,
+  which keeps her one app. This replaces DEC-0060's tap to open.
+- Related: DEC-0060 (its tap to open, replaced), DEC-0062

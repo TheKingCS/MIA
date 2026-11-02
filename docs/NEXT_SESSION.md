@@ -35,6 +35,13 @@ versionCode above the phone's when installing a local build (set
 GITHUB_RUN_NUMBER; last used 122). Her art is public in `TheKingCS/mia-art`
 (DEC-0061, artwork only; `python -m tools.glasses_art <folder>` draws the orb).
 
+**Superseded in part by DEC-0062/0063 (2026-11-02):** her face becomes a Web
+App (test page live at thekingcs.github.io/mia-art, installed by QR; look,
+icon, key through the install link, crypto and speech all passed on the real
+glasses) joined to the phone by a sealed relay, not built yet. Her icon opens
+her; a tap makes her listen. The phone can't open a Web App. Still unknown:
+camera while the Web App shows.
+
 **Getting MIA on the glasses (2026-11-02):** opening the phone app connects
 her; a drop retries four times; Close MIA on her Home stays closed. **A tap
 on the glasses brings her back** (works, Zac tested): the glasses send

@@ -2,7 +2,6 @@ package com.mia.phone
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import com.meta.wearable.dat.core.voiceinvocations.isVoiceInvocationsIntent
 import android.app.ActivityManager
 import android.Manifest
 import android.content.Intent
@@ -39,7 +38,6 @@ class MainActivity : Activity() {
     private val placesBridge = PlacesBridge(this)
     // The workout's count, spoken here (DEC-0055); made when the page first needs it (after onCreate).
     private val phoneVoice = lazy { PhoneVoice(this) }
-    private val metaGlasses = MetaGlasses.attach(this)  // the glasses, through Meta's toolkit (DEC-0059)
 
     fun webView(): WebView? = web
 
@@ -81,7 +79,6 @@ class MainActivity : Activity() {
         }
         setContentView(status)
         Places.register(applicationContext)  // the watched places' alerts (after an update, too)
-        metaGlasses.autoConnect()  // opening MIA, or "Hey Meta, start MIA"
         Thread {
             try {
                 // Once per app process (Engine.kt), shared with the listening service.
@@ -93,6 +90,7 @@ class MainActivity : Activity() {
                 runOnUiThread {
                     show(result.optString("token"), startPage(intent, shared))
                     if (Voice.wanted(intent)) listen()
+                    ListenService.ready(this)  // a tap on the glasses talks to her (DEC-0063)
                 }
             } catch (e: Throwable) {
                 Log.e(TAG, "failed", e)
@@ -120,7 +118,6 @@ class MainActivity : Activity() {
     override fun onNewIntent(newIntent: Intent) {
         super.onNewIntent(newIntent)
         setIntent(newIntent)
-        if (isVoiceInvocationsIntent(newIntent)) metaGlasses.autoConnect()
         val token = Engine.started?.optString("token") ?: return  // still starting: onCreate's thread takes it
         if (Voice.wanted(newIntent)) { listen(); return }
         if (newIntent.getStringExtra("arrive") != null) { web?.loadUrl(page(startPage(newIntent, false), token)); return }
@@ -194,7 +191,6 @@ class MainActivity : Activity() {
             addJavascriptInterface(gallery, "MIAAndroid")
             addJavascriptInterface(placesBridge, "MIAPhonePlaces")
             addJavascriptInterface(phoneVoice.value, "MIAPhoneVoice")
-            addJavascriptInterface(metaGlasses, "MIAMetaGlasses")
             // Signed in: straight to Home (or the Inbox, after a share). Not
             // yet: the screen asks to make an account (first start) or to
             // sign in (after logging out).
