@@ -18,7 +18,10 @@ import com.meta.wearable.dat.display.Display
 import com.meta.wearable.dat.display.addDisplay
 import com.meta.wearable.dat.display.types.DisplayState
 import com.meta.wearable.dat.display.views.ButtonStyle
+import com.meta.wearable.dat.display.views.Direction
 import com.meta.wearable.dat.display.views.FlexBoxBackground
+import com.meta.wearable.dat.display.views.IconName
+import com.meta.wearable.dat.display.views.IconStyle
 import com.meta.wearable.dat.display.views.TextColor
 import com.meta.wearable.dat.display.views.TextStyle
 import kotlinx.coroutines.CoroutineScope
@@ -257,9 +260,9 @@ class MetaGlasses private constructor(private var activity: Activity) {
     private fun drawHome(data: JSONObject) {
         val apps = data.optJSONArray("apps") ?: JSONArray()
         val cards = (0 until minOf(apps.length(), MAX_BUTTONS - 1)).map { apps.getJSONObject(it) }
-        screen("MIA", data.optString("hint")) { add ->
-            cards.forEach { card -> add(card.optString("name"), { showApp(card) }) }
-            add("Close MIA", { close() })
+        screen("MIA", IconName.CIRCLE_8_RAYS_LARGE, listOf(data.optString("hint") to "")) {
+            cards.forEach { card -> add(card.optString("name"), appIcon(card)) { showApp(card) } }
+            add("Close MIA", quiet = true) { close() }
         }
     }
 
@@ -267,33 +270,55 @@ class MetaGlasses private constructor(private var activity: Activity) {
         onHome = false
         val menu = card.optJSONArray("menu") ?: JSONArray()
         val items = (0 until menu.length()).map { menu.getJSONObject(it) }.filter { it.optString("type") == "panel" }.take(MAX_BUTTONS - 1)
-        screen(card.optString("name"), card.optString("status")) { add ->
-            items.forEach { item -> add(item.optString("label"), { showPanel(card, item.optString("id")) }) }
-            add("Back", { showHome() })
+        screen(card.optString("name"), appIcon(card), listOf(card.optString("status") to "")) {
+            items.forEach { item -> add(item.optString("label"), IconName.CARET_RIGHT) { showPanel(card, item.optString("id")) } }
+            add("Back", IconName.ARROW_LEFT, quiet = true) { showHome() }
         }
     }
 
     private fun showPanel(card: JSONObject, itemId: String): Unit = load("/api/glasses/${card.optString("id")}/$itemId", retry = { showPanel(card, itemId) }) { panel ->
         val lines = panel.optJSONArray("lines") ?: JSONArray()
-        val shown = (0 until minOf(lines.length(), MAX_LINES)).joinToString("\n") {
-            val line = lines.getJSONObject(it)
-            listOf(line.optString("text"), line.optString("detail")).filter { bit -> bit.isNotEmpty() }.joinToString(": ")
+        val rows = (0 until minOf(lines.length(), MAX_LINES)).map { lines.getJSONObject(it).let { line -> line.optString("text") to line.optString("detail") } }
+        screen(panel.optString("title"), appIcon(card), rows.ifEmpty { listOf(panel.optString("empty") to "") }) {
+            add("Back", IconName.ARROW_LEFT, quiet = true) { showApp(card) }
         }
-        screen(panel.optString("title"), shown.ifEmpty { panel.optString("empty") }) { add -> add("Back", { showApp(card) }) }
     }
 
-    /** One screen: a title, a line of words, and buttons. Each send replaces the last. */
-    private fun screen(title: String, body: String, buttons: ((String, () -> Unit) -> Unit) -> Unit) {
-        val list = mutableListOf<Pair<String, () -> Unit>>()
-        buttons { label, tap -> list.add(label to tap) }
+    private fun appIcon(card: JSONObject): IconName = APP_ICONS[card.optString("id")] ?: IconName.CARET_RIGHT
+
+    private class Choice(val label: String, val icon: IconName?, val quiet: Boolean, val tap: () -> Unit)
+
+    private class Choices {
+        val list = mutableListOf<Choice>()
+        fun add(label: String, icon: IconName? = null, quiet: Boolean = false, tap: () -> Unit) {
+            list.add(Choice(label, icon, quiet, tap))
+        }
+    }
+
+    /** One screen: its icon and title, rows of words (with a smaller detail), and buttons. Each send replaces the last. */
+    private fun screen(title: String, mark: IconName, rows: List<Pair<String, String>>, buttons: Choices.() -> Unit) {
+        val choices = Choices().apply(buttons).list
+        val shown = rows.filter { (text, _) -> text.isNotEmpty() }
         val target = display ?: return
         scope.launch {
             target.sendContent {
                 flexBox(gap = 10, padding = 20, background = FlexBoxBackground.CARD) {
-                    text(title, style = TextStyle.HEADING)
-                    if (body.isNotEmpty()) text(body, style = TextStyle.BODY, color = TextColor.SECONDARY)
-                    list.forEachIndexed { i, (label, tap) ->
-                        button(label = label, style = if (i == 0) ButtonStyle.PRIMARY else ButtonStyle.SECONDARY, onClick = { tap() })
+                    flexBox(direction = Direction.ROW, gap = 10) {
+                        icon(name = mark, style = IconStyle.FILLED)
+                        text(title, style = TextStyle.HEADING)
+                    }
+                    shown.forEach { (text, detail) ->
+                        text(text, style = TextStyle.BODY, color = TextColor.SECONDARY)
+                        if (detail.isNotEmpty()) text(detail, style = TextStyle.META, color = TextColor.SECONDARY)
+                    }
+                    choices.forEachIndexed { i, choice ->
+                        val style = when {
+                            choice.quiet -> ButtonStyle.OUTLINE
+                            i == 0 -> ButtonStyle.PRIMARY
+                            else -> ButtonStyle.SECONDARY
+                        }
+                        if (choice.icon != null) button(label = choice.label, style = style, iconName = choice.icon, onClick = { choice.tap() })
+                        else button(label = choice.label, style = style, onClick = { choice.tap() })
                     }
                 }
             }.onFailure { error, _ -> Log.d(TAG, error.description) }  // usually just replaced by a newer screen
@@ -316,9 +341,9 @@ class MetaGlasses private constructor(private var activity: Activity) {
                 }
             }
             if (data != null) then(data)
-            else if (!quietly) screen("MIA", "I can't reach my engine right now.") { add ->
-                add("Try Again", retry)
-                add("Home", { showHome() })
+            else if (!quietly) screen("MIA", IconName.EXCLAMATION_CIRCLE, listOf("I can't reach my engine right now." to "")) {
+                add("Try Again", IconName.TWO_ARROWS_CLOCKWISE, tap = retry)
+                add("Home", IconName.HOUSE, quiet = true) { showHome() }
             }
         }
     }
@@ -332,6 +357,17 @@ class MetaGlasses private constructor(private var activity: Activity) {
         private const val VOICE_RETRY_MS = 8000L
         private const val READ_TIMEOUT_MS = 30000
         const val BLUETOOTH_REQUEST = 7301
+        private val APP_ICONS = mapOf(
+            "assistant" to IconName.SPEECH_BUBBLE, "budget" to IconName.SHOPPING_BAG, "calendar" to IconName.CALENDAR,
+            "character" to IconName.PERSON_CIRCLE, "classroom" to IconName.GRADUATION_CAP, "dashboard" to IconName.CLOCK,
+            "garage" to IconName.CAR_FRONT_VIEW, "greenhouse" to IconName.TREE, "household" to IconName.HOUSE,
+            "inbox" to IconName.ENVELOPE_OPEN, "kitchen" to IconName.FORK_KNIFE, "knowledge" to IconName.LIGHT_BULB,
+            "maintenance" to IconName.GEAR, "maps" to IconName.COMPASS_NORTH_UP_RED, "memories" to IconName.MOUNTAIN_SQUARE_STACKED,
+            "missions" to IconName.STAR, "music" to IconName.MUSIC_NOTE, "navigation" to IconName.COMPASS_NORTH_UP_RED,
+            "notes" to IconName.PENCIL_SQUARE, "power" to IconName.LIGHT_BULB, "property" to IconName.HOUSE,
+            "real_estate" to IconName.HOUSE, "relationships" to IconName.THREE_PEOPLE_OVERLAPPING, "settings" to IconName.SLIDERS_HORIZONTAL,
+            "skills" to IconName.GRADUATION_CAP, "toolbox" to IconName.GEAR, "workout" to IconName.HEART,
+        )
         private var only: MetaGlasses? = null
 
         /** A tap on the glasses with MIA not showing on them. False: she's there, or never set up. */
