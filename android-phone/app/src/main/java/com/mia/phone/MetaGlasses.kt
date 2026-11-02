@@ -2,7 +2,6 @@ package com.mia.phone
 
 import android.Manifest
 import android.app.Activity
-import android.content.Context
 import android.content.pm.PackageManager
 import android.util.Log
 import android.webkit.JavascriptInterface
@@ -44,6 +43,7 @@ class MetaGlasses(private val activity: Activity) {
     private var display: Display? = null
     @Volatile private var state = "not connected"
     private var watching = false
+    private var ready = false
 
     @JavascriptInterface
     fun state(): String = state
@@ -57,6 +57,11 @@ class MetaGlasses(private val activity: Activity) {
                 activity.requestPermissions(arrayOf(Manifest.permission.BLUETOOTH_CONNECT), BLUETOOTH_REQUEST)
                 return@runOnUiThread
             }
+            // Meta: the permission comes first, then the toolkit starts, once.
+            if (!ready) {
+                ready = true
+                Wearables.initialize(activity.applicationContext).onFailure { error, _ -> fail(error.description) }
+            }
             watchRegistration()
             if (Wearables.registrationState.value == RegistrationState.REGISTERED) startSession()
             else {
@@ -69,6 +74,7 @@ class MetaGlasses(private val activity: Activity) {
     private fun watchRegistration() {
         if (watching) return
         watching = true
+        scope.launch { Wearables.registrationErrorStream.collect { error -> fail(error.description) } }
         scope.launch {
             Wearables.registrationState.collect { registered ->
                 if (registered == RegistrationState.REGISTERED && session == null) startSession()
@@ -184,9 +190,5 @@ class MetaGlasses(private val activity: Activity) {
         private const val MAX_BUTTONS = 5
         private const val MAX_LINES = 5
         const val BLUETOOTH_REQUEST = 7301
-
-        fun initialize(context: Context) {
-            Wearables.initialize(context).onFailure { error, _ -> Log.w(TAG, error.description) }
-        }
     }
 }

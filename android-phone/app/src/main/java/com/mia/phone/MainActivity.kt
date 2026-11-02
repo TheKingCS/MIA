@@ -71,7 +71,6 @@ class MainActivity : Activity() {
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        MetaGlasses.initialize(applicationContext)
         val status = TextView(this).apply {
             text = "Starting MIA on this phone…"
             textSize = 18f

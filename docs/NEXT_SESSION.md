@@ -25,7 +25,9 @@ Read-only so far: actions, Inputs, voice and the orb come next. The
 toolkit needs Android 10, so minSdk went 26 to 29; build tools are AGP
 8.11.1, Kotlin 2.2.21, Chaquopy 17, compileSdk 36. The app's id and token
 live in `android-phone/local.properties` (gitignored), never in the repo;
-CI builds get "0" unless the workflow is given them as secrets. Local
+CI builds get "0" unless the workflow is given them as secrets. For Developer
+Mode testing they are commented out there, so the build uses 0/0 as Meta
+says; put them back for a release channel build. Local
 build: `C:\Users\zacrh\Android\phone_build.ps1 assembleDebug`.
 
 **Zac's call: qwen3:14b or stay on qwen2.5:14b** (both measured

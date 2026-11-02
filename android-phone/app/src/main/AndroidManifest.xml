@@ -63,6 +63,13 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- The Meta AI app comes back here after registering (DEC-0059). -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="miaphone" />
+            </intent-filter>
             <!-- Talk to MIA: the app shortcut, and a headset's voice button. -->
             <intent-filter>
                 <action android:name="com.mia.phone.LISTEN" />
