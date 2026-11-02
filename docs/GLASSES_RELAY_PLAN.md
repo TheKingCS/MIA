@@ -76,6 +76,9 @@ relay. Then reads only: `/api/glasses`, `/api/glasses/{app}/{item}` and
 approval (Propose, Approve, Execute), each added on purpose. Nothing else
 passes, whatever the page asks: no financial or account paths.
 
+Before any change path goes on the list, freshness must cover it as it does
+Listen: a held-back request otherwise passes at any age.
+
 ## What a person with the relay could do
 
 They could drop or delay messages, see when they flow and how big they are.
@@ -97,8 +100,9 @@ offline: it keeps none.
 - [x] Unpairing works (tested on the real pair: the glasses get no answer).
 - [x] Nothing is logged with message contents, on the relay or the phone. The
   engine's token is no longer logged either (`ci_smoke.sh` signs up instead).
-- [ ] Security review of the diff, then Zac's OK. A third review found the page gave up its key for an
-  empty commit, which undid the promise; fixed, and awaiting a last check.
+- [ ] Security review of the diff, then Zac's OK. The fourth review (2026-11-02) found nothing at
+  confidence 8 or above, code read only; Zac's OK is still to come. The third
+  found the page gave up its key for an empty commit, which undid the promise.
   Two reviews before it: the
   first found a relay could beat the check code, an unproved `ok` and an open
   bridge; the second found no person confirming on the glasses, a dialog not
