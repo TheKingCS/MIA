@@ -56,6 +56,7 @@ SOURCES = ("manual", "assistant", "phone", "import", "inferred")
 
 # Every type MIA records, with the plain word used when counting them.
 TYPES = {
+    "first_boot_finished": "first meetings with MIA",
     "bill_paid": "bills paid",
     "income_received": "income received",
     "expense_added": "expenses logged",

@@ -482,7 +482,7 @@ def assemble_life_state_v2(context, today: Optional[date] = None) -> dict:
     signed-in person, or the phone user on their own view), as plain
     JSON-ready data. Never raises for a missing store: that section says
     PLANNED instead."""
-    from core import links
+    from core import first_boot, links
 
     today = today or date.today()
     person = _person(context)
@@ -520,6 +520,7 @@ def assemble_life_state_v2(context, today: Optional[date] = None) -> dict:
                           stated=len(stated.all_links()) if stated is not None else 0,
                           derived=sum(1 for l in all_links if l.derived)),
         "opportunities": _section("PLANNED", "Phase 2: MIA's reasoning over this state", items=[]),
+        "onboarding": _section("REAL", "core/first_boot.py", **first_boot.summary(context)),
     }
 
 

@@ -113,6 +113,56 @@ body {
 #home.unavailable #orb-wrap *, #home.unavailable #orb { animation-play-state: paused !important; }
 #home.unavailable #caption { opacity: 1; color: var(--ink-dim); }
 
+/* ---------------- meeting MIA: she awakens (core/first_boot.py) ---------------- */
+#boot { position: absolute; inset: 0; background: #000; overflow: hidden; }
+.b-sky { position: absolute; left: 120px; top: 60px; width: 360px; height: 360px; }
+.b-swarm, .b-rays, .b-core { position: absolute; inset: 0; transition: opacity 1.6s ease, transform 1.8s cubic-bezier(0.2, 0.7, 0.2, 1); }
+.b-swarm { animation: spin 60s linear infinite; }
+.b-swarm i { position: absolute; border-radius: 50%; background: #c9f5ff;
+  box-shadow: 0 0 6px var(--accent), 0 0 14px var(--accent-dim); animation: b-twinkle 3.6s ease-in-out infinite; }
+@keyframes b-twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
+.b-rays { inset: -90px; opacity: 0; border-radius: 50%;
+  background: repeating-conic-gradient(rgba(150, 232, 255, 0.4) 0 1.2deg, transparent 1.2deg 8deg),
+    radial-gradient(closest-side, var(--accent-dim), transparent);
+  -webkit-mask: radial-gradient(closest-side, #000 15%, transparent 100%); mask: radial-gradient(closest-side, #000 15%, transparent 100%); }
+.b-core { opacity: 0; transform: scale(0.6); }
+.b-core i { position: absolute; border-radius: 50%; box-sizing: border-box; }
+.b-halo { inset: 0; background: radial-gradient(closest-side, var(--accent-dim), rgba(53, 212, 255, 0.1) 55%, transparent); }
+.b-ticks { inset: 30px; animation: spin 36s linear infinite;
+  background: repeating-conic-gradient(rgba(127, 226, 255, 0.85) 0 0.8deg, transparent 0.8deg 4deg);
+  -webkit-mask: radial-gradient(closest-side, transparent 90%, #000 91%, #000 98%, transparent 99%);
+  mask: radial-gradient(closest-side, transparent 90%, #000 91%, #000 98%, transparent 99%); }
+.b-ring { border: 3px solid var(--accent-dim); border-left-color: transparent; border-bottom-color: transparent; }
+.b-ring.b1 { inset: 48px; animation: spin 20s linear infinite; }
+.b-ring.b2 { inset: 66px; border-width: 2px; animation: spin 26s linear infinite reverse; }
+.b-orb { inset: 88px; animation: breathe 6s ease-in-out infinite;
+  background: radial-gradient(circle at 38% 30%, #f2fdff 0%, var(--accent-soft) 12%, #2cc4f2 40%, #0a6b98 72%, #05304d 100%);
+  box-shadow: 0 0 36px var(--accent-dim), 0 0 110px var(--accent-faint), inset 0 0 26px rgba(255, 255, 255, 0.28); }
+.b-name { position: absolute; left: 0; right: 0; top: 366px; margin: 0; padding-left: 0.5em; text-align: center;
+  font-size: 40px; font-weight: 200; letter-spacing: 0.5em; opacity: 0; transition: opacity 1.6s ease 0.8s; }
+.b-wave { position: absolute; left: 0; right: 0; top: 262px; height: 30px; display: flex; justify-content: center;
+  align-items: center; gap: 5px; opacity: 0; transition: opacity 1s ease; }
+.b-wave i { display: block; width: 3px; border-radius: 2px; background: var(--accent); box-shadow: 0 0 6px var(--accent);
+  animation: b-wave 1.5s ease-in-out infinite; }
+@keyframes b-wave { 0%, 100% { transform: scaleY(0.25); } 50% { transform: scaleY(1); } }
+#boot[data-look="flare"] .b-rays { opacity: 1; }
+#boot[data-look="flare"] .b-swarm { transform: scale(0.82); }
+#boot[data-look="core"] .b-swarm, #boot[data-look="voice"] .b-swarm { opacity: 0; transform: scale(0.2); }
+#boot[data-look="core"] .b-core { opacity: 1; transform: none; }
+#boot[data-look="core"] .b-name { opacity: 1; }
+#boot[data-look="voice"] .b-core { opacity: 1; transform: translateY(-96px) scale(0.5); }
+#boot[data-look="voice"] .b-wave { opacity: 1; }
+#boot.paused * { animation-play-state: paused !important; }
+#boot-line { position: absolute; left: 56px; right: 56px; top: 386px; margin: 0; text-align: center;
+  font-size: 27px; font-weight: 300; line-height: 1.4; color: var(--ink); }
+#boot[data-look="voice"] #boot-line { top: 358px; }
+.boot-on .edge { display: none; }
+#boot-line.in { animation: b-line 1.2s ease-out both; }
+@keyframes b-line { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+#boot-keys { position: absolute; left: 0; right: 0; bottom: 18px; margin: 0; text-align: center; font-family: var(--font-mono);
+  font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint); }
+#boot-keys b { color: var(--accent); font-weight: 400; }
+
 /* ---------------- Ambient: the whole conversation ---------------- */
 .log { position: absolute; inset: 0; display: flex; flex-direction: column; padding: 34px 44px 26px; box-sizing: border-box; }
 .log-top { display: flex; align-items: center; gap: 12px; padding-bottom: 14px; }
@@ -204,7 +254,7 @@ body {
 .say.small { font-size: 26px; color: var(--ink-dim); }
 
 @media (prefers-reduced-motion: reduce) {
-  #orb, #orb-wrap .ring, #orb-wrap .p, .saturn .s::before, .log-orb { animation: none !important; }
+  #orb, #orb-wrap .ring, #orb-wrap .p, .saturn .s::before, .log-orb, #boot * { animation: none !important; }
 }
 
 /* edge arrows for a touchscreen: faint, out of the way, big to tap */

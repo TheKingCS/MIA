@@ -23,7 +23,8 @@
     "friction",
     "goals",
     "links",
-    "opportunities"
+    "opportunities",
+    "onboarding"
   ],
   "$defs": {
     "status": {
@@ -1173,6 +1174,51 @@
       ],
       "additionalProperties": false,
       "description": "PLANNED: MIA's reasoning over this state (Phase 2)."
+    },
+    "onboarding": {
+      "type": "object",
+      "description": "How far this person has got through meeting MIA (core/first_boot.py).",
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "source": {
+          "type": "string",
+          "description": "Where it comes from in the MIA repo."
+        },
+        "done": {
+          "type": "boolean"
+        },
+        "phase": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The part to do next; null when done."
+        },
+        "finished": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "skipped": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Skipped parts, which can come back."
+        }
+      },
+      "required": [
+        "status",
+        "source",
+        "done",
+        "phase",
+        "finished",
+        "skipped"
+      ],
+      "additionalProperties": false
     }
   }
 }

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="color-scheme" content="dark">
   <title>MIA · Glasses</title>
-  <link rel="stylesheet" href="glasses.css?v=18">
+  <link rel="stylesheet" href="glasses.css?v=20">
 </head>
 <body>
   <!--
@@ -27,15 +27,29 @@
       <p id="caption" aria-live="polite"></p>
     </section>
     <section id="screen" hidden aria-live="polite"></section>
+    <!-- Meeting MIA (core/first_boot.py): she doesn't launch, she awakens. -->
+    <section id="boot" hidden aria-label="Meeting MIA">
+      <div class="b-sky" aria-hidden="true">
+        <div class="b-rays"></div>
+        <div class="b-swarm"></div>
+        <div class="b-core">
+          <i class="b-halo"></i><i class="b-ticks"></i><i class="b-ring b1"></i><i class="b-ring b2"></i><i class="b-orb"></i>
+        </div>
+        <p class="b-name">MIA</p>
+        <div class="b-wave"></div>
+      </div>
+      <p id="boot-line" aria-live="polite"></p>
+      <p id="boot-keys"></p>
+    </section>
     <p id="demo-tag" hidden>Demo · placeholder data</p>
     <!-- for a touchscreen: tap an edge to move (the glasses use the Band's scroll) -->
     <button id="prev" class="edge" type="button" aria-label="Previous">‹</button>
     <button id="next" class="edge" type="button" aria-label="Next">›</button>
   </div>
-  <script src="mia.js?v=10"></script>
+  <script src="mia.js?v=11"></script>
   <script src="icons.js?v=8"></script>
   <script src="sound.js"></script>
   <script src="places-watch.js"></script>
-  <script src="glasses.js?v=12"></script>
+  <script src="glasses.js?v=14"></script>
 </body>
 </html>

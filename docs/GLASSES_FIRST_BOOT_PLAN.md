@@ -251,6 +251,28 @@ screen, talking on the glasses alone breaks. So before slice 1:
 
 Build order becomes: 0 (voice without the app open), then 1–6 as above.
 
+### Slice 2: built 2026-10-30, checked in a browser at 600×600
+
+- `core/first_boot.py`: each person's progress (on their profile, so it
+  follows them to any device) and the words, with their own first name.
+  `/api/first-boot` says what's left; `firstboot.advance` and
+  `firstboot.skip` save it, one life event when finished, an `onboarding`
+  section in Life State.
+- `web/glasses.js` plays the beats on the glasses, the first time each
+  person opens them: the swarm forms, flares, collapses into her orb with
+  the MIA name, then she introduces herself with the waveform. Select
+  pauses, move skips a beat, back skips the rest. Leaving partway picks up
+  at the start of that part.
+- Her voice comes from `/api/heavy/speak`, so the home computer's voice
+  when the glasses' screen is served from it; where there's none, or the
+  browser blocks sound, the words still show.
+- For now the last line is "Whenever you want me, just tap and talk."
+  **When User Sync lands (slice 3), it becomes "Next, I'd like to get to
+  know you...".** Phase 2's "connect your devices" list waits for slice 4,
+  with phone permissions, so it only ever shows real connections.
+- Anyone who already uses the glasses, Zac included, sees it once, the
+  next time they open them.
+
 ### Slice 1: built 2026-10-30, checked in a browser at 600×600
 
 - `core/glasses_feed.py`: `set_orb()` / `orb()`, in memory, per person; a

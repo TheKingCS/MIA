@@ -19,7 +19,7 @@ from core.gamification import SkillWeight
 from tests.engine_world import build_world
 
 SECTIONS = ("finances", "properties", "assets", "kitchen", "workout", "projects", "due", "missions_and_skills", "recent_wins", "friction",
-            "goals", "links", "opportunities")
+            "goals", "links", "opportunities", "onboarding")
 TODAY = date.today()
 
 

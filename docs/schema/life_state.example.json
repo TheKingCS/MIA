@@ -339,5 +339,17 @@
     "status": "PLANNED",
     "source": "Phase 2: MIA's reasoning over this state",
     "items": []
+  },
+  "onboarding": {
+    "status": "REAL",
+    "source": "core/first_boot.py",
+    "done": true,
+    "phase": null,
+    "finished": [
+      "awakening",
+      "connecting",
+      "introduction"
+    ],
+    "skipped": []
   }
 }

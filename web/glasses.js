@@ -50,7 +50,7 @@
     set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* private window: just don't remember */ } },
   };
   let data = null;           // MIA.glasses(): {apps, others, pinned, hint}
-  let view = "home";         // home | cards | menu | panel | confirm | result | reward | hud | log
+  let view = "home";         // home | cards | menu | panel | confirm | result | reward | hud | log | boot
   let showingAll = false;    // browsing the apps that aren't pinned
   let appIndex = 0, row = 0;
   let panel = null, proposal = null, resultText = "", after = "menu", busy = false;
@@ -183,6 +183,7 @@
     phoneState = state;
     speaking = state === "speaking";
     if (recorder && recorder.state === "recording") return;  // this screen's own microphone turn
+    if (view === "boot") return;
     if (state === "listening" && view === "hud") show("home");
     if (state === "listening" || state === "thinking" || state === "interrupted") { clearTimeout(captionTimer); orbState(state); }
     else if (voiceState === "listening" || voiceState === "thinking" || voiceState === "interrupted") orbState("idle");
@@ -294,9 +295,112 @@
     view = v;
     document.body.classList.toggle("hud-on", v === "hud");  // nothing on screen but the card
     home.hidden = v !== "home";
-    screen.hidden = v === "home";
-    if (v !== "home") render();
+    screen.hidden = v === "home" || v === "boot";
+    $("boot").hidden = v !== "boot";
+    document.body.classList.toggle("boot-on", v === "boot");
+    if (v !== "home" && v !== "boot") render();
     if (v === "log") paintOrb();
+  }
+
+  // ------------------------------------------------------------ meeting MIA (core/first_boot.py)
+  // The engine's beats, played in order: the swarm forms, flares, collapses
+  // into her orb, and she speaks. Select pauses, move skips a beat, back
+  // skips the rest. Finished parts are saved as they end, so leaving comes
+  // back here. Her voice where this MIA has one; the words always show.
+  const bootBox = $("boot");
+  let beats = [], beatAt = 0, beatTimer = null, beatAudio = null, bootPaused = false;
+  function bootSky() {
+    const swarm = bootBox.querySelector(".b-swarm");
+    if (swarm.childElementCount) return;
+    for (let i = 0; i < 110; i++) {
+      const a = Math.random() * Math.PI * 2, d = 165 * Math.sqrt(Math.random()), s = 1.5 + Math.random() * 3;
+      const dot = el("i");
+      dot.style.cssText = "left:" + (180 + Math.cos(a) * d - s / 2).toFixed(1) + "px;top:" + (180 + Math.sin(a) * d - s / 2).toFixed(1) +
+        "px;width:" + s.toFixed(1) + "px;height:" + s.toFixed(1) + "px;animation-delay:" + (Math.random() * 3.6).toFixed(2) + "s";
+      swarm.append(dot);
+    }
+    const wave = bootBox.querySelector(".b-wave");
+    for (let i = 0; i < 17; i++) {
+      const bar = el("i");
+      bar.style.cssText = "height:" + (10 + Math.round(18 * Math.abs(Math.sin(i * 1.7)))) + "px;animation-delay:" + (i * 0.07).toFixed(2) + "s";
+      wave.append(bar);
+    }
+  }
+  function saveBoot(kind, params) {
+    if (demo) return;
+    MIA.propose(kind, params).then((p) => MIA.approve(p.proposal_id)).catch(() => { /* asked again next time */ });
+  }
+  function stopVoice() {
+    if (beatAudio) { beatAudio.onended = null; beatAudio.pause(); beatAudio = null; }
+  }
+  function bootHint() {
+    $("boot-keys").innerHTML = "<b>●</b> " + (bootPaused ? "resume" : "pause") + " &nbsp;·&nbsp; <b>▶</b> skip &nbsp;·&nbsp; <b>▼</b> skip all";
+    bootBox.classList.toggle("paused", bootPaused);
+  }
+  function playBeat() {
+    const beat = beats[beatAt];
+    if (!beat) { endBoot(); return; }
+    bootBox.dataset.look = beat.look;
+    const line = $("boot-line");
+    if (line.textContent !== beat.say) {  // a new line fades in
+      line.textContent = beat.say;
+      line.classList.remove("in");
+      void line.offsetWidth;
+      if (beat.say) line.classList.add("in");
+    }
+    const started = performance.now();
+    if (beat.speak && !demo) {
+      MIA.speak(beat.say).then((said) => {
+        if (beats[beatAt] !== beat || bootPaused) return;
+        beatAudio = new Audio("data:audio/wav;base64," + said.audio_wav_base64);
+        beatAudio.play().catch(() => { beatAudio = null; });
+      }).catch(() => { /* no voice here: the words still show */ });
+    }
+    const atEnd = () => {
+      if (bootPaused) return;
+      if (beatAudio && !beatAudio.paused && !beatAudio.ended) { beatAudio.onended = nextBeat; return; }  // let her finish
+      nextBeat();
+    };
+    beatTimer = setTimeout(atEnd, Math.max(0, beat.seconds * 1000 - (performance.now() - started)));
+  }
+  function nextBeat() {
+    clearTimeout(beatTimer);
+    stopVoice();
+    const was = beats[beatAt];
+    beatAt += 1;
+    const next = beats[beatAt];
+    if (was && (!next || next.phase !== was.phase)) saveBoot("firstboot.advance", { phase: was.phase });
+    playBeat();
+  }
+  function bootPause() {
+    bootPaused = !bootPaused;
+    bootHint();
+    clearTimeout(beatTimer);
+    if (bootPaused) { if (beatAudio) beatAudio.pause(); return; }
+    stopVoice();
+    playBeat();  // the line again, from its start
+  }
+  function endBoot() {
+    clearTimeout(beatTimer);
+    stopVoice();
+    beats = [];
+    lastInput = Date.now();
+    show("home");
+  }
+  function skipBoot() {
+    saveBoot("firstboot.skip", {});
+    endBoot();
+  }
+  async function startBoot() {
+    let left;
+    try { left = await MIA.firstBoot(); } catch (e) { return false; }
+    if (!left || left.done || !(left.beats || []).length) return false;
+    beats = left.beats; beatAt = 0; bootPaused = false;
+    bootSky();
+    show("boot");
+    bootHint();
+    playBeat();
+    return true;
   }
 
   // ------------------------------------------------------------ Ambient: the whole conversation
@@ -472,6 +576,7 @@
   // What you said through the glasses (the phone heard it): open the app you
   // named, or show MIA's answer under her orb. Her voice is already in your ear.
   function heard(c) {
+    if (view === "boot") return;
     lastInput = Date.now();
     if (c.open !== undefined) {
       if (!c.open) { show("home"); answer(c.text, 5); return; }
@@ -562,6 +667,7 @@
 
   function move(dir) {
     if (busy) return;
+    if (view === "boot") { if (dir > 0) nextBeat(); return; }
     if (view === "hud") { show("home"); return; }
     if (view === "log") {
       const box = document.querySelector(".log-scroll");
@@ -606,6 +712,7 @@
   }
   async function doSelect() {
     const a = app();
+    if (view === "boot") { bootPause(); return; }
     if (view === "hud") { show("home"); return; }
     if (view === "home" || view === "log") { listen(); return; }
     if (view === "cards") {
@@ -715,6 +822,7 @@
 
   function back() {
     if (busy) return;
+    if (view === "boot") { skipBoot(); return; }
     if (view === "hud" || view === "log") { show("home"); return; }
     if (view === "home") {
       if (voiceState === "answered") { orbState("idle"); return; }
@@ -766,7 +874,7 @@
   // ------------------------------------------------------------ boot: her orb
   (async () => {
     await load();
-    show("home");
+    if (!(await startBoot())) show("home");
     if (!demo) hudFetch();  // the feed's cursor: from now on
   })();
 })();
