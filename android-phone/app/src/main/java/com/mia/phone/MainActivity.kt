@@ -2,6 +2,7 @@ package com.mia.phone
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import com.meta.wearable.dat.core.voiceinvocations.isVoiceInvocationsIntent
 import android.app.ActivityManager
 import android.Manifest
 import android.content.Intent
@@ -37,7 +38,7 @@ class MainActivity : Activity() {
     private val placesBridge = PlacesBridge(this)
     // The workout's count, spoken here (DEC-0055); made when the page first needs it (after onCreate).
     private val phoneVoice = lazy { PhoneVoice(this) }
-    private val metaGlasses = MetaGlasses(this)  // the glasses, through Meta's toolkit (DEC-0059)
+    private val metaGlasses = MetaGlasses.attach(this)  // the glasses, through Meta's toolkit (DEC-0059)
 
     fun webView(): WebView? = web
 
@@ -79,6 +80,7 @@ class MainActivity : Activity() {
         }
         setContentView(status)
         Places.register(applicationContext)  // the watched places' alerts (after an update, too)
+        metaGlasses.autoConnect()  // opening MIA, or "Hey Meta, start MIA"
         Thread {
             try {
                 // Once per app process (Engine.kt), shared with the listening service.
@@ -117,6 +119,7 @@ class MainActivity : Activity() {
     override fun onNewIntent(newIntent: Intent) {
         super.onNewIntent(newIntent)
         setIntent(newIntent)
+        if (isVoiceInvocationsIntent(newIntent)) metaGlasses.autoConnect()
         val token = Engine.started?.optString("token") ?: return  // still starting: onCreate's thread takes it
         if (Voice.wanted(newIntent)) { listen(); return }
         if (newIntent.getStringExtra("arrive") != null) { web?.loadUrl(page(startPage(newIntent, false), token)); return }

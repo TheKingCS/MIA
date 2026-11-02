@@ -11,6 +11,9 @@ import com.meta.wearable.dat.core.session.DeviceSession
 import com.meta.wearable.dat.core.session.DeviceSessionState
 import com.meta.wearable.dat.core.types.DeviceSessionError
 import com.meta.wearable.dat.core.types.RegistrationState
+import com.meta.wearable.dat.core.voiceinvocations.VoiceInvocationsStream
+import com.meta.wearable.dat.core.voiceinvocations.startVoiceInvocationsStream
+import com.meta.wearable.dat.core.voiceinvocations.types.actions.LaunchApp
 import com.meta.wearable.dat.display.Display
 import com.meta.wearable.dat.display.addDisplay
 import com.meta.wearable.dat.display.types.DisplayState
@@ -20,7 +23,9 @@ import com.meta.wearable.dat.display.views.TextColor
 import com.meta.wearable.dat.display.views.TextStyle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -36,9 +41,11 @@ import java.net.URL
  * app's menu and readouts. Changes (an item's action) come next, through
  * /api/actions, with the second gesture the rules ask for.
  *
- * The page asks through window.MIAMetaGlasses: connect() and state().
+ * The page asks through window.MIAMetaGlasses: connect() and state(). There
+ * is one per app process, so a session outlives the screen that started it
+ * (GlassesService.kt keeps her awake meanwhile).
  */
-class MetaGlasses(private val activity: Activity) {
+class MetaGlasses private constructor(private var activity: Activity) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var session: DeviceSession? = null
     private var display: Display? = null
@@ -46,9 +53,47 @@ class MetaGlasses(private val activity: Activity) {
     private var watching = false
     private var ready = false
     private var glassesAppOutdated = false
+    private var retries = 0
+    private val sessionJobs = mutableListOf<Job>()
+    private var voice: VoiceInvocationsStream? = null
+    private var lastHome: JSONObject? = null
+    private var onHome = false
 
     @JavascriptInterface
     fun state(): String = state
+
+    /** Opening MIA, or "Hey Meta, start MIA": connect if everything's already set up. */
+    fun autoConnect() {
+        if (activity.checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) return
+        prepare()
+        retries = 0
+        if (Wearables.registrationState.value == RegistrationState.REGISTERED) startSession()
+    }
+
+    /** Meta: the permission comes first, then the toolkit starts, once. */
+    private fun prepare() {
+        if (!ready) {
+            ready = true
+            Wearables.initialize(activity.applicationContext).onFailure { error, _ -> fail(error.description) }
+            listenForVoice()
+        }
+        watchRegistration()
+    }
+
+    /** "Hey Meta, start MIA": Meta AI brings the app up and asks here too. */
+    private fun listenForVoice() {
+        val stream = Wearables.startVoiceInvocationsStream(AutoDeviceSelector())
+        voice = stream
+        scope.launch {
+            stream.invocations.collect { invocation ->
+                if (invocation is LaunchApp) {
+                    autoConnect()
+                    invocation.responseHandle.sendSuccess(null)
+                }
+            }
+        }
+        scope.launch { stream.errors.collect { error -> Log.w(TAG, error.description) } }
+    }
 
     /** From the Connect Glasses button: permission, Meta AI registration, then the session. */
     @JavascriptInterface
@@ -65,12 +110,8 @@ class MetaGlasses(private val activity: Activity) {
                 activity.requestPermissions(arrayOf(Manifest.permission.BLUETOOTH_CONNECT), BLUETOOTH_REQUEST)
                 return@runOnUiThread
             }
-            // Meta: the permission comes first, then the toolkit starts, once.
-            if (!ready) {
-                ready = true
-                Wearables.initialize(activity.applicationContext).onFailure { error, _ -> fail(error.description) }
-            }
-            watchRegistration()
+            prepare()
+            retries = 0
             if (Wearables.registrationState.value == RegistrationState.REGISTERED) startSession()
             else {
                 state = "finish connecting in the Meta AI app"
@@ -96,17 +137,43 @@ class MetaGlasses(private val activity: Activity) {
         Wearables.createSession(AutoDeviceSelector(filter = { device -> device.isDisplayCapable() })).fold(
             onSuccess = { opened ->
                 session = opened
-                scope.launch { opened.errors.collect { error -> sessionFailed(error) } }
-                scope.launch {
+                sessionJobs += scope.launch { opened.errors.collect { error -> sessionFailed(error) } }
+                sessionJobs += scope.launch {
                     opened.state.collect { now ->
                         if (now == DeviceSessionState.STARTED && display == null) attach(opened)
-                        if (now == DeviceSessionState.STOPPED) { session = null; display = null; if (!glassesAppOutdated) state = "not connected" }
+                        if (now == DeviceSessionState.STOPPED) stopped()
                     }
                 }
                 opened.start()
             },
-            onFailure = { error, _ -> sessionFailed(error) },
+            onFailure = { error, _ ->
+                sessionFailed(error)
+                retrySoon()
+            },
         )
+    }
+
+    private fun stopped() {
+        sessionJobs.toList().also { sessionJobs.clear() }.forEach { it.cancel() }
+        session = null
+        display = null
+        retrySoon()
+    }
+
+    /** The glasses come and go (taken off, a moment out of range): try a few times, then wait to be asked. */
+    private fun retrySoon() {
+        if (glassesAppOutdated) return
+        if (retries >= MAX_RETRIES) {
+            state = "not connected"
+            GlassesService.end(activity.applicationContext)
+            return
+        }
+        retries++
+        state = "reconnecting"
+        scope.launch {
+            delay(RETRY_MS)
+            if (session == null) startSession()
+        }
     }
 
     /** Meta's own app on the glasses can fall behind the toolkit; only it can fix that. */
@@ -120,9 +187,14 @@ class MetaGlasses(private val activity: Activity) {
         opened.addDisplay().fold(
             onSuccess = { attached ->
                 display = attached
-                scope.launch {
+                sessionJobs += scope.launch {
                     attached.state.collect { now ->
-                        if (now == DisplayState.STARTED) { state = "connected"; showHome() }
+                        if (now == DisplayState.STARTED) {
+                            state = "connected"
+                            retries = 0
+                            GlassesService.begin(activity.applicationContext)
+                            showHome()
+                        }
                     }
                 }
             },
@@ -137,7 +209,17 @@ class MetaGlasses(private val activity: Activity) {
 
     // ---------------------------------------------------------------- what's shown
 
-    private fun showHome() = load("/api/glasses") { data ->
+    /** The last Home right away, so Back never waits on the engine; fresh when it arrives. */
+    private fun showHome() {
+        onHome = true
+        lastHome?.let { drawHome(it) }
+        load("/api/glasses", quietly = lastHome != null, retry = { showHome() }) { data ->
+            lastHome = data
+            if (onHome) drawHome(data)
+        }
+    }
+
+    private fun drawHome(data: JSONObject) {
         val apps = data.optJSONArray("apps") ?: JSONArray()
         val cards = (0 until minOf(apps.length(), MAX_BUTTONS)).map { apps.getJSONObject(it) }
         screen("MIA", data.optString("hint")) {
@@ -146,6 +228,7 @@ class MetaGlasses(private val activity: Activity) {
     }
 
     private fun showApp(card: JSONObject) {
+        onHome = false
         val menu = card.optJSONArray("menu") ?: JSONArray()
         val items = (0 until menu.length()).map { menu.getJSONObject(it) }.filter { it.optString("type") == "panel" }.take(MAX_BUTTONS - 1)
         screen(card.optString("name"), card.optString("status")) { add ->
@@ -154,7 +237,7 @@ class MetaGlasses(private val activity: Activity) {
         }
     }
 
-    private fun showPanel(card: JSONObject, itemId: String) = load("/api/glasses/${card.optString("id")}/$itemId") { panel ->
+    private fun showPanel(card: JSONObject, itemId: String): Unit = load("/api/glasses/${card.optString("id")}/$itemId", retry = { showPanel(card, itemId) }) { panel ->
         val lines = panel.optJSONArray("lines") ?: JSONArray()
         val shown = (0 until minOf(lines.length(), MAX_LINES)).joinToString("\n") {
             val line = lines.getJSONObject(it)
@@ -177,18 +260,18 @@ class MetaGlasses(private val activity: Activity) {
                         button(label = label, style = if (i == 0) ButtonStyle.PRIMARY else ButtonStyle.SECONDARY, onClick = { tap() })
                     }
                 }
-            }.onFailure { error, _ -> fail(error.description) }
+            }.onFailure { error, _ -> Log.d(TAG, error.description) }  // usually just replaced by a newer screen
         }
     }
 
-    private fun load(path: String, then: (JSONObject) -> Unit) {
+    private fun load(path: String, quietly: Boolean = false, retry: () -> Unit, then: (JSONObject) -> Unit) {
         scope.launch {
             val data = withContext(Dispatchers.IO) {
                 try {
                     val token = Engine.ensure(activity.applicationContext).optString("token")
                     val connection = URL("http://127.0.0.1:${MainActivity.PORT}$path").openConnection() as HttpURLConnection
                     connection.connectTimeout = 5000
-                    connection.readTimeout = 15000
+                    connection.readTimeout = READ_TIMEOUT_MS
                     connection.setRequestProperty("Authorization", "Bearer $token")
                     JSONObject(connection.inputStream.bufferedReader().use { it.readText() })
                 } catch (e: Exception) {
@@ -196,7 +279,11 @@ class MetaGlasses(private val activity: Activity) {
                     null
                 }
             }
-            if (data != null) then(data) else screen("MIA", "I can't reach my engine right now.") { }
+            if (data != null) then(data)
+            else if (!quietly) screen("MIA", "I can't reach my engine right now.") { add ->
+                add("Try Again", retry)
+                add("Home", { showHome() })
+            }
         }
     }
 
@@ -204,6 +291,13 @@ class MetaGlasses(private val activity: Activity) {
         private const val TAG = "MetaGlasses"
         private const val MAX_BUTTONS = 5
         private const val MAX_LINES = 5
+        private const val MAX_RETRIES = 4
+        private const val RETRY_MS = 6000L
+        private const val READ_TIMEOUT_MS = 30000
         const val BLUETOOTH_REQUEST = 7301
+        private var only: MetaGlasses? = null
+
+        fun attach(activity: Activity): MetaGlasses =
+            (only ?: MetaGlasses(activity).also { only = it }).also { it.activity = activity }
     }
 }

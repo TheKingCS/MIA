@@ -32,6 +32,7 @@
          with its "MIA · Ready" notification, and the CPU kept awake for one turn. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <!-- Android 11+: to find the phone's speech recognizer. -->
@@ -108,6 +109,12 @@
             android:name=".ListenService"
             android:exported="false"
             android:foregroundServiceType="microphone" />
+
+        <!-- Awake while the glasses are connected (GlassesService.kt). -->
+        <service
+            android:name=".GlassesService"
+            android:exported="false"
+            android:foregroundServiceType="connectedDevice" />
 
         <!-- Arriving at a watched place (Places.kt), and setting the alerts again after a restart. -->
         <receiver android:name=".PlaceReceiver" android:exported="false" />
