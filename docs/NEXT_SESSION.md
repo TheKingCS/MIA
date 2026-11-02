@@ -44,7 +44,8 @@ it; MIA will be his music app). Not yet tried with the phone in a pocket.
 **"Hey Meta, start MIA" doesn't work:** Meta says "no device called MIA",
 and on the phone the voice stream reaches STARTED then "Channel error
 occurred" within 100 ms, every time. Next step is Meta support checking the
-Voice Invocation permission (message drafted for Zac); the code's ready.
+Voice Invocation permission, optional now: DEC-0060 makes the tap the way
+in (Zac doesn't want to ask one AI to open his AI); the code stays.
 Next: her look on the glasses, then approving actions. Local
 build: `C:\Users\zacrh\Android\phone_build.ps1 assembleDebug`.
 

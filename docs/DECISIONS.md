@@ -1051,3 +1051,11 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   asks; the phone app draws it. `web/glasses.*` stays the design preview
   in the browser while the native surface is built.
 - Related: DEC-0016 (its route, superseded), DEC-0029, DEC-0030 (phase F), DEC-0055, DEC-0056
+
+### DEC-0060: A tap on the glasses opens MIA, not "Hey Meta"
+- Status: APPROVED
+- Proposed by: zac, 2026-11-02 · Approved by: zac, 2026-11-02 ("It feels weird asking one AI to open My AI. The tap feels right for now.")
+- Decision: a tap on the glasses is how MIA opens, for now. With her closed
+  it brings her back; with her showing it selects. "Hey Meta, start MIA" is
+  not the way in: the code stays, but chasing it with Meta isn't a priority.
+- Related: DEC-0059
