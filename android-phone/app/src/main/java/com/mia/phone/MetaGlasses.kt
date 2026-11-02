@@ -56,6 +56,8 @@ class MetaGlasses private constructor(private var activity: Activity) {
     private var retries = 0
     private val sessionJobs = mutableListOf<Job>()
     private var voice: VoiceInvocationsStream? = null
+    private val voiceJobs = mutableListOf<Job>()
+    private var voiceState = ""
     private var lastHome: JSONObject? = null
     private var onHome = false
 
@@ -82,17 +84,26 @@ class MetaGlasses private constructor(private var activity: Activity) {
 
     /** "Hey Meta, start MIA": Meta AI brings the app up and asks here too. */
     private fun listenForVoice() {
+        voiceJobs.toList().also { voiceJobs.clear() }.forEach { it.cancel() }
+        voice?.close()
         val stream = Wearables.startVoiceInvocationsStream(AutoDeviceSelector())
         voice = stream
-        scope.launch {
+        voiceJobs += scope.launch {
             stream.invocations.collect { invocation ->
+                Log.i(TAG, "Voice: $invocation")
                 if (invocation is LaunchApp) {
                     autoConnect()
                     invocation.responseHandle.sendSuccess(null)
                 }
             }
         }
-        scope.launch { stream.errors.collect { error -> Log.w(TAG, error.description) } }
+        voiceJobs += scope.launch { stream.errors.collect { error -> Log.w(TAG, "Voice: ${error.description}") } }
+        voiceJobs += scope.launch {
+            stream.state.collect { now ->
+                Log.i(TAG, "Voice stream: $now")
+                voiceState = now.toString()
+            }
+        }
     }
 
     /** From the Connect Glasses button: permission, Meta AI registration, then the session. */
@@ -193,6 +204,7 @@ class MetaGlasses private constructor(private var activity: Activity) {
                             state = "connected"
                             retries = 0
                             GlassesService.begin(activity.applicationContext)
+                            if (voiceState != "STARTED") listenForVoice()  // it doesn't come back by itself after Meta AI restarts
                             showHome()
                         }
                     }
