@@ -100,10 +100,10 @@ def test_a_missed_day_shows_honestly(life):
     do(w, "loop.set", name="work", days="every day", start="9:30 pm", end="6 am")
     r = w.loop.rhythms[0]
     today = date.today()
-    monday = today - timedelta(days=today.weekday())
+    monday = today - timedelta(days=today.weekday() + 7)  # last week: all of it past, whatever day this runs
     r.created_at = (monday - timedelta(days=7)).isoformat() + "T00:00:00"
     sunday = monday + timedelta(days=6)
-    w.dungeon.add_run(w.dungeon.dungeons[0].dungeon_id, (monday if today != monday else sunday).isoformat(), 8.5)
+    w.dungeon.add_run(w.dungeon.dungeons[0].dungeon_id, monday.isoformat(), 8.5)
     view = week(w, sunday)
     row = view["rows"][0]
     cleared = [c for c in row["cells"] if c["status"] == "cleared"]
