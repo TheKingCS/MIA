@@ -68,12 +68,18 @@
     { look: "voice", say: "Hello.", seconds: 4, speak: true, phase: "introduction" },
     { look: "voice", say: "I'm MIA, your Multifunctional Intelligent Assistant.", seconds: 6, speak: true, phase: "introduction" },
     { look: "voice", say: "I'm here to help you organize your life, reach your goals, and make the most of every day.", seconds: 9, speak: true, phase: "introduction" },
-    { look: "voice", say: "Whenever you want me, just tap and talk.", seconds: 6, speak: true, phase: "introduction" },
+    { look: "voice", say: "Next, I'd like to get to know you.", seconds: 6, speak: true, phase: "introduction" },
   ] };
   class MiaError extends Error {
     constructor(status, message) { super(message); this.status = status; }
   }
 
+  // The shape of /api/user-sync, for trying the screen with ?demo&sync.
+  const DEMO_SYNC = { active: true, begun: true, offer: false, done: false, paused: false, topic: "meals", title: "Meals", number: 1, topics: 1, step: "ask",
+    question: "What do you usually eat on weeknights?", heard: "", chips: [], percent: 0, say: "" };
+  const DEMO_REVIEW = Object.assign({}, DEMO_SYNC, { step: "review", question: "Here's what I've got. Does that look right?", percent: 50,
+    heard: "Chicken and rice, sometimes tacos. I meal prep on Sundays.",
+    chips: [{ app: "Recipe book", text: "Chicken and rice" }, { app: "Recipe book", text: "Tacos" }, { app: "Missions", text: "Sunday meal prep" }] });
   async function call(method, path, body) {
     if (!token) throw new MiaError(401, "Not signed in.");
     const response = await fetch(path, {
@@ -185,6 +191,10 @@
     glasses: (mission) => read("/api/glasses" + (mission ? "?mission=" + encodeURIComponent(mission) : ""), "glasses"),
     // Meeting MIA (core/first_boot.py): what's left. In the demo, only with ?boot.
     firstBoot: () => demo ? Promise.resolve(params.has("boot") ? DEMO_BOOT : { done: true, beats: [] }) : call("GET", "/api/first-boot"),
+    // User Sync (core/user_sync.py). In the demo, only with ?sync; ?sync=review starts at the chips.
+    userSync: () => demo ? Promise.resolve(params.has("sync") ? (params.get("sync") === "review" ? DEMO_REVIEW : DEMO_SYNC) : { done: true, offer: false, active: false })
+      : call("GET", "/api/user-sync"),
+    userSyncStep: (step) => demo ? Promise.resolve({ ...(params.get("sync") === "review" ? DEMO_REVIEW : DEMO_SYNC), say: "" }) : call("POST", "/api/user-sync", step),
     // Her voice saying one line; rejected where this MIA has none (the words still show).
     speak: (text) => demo ? demoOnly() : call("POST", "/api/heavy/speak", { text }),
     // What her orb is doing (core/glasses_feed.py), polled while the glasses are on.

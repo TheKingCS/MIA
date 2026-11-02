@@ -45,7 +45,7 @@ PHASES = {
         {"look": "voice", "say": "I'm MIA, your Multifunctional Intelligent Assistant.", "seconds": 6, "speak": True},
         {"look": "voice", "say": "I'm here to help you organize your life, reach your goals, and make the most of every day.",
          "seconds": 9, "speak": True},
-        {"look": "voice", "say": "Whenever you want me, just tap and talk.", "seconds": 6, "speak": True},
+        {"look": "voice", "say": "Next, I'd like to get to know you.", "seconds": 6, "speak": True},
     ],
 }
 

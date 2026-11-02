@@ -137,6 +137,12 @@ class VoiceTextRequest(BaseModel):
     text: str
 
 
+class UserSyncRequest(BaseModel):
+    text: str = ""
+    choice: str = ""  # start | approve | drop | skip | later
+    index: int = -1
+
+
 class OrbStateRequest(BaseModel):
     state: str
 
@@ -831,6 +837,37 @@ def create_app(context: AppContext) -> FastAPI:
         with app.state.turn_lock:
             return state(view_for(context, profile_id))
 
+    # User Sync (core/user_sync.py): the same conversation on the glasses and
+    # the phone, so a phone linked to the home computer uses the computer's.
+    @app.get("/api/user-sync")
+    def user_sync_state(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.home_link import HomeLinkError, home_call, linked
+        from core.user_sync import state
+
+        if linked(context):
+            try:
+                return home_call(context, "/api/user-sync", method="GET")
+            except HomeLinkError:
+                pass  # the computer's out of reach: this phone answers
+        with app.state.turn_lock:
+            return state(view_for(context, profile_id))
+
+    @app.post("/api/user-sync")
+    def user_sync_step(body: UserSyncRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.home_link import HomeLinkError, home_call, linked
+        from core.user_sync import choose, reply, start
+
+        if linked(context):
+            try:
+                return home_call(context, "/api/user-sync", body.model_dump(), timeout=90)
+            except HomeLinkError:
+                pass  # the computer's out of reach: this phone answers
+        view = view_for(context, profile_id)
+        with app.state.turn_lock:
+            if body.choice == "start":
+                return start(view)
+            return choose(view, body.choice, body.index) if body.choice else reply(view, body.text)
+
     # What her orb is doing (core/glasses_feed.py). No turn lock: the orb
     # has to keep answering "thinking" while a turn holds it.
     @app.get("/api/glasses/orb")
@@ -874,7 +911,14 @@ def create_app(context: AppContext) -> FastAPI:
             except HomeLinkError:
                 pass  # the computer's out of reach: this phone answers
         view = view_for(context, profile_id)
-        return {**handle(view, profile_id, text, lambda words: respond(profile_id, words, background)), "where": "here"}
+
+        def sync(words: str) -> Optional[dict]:
+            from core.user_sync import hear
+
+            with app.state.turn_lock:
+                return hear(view, words)
+
+        return {**handle(view, profile_id, text, lambda words: respond(profile_id, words, background), sync), "where": "here"}
 
     @app.get("/api/glasses/{app_id}/{item_id}")
     def glasses_item(app_id: str, item_id: str, mission: str = "",

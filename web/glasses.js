@@ -50,7 +50,7 @@
     set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* private window: just don't remember */ } },
   };
   let data = null;           // MIA.glasses(): {apps, others, pinned, hint}
-  let view = "home";         // home | cards | menu | panel | confirm | result | reward | hud | log | boot
+  let view = "home";         // home | cards | menu | panel | confirm | result | reward | hud | log | boot | sync
   let showingAll = false;    // browsing the apps that aren't pinned
   let appIndex = 0, row = 0;
   let panel = null, proposal = null, resultText = "", after = "menu", busy = false;
@@ -69,10 +69,11 @@
   const ALL = { id: "__all", name: "All Apps" };
   const BACK_CARD = { id: "__back", name: "Back", status: "To your pinned apps" };
   const LOG_CARD = { id: "__log", name: "Conversation", status: "Everything you and MIA have said" };
+  const SYNC_CARD = { id: "__sync", name: "Getting To Know You", status: "Pick up where we left off" };
   function cards() {
     const d = data || {};
     if (showingAll) return (d.others || []).concat([BACK_CARD]);
-    const list = d.apps || [];
+    const list = (syncLeft ? [SYNC_CARD] : []).concat(d.apps || []);
     // The log comes last: one move back from the orb reaches it.
     return (d.pinned && (d.others || []).length
       ? list.concat([Object.assign({}, ALL, { status: d.others.length + " more apps" })]) : list).concat([LOG_CARD]);
@@ -296,6 +297,7 @@
     document.body.classList.toggle("hud-on", v === "hud");  // nothing on screen but the card
     home.hidden = v !== "home";
     screen.hidden = v === "home" || v === "boot";
+    document.body.classList.toggle("sync-on", v === "sync");
     $("boot").hidden = v !== "boot";
     document.body.classList.toggle("boot-on", v === "boot");
     if (v !== "home" && v !== "boot") render();
@@ -383,9 +385,11 @@
   function endBoot() {
     clearTimeout(beatTimer);
     stopVoice();
+    const finished = beats.length && beatAt >= beats.length;
     beats = [];
     lastInput = Date.now();
     show("home");
+    if (finished) startSync();
   }
   function skipBoot() {
     saveBoot("firstboot.skip", {});
@@ -401,6 +405,81 @@
     bootHint();
     playBeat();
     return true;
+  }
+
+  // ------------------------------------------------------------ User Sync (core/user_sync.py)
+  // Her question, what she heard, and what she'd set up. You answer out loud
+  // (the phone hears you; its answers reach here as feed cards) or on the
+  // phone. At the chips, move picks one: select drops it, or saves on "Looks
+  // right". Back is "let's finish later". Her voice is the phone's when you
+  // spoke; a line from a select here, she says through this screen.
+  let sync = null, syncLeft = false, syncRow = 0;
+  function sayHere(text) {
+    if (!text || demo) return;
+    MIA.speak(text).then((said) => { new Audio("data:audio/wav;base64," + said.audio_wav_base64).play().catch(() => {}); }).catch(() => {});
+  }
+  async function checkSync() {
+    try { const now = await MIA.userSync(); syncLeft = !!now && !now.done && !!(now.paused || now.offer || now.active); return now; }
+    catch (e) { syncLeft = false; return null; }
+  }
+  function paintSync(now, say) {
+    sync = now; syncRow = Math.min(syncRow, (now.chips || []).length);
+    syncLeft = !now.done;
+    if (now.done || now.paused) {
+      show("home");
+      if (say) { answer(say, 9); sayHere(say); }
+      return;
+    }
+    sayHere(say);
+    show("sync");
+  }
+  async function startSync() {
+    try { const now = await MIA.userSyncStep({ choice: "start" }); paintSync(now, now.say); }
+    catch (e) { show("home"); }
+  }
+  async function syncStep(step) {
+    try { const now = await MIA.userSyncStep(step); paintSync(now, now.say); }
+    catch (err) { answer(err.message, 6); }
+  }
+  async function refreshSync() {
+    const now = await checkSync();
+    if (now && view === "sync") paintSync(now);
+  }
+  function syncScreen() {
+    const s = sync || {};
+    const wrap = el("div", "sync");
+    ["tl", "tr", "bl", "br"].forEach((k) => wrap.append(el("i", "rc " + k)));
+    const top = el("div", "s-top");
+    const who = el("span", "s-who");
+    who.append(el("i", "log-orb"), el("span", "log-state", "MIA"));
+    top.append(who, el("span", "s-topic", "Topic " + esc(s.number) + " of " + esc(s.topics) + " · " + esc(s.title)));
+    wrap.append(top, el("h1", "s-q", esc(s.question)));
+    if (s.heard) {
+      const you = el("div", "s-you");
+      you.append(el("span", "who", "You"), el("p", "", "“" + esc(s.heard) + "”"));
+      wrap.append(you);
+    }
+    const n = (s.chips || []).length;
+    if (s.step === "review") {
+      const chips = el("div", "s-chips");
+      s.chips.forEach((c, i) => {
+        const chip = el("div", "s-chip" + (i === syncRow ? " sel" : ""));
+        chip.append(el("span", "a", esc(c.app)), el("span", "", " · " + esc(c.text)));
+        chip.dataset.chip = String(i);
+        chips.append(chip);
+      });
+      const yes = el("div", "s-chip s-yes" + (syncRow === n ? " sel" : ""), "✓ Looks right");
+      yes.dataset.chip = "yes";
+      chips.append(yes);
+      wrap.append(el("p", "s-label", "MIA is setting up"), chips);
+    }
+    wrap.append(el("p", "s-hint", s.step === "review"
+      ? (syncRow === n ? "<b>●</b> save these" : "<b>●</b> drop this one") + " &nbsp;·&nbsp; <b>▶</b> next &nbsp;·&nbsp; <b>▼</b> finish later"
+      : "Answer out loud &nbsp;·&nbsp; <b>▶</b> skip that one &nbsp;·&nbsp; <b>▼</b> finish later"));
+    const foot = el("div", "s-foot");
+    foot.append(el("span", "", "User Sync"), el("div", "m-bar", '<i style="width:' + Number(s.percent || 0) + '%"></i>'));
+    wrap.append(foot);
+    return wrap;
   }
 
   // ------------------------------------------------------------ Ambient: the whole conversation
@@ -519,6 +598,8 @@
       parts.push(hudScreen());
     } else if (view === "log") {
       parts.push(logScreen());
+    } else if (view === "sync") {
+      parts.push(syncScreen());
     }
     screen.replaceChildren(...parts);
   }
@@ -578,6 +659,10 @@
   function heard(c) {
     if (view === "boot") return;
     lastInput = Date.now();
+    if (c.sync) {  // an answer in User Sync, from wherever this screen is
+      refreshSync().then(() => { if (view !== "sync" && syncLeft) startSync(); });
+      return;
+    }
     if (c.open !== undefined) {
       if (!c.open) { show("home"); answer(c.text, 5); return; }
       let i = (data && data.apps || []).findIndex((a) => a.id === c.open);
@@ -669,6 +754,11 @@
     if (busy) return;
     if (view === "boot") { if (dir > 0) nextBeat(); return; }
     if (view === "hud") { show("home"); return; }
+    if (view === "sync") {
+      if (sync.step === "review") { const n = sync.chips.length + 1; syncRow = (syncRow + dir + n) % n; render(); }
+      else if (dir > 0) syncStep({ choice: "skip" });
+      return;
+    }
     if (view === "log") {
       const box = document.querySelector(".log-scroll");
       if (box) box.scrollTop += dir * LOG_STEP;
@@ -715,8 +805,14 @@
     if (view === "boot") { bootPause(); return; }
     if (view === "hud") { show("home"); return; }
     if (view === "home" || view === "log") { listen(); return; }
+    if (view === "sync") {
+      if (sync.step !== "review") return;  // she's listening: answers come out loud
+      await syncStep(syncRow === sync.chips.length ? { choice: "approve" } : { choice: "drop", index: syncRow });
+      return;
+    }
     if (view === "cards") {
       if (!a) return;
+      if (a.id === "__sync") { await startSync(); return; }
       if (a.id === "__log") { await openLog(); return; }
       if (a.id === "__all") { showingAll = true; appIndex = 0; render(); return; }
       if (a.id === "__back") { showingAll = false; appIndex = Math.max(0, cards().length - 1); render(); return; }
@@ -823,6 +919,7 @@
   function back() {
     if (busy) return;
     if (view === "boot") { skipBoot(); return; }
+    if (view === "sync") { syncStep({ choice: "later" }); return; }
     if (view === "hud" || view === "log") { show("home"); return; }
     if (view === "home") {
       if (voiceState === "answered") { orbState("idle"); return; }
@@ -866,6 +963,8 @@
     if (target && target.closest("#next")) { move(1); return; }
     const li = target && target.closest("li[data-row]");
     if (li) row = Number(li.dataset.row);
+    const chip = target && target.closest("[data-chip]");
+    if (chip) syncRow = chip.dataset.chip === "yes" ? sync.chips.length : Number(chip.dataset.chip);
     select();
   });
   addEventListener("pointercancel", () => { px = py = null; });
@@ -874,7 +973,11 @@
   // ------------------------------------------------------------ boot: her orb
   (async () => {
     await load();
-    if (!(await startBoot())) show("home");
+    const left = await checkSync();
+    if (!(await startBoot())) {
+      show("home");
+      if (left && (left.active || left.offer)) await startSync();  // left mid-way: back to it. Paused stays a card.
+    }
     if (!demo) hudFetch();  // the feed's cursor: from now on
   })();
 })();

@@ -683,6 +683,18 @@ def _memory_fix(context, params) -> str:
     return "Fixed. I'll remember it that way."
 
 
+def _memory_add_describe(context, params) -> str:
+    text = str(params.get("text") or "").strip()
+    if not text:
+        raise ActionError("Say what MIA should remember.")
+    return f"Remember: {text}"
+
+
+def _memory_add(context, params) -> str:
+    made = _need(context, "user_memories").add_memory(str(params["text"]), str(params.get("category") or "Other"))
+    return "I'll remember that." if made is not None else "I already remember that."
+
+
 def _memory_forget(context, params) -> str:
     memory = _memory(context, params)
     context.user_memories.delete_memory(memory.memory_id)
@@ -744,6 +756,8 @@ def _register() -> None:
         ActionType("music.scan", "Scan Library", {}, _say("Look for new music in the music folder"), _scan),
         ActionType("person.caught_up", "Caught Up", {"person_id": "the person"}, _caught_describe, _caught),
         # What I Used (DEC-0029): fix or forget a memory MIA used.
+        ActionType("memory.add", "Remember", {"text": "what to remember", "category": "optional"},
+                   _memory_add_describe, _memory_add, True),
         ActionType("memory.fix", "Fix", {"memory_id": "the memory", "text": "what to remember instead"},
                    _memory_fix_describe, _memory_fix),
         ActionType("memory.forget", "Forget", {"memory_id": "the memory"},

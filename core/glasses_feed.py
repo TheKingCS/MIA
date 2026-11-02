@@ -82,6 +82,8 @@ def said(profile_id: str, turn: dict, now: Optional[datetime] = None) -> dict:
                 "heard": _short(turn.get("heard", "")), "level": "voice", "source": "voice"}
         if "open" in turn:
             card["open"] = turn["open"]
+        if turn.get("sync"):
+            card["sync"] = True  # an answer in User Sync: its screen re-reads
         _voice.append((now, profile_id, card))
     return card
 

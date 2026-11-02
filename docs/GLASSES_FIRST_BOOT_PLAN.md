@@ -1,6 +1,6 @@
 # First Boot, User Sync and the Presence System: wiring plan
 
-*Claude, 2026-10-29. Status: PROPOSAL, waiting on Zac. Nothing here is built yet.*
+*Claude, 2026-10-29. Status: approved by Zac and being built: slices 0-3 are in, see section 5.*
 
 The design lives on the canvas "MIA Glasses First Boot" (the first boot,
 phases 1–9, the Hey MIA frames and the Presence System lab). Zac's brief
@@ -98,11 +98,9 @@ For each answer:
 
 Gaps found while writing this:
 
-- **There is no action to add a recipe** (`recipe.delete`, `.rate`,
-  `.favorite`, `.ingredients` exist; adding one doesn't). It needs a
-  `recipe.add` kind on top of `core/kitchen_manager.py`.
-- **There is no action to add a memory** (`memory.fix` and
-  `memory.forget` exist). It needs `memory.add`, so "remember that" is
+- `recipe.add` turned out to exist already (the record actions make it).
+- **There was no action to add a memory** (`memory.fix` and
+  `memory.forget` existed). `memory.add` now makes "remember that"
   approvable and undoable like the rest.
 - Workouts: `fitness.plan` sets a plan. Checking whether it can hold a
   named split (push/pull/legs, four days) is the first job of that slice.
@@ -250,6 +248,31 @@ screen, talking on the glasses alone breaks. So before slice 1:
   the only time the phone needs to be picked up.
 
 Build order becomes: 0 (voice without the app open), then 1–6 as above.
+
+### Slice 3: built 2026-11-02, Meals only
+
+- `core/user_sync.py`: the questions in code, the model extracts, the code
+  keeps only what fits and what the person really said, each fact a chip.
+  "Looks right" (or select) runs the chips through `core/actions.py`;
+  nothing is written before it. If the model gives nothing usable, their
+  words become a memory chip. What fails to save stays on screen.
+- Words from the glasses reach it first (`core/glasses_voice.py`), so it
+  runs with the phone in a pocket. "Open Kitchen" and "go home" still work.
+- `/api/user-sync`; a linked phone uses the home computer's.
+- `web/glasses.js`: the "Getting to know you" board. At the chips, move
+  picks one, select drops it or saves on "Looks right". Back is finish
+  later; a "Getting To Know You" card picks it up, or say "let's keep going".
+- Her boot's last line is now "Next, I'd like to get to know you." and
+  User Sync follows it. Someone past the boot gets it on opening the
+  glasses; someone who skipped the boot gets the card too.
+- `data/user_sync_cases.json` + `tools/user_sync_check.py`: 10 of 10 on
+  qwen2.5:14b, about 2.5 seconds each. One case failed first ("leftovers"
+  as a dish), fixed by a rule in code. Add real answers as they come.
+- **Not built yet:** the phone screen to read and type the same
+  conversation (answer 1). `/api/user-sync` is ready for it; it comes with
+  slice 4. A weekly repeat for the meal-prep mission: `mission.add` makes
+  one mission, not a recurring one. Never tried with a spoken answer on a
+  real phone.
 
 ### Slice 2: built 2026-10-30, checked in a browser at 600×600
 

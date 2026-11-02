@@ -18,6 +18,9 @@ What the words do:
   a Talk turn, the same as speaking to MIA on the phone: the plain-word
   commands log at once (with undo), the rest goes to the model.
 
+During User Sync the words are her answers instead (core/user_sync.py),
+so the conversation runs with the phone in a pocket.
+
 Either way the glasses hear about it through their feed
 (core/glasses_feed.said): a card with what you said and MIA's answer,
 and the app to open. A phone linked to the home computer sends the words
@@ -98,9 +101,10 @@ def command(context, text: str) -> Optional[dict]:
     return None
 
 
-def handle(context, profile_id: str, text: str, talk) -> dict:
+def handle(context, profile_id: str, text: str, talk, sync=None) -> dict:
     """What the words do. `talk(text)` runs a Talk turn and returns its
-    answer ({"reply_text", ...}). Returns {"heard", "say", "open"?}, and
+    answer ({"reply_text", ...}); `sync(text)` gives User Sync the words
+    first (core/user_sync.hear). Returns {"heard", "say", "open"?}, and
     the glasses hear about it through their feed."""
     from core.glasses_feed import said
 
@@ -108,8 +112,11 @@ def handle(context, profile_id: str, text: str, talk) -> dict:
     if not heard:
         return {"heard": "", "say": "I didn't catch that."}
     found = command(context, heard)
+    syncing = sync(heard) if found is None and sync is not None else None
     if found is not None:
         out = {"heard": heard, **found}
+    elif syncing is not None:
+        out = {"heard": heard, "say": syncing.get("say") or "Done.", "sync": True}
     else:
         answer = talk(heard) or {}
         out = {"heard": heard, "say": answer.get("reply_text") or "Done."}

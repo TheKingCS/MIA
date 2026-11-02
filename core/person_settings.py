@@ -35,6 +35,7 @@ PERSONAL_SETTINGS = (
     "apps.hidden",
     "setup.questions_done",
     "first_boot.progress",
+    "user_sync.progress",
     "email.send.address",
     "email.send.host",
     "email.send.port",
