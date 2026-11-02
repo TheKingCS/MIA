@@ -46,10 +46,13 @@ glasses, voice) shares, moving set by set.
 
 ## 2. Technical limits
 
-- **Meta glasses camera:** not reachable from the glasses' web app; the
-  Device Access Toolkit gives the phone app photo capture, not a live
-  video stream to analyze. Camera rep counting on the glasses is not
-  possible today; it waits on Meta.
+- **Meta glasses camera (corrected 2026-11-01, from Meta's DAT 1.0.1
+  docs):** not reachable from the glasses' web app, but the Device Access
+  Toolkit gives the phone app a **live video stream**, photos while
+  streaming, **motion samples** (accelerometer, gyroscope, up to 60 Hz)
+  and on-glasses **speech recognition**. Motion and Speech are
+  experimental (development use, not store release). Whether any of it
+  counts reps well is unmeasured.
 - **Phone camera vision:** possible later (on-device pose estimation,
   e.g. MediaPipe Pose, in the phone app), but the phone must be propped
   facing you, it costs battery and heat, and accuracy varies by exercise

@@ -70,7 +70,7 @@ rate-limited), **disruptive** (never without explicit approval).
 | Port scan of a device | open services | the port scanner | **yes** (Field Kit, Talk) | **active** | **limited to own network since 2026-10-30** | built |
 | Router's device list | every device the router knows | the router's admin page or API | no | authorized | brand-specific, needs its password from the person | medium-large |
 | Phone camera | photo of a label, board, screen | the phone app (explicit capture) | partly (photos into the Inbox/Vault) | authorized | a photo, not live video | medium |
-| Glasses camera | what the person sees | Meta Device Access Toolkit (phone app) | **no** (web apps can't; DEC-0029/0030 phase F) | authorized | photo capture only, explicit | large, waits on Meta |
+| Glasses camera | what the person sees | Meta Device Access Toolkit (phone app) | **no, not built** (web apps can't; the toolkit can: live video and photos, DAT 1.0.1, corrected 2026-11-01) | authorized | needs the toolkit in the phone app and Meta's permission | large |
 | Object / device recognition | what's in a photo | a vision model (e.g. a local multimodal model in Ollama) | **no** | passive (on a given photo) | small local vision models are rough; never stated as confirmed | medium |
 | OCR of labels, serials | text on a label | Tesseract | **yes** (`core/ocr.py`, if installed) | passive | glare, small print | small to wire in |
 | Research (datasheets, manuals) | specs for a found model | reference packs offline; the web needs DEC-0053 | partly (offline packs, the Inbox's manuals) | authorized | DEC-0053 not approved: no web lookup | medium |
