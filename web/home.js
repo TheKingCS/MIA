@@ -215,6 +215,16 @@
     renderPresence(state);
     renderFocus(state);
     renderBriefing(state);
+    renderSync();
+  }
+
+  /* Getting to know you (core/user_sync.py): the way in on the phone and here. */
+  async function renderSync() {
+    const link = $("sync-link");
+    try {
+      const now = await MIA.userSync();
+      link.hidden = !now || now.done;
+    } catch (e) { link.hidden = true; }
   }
 
   /* ---------- Talk: conversation lives on Home ---------- */

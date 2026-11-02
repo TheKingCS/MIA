@@ -413,7 +413,11 @@
   // phone. At the chips, move picks one: select drops it, or saves on "Looks
   // right". Back is "let's finish later". Her voice is the phone's when you
   // spoke; a line from a select here, she says through this screen.
-  let sync = null, syncLeft = false, syncRow = 0;
+  // First the phone's permissions, as the phone reports them, and between
+  // topics she offers to keep going. This screen follows the phone: it
+  // re-reads while it's up, so typing there and Allow show here too.
+  const SYNC_POLL_MS = 3000;
+  let sync = null, syncLeft = false, syncRow = 0, syncPainted = "";
   function sayHere(text) {
     if (!text || demo) return;
     MIA.speak(text).then((said) => { new Audio("data:audio/wav;base64," + said.audio_wav_base64).play().catch(() => {}); }).catch(() => {});
@@ -425,6 +429,7 @@
   function paintSync(now, say) {
     sync = now; syncRow = Math.min(syncRow, (now.chips || []).length);
     syncLeft = !now.done;
+    syncPainted = JSON.stringify({ ...now, say: "" });
     if (now.done || now.paused) {
       show("home");
       if (say) { answer(say, 9); sayHere(say); }
@@ -443,8 +448,9 @@
   }
   async function refreshSync() {
     const now = await checkSync();
-    if (now && view === "sync") paintSync(now);
+    if (now && view === "sync" && JSON.stringify({ ...now, say: "" }) !== syncPainted) paintSync(now);
   }
+  setInterval(() => { if (view === "sync" && !demo) refreshSync(); }, SYNC_POLL_MS);
   function syncScreen() {
     const s = sync || {};
     const wrap = el("div", "sync");
@@ -452,12 +458,21 @@
     const top = el("div", "s-top");
     const who = el("span", "s-who");
     who.append(el("i", "log-orb"), el("span", "log-state", "MIA"));
-    top.append(who, el("span", "s-topic", "Topic " + esc(s.number) + " of " + esc(s.topics) + " · " + esc(s.title)));
+    top.append(who, el("span", "s-topic", s.step === "phone" ? "Approve on your phone" : "Topic " + esc(s.number) + " of " + esc(s.topics) + " · " + esc(s.title)));
     wrap.append(top, el("h1", "s-q", esc(s.question)));
     if (s.heard) {
       const you = el("div", "s-you");
       you.append(el("span", "who", "You"), el("p", "", "“" + esc(s.heard) + "”"));
       wrap.append(you);
+    }
+    if (s.step === "phone") {
+      const rows = el("div", "s-rows");
+      s.rows.forEach((r) => {
+        const row = el("div", "s-row " + (r.status === "allowed" ? "on" : ""));
+        row.append(el("span", "", esc(r.label)), el("span", "s-note", r.status === "allowed" ? "Allowed" : r.status === "not yet" ? "Not yet" : "On your phone"));
+        rows.append(row);
+      });
+      wrap.append(rows);
     }
     const n = (s.chips || []).length;
     if (s.step === "review") {
@@ -473,9 +488,11 @@
       chips.append(yes);
       wrap.append(el("p", "s-label", "MIA is setting up"), chips);
     }
-    wrap.append(el("p", "s-hint", s.step === "review"
+    const SYNC_HINTS = { phone: "<b>●</b> skip this for now &nbsp;·&nbsp; <b>▼</b> finish later",
+      next: "<b>●</b> keep going &nbsp;·&nbsp; <b>▶</b> skip this topic &nbsp;·&nbsp; <b>▼</b> finish later" };
+    wrap.append(el("p", "s-hint", SYNC_HINTS[s.step] || (s.step === "review"
       ? (syncRow === n ? "<b>●</b> save these" : "<b>●</b> drop this one") + " &nbsp;·&nbsp; <b>▶</b> next &nbsp;·&nbsp; <b>▼</b> finish later"
-      : "Answer out loud &nbsp;·&nbsp; <b>▶</b> skip that one &nbsp;·&nbsp; <b>▼</b> finish later"));
+      : "Answer out loud &nbsp;·&nbsp; <b>▶</b> skip that one &nbsp;·&nbsp; <b>▼</b> finish later")));
     const foot = el("div", "s-foot");
     foot.append(el("span", "", "User Sync"), el("div", "m-bar", '<i style="width:' + Number(s.percent || 0) + '%"></i>'));
     wrap.append(foot);
@@ -806,6 +823,8 @@
     if (view === "hud") { show("home"); return; }
     if (view === "home" || view === "log") { listen(); return; }
     if (view === "sync") {
+      if (sync.step === "phone") { await syncStep({ choice: "skip" }); return; }
+      if (sync.step === "next") { await syncStep({ choice: "continue" }); return; }
       if (sync.step !== "review") return;  // she's listening: answers come out loud
       await syncStep(syncRow === sync.chips.length ? { choice: "approve" } : { choice: "drop", index: syncRow });
       return;

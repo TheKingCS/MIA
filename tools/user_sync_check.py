@@ -44,7 +44,8 @@ class Ollama:
 
 def missing_and_extra(chips: list[dict], case: dict) -> tuple[list[str], list[str]]:
     """Pure logic. What the case wanted and didn't get; what came out that it didn't want."""
-    by_kind = {"recipes": "recipe.add", "missions": "mission.add", "memories": "memory.add"}
+    by_kind = {"recipes": "recipe.add", "missions": "mission.add", "memories": "memory.add", "calendar": "event.add",
+               "people": "person.add", "bills": "bill.add", "training": "fitness.plan"}
     missing, extra = [], []
     for group, kind in by_kind.items():
         got = [c["text"] for c in chips if c["kind"] == kind]
@@ -63,7 +64,8 @@ def run_case(context, case: dict) -> list[dict]:
 
 def main() -> int:
     model = sys.argv[1] if len(sys.argv) > 1 else "qwen2.5:14b"
-    context = SimpleNamespace(llm=Ollama(model), kitchen=None, missions=None)
+    context = SimpleNamespace(llm=Ollama(model), kitchen=None, missions=None, relationships=None,
+                              fitness=SimpleNamespace(plan={}))
     cases = json.loads(CASES.read_text(encoding="utf-8"))
     passed = 0
     for case in cases:

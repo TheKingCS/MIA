@@ -5,7 +5,16 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-11-01*
+*Last updated: 2026-11-02*
+
+**First boot and User Sync (2026-11-02): slices 0-4 of
+`docs/GLASSES_FIRST_BOOT_PLAN.md` are in.** User Sync has all seven topics,
+the phone permission step and a phone screen (`web/sync.html`, linked from
+Home). Next is slice 5 (app intros, tours, the first mission), then slice 6
+(idle tips). Still to do: a wake word for "Hey MIA" (in no slice, needed
+before the first mission's "Say Hey MIA" objective); a weekly repeat for the
+meal-prep mission; a birthday without a year gets no reminder. Zac, on the
+phone: Home, Getting To Know You, try the Allow buttons and a topic or two.
 
 **The glasses are here (2026-11-01).** Meta's DAT plugin is installed in
 Claude Code on the PC (`mwdat-android`, DAT 1.0.1). It corrects MIA's

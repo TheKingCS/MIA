@@ -1770,3 +1770,19 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
 .pw-code { font-family: var(--font-mono); font-size: var(--text-lg); letter-spacing: 0.08em; color: var(--accent);
   text-align: center; padding: 10px; border: 1px dashed rgba(var(--rgb-accent), 0.5); border-radius: var(--radius); }
 .pw-offscreen { position: fixed; left: -9999px; top: 0; }
+
+/* User Sync on the phone (web/sync.js) and Home's way in. */
+.home-sync { display: flex; flex-direction: column; gap: 2px; padding: 12px 16px; text-decoration: none; color: inherit;
+  border-color: rgba(var(--rgb-accent), 0.45); }
+.home-sync[hidden] { display: none; }
+.sync-q { margin: 0 0 8px; font-weight: 400; text-transform: none; }
+.sync-box { width: 100%; box-sizing: border-box; margin: 8px 0; padding: 10px 12px; border-radius: 10px; font: inherit; resize: vertical;
+  color: inherit; background: rgba(var(--rgb-accent), 0.05); border: 1px solid rgba(var(--rgb-accent), 0.3); }
+.sync-rows { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+.sync-row { display: flex; justify-content: space-between; align-items: center; min-height: 44px; }
+.sync-chips { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+.sync-chip { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 12px;
+  border: 1px solid rgba(var(--rgb-accent), 0.4); border-radius: 8px; }
+.sync-x { min-width: 44px; min-height: 44px; border: 0; background: none; color: inherit; font-size: 20px; cursor: pointer; }
+.mod-sync .bar { height: 4px; margin-top: 12px; }
+.mod-sync .bar-fill { height: 100%; background: rgb(var(--rgb-accent)); }

@@ -1,6 +1,6 @@
 # First Boot, User Sync and the Presence System: wiring plan
 
-*Claude, 2026-10-29. Status: approved by Zac and being built: slices 0-3 are in, see section 5.*
+*Claude, 2026-10-29. Status: approved by Zac and being built: slices 0-4 are in, see section 5.*
 
 The design lives on the canvas "MIA Glasses First Boot" (the first boot,
 phases 1–9, the Hey MIA frames and the Presence System lab). Zac's brief
@@ -106,9 +106,11 @@ Gaps found while writing this:
   named split (push/pull/legs, four days) is the first job of that slice.
 
 **Phone permissions** (Phase 4's first frame): only the phone can ask
-the OS for calendar, health, location, notifications and photos. The
-phone app reports what was granted to `/api/first-boot/permissions`; the
-glasses show only what was reported (REAL), never a guessed percentage.
+the OS for a permission. The phone app reports what was granted through
+`/api/user-sync`; the glasses show only what was reported (REAL), never a
+guessed percentage. As built it asks for what MIA already uses: microphone,
+notifications, location, photos, Bluetooth for the glasses. Calendar and
+health aren't asked: the phone app reads neither.
 
 **Testing it:** a fixed set of sample answers per topic, each with the
 proposals it must produce, run against the real model, the same way the
@@ -249,6 +251,36 @@ screen, talking on the glasses alone breaks. So before slice 1:
 
 Build order becomes: 0 (voice without the app open), then 1–6 as above.
 
+### Slice 4: built 2026-11-02
+
+- **Seven topics, 2-3 questions each:** Routines, Work, Meals, Workouts,
+  Hobbies, People, Money. "You" is left out: the first account already asks
+  it. A child isn't asked about Money, and a child's weekly things become
+  memories, since the calendar is the household's.
+- **What each becomes:** a weekly thing, `event.add` repeating weekly (a
+  weekly repeat, which is what the meal-prep mission lacks); a named split,
+  `fitness.plan` (it holds one: a rotation of named days plus training
+  days), never over a plan they already have; goals, things coming up and
+  savings, `mission.add`; people, `person.add`; a bill with an amount and a
+  day they said, `bill.add`; everything else, a memory.
+- A number they didn't say is thrown out with the rest. A birthday without a
+  year goes in the person's notes, so it gets no reminder: a date needs a
+  year and she won't make one up.
+- **Her offer:** after every topic, "Next is work. Keep going, or finish
+  later?" Select keeps going, move skips that topic, back is finish later.
+- **The phone step** comes first and never blocks: "skip", or everything
+  allowed, moves on. `Permissions.kt` (`window.MIAPhonePermissions`) asks
+  Android, `web/sync.js` reports to `/api/user-sync`, the glasses show it.
+- **Phone screen:** `web/sync.html`, the same conversation typed, reached
+  from a "Getting To Know You" link on Home. Both screens re-read every 3
+  seconds, so an answer on one shows on the other.
+- `data/user_sync_cases.json`: 40 cases, 40 of 40 on qwen2.5:14b. The set is
+  our own writing; add real answers as they come. Replies with a stray `}`
+  after the JSON were being lost; `_json_in` now reads past it.
+- **Not tried:** any of it with a person on a real phone; the Allow buttons
+  on Android (compiled only). User Sync on the glasses' Web App needs the
+  sealed relay (`docs/GLASSES_RELAY_PLAN.md`) to carry real data.
+
 ### Slice 3: built 2026-11-02, Meals only
 
 - `core/user_sync.py`: the questions in code, the model extracts, the code
@@ -268,11 +300,8 @@ Build order becomes: 0 (voice without the app open), then 1–6 as above.
 - `data/user_sync_cases.json` + `tools/user_sync_check.py`: 10 of 10 on
   qwen2.5:14b, about 2.5 seconds each. One case failed first ("leftovers"
   as a dish), fixed by a rule in code. Add real answers as they come.
-- **Not built yet:** the phone screen to read and type the same
-  conversation (answer 1). `/api/user-sync` is ready for it; it comes with
-  slice 4. A weekly repeat for the meal-prep mission: `mission.add` makes
-  one mission, not a recurring one. Never tried with a spoken answer on a
-  real phone.
+- A weekly repeat for the meal-prep mission isn't built: `mission.add` makes
+  one mission, not a recurring one.
 
 ### Slice 2: built 2026-10-30, checked in a browser at 600×600
 

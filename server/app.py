@@ -139,8 +139,9 @@ class VoiceTextRequest(BaseModel):
 
 class UserSyncRequest(BaseModel):
     text: str = ""
-    choice: str = ""  # start | approve | drop | skip | later
+    choice: str = ""  # start | approve | drop | skip | continue | later
     index: int = -1
+    permissions: Optional[dict] = None  # what the phone app says is allowed
 
 
 class OrbStateRequest(BaseModel):
@@ -855,7 +856,7 @@ def create_app(context: AppContext) -> FastAPI:
     @app.post("/api/user-sync")
     def user_sync_step(body: UserSyncRequest, profile_id: str = Depends(require_profile_id)) -> dict:
         from core.home_link import HomeLinkError, home_call, linked
-        from core.user_sync import choose, reply, start
+        from core.user_sync import choose, reply, report, start
 
         if linked(context):
             try:
@@ -864,6 +865,8 @@ def create_app(context: AppContext) -> FastAPI:
                 pass  # the computer's out of reach: this phone answers
         view = view_for(context, profile_id)
         with app.state.turn_lock:
+            if body.permissions is not None:
+                return report(view, body.permissions)
             if body.choice == "start":
                 return start(view)
             return choose(view, body.choice, body.index) if body.choice else reply(view, body.text)

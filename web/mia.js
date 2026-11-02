@@ -80,6 +80,11 @@
   const DEMO_REVIEW = Object.assign({}, DEMO_SYNC, { step: "review", question: "Here's what I've got. Does that look right?", percent: 50,
     heard: "Chicken and rice, sometimes tacos. I meal prep on Sundays.",
     chips: [{ app: "Recipe book", text: "Chicken and rice" }, { app: "Recipe book", text: "Tacos" }, { app: "Missions", text: "Sunday meal prep" }] });
+  const DEMO_PHONE = Object.assign({}, DEMO_SYNC, { step: "phone", title: "Your phone", number: 1, question: "First, your phone. Tap Allow on it for each of these.",
+    rows: [{ id: "microphone", label: "Microphone", status: "allowed" }, { id: "notifications", label: "Notifications", status: "allowed" },
+      { id: "location", label: "Location", status: "not yet" }, { id: "photos", label: "Photos", status: "waiting" }, { id: "glasses", label: "Glasses", status: "waiting" }] });
+  const DEMO_NEXT = Object.assign({}, DEMO_SYNC, { step: "next", question: "Next is work. Keep going, or finish later?", percent: 14 });
+  const demoSync = () => ({ review: DEMO_REVIEW, phone: DEMO_PHONE, next: DEMO_NEXT })[params.get("sync")] || DEMO_SYNC;
   async function call(method, path, body) {
     if (!token) throw new MiaError(401, "Not signed in.");
     const response = await fetch(path, {
@@ -191,10 +196,9 @@
     glasses: (mission) => read("/api/glasses" + (mission ? "?mission=" + encodeURIComponent(mission) : ""), "glasses"),
     // Meeting MIA (core/first_boot.py): what's left. In the demo, only with ?boot.
     firstBoot: () => demo ? Promise.resolve(params.has("boot") ? DEMO_BOOT : { done: true, beats: [] }) : call("GET", "/api/first-boot"),
-    // User Sync (core/user_sync.py). In the demo, only with ?sync; ?sync=review starts at the chips.
-    userSync: () => demo ? Promise.resolve(params.has("sync") ? (params.get("sync") === "review" ? DEMO_REVIEW : DEMO_SYNC) : { done: true, offer: false, active: false })
-      : call("GET", "/api/user-sync"),
-    userSyncStep: (step) => demo ? Promise.resolve({ ...(params.get("sync") === "review" ? DEMO_REVIEW : DEMO_SYNC), say: "" }) : call("POST", "/api/user-sync", step),
+    // User Sync (core/user_sync.py). In the demo, only with ?sync; ?sync=review, =phone or =next starts there.
+    userSync: () => demo ? Promise.resolve(params.has("sync") ? demoSync() : { done: true, offer: false, active: false }) : call("GET", "/api/user-sync"),
+    userSyncStep: (step) => demo ? Promise.resolve({ ...demoSync(), say: "" }) : call("POST", "/api/user-sync", step),
     // Her voice saying one line; rejected where this MIA has none (the words still show).
     speak: (text) => demo ? demoOnly() : call("POST", "/api/heavy/speak", { text }),
     // What her orb is doing (core/glasses_feed.py), polled while the glasses are on.

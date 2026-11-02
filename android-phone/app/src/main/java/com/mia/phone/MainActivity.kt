@@ -40,6 +40,7 @@ class MainActivity : Activity() {
     // Location quests while MIA is closed (Places.kt). Talking through the
     // glasses is ListenService's, so it keeps working once this screen is gone.
     private val placesBridge = PlacesBridge(this)
+    private val permissions = Permissions(this)
     // The workout's count, spoken here (DEC-0055); made when the page first needs it (after onCreate).
     private val phoneVoice = lazy { PhoneVoice(this) }
 
@@ -217,6 +218,7 @@ class MainActivity : Activity() {
             addJavascriptInterface(placesBridge, "MIAPhonePlaces")
             addJavascriptInterface(phoneVoice.value, "MIAPhoneVoice")
             addJavascriptInterface(Relay, "MIARelay")
+            addJavascriptInterface(permissions, "MIAPhonePermissions")
             // Signed in: straight to Home (or the Inbox, after a share). Not
             // yet: the screen asks to make an account (first start) or to
             // sign in (after logging out).
@@ -236,6 +238,7 @@ class MainActivity : Activity() {
             return
         }
         if (requestCode == PlacesBridge.PLACES_REQUEST) { placesBridge.answered(); return }
+        if (requestCode == Permissions.ASK_REQUEST) { this.permissions.answered(); return }
         if (requestCode != GEO_REQUEST) return
         val ask = geoAsk ?: return
         geoAsk = null

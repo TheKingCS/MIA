@@ -2,10 +2,12 @@
 stand-in model. tools/user_sync_check.py runs the same steps on the real one."""
 
 import json
+from datetime import date
 from pathlib import Path
 
 from core import user_sync
 from core.actions import ActionCenter
+from core.relationships_manager import RelationshipsManager
 from core.user_memory_manager import UserMemoryManager
 from tests.engine_world import build_world
 from tools.user_sync_check import missing_and_extra
@@ -21,11 +23,16 @@ class Model:
         return self.reply if isinstance(self.reply, (str, type(None))) else json.dumps(self.reply)
 
 
-def make(tmp_path, monkeypatch, reply=None):
+def make(tmp_path, monkeypatch, reply=None, only="meals"):
+    """In one topic, past the phone; `only=None` is the whole of it from the start."""
     world = build_world(tmp_path, monkeypatch)
     world.actions = ActionCenter()
     world.llm = Model(reply)
+    if only:
+        monkeypatch.setattr(user_sync, "TOPICS", {only: user_sync.TOPICS[only]})
     user_sync.start(world)
+    if only:
+        user_sync.choose(world, "skip")
     return world
 
 
@@ -174,13 +181,125 @@ def test_through_the_server(tmp_path, monkeypatch):
     client.headers.update({"Authorization": f"Bearer {token}"})
 
     assert client.get("/api/user-sync").json()["offer"] is True
-    assert client.post("/api/user-sync", json={"choice": "start"}).json()["say"].startswith("Let's talk about meals.")
+    assert client.post("/api/user-sync", json={"choice": "start"}).json()["step"] == "phone"
+    assert client.post("/api/user-sync", json={"permissions": {"microphone": True}}).json()["rows"][0]["status"] == "allowed"
+    assert client.post("/api/user-sync", json={"choice": "skip"}).json()["say"].startswith("Let's talk about routines.")
+    progress = user_sync._progress(world)
+    progress["topics"] = {"routines": {"status": "skipped"}, "work": {"status": "skipped"}}
+    user_sync._save(world, progress)
     for said in ("Chicken and rice, sometimes tacos", "Sundays", "no"):
         got = client.post("/api/glasses/voice", json={"text": said}).json()
     assert got["sync"] is True
     assert client.get("/api/user-sync").json()["step"] == "review"
-    assert client.post("/api/user-sync", json={"choice": "approve"}).json()["done"] is True
+    assert client.post("/api/user-sync", json={"choice": "approve"}).json()["step"] == "next"
     assert len(world.kitchen.all_recipes()) == 2
+
+
+def chips_for(tmp_path, monkeypatch, topic, reply, *answers):
+    world = make(tmp_path, monkeypatch, reply, only=topic)
+    world.relationships = RelationshipsManager(world, tmp_path)
+    now = answer_all(world, *answers)
+    return world, now
+
+
+def test_the_phone_step_shows_only_what_was_reported_and_never_blocks(tmp_path, monkeypatch):
+    world = make(tmp_path, monkeypatch, None, only=None)
+    now = user_sync.state(world)
+    assert now["step"] == "phone" and {r["status"] for r in now["rows"]} == {"waiting"}
+    now = user_sync.report(world, {"microphone": True, "location": False, "made_up": True})
+    rows = {r["id"]: r["status"] for r in now["rows"]}
+    assert rows["microphone"] == "allowed" and rows["location"] == "not yet" and rows["photos"] == "waiting" and "made_up" not in rows
+    assert user_sync.reply(world, "skip")["say"].startswith("Let's talk about routines.")
+
+
+def test_everything_allowed_moves_on_by_itself(tmp_path, monkeypatch):
+    world = make(tmp_path, monkeypatch, None, only=None)
+    now = user_sync.report(world, {key: True for key, _label in user_sync.PHONE_ASKS})
+    assert now["step"] == "ask" and now["topic"] == "routines"
+
+
+def test_she_offers_to_keep_going_after_each_topic(tmp_path, monkeypatch):
+    world = make(tmp_path, monkeypatch, {"job": "nurse", "schedule": "", "upcoming": []}, only=None)
+    user_sync.choose(world, "skip")
+    user_sync.reply(world, "skip this topic")
+    now = user_sync.state(world)
+    assert now["step"] == "next" and now["topic"] == "work" and "finish later" in now["question"]
+    assert user_sync.reply(world, "skip")["topic"] == "meals"  # skipping the one she offered
+    assert user_sync.state(world)["step"] == "next"
+    assert user_sync.reply(world, "keep going")["question"] == QS[0]
+
+
+def test_a_child_is_never_asked_about_money(tmp_path, monkeypatch):
+    world = make(tmp_path, monkeypatch, None, only=None)
+    monkeypatch.setattr(user_sync, "is_child", lambda context: True)
+    assert "money" not in user_sync._topics(world) and user_sync.state(world)["topics"] == len(user_sync.TOPICS) - 1
+
+
+def test_a_weekly_thing_goes_on_the_calendar_only_after_the_yes(tmp_path, monkeypatch):
+    reply = {"wake": "7:00", "bed": "4:00", "weekly": [{"what": "trash day", "day": "Tuesday", "time": ""},
+                                                        {"what": "piano", "day": "Friday", "time": ""}], "morning": []}
+    world, now = chips_for(tmp_path, monkeypatch, "routines", reply, "Up at seven, in bed by ten thirty", "Trash day is Tuesday", "no")
+    assert [c["text"] for c in now["chips"]] == ["Up around 7:00", "Trash day, Tuesdays"]  # no 4:00, no piano
+    before = len(world.calendar.all_events())
+    user_sync.reply(world, "looks right")
+    events = world.calendar.all_events()
+    assert len(events) == before + 1 and events[-1].recurrence == "weekly"
+    assert date.fromisoformat(events[-1].date).weekday() == 1
+
+
+def test_a_named_split_becomes_the_plan_but_never_replaces_one(tmp_path, monkeypatch):
+    reply = {"split": ["push", "pull", "legs"], "days": ["Monday", "Wednesday", "Friday"], "activities": [], "goal": "first pull-up"}
+    world, now = chips_for(tmp_path, monkeypatch, "workouts", reply, "Push, pull, legs", "Monday, Wednesday and Friday", "My first pull-up")
+    assert [c["text"] for c in now["chips"]] == ["Push, Pull, Legs, Mon, Wed, Fri", "First pull-up"]
+    assert user_sync.reply(world, "looks right")["done"] is True
+    assert [d["name"] for d in world.fitness.plan["training"]["rotation"]] == ["Push", "Pull", "Legs"]
+
+    world, now = chips_for(tmp_path / "again", monkeypatch, "workouts", {**reply, "goal": ""}, "Push, pull, legs", "no", "no")
+    world.fitness.update_plan({"training": {"rotation": [{"name": "Full body", "exercises": []}]}})
+    assert user_sync._extract_workouts(world, [{"q": "", "a": "Push, pull, legs on Monday, Wednesday and Friday"}])[0]["text"] == "Mon, Wed, Fri"
+
+
+def test_weekdays_can_be_a_span(tmp_path, monkeypatch):
+    days = user_sync._days(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], "Monday through Friday")
+    assert len(days) == 5
+    assert user_sync._days(["Monday", "Friday"], "just Fridays") == ["friday"]
+
+
+def test_a_person_needs_a_year_for_a_real_birthday(tmp_path, monkeypatch):
+    reply = {"people": [{"name": "Sarah", "who": "sister", "birthday": "March 4, 1990"},
+                        {"name": "Mom", "who": "", "birthday": "June 2"}, {"name": "Elvis", "who": "friend", "birthday": ""}]}
+    world, now = chips_for(tmp_path, monkeypatch, "people", reply, "My sister Sarah and my mom", "Sarah is March 4, 1990. Mom is June 2.")
+    assert [c["text"] for c in now["chips"]] == ["Sarah, sister, March 4, 1990", "Mom, June 2"]
+    user_sync.reply(world, "looks right")
+    people = {p.name: p for p in world.relationships.all_people()}
+    assert people["Sarah"].birthday == "1990-03-04" and not people["Mom"].birthday and "June 2" in people["Mom"].notes
+
+
+def test_a_bill_needs_a_real_amount_and_day(tmp_path, monkeypatch):
+    reply = {"saving_for": ["a van"], "bills": [{"name": "rent", "amount": "1200", "day": "1"}, {"name": "power", "amount": "90", "day": "9"}],
+             "watch": ["takeout"]}
+    world, now = chips_for(tmp_path, monkeypatch, "money", reply, "A van", "Rent is 1,200 on the 1st, and the power bill", "Takeout")
+    assert [(c["app"], c["text"]) for c in now["chips"]] == [("Missions", "Save for a van"), ("Budget", "Rent"), ("Memory", "Power"), ("Memory", "Takeout")]
+    user_sync.reply(world, "looks right")
+    assert [b.name for b in world.budget.all_bills()] == ["Rent"]
+
+
+def test_a_stray_brace_after_the_answer_doesnt_lose_it():
+    assert user_sync._json_in('{"job": "nurse"}}') == {"job": "nurse"}
+    assert user_sync._json_in('{"job": "nurse"') is None
+
+
+def test_numbers_they_didnt_say_are_thrown_away():
+    assert not user_sync._said("Monday to Friday, 9 to 5", "Monday to Friday, 8 to 5")
+    assert user_sync._said("8 to 5", "usually 8 to 5")
+    assert user_sync._time("7:00", "up at seven") and not user_sync._time("6:00", "up at seven")
+
+
+def test_every_topic_has_sample_answers_and_a_fallback(tmp_path, monkeypatch):
+    cases = json.loads((Path(__file__).parent.parent / "data" / "user_sync_cases.json").read_text(encoding="utf-8"))
+    for topic in user_sync.TOPICS:
+        assert len([c for c in cases if c["topic"] == topic]) >= 5
+        assert user_sync.TOPICS[topic]["extract"](make(tmp_path / topic, monkeypatch, None, only=None), [{"q": "", "a": "x"}]) is None
 
 
 def test_the_check_tool_marks_a_guess_as_wrong():
