@@ -84,8 +84,6 @@ class MainActivity : Activity() {
             try {
                 // Once per app process (Engine.kt), shared with the listening service.
                 val result = Engine.ensure(applicationContext, lastExit())
-                // Spike only: the CI check reads it to call the API. Local to this phone.
-                Log.d(TAG, "token=${result.optString("token")}")
                 // Opened from another app's Share menu: into the inbox, then show it.
                 val shared = if (Share.isShare(intent)) saveShare(intent) else false
                 runOnUiThread {

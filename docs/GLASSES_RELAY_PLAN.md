@@ -65,8 +65,7 @@ offline: it keeps none.
 - [x] Relay refuses other origins, oversized messages and floods (`relay/test.mjs`, live).
 - [x] Replay and tampering refused on the real pair; a swapped key shows different codes (`mia-art/test.mjs`).
 - [x] A path outside the allowlist is refused on the phone.
-- [ ] Unpairing works.
-- [ ] Nothing is logged with message contents, on the relay or the phone.
-  Relay messages aren't, but `MainActivity` logs the engine's token (a spike
-  line the CI check reads): it has to go first.
+- [x] Unpairing works (tested on the real pair: the glasses get no answer).
+- [x] Nothing is logged with message contents, on the relay or the phone. The
+  engine's token is no longer logged either (`ci_smoke.sh` signs up instead).
 - [ ] Security review of the diff, then Zac's OK.
