@@ -100,7 +100,7 @@ class MetaGlasses(private val activity: Activity) {
                 scope.launch {
                     opened.state.collect { now ->
                         if (now == DeviceSessionState.STARTED && display == null) attach(opened)
-                        if (now == DeviceSessionState.STOPPED) { session = null; display = null; state = "not connected" }
+                        if (now == DeviceSessionState.STOPPED) { session = null; display = null; if (!glassesAppOutdated) state = "not connected" }
                     }
                 }
                 opened.start()
