@@ -65,7 +65,9 @@ object Relay {
     private val CARDS = Regex("/api/glasses(\\?mission=[A-Za-z0-9_-]{1,64})?")
     private val FEED = Regex("/api/glasses/feed(\\?since=[A-Za-z0-9:.%_-]{0,64})?")
     private val PANEL = Regex("/api/glasses/([a-z_]{1,32})/([a-z0-9_-]{1,32})(\\?mission=[A-Za-z0-9_-]{1,64})?")
+    private val THREAD = Regex("/api/talk/thread\\?limit=[0-9]{1,2}")
     private val NOT_FOR_GLASSES = setOf("action", "actions", "ask")
+    private const val MAX_REPLY = 200_000  // under what the relay carries
     // By name, so a new app stays off the glasses until someone adds it. No
     // budget, property or account app belongs here.
     private val HOME_APPS = listOf("missions", "calendar", "workout", "kitchen", "maintenance")
@@ -340,7 +342,7 @@ object Relay {
      *  the answer is cut down again in clean(). Anything else stays refused. */
     private fun read(path: String): String? {
         val panel = PANEL.matchEntire(path)
-        val allowed = path == ORB || FEED.matches(path) || CARDS.matches(path) ||
+        val allowed = path == ORB || FEED.matches(path) || CARDS.matches(path) || THREAD.matches(path) ||
             (panel != null && panel.groupValues[1] in HOME_APPS)
         if (!allowed) {
             Log.w(TAG, "Refused: a path that isn't allowed")
@@ -354,7 +356,7 @@ object Relay {
             connection.readTimeout = 7000
             connection.setRequestProperty("Authorization", "Bearer $token")
             val data = JSONObject(connection.inputStream.bufferedReader().use { it.readText() })
-            (if (CARDS.matches(path)) cards(data) else clean(data) as JSONObject).toString()
+            (if (CARDS.matches(path)) cards(data) else clean(data) as JSONObject).toString().takeIf { it.length <= MAX_REPLY }
         } catch (e: Exception) {
             Log.w(TAG, "Couldn't read for the glasses")
             null

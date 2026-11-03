@@ -73,7 +73,8 @@ but a picture is refused.
 `/voice/listen` makes her listen; she answers through the glasses, not the
 relay. Reads (Zac: read-only Home, 2026-11-02; "build her out according to
 the designs"): `/api/glasses`, each panel of the apps in `HOME_APPS`,
-`/api/glasses/orb` and `/api/glasses/feed`. Each must match an exact shape. The
+`/api/glasses/orb`, `/api/glasses/feed` and `/api/talk/thread` (conversation).
+Each must match an exact shape. The
 phone cuts the answer down: only approved apps, only panel menu items, every
 `action` removed, and any text with a currency symbol blanked. Changes come
 later, through `/api/actions` and the usual
