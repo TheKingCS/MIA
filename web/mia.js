@@ -309,6 +309,8 @@
     freedom: () => read("/api/freedom", "freedom"),
     // The Fix-It Log (core/failure_log.py, DEC-0049): where MIA stumbled; a page reports its own errors.
     failures: () => read("/api/failures", "failures"),
+    // The development dashboard (core/work_dashboard.py): the device's owner only.
+    dev: (query) => demo ? Promise.resolve({ available: false }) : call("GET", "/api/dev" + (query ? "?q=" + encodeURIComponent(query) : "")),
     pageError: (page, message) => demo || !token ? Promise.resolve(null) : call("POST", "/api/failures/page", { page, message }),
     pageOpened: (page) => demo || !token ? Promise.resolve(null) : call("POST", "/api/usage/page", { page }),
     // The Sunday check-in (core/weekly_checkin.py, DEC-0047): last week's recap, this week laid out.

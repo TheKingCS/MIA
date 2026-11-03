@@ -1744,6 +1744,16 @@ def create_app(context: AppContext) -> FastAPI:
         return _screen(profile_id, "freedom", freedom_page)
 
     # ------------------------------------------------------------ The Fix-It Log (core/failure_log.py, DEC-0049)
+    @app.get("/api/dev")
+    def web_dev(q: str = "", profile_id: str = Depends(require_profile_id)) -> dict:
+        """The development dashboard (DEC-0068/0070): the device's owner only."""
+        from core.work_dashboard import for_person
+
+        found = for_person(view_for(context, profile_id), profile_id, q[:200])
+        if found is None:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "Only this MIA's owner sees the development work.")
+        return found
+
     @app.get("/api/failures")
     def web_failures(profile_id: str = Depends(require_profile_id)) -> dict:
         from core.failure_actions import failures_page
