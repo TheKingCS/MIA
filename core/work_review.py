@@ -142,28 +142,48 @@ def lab_diff(proposal_id: str) -> str:
 
 
 def ask_provider(provider: str, prompt: str) -> str:
-    """Run a review on a provider: Ollama locally, or Claude Code read-only."""
-    if provider == "ollama":
-        from tools.intelligence_check import build_context
+    """Run a review on a provider, read-only: a local model through Ollama, or
+    a coding CLI (Claude Code, Codex, Copilot) that may read but never edit,
+    run commands or reach the web. Each signs in with Zac's own account."""
+    import shutil
+    import subprocess
 
-        context = build_context()
-        said = context.llm.generate(prompt, timeout=300) if context.llm is not None else None
+    from core.work_agents import load as load_agents
+
+    spec = load_agents().providers.get(provider)
+    if spec is None:
+        raise ReviewError(f"No provider {provider!r}.")
+    if spec.kind == "local":
+        import json
+        import urllib.request
+
+        body = json.dumps({"model": spec.model, "prompt": prompt, "stream": False, "options": {"temperature": 0.2}})
+        request = urllib.request.Request("http://127.0.0.1:11434/api/generate", data=body.encode("utf-8"),
+                                         headers={"Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(request, timeout=900) as answer:
+                said = json.loads(answer.read()).get("response", "")
+        except (OSError, ValueError) as problem:
+            raise ReviewError(f"{spec.model} didn't answer: {problem}") from problem
         if not said:
-            raise ReviewError("The local model didn't answer.")
+            raise ReviewError(f"{spec.model} didn't answer.")
         return said
-    if provider == "claude-code":
-        import shutil
-        import subprocess
-
-        claude = shutil.which("claude")
-        if claude is None:
-            raise ReviewError("Claude Code isn't installed here.")
-        out = subprocess.run([claude, "-p", prompt, "--allowedTools", "Read", "Glob", "Grep",
-                              "--disallowedTools", "Edit", "Write", "Bash", "WebFetch", "WebSearch"],
-                             cwd=str(tasks_mod.ROOT), capture_output=True, text=True, timeout=1800,
-                             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
-        return out.stdout or out.stderr
-    raise ReviewError(f"{provider} can't review here yet.")
+    command = shutil.which(spec.command) if spec.command else None
+    if command is None:
+        raise ReviewError(f"{provider} isn't installed here.")
+    readonly = {
+        "claude-code": [command, "-p", prompt, "--allowedTools", "Read", "Glob", "Grep",
+                        "--disallowedTools", "Edit", "Write", "Bash", "WebFetch", "WebSearch"],
+        "codex": [command, "exec", "--sandbox", "read-only", "--skip-git-repo-check", prompt],
+        "copilot": [command, "-p", prompt, "--deny-tool", "write", "--deny-tool", "shell"],
+    }.get(provider)
+    if readonly is None:
+        raise ReviewError(f"{provider} can't review here yet.")
+    out = subprocess.run(readonly, cwd=str(tasks_mod.ROOT), capture_output=True, text=True, encoding="utf-8",
+                         errors="replace", timeout=1800, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+    if out.returncode != 0 and not out.stdout.strip():
+        raise ReviewError(f"{provider} didn't review: {(out.stderr or '').strip()[-300:]}")
+    return out.stdout or out.stderr
 
 
 __all__ = ["review", "approve", "verdict", "author_of", "ReviewError", "AgentError"]

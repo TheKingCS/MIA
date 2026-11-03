@@ -51,14 +51,18 @@ class Provider:
         """Installed and reachable here: a CLI on the path, or Ollama answering."""
         if self.kind == "cli":
             return bool(self.command) and shutil.which(self.command) is not None
-        if self.kind == "local":
+        if self.kind == "local":  # Ollama answering, with this provider's model pulled
+            import json
             import urllib.request
 
             try:
-                with urllib.request.urlopen("http://127.0.0.1:11434/api/tags", timeout=2):
-                    return True
-            except OSError:
+                with urllib.request.urlopen("http://127.0.0.1:11434/api/tags", timeout=2) as answer:
+                    models = {m.get("name", "") for m in json.loads(answer.read()).get("models", [])}
+            except (OSError, ValueError):
                 return False
+            return not self.model or self.model in models or f"{self.model}:latest" in models
+        if self.kind == "mia":  # MIA herself, in this repo
+            return (ROOT / "core" / "inspection.py").exists()
         return False
 
 
