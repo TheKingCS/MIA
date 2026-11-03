@@ -24,6 +24,10 @@ Missions are in the boards' look, and everyday actions go through the relay
 publishing with them. Zac, on the
 phone: Home, Getting To Know You, try the Allow buttons and a topic or two.
 
+**Tasks now live in `work/tasks/` (DEC-0068, 2026-11-03):** `python -m
+tools.work list --ready` shows what can start. The build queue below is
+history; anything still open from it is a task.
+
 **Parked, to come back to (Zac, 2026-11-03), in this order:**
 1. Personality plan (DEC-0067), `docs/PERSONALITY_AND_ECOSYSTEM_AUDIT.md`
    sections E to G. Done: phase 1, tuning round 1, 👍/👎 ratings, turn traces.
@@ -528,6 +532,8 @@ every step below in order, from a blank machine, with Windows notes.
       back here; Claude builds the one you pick as a new MIA theme.
 
 ## 2. Build queue (Claude), in order
+
+*History since 2026-11-03: open work is in `work/tasks/`.*
 
 **The mission system is locked in (DEC-0047, `docs/MISSION_SYSTEM.md`).**
 Build order (Zac said begin, 2026-10-27): 1) the Loop ✅ built

@@ -9,10 +9,14 @@ no AI talks to another directly, they all read and write these files.*
 1. Read **`docs/CURRENT_STATE.md`**: where the project is right now.
 2. Check **`docs/QUESTIONS.md`** for questions addressed to you.
 3. Check **`docs/HANDOFFS/`** for anything new addressed to you.
-4. Check **`docs/DECISIONS.md`** before proposing anything: don't redo
+4. Check **`work/tasks/`** for work assigned to you or ready to start
+   (`python -m tools.work list --ready`; DEC-0068). Claim one before you
+   start, so nobody works on the same files at once; close it only with
+   evidence. New work becomes a task: `python -m tools.work new "..."`.
+5. Check **`docs/DECISIONS.md`** before proposing anything: don't redo
    or contradict an approved decision without proposing a new one that
    supersedes it.
-5. Run every proposal through the 10-question guardrail (below).
+6. Run every proposal through the 10-question guardrail (below).
 
 ## Who does what
 
@@ -37,6 +41,7 @@ what is part of the project.
 | `docs/HANDOFFS/` | Bigger pieces of work passed between us, one file each: `H-0001_from-to_subject.md`. | The sender. |
 | `docs/ROADMAP.md` | The engineering record: what was built, why, and how it was verified. | Claude. |
 | `docs/NEXT_SESSION.md` | Zac's hands-on steps and Claude's build queue. | Claude. |
+| `work/tasks/T-*.md` | Every open piece of work, one file each: status, owner, dependencies, files it touches, evidence (DEC-0068). | Anyone; `tools/work.py`. |
 | `docs/ENGINE_PHASE1_PLAN.md`, `docs/schema/` | The engine contract: Life State v2, the schema, a placeholder example. | Claude. |
 
 ## How to write to the hub
