@@ -280,10 +280,15 @@ def approve(proposal_id: str, suite: Optional[Callable] = None) -> Proposal:
     dirty = [ln[3:] for ln in _git("status", "--porcelain").splitlines()]
     if set(dirty) & set(p.files):
         raise ValueError("Files it changes have unsaved edits here: " + ", ".join(sorted(set(dirty) & set(p.files))))
+    # The running copy as it is first: it can hold work in progress the lab
+    # never saw (2026-11-03: Zac's uncommitted Plaid work failed a Plaid test,
+    # and the merge was reverted for a failure that was already there).
+    before = (suite or run_suite)(ROOT)
     _git("merge", "--no-ff", "--no-edit", p.branch, "-m", f"From the lab: {p.title} ({p.proposal_id})", author=OWNER)
     p.merged_as = _git("rev-parse", "HEAD")
     after = (suite or run_suite)(ROOT)  # the running copy
-    fresh = new_failures(after, {"failed": p.tests.get("lab_failed", [])})  # anything beyond what failed in the lab
+    known = set(before.get("failed", [])) | set(p.tests.get("lab_failed", []))
+    fresh = new_failures(after, {"failed": sorted(known)})  # only what the merge added here
     if not after.get("finished", True):
         fresh = fresh or ["(the suite didn't finish)"]
     if fresh:

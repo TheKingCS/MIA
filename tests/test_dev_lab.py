@@ -79,7 +79,8 @@ def test_breaking_the_running_copy_reverts_itself(repo):
     p = lab.create("Looks fine", "x")
     lab.write(p.proposal_id, coder=lambda t, cwd, py: (Path(cwd) / "core" / "thing.py").write_text("VALUE = 4\n"))
     lab.check(p.proposal_id, suite=suite({"*": []}))
-    p = lab.approve(p.proposal_id, suite=suite({"MIA": ["tests/test_c.py::only_here"]}))
+    runs = iter([[], ["tests/test_c.py::only_here"]])  # fine before the merge, broken after
+    p = lab.approve(p.proposal_id, suite=lambda cwd: {"summary": "", "failed": next(runs), "finished": True})
     assert p.status == lab.REVERTED and (repo / "core" / "thing.py").read_text() == "VALUE = 1\n"
     log = subprocess.run(["git", "log", "--format=%s"], cwd=str(repo), capture_output=True, text=True).stdout
     assert log.startswith("Revert") and "From the lab: Looks fine" in log  # history keeps both
@@ -100,3 +101,14 @@ def test_the_rules():
                                      ["tests/test_a.py::one", "tests/test_b.py::two"], "finished": True}
     assert lab.new_failures({"failed": ["a", "b"]}, {"failed": ["a"]}) == ["b"]
     assert not lab.suite_result("Traceback...")["finished"]
+
+
+def test_a_failure_already_in_the_running_copy_doesnt_revert(repo):
+    """Work in progress here the lab never saw: failing before and after the merge isn't the merge's doing."""
+    p = lab.create("Fine", "x")
+    lab.write(p.proposal_id, coder=lambda t, cwd, py: (Path(cwd) / "core" / "thing.py").write_text("VALUE = 5\n"))
+    lab.check(p.proposal_id, suite=suite({"*": []}))
+    already = ["tests/test_plaid.py::work_in_progress"]
+    p = lab.approve(p.proposal_id, suite=lambda cwd: {"summary": "", "failed": list(already), "finished": True})
+    assert p.status == lab.MERGED and (repo / "core" / "thing.py").read_text() == "VALUE = 5\n"
+
