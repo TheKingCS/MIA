@@ -113,17 +113,29 @@ def open_objections(task_id: str, log=activity.ACTIVITY) -> list[dict]:
     return open_ones
 
 
+def settled_by_zac(task_id: str, log=activity.ACTIVITY) -> bool:
+    """When the author and the reviewer still disagree after an answer, Zac
+    decides: his resolve, after the latest review, settles it. An agent's
+    can't, and a new review reopens it."""
+    last = None
+    for e in activity.search(task_id=task_id, path=log):
+        if e.get("action") in ("review", "resolve"):
+            last = e
+    return bool(last) and last.get("action") == "resolve" and last.get("who") == "zac"
+
+
 def resolve(task_id: str, who: str, how: str, folder=tasks_mod.TASKS_DIR, log=activity.ACTIVITY) -> int:
     """Answer the open objections: what was changed, or why the reviewer was
     wrong. Kept in the task and the history either way. Returns how many."""
     tasks = tasks_mod.load(folder)
     task = tasks_mod._get(tasks, task_id)
     objections = open_objections(task.id, log)
-    if not objections:
+    deciding = who == "zac" and latest_verdict(task.id, log) == "changes"  # a disagreement only Zac settles
+    if not objections and not deciding:
         raise ReviewError(f"{task.id} has no open objection to resolve.")
     if not how.strip():
         raise ReviewError("Say how it's resolved: what changed, or why the objection doesn't hold.")
-    raised_by = ", ".join(sorted({e.get("who", "") for e in objections}))
+    raised_by = ", ".join(sorted({e.get("who", "") for e in objections})) or "the last review"
     tasks_mod.note(task, who, f"Resolved the objection from {raised_by}: {how.strip()}")
     tasks_mod.save(task, folder)
     activity.record(who, "resolve", task.id, f"{len(objections)} from {raised_by}: {how.strip()}", log)
@@ -146,6 +158,8 @@ def approve(task_id: str, *, confirm: Callable[[str], str], lab=None, suite: Opt
         raise ReviewError(f"{task.id} has an objection from {raised_by} nobody has answered. "
                           f"Resolve it first: python -m tools.work resolve {task.id} --by <who> --how \"...\"")
     said = latest_verdict(task.id, log)
+    if said != "approve" and settled_by_zac(task.id, log):
+        said = "approve"  # still disagreeing after an answer: Zac decided (DEC-0071)
     if said != "approve":
         raise ReviewError(f"{task.id} needs an independent review that approves it first"
                           + (f" (the last said {said})." if said else "."))

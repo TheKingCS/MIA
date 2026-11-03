@@ -99,3 +99,15 @@ def test_an_objection_cant_be_outvoted_only_answered(waiting):
     assert "Resolved the objection from QA Engineer (ollama): the retry now logs" in tasks_mod.load(folder)["T-0001"].body
     assert rv.approve("T-0001", confirm=lambda q: "T-0001", lab=lab, folder=folder, log=log)
 
+
+def test_a_disagreement_that_outlasts_its_answer_is_zacs_to_settle(waiting):
+    folder, log, _, lab = waiting
+    _review(waiting, "QA Engineer", "A problem.\nVERDICT: changes")
+    rv.resolve("T-0001", "claude", "checked: it doesn't hold", folder=folder, log=log)
+    _review(waiting, "QA Engineer", "VERDICT: changes")  # still no, with nothing to answer
+    rv.resolve("T-0001", "claude", "nothing new raised", folder=folder, log=log)
+    with pytest.raises(rv.ReviewError, match="review that approves"):  # an agent can't settle it
+        rv.approve("T-0001", confirm=lambda q: "T-0001", lab=lab, folder=folder, log=log)
+    rv.resolve("T-0001", "zac", "read both; the change is right", folder=folder, log=log)
+    assert rv.approve("T-0001", confirm=lambda q: "T-0001", lab=lab, folder=folder, log=log)
+
