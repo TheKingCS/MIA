@@ -1097,3 +1097,17 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   the glasses' QR scan), so the phone app no longer draws on the glasses,
   which keeps her one app. This replaces DEC-0060's tap to open.
 - Related: DEC-0060 (its tap to open, replaced), DEC-0062
+
+### DEC-0064: Everyday actions through the sealed relay
+- Status: APPROVED
+- Proposed by: claude, 2026-11-02 · Approved by: zac, 2026-11-02 ("Yes, approve and build")
+- Decision: let the glasses make a short list of everyday, undoable changes
+  through the relay, using one-time references the phone hands out, so the
+  page can never name its own action (`docs/GLASSES_RELAY_PLAN.md`, the fifth
+  review). The list: task.done, routine.log, grocery.check, objective.tick,
+  fitness.step, fitness.training_done, fitness.food, meal.prep_done,
+  maintenance.done. Left off for now: meal.cook (it takes from the pantry),
+  mission.complete (it pays out), the live workout, anything with money.
+  Garage and Greenhouse join `HOME_APPS` so their Done works. User Sync's
+  Money topic stays off the relay.
+- Related: DEC-0062

@@ -43,8 +43,10 @@ import kotlin.math.abs
 /**
  * The phone's side of the sealed relay (DEC-0062, docs/GLASSES_RELAY_PLAN.md).
  * It connects out to the relay, opens what the glasses send, and answers
- * only what's named below: the read-only screens of the apps in HOME_APPS,
- * cut down here on the phone, so the glasses can't ask for more (DEC-0062).
+ * only what's named below: the screens of the apps in HOME_APPS, cut down
+ * here on the phone, so the glasses can't ask for more (DEC-0062). The page's
+ * code is public, so it never names a change: a panel's allowed actions become
+ * one-time references here, and the page can only send one back (DEC-0064).
  * Logs say why something was refused, never what it held.
  *
  * The page asks through window.MIARelay: state(), pair(), confirm(), cancel()
@@ -72,14 +74,33 @@ object Relay {
     private val FIRST_BOOT_WRITES = setOf("/api/user-sync", "/api/welcome")
     private val BOOT_ACTIONS = setOf("firstboot.advance", "firstboot.skip")
     private const val BOOT_STEP = "/firstboot/step"
+    private const val SYNC = "/api/user-sync"
+    // Everyday and undoable (DEC-0064). Nothing that pays out, spends or deletes.
+    private val OFFER_KINDS = setOf("task.done", "routine.log", "grocery.check", "objective.tick", "fitness.step",
+        "fitness.training_done", "fitness.food", "meal.prep_done", "maintenance.done")
+    private const val OFFER_PROPOSE = "/action/propose"
+    private const val OFFER_APPROVE = "/action/approve"
+    private const val OFFER_REJECT = "/action/reject"
+    private const val OFFER_MS = 5 * 60 * 1000L
+    private const val MAX_OFFERS = 300
+    private const val MAX_CHANGES_A_MINUTE = 30
+    private const val PAIRED_PERSON = "person"
+    // Money waits for the phone's screen, whatever the page sends (DEC-0064).
+    private val SYNC_CHOICES_ON_MONEY = setOf("skip", "later", "start", "continue")
     private const val MAX_BODY = 20_000
     private const val MAX_REPLY = 200_000  // under what the relay carries
     // By name, so a new app stays off the glasses until someone adds it. No
     // budget, property or account app belongs here.
-    private val HOME_APPS = listOf("missions", "calendar", "workout", "kitchen", "maintenance")
+    private val HOME_APPS = listOf("missions", "calendar", "workout", "kitchen", "garage", "greenhouse")
     private val MONEY = Regex("[$€£¥]")
 
     private class Keys(val room: String, val send: ByteArray, val receive: ByteArray)
+    private class Offer(val kind: String, val params: JSONObject, val at: Long)
+
+    // What the glasses were offered, and which proposal came from which offer.
+    private val offers = HashMap<String, Offer>()
+    private val proposed = HashMap<String, String>()
+    private val changes = ArrayDeque<Long>()
 
     private val client = OkHttpClient()
     private val main = Handler(Looper.getMainLooper())
@@ -247,6 +268,7 @@ object Relay {
         pairing = null
         clearPairing()
         highest = 0
+        forgetOffers()
         keys = chosen
         save(chosen)
         stage = "paired"
@@ -277,6 +299,7 @@ object Relay {
     @JavascriptInterface
     @Synchronized
     fun unpair() {
+        forgetOffers()
         cancel()
         keys = null
         stage = "unpaired"
@@ -362,7 +385,10 @@ object Relay {
         }
         return try {
             val data = engine(path, null) ?: return null
-            (if (CARDS.matches(path)) cards(data) else clean(data) as JSONObject).toString().takeIf { it.length <= MAX_REPLY }
+            if (panel != null) offer(data)
+            val out = if (CARDS.matches(path)) cards(data) else clean(data) as JSONObject
+            if (path == SYNC) money(out as JSONObject)
+            out.toString().takeIf { it.length <= MAX_REPLY }
         } catch (e: Exception) {
             Log.w(TAG, "Couldn't read for the glasses")
             null
@@ -376,17 +402,115 @@ object Relay {
             if (path == BOOT_STEP) {
                 val kind = body.optString("kind")
                 if (kind !in BOOT_ACTIONS) return null
-                val proposal = engine("/api/actions", JSONObject().put("kind", kind).put("params", body.optJSONObject("params") ?: JSONObject()))
+                val proposal = engine("/api/actions/propose", JSONObject().put("kind", kind).put("params", body.optJSONObject("params") ?: JSONObject()))
                     ?: return null
                 engine("/api/actions/${proposal.getString("proposal_id")}/approve", JSONObject()) ?: return null
                 return "{}"
             }
+            if (path == OFFER_PROPOSE) return propose(body)
+            if (path == OFFER_APPROVE) return decide(body, true)
+            if (path == OFFER_REJECT) return decide(body, false)
             if (path !in FIRST_BOOT_WRITES) return null
-            clean(engine(path, body) ?: return null).toString()
+            if (path == SYNC && !syncAllowed(body)) return null
+            val out = clean(engine(path, body) ?: return null) as JSONObject
+            if (path == SYNC) money(out)
+            out.toString()
         } catch (e: Exception) {
             Log.w(TAG, "Couldn't save for the glasses")
             null
         }
+    }
+
+    /** User Sync's Money topic is for the phone: its screen says so, and only moving on passes. */
+    private fun money(sync: JSONObject) {
+        if (sync.optString("topic") == "money" && sync.optString("step") != "next") sync.put("phone_only", true)
+    }
+
+    private fun syncAllowed(body: JSONObject): Boolean {
+        val now = engine(SYNC, null) ?: return false
+        return now.optString("topic") != "money" || body.optString("choice") in SYNC_CHOICES_ON_MONEY
+    }
+
+    /** Swaps each allowed action in a panel for a reference. The rest stay out (clean()). */
+    @Synchronized
+    private fun offer(panel: JSONObject) {
+        val now = System.currentTimeMillis()
+        offers.entries.removeAll { now - it.value.at > OFFER_MS }
+        val lines = panel.optJSONArray("lines") ?: return
+        for (i in 0 until lines.length()) {
+            val line = lines.optJSONObject(i) ?: continue
+            val action = line.optJSONObject("action") ?: continue
+            val kind = action.optString("kind")
+            if (kind !in OFFER_KINDS || offers.size >= MAX_OFFERS) continue
+            val ref = ByteArray(16).also { random.nextBytes(it) }.joinToString("") { "%02x".format(it) }
+            offers[ref] = Offer(kind, action.optJSONObject("params") ?: JSONObject(), now)
+            line.put("offered", JSONObject().put("kind", "offer").put("label", action.optString("label"))
+                .put("params", JSONObject().put("ref", ref)))
+        }
+    }
+
+    @Synchronized
+    private fun offerFor(ref: String): Offer? = offers[ref]?.takeIf { System.currentTimeMillis() - it.at <= OFFER_MS }
+
+    @Synchronized
+    private fun roomForChange(): Boolean {
+        val now = System.currentTimeMillis()
+        while (changes.isNotEmpty() && now - changes.first() > 60_000L) changes.removeFirst()
+        if (changes.size >= MAX_CHANGES_A_MINUTE) return false
+        changes.addLast(now)
+        return true
+    }
+
+    /** A pairing acts for one person: whoever made its first change. */
+    private fun samePerson(proposal: JSONObject): Boolean {
+        val who = proposal.optString("profile_id")
+        val saved = prefs()?.getString(PAIRED_PERSON, null)
+        if (saved == null) prefs()?.edit()?.putString(PAIRED_PERSON, who)?.apply()
+        return who.isNotEmpty() && (saved == null || saved == who)
+    }
+
+    /** Only what the screen shows and nothing of the params. */
+    private fun shown(proposal: JSONObject): String {
+        val out = JSONObject()
+        for (key in listOf("proposal_id", "status", "summary", "result", "reward")) {
+            if (proposal.has(key)) out.put(key, proposal.get(key))
+        }
+        return (clean(out) as JSONObject).toString()
+    }
+
+    private fun propose(body: JSONObject): String? {
+        val ref = body.optString("ref")
+        val offered = offerFor(ref) ?: return null
+        if (!roomForChange()) return null
+        val proposal = engine("/api/actions/propose", JSONObject().put("kind", offered.kind).put("params", offered.params)) ?: return null
+        val id = proposal.getString("proposal_id")
+        if (!samePerson(proposal)) {
+            engine("/api/actions/$id/reject", JSONObject())
+            return null
+        }
+        synchronized(this) { proposed[id] = ref }
+        return shown(proposal)
+    }
+
+    /** Yes or no to a proposal from this pairing. A yes spends its reference. */
+    private fun decide(body: JSONObject, yes: Boolean): String? {
+        val id = body.optString("id")
+        val ref = synchronized(this) { proposed.remove(id) } ?: return null
+        if (!yes) return shown(engine("/api/actions/$id/reject", JSONObject()) ?: return null)
+        val spent = synchronized(this) { offers.remove(ref) }
+        if (spent == null) {
+            engine("/api/actions/$id/reject", JSONObject())
+            return null
+        }
+        return shown(engine("/api/actions/$id/approve", JSONObject()) ?: return null)
+    }
+
+    @Synchronized
+    private fun forgetOffers() {
+        offers.clear()
+        proposed.clear()
+        changes.clear()
+        prefs()?.edit()?.remove(PAIRED_PERSON)?.apply()
     }
 
     private fun engine(path: String, body: JSONObject?): JSONObject? {
@@ -408,6 +532,7 @@ object Relay {
     /** Her app cards: approved apps only, their panels only. */
     private fun cards(data: JSONObject): Any {
         val out = JSONObject().put("hint", data.optString("hint")).put("pinned", data.optBoolean("pinned"))
+            .put("priority", data.optString("priority"))
         for (list in listOf("apps", "others")) {
             val all = data.optJSONArray(list) ?: JSONArray()
             val kept = JSONArray()

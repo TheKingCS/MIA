@@ -13,8 +13,10 @@ the phone permission step and a phone screen (`web/sync.html`, linked from
 Home). After it come the Know Your System mission, Home's tour, the app
 menu and four app tours (`core/welcome.py`, `core/app_intro.py`). Next is
 slice 6 (idle tips). Still to do: a weekly repeat for the meal-prep mission;
-a birthday without a year gets no reminder. On real glasses all of this
-waits for the sealed relay to carry real data. Zac, on the
+a birthday without a year gets no reminder. Glasses' Home, app menu and
+Missions are in the boards' look, and everyday actions go through the relay
+(DEC-0064): compiled, not yet tried on the real pair; `mia-art` needs
+publishing with them. Zac, on the
 phone: Home, Getting To Know You, try the Allow buttons and a topic or two.
 
 **The glasses are here (2026-11-01).** Meta's DAT plugin is installed in

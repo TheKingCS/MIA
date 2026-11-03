@@ -74,8 +74,44 @@ out any script but its own. Publish with `tools/publish_glasses.py`, then from
 ## Meeting her (writes)
 
 First boot, User Sync and the tours need to save. The glasses can only POST to
-`/api/user-sync` and `/api/welcome`, and `/firstboot/step` for
-`firstboot.advance` and `firstboot.skip`. Each must be under 30 seconds old.
+`/api/user-sync` and `/api/welcome`, `/firstboot/step` for
+`firstboot.advance` and `firstboot.skip`, and `/action/propose`, `/approve`
+and `/reject` for the offers below. Each must be under 30 seconds old.
+
+## Everyday actions: the fifth review (2026-11-02, code read only)
+
+Approved and built (DEC-0064), compiled but not yet run on the real pair. What
+the review found:
+
+1. **Bug:** `/firstboot/step` posts to `/api/actions`, which doesn't exist
+   (the route is `/api/actions/propose`), so her first boot can't save
+   through the relay and would start over each time she opens.
+2. **Money already crosses:** `/api/user-sync` approves its chips, and the
+   Money topic's can be `bill.add`. DEC-0062 keeps money off the glasses.
+   User Sync's Money topic should stay off the relay until Zac says otherwise.
+3. **The page is the risk.** It holds the key and its code is public. If
+   `mia-art` or its deploy were taken over, new code on the glasses could
+   send anything the phone accepts, so the phone can't trust the page's
+   `kind` or `params`.
+
+The design that answers 3: when the phone sends a panel, it swaps each
+allowed `action` for a one-time reference and keeps the real kind and params
+itself. The page can only send that reference back, so it can use what was
+offered and invent nothing. Then propose and approve, as elsewhere:
+
+- Only a short list of kinds (DEC-0064), everyday and undoable.
+- Under 30 seconds old, like the other writes. A cap per minute.
+- Undo only for a proposal made in this pairing.
+- References die on unpairing and after a few minutes.
+- Checked: a linked phone reads panels and saves actions on the same engine.
+- A pairing acts for one person: whoever made its first change. If the engine
+  is someone else's after that, the change is rejected.
+
+`HOME_APPS` now has `garage` and `greenhouse`; `maintenance` came off, since
+it was never on the glasses. On User Sync's Money topic the phone lets only
+skip, later and moving on through, and marks the screen `phone_only`.
+
+Not built: undo from the glasses. They have no Undo control; undo is on the phone.
 
 ## The bridges
 
@@ -91,10 +127,8 @@ the designs"): `/api/glasses`, each panel of the apps in `HOME_APPS`,
 `/api/glasses/orb`, `/api/glasses/feed` and `/api/talk/thread` (conversation).
 Each must match an exact shape. The
 phone cuts the answer down: only approved apps, only panel menu items, every
-`action` removed, and any text with a currency symbol blanked. Changes come
-later, through `/api/actions` and the usual
-approval (Propose, Approve, Execute), each added on purpose. Nothing else
-passes, whatever the page asks: no financial or account paths.
+`action` removed (a short list come back as references, DEC-0064), and any
+text with a currency symbol blanked. Nothing else passes, whatever the page asks: no financial or account paths.
 
 Before any change path goes on the list, freshness must cover it as it does
 Listen: a held-back request otherwise passes at any age.

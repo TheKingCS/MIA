@@ -251,6 +251,29 @@ screen, talking on the glasses alone breaks. So before slice 1:
 
 Build order becomes: 0 (voice without the app open), then 1–6 as above.
 
+### Home, app menu and Missions in the boards' look: built 2026-11-02
+
+One move from her orb is now Home and the app menu together
+(`dashScreen`): her orb and the time, "Priority now"
+(`core/glasses.priority_now`), every app as a tile, eight to a page, and the
+selected app's line. Missions opens as the Phase 6 card. Everything else
+about moving around is unchanged.
+
+### App screens: built 2026-11-02, after slice 5
+
+Zac asked for the apps in the designs' look, with their full use. Every
+app's menu and panels now sit in the same frame as the first-boot screens
+(`appFrame` in `web/glasses.js`). `core/glasses.py` adds number tiles
+(`TILES`: Kitchen, Workout, Garage, Greenhouse, Calendar), "I Made This" on
+a recipe's last page (`meal.cook`), and a page per asset in Garage and
+Greenhouse (`asset-<id>`, with its condition and what's due, Done on each).
+
+**Not "full capabilities" yet.** The glasses keep H-0041's rule: nothing that
+deletes, needs a typed number, or moves money. Adding recipes, planning
+meals, logging a set's numbers, adding an asset and all of Budget stay on
+the phone or by voice. Through the relay only DEC-0064's list can change
+anything; "I Made This" isn't on it.
+
 ### Slice 5: built 2026-11-02
 
 - `core/welcome.py`, `/api/welcome`: after User Sync, "Synchronization

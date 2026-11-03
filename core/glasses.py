@@ -46,7 +46,7 @@ log = get_logger(__name__)
 GLASSES_KINDS = frozenset({
     "fitness.food", "fitness.step", "fitness.training_done", "fitness.skill", "fitness.milestone",
     "mission.complete", "objective.tick", "maintenance.done", "grocery.check",
-    "task.done", "meal.prep_done", "routine.log", "app.favorite",
+    "task.done", "meal.prep_done", "meal.cook", "routine.log", "app.favorite",
     # the live workout (DEC-0055): moving it along, never a number to type (counts come by voice)
     "training.start", "training.set", "training.skip_rest", "training.pause", "training.resume", "training.skip",
     "training.finish",
@@ -151,6 +151,7 @@ def _kitchen_recipes(context, today):
             "id": r["id"], "name": r.get("name") or "", "photo": r.get("photo") or "",
             "ingredients": [i for i in (r.get("ingredients_text") or "").splitlines() if i.strip()],
             "steps": recipe_steps(r.get("instructions") or ""), "rating": r.get("rating"),
+            "action": {"kind": "meal.cook", "label": "I Made This", "params": {"recipe_id": r["id"]}},
         }
         lines.append(line)
     return _panel("Recipes", lines, "No recipes yet. Add them on your phone.", limit=60)
@@ -575,6 +576,22 @@ def _equipment_rows(context, scope: str, today) -> tuple[list[dict], list[dict]]
     return page.get("assets") or [], rows
 
 
+ASSET_ITEM = "asset-"
+
+
+def _asset_panel(context, scope: str, asset_id: str, today) -> Optional[dict]:
+    """One thing you own: its condition, then everything due on it."""
+    found, rows = _equipment_rows(context, scope, today)
+    asset = next((a for a in found if a["id"] == asset_id), None)
+    if asset is None:
+        return None
+    lines = _task_lines(context, [r for r in rows if r["asset_id"] == asset_id], with_asset=False)
+    c = asset.get("condition")
+    if c:
+        lines.insert(0, _line("Condition", f"{c['percent']}% {c['label']}"))
+    return _panel(asset.get("name") or "", lines, "Nothing due on this one.", limit=60)
+
+
 def _equipment(scope: str):
     def assets(context, today):
         found, rows = _equipment_rows(context, scope, today)
@@ -587,6 +604,7 @@ def _equipment(scope: str):
                     f"next: {nxt['title']} ({nxt['text']})" if nxt else ""]
             lines.append(_line(a.get("name") or "", " · ".join(b for b in bits if b) or (a.get("make_model") or ""),
                                "attention" if late else ""))
+            lines[-1]["open"] = {"item": f"{ASSET_ITEM}{a['id']}", "label": "Open"}
         return _panel("Assets", lines, "Nothing tracked here yet.", limit=60)
 
     def in_bucket(bucket: str, label: str, empty: str):
@@ -792,6 +810,69 @@ def _equipment_status(context, scope: str, today: date) -> dict:
     return {"line": " · ".join(bits), "tone": "attention" if late else "calm"}
 
 
+def _tile(label: str, value, tone: str = "") -> dict:
+    return {"label": label, "value": str(value), "tone": tone}
+
+
+def _kitchen_tiles(context, today) -> list[dict]:
+    from core.web_screens import kitchen_page
+
+    page = kitchen_page(context, today)
+    meals = (((_fitness(context, today).get("today") or {}).get("meals") or {}).get("meals")) or []
+    expiring = [p for p in page.get("pantry") or [] if p.get("expires_in") is not None and p["expires_in"] <= 2]
+    return [_tile("Meals", f"{sum(1 for m in meals if m.get('eaten'))}/{len(meals)}"),
+            _tile("Grocery", sum(1 for g in page.get("grocery") or [] if not g.get("checked"))),
+            _tile("Expiring", len(expiring), "attention" if expiring else ""),
+            _tile("Recipes", sum(1 for r in page.get("recipes") or [] if not r.get("locked")))]
+
+
+def _workout_tiles(context, today) -> list[dict]:
+    page = _fitness(context, today)
+    t = page.get("today") or {}
+    training = t.get("training") if not t.get("rest_day") else None
+    steps = (training or {}).get("steps") or []
+    food = t.get("food") or {}
+    target = (food.get("targets") or {}).get("protein_g")
+    tiles = [_tile("Today", (training or {}).get("name") or "Rest"),
+             _tile("Steps", f"{sum(1 for s in steps if s.get('done'))}/{len(steps)}")]
+    if target:
+        tiles.append(_tile("Protein", f"{round((food.get('totals') or {}).get('protein_g') or 0)}/{target} g"))
+    return tiles
+
+
+def _equipment_tiles(scope: str):
+    def build(context, today) -> list[dict]:
+        found, rows = _equipment_rows(context, scope, today)
+        buckets = [bucket_of(r.get("days"), r.get("urgency") or "") for r in rows]
+        late = buckets.count("past_due")
+        return [_tile("Tracked", len(found)), _tile("Past Due", late, "attention" if late else ""),
+                _tile("Today", buckets.count("due_today")), _tile("Soon", buckets.count("due_soon"))]
+    return build
+
+
+def _calendar_tiles(context, today) -> list[dict]:
+    from core.calendar_view import calendar_page
+
+    page = calendar_page(context, today)
+    late = len(page["past_due"])
+    return [_tile("Past Due", late, "attention" if late else ""), _tile("Today", len(page["today"])), _tile("Soon", len(page["soon"]))]
+
+
+# The numbers at the top of an app's screen. No money here (H-0041).
+TILES = {"kitchen": _kitchen_tiles, "workout": _workout_tiles, "garage": _equipment_tiles("garage"),
+         "greenhouse": _equipment_tiles("greenhouse"), "calendar": _calendar_tiles}
+
+
+def _tiles(context, module_id: str, today: date) -> list[dict]:
+    if module_id not in TILES:
+        return []
+    try:
+        return TILES[module_id](context, today)
+    except Exception:
+        log.exception("Glasses: the tiles for %s failed", module_id)
+        return []
+
+
 def _visible_apps(context) -> list:
     from core.web_surfaces import APPS, APPS_BY_ID, _visible
 
@@ -820,6 +901,17 @@ def menu_for(app, pinned: Optional[bool] = None) -> list[dict]:
                       "action": {"kind": "app.favorite", "label": "Unpin" if pinned else "Pin",
                                  "params": {"module_id": app.module_id, "favorite": not pinned}}})
     return items
+
+
+def priority_now(apps: list[dict]) -> str:
+    """Pure logic. The one line on Home: what needs attention, else the
+    mission's next step, else nothing."""
+    late = next((a for a in apps if a.get("tone") == "attention" and a.get("status")), None)
+    if late:
+        return f"{late['name']}: {late['status']}"
+    mission = next((a.get("mission") for a in apps if a.get("mission")), None)
+    step = next((o["text"] for o in (mission or {}).get("objectives", []) if not o["done"]), "")
+    return step or ""
 
 
 def glasses_apps(context, today: Optional[date] = None, mission_id: Optional[str] = None) -> dict:
@@ -854,14 +946,14 @@ def glasses_apps(context, today: Optional[date] = None, mission_id: Optional[str
         return {
             "id": app.module_id, "name": SHORT_NAMES.get(app.module_id, app.name), "full_name": app.name,
             "tagline": app.tagline, "status": g.get("line") or "", "tone": g.get("tone") or "calm",
-            "ask": app.ask, "pinned": app.module_id in pinned_ids,
+            "ask": app.ask, "pinned": app.module_id in pinned_ids, "tiles": _tiles(context, app.module_id, today),
             "menu": menu_for(app, None if app.module_id == "missions" else app.module_id in pinned_ids),
             **({"mission": mission_focus(context, today, mission_id)} if app.module_id == "missions" else {}),
         }
 
     pinned = [card(by_id[i]) for i in pinned_ids]
     others = [card(a) for a in apps if a.module_id not in pinned_ids]
-    return {"as_of": today.isoformat(), "pinned": bool(pinned),
+    return {"as_of": today.isoformat(), "pinned": bool(pinned), "priority": priority_now(pinned + others),
             "apps": pinned or others, "others": others if pinned else [],
             "hint": "" if pinned else "Star your favorite apps to pin them here.",
             "kinds": sorted(GLASSES_KINDS)}
@@ -879,4 +971,7 @@ def glasses_panel(context, app_id: str, item_id: str, today: Optional[date] = No
             panel = build(context, today, mission_id) if build in (_missions_progress, _missions_pick) \
                 else build(context, today)
             return {"app": app_id, "item": item_id, "label": label, **panel}
+    if item_id.startswith(ASSET_ITEM) and app_id in EQUIPMENT_SCOPES:
+        panel = _asset_panel(context, app_id, item_id[len(ASSET_ITEM):], today)
+        return {"app": app_id, "item": item_id, "label": panel["title"], **panel} if panel else None
     return None
