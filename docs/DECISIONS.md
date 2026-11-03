@@ -1150,3 +1150,26 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   The action path's prompt and tool calling stay as they are.
 - Related: DEC-0014, DEC-0029, DEC-0044, DEC-0052, DEC-0063
 
+### DEC-0068: MIA-DII builds on the repo as the one source of truth
+- Status: PROPOSED
+- Proposed by: claude, 2026-11-03
+- Decision: Tasks become files (`work/tasks/`), with an append-only activity log, and the
+  orchestration loop extends `core/dev_lab.py`. No new database and no
+  orchestration framework. (`docs/DEV_ECOSYSTEM_AUDIT.md`.)
+- Related: DEC-0058, DEC-0067
+
+### DEC-0069: Six permission tiers for development agents
+- Status: PROPOSED
+- Proposed by: claude, 2026-11-03
+- Decision: Read, Propose, Experiment, Review, Approve, Deploy (`docs/DEV_ECOSYSTEM_AUDIT.md`
+  section 8). Approve is Zac's only; secrets and protected paths are never in
+  an agent's context; a reviewer is never the author.
+- Related: DEC-0058, DEC-0067
+
+### DEC-0070: The MIA-DII MVP: steps 1 to 5, Claude Code and Ollama
+- Status: PROPOSED
+- Proposed by: claude, 2026-11-03
+- Decision: Tasks, activity and evidence, the agent registry and loop, independent
+  review, the dashboard. Codex and Copilot join at step 6, once installed and
+  signed in on the PC.
+- Related: DEC-0058, DEC-0067
