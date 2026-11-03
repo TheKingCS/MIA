@@ -43,6 +43,10 @@ class AssistantTurn:
     used: list[dict] = field(default_factory=list)
     # A page for the surface to open (show-off mode's tour, DEC-0031).
     open: str = ""
+    # For the turn trace (core/turn_trace.py): which way it was answered.
+    route: str = ""
+    tools_offered: list[str] = field(default_factory=list)
+    tools_called: list[str] = field(default_factory=list)
 
 
 def add_message(conversation: Conversation, role: str, content: str) -> None:
@@ -99,6 +103,16 @@ def _personal(conversation) -> bool:
 
 
 def run_assistant_turn(context: AppContext, conversation: Conversation, prompt: str) -> AssistantTurn:
+    """One turn, traced (core/turn_trace.py): how it was answered, and how long it took."""
+    from core.turn_trace import record
+
+    started = time.monotonic()
+    turn = _turn(context, conversation, prompt)
+    record(context, conversation, prompt, turn, time.monotonic() - started)
+    return turn
+
+
+def _turn(context: AppContext, conversation: Conversation, prompt: str) -> AssistantTurn:
     # Mode switches and the safety floor first (core/talk_it_out.py),
     # before the message is stored, so it's stored with the privacy its
     # own words asked for, and before the model, which the safety floor
@@ -108,7 +122,7 @@ def run_assistant_turn(context: AppContext, conversation: Conversation, prompt: 
     if prepared.fixed_reply is not None:
         add_message(conversation, "assistant", prepared.fixed_reply)
         after_fixed_reply(context, conversation)
-        return AssistantTurn(replies=[prepared.fixed_reply])
+        return AssistantTurn(replies=[prepared.fixed_reply], route="fixed")
     # Plain-word commands ("workout complete", "I weigh 182", "undo that"),
     # done by MIA's own code at once, no model (core/quick_commands.py).
     # Never in a private journal or talk-it-out mode.
@@ -117,7 +131,7 @@ def run_assistant_turn(context: AppContext, conversation: Conversation, prompt: 
 
         if wants_show_off(prompt):  # "show off for my friends" (DEC-0031)
             add_message(conversation, "assistant", INTRO)
-            return AssistantTurn(replies=[INTRO], open="showoff.html")
+            return AssistantTurn(replies=[INTRO], open="showoff.html", route="show off")
         from core.quick_commands import handle
 
         quick = handle(context, prompt)
@@ -129,11 +143,12 @@ def run_assistant_turn(context: AppContext, conversation: Conversation, prompt: 
             if planned is not None:
                 said, _sheet = planned
                 add_message(conversation, "assistant", said)
-                return AssistantTurn(replies=([prepared.notice] if prepared.notice else []) + [said])
+                return AssistantTurn(replies=([prepared.notice] if prepared.notice else []) + [said],
+                                     route=f"plan: {_sheet.plan}")
             quick = _direct_lookup(context, prompt)
         if quick is not None:
             add_message(conversation, "assistant", quick)
-            return AssistantTurn(replies=([prepared.notice] if prepared.notice else []) + [quick])
+            return AssistantTurn(replies=([prepared.notice] if prepared.notice else []) + [quick], route="code")
     notices = []
     if prepared.notice:
         add_message(conversation, "assistant", prepared.notice)
@@ -141,7 +156,7 @@ def run_assistant_turn(context: AppContext, conversation: Conversation, prompt: 
 
     if context.llm is None:
         _observe(context, conversation, prompt, [], llm_available=False)
-        return AssistantTurn(replies=notices, llm_available=False)
+        return AssistantTurn(replies=notices, llm_available=False, route="no model")
     started = time.monotonic()
     messages, tools = build_chat_request(context, conversation, prompt)
     used = memories_used(context, prompt, messages)
@@ -151,7 +166,7 @@ def run_assistant_turn(context: AppContext, conversation: Conversation, prompt: 
     offered = [t.get("function", {}).get("name", "") for t in tools]
     if reply is None:
         _observe(context, conversation, prompt, offered, llm_available=False)
-        return AssistantTurn(replies=notices, llm_available=False)
+        return AssistantTurn(replies=notices, llm_available=False, route="model, no answer", tools_offered=offered)
 
     if reply.tool_calls:
         calls_to_execute, skipped_calls = split_safe_tool_calls(reply.tool_calls, context.assistant_actions)
@@ -168,13 +183,15 @@ def run_assistant_turn(context: AppContext, conversation: Conversation, prompt: 
                          seconds=time.monotonic() - started)
         if offer:
             replies.append(offer)
-        return AssistantTurn(replies=replies, used=used)
+        return AssistantTurn(replies=replies, used=used, route="model, tools", tools_offered=offered,
+                             tools_called=[c.name for c in calls_to_execute])
 
     content = with_offer(conversation, reply.content)
     add_message(conversation, "assistant", content)
     _observe(context, conversation, prompt, offered, reply=content, seconds=time.monotonic() - started,
              garbled=_garbled(reply.content))
-    return AssistantTurn(replies=notices + [content], followup=plan_followup(context, conversation, prompt), used=used)
+    return AssistantTurn(replies=notices + [content], followup=plan_followup(context, conversation, prompt), used=used,
+                         route="model", tools_offered=offered)
 
 
 def _garbled(content: str) -> bool:

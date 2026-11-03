@@ -359,3 +359,24 @@ shopped for later.
   rating comes with the relay's next change. These ratings are what a
   fine-tune would learn from later.
 
+## G. Phase 2: turn traces (2026-11-03)
+
+`core/turn_trace.py`: one line per turn in each person's folder
+(`turn_traces.jsonl`, the last 2000). The route that answered (fixed, show
+off, code, `plan: <name>`, model, model with tools, no model), what was asked
+and said (redacted the Fix-It Log's way), words, tools offered and called,
+memories used, the model and where it ran, and seconds. Private and
+off-the-record turns are never traced. `run_assistant_turn` records it
+around every turn; nothing is sent anywhere.
+
+GitHub Issues (DEC-0067, choice 3) needs a GitHub login this PC doesn't
+have: `gh` isn't installed here, and the cloud sessions' GitHub access isn't
+available on the PC. Either Zac signs `gh` in here, or a cloud session sets
+the issues up.
+
+Test suite on this PC, unchanged code: `test_inbox.py`, `test_ocr.py`,
+`test_textbook_tutor.py` and one `test_plaid_manager.py` test fail
+(Tesseract installed, PDF reading, the Plaid work in progress);
+`test_your_data_and_undo.py`'s reasons check fails only in a full run and
+passes alone.
+
