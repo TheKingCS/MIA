@@ -20,9 +20,10 @@ def test_every_offer_is_a_real_glasses_action():
     assert offered() <= set(ACTION_TYPES)
 
 
-def test_nothing_that_pays_out_or_takes_from_the_pantry():
-    assert not offered() & {"mission.complete", "meal.cook", "app.favorite"}
-    assert not [k for k in offered() if k.startswith(("training.", "bill.", "budget", "debt"))]
+def test_nothing_that_spends_or_deletes():
+    assert {"mission.complete", "meal.cook", "training.set"} <= offered()  # DEC-0065
+    assert "app.favorite" not in offered()
+    assert not [k for k in offered() if k.startswith(("bill.", "budget", "debt")) or k.endswith(".delete")]
 
 
 def test_no_money_app_reaches_the_glasses():

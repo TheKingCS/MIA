@@ -272,8 +272,25 @@ def _kitchen_pantry(context, today):
     return _panel("My Pantry", lines, "The pantry is empty.", limit=60)
 
 
+QUICK = ("training.set", "training.skip_rest", "training.skip", "training.pause", "training.resume")
+
+
+def _quick(panel: dict) -> dict:
+    """A live workout moves on one press: each of these is small and undoable,
+    and a second gesture per set would get in the way. The screen keeps itself
+    current (`live`)."""
+    for line in panel["lines"]:
+        if (line.get("action") or {}).get("kind") in QUICK:
+            line["action"]["quick"] = True
+    return {**panel, "live": True}
+
+
 def _workout_live(context, today):
     """The workout going right now (DEC-0055): where you are and the next move."""
+    return _quick(_workout_live_lines(context, today))
+
+
+def _workout_live_lines(context, today):
     from core.web_fitness import live_session
 
     s = live_session(context)
@@ -298,6 +315,9 @@ def _workout_live(context, today):
         lines.append(_line("Paused" if s["status"] == "paused" else "Pause", "", "",
                            {"kind": "training.resume" if s["status"] == "paused" else "training.pause",
                             "label": "Resume" if s["status"] == "paused" else "Pause", "params": {}}))
+        if s["status"] != "paused":
+            lines.append(_line("Skip this exercise", n.get("name") or "", "",
+                               {"kind": "training.skip", "label": "Skip", "params": {}}))
         if s.get("next"):
             lines.append(_line("Next", s["next"], ""))
         lines.append(_line("Finish", f"{s['done_exercises']}/{s['exercises']} exercises", "",

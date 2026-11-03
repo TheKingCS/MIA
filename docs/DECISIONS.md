@@ -1111,3 +1111,13 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   Garage and Greenhouse join `HOME_APPS` so their Done works. User Sync's
   Money topic stays off the relay.
 - Related: DEC-0062
+
+### DEC-0065: Claiming missions, I Made This and the live workout from the glasses
+- Status: APPROVED
+- Proposed by: claude, 2026-11-02 · Approved by: zac, 2026-11-02 ("Yes, allow both"; next apps: Workout and Missions)
+- Decision: `mission.complete`, `meal.cook` and the live workout's
+  `training.*` kinds join the relay's one-time references (DEC-0064). During
+  a live workout, Next set, Skip rest, Skip, Pause and Resume take one press:
+  the press is the approval, since a second gesture per set gets in the way.
+  Start and Finish still ask. Everything stays undoable on the phone.
+- Related: DEC-0062, DEC-0064

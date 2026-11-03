@@ -75,9 +75,13 @@ object Relay {
     private val BOOT_ACTIONS = setOf("firstboot.advance", "firstboot.skip")
     private const val BOOT_STEP = "/firstboot/step"
     private const val SYNC = "/api/user-sync"
-    // Everyday and undoable (DEC-0064). Nothing that pays out, spends or deletes.
+    // Everyday and undoable (DEC-0064), plus a mission's reward, I Made This and
+    // the live workout (DEC-0065). Nothing that spends money or deletes.
     private val OFFER_KINDS = setOf("task.done", "routine.log", "grocery.check", "objective.tick", "fitness.step",
-        "fitness.training_done", "fitness.food", "meal.prep_done", "maintenance.done")
+        "fitness.training_done", "fitness.food", "meal.prep_done", "maintenance.done",
+        "mission.complete", "meal.cook",
+        "training.start", "training.set", "training.skip_rest", "training.skip", "training.pause", "training.resume",
+        "training.finish")
     private const val OFFER_PROPOSE = "/action/propose"
     private const val OFFER_APPROVE = "/action/approve"
     private const val OFFER_REJECT = "/action/reject"
@@ -468,7 +472,7 @@ object Relay {
             val ref = ByteArray(16).also { random.nextBytes(it) }.joinToString("") { "%02x".format(it) }
             offers[ref] = Offer(kind, action.optJSONObject("params") ?: JSONObject(), now)
             line.put("offered", JSONObject().put("kind", "offer").put("label", action.optString("label"))
-                .put("params", JSONObject().put("ref", ref)))
+                .put("quick", action.optBoolean("quick")).put("params", JSONObject().put("ref", ref)))
         }
     }
 

@@ -111,6 +111,9 @@ offered and invent nothing. Then propose and approve, as elsewhere:
 it was never on the glasses. On User Sync's Money topic the phone lets only
 skip, later and moving on through, and marks the screen `phone_only`.
 
+DEC-0065 adds `mission.complete`, `meal.cook` and the live workout to the list;
+the workout's small steps take one press.
+
 Not built: undo from the glasses. They have no Undo control; undo is on the phone.
 
 `music` is in `HOME_APPS` (Zac, 2026-11-02: "I need the music app working").

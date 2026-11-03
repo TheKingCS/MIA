@@ -153,3 +153,15 @@ def test_music_plays_the_list_it_was_picked_from(tmp_path, monkeypatch):
     artist = glasses_panel(world, "music", "artists", TODAY)["lines"][1]
     assert [line["text"] for line in glasses_panel(world, "music", artist["open"]["item"], TODAY)["lines"]] == ["Three", "Two"]
     assert glasses_panel(world, "music", "list-a-99", TODAY) is None
+
+
+def test_a_live_workout_moves_on_one_press(tmp_path, monkeypatch):
+    world = make(tmp_path, monkeypatch)
+    from core import glasses
+
+    monkeypatch.setattr(glasses, "_workout_live_lines", lambda context, today: {"title": "t", "more": 0, "empty": "", "lines": [
+        {"text": "Set done", "action": {"kind": "training.set", "label": "Next set", "params": {}}},
+        {"text": "Finish", "action": {"kind": "training.finish", "label": "Finish", "params": {}}}]})
+    panel = glasses_panel(world, "workout", "live", TODAY)
+    assert panel["live"] is True
+    assert panel["lines"][0]["action"]["quick"] is True and "quick" not in panel["lines"][1]["action"]

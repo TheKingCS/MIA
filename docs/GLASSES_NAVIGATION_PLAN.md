@@ -49,17 +49,16 @@ Reach: what the real glasses can open now, through the relay's `HOME_APPS`.
 | Rentals, Budget, Freedom | No | Nothing, by rule (H-0041, DEC-0062) | Stay on the phone unless he says otherwise |
 | Workshop, Expeditions, Maps, Navigation, Classroom, Memories, Lab, Field Kit, Power, Observations, Diagnostics | No | Questions for MIA, which the relay doesn't carry | Each needs its own decision: panels, or off the glasses |
 
-## Questions for Zac (four open)
+## Questions for Zac (three open)
 
 1. **Which apps belong on the glasses at all?** A short list that works well beats
    twenty-five thin ones. Proposed first: Missions, Calendar, Kitchen, Workout,
    Garage, Music, then People.
 2. **Pinned order on Home:** by your stars, or the order you use them?
-3. **Should Active Training and "I Made This" join the relay's list?** Both are
-   left off DEC-0064.
+3. Answered 2026-11-02 (DEC-0065): yes, with claiming missions.
 4. **Should People and Notes cross the relay?** They're personal, so it's a wider read.
-5. Answered 2026-11-02: the music is on the phone. MIA reads its Music and
-   Download folders, once Android allows it.
+5. Answered 2026-11-02: song files Zac copies to the phone. MIA reads its Music
+   and Download folders, once Android allows it.
 
 ## Build order (proposed)
 
