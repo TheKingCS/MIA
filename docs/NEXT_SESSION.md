@@ -30,7 +30,7 @@ designed screen, money included, offered question buttons) is built in
 wasn't plugged in. Plug in, `adb install -r` it, reopen MIA on the glasses.
 The glasses page is already live. A security review of everything added since
 the fourth one (DEC-0064 to 0066: actions, missions, music, questions, money)
-was running; fix what it finds before relying on those. Recipe photos and her
+found no High issue (2026-11-03). Fixed: a reference could be approved after it expired, and I Made This couldn't work. Build 143 has both; install it, not 142. Still open, Zac's call: the glasses' question buttons run full Talk turns that can change things, and 'Any emails I should answer?' brings stranger-written email into such a turn (make glasses Talk read-only?). Recipe photos and her
 awakening voice need a way round the relay's size limit (H-0079).
 
 **The glasses are here (2026-11-01).** Meta's DAT plugin is installed in

@@ -478,14 +478,20 @@ object Relay {
         val lines = panel.optJSONArray("lines") ?: return
         for (i in 0 until lines.length()) {
             val line = lines.optJSONObject(i) ?: continue
-            val action = line.optJSONObject("action") ?: continue
-            val kind = action.optString("kind")
-            if (kind !in OFFER_KINDS || offers.size >= MAX_OFFERS) continue
-            val ref = ByteArray(16).also { random.nextBytes(it) }.joinToString("") { "%02x".format(it) }
-            offers[ref] = Offer(kind, action.optJSONObject("params") ?: JSONObject(), now)
-            line.put("offered", JSONObject().put("kind", "offer").put("label", action.optString("label"))
-                .put("quick", action.optBoolean("quick")).put("params", JSONObject().put("ref", ref)))
+            offerOn(line, now)
+            line.optJSONObject("recipe")?.let { offerOn(it, now) }  // I Made This, on the recipe's last page
         }
+    }
+
+    /** A change shown on `holder` becomes a one-time reference beside it. */
+    private fun offerOn(holder: JSONObject, now: Long) {
+        val action = holder.optJSONObject("action") ?: return
+        val kind = action.optString("kind")
+        if (kind !in OFFER_KINDS || offers.size >= MAX_OFFERS) return
+        val ref = ByteArray(16).also { random.nextBytes(it) }.joinToString("") { "%02x".format(it) }
+        offers[ref] = Offer(kind, action.optJSONObject("params") ?: JSONObject(), now)
+        holder.put("offered", JSONObject().put("kind", "offer").put("label", action.optString("label"))
+            .put("quick", action.optBoolean("quick")).put("params", JSONObject().put("ref", ref)))
     }
 
     @Synchronized
@@ -536,7 +542,8 @@ object Relay {
         val id = body.optString("id")
         val ref = synchronized(this) { proposed.remove(id) } ?: return null
         if (!yes) return shown(engine("/api/actions/$id/reject", JSONObject()) ?: return null)
-        val spent = synchronized(this) { offers.remove(ref) }
+        // A reference dies after OFFER_MS, at approve as well as at propose.
+        val spent = synchronized(this) { offers.remove(ref) }?.takeIf { System.currentTimeMillis() - it.at <= OFFER_MS }
         if (spent == null) {
             engine("/api/actions/$id/reject", JSONObject())
             return null
