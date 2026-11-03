@@ -8,7 +8,8 @@ three surfaces:
 
 - **glasses**: one or two spoken sentences, about 20 words (5 to 8
   seconds), what matters first.
-- **phone**: shown whole, like the PC; its length comes from the prompt.
+- **phone**: shown whole, only without a filler opening or a closing
+  offer of more help, which the model adds however it's asked not to.
 - **pc**: the full answer.
 
 The whole answer always stays in the conversation, where the phone and the
@@ -78,6 +79,25 @@ def tidy(text: str) -> str:
     return kept or text
 
 
+OFFERING = re.compile(r"\b(let me know|anything else|feel free|is there anything)\b", re.I)
+
+
+def polish(text: str) -> str:
+    """Pure logic. The whole answer, for a screen: only the filler opening and
+    a last sentence that offers more help go. Lists, markdown and length stay."""
+    text = (text or "").strip()
+    trimmed = FILLER.sub("", text).strip() or text
+    trimmed = trimmed[:1].upper() + trimmed[1:]
+    lines = trimmed.split("\n")
+    sentences = SENTENCE.findall(lines[-1])
+    if sentences and OFFERING.search(sentences[-1]):
+        lines[-1] = "".join(sentences[:-1]).rstrip()
+        if not lines[-1]:
+            lines.pop()
+    kept = "\n".join(lines).strip()
+    return kept or trimmed
+
+
 def first_sentences(text: str, budget: int) -> str:
     """Pure logic. The answer's own opening sentences, whole, within `budget`
     words. At least one sentence, even a long one: never half of one."""
@@ -99,6 +119,8 @@ def compose(context, answer: str, surface: str = PC) -> Composed:
     """`answer` for `surface`. Never raises: at worst the tidied answer."""
     full = answer or ""
     budget = BUDGET.get(surface)
+    if surface == PHONE:
+        return Composed(say=polish(full), full=full)
     if budget is None:
         return Composed(say=full, full=full)
     spoken = tidy(full)

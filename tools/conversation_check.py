@@ -42,6 +42,8 @@ CHECKS = {
     "offer": re.compile(r"(let me know[^.?!]*|anything else[^.?!]*|feel free[^.?!]*|is there anything[^.?!]*)[.?!]?\s*$", re.I),
     "list": re.compile(r"(^|\n)\s*([-*•]|\d+[.)])\s", re.M),
     "markdown": re.compile(r"\*\*|__|^#+\s", re.M),
+    "shortfall": re.compile(r"\b(haven'?t (completed|finished|done)|still (haven'?t|need to finish)|you didn'?t|not (yet )?completed)\b", re.I),
+    "stiff_ai": re.compile(r"\b(designed to|simulate conversation|language model|i do not experience|don'?t experience emotions)\b", re.I),
     "robot": re.compile(r"\b(i will now|i'll now|accessing|retrieving|processing your request|as an ai language model|"
                         r"i am unable to|unfortunately,? i)\b", re.I),
 }

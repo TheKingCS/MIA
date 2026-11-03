@@ -7,6 +7,8 @@ contract, and its screen (served as /api/failures).
 
 - `failures.report`: report a problem in your own words.
 - `failures.thumbs`: a 👎 on one of MIA's replies (and what was wrong).
+- `answer.rate`: a 👍 or 👎 on one of her replies, kept as a rating (DEC-0067);
+  a 👎 is also logged here, as failures.thumbs is.
 - `failures.status`: an issue fixed, ignored, or open again.
 - `failures.forget`: forget a phrasing MIA learned ("when I say X I mean Y").
 """
@@ -46,6 +48,25 @@ def _thumbs_execute(context, params) -> str:
     _book(context).record("thumbs_down", prompt=str(params.get("prompt") or ""), reply=str(params.get("reply") or ""),
                           note=str(params.get("note") or ""))
     return "Thanks: logged, so it gets fixed."
+
+
+def _rate_describe(context, params) -> str:
+    if not str(params.get("reply") or "").strip():
+        raise ActionError("Which reply?")
+    if params.get("rating") not in ("up", "down"):
+        raise ActionError("A rating is 👍 or 👎.")
+    return "That answer was right" if params["rating"] == "up" else _thumbs_describe(context, params)
+
+
+def _rate_execute(context, params) -> str:
+    ratings = getattr(context, "ratings", None)
+    if ratings is not None:
+        model = context.config.get("llm.model", "") if getattr(context, "config", None) is not None else ""
+        ratings.rate(params["rating"], str(params.get("prompt") or ""), str(params.get("reply") or ""),
+                     str(params.get("surface") or ""), str(params.get("note") or ""), model)
+    if params["rating"] == "down":
+        return _thumbs_execute(context, params)
+    return "Thanks: noted."
 
 
 def _issue(context, params):
@@ -93,6 +114,9 @@ def _register() -> None:
                    _report_describe, _report_execute, True),
         ActionType("failures.thumbs", "Not Right", {"prompt": "what was asked", "reply": "her answer", "note": "what was wrong"},
                    _thumbs_describe, _thumbs_execute, True),
+        ActionType("answer.rate", "Rate", {"rating": "up or down", "prompt": "what was asked", "reply": "her answer",
+                                          "surface": "glasses, phone or pc", "note": "what was wrong"},
+                   _rate_describe, _rate_execute, True),
         ActionType("failures.status", "Issue", {"key": "the issue", "status": "fixed, ignored or open"},
                    _status_describe, _status_execute),
         ActionType("failures.forget", "Forget", {"phrase_id": "the phrasing"}, _forget_describe, _forget_execute, True),

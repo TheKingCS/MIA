@@ -636,6 +636,11 @@ def create_app(context: AppContext) -> FastAPI:
             replies = turn.replies + [LLM_UNAVAILABLE_REPLY]
         else:
             replies = turn.replies or ["Done."]
+        # Her answer as the phone shows and says it (DEC-0067): no "Sure!" first,
+        # no "let me know" last. The glasses compose their own from this.
+        from core.response_composer import PHONE, compose
+
+        replies = replies[:-1] + [compose(view, replies[-1], PHONE).say]
         reply_text = " ".join(replies)
         if turn.followup is not None:
             background.add_task(followup_locked, conversation, turn.followup, view)

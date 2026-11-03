@@ -112,6 +112,7 @@ if TYPE_CHECKING:
     from core.work_dungeon import DungeonBook
     from core.the_loop import LoopBook
     from core.failure_log import FailureLog
+    from core.answer_ratings import AnswerRatings
     from core.questlines import QuestBook
     from core.world_map import WorldMap
     from core.memory_vault import MemoryVault
@@ -249,6 +250,7 @@ class AppContext:
     boss_book: Optional["BossBook"] = field(default=None, repr=False)  # DEC-0028
     dungeon: Optional["DungeonBook"] = field(default=None, repr=False)  # DEC-0046 work as a dungeon: runs, loot
     loop: Optional["LoopBook"] = field(default=None, repr=False)  # DEC-0047 the loop: what recurs, and when
+    ratings: Optional["AnswerRatings"] = field(default=None, repr=False)  # DEC-0067 👍/👎 on her answers
     failures: Optional["FailureLog"] = field(default=None, repr=False)  # DEC-0049 where MIA stumbled, so it gets fixed
     quest_book: Optional["QuestBook"] = field(default=None, repr=False)  # DEC-0028 questlines
     world_map: Optional["WorldMap"] = field(default=None, repr=False)  # DEC-0028 fog of war

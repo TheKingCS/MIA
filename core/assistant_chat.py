@@ -280,7 +280,7 @@ def looks_like_action_request(text: str, keywords: Iterable[str] = _ACTION_REQUE
 # Short, deliberately — see this module's docstring on why length is a
 # real, previously-measured regression risk for llama3.2:3b, and why
 # the warmer clauses are only added to the info-question path.
-from core.personality import CHARACTER, IDENTITY  # noqa: E402  (DEC-0067)
+from core.personality import CHARACTER, EXAMPLES, IDENTITY  # noqa: E402  (DEC-0067)
 
 _IDENTITY_LINE = (
     "You are MIA (Multifunctional Intelligent Assistant), the user's personal assistant, running on their own devices."
@@ -561,6 +561,8 @@ def build_system_message(context, is_action_request: bool, is_teaching_request: 
         block = connectivity_prompt_block(connectivity.status)
         if block:
             parts.append(block)
+    if closing_instruction is CONVERSATION_INSTRUCTION:
+        parts.append(EXAMPLES)  # conversation only: help and teaching answers stay plain
     parts.append(closing_instruction)
     return "\n\n".join(parts)
 

@@ -277,18 +277,24 @@
     document.body.append(panel, orb);
   }
 
-  // The Fix-It Log (DEC-0049): a 👎 under a reply logs it as wrong, with what
-  // was wrong if the person wants to say; it's fixed from the log.
+  // Rating her answers (DEC-0067): 👍 or 👎 under a reply, kept as a rating
+  // for tuning her voice. A 👎 also goes to the Fix-It Log (DEC-0049), with
+  // what was wrong if the person wants to say, and it's fixed from there.
   function notRight(asked, reply) {
-    const b = el("button", { type: "button", class: "talk-thumb", title: "That wasn't right", "aria-label": "That wasn't right" }, "👎");
-    b.onclick = async () => {
+    const surface = window.MIAAndroid ? "phone" : "pc";
+    const done = (text) => box.replaceWith(el("small", { class: "talk-thumb done" }, text));
+    const rate = (rating, note) => act({ kind: "answer.rate", params: { rating, prompt: asked, reply: reply || "", surface, note } },
+      { quick: true });
+    const up = el("button", { type: "button", class: "talk-thumb", title: "That was right", "aria-label": "That was right" }, "👍");
+    up.onclick = async () => { if (await rate("up", "")) done("Thanks ✓"); };
+    const down = el("button", { type: "button", class: "talk-thumb", title: "That wasn't right", "aria-label": "That wasn't right" }, "👎");
+    down.onclick = async () => {
       const v = await form("What Was Wrong?", [{ name: "note", label: "What should she have done? (optional)", type: "textarea" }], {});
       if (!v) return;
-      if (await act({ kind: "failures.thumbs", params: { prompt: asked, reply: reply || "", note: v.note } }, { quick: true })) {
-        b.replaceWith(el("small", { class: "talk-thumb done" }, "Logged ✓"));
-      }
+      if (await rate("down", v.note)) done("Logged ✓");
     };
-    return b;
+    const box = el("span", { class: "talk-thumbs" }, up, down);
+    return box;
   }
 
   // A page that breaks says so itself (the Fix-It Log), a few times per visit at most.

@@ -29,7 +29,13 @@ def test_a_short_answer_is_said_as_is():
 def test_the_phone_and_pc_get_the_whole_answer():
     long = "One. " * 200
     for surface in (PHONE, PC):
-        assert compose(SimpleNamespace(llm=None), long, surface).say == long
+        assert compose(SimpleNamespace(llm=None), long, surface).say.strip() == long.strip()
+
+
+def test_the_phone_loses_only_the_filler_and_the_closing_offer():
+    said = compose(SimpleNamespace(llm=None), "Sure! Here's the plan:" + chr(10) + "- Gym" + chr(10) + "- Call Sam" + chr(10) +
+                   "Let me know if you need anything else.", PHONE).say
+    assert said == "Here's the plan:" + chr(10) + "- Gym" + chr(10) + "- Call Sam"
 
 
 def test_her_own_opening_comes_first_when_it_fits():

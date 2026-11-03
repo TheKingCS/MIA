@@ -335,3 +335,27 @@ Unrelated, and found along the way: `tests/test_inbox.py` and
 installed, and the tests expect it not to be), and the full suite stops with
 a Qt access violation near `tests/test_password_vault.py`.
 
+## F. Tuning, round 1 (2026-11-03)
+
+Zac's order: tune her instructions, then ratings, a fine-tune later, models
+shopped for later.
+
+- **Instructions:** CHARACTER now says what to do about the misses (an AI
+  question answered simply and warmly, never listing what they haven't done,
+  no closing offer), and EXAMPLES shows four short exchanges of tone,
+  different from the corpus's own cases, on the conversation path only.
+- **The phone:** the model kept its "Sure!" and "let me know", however it was
+  asked, so `response_composer.polish` takes off only a filler opening and a
+  last sentence that offers help. Lists and length stay.
+- **Results** (37 cases each): glasses 37 of 37 within 25 words, median 18;
+  every flag at 0 on both devices (phone was filler 2, closing offers 4); tool
+  choice 213/213.
+- **A bug found in my own check:** two new patterns had a control character
+  where `` belonged, so they matched nothing; every run was rescored after
+  the fix.
+- **Ratings:** a 👍 and a 👎 under each answer on the phone and PC
+  (`web/shell.js`), kept per person in `core/answer_ratings.py`, through the
+  `answer.rate` action. A 👎 still reaches the Fix-It Log. The glasses' own
+  rating comes with the relay's next change. These ratings are what a
+  fine-tune would learn from later.
+

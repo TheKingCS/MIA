@@ -142,7 +142,7 @@ def test_a_child_can_only_take_child_actions(world):
                                                                                  "setting.set", "communication.resume",
                                                                                  "loop.checkin_done",  # their own weekly debrief (DEC-0047)
                                                                                  # telling MIA she got it wrong, and their own phrasings (DEC-0049)
-                                                                                 "failures.report", "failures.thumbs", "failures.forget"}
+                                                                                 "failures.report", "failures.thumbs", "failures.forget", "answer.rate"}
     assert "recipe.delete" not in child_ok and "meal.log" in child_ok and "workout.log" in child_ok
     assert "mission.delete" not in child_ok and "mission.complete" in child_ok
     assert "fitness.weigh_in" not in child_ok and "fitness.training_done" in child_ok
