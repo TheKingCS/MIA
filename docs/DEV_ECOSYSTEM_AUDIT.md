@@ -245,3 +245,36 @@ Integration tests, run in a scratch repo:
   weight-space programming, speculative decoding) is research for later. The
   first real model work is the fine-tune from Zac's ratings, and that needs
   step 7's reproducible runs, not a broad lab.
+
+---
+
+## 13. The MVP, built (2026-11-03, DEC-0068 to 0070)
+
+Steps 1 to 5 (tasks T-0001 to T-0005, each closed with its evidence):
+`core/work_tasks.py`, `core/work_activity.py`, `core/work_agents.py` with
+`work/agents.json`, `core/work_loop.py`, `core/work_review.py`,
+`core/work_dashboard.py` with `web/dev.html`, and `tools/work.py` over all of
+them. `tests/test_work_mvp.py` runs one task from creation to approval
+through all of it.
+
+| Acceptance (spec section 9) | Shown by |
+|---|---|
+| One dashboard for every contributor | `web/dev.html` (`/api/dev`): agents, tasks, queue, history; owner only |
+| Shared project and architecture context | **Partly**: everyone reads the same repo and docs; a role's `reads` list isn't fed into its prompt yet |
+| Persistent development tasks | `work/tasks/`, in git |
+| Assignment to different AI providers | Roles on Claude Code and Ollama; Codex and Copilot wait for step 6 |
+| Activity and handoff tracking | `work/activity.jsonl` |
+| Git branch and artifact association | A task's `branch` names its lab; approval records the merge |
+| Independent review | `tools.work review`; the author, or its provider when another could review, is refused |
+| Completion evidence | `done` needs it; `--tests` runs them and records the commit |
+| Human-controlled approval | `tools.work approve`: a person typing the task's id; headless refuses |
+| Searchable history | `tools.work history`, and the dashboard's search |
+| Recovery of interrupted tasks | The loop resumes from its last recorded step |
+
+**Not yet shown:**
+- A real run: the integration test uses a stand-in lab. A first real task
+  through Claude Code and an Ollama review is the next proof, and costs real
+  usage.
+- Feeding each role's `reads` into its prompt.
+- A usage and cost meter (section 3).
+

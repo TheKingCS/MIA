@@ -24,6 +24,11 @@ Missions are in the boards' look, and everyday actions go through the relay
 publishing with them. Zac, on the
 phone: Home, Getting To Know You, try the Allow buttons and a topic or two.
 
+**The development platform's MVP is built (DEC-0070, 2026-11-03):**
+`python -m tools.work` (list, claim, run --as, review --as, approve, history),
+and `web/dev.html` for the device's owner. Details and what's not yet proven:
+`docs/DEV_ECOSYSTEM_AUDIT.md` section 13.
+
 **Tasks now live in `work/tasks/` (DEC-0068, 2026-11-03):** `python -m
 tools.work list --ready` shows what can start. The build queue below is
 history; anything still open from it is a task.
