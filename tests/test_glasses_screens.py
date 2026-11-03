@@ -75,3 +75,33 @@ def test_a_vehicle_opens_to_its_own_page(tmp_path, monkeypatch):
     assert panel["title"] == assets[0]["name"]
     assert glasses_panel(world, "garage", f"{ASSET_ITEM}nope", TODAY) is None
     assert glasses_panel(world, "kitchen", line["open"]["item"], TODAY) is None
+
+
+def signed_in(world):
+    from fastapi.testclient import TestClient
+
+    import server.app as server_app
+
+    world.profiles.set_password(world.me.profile_id, "pw")
+    world.voice = world.push_subscriptions = None
+    client = TestClient(server_app.create_app(world))
+    token = client.post("/api/login", json={"profile_id": world.me.profile_id, "password": "pw"}).json()["token"]
+    client.headers.update({"Authorization": f"Bearer {token}"})
+    return client
+
+
+def test_a_linked_phone_reads_the_conversation_where_it_went(tmp_path, monkeypatch):
+    world = make(tmp_path, monkeypatch)
+    client = signed_in(world)
+    monkeypatch.setattr("core.home_link.linked", lambda context: True)
+    asked = []
+
+    def home(context, path, *args, **kwargs):
+        asked.append(path)
+        return {"messages": [{"role": "user", "content": "from the computer"}]}
+
+    monkeypatch.setattr("core.home_link.home_call", home)
+    got = client.get("/api/talk/thread?limit=40&earlier=1").json()
+    assert got["messages"][0]["content"] == "from the computer" and asked == ["/api/talk/thread?limit=40&earlier=1"]
+    client.get("/api/glasses/feed?since=abc")
+    assert asked[-1] == "/api/glasses/feed?since=abc"

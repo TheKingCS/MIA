@@ -217,3 +217,16 @@ def test_one_conversation_everywhere(phone):
     phone.client.post("/api/voice/text", json={"text": "Something new"})
     assert ctx.conversations.get_active_conversation_id() != started.conversation_id
     assert phone.client.get("/api/talk/thread").json()["messages"][0]["content"] == "Something new"
+
+
+def test_the_glasses_log_goes_back_past_a_new_chat(phone):
+    ctx = phone.context
+    alice = ctx.profiles.list_profiles()[0].profile_id
+    ctx.profiles.set_active_profile(alice)
+    ctx.personal_data.activate(alice)
+    started = ctx.conversations.get_or_create_active_conversation()
+    ctx.conversations.add_message(started.conversation_id, "user", "Let's plan the garden")
+    phone.client.post("/api/voice/reset")
+    phone.client.post("/api/voice/text", json={"text": "Something new"})
+    said = [m["content"] for m in phone.client.get("/api/talk/thread?earlier=1").json()["messages"]]
+    assert "Let's plan the garden" in said and said.index("Let's plan the garden") < said.index("Something new")

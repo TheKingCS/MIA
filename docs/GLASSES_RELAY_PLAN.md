@@ -113,6 +113,9 @@ skip, later and moving on through, and marks the screen `phone_only`.
 
 Not built: undo from the glasses. They have no Undo control; undo is on the phone.
 
+`/api/talk/thread` and `/api/glasses/feed` read the home computer's when the
+phone is linked: that's where her voice turns go.
+
 ## The bridges
 
 Only pages at `http://127.0.0.1:PORT/` stay in the app's WebView; links go to

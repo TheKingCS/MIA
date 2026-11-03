@@ -829,8 +829,16 @@ def create_app(context: AppContext) -> FastAPI:
     @app.get("/api/glasses/feed")
     def glasses_feed(since: str = "", profile_id: str = Depends(require_profile_id)) -> dict:
         """The Heads-Up screen: what's new since the glasses last asked (core/glasses_feed.py)."""
-        from core.glasses_feed import feed
+        from urllib.parse import quote
 
+        from core.glasses_feed import feed
+        from core.home_link import HomeLinkError, home_call, linked
+
+        if linked(context):
+            try:
+                return home_call(context, "/api/glasses/feed?since=" + quote(since), method="GET", timeout=3)
+            except HomeLinkError:
+                pass  # the computer's out of reach: this phone answers
         with app.state.turn_lock:
             return feed(view_for(context, profile_id), since or None)
 
@@ -2203,15 +2211,30 @@ def create_app(context: AppContext) -> FastAPI:
         return {"reset": True}
 
     @app.get("/api/talk/thread")
-    def talk_thread(limit: int = 20, profile_id: str = Depends(require_profile_id)) -> dict:
+    def talk_thread(limit: int = 20, earlier: bool = False, profile_id: str = Depends(require_profile_id)) -> dict:
         """The conversation Talk continues (DEC-0029): its recent messages,
         so the phone, the web and the glasses show the same thread. Off-
-        the-record messages are never kept, so never shown."""
+        the-record messages are never kept, so never shown. `earlier` is the
+        glasses' log, which goes back through past conversations too, since
+        a new one starts after hours of quiet. A phone linked to the home computer reads the
+        computer's: that's where its words went."""
+        from core.home_link import HomeLinkError, home_call, linked
+
+        limit = max(1, min(limit, 200))
+        if linked(context):
+            try:
+                return home_call(context, f"/api/talk/thread?limit={limit}&earlier={int(earlier)}", method="GET")
+            except HomeLinkError:
+                pass  # the computer's out of reach: this phone answers
         with app.state.turn_lock:
             view = view_for(context, profile_id)
             conversation = conversation_for(profile_id, view)
-            messages = [{"role": m.role, "content": m.content} for m in conversation.messages
-                        if not getattr(m, "privacy", "")][-max(1, min(limit, 200)):]
+            manager = getattr(view, "conversations", None)
+            past = [c for c in (manager.all_conversations() if earlier and manager is not None else [])
+                    if c.conversation_id != conversation.conversation_id]
+            past.sort(key=lambda c: c.messages[-1].timestamp if c.messages else "")
+            shown = [m for c in past + [conversation] for m in c.messages if not getattr(m, "privacy", "")]
+            messages = [{"role": m.role, "content": m.content} for m in shown][-limit:]
             return {"conversation_id": conversation.conversation_id, "title": conversation.title, "messages": messages}
 
     # The web front end (web/, DEC-0012) and the schemas it's built on.

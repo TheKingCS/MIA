@@ -217,6 +217,8 @@
     userSync: () => demo ? Promise.resolve(params.has("sync") ? demoSync() : { done: true, offer: false, active: false }) : call("GET", "/api/user-sync"),
     userSyncStep: (step) => demo ? Promise.resolve({ ...demoSync(), say: "" }) : call("POST", "/api/user-sync", step),
     // Her voice saying one line; rejected where this MIA has none (the words still show).
+    // The glasses' log: the thread and the conversations before it.
+    history: (limit) => demo ? MIA.thread(limit) : call("GET", "/api/talk/thread?limit=" + (limit || 200) + "&earlier=1"),
     // The first mission and tours (core/welcome.py). In the demo, only with ?welcome=<stage>.
     welcome: () => demo ? Promise.resolve(params.has("welcome") ? demoWelcome() : { stage: "none", left: false }) : call("GET", "/api/welcome"),
     welcomeStep: (step) => demo ? Promise.resolve(demoWelcome()) : call("POST", "/api/welcome", step),

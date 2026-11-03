@@ -67,7 +67,7 @@ object Relay {
     private val CARDS = Regex("/api/glasses(\\?mission=[A-Za-z0-9_-]{1,64})?")
     private val FEED = Regex("/api/glasses/feed(\\?since=[A-Za-z0-9:.%_-]{0,64})?")
     private val PANEL = Regex("/api/glasses/([a-z_]{1,32})/([a-z0-9_-]{1,32})(\\?mission=[A-Za-z0-9_-]{1,64})?")
-    private val THREAD = Regex("/api/talk/thread\\?limit=[0-9]{1,2}")
+    private val THREAD = Regex("/api/talk/thread\\?limit=[0-9]{1,2}&earlier=1")
     private val NOT_FOR_GLASSES = setOf("action", "actions", "ask", "html", "heard")
     // Meeting her: the only writes the glasses can make, each named here.
     private val FIRST_BOOT_READS = setOf("/api/first-boot", "/api/user-sync", "/api/welcome")
