@@ -77,6 +77,10 @@ def main(argv=None) -> int:
     rn = sub.add_parser("run", help="work a task as a role, through the lab, as far as review")
     rn.add_argument("id")
     rn.add_argument("--as", dest="role", required=True)
+    rv_ = sub.add_parser("review", help="an independent review of a task waiting for one")
+    rv_.add_argument("id")
+    rv_.add_argument("--as", dest="role", required=True)
+    sub.add_parser("approve", help="Zac only, at the keyboard: merge a reviewed task").add_argument("id")
     mv = sub.add_parser("move")
     mv.add_argument("id")
     mv.add_argument("status")
@@ -123,6 +127,22 @@ def main(argv=None) -> int:
                 print(f"Stopped: {problem}", file=sys.stderr)
                 return 1
             print(_line(w.load()[args.id.upper()], w.load()), f"(stopped at {stopped}: waiting for review and Zac)")
+            return 0
+        if args.command in ("review", "approve"):
+            from core import work_review
+            from core.work_agents import AgentError, load as load_agents
+
+            try:
+                if args.command == "review":
+                    said = work_review.review(args.id, args.role, load_agents(), ask=work_review.ask_provider,
+                                              diff=work_review.lab_diff)
+                    print(f"{args.id.upper()}: {said}")
+                else:
+                    merged = work_review.approve(args.id, confirm=input)
+                    print(f"{args.id.upper()} approved and merged as {merged[:10]}. Restart MIA to load it.")
+            except (AgentError, work_review.ReviewError) as problem:
+                print(f"Stopped: {problem}", file=sys.stderr)
+                return 1
             return 0
         if args.command == "resume":
             task = w._get(tasks, args.id)
