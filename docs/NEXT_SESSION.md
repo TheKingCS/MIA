@@ -24,6 +24,15 @@ Missions are in the boards' look, and everyday actions go through the relay
 publishing with them. Zac, on the
 phone: Home, Getting To Know You, try the Allow buttons and a topic or two.
 
+**Pending on the glasses (2026-11-03):** phone build 142 (DEC-0066: every
+designed screen, money included, offered question buttons) is built in
+`android-phone/app/build/outputs/apk/debug/` but not installed: Zac's phone
+wasn't plugged in. Plug in, `adb install -r` it, reopen MIA on the glasses.
+The glasses page is already live. A security review of everything added since
+the fourth one (DEC-0064 to 0066: actions, missions, music, questions, money)
+was running; fix what it finds before relying on those. Recipe photos and her
+awakening voice need a way round the relay's size limit (H-0079).
+
 **The glasses are here (2026-11-01).** Meta's DAT plugin is installed in
 Claude Code on the PC (`mwdat-android`, DAT 1.0.1). It corrects MIA's
 docs: through the phone app the toolkit offers Display (a native UI on
