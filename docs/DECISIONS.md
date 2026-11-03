@@ -1173,3 +1173,24 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   review, the dashboard. Codex and Copilot join at step 6, once installed and
   signed in on the PC.
 - Related: DEC-0058, DEC-0067
+
+### DEC-0071: Three things the development platform has to get right
+- Status: APPROVED
+- Proposed by: zac, 2026-11-03 · Approved by: zac, 2026-11-03 ("Three things I really want us to get right")
+- Decision:
+  1. **MIA has independent inspection authority.** She inspects the actual
+     repository, running services, dependencies, logs and integrations
+     herself, and finds where the documentation and reality disagree,
+     instead of reporting what Claude tells her.
+  2. **Every agent shares one development history.** Every task, decision,
+     code change, review, failure and successful experiment becomes part of
+     the development knowledge base.
+  3. **Agents may disagree, and a disagreement is resolved, never dropped.**
+     A reviewer's objection is recorded and must be answered, by a change or
+     a reason, before approval; a later approving review doesn't erase it.
+     (Built 2026-11-03: `tools.work resolve`, enforced at approve.)
+  Future: **MIA's Development Evolution Timeline** on the dashboard:
+  capabilities acquired, models optimized, benchmarks improved, bugs
+  eliminated, milestones, tools integrated, skills, performance over time.
+- Related: DEC-0056, DEC-0057, DEC-0068, DEC-0069
+

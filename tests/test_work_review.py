@@ -66,7 +66,7 @@ def test_approval_needs_an_approving_review_first(waiting):
     with pytest.raises(rv.ReviewError, match="independent review"):
         rv.approve("T-0001", confirm=lambda q: "T-0001", lab=lab, folder=folder, log=log)
     _review(waiting, "QA Engineer", "A real bug in x.\nVERDICT: changes")
-    with pytest.raises(rv.ReviewError, match="last said changes"):
+    with pytest.raises(rv.ReviewError, match="objection from QA Engineer"):
         rv.approve("T-0001", confirm=lambda q: "T-0001", lab=lab, folder=folder, log=log)
 
 
@@ -83,3 +83,19 @@ def test_only_a_person_typing_the_id_approves(waiting):
     assert rv.approve("T-0001", confirm=lambda q: "t-0001", lab=lab, folder=folder, log=log) == "abc1234567"
     task = tasks_mod.load(folder)["T-0001"]
     assert task.status == "done" and "merged as abc1234567" in task.body
+
+
+def test_an_objection_cant_be_outvoted_only_answered(waiting):
+    """Zac: a disagreement is recorded and resolved, not silently discarded."""
+    folder, log, _, lab = waiting
+    _review(waiting, "QA Engineer", "The retry hides a real error.\nVERDICT: changes")
+    _review(waiting, "QA Engineer", "Looks fine.\nVERDICT: approve")  # a later yes doesn't erase the no
+    with pytest.raises(rv.ReviewError, match="objection from QA Engineer"):
+        rv.approve("T-0001", confirm=lambda q: "T-0001", lab=lab, folder=folder, log=log)
+    with pytest.raises(rv.ReviewError, match="Say how"):
+        rv.resolve("T-0001", "claude", "  ", folder=folder, log=log)
+    assert rv.resolve("T-0001", "claude", "the retry now logs the error first", folder=folder, log=log) == 1
+    assert rv.open_objections("T-0001", log) == []
+    assert "Resolved the objection from QA Engineer (ollama): the retry now logs" in tasks_mod.load(folder)["T-0001"].body
+    assert rv.approve("T-0001", confirm=lambda q: "T-0001", lab=lab, folder=folder, log=log)
+

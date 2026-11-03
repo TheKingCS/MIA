@@ -99,6 +99,37 @@ def latest_verdict(task_id: str, log=activity.ACTIVITY) -> str:
     return reviews[-1]["detail"].split(":", 1)[0] if reviews else ""
 
 
+def open_objections(task_id: str, log=activity.ACTIVITY) -> list[dict]:
+    """Every "changes" review not yet answered (Zac, 2026-11-03: "that
+    disagreement should be recorded and resolved, not silently discarded").
+    A later approving review doesn't answer an objection; only a resolve does,
+    saying how, and each resolve answers the objections raised before it."""
+    open_ones: list[dict] = []
+    for e in activity.search(task_id=task_id, path=log):
+        if e.get("action") == "review" and str(e.get("detail", "")).startswith("changes"):
+            open_ones.append(e)
+        elif e.get("action") == "resolve":
+            open_ones = []
+    return open_ones
+
+
+def resolve(task_id: str, who: str, how: str, folder=tasks_mod.TASKS_DIR, log=activity.ACTIVITY) -> int:
+    """Answer the open objections: what was changed, or why the reviewer was
+    wrong. Kept in the task and the history either way. Returns how many."""
+    tasks = tasks_mod.load(folder)
+    task = tasks_mod._get(tasks, task_id)
+    objections = open_objections(task.id, log)
+    if not objections:
+        raise ReviewError(f"{task.id} has no open objection to resolve.")
+    if not how.strip():
+        raise ReviewError("Say how it's resolved: what changed, or why the objection doesn't hold.")
+    raised_by = ", ".join(sorted({e.get("who", "") for e in objections}))
+    tasks_mod.note(task, who, f"Resolved the objection from {raised_by}: {how.strip()}")
+    tasks_mod.save(task, folder)
+    activity.record(who, "resolve", task.id, f"{len(objections)} from {raised_by}: {how.strip()}", log)
+    return len(objections)
+
+
 def approve(task_id: str, *, confirm: Callable[[str], str], lab=None, suite: Optional[Callable] = None,
             folder=tasks_mod.TASKS_DIR, log=activity.ACTIVITY) -> str:
     """Zac's approval. `confirm(question)` must come back as the task's id,
@@ -109,6 +140,11 @@ def approve(task_id: str, *, confirm: Callable[[str], str], lab=None, suite: Opt
     task = tasks_mod._get(tasks, task_id)
     if task.status != "review":
         raise ReviewError(f"{task.id} isn't waiting for approval ({task.status}).")
+    objections = open_objections(task.id, log)
+    if objections:
+        raised_by = ", ".join(sorted({e.get("who", "") for e in objections}))
+        raise ReviewError(f"{task.id} has an objection from {raised_by} nobody has answered. "
+                          f"Resolve it first: python -m tools.work resolve {task.id} --by <who> --how \"...\"")
     said = latest_verdict(task.id, log)
     if said != "approve":
         raise ReviewError(f"{task.id} needs an independent review that approves it first"

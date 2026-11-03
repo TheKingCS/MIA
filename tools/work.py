@@ -81,6 +81,10 @@ def main(argv=None) -> int:
     rv_.add_argument("id")
     rv_.add_argument("--as", dest="role", required=True)
     sub.add_parser("approve", help="Zac only, at the keyboard: merge a reviewed task").add_argument("id")
+    rs = sub.add_parser("resolve", help="answer a review's objection: what changed, or why it doesn't hold")
+    rs.add_argument("id")
+    rs.add_argument("--by", required=True)
+    rs.add_argument("--how", required=True)
     mv = sub.add_parser("move")
     mv.add_argument("id")
     mv.add_argument("status")
@@ -127,6 +131,16 @@ def main(argv=None) -> int:
                 print(f"Stopped: {problem}", file=sys.stderr)
                 return 1
             print(_line(w.load()[args.id.upper()], w.load()), f"(stopped at {stopped}: waiting for review and Zac)")
+            return 0
+        if args.command == "resolve":
+            from core import work_review
+
+            try:
+                count = work_review.resolve(args.id, args.by, args.how)
+            except work_review.ReviewError as problem:
+                print(f"Stopped: {problem}", file=sys.stderr)
+                return 1
+            print(f"{args.id.upper()}: {count} objection(s) answered and kept in the history.")
             return 0
         if args.command in ("review", "approve"):
             from core import work_review
