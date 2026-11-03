@@ -112,3 +112,17 @@ def test_a_failure_already_in_the_running_copy_doesnt_revert(repo):
     p = lab.approve(p.proposal_id, suite=lambda cwd: {"summary": "", "failed": list(already), "finished": True})
     assert p.status == lab.MERGED and (repo / "core" / "thing.py").read_text() == "VALUE = 5\n"
 
+
+def test_a_reverted_proposal_can_be_retried_on_the_running_copy(repo):
+    p = lab.create("Try again", "x")
+    lab.write(p.proposal_id, coder=lambda t, cwd, py: (Path(cwd) / "core" / "thing.py").write_text("VALUE = 6\n"))
+    lab.check(p.proposal_id, suite=suite({"*": []}))
+    runs = iter([[], ["tests/test_c.py::flaky_here"]])
+    assert lab.approve(p.proposal_id, suite=lambda cwd: {"summary": "", "failed": next(runs), "finished": True}).status == lab.REVERTED
+    p = lab.retry(p.proposal_id)
+    assert p.status == lab.WRITTEN and "-again-" in p.branch
+    p = lab.check(p.proposal_id, suite=suite({"*": []}))
+    assert p.status == lab.READY and p.files == ["core/thing.py"]
+    p = lab.approve(p.proposal_id, suite=lambda cwd: {"summary": "", "failed": [], "finished": True})
+    assert p.status == lab.MERGED and (repo / "core" / "thing.py").read_text() == "VALUE = 6\n"
+

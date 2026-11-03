@@ -299,6 +299,32 @@ def approve(proposal_id: str, suite: Optional[Callable] = None) -> Proposal:
     return _put(p)
 
 
+def retry(proposal_id: str) -> Proposal:
+    """A reverted proposal, again: git won't merge a branch whose merge was
+    reverted (its commits count as merged), so its change is rebuilt as a new
+    commit on a new branch from the running copy as it is now, ready for a
+    fresh check."""
+    p = get(proposal_id)
+    if p.status != REVERTED:
+        raise ValueError(f"Only a reverted proposal is retried; this one is {p.status}.")
+    change = _git("diff", "--binary", f"{p.base}...{p.branch}")
+    if not change.strip():
+        raise ValueError("Its branch has no change to carry over.")
+    lab = folder(p)
+    base = _git("rev-parse", "HEAD")
+    branch = f"{p.branch.split('-again-')[0]}-again-{datetime.now().strftime('%H%M%S')}"
+    _git("checkout", "-q", "-b", branch, base, cwd=lab)
+    patch = lab / ".lab-retry.patch"
+    patch.write_text(change if change.endswith("\n") else change + "\n", encoding="utf-8", newline="\n")
+    try:
+        _git("apply", "--index", str(patch), cwd=lab)
+    finally:
+        patch.unlink(missing_ok=True)
+    _git("commit", "-m", f"lab: {p.title} (again, on {base[:10]})\n\n{p.problem}", cwd=lab, author=LAB_AUTHOR)
+    p.branch, p.base, p.status, p.note, p.merged_as = branch, base, WRITTEN, "Rebuilt on the running copy, to check again.", ""
+    return _put(p)
+
+
 def reject(proposal_id: str, why: str = "") -> Proposal:
     p = get(proposal_id)
     if p.status in (MERGED,):
