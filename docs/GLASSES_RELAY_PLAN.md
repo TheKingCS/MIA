@@ -62,6 +62,12 @@ each side's proof.
   go up, so a replayed message is refused.
 - Requests name a path; the phone checks it against the allowlist.
 
+## What the glasses see (DEC-0066)
+
+Every app the engine lists for the glasses, and each designed panel, money
+included. A question button runs a Talk turn only when its words are ones the
+phone itself served in the cards or the welcome's ideas.
+
 ## Her address
 
 The page lives at `mia-glasses.yhrhodes.workers.dev` on its own (a static

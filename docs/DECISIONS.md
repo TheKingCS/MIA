@@ -1121,3 +1121,16 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   the press is the approval, since a second gesture per set gets in the way.
   Start and Finish still ask. Everything stays undoable on the phone.
 - Related: DEC-0062, DEC-0064
+
+### DEC-0066: Every designed screen on the glasses, money included
+- Status: APPROVED
+- Proposed by: zac, 2026-11-03 · Approved by: zac, 2026-11-03 ("I want to set it up to handle money ... instead of configuring it to handle it properly"; "the functionality it has and the designs for all the pages need to be accepted and implemented as designed")
+- Decision: the phone stops cutting the glasses down to a list of apps and
+  stops blanking money: every app the engine puts on the glasses shows as
+  designed, Budget, Freedom and Rentals included. Her question buttons and
+  the welcome's ideas run a Talk turn, but only for a question the engine
+  offered; the page can't send its own words. Still off the relay: free
+  Talk, raw html, the words heard, User Sync's money topic (DEC-0064), and
+  any change not offered by reference.
+- Related: DEC-0062, DEC-0064, DEC-0065
+

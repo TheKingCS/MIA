@@ -43,7 +43,7 @@ import kotlin.math.abs
 /**
  * The phone's side of the sealed relay (DEC-0062, docs/GLASSES_RELAY_PLAN.md).
  * It connects out to the relay, opens what the glasses send, and answers
- * only what's named below: the screens of the apps in HOME_APPS, cut down
+ * only what's named below: every screen the engine puts on the glasses, cut down
  * here on the phone, so the glasses can't ask for more (DEC-0062). The page's
  * code is public, so it never names a change: a panel's allowed actions become
  * one-time references here, and the page can only send one back (DEC-0064).
@@ -89,7 +89,7 @@ object Relay {
     private const val MAX_OFFERS = 300
     private const val MAX_CHANGES_A_MINUTE = 30
     private const val PAIRED_PERSON = "person"
-    private val MENU_TYPES = setOf("panel", "player")
+    private val MENU_TYPES = setOf("panel", "player", "ask")
     private const val MUSIC_PLAY = "/music/play"
     private const val MUSIC_CONTROL = "/music/control"
     private const val MUSIC_NOW = "/music/now"
@@ -100,14 +100,18 @@ object Relay {
     private const val MAX_REPLY = 200_000  // under what the relay carries
     // By name, so a new app stays off the glasses until someone adds it. No
     // budget, property or account app belongs here.
-    private val HOME_APPS = listOf("missions", "calendar", "workout", "kitchen", "garage", "greenhouse", "music")
-    private val MONEY = Regex("[$€£¥]")
+    // Every app the engine puts on the glasses, money included (Zac, 2026-11-03:
+    // "set it up to handle money"); the engine decides which apps those are.
+    private const val TALK = "/talk"
+    private const val WELCOME = "/api/welcome"
+    private const val MAX_SAYS = 400
 
     private class Keys(val room: String, val send: ByteArray, val receive: ByteArray)
     private class Offer(val kind: String, val params: JSONObject, val at: Long)
 
     // What the glasses were offered, and which proposal came from which offer.
     private val offers = HashMap<String, Offer>()
+    private val says = HashSet<String>()
     private val proposed = HashMap<String, String>()
     private val changes = ArrayDeque<Long>()
 
@@ -388,7 +392,7 @@ object Relay {
         if (path == MUSIC_NOW) return Music.now()
         val panel = PANEL.matchEntire(path)
         val allowed = path == ORB || path in FIRST_BOOT_READS || FEED.matches(path) || CARDS.matches(path) || THREAD.matches(path) ||
-            (panel != null && panel.groupValues[1] in HOME_APPS)
+            panel != null
         if (!allowed) {
             Log.w(TAG, "Refused: a path that isn't allowed")
             return null
@@ -396,6 +400,9 @@ object Relay {
         return try {
             val data = engine(path, null) ?: return null
             if (panel != null) offer(data)
+            if (path == WELCOME) data.optJSONArray("ideas")?.let { ideas ->
+                (0 until ideas.length()).forEach { offer(ideas.getJSONObject(it).optString("say")) }
+            }
             val out = if (CARDS.matches(path)) cards(data) else clean(data) as JSONObject
             if (path == SYNC) money(out as JSONObject)
             out.toString().takeIf { it.length <= MAX_REPLY }
@@ -409,6 +416,11 @@ object Relay {
      *  two steps, which are approved here as her screen's second gesture. */
     private fun write(path: String, body: JSONObject): String? {
         return try {
+            if (path == TALK) {
+                val say = body.optString("text")
+                if (!offered(say)) return null
+                return clean(engine("/api/voice/text", JSONObject().put("text", say)) ?: return null).toString()
+            }
             if (path == BOOT_STEP) {
                 val kind = body.optString("kind")
                 if (kind !in BOOT_ACTIONS) return null
@@ -563,11 +575,14 @@ object Relay {
         for (list in listOf("apps", "others")) {
             val all = data.optJSONArray(list) ?: JSONArray()
             val kept = JSONArray()
-            (0 until all.length()).map { all.getJSONObject(it) }.filter { it.optString("id") in HOME_APPS }.forEach { app ->
+            (0 until all.length()).map { all.getJSONObject(it) }.forEach { app ->
                 val menu = app.optJSONArray("menu") ?: JSONArray()
                 val panels = JSONArray()
                 (0 until menu.length()).map { menu.getJSONObject(it) }
-                    .filter { it.optString("type") in MENU_TYPES }.forEach { panels.put(it) }
+                    .filter { it.optString("type") in MENU_TYPES }.forEach { item ->
+                        if (item.optString("type") == "ask") offer(item.optString("say"))
+                        panels.put(item)
+                    }
                 app.put("menu", panels)
                 kept.put(app)
             }
@@ -576,13 +591,24 @@ object Relay {
         return clean(out) ?: out
     }
 
-    /** Whatever the engine sends: no actions, and no line with money in it. */
+    /** A question her screen may ask her: only ever one the engine offered. */
+    @Synchronized
+    private fun offer(say: String) {
+        if (say.isBlank()) return
+        if (says.size >= MAX_SAYS) says.clear()
+        says.add(say)
+    }
+
+    @Synchronized
+    private fun offered(say: String): Boolean = say in says
+
+    /** Whatever the engine sends: no actions, no raw html, not the words heard. */
     private fun clean(value: Any?): Any? = when (value) {
         is JSONObject -> JSONObject().also { out ->
             value.keys().forEach { key -> if (key !in NOT_FOR_GLASSES) out.put(key, clean(value.get(key))) }
         }
         is JSONArray -> JSONArray().also { out -> (0 until value.length()).forEach { out.put(clean(value.get(it))) } }
-        is String -> if (MONEY.containsMatchIn(value)) "" else value
+        is String -> value
         else -> value
     }
 
