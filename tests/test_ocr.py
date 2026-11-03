@@ -130,10 +130,8 @@ def test_queue_dedupes_reports_progress_and_cancels(tmp_path):
     assert not (tmp_path / "b.json").exists() and not (tmp_path / "o.json").exists()
 
 
-def test_unavailable_without_tesseract(monkeypatch, tmp_path):
+def test_unavailable_without_tesseract(monkeypatch):
     monkeypatch.setattr(ocr_module.shutil, "which", lambda name: None)
-    # Its Windows install folder too, or a PC that has it finds it there.
-    monkeypatch.setattr(ocr_module, "_WINDOWS_DEFAULT", tmp_path / "no_tesseract.exe")
     config = ConfigManager.__new__(ConfigManager)
     config.get = lambda key, default=None: default
     assert not ocr_module.available(config)

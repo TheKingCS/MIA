@@ -9,6 +9,7 @@ from email.message import EmailMessage
 from pathlib import Path
 
 import pytest
+from PySide6.QtGui import QPainter, QPdfWriter
 from PySide6.QtWidgets import QApplication
 
 import core.classroom_manager as classroom_module
@@ -42,29 +43,14 @@ def qapp():
 
 
 def write_pdf(path: Path, pages: list[str], qapp) -> Path:
-    """A text PDF written by hand in the PDF's built-in Helvetica, so it
-    needs no installed font: drawn with Qt, the pages came out blank under
-    the headless "offscreen" display mode on Windows (no fonts), and every
-    book read as a scan."""
-    objects = ["<< /Type /Catalog /Pages 2 0 R >>", None,
-               "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>"]
-    kids = []
-    for page in pages:
-        lines = [line.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)") for line in page.splitlines()]
-        stream = "".join(f"BT /F1 12 Tf 50 {740 - n * 20} Td ({line}) Tj ET\n" for n, line in enumerate(lines))
-        objects.append(f"<< /Length {len(stream)} >>\nstream\n{stream}endstream")
-        kids.append(f"{len(objects) + 1} 0 R")
-        objects.append(f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] "
-                       f"/Resources << /Font << /F1 3 0 R >> >> /Contents {len(objects)} 0 R >>")
-    objects[1] = f"<< /Type /Pages /Kids [{' '.join(kids)}] /Count {len(kids)} >>"
-    out, offsets = "%PDF-1.4\n", []
-    for number, body in enumerate(objects, 1):
-        offsets.append(len(out))
-        out += f"{number} 0 obj\n{body}\nendobj\n"
-    xref = len(out)
-    out += f"xref\n0 {len(objects) + 1}\n0000000000 65535 f \n" + "".join(f"{o:010d} 00000 n \n" for o in offsets)
-    out += f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n"
-    path.write_bytes(out.encode("latin-1"))
+    writer = QPdfWriter(str(path))
+    painter = QPainter(writer)
+    for i, page in enumerate(pages):
+        if i:
+            writer.newPage()
+        for n, line in enumerate(page.splitlines()):
+            painter.drawText(200, 300 + n * 250, line)
+    painter.end()
     return path
 
 
