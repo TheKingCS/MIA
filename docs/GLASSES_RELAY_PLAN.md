@@ -113,6 +113,10 @@ skip, later and moving on through, and marks the screen `phone_only`.
 
 Not built: undo from the glasses. They have no Undo control; undo is on the phone.
 
+`music` is in `HOME_APPS` (Zac, 2026-11-02: "I need the music app working").
+`/music/play` takes track ids that must look like ids, `/music/control` a named
+control, `/music/now` is read; each plays only this phone's library.
+
 `/api/talk/thread` and `/api/glasses/feed` read the home computer's when the
 phone is linked: that's where her voice turns go.
 

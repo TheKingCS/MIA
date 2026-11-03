@@ -16,6 +16,9 @@
   const audio = el("audio", { controls: true, preload: "none", class: "music-audio" });
   audio.addEventListener("ended", () => playAt(at + 1));
 
+  // Songs already on the phone: Android has to say yes first (Permissions.kt).
+  const phoneAsks = () => { try { return window.MIAPhonePermissions && !JSON.parse(window.MIAPhonePermissions.status()).music; } catch (e) { return false; } };
+  window.MIAPermissions = { changed: () => { if (!phoneAsks()) act({ kind: "music.scan", params: {} }); } };
   const btn = (label, cls, onclick) => el("button", { type: "button", class: "btn " + cls, onclick }, label);
   const buttons = (...list) => el("div", { class: "row-buttons" }, list.filter(Boolean));
   const section = (title, actions, ...body) =>
@@ -148,6 +151,7 @@
         btn("Scan Library", "btn-ghost", () => act({ kind: "music.scan", params: {} }))),
       el("p", { class: "music-library" }, "Upload songs (mp3, m4a, flac…) from this device's files" +
         (lib.found ? ", or put them in MIA's music folder and Scan Library." : ". On the PC you can also point MIA at your music folder in Settings.")),
+      phoneAsks() ? buttons(btn("Find The Songs On This Phone", "btn-amber", () => window.MIAPhonePermissions.ask("music"))) : null,
       !lib.found && lib.folder ? el("p", { class: "dim music-library" }, "Looking in: " + lib.folder) : null) : null;
     $("panel").replaceChildren(...[empty, ...[].concat(lib.count ? VIEWS[tab]() : []),
       lib.count ? el("p", { class: "dim music-library" }, "Library: " + lib.folder + " · ", el("a", { href: "#", onclick: (ev) => { ev.preventDefault(); act({ kind: "music.scan", params: {} }); } }, "Scan For New Music")) : null].filter(Boolean));

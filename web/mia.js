@@ -88,6 +88,7 @@
   // The shape of /api/welcome, for trying the screens with ?demo&welcome=mission, home, apps, tour or explore.
   const DEMO_MISSION = { name: "Know your system", summary: "Learn MIA by using her. Finishing this tour is your first completed mission.", xp: 100, percent: 25,
     objectives: [{ text: "Meet MIA", done: true }, { text: "Tour your Home", done: false }, { text: "Explore the app menu", done: false }, { text: "Talk to MIA on your own", done: false }] };
+  const DEMO_PLAYING = { track: "demo", number: 2, total: 12, playing: true, seconds: 74, length: 212 };
   const DEMO_TILES = ["Missions", "Calendar", "Kitchen", "Workout"];
   const demoWelcome = () => {
     const stage = params.get("welcome");
@@ -217,6 +218,10 @@
     userSync: () => demo ? Promise.resolve(params.has("sync") ? demoSync() : { done: true, offer: false, active: false }) : call("GET", "/api/user-sync"),
     userSyncStep: (step) => demo ? Promise.resolve({ ...demoSync(), say: "" }) : call("POST", "/api/user-sync", step),
     // Her voice saying one line; rejected where this MIA has none (the words still show).
+    // Music on the glasses: the phone plays it (Music.kt), through the relay. Elsewhere, the Music screen.
+    musicPlay: () => demo ? Promise.resolve(DEMO_PLAYING) : Promise.reject(new MiaError(400, "Music plays from the glasses' page.")),
+    musicControl: () => demo ? Promise.resolve(DEMO_PLAYING) : Promise.reject(new MiaError(400, "Music plays from the glasses' page.")),
+    musicNow: () => Promise.resolve(demo ? DEMO_PLAYING : {}),
     // The glasses' log: the thread and the conversations before it.
     history: (limit) => demo ? MIA.thread(limit) : call("GET", "/api/talk/thread?limit=" + (limit || 200) + "&earlier=1"),
     // The first mission and tours (core/welcome.py). In the demo, only with ?welcome=<stage>.

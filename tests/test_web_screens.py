@@ -217,7 +217,7 @@ def test_a_recipe_photo(world, tmp_path):
     assert got.status_code == 200 and got.content == jpeg
     url = kitchen_page(world)["recipes"][0]["photo"]
     assert url.startswith(path + "?v=")
-    card = glasses_panel(world, "kitchen", "recipes")["lines"][0]
+    card = glasses_panel(world, "kitchen", "recipes-all")["lines"][0]
     assert card["recipe"]["photo"] == url
     # a new picture replaces the old one
     assert client.post(path, content=b"\x89PNG" + b"1" * 32, headers={"X-Filename": "toast.png"}).status_code == 200

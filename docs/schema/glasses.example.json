@@ -1042,10 +1042,24 @@
       "pinned": false,
       "menu": [
         {
-          "id": "ask0",
-          "label": "What's playing",
-          "type": "ask",
-          "say": "What's playing?"
+          "id": "now",
+          "label": "Now Playing",
+          "type": "player"
+        },
+        {
+          "id": "songs",
+          "label": "Songs",
+          "type": "panel"
+        },
+        {
+          "id": "playlists",
+          "label": "Playlists",
+          "type": "panel"
+        },
+        {
+          "id": "artists",
+          "label": "Artists",
+          "type": "panel"
         },
         {
           "id": "pin",
@@ -1061,7 +1075,23 @@
           }
         }
       ],
-      "tiles": []
+      "tiles": [
+        {
+          "label": "Songs",
+          "value": "212",
+          "tone": ""
+        },
+        {
+          "label": "Playlists",
+          "value": "6",
+          "tone": ""
+        },
+        {
+          "label": "Artists",
+          "value": "41",
+          "tone": ""
+        }
+      ]
     },
     {
       "id": "diagnostics",

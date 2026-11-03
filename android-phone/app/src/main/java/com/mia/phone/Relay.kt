@@ -85,13 +85,18 @@ object Relay {
     private const val MAX_OFFERS = 300
     private const val MAX_CHANGES_A_MINUTE = 30
     private const val PAIRED_PERSON = "person"
+    private val MENU_TYPES = setOf("panel", "player")
+    private const val MUSIC_PLAY = "/music/play"
+    private const val MUSIC_CONTROL = "/music/control"
+    private const val MUSIC_NOW = "/music/now"
+    private val MUSIC_CONTROLS = setOf("pause", "resume", "next", "previous", "stop")
     // Money waits for the phone's screen, whatever the page sends (DEC-0064).
     private val SYNC_CHOICES_ON_MONEY = setOf("skip", "later", "start", "continue")
     private const val MAX_BODY = 20_000
     private const val MAX_REPLY = 200_000  // under what the relay carries
     // By name, so a new app stays off the glasses until someone adds it. No
     // budget, property or account app belongs here.
-    private val HOME_APPS = listOf("missions", "calendar", "workout", "kitchen", "garage", "greenhouse")
+    private val HOME_APPS = listOf("missions", "calendar", "workout", "kitchen", "garage", "greenhouse", "music")
     private val MONEY = Regex("[$€£¥]")
 
     private class Keys(val room: String, val send: ByteArray, val receive: ByteArray)
@@ -376,6 +381,7 @@ object Relay {
     /** What the glasses may read. Only these shapes, only approved apps, and
      *  the answer is cut down again in clean(). Anything else stays refused. */
     private fun read(path: String): String? {
+        if (path == MUSIC_NOW) return Music.now()
         val panel = PANEL.matchEntire(path)
         val allowed = path == ORB || path in FIRST_BOOT_READS || FEED.matches(path) || CARDS.matches(path) || THREAD.matches(path) ||
             (panel != null && panel.groupValues[1] in HOME_APPS)
@@ -407,6 +413,13 @@ object Relay {
                 engine("/api/actions/${proposal.getString("proposal_id")}/approve", JSONObject()) ?: return null
                 return "{}"
             }
+            if (path == MUSIC_PLAY) return play(body)
+            if (path == MUSIC_CONTROL) {
+                val what = body.optString("do")
+                if (what !in MUSIC_CONTROLS) return null
+                Music.control(what)
+                return Music.now()
+            }
             if (path == OFFER_PROPOSE) return propose(body)
             if (path == OFFER_APPROVE) return decide(body, true)
             if (path == OFFER_REJECT) return decide(body, false)
@@ -419,6 +432,16 @@ object Relay {
             Log.w(TAG, "Couldn't save for the glasses")
             null
         }
+    }
+
+    /** Track ids only, played from this phone's own library. */
+    private fun play(body: JSONObject): String? {
+        val context = appContext ?: return null
+        val list = body.optJSONArray("ids") ?: return null
+        val ids = (0 until minOf(list.length(), Music.MAX_QUEUE)).map { list.optString(it) }
+        if (ids.isEmpty() || !ids.all { Music.TRACK.matches(it) }) return null
+        Music.play(context, ids, body.optInt("at"))
+        return Music.now()
     }
 
     /** User Sync's Money topic is for the phone: its screen says so, and only moving on passes. */
@@ -540,7 +563,7 @@ object Relay {
                 val menu = app.optJSONArray("menu") ?: JSONArray()
                 val panels = JSONArray()
                 (0 until menu.length()).map { menu.getJSONObject(it) }
-                    .filter { it.optString("type") == "panel" }.forEach { panels.put(it) }
+                    .filter { it.optString("type") in MENU_TYPES }.forEach { panels.put(it) }
                 app.put("menu", panels)
                 kept.put(app)
             }

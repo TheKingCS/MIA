@@ -478,3 +478,27 @@ def test_play_playlist_empty_or_bad_start_index_returns_false(isolated_paths, tm
     _install_fake_player(manager)
     assert manager.play_playlist(playlist.playlist_id) is False
     assert manager.play_playlist("no-such-playlist") is False
+
+
+def test_a_phones_own_folders_are_read_too(isolated_paths, tmp_path):
+    context = _make_context()
+    context.config.set("music.library_root_path", str(tmp_path / "nowhere"))
+    phone = tmp_path / "Music"
+    _write_wav(phone / "song.wav", title="Phone Song")
+    context.config.set("music.extra_folders", [str(phone)])
+    manager = _make_manager(context)
+    result = manager.scan_library(as_of=time.time() + 60)
+    assert result.added == 1 and [t.title for t in manager.all_tracks()] == ["Phone Song"]
+
+
+def test_a_folder_that_reads_empty_keeps_its_songs(isolated_paths, tmp_path):
+    """Android shows an empty folder until it lets MIA read audio: nothing is lost."""
+    context = _make_context()
+    phone = tmp_path / "Music"
+    _write_wav(phone / "song.wav", title="Phone Song")
+    context.config.set("music.extra_folders", [str(phone)])
+    manager = _make_manager(context)
+    manager.scan_library(as_of=time.time() + 60)
+    (phone / "song.wav").unlink()
+    manager.scan_library(as_of=time.time() + 60)
+    assert [t.title for t in manager.all_tracks()] == ["Phone Song"]

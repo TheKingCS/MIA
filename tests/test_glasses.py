@@ -65,7 +65,7 @@ def test_the_cards_are_the_persons_apps_with_menus(world):
         menu = [m for m in card["menu"] if m["type"] != "action"]
         assert 1 <= len(menu) <= 5, card["id"]
         assert len({m["id"] for m in card["menu"]}) == len(card["menu"])
-        assert all(m["type"] == "panel" or m["say"] for m in menu)
+        assert all(m["type"] in ("panel", "player") or m["say"] for m in menu)
         if card["id"] == "missions":  # always there, never pinned or unpinned
             assert all(m["id"] != "pin" for m in card["menu"])
             continue

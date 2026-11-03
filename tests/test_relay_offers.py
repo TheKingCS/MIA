@@ -27,7 +27,7 @@ def test_nothing_that_pays_out_or_takes_from_the_pantry():
 
 def test_no_money_app_reaches_the_glasses():
     apps = set(re.findall(r'"([a-z_]+)"', re.search(r"HOME_APPS = listOf\((.*?)\)", RELAY).group(1)))
-    assert apps == {"missions", "calendar", "workout", "kitchen", "garage", "greenhouse"}
+    assert apps == {"missions", "calendar", "workout", "kitchen", "garage", "greenhouse", "music"}
 
 
 def test_the_first_boot_step_uses_a_real_route():

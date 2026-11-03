@@ -22,6 +22,8 @@ class Permissions(private val activity: MainActivity) {
         "location" -> arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
         "photos" -> if (Build.VERSION.SDK_INT >= 33) arrayOf(Manifest.permission.READ_MEDIA_IMAGES)
                     else arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+        "music" -> if (Build.VERSION.SDK_INT >= 33) arrayOf(Manifest.permission.READ_MEDIA_AUDIO)
+                   else arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
         "glasses" -> if (Build.VERSION.SDK_INT >= 31) arrayOf(Manifest.permission.BLUETOOTH_CONNECT) else emptyArray()
         else -> emptyArray()
     }
@@ -46,6 +48,6 @@ class Permissions(private val activity: MainActivity) {
 
     companion object {
         const val ASK_REQUEST = 46
-        private val IDS = listOf("microphone", "notifications", "location", "photos", "glasses")
+        private val IDS = listOf("microphone", "notifications", "location", "photos", "music", "glasses")
     }
 }

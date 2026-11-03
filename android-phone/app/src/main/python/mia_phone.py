@@ -15,6 +15,19 @@ _started = {}
 _lock = threading.Lock()
 
 
+import logging
+
+log = logging.getLogger("mia.phone")
+PHONE_MUSIC = ["/storage/emulated/0/Music", "/storage/emulated/0/Download"]
+
+
+def _scan_music(context) -> None:
+    try:
+        context.music.scan_library()
+    except Exception:
+        log.exception("The phone's music couldn't be scanned.")
+
+
 def start(root: str, port: int, native_dir: str = "", last_exit: str = "") -> str:
     """Builds MIA's engine and starts her server. Returns JSON: the session
     token for the screen and how long each step took (milliseconds).
@@ -53,6 +66,11 @@ def _start(root: str, port: int, native_dir: str, last_exit: str) -> None:
     if me is not None:
         context.profiles.set_active_profile(me.profile_id)
         context.personal_data.activate_current()
+
+    # The songs already on this phone, once Android lets MIA read them.
+    if not context.config.get("music.extra_folders"):
+        context.config.set("music.extra_folders", PHONE_MUSIC)
+    threading.Thread(target=_scan_music, args=(context,), daemon=True).start()
 
     import uvicorn
 

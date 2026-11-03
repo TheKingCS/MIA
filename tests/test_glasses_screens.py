@@ -1,6 +1,8 @@
 """The numbers on an app's glasses screen, a vehicle's own page, and "I Made This"."""
 
 from datetime import date
+from pathlib import Path
+from types import SimpleNamespace
 
 from core.actions import ActionCenter
 from core.glasses import ASSET_ITEM, GLASSES_KINDS, TILES, glasses_apps, glasses_panel, priority_now
@@ -52,7 +54,7 @@ def test_a_broken_app_loses_its_numbers_not_its_card(tmp_path, monkeypatch):
 def test_i_made_this_is_on_the_recipe_and_allowed(tmp_path, monkeypatch):
     world = make(tmp_path, monkeypatch)
     recipe = world.kitchen.add_recipe("Tacos")
-    line = glasses_panel(world, "kitchen", "recipes", TODAY)["lines"][0]
+    line = glasses_panel(world, "kitchen", "recipes-all", TODAY)["lines"][0]
     action = line["recipe"]["action"]
     assert action["kind"] in GLASSES_KINDS
     proposal = world.actions.approve(world, world.actions.propose(world, action["kind"], action["params"]).proposal_id)
@@ -105,3 +107,49 @@ def test_a_linked_phone_reads_the_conversation_where_it_went(tmp_path, monkeypat
     assert got["messages"][0]["content"] == "from the computer" and asked == ["/api/talk/thread?limit=40&earlier=1"]
     client.get("/api/glasses/feed?since=abc")
     assert asked[-1] == "/api/glasses/feed?since=abc"
+
+
+def test_recipes_open_by_shelf(tmp_path, monkeypatch):
+    world = make(tmp_path, monkeypatch)
+    world.kitchen.add_recipe("Tacos", category="Dinner")
+    world.kitchen.add_recipe("Pancakes", category="Breakfast")
+    shelves = glasses_panel(world, "kitchen", "recipes", TODAY)["lines"]
+    assert [s["text"] for s in shelves] == ["Breakfast", "Dinner", "All Recipes"]
+    panel = glasses_panel(world, "kitchen", shelves[1]["open"]["item"], TODAY)
+    assert panel["title"] == "Dinner" and [line["text"] for line in panel["lines"]] == ["Tacos"]
+    assert glasses_panel(world, "kitchen", "recipes-nothing", TODAY) is None
+
+
+class Songs:
+    def __init__(self, tracks, playlists=()):
+        self.tracks, self.playlists = tracks, playlists
+        self.root_path = Path(".")
+
+    def all_tracks(self):
+        return self.tracks
+
+    def all_playlists(self):
+        return self.playlists
+
+    def uploaded(self, track):
+        return False
+
+
+def song(track_id, title, artist):
+    return SimpleNamespace(track_id=track_id, title=title, artist=artist, album="", genre="", duration_seconds=180, track_number=1)
+
+
+def test_music_plays_the_list_it_was_picked_from(tmp_path, monkeypatch):
+    world = make(tmp_path, monkeypatch)
+    world.music = Songs([song("a", "One", "Ann"), song("b", "Two", "Bo"), song("c", "Three", "Bo")],
+                        [SimpleNamespace(playlist_id="p1", name="Drive", track_ids=["c", "a", "gone"])])
+    apps = card(world, "music")
+    assert apps["menu"][0]["type"] == "player"
+    songs = glasses_panel(world, "music", "songs", TODAY)["lines"]
+    assert songs[1]["play"]["ids"] == ["a", "c", "b"] and songs[1]["play"]["at"] == 1
+    playlist = glasses_panel(world, "music", "playlists", TODAY)["lines"][0]
+    drive = glasses_panel(world, "music", playlist["open"]["item"], TODAY)
+    assert [line["text"] for line in drive["lines"]] == ["Three", "One"] and drive["lines"][0]["play"]["ids"] == ["c", "a"]
+    artist = glasses_panel(world, "music", "artists", TODAY)["lines"][1]
+    assert [line["text"] for line in glasses_panel(world, "music", artist["open"]["item"], TODAY)["lines"]] == ["Three", "Two"]
+    assert glasses_panel(world, "music", "list-a-99", TODAY) is None

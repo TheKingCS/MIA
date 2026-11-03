@@ -65,7 +65,7 @@ MAX_CHIPS = 8
 
 # Only what the phone app really uses: it reads neither the calendar nor Health.
 PHONE_ASKS = (("microphone", "Microphone"), ("notifications", "Notifications"), ("location", "Location"),
-              ("photos", "Photos"), ("glasses", "Glasses"))
+              ("photos", "Photos"), ("music", "Music"), ("glasses", "Glasses"))
 
 LATER = re.compile(r"(let'?s )?(finish|do this|do it|continue|pick (this|it) up) later|later|stop( for now)?|pause|not now", re.I)
 SKIP = re.compile(r"skip( that( one)?| this( one)?| it)?|pass|next( question)?", re.I)
@@ -694,6 +694,9 @@ def report(context, granted: dict) -> dict:
     """What the phone says is allowed. Everything allowed moves on by itself."""
     progress = _progress(context)
     told = progress.setdefault("permissions", {})
+    music = getattr(context, "music", None)
+    if music is not None and (granted or {}).get("music") and not told.get("music"):
+        music.scan_library()  # the songs already on this phone
     told.update({key: bool(granted[key]) for key, _label in PHONE_ASKS if key in (granted or {})})
     if _topic_now(context, progress) is not None and not progress.get("phone_done") and all(told.get(k) for k, _l in PHONE_ASKS):
         return _phone_done(context, progress)

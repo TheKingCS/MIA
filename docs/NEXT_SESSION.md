@@ -7,6 +7,11 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 *Last updated: 2026-11-02*
 
+**Glasses navigation: `docs/GLASSES_NAVIGATION_PLAN.md` is a draft waiting on
+Zac's five questions.** Recipes open by shelf; Music plays on the phone
+(`Music.kt`) from the glasses and reads the phone's Music and Download folders
+(`music.extra_folders`); neither tried on real hardware.
+
 **First boot and User Sync (2026-11-02): slices 0-5 of
 `docs/GLASSES_FIRST_BOOT_PLAN.md` are in.** User Sync has all seven topics,
 the phone permission step and a phone screen (`web/sync.html`, linked from

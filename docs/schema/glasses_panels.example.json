@@ -1684,5 +1684,57 @@
     "lines": [],
     "more": 0,
     "empty": "The inbox isn't available here."
+  },
+  "music/songs": {
+    "app": "music",
+    "item": "songs",
+    "label": "Songs",
+    "title": "Songs",
+    "empty": "",
+    "more": 0,
+    "lines": [
+      {
+        "text": "[Song 1]",
+        "detail": "[Artist] · 3:12",
+        "tone": "",
+        "play": {
+          "label": "Play",
+          "ids": [
+            "t1",
+            "t2",
+            "t3"
+          ],
+          "at": 0
+        }
+      },
+      {
+        "text": "[Song 2]",
+        "detail": "[Artist] · 3:12",
+        "tone": "",
+        "play": {
+          "label": "Play",
+          "ids": [
+            "t1",
+            "t2",
+            "t3"
+          ],
+          "at": 1
+        }
+      },
+      {
+        "text": "[Song 3]",
+        "detail": "[Artist] · 3:12",
+        "tone": "",
+        "play": {
+          "label": "Play",
+          "ids": [
+            "t1",
+            "t2",
+            "t3"
+          ],
+          "at": 2
+        }
+      }
+    ]
   }
 }

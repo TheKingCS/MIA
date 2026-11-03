@@ -23,7 +23,8 @@
         "trail_map_root_path": ""
     },
     "music": {
-        "library_root_path": ""
+        "library_root_path": "",
+        "extra_folders": []
     },
     "llm": {
         "base_url": "http://localhost:11434",

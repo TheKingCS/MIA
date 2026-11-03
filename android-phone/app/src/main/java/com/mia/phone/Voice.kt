@@ -126,6 +126,7 @@ class Voice(private val context: Context, private val onState: (String) -> Unit 
     /** What she's doing: the notification, and MIA, for the glasses' orb. Best effort. */
     private fun report(state: String) {
         onState(state)
+        if (state == "listening") Music.holdForVoice() else if (state == "ready") Music.voiceDone()
         if (token.isEmpty() || orbLine.isShutdown) return
         orbLine.execute {
             try {

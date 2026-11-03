@@ -135,12 +135,50 @@ def _kitchen_grocery(context, today):
     return _panel("Grocery List", lines, "The grocery list is empty.", limit=60)
 
 
-def _kitchen_recipes(context, today):
-    """Every recipe, to swipe through on the glasses: its picture, and its
-    ingredients and steps once selected."""
-    from core.web_screens import kitchen_page, recipe_steps
+RECIPE_ITEM = "recipes-"
+MUSIC_LIST = "list-"
 
-    recipes = [r for r in kitchen_page(context, today).get("recipes") or [] if not r.get("locked")]
+
+def _slug(text: str) -> str:
+    return "".join(c if c.isalnum() else "-" for c in text.lower()).strip("-")[:20]
+
+
+def _open_recipes(context, today):
+    from core.web_screens import kitchen_page
+
+    return [r for r in kitchen_page(context, today).get("recipes") or [] if not r.get("locked")]
+
+
+def _kitchen_recipes(context, today):
+    """The recipe book's way in: favorites, each category, then all of them.
+    Picking one opens those recipes to swipe through."""
+    recipes = _open_recipes(context, today)
+    lines = []
+
+    def shelf(label: str, item: str, count: int) -> None:
+        if count:
+            line = _line(label, f"{count} recipe{'' if count == 1 else 's'}")
+            line["open"] = {"item": f"{RECIPE_ITEM}{item}", "label": "Open"}
+            lines.append(line)
+
+    shelf("Favorites", "favorites", sum(1 for r in recipes if r.get("favorite")))
+    for name in sorted({r.get("category") or "" for r in recipes} - {""}):
+        shelf(name, _slug(name), sum(1 for r in recipes if r.get("category") == name))
+    shelf("All Recipes", "all", len(recipes))
+    return _panel("Recipes", lines, "No recipes yet. Add them on your phone.", limit=60)
+
+
+def _recipe_shelf(context, today, which: str) -> Optional[dict]:
+    """The recipes on one shelf: each with its picture, ingredients and steps."""
+    from core.web_screens import recipe_steps
+
+    recipes = _open_recipes(context, today)
+    if which == "favorites":
+        recipes = [r for r in recipes if r.get("favorite")]
+    elif which != "all":
+        recipes = [r for r in recipes if _slug(r.get("category") or "") == which]
+    if not recipes:
+        return None
     recipes.sort(key=lambda r: (not r.get("favorite"), -(r.get("times_made") or 0), (r.get("name") or "").lower()))
     lines = []
     for r in recipes:
@@ -154,7 +192,68 @@ def _kitchen_recipes(context, today):
             "action": {"kind": "meal.cook", "label": "I Made This", "params": {"recipe_id": r["id"]}},
         }
         lines.append(line)
-    return _panel("Recipes", lines, "No recipes yet. Add them on your phone.", limit=60)
+    title = {"favorites": "Favorites", "all": "All Recipes"}.get(which) or recipes[0].get("category") or "Recipes"
+    return _panel(title, lines, "No recipes here.", limit=60)
+
+
+def _music(context):
+    from core.web_more import music_page
+
+    return music_page(context)
+
+
+def _song_lines(tracks: list[dict]) -> list[dict]:
+    """Each song says what plays from it: the list it's in, from here on."""
+    ids = [t["id"] for t in tracks[:200]]
+    lines = []
+    for i, t in enumerate(tracks[:60]):
+        line = _line(t["title"], " · ".join(b for b in (t.get("artist"), t.get("duration")) if b))
+        line["play"] = {"label": "Play", "ids": ids, "at": i}
+        lines.append(line)
+    return lines
+
+
+def _music_songs(context, today):
+    tracks = _music(context).get("tracks") or []
+    return _panel("Songs", _song_lines(tracks), "No songs yet. Add them on your phone.", more=max(0, len(tracks) - 60), limit=60)
+
+
+def _music_shelf(lines_of: list[tuple[str, str, int]]) -> list[dict]:
+    lines = []
+    for label, item, count in lines_of:
+        line = _line(label, f"{count} song{'' if count == 1 else 's'}")
+        line["open"] = {"item": f"{MUSIC_LIST}{item}", "label": "Open"}
+        lines.append(line)
+    return lines
+
+
+def _music_playlists(context, today):
+    lists = _music(context).get("playlists") or []
+    return _panel("Playlists", _music_shelf([(p["name"], f"p-{p['id']}"[:27], len(p["track_ids"])) for p in lists]),
+                  "No playlists yet.", limit=60)
+
+
+def _music_artists(context, today):
+    artists = _music(context).get("artists") or []
+    return _panel("Artists", _music_shelf([(a["name"], f"a-{i}", a["count"]) for i, a in enumerate(artists)]), "No artists yet.", limit=60)
+
+
+def _music_list(context, which: str) -> Optional[dict]:
+    """One playlist or artist's songs."""
+    page = _music(context)
+    tracks = page.get("tracks") or []
+    if which.startswith("p-"):
+        found = next((p for p in page.get("playlists") or [] if f"p-{p['id']}"[:27] == which), None)
+        if found is None:
+            return None
+        by_id = {t["id"]: t for t in tracks}
+        return _panel(found["name"], _song_lines([by_id[i] for i in found["track_ids"]]), "This playlist is empty.", limit=60)
+    artists = page.get("artists") or []
+    index = which[2:]
+    if not index.isdigit() or int(index) >= len(artists):
+        return None
+    name = artists[int(index)]["name"]
+    return _panel(name, _song_lines([t for t in tracks if (t.get("artist") or "Unknown artist") == name]), "No songs.", limit=60)
 
 
 def _kitchen_pantry(context, today):
@@ -739,6 +838,7 @@ Panel = Callable[[object, date], dict]
 PANELS: dict[str, tuple[tuple[str, str, Panel], ...]] = {
     "missions": (("pick", "Select Mission", _missions_pick), ("progress", "Log Progress", _missions_progress),
                  ("claim", "Ready To Claim", _missions_claim)),
+    "music": (("songs", "Songs", _music_songs), ("playlists", "Playlists", _music_playlists), ("artists", "Artists", _music_artists)),
     "kitchen": (("recipes", "Recipes", _kitchen_recipes), ("meals", "Today's Meal Plan", _kitchen_meals),
                 ("pantry", "My Pantry", _kitchen_pantry), ("grocery", "Grocery List", _kitchen_grocery)),
     "workout": (("live", "Active Training", _workout_live), ("training", "Today's Training", _workout_training), ("practice", "Skill Practice", _workout_practice),
@@ -783,7 +883,6 @@ ASKS: dict[str, tuple[str, ...]] = {
     "navigation": ("How far is my nearest waypoint?", "When is sunset today?"),
     "lab": ("What's my latest experiment reading?",),
     "field_kit": ("What devices are connected?",),
-    "music": ("What's playing?",),
     "diagnostics": ("How is the computer doing?",),
 }
 
@@ -850,6 +949,12 @@ def _equipment_tiles(scope: str):
     return build
 
 
+def _music_tiles(context, today) -> list[dict]:
+    page = _music(context)
+    return [_tile("Songs", len(page.get("tracks") or [])), _tile("Playlists", len(page.get("playlists") or [])),
+            _tile("Artists", len(page.get("artists") or []))]
+
+
 def _calendar_tiles(context, today) -> list[dict]:
     from core.calendar_view import calendar_page
 
@@ -860,7 +965,7 @@ def _calendar_tiles(context, today) -> list[dict]:
 
 # The numbers at the top of an app's screen. No money here (H-0041).
 TILES = {"kitchen": _kitchen_tiles, "workout": _workout_tiles, "garage": _equipment_tiles("garage"),
-         "greenhouse": _equipment_tiles("greenhouse"), "calendar": _calendar_tiles}
+         "greenhouse": _equipment_tiles("greenhouse"), "calendar": _calendar_tiles, "music": _music_tiles}
 
 
 def _tiles(context, module_id: str, today: date) -> list[dict]:
@@ -893,6 +998,8 @@ def menu_for(app, pinned: Optional[bool] = None) -> list[dict]:
     for MIA, at most five; then pin or unpin it for the glasses (its
     favorite star) when `pinned` is known."""
     items = [{"id": item, "label": label, "type": "panel"} for item, label, _ in PANELS.get(app.module_id, ())]
+    if app.module_id == "music":
+        items.insert(0, {"id": "now", "label": "Now Playing", "type": "player"})
     items += [{"id": f"ask{i}", "label": say.rstrip("?.!"), "type": "ask", "say": say}
               for i, say in enumerate(ASKS.get(app.module_id, ()))]
     items = items[:5]
@@ -971,6 +1078,12 @@ def glasses_panel(context, app_id: str, item_id: str, today: Optional[date] = No
             panel = build(context, today, mission_id) if build in (_missions_progress, _missions_pick) \
                 else build(context, today)
             return {"app": app_id, "item": item_id, "label": label, **panel}
+    if item_id.startswith(RECIPE_ITEM) and app_id == "kitchen":
+        panel = _recipe_shelf(context, today, item_id[len(RECIPE_ITEM):])
+        return {"app": app_id, "item": item_id, "label": panel["title"], **panel} if panel else None
+    if item_id.startswith(MUSIC_LIST) and app_id == "music":
+        panel = _music_list(context, item_id[len(MUSIC_LIST):])
+        return {"app": app_id, "item": item_id, "label": panel["title"], **panel} if panel else None
     if item_id.startswith(ASSET_ITEM) and app_id in EQUIPMENT_SCOPES:
         panel = _asset_panel(context, app_id, item_id[len(ASSET_ITEM):], today)
         return {"app": app_id, "item": item_id, "label": panel["title"], **panel} if panel else None

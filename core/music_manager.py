@@ -316,14 +316,22 @@ class MusicManager:
         ScanResult(root_missing=True) instead. `as_of` (a later time) takes in
         files MIA just wrote whole, like an upload, without the wait."""
         root = self._resolve_root_path()
-        if not root.exists():
+        # Folders the library also reads, like a phone's own Music folder.
+        extras = [Path(f).expanduser() for f in self.context.config.get("music.extra_folders", []) or []]
+        extras = [f for f in extras if f.exists()]
+        if not root.exists() and not extras:
             log.warning("Music library root '%s' doesn't exist — scan skipped.", root)
             return ScanResult(root_missing=True)
 
         found: dict[str, Path] = {}
-        for path in root.rglob("*"):
-            if path.is_file() and path.suffix.lower() in _AUDIO_EXTENSIONS:
-                found[str(path.resolve())] = path
+        silent: list[str] = []  # an empty extra folder may just be a permission not given
+        for folder in ([root] if root.exists() else []) + extras:
+            before = len(found)
+            for path in folder.rglob("*"):
+                if path.is_file() and path.suffix.lower() in _AUDIO_EXTENSIONS:
+                    found[str(path.resolve())] = path
+            if folder in extras and len(found) == before:
+                silent.append(str(folder.resolve()))
 
         existing_by_path = {t.file_path: t for t in self._tracks}
         now = datetime.now().isoformat(timespec="seconds")
@@ -366,7 +374,8 @@ class MusicManager:
                 self._tracks.append(new_track)
                 added += 1
 
-        removed_ids = {t.track_id for t in self._tracks if t.file_path not in found}
+        removed_ids = {t.track_id for t in self._tracks if t.file_path not in found
+                       and not any(t.file_path.startswith(s) for s in silent)}
         if removed_ids:
             self._tracks = [t for t in self._tracks if t.track_id not in removed_ids]
 
