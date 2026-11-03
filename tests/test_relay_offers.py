@@ -26,9 +26,20 @@ def test_nothing_that_spends_or_deletes():
     assert not [k for k in offered() if k.startswith(("bill.", "budget", "debt")) or k.endswith(".delete")]
 
 
-def test_no_money_app_reaches_the_glasses():
-    apps = set(re.findall(r'"([a-z_]+)"', re.search(r"HOME_APPS = listOf\((.*?)\)", RELAY).group(1)))
-    assert apps == {"missions", "calendar", "workout", "kitchen", "garage", "greenhouse", "music"}
+def test_every_designed_app_reaches_the_glasses():
+    """DEC-0066: the engine decides which apps the glasses get, money included;
+    the phone no longer cuts them to a list or blanks amounts."""
+    assert "HOME_APPS" not in RELAY
+    assert "MONEY" not in RELAY.replace("SYNC_CHOICES_ON_MONEY", "")
+
+
+def test_a_reference_dies_at_approve_too():
+    assert "it.at <= OFFER_MS }" in RELAY.split("private fun decide")[1].split("private fun")[0]
+
+
+def test_talk_runs_only_offered_words():
+    talk = RELAY.split("if (path == TALK)")[1].split("}")[0]
+    assert "offered(say)" in talk
 
 
 def test_the_first_boot_step_uses_a_real_route():
