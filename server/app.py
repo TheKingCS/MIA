@@ -144,6 +144,11 @@ class UserSyncRequest(BaseModel):
     permissions: Optional[dict] = None  # what the phone app says is allowed
 
 
+class WelcomeRequest(BaseModel):
+    choice: str
+    app: str = ""
+
+
 class OrbStateRequest(BaseModel):
     state: str
 
@@ -871,6 +876,33 @@ def create_app(context: AppContext) -> FastAPI:
                 return start(view)
             return choose(view, body.choice, body.index) if body.choice else reply(view, body.text)
 
+    # What comes after User Sync (core/welcome.py): the first mission and tours.
+    @app.get("/api/welcome")
+    def welcome_state(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.home_link import HomeLinkError, home_call, linked
+        from core.welcome import state
+
+        if linked(context):
+            try:
+                return home_call(context, "/api/welcome", method="GET")
+            except HomeLinkError:
+                pass  # the computer's out of reach: this phone answers
+        with app.state.turn_lock:
+            return state(view_for(context, profile_id))
+
+    @app.post("/api/welcome")
+    def welcome_step(body: WelcomeRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.home_link import HomeLinkError, home_call, linked
+        from core.welcome import choose
+
+        if linked(context):
+            try:
+                return home_call(context, "/api/welcome", body.model_dump())
+            except HomeLinkError:
+                pass  # the computer's out of reach: this phone answers
+        with app.state.turn_lock:
+            return choose(view_for(context, profile_id), body.choice, body.app)
+
     # What her orb is doing (core/glasses_feed.py). No turn lock: the orb
     # has to keep answering "thinking" while a turn holds it.
     @app.get("/api/glasses/orb")
@@ -916,10 +948,11 @@ def create_app(context: AppContext) -> FastAPI:
         view = view_for(context, profile_id)
 
         def sync(words: str) -> Optional[dict]:
+            from core import welcome
             from core.user_sync import hear
 
             with app.state.turn_lock:
-                return hear(view, words)
+                return hear(view, words) or welcome.hear(view, words)
 
         return {**handle(view, profile_id, text, lambda words: respond(profile_id, words, background), sync), "where": "here"}
 

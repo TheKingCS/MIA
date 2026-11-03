@@ -1,6 +1,6 @@
 # First Boot, User Sync and the Presence System: wiring plan
 
-*Claude, 2026-10-29. Status: approved by Zac and being built: slices 0-4 are in, see section 5.*
+*Claude, 2026-10-29. Status: approved by Zac and being built: slices 0-5 are in, see section 5.*
 
 The design lives on the canvas "MIA Glasses First Boot" (the first boot,
 phases 1–9, the Hey MIA frames and the Presence System lab). Zac's brief
@@ -250,6 +250,35 @@ screen, talking on the glasses alone breaks. So before slice 1:
   the only time the phone needs to be picked up.
 
 Build order becomes: 0 (voice without the app open), then 1–6 as above.
+
+### Slice 5: built 2026-11-02
+
+- `core/welcome.py`, `/api/welcome`: after User Sync, "Synchronization
+  complete", the Know Your System mission, Home's tour, the app menu, and
+  her hand-over. Back leaves it for later; a "Know Your System" card brings
+  it back. "Next", "skip the tour", "let's go" work by voice.
+- The mission is added only on "let's go", through `core/actions.py`, worth
+  100 XP. Its objectives tick themselves: Meet MIA, Tour your Home (finished,
+  not skipped), Explore the app menu (a tour finished, or "Just open it"),
+  Talk to MIA on your own. The last one finishes it, and the XP is paid.
+- **"Say Hey MIA" became "Talk to MIA on your own", and her last line says
+  "just tap and talk":** there's no wake word (DEC-0060, DEC-0063), so the
+  wake word this plan wanted isn't needed.
+- `core/app_intro.py`: what the app is, plus lines from the person's own
+  data, only when the data exists. Missions, Budget, Workout, Kitchen.
+- Tours exist for those four. Each step names a real menu item (a test
+  checks it), but they're shown on the tour's own screen with the menu's
+  labels, not highlighted inside the menu itself. A paused tour keeps its step.
+- **Differs from the plan above:** intros come with `/api/welcome`, not an
+  `intro` item; `tour.*` aren't action kinds, since moving through a tour
+  changes nothing in the person's life (the mission's steps do go through
+  actions); a finished tour is a life event. "It feeds your missions" isn't
+  said anywhere yet: `core/links.py` has no link to a fund to read.
+- **Not tried:** on real glasses (it needs the sealed relay to carry real
+  data), or from start to finish against a live server on a screen. The
+  engine path is tested through `/api/welcome`; the screens only in the
+  demo (`/web/glasses.html?demo&welcome=mission`, `home`, `tour`, `apps`,
+  `explore`).
 
 ### Slice 4: built 2026-11-02
 

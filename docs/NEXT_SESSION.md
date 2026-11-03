@@ -7,13 +7,14 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 *Last updated: 2026-11-02*
 
-**First boot and User Sync (2026-11-02): slices 0-4 of
+**First boot and User Sync (2026-11-02): slices 0-5 of
 `docs/GLASSES_FIRST_BOOT_PLAN.md` are in.** User Sync has all seven topics,
 the phone permission step and a phone screen (`web/sync.html`, linked from
-Home). Next is slice 5 (app intros, tours, the first mission), then slice 6
-(idle tips). Still to do: a wake word for "Hey MIA" (in no slice, needed
-before the first mission's "Say Hey MIA" objective); a weekly repeat for the
-meal-prep mission; a birthday without a year gets no reminder. Zac, on the
+Home). After it come the Know Your System mission, Home's tour, the app
+menu and four app tours (`core/welcome.py`, `core/app_intro.py`). Next is
+slice 6 (idle tips). Still to do: a weekly repeat for the meal-prep mission;
+a birthday without a year gets no reminder. On real glasses all of this
+waits for the sealed relay to carry real data. Zac, on the
 phone: Home, Getting To Know You, try the Allow buttons and a topic or two.
 
 **The glasses are here (2026-11-01).** Meta's DAT plugin is installed in

@@ -36,6 +36,7 @@ PERSONAL_SETTINGS = (
     "setup.questions_done",
     "first_boot.progress",
     "user_sync.progress",
+    "welcome.progress",
     "email.send.address",
     "email.send.host",
     "email.send.port",

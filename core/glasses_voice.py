@@ -19,7 +19,8 @@ What the words do:
   commands log at once (with undo), the rest goes to the model.
 
 During User Sync the words are her answers instead (core/user_sync.py),
-so the conversation runs with the phone in a pocket.
+so the conversation runs with the phone in a pocket. The first mission's
+tours take "next" and "skip the tour" the same way (core/welcome.py).
 
 Either way the glasses hear about it through their feed
 (core/glasses_feed.said): a card with what you said and MIA's answer,
@@ -106,6 +107,7 @@ def handle(context, profile_id: str, text: str, talk, sync=None) -> dict:
     answer ({"reply_text", ...}); `sync(text)` gives User Sync the words
     first (core/user_sync.hear). Returns {"heard", "say", "open"?}, and
     the glasses hear about it through their feed."""
+    from core import welcome
     from core.glasses_feed import said
 
     heard = " ".join(str(text or "").split())
@@ -120,5 +122,6 @@ def handle(context, profile_id: str, text: str, talk, sync=None) -> dict:
     else:
         answer = talk(heard) or {}
         out = {"heard": heard, "say": answer.get("reply_text") or "Done."}
+        welcome.talked(context)
     said(profile_id, out)
     return out

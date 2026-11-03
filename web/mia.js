@@ -85,6 +85,23 @@
       { id: "location", label: "Location", status: "not yet" }, { id: "photos", label: "Photos", status: "waiting" }, { id: "glasses", label: "Glasses", status: "waiting" }] });
   const DEMO_NEXT = Object.assign({}, DEMO_SYNC, { step: "next", question: "Next is work. Keep going, or finish later?", percent: 14 });
   const demoSync = () => ({ review: DEMO_REVIEW, phone: DEMO_PHONE, next: DEMO_NEXT })[params.get("sync")] || DEMO_SYNC;
+  // The shape of /api/welcome, for trying the screens with ?demo&welcome=mission, home, apps, tour or explore.
+  const DEMO_MISSION = { name: "Know your system", summary: "Learn MIA by using her. Finishing this tour is your first completed mission.", xp: 100, percent: 25,
+    objectives: [{ text: "Meet MIA", done: true }, { text: "Tour your Home", done: false }, { text: "Explore the app menu", done: false }, { text: "Talk to MIA on your own", done: false }] };
+  const DEMO_TILES = ["Missions", "Calendar", "Kitchen", "Workout"];
+  const demoWelcome = () => {
+    const stage = params.get("welcome");
+    const out = { stage, paused: false, left: true, ready: false, mission: DEMO_MISSION, tour: null, apps: [], ideas: [] };
+    if (stage === "home") out.tour = { app: "home", name: "Home", number: 1, of: 4, text: "Your missions live here: real goals broken into steps, each worth XP. Your first one is already running.",
+      tiles: DEMO_TILES.map((label, i) => ({ label, on: i === 0 })) };
+    if (stage === "tour") out.tour = { app: "kitchen", name: "Kitchen", number: 2, of: 4, text: "What's planned to eat today.",
+      tiles: ["Recipes", "Today's Meal Plan", "My Pantry", "Grocery List"].map((label, i) => ({ label, on: i === 1 })) };
+    if (stage === "apps") out.apps = [["budget", "Budget", "Tour ready", "Spending, bills and savings goals.", ["Save for a van is on your missions, from earlier."]],
+      ["missions", "Missions", "Tour done", "Your goals, broken into steps, each worth XP.", []], ["workout", "Workout", "Paused · step 2", "Your training plan, what's on today and how it's going.", []],
+      ["kitchen", "Kitchen", "Tour ready", "Your recipes, your pantry, and what's for dinner.", []]].map(([id, name, status, what, yours]) => ({ id, name, status, intro: { what, yours } }));
+    if (stage === "explore") out.ideas = [{ label: "Plan my week", say: "" }, { label: "Set a goal", say: "" }, { label: "Just talk", say: "" }];
+    return out;
+  };
   async function call(method, path, body) {
     if (!token) throw new MiaError(401, "Not signed in.");
     const response = await fetch(path, {
@@ -200,6 +217,9 @@
     userSync: () => demo ? Promise.resolve(params.has("sync") ? demoSync() : { done: true, offer: false, active: false }) : call("GET", "/api/user-sync"),
     userSyncStep: (step) => demo ? Promise.resolve({ ...demoSync(), say: "" }) : call("POST", "/api/user-sync", step),
     // Her voice saying one line; rejected where this MIA has none (the words still show).
+    // The first mission and tours (core/welcome.py). In the demo, only with ?welcome=<stage>.
+    welcome: () => demo ? Promise.resolve(params.has("welcome") ? demoWelcome() : { stage: "none", left: false }) : call("GET", "/api/welcome"),
+    welcomeStep: (step) => demo ? Promise.resolve(demoWelcome()) : call("POST", "/api/welcome", step),
     speak: (text) => demo ? demoOnly() : call("POST", "/api/heavy/speak", { text }),
     // What her orb is doing (core/glasses_feed.py), polled while the glasses are on.
     glassesOrb: () => demo ? Promise.resolve({ state: "idle" }) : call("GET", "/api/glasses/orb"),
