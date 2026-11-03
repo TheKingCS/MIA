@@ -62,6 +62,21 @@ each side's proof.
   go up, so a replayed message is refused.
 - Requests name a path; the phone checks it against the allowlist.
 
+## Her address
+
+The page lives at `mia-glasses.yhrhodes.workers.dev` on its own (a static
+Cloudflare Worker), not on `thekingcs.github.io`, which other sites share:
+nothing else can reach the key there. A strict Content-Security-Policy keeps
+out any script but its own. Publish with `tools/publish_glasses.py`, then from
+`mia-art`: `wrangler deploy --name mia-glasses --assets . --compatibility-date
+2026-10-01`. The relay only lets that origin in.
+
+## Meeting her (writes)
+
+First boot, User Sync and the tours need to save. The glasses can only POST to
+`/api/user-sync` and `/api/welcome`, and `/firstboot/step` for
+`firstboot.advance` and `firstboot.skip`. Each must be under 30 seconds old.
+
 ## The bridges
 
 Only pages at `http://127.0.0.1:PORT/` stay in the app's WebView; links go to

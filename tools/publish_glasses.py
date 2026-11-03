@@ -17,7 +17,9 @@ from pathlib import Path
 WEB = Path(__file__).resolve().parent.parent / "web"
 COPIED = ("glasses.js", "icons.js")
 
-HEAD = """  <meta name="application-name" content="MIA">
+# Its own address, so nothing else can reach the key, and only its own code runs.
+HEAD = """  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src data:; connect-src wss://mia-relay.yhrhodes.workers.dev; base-uri 'none'; form-action 'none'">
+  <meta name="application-name" content="MIA">
   <meta name="description" content="MIA on Meta Ray-Ban Display glasses">
   <meta name="mrbd-web-app-capable" content="yes">
 """
@@ -71,6 +73,7 @@ def main(folder: str) -> None:
         shutil.copyfile(WEB / name, out / name)
     (out / "glasses.css").write_text(stylesheet(), encoding="utf-8", newline="\n")
     (out / "index.html").write_text(page(), encoding="utf-8", newline="\n")
+    (out / "_headers").write_text("/*\n  Cache-Control: no-cache\n  X-Content-Type-Options: nosniff\n", encoding="utf-8")
     print("Published to", out)
 
 

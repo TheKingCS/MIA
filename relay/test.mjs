@@ -6,7 +6,7 @@ import https from "node:https";
 const base = process.argv[2];
 const socketBase = base.replace(/^http/, "ws");
 const room = "a".repeat(64);
-const pageOrigin = { Origin: "https://thekingcs.github.io" };
+const pageOrigin = { Origin: "https://mia-glasses.yhrhodes.workers.dev" };
 let failed = 0;
 
 function check(name, ok) {

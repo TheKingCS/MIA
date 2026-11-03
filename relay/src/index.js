@@ -7,7 +7,7 @@
 
 const ROOM = /^([a-f0-9]{64}|pair-[0-9]{6})$/;
 const ROLES = new Set(["page", "phone"]);
-const PAGE_ORIGIN = "https://thekingcs.github.io";
+const PAGE_ORIGIN = "https://mia-glasses.yhrhodes.workers.dev";
 const MAX_BYTES = 256 * 1024;
 const MAX_PER_MINUTE = 240;
 const FULL = 1008;

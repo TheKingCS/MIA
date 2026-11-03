@@ -66,7 +66,13 @@ object Relay {
     private val FEED = Regex("/api/glasses/feed(\\?since=[A-Za-z0-9:.%_-]{0,64})?")
     private val PANEL = Regex("/api/glasses/([a-z_]{1,32})/([a-z0-9_-]{1,32})(\\?mission=[A-Za-z0-9_-]{1,64})?")
     private val THREAD = Regex("/api/talk/thread\\?limit=[0-9]{1,2}")
-    private val NOT_FOR_GLASSES = setOf("action", "actions", "ask")
+    private val NOT_FOR_GLASSES = setOf("action", "actions", "ask", "html", "heard")
+    // Meeting her: the only writes the glasses can make, each named here.
+    private val FIRST_BOOT_READS = setOf("/api/first-boot", "/api/user-sync", "/api/welcome")
+    private val FIRST_BOOT_WRITES = setOf("/api/user-sync", "/api/welcome")
+    private val BOOT_ACTIONS = setOf("firstboot.advance", "firstboot.skip")
+    private const val BOOT_STEP = "/firstboot/step"
+    private const val MAX_BODY = 20_000
     private const val MAX_REPLY = 200_000  // under what the relay carries
     // By name, so a new app stays off the glasses until someone adds it. No
     // budget, property or account app belongs here.
@@ -320,12 +326,18 @@ object Relay {
 
         val path = message.optString("path")
         val id = message.opt("id")
+        val fresh = abs(System.currentTimeMillis() - number) <= FRESH_MS
+        if (message.has("body") || path == BOOT_STEP) {
+            val body = message.optJSONObject("body")
+            val allowed = fresh && body != null && body.toString().length <= MAX_BODY
+            Thread { answer(webSocket, id, if (allowed) write(path, body!!) else null) }.start()
+            return
+        }
         if (path != LISTEN) {
             Thread { answer(webSocket, id, read(path)) }.start()  // the engine can take a moment
             return
         }
         // Held back on the way: an old press never opens the mic.
-        val fresh = abs(System.currentTimeMillis() - number) <= FRESH_MS
         answer(webSocket, id, if (fresh) listen() else null)
     }
 
@@ -342,25 +354,55 @@ object Relay {
      *  the answer is cut down again in clean(). Anything else stays refused. */
     private fun read(path: String): String? {
         val panel = PANEL.matchEntire(path)
-        val allowed = path == ORB || FEED.matches(path) || CARDS.matches(path) || THREAD.matches(path) ||
+        val allowed = path == ORB || path in FIRST_BOOT_READS || FEED.matches(path) || CARDS.matches(path) || THREAD.matches(path) ||
             (panel != null && panel.groupValues[1] in HOME_APPS)
         if (!allowed) {
             Log.w(TAG, "Refused: a path that isn't allowed")
             return null
         }
-        val context = appContext ?: return null
         return try {
-            val token = Engine.ensure(context).optString("token")
-            val connection = URL("http://127.0.0.1:${MainActivity.PORT}$path").openConnection() as HttpURLConnection
-            connection.connectTimeout = 5000
-            connection.readTimeout = 7000
-            connection.setRequestProperty("Authorization", "Bearer $token")
-            val data = JSONObject(connection.inputStream.bufferedReader().use { it.readText() })
+            val data = engine(path, null) ?: return null
             (if (CARDS.matches(path)) cards(data) else clean(data) as JSONObject).toString().takeIf { it.length <= MAX_REPLY }
         } catch (e: Exception) {
             Log.w(TAG, "Couldn't read for the glasses")
             null
         }
+    }
+
+    /** The writes of meeting her: User Sync and the tours, and first boot's own
+     *  two steps, which are approved here as her screen's second gesture. */
+    private fun write(path: String, body: JSONObject): String? {
+        return try {
+            if (path == BOOT_STEP) {
+                val kind = body.optString("kind")
+                if (kind !in BOOT_ACTIONS) return null
+                val proposal = engine("/api/actions", JSONObject().put("kind", kind).put("params", body.optJSONObject("params") ?: JSONObject()))
+                    ?: return null
+                engine("/api/actions/${proposal.getString("proposal_id")}/approve", JSONObject()) ?: return null
+                return "{}"
+            }
+            if (path !in FIRST_BOOT_WRITES) return null
+            clean(engine(path, body) ?: return null).toString()
+        } catch (e: Exception) {
+            Log.w(TAG, "Couldn't save for the glasses")
+            null
+        }
+    }
+
+    private fun engine(path: String, body: JSONObject?): JSONObject? {
+        val context = appContext ?: return null
+        val token = Engine.ensure(context).optString("token")
+        val connection = URL("http://127.0.0.1:${MainActivity.PORT}$path").openConnection() as HttpURLConnection
+        connection.connectTimeout = 5000
+        connection.readTimeout = if (body == null) 7000 else 90000
+        connection.setRequestProperty("Authorization", "Bearer $token")
+        if (body != null) {
+            connection.requestMethod = "POST"
+            connection.doOutput = true
+            connection.setRequestProperty("Content-Type", "application/json")
+            connection.outputStream.use { it.write(body.toString().toByteArray()) }
+        }
+        return JSONObject(connection.inputStream.bufferedReader().use { it.readText() })
     }
 
     /** Her app cards: approved apps only, their panels only. */
