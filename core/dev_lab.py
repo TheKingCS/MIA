@@ -307,19 +307,19 @@ def retry(proposal_id: str) -> Proposal:
     p = get(proposal_id)
     if p.status != REVERTED:
         raise ValueError(f"Only a reverted proposal is retried; this one is {p.status}.")
-    change = _git("diff", "--binary", f"{p.base}...{p.branch}")
-    if not change.strip():
+    changed = [line.split("\t") for line in _git("diff", "--name-status", "--no-renames", f"{p.base}...{p.branch}").splitlines() if line]
+    if not changed:
         raise ValueError("Its branch has no change to carry over.")
     lab = folder(p)
     base = _git("rev-parse", "HEAD")
     branch = f"{p.branch.split('-again-')[0]}-again-{datetime.now().strftime('%H%M%S')}"
     _git("checkout", "-q", "-b", branch, base, cwd=lab)
-    patch = lab / ".lab-retry.patch"
-    patch.write_text(change if change.endswith("\n") else change + "\n", encoding="utf-8", newline="\n")
-    try:
-        _git("apply", "--index", str(patch), cwd=lab)
-    finally:
-        patch.unlink(missing_ok=True)
+    # Each file as the branch had it, straight from git: no patch text, so line endings stay as they were.
+    for state, path in changed:
+        if state.startswith("D"):
+            _git("rm", "-q", "--ignore-unmatch", "--", path, cwd=lab)
+        else:
+            _git("checkout", p.branch, "--", path, cwd=lab)
     _git("commit", "-m", f"lab: {p.title} (again, on {base[:10]})\n\n{p.problem}", cwd=lab, author=LAB_AUTHOR)
     p.branch, p.base, p.status, p.note, p.merged_as = branch, base, WRITTEN, "Rebuilt on the running copy, to check again.", ""
     return _put(p)
