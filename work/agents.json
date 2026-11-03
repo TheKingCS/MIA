@@ -1,0 +1,22 @@
+{
+  "_about": "Development agents (DEC-0068/0069, docs/DEV_ECOSYSTEM_AUDIT.md section 7): each role is a provider, a model and a permission tier. Edit freely: roles are configuration, not code. Tiers: read, propose, experiment, review (approve is Zac's only, deploy isn't given to agents). core/work_agents.py checks them.",
+  "providers": {
+    "claude-code": {"kind": "cli", "command": "claude", "can": ["write", "review"]},
+    "ollama": {"kind": "local", "model": "qwen2.5:14b", "can": ["review", "summarize"]},
+    "codex": {"kind": "cli", "command": "codex", "can": ["write", "review"]}
+  },
+  "roles": [
+    {"role": "Chief Architect", "provider": "claude-code", "tier": "propose", "reads": ["docs/ARCHITECTURE.md", "docs/DECISIONS.md"]},
+    {"role": "Research Engineer", "provider": "claude-code", "tier": "propose", "reads": ["docs/ROADMAP.md"]},
+    {"role": "Systems Inspector", "provider": "claude-code", "tier": "read", "reads": ["docs/INSPECTION_AND_SELF_PLAN.md"]},
+    {"role": "Software Engineer", "provider": "claude-code", "tier": "experiment", "reads": ["CLAUDE.md", "docs/ARCHITECTURE.md"]},
+    {"role": "Debugging Engineer", "provider": "claude-code", "tier": "experiment", "reads": ["CLAUDE.md", "docs/FAILURE_LOG.md"]},
+    {"role": "AI Research Engineer", "provider": "claude-code", "tier": "propose", "reads": ["docs/INTELLIGENCE_BENCHMARK.md"]},
+    {"role": "Memory Engineer", "provider": "claude-code", "tier": "experiment", "reads": ["docs/MEMORY_VAULT.md"]},
+    {"role": "Performance Engineer", "provider": "claude-code", "tier": "experiment", "reads": ["CLAUDE.md"]},
+    {"role": "QA Engineer", "provider": "ollama", "tier": "review", "reads": ["CLAUDE.md"]},
+    {"role": "Security Auditor", "provider": "claude-code", "tier": "review", "reads": ["docs/GLASSES_RELAY_PLAN.md"]},
+    {"role": "Documentation Engineer", "provider": "claude-code", "tier": "experiment", "reads": ["docs/COLLABORATION.md"]},
+    {"role": "Release Engineer", "provider": "claude-code", "tier": "propose", "reads": ["docs/SETUP_GUIDE.md"]}
+  ]
+}

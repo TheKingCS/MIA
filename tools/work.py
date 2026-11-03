@@ -73,6 +73,10 @@ def main(argv=None) -> int:
     hs.add_argument("--task", default="")
     hs.add_argument("--who", default="")
     sub.add_parser("resume").add_argument("id")
+    sub.add_parser("agents")
+    rn = sub.add_parser("run", help="work a task as a role, through the lab, as far as review")
+    rn.add_argument("id")
+    rn.add_argument("--as", dest="role", required=True)
     mv = sub.add_parser("move")
     mv.add_argument("id")
     mv.add_argument("status")
@@ -99,6 +103,26 @@ def main(argv=None) -> int:
         if args.command == "history":
             for e in activity.search(args.text, args.task, args.who):
                 print(f"{e['at']}  {e['who']:8} {e['action']:7} {e['task']:7} {e['detail']}")
+            return 0
+        if args.command == "agents":
+            from core.work_agents import load as load_agents
+
+            registry = load_agents()
+            for role in registry.roles.values():
+                provider = registry.providers[role.provider]
+                here = "here" if provider.available() else "not here"
+                print(f"{role.role:24} {role.tier:10} {role.provider:12} ({here})")
+            return 0
+        if args.command == "run":
+            from core import work_loop
+            from core.work_agents import AgentError, load as load_agents
+
+            try:
+                stopped = work_loop.run(args.id, args.role, load_agents())
+            except (AgentError, work_loop.LoopError) as problem:
+                print(f"Stopped: {problem}", file=sys.stderr)
+                return 1
+            print(_line(w.load()[args.id.upper()], w.load()), f"(stopped at {stopped}: waiting for review and Zac)")
             return 0
         if args.command == "resume":
             task = w._get(tasks, args.id)
