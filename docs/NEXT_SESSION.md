@@ -24,6 +24,18 @@ Missions are in the boards' look, and everyday actions go through the relay
 publishing with them. Zac, on the
 phone: Home, Getting To Know You, try the Allow buttons and a topic or two.
 
+**Parked, to come back to (Zac, 2026-11-03), in this order:**
+1. Personality plan (DEC-0067), `docs/PERSONALITY_AND_ECOSYSTEM_AUDIT.md`
+   sections E to G. Done: phase 1, tuning round 1, 👍/👎 ratings, turn traces.
+   Next: **phase 3, the self-knowledge map** (needs Zac's go), and **GitHub
+   Issues** (blocked: no GitHub login on this PC; sign `gh` in, or a cloud
+   session sets it up). Later: rating on the glasses (relay + Claude Design's
+   screen), a fine-tune from the ratings, shopping for models.
+2. Glasses: install phone build 143 or newer (DEC-0066 screens, fixes from the
+   fifth relay review); Zac's call on making the glasses' question buttons
+   read-only (an email question puts stranger-written text into a Talk turn).
+3. Restart MIA on the PC to hear the new voice.
+
 **Personality phase 1 is in (DEC-0067, 2026-11-03):** results in
 `docs/PERSONALITY_AND_ECOSYSTEM_AUDIT.md` section E. The glasses' answers come from
 `core/response_composer.py`; restart MIA on the PC, and the phone needs a new build,
