@@ -77,9 +77,10 @@ def commit(root: Path = ROOT) -> str:
     """The commit the work is on, and whether anything is left uncommitted."""
     def git(*args):
         return subprocess.run(["git", *args], cwd=str(root), capture_output=True, text=True, timeout=30,
-                              creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0)).stdout.strip()
+                              creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0)).stdout
 
-    head = git("log", "-1", "--format=%h %s")
+    head = git("log", "-1", "--format=%h %s").strip()
+    # Each status line is two status letters, a space, then the path: never strip the line first.
     dirty = [line[3:] for line in git("status", "--porcelain").splitlines() if line.strip()]
     return head + (f" (uncommitted: {', '.join(dirty[:8])}{'...' if len(dirty) > 8 else ''})" if dirty else "")
 
