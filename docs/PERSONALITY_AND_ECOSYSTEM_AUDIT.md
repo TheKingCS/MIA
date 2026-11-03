@@ -295,3 +295,43 @@ The registry work (C3) would make this map from code, so it can't go stale.
 4. Native turn traces before Langfuse?
 5. The composer's second model call for long model answers: allowed, if the
    corpus shows it's needed and it stays under about 2 seconds?
+
+---
+
+## E. Phase 1 results (2026-11-03, qwen2.5:14b, 37 corpus cases)
+
+| | Before | After |
+|---|---|---|
+| Glasses, median words | 51 | **15** (about 6 seconds spoken) |
+| Glasses, within 25 words | 8 of 37 | **36 of 37** (97%; target 90%) |
+| Glasses, median time to answer | 2.0 s | **1.5 s** |
+| Filler, closing offers, lists, markdown on the glasses | 4 | **0** |
+| Phone, median words (whole answer) | 51 | 44 |
+| Tool choice (`tools/pc_model_check.py`) | 213/213 | **213/213** |
+
+How: one personality (`core/personality.py`: IDENTITY, CHARACTER) in every
+prompt but the action path's; the glasses' answer composed by
+`core/response_composer.py`. **Her own opening sentences when they fit** (32
+of 37), and a short model rewrite only when her opening is too long to speak
+(5 of 37). Tried the other way round first, the rewrites lost her warmth
+("I'm here, Zac." disappeared), flattened jokes, and once added a fact
+("smell of blood" about bulls), so the order was flipped and the rewrite told
+to add nothing. Numbers in a rewrite must be the answer's own.
+
+**What phase 1 didn't fix: the model's own manner.**
+- She still misses some jokes, answers "Do you have feelings?" stiffly, and
+  ends phone answers with an offer of help more often than before (4 of 37,
+  was 1).
+- She once listed what you "haven't completed", which brushes DEC-0014. The
+  guilt-word check doesn't catch that phrasing.
+
+These are the next things to work on, with the corpus to measure them:
+tighter wording in CHARACTER, a few worked examples, or qwen3:14b, which the
+benchmark found reasons better. Full runs: `pc-check/conversation-*.md`, kept
+out of git.
+
+Unrelated, and found along the way: `tests/test_inbox.py` and
+`tests/test_ocr.py` fail on this PC on unchanged code (Tesseract is
+installed, and the tests expect it not to be), and the full suite stops with
+a Qt access violation near `tests/test_password_vault.py`.
+

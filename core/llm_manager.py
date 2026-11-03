@@ -398,10 +398,11 @@ class LLMManager:
             return True
         return self._backend.is_available(timeout=self._timeout)
 
-    def generate(self, prompt: str) -> Optional[str]:
+    def generate(self, prompt: str, timeout: Optional[float] = None) -> Optional[str]:
         """Return the model's reply, or None (logged) if the backend can't be reached."""
+        wait = self._timeout if timeout is None else timeout
         try:
-            return self._ask(lambda backend: backend.generate(prompt, timeout=self._timeout))
+            return self._ask(lambda backend: backend.generate(prompt, timeout=wait))
         except LLMUnavailableError as exc:
             log.warning("Assistant unavailable: %s", exc)
             return None

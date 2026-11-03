@@ -280,6 +280,8 @@ def looks_like_action_request(text: str, keywords: Iterable[str] = _ACTION_REQUE
 # Short, deliberately — see this module's docstring on why length is a
 # real, previously-measured regression risk for llama3.2:3b, and why
 # the warmer clauses are only added to the info-question path.
+from core.personality import CHARACTER, IDENTITY  # noqa: E402  (DEC-0067)
+
 _IDENTITY_LINE = (
     "You are MIA (Multifunctional Intelligent Assistant), the user's personal assistant, running on their own devices."
 )
@@ -387,7 +389,8 @@ CONVERSATION_INSTRUCTION = (
     "records or numbers that isn't above: for those, say what you'd need or offer to look it up or add it. If "
     "you're not sure what they mean, ask one short question, or offer the two closest things you could do for "
     "them. Never say you don't know what to do. When reference material comes with the question, use it where "
-    "it helps. Keep it brief and natural, in plain conversational text."
+    "it helps. A statement isn't a request: answer what they said before offering to do anything. Keep it "
+    "brief and natural, in plain conversational text."
 )
 NO_MATERIAL_PREFIX = "No reference material matched"
 
@@ -543,7 +546,7 @@ def build_system_message(context, is_action_request: bool, is_teaching_request: 
     # A how-to question about MIA answers from her own docs; anything else, as a person (2026-10-27).
     closing_instruction = (_TEACHING_INSTRUCTION if is_teaching_request else
                            GROUNDING_INSTRUCTION if is_help_question else CONVERSATION_INSTRUCTION)
-    parts = [_IDENTITY_LINE + _IDENTITY_WARMTH + _IDENTITY_APP_FLUENCY, build_user_context_block(context, prompt)]
+    parts = [IDENTITY + CHARACTER + _IDENTITY_APP_FLUENCY, build_user_context_block(context, prompt)]
     # DEC-0044: what they're working toward and what needs them now, so a
     # request is understood in context (core/presence.py).
     from core.presence import context_lines
@@ -665,7 +668,7 @@ def build_personal_system_message(context, mode: str, conversation=None, prompt:
     reference material" is the wrong instruction for someone venting."""
     from core.talk_it_out import journal_context_block  # local: talk_it_out imports this module
 
-    parts = [_IDENTITY_LINE + _IDENTITY_WARMTH + " " + AGENCY_LINE, build_user_context_block(context, prompt)]
+    parts = [IDENTITY + CHARACTER + " " + AGENCY_LINE, build_user_context_block(context, prompt)]
     journal_block = "" if is_study_mode(mode) else journal_context_block(context)
     if journal_block:
         parts.append(journal_block)

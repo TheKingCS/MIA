@@ -1134,3 +1134,19 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   any change not offered by reference.
 - Related: DEC-0062, DEC-0064, DEC-0065
 
+### DEC-0067: Phase 1 of the personality and ecosystem plan, and four choices
+- Status: APPROVED
+- Proposed by: claude, 2026-11-03 · Approved by: zac, 2026-11-03 ("yes approve all five, start phase 1")
+- Decision: from `docs/PERSONALITY_AND_ECOSYSTEM_AUDIT.md`:
+  1. Phase 1: device-aware answers (`core/response_composer.py`: glasses,
+     phone, PC), one personality in `core/personality.py`, measured by the
+     conversation corpus (`tools/conversation_check.py`).
+  2. `MIA_VOICE.md` rewritten for the Companion personality (natural humor,
+     independent; DEC-0014 kept; honest about being an AI).
+  3. GitHub Issues for tracking work, not Linear or Notion.
+  4. Native turn traces before Langfuse.
+  5. On the glasses, one short model call may write the spoken version of a
+     long answer, if it's needed and stays under about 2 seconds.
+  The action path's prompt and tool calling stay as they are.
+- Related: DEC-0014, DEC-0029, DEC-0044, DEC-0052, DEC-0063
+

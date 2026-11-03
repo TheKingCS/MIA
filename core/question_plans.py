@@ -588,9 +588,10 @@ def request(context, conversation, prompt: str, today: Optional[date] = None) ->
     sheet = gather(context, plan, asked, today)
     if not sheet.facts:
         return None
-    from core.assistant_chat import _IDENTITY_LINE, trim_history
+    from core.assistant_chat import trim_history
+    from core.personality import CHARACTER, IDENTITY
 
-    system = (f"{_IDENTITY_LINE}\n\n{ANSWER_PROTOCOL}\n\nFact sheet ({sheet.title}, today "
+    system = (f"{IDENTITY}{CHARACTER}\n\n{ANSWER_PROTOCOL}\n\nFact sheet ({sheet.title}, today "
               f"{(today or date.today()).isoformat()}):\n{sheet.as_text()}")
     messages = [{"role": "system", "content": system}]
     history = trim_history(conversation.messages) if conversation is not None else []

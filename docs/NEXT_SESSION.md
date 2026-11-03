@@ -24,6 +24,12 @@ Missions are in the boards' look, and everyday actions go through the relay
 publishing with them. Zac, on the
 phone: Home, Getting To Know You, try the Allow buttons and a topic or two.
 
+**Personality phase 1 is in (DEC-0067, 2026-11-03):** results in
+`docs/PERSONALITY_AND_ECOSYSTEM_AUDIT.md` section E. The glasses' answers come from
+`core/response_composer.py`; restart MIA on the PC, and the phone needs a new build,
+to hear it. Next: her manner (jokes, stiffness, closing offers), measured with
+`python -m tools.conversation_check`.
+
 **Pending on the glasses (2026-11-03):** phone build 142 (DEC-0066: every
 designed screen, money included, offered question buttons) is built in
 `android-phone/app/build/outputs/apk/debug/` but not installed: Zac's phone
