@@ -16,6 +16,10 @@ with `tools/publish_glasses.py`; `boot.js` in the `mia-art` repo replaces
 3. User Sync has no conversation: answers come from the phone hearing the
    person, which needs starting from the glasses (Claude to wire).
 
+4. Zac, 2026-11-03: Getting To Know You shouldn't be a card on the glasses. It
+   only opens chat with her. While setup is unfinished its way back belongs on
+   Home, and it goes away once setup is done (`SYNC_CARD`, `web/glasses.js:73`).
+
 ## Constraints
 Zac's priority is the screens he uses every day; these wait until then. Check
 layout at the real 600x600 additive display, not only the browser preview.

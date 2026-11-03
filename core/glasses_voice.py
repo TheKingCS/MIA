@@ -34,6 +34,8 @@ from __future__ import annotations
 import re
 from typing import Optional
 
+SPOKEN_CHARS = 220  # about 15 seconds out loud, enough on a walk
+THE_REST = "The rest is in our conversation."
 OPEN_WORDS = ("open up", "open", "show me", "show", "go to", "take me to", "bring up", "pull up", "switch to")
 HOME_WORDS = ("go home", "home", "back to home", "close", "close it", "go back home", "back to mia")
 FILLER = re.compile(r"^(hey |ok |okay )?(mia[, ]+)?(please |can you |could you )?", re.I)
@@ -102,6 +104,23 @@ def command(context, text: str) -> Optional[dict]:
     return None
 
 
+def spoken(text: str) -> str:
+    """Pure logic. What she says out loud on the glasses: the start of her
+    answer, in whole sentences. The whole answer stays in the conversation,
+    and a long one says where to find it."""
+    text = " ".join(str(text or "").split())
+    if len(text) <= SPOKEN_CHARS:
+        return text
+    kept = ""
+    for sentence in re.findall(r".+?(?:[.!?](?=\s|$)|$)\s*", text):
+        if len(kept) + len(sentence) > SPOKEN_CHARS:
+            break
+        kept += sentence
+    if not kept:
+        kept = text[:SPOKEN_CHARS].rsplit(" ", 1)[0].rstrip(" ,;:") + "."
+    return kept.strip() + " " + THE_REST
+
+
 def handle(context, profile_id: str, text: str, talk, sync=None) -> dict:
     """What the words do. `talk(text)` runs a Talk turn and returns its
     answer ({"reply_text", ...}); `sync(text)` gives User Sync the words
@@ -121,7 +140,7 @@ def handle(context, profile_id: str, text: str, talk, sync=None) -> dict:
         out = {"heard": heard, "say": syncing.get("say") or "Done.", "sync": True}
     else:
         answer = talk(heard) or {}
-        out = {"heard": heard, "say": answer.get("reply_text") or "Done."}
+        out = {"heard": heard, "say": spoken(answer.get("reply_text") or "Done.")}
         welcome.talked(context)
     said(profile_id, out)
     return out

@@ -85,3 +85,35 @@ def test_the_endpoint_and_the_home_computer(world, monkeypatch):
     monkeypatch.setattr(home_link, "home_call", away)
     got = client.post("/api/glasses/voice", json={"text": "open kitchen"}).json()
     assert got["where"] == "here" and got["open"] == "kitchen"  # the phone answers itself
+
+
+def test_a_short_answer_is_spoken_whole():
+    from core.glasses_voice import spoken
+
+    assert spoken("You have two things today.") == "You have two things today."
+
+
+def test_a_long_answer_stops_at_a_sentence_and_says_where_the_rest_is():
+    from core.glasses_voice import SPOKEN_CHARS, THE_REST, spoken
+
+    long = "First things first, here is the plan for today. " * 12
+    said = spoken(long)
+    assert said.endswith(THE_REST)
+    assert len(said) <= SPOKEN_CHARS + len(THE_REST) + 1
+    assert said.startswith("First things first, here is the plan for today.")
+    assert said.count("today.") >= 2
+
+
+def test_one_endless_sentence_still_stops():
+    from core.glasses_voice import SPOKEN_CHARS, THE_REST, spoken
+
+    said = spoken("word " * 200)
+    assert said.endswith(THE_REST)
+    assert len(said) <= SPOKEN_CHARS + len(THE_REST) + 2
+
+
+def test_a_voice_turn_speaks_the_short_answer(world):
+    from core.glasses_voice import THE_REST
+
+    out = handle(world, "person", "tell me everything", lambda heard: {"reply_text": "A long sentence goes here now. " * 30})
+    assert out["say"].endswith(THE_REST)
