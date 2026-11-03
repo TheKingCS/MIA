@@ -136,7 +136,7 @@ def main(argv=None) -> int:
             from core import work_review
 
             try:
-                count = work_review.resolve(args.id, args.by, args.how)
+                count = work_review.resolve(args.id, args.by, args.how, confirm=input)
             except work_review.ReviewError as problem:
                 print(f"Stopped: {problem}", file=sys.stderr)
                 return 1

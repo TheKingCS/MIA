@@ -124,7 +124,8 @@ def settled_by_zac(task_id: str, log=activity.ACTIVITY) -> bool:
     return bool(last) and last.get("action") == "resolve" and last.get("who") == "zac"
 
 
-def resolve(task_id: str, who: str, how: str, folder=tasks_mod.TASKS_DIR, log=activity.ACTIVITY) -> int:
+def resolve(task_id: str, who: str, how: str, folder=tasks_mod.TASKS_DIR, log=activity.ACTIVITY,
+            confirm: Optional[Callable[[str], str]] = None) -> int:
     """Answer the open objections: what was changed, or why the reviewer was
     wrong. Kept in the task and the history either way. Returns how many."""
     tasks = tasks_mod.load(folder)
@@ -135,6 +136,13 @@ def resolve(task_id: str, who: str, how: str, folder=tasks_mod.TASKS_DIR, log=ac
         raise ReviewError(f"{task.id} has no open objection to resolve.")
     if not how.strip():
         raise ReviewError("Say how it's resolved: what changed, or why the objection doesn't hold.")
+    if who == "zac":  # in Zac's name only with Zac at the keyboard, as approve is
+        try:
+            typed = confirm(f"Settle {task.id}'s review as Zac? Type {task.id}: ") if confirm else ""
+        except (EOFError, OSError):
+            typed = ""
+        if (typed or "").strip().upper() != task.id:
+            raise ReviewError("Not settled: only Zac, at the keyboard, decides in his name.")
     raised_by = ", ".join(sorted({e.get("who", "") for e in objections})) or "the last review"
     tasks_mod.note(task, who, f"Resolved the objection from {raised_by}: {how.strip()}")
     tasks_mod.save(task, folder)

@@ -108,6 +108,8 @@ def test_a_disagreement_that_outlasts_its_answer_is_zacs_to_settle(waiting):
     rv.resolve("T-0001", "claude", "nothing new raised", folder=folder, log=log)
     with pytest.raises(rv.ReviewError, match="review that approves"):  # an agent can't settle it
         rv.approve("T-0001", confirm=lambda q: "T-0001", lab=lab, folder=folder, log=log)
-    rv.resolve("T-0001", "zac", "read both; the change is right", folder=folder, log=log)
+    with pytest.raises(rv.ReviewError, match="only Zac"):  # "--by zac" alone, from an agent
+        rv.resolve("T-0001", "zac", "read both; the change is right", folder=folder, log=log)
+    rv.resolve("T-0001", "zac", "read both; the change is right", folder=folder, log=log, confirm=lambda q: "T-0001")
     assert rv.approve("T-0001", confirm=lambda q: "T-0001", lab=lab, folder=folder, log=log)
 
