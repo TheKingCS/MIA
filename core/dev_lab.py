@@ -93,7 +93,7 @@ def _now() -> str:
 def _git(*args: str, cwd: Optional[Path] = None, author: Optional[tuple] = None, check: bool = True) -> str:
     cwd = cwd or ROOT
     who = ["-c", f"user.name={author[0]}", "-c", f"user.email={author[1]}"] if author else []
-    out = subprocess.run(["git", *who, *args], cwd=str(cwd), capture_output=True, text=True, timeout=300,
+    out = subprocess.run(["git", *who, *args], cwd=str(cwd), capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=300,
                          creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
     if check and out.returncode != 0:
         raise RuntimeError((out.stderr or out.stdout or "git failed").strip()[:400])
@@ -214,7 +214,7 @@ def run_claude(task: str, cwd: Path, python: str) -> str:
     args = [claude, "-p", task, "--permission-mode", "acceptEdits", "--output-format", "json",
             "--allowedTools", "Read", "Edit", "Write", "Glob", "Grep", f"Bash({python} -m pytest:*)",
             "--disallowedTools", "WebFetch", "WebSearch", "Bash(git push:*)"]
-    out = subprocess.run(args, cwd=str(cwd), capture_output=True, text=True, timeout=CODER_TIMEOUT,
+    out = subprocess.run(args, cwd=str(cwd), capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=CODER_TIMEOUT,
                          creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
     try:
         return str(json.loads(out.stdout).get("result") or "").strip()
@@ -241,7 +241,7 @@ def write(proposal_id: str, coder: Optional[Callable] = None) -> Proposal:
 
 def run_suite(cwd: Path) -> dict:
     out = subprocess.run([_python(), "-m", "pytest", "-q", "-p", "no:cacheprovider"], cwd=str(cwd),
-                         capture_output=True, text=True, timeout=SUITE_TIMEOUT,
+                         capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=SUITE_TIMEOUT,
                          env={**__import__("os").environ, "QT_QPA_PLATFORM": "offscreen"},
                          creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
     return suite_result((out.stdout or "") + "\n" + (out.stderr or ""))

@@ -170,10 +170,15 @@ def test_why_that_message_and_muting(home):
 
 
 def test_reasons_cover_every_kind_and_words_find_them():
-    import subprocess
+    import re
+    from pathlib import Path
 
-    raised = subprocess.run(["grep", "-rhoP", r'topic="\K[a-z_]+', "core", "gui", "modules"],
-                            capture_output=True, text=True).stdout.split()
+    # Every topic= the code raises (in Python, not grep: grep isn't on every machine's path).
+    root = Path(__file__).resolve().parent.parent
+    topic = re.compile(r'topic="([a-z_]+)')
+    raised = [m for folder in ("core", "gui", "modules") for f in (root / folder).rglob("*.py")
+              for m in topic.findall(f.read_text(encoding="utf-8", errors="replace"))]
+    assert raised  # the search found the topics, so the check below means something
     assert set(raised) <= set(REASONS), set(raised) - set(REASONS)
     assert find_topic("my budget") == "budget_nudge" and find_topic("the check-ins") == "checkin"
     assert find_topic("warranties") == "warranty" and find_topic("") is None
