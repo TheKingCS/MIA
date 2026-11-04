@@ -1760,7 +1760,12 @@ def create_app(context: AppContext) -> FastAPI:
         """The person's creations: drafts and published, never anyone else's."""
         store = getattr(view_for(context, profile_id), "creations", None)
         items = list(store.items) if store is not None else []
-        return {"creations": [{"id": c["id"], "title": c["title"], "status": c["status"], "version": c["version"],
+        counts = {}
+        for owner in ("household", "personal"):
+            sets = getattr(view_for(context, profile_id), "record_sets" if owner == "household" else "my_record_sets", None)
+            for rs in (sets.sets if sets is not None else []):
+                counts[rs["id"]] = len(rs["records"])
+        return {"evaluation": store.evaluation(counts) if store is not None else [], "creations": [{"id": c["id"], "title": c["title"], "status": c["status"], "version": c["version"],
                                "versions": len(c["versions"]), "owner": c["owner"],
                                "icon": c["versions"][-1]["spec"].get("icon", "apps"), "created": c["created"]}
                               for c in items]}
@@ -1784,6 +1789,10 @@ def create_app(context: AppContext) -> FastAPI:
             raise HTTPException(status.HTTP_404_NOT_FOUND, str(problem)) from None
         latest, shown = found["versions"][-1], store.shown(creation_id)
         spec = latest["spec"] if found["status"] == "draft" else shown["spec"]
+        if found["status"] == "published":
+            from datetime import date as _date
+
+            store.opened(creation_id, _date.today().isoformat())
         if spec.get("kind") == "workflow":  # said in plain sentences (core/workflows.py)
             from core.workflows import describe, may
 

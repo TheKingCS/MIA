@@ -149,7 +149,7 @@
   }
 
   async function drawList() {
-    const { creations } = await MIA.madeList();
+    const { creations, evaluation } = await MIA.madeList();
     const ask = el("textarea", { class: "made-ask", rows: "3", placeholder: "What do you want to keep track of? Say what matters about each one.",
       "aria-label": "What do you want to keep track of?" });
     const note = el("p", { class: "dim" });
@@ -177,7 +177,12 @@
         el("li", { class: "dg-run" }, el("a", { href: "made.html?id=" + c.id },
           el("div", { class: "row-title" }, c.title),
           el("div", { class: "row-sub dim" }, [c.status, c.owner === "household" ? "the household's" : "yours",
-            "version " + (c.version || c.versions)].join(" · ")))))) : el("p", { class: "empty" }, "Nothing yet.")));
+            "version " + (c.version || c.versions)].join(" · ")))))) : el("p", { class: "empty" }, "Nothing yet.")),
+      (evaluation || []).length ? section("How her blueprints are doing", el("p", { class: "dim" },
+        "What's been seen so far, not yet what it means: how many of each were made and kept, the days they were opened, " +
+        "and the records added."), el("ul", { class: "dg-runs" }, evaluation.map((e) => el("li", { class: "dg-run" },
+          el("div", { class: "row-title" }, e.blueprint), el("div", { class: "row-sub dim" }, e.made + " made · " + e.published +
+            " in use · " + e.retired + " removed · opened on " + e.days_opened + " days · " + e.records + " records"))))) : "");
   }
 
   MIAShell.start(() => (id ? drawOne() : drawList()).catch((e) => $("panel").replaceChildren(el("p", { class: "empty" }, e.message))));

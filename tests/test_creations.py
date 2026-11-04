@@ -318,3 +318,17 @@ def test_files_that_cant_become_a_screen():
         record_import.infer("just,a,header\n")
     fields, rows = record_import.infer("when;what\n01/02/2026;x\n03/04/2026;y\n")  # semicolons and US dates
     assert fields[0]["type"] == "date" and rows[1]["when"] == "2026-03-04"
+
+
+def test_how_her_blueprints_are_used_is_observed(world):
+    """DEC-0093: opens and records per blueprint, observed, nothing inferred from it yet."""
+    w = world
+    creation_maker.make(w, "keep track of the seeds I save please", ask=model(DESIGN))
+    act(w, "creation.publish", {"creation_id": "C-0001"})
+    act(w, "records.add", {"creation_id": "C-0001", "values": {"variety": "Hopi Blue"}})
+    w.creations.opened("C-0001", "2026-11-04")
+    w.creations.opened("C-0001", "2026-11-04")  # once a day
+    w.creations.opened("C-0001", "2026-11-05")
+    counts = {rs["id"]: len(rs["records"]) for rs in w.record_sets.sets}
+    assert w.creations.evaluation(counts) == [{"blueprint": "tracker", "made": 1, "published": 1, "retired": 0,
+                                               "days_opened": 2, "records": 1}]

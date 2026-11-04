@@ -125,6 +125,30 @@ class Creations:
         self._save()
         return found
 
+    def opened(self, creation_id: str, day: str) -> None:
+        """Counted once a day per creation: how it's used is how it's judged (DEC-0093)."""
+        found = self.get(creation_id)
+        days = found.setdefault("opened_days", [])
+        if not days or days[-1] != day:
+            days.append(day)
+            found["opened_days"] = days[-366:]
+            self._save()
+
+    def evaluation(self, record_counts: dict) -> list[dict]:
+        """Per blueprint, what was observed (DEC-0093: observed, not yet inferred or verified): how many made,
+        published, retired, the days they were opened, the records added. `record_counts`: set id -> records."""
+        rows: dict[str, dict] = {}
+        for c in self.items:
+            bp = (c["versions"][-1].get("blueprint") or "her own layout").split("@")[0]
+            r = rows.setdefault(bp, {"blueprint": bp, "made": 0, "published": 0, "retired": 0, "days_opened": 0,
+                                     "records": 0})
+            r["made"] += 1
+            r["published"] += c["status"] == PUBLISHED
+            r["retired"] += c["status"] == RETIRED
+            r["days_opened"] += len(c.get("opened_days") or [])
+            r["records"] += record_counts.get(c.get("set_id"), 0)
+        return sorted(rows.values(), key=lambda r: -r["made"])
+
     def keep_rows(self, creation_id: str, rows: list[dict]) -> None:
         """An imported file's rows, kept with its draft until it's published (core/record_import.py)."""
         self.get(creation_id)["pending_rows"] = list(rows)
