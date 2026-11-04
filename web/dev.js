@@ -163,6 +163,60 @@
   }
   const stars = (n) => "★".repeat(Math.max(0, Math.min(5, n || 0)));
 
+  // Missions (core/work_runner.py) and what the team learned (core/dev_knowledge.py): both written to only
+  // from this window, which holds its key.
+  async function post(path, body) {
+    try {
+      const r = await fetch(path, { method: "POST", headers: { "X-Dev-Key": key, "Content-Type": "application/json" },
+        body: JSON.stringify(body) });
+      chatNote = r.ok ? "" : (await r.json().catch(() => ({}))).error || "That didn't save.";
+    } catch (e) { chatNote = "That didn't save."; }
+    refresh();
+  }
+
+  function missions(p) {
+    const list = p.missions || [];
+    const parts = [el("h2", {}, "Missions"), el("p", {}, "Give the council a goal, the paths it may change and a budget, and it " +
+      "works the mission's tasks by itself: writing with whoever has time, getting reviews, stopping at its budget or " +
+      "work/STOP. It never approves: merging stays yours. Starting one spends your usage.")];
+    parts.push(list.length ? el("ul", { class: "dev-agents" }, list.map((m) => el("li", {},
+      el("span", {}, m.id + " · " + m.goal),
+      el("span", { class: m.status === "active" ? "busy" : "dim" }, m.status + (m.running_here ? " · running here" : "")),
+      el("span", { class: "sub" }, "tasks " + m.used.tasks + "/" + m.budget.tasks + " · " + m.used.hours + "/" + m.budget.hours +
+        " h · calls " + m.used.calls + "/" + m.budget.calls + " · scope " + m.scope.join(", ") +
+        (m.steps.length ? " · last: " + m.steps[0].what : "")),
+      p.writable ? el("span", { class: "sub" }, m.status === "active"
+        ? el("button", { class: "dev-chip", type: "button", onclick: () => post("api/mission", { act: "pause", id: m.id }) }, "Pause")
+        : m.status !== "done" ? el("button", { class: "dev-chip ok", type: "button", onclick: () => post("api/mission", { act: "start", id: m.id }) }, "Start") : "") : "")))
+      : el("p", { class: "empty" }, "No missions yet."));
+    if (p.writable) {
+      const goal = el("input", { class: "dev-search", placeholder: "The goal", "aria-label": "The mission's goal" });
+      const scope = el("input", { class: "dev-search", placeholder: "Paths it may change, comma-separated (tests/, core/ocr.py)",
+        "aria-label": "The mission's scope" });
+      parts.push(goal, scope, el("button", { class: "dev-chip", type: "button", onclick: () =>
+        goal.value.trim() && post("api/mission", { act: "new", goal: goal.value.trim(), scope: scope.value }) }, "New mission (paused)"),
+        el("p", { class: "dim" }, "Its tasks are the ones made with --source and its id: python -m tools.work new \"...\" --source M-0001"));
+    }
+    return el("section", { class: "dev-col" }, parts);
+  }
+
+  function knowledge(p) {
+    const k = p.knowledge || { waiting: [], confirmed: 0, withdrawn: 0 };
+    const parts = [el("h2", {}, "What the team learned", el("span", { class: "n" }, k.confirmed + " confirmed")),
+      el("p", {}, "MIA's write-ups of finished work wait here until someone confirms them; only confirmed ones are " +
+        "given to the agents. Her local model gets these wrong often (" + k.withdrawn + " withdrawn so far), so check each " +
+        "against its sources.")];
+    parts.push(k.waiting.length ? el("ul", { class: "dev-saga" }, k.waiting.map((e) => el("li", {},
+      el("div", { class: "head" }, el("b", {}, e.title), " " + e.kind + " · " + e.id),
+      el("div", { class: "said" }, e.body), el("div", { class: "dim src" }, e.from.join(" · ")),
+      p.writable ? el("div", { class: "dev-say-row" },
+        el("button", { class: "dev-chip ok", type: "button", onclick: () => post("api/knowledge", { act: "confirm", id: e.id }) }, "Right"),
+        el("button", { class: "dev-chip", type: "button", onclick: () => post("api/knowledge", { act: "withdraw", id: e.id,
+          why: prompt("What's wrong with it?") || "not right" }) }, "Wrong")) : "")))
+      : el("p", { class: "empty" }, "Nothing waiting."));
+    return el("section", { class: "dev-col dev-chronicles" }, parts);
+  }
+
   function chronicles(p) {
     const s = p.saga || { waiting: 0, candidates: [], events: [] };
     const parts = [el("h2", {}, "The Chronicles", el("span", { class: "n" }, s.waiting + " waiting")),
@@ -246,6 +300,8 @@
             el("ul", { class: "dev-agents" }, lessons.map(([prov, list]) => el("li", {}, el("span", {}, prov),
               el("span", { class: "dim" }, list.length + " lesson" + (list.length === 1 ? "" : "s")),
               el("span", { class: "sub" }, list.slice(-3).map((l) => l.lesson).join(" · ")))))] : "")),
+      el("div", { class: "dev-grid2" }, missions(p), el("div", {})),
+      knowledge(p),
       chronicles(p),
       el("section", { class: "dev-col dev-history" }, el("h2", {}, "Everything that happened"), search,
         p.activity.length ? el("ul", { class: "dev-time" }, p.activity.map(event))

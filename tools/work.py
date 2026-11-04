@@ -90,6 +90,16 @@ def main(argv=None) -> int:
     lr = sub.add_parser("learn", help="MIA writes what a finished task taught (work/knowledge, DEC-0073)")
     lr.add_argument("ids", nargs="*", help="task ids; none means every finished task not yet written up")
     sub.add_parser("knowledge", help="what the team has learned, newest last")
+    ms = sub.add_parser("mission", help="the council's missions (DEC-0076): new, start, pause, done, list")
+    ms.add_argument("act", choices=["new", "start", "pause", "done", "list"])
+    ms.add_argument("what", nargs="?", default="", help="the goal (new) or the mission's id")
+    ms.add_argument("--scope", nargs="*", default=[], help="paths its changes may touch (new)")
+    ms.add_argument("--tasks", type=int, default=5)
+    ms.add_argument("--hours", type=float, default=8.0)
+    ms.add_argument("--calls", type=int, default=60)
+    rr = sub.add_parser("runner", help="work an active mission: one step, or until it stops")
+    rr.add_argument("id")
+    rr.add_argument("--once", action="store_true")
     mv = sub.add_parser("move")
     mv.add_argument("id")
     mv.add_argument("status")
@@ -163,6 +173,39 @@ def main(argv=None) -> int:
                 print(f"Stopped: {problem}", file=sys.stderr)
                 return 1
             return 0
+        if args.command == "mission":
+            from core import work_runner
+
+            try:
+                if args.act == "list":
+                    for m in work_runner.missions().values():
+                        used = work_runner.spent(m)
+                        print(f"{m.id}  {m.status:7} {m.goal}  (tasks {used['tasks']}/{m.tasks}, "
+                              f"{used['hours']:g}/{m.hours:g} h; scope {', '.join(m.scope)})")
+                elif args.act == "new":
+                    m = work_runner.new(args.what, args.scope, tasks=args.tasks, hours=args.hours, calls=args.calls)
+                    print(f"{m.id}: {m.goal} (paused until you start it: python -m tools.work mission start {m.id})")
+                else:
+                    status = {"start": "active", "pause": "paused", "done": "done"}[args.act]
+                    m = work_runner.set_status(args.what, status, "zac", confirm=input if status == "active" else None)
+                    print(f"{m.id} is {m.status}." + (f" Run it: python -m tools.work runner {m.id}" if status == "active" else ""))
+            except ValueError as problem:
+                print(f"Stopped: {problem}", file=sys.stderr)
+                return 1
+            return 0
+        if args.command == "runner":
+            import time
+
+            from core import work_runner
+            from core.work_agents import load as load_agents
+
+            while True:
+                said = work_runner.step(args.id, load_agents())
+                print(said, flush=True)
+                if args.once or said.startswith(("stop", "No mission")) or " is paused" in said or " is done" in said:
+                    return 0
+                if said.startswith(("hold", "idle")) or "usage limit" in said:
+                    time.sleep(300)  # nothing to do now: look again in five minutes
         if args.command == "knowledge":
             from core import dev_knowledge
 

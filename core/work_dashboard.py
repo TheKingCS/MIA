@@ -69,6 +69,38 @@ def _council(n: int = 60) -> list[dict]:
         return []
 
 
+def _missions(events: list[dict]) -> list[dict]:
+    """The council's missions (core/work_runner.py): what each may do, what it's used, its latest steps."""
+    from core import work_runner
+
+    try:
+        found = work_runner.missions()
+    except OSError:
+        return []
+    out = []
+    for m in found.values():
+        steps = [e for e in events if e.get("who") == "runner" and str(e.get("detail", "")).startswith(m.id + " ")]
+        out.append({"id": m.id, "goal": m.goal, "status": m.status, "scope": m.scope, "budget":
+                    {"tasks": m.tasks, "hours": m.hours, "calls": m.calls}, "used": work_runner.spent(m),
+                    "steps": [{"at": e["at"], "task": e.get("task", ""), "what": e["detail"][len(m.id) + 1:]}
+                              for e in steps[-8:]][::-1]})
+    return out
+
+
+def _knowledge() -> dict:
+    """What the team learned (core/dev_knowledge.py): MIA's notes waiting for someone to confirm them."""
+    from core import dev_knowledge
+
+    try:
+        found = dev_knowledge.entries()
+    except OSError:
+        return {"waiting": [], "confirmed": 0, "withdrawn": 0}
+    count = lambda s: sum(1 for e in found if e.get("status") == s)  # noqa: E731
+    return {"waiting": [{"id": e["id"], "kind": e["kind"], "title": e["title"], "body": e["body"][:600],
+                         "from": e.get("from") or []} for e in found if e.get("status") == "derived"][-10:][::-1],
+            "confirmed": count("confirmed"), "withdrawn": count("withdrawn")}
+
+
 def _saga(shown: int = 12) -> dict:
     """The Chronicle Archive (core/saga.py): what's waiting for Zac, most significant and newest first,
     and the latest events kept."""
@@ -212,6 +244,8 @@ def page(context, query: str = "", tasks_dir=tasks_mod.TASKS_DIR, log=activity.A
         "lessons": rv._lessons(),
         "council": _council(),
         "saga": _saga(),
+        "missions": _missions(all_events),
+        "knowledge": _knowledge(),
         "available": True,
         "summary": {s: sum(1 for r in rows if r["status"] == s) for s in ("ready", "claimed", "review", "blocked", "done")},
         "queue": [r for r in open_rows if r["status"] == "review"],

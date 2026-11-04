@@ -72,6 +72,7 @@ class Role:
     provider: str
     tier: str
     reads: list[str] = field(default_factory=list)
+    providers: list[str] = field(default_factory=list)  # who may do it, in order, when the first has no time (DEC-0079)
 
 
 @dataclass
@@ -113,7 +114,12 @@ def parse(data: dict) -> Registry:
             raise AgentError(f"{r.get('role')}: tier is one of {', '.join(TIERS)}.")
         if r.get("provider") not in providers:
             raise AgentError(f"{r.get('role')}: unknown provider {r.get('provider')!r}.")
-        roles[r["role"]] = Role(role=r["role"], provider=r["provider"], tier=tier, reads=list(r.get("reads", [])))
+        order = [r["provider"]] + [p for p in r.get("providers") or [] if p != r["provider"]]
+        unknown = [p for p in order if p not in providers]
+        if unknown:
+            raise AgentError(f"{r.get('role')}: unknown provider {unknown[0]!r} in providers.")
+        roles[r["role"]] = Role(role=r["role"], provider=r["provider"], tier=tier, reads=list(r.get("reads", [])),
+                                providers=order)
     return Registry(providers=providers, roles=roles)
 
 

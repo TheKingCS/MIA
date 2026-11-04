@@ -56,6 +56,35 @@ def _run(message: dict) -> None:
                      thread=message.get("thread", ""), turn=message["id"])
 
 
+RUNNING: set[str] = set()  # missions this window is working
+
+
+def _run_mission(mission_id: str) -> None:
+    """Step a started mission until it stops, pauses or the window closes; a quiet step waits five minutes."""
+    import time
+
+    from core import work_runner
+    from core.work_agents import load as load_agents
+
+    with _LOCK:
+        if mission_id in RUNNING:
+            return
+        RUNNING.add(mission_id)
+    try:
+        while True:
+            said = work_runner.step(mission_id, load_agents())
+            if said.startswith(("stop", "No mission")) or " is paused" in said or " is done" in said:
+                return
+            time.sleep(300 if said.startswith(("hold", "idle")) or "usage limit" in said else 5)
+    except Exception as problem:  # the history says so rather than the runner going quiet
+        from core import work_activity
+
+        work_activity.record("runner", "runner", "", f"{mission_id} stopped: {str(problem)[:200]}")
+    finally:
+        with _LOCK:
+            RUNNING.discard(mission_id)
+
+
 def handler(key: str, port_of: callable):
     class Board(BaseHTTPRequestHandler):
         def log_message(self, *args) -> None:  # quiet; nothing to keep
@@ -85,6 +114,8 @@ def handler(key: str, port_of: callable):
                 if found.get("available"):
                     with _LOCK:
                         found["asking"] = sorted(ASKING)
+                        for m in found.get("missions", []):
+                            m["running_here"] = m["id"] in RUNNING
                     found["writable"] = True
                 return self._send(200, json.dumps(found, default=str).encode("utf-8"), "application/json")
             found = FILES.get(url.path)
@@ -98,7 +129,7 @@ def handler(key: str, port_of: callable):
                     not hmac.compare_digest(self.headers.get("X-Dev-Key", ""), key):
                 return self._send(403, b"{}", "application/json")
             where = urlsplit(self.path).path
-            if where not in ("/api/council", "/api/saga"):
+            if where not in ("/api/council", "/api/saga", "/api/mission", "/api/knowledge"):
                 return self._send(404, b"{}", "application/json")
             try:
                 length = min(int(self.headers.get("Content-Length", "0")), 100_000)
@@ -107,6 +138,21 @@ def handler(key: str, port_of: callable):
                 return self._send(400, b"{}", "application/json")
             if where == "/api/saga":
                 return self._saga(body)
+            if where == "/api/mission":
+                return self._mission(body)
+            if where == "/api/knowledge":  # Zac confirming or withdrawing one of MIA's notes (DEC-0083)
+                from core import dev_knowledge
+
+                try:
+                    if body.get("act") == "confirm":
+                        dev_knowledge.confirm(str(body.get("id", "")), "zac")
+                    elif body.get("act") == "withdraw":
+                        dev_knowledge.withdraw(str(body.get("id", "")), "zac", str(body.get("why") or "not right")[:300])
+                    else:
+                        raise dev_knowledge.KnowledgeError("Confirm or withdraw.")
+                except dev_knowledge.KnowledgeError as problem:
+                    return self._send(400, json.dumps({"error": str(problem)}).encode("utf-8"), "application/json")
+                return self._send(200, b"{}", "application/json")
             from core import saga
 
             said = saga.REMEMBER.match(str(body.get("text", "")))
@@ -131,6 +177,28 @@ def handler(key: str, port_of: callable):
             if not STOP.match(message["text"]):
                 threading.Thread(target=_run, args=(message,), daemon=True).start()
             return self._send(200, json.dumps(message).encode("utf-8"), "application/json")
+
+        def _mission(self, body: dict) -> None:
+            """Zac creating, starting or pausing a mission (core/work_runner.py). This window is his, at this
+            PC, holding its own key; a started mission runs here while the window is open."""
+            from core import work_runner
+
+            act = str(body.get("act", ""))
+            try:
+                if act == "new":
+                    scope = [s.strip() for s in str(body.get("scope", "")).split(",") if s.strip()]
+                    m = work_runner.new(str(body.get("goal", ""))[:300], scope, tasks=int(body.get("tasks") or 5),
+                                        hours=float(body.get("hours") or 8))
+                elif act in ("start", "pause", "done"):
+                    m = work_runner.set_status(str(body.get("id", "")), {"start": "active", "pause": "paused",
+                                                                         "done": "done"}[act], "zac")
+                    if act == "start":
+                        threading.Thread(target=_run_mission, args=(m.id,), daemon=True).start()
+                else:
+                    raise ValueError("New, start, pause or done.")
+            except ValueError as problem:
+                return self._send(400, json.dumps({"error": str(problem)}).encode("utf-8"), "application/json")
+            return self._send(200, json.dumps({"id": m.id, "status": m.status}).encode("utf-8"), "application/json")
 
         def _saga(self, body: dict) -> None:
             """Zac deciding on the Chronicle Archive's candidates (core/saga.py)."""
