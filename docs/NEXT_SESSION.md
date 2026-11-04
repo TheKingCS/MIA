@@ -283,7 +283,8 @@ tokens.
   5. **Council Mode on the glasses**: "MIA, bring the council together", then a name ("Claude, start us off"), "everyone", "debate it", "sum up", "hold on", "that's all". The engine side is built; the speaker card and each member's voice on the glasses still need building and testing with you (T-0035).
   6. **Decide**: how the Creator looks on the page (DEC-0087).
   - Samples from the local image model: `C:\Users\zacrh\DevTools\imagegen\out\` (draft quality, under a second each).
-  - Next build: T-0027 (MIA's own coder and shadow attempts), T-0028 (the independence ledger), T-0029 (her architecture map), T-0040 and T-0041 (ACAF steps 4 and 5), T-0036 (a bigger image model and consistent characters), T-0035 (glasses side).
+  - Also new in the window: **Independence** (what each member has shown it can do; MIA's coder is 0 of 2 so far, from two real attempts on T-0019), **MIA's architecture** (read from the code; it found one real break, T-0042), and Made by MIA takes a **CSV file**.
+  - Next build: T-0042 (a good first mission task), T-0035 (glasses side, with you), T-0036 (a bigger image model and consistent characters), the rest of T-0040 and T-0041.
 
 - [ ] **Later, together (Zac, 2026-10-21): fill in all of Zac's own information** once the systems are built: the real addresses (homestead, each rental), how each activity is owned, filing jointly or not, the Freedom plan's numbers and builds, the flock, the recipes, the label info, the Compliance list verified one by one. Entered in MIA on the PC (data\, never the repo), with Claude walking through it.
 
