@@ -1,0 +1,35 @@
+/*
+ * made.css: the few pieces the shared components don't have, for screens
+ * MIA makes (web/made.js). Tokens only (web/tokens.css, DEC-0023).
+ */
+.made-block { margin-top: var(--gap); }
+.made-strip { margin-top: var(--gap); }
+.made-banner { margin-top: var(--gap); display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.made-banner > p { margin: 0; flex: 1 1 320px; }
+.made-why { flex-basis: 100% !important; font-size: var(--text-xs); }
+.made-bars { display: flex; align-items: flex-end; gap: 10px; height: 200px; padding-top: 8px; }
+.made-bar-col { flex: 1 1 0; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.made-bar-track { flex: 1 1 auto; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
+.made-bar { width: min(64px, 80%); min-height: 2px; border-radius: var(--radius-sm) var(--radius-sm) 0 0; background: rgba(var(--rgb-accent), .75); }
+.made-bar-n { font-size: var(--text-xs); color: var(--text); }
+.made-bar-lbl { font-size: var(--text-xs); color: var(--text-dim); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.made-line { width: 100%; height: 180px; display: block; }
+.made-line polyline { fill: none; stroke: var(--accent); stroke-width: 2.5; }
+.made-line-ends { display: flex; justify-content: space-between; font-size: var(--text-xs); margin-top: 4px; }
+.made-chart-text { font-size: var(--text-xs); margin: 4px 0 0; }
+.made-table-wrap { overflow-x: auto; }
+.made-table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+.made-table th { text-align: left; color: var(--text-dim); font-weight: 600; padding: 6px 8px; border-bottom: 1px solid var(--line-strong); }
+.made-table td { padding: 6px 8px; border-bottom: 1px solid var(--line); }
+.made-x { min-height: 0; padding: 0 8px; }
+.made-cards { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.made-cards li { padding: 10px 12px; }
+.made-time { list-style: none; margin: 0; padding: 0; }
+.made-time li { display: grid; grid-template-columns: 110px 1fr; gap: 10px; padding: 6px 0; border-top: 1px solid var(--line); }
+.made-meter { height: 10px; border-radius: var(--radius-pill); background: var(--surface); overflow: hidden; }
+.made-meter .fill { height: 100%; background: var(--accent); }
+.made-note { color: var(--text-dim); margin: var(--gap) 0 0; }
+.made-ask { width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: var(--radius-sm); border: 1px solid var(--line);
+  background: var(--surface-solid); color: var(--text); font: inherit; }
+.made-row { margin-top: 8px; }
+@media (max-width: 600px) { .made-time li { grid-template-columns: 1fr; gap: 0; } }

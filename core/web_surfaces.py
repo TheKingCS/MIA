@@ -273,10 +273,24 @@ def shell(context, today: Optional[date] = None) -> dict:
         "apps": [{"id": a.module_id, "name": a.name, "icon": a.icon, "tagline": a.tagline, "page": a.page}
                  for a in apps if a.page],
         "on_pc_only": [a.name for a in apps if not a.page],
+        "made": _made(context),
         "weather": {"status": "PLANNED", "text": None},
         "sound": _sound(context),
         "places": _places(context),
     }
+
+
+def _made(context) -> list:
+    """Screens MIA made for this person and they published (core/creations.py, DEC-0091), for the sidebar."""
+    store = getattr(context, "creations", None)
+    if store is None:
+        return []
+    try:
+        return [{"id": c["id"], "name": c["title"], "icon": store.shown(c["id"])["spec"].get("icon", "apps"),
+                 "page": f"made.html?id={c['id']}"} for c in store.published()]
+    except Exception:
+        log.exception("Shell: creations failed")
+        return []
 
 
 def _places(context) -> list:

@@ -158,6 +158,9 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
     from core.flock import FlockBook
 
     context.flock = FlockBook(context)
+    from core.record_sets import RecordSets
+
+    context.record_sets = RecordSets(context)  # the household's record sets (DEC-0089)
     from core.obligations import ObligationBook
 
     context.obligations = ObligationBook(context)

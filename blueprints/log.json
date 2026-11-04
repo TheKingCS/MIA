@@ -1,0 +1,17 @@
+{
+  "id": "log",
+  "version": 1,
+  "purpose": "Something that happens again and again, measured each time: weights, readings, hours.",
+  "fits": "a date and a number above all; the line over time matters most",
+  "inputs": {"required": ["$date", "$number"], "optional": ["$title"]},
+  "blocks": [
+    {"block": "stats", "items": [
+      {"label": "Entries", "value": {"count": true}},
+      {"label": "Latest", "value": {"latest": "$number"}},
+      {"label": "Average", "value": {"avg": "$number"}}
+    ]},
+    {"block": "chart", "title": "Over time", "type": "line", "x": "$date", "y": {"avg": "$number"}},
+    {"block": "form", "title": "Log one"},
+    {"block": "timeline", "title": "History", "date_field": "$date", "title_field": "$title", "limit": 30}
+  ]
+}

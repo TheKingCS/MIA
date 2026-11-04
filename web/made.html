@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Made by MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
+  <link rel="stylesheet" href="made.css">
+</head>
+<body data-app="made" data-icon="apps">
+  <!--
+    Every screen MIA makes (claude, 2026-11-04, DEC-0088 to DEC-0091): one
+    page that draws a creation's blocks, assembled in core
+    (core/creation_spec.py). ?id=C-0001 shows one; without it, the list
+    and a box to ask her for a new one. Formatting only.
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <header class="hero">
+        <h1><span aria-hidden="true" id="hero-icon"></span> <span id="hero-name">Made by MIA</span></h1>
+        <p class="tagline" id="hero-tagline">Screens MIA built for what you keep track of.</p>
+      </header>
+      <div id="panel"></div>
+    </main>
+  </div>
+  <script src="mia.js"></script>
+  <script src="icons.js"></script>
+  <script src="sound.js"></script>
+  <script src="places-watch.js"></script>
+  <script src="shell.js"></script>
+  <script src="made.js"></script>
+</body>
+</html>

@@ -99,6 +99,8 @@ from core.failure_log import FailureLog
 from core.answer_ratings import AnswerRatings
 from core.turn_trace import TurnTraces
 from core.saga import SagaMoments
+from core.creations import Creations
+from core.record_sets import RecordSets
 from core.questlines import QuestBook
 from core.world_map import WorldMap
 from core.memory_vault import MemoryVault
@@ -152,6 +154,8 @@ PERSONAL_STORES: tuple[tuple[str, type], ...] = (
     ("failures", FailureLog),
     ("traces", TurnTraces),  # how each turn was answered (DEC-0067)
     ("saga_moments", SagaMoments),  # moments kept for MIA: The Chronicles (DEC-0084)
+    ("creations", Creations),  # screens MIA made for this person (DEC-0091)
+    ("my_record_sets", RecordSets),  # their own record sets (DEC-0089)
     ("ratings", AnswerRatings),  # 👍 and 👎 on her answers (DEC-0067)
     ("quest_book", QuestBook),
     ("world_map", WorldMap),
@@ -171,6 +175,7 @@ PERSONAL_STORES: tuple[tuple[str, type], ...] = (
 # the order the app builds them.
 HOUSEHOLD_STORES: tuple[tuple[str, type], ...] = (
     ("calendar", CalendarManager),
+    ("record_sets", RecordSets),  # the household's record sets (DEC-0089)
     ("alarms", AlarmManager),
     ("inventory", InventoryManager),
     ("data_logger", DataLoggerManager),

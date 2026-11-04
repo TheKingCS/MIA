@@ -1,0 +1,17 @@
+{
+  "id": "tracker",
+  "version": 1,
+  "purpose": "Things kept over time, with a few details each: seeds saved, books read, repairs done.",
+  "fits": "several fields, often a date; records added one at a time",
+  "inputs": {"required": ["$title"], "optional": ["$date", "$group", "$number"]},
+  "blocks": [
+    {"block": "stats", "items": [
+      {"label": "Kept", "value": {"count": true}},
+      {"label": "Latest", "value": {"latest": "$title"}},
+      {"label": "Total $number", "value": {"sum": "$number"}}
+    ]},
+    {"block": "chart", "title": "By $group", "type": "bar", "x": "$group", "y": {"count": true}},
+    {"block": "table", "columns": "$all", "sort": "-$date"},
+    {"block": "form", "title": "Add one"}
+  ]
+}

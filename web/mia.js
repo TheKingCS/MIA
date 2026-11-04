@@ -310,6 +310,10 @@
     // The Fix-It Log (core/failure_log.py, DEC-0049): where MIA stumbled; a page reports its own errors.
     failures: () => read("/api/failures", "failures"),
     // The development dashboard (core/work_dashboard.py): the device's owner only.
+    // What MIA made (core/creations.py, DEC-0091): the list, one drawn, and making a draft from a need.
+    madeList: () => demo ? Promise.resolve({ creations: [] }) : call("GET", "/api/made"),
+    made: (id) => demo ? Promise.reject(new MiaError(400, "Not in the demo.")) : call("GET", "/api/made/" + encodeURIComponent(id)),
+    make: (need) => demo ? demoOnly() : call("POST", "/api/made", { need }),
     dev: (query) => demo ? Promise.resolve({ available: false }) : call("GET", "/api/dev" + (query ? "?q=" + encodeURIComponent(query) : "")),
     pageError: (page, message) => demo || !token ? Promise.resolve(null) : call("POST", "/api/failures/page", { page, message }),
     pageOpened: (page) => demo || !token ? Promise.resolve(null) : call("POST", "/api/usage/page", { page }),

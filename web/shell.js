@@ -192,8 +192,13 @@
 
   function appLinks(shell, cls) {
     const here = document.body.dataset.app || "web_home";
+    const made = new URLSearchParams(location.search).get("id");
+    // What MIA made for this person (core/creations.py, DEC-0091) follows the apps, drawn the same way.
     return shell.apps.map((a) => el("a", { class: cls, href: a.page, "aria-current": a.id === here ? "page" : null },
-      el("span", { class: "ico", "aria-hidden": "true" }, icon(a.id, a.icon)), el("span", { class: "label" }, a.name)));
+      el("span", { class: "ico", "aria-hidden": "true" }, icon(a.id, a.icon)), el("span", { class: "label" }, a.name)))
+      .concat((shell.made || []).map((m) => el("a", { class: cls, href: m.page,
+        "aria-current": here === "made" && made === m.id ? "page" : null },
+        el("span", { class: "ico", "aria-hidden": "true" }, icon(m.icon, "✦")), el("span", { class: "label" }, m.name))));
   }
 
   function more(shell) {

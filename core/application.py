@@ -358,6 +358,9 @@ class MIAApplication:
         from core.flock import FlockBook
 
         self.context.flock = FlockBook(self.context)  # chickens (DEC-0037)
+        from core.record_sets import RecordSets
+
+        self.context.record_sets = RecordSets(self.context)  # the household's record sets (DEC-0089)
         from core.obligations import ObligationBook
 
         self.context.obligations = ObligationBook(self.context)  # tax and compliance deadlines (DEC-0040)

@@ -1,0 +1,13 @@
+{
+  "id": "collection",
+  "version": 1,
+  "purpose": "A set of things to browse more than to count: recipes to try, places to visit, ideas.",
+  "fits": "a name and a few details; no date or number needed",
+  "inputs": {"required": ["$title"], "optional": ["$group"]},
+  "blocks": [
+    {"block": "stats", "items": [{"label": "In the collection", "value": {"count": true}}]},
+    {"block": "cards", "title_field": "$title", "detail_fields": "$details", "sort": "$title"},
+    {"block": "chart", "title": "By $group", "type": "bar", "x": "$group", "y": {"count": true}},
+    {"block": "form", "title": "Add one"}
+  ]
+}

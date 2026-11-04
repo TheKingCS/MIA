@@ -1754,6 +1754,63 @@ def create_app(context: AppContext) -> FastAPI:
             raise HTTPException(status.HTTP_403_FORBIDDEN, "Only this MIA's owner sees the development work.")
         return found
 
+    # ------------------------------------------------------------ What MIA makes (ACAF, DEC-0088 to DEC-0091)
+    @app.get("/api/made")
+    def web_made_list(profile_id: str = Depends(require_profile_id)) -> dict:
+        """The person's creations: drafts and published, never anyone else's."""
+        store = getattr(view_for(context, profile_id), "creations", None)
+        items = list(store.items) if store is not None else []
+        return {"creations": [{"id": c["id"], "title": c["title"], "status": c["status"], "version": c["version"],
+                               "versions": len(c["versions"]), "owner": c["owner"],
+                               "icon": c["versions"][-1]["spec"].get("icon", "apps"), "created": c["created"]}
+                              for c in items]}
+
+    @app.get("/api/made/{creation_id}")
+    def web_made(creation_id: str, profile_id: str = Depends(require_profile_id)) -> dict:
+        """One creation drawn from its spec (core/creation_spec.assemble): the published version,
+        or for a draft its latest version, read-only."""
+        from core.creation_actions import sets_for
+        from core.creation_spec import assemble
+        from core.creations import CreationError
+        from core.record_sets import RecordError
+
+        view = view_for(context, profile_id)
+        store = getattr(view, "creations", None)
+        if store is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "No creations here.")
+        try:
+            found = store.get(creation_id)
+        except CreationError as problem:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, str(problem)) from None
+        latest, shown = found["versions"][-1], store.shown(creation_id)
+        record_set = None
+        if found["set_id"]:
+            try:
+                record_set = sets_for(view, found["owner"]).get(found["set_id"])
+            except (RecordError, Exception):
+                record_set = None
+        return {"id": found["id"], "status": found["status"], "version": found["version"],
+                "latest": latest["version"], "pending": latest["version"] != found["version"],
+                "owner": found["owner"], "why": latest["why"], "made_by": latest["made_by"],
+                "blueprint": latest["blueprint"] or "her own layout", "rollback": len(found["published_versions"]) > 1,
+                "screen": assemble(latest["spec"] if found["status"] == "draft" else shown["spec"], record_set)}
+
+    @app.post("/api/made")
+    def web_make(body: dict, profile_id: str = Depends(require_profile_id)) -> dict:
+        """MIA makes a draft from a need in plain words (core/creation_maker.py). Changes no data:
+        the draft is private until the person publishes it."""
+        from core.child_accounts import is_child
+        from core.creation_maker import MakerError, make
+
+        view = view_for(context, profile_id)
+        if is_child(view, profile_id):  # Made by MIA isn't one of the children's apps
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "Ask a grown-up to make a new screen.")
+        try:
+            made = make(view, str(body.get("need", ""))[:600])
+        except MakerError as problem:
+            raise HTTPException(status.HTTP_409_CONFLICT, str(problem)) from None
+        return {"id": made["id"], "title": made["title"], "status": made["status"]}
+
     @app.get("/api/failures")
     def web_failures(profile_id: str = Depends(require_profile_id)) -> dict:
         from core.failure_actions import failures_page
