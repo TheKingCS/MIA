@@ -12,8 +12,10 @@ from core import mia_coder, work_activity, work_tasks
 from tests.test_dev_lab import repo, suite  # noqa: F401  (the fixture)
 
 
-def reply(files, said="Fixed it."):
-    return lambda prompt, schema: json.dumps({"files": [{"path": p, "content": c} for p, c in files.items()], "said": said})
+def reply(edits, said="Fixed it."):
+    """edits: path -> (find, replace)."""
+    return lambda prompt, schema: json.dumps({"edits": [{"path": p, "find": f, "replace": r} for p, (f, r) in edits.items()],
+                                              "said": said})
 
 
 def test_she_changes_only_the_listed_files(repo):
@@ -22,7 +24,8 @@ def test_she_changes_only_the_listed_files(repo):
 
     def model(prompt, schema):
         seen["prompt"] = prompt
-        return reply({"core/thing.py": "VALUE = 2\n", "core/actions.py": "# gone\n", "../evil.py": "x"})(prompt, schema)
+        return reply({"core/thing.py": ("VALUE = 1", "VALUE = 2"), "core/actions.py": ("# approvals", "# gone"),
+                      "../evil.py": ("", "x")})(prompt, schema)
     p = lab.write(p.proposal_id, coder=mia_coder.coder(model))
     assert "=== core/thing.py\nVALUE = 1" in seen["prompt"] and "core/actions.py" not in seen["prompt"].split("===")[-1]
     where = lab.folder(p)
@@ -41,7 +44,7 @@ def test_a_shadow_attempt_is_graded_recorded_and_never_merged(repo, tmp_path):
     folder, log = tmp_path / "tasks", tmp_path / "activity.jsonl"
     work_tasks.save(work_tasks.Task(id="T-0001", title="Make VALUE 2", files=["core/thing.py"], body="VALUE should be 2"),
                     folder)
-    result = mia_coder.shadow("T-0001", ask=reply({"core/thing.py": "VALUE = 2\n"}),
+    result = mia_coder.shadow("T-0001", ask=reply({"core/thing.py": ("VALUE = 1", "VALUE = 2")}),
                               suite=suite({"*": ["tests/test_a.py::old"], "__lab__": []}), folder=folder, log=log)
     assert result["outcome"] == "pass", result
     assert (repo / "core" / "thing.py").read_text() == "VALUE = 1\n"  # the running copy untouched
@@ -57,3 +60,9 @@ def test_the_files_a_task_lists():
     assert mia_coder.files_of("Task: x\n\nPlan: Files: core/ocr.py, tests/test_ocr.py\n\nWhat the team learned...") == \
         ["core/ocr.py", "tests/test_ocr.py"]
     assert mia_coder.files_of("no plan") == []
+
+
+def test_an_edit_whose_passage_isnt_there_once_is_skipped(repo):
+    (repo / "core" / "two.py").write_text("x = 1\nx = 1\n")
+    said = mia_coder.coder(reply({"core/two.py": ("x = 1", "x = 2")}))("Plan: Files: core/two.py", repo, "python")
+    assert "appears more than once" in said and (repo / "core" / "two.py").read_text() == "x = 1\nx = 1\n"

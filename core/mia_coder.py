@@ -7,9 +7,12 @@ MIA's own coder, and her shadow attempts (DEC-0074, T-0027;
 
 **The coder** is her local model (qwen3-coder:30b) with no tools at all: code
 gives it the task and the current contents of the files it may change, and
-it replies with their new contents, held to a JSON schema. Code writes only
-those files, only inside the lab's copy, never anything on the lab's
-protected list. No shell, no other file, no network.
+it replies with **edits** (an exact passage to find and what replaces it),
+held to a JSON schema. Code applies an edit only when its passage appears
+exactly once in a listed file, only inside the lab's copy, never on the
+lab's protected list. No shell, no other file, no network. (Whole new files
+were tried first: on T-0019's four files the model hadn't finished after 20
+minutes. Edits are a fraction of the output.)
 (Codex's local mode was tried first, 2026-11-04: on Windows its sandbox stays
 read-only, and the model didn't use its editing tools; letting it past the
 sandbox would hand a local model the whole machine.)
@@ -35,14 +38,16 @@ MAX_FILE = 40_000  # characters of one file she's given
 MAX_FILES = 4
 
 SCHEMA = {"type": "object", "properties": {
-    "files": {"type": "array", "items": {"type": "object", "properties": {
-        "path": {"type": "string"}, "content": {"type": "string"}}, "required": ["path", "content"]}},
-    "said": {"type": "string"}}, "required": ["files", "said"]}
+    "edits": {"type": "array", "items": {"type": "object", "properties": {
+        "path": {"type": "string"}, "find": {"type": "string"}, "replace": {"type": "string"}},
+        "required": ["path", "find", "replace"]}},
+    "said": {"type": "string"}}, "required": ["edits", "said"]}
 
 PROMPT = """You are fixing code in MIA's development lab. Below is the task, then every file you may change,
-with its full current contents. Reply with JSON: "files", the new FULL contents of each file you change
-(path and content; leave out files you don't change), and "said", two sentences on what you changed and why.
-Change as little as the task needs. Keep each file's style. Don't change files that aren't listed.
+with its full current contents. Reply with JSON: "edits", each one a path, an exact passage copied from
+that file ("find": a few whole lines, enough to appear only once) and what replaces it ("replace"); and
+"said", two sentences on what you changed and why. Change as little as the task needs. Keep each file's
+style. Don't change files that aren't listed.
 
 {task}
 
@@ -93,15 +98,23 @@ def coder(ask: Optional[Callable[[str, dict], str]] = None) -> Callable[[str, Pa
             reply = json.loads(said)
         except ValueError as problem:
             raise CoderError("Her model's reply wasn't JSON.") from problem
-        changed = []
-        for item in reply.get("files") or []:
+        changed, skipped = [], []
+        for item in reply.get("edits") or []:
             f = str(item.get("path", "")).replace("\\", "/").lstrip("./")
             if f not in allowed:
+                skipped.append(f"{f}: not a file she may change")
                 continue  # only the listed files, whatever she says
             target = (cwd / f).resolve()
-            target.write_text(str(item.get("content", "")), encoding="utf-8")
+            text = target.read_text(encoding="utf-8") if target.exists() else ""
+            find, replace = str(item.get("find", "")), str(item.get("replace", ""))
+            if not find or text.count(find) != 1:
+                skipped.append(f"{f}: its passage {'is missing' if not find or find not in text else 'appears more than once'}")
+                continue
+            target.write_text(text.replace(find, replace, 1), encoding="utf-8")
             changed.append(f)
-        return (str(reply.get("said", ""))[:600] + (f" (changed {', '.join(changed)})" if changed else " (changed nothing)"))
+        note = (f" (changed {', '.join(sorted(set(changed)))})" if changed else " (changed nothing)") + \
+            (f"; skipped {'; '.join(skipped[:3])}" if skipped else "")
+        return str(reply.get("said", ""))[:600] + note
     return write
 
 
