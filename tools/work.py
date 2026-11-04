@@ -87,6 +87,9 @@ def main(argv=None) -> int:
     rs.add_argument("--by", required=True)
     rs.add_argument("--how", required=True)
     rs.add_argument("--lesson", default="", help="what the reviewer should check next time, if it was wrong")
+    lr = sub.add_parser("learn", help="MIA writes what a finished task taught (work/knowledge, DEC-0073)")
+    lr.add_argument("ids", nargs="*", help="task ids; none means every finished task not yet written up")
+    sub.add_parser("knowledge", help="what the team has learned, newest last")
     mv = sub.add_parser("move")
     mv.add_argument("id")
     mv.add_argument("status")
@@ -159,6 +162,26 @@ def main(argv=None) -> int:
             except (AgentError, work_review.ReviewError) as problem:
                 print(f"Stopped: {problem}", file=sys.stderr)
                 return 1
+            return 0
+        if args.command == "knowledge":
+            from core import dev_knowledge
+
+            for e in dev_knowledge.entries():
+                print(f"{e['id']}  {e.get('status', ''):9} {e['kind']:17} {e['title']}  ({', '.join(e.get('from') or [])})")
+            return 0
+        if args.command == "learn":
+            from core import dev_knowledge
+
+            ids = [i.upper() for i in args.ids] or [t.id for t in tasks.values() if t.status == "done"]
+            for task_id in ids:
+                try:
+                    kept = dev_knowledge.retrospective(task_id)
+                except OSError as problem:
+                    print(f"{task_id}: the local model didn't answer ({problem})", file=sys.stderr)
+                    return 1
+                for e in kept:
+                    activity.record("mia", "learn", task_id, f"{e['id']} {e['kind']}: {e['title']}")
+                print(f"{task_id}: " + ("; ".join(f"{e['id']} {e['title']}" for e in kept) or "nothing new"))
             return 0
         if args.command == "resume":
             task = w._get(tasks, args.id)

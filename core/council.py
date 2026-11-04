@@ -205,6 +205,18 @@ def mia_answers(question: str, exclude: str = "", repo: Optional[Path] = None,
                 if h.get("who") != "mia" and h.get("id") != exclude and h.get("kind") != "note"][:5]
     finally:
         found.close()
+    try:  # what the team learned (core/dev_knowledge.py, DEC-0073), by the question's words
+        from types import SimpleNamespace
+
+        from core.dev_knowledge import for_task
+
+        known = for_task(SimpleNamespace(title=question, body="", files=[]), limit=3, min_hits=2,
+                         derived=True)  # to Zac, labelled; he can judge
+    except OSError:
+        known = []
+    if known:
+        parts.append("From what the team learned:\n" + "\n".join(
+            f"- {e['title']} ({e['id']}, {e.get('status', 'derived')})" for e in known))
     if hits:
         parts.append("From the development history:\n" + "\n".join(
             f"- {h.get('at', '')[:10]} {h.get('who', '')}: {(h.get('text') or h.get('detail') or '')[:240]}"

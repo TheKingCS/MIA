@@ -51,3 +51,38 @@
 {"at": "2026-11-04T08:21:57+00:00", "who": "claude", "action": "claim", "task": "T-0038", "detail": "files: core/creation_sources.py, core/creation_spec.py, core/creation_maker.py"}
 {"at": "2026-11-04T08:21:57+00:00", "who": "claude", "action": "note", "task": "T-0038", "detail": "Built: the source catalogue over MIA's history (eggs, workouts, meals, upkeep, missions, spending, bills paid), read-only, money never to a child; charts over dates by day, week or month; code points the model at a matching source and the period asked for. Live: 'eggs each week' and 'spending each month by category' used the history, 'firewood I split' made its own record set. Left for later: a creation's card on the glasses."}
 {"at": "2026-11-04T08:21:59+00:00", "who": "claude", "action": "done", "task": "T-0038", "detail": "tests (tests/test_creations.py): 13 passed in 1.12s; commit 408f9c8 Make Something in the sidebar, for grown-ups (uncommitted: core/budget_manager.py, core/creation_actions.py, core/creation_maker.py, core/creation_spec.py, core/creations.py, core/dev_lab.py, core/plaid_manager.py, server/app.py...)"}
+{"at": "2026-11-04T08:25:21+00:00", "who": "mia", "action": "learn", "task": "T-0001", "detail": "K-0003 debugging: Identifying and fixing a bug in task movement"}
+{"at": "2026-11-04T08:25:21+00:00", "who": "mia", "action": "learn", "task": "T-0001", "detail": "K-0004 lesson: Reviewing the importance of thorough testing"}
+{"at": "2026-11-04T08:25:24+00:00", "who": "mia", "action": "learn", "task": "T-0002", "detail": "K-0005 debugging: Initial test failures due to missing evidence attachment"}
+{"at": "2026-11-04T08:25:24+00:00", "who": "mia", "action": "learn", "task": "T-0002", "detail": "K-0006 lesson: Ensure proper evidence attachment in activity logs"}
+{"at": "2026-11-04T08:25:30+00:00", "who": "mia", "action": "learn", "task": "T-0003", "detail": "K-0007 debugging: Incorrect initial test setup"}
+{"at": "2026-11-04T08:25:30+00:00", "who": "mia", "action": "learn", "task": "T-0003", "detail": "K-0008 lesson: Checkpoints are crucial for task resumption"}
+{"at": "2026-11-04T08:25:30+00:00", "who": "mia", "action": "learn", "task": "T-0003", "detail": "K-0009 decision: Decisions on budget and plaid management"}
+{"at": "2026-11-04T08:25:35+00:00", "who": "mia", "action": "learn", "task": "T-0004", "detail": "K-0010 debugging: Review process identified initial test failures"}
+{"at": "2026-11-04T08:25:35+00:00", "who": "mia", "action": "learn", "task": "T-0004", "detail": "K-0011 lesson: Independent review uncovered overlooked test cases"}
+{"at": "2026-11-04T08:25:35+00:00", "who": "mia", "action": "learn", "task": "T-0004", "detail": "K-0012 decision: Approval process streamlined with Zac's final review"}
+{"at": "2026-11-04T08:25:38+00:00", "who": "mia", "action": "learn", "task": "T-0005", "detail": "K-0013 debugging: Warning in test_work_dashboard.py"}
+{"at": "2026-11-04T08:25:38+00:00", "who": "mia", "action": "learn", "task": "T-0005", "detail": "K-0014 lesson: Review of Dashboard Features"}
+{"at": "2026-11-04T08:25:42+00:00", "who": "mia", "action": "learn", "task": "T-0030", "detail": "K-0015 method: Delegation based on availability"}
+{"at": "2026-11-04T08:25:42+00:00", "who": "mia", "action": "learn", "task": "T-0030", "detail": "K-0016 debugging: Review and chat recording"}
+{"at": "2026-11-04T08:25:42+00:00", "who": "mia", "action": "learn", "task": "T-0030", "detail": "K-0017 test-procedure: Comprehensive testing"}
+{"at": "2026-11-04T08:25:48+00:00", "who": "mia", "action": "learn", "task": "T-0031", "detail": "K-0018 debugging: Thread budgets caused unexpected behavior"}
+{"at": "2026-11-04T08:25:48+00:00", "who": "mia", "action": "learn", "task": "T-0031", "detail": "K-0019 lesson: Reviewers caught inconsistencies in budget management"}
+{"at": "2026-11-04T08:25:48+00:00", "who": "mia", "action": "learn", "task": "T-0031", "detail": "K-0020 decision: Disagreement on budget enforcement resolved"}
+{"at": "2026-11-04T08:25:53+00:00", "who": "mia", "action": "learn", "task": "T-0032", "detail": "K-0021 debugging: Initial test failures due to uncommitted changes"}
+{"at": "2026-11-04T08:25:53+00:00", "who": "mia", "action": "learn", "task": "T-0032", "detail": "K-0022 lesson: Commit all changes before testing"}
+{"at": "2026-11-04T08:25:53+00:00", "who": "mia", "action": "learn", "task": "T-0032", "detail": "K-0023 test-procedure: Ensure all related files are up-to-date"}
+{"at": "2026-11-04T08:25:58+00:00", "who": "mia", "action": "learn", "task": "T-0033", "detail": "K-0024 method: Character naming reflects roles and themes"}
+{"at": "2026-11-04T08:25:58+00:00", "who": "mia", "action": "learn", "task": "T-0033", "detail": "K-0025 failed-experiment: Initial neutral stance on Creator's involvement"}
+{"at": "2026-11-04T08:25:58+00:00", "who": "mia", "action": "learn", "task": "T-0033", "detail": "K-0026 debugging: Council dialogue minimization"}
+{"at": "2026-11-04T08:26:02+00:00", "who": "mia", "action": "learn", "task": "T-0037", "detail": "K-0027 debugging: Unexpected screen generation due to blueprint misinterpretation"}
+{"at": "2026-11-04T08:26:02+00:00", "who": "mia", "action": "learn", "task": "T-0037", "detail": "K-0028 lesson: Review blueprint interpretation before screen generation"}
+{"at": "2026-11-04T08:26:02+00:00", "who": "mia", "action": "learn", "task": "T-0037", "detail": "K-0029 test-procedure: Ensure comprehensive testing for blueprint interpretation"}
+{"at": "2026-11-04T08:26:07+00:00", "who": "mia", "action": "learn", "task": "T-0038", "detail": "K-0030 method: Built a read-only source catalogue for MIA's history"}
+{"at": "2026-11-04T08:26:07+00:00", "who": "mia", "action": "learn", "task": "T-0038", "detail": "K-0031 failed-experiment: Initial attempt to include money data for children failed"}
+{"at": "2026-11-04T08:26:07+00:00", "who": "mia", "action": "learn", "task": "T-0038", "detail": "K-0032 debugging: Resolved issues with live data usage"}
+{"at": "2026-11-04T08:26:58+00:00", "who": "mia", "action": "learn", "task": "T-0019", "detail": "K-0034 debugging: Ensure monkeypatching affects actual check logic"}
+{"at": "2026-11-04T08:26:58+00:00", "who": "mia", "action": "learn", "task": "T-0019", "detail": "K-0035 decision: Do not skip or disable tests to achieve green status"}
+{"at": "2026-11-04T08:26:58+00:00", "who": "mia", "action": "learn", "task": "T-0019", "detail": "K-0036 lesson: Review and confirm QA feedback thoroughly"}
+{"at": "2026-11-04T08:28:03+00:00", "who": "claude", "action": "note", "task": "T-0024", "detail": "Built and tried: entries need sources; the retrospective (local model) wrote 30 entries from thin records, most describing failures and reviews that never happened. They're withdrawn (kept, never handed on), the lesson is K-0033, a write-up now needs a record with substance, and agents are given confirmed entries only; MIA's derived notes wait for someone to confirm them. On T-0019, the one record with real process, 2 of 3 entries misstated what happened."}
+{"at": "2026-11-04T08:28:05+00:00", "who": "claude", "action": "done", "task": "T-0024", "detail": "tests (tests/test_dev_knowledge.py tests/test_council.py tests/test_work_loop.py): 20 passed in 0.41s; commit ab2b976 ACAF step 2: screens over the history MIA already keeps (uncommitted: core/budget_manager.py, core/council.py, core/plaid_manager.py, core/work_agents.py, core/work_loop.py, core/work_review.py, tools/work.py, work/activity.jsonl...)"}

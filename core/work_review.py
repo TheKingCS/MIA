@@ -129,12 +129,23 @@ def review(task_id: str, role_name: str, registry: Registry, *, ask: Callable[[s
         change = change[:MAX_DIFF] + "\n[... the rest of the diff was cut for length; say so if it matters]"
     said = ask(role.provider, REVIEW_PROMPT.format(role=role.role, task_id=task.id, title=task.title,
                                                     body=task.body, diff=change,
-                                                    lessons=lessons_for(role.provider, lessons)))
+                                                    lessons=lessons_for(role.provider, lessons) + _known(task)))
     found = verdict(said)
     tasks_mod.note(task, who, f"Review: {found}. " + " ".join((said or "").split())[:1500])
     tasks_mod.save(task, folder)
     activity.record(who, "review", task.id, f"{found}: {(said or '')[:500]}", log)
     return found
+
+
+def _known(task) -> str:
+    """What the team learned before about this task's files (core/dev_knowledge.py, DEC-0073)."""
+    try:
+        from core.dev_knowledge import briefing
+
+        found = briefing(task)
+    except OSError:
+        return ""
+    return found + "\n\n" if found else ""
 
 
 def _other_provider_exists(registry: Registry, provider: str) -> bool:

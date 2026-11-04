@@ -72,7 +72,11 @@ def run(task_id: str, role_name: str, registry: Registry, *, lab=None, coder: Op
         tasks_mod.claim(tasks, task.id, who)
         step("claim", ", ".join(task.files))
     if "lab" not in done:
-        p = lab.create(task.title, task.body or task.title, evidence=f"Task {task.id}", plan=f"Files: {', '.join(task.files)}")
+        from core.dev_knowledge import briefing  # what the team learned before (DEC-0073)
+
+        known = briefing(task)
+        p = lab.create(task.title, task.body or task.title, evidence=f"Task {task.id}",
+                       plan=f"Files: {', '.join(task.files)}" + (f"\n\n{known}" if known else ""))
         task.branch = p.branch
         step("lab", p.proposal_id)
     pid = proposal_id(task)
