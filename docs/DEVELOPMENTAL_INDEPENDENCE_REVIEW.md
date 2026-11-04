@@ -335,6 +335,109 @@ of where it's kept, see DEC-0077.
 - ChatGPT takes part through Codex, which signs in with Zac's ChatGPT
   account, and through handoffs, as today.
 
+### 6.4 Usage: delegating by who has time, so the team never sits idle
+
+Zac, 2026-11-03: *"One thing that is vital is understanding usage and
+delegating tasks based on time available to use each model so that the dev
+team doesnt have to sit idle when one model is unavailable."* DEC-0079. The
+runner in 6.1 is built around this; it isn't an add-on.
+
+**What each provider's limit looks like:**
+
+| Provider | Limit | What we can see | Shared with |
+|---|---|---|---|
+| Claude Code (Zac's plan) | A rolling 5-hour window, plus a weekly cap | Tokens per call, in its JSON result. When a limit is hit, the message says when it resets. | **Zac's own Claude sessions, like this one.** Today a limit stopped one halfway. |
+| Codex (Zac's ChatGPT plan) | A rolling 5-hour window, plus a weekly cap | Its `--json` output carries token counts, and, I expect, how much of each window is used and when it resets (to check once signed in) | Zac's ChatGPT use of Codex |
+| Copilot (Zac's plan) | Premium requests per month; each call counts by model | Its own usage command; nothing headless I'm sure of | Zac's Copilot use in editors |
+| Local (Ollama) | No quota, but **one GPU**. qwen3-coder:30b (about 17 GB) and qwen2.5:14b (about 9 GB) don't both fit in 24 GB | Ollama reports what's loaded | **MIA's own Assistant** |
+| Zac | Time to approve | Your Turn's length | — |
+
+**What's built:**
+
+1. **A usage record.** Every provider call, from the runner, the loop, a
+   review, the chat or a shadow attempt, records:
+   - who, which role and which task;
+   - how long it took;
+   - tokens, when reported;
+   - the outcome: ok, limit or error;
+   - when it resets, when said.
+
+   The record is kept in `data/dev/usage.jsonl`, on this PC. It holds no
+   prompt text.
+2. **A state per provider, always current:**
+   - *ready*;
+   - *busy* (on a task);
+   - *cooling*, until a reset time: the one the message gave, or a cautious
+     guess with back-off;
+   - *low* (near its learned limit);
+   - *signed out*;
+   - *not installed*;
+   - for local models, *GPU busy*.
+
+   Limit messages are recognized per CLI. An unknown failure counts as an
+   error, never as a limit, so a broken provider doesn't look like a
+   resting one.
+3. **Learned capacity.** We aren't told each plan's exact numbers, so the
+   runner learns them. It notes how much each provider did in its window
+   before it hit the limit. From that it estimates **what's left and when
+   it comes back**. The board shows this as a bar and a countdown per
+   provider: "Codex: about 40% of this window left, back in full at 6:10 PM".
+   The first week's estimates are rough and get better with each window.
+4. **Roles name providers in order, not just one.** In `work/agents.json`,
+   for example, Software Engineer is `claude-code, codex, copilot`, and QA
+   is `codex, ollama-coder`. The scheduler picks the first one that is
+   *ready* and allowed. The rules don't bend: a reviewer is still never the
+   author's provider, and approve is still Zac's.
+5. **Work is sized, so scarce time goes where it matters.** Each piece of
+   work says what it needs:
+   - *frontier write*: multi-file or tricky;
+   - *small write*;
+   - *review*;
+   - *security review*;
+   - *summarize/retrospective*;
+   - *shadow attempt*;
+   - *inspect*.
+
+   The ledger (5.1) says which providers do each kind well. The scheduler:
+   - sends work the local models do well enough to local, so it doesn't
+     burn a subscription;
+   - keeps the subscription models for what only they do well;
+   - doesn't give a big write to a model the ledger says fails at it. That
+     task waits for the next frontier model back, and the board says which
+     and when.
+6. **Never idle.** When every frontier model is cooling, the runner still has
+   work. All of it runs on this PC:
+   - retrospectives and knowledge entries;
+   - MIA's shadow attempts;
+   - first-pass local reviews, each counting as one of the two only where
+     the ledger trusts it;
+   - running the suite and triaging failures;
+   - MIA's inspection of the repo against the docs;
+   - planning the mission's next tasks;
+   - writing small tasks the local coder has earned.
+7. **Handover mid-task.** If a writer hits its limit halfway, the next ready
+   writer picks the task up in the same lab copy. It gets the diff so far,
+   the trace and a note. The lab's check still grades the result, so a
+   handover can't sneak anything through. The loop's resume already does
+   most of this.
+8. **Leave Zac room.** Each subscription keeps a **reserve** for Zac's own
+   use, set per provider in the mission (for example, never start a large
+   write on Claude with less than about 25% of the window left). The runner
+   can't see Zac's own sessions. It only sees the limit arrive sooner, which
+   it learns from.
+9. **The GPU is shared fairly.** Local work yields while MIA's Assistant is
+   in use (a turn in the last few minutes). The runner groups local work by
+   model so it doesn't keep swapping 17 GB in and out.
+10. **Zac's queue.** Unapproved tasks pile up and start to overlap, so when
+    Your Turn holds several tasks touching the same files, the runner
+    switches to other parts of the mission instead of stacking more on
+    them. This is set by `your_turn_limit` in the mission.
+
+Every scheduling choice is in the activity log with its reason, for example
+"codex (claude-code cooling until 3:10 PM)". The board's **Team** panel
+shows, for each member, its state, what's left and when it's back, what it's
+on, and what's queued for it.
+
 ## 7. Safeguards (section 9.7)
 
 1. **The three dimensions are separate in code.** The ledger's stages live in
@@ -377,7 +480,7 @@ Each step is a task in `work/tasks/`, run through the loop, and reviewed.
 | 1 | Knowledge vault + retrospective step + lessons folded in + retrieval (T-0021 grows into this) | I Observer | — |
 | 2 | Method traces from the lab's coders | I | 1 |
 | 3 | The council chat in the window (read-only asks, runner posts) | — | — |
-| 4 | Missions and the runner, stop file, budgets, scope check | — | today's loop |
+| 4 | Missions and the runner, stop file, budgets, scope check; the usage record, provider states and delegation by availability (6.4), first with fixed preferences, then by the ledger once step 6 exists | — | today's loop |
 | 5 | Her local coder (Codex local mode, sandboxed) + shadow attempts + grading | II Apprentice | 1, 4 |
 | 6 | The ledger, stages, calibration, the Independence panel; protected list extended | II–III measured | 5 |
 | 7 | The architecture map and growth branches (T-0020's doc-vs-code marks, T-0023) | — | 6 for branches |
@@ -423,6 +526,11 @@ without Zac at any step.
 - **DEC-0076 (proposed):** missions. The council runs by itself within a
   mission's scope and budget, with a stop file and button, and stops at Your
   Turn. Approve stays Zac's, at the keyboard.
+- **DEC-0079 (approved as a requirement, Zac's):** the dev team never
+  sits idle because one model is unavailable. Usage is recorded, each
+  provider's state and remaining time is known, and work goes to whoever
+  has time and does it well, with a reserve kept for Zac (6.4). The design
+  goes with DEC-0076.
 - **DEC-0077 (proposed; one choice):** the council chat. **Where it's kept:**
   (a) in the repo, `work/council.jsonl`, redacted, so every council member
   and cloud session shares it (recommended: it is the shared history), or

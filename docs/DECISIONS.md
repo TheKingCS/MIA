@@ -1282,3 +1282,21 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   ring on the parts it changed, replayable over time: the Evolution
   Timeline of DEC-0071 (T-0023).
 - Related: DEC-0057, DEC-0071, DEC-0075
+
+### DEC-0079: The dev team never sits idle because one model is unavailable
+- Status: APPROVED (the requirement; its design goes with DEC-0076, proposed)
+- Proposed by: zac, 2026-11-03 ("One thing that is vital is understanding usage and delegating tasks based on time available to use each model so that the dev team doesnt have to sit idle when one model is unavailable") · Approved by: zac, 2026-11-03 (the same message)
+- Decision: every provider call is recorded (who, task, time, tokens,
+  outcome, reset time; no prompt text) on this PC; each provider has a
+  live state (ready, busy, cooling until a reset, low, signed out, GPU
+  busy) and an estimate of what's left in its window and when it comes
+  back, learned from its own limits. Roles name providers in order; work
+  goes to the first ready one that's allowed and good at that kind of
+  work, local models taking what they do well enough; a writer that hits
+  its limit hands the task over in the same lab copy; when the frontier
+  models are all cooling, the team does the local work (retrospectives,
+  shadow attempts, reviews, tests, inspection, planning). A reserve of
+  each subscription stays Zac's; local work yields the GPU to MIA's
+  Assistant. Review rules and Zac's approval never bend for availability.
+  (`docs/DEVELOPMENTAL_INDEPENDENCE_REVIEW.md` section 6.4.)
+- Related: DEC-0069, DEC-0074, DEC-0075, DEC-0076
