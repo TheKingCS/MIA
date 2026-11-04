@@ -105,7 +105,8 @@
     const bits = [];
     if (page.status === "draft") bits.push(el("p", {}, el("strong", {}, "A draft MIA made. "),
       "Only you can see it, and nothing's been changed yet. Publishing adds it to your apps" +
-      (page.source ? ". It shows what you already keep, so nothing new is stored."
+      (page.kind === "workflow" ? ", and it may then do only what's listed below, each time it runs."
+        : page.source ? ". It shows what you already keep, so nothing new is stored."
         : " and starts its records " + (page.owner === "household" ? "with the household." : "in your own folder."))),
       act("creation.publish", "Publish", "btn-green"));
     else if (page.pending) bits.push(el("p", {}, el("strong", {}, "Version " + page.latest + " is waiting. "),
@@ -117,8 +118,29 @@
     return el("section", { class: "glass made-banner" + (page.status === "draft" || page.pending ? " glow" : "") }, bits);
   }
 
+  // A workflow (core/workflows.py): what it does in plain sentences, what approving it allows, a dry run.
+  function drawWorkflow(page) {
+    $("hero-name").textContent = page.title;
+    $("hero-tagline").textContent = "A workflow MIA made";
+    document.title = page.title + " — MIA";
+    const out = el("ul", { class: "made-time" });
+    const dry = el("button", { class: "btn btn-ghost", type: "button", onclick: async () => {
+      try { const r = await MIA.madeDry(page.id); out.replaceChildren(...r.lines.map((l) => el("li", {}, el("span", {}, l)))); }
+      catch (e) { out.replaceChildren(el("li", {}, el("span", {}, e.message))); }
+    } }, "Dry run (changes nothing)");
+    $("panel").replaceChildren(banner(page),
+      section("What it does", el("ul", { class: "made-time" }, page.steps.map((l) => el("li", {},
+        el("span", { style: "white-space:pre" }, l))))),
+      section("What switching it on allows", el("ul", { class: "dg-runs" }, page.may.map((m) => el("li", { class: "dg-run" }, m)))),
+      section("Try it", dry, out),
+      section("Runs", page.runs.length ? el("ul", { class: "made-time" }, page.runs.map((r) => el("li", {},
+        el("span", { class: "dim" }, r.at.slice(0, 16).replace("T", " ")), el("span", {}, r.lines.join(" · "))))) :
+        el("p", { class: "empty" }, "It hasn't run yet.")));
+  }
+
   async function drawOne() {
     const page = await MIA.made(id);
+    if (page.kind === "workflow") return drawWorkflow(page);
     $("hero-name").textContent = page.screen.title;
     $("hero-tagline").textContent = page.screen.about || page.screen.records + " record" + (page.screen.records === 1 ? "" : "s");
     if (window.MIAIcons) MIAIcons.badge(document.querySelector(".hero h1 > span"), page.screen.icon);

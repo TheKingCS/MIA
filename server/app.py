@@ -1784,6 +1784,14 @@ def create_app(context: AppContext) -> FastAPI:
             raise HTTPException(status.HTTP_404_NOT_FOUND, str(problem)) from None
         latest, shown = found["versions"][-1], store.shown(creation_id)
         spec = latest["spec"] if found["status"] == "draft" else shown["spec"]
+        if spec.get("kind") == "workflow":  # said in plain sentences (core/workflows.py)
+            from core.workflows import describe, may
+
+            return {"id": found["id"], "kind": "workflow", "status": found["status"], "version": found["version"],
+                    "latest": latest["version"], "pending": latest["version"] != found["version"], "owner": found["owner"],
+                    "why": latest["why"], "made_by": latest["made_by"], "blueprint": "a workflow",
+                    "rollback": len(found["published_versions"]) > 1, "title": spec["title"], "steps": describe(spec),
+                    "may": may(spec), "runs": (found.get("runs") or [])[-10:][::-1]}
         record_set = None
         if spec.get("source"):  # read from her history (core/creation_sources.py), drafts too: it's already theirs
             from core.creation_sources import records, source_of
@@ -1800,6 +1808,16 @@ def create_app(context: AppContext) -> FastAPI:
                 "blueprint": latest["blueprint"] or "her own layout", "rollback": len(found["published_versions"]) > 1,
                 "source": spec.get("source", ""), "screen": assemble(spec, record_set)}
 
+    @app.post("/api/made/{creation_id}/dry")
+    def web_made_dry(creation_id: str, profile_id: str = Depends(require_profile_id)) -> dict:
+        """What a workflow would do now, doing none of it."""
+        from core.workflows import run
+
+        try:
+            return {"lines": run(view_for(context, profile_id), creation_id, dry=True)["lines"]}
+        except (ValueError, KeyError) as problem:
+            raise HTTPException(status.HTTP_409_CONFLICT, str(problem)) from None
+
     @app.post("/api/made")
     def web_make(body: dict, profile_id: str = Depends(require_profile_id)) -> dict:
         """MIA makes a draft from a need in plain words (core/creation_maker.py). Changes no data:
@@ -1810,8 +1828,12 @@ def create_app(context: AppContext) -> FastAPI:
         view = view_for(context, profile_id)
         if is_child(view, profile_id):  # Made by MIA isn't one of the children's apps
             raise HTTPException(status.HTTP_403_FORBIDDEN, "Ask a grown-up to make a new screen.")
-        try:
-            made = make(view, str(body.get("need", ""))[:600])
+        from core.creation_maker import RECURRING, make_workflow
+
+        need = str(body.get("need", ""))[:600]
+        try:  # something again and again is a workflow (DEC-0092); anything else, a screen
+            made = make_workflow(view, need) if body.get("kind") == "workflow" or (
+                body.get("kind") != "screen" and RECURRING.search(need)) else make(view, need)
         except MakerError as problem:
             raise HTTPException(status.HTTP_409_CONFLICT, str(problem)) from None
         return {"id": made["id"], "title": made["title"], "status": made["status"]}

@@ -24,6 +24,7 @@ creation is published.
 from __future__ import annotations
 
 import json
+import re
 from typing import Callable, Optional
 
 from core import blueprints as bp
@@ -148,6 +149,89 @@ def _spec_from(design: dict, blueprints: dict) -> tuple[dict, str]:
             return candidate, ""
     chosen = blueprints.get(design.get("blueprint")) or blueprints["tracker"]
     return {**base, "blocks": bp.fill(chosen, fields)}, f"{chosen['id']}@{chosen['version']}"
+
+
+RECURRING = re.compile(r"\b(every|each)\s+(day|morning|evening|night|week|month|monday|tuesday|wednesday|thursday|"
+                       r"friday|saturday|sunday)\b|\bremind me\b|\blet me know (when|if)\b|\btell me (when|if)\b|"
+                       r"\b(daily|weekly|monthly)\b", re.I)
+
+WORKFLOW_SCHEMA = {"type": "object", "properties": {
+    "title": {"type": "string"}, "owner": {"type": "string", "enum": ["personal", "household"]},
+    "trigger": {"type": "object"}, "limits": {"type": "object"}, "steps": {"type": "array", "items": {"type": "object"}}},
+    "required": ["title", "owner", "trigger", "steps"]}
+
+WORKFLOW_PROMPT = """You design workflows for MIA, a personal assistant: something done again and again. Someone said
+what they want. Reply only with JSON.
+
+What they said: {need}
+
+A workflow is: title, owner ("personal" or "household"), trigger {{"every": "day"|"week"|"month"}} (a week may
+add "weekday": 0-6, Monday is 0; a month "day": 1-28), optional limits {{"adds_per_run": 0-5}}, and steps,
+each one of:
+- {{"step": "read", "source": <a source below>, "within_days": N (optional), "as": "name"}}
+- {{"step": "count", "of": "name", "as": "n"}} or sum / avg / min / max / latest with "of": "name.field"
+- {{"step": "when", "value": "n", "above"|"below"|"equals": number, "then": [steps]}} (no when inside a when)
+- {{"step": "tell", "title": "...", "text": "a message; {{n}} puts in a number worked out above"}}
+- {{"step": "add", "to": "creation:C-0001", "values": {{"field": "value"}}}} (needs limits.adds_per_run)
+
+Sources it may read (and their fields):
+{sources}
+{again}"""
+
+
+def _workflow_sources(context, child: bool) -> str:
+    from core.workflows import _sources
+
+    return "\n".join(f"  - {name}: " + ", ".join(f"{f} ({d['type']})" for f, d in fields.items())
+                     for name, fields in _sources(context, child).items())
+
+
+def _miscounts(spec: dict, need: str, context, child: bool) -> list[str]:
+    """A valid workflow that counts records when the need is about a number they hold ("fewer than 20
+    eggs" counts collections, not eggs): sent back once to be fixed."""
+    from core.workflows import _flat, _sources
+
+    sources = _sources(context, child)
+    reads = {s.get("as"): sources.get(s.get("source"), {}) for s in _flat(spec.get("steps")) if s.get("step") == "read"}
+    words = set(re.findall(r"[a-z]+", need.lower()))
+    out = []
+    for s in _flat(spec.get("steps")):
+        if s.get("step") != "count":
+            continue
+        for name, f in (reads.get(str(s.get("of", "")).partition(".")[0]) or {}).items():
+            said = {name, *re.findall(r"[a-z]+", str(f.get("label", "")).lower())}
+            if f["type"] in ("number", "money") and words & said:
+                base = str(s["of"]).partition(".")[0]
+                out.append(f"count of {base} counts its records; to total the {f['label'].lower()}, use "
+                           f"\"sum\" of {base}.{name}.")
+    return out
+
+
+def make_workflow(context, need: str, ask: Optional[Callable[[str, dict], str]] = None, child: bool = False) -> dict:
+    """A draft workflow for `need` (core/workflows.py, DEC-0092), or MakerError. Changes no data."""
+    from core.workflows import check as check_workflow
+
+    store = getattr(context, "creations", None)
+    if store is None:
+        raise MakerError("Creations aren't available here.")
+    ask = ask or _ollama
+    again, problems = "", []
+    for _attempt in range(2):
+        said = ask(WORKFLOW_PROMPT.format(need=need, sources=_workflow_sources(context, child), again=again),
+                   WORKFLOW_SCHEMA)
+        try:
+            design = json.loads(said)
+        except ValueError:
+            problems, again = ["the design wasn't JSON"], "\nYour last reply wasn't JSON. Reply with JSON only."
+            continue
+        spec = {"kind": "workflow", "title": str(design.get("title", ""))[:60], "owner": design.get("owner", "personal"),
+                "trigger": design.get("trigger") or {}, "steps": design.get("steps") or [],
+                **({"limits": design["limits"]} if design.get("limits") else {})}
+        problems = check_workflow(spec, context, child=child) or _miscounts(spec, need, context, child)
+        if not problems:
+            return store.draft(spec, [], made_by="mia", why=need, blueprint="")
+        again = "\nYour last design had these problems; fix them:\n- " + "\n- ".join(problems[:8])
+    raise MakerError("I couldn't make a workflow that passes its checks: " + "; ".join(problems[:4]))
 
 
 def make(context, need: str, ask: Optional[Callable[[str, dict], str]] = None, child: bool = False) -> dict:

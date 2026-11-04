@@ -79,12 +79,15 @@ class Creations:
         if creation_id:
             found = self.get(creation_id)
             before = found["versions"][-1]["spec"]  # what it shows stays what it showed: only the layout changes
-            spec = {**{k: v for k, v in spec.items() if k not in ("record_set", "source")}, "owner": found["owner"],
-                    **({"source": before["source"]} if before.get("source") else {"record_set": before.get("record_set")})}
+            if before.get("kind", "screen") == "screen":
+                spec = {**{k: v for k, v in spec.items() if k not in ("record_set", "source")}, "owner": found["owner"],
+                        **({"source": before["source"]} if before.get("source") else {"record_set": before.get("record_set")})}
+            else:
+                spec = {**spec, "owner": found["owner"]}
         else:
             taken = {c["id"] for c in self.items}
             found = {"id": next(f"C-{n:04d}" for n in range(1, 10_000) if f"C-{n:04d}" not in taken),
-                     "kind": "screen", "title": spec.get("title", ""), "owner": spec.get("owner", "personal"),
+                     "kind": spec.get("kind", "screen"), "title": spec.get("title", ""), "owner": spec.get("owner", "personal"),
                      "status": DRAFT, "version": 0, "published_versions": [], "set_id": "", "versions": [],
                      "created": now}
             self.items.append(found)
@@ -121,6 +124,12 @@ class Creations:
         found["title"] = found["versions"][found["version"] - 1]["spec"].get("title", found["title"])
         self._save()
         return found
+
+    def log_run(self, creation_id: str, entry: dict, keep: int = 50) -> None:
+        """A workflow's run (core/workflows.py): what it did, kept with it, the latest `keep`."""
+        found = self.get(creation_id)
+        found["runs"] = (found.get("runs") or [])[-(keep - 1):] + [entry]
+        self._save()
 
     def retire(self, creation_id: str) -> dict:
         found = self.get(creation_id)

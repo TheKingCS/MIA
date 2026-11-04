@@ -59,6 +59,11 @@ def _describe_publish(context, params) -> str:
     if latest["version"] == found["version"]:
         raise ActionError(f"{found['title']} is already published as it is.")
     where = "the household's records" if found["owner"] == "household" else "your own records"
+    if latest["spec"].get("kind") == "workflow":
+        from core.workflows import may
+
+        return (f"{'Switch on' if not found['version'] else 'Update'} “{latest['spec']['title']}”, which may "
+                + "; ".join(may(latest["spec"])))
     if latest["spec"].get("source"):
         from core.creation_sources import source_of
 
@@ -75,6 +80,14 @@ def _publish(context, params) -> str:
 
     found = _get(context, params)
     latest = found["versions"][-1]
+    if latest["spec"].get("kind") == "workflow":  # its standing approval is exactly what it lists (DEC-0092)
+        from core.workflows import check as check_workflow
+
+        problems = check_workflow(latest["spec"], context, child=_child(context))
+        if problems:
+            raise ActionError("It doesn't pass its checks: " + " ".join(problems[:3]))
+        _creations(context).mark_published(found["id"], latest["version"], "")
+        return f"{latest['spec']['title']} is on."
     problems = check(latest["spec"], child=_child(context))
     if problems:
         raise ActionError("It doesn't pass its checks: " + " ".join(problems[:3]))

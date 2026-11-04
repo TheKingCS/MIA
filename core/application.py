@@ -714,6 +714,7 @@ class MIAApplication:
             ("obligation_reminders", self._check_obligations),
             ("loop", self._check_loop),
             ("fix_report", self._check_fix_report),
+            ("workflows", self._check_workflows),
         ]
         # 2026-09-27, Cognitive Extension slice C: checks no longer notify
         # directly. Each one offers what it would say (_offer()), and the
@@ -734,6 +735,13 @@ class MIAApplication:
         elif self.context.notifications is not None:
             for c in offers:
                 self.context.notifications.notify(title=c.title, message=c.message, level=c.level, source=c.source)
+
+    def _check_workflows(self, now: datetime, today_iso: str) -> None:
+        """Workflows MIA made whose trigger has come round (core/workflows.py, DEC-0092): run them;
+        what they'd tell the person joins this tick's offers, through the gate like the rest."""
+        from core.workflows import run_due
+
+        self._offers.extend(run_due(self.context, now))
 
     def _offer(self, topic: str, title: str, message: str, urgency: str, source: str = "system",
                daily: bool = False, fingerprint: str = "") -> None:
