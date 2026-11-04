@@ -106,3 +106,46 @@ def test_its_own_window_serves_only_this_computer_and_this_run():
         assert "board" in found or found == {"available": False}
     finally:
         server.shutdown()
+
+
+def test_the_window_takes_zacs_messages_only_with_its_key(tmp_path, monkeypatch):
+    import json as json_mod
+    import time
+    import urllib.error
+    import urllib.request
+
+    from core import council
+    from core.dev_store import DevStore
+    from tools import dev_window
+
+    store, repo = DevStore(tmp_path / "dev" / "council"), tmp_path / "council.jsonl"
+    monkeypatch.setattr(council, "_store", lambda: store)
+    monkeypatch.setattr(council, "REPO_LOG", repo)
+    monkeypatch.setattr(council, "here", lambda: ["mia"])
+    monkeypatch.setattr("core.self_docs.answer", lambda q, **k: "From my docs.")
+    monkeypatch.setattr("core.work_activity.ACTIVITY", tmp_path / "activity.jsonl")
+    server, address = dev_window.serve()
+    try:
+        port, key = server.server_address[1], address.split("#key=")[1]
+
+        def send(body, key_=key):
+            request = urllib.request.Request(f"http://127.0.0.1:{port}/api/council", data=json_mod.dumps(body).encode(),
+                                             headers={"X-Dev-Key": key_, "Content-Type": "application/json"}, method="POST")
+            try:
+                return urllib.request.urlopen(request).status
+            except urllib.error.HTTPError as e:
+                return e.code
+
+        assert send({"text": "hi"}, key_="guess") == 403 and not repo.exists()
+        assert send({"text": "  "}) == 400
+        assert send({"text": "@mia what's the plan? @codex too"}) == 200
+        for _ in range(50):
+            if len(store.tail(10)) >= 3 and not dev_window.ASKING:
+                break
+            time.sleep(0.1)
+        said = {m["who"]: m for m in store.tail(10)}
+        assert said["zac"]["asks"] == ["mia", "codex"] and said["mia"]["text"].startswith("From my docs.")
+        assert "Not here" in said["codex"]["text"] and said["codex"]["reply_to"] == said["zac"]["id"]
+        assert len(repo.read_text(encoding="utf-8").splitlines()) == 3  # the repo's copy too
+    finally:
+        server.shutdown()

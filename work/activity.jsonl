@@ -18,3 +18,12 @@
 {"at": "2026-11-03T21:38:08+00:00", "who": "zac", "action": "resolve", "task": "T-0019", "detail": "1 from QA Engineer (ollama-coder): Read both; the fix is right"}
 {"at": "2026-11-03T21:40:20+00:00", "who": "zac", "action": "approve", "task": "T-0019", "detail": "reverted: It broke here: tests/test_plaid_manager.py::test_import_transaction_transfer_is_skipped. Reverted; the history keeps both."}
 {"at": "2026-11-04T01:53:08+00:00", "who": "claude", "action": "move", "task": "T-0019", "detail": "review: Rebuilt on the running copy after the Plaid-baseline revert; checked again: 4842 passed, no new failures"}
+{"at": "2026-11-04T05:14:37+00:00", "who": "claude", "action": "new", "task": "T-0024", "detail": "The Development Knowledge Vault"}
+{"at": "2026-11-04T05:14:37+00:00", "who": "claude", "action": "new", "task": "T-0025", "detail": "Method traces from the lab's coders"}
+{"at": "2026-11-04T05:14:38+00:00", "who": "claude", "action": "new", "task": "T-0026", "detail": "Missions and the runner, delegating by who has time"}
+{"at": "2026-11-04T05:14:38+00:00", "who": "claude", "action": "new", "task": "T-0027", "detail": "MIA's own coder and shadow attempts"}
+{"at": "2026-11-04T05:14:38+00:00", "who": "claude", "action": "new", "task": "T-0028", "detail": "The independence ledger"}
+{"at": "2026-11-04T05:14:38+00:00", "who": "claude", "action": "new", "task": "T-0029", "detail": "Her architecture and branches of growth"}
+{"at": "2026-11-04T05:14:43+00:00", "who": "claude", "action": "new", "task": "T-0030", "detail": "The council chat, kept in the repo and on the PC"}
+{"at": "2026-11-04T05:14:43+00:00", "who": "claude", "action": "claim", "task": "T-0030", "detail": "files: core/council.py, core/dev_store.py, core/dev_usage.py, tools/dev_window.py, web/dev.js"}
+{"at": "2026-11-04T05:14:53+00:00", "who": "claude", "action": "done", "task": "T-0030", "detail": "tests (tests/test_council.py tests/test_dev_store.py tests/test_work_dashboard.py tests/test_work_review.py tests/test_dev_lab.py): 38 passed in 9.35s; commit a65e3c2 DEC-0079: the dev team delegates by who has time, so it never sits idle (uncommitted: core/budget_manager.py, core/dev_lab.py, core/plaid_manager.py, core/work_dashboard.py, core/work_review.py, docs/DECISIONS.md, docs/DEVELOPMENTAL_INDEPENDENCE_REVIEW.md, tests/test_work_dashboard.py...)"}

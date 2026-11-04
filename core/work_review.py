@@ -286,7 +286,7 @@ def lab_diff(proposal_id: str) -> str:
     return dev_lab._git("diff", f"{p.base}...{p.branch}")
 
 
-def ask_provider(provider: str, prompt: str) -> str:
+def _ask(provider: str, prompt: str) -> str:
     """Run a review on a provider, read-only: a local model through Ollama, or
     a coding CLI (Claude Code, Codex, Copilot) that may read but never edit,
     run commands or reach the web. Each signs in with Zac's own account."""
@@ -326,9 +326,35 @@ def ask_provider(provider: str, prompt: str) -> str:
         raise ReviewError(f"{provider} can't review here yet.")
     out = subprocess.run(readonly, cwd=str(tasks_mod.ROOT), capture_output=True, text=True, encoding="utf-8",
                          errors="replace", timeout=1800, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
-    if out.returncode != 0 and not out.stdout.strip():
-        raise ReviewError(f"{provider} didn't review: {(out.stderr or '').strip()[-300:]}")
+    from core.dev_usage import outcome
+
+    said = f"{out.stdout}\n{out.stderr}".strip()
+    if out.returncode != 0 and (not out.stdout.strip() or outcome(said) == "limit"):
+        # A usage limit printed as output is not a review (DEC-0079): it's the provider resting.
+        raise ReviewError(f"{provider} didn't answer: {said[-300:]}")
     return out.stdout or out.stderr
+
+
+def ask_provider(provider: str, prompt: str, purpose: str = "review", task: str = "") -> str:
+    """`_ask` with every call recorded (DEC-0079, core/dev_usage.py): how long,
+    how much text each way, and whether it ended at a usage limit."""
+    import time
+
+    from core import dev_usage
+
+    started, said, problem = time.monotonic(), "", ""
+    try:
+        said = _ask(provider, prompt)
+        return said
+    except Exception as error:
+        problem = str(error) or type(error).__name__
+        raise
+    finally:
+        try:
+            dev_usage.record(provider, purpose, time.monotonic() - started, len(prompt), len(said or ""),
+                             error=problem, task=task)
+        except OSError:  # the record never stops the work
+            pass
 
 
 __all__ = ["review", "approve", "verdict", "author_of", "ReviewError", "AgentError"]

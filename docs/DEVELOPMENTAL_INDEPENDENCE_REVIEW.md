@@ -438,6 +438,37 @@ Every scheduling choice is in the activity log with its reason, for example
 shows, for each member, its state, what's left and when it's back, what it's
 on, and what's queued for it.
 
+### 6.5 Kept in the repo and on the PC, without taking up room
+
+Zac, 2026-11-04: *"in the repo and on the pc but for the pc we need a way to
+not take up a ton of memory while maintaining MIAs ability to access the
+fullness of her memory and development."* Built: `core/dev_store.py`,
+`core/council.py`, `core/dev_usage.py`.
+
+- **The repo** keeps the shared copy, as plain lines that git compresses and
+  merges: `work/council.jsonl`, `work/activity.jsonl`, `work/tasks/` and,
+  next, `work/knowledge/`. Chat text there is redacted (no emails, long
+  numbers or passwords) and cut to 4,000 characters.
+- **The PC** keeps the full copy in `data/dev/`. It's a record in segments:
+  - the open segment is plain text;
+  - a full segment (2 MB, or a new month) is gzipped to about a tenth of its
+    size;
+  - nothing is ever deleted or rewritten.
+
+  A year of daily development comes to a few megabytes.
+- **Memory (RAM).** Nothing is loaded whole. Reading streams one line at a
+  time, and the newest messages come from the open segment only.
+- **"The fullness" stays reachable** through one search index, SQLite
+  full-text search. It covers the PC's stores and the repo's own records.
+  - It holds where each word appears, not a second copy of the text, so it
+    stays a fraction of what it indexes.
+  - A hit is read from where it's kept, compressed or not.
+  - It reads only what's new since its last look.
+  - It can be deleted and rebuilt at any time.
+  - `@mia` answers through it, from her documents and the whole history.
+- **Both copies stay one conversation.** A message a cloud session adds to
+  the repo copy joins the PC's on the next read, matched by its id.
+
 ## 7. Safeguards (section 9.7)
 
 1. **The three dimensions are separate in code.** The ledger's stages live in

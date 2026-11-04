@@ -92,7 +92,10 @@
   }
 
   function agent(a) {
-    const state = !a.here ? "not installed" : a.signed_in === false ? "needs sign-in" : "ready";
+    const u = a.usage || {};
+    const state = !a.here ? "not installed" : a.signed_in === false ? "needs sign-in"
+      : u.state === "cooling" ? "resting until " + new Date(u.until).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })
+      : "ready";
     const sub = [a.tier, a.provider + (a.model ? " · " + a.model : "")];
     if (a.last) sub.push("last: " + (ACTION[a.last.action] || a.last.action) + " " + (a.last.task || "") + ", " + ago(a.last.at));
     return el("li", {}, el("span", {}, a.role), el("span", { class: a.working_on.length ? "busy" : "dim" },
@@ -112,11 +115,62 @@
       showAll ? "Show fewer" : "Show all " + list.length) : "";
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && open) { open = ""; render(); } });
 
+  // The council chat (core/council.py): written to from its own window only, which holds the key.
+  const MEMBERS = ["claude", "codex", "copilot", "qwen", "coder", "mia", "all"];
+  let draft = "", sending = false, chatNote = "";
+  async function send(text) {
+    if (!text.trim() || sending) return;
+    sending = true; chatNote = "";
+    try {
+      const r = await fetch("api/council", { method: "POST", headers: { "X-Dev-Key": key, "Content-Type": "application/json" },
+        body: JSON.stringify({ text, task: open }) });
+      if (!r.ok) chatNote = (await r.json().catch(() => ({}))).error || "That didn't send.";
+      else draft = "";
+    } catch (e) { chatNote = "That didn't send."; }
+    sending = false;
+    refresh();
+  }
+
+  function message(m, byId) {
+    const to = m.reply_to && byId[m.reply_to];
+    return el("li", { class: "dev-msg" + (m.who === "zac" ? " mine" : "") + (m.reply_to ? " reply" : "") },
+      el("div", { class: "head" }, el("b", {}, m.who), " " + when(m.at) + (m.task ? " · " + m.task : "") +
+        (to ? " · to " + to.who : "")),
+      el("div", { class: "said" }, m.text));
+  }
+
+  function council(p) {
+    const list = p.council || [];
+    const byId = Object.fromEntries(list.map((m) => [m.id, m]));
+    const asking = (p.asking || []).map((n) => el("li", { class: "dev-msg thinking" }, n + " is answering…"));
+    const log = el("ul", { class: "dev-chat", "aria-live": "polite" },
+      list.length ? list.map((m) => message(m, byId)) : el("li", { class: "empty" }, "Nobody's said anything yet."), asking);
+    const parts = [el("h2", {}, "Council"), el("p", {},
+      "Talk to the whole team. @claude, @codex, @copilot, @qwen, @coder or @mia asks one; @all asks everyone here. " +
+      "A plain message asks no one. Nothing said here approves anything."), log];
+    if (p.writable) {
+      const box = el("textarea", { class: "dev-say", rows: "3", placeholder: open ? "About " + open + "…" : "Message the council",
+        "aria-label": "Message the council" });
+      box.value = draft;
+      box.addEventListener("input", () => { draft = box.value; });
+      box.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(box.value); } });
+      parts.push(box, el("div", { class: "dev-say-row" },
+        MEMBERS.map((n) => el("button", { class: "dev-chip", type: "button", onclick: () => {
+          draft = (box.value.trim() + " @" + n + " ").trimStart(); box.value = draft; box.focus(); } }, "@" + n)),
+        el("button", { class: "dev-send", type: "button", disabled: sending, onclick: () => send(box.value) }, sending ? "Sending…" : "Send")));
+      if (chatNote) parts.push(el("p", { class: "dev-note" }, chatNote));
+    } else parts.push(el("p", { class: "dim" }, "Write to the council from the MIA Development window on the computer."));
+    return el("section", { class: "dev-col dev-council" }, parts);
+  }
+
+  let chatAtBottom = true, chatSeen = false;
   function render() {
     const p = data;
     const panel = $("panel");
     const kept = document.querySelector(".dev-detail");
     const scrolled = kept ? kept.scrollTop : 0;
+    const said = document.activeElement && document.activeElement.classList.contains("dev-say") ? document.activeElement : null;
+    const caret = said ? [said.selectionStart, said.selectionEnd] : null;
     if (!p.available) { panel.replaceChildren(el("p", { class: "empty" }, "The development work lives on the computer with MIA's code.")); return; }
     const all = Object.values(p.board).flat();
     const chosen = all.find((t) => t.id === open);
@@ -135,19 +189,25 @@
         p.board[k].length ? shown(k, p.board[k]).map(card) : el("p", { class: "empty" }, k === "yours" ? "Nothing needs you." : "None."),
         more(k, p.board[k])))),
       chosen ? detail(chosen) : "",
-      el("div", { class: "dev-grid2" },
+      el("div", { class: "dev-grid2" }, council(p),
         el("section", { class: "dev-col" }, el("h2", {}, "Who's on the team"),
           el("p", {}, "Each agent, the account it signs in with, and what it's doing."),
           el("ul", { class: "dev-agents" }, p.agents.map(agent)),
           lessons.length ? [el("h2", { class: "gap" }, "What the reviewers have learned"),
             el("ul", { class: "dev-agents" }, lessons.map(([prov, list]) => el("li", {}, el("span", {}, prov),
               el("span", { class: "dim" }, list.length + " lesson" + (list.length === 1 ? "" : "s")),
-              el("span", { class: "sub" }, list.slice(-3).map((l) => l.lesson).join(" · ")))))] : ""),
-        el("section", { class: "dev-col" }, el("h2", {}, "Everything that happened"), search,
-          p.activity.length ? el("ul", { class: "dev-time" }, p.activity.map(event))
-            : el("p", { class: "empty" }, query ? "Nothing matches." : "Nothing yet."))));
+              el("span", { class: "sub" }, list.slice(-3).map((l) => l.lesson).join(" · ")))))] : "")),
+      el("section", { class: "dev-col dev-history" }, el("h2", {}, "Everything that happened"), search,
+        p.activity.length ? el("ul", { class: "dev-time" }, p.activity.map(event))
+          : el("p", { class: "empty" }, query ? "Nothing matches." : "Nothing yet.")));
     const drawer = document.querySelector(".dev-detail");
     if (drawer && kept) drawer.scrollTop = scrolled;
+    const chat = document.querySelector(".dev-chat");
+    if (chat && (chatAtBottom || !chatSeen)) chat.scrollTop = chat.scrollHeight;
+    chatSeen = true;
+    const box = document.querySelector(".dev-say");
+    if (box && caret) { box.focus(); box.setSelectionRange(caret[0], caret[1]); }
+    if (chat) chat.addEventListener("scroll", () => { chatAtBottom = chat.scrollHeight - chat.scrollTop - chat.clientHeight < 40; });
   }
 
   async function refresh() {
@@ -156,7 +216,14 @@
   }
 
   // While it's open and showing, keep it current (nothing to re-read when hidden).
-  setInterval(() => { if (document.visibilityState === "visible" && !document.querySelector(".dev-search:focus")) refresh(); }, 10000);
+  // Not while someone's typing (a re-draw would take their place), and sooner while a member is answering.
+  let ticks = 0;
+  setInterval(() => {
+    ticks += 1;
+    const typing = document.querySelector(".dev-search:focus");
+    const waiting = data && (data.asking || []).length;
+    if (document.visibilityState === "visible" && !typing && (waiting || ticks % 5 === 0)) refresh();
+  }, 2000);
   if (standalone) refresh();
   else MIAShell.start(refresh);
 })();

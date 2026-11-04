@@ -48,6 +48,27 @@ def signed_in(provider) -> Optional[bool]:
     return None
 
 
+def _usage(provider: str, seen: dict) -> dict:
+    """A provider's usage state (core/dev_usage.py), once per page."""
+    from core import dev_usage
+
+    try:
+        seen[provider] = dev_usage.state(provider)
+    except OSError:
+        seen[provider] = {"state": "ready", "until": "", "calls": 0}
+    return seen[provider]
+
+
+def _council(n: int = 60) -> list[dict]:
+    """The council chat's latest messages (core/council.py)."""
+    from core import council
+
+    try:
+        return council.recent(n)
+    except OSError:
+        return []
+
+
 def _reviews(task_id: str, events: list[dict]) -> list[dict]:
     """The reviews of the current change (a rewrite starts again), oldest first."""
     from core.work_review import provider_of
@@ -159,7 +180,7 @@ def page(context, query: str = "", tasks_dir=tasks_mod.TASKS_DIR, log=activity.A
     open_rows = [r for r in rows if r["status"] not in tasks_mod.FINISHED]
     order = {"review": 0, "claimed": 1, "ready": 2, "blocked": 3, "open": 4}
     open_rows.sort(key=lambda r: (order.get(r["status"], 9), r["id"]))
-    agents = []
+    agents, usage = [], {}
     for r in (registry.roles.values() if registry else []):
         provider = registry.providers[r.provider]
         who = f"{r.role} ({r.provider})"
@@ -167,7 +188,7 @@ def page(context, query: str = "", tasks_dir=tasks_mod.TASKS_DIR, log=activity.A
         last = next((e for e in reversed(all_events) if e.get("who") == who), None)
         agents.append({"role": r.role, "tier": r.tier, "provider": r.provider, "model": provider.model,
                        "here": provider.available(), "signed_in": signed_in(provider), "working_on": on,
-                       "last": last})
+                       "last": last, "usage": usage.get(r.provider) or _usage(r.provider, usage)})
     events = activity.search(query, path=log) if query else all_events
     board = {stage: [x for x in rows if x["stage"] == stage] for stage in STAGES}
     board["done"] = sorted(board["done"], key=lambda r: r["updated"], reverse=True)[:8]
@@ -175,6 +196,7 @@ def page(context, query: str = "", tasks_dir=tasks_mod.TASKS_DIR, log=activity.A
         "board": board,
         "latest": all_events[-1] if all_events else None,
         "lessons": rv._lessons(),
+        "council": _council(),
         "available": True,
         "summary": {s: sum(1 for r in rows if r["status"] == s) for s in ("ready", "claimed", "review", "blocked", "done")},
         "queue": [r for r in open_rows if r["status"] == "review"],

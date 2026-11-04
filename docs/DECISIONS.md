@@ -1211,8 +1211,8 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0058, DEC-0068 to DEC-0071
 
 ### DEC-0073: The Development Knowledge Vault is work/knowledge/
-- Status: PROPOSED
-- Proposed by: claude, 2026-11-03 (review section 4.1)
+- Status: APPROVED
+- Proposed by: claude, 2026-11-03 (review section 4.1) · Approved by: zac, 2026-11-04 ("Approve and i think in the repo and on the pc")
 - Decision: one markdown entry per piece of knowledge (method, decision,
   implementation, failed experiment, debugging, test procedure, security
   finding, lesson), each with refs to the task, commit and events it came
@@ -1224,8 +1224,8 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0071 point 2 (T-0021), DEC-0041
 
 ### DEC-0074: MIA's own coder, learning by shadow attempts
-- Status: PROPOSED
-- Proposed by: claude, 2026-11-03 (review sections 3.3, 4.3)
+- Status: APPROVED
+- Proposed by: claude, 2026-11-03 (review sections 3.3, 4.3) · Approved by: zac, 2026-11-04 ("Approve and i think in the repo and on the pc")
 - Decision: MIA codes through Codex's local mode on qwen3-coder:30b
   (`codex exec --oss --local-provider ollama`, sandboxed to the lab), no
   account needed. While a council agent works a task, she works the same
@@ -1235,8 +1235,8 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0058, DEC-0069, DEC-0072
 
 ### DEC-0075: Independence measured per skill, from evidence
-- Status: PROPOSED
-- Proposed by: claude, 2026-11-03 (review section 5)
+- Status: APPROVED
+- Proposed by: claude, 2026-11-03 (review section 5) · Approved by: zac, 2026-11-04 ("Approve and i think in the repo and on the pc")
 - Decision: a ledger of skills in the three dimensions, computed every time
   from the activity log and the lab (never stored, so never edited), with
   each skill's success rate and its 90% lower bound over the latest 30
@@ -1247,8 +1247,8 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0069, DEC-0072
 
 ### DEC-0076: Missions: the council runs by itself, inside a scope and a budget
-- Status: PROPOSED
-- Proposed by: claude, 2026-11-03 (review section 6.1), for Zac's "set the council on the mission to develop MIA and let them run at it autonomously"
+- Status: APPROVED
+- Proposed by: claude, 2026-11-03 (review section 6.1), for Zac's "set the council on the mission to develop MIA and let them run at it autonomously" · Approved by: zac, 2026-11-04 ("Approve and i think in the repo and on the pc")
 - Decision: a mission (`work/missions/`) is a goal, a scope (the files it
   may change, checked in code at the lab's check), a budget (tasks, hours,
   calls per provider) and its roles. A runner proposes tasks inside the
@@ -1259,22 +1259,26 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0058, DEC-0069, DEC-0071
 
 ### DEC-0077: The council chat in the dev window
-- Status: PROPOSED
-- Proposed by: claude, 2026-11-03 (review section 6.3), for Zac's "communicate with them all in a group chat style in the dev environment"
+- Status: APPROVED
+- Proposed by: claude, 2026-11-03 (review section 6.3), for Zac's "communicate with them all in a group chat style in the dev environment" · Approved by: zac, 2026-11-04 ("Approve and i think in the repo and on the pc")
 - Decision: one conversation in the window that Zac and every agent post
   into; @name asks one member (read-only, as reviewers are), @mia answers
   from her inspection and knowledge; the runner posts its progress and
   questions. A chat message never approves, settles in Zac's name, changes
   a permission or starts work outside a mission.
-- Open choice for Zac: kept (a) in the repo, `work/council.jsonl`,
-  redacted, shared with every council member and cloud session
-  (recommended), or (b) on this PC only, with task-linked messages copied
-  into the history.
+- Zac's choice (2026-11-04): **both**. The repo keeps the shared copy,
+  `work/council.jsonl`, redacted, for every council member and cloud
+  session; this PC keeps the full one in `data/dev/` without taking up
+  a lot of room ("a way to not take up a ton of memory while maintaining
+  MIAs ability to access the fullness of her memory and development"):
+  closed months compressed, one small search index over everything,
+  read a line at a time, never loaded whole; nothing deleted
+  (`core/dev_store.py`, review section 6.5).
 - Related: DEC-0071, DEC-0002
 
 ### DEC-0078: Her architecture and branches of growth, derived, in the dev window
-- Status: PROPOSED
-- Proposed by: claude, 2026-11-03 (review section 6.2), for Zac's "see MIAs architecture and her branches of growth in the dev environment"
+- Status: APPROVED
+- Proposed by: claude, 2026-11-03 (review section 6.2), for Zac's "see MIAs architecture and her branches of growth in the dev environment" · Approved by: zac, 2026-11-04 ("Approve and i think in the repo and on the pc")
 - Decision: a map of her layers, modules and imports read from the code
   (never hand-drawn, nothing run), each capability with its status, and
   where the docs and the code disagree marked (T-0020); her growth drawn as

@@ -35,6 +35,25 @@ FILES = {"/": ("dev-window.html", "text/html"), "/tokens.css": ("tokens.css", "t
          "/dev.css": ("dev.css", "text/css"), "/dev.js": ("dev.js", "text/javascript")}
 
 
+ASKING: set[str] = set()  # council members answering right now
+_LOCK = threading.Lock()
+
+
+def _answer(name: str, message: dict) -> None:
+    """One member's reply, in the background: a CLI can take minutes."""
+    from core import council
+
+    with _LOCK:
+        ASKING.add(name)
+    try:
+        council.answer(name, message)
+    except Exception as problem:  # the chat says so rather than going quiet
+        council.post(name, f"(I couldn't answer: {problem})", reply_to=message["id"])
+    finally:
+        with _LOCK:
+            ASKING.discard(name)
+
+
 def handler(key: str, port_of: callable):
     class Board(BaseHTTPRequestHandler):
         def log_message(self, *args) -> None:  # quiet; nothing to keep
@@ -60,11 +79,43 @@ def handler(key: str, port_of: callable):
                 from core.work_dashboard import page
 
                 query = (parse_qs(url.query).get("q") or [""])[0][:200]
-                return self._send(200, json.dumps(page(None, query), default=str).encode("utf-8"), "application/json")
+                found = page(None, query)
+                if found.get("available"):
+                    with _LOCK:
+                        found["asking"] = sorted(ASKING)
+                    found["writable"] = True
+                return self._send(200, json.dumps(found, default=str).encode("utf-8"), "application/json")
             found = FILES.get(url.path)
             if found is None:
                 return self._send(404, b"Not here.", "text/plain")
             return self._send(200, (WEB / found[0]).read_bytes(), found[1])
+
+        def do_POST(self) -> None:
+            """Zac's message to the council. Same rules as reading, and a message never approves anything."""
+            if self.headers.get("Host", "") != f"127.0.0.1:{port_of()}" or \
+                    not hmac.compare_digest(self.headers.get("X-Dev-Key", ""), key):
+                return self._send(403, b"{}", "application/json")
+            if urlsplit(self.path).path != "/api/council":
+                return self._send(404, b"{}", "application/json")
+            try:
+                length = min(int(self.headers.get("Content-Length", "0")), 100_000)
+                body = json.loads(self.rfile.read(length) or b"{}")
+            except ValueError:
+                return self._send(400, b"{}", "application/json")
+            from core import council
+
+            try:
+                message = council.post("zac", str(body.get("text", "")), task=str(body.get("task", ""))[:12])
+            except council.CouncilError as problem:
+                return self._send(400, json.dumps({"error": str(problem)}).encode("utf-8"), "application/json")
+            here = set(council.here())
+            for name in message["asks"]:
+                if name in here or name == "mia":
+                    threading.Thread(target=_answer, args=(name, message), daemon=True).start()
+                else:
+                    council.post(name, "(Not here right now: not installed, signed out, or its model isn't "
+                                 "loaded.)", reply_to=message["id"])
+            return self._send(200, json.dumps(message).encode("utf-8"), "application/json")
 
     return Board
 
