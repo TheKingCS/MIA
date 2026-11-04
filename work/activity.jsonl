@@ -17,3 +17,4 @@
 {"at": "2026-11-03T21:23:38+00:00", "who": "QA Engineer (ollama-coder)", "action": "review", "task": "T-0019", "detail": "changes: VERDICT: changes"}
 {"at": "2026-11-03T21:38:08+00:00", "who": "zac", "action": "resolve", "task": "T-0019", "detail": "1 from QA Engineer (ollama-coder): Read both; the fix is right"}
 {"at": "2026-11-03T21:40:20+00:00", "who": "zac", "action": "approve", "task": "T-0019", "detail": "reverted: It broke here: tests/test_plaid_manager.py::test_import_transaction_transfer_is_skipped. Reverted; the history keeps both."}
+{"at": "2026-11-04T01:53:08+00:00", "who": "claude", "action": "move", "task": "T-0019", "detail": "review: Rebuilt on the running copy after the Plaid-baseline revert; checked again: 4842 passed, no new failures"}
