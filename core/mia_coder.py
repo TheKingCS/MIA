@@ -128,8 +128,11 @@ def shadow(task_id: str, lab=None, ask=None, suite=None, folder=None, log=None) 
     task = work_tasks._get(tasks, task_id)
     record = (lambda d: work_activity.record(WHO, "shadow", task.id, d, log)) if log else \
         (lambda d: work_activity.record(WHO, "shadow", task.id, d))
+    from core.dev_knowledge import briefing  # what the team learned, as the council gets it (DEC-0073)
+
+    known = briefing(task)
     p = lab.create(f"MIA's attempt: {task.title}", task.body or task.title, evidence=f"Task {task.id} (shadow)",
-                   plan=f"Files: {', '.join(task.files)}")
+                   plan=f"Files: {', '.join(task.files)}" + (f"\n\n{known}" if known else ""))
     try:
         p = lab.write(p.proposal_id, coder=coder(ask))
     except Exception as problem:
