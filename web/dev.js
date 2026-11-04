@@ -232,6 +232,43 @@
     return el("section", { class: "dev-col" }, parts);
   }
 
+  // A bar's width set from script: the window's policy refuses inline style attributes, not this.
+  function barOf(pct) {
+    const bar = el("span", { class: "dev-bar" });
+    bar.style.width = pct + "%";
+    return bar;
+  }
+
+  function architecture(p) {
+    const a = p.architecture || {};
+    if (!a.layers) return "";
+    const most = Math.max(1, ...a.layers.map((l) => l.lines));
+    const grown = Math.max(1, ...(a.growth.areas || []).map((x) => x[1]));
+    const bars = (rows, top) => el("ul", { class: "dev-agents" }, rows.map(([label, n, sub]) => el("li", {},
+      el("span", {}, label), el("span", { class: "dim" }, sub),
+      el("span", { class: "sub" }, barOf(Math.max(2, Math.round(100 * n / top)))))));
+    const breaks = a.layering || [];
+    return el("section", { class: "dev-col dev-chronicles" }, el("h2", {}, "MIA's architecture",
+      el("span", { class: "n" }, a.layers.reduce((n, l) => n + l.lines, 0).toLocaleString() + " lines")),
+      el("p", {}, "Read from the code itself, nothing run: her layers, what the rest depends on most, whether the layering " +
+        "rule holds, and how she's grown."),
+      el("div", { class: "dev-grid2" },
+        el("div", {}, el("h2", { class: "gap" }, "Layers"),
+          bars(a.layers.map((l) => [l.layer, l.lines, l.files + " files · " + l.lines.toLocaleString() + " lines"]), most)),
+        el("div", {}, el("h2", { class: "gap" }, "Growing, by area"),
+          bars((a.growth.areas || []).map(([area, n]) => [area, n, n + " task" + (n === 1 ? "" : "s") + " done"]), grown),
+          el("h2", { class: "gap" }, "What most of her depends on"),
+          el("ul", { class: "dev-agents" }, (a.depended_on || []).slice(0, 6).map(([m, n]) =>
+            el("li", {}, el("span", {}, m), el("span", { class: "dim" }, n + " files")))))),
+      el("h2", { class: "gap" }, breaks.length ? "Where the layering rule is broken" : "The layering rule holds"),
+      breaks.length ? el("ul", { class: "dev-agents" }, breaks.map((b) => el("li", {}, el("span", {}, b.file + ":" + b.line),
+        el("span", { class: "dim" }, b.imports), el("span", { class: "sub" }, b.rule))))
+        : el("p", { class: "dim" }, "core/ reaches neither gui/ nor modules/, and no module reaches another (" +
+          (a.sanctioned || []).length + " files cross it by design: boot and module discovery)."),
+      (a.docs || []).length ? el("p", { class: "dev-note" }, "The docs name files that aren't there: " +
+        a.docs.map((d) => d.names + " (" + d.doc + ")").join(", ")) : "");
+  }
+
   function independence(p) {
     const k = p.independence || { stages: [], rows: [] };
     const pct = (v) => v == null ? "—" : Math.round(v * 100) + "%";
@@ -350,6 +387,7 @@
               el("span", { class: "sub" }, list.slice(-3).map((l) => l.lesson).join(" · ")))))] : "")),
       el("div", { class: "dev-grid2" }, missions(p), voices(p)),
       el("div", { class: "dev-grid2" }, independence(p), knowledge(p)),
+      architecture(p),
       chronicles(p),
       el("section", { class: "dev-col dev-history" }, el("h2", {}, "Everything that happened"), search,
         p.activity.length ? el("ul", { class: "dev-time" }, p.activity.map(event))

@@ -87,6 +87,23 @@ def _missions(events: list[dict]) -> list[dict]:
     return out
 
 
+_MAP: dict = {}  # the architecture map, rebuilt every ten minutes (it reads the whole repo: ~2 s)
+
+
+def _architecture() -> dict:
+    """MIA's architecture and growth (core/dev_map.py), derived from the code."""
+    import time
+
+    from core import dev_map
+
+    if not _MAP or time.monotonic() - _MAP["at"] > 600:
+        try:
+            _MAP.update(at=time.monotonic(), map=dev_map.architecture())
+        except (OSError, SyntaxError):
+            return {}
+    return _MAP["map"]
+
+
 def _independence() -> dict:
     """The ledger (core/dev_ledger.py): what each provider has shown it can do, by skill."""
     from core import dev_ledger
@@ -273,6 +290,7 @@ def page(context, query: str = "", tasks_dir=tasks_mod.TASKS_DIR, log=activity.A
         "knowledge": _knowledge(),
         "members": _members(),
         "independence": _independence(),
+        "architecture": _architecture(),
         "available": True,
         "summary": {s: sum(1 for r in rows if r["status"] == s) for s in ("ready", "claimed", "review", "blocked", "done")},
         "queue": [r for r in open_rows if r["status"] == "review"],
