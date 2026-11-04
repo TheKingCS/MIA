@@ -1401,3 +1401,66 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   are in the Story Bible (`docs/chronicles/characters/`) for Zac to change.
   Whether "the Creator" looks like him waits for him.
 - Related: DEC-0084, DEC-0085
+
+### DEC-0088: ACAF: MIA creates specifications, not code
+- Status: PROPOSED
+- Proposed by: claude, 2026-11-04 (`docs/ACAF_REVIEW.md`, for H-0082)
+- Decision: screens, record sets, reports and workflows MIA creates are JSON
+  specifications built from a fixed catalogue of blocks and data sources,
+  assembled in core and drawn by one generic page (`web/made.html`) in her
+  design system (DEC-0013, DEC-0017, DEC-0023). A spec holds no HTML, script
+  or free formula, so it can't run anything, reach data its owner can't see,
+  or look foreign. New combinations of blocks give screens for information
+  nobody planned. Anything needing new code (a tool, a parser, a module)
+  goes through the lab, the council and Zac (DEC-0058, DEC-0068 to DEC-0076).
+- Related: DEC-0013, DEC-0017, DEC-0023, DEC-0058
+
+### DEC-0089: Record sets, a home for information MIA has no store for
+- Status: PROPOSED
+- Proposed by: claude, 2026-11-04 (review section 3.4)
+- Decision: a generic typed store (fields of text, number, money, date,
+  choice, yes/no, link, photo ref), owned by a person or a household like
+  every store (DEC-0001), changed through generic action kinds (approval,
+  undo, history), recorded in life events, money through `region.money()`.
+- Related: DEC-0001, DEC-0088
+
+### DEC-0090: Blueprints, versioned in the repo
+- Status: PROPOSED
+- Proposed by: claude, 2026-11-04 (review section 3.1)
+- Decision: ACAF's templates are blueprints, `blueprints/` in the repo
+  (named so: "templates" already means starter sets, "components" the
+  workshop's parts, "skills" the skill tree). Composable and versioned; a
+  change goes through the lab and review; creations keep the version they
+  were made with until re-checked.
+- Related: DEC-0068, DEC-0088
+
+### DEC-0091: How a creation is made, checked, published and undone
+- Status: PROPOSED
+- Proposed by: claude, 2026-11-04 (review sections 4, 5 and 7)
+- Decision: MIA writes a spec with her local model, its reply held to the
+  spec's schema; code checks structure, data, permissions, privacy, child
+  safety, accessibility and a headless render. Private drafts are automatic;
+  publishing or changing a creation is an approved action, versioned, with
+  one-step rollback; nothing is overwritten silently. Every creation keeps
+  its blueprint, sources, permissions, checks and history, and MIA explains
+  it from them. The checker, the source catalogue and the runners join the
+  lab's protected list.
+- Related: DEC-0058, DEC-0088
+
+### DEC-0092: Workflows, with standing approval by kind
+- Status: PROPOSED
+- Proposed by: claude, 2026-11-04 (review section 6; roadmap step 3)
+- Decision: a workflow is a spec of a trigger and steps (read sources,
+  action kinds, reports). Approving one is a standing approval for exactly
+  its listed action kinds within its limits; a new kind needs approval
+  again; unprompted messages go through the communication gate; runs are
+  logged, a failed step retries once, and a dry run comes first.
+- Related: DEC-0088, the communication gate
+
+### DEC-0093: Creations are judged by use, and blueprints improve only when verified
+- Status: PROPOSED
+- Proposed by: claude, 2026-11-04 (review section 5)
+- Decision: each creation's opens, use, ratings and fixes are kept;
+  improvements are marked observed, inferred or verified; a blueprint
+  changes only when verified, through the lab.
+- Related: DEC-0075, DEC-0090
