@@ -116,26 +116,38 @@
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && open) { open = ""; render(); } });
 
   // The council chat (core/council.py): written to from its own window only, which holds the key.
-  const MEMBERS = ["claude", "codex", "copilot", "qwen", "coder", "mia", "all"];
-  let draft = "", sending = false, chatNote = "";
+  const MEMBERS = ["claude", "chatgpt", "codex", "copilot", "qwen", "coder", "mia", "all"];
+  let draft = "", sending = false, chatNote = "", replyTo = null;
   async function send(text) {
     if (!text.trim() || sending) return;
     sending = true; chatNote = "";
     try {
       const r = await fetch("api/council", { method: "POST", headers: { "X-Dev-Key": key, "Content-Type": "application/json" },
-        body: JSON.stringify({ text, task: open }) });
+        body: JSON.stringify({ text, task: open, reply_to: replyTo ? replyTo.id : "" }) });
       if (!r.ok) chatNote = (await r.json().catch(() => ({}))).error || "That didn't send.";
-      else draft = "";
+      else { draft = ""; replyTo = null; }
     } catch (e) { chatNote = "That didn't send."; }
     sending = false;
     refresh();
   }
 
-  function message(m, byId) {
+  // What each of Zac's messages may spend, and has (core/council_floor.py): members' answers, never MIA's.
+  function cost(m, list) {
+    if (m.who !== "zac" || !m.plan || !m.plan.budget) return "";
+    const used = list.filter((x) => x.turn === m.id && x.kind === "answer" && x.who !== "mia").length;
+    return " · " + used + " of " + m.plan.budget + " call" + (m.plan.budget === 1 ? "" : "s") +
+      (m.plan.mode !== "ask" ? " · " + m.plan.mode : "");
+  }
+
+  function message(m, byId, list) {
     const to = m.reply_to && byId[m.reply_to];
-    return el("li", { class: "dev-msg" + (m.who === "zac" ? " mine" : "") + (m.reply_to ? " reply" : "") },
+    const kind = m.kind && m.kind !== "message" && m.kind !== "answer" ? " " + m.kind : "";
+    const reply = el("button", { class: "dev-reply", type: "button", "aria-label": "Reply to " + m.who,
+      onclick: () => { replyTo = m; render(); const b = document.querySelector(".dev-say"); if (b) b.focus(); } }, "Reply");
+    return el("li", { class: "dev-msg" + (m.who === "zac" ? " mine" : "") + (m.reply_to ? " reply" : "") + kind },
       el("div", { class: "head" }, el("b", {}, m.who), " " + when(m.at) + (m.task ? " · " + m.task : "") +
-        (to ? " · to " + to.who : "")),
+        (to ? " · to " + to.who : "") + (m.kind === "summary" ? " · summary" : "") + cost(m, list),
+        m.kind === "note" ? "" : reply),
       el("div", { class: "said" }, m.text));
   }
 
@@ -144,11 +156,14 @@
     const byId = Object.fromEntries(list.map((m) => [m.id, m]));
     const asking = (p.asking || []).map((n) => el("li", { class: "dev-msg thinking" }, n + " is answering…"));
     const log = el("ul", { class: "dev-chat", "aria-live": "polite" },
-      list.length ? list.map((m) => message(m, byId)) : el("li", { class: "empty" }, "Nobody's said anything yet."), asking);
+      list.length ? list.map((m) => message(m, byId, list)) : el("li", { class: "empty" }, "Nobody's said anything yet."), asking);
     const parts = [el("h2", {}, "Council"), el("p", {},
-      "Talk to the whole team. @claude, @codex, @copilot, @qwen, @coder or @mia asks one; @all asks everyone here. " +
-      "A plain message asks no one. Nothing said here approves anything."), log];
+      "@name asks one member; name two and say \"debate\" for two rounds; \"discuss\" or @all asks everyone here. " +
+      "Members can ask each other one question at a time, and MIA only passes it on if the turn's budget allows " +
+      "and she can't answer it herself. \"budget 4\" sets it; \"stop\" ends it. Nothing said here approves anything."), log];
     if (p.writable) {
+      if (replyTo) parts.push(el("p", { class: "dev-replying" }, "Replying to " + replyTo.who + ": " + replyTo.text.slice(0, 80) + " ",
+        el("button", { class: "dev-reply", type: "button", onclick: () => { replyTo = null; render(); } }, "Cancel")));
       const box = el("textarea", { class: "dev-say", rows: "3", placeholder: open ? "About " + open + "…" : "Message the council",
         "aria-label": "Message the council" });
       box.value = draft;

@@ -1315,8 +1315,8 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0071, DEC-0077, DEC-0079
 
 ### DEC-0081: One council everywhere, and how its members talk
-- Status: PROPOSED
-- Proposed by: claude, 2026-11-04 (review sections 3 and 4)
+- Status: APPROVED
+- Proposed by: claude, 2026-11-04 (review sections 3 and 4) · Approved by: zac, 2026-11-04 ("Approve, c a local model if thats doable, we can name them based on their roles")
 - Decision: the dev window's chat, the phone and the glasses share one
   council (`core/council.py`): threads, rules, capture. A voice session is a
   thread in a mode, as User Sync is. Agents talk only through MIA: a thread
@@ -1330,8 +1330,8 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0077, DEC-0079, DEC-0080
 
 ### DEC-0082: A voice for every council member
-- Status: PROPOSED
-- Proposed by: claude, 2026-11-04 (review section 5)
+- Status: APPROVED
+- Proposed by: claude, 2026-11-04 (review section 5) · Approved by: zac, 2026-11-04 ("Approve, c a local model if thats doable, we can name them based on their roles")
 - Decision: members in `work/agents.json` (name, provider, brief, voice,
   colour), separate from roles. The PC speaks every member with Kokoro
   (DEC-0051) and the phone fetches the audio over the home link; the
@@ -1343,8 +1343,8 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0051, DEC-0062, DEC-0081
 
 ### DEC-0083: Council discussions become knowledge, with their sources
-- Status: PROPOSED
-- Proposed by: claude, 2026-11-04 (review section 6)
+- Status: APPROVED
+- Proposed by: claude, 2026-11-04 (review section 6) · Approved by: zac, 2026-11-04 ("Approve, c a local model if thats doable, we can name them based on their roles")
 - Decision: a closed thread is split in code into proposals, objections,
   open questions and asks; MIA's local model summarizes with each claim
   tied to its messages; claims stay "said by X, unverified" until a test,
@@ -1354,8 +1354,8 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0073, DEC-0075, DEC-0081
 
 ### DEC-0084: The Chronicle Archive, for MIA: The Chronicles
-- Status: PROPOSED
-- Proposed by: claude, 2026-11-04 (review section 7)
+- Status: APPROVED
+- Proposed by: claude, 2026-11-04 (review section 7) · Approved by: zac, 2026-11-04 ("Approve, c a local model if thats doable, we can name them based on their roles")
 - Decision: a story archive of its own (`core/saga.py`, working name),
   separate from the personal Chronicle (DEC-0028). Development events in
   the repo (`work/saga/`); Creator and MIA moments only in Zac's own folder
@@ -1367,8 +1367,8 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0002, DEC-0028, DEC-0083
 
 ### DEC-0085: The Story Bible, with continuity checked in code
-- Status: PROPOSED
-- Proposed by: claude, 2026-11-04 (review section 7.4)
+- Status: APPROVED
+- Proposed by: claude, 2026-11-04 (review section 7.4) · Approved by: zac, 2026-11-04 ("Approve, c a local model if thats doable, we can name them based on their roles")
 - Decision: `docs/chronicles/` (premise, timeline from approved events,
   characters, world, visual identity from `web/tokens.css` and the Stark
   interface, arcs, open threads, issues). Before a script is approved, code
@@ -1378,8 +1378,8 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0023, DEC-0084
 
 ### DEC-0086: Weekly issues, drafts until Zac approves
-- Status: PROPOSED
-- Proposed by: claude, 2026-11-04 (review section 8)
+- Status: APPROVED
+- Proposed by: claude, 2026-11-04 (review section 8) · Approved by: zac, 2026-11-04 ("Approve, c a local model if thats doable, we can name them based on their roles")
 - Decision: Sunday's run gathers the week's approved events, ranks them in
   code, and outlines and scripts an issue (writer configurable; ChatGPT
   writes, Claude checks it against the events). A thin week says so rather
@@ -1387,19 +1387,17 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   through the action contract; publishing beyond his devices is its own
   approval. Scripts in the repo; art on the PC by hash, versioned per
   panel, so one panel can be redone alone.
-- Open choice for Zac: art (a) by hand through ChatGPT from prompt packs
-  MIA prepares (recommended to start), (b) an image API with its key in
-  MIA's secrets, paid per image, or (c) a local image model on the GPU,
-  once verified on this AMD card.
+- Zac's choice (2026-11-04): **(c), a local image model on the GPU, "if thats doable"**:
+  verified on this AMD card before anything depends on it (task T-0036);
+  until it works, the prompt packs of (a) are the fallback.
 - Related: DEC-0084, DEC-0085
 
 ### DEC-0087: Names and likenesses in anything published
-- Status: PROPOSED
-- Proposed by: claude, 2026-11-04 (review sections 1 and 9)
-- Open choice for Zac: for the series shown beyond his own devices, the
-  council gets fictional names and looks drawn from their roles while the
-  real product names stay inside MIA (recommended: Claude, ChatGPT, Codex
-  and Copilot are other companies' trademarks), or the real names are kept
-  and that question accepted. Also his: whether "the Creator" looks like
-  him.
+- Status: APPROVED
+- Proposed by: claude, 2026-11-04 (review sections 1 and 9) · Approved by: zac, 2026-11-04 ("Approve, c a local model if thats doable, we can name them based on their roles")
+- Zac's choice (2026-11-04): **named for their roles** ("we can name them based on their
+  roles"): in the series the council has fictional names and looks drawn
+  from what each does; the real product names stay inside MIA. The names
+  are in the Story Bible (`docs/chronicles/characters/`) for Zac to change.
+  Whether "the Creator" looks like him waits for him.
 - Related: DEC-0084, DEC-0085

@@ -27,3 +27,9 @@
 {"at": "2026-11-04T05:14:43+00:00", "who": "claude", "action": "new", "task": "T-0030", "detail": "The council chat, kept in the repo and on the PC"}
 {"at": "2026-11-04T05:14:43+00:00", "who": "claude", "action": "claim", "task": "T-0030", "detail": "files: core/council.py, core/dev_store.py, core/dev_usage.py, tools/dev_window.py, web/dev.js"}
 {"at": "2026-11-04T05:14:53+00:00", "who": "claude", "action": "done", "task": "T-0030", "detail": "tests (tests/test_council.py tests/test_dev_store.py tests/test_work_dashboard.py tests/test_work_review.py tests/test_dev_lab.py): 38 passed in 9.35s; commit a65e3c2 DEC-0079: the dev team delegates by who has time, so it never sits idle (uncommitted: core/budget_manager.py, core/dev_lab.py, core/plaid_manager.py, core/work_dashboard.py, core/work_review.py, docs/DECISIONS.md, docs/DEVELOPMENTAL_INDEPENDENCE_REVIEW.md, tests/test_work_dashboard.py...)"}
+{"at": "2026-11-04T06:00:43+00:00", "who": "claude", "action": "new", "task": "T-0031", "detail": "The council talks to itself, sparingly"}
+{"at": "2026-11-04T06:00:43+00:00", "who": "claude", "action": "new", "task": "T-0032", "detail": "The Chronicle Archive"}
+{"at": "2026-11-04T06:00:43+00:00", "who": "claude", "action": "new", "task": "T-0033", "detail": "The Story Bible"}
+{"at": "2026-11-04T06:00:43+00:00", "who": "claude", "action": "new", "task": "T-0034", "detail": "A voice for every council member"}
+{"at": "2026-11-04T06:00:43+00:00", "who": "claude", "action": "new", "task": "T-0035", "detail": "Council Mode on the glasses"}
+{"at": "2026-11-04T06:00:43+00:00", "who": "claude", "action": "new", "task": "T-0036", "detail": "Verify a local image model on the 7900 XTX"}

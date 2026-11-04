@@ -39,19 +39,21 @@ ASKING: set[str] = set()  # council members answering right now
 _LOCK = threading.Lock()
 
 
-def _answer(name: str, message: dict) -> None:
-    """One member's reply, in the background: a CLI can take minutes."""
-    from core import council
-
+def _speaking(name: str, now: bool) -> None:
     with _LOCK:
-        ASKING.add(name)
+        (ASKING.add if now else ASKING.discard)(name)
+
+
+def _run(message: dict) -> None:
+    """Zac's message worked through the council (core/council_floor.py), in the background: a CLI
+    can take minutes, and a debate several turns."""
+    from core import council, council_floor
+
     try:
-        council.answer(name, message)
+        council_floor.run(message, on_turn=_speaking)
     except Exception as problem:  # the chat says so rather than going quiet
-        council.post(name, f"(I couldn't answer: {problem})", reply_to=message["id"])
-    finally:
-        with _LOCK:
-            ASKING.discard(name)
+        council.post("mia", f"(The council stopped: {problem})", reply_to=message["id"], kind="note",
+                     thread=message.get("thread", ""), turn=message["id"])
 
 
 def handler(key: str, port_of: callable):
@@ -104,17 +106,21 @@ def handler(key: str, port_of: callable):
                 return self._send(400, b"{}", "application/json")
             from core import council
 
+            from core import council_floor
+
+            text = str(body.get("text", ""))
+            ready = council_floor.ready_members()
             try:
-                message = council.post("zac", str(body.get("text", "")), task=str(body.get("task", ""))[:12])
+                message = council.post("zac", text, task=str(body.get("task", ""))[:12],
+                                       reply_to=str(body.get("reply_to", ""))[:40],
+                                       plan=council_floor.plan(text, sorted(ready)))
             except council.CouncilError as problem:
                 return self._send(400, json.dumps({"error": str(problem)}).encode("utf-8"), "application/json")
-            here = set(council.here())
-            for name in message["asks"]:
-                if name in here or name == "mia":
-                    threading.Thread(target=_answer, args=(name, message), daemon=True).start()
-                else:
-                    council.post(name, "(Not here right now: not installed, signed out, or its model isn't "
-                                 "loaded.)", reply_to=message["id"])
+            # Only Zac's messages set the council going, and each within its own budget (DEC-0081).
+            from core.council_floor import STOP
+
+            if not STOP.match(message["text"]):
+                threading.Thread(target=_run, args=(message,), daemon=True).start()
             return self._send(200, json.dumps(message).encode("utf-8"), "application/json")
 
     return Board

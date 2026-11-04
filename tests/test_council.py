@@ -43,8 +43,8 @@ def test_mentions():
 
 def test_a_member_answers_in_the_thread_with_the_chat_as_data(chat):
     repo, store = chat
-    council.post("codex", "I'd split the runner in two.", repo=repo, store=store)
-    asked = council.post("zac", "@qwen do you agree?", repo=repo, store=store)
+    said = council.post("codex", "I'd split the runner in two.", repo=repo, store=store)
+    asked = council.post("zac", "@qwen do you agree?", reply_to=said["id"], repo=repo, store=store)
     seen = {}
     reply = council.answer("qwen", asked, ask=lambda provider, prompt: seen.update(p=provider, prompt=prompt) or "Yes.",
                            repo=repo, store=store)

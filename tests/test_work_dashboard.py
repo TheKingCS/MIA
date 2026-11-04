@@ -143,9 +143,13 @@ def test_the_window_takes_zacs_messages_only_with_its_key(tmp_path, monkeypatch)
             if len(store.tail(10)) >= 3 and not dev_window.ASKING:
                 break
             time.sleep(0.1)
-        said = {m["who"]: m for m in store.tail(10)}
-        assert said["zac"]["asks"] == ["mia", "codex"] and said["mia"]["text"].startswith("From my docs.")
-        assert "Not here" in said["codex"]["text"] and said["codex"]["reply_to"] == said["zac"]["id"]
+        said = store.tail(10)
+        zac = said[0]
+        assert zac["who"] == "zac" and zac["asks"] == ["mia", "codex"] and zac["plan"]["order"] == ["mia", "codex"]
+        mia = next(m for m in said if m["who"] == "mia" and m["kind"] == "answer")
+        assert mia["text"].startswith("From my docs.") and mia["thread"] == zac["id"]
+        skipped = next(m for m in said if m["kind"] == "note")
+        assert "Codex isn't available" in skipped["text"]  # here only MIA is: nobody else is called
         assert len(repo.read_text(encoding="utf-8").splitlines()) == 3  # the repo's copy too
     finally:
         server.shutdown()

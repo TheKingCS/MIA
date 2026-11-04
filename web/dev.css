@@ -108,3 +108,12 @@
   border: 1px solid var(--accent); background: rgba(var(--rgb-accent), .15); color: var(--text); font: inherit; }
 .dev-send:disabled { opacity: .5; cursor: default; }
 .dev-note { color: var(--bad); font-size: var(--text-sm); }
+
+.dev-msg.note { background: none; border-style: dashed; color: var(--text-dim); font-size: var(--text-xs); }
+.dev-msg.note .said { color: var(--text-dim); }
+.dev-msg.summary { border-color: rgba(var(--rgb-accent), .6); background: rgba(var(--rgb-accent), .06); }
+.dev-msg .head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px; }
+.dev-reply { margin-left: auto; background: none; border: none; color: var(--text-faint); font: inherit;
+  font-size: var(--text-xs); cursor: pointer; padding: 0 2px; }
+.dev-reply:hover, .dev-reply:focus-visible { color: var(--accent); outline: none; }
+.dev-replying { font-size: var(--text-xs); color: var(--text-dim); margin: 0 0 4px; }

@@ -52,6 +52,86 @@
       "note": "MIA herself: her inspection and self-knowledge, read-only"
     }
   },
+  "members": {
+    "_about": "The council (DEC-0081/0082): who answers to which name, on which provider, and in which voice. Separate from roles, so no role is tied to a provider. Voices are Kokoro's (the PC) and are placeholders until Zac picks each by ear; colour is a theme token, never a colour. Two members on one provider (chatgpt and codex both run through the Codex CLI) share its usage and count as one reviewer. Series names (DEC-0087) live in the Story Bible, docs/chronicles/characters/.",
+    "mia": {
+      "name": "MIA",
+      "provider": "mia",
+      "about": "Systems Inspector, coordination and knowledge; she moderates",
+      "voice": "kokoro:af_heart",
+      "phone_voice": {
+        "pitch": 1.0,
+        "rate": 1.0
+      },
+      "colour": "accent"
+    },
+    "claude": {
+      "name": "Claude",
+      "provider": "claude-code",
+      "about": "implementation and code",
+      "voice": "kokoro:bm_george",
+      "phone_voice": {
+        "pitch": 0.9,
+        "rate": 0.95
+      },
+      "colour": "win"
+    },
+    "chatgpt": {
+      "name": "ChatGPT",
+      "provider": "codex",
+      "about": "architecture, research, specifications and planning",
+      "voice": "kokoro:af_sarah",
+      "phone_voice": {
+        "pitch": 1.1,
+        "rate": 1.0
+      },
+      "colour": "xp"
+    },
+    "codex": {
+      "name": "Codex",
+      "provider": "codex",
+      "about": "QA, code review and security review",
+      "voice": "kokoro:am_michael",
+      "phone_voice": {
+        "pitch": 0.8,
+        "rate": 1.05
+      },
+      "colour": "attention"
+    },
+    "copilot": {
+      "name": "Copilot",
+      "provider": "copilot",
+      "about": "development help and coding support",
+      "voice": "kokoro:am_eric",
+      "phone_voice": {
+        "pitch": 1.0,
+        "rate": 1.1
+      },
+      "colour": "ok"
+    },
+    "qwen": {
+      "name": "Qwen",
+      "provider": "ollama",
+      "about": "offline reasoning and analysis (local)",
+      "voice": "kokoro:af_kore",
+      "phone_voice": {
+        "pitch": 1.2,
+        "rate": 1.0
+      },
+      "colour": "rarity-rare"
+    },
+    "coder": {
+      "name": "Coder",
+      "provider": "ollama-coder",
+      "about": "offline coding and code reading (local)",
+      "voice": "kokoro:bm_lewis",
+      "phone_voice": {
+        "pitch": 0.85,
+        "rate": 0.95
+      },
+      "colour": "rarity-epic"
+    }
+  },
   "roles": [
     {
       "role": "Chief Architect",

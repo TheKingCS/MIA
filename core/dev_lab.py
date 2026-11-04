@@ -64,7 +64,7 @@ PROTECTED = (
     # The development platform's own rules and records (DEC-0075): who reviews, who may do what, the
     # history and the measure of what MIA can do. A lab change can't rewrite its own judge.
     "core/work_review.py", "core/work_agents.py", "core/work_loop.py", "core/work_tasks.py",
-    "core/work_activity.py", "core/dev_store.py", "core/dev_usage.py", "core/council.py", "tools/work.py",
+    "core/work_activity.py", "core/dev_store.py", "core/dev_usage.py", "core/council.py", "core/council_floor.py", "tools/work.py",
     "tools/dev_window.py", "work/",
 )
 DRAFTED, WRITTEN, READY, NOT_READY, MERGED, REVERTED, REJECTED = (
