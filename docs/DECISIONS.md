@@ -1304,3 +1304,102 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   Assistant. Review rules and Zac's approval never bend for availability.
   (`docs/DEVELOPMENTAL_INDEPENDENCE_REVIEW.md` section 6.4.)
 - Related: DEC-0069, DEC-0074, DEC-0075, DEC-0076
+
+### DEC-0080: The council's members talk to each other, sparingly
+- Status: APPROVED (the requirement; its design is DEC-0081, proposed)
+- Proposed by: zac, 2026-11-04 ("I do think the AI need to be able to communicate to each other but in some smart restricted manor as to not needlessly have them eat up the usage. They wont be much of a council if they cant communicate.") · Approved by: zac, 2026-11-04 (the same message)
+- Decision: council members can ask each other questions and debate, but
+  never at will: every exchange passes through MIA, within a budget, and
+  costs as little as it can. (`docs/COUNCIL_AND_CHRONICLES_REVIEW.md`
+  section 3.)
+- Related: DEC-0071, DEC-0077, DEC-0079
+
+### DEC-0081: One council everywhere, and how its members talk
+- Status: PROPOSED
+- Proposed by: claude, 2026-11-04 (review sections 3 and 4)
+- Decision: the dev window's chat, the phone and the glasses share one
+  council (`core/council.py`): threads, rules, capture. A voice session is a
+  thread in a mode, as User Sync is. Agents talk only through MIA: a thread
+  has a call budget; an agent asks another with one `ASK member: question`
+  line, passed on only if the budget allows, the member is ready, it isn't
+  a repeat and MIA can't answer it from what's decided; members read MIA's
+  running summary (local, free), not the chat; answers are short by
+  default; local members and MIA's knowledge come first; a thread stops at
+  agreement, no new points, its budget, a member's reserve or Zac's word.
+  Every call is recorded with its thread.
+- Related: DEC-0077, DEC-0079, DEC-0080
+
+### DEC-0082: A voice for every council member
+- Status: PROPOSED
+- Proposed by: claude, 2026-11-04 (review section 5)
+- Decision: members in `work/agents.json` (name, provider, brief, voice,
+  colour), separate from roles. The PC speaks every member with Kokoro
+  (DEC-0051) and the phone fetches the audio over the home link; the
+  phone's Android voice, set per member, is the fallback. A sound, a
+  speaker card and the orb's colour say who's speaking; Zac's words are
+  marked as his. A tap stops whoever is speaking. Zac picks each voice by
+  ear. No voice imitates a real person or a provider's own voice; each
+  voice's licence is checked before anything is published.
+- Related: DEC-0051, DEC-0062, DEC-0081
+
+### DEC-0083: Council discussions become knowledge, with their sources
+- Status: PROPOSED
+- Proposed by: claude, 2026-11-04 (review section 6)
+- Decision: a closed thread is split in code into proposals, objections,
+  open questions and asks; MIA's local model summarizes with each claim
+  tied to its messages; claims stay "said by X, unverified" until a test,
+  commit or decision backs them; entries go to the Development Knowledge
+  Vault (DEC-0073) and are tracked to implemented and validated. Tasks and
+  decisions from a thread are only proposed.
+- Related: DEC-0073, DEC-0075, DEC-0081
+
+### DEC-0084: The Chronicle Archive, for MIA: The Chronicles
+- Status: PROPOSED
+- Proposed by: claude, 2026-11-04 (review section 7)
+- Decision: a story archive of its own (`core/saga.py`, working name),
+  separate from the personal Chronicle (DEC-0028). Development events in
+  the repo (`work/saga/`); Creator and MIA moments only in Zac's own folder
+  on the PC, never the repo. Events carry sources, evidence, real or
+  fictional, built or imagined, significance, privacy (series, private,
+  never) and approval. Candidates come from rules in code (finished tasks,
+  firsts, approved decisions, reverts, marked threads) and from "remember
+  this for the Chronicles"; only Zac adds them to the series.
+- Related: DEC-0002, DEC-0028, DEC-0083
+
+### DEC-0085: The Story Bible, with continuity checked in code
+- Status: PROPOSED
+- Proposed by: claude, 2026-11-04 (review section 7.4)
+- Decision: `docs/chronicles/` (premise, timeline from approved events,
+  characters, world, visual identity from `web/tokens.css` and the Stark
+  interface, arcs, open threads, issues). Before a script is approved, code
+  checks every real-world claim against an approved event, that anything
+  shown as real is built, appearances against the character files, and
+  that nothing private appears; a failing check names the line.
+- Related: DEC-0023, DEC-0084
+
+### DEC-0086: Weekly issues, drafts until Zac approves
+- Status: PROPOSED
+- Proposed by: claude, 2026-11-04 (review section 8)
+- Decision: Sunday's run gathers the week's approved events, ranks them in
+  code, and outlines and scripts an issue (writer configurable; ChatGPT
+  writes, Claude checks it against the events). A thin week says so rather
+  than invent drama. Zac reviews and edits in the window and approves
+  through the action contract; publishing beyond his devices is its own
+  approval. Scripts in the repo; art on the PC by hash, versioned per
+  panel, so one panel can be redone alone.
+- Open choice for Zac: art (a) by hand through ChatGPT from prompt packs
+  MIA prepares (recommended to start), (b) an image API with its key in
+  MIA's secrets, paid per image, or (c) a local image model on the GPU,
+  once verified on this AMD card.
+- Related: DEC-0084, DEC-0085
+
+### DEC-0087: Names and likenesses in anything published
+- Status: PROPOSED
+- Proposed by: claude, 2026-11-04 (review sections 1 and 9)
+- Open choice for Zac: for the series shown beyond his own devices, the
+  council gets fictional names and looks drawn from their roles while the
+  real product names stay inside MIA (recommended: Claude, ChatGPT, Codex
+  and Copilot are other companies' trademarks), or the real names are kept
+  and that question accepted. Also his: whether "the Creator" looks like
+  him.
+- Related: DEC-0084, DEC-0085
