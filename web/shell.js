@@ -198,7 +198,10 @@
       el("span", { class: "ico", "aria-hidden": "true" }, icon(a.id, a.icon)), el("span", { class: "label" }, a.name)))
       .concat((shell.made || []).map((m) => el("a", { class: cls, href: m.page,
         "aria-current": here === "made" && made === m.id ? "page" : null },
-        el("span", { class: "ico", "aria-hidden": "true" }, icon(m.icon, "✦")), el("span", { class: "label" }, m.name))));
+        el("span", { class: "ico", "aria-hidden": "true" }, icon(m.icon, "✦")), el("span", { class: "label" }, m.name))))
+      .concat(shell.person && shell.person.child ? [] : [el("a", { class: cls, href: "made.html",  // ask her for one
+        "aria-current": here === "made" && !made ? "page" : null },
+        el("span", { class: "ico", "aria-hidden": "true" }, "＋"), el("span", { class: "label" }, "Make Something"))]);
   }
 
   function more(shell) {
