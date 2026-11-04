@@ -2,7 +2,33 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-10-29 (Kokoro voice, how MIA describes herself, the stretched Home cards), by claude.*
+session. Last updated: 2026-11-04 (the development platform, the council, the Chronicles, MIA making screens and workflows), by claude.*
+
+**2026-11-03 to 04, Claude on the PC (DEC-0068 to DEC-0093, approved).** Four new layers, all in the
+dev window (`python -m tools.dev_window`, the desktop's **MIA Development** shortcut) and MIA's web:
+
+- **The development platform** (MIA-DII): tasks as files (`work/tasks/`), one history
+  (`work/activity.jsonl`), roles and providers (`work/agents.json`), the loop through the lab, two
+  reviewers on different providers, objections that must be answered, reviewer lessons, missions the
+  council works by itself within a scope and budget with work handed to whoever has time
+  (`core/work_runner.py`, DEC-0076/0079), and the Development Knowledge Vault (`work/knowledge/`,
+  DEC-0073). MIA's local write-ups proved unreliable (30 withdrawn, K-0033): agents get confirmed
+  entries only.
+- **The council**: one chat in the repo and on the PC (`core/council.py`, `core/dev_store.py`),
+  members talking to each other only through MIA within each turn's budget (`core/council_floor.py`),
+  a voice for each (`core/council_voices.py`), and Council Mode through the glasses, engine side
+  (`core/council_session.py`; the glasses' speaker card and per-member audio wait for the hardware).
+- **MIA: The Chronicles**: the archive (`core/saga.py`, `work/saga/`; personal moments only in the
+  person's folder), the Story Bible (`docs/chronicles/`, the council named for their roles), and a
+  local image model that runs on the 7900 XTX (SD-Turbo, under a second an image; draft quality).
+- **ACAF** (DEC-0088 to 0093): MIA makes screens and workflows as specifications, not code, from a
+  sentence: record sets, screens over her history, workflows with standing approval by kind,
+  all checked in code, published by approval, undoable (`core/creation_*.py`, `core/workflows.py`,
+  `web/made.html`, sidebar **Make Something**).
+
+Waiting on Zac: approve T-0019, `codex login` (the second reviewer), pick the council's voices,
+try Make Something, and try Council Mode on the glasses. The two failing tests are known: T-0019's
+OCR fix (not merged yet) and the Plaid work in progress.
 
 **2026-10-30, Claude on the PC (DEC-0052, approved):** MIA's reasoning
 layer. One owner per fact (pay → the Dungeon, training days → the Loop,
