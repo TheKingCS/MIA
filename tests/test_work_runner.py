@@ -57,6 +57,7 @@ def step(place, registry, **kw):
     kw.setdefault("lab", SimpleNamespace(get=lambda pid: SimpleNamespace(files=["core/ocr.py"])))
     kw.setdefault("state", lambda provider: {"state": "ready"})
     kw.setdefault("learn", lambda task_id: [])
+    kw.setdefault("shadow", lambda task_id: {"outcome": "pass"})
     return runner.step(place.mission, registry, folder=place.missions, tasks_dir=place.tasks, log=place.log,
                        stop_file=place.stop, **kw)
 
@@ -144,3 +145,21 @@ def test_a_usage_limit_mid_write_is_a_rest_not_a_failure(place, monkeypatch):
 def test_scope():
     assert runner.in_scope(["tests/test_ocr.py", "core/ocr.py", "core/ocr_extra.py"], ["tests/", "core/ocr.py"]) == \
         ["core/ocr_extra.py"]
+
+
+def test_with_nothing_to_write_mia_practises_on_what_the_council_wrote(place):
+    registry = agents.parse(REGISTRY)
+    activity.record("Software Engineer (claude-code)", "loop", "T-0001", "write: done", place.log)
+    tasks = tasks_mod.load(place.tasks)
+    tasks["T-0001"].status = "review"
+    tasks_mod.save(tasks["T-0001"], place.tasks)
+    tried = []
+
+    def shadow(task_id):
+        tried.append(task_id)
+        activity.record("MIA (ollama-coder)", "shadow", task_id, "fail: changed nothing", place.log)
+        return {"outcome": "fail"}
+    resting = lambda p: {"state": "cooling"}  # noqa: E731  nothing can review or write
+    assert step(place, registry, loop=FakeLoop(place), state=resting, shadow=shadow) == "MIA's attempt at T-0001: fail"
+    assert step(place, registry, loop=FakeLoop(place), state=resting, shadow=shadow).startswith("idle")
+    assert tried == ["T-0001"]  # once per task

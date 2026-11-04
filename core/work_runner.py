@@ -211,7 +211,7 @@ def _with_provider(registry, role_name: str, provider: str):
     return swapped
 
 
-def step(mission_id: str, registry, *, loop=None, review=None, learn=None, state=None, lab=None, usage=None,
+def step(mission_id: str, registry, *, loop=None, review=None, learn=None, shadow=None, state=None, lab=None, usage=None,
          folder: Path = MISSIONS, tasks_dir=tasks_mod.TASKS_DIR, log=activity.ACTIVITY,
          stop_file: Path = STOP_FILE) -> str:
     """One thing the mission allows now. Returns what it did, in words (also kept in the history)."""
@@ -225,6 +225,8 @@ def step(mission_id: str, registry, *, loop=None, review=None, learn=None, state
         from core.dev_usage import state
     if learn is None:
         from core.dev_knowledge import retrospective as learn
+    if shadow is None:
+        from core.mia_coder import shadow
 
     def said(what: str, task_id: str = "") -> str:
         activity.record(WHO, "runner", task_id, f"{mission_id} {what}", log)
@@ -305,6 +307,18 @@ def step(mission_id: str, registry, *, loop=None, review=None, learn=None, state
                 return said(f"blocked {task.id}: outside the scope ({', '.join(outside)})", task.id)
         return said(f"wrote {task.id}: now {stopped}", task.id)
 
+    # The local work, at no one's usage. First MIA's practice (DEC-0074): a task the council wrote that she
+    # hasn't attempted, small enough for her (a few files).
+    attempted = {e.get("task") for e in activity.events(log) if e.get("action") == "shadow"}
+    written = {e.get("task") for e in activity.events(log) if e.get("action") == "loop"
+               and str(e.get("detail", "")).startswith("write")}
+    for task in sorted(tasks.values(), key=lambda t: t.id):
+        if task.id in written and task.id not in attempted and 0 < len(task.files) <= 4:
+            try:
+                result = shadow(task.id)
+            except Exception as problem:
+                return said(f"MIA's attempt at {task.id} didn't run: {str(problem)[:200]}", task.id)
+            return said(f"MIA's attempt at {task.id}: {result.get('outcome', '?')}", task.id)
     tried = {e.get("task") for e in activity.events(log) if e.get("action") == "learn"
              or (e.get("who") == WHO and " learned from " in f" {e.get('detail', '')}")}
     for task in [t for t in tasks.values() if t.status == "done" and t.id not in tried]:  # the local work
