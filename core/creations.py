@@ -125,6 +125,17 @@ class Creations:
         self._save()
         return found
 
+    def keep_rows(self, creation_id: str, rows: list[dict]) -> None:
+        """An imported file's rows, kept with its draft until it's published (core/record_import.py)."""
+        self.get(creation_id)["pending_rows"] = list(rows)
+        self._save()
+
+    def take_rows(self, creation_id: str) -> list[dict]:
+        found = self.get(creation_id)
+        rows = found.pop("pending_rows", None) or []
+        self._save()
+        return rows
+
     def log_run(self, creation_id: str, entry: dict, keep: int = 50) -> None:
         """A workflow's run (core/workflows.py): what it did, kept with it, the latest `keep`."""
         found = self.get(creation_id)

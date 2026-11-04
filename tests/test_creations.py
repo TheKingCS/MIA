@@ -275,3 +275,46 @@ def test_code_points_the_model_at_history_and_the_period_asked_for():
                                        blueprints.load(), "eggs each week")
     chart = next(b for b in spec["blocks"] if b["block"] == "chart")
     assert chart["by"] == "week" and not any(b["block"] == "form" for b in spec["blocks"])
+
+
+CSV = """Date,Item,Category,Amount,Paid with
+2026-10-02,Chicken feed,Animals,$32.50,Card
+2026-10-09,Fence posts,Repairs,$118.00,Card
+2026-10-15,Chicken feed,Animals,$32.50,Cash
+2026-10-22,Seed potatoes,Garden,$24.99,Card
+2026-10-29,Hinges,Repairs,$9.40,Cash
+2026-11-01,Chicken feed,Animals,$32.50,Card
+"""
+
+
+def test_a_file_becomes_a_record_set_and_a_screen(world):
+    """ACAF step 4: a CSV nobody planned for; its columns read by code, its rows kept until publishing."""
+    from core import record_import
+
+    fields, rows = record_import.infer(CSV)
+    types = {f["name"]: f["type"] for f in fields}
+    assert types == {"date": "date", "item": "text", "category": "choice", "amount": "money", "paid_with": "choice"}
+    assert rows[0] == {"date": "2026-10-02", "item": "Chicken feed", "category": "Animals", "amount": 32.5, "paid_with": "Card"}
+    w = world
+    made = record_import.draft(w, "Homestead costs", CSV)
+    assert made["status"] == "draft" and w.record_sets.sets == [] and w.my_record_sets.sets == []  # nothing yet
+    assert "log" in made["versions"][-1]["blueprint"]  # a date and money: over time
+    proposal = w.actions.propose(w, "creation.publish", {"creation_id": made["id"]})
+    assert "with the 6 rows from the file" in proposal.summary
+    done = w.actions.approve(w, proposal.proposal_id)
+    assert done.status == "executed" and "6 records from the file" in done.result
+    kept = w.my_record_sets.sets[0]["records"]
+    assert len(kept) == 6 and kept[1]["values"]["amount"] == 118.0
+    assert "pending_rows" not in w.creations.get(made["id"])
+    w.actions.undo(w, done.proposal_id)  # one step back: the screen and its rows
+    w.my_record_sets._load()
+    assert w.my_record_sets.sets == []
+
+
+def test_files_that_cant_become_a_screen():
+    from core import record_import
+
+    with pytest.raises(record_import.ImportError_, match="header row"):
+        record_import.infer("just,a,header\n")
+    fields, rows = record_import.infer("when;what\n01/02/2026;x\n03/04/2026;y\n")  # semicolons and US dates
+    assert fields[0]["type"] == "date" and rows[1]["when"] == "2026-03-04"

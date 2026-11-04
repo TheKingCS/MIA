@@ -314,6 +314,7 @@
     madeList: () => demo ? Promise.resolve({ creations: [] }) : call("GET", "/api/made"),
     made: (id) => demo ? Promise.reject(new MiaError(400, "Not in the demo.")) : call("GET", "/api/made/" + encodeURIComponent(id)),
     make: (need) => demo ? demoOnly() : call("POST", "/api/made", { need }),
+    madeImport: (name, csv) => demo ? demoOnly() : call("POST", "/api/made/import", { name, csv }),
     madeDry: (id) => demo ? demoOnly() : call("POST", "/api/made/" + encodeURIComponent(id) + "/dry"),
     dev: (query) => demo ? Promise.resolve({ available: false }) : call("GET", "/api/dev" + (query ? "?q=" + encodeURIComponent(query) : "")),
     pageError: (page, message) => demo || !token ? Promise.resolve(null) : call("POST", "/api/failures/page", { page, message }),

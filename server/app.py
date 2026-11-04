@@ -1818,6 +1818,25 @@ def create_app(context: AppContext) -> FastAPI:
         except (ValueError, KeyError) as problem:
             raise HTTPException(status.HTTP_409_CONFLICT, str(problem)) from None
 
+    @app.post("/api/made/import")
+    def web_made_import(body: dict, profile_id: str = Depends(require_profile_id)) -> dict:
+        """A file (CSV) nobody planned for becomes a draft screen with its rows kept beside it
+        (core/record_import.py). Changes no data until it's published."""
+        from core.child_accounts import is_child
+        from core.record_import import ImportError_, draft
+
+        view = view_for(context, profile_id)
+        if is_child(view, profile_id):
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "Ask a grown-up to bring in a file.")
+        text = str(body.get("csv", ""))
+        if len(text) > 2_000_000:
+            raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "That file is too big (2 MB at most).")
+        try:
+            made = draft(view, str(body.get("name", ""))[:60], text)
+        except ImportError_ as problem:
+            raise HTTPException(status.HTTP_409_CONFLICT, str(problem)) from None
+        return {"id": made["id"], "title": made["title"], "status": made["status"]}
+
     @app.post("/api/made")
     def web_make(body: dict, profile_id: str = Depends(require_profile_id)) -> dict:
         """MIA makes a draft from a need in plain words (core/creation_maker.py). Changes no data:

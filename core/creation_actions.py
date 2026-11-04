@@ -69,6 +69,8 @@ def _describe_publish(context, params) -> str:
 
         if not found["version"]:
             return f"Add “{latest['spec']['title']}” to your apps, showing {source_of(latest['spec']).title.lower()} from your history"
+    if found.get("pending_rows"):
+        return f"Add “{latest['spec']['title']}” to your apps with the {len(found['pending_rows'])} rows from the file"
     if found["version"]:
         return f"Publish version {latest['version']} of “{latest['spec']['title']}” in place of version {found['version']}"
     return f"Add “{latest['spec']['title']}” to your apps, keeping its records with {where}"
@@ -99,6 +101,15 @@ def _publish(context, params) -> str:
         except RecordError as problem:
             raise ActionError(str(problem)) from None
     _creations(context).mark_published(found["id"], latest["version"], set_id)
+    rows = _creations(context).take_rows(found["id"])  # an imported file's rows, in the same undoable step
+    if rows:
+        store = sets_for(context, found["owner"])
+        for values in rows:
+            try:
+                store.add(set_id, values)
+            except RecordError:
+                continue
+        return f"{latest['spec']['title']} is in your apps, with {len(rows)} records from the file."
     return f"{latest['spec']['title']} is in your apps."
 
 
