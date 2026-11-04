@@ -115,6 +115,16 @@ def handle(context, profile_id: str, text: str, talk, sync=None) -> dict:
     heard = " ".join(str(text or "").split())
     if not heard:
         return {"heard": "", "say": "I didn't catch that."}
+    from core.council_session import hear as council_hears
+
+    try:  # Council Mode first (core/council_session.py): while it's open, the words are the council's
+        meeting = council_hears(context, profile_id, heard)
+    except Exception:  # the council failing never takes MIA's own answers with it
+        meeting = None
+    if meeting is not None:
+        out = {"heard": heard, **meeting}
+        said(profile_id, out)
+        return out
     found = command(context, heard)
     syncing = sync(heard) if found is None and sync is not None else None
     if found is not None:

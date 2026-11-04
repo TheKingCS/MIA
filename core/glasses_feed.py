@@ -72,6 +72,24 @@ ORB_STATES = frozenset(ORB_LASTS) | {"idle"}
 _orb: dict = {}  # profile id -> (state, when)
 
 
+def council_said(profile_id: str, member: str, text: str, now: Optional[datetime] = None) -> dict:
+    """A council member's answer in Council Mode (core/council_session.py, DEC-0082): a card with who's
+    speaking, in which voice, and what they say aloud; the full answer is in the council chat."""
+    global _voice_n
+    from core.council import members
+    from core.council_session import spoken
+
+    who = members().get(member, {})
+    now = now or datetime.now()
+    with _voice_lock:
+        _voice_n += 1
+        card = {"id": f"v:{_voice_n}", "icon": "◉", "headline": who.get("name", member), "text": _short(text),
+                "say": spoken(text), "speaker": member, "voice": who.get("voice", ""), "colour": who.get("colour", "accent"),
+                "level": "voice", "source": "council", "generated": True}
+        _voice.append((now, profile_id, card))
+    return card
+
+
 def said(profile_id: str, turn: dict, now: Optional[datetime] = None) -> dict:
     """Tell the glasses about a voice turn: {"heard", "say", "open"?}."""
     global _voice_n

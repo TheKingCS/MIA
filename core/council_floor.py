@@ -191,7 +191,8 @@ def _local_model(prompt: str) -> str:
 
 def run(root: dict, *, ask: Optional[Callable[[str, str], str]] = None,
         summarize: Optional[Callable[[str], str]] = _local_model, ready: Optional[set] = None,
-        on_turn: Optional[Callable[[str, bool], None]] = None, repo=None, store=None) -> list[dict]:
+        on_turn: Optional[Callable[[str, bool], None]] = None, repo=None, store=None,
+        on_said: Optional[Callable[[dict], None]] = None) -> list[dict]:
     """Work one of Zac's messages through the council within its budget. Returns what was posted."""
     store = store or council._store()
     ready = set(ready) if ready is not None else ready_members()
@@ -222,6 +223,8 @@ def run(root: dict, *, ask: Optional[Callable[[str, str], str]] = None,
             if on_turn:
                 on_turn(name, False)
         posted.append(said)
+        if on_said:
+            on_said(said)
         if said["text"].startswith(FAILED):
             ready.discard(name)
         return said
@@ -295,4 +298,6 @@ def run(root: dict, *, ask: Optional[Callable[[str, str], str]] = None,
         if wrap:
             posted.append(council.post("mia", wrap, reply_to=root["id"], repo=repo, store=store,
                                        kind="summary", thread=thread_id, turn=turn))
+            if on_said:
+                on_said(posted[-1])
     return posted
