@@ -1,0 +1,12 @@
+{
+  "ollama-coder": [
+    {
+      "task": "T-0019",
+      "lesson": "Search the whole repo for a name before calling it unused: _WINDOWS_DEFAULT looked unused in the diff but core/ocr.py uses it."
+    },
+    {
+      "task": "T-0019",
+      "lesson": "A changes verdict must name each problem with its file and what to change; a bare VERDICT: changes gives the author nothing to answer."
+    }
+  ]
+}
