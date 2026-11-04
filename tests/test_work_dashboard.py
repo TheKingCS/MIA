@@ -42,3 +42,67 @@ def test_the_page_shows_the_queue_the_work_and_the_history(tmp_path):
 
 def test_without_the_repo_it_says_so(tmp_path):
     assert dash.page(None, tasks_dir=tmp_path / "nowhere") == {"available": False}
+
+
+def test_the_board_says_whose_move_it_is(tmp_path, monkeypatch):
+    """Zac: "easy to view and understand the workflow ... what is building, who is building it"."""
+    from core import work_review as rv
+    from core.work_agents import parse
+    from tests.test_work_loop import REGISTRY
+
+    data = {**REGISTRY, "providers": {**REGISTRY["providers"], "codex": {"kind": "cli", "command": "codex",
+                                                                       "can": ["review"]}},
+            "roles": REGISTRY["roles"] + [{"role": "Security Auditor", "provider": "codex", "tier": "review"}]}
+    monkeypatch.setattr("core.work_agents.load", lambda *a: parse(data))
+    folder, log = tmp_path / "tasks", tmp_path / "activity.jsonl"
+    tasks_mod.save(tasks_mod.Task(id="T-0001", title="Being built", status="claimed", owner="Software Engineer (claude-code)"), folder)
+    tasks_mod.save(tasks_mod.Task(id="T-0002", title="One review in", status="review", branch="lab/x"), folder)
+    tasks_mod.save(tasks_mod.Task(id="T-0003", title="Ready to start"), folder)
+    w = "Software Engineer (claude-code)"
+    activity.record(w, "loop", "T-0001", "claim: core/x.py", log)
+    activity.record(w, "loop", "T-0001", "lab: x", log)
+    activity.record(w, "loop", "T-0002", "write: changed it", log)
+    activity.record("QA Engineer (ollama)", "review", "T-0002", "approve: right", log)
+    board = dash.page(None, tasks_dir=folder, log=log)["board"]
+    building, = board["building"]
+    assert building["id"] == "T-0001" and building["next"] == "Software Engineer (claude-code) is on it: next, write."
+    assert [s["done"] for s in building["steps"]] == [True, True, False, False, False]
+    waiting, = board["review"]
+    assert waiting["needed"] == 2 and waiting["approvals"] == ["ollama"] and "1 of 2" in waiting["next"]
+    assert board["next"][0]["command"] == 'python -m tools.work run T-0003 --as "<role>"'
+    activity.record("Security Auditor (codex)", "review", "T-0002", "approve: fine", log)
+    yours, = dash.page(None, tasks_dir=folder, log=log)["board"]["yours"]
+    assert yours["id"] == "T-0002" and yours["command"] == "python -m tools.work approve T-0002"
+    assert [e["action"] for e in yours["timeline"]] == ["loop", "review", "review"]
+    activity.record("Security Auditor (codex)", "review", "T-0002", "changes: a hole", log)
+    stuck, = dash.page(None, tasks_dir=folder, log=log)["board"]["review"]
+    assert "Security Auditor (codex) asked for changes" in stuck["next"] and rv.open_objections("T-0002", log)
+
+
+def test_its_own_window_serves_only_this_computer_and_this_run():
+    import json as json_mod
+    import urllib.error
+    import urllib.request
+
+    from tools import dev_window
+
+    server, address = dev_window.serve()
+    try:
+        port, key = server.server_address[1], address.split("#key=")[1]
+        base = f"http://127.0.0.1:{port}"
+        assert b"MIA Development" in urllib.request.urlopen(base + "/").read()
+
+        def code(url, headers):
+            try:
+                return urllib.request.urlopen(urllib.request.Request(url, headers=headers)).status
+            except urllib.error.HTTPError as e:
+                return e.code
+
+        assert code(base + "/api/dev", {}) == 403 and code(base + "/api/dev", {"X-Dev-Key": "guess"}) == 403
+        assert code(f"http://localhost:{port}/", {}) == 403  # another name for here: refused
+        assert code(base + "/../core/actions.py", {}) == 404 and code(base + "/mia.js", {}) == 404
+        found = json_mod.loads(urllib.request.urlopen(urllib.request.Request(base + "/api/dev",
+                                                                            headers={"X-Dev-Key": key})).read())
+        assert "board" in found or found == {"available": False}
+    finally:
+        server.shutdown()

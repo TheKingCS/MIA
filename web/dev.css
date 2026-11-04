@@ -1,0 +1,88 @@
+/*
+ * dev.css: the development board (claude, 2026-11-03). Tokens only
+ * (web/tokens.css, DEC-0023): one accent, graphite layers.
+ */
+.dev-now { display: flex; align-items: center; gap: 10px; padding: 10px 14px; margin: 0 0 14px;
+  border: 1px solid var(--glass-line); border-radius: var(--radius); background: var(--glass);
+  font-size: var(--text-sm); color: var(--text-dim); }
+.dev-now .pulse { width: 9px; height: 9px; border-radius: 50%; background: var(--text-faint); flex: none; }
+.dev-now.live .pulse { background: var(--accent); box-shadow: 0 0 10px var(--accent-glow); animation: dev-pulse 1.6s infinite; }
+@keyframes dev-pulse { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .dev-now.live .pulse { animation: none; } }
+
+.dev-flow { display: grid; grid-template-columns: repeat(5, minmax(200px, 1fr)); gap: 12px; align-items: start;
+  overflow-x: auto; padding-bottom: 6px; }
+.dev-col { min-width: 0; border: 1px solid var(--glass-line); border-radius: var(--radius); background: var(--glass);
+  padding: 10px; }
+.dev-col h2 { margin: 0 0 4px; font-size: var(--text-md); display: flex; justify-content: space-between; gap: 8px; }
+.dev-col h2.gap { margin-top: 14px; }
+.dev-col h2 .n { color: var(--text-faint); font-weight: 400; }
+.dev-col > p { margin: 0 0 10px; font-size: var(--text-xs); color: var(--text-faint); }
+.dev-col.yours { border-color: rgba(var(--rgb-accent), .55); box-shadow: 0 0 18px rgba(var(--rgb-accent), .12); }
+.dev-col .empty { font-size: var(--text-sm); color: var(--text-faint); margin: 6px 2px; }
+
+.dev-card { display: block; width: 100%; text-align: left; font: inherit; color: var(--text); cursor: pointer;
+  border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); padding: 9px 10px;
+  margin: 0 0 8px; }
+.dev-card:hover, .dev-card:focus-visible { border-color: rgba(var(--rgb-accent), .6); outline: none; }
+.dev-card[aria-expanded="true"] { border-color: var(--accent); }
+.dev-card .id { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-faint); }
+.dev-card { overflow-wrap: anywhere; }
+.dev-card .t { display: block; font-size: var(--text-sm); margin: 2px 0 4px; }
+.dev-card .who { display: block; font-size: var(--text-xs); color: var(--accent); }
+.dev-card .nx { display: block; font-size: var(--text-xs); color: var(--text-dim); margin-top: 4px; }
+.dev-chip { display: inline-block; font-size: var(--text-xs); padding: 1px 7px; border-radius: var(--radius-pill);
+  border: 1px solid var(--line); color: var(--text-dim); margin: 4px 4px 0 0; }
+.dev-chip.ok { border-color: var(--ok); color: var(--ok); }
+.dev-chip.bad { border-color: var(--bad); color: var(--bad); }
+.dev-chip.wait { border-style: dashed; }
+
+.dev-steps { display: flex; gap: 3px; margin-top: 6px; }
+.dev-steps span { flex: 1; height: 4px; border-radius: 2px; background: var(--line); }
+.dev-steps span.done { background: var(--accent); }
+
+.dev-detail { position: fixed; top: 0; right: 0; bottom: 0; z-index: 50; width: min(560px, 100vw); box-sizing: border-box;
+  overflow-y: auto; overflow-x: hidden; overflow-wrap: anywhere; border-left: 1px solid rgba(var(--rgb-accent), .45); background: var(--surface-solid);
+  box-shadow: -12px 0 40px rgba(var(--rgb-bg), .7); padding: 18px 20px 40px; }
+.dev-close { position: sticky; top: 0; float: right; width: var(--touch); height: var(--touch); border-radius: 50%;
+  border: 1px solid var(--line); background: var(--surface); color: var(--text); font-size: var(--text-lg); cursor: pointer; }
+.dev-close:hover, .dev-close:focus-visible { border-color: var(--accent); outline: none; }
+.dev-more { width: 100%; padding: 8px; border-radius: var(--radius-sm); border: 1px dashed var(--line); background: none;
+  color: var(--text-dim); font: inherit; font-size: var(--text-sm); cursor: pointer; }
+.dev-more:hover { color: var(--text); border-color: var(--accent); }
+.dev-detail h2 { margin: 0 0 4px; font-size: var(--text-lg); }
+.dev-detail .nx { margin: 6px 0 10px; color: var(--text); }
+.dev-detail code, .dev-cmd { font-family: var(--font-mono); font-size: var(--text-sm); }
+.dev-cmd { display: block; padding: 8px 10px; margin: 6px 0 12px; border-radius: var(--radius-sm);
+  background: var(--surface-solid); border: 1px solid var(--line); color: var(--accent); user-select: all; }
+.dev-detail h3 { margin: 14px 0 6px; font-size: var(--text-sm); color: var(--text-dim); text-transform: uppercase;
+  letter-spacing: var(--label-track); }
+.dev-review { border-left: 3px solid var(--line); padding: 2px 0 2px 10px; margin: 0 0 8px; font-size: var(--text-sm); }
+.dev-review.approve { border-color: var(--ok); }
+.dev-review.changes { border-color: var(--bad); }
+.dev-review .said { color: var(--text-dim); white-space: pre-wrap; }
+.dev-time { list-style: none; margin: 0; padding: 0; font-size: var(--text-sm); }
+.dev-time li { display: grid; grid-template-columns: 112px 1fr; gap: 10px; padding: 5px 0; border-top: 1px solid var(--line); }
+.dev-time .at { color: var(--text-faint); font-size: var(--text-xs); }
+.dev-time .what b { color: var(--text); font-weight: 600; }
+.dev-time .what span { color: var(--text-dim); }
+
+.dev-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+.dev-agents { list-style: none; margin: 0; padding: 0; font-size: var(--text-sm); }
+.dev-agents li { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; padding: 6px 0; border-top: 1px solid var(--line); }
+.dev-agents .sub { grid-column: 1 / -1; font-size: var(--text-xs); color: var(--text-faint); }
+.dev-agents .busy { color: var(--accent); }
+
+.dev-standalone { margin: 0; min-height: 100vh; background: var(--bg); color: var(--text); font-family: var(--font); }
+.dev-standalone .dev-wrap { padding: 16px; max-width: 1500px; margin: 0 auto; }
+.dev-standalone header h1 { margin: 0; font-size: var(--text-xl); }
+.dev-standalone header p { margin: 2px 0 14px; color: var(--text-dim); font-size: var(--text-sm); }
+.dev-search { width: 100%; box-sizing: border-box; padding: 8px 10px; margin: 0 0 8px; border-radius: var(--radius-sm);
+  border: 1px solid var(--line); background: var(--surface-solid); color: var(--text); font: inherit; }
+
+@media (max-width: 900px) {
+  .dev-flow { grid-template-columns: repeat(5, 78vw); scroll-snap-type: x mandatory; }
+  .dev-col { scroll-snap-align: start; }
+  .dev-grid2 { grid-template-columns: 1fr; }
+  .dev-time li { grid-template-columns: 1fr; gap: 0; }
+}
