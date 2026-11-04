@@ -87,6 +87,20 @@ def _missions(events: list[dict]) -> list[dict]:
     return out
 
 
+def _independence() -> dict:
+    """The ledger (core/dev_ledger.py): what each provider has shown it can do, by skill."""
+    from core import dev_ledger
+
+    try:
+        found = dev_ledger.ledger()
+    except OSError:
+        return {"stages": list(dev_ledger.STAGES), "rows": []}
+    rows = [{"provider": p, "skill": s, **{k: v for k, v in r.items() if k != "recent"},
+             "recent": [o["why"] + (" ✓" if o["passed"] else " ✗") for o in r["recent"]]}
+            for p, skills in found.items() for s, r in skills.items() if r["attempts"] or p == "ollama-coder"]
+    return {"stages": list(dev_ledger.STAGES), "rows": rows}
+
+
 def _members() -> list[dict]:
     """The council's members and their voices (work/agents.json, DEC-0082)."""
     try:
@@ -258,6 +272,7 @@ def page(context, query: str = "", tasks_dir=tasks_mod.TASKS_DIR, log=activity.A
         "missions": _missions(all_events),
         "knowledge": _knowledge(),
         "members": _members(),
+        "independence": _independence(),
         "available": True,
         "summary": {s: sum(1 for r in rows if r["status"] == s) for s in ("ready", "claimed", "review", "blocked", "done")},
         "queue": [r for r in open_rows if r["status"] == "review"],

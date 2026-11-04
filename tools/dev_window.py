@@ -147,7 +147,7 @@ def handler(key: str, port_of: callable):
                     not hmac.compare_digest(self.headers.get("X-Dev-Key", ""), key):
                 return self._send(403, b"{}", "application/json")
             where = urlsplit(self.path).path
-            if where not in ("/api/council", "/api/saga", "/api/mission", "/api/knowledge", "/api/voice"):
+            if where not in ("/api/council", "/api/saga", "/api/mission", "/api/knowledge", "/api/voice", "/api/ledger"):
                 return self._send(404, b"{}", "application/json")
             try:
                 length = min(int(self.headers.get("Content-Length", "0")), 100_000)
@@ -158,6 +158,14 @@ def handler(key: str, port_of: callable):
                 return self._saga(body)
             if where == "/api/mission":
                 return self._mission(body)
+            if where == "/api/ledger":  # Zac confirming a stage the evidence supports (DEC-0075); grants nothing
+                from core import dev_ledger
+
+                try:
+                    dev_ledger.confirm(str(body.get("provider", "")), str(body.get("skill", "")), int(body.get("stage", 0)))
+                except (ValueError, TypeError) as problem:
+                    return self._send(400, json.dumps({"error": str(problem)}).encode("utf-8"), "application/json")
+                return self._send(200, b"{}", "application/json")
             if where == "/api/voice":  # Zac's pick for a member
                 from core import council_voices
 

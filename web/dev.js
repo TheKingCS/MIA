@@ -232,6 +232,22 @@
     return el("section", { class: "dev-col" }, parts);
   }
 
+  function independence(p) {
+    const k = p.independence || { stages: [], rows: [] };
+    const pct = (v) => v == null ? "—" : Math.round(v * 100) + "%";
+    const parts = [el("h2", {}, "Independence"), el("p", {}, "What each member, MIA's own coder (ollama-coder) first, has " +
+      "shown it can do, from the history: merges, reverts, MIA's shadow attempts, and whether reviewers' objections held. " +
+      "The bound is the cautious rate: a few tries mean little. A stage past Apprentice waits for you, and grants no permission.")];
+    parts.push(el("ul", { class: "dev-agents" }, k.rows.map((r) => el("li", {},
+      el("span", {}, r.provider + " · " + r.skill),
+      el("span", { class: r.shown >= 3 ? "busy" : "dim" }, k.stages[r.shown] + (r.proposed ? " (evidence says " + k.stages[r.stage] + ")" : "")),
+      el("span", { class: "sub" }, r.passed + " of " + r.attempts + " · rate " + pct(r.rate) + " · bound " + pct(r.bound) +
+        (r.recent.length ? " · " + r.recent.join(", ") : ""),
+        r.proposed && p.writable ? el("button", { class: "dev-chip ok", type: "button", onclick: () =>
+          post("api/ledger", { provider: r.provider, skill: r.skill, stage: r.stage }) }, "Confirm " + k.stages[r.stage]) : "")))));
+    return el("section", { class: "dev-col" }, parts);
+  }
+
   function knowledge(p) {
     const k = p.knowledge || { waiting: [], confirmed: 0, withdrawn: 0 };
     const parts = [el("h2", {}, "What the team learned", el("span", { class: "n" }, k.confirmed + " confirmed")),
@@ -333,7 +349,7 @@
               el("span", { class: "dim" }, list.length + " lesson" + (list.length === 1 ? "" : "s")),
               el("span", { class: "sub" }, list.slice(-3).map((l) => l.lesson).join(" · ")))))] : "")),
       el("div", { class: "dev-grid2" }, missions(p), voices(p)),
-      knowledge(p),
+      el("div", { class: "dev-grid2" }, independence(p), knowledge(p)),
       chronicles(p),
       el("section", { class: "dev-col dev-history" }, el("h2", {}, "Everything that happened"), search,
         p.activity.length ? el("ul", { class: "dev-time" }, p.activity.map(event))
