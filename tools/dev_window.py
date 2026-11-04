@@ -92,10 +92,11 @@ def handler(key: str, port_of: callable):
 
         def _send(self, code: int, body: bytes, kind: str) -> None:
             self.send_response(code)
-            self.send_header("Content-Type", kind + "; charset=utf-8")
+            self.send_header("Content-Type", kind if kind.startswith("audio/") else kind + "; charset=utf-8")
             self.send_header("Cache-Control", "no-store")
             self.send_header("X-Content-Type-Options", "nosniff")
-            self.send_header("Content-Security-Policy", "default-src 'self'; frame-ancestors 'none'")
+            # blob: for media only: a voice sample is fetched with the key, then played from memory.
+            self.send_header("Content-Security-Policy", "default-src 'self'; media-src 'self' blob:; frame-ancestors 'none'")
             self.end_headers()
             self.wfile.write(body)
 
@@ -117,7 +118,24 @@ def handler(key: str, port_of: callable):
                         for m in found.get("missions", []):
                             m["running_here"] = m["id"] in RUNNING
                     found["writable"] = True
+                    from core import council_voices
+
+                    found["voices"] = council_voices.voices()
                 return self._send(200, json.dumps(found, default=str).encode("utf-8"), "application/json")
+            if url.path == "/api/voice":  # a member's voice sample (core/council_voices.py, DEC-0082)
+                if not hmac.compare_digest(self.headers.get("X-Dev-Key", ""), key):
+                    return self._send(403, b"{}", "application/json")
+                from core import council_voices
+
+                asked = parse_qs(url.query)
+                try:
+                    wav = council_voices.sample((asked.get("member") or [""])[0][:20], (asked.get("voice") or [""])[0][:40])
+                except council_voices.VoiceError as problem:
+                    return self._send(400, json.dumps({"error": str(problem)}).encode("utf-8"), "application/json")
+                except Exception as problem:  # Kokoro missing or failing: say so
+                    return self._send(503, json.dumps({"error": f"No voice here: {problem}"[:300]}).encode("utf-8"),
+                                      "application/json")
+                return self._send(200, wav, "audio/wav")
             found = FILES.get(url.path)
             if found is None:
                 return self._send(404, b"Not here.", "text/plain")
@@ -129,7 +147,7 @@ def handler(key: str, port_of: callable):
                     not hmac.compare_digest(self.headers.get("X-Dev-Key", ""), key):
                 return self._send(403, b"{}", "application/json")
             where = urlsplit(self.path).path
-            if where not in ("/api/council", "/api/saga", "/api/mission", "/api/knowledge"):
+            if where not in ("/api/council", "/api/saga", "/api/mission", "/api/knowledge", "/api/voice"):
                 return self._send(404, b"{}", "application/json")
             try:
                 length = min(int(self.headers.get("Content-Length", "0")), 100_000)
@@ -140,6 +158,14 @@ def handler(key: str, port_of: callable):
                 return self._saga(body)
             if where == "/api/mission":
                 return self._mission(body)
+            if where == "/api/voice":  # Zac's pick for a member
+                from core import council_voices
+
+                try:
+                    chosen = council_voices.choose(str(body.get("member", ""))[:20], str(body.get("voice", ""))[:40])
+                except council_voices.VoiceError as problem:
+                    return self._send(400, json.dumps({"error": str(problem)}).encode("utf-8"), "application/json")
+                return self._send(200, json.dumps(chosen).encode("utf-8"), "application/json")
             if where == "/api/knowledge":  # Zac confirming or withdrawing one of MIA's notes (DEC-0083)
                 from core import dev_knowledge
 

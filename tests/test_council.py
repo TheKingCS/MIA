@@ -116,3 +116,33 @@ def test_every_review_call_is_recorded(monkeypatch, tmp_path):
     with pytest.raises(rv.ReviewError):
         rv.ask_provider("codex", "again")
     assert [e["outcome"] for e in store.tail(5)] == ["ok", "limit"] and store.tail(5)[0]["task"] == "T-0001"
+
+
+def test_members_voices_sampled_kept_and_chosen(tmp_path, monkeypatch):
+    """DEC-0082: hear a member, pick a voice; no provider-named voice for a provider's own member."""
+    import json as json_mod
+    import shutil
+
+    from core import council_voices as cv
+    from core.work_agents import REGISTRY
+
+    registry = tmp_path / "agents.json"
+    shutil.copy(REGISTRY, registry)
+    monkeypatch.setattr("core.work_agents.REGISTRY", registry)
+    made = []
+
+    def synth(text, path):
+        made.append(text)
+        path.write_bytes(b"RIFFfake")
+    assert cv.sample("codex", "am_eric", folder=tmp_path / "v", synth=synth) == b"RIFFfake"
+    cv.sample("codex", "am_eric", folder=tmp_path / "v", synth=synth)
+    assert len(made) == 1 and made[0].startswith("I'm Codex.")  # kept: the second listen costs nothing
+    with pytest.raises(cv.VoiceError, match="provider's own"):
+        cv.sample("chatgpt", "af_nova", folder=tmp_path / "v", synth=synth)
+    with pytest.raises(cv.VoiceError, match="provider's own"):
+        cv.choose("codex", "am_onyx", registry=registry)
+    assert cv.choose("qwen", "am_onyx", registry=registry)["voice"] == "kokoro:am_onyx"  # a local model may
+    saved = json_mod.loads(registry.read_text(encoding="utf-8"))["members"]["qwen"]
+    assert saved["voice"] == "kokoro:am_onyx" and saved["voice_chosen_by"] == "zac"
+    with pytest.raises(cv.VoiceError, match="No council member"):
+        cv.choose("_about", "am_onyx", registry=registry)

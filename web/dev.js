@@ -200,6 +200,38 @@
     return el("section", { class: "dev-col" }, parts);
   }
 
+  // Each member's voice (core/council_voices.py): hear it, try others, keep one.
+  async function hear(member, voice, note) {
+    note.textContent = "Making the sample…";
+    try {
+      const r = await fetch("api/voice?member=" + encodeURIComponent(member) + "&voice=" + encodeURIComponent(voice),
+        { headers: { "X-Dev-Key": key } });
+      if (!r.ok) { note.textContent = (await r.json().catch(() => ({}))).error || "No sample."; return; }
+      const audio = new Audio(URL.createObjectURL(await r.blob()));
+      note.textContent = "";
+      await audio.play();
+    } catch (e) { note.textContent = "Couldn't play it."; }
+  }
+
+  function voices(p) {
+    const all = p.voices || [];
+    const parts = [el("h2", {}, "Voices"), el("p", {}, "Who sounds like whom, on the glasses and the PC. These are " +
+      "placeholders until you pick each by ear. Voices named like a provider's own are refused for it.")];
+    if (!all.length) parts.push(el("p", { class: "empty" }, "Kokoro isn't installed here, so there's nothing to play."));
+    parts.push(el("ul", { class: "dev-agents" }, (p.members || []).map((m) => {
+      const pick = el("select", { "aria-label": m.name + "'s voice" }, all.map((v) =>
+        el("option", { value: v, selected: "kokoro:" + v === m.voice ? true : null }, v)));
+      const note = el("span", { class: "dim" });
+      return el("li", {}, el("span", {}, m.name + " · " + m.voice.replace("kokoro:", "") + (m.chosen ? " (yours)" : "")),
+        el("span", { class: "dim" }, m.provider),
+        el("span", { class: "sub" }, all.length && p.writable ? [pick,
+          el("button", { class: "dev-chip", type: "button", onclick: () => hear(m.id, pick.value, note) }, "Play"),
+          el("button", { class: "dev-chip ok", type: "button", onclick: () => post("api/voice", { member: m.id, voice: pick.value }) }, "Use this"),
+          note] : m.about));
+    })));
+    return el("section", { class: "dev-col" }, parts);
+  }
+
   function knowledge(p) {
     const k = p.knowledge || { waiting: [], confirmed: 0, withdrawn: 0 };
     const parts = [el("h2", {}, "What the team learned", el("span", { class: "n" }, k.confirmed + " confirmed")),
@@ -300,7 +332,7 @@
             el("ul", { class: "dev-agents" }, lessons.map(([prov, list]) => el("li", {}, el("span", {}, prov),
               el("span", { class: "dim" }, list.length + " lesson" + (list.length === 1 ? "" : "s")),
               el("span", { class: "sub" }, list.slice(-3).map((l) => l.lesson).join(" · ")))))] : "")),
-      el("div", { class: "dev-grid2" }, missions(p), el("div", {})),
+      el("div", { class: "dev-grid2" }, missions(p), voices(p)),
       knowledge(p),
       chronicles(p),
       el("section", { class: "dev-col dev-history" }, el("h2", {}, "Everything that happened"), search,

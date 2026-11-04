@@ -87,6 +87,17 @@ def _missions(events: list[dict]) -> list[dict]:
     return out
 
 
+def _members() -> list[dict]:
+    """The council's members and their voices (work/agents.json, DEC-0082)."""
+    try:
+        from core.council import members
+
+        return [{"id": k, "name": m["name"], "provider": m.get("provider", ""), "about": m.get("about", ""),
+                 "voice": m.get("voice", ""), "chosen": m.get("voice_chosen_by") == "zac"} for k, m in members().items()]
+    except (OSError, ValueError):
+        return []
+
+
 def _knowledge() -> dict:
     """What the team learned (core/dev_knowledge.py): MIA's notes waiting for someone to confirm them."""
     from core import dev_knowledge
@@ -246,6 +257,7 @@ def page(context, query: str = "", tasks_dir=tasks_mod.TASKS_DIR, log=activity.A
         "saga": _saga(),
         "missions": _missions(all_events),
         "knowledge": _knowledge(),
+        "members": _members(),
         "available": True,
         "summary": {s: sum(1 for r in rows if r["status"] == s) for s in ("ready", "claimed", "review", "blocked", "done")},
         "queue": [r for r in open_rows if r["status"] == "review"],
