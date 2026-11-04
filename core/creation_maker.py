@@ -48,6 +48,7 @@ DESIGN_SCHEMA = {
             "type": {"type": "string", "enum": list(FIELD_TYPES)},
             "choices": {"type": "array", "items": {"type": "string"}}}, "required": ["name", "label", "type"]}},
         "blueprint": {"type": "string"},
+        "source": {"type": "string"},
         "blocks": {"type": "array", "items": {"type": "object"}},
     },
     "required": ["title", "icon", "owner", "set_name", "fields", "blueprint"],
@@ -64,8 +65,12 @@ Rules:
 - owner: "household" if it's about the home, family or a shared business; "personal" if it's just theirs.
 - blueprint: one of these.
 {blueprints}
+{hint}- source (optional): if what they want is about something MIA already keeps, name it here and
+  leave fields empty; the screen shows that history and nothing new is stored. These exist:
+{sources}
 - blocks (optional): leave it out to use the blueprint. Give your own only if the blueprint wouldn't
-  show it well. Blocks are: {blocks}. A value is {{"count": true}} or {{"sum"|"avg"|"min"|"max"|"latest": "field"}}.
+  show it well. Blocks are: {blocks}. A value is {{"count": true}} or {{"sum"|"avg"|"min"|"max"|"latest": "field"}}. A chart
+  over a date can add "by": "day", "week" or "month".
 - icon: one of {icons}.
 {again}"""
 
@@ -88,8 +93,46 @@ def _ollama(prompt: str, schema: dict) -> str:
         raise MakerError(f"My local model isn't answering ({problem}), so I can't design it right now.") from problem
 
 
-def spec_from(design: dict, blueprints: dict) -> tuple[dict, str]:
+PERIOD_WORDS = {"week": ("week", "weekly", "weeks"), "month": ("month", "monthly", "months"),
+                "day": ("day", "daily", "days")}
+
+
+def _periods(spec: dict, need: str) -> dict:
+    """Pure logic. "each month", "per week": a chart over dates groups by that, if it doesn't already."""
+    import re
+
+    words = set(re.findall(r"[a-z]+", (need or "").lower()))
+    by = next((p for p, said in PERIOD_WORDS.items() if words & set(said)), None)
+    if not by:
+        return spec
+    from core.creation_spec import _fields
+
+    fields = _fields(spec)
+    blocks = [{**b, "by": by} if b.get("block") == "chart" and "by" not in b
+              and fields.get(b.get("x"), {}).get("type") == "date" else b for b in spec["blocks"]]
+    return {**spec, "blocks": blocks}
+
+
+def spec_from(design: dict, blueprints: dict, need: str = "") -> tuple[dict, str]:
     """Pure logic. A design (the model's reply) -> a spec, and the blueprint it used ("" for her own blocks)."""
+    spec, used = _spec_from(design, blueprints)
+    return _periods(spec, need), used
+
+
+def _spec_from(design: dict, blueprints: dict) -> tuple[dict, str]:
+    from core.creation_sources import SOURCES, fields_of
+
+    source = str(design.get("source") or "").removeprefix("history:")
+    if source in SOURCES:
+        base = {"kind": "screen", "title": str(design.get("title", ""))[:60] or SOURCES[source].title,
+                "icon": design.get("icon") or "apps", "about": str(design.get("about", ""))[:300],
+                "owner": design.get("owner", "personal"), "source": f"history:{source}"}
+        own = [b for b in design.get("blocks") or [] if isinstance(b, dict) and b.get("block") != "form"]
+        if own and not check({**base, "blocks": own}):
+            return {**base, "blocks": own}, ""
+        chosen = blueprints.get(design.get("blueprint")) or blueprints["log"]
+        filled = [b for b in bp.fill(chosen, fields_of(source)) if b.get("block") != "form"]
+        return {**base, "blocks": filled}, f"{chosen['id']}@{chosen['version']}"
     fields = [{k: f[k] for k in ("name", "label", "type", "choices") if k in f} for f in design.get("fields") or []]
     for f in fields:
         f["name"] = "".join(c if c.isalnum() else "_" for c in str(f["name"]).lower()).strip("_")[:32] or "field"
@@ -120,14 +163,20 @@ def make(context, need: str, ask: Optional[Callable[[str, dict], str]] = None, c
     listing = "\n".join(f"  - {b['id']}: {b['purpose']} (fits {b['fits']})" for b in blueprints.values())
     again, problems = "", []
     for _attempt in range(2):
+        from core.creation_sources import describe
+
+        from core.creation_sources import SOURCES, matching
+
+        hint = "".join(f"- MIA already keeps {SOURCES[m].title.lower()}: this sounds like source \"{m}\". Use it "
+                       "unless they clearly want something new.\n" for m in matching(need, child))
         said = ask(PROMPT.format(need=need, blueprints=listing, blocks=", ".join(BLOCKS), icons=", ".join(ICONS),
-                                 again=again), DESIGN_SCHEMA)
+                                 sources=describe(child), hint=hint, again=again), DESIGN_SCHEMA)
         try:
             design = json.loads(said)
         except ValueError:
             problems, again = ["the design wasn't JSON"], "\nYour last reply wasn't JSON. Reply with JSON only."
             continue
-        spec, blueprint = spec_from(design, blueprints)
+        spec, blueprint = spec_from(design, blueprints, need)
         problems = check(spec, child=child)
         if not problems:
             return store.draft(spec, [], made_by="mia", why=need, blueprint=blueprint)

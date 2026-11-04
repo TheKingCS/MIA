@@ -59,6 +59,11 @@ def _describe_publish(context, params) -> str:
     if latest["version"] == found["version"]:
         raise ActionError(f"{found['title']} is already published as it is.")
     where = "the household's records" if found["owner"] == "household" else "your own records"
+    if latest["spec"].get("source"):
+        from core.creation_sources import source_of
+
+        if not found["version"]:
+            return f"Add “{latest['spec']['title']}” to your apps, showing {source_of(latest['spec']).title.lower()} from your history"
     if found["version"]:
         return f"Publish version {latest['version']} of “{latest['spec']['title']}” in place of version {found['version']}"
     return f"Add “{latest['spec']['title']}” to your apps, keeping its records with {where}"
@@ -74,7 +79,7 @@ def _publish(context, params) -> str:
     if problems:
         raise ActionError("It doesn't pass its checks: " + " ".join(problems[:3]))
     set_id = found["set_id"]
-    if not set_id:
+    if not set_id and not latest["spec"].get("source"):  # a source's records are already MIA's: nothing to make
         rs = latest["spec"]["record_set"]
         try:
             set_id = sets_for(context, found["owner"]).create(rs["name"], rs["fields"], about=latest["spec"].get("about", ""))["id"]
@@ -106,6 +111,11 @@ def _retire(context, params) -> str:
 
 def _published_set(context, params) -> tuple[dict, dict]:
     found = _get(context, params)
+    shown = _creations(context).shown(found["id"])["spec"]
+    if shown.get("source"):
+        from core.creation_sources import source_of
+
+        raise ActionError(f"{found['title']} shows your history; add to it in {source_of(shown).app}.")
     if found["status"] != "published" or not found["set_id"]:
         raise ActionError(f"{found['title']} isn't published yet.")
     from core.record_sets import RecordError

@@ -78,7 +78,9 @@ class Creations:
         now = datetime.now().isoformat(timespec="seconds")
         if creation_id:
             found = self.get(creation_id)
-            spec = {**spec, "record_set": found["versions"][-1]["spec"]["record_set"], "owner": found["owner"]}
+            before = found["versions"][-1]["spec"]  # what it shows stays what it showed: only the layout changes
+            spec = {**{k: v for k, v in spec.items() if k not in ("record_set", "source")}, "owner": found["owner"],
+                    **({"source": before["source"]} if before.get("source") else {"record_set": before.get("record_set")})}
         else:
             taken = {c["id"] for c in self.items}
             found = {"id": next(f"C-{n:04d}" for n in range(1, 10_000) if f"C-{n:04d}" not in taken),

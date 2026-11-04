@@ -104,8 +104,10 @@
       onclick: () => MIAShell.act({ kind, params: { creation_id: page.id } }) }, label);
     const bits = [];
     if (page.status === "draft") bits.push(el("p", {}, el("strong", {}, "A draft MIA made. "),
-      "Only you can see it, and nothing's been changed yet. Publishing adds it to your apps and starts its records " +
-      (page.owner === "household" ? "with the household." : "in your own folder.")), act("creation.publish", "Publish", "btn-green"));
+      "Only you can see it, and nothing's been changed yet. Publishing adds it to your apps" +
+      (page.source ? ". It shows what you already keep, so nothing new is stored."
+        : " and starts its records " + (page.owner === "household" ? "with the household." : "in your own folder."))),
+      act("creation.publish", "Publish", "btn-green"));
     else if (page.pending) bits.push(el("p", {}, el("strong", {}, "Version " + page.latest + " is waiting. "),
       "You're seeing it; your apps still show version " + page.version + "."), act("creation.publish", "Publish it", "btn-green"));
     if (page.rollback && !page.pending) bits.push(act("creation.rollback", "Go back a version", "btn-ghost"));

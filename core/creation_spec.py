@@ -15,6 +15,11 @@ combinations of blocks still give screens nobody planned.
 - `check(spec, child=False)`: every problem, in words; an empty list passes.
   Unknown keys are refused, so nothing can be smuggled in.
 - `assemble(spec, record_set)`: the blocks with their values, ready to draw.
+
+A screen shows its own record set, or one **source** from the catalogue
+(core/creation_sources.py: eggs, workouts, spending...), read-only: a source
+has no form, and money sources never reach a child. A chart over dates can
+group them by day, week or month.
 """
 
 from __future__ import annotations
@@ -27,7 +32,7 @@ from core.record_sets import FIELD_TYPES, check_fields
 BLOCKS = {
     # block: (allowed keys, what it is)
     "stats": ({"block", "title", "items"}, "a row of numbers"),
-    "chart": ({"block", "title", "type", "x", "y"}, "bars by a field, or a line over dates"),
+    "chart": ({"block", "title", "type", "x", "y", "by"}, "bars by a field, or a line over dates (by day, week or month)"),
     "table": ({"block", "title", "columns", "sort", "limit"}, "the records as rows"),
     "list": ({"block", "title", "title_field", "detail_fields", "sort", "limit"}, "the records as a list"),
     "cards": ({"block", "title", "title_field", "detail_fields", "sort", "limit"}, "the records as cards"),
@@ -48,8 +53,15 @@ MAX_BLOCKS = 12
 MAX_ROWS = 200
 
 
+PERIODS = ("day", "week", "month")
+
+
 def _fields(spec: dict) -> dict:
-    return {f["name"]: f for f in (spec.get("record_set") or {}).get("fields") or [] if isinstance(f, dict) and "name" in f}
+    from core.creation_sources import fields_of, source_of
+
+    source = source_of(spec)
+    found = fields_of(source.id) if source else (spec.get("record_set") or {}).get("fields") or []
+    return {f["name"]: f for f in found if isinstance(f, dict) and "name" in f}
 
 
 def _value_problems(value, fields: dict, where: str) -> list[str]:
@@ -86,13 +98,24 @@ def check(spec: dict, child: bool = False) -> list[str]:
         problems.append("It's personal or the household's.")
     if child and spec.get("owner") == "household":
         problems.append("A child's screens are their own, not the household's.")
-    rs = spec.get("record_set")
-    if not isinstance(rs, dict) or not isinstance(rs.get("fields"), list):
-        problems.append("It needs the record set it shows, with its fields.")
-        return problems
-    problems += [f"Record set: {p}" for p in check_fields(rs["fields"])]
-    if not str(rs.get("name", "")).strip():
-        problems.append("The record set needs a name.")
+    from core.creation_sources import SOURCES, source_of
+
+    rs, source = spec.get("record_set"), source_of(spec)
+    if spec.get("source"):
+        if source is None:
+            problems.append(f"There's no source {spec['source']!r} (one of {', '.join(SOURCES)}).")
+            return problems
+        if rs:
+            problems.append("It shows a source or its own record set, not both.")
+        if child and source.money:
+            problems.append("Money doesn't go on a child's screen.")
+    else:
+        if not isinstance(rs, dict) or not isinstance(rs.get("fields"), list):
+            problems.append("It needs the record set it shows, with its fields.")
+            return problems
+        problems += [f"Record set: {p}" for p in check_fields(rs["fields"])]
+        if not str(rs.get("name", "")).strip():
+            problems.append("The record set needs a name.")
     fields = _fields(spec)
     if child and any(f["type"] == "money" for f in fields.values()):
         problems.append("Money doesn't go on a child's screen.")
@@ -130,6 +153,8 @@ def check(spec: dict, child: bool = False) -> list[str]:
             if b.get("type") == "line" and fields.get(b.get("x"), {}).get("type") != "date":
                 problems.append(f"{where}: a line runs over a date field.")
             problems += _value_problems(b.get("y"), fields, f"{where} y")
+            if "by" in b and (b["by"] not in PERIODS or fields.get(b.get("x"), {}).get("type") != "date"):
+                problems.append(f"{where}: by is day, week or month, over a date field.")
         elif kind == "table":
             columns = b.get("columns")
             if not isinstance(columns, list) or not columns:
@@ -155,7 +180,10 @@ def check(spec: dict, child: bool = False) -> list[str]:
         if sort:
             named.append(sort)
         problems += [f"{where}: there's no field {n!r}." for n in named if n not in fields]
-    if not any(b.get("block") in ("table", "list", "cards", "timeline", "form") for b in blocks if isinstance(b, dict)):
+    if source and any(isinstance(b, dict) and b.get("block") == "form" for b in blocks):
+        problems.append(f"{source.title} is read here and added in {source.app}: no form.")
+    if not any(b.get("block") in ("table", "list", "cards", "timeline", "form", "chart", "stats", "meter")
+               for b in blocks if isinstance(b, dict)):
         problems.append("It should show the records or let someone add one.")
     return problems
 
@@ -202,6 +230,22 @@ def _sorted(records: list[dict], sort: str) -> list[dict]:
     return sorted(have, key=lambda r: r["values"][name], reverse=reverse) + missing
 
 
+def _period(day, by: str) -> str:
+    """Pure logic. "2026-11-04" -> its day, its week's Monday ("Week of Nov 2"), or its month ("Nov 2026")."""
+    from datetime import date, timedelta
+
+    try:
+        d = date.fromisoformat(str(day)[:10])
+    except ValueError:
+        return "—"
+    if by == "week":
+        monday = d - timedelta(days=d.weekday())
+        return f"Week of {monday:%b} {monday.day}"
+    if by == "month":
+        return f"{d:%b %Y}"
+    return d.isoformat()
+
+
 def assemble(spec: dict, record_set: Optional[dict], money=None) -> dict:
     """A checked spec and its record set (None for a draft not yet published) -> what web/made.js draws."""
     if money is None:
@@ -219,7 +263,8 @@ def assemble(spec: dict, record_set: Optional[dict], money=None) -> dict:
             groups: "OrderedDict[str, list]" = OrderedDict()
             ordered = sorted(records, key=lambda r: str(r["values"].get(b["x"]) or ""))
             for r in ordered:
-                key = _text(fields[b["x"]], r["values"].get(b["x"]), money)
+                key = _period(r["values"].get(b["x"]), b["by"]) if b.get("by") else \
+                    _text(fields[b["x"]], r["values"].get(b["x"]), money)
                 groups.setdefault(key, []).append(r)
             points = []
             for label, members in groups.items():

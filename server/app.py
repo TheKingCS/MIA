@@ -1783,8 +1783,13 @@ def create_app(context: AppContext) -> FastAPI:
         except CreationError as problem:
             raise HTTPException(status.HTTP_404_NOT_FOUND, str(problem)) from None
         latest, shown = found["versions"][-1], store.shown(creation_id)
+        spec = latest["spec"] if found["status"] == "draft" else shown["spec"]
         record_set = None
-        if found["set_id"]:
+        if spec.get("source"):  # read from her history (core/creation_sources.py), drafts too: it's already theirs
+            from core.creation_sources import records, source_of
+
+            record_set = {"records": records(view, source_of(spec).id)}
+        elif found["set_id"]:
             try:
                 record_set = sets_for(view, found["owner"]).get(found["set_id"])
             except (RecordError, Exception):
@@ -1793,7 +1798,7 @@ def create_app(context: AppContext) -> FastAPI:
                 "latest": latest["version"], "pending": latest["version"] != found["version"],
                 "owner": found["owner"], "why": latest["why"], "made_by": latest["made_by"],
                 "blueprint": latest["blueprint"] or "her own layout", "rollback": len(found["published_versions"]) > 1,
-                "screen": assemble(latest["spec"] if found["status"] == "draft" else shown["spec"], record_set)}
+                "source": spec.get("source", ""), "screen": assemble(spec, record_set)}
 
     @app.post("/api/made")
     def web_make(body: dict, profile_id: str = Depends(require_profile_id)) -> dict:

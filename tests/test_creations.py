@@ -215,3 +215,63 @@ def test_the_whole_way_through_the_server(tmp_path, monkeypatch):
     shell = client.get("/api/shell", headers=auth).json()
     assert {"id": cid, "name": "Seed Bank", "icon": "greenhouse", "page": f"made.html?id={cid}"} in shell["made"]
     assert client.get("/api/made/C-9999", headers=auth).status_code == 404
+
+
+def _history(w, kind, summary, payload):
+    from core import life_events
+
+    class Here:  # the household's folder, as a store would be
+        data_dir = w.home_dir
+    life_events.record(Here(), kind, summary, payload=payload)
+
+
+def test_a_screen_over_history_she_already_keeps(world):
+    """ACAF step 2: "how many eggs a week?" needs no new store: it reads the history (core/creation_sources.py)."""
+    w = world
+    for day, n in (("2026-10-26", 6), ("2026-10-27", 7), ("2026-11-02", 5), ("2026-11-03", 8)):
+        _history(w, "eggs_collected", f"Collected {n} eggs", {"eggs": n, "date": day})
+    eggs = {"title": "Eggs by Week", "icon": "flock", "owner": "household", "set_name": "", "fields": [],
+            "blueprint": "log", "source": "eggs",
+            "blocks": [{"block": "stats", "items": [{"label": "Eggs", "value": {"sum": "eggs"}}]},
+                       {"block": "chart", "type": "bar", "x": "date", "by": "week", "y": {"sum": "eggs"}}]}
+    made = creation_maker.make(w, "show me how many eggs we get each week", ask=model(eggs))
+    spec = made["versions"][-1]["spec"]
+    assert spec["source"] == "history:eggs" and "record_set" not in spec and creation_spec.check(spec) == []
+    from core import creation_sources
+
+    screen = creation_spec.assemble(spec, {"records": creation_sources.records(w, "eggs")}, money=str)
+    assert screen["blocks"][0]["items"][0]["value"] == "26"
+    assert {p["label"]: p["value"] for p in screen["blocks"][1]["points"]} == {"Week of Oct 26": 13, "Week of Nov 2": 13}
+    done = act(w, "creation.publish", {"creation_id": made["id"]})
+    assert done.status == "executed" and w.record_sets.sets == []  # nothing new stored
+    refused = w.actions.propose  # adding goes to the app that keeps it
+    from core.actions import ActionError
+
+    with pytest.raises(ActionError, match="add to it in Chickens"):
+        refused(w, "records.add", {"creation_id": made["id"], "values": {"eggs": 3}})
+
+
+def test_sources_keep_their_rules():
+    base = {"kind": "screen", "title": "Spend", "owner": "personal", "source": "history:spending",
+            "blocks": [{"block": "stats", "items": [{"label": "Spent", "value": {"sum": "amount"}}]}]}
+    assert creation_spec.check(base) == []
+    assert "Money doesn't go on a child's screen." in creation_spec.check(base, child=True)
+    assert any("no form" in p for p in creation_spec.check({**base, "blocks": base["blocks"] + [{"block": "form"}]}))
+    assert any("There's no source" in p for p in creation_spec.check({**base, "source": "history:passwords"}))
+    assert any("by is day, week or month" in p for p in creation_spec.check(
+        {**base, "blocks": [{"block": "chart", "type": "bar", "x": "category", "by": "week", "y": {"count": True}}]}))
+    from core import creation_sources
+
+    assert "spending" not in creation_sources.describe(child=True) and "eggs" in creation_sources.describe(child=True)
+
+
+def test_code_points_the_model_at_history_and_the_period_asked_for():
+    from core import creation_sources
+
+    assert creation_sources.matching("how many eggs do the hens lay") == ["eggs"]
+    assert creation_sources.matching("what did I spend on bills") == ["spending", "bills_paid"]
+    assert creation_sources.matching("what did I spend", child=True) == []  # money isn't offered to a child
+    spec, _ = creation_maker.spec_from({"title": "Eggs", "owner": "household", "source": "eggs", "blueprint": "log"},
+                                       blueprints.load(), "eggs each week")
+    chart = next(b for b in spec["blocks"] if b["block"] == "chart")
+    assert chart["by"] == "week" and not any(b["block"] == "form" for b in spec["blocks"])

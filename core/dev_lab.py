@@ -67,7 +67,7 @@ PROTECTED = (
     "core/work_activity.py", "core/dev_store.py", "core/dev_usage.py", "core/council.py", "core/council_floor.py", "tools/work.py",
     "tools/dev_window.py", "work/",
     # What MIA's creations are checked and published by (DEC-0091): she can't loosen her own rules.
-    "core/creation_spec.py", "core/creation_actions.py", "core/creations.py", "core/record_sets.py",
+    "core/creation_spec.py", "core/creation_actions.py", "core/creations.py", "core/record_sets.py", "core/creation_sources.py",
 )
 DRAFTED, WRITTEN, READY, NOT_READY, MERGED, REVERTED, REJECTED = (
     "drafted", "written", "ready", "not ready", "merged", "reverted", "rejected")
