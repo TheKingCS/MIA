@@ -1194,3 +1194,91 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   eliminated, milestones, tools integrated, skills, performance over time.
 - Related: DEC-0056, DEC-0057, DEC-0068, DEC-0069
 
+
+### DEC-0072: Developmental Independence is a standing objective
+- Status: APPROVED
+- Proposed by: chatgpt, 2026-11-03 (H-0080) · Approved by: zac, 2026-11-03 (by pasting it, COLLABORATION.md rule 1)
+- Decision: MIA's development ecosystem exists to cultivate her capabilities,
+  not create permanent dependencies: the council (Claude Code, Codex,
+  Copilot, ChatGPT) teaches her, and success is measured by how much she can
+  do without it. Three dimensions stay separate (intelligence, development,
+  operational autonomy); advancing in one never grants permissions in
+  another; independence never means unrestricted access or unquestioned
+  confidence; stages (Observer, Apprentice, Contributor, Developer,
+  Independent) come from demonstrated competence. A long-term objective,
+  not an instruction to start autonomous self-modification. How to build it:
+  `docs/DEVELOPMENTAL_INDEPENDENCE_REVIEW.md`, DEC-0073 to DEC-0078.
+- Related: DEC-0058, DEC-0068 to DEC-0071
+
+### DEC-0073: The Development Knowledge Vault is work/knowledge/
+- Status: PROPOSED
+- Proposed by: claude, 2026-11-03 (review section 4.1)
+- Decision: one markdown entry per piece of knowledge (method, decision,
+  implementation, failed experiment, debugging, test procedure, security
+  finding, lesson), each with refs to the task, commit and events it came
+  from (none, refused), versioned by git and superseded rather than edited.
+  Written by a retrospective step after each task (the local model,
+  marked derived) and from the lab coders' method traces; searched by
+  `core/self_docs.py` and put in a role's prompt before it works or
+  reviews. Not the photo Memory Vault, and never personal.
+- Related: DEC-0071 point 2 (T-0021), DEC-0041
+
+### DEC-0074: MIA's own coder, learning by shadow attempts
+- Status: PROPOSED
+- Proposed by: claude, 2026-11-03 (review sections 3.3, 4.3)
+- Decision: MIA codes through Codex's local mode on qwen3-coder:30b
+  (`codex exec --oss --local-provider ollama`, sandboxed to the lab), no
+  account needed. While a council agent works a task, she works the same
+  task from the same commit in a second lab worktree; the suite and the
+  reviewers grade both; her misses become her lessons. A shadow attempt
+  never merges.
+- Related: DEC-0058, DEC-0069, DEC-0072
+
+### DEC-0075: Independence measured per skill, from evidence
+- Status: PROPOSED
+- Proposed by: claude, 2026-11-03 (review section 5)
+- Decision: a ledger of skills in the three dimensions, computed every time
+  from the activity log and the lab (never stored, so never edited), with
+  each skill's success rate and its 90% lower bound over the latest 30
+  outcomes, her calibration, and a stage per skill. The ledger proposes a
+  promotion, Zac confirms it, a drop demotes by itself. A stage never
+  changes a permission tier. The ledger, runner, review and agent rules
+  join the lab's protected list, so she can't grade herself.
+- Related: DEC-0069, DEC-0072
+
+### DEC-0076: Missions: the council runs by itself, inside a scope and a budget
+- Status: PROPOSED
+- Proposed by: claude, 2026-11-03 (review section 6.1), for Zac's "set the council on the mission to develop MIA and let them run at it autonomously"
+- Decision: a mission (`work/missions/`) is a goal, a scope (the files it
+  may change, checked in code at the lab's check), a budget (tasks, hours,
+  calls per provider) and its roles. A runner proposes tasks inside the
+  scope, works them through the loop and two reviews one writer at a time,
+  runs MIA's shadow attempts alongside, and stops at Your Turn, a usage
+  limit (waits), the budget, the scope or protected list, a Stop button or
+  `work/STOP`. It never approves: a merge stays Zac at the keyboard.
+- Related: DEC-0058, DEC-0069, DEC-0071
+
+### DEC-0077: The council chat in the dev window
+- Status: PROPOSED
+- Proposed by: claude, 2026-11-03 (review section 6.3), for Zac's "communicate with them all in a group chat style in the dev environment"
+- Decision: one conversation in the window that Zac and every agent post
+  into; @name asks one member (read-only, as reviewers are), @mia answers
+  from her inspection and knowledge; the runner posts its progress and
+  questions. A chat message never approves, settles in Zac's name, changes
+  a permission or starts work outside a mission.
+- Open choice for Zac: kept (a) in the repo, `work/council.jsonl`,
+  redacted, shared with every council member and cloud session
+  (recommended), or (b) on this PC only, with task-linked messages copied
+  into the history.
+- Related: DEC-0071, DEC-0002
+
+### DEC-0078: Her architecture and branches of growth, derived, in the dev window
+- Status: PROPOSED
+- Proposed by: claude, 2026-11-03 (review section 6.2), for Zac's "see MIAs architecture and her branches of growth in the dev environment"
+- Decision: a map of her layers, modules and imports read from the code
+  (never hand-drawn, nothing run), each capability with its status, and
+  where the docs and the code disagree marked (T-0020); her growth drawn as
+  branches from the ledger (dimensions, skills, stage), each merged task a
+  ring on the parts it changed, replayable over time: the Evolution
+  Timeline of DEC-0071 (T-0023).
+- Related: DEC-0057, DEC-0071, DEC-0075
