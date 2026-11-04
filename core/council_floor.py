@@ -46,7 +46,7 @@ REPEAT = 0.6  # a question this alike to one already asked in the thread is a re
 SAME_POINT = 0.7  # an answer this alike to the member's last one adds nothing new
 SHORT_THREAD = 3  # messages a member reads as they are; past this, a summary
 
-ASK_LINE = re.compile(r"^\s*ASK\s+@?(\w+)\s*:\s*(.+?)\s*$", re.I | re.M)
+ASK_LINE = re.compile(r"(?:^|[.!?]\s+)ASK\s+@?(\w+)\s*:\s*(.+?)\s*$", re.I | re.M)  # its own line, or after a sentence
 AGREE = re.compile(r"^\s*AGREE\b", re.I | re.M)
 DEBATE = re.compile(r"\b(debate|argue|challenge|push back|disagree)\b", re.I)
 DISCUSS = re.compile(r"\b(discuss|work (it|this) out|figure (it|this) out|talk (it|this) (over|through))\b|@all\b", re.I)
@@ -65,7 +65,8 @@ WRAP_PROMPT = (
     "The discussion:\n{text}\n\n"
     "You're MIA, moderating your development council. Write only your summary of the discussion above, in at "
     "most 90 words: where the members agree, where they disagree (who and on what), and what's still open or "
-    "should become a task. Plain sentences, no headings, no quotes from the discussion. Name each member. "
+    "should become a task. Plain sentences, no headings, no quotes from the discussion. Name each member. Zac "
+    "asked the question: don't give him a position he didn't state. "
     "Don't add opinions of your own."
 )
 

@@ -24,8 +24,9 @@
     for (const kid of kids.flat()) if (kid != null && kid !== "") node.append(kid.nodeType ? kid : String(kid));
     return node;
   }
-  const when = (iso) => iso ? new Date(iso).toLocaleString(undefined,
-    { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "";
+  const when = (iso) => !iso ? "" : /^\d{4}-\d{2}-\d{2}$/.test(iso)  // a date alone (a decision's): no time
+    ? new Date(iso + "T12:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" })
+    : new Date(iso).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
   const ago = (iso) => {
     const m = Math.round((Date.now() - new Date(iso)) / 60000);
     return m < 1 ? "just now" : m < 60 ? m + " min ago" : m < 1440 ? Math.round(m / 60) + " h ago" : when(iso);
@@ -151,6 +152,39 @@
       el("div", { class: "said" }, m.text));
   }
 
+  // The Chronicle Archive (core/saga.py): what the records hold that could become the story, waiting for Zac.
+  async function decide(action, ref, id) {
+    try {
+      const r = await fetch("api/saga", { method: "POST", headers: { "X-Dev-Key": key, "Content-Type": "application/json" },
+        body: JSON.stringify({ action, ref, id }) });
+      chatNote = r.ok ? "" : (await r.json().catch(() => ({}))).error || "That didn't save.";
+    } catch (e) { chatNote = "That didn't save."; }
+    refresh();
+  }
+  const stars = (n) => "★".repeat(Math.max(0, Math.min(5, n || 0)));
+
+  function chronicles(p) {
+    const s = p.saga || { waiting: 0, candidates: [], events: [] };
+    const parts = [el("h2", {}, "The Chronicles", el("span", { class: "n" }, s.waiting + " waiting")),
+      el("p", {}, "What really happened that could become the story, found by rules in the records. Nothing joins the " +
+        "series until you say so. Private keeps it in the archive but out of the comic. In the Council, " +
+        "\"remember this for the Chronicles: …\" adds one yourself.")];
+    if (s.candidates.length) parts.push(el("ul", { class: "dev-saga" }, s.candidates.map((c) => el("li", {},
+      el("div", { class: "head" }, el("b", {}, c.title), " " + c.category + " · " + stars(c.significance) + " · " + when(c.at)),
+      el("div", { class: "said" }, c.summary),
+      el("div", { class: "dim src" }, c.sources.join(" · ")),
+      p.writable ? el("div", { class: "dev-say-row" },
+        el("button", { class: "dev-chip ok", type: "button", onclick: () => decide("accept", c.ref) }, "For the series"),
+        el("button", { class: "dev-chip", type: "button", onclick: () => decide("private", c.ref) }, "Keep private"),
+        el("button", { class: "dev-chip", type: "button", onclick: () => decide("drop", c.ref) }, "Drop")) : ""))));
+    else parts.push(el("p", { class: "empty" }, "Nothing waiting."));
+    if (s.events.length) parts.push(el("h2", { class: "gap" }, "In the archive"), el("ul", { class: "dev-agents" },
+      s.events.map((e) => el("li", {}, el("span", {}, e.id + " · " + e.title),
+        el("span", { class: "dim" }, e.privacy === "series" ? "for the series" : "private"),
+        el("span", { class: "sub" }, e.category + " · " + stars(e.significance) + " · " + when(e.at))))));
+    return el("section", { class: "dev-col dev-chronicles" }, parts);
+  }
+
   function council(p) {
     const list = p.council || [];
     const byId = Object.fromEntries(list.map((m) => [m.id, m]));
@@ -212,6 +246,7 @@
             el("ul", { class: "dev-agents" }, lessons.map(([prov, list]) => el("li", {}, el("span", {}, prov),
               el("span", { class: "dim" }, list.length + " lesson" + (list.length === 1 ? "" : "s")),
               el("span", { class: "sub" }, list.slice(-3).map((l) => l.lesson).join(" · ")))))] : "")),
+      chronicles(p),
       el("section", { class: "dev-col dev-history" }, el("h2", {}, "Everything that happened"), search,
         p.activity.length ? el("ul", { class: "dev-time" }, p.activity.map(event))
           : el("p", { class: "empty" }, query ? "Nothing matches." : "Nothing yet.")));

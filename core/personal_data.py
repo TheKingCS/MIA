@@ -98,6 +98,7 @@ from core.training_session import TrainingStore
 from core.failure_log import FailureLog
 from core.answer_ratings import AnswerRatings
 from core.turn_trace import TurnTraces
+from core.saga import SagaMoments
 from core.questlines import QuestBook
 from core.world_map import WorldMap
 from core.memory_vault import MemoryVault
@@ -150,6 +151,7 @@ PERSONAL_STORES: tuple[tuple[str, type], ...] = (
     ("training", TrainingStore),  # the live workout session (DEC-0055)
     ("failures", FailureLog),
     ("traces", TurnTraces),  # how each turn was answered (DEC-0067)
+    ("saga_moments", SagaMoments),  # moments kept for MIA: The Chronicles (DEC-0084)
     ("ratings", AnswerRatings),  # 👍 and 👎 on her answers (DEC-0067)
     ("quest_book", QuestBook),
     ("world_map", WorldMap),

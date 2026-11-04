@@ -157,3 +157,8 @@ def test_echoes_are_tidied_away():
     said = "[zac] the question\n[qwen] what qwen said\nQwen prefers breaks; Coder prefers every answer."
     assert floor.tidy(said, ["zac", "qwen", "coder"]) == "Qwen prefers breaks; Coder prefers every answer."
     assert floor.tidy("Coder: it works.", ["coder"]) == "it works."
+
+
+def test_an_ask_after_a_sentence_counts_too():
+    assert floor.ask_line("Only when long. ASK CODER: what threshold?") == ("coder", "what threshold?")
+    assert floor.ask_line("I'd ASK nobody: this is prose") is None

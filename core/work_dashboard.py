@@ -69,6 +69,20 @@ def _council(n: int = 60) -> list[dict]:
         return []
 
 
+def _saga(shown: int = 12) -> dict:
+    """The Chronicle Archive (core/saga.py): what's waiting for Zac, most significant and newest first,
+    and the latest events kept."""
+    from core import saga
+
+    try:
+        waiting = saga.candidates()
+        kept = saga.events()
+    except OSError:
+        return {"waiting": 0, "candidates": [], "events": []}
+    ranked = sorted(waiting, key=lambda c: (c["significance"], c["at"]), reverse=True)
+    return {"waiting": len(waiting), "candidates": ranked[:shown], "events": list(reversed(kept))[:20]}
+
+
 def _reviews(task_id: str, events: list[dict]) -> list[dict]:
     """The reviews of the current change (a rewrite starts again), oldest first."""
     from core.work_review import provider_of
@@ -197,6 +211,7 @@ def page(context, query: str = "", tasks_dir=tasks_mod.TASKS_DIR, log=activity.A
         "latest": all_events[-1] if all_events else None,
         "lessons": rv._lessons(),
         "council": _council(),
+        "saga": _saga(),
         "available": True,
         "summary": {s: sum(1 for r in rows if r["status"] == s) for s in ("ready", "claimed", "review", "blocked", "done")},
         "queue": [r for r in open_rows if r["status"] == "review"],

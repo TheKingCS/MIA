@@ -97,13 +97,22 @@ def handler(key: str, port_of: callable):
             if self.headers.get("Host", "") != f"127.0.0.1:{port_of()}" or \
                     not hmac.compare_digest(self.headers.get("X-Dev-Key", ""), key):
                 return self._send(403, b"{}", "application/json")
-            if urlsplit(self.path).path != "/api/council":
+            where = urlsplit(self.path).path
+            if where not in ("/api/council", "/api/saga"):
                 return self._send(404, b"{}", "application/json")
             try:
                 length = min(int(self.headers.get("Content-Length", "0")), 100_000)
                 body = json.loads(self.rfile.read(length) or b"{}")
             except ValueError:
                 return self._send(400, b"{}", "application/json")
+            if where == "/api/saga":
+                return self._saga(body)
+            from core import saga
+
+            said = saga.REMEMBER.match(str(body.get("text", "")))
+            if said and (said.group(1) or said.group(2) or "").strip():  # Zac adds to the archive himself
+                event = saga.note_idea((said.group(1) or said.group(2)).strip())
+                return self._send(200, json.dumps({"saga": event}).encode("utf-8"), "application/json")
             from core import council
 
             from core import council_floor
@@ -122,6 +131,28 @@ def handler(key: str, port_of: callable):
             if not STOP.match(message["text"]):
                 threading.Thread(target=_run, args=(message,), daemon=True).start()
             return self._send(200, json.dumps(message).encode("utf-8"), "application/json")
+
+        def _saga(self, body: dict) -> None:
+            """Zac deciding on the Chronicle Archive's candidates (core/saga.py)."""
+            from core import saga
+
+            act, ref = str(body.get("action", "")), str(body.get("ref", ""))
+            try:
+                if act in ("accept", "private"):
+                    found = next((c for c in saga.candidates() if c["ref"] == ref), None)
+                    if found is None:
+                        raise ValueError("That one's already been decided.")
+                    result = saga.accept(found, privacy="series" if act == "accept" else "private")
+                elif act == "drop":
+                    saga.drop(ref)
+                    result = {"dropped": ref}
+                elif act in ("series", "unseries"):
+                    result = saga.mark(str(body.get("id", "")), "series" if act == "series" else "private")
+                else:
+                    raise ValueError("Accept, private or drop.")
+            except ValueError as problem:
+                return self._send(400, json.dumps({"error": str(problem)}).encode("utf-8"), "application/json")
+            return self._send(200, json.dumps(result, default=str).encode("utf-8"), "application/json")
 
     return Board
 

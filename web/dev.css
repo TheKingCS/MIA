@@ -117,3 +117,15 @@
   font-size: var(--text-xs); cursor: pointer; padding: 0 2px; }
 .dev-reply:hover, .dev-reply:focus-visible { color: var(--accent); outline: none; }
 .dev-replying { font-size: var(--text-xs); color: var(--text-dim); margin: 0 0 4px; }
+
+/* The Chronicles (core/saga.py). */
+.dev-chronicles { margin-top: 12px; }
+.dev-chronicles h2 .n { font-size: var(--text-sm); }
+.dev-saga { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px; }
+.dev-saga li { padding: 9px 10px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface);
+  font-size: var(--text-sm); overflow-wrap: anywhere; }
+.dev-saga .head { font-size: var(--text-xs); color: var(--text-faint); margin-bottom: 3px; }
+.dev-saga .head b { display: block; font-size: var(--text-sm); color: var(--text); font-weight: 600; }
+.dev-saga .said { color: var(--text-dim); }
+.dev-saga .src { font-size: var(--text-xs); margin-top: 4px; font-family: var(--font-mono); }
+.dev-saga .dev-chip { cursor: pointer; background: none; font: inherit; font-size: var(--text-xs); }

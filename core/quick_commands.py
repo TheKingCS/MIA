@@ -152,6 +152,11 @@ def handle(context, text: str) -> Optional[str]:
     said = _workout(context, text)
     if said is not None:
         return said
+    from core.saga import remember_command
+
+    said = remember_command(context, text)  # "remember this for the Chronicles" (DEC-0084)
+    if said is not None:
+        return said
 
     fit = getattr(context, "fitness", None)
     plan = fit.plan if fit is not None else None
