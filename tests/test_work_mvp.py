@@ -64,8 +64,9 @@ def test_one_task_from_creation_to_approval(team):
 
     # Human-controlled approval: refused headless, granted to a person typing the id.
     with pytest.raises(review.ReviewError):
-        review.approve(fix.id, confirm=lambda q: (_ for _ in ()).throw(EOFError()), lab=lab, folder=folder, log=log)
-    review.approve(fix.id, confirm=lambda q: fix.id, lab=lab, folder=folder, log=log)
+        review.approve(fix.id, confirm=lambda q: (_ for _ in ()).throw(EOFError()), lab=lab, folder=folder, log=log,
+                       registry=registry)
+    review.approve(fix.id, confirm=lambda q: fix.id, lab=lab, folder=folder, log=log, registry=registry)
 
     # Completion evidence, and a searchable history of every handoff.
     done = tasks_mod.load(folder)[fix.id]

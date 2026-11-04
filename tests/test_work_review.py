@@ -12,7 +12,7 @@ from tests.test_work_loop import REGISTRY, FakeLab
 
 
 @pytest.fixture
-def waiting(tmp_path):
+def waiting(tmp_path, monkeypatch):
     """T-0001, written by the Software Engineer on Claude Code, waiting for review."""
     folder, log = tmp_path / "tasks", tmp_path / "activity.jsonl"
     tasks_mod.save(tasks_mod.Task(id="T-0001", title="A fix", files=["core/x.py"], body="Make x right."), folder)
@@ -26,6 +26,8 @@ def waiting(tmp_path):
 
     lab.approve = merge
     registry = agents.parse(REGISTRY)
+    monkeypatch.setattr(rv, "_registry", lambda: registry)
+    monkeypatch.setattr(rv, "LESSONS", tmp_path / "review_lessons.json")
     loop.run("T-0001", "Software Engineer", registry, lab=lab, folder=folder, log=log)
     return folder, log, registry, lab
 
@@ -113,3 +115,53 @@ def test_a_disagreement_that_outlasts_its_answer_is_zacs_to_settle(waiting):
     rv.resolve("T-0001", "zac", "read both; the change is right", folder=folder, log=log, confirm=lambda q: "T-0001")
     assert rv.approve("T-0001", confirm=lambda q: "T-0001", lab=lab, folder=folder, log=log)
 
+
+
+TWO_REVIEWERS = {**REGISTRY, "providers": {**REGISTRY["providers"], "codex": {"kind": "cli", "command": "codex",
+                                                                           "can": ["review"]}},
+                 "roles": REGISTRY["roles"] + [{"role": "Security Auditor", "provider": "codex", "tier": "review"}]}
+
+
+def test_two_providers_must_approve_when_two_can_review(waiting, monkeypatch):
+    """Zac: "it probably should have a second reviewer"."""
+    folder, log, _, lab = waiting
+    registry = agents.parse(TWO_REVIEWERS)
+    monkeypatch.setattr(rv, "_registry", lambda: registry)
+    assert rv.reviewers_needed(registry, "Software Engineer (claude-code)") == 2
+    _review(waiting, "QA Engineer", "VERDICT: approve")
+    _review(waiting, "QA Engineer", "VERDICT: approve")  # the same provider twice is still one
+    with pytest.raises(rv.ReviewError, match="1 approving review.*needs 2"):
+        rv.approve("T-0001", confirm=lambda q: "T-0001", lab=lab, folder=folder, log=log)
+    rv.review("T-0001", "Security Auditor", registry, ask=lambda pr, pm: "VERDICT: approve",
+              diff=lambda pid: "+ x", folder=folder, log=log)
+    assert rv.approvals("T-0001", log) == ["codex", "ollama"]
+    assert rv.approve("T-0001", confirm=lambda q: "T-0001", lab=lab, folder=folder, log=log)
+
+
+def test_zac_can_settle_a_task_one_reviewer_short(waiting, monkeypatch):
+    folder, log, _, lab = waiting
+    monkeypatch.setattr(rv, "_registry", lambda: agents.parse(TWO_REVIEWERS))
+    _review(waiting, "QA Engineer", "VERDICT: approve")
+    with pytest.raises(rv.ReviewError, match="no open objection"):  # an agent can't wave the second review off
+        rv.resolve("T-0001", "claude", "one is enough", folder=folder, log=log)
+    rv.resolve("T-0001", "zac", "one is enough here", folder=folder, log=log, confirm=lambda q: "T-0001")
+    assert rv.approve("T-0001", confirm=lambda q: "T-0001", lab=lab, folder=folder, log=log)
+
+
+def test_a_reviewers_mistake_becomes_a_lesson_in_its_next_prompt(waiting, tmp_path):
+    """Zac: "prompted on the things it gets wrong so it doesn't do the same issue twice"."""
+    folder, log, registry, _ = waiting
+    lessons = tmp_path / "review_lessons.json"
+    _review(waiting, "QA Engineer", "_DEFAULT is unused.\nVERDICT: changes")
+    rv.resolve("T-0001", "claude", "it's used in core/ocr.py:74", folder=folder, log=log,
+               lesson="Search the whole repo before calling a name unused.", lessons=lessons)
+    assert "Search the whole repo" in rv.lessons_for("ollama", lessons) and rv.lessons_for("codex", lessons) == ""
+    seen = {}
+    rv.review("T-0001", "QA Engineer", registry, diff=lambda pid: "+ x", folder=folder, log=log, lessons=lessons,
+              ask=lambda pr, prompt: seen.update(prompt=prompt) or "VERDICT: approve")
+    assert "Mistakes you made in earlier reviews" in seen["prompt"]
+    assert "Search the whole repo before calling a name unused. (T-0001)" in seen["prompt"]
+    assert any(e["action"] == "lesson" for e in rv.activity.search(task_id="T-0001", path=log))
+    for n in range(rv.MAX_LESSONS + 3):
+        rv.add_lesson("ollama", "T-0002", f"lesson {n}", lessons)
+    assert rv.lessons_for("ollama", lessons).count("\n- ") == rv.MAX_LESSONS  # only the latest are kept

@@ -19,6 +19,7 @@ work, like any other change.
     .venv\\Scripts\\python -m tools.work history "relay"            (search who did what)
     .venv\\Scripts\\python -m tools.work history --task T-0001
     .venv\\Scripts\\python -m tools.work resume T-0001              (where an interrupted task got to)
+    .venv\\Scripts\\python -m tools.work resolve T-0001 --by claude --how "why" --lesson "what the reviewer should check"
 
 Every change is recorded in work/activity.jsonl (core/work_activity.py).
 """
@@ -85,6 +86,7 @@ def main(argv=None) -> int:
     rs.add_argument("id")
     rs.add_argument("--by", required=True)
     rs.add_argument("--how", required=True)
+    rs.add_argument("--lesson", default="", help="what the reviewer should check next time, if it was wrong")
     mv = sub.add_parser("move")
     mv.add_argument("id")
     mv.add_argument("status")
@@ -136,7 +138,7 @@ def main(argv=None) -> int:
             from core import work_review
 
             try:
-                count = work_review.resolve(args.id, args.by, args.how, confirm=input)
+                count = work_review.resolve(args.id, args.by, args.how, confirm=input, lesson=args.lesson)
             except work_review.ReviewError as problem:
                 print(f"Stopped: {problem}", file=sys.stderr)
                 return 1

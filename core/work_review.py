@@ -17,11 +17,21 @@ task to review:
   first. Approving merges through the lab's own `approve`, which runs the
   suite and reverts by itself on a new failure; the task closes with the merge
   as evidence.
+- **two reviewers** (Zac, 2026-11-03: "it probably should have a second
+  reviewer"): approve needs approving reviews from two different providers,
+  neither the author's, or as many as are registered if fewer. A small local
+  model alone got T-0019's review wrong twice.
+- **lessons** ("prompted on the things it gets wrong so it doesn't do the same
+  issue twice"): a resolve that shows a reviewer was wrong can say what it
+  should have checked. That lesson is kept per provider in
+  `work/review_lessons.json` and put in the provider's next review prompts.
 """
 
 from __future__ import annotations
 
+import json
 import re
+from pathlib import Path
 from typing import Callable, Optional
 
 from core import work_activity as activity
@@ -30,18 +40,54 @@ from core.work_agents import AgentError, Registry
 
 VERDICT = re.compile(r"VERDICT:\s*(approve|changes)", re.I)
 MAX_DIFF = 60_000  # what a reviewer is given at most; past it, it's told the rest was cut
+REVIEWS_NEEDED = 2  # approving providers, when that many can review
+LESSONS = tasks_mod.ROOT / "work" / "review_lessons.json"
+MAX_LESSONS = 12  # per provider, the latest; older ones drop off
 
 REVIEW_PROMPT = (
     "You are reviewing a change to MIA, a personal assistant, as {role}. You did not write it. Read the task and "
     "the diff, and look for real problems: bugs, a test that doesn't test what it says, security or privacy "
     "issues, a broken convention in CLAUDE.md, something the task asked for that's missing. Don't comment on "
     "style. List each problem with the file and what to change. End with one line: VERDICT: approve, or "
-    "VERDICT: changes.\n\nThe task ({task_id}): {title}\n{body}\n\nThe diff:\n{diff}"
+    "VERDICT: changes.\n\n{lessons}The task ({task_id}): {title}\n{body}\n\nThe diff:\n{diff}"
 )
 
 
 class ReviewError(ValueError):
     """A review or approval that can't happen as asked."""
+
+
+def provider_of(who: str) -> str:
+    """Pure logic. "QA Engineer (ollama-coder)" -> "ollama-coder"."""
+    return who.rsplit("(", 1)[-1].rstrip(")") if who.endswith(")") else ""
+
+
+def _lessons(path: Optional[Path] = None) -> dict:
+    try:
+        return json.loads(Path(path or LESSONS).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def lessons_for(provider: str, path: Optional[Path] = None) -> str:
+    """What this provider got wrong before, for its review prompt; "" if nothing."""
+    kept = _lessons(path).get(provider) or []
+    if not kept:
+        return ""
+    lines = "\n".join(f"- {k['lesson']} ({k['task']})" for k in kept)
+    return f"Mistakes you made in earlier reviews here. Check for these before you object:\n{lines}\n\n"
+
+
+def add_lesson(provider: str, task_id: str, lesson: str, path: Optional[Path] = None) -> None:
+    from core.atomic_write import atomic_write_text
+
+    data = _lessons(path)
+    kept = [k for k in data.get(provider, []) if k.get("lesson") != lesson]
+    kept.append({"task": task_id, "lesson": lesson})
+    data[provider] = kept[-MAX_LESSONS:]
+    path = Path(path or LESSONS)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    atomic_write_text(path, json.dumps(data, indent=2, ensure_ascii=False) + "\n")
 
 
 def author_of(task_id: str, log=activity.ACTIVITY) -> str:
@@ -59,7 +105,8 @@ def verdict(text: str) -> str:
 
 
 def review(task_id: str, role_name: str, registry: Registry, *, ask: Callable[[str, str], str],
-           diff: Callable[[str], str], folder=tasks_mod.TASKS_DIR, log=activity.ACTIVITY) -> str:
+           diff: Callable[[str], str], folder=tasks_mod.TASKS_DIR, log=activity.ACTIVITY,
+           lessons: Optional[Path] = None) -> str:
     """One independent review of a task waiting in review. `ask(provider, prompt)`
     runs the reviewer; `diff(proposal_id)` gives the change. Returns the verdict."""
     tasks = tasks_mod.load(folder)
@@ -81,7 +128,8 @@ def review(task_id: str, role_name: str, registry: Registry, *, ask: Callable[[s
     if len(change) > MAX_DIFF:
         change = change[:MAX_DIFF] + "\n[... the rest of the diff was cut for length; say so if it matters]"
     said = ask(role.provider, REVIEW_PROMPT.format(role=role.role, task_id=task.id, title=task.title,
-                                                    body=task.body, diff=change))
+                                                    body=task.body, diff=change,
+                                                    lessons=lessons_for(role.provider, lessons)))
     found = verdict(said)
     tasks_mod.note(task, who, f"Review: {found}. " + " ".join((said or "").split())[:1500])
     tasks_mod.save(task, folder)
@@ -92,6 +140,25 @@ def review(task_id: str, role_name: str, registry: Registry, *, ask: Callable[[s
 def _other_provider_exists(registry: Registry, provider: str) -> bool:
     """A reviewer on the author's own provider is refused only when another provider could review."""
     return any(p.name != provider and "review" in p.can for p in registry.providers.values())
+
+
+def reviewers_needed(registry: Registry, author: str) -> int:
+    """Two approving providers, or every provider that could review if fewer."""
+    eligible = {r.provider for r in registry.roles.values()
+                if r.tier == "review" and not author.endswith(f"({r.provider})")}
+    return max(1, min(REVIEWS_NEEDED, len(eligible)))
+
+
+def approvals(task_id: str, log=activity.ACTIVITY) -> list[str]:
+    """The providers whose latest review of the current change approves it.
+    A rewrite (the loop's write step) starts the count again."""
+    latest: dict[str, str] = {}
+    for e in activity.search(task_id=task_id, path=log):
+        if e.get("action") == "loop" and str(e.get("detail", "")).startswith("write"):
+            latest = {}
+        elif e.get("action") == "review":
+            latest[provider_of(e.get("who", ""))] = str(e.get("detail", "")).split(":", 1)[0]
+    return sorted(p for p, said in latest.items() if said == "approve")
 
 
 def latest_verdict(task_id: str, log=activity.ACTIVITY) -> str:
@@ -125,13 +192,16 @@ def settled_by_zac(task_id: str, log=activity.ACTIVITY) -> bool:
 
 
 def resolve(task_id: str, who: str, how: str, folder=tasks_mod.TASKS_DIR, log=activity.ACTIVITY,
-            confirm: Optional[Callable[[str], str]] = None) -> int:
+            confirm: Optional[Callable[[str], str]] = None, lesson: str = "",
+            lessons: Optional[Path] = None) -> int:
     """Answer the open objections: what was changed, or why the reviewer was
-    wrong. Kept in the task and the history either way. Returns how many."""
+    wrong. Kept in the task and the history either way. `lesson`, when the
+    reviewer was wrong, is what it should check next time: it goes into that
+    provider's later review prompts. Returns how many."""
     tasks = tasks_mod.load(folder)
     task = tasks_mod._get(tasks, task_id)
     objections = open_objections(task.id, log)
-    deciding = who == "zac" and latest_verdict(task.id, log) == "changes"  # a disagreement only Zac settles
+    deciding = who == "zac" and bool(latest_verdict(task.id, log))  # a disagreement, or a review short: Zac's
     if not objections and not deciding:
         raise ReviewError(f"{task.id} has no open objection to resolve.")
     if not how.strip():
@@ -147,11 +217,23 @@ def resolve(task_id: str, who: str, how: str, folder=tasks_mod.TASKS_DIR, log=ac
     tasks_mod.note(task, who, f"Resolved the objection from {raised_by}: {how.strip()}")
     tasks_mod.save(task, folder)
     activity.record(who, "resolve", task.id, f"{len(objections)} from {raised_by}: {how.strip()}", log)
+    if lesson.strip():
+        objected = objections or [e for e in activity.search(task_id=task.id, path=log)
+                                  if e.get("action") == "review"][-1:]
+        for provider in sorted({provider_of(e.get("who", "")) for e in objected} - {""}):
+            add_lesson(provider, task.id, lesson.strip(), lessons)
+            activity.record(who, "lesson", task.id, f"for {provider}: {lesson.strip()}", log)
     return len(objections)
 
 
+def _registry() -> Registry:
+    from core.work_agents import load as load_agents
+
+    return load_agents()
+
+
 def approve(task_id: str, *, confirm: Callable[[str], str], lab=None, suite: Optional[Callable] = None,
-            folder=tasks_mod.TASKS_DIR, log=activity.ACTIVITY) -> str:
+            folder=tasks_mod.TASKS_DIR, log=activity.ACTIVITY, registry: Optional[Registry] = None) -> str:
     """Zac's approval. `confirm(question)` must come back as the task's id,
     typed by a person; anything else, or no person to ask, refuses."""
     if lab is None:
@@ -166,11 +248,16 @@ def approve(task_id: str, *, confirm: Callable[[str], str], lab=None, suite: Opt
         raise ReviewError(f"{task.id} has an objection from {raised_by} nobody has answered. "
                           f"Resolve it first: python -m tools.work resolve {task.id} --by <who> --how \"...\"")
     said = latest_verdict(task.id, log)
-    if said != "approve" and settled_by_zac(task.id, log):
-        said = "approve"  # still disagreeing after an answer: Zac decided (DEC-0071)
-    if said != "approve":
-        raise ReviewError(f"{task.id} needs an independent review that approves it first"
-                          + (f" (the last said {said})." if said else "."))
+    if not settled_by_zac(task.id, log):  # still disagreeing after an answer: Zac decided (DEC-0071)
+        if said != "approve":
+            raise ReviewError(f"{task.id} needs an independent review that approves it first"
+                              + (f" (the last said {said})." if said else "."))
+        need = reviewers_needed(registry or _registry(), author_of(task.id, log))
+        have = approvals(task.id, log)
+        if len(have) < need:
+            raise ReviewError(f"{task.id} has {len(have)} approving review(s) ({', '.join(have) or 'none'}); "
+                              f"it needs {need} from different providers. Ask another reviewer, or settle "
+                              f"it yourself with resolve.")
     try:
         typed = confirm(f"Approve {task.id} ({task.title}) into the running MIA? Type {task.id} to approve: ")
     except (EOFError, OSError):
