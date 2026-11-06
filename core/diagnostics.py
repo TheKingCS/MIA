@@ -132,6 +132,28 @@ def run(context, procedure, inspect=None) -> dict:
     return {"title": spec["title"], "lines": lines, **result}
 
 
+def screen(context, inspect=None) -> dict:
+    """The Diagnostics web screen (web/diagnostics.html, the PC's owner's): every built-in check-up over one
+    passive inspection."""
+    if inspect is None:
+        from core.inspection import inspect
+    try:
+        report = inspect(context, "this_computer")
+    except Exception as problem:
+        return {"checks": [], "error": f"The PC couldn't be inspected: {str(problem)[:200]}"}
+    once = lambda _context, _subject: report  # noqa: E731
+    checks = []
+    for pid, spec in PROCEDURES.items():
+        try:
+            done = run(context, pid, inspect=once)
+        except DiagnosticError as problem:
+            done = {"title": spec["title"], "lines": [str(problem)], "passed": 0, "failed": [str(problem)],
+                    "unknown": []}
+        checks.append({"id": pid, "title": done["title"], "ok": not done["failed"], "passed": done["passed"],
+                       "failed": done["failed"], "unknown": sorted(set(done["unknown"]))})
+    return {"checks": checks, "error": ""}
+
+
 _ASK = (("network", ("network", "internet connection", "wifi", "wi-fi", "connection")),
         ("big_download", ("download", "room for", "disk space", "space for")),
         ("pc_ready", ("check my pc", "check the pc", "pc check", "check-up", "checkup", "diagnose", "health check",

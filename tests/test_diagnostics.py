@@ -46,3 +46,23 @@ def test_asked_for_by_name(monkeypatch):
     assert d.reply(None, "can you check the network?") == "ran network"
     assert d.reply(None, "is there room for a big download?") == "ran big_download"
     assert d.reply(None, "check my email") is None and d.reply(None, "what's the weather") is None
+
+
+
+def test_the_screen_runs_every_check_up_over_one_inspection():
+    from types import SimpleNamespace
+
+    from core import diagnostics
+
+    calls = []
+    facts = [SimpleNamespace(fact="disk.C.free_gb", value=10.0), SimpleNamespace(fact="memory.use_percent", value=40),
+             SimpleNamespace(fact="ai.model", value="qwen")]
+
+    def inspect(context, subject):
+        calls.append(subject)
+        return SimpleNamespace(evidence=facts)
+
+    found = {c["id"]: c for c in diagnostics.screen(None, inspect=inspect)["checks"]}
+    assert calls == ["this_computer"] and set(found) == set(diagnostics.PROCEDURES)
+    assert not found["pc_ready"]["ok"] and "Drive C has 10 GB free" in found["pc_ready"]["failed"][0]
+    assert "cpu.use_percent" in found["pc_ready"]["unknown"]

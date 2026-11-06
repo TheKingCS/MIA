@@ -606,6 +606,8 @@ def test_the_council_is_the_owners_only(client, context, monkeypatch):
     bea = next(p for p in context.profiles.list_profiles() if p.name == "Bea")
     token = client.post("/api/login", json={"profile_id": bea.profile_id, "password": "pass1234"}).json()["token"]
     assert client.get("/api/council", headers={"Authorization": f"Bearer {token}"}).status_code == 403
+    said = client.get("/api/diagnostics", headers={"Authorization": f"Bearer {token}"})  # the PC's check-up too
+    assert said.status_code == 403 and "owner" in said.json()["detail"]
 
 
 def test_sight_takes_a_photo_and_a_question(client, context, monkeypatch):
@@ -620,7 +622,8 @@ def test_sight_takes_a_photo_and_a_question(client, context, monkeypatch):
 
 def test_only_the_owner_sees_the_council_in_the_sidebar(client, context):
     owner = {"Authorization": f"Bearer {_login(client, context)}"}
-    assert [o["page"] for o in client.get("/api/shell", headers=owner).json()["owner"]] == ["council.html"]
+    assert [o["page"] for o in client.get("/api/shell", headers=owner).json()["owner"]] == ["council.html",
+                                                                                          "diagnostics.html"]
     context.profiles.create_profile("Bea", password="pass1234")
     bea = next(p for p in context.profiles.list_profiles() if p.name == "Bea")
     token = client.post("/api/login", json={"profile_id": bea.profile_id, "password": "pass1234"}).json()["token"]
@@ -639,3 +642,13 @@ def test_the_new_screens_and_the_journal_keeps_its_own_route(client, context):
     kept = client.get("/api/life-notes", headers=owner).json()  # Kept (DEC-0054)
     assert [k["kind"] for k in kept["kinds"]] == ["commitment", "decision", "idea", "dropped_goal"]
     assert all(k["notes"] == [] for k in kept["kinds"])
+
+
+
+
+def test_the_pcs_check_up_is_its_owners(client, context, monkeypatch):
+    import core.diagnostics as diagnostics
+
+    monkeypatch.setattr(diagnostics, "screen", lambda ctx: {"checks": [{"id": "pc_ready", "ok": True}], "error": ""})
+    owner = {"Authorization": f"Bearer {_login(client, context)}"}
+    assert client.get("/api/diagnostics", headers=owner).json()["checks"][0]["id"] == "pc_ready"

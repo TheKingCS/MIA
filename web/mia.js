@@ -221,6 +221,11 @@
     council: () => demo ? Promise.resolve({ messages: [], members: [] }) : call("GET", "/api/council"),
     councilSay: (body) => demo ? Promise.resolve({}) : call("POST", "/api/council", body),
     // The Operating Journal, games played and Good News Radio (DEC-0097, 0098, 0096); changes go through actions.
+    diagnostics: () => demo ? Promise.resolve({ error: "", checks: [
+      { id: "pc_ready", title: "Is the PC ready for MIA?", ok: true, passed: 5, failed: [], unknown: [] },
+      { id: "network", title: "The network", ok: false, passed: 2, failed: ["The wired connection is running at 100 Mb/s, under a gigabit."], unknown: [] },
+      { id: "big_download", title: "Room for a big download", ok: true, passed: 2, failed: [], unknown: ["disk.D.free_gb"] }] })
+      : call("GET", "/api/diagnostics"),
     lifeNotes: () => demo ? Promise.resolve({ kinds: [
       { kind: "commitment", title: "Promises", notes: [
         { id: "n1", line: "a promise to Sam: fix his gate (by Saturday)", status: "open", at: "2026-11-06", due: "2026-11-07" },

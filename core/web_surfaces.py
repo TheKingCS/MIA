@@ -298,12 +298,13 @@ def shell(context, today: Optional[date] = None) -> dict:
 
 
 def _owner_pages(context, pid) -> list:
-    """Pages only the PC's owner has (the first account): the council (build plan step 16)."""
+    """Pages only the PC's owner has (the first account): the council (build plan step 16) and the PC's check-up."""
     from core.person_settings import _is_first_account
 
     try:
         if pid and _is_first_account(context, pid):
-            return [{"id": "council", "name": "The Council", "icon": "assistant", "page": "council.html"}]
+            return [{"id": "council", "name": "The Council", "icon": "assistant", "page": "council.html"},
+                    {"id": "diagnostics", "name": "Diagnostics", "icon": "assistant", "page": "diagnostics.html"}]
     except Exception:
         log.debug("Shell: owner pages unavailable", exc_info=True)
     return []

@@ -766,11 +766,19 @@ def create_app(context: AppContext) -> FastAPI:
     # inbox scan takes it from there within a minute.
     # The council from the phone (build plan step 16): the same chat as the dev window (core/council.py), for the
     # PC's owner only (the first account): it spends his providers' usage, and it's his development platform.
-    def _owner_only(profile_id: str) -> None:
+    def _owner_only(profile_id: str, what: str = "The council") -> None:
         from core.person_settings import _is_first_account
 
         if not _is_first_account(context, profile_id):
-            raise HTTPException(status.HTTP_403_FORBIDDEN, "The council is the PC owner's.")
+            raise HTTPException(status.HTTP_403_FORBIDDEN, f"{what} is the PC owner's.")
+
+    @app.get("/api/diagnostics")
+    def diagnostics_screen(profile_id: str = Depends(require_profile_id)) -> dict:
+        """The PC's check-ups (core/diagnostics.py), for its owner: they read its drives and network adapters."""
+        _owner_only(profile_id, "This PC's check-up")
+        from core.diagnostics import screen
+
+        return screen(context)
 
     @app.get("/api/council")
     def council_read(profile_id: str = Depends(require_profile_id)) -> dict:

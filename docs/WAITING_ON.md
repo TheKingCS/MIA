@@ -101,8 +101,12 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       Claude: (a) now, (c) over time. Details in `work/tasks/T-0051.md`.
 - [ ] Flaky: `tests/test_reference_library_manager.py` (2026-11-07: one cause found and fixed: deleting a pack failed
       on Windows while libzim still held the file; if `test_search_all_packs_returns_snippet_from_matching_pack` fails
-      again, look for another open handle), and a native Qt crash mid-suite (no summary printed), seen twice (the
-      second 2026-11-06);
+      again, look for another open handle); and the native crash mid-suite (no summary printed), which now has a
+      **reliable trigger** (2026-11-06): one more test in `tests/test_server_app.py` that creates a second profile
+      and logs it in (any route after) makes the full suite die later with "Fatal Python error: Aborted" / an
+      access violation inside anyio's event loop, at `tests/test_user_sync.py::test_through_the_server`; never in
+      a subset. Something builds up per signed-in person across test clients (not a Qt object: no store is one).
+      Worked around by checking the 403 inside the council test, which already signs a second person in;
       `tests/test_inbox.py::test_what_she_read_and_the_person_corrected_is_noted` failed once in a full run (2026-11-06),
       never alone.
 - [ ] `vault.coverage` is built from the vault's own list (photos over a week old still only on the phone,
