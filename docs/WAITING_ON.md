@@ -84,7 +84,10 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       builds, not yet tried on the phone), so Look's "choose a photo" works there, and "take a photo" opens the
       camera, which writes into MIA's own cache (never the gallery; cleared at the next look). The glasses' own
       camera and asking the question by voice are still to do.
-- [ ] The phone build bundles Chaquopy's `cryptography` 42.0.8, which the dependency audit doesn't cover yet.
+- [ ] **T-0051, security (phone):** the audit covers the phone's own packages now (`phone.vulnerable`, weekly):
+      `cryptography` 42.0.8 (11 advisories), `starlette` 0.27.0 (14), `fastapi` 0.99.1 (1). They're pinned by
+      the phone's `pydantic<2`; its server listens on 127.0.0.1 only. The fix moves the phone to pydantic 2 (if
+      Chaquopy has the wheels) and needs a real phone test: a build for Zac to try.
 - [ ] Flaky: `tests/test_reference_library_manager.py` (2026-11-07: one cause found and fixed: deleting a pack failed
       on Windows while libzim still held the file; if `test_search_all_packs_returns_snippet_from_matching_pack` fails
       again, look for another open handle), and a native Qt crash mid-suite (no summary printed), seen twice (the

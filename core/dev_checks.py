@@ -132,6 +132,21 @@ def installed() -> dict[str, str]:
     return dict(sorted(out.items()))
 
 
+PHONE_BUILD = ROOT / "android-phone" / "app" / "build"
+
+
+def phone_packages(build: Path = PHONE_BUILD) -> dict[str, str]:
+    """The Python packages the phone app bundles (Chaquopy installs them into its build): name -> version, read
+    from the installed packages' folder names. Empty when the phone app hasn't been built on this PC."""
+    out = {}
+    for found in build.rglob("*.dist-info") if build.exists() else []:
+        name, _, version = found.name[:-len(".dist-info")].rpartition("-")
+        if name and version and found.is_dir():
+            out[name.lower().replace("_", "-")] = version
+    out.pop("pip", None)  # the installer Chaquopy brings, not something the app runs
+    return dict(sorted(out.items()))
+
+
 def vulnerable(packages: Optional[dict[str, str]] = None, post: Callable[[str, dict], dict] = _post) -> dict:
     """Installed packages with a known vulnerability (OSV): {"checked", "packages": {name: [ids]}}."""
     packages = installed() if packages is None else packages

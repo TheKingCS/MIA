@@ -788,6 +788,22 @@ def _vulnerable(_context) -> Optional[Reading]:
                    + (": " + ", ".join(f"{n} ({', '.join(v['packages'][n][:3])})" for n in names[:6]) if names else ""))
 
 
+def _phone_vulnerable(_context) -> Optional[Reading]:
+    """The Python packages the phone app bundles (Chaquopy) with a known vulnerability; None until it's built here."""
+    if not _has_repo():
+        return None
+    from core import dev_checks
+
+    packages = dev_checks.phone_packages()
+    if not packages:
+        return None
+    v = dev_checks.vulnerable(packages)
+    names = sorted(v["packages"])
+    return Reading(len(names), v["checked"], f"{len(names)} of {v['checked']} phone packages with a known "
+                   "vulnerability" + (": " + ", ".join(f"{n} {packages[n]} ({len(v['packages'][n])})" for n in names)
+                                      if names else ""))
+
+
 def _outdated(_context) -> Optional[Reading]:
     if not _has_repo():
         return None
@@ -959,6 +975,9 @@ LOOPS: tuple[Loop, ...] = (
          floor=0.2, min_n=3, covers=("dev:merge",)),
     Loop("dev.vulnerable", "development", "installed packages with a known vulnerability", "device", _vulnerable,
          floor=0, every=7, heavy=True, files=("requirements.txt",), covers=("dev:dependencies",)),
+    Loop("phone.vulnerable", "development", "packages the phone app bundles with a known vulnerability", "device",
+         _phone_vulnerable, floor=0, every=7, heavy=True, files=("android-phone/app/build.gradle.kts",),
+         covers=("dev:dependencies", "flow:phone")),
     Loop("dev.outdated", "development", "required packages behind their latest release", "device", _outdated,
          acts="watch", every=7, heavy=True, covers=("dev:dependencies",)),
     Loop("dev.loop_coverage", "development", "processes with a loop, of those that need one", "device",

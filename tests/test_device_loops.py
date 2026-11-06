@@ -181,3 +181,19 @@ def test_the_lab_loop_counts_real_proposals_only(monkeypatch):
     monkeypatch.setattr(lab, "all_proposals", lambda: found)
     reading = BY_ID["dev.lab"].measure(None)
     assert (reading.value, reading.n, reading.detail) == (0.5, 4, "2 of 4 went in; 1 turned down, 1 reverted")
+
+
+
+def test_the_phones_own_packages_are_audited(tmp_path, monkeypatch):
+    from core import dev_checks
+
+    for name in ("cryptography-42.0.8.dist-info", "typing_extensions-4.16.0.dist-info", "pip-25.3.dist-info"):
+        (tmp_path / "python" / "env" / name).mkdir(parents=True)
+    found = dev_checks.phone_packages(tmp_path)
+    assert found == {"cryptography": "42.0.8", "typing-extensions": "4.16.0"}  # pip only installs, never runs
+    assert dev_checks.phone_packages(tmp_path / "never built") == {}
+    monkeypatch.setattr(loops, "_has_repo", lambda: True)
+    monkeypatch.setattr(dev_checks, "phone_packages", lambda: found)
+    monkeypatch.setattr(dev_checks, "vulnerable", lambda packages: {"checked": 2, "packages": {"cryptography": ["A", "B"]}})
+    reading = BY_ID["phone.vulnerable"].measure(None)
+    assert (reading.value, reading.n) == (1, 2) and reading.detail.endswith("cryptography 42.0.8 (2)")
