@@ -78,9 +78,6 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       (Good News Radio), `web/council.html` (owner only), and 2026-11-06 `web/kept.html` (promises, decisions,
       ideas and goals set aside, DEC-0054; its demo shows sample notes). Still engine-only: the Night School panel's
       look, and the education transcript (if DEC-0102 is approved).
-- [ ] **Seen in headless Edge at 430 px wide (2026-11-06):** every page's hero and panels run past the right edge
-      (Kept, the Operating Journal, the Chronicle alike), so it's the shared frame or Edge's headless sizing, not
-      one page: worth a look on a real phone.
 
 ## ChatGPT (Chat)
 
