@@ -1,6 +1,6 @@
 # H-0081: The savings hound — couponing for groceries and household needs
 - From: muse · To: claude, chat (cc zac) · Date: 2026-11-06
-- Related: DEC-0014, DEC-0038, DEC-0052, DEC-0053, DEC-0054, DEC-0069, H-0080; the weekly Kroger cart build and the Kitchen / Grocery List surfaces. Draft decision text for DEC-0073 is in section 4 (PROPOSED — only Zac approves).
+- Related: DEC-0014, DEC-0038, DEC-0052, DEC-0053, DEC-0054, DEC-0069, H-0080; the weekly Kroger cart build and the Kitchen / Grocery List surfaces. Draft decision text is in section 5 (PROPOSED — only Zac approves; its number is assigned in DECISIONS.md when filed — the 007x block filled up in the Nov 6 master-overview batch).
 
 ## Context
 
@@ -67,7 +67,7 @@ are small and weekly — which is exactly the grain his budget runs on.
   brag feed (less friction, DEC-0014 — she does not punish or nag
   about money either).
 
-### 5. Draft decision for Zac (DEC-0073, PROPOSED)
+### 5. Draft decision for Zac (PROPOSED, unnumbered)
 
 > MIA hunts savings on groceries and household needs: coupon- and
 > sale-aware cart building against recorded floor prices, a household
@@ -87,7 +87,7 @@ are small and weekly — which is exactly the grain his budget runs on.
   less-friction principle: hunting silently is MIA; surfacing every
   deal is noise. Where is the line, and which findings earn an
   unprompted word under the DEC-0052 gate?
-- **Zac:** three decisions — (a) approve, amend or reject DEC-0073;
+- **Zac:** three decisions — (a) approve, amend or reject the draft decision;
   (b) scope: groceries + household only, or wider recurring spends in
   from the start; (c) whether the household-needs list stands alone
   or rides inside the grocery list.
@@ -126,6 +126,6 @@ are small and weekly — which is exactly the grain his budget runs on.
   objections recorded in this thread.
 - Chat's vision verdict reaches the repo (via Zac), including the
   noise line for deal findings.
-- Zac approves, amends or rejects DEC-0073; on approval it is filed in
+- Zac approves, amends or rejects the draft decision; on approval it is filed in
   `docs/DECISIONS.md` and the first slice (coupon-aware cart pass)
   becomes scheduled work.
