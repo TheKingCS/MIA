@@ -64,9 +64,44 @@ def test_every_rule_runs_on_an_empty_life(life):
 
 
 def test_only_the_chosen_kinds_go_out_unprompted():
-    unprompted = {"bill_before_pay", "upkeep_before_trip", "deadline_in_packed_week", "cheaper_quote"}
+    unprompted = {"bill_before_pay", "upkeep_before_trip", "deadline_in_packed_week", "cheaper_quote",
+                  "goods_before_market"}  # DEC-0052: goods passing their best-by before market day
     import inspect
 
     for rule in F.RULES:
         allows = "unprompted=True" in inspect.getsource(rule) or "unprompted=short" in inspect.getsource(rule)
         assert allows == (rule.__name__ in unprompted), rule.__name__
+
+
+def test_goods_that_wont_make_market_day(monkeypatch):
+    from datetime import date
+    from types import SimpleNamespace
+
+    import core.calendar_view as cv
+    import core.goods as goods
+    from core.findings import goods_before_market
+    from core.goods import Lot
+
+    today = date(2026, 11, 6)
+    monkeypatch.setattr(cv, "calendar_items", lambda context, start, end, today=None: [
+        {"date": "2026-11-08", "title": "Dentist", "time": "", "kind": "event"},
+        {"date": "2026-11-14", "title": "Farmers market", "time": "", "kind": "event"}])
+    made = [Lot("j1", "r1", "jam", "2026-10-20", "2026-11-10", 12, 4, 0, 2.0),  # 8 left, gone by the 10th
+            Lot("j2", "r1", "jam", "2026-11-01", "2026-11-30", 12, 0, 0, 2.0),  # keeps till after
+            Lot("j3", "r2", "soap", "2026-09-01", "", 10, 2, 0, 1.0),  # keeps
+            Lot("j4", "r3", "bread", "2026-11-04", "2026-11-07", 6, 6, 0, 1.0)]  # all sold
+    monkeypatch.setattr(goods, "lots", lambda jobs, recipes, sales, include_empty=False: made)
+    context = SimpleNamespace(craft_recipes=SimpleNamespace(all_recipes=lambda: []),
+                              jobs=SimpleNamespace(all_jobs=lambda: []), ledger=None)
+    [found] = goods_before_market(context, today)
+    assert found.refs == ["job:j1"] and found.unprompted and found.key == "goods_before_market:j1:2026-11-14"
+    assert found.claim.startswith("8 jam made 2026-10-20 pass their sell-by") and "before Farmers market" in found.claim
+    monkeypatch.setattr(cv, "calendar_items", lambda context, start, end, today=None: [])
+    assert goods_before_market(context, today) == []  # no market day ahead: nothing to say
+
+
+def test_why_a_finding_was_said():
+    from core.message_reasons import explain, name_of
+
+    assert name_of("finding_goods_before_market") == "things I noticed across your apps"
+    assert "two of your apps together" in explain({"topic": "finding_bill_before_pay", "title": "A bill before payday"})

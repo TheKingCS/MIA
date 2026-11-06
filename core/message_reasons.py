@@ -48,14 +48,24 @@ REASONS: dict[str, tuple[str, str]] = {
 }
 
 
+# Findings (core/findings.py) go out as finding_<kind>: one reason for them all.
+FINDING = ("things I noticed across your apps", "two of your apps together showed something coming up that's easier "
+                                                "to handle now (a bill before payday, upkeep before a trip, goods "
+                                                "before market day...)")
+
+
+def _reason(topic: str, default: tuple[str, str]) -> tuple[str, str]:
+    return REASONS.get(topic) or (FINDING if topic.startswith("finding_") else default)
+
+
 def name_of(topic: str) -> str:
-    return REASONS.get(topic, (topic.replace("_", " "), ""))[0]
+    return _reason(topic, (topic.replace("_", " "), ""))[0]
 
 
 def explain(entry: dict) -> str:
     """Pure logic. Why a logged message was sent and how to stop that kind."""
     topic = entry.get("topic", "")
-    name, why = REASONS.get(topic, (topic.replace("_", " "), "it looked useful"))
+    name, why = _reason(topic, (topic.replace("_", " "), "it looked useful"))
     said = entry.get("title") or "that"
     return (f"I told you \"{said}\" because {why}. If you'd rather not hear about {name}, say "
             f"\"stop telling me about {name}\" and I'll take a break from it.")

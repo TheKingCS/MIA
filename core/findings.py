@@ -11,14 +11,14 @@ the person unprompted.
 
 Unprompted (Zac, 2026-10-30, "go with that"): a bill due before payday
 with money short, upkeep due on a vehicle before a trip, a deadline in a
-packed week, a cheaper insurance quote near renewal. These go through
+packed week, a cheaper insurance quote near renewal, goods passing their
+sell-by before the next market day on the calendar. These go through
 the communication gate (merged, rate-limited, repeats dropped). The
 rest show only when asked ("what have you noticed?", the "noticed"
 question plan) and on Home, quietly.
 
 Not built yet, for want of data (docs/INTELLIGENCE_BENCHMARK.md section
-5): goods passing their best-by before market day (lots have no best-by
-date) and a subscription nobody uses (nothing records use).
+5): a subscription nobody uses (nothing records use).
 
 Each rule is small and fails alone: one store failing never hides the
 others.
@@ -26,6 +26,7 @@ others.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 from types import SimpleNamespace
@@ -227,6 +228,40 @@ def deadline_in_packed_week(context, today: date) -> list[Finding]:
     return out
 
 
+MARKET_AHEAD_DAYS = 14
+_MARKET = re.compile(r"\b(market|farmers'? market|craft fair|fair|stand|booth|bazaar)\b", re.IGNORECASE)
+
+
+def goods_before_market(context, today: date) -> list[Finding]:
+    """Goods on hand whose sell-by (made + the recipe's shelf days) comes before the next market day on the
+    calendar, within MARKET_AHEAD_DAYS (DEC-0052's unprompted list)."""
+    from core.calendar_view import calendar_items
+    from core.goods import lots
+
+    book, jobs = getattr(context, "craft_recipes", None), getattr(context, "jobs", None)
+    if book is None or jobs is None:
+        return []
+    market = next((i for i in calendar_items(context, today, today + timedelta(days=MARKET_AHEAD_DAYS), today)
+                   if _MARKET.search(i.get("title", ""))), None)
+    if market is None:
+        return []
+    day = _day(market["date"])
+    ledger = getattr(context, "ledger", None)
+    recipes = {r.recipe_id: r for r in book.all_recipes()}
+    out = []
+    for lot in lots(jobs.all_jobs(), recipes, ledger.all_revenue() if ledger is not None else []):
+        sell_by = _day(lot.sell_by)
+        if lot.left <= 0 or sell_by is None or day is None or not today <= sell_by < day:
+            continue
+        out.append(Finding(f"goods_before_market:{lot.job_id}:{day}", "Goods that won't make market day",
+                           f"{lot.left:g} {lot.name} made {lot.made} pass their sell-by {_say_day(sell_by, today)}, "
+                           f"before {market['title']} {_say_day(day, today)}.",
+                           "Sold or used before then, they aren't wasted.", [f"job:{lot.job_id}"],
+                           f"Sell or use the {lot.name} from {lot.made} first.", DERIVED, unprompted=True,
+                           app="homestead"))
+    return out
+
+
 def goal_not_moving(context, today: date) -> list[Finding]:
     """An active mission that hasn't moved in two weeks."""
     missions = getattr(context, "missions", None)
@@ -289,7 +324,8 @@ def cheaper_quote(context, today: date) -> list[Finding]:
 
 
 RULES: tuple[Callable, ...] = (bill_before_pay, upkeep_before_trip, deadline_in_packed_week, cheaper_quote,
-                               meal_missing_ingredient, overtime_and_training, goal_not_moving, build_over_budget)
+                               goods_before_market, meal_missing_ingredient, overtime_and_training, goal_not_moving,
+                               build_over_budget)
 
 
 def findings(context, today: Optional[date] = None) -> list[Finding]:
