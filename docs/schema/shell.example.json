@@ -214,6 +214,13 @@
       "page": "vault.html"
     },
     {
+      "id": "memories",
+      "name": "Memories",
+      "icon": "📸",
+      "tagline": "Remember the trip.",
+      "page": "memories.html"
+    },
+    {
       "id": "navigation",
       "name": "Navigation",
       "icon": "🧭",

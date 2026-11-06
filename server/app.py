@@ -844,6 +844,13 @@ def create_app(context: AppContext) -> FastAPI:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "That article isn't in the library.")
         return found
 
+    @app.get("/api/memories")
+    def memories_screen(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.memories_web import screen  # a recap per expedition, and on this day
+
+        with app.state.turn_lock:
+            return screen(view_for(context, profile_id))
+
     @app.get("/api/observations")
     def observations_screen(profile_id: str = Depends(require_profile_id)) -> dict:
         from core.observations_web import screen  # what MIA noticed: findings across apps, insights by source

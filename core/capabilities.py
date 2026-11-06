@@ -71,7 +71,7 @@ LIMITS = {
     "inbox": "Email intake reads one mailbox you set up for MIA.",
     "expeditions": "",
     "vault": "",
-    "memories": "No web screen yet.",
+    "memories": "Recaps come from Expeditions' trips; the photos are on the Expeditions page.",
     "maps": "No web screen yet.",
     "navigation": "Waypoints are added by voice or on the map; sun times are for the day, not live.",
     "knowledge": "Only packs copied onto this computer; articles read as plain text, without pictures.",

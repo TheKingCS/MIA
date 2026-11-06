@@ -221,6 +221,12 @@
     council: () => demo ? Promise.resolve({ messages: [], members: [] }) : call("GET", "/api/council"),
     councilSay: (body) => demo ? Promise.resolve({}) : call("POST", "/api/council", body),
     // The Operating Journal, games played and Good News Radio (DEC-0097, 0098, 0096); changes go through actions.
+    memories: () => demo ? (() => {
+      const elk = { id: "e1", name: "Elk Creek", where: "the high country", start: "2025-11-06", end: "2025-11-08", days: 3, km: 18.4,
+        photos: 42, activities: [{ kind: "hike", trips: 2, km: 18.4, kmh: 3.1 }], places: [{ kind: "Camp", count: 3 }, { kind: "Water", count: 2 }],
+        highlights: ["Saw a moose at dawn"] };
+      return Promise.resolve({ recaps: [elk], on_this_day: [elk] });
+    })() : call("GET", "/api/memories"),
     observations: () => demo ? Promise.resolve({
       findings: [{ title: "A bill before payday", claim: "Rent is due Friday; your pay comes Monday, and the account is $120 short.",
         why: "Paid late, it costs a fee.", next: "Move it to Monday, or move $120 over.", app: "money", sure: "DERIVED" }],

@@ -55,7 +55,7 @@ Screens: `docs/design_handoff/screens/<name>.png` (placeholder data).
 | Notes | Dated, tagged notes and journal | `notes` | ✅ `/api/journal` + journal actions | ✅ Journal: entries, search, tags, write, read, edit, delete; Talk It Out (private entries stay encrypted) | |
 | Classroom | Subjects, courses, lessons, textbooks and study | `classroom` | ✅ `/api/classroom` + subject, course and lesson actions | ✅ subjects with how far along, courses, lessons ticked done (skill XP once) or not, add and take out, all undoable (2026-11-06) (not yet: lesson notes and skill rewards, textbooks and the tutor) | |
 | Expeditions | Trips: routes, gear, weather, distance | `expeditions` | ✅ `/api/expeditions` + expedition actions | ✅ now / coming up / past, trips, start / finish, packing list, photos, videos and files (not yet: route, splits, weather) | |
-| Memories | Trip recaps, stats, photos | `memories` | |  | |
+| Memories | Trip recaps, stats, photos | `memories` | ✅ `/api/memories` | ✅ on this day, a recap per expedition (dates, place, days, distance and pace by activity, places visited, journal highlights, photo count linking to Expeditions), read only (2026-11-06) (not yet: the route map) | |
 | Maps: Waypoints | Waypoints | `maps__01_waypoints` | |  | |
 | Maps: Basemap | Offline basemap | `maps__02_basemap` | |  | |
 | Maps: Trail maps | Trail map PDFs | `maps__03_trail_maps` | |  | |
