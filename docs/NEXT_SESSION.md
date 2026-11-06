@@ -42,7 +42,11 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 - **T-0010:** a rating said out loud works everywhere, the glasses included; a 👍/👎 on the glasses screen is
   Muse's, if Zac wants one.
 - **Working web screens** (formatting only, the look is muse's): `web/operating.html`, `web/play.html`,
-  `web/news.html`, `web/council.html`.
+  `web/news.html`, `web/council.html`, and 2026-11-06 `web/kept.html`, `web/diagnostics.html` (owner only),
+  `web/knowledge.html`, `web/classroom.html`, `web/household.html`, `web/navigation.html`. Still desktop-only:
+  Power, Observations, Memories, Maps, Toolbox, the Lab, the Field Kit. To see a page render on this PC, use
+  headless Edge (no Playwright here): `msedge --headless=new --window-size=600,900 --screenshot=x.png
+  "file:///C:/Users/zacrh/MIA/web/<page>.html?demo=1"`.
 - **Found by the loops, 2026-11-06:** T-0050 (fixed: git output read as UTF-8), T-0049 (fixed: `dev.lab` counted
   practice), T-0051 (the phone's old `cryptography`/`starlette`/`fastapi`: Zac chooses; Claude recommends keeping
   them for now with the exposure written down, then Android Keystore over time). `phone.vulnerable` audits the

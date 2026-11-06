@@ -18,7 +18,11 @@ none worse); a Kept screen (`web/kept.html`) shows the notes. The Chronicles dra
 panel, much better than SD-Turbo), and a series' look can hold across panels from a reference picture Zac picks.
 Her coder finds a passage whose spacing she got wrong, and a Night School lesson whose first try fails its test
 now gets one more with pytest's words (both from the first night's failures). The vault's
-photos are described at night by the local vision model, so "find my photos of the creek" works. The phone's web view now takes and chooses photos for
+photos are described at night by the local vision model, so "find my photos of the creek" works, and
+near-duplicates are offered like bursts. Five more apps work on the web (DEC-0017, `docs/WEB_PARITY.md`):
+Diagnostics (the owner's), Knowledge (the offline library), Classroom, Household and Navigation, each rendered and
+checked in headless Edge. The reference library's flaky tests had a second cause, found and fixed: a fresh file's
+timestamp can read a few ms ahead of the clock on Windows (1 file in 10). The phone's web view now takes and chooses photos for
 Look (it builds; not yet tried on the phone). A rating said out loud ("thumbs
 up", "that's a bad answer") works on the glasses (T-0010). A finding for goods that won't make market day.
 Fixed: deleting a reference pack failed on Windows now and then (the old flaky test). Running every loop for
