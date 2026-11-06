@@ -249,6 +249,23 @@ class LifeNotes:
         return [n for n in self.notes if (kind is None or n["kind"] == kind) and (not open_only or n["status"] == OPEN)]
 
 
+TITLES = {"commitment": "Promises", "decision": "Decisions", "idea": "Ideas", "dropped_goal": "Goals set aside"}
+
+
+def screen(context) -> dict:
+    """The Kept screen (web/kept.html): each kind's notes, open first, newest first."""
+    store = getattr(context, "life_notes", None)
+    kinds = []
+    for kind in KINDS:
+        mine = store.of_kind(kind) if store is not None else []
+        newest = lambda notes: sorted(notes, key=lambda n: n.get("at", ""), reverse=True)  # noqa: E731
+        found = newest([n for n in mine if n.get("status") == OPEN]) + newest([n for n in mine if n.get("status") != OPEN])
+        kinds.append({"kind": kind, "title": TITLES[kind],
+                      "notes": [{"id": n["id"], "line": describe(n), "status": n.get("status", OPEN),
+                                 "at": n.get("at", "")[:10], "due": n.get("due", "")} for n in found]})
+    return {"kinds": kinds}
+
+
 # ------------------------------------------------------------------ said out loud
 
 _LEAD = r"^\s*(?:(?:hey\s+)?mia[,:]?\s+)?"

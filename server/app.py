@@ -814,6 +814,13 @@ def create_app(context: AppContext) -> FastAPI:
         with app.state.turn_lock:
             return screen(view_for(context, profile_id))
 
+    @app.get("/api/life-notes")
+    def life_notes_screen(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.life_notes import screen  # promises, decisions, ideas, goals set aside (DEC-0054)
+
+        with app.state.turn_lock:
+            return screen(view_for(context, profile_id))
+
     @app.get("/api/play")
     def play_screen(profile_id: str = Depends(require_profile_id)) -> dict:
         from core.recreation import screen

@@ -636,3 +636,6 @@ def test_the_new_screens_and_the_journal_keeps_its_own_route(client, context):
     assert play["played"] == [] and len(play["weeks"]) == 5 and "hard" in play["efforts"]
     news = client.get("/api/news", headers=owner).json()
     assert news["on"] is False and len(news["personalities"]) == 4
+    kept = client.get("/api/life-notes", headers=owner).json()  # Kept (DEC-0054)
+    assert [k["kind"] for k in kept["kinds"]] == ["commitment", "decision", "idea", "dropped_goal"]
+    assert all(k["notes"] == [] for k in kept["kinds"])

@@ -259,6 +259,20 @@
           "favorite": false
         },
         {
+          "id": "life_notes",
+          "name": "Kept",
+          "icon": "📌",
+          "tagline": "What you said you'd do.",
+          "description": "The promises, decisions, ideas and goals set aside you asked MIA to keep, from what you said (DEC-0054).",
+          "page": "kept.html",
+          "on_web": true,
+          "shown": true,
+          "can_hide": true,
+          "ask": "What did I promise?",
+          "tools": [],
+          "favorite": false
+        },
+        {
           "id": "play",
           "name": "Play",
           "icon": "🏓",

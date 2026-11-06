@@ -191,3 +191,15 @@ def test_kept_or_forgotten_by_voice(tmp_path, monkeypatch):
     assert life_notes.reply(person, "I kept my promise to Alex") == "I don't have a promise about Alex kept."
     assert [n["what"] for n in store.of_kind("commitment", open_only=True)] == ["call the bank"]
     assert life_notes.reply(person, "I kept my word") is None
+
+
+def test_the_kept_screen(tmp_path):
+    store = LifeNotes(data_dir=tmp_path)
+    old = store.add("commitment", "call the bank")
+    store.mark_done(old["id"])
+    store.add("commitment", "fix his gate", who="Sam", by="tomorrow")
+    store.notes[-1]["at"] = "2099-01-01T00:00:00"
+    data = life_notes.screen(SimpleNamespace(life_notes=store))
+    promises = data["kinds"][0]
+    assert promises["title"] == "Promises" and [n["status"] for n in promises["notes"]] == ["open", "done"]
+    assert promises["notes"][0]["line"] == "a promise to Sam: fix his gate (by tomorrow)" and promises["notes"][0]["due"]

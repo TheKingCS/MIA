@@ -221,6 +221,13 @@
       "page": "operating.html"
     },
     {
+      "id": "life_notes",
+      "name": "Kept",
+      "icon": "📌",
+      "tagline": "What you said you'd do.",
+      "page": "kept.html"
+    },
+    {
       "id": "play",
       "name": "Play",
       "icon": "🏓",
