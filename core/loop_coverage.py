@@ -157,7 +157,27 @@ def covered_by(loops=None) -> dict[str, list[str]]:
             area = area_of(pid.split(":", 1)[1])
             if area in areas and areas[area] not in out.get(pid, []):
                 out.setdefault(pid, []).append(areas[area])
+        for pid, area in CORRECTED_IN.items():  # apps and stores whose records MIA changes through that area's actions
+            if area in areas and areas[area] not in out.get(pid, []):
+                out.setdefault(pid, []).append(areas[area])
     return out
+
+
+# Apps and stores the corrections loops watch: chosen by hand, since a name alone misleads ("craft_recipes" isn't
+# the kitchen's, "life_events" isn't the calendar's).
+CORRECTED_IN = {
+    "module:budget": "money", "store:insurance": "money", "store:freedom_log": "money",
+    "module:inbox": "inbox",
+    "module:maintenance": "maintenance", "store:maintenance": "maintenance",
+    "module:missions": "missions", "store:quest_book": "missions", "store:boss_book": "missions",
+    "store:reward_shop": "missions",
+    "module:workout": "workouts", "store:workout": "workouts", "store:fitness": "workouts", "store:training": "workouts",
+    "store:calendar": "calendar", "store:alarms": "calendar",
+    "store:projects": "tasks", "store:tasks": "tasks",
+    "store:products": "home", "store:materials": "home", "store:components": "home", "store:flock": "home",
+    "store:grow_lab": "home", "store:jobs": "home", "store:expeditions": "home", "store:trips": "home",
+    "module:expeditions": "home",
+}
 
 
 def report(root: Path = ROOT, path: Path = DECISIONS, loops=None) -> dict:

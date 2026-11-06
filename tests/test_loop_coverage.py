@@ -40,3 +40,11 @@ def test_the_corrections_loops_cover_their_areas_action_families():
     rows = {r["id"]: r for r in loop_coverage.report()["rows"]}
     assert rows["action:bill"]["loops"] == ["corrections.money"] and rows["action:recipe"]["loops"] == ["corrections.kitchen"]
     assert rows["action:music"]["state"] == "todo"  # no area: still to do
+
+
+def test_the_hand_chosen_corrections_list_names_real_processes():
+    from core.corrections import AREAS
+
+    every = loop_coverage.processes()
+    assert not [p for p in loop_coverage.CORRECTED_IN if p not in every]  # a renamed store or app: update the list
+    assert set(loop_coverage.CORRECTED_IN.values()) <= set(AREAS)
