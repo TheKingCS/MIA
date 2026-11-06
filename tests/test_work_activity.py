@@ -48,3 +48,20 @@ def test_a_broken_line_doesnt_lose_the_rest(tmp_path):
 
 def test_evidence_names_the_commit():
     assert a.commit()  # "<hash> <subject>", plus anything uncommitted
+
+
+def test_the_commit_is_read_whatever_its_subject_says(tmp_path):
+    """dev.suite, 2026-11-06: a commit subject with "⏸" in it broke commit() on Windows' default codepage."""
+    import os
+    import subprocess
+
+    env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t", "GIT_COMMITTER_NAME": "t",
+           "GIT_COMMITTER_EMAIL": "t@t"}
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True, env=env)
+    (tmp_path / "a.txt").write_text("a", encoding="utf-8")
+    subprocess.run(["git", "-C", str(tmp_path), "add", "a.txt"], check=True, env=env)
+    subprocess.run(["git", "-C", str(tmp_path), "commit", "-q", "-m", "A step marked ⏸ is skipped"], check=True,
+                   env=env)
+    (tmp_path / "b.txt").write_text("b", encoding="utf-8")
+    said = a.commit(tmp_path)
+    assert said.endswith("A step marked ⏸ is skipped (uncommitted: b.txt)"), said

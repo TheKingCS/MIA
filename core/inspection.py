@@ -117,8 +117,10 @@ def _ev(fact: str, value, method: str, source: str, confidence: str = CONFIRMED,
 def _run(args: list[str], timeout: float = 8) -> str:
     """A read-only system command's output, or "" (never raises)."""
     try:
+        # git speaks UTF-8 (a commit subject with "⏸" in it); the system's own tools, the console's codepage
+        utf8 = {"encoding": "utf-8", "errors": "replace"} if args and args[0] == "git" else {}
         out = subprocess.run(args, capture_output=True, text=True, timeout=timeout,
-                             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+                             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0), **utf8)
         return (out.stdout or "").strip()
     except (OSError, subprocess.SubprocessError):
         return ""

@@ -76,8 +76,10 @@ def last_step(task_id: str, path: Path = ACTIVITY) -> Optional[dict]:
 def commit(root: Path = ROOT) -> str:
     """The commit the work is on, and whether anything is left uncommitted."""
     def git(*args):
-        return subprocess.run(["git", *args], cwd=str(root), capture_output=True, text=True, timeout=30,
-                              creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0)).stdout
+        # git speaks UTF-8; Windows' default codepage can't read "⏸" in a commit subject (dev.suite, 2026-11-06)
+        return subprocess.run(["git", *args], cwd=str(root), capture_output=True, text=True, encoding="utf-8",
+                              errors="replace", timeout=30,
+                              creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0)).stdout or ""
 
     head = git("log", "-1", "--format=%h %s").strip()
     # Each status line is two status letters, a space, then the path: never strip the line first.
