@@ -327,7 +327,7 @@
   },
   "flow:search": {
    "status": "todo",
-   "why": "teacher: It needs a loop, but nothing is recorded. core/search_manager.py SearchManager.search() keeps no queries, no zero-result searches and no choices, and a provider that raises is only logged. A loop such"
+   "why": "teacher: It needs a loop, but MIA records nothing about search yet, so there is nothing to measure. core/search_manager.py SearchManager.search() sends the query to every provider and returns the combined list"
   },
   "module:budget": {
    "status": "todo"
