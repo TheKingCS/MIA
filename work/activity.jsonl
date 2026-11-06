@@ -135,3 +135,5 @@
 {"at": "2026-11-06T14:27:04+00:00", "who": "claude", "action": "done", "task": "T-0040", "detail": "tests (tests/test_creations.py tests/test_diagnostics.py): 21 passed in 1.19s; commit 3920423 T-0044: MIA's write-ups: a second guard, and a loop that measures how she writes now (uncommitted: core/budget_manager.py, core/plaid_manager.py, core/quick_commands.py, core/record_import.py, tests/test_creations.py, web/made.js, core/diagnostics.py, tests/test_diagnostics.py)"}
 {"at": "2026-11-06T15:12:26+00:00", "who": "MIA (ollama-coder)", "action": "shadow", "task": "T-0007", "detail": "pass: 5072 passed, 15 skipped, 2 warnings in 127.07s (0:02:07); fixed 0, new failures 0; files core/links.py"}
 {"at": "2026-11-06T15:12:49+00:00", "who": "MIA (night school)", "action": "night", "task": "", "detail": "build plan step 3: The remaining usage loops: passed 1 of 3 lessons"}
+{"at": "2026-11-06T16:53:14+00:00", "who": "MIA (loops)", "action": "watch", "task": "T-0049", "detail": "dev.lab: 0.14 is below its floor of 0.5"}
+{"at": "2026-11-06T16:55:19+00:00", "who": "MIA (loops)", "action": "watch", "task": "T-0050", "detail": "dev.suite: 1 is above its floor of 0"}
