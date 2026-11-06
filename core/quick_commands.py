@@ -179,6 +179,11 @@ def handle(context, text: str) -> Optional[str]:
     said = gap_reply(context, text)  # "build it" / "bring it back", to her latest capability-gap offer
     if said is not None:
         return said
+    from core.good_news import reply as news_reply
+
+    said = news_reply(context, text)  # "what's the good news?", "good news, the calm one" (DEC-0096)
+    if said is not None:
+        return said
     played = _played(context, text)  # "played pickleball for an hour with Sam, it was hard" (DEC-0098)
     if played is not None:
         return played

@@ -721,6 +721,7 @@ class MIAApplication:
             ("capability_gaps", self._check_capability_gaps),
             ("seasons_of_memory", self._check_seasons_of_memory),
             ("operating_journal", self._check_operating_journal),
+            ("good_news", self._check_good_news),
         ]
         # 2026-09-27, Cognitive Extension slice C: checks no longer notify
         # directly. Each one offers what it would say (_offer()), and the
@@ -782,6 +783,14 @@ class MIAApplication:
         from core.operating_journal import weekly_offer
 
         self._offers.extend(weekly_offer(self.context, now.date()))
+
+    def _check_good_news(self, now: datetime, today_iso: str) -> None:
+        """Good News Radio (core/good_news.py, DEC-0096): when someone switched it on, today's episode is made
+        once, in a process of its own (it reads the public feeds and voices four personalities)."""
+        from core import good_news
+
+        if good_news.due(self.context, now):
+            good_news.launch()
 
     def _check_workflows(self, now: datetime, today_iso: str) -> None:
         """Workflows MIA made whose trigger has come round (core/workflows.py, DEC-0092): run them;

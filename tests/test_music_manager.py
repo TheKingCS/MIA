@@ -41,6 +41,8 @@ def isolated_paths(tmp_path, monkeypatch):
     monkeypatch.setattr(music_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(music_manager_module, "_TRACKS_FILE", data_dir / "music_tracks.json")
     monkeypatch.setattr(music_manager_module, "_PLAYLISTS_FILE", data_dir / "music_playlists.json")
+    # The default library folder too: on a PC with songs in music_library/ the scans read the real ones (2026-11-06).
+    monkeypatch.setattr(music_manager_module, "_DEFAULT_ROOT", tmp_path / "music_library")
     return data_dir
 
 

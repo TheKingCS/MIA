@@ -40,8 +40,10 @@ Step 9 is built: capability gaps (`core/capability_gaps.py`, `python -m tools.ga
 memory (`core/seasons.py`). Step 11 too: the Operating Journal (`core/operating_journal.py`); **Zac:** write
 your first lines by talking to MIA ("add to my operating journal: work out 4 times a week"), then ask
 "am I living how I said I want to?". Step 12 too: recreation (`core/recreation.py`; say "played pickleball
-for an hour, it was hard"). Phase C is done. Next: Phase D, step 13, Good News Radio (DEC-0096), which
-needs Zac's source list and its switch for going online (DEC-0053).
+for an hour, it was hard"). Phase C is done. Step 13 too: Good News Radio is on for Zac (sources and going
+online approved 2026-11-06); ask "what's the good news?" or play "Good News Radio, Sunny, Nov 6".
+`music_library/` (the music's default folder, in the repo) is now gitignored. Next: step 14, maps and comms
+(DEC-0099), research first.
 A flaky test seen once: `tests/test_reference_library_manager.py::test_search_all_packs_returns_snippet_from_matching_pack`.
 
 **Glasses navigation: `docs/GLASSES_NAVIGATION_PLAN.md` is a draft waiting on

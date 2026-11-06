@@ -360,6 +360,23 @@ def _play_load(context) -> Optional[Reading]:
                              f"{sum(w['play_load'] for w in weeks[:-1]) / 4:g} before")
 
 
+def _news_misleading(context) -> Optional[Reading]:
+    if getattr(context, "failures", None) is None:
+        return None
+    from core import good_news
+
+    heard = [h for h in good_news.heard(context) if h.get("day", "") >= _since(30)[:10]]
+    stories = sum(len(h.get("stories", [])) for h in heard)
+    if not stories:
+        return None
+    bad = [s for h in heard for s in h.get("misleading", [])]
+    by = {}
+    for s in bad:
+        by[s] = by.get(s, 0) + 1
+    return Reading(round(len(bad) / stories, 3), stories, f"{len(bad)} of {stories} stories heard called misleading"
+                   + (": " + ", ".join(f"{s} {n}" for s, n in sorted(by.items(), key=lambda kv: -kv[1])) if by else ""))
+
+
 def _unused_creations(context) -> Optional[Reading]:
     store = getattr(context, "creations", None)
     if store is None:
@@ -604,6 +621,8 @@ LOOPS: tuple[Loop, ...] = (
                                                 "check:operating_journal")),
     Loop("recreation.load", "life", "this week's play load against the four weeks before (past 1.5: easing off helps)",
          "person", _play_load, floor=1.5, acts="watch", covers=("store:recreation", "action:play")),
+    Loop("news.misleading", "proactivity", "Good News Radio stories they called misleading, in 30 days", "person",
+         _news_misleading, floor=0.05, min_n=20, files=("core/good_news.py",), covers=("check:good_news",)),
     Loop("gate.saturation", "proactivity", "days the daily limit of unprompted messages was hit, in 7", "person",
          _gate_saturation, floor=2, covers=("flow:gate",)),
     Loop("gate.unwelcome", "proactivity", "kinds of message on a break for being dismissed", "person", _gate_unwelcome,

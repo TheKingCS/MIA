@@ -128,12 +128,18 @@ first. Each is a step below.
 
 ### Phase D: New capabilities
 
-13. ⬜ **Good News Radio** (DEC-0096): sources (an allowlist of credible outlets and science, health, energy and
-    civic feeds, fetched only when switched on, DEC-0053); stories chosen by code and the local model, each claim
-    checked against a second source and linked; nothing hidden that matters; a daily episode written in the voice
-    of a chosen personality (an energetic morning host, a late-night talk show, calm, curious) and spoken with
-    Kokoro voices; played on the PC, the phone and the glasses; the personality follows the mood asked for. Its
-    loop: stories later found misleading, skips, ratings by personality.
+13. ✅ **Good News Radio** (DEC-0096; `core/good_news.py`, `tools/good_news.py`, 2026-11-06): once a day, when a
+    person switched it on (Zac has: "turn on good news radio"), the PC reads 16 public feeds Zac approved: primary
+    sources (NASA, NIH, WHO, Nature, MIT News, Our World in Data), science journalism (BBC, NPR, The Conversation,
+    ScienceDaily press releases, labelled) and solutions journalism (Positive News, Reasons to be Cheerful,
+    Anthropocene, Canary Media); nothing about anyone is sent. Good news is judged in code (a topic, the progress in
+    the headline, no harm words; picture-of-the-day posts and roundups skipped); each story says how it's known
+    (confirmed by two outlets, from the source itself, or one outlet), keeps its caveats (animals or the lab, an
+    early result, could not does, a press release) and its links; two a topic and two an outlet. Four
+    personalities by the hour or asked for (Sunny, Spark, Still, Night Owl), each a Kokoro voice, each episode a
+    track in the music library (the last week kept). "What's the good news?", "good news, the calm one", "that
+    story was misleading" (`news.misleading`; a source called misleading twice is dropped). Not yet: the model
+    phrasing the script (it's made in code), a screen.
 14. ⬜ **Maps and comms, inspired by defense systems** (DEC-0099): research first (Part 3), then an offline map of
     the property and trails with MGRS grid references, waypoints and tracks; a shared picture of places, people (by
     consent) and sensors, Lattice-style; and later mesh messaging that works without cell service (Meshtastic
