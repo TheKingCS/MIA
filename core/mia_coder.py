@@ -46,8 +46,9 @@ SCHEMA = {"type": "object", "properties": {
 PROMPT = """You are fixing code in MIA's development lab. Below is the task, then every file you may change,
 with its full current contents. Reply with JSON: "edits", each one a path, an exact passage copied from
 that file ("find": a few whole lines, enough to appear only once) and what replaces it ("replace"); and
-"said", two sentences on what you changed and why. Change as little as the task needs. Keep each file's
-style. Don't change files that aren't listed.
+"said", two sentences on what you changed and why. For a listed file that's empty (a new file), give "find" as ""
+and the whole file as "replace". Change as little as the task needs. Keep each file's style. Don't change files
+that aren't listed.
 
 {task}
 
@@ -107,6 +108,11 @@ def coder(ask: Optional[Callable[[str, dict], str]] = None) -> Callable[[str, Pa
             target = (cwd / f).resolve()
             text = target.read_text(encoding="utf-8") if target.exists() else ""
             find, replace = str(item.get("find", "")), str(item.get("replace", ""))
+            if not find and not text.strip() and replace.strip():  # a new file: her edit is all of it
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text(replace, encoding="utf-8")
+                changed.append(f)
+                continue
             if not find or text.count(find) != 1:
                 skipped.append(f"{f}: its passage {'is missing' if not find or find not in text else 'appears more than once'}")
                 continue

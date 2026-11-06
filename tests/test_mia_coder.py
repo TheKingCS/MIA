@@ -66,3 +66,12 @@ def test_an_edit_whose_passage_isnt_there_once_is_skipped(repo):
     (repo / "core" / "two.py").write_text("x = 1\nx = 1\n")
     said = mia_coder.coder(reply({"core/two.py": ("x = 1", "x = 2")}))("Plan: Files: core/two.py", repo, "python")
     assert "appears more than once" in said and (repo / "core" / "two.py").read_text() == "x = 1\nx = 1\n"
+
+
+def test_she_can_write_a_new_file_the_task_lists(repo):
+    p = lab.create("A new counter", "Add core/counter.py", plan="Files: core/counter.py, core/thing.py")
+    p = lab.write(p.proposal_id, coder=mia_coder.coder(reply({"core/counter.py": ("", "def count():\n    return 1\n"),
+                                                               "core/thing.py": ("", "wiped\n")})))
+    where = lab.folder(p)
+    assert (where / "core" / "counter.py").read_text() == "def count():\n    return 1\n"
+    assert (where / "core" / "thing.py").read_text() == "VALUE = 1\n"  # a file with text in it is never replaced whole

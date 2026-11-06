@@ -2,7 +2,17 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-11-04 (the development platform, the council, the Chronicles, MIA making screens and workflows), by claude.*
+session. Last updated: 2026-11-06 (improvement loops, Night School, loop coverage), by claude.*
+
+**2026-11-06, Claude on the PC (DEC-0094 to DEC-0101).** Zac's master overview and ideas are filed
+(`docs/HANDOFFS/H-0083...`; the Interconnection Architecture arrived cut off after section 3, so the rest is
+still needed). `docs/BUILD_PLAN.md` is the checklist; `docs/IMPROVEMENT_LOOPS.md` the map of loops.
+Built: the loop registry (`core/loops.py`, 23 loops, daily, the dev window's **Her loops**), **Night
+School** (`core/night_school.py`, `docs/NIGHT_SCHOOL.md`: nightly lessons with Claude as a read-only
+teacher, graded by tests, one shadow attempt, lessons carried forward, her own choice of study scored
+against her teacher's) and **loop coverage** (`core/loop_coverage.py`: 240 processes read from the code,
+each covered, declined with a reason, or to do; a test holds new ones to it). Her coder can now write a
+new file whole.
 
 **2026-11-03 to 04, Claude on the PC (DEC-0068 to DEC-0093, approved).** Four new layers, all in the
 dev window (`python -m tools.dev_window`, the desktop's **MIA Development** shortcut) and MIA's web:

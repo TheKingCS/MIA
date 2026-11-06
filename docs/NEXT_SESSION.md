@@ -5,7 +5,18 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-11-02*
+*Last updated: 2026-11-06*
+
+**Night School is running (DEC-0100, DEC-0101, 2026-11-06; `docs/NIGHT_SCHOOL.md`).** Every night from
+01:30, MIA's daily check starts it in its own process: she picks what to study and why, Claude Code
+(read-only) sets exercises for the build plan's next step, each with a test that fails first, her coder does
+them in the lab, code grades them, and the teacher writes the lesson she gets next time. Then one shadow
+attempt at real work, and loops drafted for the next family of processes nobody watches
+(`core/loop_coverage.py`; `tests/test_loop_coverage.py` fails on a new store, action family, check or app
+with no loop and no reason). See: `python -m tools.night_school`, the dev window's Night School panel.
+Zac: real exercises she passes wait in `python -m tools.lab list` for `approve`; switch her to choosing
+her own lessons (`"mode": "self"` in `work/night_school.json`) when the panel says the evidence supports it.
+Next in the build plan: step 2 (the loops that need running); Night School is studying that step too.
 
 **Glasses navigation: `docs/GLASSES_NAVIGATION_PLAN.md` is a draft waiting on
 Zac's five questions.** Recipes open by shelf; Music plays on the phone

@@ -1521,3 +1521,26 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   places, people by consent and sensors, and later mesh messaging without cell service, using open
   civilian standards only.
 - Related: DEC-0094, `docs/GLASSES_NAVIGATION_PLAN.md`
+
+### DEC-0100: Night School
+- Status: APPROVED (Zac's request: "I want that happening asap") · design in `docs/NIGHT_SCHOOL.md`
+- Proposed by: zac, 2026-11-06 ("MIAs night school module where she spends time every night with Claude learning how to build herself into the best version of herself, doing tests, building her skills and proving her capabilities")
+- Decision: every night (01:30 for four hours by default, `work/night_school.json`) MIA looks at her loops,
+  her ledger and her report card, chooses what to study and why, and her teacher (Claude Code, read-only;
+  Codex when Claude is resting) sets exercises for the focus, each with a test that fails first. Her own
+  coder does them in the lab and code grades them (the test, then the full suite); the teacher writes the
+  lesson she's given next time. One shadow attempt at real work each night counts in the ledger. Practice
+  never merges; a real exercise she passes waits in the lab for Zac. The focus is the build plan's next
+  step until her own picks have matched her teacher's often enough (10 nights, a cautious rate of 60%);
+  then Zac may switch her to choosing. Nothing she earns grants a permission (DEC-0072).
+- Related: DEC-0072, DEC-0074, DEC-0075, DEC-0094, DEC-0101
+
+### DEC-0101: Every process is watched or says why not
+- Status: APPROVED (Zac's request) · `docs/NIGHT_SCHOOL.md` section 3
+- Proposed by: zac, 2026-11-06 ("She also needs a method for developing these loops into all processes that could benefit from a self improvement loop and continue to do so throughout her development")
+- Decision: `core/loop_coverage.py` reads every process from the code (stores, action families, daily
+  checks, apps, flows, development), and each is covered by a loop, declined with a reason, to do, or
+  proposed. A test fails on any new process that's none of these, so nothing joins MIA without a decision
+  on how it's watched. Night School's teacher drafts loops for the next family each night as a task for
+  the usual paths; `dev.loop_coverage` measures the reach.
+- Related: DEC-0094, DEC-0100

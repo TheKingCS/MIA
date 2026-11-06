@@ -65,6 +65,7 @@ class Loop:
     acts: str = "task"  # "task" | "offer" | "watch"
     files: tuple[str, ...] = ()
     unit: str = ""
+    covers: tuple[str, ...] = ()  # the processes it watches (core/loop_coverage.py, DEC-0101)
 
 
 def _now() -> datetime:
@@ -247,43 +248,83 @@ def _chronicles(_context) -> Optional[Reading]:
     return Reading(float(len(saga.candidates())), 1, "candidates waiting for Zac")
 
 
+def _loop_coverage(_context) -> Optional[Reading]:
+    if not _has_repo():
+        return None
+    from core import loop_coverage
+
+    r = loop_coverage.report()
+    need = r["total"] - r["counts"].get("declined", 0)
+    return Reading(r["share"], need, f"{r['counts'].get('covered', 0)} of {need} covered, "
+                                     f"{r['counts'].get('proposed', 0)} proposed") if need else None
+
+
+def _night_lessons(_context) -> Optional[Reading]:
+    if not _has_repo():
+        return None
+    from core import night_school
+
+    week = [l for n in night_school.nights(7) for l in n.get("lessons", []) if l.get("outcome") in ("pass", "fail")]
+    if not week:
+        return None
+    passed = sum(1 for l in week if l["outcome"] == "pass")
+    return Reading(round(passed / len(week), 2), len(week), f"{passed} of {len(week)} lessons passed")
+
+
+def _night_choice(_context) -> Optional[Reading]:
+    if not _has_repo():
+        return None
+    from core import night_school
+
+    c = night_school.choosing()
+    return Reading(c["rate"], c["nights"], f"{c['agreed']} of {c['nights']} nights") if c["nights"] else None
+
+
 LOOPS: tuple[Loop, ...] = (
     # A. Conversation and intelligence
     Loop("answers.failures", "answers", "turns that went wrong, per 100", "person",
-         _per_100_turns(()), min_n=20, files=("core/assistant_turn.py",)),
-    Loop("answers.thumbs", "answers", "answers rated 👍", "person", _thumbs, better="higher", floor=0.7, min_n=5),
+         _per_100_turns(()), min_n=20, files=("core/assistant_turn.py",), covers=("flow:talk", "module:assistant")),
+    Loop("answers.thumbs", "answers", "answers rated 👍", "person", _thumbs, better="higher", floor=0.7, min_n=5,
+         covers=("flow:talk", "store:ratings")),
     Loop("answers.rephrased", "answers", "asked again in other words, per 100 turns", "person",
-         _per_100_turns(("rephrased",)), min_n=20, files=("core/assistant_turn.py",)),
+         _per_100_turns(("rephrased",)), min_n=20, files=("core/assistant_turn.py",), covers=("flow:talk",)),
     Loop("answers.talked_instead", "answers", "had the tool but only talked, per 100 turns", "person",
-         _per_100_turns(("talked_instead",)), floor=2, min_n=20, files=("core/tool_loop.py",)),
+         _per_100_turns(("talked_instead",)), floor=2, min_n=20, files=("core/tool_loop.py",), covers=("flow:tools",)),
     Loop("answers.no_tool", "answers", "asked for something she has no tool for", "person",
-         _count_of(("no_tool",)), acts="watch"),
-    Loop("answers.slow", "answers", "share of answers over 25 seconds", "person", _slow, floor=0.10, min_n=20),
+         _count_of(("no_tool",)), acts="watch", covers=("flow:tools", "store:failures")),
+    Loop("answers.slow", "answers", "share of answers over 25 seconds", "person", _slow, floor=0.10, min_n=20, covers=("flow:talk", "store:traces")),
     Loop("answers.model_down", "answers", "the model not answering, or garbled", "person",
-         _count_of(("model_down", "garbled")), floor=0),
+         _count_of(("model_down", "garbled")), floor=0, covers=("flow:talk", "flow:pc")),
     Loop("answers.undo_soon", "answers", "what she did, undone right away, per 100 turns", "person",
-         _per_100_turns(("undo_soon",)), min_n=20),
+         _per_100_turns(("undo_soon",)), min_n=20, covers=("flow:undo",)),
     # D. Her creations
     Loop("creations.unused", "creations", "published screens nobody opens", "person", _unused_creations, floor=0,
-         acts="offer"),
+         acts="offer", covers=("store:creations", "action:creation")),
     Loop("workflows.failing", "creations", "workflow runs that stopped", "person", _failing_workflows, floor=0,
-         files=("core/workflows.py",)),
+         files=("core/workflows.py",), covers=("flow:workflows", "check:workflows")),
     # E. Devices
-    Loop("pc.disk", "devices", "free space on the PC", "device", _disk, better="higher", floor=20, unit="GB"),
+    Loop("pc.disk", "devices", "free space on the PC", "device", _disk, better="higher", floor=20, unit="GB", covers=("flow:pc",)),
     # F. Her development
     Loop("dev.layering", "development", "breaks of the layering rule", "device", _layering, floor=0,
-         files=("core/dev_map.py",)),
-    Loop("dev.doc_drift", "development", "files the docs name that don't exist", "device", _doc_drift, floor=0),
-    Loop("dev.stuck", "development", "tasks claimed for a week or more", "device", _stuck, floor=0),
+         files=("core/dev_map.py",), covers=("dev:code",)),
+    Loop("dev.doc_drift", "development", "files the docs name that don't exist", "device", _doc_drift, floor=0, covers=("dev:code",)),
+    Loop("dev.stuck", "development", "tasks claimed for a week or more", "device", _stuck, floor=0, covers=("dev:tasks",)),
     Loop("dev.reviewers", "development", "the weakest reviewer's cautious rate", "device", _reviewers,
-         better="higher", floor=0.5),
+         better="higher", floor=0.5, covers=("dev:review",)),
     Loop("dev.knowledge", "development", "MIA's write-ups withdrawn", "device", _knowledge, floor=0.3,
-         files=("core/dev_knowledge.py",)),
+         files=("core/dev_knowledge.py",), covers=("dev:knowledge",)),
     Loop("dev.coder", "development", "MIA's coder: shadow attempts passed", "device", _coder, better="higher",
-         acts="watch"),
-    Loop("dev.limits", "development", "usage limits hit in a week", "device", _limits, acts="watch"),
-    Loop("dev.council_cost", "development", "calls per council turn", "device", _council_cost, acts="watch"),
-    Loop("dev.chronicles", "development", "Chronicles candidates waiting", "device", _chronicles, acts="watch"),
+         acts="watch", covers=("dev:shadow",)),
+    Loop("dev.limits", "development", "usage limits hit in a week", "device", _limits, acts="watch", covers=("dev:usage",)),
+    Loop("dev.council_cost", "development", "calls per council turn", "device", _council_cost, acts="watch", covers=("dev:council",)),
+    Loop("dev.chronicles", "development", "Chronicles candidates waiting", "device", _chronicles, acts="watch",
+         covers=("dev:chronicles", "check:chronicle")),
+    Loop("dev.loop_coverage", "development", "processes with a loop, of those that need one", "device",
+         _loop_coverage, better="higher", acts="watch", covers=("dev:loops", "check:loops")),
+    Loop("night.lessons", "development", "Night School lessons passed this week", "device", _night_lessons,
+         better="higher", min_n=3, acts="watch", covers=("dev:night_school", "check:night_school")),
+    Loop("night.choice", "development", "nights her own pick of what to study matched her teacher's", "device",
+         _night_choice, better="higher", min_n=5, acts="watch", covers=("dev:night_school",)),
 )
 
 

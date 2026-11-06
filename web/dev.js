@@ -262,6 +262,38 @@
           (l.floor != null ? " · floor " + l.floor + (l.unit || "") : "") + (l.task ? " · " + l.task : ""), spark(l.trend))))));
   }
 
+  // Night School (core/night_school.py, DEC-0100): what she studied, how she did, what her teacher taught her.
+  function nightPanel(p) {
+    const n = p.night || {};
+    if (!n.settings) return "";
+    const card = Object.entries(n.card || {});
+    const c = n.choosing || {};
+    const cov = n.coverage || { counts: {} };
+    const last = (n.nights || [])[0];
+    return el("section", { class: "dev-col dev-chronicles" }, el("h2", {}, "Night School",
+      el("span", { class: "n" }, (n.nights || []).length ? "last: " + last.at.slice(0, 10) : "not yet")),
+      el("p", {}, "Every night from " + n.settings.start + " for " + n.settings.hours + " hours she studies with her teacher (" +
+        n.settings.teachers.join(", then ") + "): exercises with a test that fails first, graded by code; one try at real work; " +
+        "and a loop drafted for something nobody watches yet. Practice never merges. Mode: " +
+        (n.settings.mode === "plan" ? "the build plan" + (n.step ? ", step " + n.step.number + " (" + n.step.title + ")" : "")
+          : "her own pick") + "."),
+      p.writable ? el("button", { class: "dev-chip", type: "button", onclick: () => post("api/night", {}) }, "Start a night now") : "",
+      last ? el("pre", { class: "dev-night" }, last.text) : el("p", { class: "dim" }, "Her first night hasn't happened yet."),
+      el("ul", { class: "dev-agents" },
+        el("li", {}, el("span", {}, "Choosing what to study"),
+          el("span", { class: "dev-chip " + (c.ready ? "ok" : "") }, c.nights ? c.agreed + " of " + c.nights + " nights" : "not yet"),
+          el("span", { class: "sub" }, c.ready ? "The evidence supports letting her choose: set \"mode\": \"self\" in work/night_school.json."
+            : "How often her own pick matched her teacher's. Ten nights and a cautious rate of 60% before she chooses.")),
+        el("li", {}, el("span", {}, "Her loops' reach"),
+          el("span", { class: "dev-chip" }, Math.round((cov.share || 0) * 100) + "%"),
+          el("span", { class: "sub" }, (cov.counts.covered || 0) + " of " + cov.total + " processes watched · " +
+            (cov.counts.todo || 0) + " to do · " + (cov.counts.proposed || 0) + " proposed" +
+            ((cov.next || []).length ? " · next: " + cov.next.slice(0, 4).join(", ") : ""))),
+        card.map(([skill, r]) => el("li", {}, el("span", {}, skill),
+          el("span", { class: "dev-chip" }, r.passed + "/" + r.lessons),
+          el("span", { class: "sub" }, "lessons passed · cautious rate " + Math.round(r.bound * 100) + "%")))));
+  }
+
   function architecture(p) {
     const a = p.architecture || {};
     if (!a.layers) return "";
@@ -414,7 +446,7 @@
               el("span", { class: "sub" }, list.slice(-3).map((l) => l.lesson).join(" · ")))))] : "")),
       el("div", { class: "dev-grid2" }, missions(p), voices(p)),
       el("div", { class: "dev-grid2" }, independence(p), knowledge(p)),
-      loopsPanel(p),
+      el("div", { class: "dev-grid2" }, nightPanel(p), loopsPanel(p)),
       architecture(p),
       chronicles(p),
       el("section", { class: "dev-col dev-history" }, el("h2", {}, "Everything that happened"), search,

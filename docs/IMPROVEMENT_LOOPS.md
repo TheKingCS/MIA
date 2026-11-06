@@ -125,6 +125,14 @@ area, the same code:
 | Maps and comms | position fix quality, offline tile coverage, message delivery on the mesh |
 | Council on the glasses | turns that failed or were cut off; speaker misheard |
 
+## 2a. How the loops keep spreading (DEC-0101)
+
+This catalog was written by hand once; from now on the code keeps it honest. `core/loop_coverage.py` lists
+every process MIA has from the code itself, and each is covered by a loop (`covers` in `core/loops.py`),
+declined with a reason, or on the to-do list in `work/loop_coverage.json`. A test fails on a new process
+that's none of these. Night School's teacher drafts loops for the next family of to-do processes every
+night (`docs/NIGHT_SCHOOL.md`). `python -m tools.night_school coverage` shows where each stands.
+
 ## 3. Cadence
 
 | When | What runs |

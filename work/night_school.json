@@ -1,0 +1,11 @@
+{
+ "enabled": true,
+ "start": "01:30",
+ "hours": 4,
+ "mode": "plan",
+ "lessons": 3,
+ "shadow": 1,
+ "loop_families": 1,
+ "teachers": ["claude-code", "codex"],
+ "teacher_calls": 8
+}

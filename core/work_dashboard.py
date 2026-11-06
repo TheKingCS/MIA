@@ -97,6 +97,16 @@ def _loops() -> list[dict]:
         return []
 
 
+def _night() -> dict:
+    """Night School (core/night_school.py, DEC-0100): her latest nights, report card, choosing, loops' reach."""
+    from core import night_school
+
+    try:
+        return night_school.summary()
+    except (OSError, ValueError):
+        return {}
+
+
 _MAP: dict = {}  # the architecture map, rebuilt every ten minutes (it reads the whole repo: ~2 s)
 
 
@@ -302,6 +312,7 @@ def page(context, query: str = "", tasks_dir=tasks_mod.TASKS_DIR, log=activity.A
         "independence": _independence(),
         "architecture": _architecture(),
         "loops": _loops(),
+        "night": _night(),
         "available": True,
         "summary": {s: sum(1 for r in rows if r["status"] == s) for s in ("ready", "claimed", "review", "blocked", "done")},
         "queue": [r for r in open_rows if r["status"] == "review"],

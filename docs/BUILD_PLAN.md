@@ -50,6 +50,10 @@ first. Each is a step below.
    scope; measured into a history (the PC's in `data/dev/`, a person's in their folder); judged against the floor
    and their own trend; a loop below its floor opens one task (`source: loop:<id>`, numbers only); the dev window's
    **Her loops** panel; `tools.work loops` to run them now; the app's daily check runs them.
+1a. ✅ **Night School and loop coverage** (DEC-0100, DEC-0101; `docs/NIGHT_SCHOOL.md`): every night she
+   studies the next step of this plan with her teacher (exercises with a test that fails first, graded by code),
+   makes one attempt at real work, and drafts loops for processes nobody watches yet; every process in MIA is
+   covered, declined with a reason, or on the to-do list, and a test holds new ones to it.
 2. ⬜ **The development loops that need running**: the weekly full suite against the known failures, reverts per
    merge, the dependency audit.
 3. ⬜ **The remaining usage loops**: numbers she didn't look up, memory quality, the gate's unwelcome kinds and

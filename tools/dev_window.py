@@ -148,7 +148,7 @@ def handler(key: str, port_of: callable):
                 return self._send(403, b"{}", "application/json")
             where = urlsplit(self.path).path
             if where not in ("/api/council", "/api/saga", "/api/mission", "/api/knowledge", "/api/voice", "/api/ledger",
-                             "/api/loops"):
+                             "/api/loops", "/api/night"):
                 return self._send(404, b"{}", "application/json")
             try:
                 length = min(int(self.headers.get("Content-Length", "0")), 100_000)
@@ -163,6 +163,11 @@ def handler(key: str, port_of: callable):
                 from core import loops
 
                 loops.run(None, "device", force=True)
+                return self._send(200, b"{}", "application/json")
+            if where == "/api/night":  # Zac starting a night of school now (core/night_school.py)
+                from core import night_school
+
+                night_school.launch()
                 return self._send(200, b"{}", "application/json")
             if where == "/api/ledger":  # Zac confirming a stage the evidence supports (DEC-0075); grants nothing
                 from core import dev_ledger
