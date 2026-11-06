@@ -35,6 +35,10 @@ MEASURE ──▶ COMPARE ──▶ FINDING ──▶ WORK ──▶ FIX ──�
 
 ## 2. The catalog
 
+**What's built is listed in `docs/LOOPS.md`**, generated from the code and kept current by a test (2026-11-06:
+80 loops). The tables below are the design: why each loop exists and what it was meant to watch; where they
+disagree, `docs/LOOPS.md` is right.
+
 Status: **built** (measured now), **step N** (in `docs/BUILD_PLAN.md`), **later** (needs something not built).
 Scope: **device** (the PC and the development platform) or **person** (one person's use).
 
