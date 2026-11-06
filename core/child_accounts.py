@@ -37,6 +37,7 @@ CHILD_APPS = frozenset({
     "missions", "music", "navigation", "notes", "observations", "relationships", "skills", "workout", "greenhouse",
     "expeditions", "settings", "web_home", "reward_shop",
     "operating_journal", "play",  # their own rules and their games (DEC-0097, DEC-0098)
+    "sight",  # "what is this?"; it never says who a person is (core/sight.py)
 })
 
 # Assistant tool domains a child is never offered.

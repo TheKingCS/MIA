@@ -39,6 +39,7 @@ LIMITS = {
     "dungeon": "Loot is pay before taxes, worked out from your hours; what reaches the bank comes from the bank sync. Shift differentials and tips aren't counted yet.",
     "operating_journal": "Lines MIA can't see in your records (sleep, mood, focus) are yours to rate; she never judges the gap.",
     "play": "Training load needs how hard it was; without it she counts a middle effort and asks next time.",
+    "sight": "Looks on your PC with a local model: a judgment from the picture, said as one; never who a person is; the photo isn't kept.",
     "good_news": "Reads its 16 sources once a day, only when you switch it on; stories are picked by rules in code, so one can slip through that isn't quite good news: say it was misleading.",
     "freedom": "The estimate assumes the last three months' pace; transfers between your own accounts can look like spending until the bank sync sorts them.",
     "compliance": "MIA keeps the list and reminds you; she never files, pays or signs anything, and a deadline isn't confirmed until you verify it.",
@@ -95,7 +96,7 @@ AREAS = (
     ("Your days and people", ("calendar", "relationships", "notes", "inbox", "observations", "vault", "memories")),
     ("Making things", ("workshop", "lab", "field_kit", "toolbox")),
     ("Outdoors", ("expeditions", "maps", "navigation", "knowledge")),
-    ("Everyday", ("music", "good_news", "files", "passwords")),
+    ("Everyday", ("music", "good_news", "sight", "files", "passwords")),
 )
 # Not listed in the overview. MIA herself (Home, the chat, Apps, Settings,
 # Diagnostics, the Fix-It Log) gets the closing line instead; Freedom stays out at the
@@ -109,7 +110,7 @@ GIST = {
     "household": "chores and routines", "greenhouse": "the garden and greenhouse", "flock": "your chickens and eggs",
     "garage": "vehicle and equipment upkeep", "security": "your home cameras", "power": "battery and energy",
     "workout": "workouts and records", "play": "games and sports",
-    "operating_journal": "how you mean to live", "good_news": "daily good news", "dungeon": "your work shifts, as loot you earn", "missions": "goals you're working toward", "skills": "a skill tree",
+    "operating_journal": "how you mean to live", "good_news": "daily good news", "sight": "looking at a photo", "dungeon": "your work shifts, as loot you earn", "missions": "goals you're working toward", "skills": "a skill tree",
     "character": "a record of what you've done", "reward_shop": "rewards you earn",
     "classroom": "courses and lessons", "calendar": "your calendar", "relationships": "people, pets and birthdays",
     "notes": "notes and a journal", "inbox": "receipts and documents I file",

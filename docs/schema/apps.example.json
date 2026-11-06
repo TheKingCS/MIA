@@ -714,6 +714,20 @@
           "favorite": false
         },
         {
+          "id": "sight",
+          "name": "Look",
+          "icon": "👁",
+          "tagline": "Show MIA something.",
+          "description": "A photo and a question (what is this, read this label, inspect this part), answered on your PC; never who a person is (build plan step 15).",
+          "page": "look.html",
+          "on_web": true,
+          "shown": true,
+          "can_hide": true,
+          "ask": "What is this?",
+          "tools": [],
+          "favorite": false
+        },
+        {
           "id": "assistant",
           "name": "MIA Assistant",
           "icon": "🗨",

@@ -235,6 +235,13 @@
       "page": "news.html"
     },
     {
+      "id": "sight",
+      "name": "Look",
+      "icon": "👁",
+      "tagline": "Show MIA something.",
+      "page": "look.html"
+    },
+    {
       "id": "assistant",
       "name": "MIA Assistant",
       "icon": "🗨",
