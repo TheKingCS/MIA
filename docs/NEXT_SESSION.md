@@ -47,8 +47,9 @@ online approved 2026-11-06); ask "what's the good news?" or play "Good News Radi
 `music_library/` (the music's default folder, in the repo) is now gitignored. Step 14 has begun: MGRS grids,
 waypoints by grid, a TAK data package and tracks from GPX (`docs/MAPS_AND_COMMS.md`). Step 15 has begun: sight
 on the PC (`core/sight.py`, `POST /api/sight`, Qwen2.5-VL 7B); the glasses' and phone's Look button is next.
-Step 16 has begun: the council from the phone (`web/council.html`, owner only). Next: step 17, the
-Chronicles' weekly issue.
+Step 16 has begun: the council from the phone (`web/council.html`, owner only). Step 17 too: the Chronicles'
+weekly issue (`core/chronicle_issue.py`), waiting on Zac's approved events. Next: Phase E, the queued tasks
+(T-0042 first).
 A flaky test seen once: `tests/test_reference_library_manager.py::test_search_all_packs_returns_snippet_from_matching_pack`.
 
 **Glasses navigation: `docs/GLASSES_NAVIGATION_PLAN.md` is a draft waiting on

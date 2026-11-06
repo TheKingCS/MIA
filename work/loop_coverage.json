@@ -259,6 +259,10 @@
   "check:checkin": {
    "status": "todo"
   },
+  "check:chronicle_issue": {
+   "status": "none",
+   "why": "Zac approves every issue by hand, and its continuity rules are checked in code before he sees it"
+  },
   "check:findings": {
    "status": "todo"
   },

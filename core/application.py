@@ -722,6 +722,7 @@ class MIAApplication:
             ("seasons_of_memory", self._check_seasons_of_memory),
             ("operating_journal", self._check_operating_journal),
             ("good_news", self._check_good_news),
+            ("chronicle_issue", self._check_chronicle_issue),
         ]
         # 2026-09-27, Cognitive Extension slice C: checks no longer notify
         # directly. Each one offers what it would say (_offer()), and the
@@ -791,6 +792,14 @@ class MIAApplication:
 
         if good_news.due(self.context, now):
             good_news.launch()
+
+    def _check_chronicle_issue(self, now: datetime, today_iso: str) -> None:
+        """The Chronicles' weekly issue (core/chronicle_issue.py, step 17): on Sundays, from the archive events Zac
+        approved and no issue has told, drafted, checked and drawn in a process of its own; Zac approves it."""
+        from core import chronicle_issue
+
+        if chronicle_issue.due(now.date()):
+            chronicle_issue.launch()
 
     def _check_workflows(self, now: datetime, today_iso: str) -> None:
         """Workflows MIA made whose trigger has come round (core/workflows.py, DEC-0092): run them;

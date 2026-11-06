@@ -19,6 +19,11 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 - [ ] **Glasses:** the five questions in `docs/GLASSES_NAVIGATION_PLAN.md`; whether the glasses' question buttons
       should be read-only (an email question brings stranger-written text into a turn that can change things).
 
+- [ ] **The Chronicles:** 124 candidate events wait for your yes or no (the dev window's Chronicles panel); the
+      weekly issue can only tell approved ones. And how the Creator looks in the comic (DEC-0087: "waiting for
+      Zac" in `docs/chronicles/characters/creator.md`). Then approve each issue: `python -m tools.chronicle_issue
+      show I-0001`, `... approve I-0001`.
+
 ### At the PC
 - [ ] **Restart MIA** so she loads `cryptography` 50.0.2 (47 had three HIGH advisories, T-0048).
 - [ ] **Start the standing mission** when you want the council working the loops' tasks:
@@ -76,3 +81,4 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       field corrections, the Loop's predictions.
 - [ ] Step 8: more cross-domain plans (the benchmark's G questions); calibration against outcomes.
 - [ ] The Chronicle's yearly edition, from the kept seasons (step 17).
+- [ ] The Chronicles' panels: a bigger image model and characters that stay the same across panels (T-0036).

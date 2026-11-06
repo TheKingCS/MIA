@@ -68,6 +68,15 @@ def report(now: Optional[datetime] = None) -> Optional[str]:
     if working:
         lines.append(f"Working on {len(working)}: " + "; ".join(f"{t.id} {t.title}" for t in working[:3])
                      + ("..." if len(working) > 3 else "") + ".")
+    try:
+        from core import chronicle_issue
+
+        waiting = [i for i in chronicle_issue.issues() if i["status"] != "approved"]
+    except (OSError, ValueError):
+        waiting = []
+    if waiting:
+        lines.append(f"The Chronicles: issue #{waiting[-1]['number']:03d} waits for you "
+                     f"(python -m tools.chronicle_issue show {waiting[-1]['id']}).")
     if week:
         lines.append(f"Night School: {len(week)} night{'s' if len(week) != 1 else ''}, {passed} of {len(lessons)} lessons passed.")
     return " ".join(lines) if lines else None

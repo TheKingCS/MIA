@@ -160,8 +160,14 @@ first. Each is a step below.
     latest messages, who's ready, Reply, @name to ask one member; a message starts the council's turn in the
     background, within its budget. Not yet: the glasses' speaker card and each member's voice on the phone
     (T-0035). 🧑 *Testing on the real glasses.*
-17. ⬜ **The Chronicles' weekly issue**: scripts from approved events, continuity checks in code, panels from the
-    local image model with a bigger model and consistent characters (T-0036). 🧑 *Zac approves each issue.*
+17. 🔨 **The Chronicles' weekly issue** (`core/chronicle_issue.py`, `tools/chronicle_issue.py`, 2026-11-06): on Sundays,
+    from approved series events no issue has told (oldest first), a script made in code (each panel's caption
+    names its event; real names become the series' own), lines from the local model in each character's voice,
+    the Story Bible's five rules checked in code (an issue with a problem stays a draft and says why), panels by
+    the local image model in its own environment (`data/chronicles/`, off the repo); Zac approves each issue,
+    which marks its events as told and lists it in `docs/chronicles/issues.md`. Tried end to end on sample
+    events: checked, in character, panels drawn (storyboard quality). Not yet: consistent characters and a
+    bigger image model (T-0036). 🧑 *Zac approves each issue.*
 
 ### Phase E: The rest already queued
 
