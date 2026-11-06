@@ -468,6 +468,20 @@ def _projections(context) -> Optional[Reading]:
                    f"(within a month)")
 
 
+def _search_empty(_context) -> Optional[Reading]:
+    if not _has_repo():
+        return None
+    since = _since(30)
+    found = [r for r in DevStore(DEV_DATA / "search").tail(2000) if r.get("at", "") >= since]
+    if not found:
+        return None
+    empty = sum(1 for r in found if not r.get("found"))
+    left = sum(1 for r in found if r.get("found") and not r.get("chosen"))
+    failed = sorted({p for r in found for p in r.get("failed", [])})
+    return Reading(round(empty / len(found), 2), len(found), f"{empty} of {len(found)} searches found nothing, {left} found "
+                   f"things but nothing was opened" + (f"; providers that failed: {', '.join(failed)}" if failed else ""))
+
+
 def _unused_creations(context) -> Optional[Reading]:
     store = getattr(context, "creations", None)
     if store is None:
@@ -766,6 +780,8 @@ LOOPS: tuple[Loop, ...] = (
     # E. Devices
     Loop("data.recovered", "devices", "data files found corrupt and reset, in 7 days", "device", _recovered, floor=0,
          files=("core/data_recovery.py",), covers=("flow:data",)),
+    Loop("search.empty", "devices", "Ctrl+K searches that found nothing, in 30 days", "device", _search_empty,
+         floor=0.3, min_n=10, files=("core/search_manager.py",), covers=("flow:search",)),
     Loop("pc.disk", "devices", "free space on the PC", "device", _disk, better="higher", floor=20, unit="GB", covers=("flow:pc",)),
     # F. Her development
     Loop("dev.layering", "development", "breaks of the layering rule", "device", _layering, floor=0,

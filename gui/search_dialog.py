@@ -75,6 +75,9 @@ class SearchDialog(QDialog):
     def __init__(self, context: AppContext, parent=None) -> None:
         super().__init__(parent)
         self.context = context
+        self._found = 0  # what the last query found, and whether a result was opened: noted when the dialog closes
+        self._chosen = False
+        self._asked = False
         self.setWindowTitle("Search MIA")
         self.resize(440, 480)
         self._build_ui()
@@ -127,6 +130,7 @@ class SearchDialog(QDialog):
             return
 
         results = self.context.search.search(text)
+        self._found, self._asked = len(results), True
         if not results:
             empty_label = QLabel("No matches.")
             empty_label.setObjectName("SubtitleLabel")
@@ -139,5 +143,11 @@ class SearchDialog(QDialog):
             self._results_layout.addWidget(row)
 
     def _on_result_clicked(self, result) -> None:
+        self._chosen = True
         self.result_activated.emit(result)
         self.accept()
+
+    def done(self, result: int) -> None:
+        if self._asked and hasattr(self.context.search, "finished"):  # for the search.empty loop
+            self.context.search.finished(self._found, self._chosen)
+        super().done(result)

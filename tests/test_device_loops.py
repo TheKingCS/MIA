@@ -62,3 +62,23 @@ def test_the_loops_predictions_against_what_happened():
     assert found == {"planned": 6, "missed": 1, "extra": 1, "off": 0.29}  # the 21st is still ahead: not counted
     assert predictions(SimpleNamespace(loop=SimpleNamespace(rhythms=[r], made={}), dungeon=SimpleNamespace(runs=runs)),
                        today) is None  # nothing planned yet: nothing to judge
+
+
+def test_a_search_is_noted_when_it_ends_never_its_words(tmp_path, monkeypatch):
+    from core import dev_store
+    from core.search_manager import SearchManager
+
+    monkeypatch.setattr(dev_store, "DEV_DATA", tmp_path)
+    monkeypatch.setattr(loops, "DEV_DATA", tmp_path)
+    monkeypatch.setattr(loops, "_has_repo", lambda: True)
+    search = SearchManager(None)
+    search.register_provider("broken", lambda q: 1 / 0)
+    search.register_provider("notes", lambda q: [])
+    search.search("grandmother's recipe")
+    search.finished(0, False)
+    search.finished(3, True)
+    kept = dev_store.DevStore(tmp_path / "search").tail(10)
+    assert [(r["found"], r["chosen"], r["failed"]) for r in kept] == [(0, False, ["broken"]), (3, True, [])]
+    assert "recipe" not in str(kept)
+    reading = BY_ID["search.empty"].measure(None)
+    assert (reading.value, reading.n) == (0.5, 2) and "broken" in reading.detail

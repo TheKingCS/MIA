@@ -55,6 +55,7 @@ class SearchManager:
     def __init__(self, context: AppContext) -> None:
         self.context = context
         self._providers: dict[str, Callable[[str], list[SearchResult]]] = {}
+        self._failed: set[str] = set()  # providers that raised since the last finished search
 
     def register_provider(self, name: str, provider: Callable[[str], list[SearchResult]]) -> None:
         """Register a search provider under `name` (used only for logging/debugging)."""
@@ -78,4 +79,17 @@ class SearchManager:
                 results.extend(provider(query))
             except Exception:
                 log.exception("Search provider '%s' raised an error — skipping its results.", name)
+                self._failed.add(name)
         return results
+
+    def finished(self, found: int, chosen: bool) -> None:
+        """A search ended (the dialog closed): how many results the last query found, whether one was opened, and
+        the providers that failed meanwhile. For the search.empty loop; never the words searched."""
+        from core import dev_store
+
+        try:
+            dev_store.DevStore(dev_store.DEV_DATA / "search").append(
+                {"found": int(found), "chosen": bool(chosen), "failed": sorted(self._failed)})
+        except OSError:
+            log.exception("Couldn't note a search")
+        self._failed = set()
