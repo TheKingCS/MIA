@@ -16,7 +16,10 @@ PySide6>=6.6,<7.0
 # (below) require it; confirmed cryptography 47.x still ships a real
 # aarch64 wheel (manylinux2014_aarch64) before widening this, so the
 # original Pi 5 justification still holds at the new floor.
-cryptography>=46,<48
+# Raised to >=50.0.2 on 2026-11-06: 47.x had three HIGH advisories
+# (GHSA-537c-gmf6-5ccf, -g6cj-pr64-35w5, -jwv3-5hgf-82ww; found by the
+# dev.vulnerable loop, T-0048). 50.0.2 ships manylinux2014 aarch64 wheels.
+cryptography>=50.0.2,<51
 
 # Mobile access, Phase 1 (2026-09-12) — the opt-in local API server
 # (server/app.py) the desktop app can start alongside itself for real

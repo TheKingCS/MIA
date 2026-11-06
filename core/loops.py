@@ -66,6 +66,8 @@ class Loop:
     files: tuple[str, ...] = ()
     unit: str = ""
     covers: tuple[str, ...] = ()  # the processes it watches (core/loop_coverage.py, DEC-0101)
+    every: int = 1  # days between readings
+    heavy: bool = False  # needs a real run (the suite, the network): Night School and the CLI, never the app's check
 
 
 def _now() -> datetime:
@@ -259,6 +261,67 @@ def _loop_coverage(_context) -> Optional[Reading]:
                                      f"{r['counts'].get('proposed', 0)} proposed") if need else None
 
 
+def _suite_unexpected(_context) -> Optional[Reading]:
+    if not _has_repo():
+        return None
+    from core import dev_checks
+
+    s = dev_checks.suite()
+    if not s["finished"]:
+        return Reading(1, 1, f"the suite didn't finish on {s['commit']}")
+    detail = f"{len(s['unexpected'])} unexpected on {s['commit']}"
+    if s["unexpected"]:
+        detail += ": " + ", ".join(s["unexpected"][:5])
+    if s["stale"]:
+        detail += f"; {len(s['stale'])} known failure(s) pass again: take them off work/known_failures.json"
+    return Reading(len(s["unexpected"]), 1, detail)
+
+
+def _suite_time(_context) -> Optional[Reading]:
+    if not _has_repo():
+        return None
+    from core import dev_checks
+
+    s = dev_checks.suite()
+    return Reading(round(s["seconds"], 1), 1, s["summary"]) if s.get("seconds") else None
+
+
+def _reverts(_context) -> Optional[Reading]:
+    if not _has_repo():
+        return None
+    from core import dev_checks, work_activity
+
+    r = dev_checks.reverts(work_activity.events())
+    if not r["merges"]:
+        return None
+    return Reading(r["rate"], r["merges"], f"{r['reverts']} of {r['merges']} merges reverted in 30 days"
+                   + (f" ({', '.join(r['reverted'])})" if r["reverted"] else ""))
+
+
+def _vulnerable(_context) -> Optional[Reading]:
+    if not _has_repo():
+        return None
+    from core import dev_checks
+
+    v = dev_checks.vulnerable()
+    names = sorted(v["packages"])
+    return Reading(len(names), v["checked"], f"{len(names)} of {v['checked']} packages with a known vulnerability"
+                   + (": " + ", ".join(f"{n} ({', '.join(v['packages'][n][:3])})" for n in names[:6]) if names else ""))
+
+
+def _outdated(_context) -> Optional[Reading]:
+    if not _has_repo():
+        return None
+    from core import dev_checks
+
+    o = dev_checks.outdated()
+    if not o["checked"]:
+        return None
+    behind = sorted(o["behind"].items())
+    return Reading(len(behind), o["checked"], f"{len(behind)} of {o['checked']} behind their latest"
+                   + (": " + ", ".join(f"{n} {h} -> {l}" for n, (h, l) in behind[:8]) if behind else ""))
+
+
 def _night_lessons(_context) -> Optional[Reading]:
     if not _has_repo():
         return None
@@ -319,6 +382,16 @@ LOOPS: tuple[Loop, ...] = (
     Loop("dev.council_cost", "development", "calls per council turn", "device", _council_cost, acts="watch", covers=("dev:council",)),
     Loop("dev.chronicles", "development", "Chronicles candidates waiting", "device", _chronicles, acts="watch",
          covers=("dev:chronicles", "check:chronicle")),
+    Loop("dev.suite", "development", "tests failing on the committed code that aren't known failures", "device",
+         _suite_unexpected, floor=0, every=7, heavy=True, covers=("dev:suite",)),
+    Loop("dev.suite_time", "development", "seconds the full suite takes", "device", _suite_time, acts="watch",
+         every=7, heavy=True, unit="s", covers=("dev:suite",)),
+    Loop("dev.reverts", "development", "merges the lab reverted, of those approved in 30 days", "device", _reverts,
+         floor=0.2, min_n=3, covers=("dev:merge",)),
+    Loop("dev.vulnerable", "development", "installed packages with a known vulnerability", "device", _vulnerable,
+         floor=0, every=7, heavy=True, files=("requirements.txt",), covers=("dev:dependencies",)),
+    Loop("dev.outdated", "development", "required packages behind their latest release", "device", _outdated,
+         acts="watch", every=7, heavy=True, covers=("dev:dependencies",)),
     Loop("dev.loop_coverage", "development", "processes with a loop, of those that need one", "device",
          _loop_coverage, better="higher", acts="watch", covers=("dev:loops", "check:loops")),
     Loop("night.lessons", "development", "Night School lessons passed this week", "device", _night_lessons,
@@ -388,9 +461,21 @@ def _open_task(loop: Loop, verdict: dict, reading: Reading, tasks_dir=None, log=
     return task.id
 
 
+def due(loop: Loop, earlier: list[dict], now: datetime) -> bool:
+    """Pure logic. A loop is due when it has no reading yet, or its last is `every` days old (by date)."""
+    if not earlier:
+        return True
+    try:
+        last = datetime.fromisoformat(earlier[-1].get("at", "")).date()
+    except ValueError:
+        return True
+    return (now.date() - last).days >= loop.every
+
+
 def run(context, scope: str, now: Optional[datetime] = None, loops: tuple[Loop, ...] = LOOPS, force: bool = False,
-        tasks_dir=None, log=None) -> list:
-    """Measure every loop of this scope that's due (once a day), keep, judge, act. Returns Candidates to offer."""
+        tasks_dir=None, log=None, heavy: bool = False) -> list:
+    """Measure every loop of this scope that's due, keep, judge, act. Heavy loops only with `heavy`.
+    Returns Candidates to offer."""
     from core.communication_gate import Candidate
 
     now = now or _now()
@@ -401,7 +486,7 @@ def run(context, scope: str, now: Optional[datetime] = None, loops: tuple[Loop, 
     offers = []
     for loop in (l for l in loops if l.scope == scope):
         earlier = past.get(loop.id, [])
-        if earlier and earlier[-1].get("at", "")[:10] == now.date().isoformat() and not force:
+        if (loop.heavy and not heavy) or not (force or due(loop, earlier, now)):
             continue
         try:
             reading = loop.measure(context)

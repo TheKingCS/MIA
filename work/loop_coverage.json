@@ -319,16 +319,7 @@
   "check:warranty": {
    "status": "todo"
   },
-  "dev:dependencies": {
-   "status": "todo"
-  },
-  "dev:merge": {
-   "status": "todo"
-  },
   "dev:missions": {
-   "status": "todo"
-  },
-  "dev:suite": {
    "status": "todo"
   },
   "flow:actions": {

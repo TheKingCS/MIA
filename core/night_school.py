@@ -476,7 +476,7 @@ def night(now: Optional[datetime] = None, *, ask: Optional[Callable[[str, str], 
 
     # 1. Her progress
     try:
-        loops.run(None, "device", now=start, tasks_dir=tasks_dir, log=log)
+        loops.run(None, "device", now=start, tasks_dir=tasks_dir, log=log, heavy=True)  # the suite, the audit
     except Exception as problem:
         record["notes"].append(f"her loops couldn't run: {str(problem)[:120]}")
     progress = loops.summary(None, "device")

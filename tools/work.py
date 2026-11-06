@@ -212,7 +212,7 @@ def main(argv=None) -> int:
             from core import loops
 
             if args.run:
-                loops.run(None, "device", force=True)
+                loops.run(None, "device", force=True, heavy=True)  # the suite and the audit too
             for l in loops.summary(None, "device"):
                 value = "—" if l["value"] is None else f"{l['value']:g}{l['unit']}"
                 print(f"{l['id']:22} {l['state']:6} {value:>8}  {l['why'] or l['detail']}"

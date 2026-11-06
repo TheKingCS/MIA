@@ -1,0 +1,4 @@
+{
+ "about": "Tests known to fail on the committed code, and why (core/dev_checks.py, the dev.suite loop). A failure not listed here opens a task; a listed one that passes again should come off. Add one only with a reason and a task that will fix it.",
+ "tests": {}
+}

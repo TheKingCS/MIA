@@ -54,8 +54,11 @@ first. Each is a step below.
    studies the next step of this plan with her teacher (exercises with a test that fails first, graded by code),
    makes one attempt at real work, and drafts loops for processes nobody watches yet; every process in MIA is
    covered, declined with a reason, or on the to-do list, and a test holds new ones to it.
-2. ⬜ **The development loops that need running**: the weekly full suite against the known failures, reverts per
-   merge, the dependency audit.
+2. ✅ **The development loops that need running** (`core/dev_checks.py`): the weekly full suite on the committed
+   code against `work/known_failures.json` (`dev.suite`, `dev.suite_time`), reverts per merge (`dev.reverts`), the
+   dependency audit (`dev.vulnerable` against osv.dev, `dev.outdated` against PyPI). Heavy loops run from Night
+   School and `tools.work loops --run`, never in the app's check. First run: `cryptography` 47 had three HIGH
+   advisories, raised to 50.0.2 (T-0048).
 3. ⬜ **The remaining usage loops**: numbers she didn't look up, memory quality, the gate's unwelcome kinds and
    saturation, maker failures, held creations, data recovery, vault coverage, glasses voice, phone link.
 4. ⬜ **Corrections in every area**: an action MIA proposed that the person undid or re-edited within 3 days,

@@ -16,7 +16,11 @@ attempt at real work, and loops drafted for the next family of processes nobody 
 with no loop and no reason). See: `python -m tools.night_school`, the dev window's Night School panel.
 Zac: real exercises she passes wait in `python -m tools.lab list` for `approve`; switch her to choosing
 her own lessons (`"mode": "self"` in `work/night_school.json`) when the panel says the evidence supports it.
-Next in the build plan: step 2 (the loops that need running); Night School is studying that step too.
+Build plan step 2 is done (2026-11-06): the weekly suite on the committed code, reverts per merge, and the
+dependency audit (`core/dev_checks.py`). Its first run found `cryptography` 47 with three HIGH advisories: the
+PC's venv is on 50.0.2 now (T-0048); **restart MIA on the PC** to load it. Still open: the phone build
+bundles Chaquopy's `cryptography` 42.0.8, which the audit doesn't cover yet. Next: step 3 (the remaining
+usage loops) and T-0047 (the flow loops Night School's teacher drafted).
 
 **Glasses navigation: `docs/GLASSES_NAVIGATION_PLAN.md` is a draft waiting on
 Zac's five questions.** Recipes open by shelf; Music plays on the phone
