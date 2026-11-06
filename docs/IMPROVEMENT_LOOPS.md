@@ -55,7 +55,7 @@ Scope: **device** (the PC and the development platform) or **person** (one perso
 | `answers.routing` | Questions reaching the right plan | `tools/bench_audit.py` coverage | no drop | task | built |
 | `answers.numbers` | A number she didn't look up | answers replaced by the fact sheet (`core/question_plans.answer`) | 0 | task | built |
 | `memory.quality` | Memories she keeps | memories edited or deleted within 14 days of being kept | ≤ 15% | lesson for the extractor | built |
-| `phone.model` | The phone's model | golden set (`tools/model_check.py`) | no drop | task | step 5 |
+| `phone.model` | The phone's model | golden set (`tools/model_check.py`) | no drop | task | CI (Model check) |
 
 ### B. Proactivity (what she says unasked)
 
@@ -74,8 +74,8 @@ area, the same code:
 |---|---|---|---|
 | `corrections.<area>` (money, kitchen, workout, missions, calendar, maintenance, inbox, memories, creations...) | MIA's changes later corrected | an action proposed by MIA undone, or the same record edited by the person within 3 days | built (`core/corrections.py`) |
 | `money.categories` | Plaid categories | transactions re-categorized by the person (and the rule that would have got it right) | step 4 |
-| `inbox.reading` | OCR and document reading | fields corrected after a read | step 4 |
-| `loop.prediction` | The Loop's predicted week | predicted shifts and routines against what was logged | step 4 |
+| `inbox.reading` | OCR and document reading | fields corrected after a read | built |
+| `loop.prediction` | The Loop's predicted week | predicted shifts and routines against what was logged | built |
 | `pantry.prediction` | Pantry levels | predicted against counted | later |
 
 ### D. Her creations (ACAF)
@@ -83,7 +83,7 @@ area, the same code:
 | Loop | Watches | Signal | Status |
 |---|---|---|---|
 | `creations.unused` | Screens nobody opens | published, not opened in 30 days (`core/creations.py`) | built |
-| `creations.maker` | Designs that fail their checks | maker retries and failures | step 3 |
+| `creations.maker` | Designs that fail their checks | maker retries and failures | built |
 | `workflows.failing` | Workflows that stop | runs ending "stopped" | built |
 | `creations.held` | Screens broken by a change | creations that no longer pass their checks | built |
 
@@ -94,9 +94,9 @@ area, the same code:
 | `pc.disk` | Room to work | free disk on the PC (`core/system_health.py`) | built |
 | `data.recovered` | Corrupt files | data-recovery events (`core/data_recovery.py`) | built |
 | `vault.coverage` | Photos kept safe | phone media not yet on the PC, and transfer failures | step 3 |
-| `glasses.voice` | Speech through the glasses | glasses turns rephrased or failed | step 3 |
+| `glasses.voice` | Speech through the glasses | glasses turns rephrased or failed | built |
 | `relay.health` | The sealed relay | failed or slow relay calls | later |
-| `phone.link` | Phone to PC | home-link failures and fallbacks | step 3 |
+| `phone.link` | Phone to PC | home-link failures and fallbacks | built |
 
 ### F. Her development (the platform)
 
