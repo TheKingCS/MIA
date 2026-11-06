@@ -38,6 +38,9 @@ REASONS: dict[str, tuple[str, str]] = {
     "obligation_deadline": ("tax and compliance deadlines", "a filing, licence or renewal is coming due or past due"),
     "chronicle": ("the Chronicle", "on Sundays, your week's chapter of the Chronicle is ready"),
     "journal_reflection": ("the weekly reflection", "you turned on the weekly journal reflection"),
+    "capability_gap": ("things I can't do yet", "you asked for something more than once that I can't do yet, and I "
+                                                "found what it would take; each one at most once a fortnight"),
+    "self_report": ("my weekly report", "on Sundays I tell the PC's owner what got better in me and what I'm working on"),
 }
 
 

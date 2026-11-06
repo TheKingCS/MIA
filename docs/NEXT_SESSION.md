@@ -36,6 +36,8 @@ Interconnection Architecture doc (it arrived cut off after section 3).
 Step 8 has begun: questions across domains compose plans; `afford` and `slipped`; answers say how sure they
 are, checked by `answers.calibration`. Flaky, seen once each: the reference-library test above, and one
 native Qt crash mid-suite (a rerun was clean).
+Step 9 is built: capability gaps (`core/capability_gaps.py`, `python -m tools.gaps`). Next: step 10, seasons of
+memory.
 A flaky test seen once: `tests/test_reference_library_manager.py::test_search_all_packs_returns_snippet_from_matching_pack`.
 
 **Glasses navigation: `docs/GLASSES_NAVIGATION_PLAN.md` is a draft waiting on

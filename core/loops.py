@@ -322,6 +322,18 @@ def _calibration(context) -> Optional[Reading]:
     return Reading(round(up_sure - up_rest, 2), n_sure, detail + f", against {rest['up']} of {n_rest} of the others")
 
 
+def _gaps(context) -> Optional[Reading]:
+    if getattr(context, "failures", None) is None:
+        return None
+    from core import capability_gaps
+
+    s = capability_gaps.summary(context)
+    if not s["gaps"]:
+        return None
+    by = ", ".join(f"{k} {n}" for k, n in sorted(s["by_need"].items()))
+    return Reading(s["repeated"], s["gaps"], f"{s['repeated']} asked more than once, of {s['gaps']}" + (f" ({by})" if by else ""))
+
+
 def _unused_creations(context) -> Optional[Reading]:
     store = getattr(context, "creations", None)
     if store is None:
@@ -545,6 +557,8 @@ LOOPS: tuple[Loop, ...] = (
          _per_100_turns(("talked_instead",)), floor=2, min_n=20, files=("core/tool_loop.py",), covers=("flow:tools",)),
     Loop("answers.no_tool", "answers", "asked for something she has no tool for", "person",
          _count_of(("no_tool",)), acts="watch", covers=("flow:tools", "store:failures")),
+    Loop("gaps.repeated", "answers", "things she can't do yet, asked more than once (self-enablement)", "person",
+         _gaps, acts="watch", covers=("flow:tools", "check:capability_gaps", "action:gap")),
     Loop("answers.slow", "answers", "share of answers over 25 seconds", "person", _slow, floor=0.10, min_n=20, covers=("flow:talk", "store:traces")),
     Loop("answers.model_down", "answers", "the model not answering, or garbled", "person",
          _count_of(("model_down", "garbled")), floor=0, covers=("flow:talk", "flow:pc")),

@@ -157,6 +157,11 @@ def handle(context, text: str) -> Optional[str]:
     said = remember_command(context, text)  # "remember this for the Chronicles" (DEC-0084)
     if said is not None:
         return said
+    from core.capability_gaps import reply as gap_reply
+
+    said = gap_reply(context, text)  # "build it" / "bring it back", to her latest capability-gap offer
+    if said is not None:
+        return said
 
     fit = getattr(context, "fitness", None)
     plan = fit.plan if fit is not None else None

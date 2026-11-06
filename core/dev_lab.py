@@ -70,7 +70,7 @@ PROTECTED = (
     "core/creation_spec.py", "core/creation_actions.py", "core/creations.py", "core/record_sets.py", "core/creation_sources.py", "core/workflows.py", "core/dev_ledger.py", "core/mia_coder.py", "core/dev_map.py", "core/record_import.py", "core/loops.py",
     # Night School grades her and keeps the map of what her loops watch (DEC-0100, DEC-0101).
     "core/night_school.py", "core/loop_coverage.py", "tools/night_school.py", "core/dev_checks.py",
-    "core/corrections.py", "core/benchmarks.py", "tools/weekly_bench.py",
+    "core/corrections.py", "core/benchmarks.py", "tools/weekly_bench.py", "core/capability_gaps.py",
 )
 DRAFTED, WRITTEN, READY, NOT_READY, MERGED, REVERTED, REJECTED = (
     "drafted", "written", "ready", "not ready", "merged", "reverted", "rejected")

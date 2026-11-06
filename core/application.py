@@ -718,6 +718,7 @@ class MIAApplication:
             ("loops", self._check_loops),
             ("night_school", self._check_night_school),
             ("self_report", self._check_self_report),
+            ("capability_gaps", self._check_capability_gaps),
         ]
         # 2026-09-27, Cognitive Extension slice C: checks no longer notify
         # directly. Each one offers what it would say (_offer()), and the
@@ -759,6 +760,13 @@ class MIAApplication:
         from core import self_report
 
         self._offers.extend(self_report.offer(self.context, now))
+
+    def _check_capability_gaps(self, now: datetime, today_iso: str) -> None:
+        """Self-enablement (core/capability_gaps.py, step 9): what she was asked and couldn't do, grouped; a
+        repeated one offered through the gate, with what it would take."""
+        from core import capability_gaps
+
+        self._offers.extend(capability_gaps.offers(self.context))
 
     def _check_workflows(self, now: datetime, today_iso: str) -> None:
         """Workflows MIA made whose trigger has come round (core/workflows.py, DEC-0092): run them;

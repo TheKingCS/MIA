@@ -101,9 +101,12 @@ first. Each is a step below.
 
 ### Phase C: The gaps in her intelligence
 
-9. ⬜ **Self-enablement**: a request no tool matched becomes a capability gap with what it would need (data, a tool,
-   a device, a permission); repeated gaps become a proposal (an ACAF creation when it's a screen or workflow, a lab
-   task when it's code).
+9. ✅ **Self-enablement** (`core/capability_gaps.py`, 2026-11-06): requests no tool matched are grouped into gaps, each
+   with what it would take, worked out in code (a tucked-away app, a screen or workflow she can make, a sense or
+   device she lacks, or new code); a gap asked twice is offered through the gate (once a fortnight). "Bring it
+   back" shows the app; "build it" opens a task (`source: gap:<id>`) that names the gap, never the person's
+   words, which stay in their folder (`python -m tools.gaps show <id>` on this PC). Screens and workflows point
+   to Make Something. Loop: `gaps.repeated`.
 10. ⬜ **Seasons of memory**: what changed this month and this year, summarized from history in code, phrased by
     the model; the Chronicle's yearly edition grows from it.
 11. ⬜ **The Operating Journal** (DEC-0097): a template, filled by talking to MIA or on a screen, for how Zac means
