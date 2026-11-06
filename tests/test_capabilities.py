@@ -105,3 +105,12 @@ def test_docs_search_ranks_decisions_and_labels_history(tmp_path):
 def test_the_real_docs_answer_about_mia():
     top = SelfDocs().search("What did we decide about eggs?")
     assert top and top[0][1].heading.startswith("DEC-0037")
+
+
+
+def test_an_app_with_a_web_page_never_says_it_has_none():
+    from core.capabilities import LIMITS
+    from core.web_surfaces import APPS
+
+    wrong = [a.module_id for a in APPS if a.page and "no web screen" in LIMITS.get(a.module_id, "").lower()]
+    assert not wrong, wrong
