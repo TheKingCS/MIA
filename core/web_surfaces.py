@@ -87,7 +87,7 @@ APPS: tuple[App, ...] = (
     App("kitchen", "Kitchen", "🍳", "Good food. Good mood.", "kitchen.html",
         "Recipes, pantry, grocery list, and meal tracking.", HOME, ("kitchen", "groceries"),
         "What can I make with what's in the pantry?"),
-    App("household", "Household", "🧺", "A home that runs itself.", None,
+    App("household", "Household", "🧺", "A home that runs itself.", "household.html",
         "Daily and weekly household routines — laundry, dishes, chores.", HOME, ("household",),
         "I did the dishes."),
     App("workout", "Workout", "🏋", "Stronger body. Clearer mind.", "workout.html",

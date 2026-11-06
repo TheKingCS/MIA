@@ -35,7 +35,7 @@ Screens: `docs/design_handoff/screens/<name>.png` (placeholder data).
 | Asset page | One asset: overview, maintenance, missions, documents, parts, history, meter hours | `(concept: the mower page)` | ✅ `/api/assets/{id}` + document upload/download | ✅ quick stats + log readings, needs attention, Overview / Maintenance (add, edit, delete, done, log) / Missions / Documents (upload, open, remove) / Costs / History; Parts PLANNED (not tracked per asset yet) | |
 | Property | House, appliances, tools | `property` | ✅ `/api/equipment?scope=property` | ✅ same as Garage, for appliances, the property and tools | |
 | Greenhouse | Garden, greenhouse and aquaponics assets and tasks | `greenhouse` | ✅ `/api/equipment?scope=greenhouse` | ✅ same as Garage, for garden and plants (child-safe) | |
-| Household | Routines with streaks | `(none)` | |  | |
+| Household | Routines with streaks | `(none)` | ✅ `/api/household`, `routine.log` | ✅ each routine's current occurrence (today's or this week's), how far along, its streak, the day's total, Did it with undo (2026-11-06) (not yet: adding or changing a routine on the page; ask MIA) | |
 | Maintenance: Assets | Add, edit, delete assets | `maintenance__01_assets` | ✅ `/api/equipment?scope=maintenance` | ✅ every asset, add, edit, delete (undo) | |
 | Maintenance: Tasks | Recurring tasks (calendar or meter-based), mark complete, log hours | `maintenance__02_tasks` | ✅ maintenance_task actions, maintenance.done, maintenance.reading | ✅ every task, calendar or meter-based, done, log reading, add, edit, delete | |
 | Maintenance: Overview | Calendar overview | `maintenance__03_overview` | ✅ calendar in `/api/equipment` | ✅ the next two months by day | |

@@ -81,6 +81,13 @@
       "page": "kitchen.html"
     },
     {
+      "id": "household",
+      "name": "Household",
+      "icon": "🧺",
+      "tagline": "A home that runs itself.",
+      "page": "household.html"
+    },
+    {
       "id": "workout",
       "name": "Workout",
       "icon": "🏋",
