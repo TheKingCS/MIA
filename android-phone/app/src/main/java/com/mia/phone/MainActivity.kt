@@ -10,6 +10,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
 import android.util.Log
 import android.view.Gravity
 import android.webkit.GeolocationPermissions
@@ -23,8 +24,10 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.FileProvider
 import org.json.JSONObject
 import java.io.ByteArrayInputStream
+import java.io.File
 
 /**
  * MIA on the phone (DEC-0019, the Phase 1 spike): starts MIA's own engine
@@ -37,6 +40,7 @@ class MainActivity : Activity() {
     // quests, DEC-0028): answered once Android's own permission is.
     private var geoAsk: Pair<String, GeolocationPermissions.Callback>? = null
     private var fileAsk: ValueCallback<Array<Uri>>? = null  // a page's file input, waiting on Android's picker
+    private var captured: Uri? = null  // where the camera is writing Look's photo, while it's open
     // The memory vault's door to the camera roll (Gallery.kt), window.MIAAndroid on MIA's screens.
     private val gallery = Gallery(this)
     // Location quests while MIA is closed (Places.kt). Talking through the
@@ -217,17 +221,24 @@ class MainActivity : Activity() {
                 }
 
                 // A screen's file input (Look's "choose a photo", the Inbox): Android's own picker, for MIA's
-                // pages only. Without this the web view ignores the tap. Taking a new photo needs a camera
-                // capture with a FileProvider: not yet, so the picker offers what's already on the phone.
+                // pages only. Without this the web view ignores the tap. An input that asks for the camera
+                // (Look's "take a photo") opens the camera, which writes into MIA's own cache: never the
+                // gallery, and cleared at the next look.
                 override fun onShowFileChooser(view: WebView, callback: ValueCallback<Array<Uri>>,
                                                params: FileChooserParams): Boolean {
                     if (!view.url.orEmpty().startsWith("http://127.0.0.1:$PORT/")) { callback.onReceiveValue(null); return true }
                     fileAsk?.onReceiveValue(null)  // one at a time: an earlier one that never came back is cancelled
                     fileAsk = callback
+                    captured = if (params.isCaptureEnabled) lookFile() else null
+                    val intent = captured?.let {
+                        Intent(MediaStore.ACTION_IMAGE_CAPTURE).putExtra(MediaStore.EXTRA_OUTPUT, it)
+                            .addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                    } ?: params.createIntent()
                     try {
-                        startActivityForResult(params.createIntent(), FILE_REQUEST)
+                        startActivityForResult(intent, FILE_REQUEST)
                     } catch (e: ActivityNotFoundException) {
                         fileAsk = null
+                        captured = null
                         callback.onReceiveValue(null)
                     }
                     return true
@@ -287,10 +298,25 @@ class MainActivity : Activity() {
         super.onActivityResult(requestCode, resultCode, data)
         // Android's own Trash dialog (the memory vault's Free Up Space) closed.
         if (requestCode == Gallery.TRASH_REQUEST) gallery.done(resultCode == RESULT_OK)
-        if (requestCode == FILE_REQUEST) {  // the picker closed: what was picked, or nothing
-            fileAsk?.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(resultCode, data))
+        if (requestCode == FILE_REQUEST) {  // the picker or the camera closed: what was picked or taken, or nothing
+            val photo = captured
+            fileAsk?.onReceiveValue(when {
+                photo != null -> if (resultCode == RESULT_OK) arrayOf(photo) else null
+                else -> WebChromeClient.FileChooserParams.parseResult(resultCode, data)
+            })
             fileAsk = null
+            captured = null
         }
+    }
+
+    // A fresh file for Look's camera in the app's own cache; the last look's photo is cleared first.
+    private fun lookFile(): Uri? = try {
+        val dir = File(cacheDir, "looks").apply { mkdirs() }
+        dir.listFiles()?.forEach { it.delete() }
+        FileProvider.getUriForFile(this, "$packageName.files", File(dir, "look-${System.currentTimeMillis()}.jpg"))
+    } catch (e: Exception) {
+        Log.w(TAG, "No file for the camera", e)
+        null
     }
 
     @Deprecated("Activity.onBackPressed is fine for this spike")

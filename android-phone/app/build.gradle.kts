@@ -87,6 +87,7 @@ dependencies {
     implementation("com.meta.wearable:mwdat-display:1.0.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")  // the sealed relay (DEC-0062)
+    implementation("androidx.core:core:1.16.0")  // FileProvider, for Look's camera (already pulled in by mwdat)
 }
 
 tasks.named("preBuild") { dependsOn(bundleMia) }
