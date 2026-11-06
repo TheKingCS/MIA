@@ -1464,3 +1464,60 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   improvements are marked observed, inferred or verified; a blueprint
   changes only when verified, through the lab.
 - Related: DEC-0075, DEC-0090
+
+### DEC-0094: Every process has an improvement loop
+- Status: APPROVED (Zac's requirement; the design in `docs/IMPROVEMENT_LOOPS.md`)
+- Proposed by: zac, 2026-11-06 ("We need to identify every situation and interaction and operation that should have monitoring and trigger improvements ... almost every process has the potential for some kind of self assessment and improvement loop and we should identify those and build it") · Approved by: zac, 2026-11-06 (the same message)
+- Decision: every situation where MIA can do better is a loop: measure (in code, from what she
+  already records), compare (a floor and her own trend), finding, work (a task, a lesson, or a finding
+  for the person through the gate), fix (only through the lab, the reviewers and Zac for code;
+  approval for data), and measure again. Loops never change MIA themselves. A person's loop history
+  stays in their folder; what reaches the repo is numbers and kinds, never their words. Every new
+  feature ships with its loop. The loops' code is protected from the lab.
+- Related: DEC-0049, DEC-0058, DEC-0072, DEC-0075
+
+### DEC-0095: The Interconnection Architecture is binding
+- Status: APPROVED (as pasted; sections from 3 on still to come)
+- Proposed by: zac and chatgpt, 2026-11-06 (H-0083 part 4) · Approved by: zac, 2026-11-06 (pasting it)
+- Decision: its eight principles bind integration work: facts in code and language in the model; one
+  Life State, many views; events as the bloodstream; links first-class; live capability awareness;
+  one mouth for proactivity; structural human authority; interconnection tested. A module contract
+  (`docs/MODULE_CONTRACT.md`) and its test follow (build plan step 7). Where code and the document
+  disagree, one is fixed in the same change.
+- Related: DEC-0013, DEC-0041, DEC-0052
+
+### DEC-0096: Good News Radio
+- Status: APPROVED (to plan; Zac's request) · design proposed in `docs/BUILD_PLAN.md` step 13
+- Proposed by: zac, 2026-11-06 ("AI reads a bunch of different news outlets every day. Gathers the good news ... hear it from different a I. Radio personalities like an energetic one. A late night talk show one ... through whatever. Mood you're in")
+- Decision: a daily audio episode of constructive, evidence-based news (science, medicine,
+  technology, renewable energy, environment, humanitarian and civic progress) from an allowlist of
+  credible sources fetched only when switched on (DEC-0053), each claim checked against a second
+  source and linked, nothing important hidden to keep it upbeat, voiced by a personality chosen by
+  mood (energetic morning, late-night talk show, calm, curious) in Kokoro voices, on the PC, phone
+  and glasses. Its loop: stories later found misleading, skips, ratings by personality.
+- Related: DEC-0051, DEC-0053, DEC-0094
+
+### DEC-0097: The Operating Journal: how I mean to operate, and how I do
+- Status: APPROVED (to plan; Zac's request) · design in `docs/BUILD_PLAN.md` step 11
+- Proposed by: zac, 2026-11-06 ("a template that is essentially a journal entry for how I want to operate, and how I do operate so that MIA can learn my goals as well as my actual routine")
+- Decision: a template, filled by talking to MIA or on a screen: values, priorities, the ideal day and
+  week, the rules he keeps; and a regular entry for how it went. MIA compares intent with what the
+  records show and shows the gap as a trend by area, never as a judgment. Personal: the person's own
+  folder (DEC-0001).
+- Related: DEC-0001, DEC-0054, DEC-0094
+
+### DEC-0098: Recreation belongs to the health cluster
+- Status: APPROVED (to plan; Zac's request) · step 12
+- Proposed by: zac, 2026-11-06 ("Playing sports for recreation should somehow be tracked in an activity log that may connect with workouts or as part of the health apps cluster")
+- Decision: sports and play are logged as activities (what, with whom, how long, how hard), by voice or
+  on screen, counting toward training load, skills and the Chronicle, in the person's own records.
+- Related: DEC-0055
+
+### DEC-0099: Maps and comms inspired by defense systems, open and civilian
+- Status: APPROVED (to research and plan; Zac's request) · step 14
+- Proposed by: zac, 2026-11-06 ("Maps should take inspiration from Palmer Luckys work with military mapping and communications technologies" and "Really dive into military level technology resources for MIA")
+- Decision: research first (Lattice's fused picture, ATAK-CIV and Cursor on Target, MGRS, offline
+  vector tiles, Meshtastic LoRa mesh), then offline maps with grid references and a shared picture of
+  places, people by consent and sensors, and later mesh messaging without cell service, using open
+  civilian standards only.
+- Related: DEC-0094, `docs/GLASSES_NAVIGATION_PLAN.md`
