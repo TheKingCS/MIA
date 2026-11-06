@@ -349,7 +349,8 @@ def test_delete_pack_then_reinstalling_same_filename_works(isolated_root, tmp_pa
     _build_zim(isolated_root / "demo.zim", title="Original Pack")
 
     manager = _make_manager()
-    manager.delete_pack("demo")
+    deleted, said = manager.delete_pack("demo")
+    assert deleted, said  # on Windows an Archive still open kept the file (fixed 2026-11-07)
 
     # A stale cached Archive/failed_stat entry would make this either
     # still list the deleted pack or wrongly reject the new one as a

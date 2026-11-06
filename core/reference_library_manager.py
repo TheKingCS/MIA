@@ -265,10 +265,22 @@ class ReferenceLibraryManager:
         self._archives.pop(pack_id, None)
         self._failed_stat.pop(pack_id, None)
 
-        try:
-            Path(pack.file_path).unlink()
-        except OSError as exc:
-            return False, f"Could not delete '{pack.title}': {exc}"
+        # libzim closes the file only when its Archive is collected, and Windows won't delete an open file:
+        # collect it now, and give a lingering handle a moment (deleting a pack failed now and then, 2026-11-07).
+        import gc
+        import time
+
+        for attempt in range(5):
+            gc.collect()
+            try:
+                Path(pack.file_path).unlink()
+                break
+            except PermissionError as exc:
+                if attempt == 4:
+                    return False, f"Could not delete '{pack.title}': {exc}"
+                time.sleep(0.1)
+            except OSError as exc:
+                return False, f"Could not delete '{pack.title}': {exc}"
 
         log.info("Deleted content pack '%s' (%s)", pack_id, pack.title)
         return True, f"Deleted '{pack.title}'."
