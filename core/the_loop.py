@@ -505,6 +505,35 @@ def plan_week(context, today: Optional[date] = None, ahead: int = 7) -> int:
     return count
 
 
+def predictions(context, today: Optional[date] = None, weeks: int = 4) -> Optional[dict]:
+    """How the week's planned work runs matched what happened (build plan step 4's loop.prediction): over the
+    last `weeks`, past days only, the days the Loop planned that were never cleared (missed) and the shifts
+    cleared on days it hadn't planned (extra). None before the Loop has planned anything."""
+    book = getattr(context, "loop", None)
+    dungeons = getattr(context, "dungeon", None)
+    if book is None or dungeons is None:
+        return None
+    today = today or date.today()
+    since = (today - timedelta(weeks=weeks)).isoformat()
+    planned = missed = extra = 0
+    for r in book.rhythms:
+        if r.kind != "work":
+            continue
+        made = [d for d in book.made.get(r.rhythm_id, []) if since <= d < today.isoformat()]
+        if not made:
+            continue
+        first = min(book.made.get(r.rhythm_id, []))
+        runs = [x for x in dungeons.runs if x.dungeon_id == r.ref and since <= x.date < today.isoformat()]
+        cleared = {x.date for x in runs if x.status == "cleared"}
+        planned += len(made)
+        missed += sum(1 for d in made if d not in cleared)
+        extra += sum(1 for d in cleared if d not in made and d >= first)
+    if not planned:
+        return None
+    return {"planned": planned, "missed": missed, "extra": extra,
+            "off": round((missed + extra) / (planned + extra), 2)}
+
+
 def paid_hours(r: Rhythm, d) -> float:
     """Pure logic. A work run's paid hours: time at work minus the unpaid
     break (9:30 PM – 6 AM with a 30-minute break pays 8), else the

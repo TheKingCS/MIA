@@ -70,8 +70,8 @@ first. Each is a step below.
    deleting something of the same kind (the same record when both name its id), corrects her once;
    `corrections.all` and one loop per area (money, kitchen, workouts, missions, calendar, maintenance, inbox,
    memories, creations, home, tasks). Not yet: edits made on the desktop's Qt screens (they don't go through
-   actions), Plaid re-categorizations learned as rules (waits on Zac's Plaid work), OCR field corrections, the
-   Loop's predictions against what happened.
+   actions), Plaid re-categorizations learned as rules (waits on Zac's Plaid work), OCR field corrections. Built
+   2026-11-07: `loop.prediction` (the Loop's planned work days against the days worked).
 5. ✅ **The weekly benchmarks on a schedule** (`core/benchmarks.py`, `tools/weekly_bench.py`, 2026-11-06): Night
    School runs the 112-question benchmark, the conversation corpus (glasses and phone) and the routing audit once a
    week on this PC; code grades each against the week before (route worse, newly flagged, newly slow) and keeps

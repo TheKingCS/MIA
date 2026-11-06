@@ -278,9 +278,6 @@
   "check:journal_reflection": {
    "status": "todo"
   },
-  "check:loop": {
-   "status": "todo"
-  },
   "check:maintenance_insight": {
    "status": "todo"
   },
@@ -535,9 +532,6 @@
    "status": "todo"
   },
   "store:lite_captures": {
-   "status": "todo"
-  },
-  "store:loop": {
    "status": "todo"
   },
   "store:maintenance": {

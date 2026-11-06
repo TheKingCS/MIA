@@ -426,6 +426,17 @@ def _maker(context) -> Optional[Reading]:
                    f"checks the first time, {failed} never passed" + (": " + "; ".join(p for p, _n in top) if top else ""))
 
 
+def _loop_prediction(context) -> Optional[Reading]:
+    from core.the_loop import predictions
+
+    found = predictions(context)
+    if found is None:
+        return None
+    return Reading(found["off"], found["planned"] + found["extra"],
+                   f"of {found['planned']} work days the Loop planned, {found['missed']} weren't worked; "
+                   f"{found['extra']} worked days it hadn't planned")
+
+
 def _unused_creations(context) -> Optional[Reading]:
     store = getattr(context, "creations", None)
     if store is None:
@@ -681,6 +692,8 @@ LOOPS: tuple[Loop, ...] = (
          floor=0.15, min_n=10, files=("core/glasses_voice.py",), covers=("flow:glasses",)),
     Loop("phone.link", "devices", "hours since their phone last reached this PC", "person", _phone_link,
          acts="watch", covers=("flow:phone",)),
+    Loop("loop.prediction", "corrections", "the Loop's planned work days that didn't match what happened, 4 weeks",
+         "person", _loop_prediction, floor=0.3, min_n=8, files=("core/the_loop.py",), covers=("store:loop", "check:loop")),
     Loop("gate.saturation", "proactivity", "days the daily limit of unprompted messages was hit, in 7", "person",
          _gate_saturation, floor=2, covers=("flow:gate",)),
     Loop("gate.unwelcome", "proactivity", "kinds of message on a break for being dismissed", "person", _gate_unwelcome,

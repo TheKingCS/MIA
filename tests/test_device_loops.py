@@ -43,3 +43,22 @@ def test_when_the_phone_last_reached_the_pc(tmp_path, monkeypatch):
     assert phone_link.last(path)["p1"] == "2026-11-06T12:10:00+00:00"
     later = datetime(2026, 11, 7, 0, 10, tzinfo=timezone.utc)
     assert phone_link.hours_since("p1", path, later) == 12.0 and phone_link.hours_since("p2", path, later) is None
+
+
+def test_the_loops_predictions_against_what_happened():
+    """Step 4: the work days the Loop planned, against the days actually worked."""
+    from datetime import date
+
+    from core.the_loop import predictions
+
+    today = date(2026, 11, 20)
+    r = SimpleNamespace(kind="work", rhythm_id="r1", ref="d1")
+    made = ["2026-11-02", "2026-11-03", "2026-11-04", "2026-11-09", "2026-11-10", "2026-11-11", "2026-11-21"]
+    runs = [SimpleNamespace(dungeon_id="d1", date=d, status="cleared") for d in
+            ("2026-11-02", "2026-11-03", "2026-11-09", "2026-11-10", "2026-11-11", "2026-11-12")]
+    runs.append(SimpleNamespace(dungeon_id="d1", date="2026-11-04", status="planned"))  # planned, never worked
+    person = SimpleNamespace(loop=SimpleNamespace(rhythms=[r], made={"r1": made}), dungeon=SimpleNamespace(runs=runs))
+    found = predictions(person, today)
+    assert found == {"planned": 6, "missed": 1, "extra": 1, "off": 0.29}  # the 21st is still ahead: not counted
+    assert predictions(SimpleNamespace(loop=SimpleNamespace(rhythms=[r], made={}), dungeon=SimpleNamespace(runs=runs)),
+                       today) is None  # nothing planned yet: nothing to judge
