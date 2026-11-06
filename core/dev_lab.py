@@ -232,16 +232,20 @@ def run_claude(task: str, cwd: Path, python: str) -> str:
         return (out.stdout or out.stderr or "").strip()[-2000:]
 
 
-def write(proposal_id: str, coder: Optional[Callable] = None) -> Proposal:
-    """Claude Code writes the change in the lab; the lab commits it."""
+def write(proposal_id: str, coder: Optional[Callable] = None, again: str = "") -> Proposal:
+    """Claude Code writes the change in the lab; the lab commits it. With `again` (what went wrong the first time,
+    e.g. the failing test's output), a written proposal gets one more try on top of the first."""
     p = get(proposal_id)
-    if p.status not in (DRAFTED, NOT_READY):
+    if p.status not in (DRAFTED, NOT_READY) + ((WRITTEN,) if again else ()):
         raise ValueError(f"That proposal is {p.status}.")
     lab = folder(p)
-    said = (coder or run_claude)(coder_task(p, _python()), lab, _python())
-    p.coder_said = str(said or "")[:2000]
+    task = coder_task(p, _python()) + (f"\n\nYour change is already in the files. {again}" if again else "")
+    said = (coder or run_claude)(task, lab, _python())
+    p.coder_said = (f"{p.coder_said}\n\nSecond try: " if again else "") + str(said or "")[:2000]
     _git("add", "-A", cwd=lab)
     if not _git("status", "--porcelain", cwd=lab):
+        if again and p.status == WRITTEN:
+            return _put(p)  # the second try changed nothing: the first stands
         p.status, p.note = NOT_READY, "The coder changed nothing."
         return _put(p)
     _git("commit", "-m", f"lab: {p.title}\n\n{p.problem}", cwd=lab, author=LAB_AUTHOR)

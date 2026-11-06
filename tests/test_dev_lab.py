@@ -126,3 +126,23 @@ def test_a_reverted_proposal_can_be_retried_on_the_running_copy(repo):
     p = lab.approve(p.proposal_id, suite=lambda cwd: {"summary": "", "failed": [], "finished": True})
     assert p.status == lab.MERGED and (repo / "core" / "thing.py").read_text() == "VALUE = 6\n"
 
+
+
+
+def test_a_second_try_goes_on_top_of_the_first(repo):
+    p = lab.create("Make VALUE 2", "VALUE should be 2", "Night School", "change core/thing.py")
+    p = lab.write(p.proposal_id, coder=lambda t, cwd, py: (Path(cwd) / "core" / "thing.py").write_text("VALUE = 3\n"))
+    seen = []
+
+    def again(task, cwd, python):
+        seen.append(task)
+        (Path(cwd) / "core" / "thing.py").write_text("VALUE = 2\n")
+        return "Fixed it."
+
+    p = lab.write(p.proposal_id, coder=again, again="It didn't pass its test yet: expected 2. Fix it.")
+    assert p.status == lab.WRITTEN and "expected 2" in seen[0] and p.coder_said.endswith("Second try: Fixed it.")
+    assert (lab.folder(p) / "core" / "thing.py").read_text() == "VALUE = 2\n"
+    p = lab.write(p.proposal_id, coder=lambda t, cwd, py: "I looked again.", again="Still failing.")
+    assert p.status == lab.WRITTEN  # a second try that changed nothing leaves the first standing
+    with pytest.raises(ValueError):
+        lab.write(p.proposal_id, coder=lambda t, cwd, py: "")  # without `again`, a written one isn't rewritten

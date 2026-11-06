@@ -319,20 +319,30 @@ def _default_ask(provider: str, prompt: str) -> str:
 
 # ------------------------------------------------------------------ a lesson
 
-def _one_test(lab_folder: Path, test_name: str) -> bool:
-    """True when the test file passes in that folder."""
+def _test_run(lab_folder: Path, test_name: str) -> tuple[bool, str]:
+    """Whether the test file passes in that folder, and what pytest said."""
     from core.dev_lab import _python
 
     out = subprocess.run([_python(), "-m", "pytest", "-q", "-p", "no:cacheprovider", test_name], cwd=str(lab_folder),
                          capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=600,
                          creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
-    return out.returncode == 0
+    return out.returncode == 0, (out.stdout or "") + (out.stderr or "")
+
+
+def _one_test(lab_folder: Path, test_name: str) -> bool:
+    """True when the test file passes in that folder."""
+    return _test_run(lab_folder, test_name)[0]
 
 
 def lesson(ex: dict, *, lab=None, coder_ask=None, suite=None, one_test=_one_test, notes: list[str] = (),
-           diff: Optional[Callable[[str], str]] = None) -> dict:
+           diff: Optional[Callable[[str], str]] = None,
+           test_run: Optional[Callable[[Path, str], tuple[bool, str]]] = None) -> dict:
     """One exercise: the test is shown failing, she works it, code grades it. Returns the lesson's record
-    (with her change under "_diff", for her teacher, read before the lab throws practice away)."""
+    (with her change under "_diff", for her teacher, read before the lab throws practice away). When her first
+    try doesn't pass its own test, she gets one more with what pytest said (as anyone would read the error and
+    fix it); the lab's full suite grades whatever she ends with."""
+    if test_run is None and one_test is _one_test:
+        test_run = _test_run
     if lab is None:
         from core import dev_lab as lab
     if diff is None:
@@ -366,6 +376,16 @@ def lesson(ex: dict, *, lab=None, coder_ask=None, suite=None, one_test=_one_test
         lab.reject(p.proposal_id, "night school: nothing changed")
         out["summary"] = p.note or "she changed nothing"
         return out
+    if test_run is not None:
+        ok, said = test_run(where, ex["test_name"])
+        if not ok:
+            out["retried"] = True
+            try:
+                p = lab.write(p.proposal_id, coder=coder(coder_ask),
+                              again="It didn't pass its test yet. What pytest said:\n" + said[-1500:] + "\nFix it.")
+                out["said"] = (p.coder_said or "")[:600]
+            except Exception as problem:  # the first try stands
+                out["retry_error"] = str(problem)[:200]
     p = lab.check(p.proposal_id, suite=suite)
     try:
         out["_diff"] = diff(p.proposal_id)[:20_000]

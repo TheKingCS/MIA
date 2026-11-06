@@ -191,3 +191,22 @@ def test_a_test_run_never_starts_a_real_night(monkeypatch):
     monkeypatch.setattr(ns, "due", lambda now, cfg=None: True)
     monkeypatch.setattr(ns, "launch", lambda: pytest.fail("a test started a real night"))
     assert ns.maybe_start(datetime(2026, 11, 7, 2, 0)) is False
+
+
+
+def test_a_first_try_that_fails_its_test_gets_one_more_with_what_pytest_said(tmp_path):
+    lab = FakeLab(tmp_path)
+    asked = []
+
+    def write(pid, coder=None, again=""):
+        asked.append(again)
+        return SimpleNamespace(proposal_id=pid, status="written", note="", coder_said="second" if again else "first")
+
+    lab.write = write
+    runs = iter([(False, "E   AttributeError: type object 'datetime' has no attribute 'timedelta'"), (True, "")])
+    done = ns.lesson(exercise(), lab=lab, one_test=lambda w, n: False, test_run=lambda w, n: next(runs))
+    assert done["retried"] and done["outcome"] == "pass" and done["said"] == "second"
+    assert asked[0] == "" and "has no attribute 'timedelta'" in asked[1] and asked[1].endswith("Fix it.")
+    asked.clear()
+    passed_first = ns.lesson(exercise(), lab=lab, one_test=lambda w, n: False, test_run=lambda w, n: (True, ""))
+    assert not passed_first.get("retried") and asked == [""]  # passing the first time: no second try
