@@ -343,7 +343,10 @@ def _ask(provider: str, prompt: str) -> str:
     if out.returncode != 0 and (not out.stdout.strip() or outcome(said) == "limit"):
         # A usage limit printed as output is not a review (DEC-0079): it's the provider resting.
         raise ReviewError(f"{provider} didn't answer: {said[-300:]}")
-    return out.stdout or out.stderr
+    answer = out.stdout or out.stderr
+    if provider == "copilot":  # its CLI's status lines ("● Copilot Fusion selected ...", "● Read ...") aren't the answer
+        answer = "\n".join(line for line in answer.splitlines() if not line.lstrip().startswith("●")).strip()
+    return answer
 
 
 def ask_provider(provider: str, prompt: str, purpose: str = "review", task: str = "") -> str:

@@ -239,6 +239,29 @@
     return bar;
   }
 
+  // MIA's improvement loops (core/loops.py, DEC-0094): every one, its latest number, its trend, its state.
+  function loopsPanel(p) {
+    const list = p.loops || [];
+    if (!list.length) return "";
+    const mark = { ok: "ok", below: "bad", slid: "bad", thin: "", none: "", error: "bad" };
+    const spark = (vals) => {
+      if (vals.length < 2) return "";
+      const top = Math.max(...vals), low = Math.min(...vals), span = top - low || 1;
+      return el("span", { class: "dev-spark" }, vals.map((v) => { const b = el("i", {}); b.style.height = (20 + 80 * (v - low) / span) + "%"; return b; }));
+    };
+    return el("section", { class: "dev-col dev-chronicles" }, el("h2", {}, "Her loops",
+      el("span", { class: "n" }, list.filter((l) => l.state === "below" || l.state === "slid").length + " need work")),
+      el("p", {}, "Each measures something about her, every day, against a floor and against its own usual. Below its floor " +
+        "or sliding, it opens a task; it never changes her by itself. These are the PC's; your own use is measured in MIA's " +
+        "daily check and stays in your folder."),
+      p.writable ? el("button", { class: "dev-chip", type: "button", onclick: () => post("api/loops", {}) }, "Measure now") : "",
+      el("ul", { class: "dev-agents" }, list.map((l) => el("li", {},
+        el("span", {}, l.id + " · " + l.what),
+        el("span", { class: "dev-chip " + (mark[l.state] || "") }, l.state === "none" ? "not yet" : l.state),
+        el("span", { class: "sub" }, (l.value == null ? "" : l.value + (l.unit || "") + " · ") + (l.why || l.detail || "") +
+          (l.floor != null ? " · floor " + l.floor + (l.unit || "") : "") + (l.task ? " · " + l.task : ""), spark(l.trend))))));
+  }
+
   function architecture(p) {
     const a = p.architecture || {};
     if (!a.layers) return "";
@@ -357,9 +380,13 @@
     const panel = $("panel");
     const kept = document.querySelector(".dev-detail");
     const scrolled = kept ? kept.scrollTop : 0;
+    // Zac, 2026-11-06 (to the council): the page kept scrolling itself to the top. Replacing the panel empties
+    // the page for a moment, so the browser jumped up; keep where the page was, and put it back after.
+    const pageY = window.scrollY;
+    if (panel.firstChild) panel.style.minHeight = panel.offsetHeight + "px";
     const said = document.activeElement && document.activeElement.classList.contains("dev-say") ? document.activeElement : null;
     const caret = said ? [said.selectionStart, said.selectionEnd] : null;
-    if (!p.available) { panel.replaceChildren(el("p", { class: "empty" }, "The development work lives on the computer with MIA's code.")); return; }
+    if (!p.available) { panel.style.minHeight = ""; panel.replaceChildren(el("p", { class: "empty" }, "The development work lives on the computer with MIA's code.")); return; }
     const all = Object.values(p.board).flat();
     const chosen = all.find((t) => t.id === open);
     const latest = p.latest;
@@ -387,6 +414,7 @@
               el("span", { class: "sub" }, list.slice(-3).map((l) => l.lesson).join(" · ")))))] : "")),
       el("div", { class: "dev-grid2" }, missions(p), voices(p)),
       el("div", { class: "dev-grid2" }, independence(p), knowledge(p)),
+      loopsPanel(p),
       architecture(p),
       chronicles(p),
       el("section", { class: "dev-col dev-history" }, el("h2", {}, "Everything that happened"), search,
@@ -398,7 +426,9 @@
     if (chat && (chatAtBottom || !chatSeen)) chat.scrollTop = chat.scrollHeight;
     chatSeen = true;
     const box = document.querySelector(".dev-say");
-    if (box && caret) { box.focus(); box.setSelectionRange(caret[0], caret[1]); }
+    if (box && caret) { box.focus({ preventScroll: true }); box.setSelectionRange(caret[0], caret[1]); }
+    panel.style.minHeight = "";
+    window.scrollTo(0, pageY);
     if (chat) chat.addEventListener("scroll", () => { chatAtBottom = chat.scrollHeight - chat.scrollTop - chat.clientHeight < 40; });
   }
 

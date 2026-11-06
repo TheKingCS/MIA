@@ -85,13 +85,17 @@ _REMEMBER_YES = re.compile(r"^\s*(?:yes|yeah|yep|sure|ok(?:ay)?)?[,.!\s]*(?:reme
 
 _EMAIL = re.compile(r"[\w.+-]+@[\w-]+\.[\w.]+")
 _LONG_NUMBER = re.compile(r"\d[\d\s-]{5,}\d")
-_SECRET = re.compile(r"\b(password|passcode|passphrase|pin|code)\b(\s*(?:is|:|=)?\s*)\S+", re.IGNORECASE)
+# After "password" anything is hidden; after "pin" or "code" only something with a digit in it ("the door code is
+# 4821"), so "code review" and "pin the issue" stay readable (the council's chat is full of them, 2026-11-06).
+_SECRET = re.compile(r"\b(password|passcode|passphrase)\b(\s*(?:is|:|=)?\s*)\S+"
+                     r"|\b(pin|code)\b(\s*(?:is|:|=)?\s*)(?=\S*\d)\S+", re.IGNORECASE)
 
 
 def redact(text: str, limit: int = 300) -> str:
     """Pure logic. What a log may keep of someone's words: no emails, no
     long numbers (cards, accounts, phones), nothing after "password"."""
-    out = _SECRET.sub(lambda m: m.group(1) + m.group(2) + "[hidden]", str(text or ""))
+    out = _SECRET.sub(lambda m: (m.group(1) or m.group(3)) + (m.group(2) or m.group(4) or "") + "[hidden]",
+                      str(text or ""))
     out = _EMAIL.sub("[email]", out)
     out = _LONG_NUMBER.sub("[number]", out)
     out = " ".join(out.split())

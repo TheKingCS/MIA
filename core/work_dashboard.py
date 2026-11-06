@@ -87,6 +87,16 @@ def _missions(events: list[dict]) -> list[dict]:
     return out
 
 
+def _loops() -> list[dict]:
+    """The device's improvement loops (core/loops.py): latest reading, trend, state, the task each opened."""
+    from core import loops
+
+    try:
+        return loops.summary(None, "device")
+    except OSError:
+        return []
+
+
 _MAP: dict = {}  # the architecture map, rebuilt every ten minutes (it reads the whole repo: ~2 s)
 
 
@@ -291,6 +301,7 @@ def page(context, query: str = "", tasks_dir=tasks_mod.TASKS_DIR, log=activity.A
         "members": _members(),
         "independence": _independence(),
         "architecture": _architecture(),
+        "loops": _loops(),
         "available": True,
         "summary": {s: sum(1 for r in rows if r["status"] == s) for s in ("ready", "claimed", "review", "blocked", "done")},
         "queue": [r for r in open_rows if r["status"] == "review"],

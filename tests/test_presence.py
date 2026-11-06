@@ -66,7 +66,9 @@ def test_every_turn_knows_their_world(life):
     goal = w.intents.add_intent("Time back on the homestead")
     w.intents.set_primary(goal.intent_id)
     w.intents.update_intent(goal.intent_id, reason="So the days are mine")
-    w.obligations.add("Licence renewal", kind="licence", due_date=(date.today() + timedelta(days=2)).isoformat())
+    # business_days=False: two days from a Thursday or Friday is a weekend, which would move to Monday
+    w.obligations.add("Licence renewal", kind="licence", due_date=(date.today() + timedelta(days=2)).isoformat(),
+                      business_days=False)
     block = context_lines(w)
     assert "- Working toward: Time back on the homestead (why, in their words: So the days are mine)" in block
     assert "Licence renewal (Due in 2 days" in block

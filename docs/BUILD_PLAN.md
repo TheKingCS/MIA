@@ -46,7 +46,7 @@ first. Each is a step below.
 
 ### Phase A: Close the loops (DEC-0094; `docs/IMPROVEMENT_LOOPS.md`)
 
-1. 🔨 **The loop registry and runner** (`core/loops.py`): loops declared with their signal, floor, cadence and
+1. ✅ **The loop registry and runner** (`core/loops.py`): loops declared with their signal, floor, cadence and
    scope; measured into a history (the PC's in `data/dev/`, a person's in their folder); judged against the floor
    and their own trend; a loop below its floor opens one task (`source: loop:<id>`, numbers only); the dev window's
    **Her loops** panel; `tools.work loops` to run them now; the app's daily check runs them.

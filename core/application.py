@@ -715,6 +715,7 @@ class MIAApplication:
             ("loop", self._check_loop),
             ("fix_report", self._check_fix_report),
             ("workflows", self._check_workflows),
+            ("loops", self._check_loops),
         ]
         # 2026-09-27, Cognitive Extension slice C: checks no longer notify
         # directly. Each one offers what it would say (_offer()), and the
@@ -735,6 +736,14 @@ class MIAApplication:
         elif self.context.notifications is not None:
             for c in offers:
                 self.context.notifications.notify(title=c.title, message=c.message, level=c.level, source=c.source)
+
+    def _check_loops(self, now: datetime, today_iso: str) -> None:
+        """MIA's improvement loops (core/loops.py, DEC-0094): the person's use and the PC's, measured once a
+        day; a loop below its floor opens a task, and what's for the person joins this tick's offers."""
+        from core import loops
+
+        for scope in ("person", "device"):
+            self._offers.extend(loops.run(self.context, scope))
 
     def _check_workflows(self, now: datetime, today_iso: str) -> None:
         """Workflows MIA made whose trigger has come round (core/workflows.py, DEC-0092): run them;

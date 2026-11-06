@@ -90,6 +90,8 @@ def main(argv=None) -> int:
     lr = sub.add_parser("learn", help="MIA writes what a finished task taught (work/knowledge, DEC-0073)")
     lr.add_argument("ids", nargs="*", help="task ids; none means every finished task not yet written up")
     sub.add_parser("knowledge", help="what the team has learned, newest last")
+    lp = sub.add_parser("loops", help="MIA's improvement loops on this PC (DEC-0094): list, or --run now")
+    lp.add_argument("--run", action="store_true")
     ms = sub.add_parser("mission", help="the council's missions (DEC-0076): new, start, pause, done, list")
     ms.add_argument("act", choices=["new", "start", "pause", "done", "list"])
     ms.add_argument("what", nargs="?", default="", help="the goal (new) or the mission's id")
@@ -206,6 +208,16 @@ def main(argv=None) -> int:
                     return 0
                 if said.startswith(("hold", "idle")) or "usage limit" in said:
                     time.sleep(300)  # nothing to do now: look again in five minutes
+        if args.command == "loops":
+            from core import loops
+
+            if args.run:
+                loops.run(None, "device", force=True)
+            for l in loops.summary(None, "device"):
+                value = "—" if l["value"] is None else f"{l['value']:g}{l['unit']}"
+                print(f"{l['id']:22} {l['state']:6} {value:>8}  {l['why'] or l['detail']}"
+                      + (f"  -> {l['task']}" if l["task"] else ""))
+            return 0
         if args.command == "knowledge":
             from core import dev_knowledge
 
