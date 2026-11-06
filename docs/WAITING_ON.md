@@ -109,4 +109,5 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       meals, upkeep tasks and people (`corrections.screen_edit`); other Qt screens can join it the same way.
 - [ ] Step 8: more cross-domain plans (the benchmark's G questions); calibration against outcomes.
 - [ ] The Chronicle's yearly edition, from the kept seasons (step 17).
-- [ ] The Chronicles' panels: a bigger image model and characters that stay the same across panels (T-0036).
+- [ ] The Chronicles' panels: characters that stay the same across panels (T-0036). The bigger model is in
+      (2026-11-06): SDXL-Turbo, 0.7 s a panel; samples in `C:\Users\zacrh\DevTools\imagegen\out\sdxl_*.png`.
