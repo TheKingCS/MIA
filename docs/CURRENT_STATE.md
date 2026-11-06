@@ -5,7 +5,7 @@
 session. Last updated: 2026-11-06 (loop coverage, DEC-0054 built, recall plans), by claude.*
 
 **2026-11-06 (morning, Zac asleep), Claude on the PC, continuing the build plan.** Every process now has a
-loop or a reason: coverage 228 of 257 (6 still to do, each with its why in `work/loop_coverage.json`). New
+loop or a reason: coverage 229 of 257 (3 still to do, all waiting on the Plaid work; 25 declined with a reason). New
 loops: which daily check is dismissed most, recurring missions missed, apps and pages that broke (a desktop
 app that breaks on opening is now noted instead of taking the window down), her lab proposals that land,
 photos still only on the phone (`vault.coverage`), offers to keep a note turned down. **DEC-0054 is built
