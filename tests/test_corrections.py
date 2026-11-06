@@ -130,3 +130,8 @@ def test_an_edit_on_a_desktop_screen_corrects_her_tool(tmp_path):
         assert corrections.screen_edit(who, "person.edit", "p1") is None
     assert corrections.screen_edit(who, "person.delete", "p1")["area"] == "people"
     assert corrections.screen_edit(None, "recipe.edit", "r1") is None  # no person: nothing kept, nothing raised
+
+
+
+def test_a_workout_she_logged_deleted_on_the_screen():
+    assert corrections._same_thing("log_workout", "workout")

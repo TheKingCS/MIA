@@ -73,6 +73,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from core.corrections import screen_edit
 from core.workout_manager import Exercise, WorkoutSession
 from gui.add_edit_exercise_dialog import AddEditExerciseDialog
 from gui.list_widget_helpers import add_empty_state_item, selected_item_data
@@ -666,6 +667,7 @@ class WorkoutModule(ModuleBase):
             QMessageBox.information(None, "No Session Selected", "Select a session to delete.")
             return
         self.context.workout.delete_session(session_id)
+        screen_edit(self.context, "workout.delete", session_id)  # a workout she logged, taken out (step 4)
         self._refresh_history_list()
 
     # ------------------------------------------------------------------
