@@ -454,6 +454,20 @@ def _inbox_reading(context) -> Optional[Reading]:
                                          if by else ""))
 
 
+def _projections(context) -> Optional[Reading]:
+    if getattr(context, "failures", None) is None:
+        return None
+    from core import calibration
+
+    calibration.check_due(context)  # what's come due, checked against what happened
+    checked = [p for p in calibration.projections(context) if p.get("outcome")]
+    if not checked:
+        return None
+    right = sum(1 for p in checked if p["outcome"] == "right")
+    return Reading(round(right / len(checked), 2), len(checked), f"{right} of {len(checked)} projected dates came true "
+                   f"(within a month)")
+
+
 def _unused_creations(context) -> Optional[Reading]:
     store = getattr(context, "creations", None)
     if store is None:
@@ -693,6 +707,9 @@ LOOPS: tuple[Loop, ...] = (
     Loop("answers.calibration", "answers", "how much better her sure answers land than the rest (👍 share)", "person",
          _calibration, better="higher", floor=0, min_n=5, files=("core/question_plans.py",),
          covers=("store:ratings",)),
+    Loop("answers.projections", "answers", "projected dates (debt-free, freedom) that came true when they came", "person",
+         _projections, better="higher", floor=0.5, min_n=3, files=("core/question_plans.py", "core/debt_math.py",
+                                                                  "core/freedom.py"), covers=("store:budget",)),
     Loop("memory.quality", "answers", "memories corrected within 14 days of being kept", "person", _memory_quality,
          floor=0.15, min_n=5, files=("core/user_memory_manager.py",), covers=("store:user_memories", "module:memories")),
     # The Operating Journal (DEC-0097): theirs to see, never a task or a nudge (DEC-0014)

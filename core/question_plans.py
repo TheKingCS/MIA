@@ -190,6 +190,10 @@ def _debts(context, sheet, prompt, today):
         sheet.add(MISSING, "Minimum payments missing for: " + ", ".join(d.name for d in ranked if not d.minimum_payment)
                   + ". The payoff dates assume nothing is paid on those.", "Money")
     now = simulate(ranked, 0, today)
+    if now.debt_free:  # checked when it comes (core/calibration.py, step 8)
+        from core.calibration import project
+
+        project(context, "debt_free", now.debt_free, "debts")
     lines = [f"{r.name} paid off {r.paid_off}" if r.paid_off else f"{r.name} never, at its minimum" for r in now.debts]
     sheet.add(CALCULATION, f"At the minimums ({_money(context, now.monthly)} a month), in the payoff order: "
                            + "; ".join(lines) + (f". Debt-free {now.debt_free}" if now.debt_free else "")
@@ -328,6 +332,9 @@ def _afford(context, sheet, prompt, today):
     if now is None or not now.get("date"):
         sheet.add(MISSING, (now or {}).get("why_no_date") or "No freedom date to compare with.", "Freedom")
         return
+    from core.calibration import project
+
+    project(context, "freedom", now["date"], "afford")  # checked when it comes (step 8)
     sheet.add(CALCULATION, f"Freedom date as things stand: {now['date']} ({_money(context, now['left'] or 0)} to go, "
                            f"saving about {_money(context, inputs.pace)} a month).", "Freedom")
     if not amount:

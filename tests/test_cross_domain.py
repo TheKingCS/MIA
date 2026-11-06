@@ -106,3 +106,28 @@ def test_the_new_cross_domain_plans_gather(life):
         assert sheet.facts, name
     resources = qp.gather(life, qp.PLAN_BY_NAME["resources"], "", TODAY)
     assert any("not market research" in f.text for f in resources.facts)
+
+
+def test_projected_dates_are_checked_when_they_come(tmp_path):
+    from datetime import datetime
+
+    person = SimpleNamespace(failures=SimpleNamespace(data_dir=tmp_path), ratings=None)
+    calibration.project(person, "debt_free", "2026-12")
+    calibration.project(person, "debt_free", "2026-12")  # once per kind and date
+    calibration.project(person, "freedom", "2027-03-01")
+    assert len(calibration.projections(person)) == 2
+    assert calibration.check_due(person, datetime(2027, 1, 10), judge=lambda kind: True) == 0  # a month's grace
+    assert calibration.check_due(person, datetime(2027, 2, 1), judge=lambda kind: kind == "freedom") == 1
+    [debt, freedom] = calibration.projections(person)
+    assert debt["outcome"] == "wrong" and freedom["outcome"] is None
+    calibration.check_due(person, datetime(2027, 5, 1), judge=lambda kind: True)
+    reading = BY_ID["answers.projections"].measure(person)
+    assert (reading.value, reading.n) == (0.5, 2)
+
+
+def test_the_debt_plan_keeps_its_projection(life, tmp_path):
+    life.failures = SimpleNamespace(data_dir=tmp_path)
+    life.budget.add_debt(name="Card", balance=3000, interest_rate=20, minimum_payment=150)
+    qp.gather(life, qp.PLAN_BY_NAME["debts"], "When will I be debt free?", TODAY)
+    [kept] = calibration.projections(life)
+    assert kept["kind"] == "debt_free" and kept["when"].startswith("20") and kept["outcome"] is None

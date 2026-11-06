@@ -97,8 +97,9 @@ first. Each is a step below.
    out twice, with and without the purchase, once or monthly) and `slipped` (history, deadlines, open loops, what
    she noticed); every plan answer is marked sure, likely or unsure from its sheet, told to the model, and noted
    (`core/calibration.py`) so `answers.calibration` checks sure answers are rated up more than the rest. Next in
-   it: more cross-domain plans (from the benchmark's G questions), and calibration against outcomes (a projected
-   date checked when it comes).
+   it, built 2026-11-07: four more cross-domain plans (projects, habits, priorities, resources: 11 benchmark
+   questions moved from the model alone to a plan) and calibration against outcomes (projected debt-free and
+   freedom dates kept and checked a month after they come, `answers.projections`).
 
 ### Phase C: The gaps in her intelligence
 
