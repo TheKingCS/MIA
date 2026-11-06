@@ -172,6 +172,18 @@ def pre_turn(context: AppContext, conversation: Conversation, prompt: str) -> Pr
             escalate(context, person_id(context))
         return result
 
+    # "Keep it" after MIA offered to keep a promise, decision, idea or goal set aside (DEC-0054).
+    from core.life_notes import answer_offer
+
+    try:
+        kept = answer_offer(context, conversation, prompt)
+    except Exception:
+        log.exception("Couldn't keep the note")
+        kept = None
+    if kept is not None:
+        result.fixed_reply = kept
+        return result
+
     # Where MIA stumbled (core/failure_log.py): what these words say about her
     # last answer; a report or a taught phrase is answered right here.
     from core.failure_log import observe_prompt

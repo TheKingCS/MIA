@@ -275,6 +275,21 @@ def _vault_coverage(context) -> Optional[Reading]:
                    f"phone" + (f"; the vault is {state.replace('_', ' ')}" if state else ""))
 
 
+def _notes_offers(context) -> Optional[Reading]:
+    """Her offers to keep a promise, decision, idea or goal set aside (core/life_notes.py) turned down, in 30 days."""
+    store = getattr(context, "life_notes", None)
+    if store is None:
+        return None
+    cut = (datetime.now() - timedelta(days=30)).isoformat(timespec="seconds")
+    made = [o for o in store.offers if o.get("at", "") >= cut]
+    if not made:
+        return None
+    turned = [o for o in made if not o.get("kept")]
+    kinds = sorted({o["kind"] for o in turned})
+    return Reading(round(len(turned) / len(made), 2), len(made), f"{len(turned)} of {len(made)} turned down"
+                   + (f" ({', '.join(k.replace('_', ' ') for k in kinds)})" if kinds else ""))
+
+
 def _gate_expired(context) -> Optional[Reading]:
     entries = _gate_entries(context)
     if entries is None:
@@ -876,6 +891,8 @@ LOOPS: tuple[Loop, ...] = (
          _gate_expired, acts="watch", min_n=3, covers=("flow:gate",)),
     Loop("screens.broken", "devices", "desktop apps and web pages that broke, in 7 days", "person", _screens_broken,
          floor=0, files=("gui/main_window.py", "web/shell.js"), covers=_apps()),
+    Loop("notes.offers", "proactivity", "offers to keep what they said they'd do, decided or set aside, turned down",
+         "person", _notes_offers, floor=0.6, min_n=10, files=("core/life_notes.py",), covers=("store:life_notes",)),
     Loop("checks.dismissed", "proactivity", "the daily check whose messages are dismissed most, in 30 days", "person",
          _checks_dismissed, floor=0.6, min_n=10, files=("core/application.py",),
          covers=tuple(sorted({f"check:{c}" for c in CHECK_TOPICS.values()})) + ("store:insights",)),

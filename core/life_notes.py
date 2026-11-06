@@ -1,0 +1,227 @@
+"""
+core.life_notes
+=================
+
+Remembering what you say you'll do, decide and want to try (DEC-0054,
+T-0018). Four kinds of note MIA picks up from normal conversation, never
+a form, each shown back for a yes before it's kept (Propose → Approve):
+
+- a **commitment** ("I promised Sam I'd fix his gate by Saturday"): who,
+  what, by when;
+- a **decision** ("we're going with the metal roof because it lasts"):
+  what, and why;
+- an **idea** ("I should try selling honey"): not acted on yet;
+- a **goal set aside** ("I'm giving up on the half marathon, my knee
+  can't take it"): what, and the reason in their words.
+
+Spotted in code (`noticed()`): first-person statements only, never a
+question, never in a private journal or an off-the-record turn. After
+MIA's reply she asks once ("Want me to keep that as a promise to Sam?
+Say “keep it”."); "keep it" or "yes" next keeps it, anything else lets
+it go. Each note is the person's own (a personal store,
+`life_notes.json`), with its date and the conversation it came from,
+and can be marked done or forgotten. They answer "what did I promise?",
+"what did we decide?", "what ideas haven't I tried?", "what goals have
+I dropped and why?" (the `recall` question plan).
+
+The offers themselves are counted, kind and kept-or-not only, never the
+words, so the `notes.offers` loop can tell when the spotting asks about
+things people don't want kept.
+"""
+
+from __future__ import annotations
+
+import json
+import re
+import uuid
+from datetime import datetime
+from pathlib import Path
+from typing import Optional
+
+from core.atomic_write import atomic_write_text
+
+FILE_NAME = "life_notes.json"
+KINDS = ("commitment", "decision", "idea", "dropped_goal")
+SAID = {"commitment": "a promise", "decision": "a decision", "idea": "an idea", "dropped_goal": "a goal set aside"}
+OPEN, DONE = "open", "done"
+_MAX_OFFERS = 500
+
+_END = r"(?=[.!;,]|$|\s+and (?:then )?i\b)"
+_WHO = r"(?P<who>[A-Z][a-z]+|my [a-z]+|him|her|them)"
+_BY = r"(?:\s+by\s+(?P<by>tomorrow|tonight|today|next week|next month|the weekend|this weekend|(?:next |this )?" \
+      r"(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)|the \d{1,2}(?:st|nd|rd|th)?))?"
+_WHY = r"(?:,?\s+(?:because|since|as|so)\s+(?P<why>[^.!?;]+))?"
+_PATTERNS = (
+    ("commitment", re.compile(r"\bi (?:promised|told) " + _WHO + r" (?:that )?i(?:'d| would| will|'ll) "
+                              r"(?P<what>[^.!?;]+?)" + _BY + _END, re.IGNORECASE)),
+    ("commitment", re.compile(r"\bi promised (?:to )?(?P<what>[^.!?;]+?)" + _BY + _END, re.IGNORECASE)),
+    ("commitment", re.compile(r"\bi(?:'ll| will) (?P<what>[^.!?;]+?) for " + _WHO + r"(?:\s+by\s+(?P<by>[a-z0-9 ]+?))"
+                              + _END, re.IGNORECASE)),
+    ("dropped_goal", re.compile(r"\bi(?:'m| am| have|'ve)? (?:giving up on|gave up on|given up on|not going to pursue|"
+                                r"no longer pursuing|abandoning|abandoned) "
+                                r"(?P<what>(?:the |my |on )?[^.!?;,]+?)" + _WHY + _END, re.IGNORECASE)),
+    ("decision", re.compile(r"\b(?:we(?:'re| are) going with|(?:we|i)(?:'re| are|'m| am) going to go with|"
+                            r"(?:we|i)(?:'ll| will) go with|let'?s go with) (?P<what>[^.!?;,]+?)" + _WHY + _END,
+                            re.IGNORECASE)),
+    ("decision", re.compile(r"\b(?:we|i)(?:'ve| have)? decided (?:to |on |that |against )?(?P<what>[^.!?;,]+?)" + _WHY
+                            + _END, re.IGNORECASE)),
+    ("idea", re.compile(r"\bi should (?:really )?(?:try|look into|think about|get into|start(?= \w+ing\b)) (?P<what>[^.!?;,]+?)" + _END,
+                        re.IGNORECASE)),
+    ("idea", re.compile(r"\b(?:it would be|it'd be) (?:cool|nice|fun|great|smart) to (?P<what>[^.!?;,]+?)" + _END,
+                        re.IGNORECASE)),
+    ("idea", re.compile(r"\bmaybe i (?:could|should|'ll|will) (?:try |start )?(?P<what>[^.!?;,]+?) (?:some ?day|one day|"
+                        r"someday)" + _END, re.IGNORECASE)),
+)
+_QUESTION = re.compile(r"^\s*(?:should|could|would|can|do|does|did|is|are|was|what|why|how|when|where|who|which)\b",
+                       re.IGNORECASE)
+_KEEP = re.compile(r"^\s*(?:(?:yes|yeah|yep|sure|ok(?:ay)?|please)[,.!\s]*)?(?:keep (?:it|that)|yes|yeah|yep|please do|"
+                   r"sure)?\s*(?:please)?[.!]*\s*$", re.IGNORECASE)
+
+
+def _clean(text: str) -> str:
+    return " ".join(str(text or "").split()).strip(" ,.")
+
+
+def noticed(text: str) -> Optional[dict]:
+    """Pure logic. The note someone's words carry, or None: {"kind", "what", "who", "by", "why"}."""
+    said = _clean(text)
+    if not said or said.endswith("?") or _QUESTION.match(said):
+        return None
+    for kind, pattern in _PATTERNS:
+        m = pattern.search(said)
+        if m is None:
+            continue
+        parts = m.groupdict()
+        what = _clean(parts.get("what"))
+        if len(what) < 3 or len(what.split()) > 16:
+            continue
+        return {"kind": kind, "what": what[:160], "who": _clean(parts.get("who"))[:40],
+                "by": _clean(parts.get("by"))[:30], "why": _clean(parts.get("why"))[:200]}
+    return None
+
+
+def describe(note: dict) -> str:
+    """Pure logic. A note in a line: "a promise to Sam: fix his gate (by Saturday)"."""
+    kind = note.get("kind", "")
+    head = SAID.get(kind, "a note") + (f" to {note['who']}" if kind == "commitment" and note.get("who") else "")
+    tail = (f" (by {note['by']})" if note.get("by") else "") + (f", because {note['why']}" if note.get("why") else "")
+    return f"{head}: {note.get('what', '')}{tail}"
+
+
+def offer_text(note: dict) -> str:
+    kind = note.get("kind", "")
+    head = SAID.get(kind, "a note") + (f" to {note['who']}" if kind == "commitment" and note.get("who") else "")
+    return f"(Want me to keep that as {head}? Say “keep it”.)"
+
+
+class LifeNotes:
+    """One person's commitments, decisions, ideas and goals set aside (context.life_notes)."""
+
+    def __init__(self, context=None, data_dir: Optional[Path] = None) -> None:
+        self.context = context
+        self.data_dir = Path(data_dir) if data_dir is not None else Path(__file__).resolve().parent.parent / "data"
+        self._file = self.data_dir / FILE_NAME
+        self.notes: list[dict] = []
+        self.offers: list[dict] = []
+        self._load()
+
+    def _load(self) -> None:
+        try:
+            data = json.loads(self._file.read_text(encoding="utf-8"))
+            self.notes, self.offers = list(data.get("notes") or []), list(data.get("offers") or [])
+        except (OSError, ValueError, AttributeError):
+            self.notes, self.offers = [], []
+
+    def _save(self) -> None:
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(self._file, json.dumps({"notes": self.notes, "offers": self.offers[-_MAX_OFFERS:]}, indent=1,
+                                                 ensure_ascii=False))
+
+    def add(self, kind: str, what: str, who: str = "", by: str = "", why: str = "",
+            conversation_id: Optional[str] = None) -> dict:
+        if kind not in KINDS:
+            raise ValueError(f"A note is one of {', '.join(KINDS)}.")
+        what = _clean(what)
+        if not what:
+            raise ValueError("What should I keep?")
+        same = next((n for n in self.notes if n["kind"] == kind and n["what"].lower() == what.lower()
+                     and n["status"] == OPEN), None)
+        if same is not None:
+            return same
+        note = {"id": uuid.uuid4().hex[:10], "kind": kind, "what": what[:160], "who": _clean(who)[:40],
+                "by": _clean(by)[:30], "why": _clean(why)[:200], "status": OPEN,
+                "at": datetime.now().isoformat(timespec="seconds"), "conversation_id": conversation_id or ""}
+        self.notes.append(note)
+        self._save()
+        return note
+
+    def offered(self, kind: str, kept: bool) -> None:
+        self.offers.append({"at": datetime.now().isoformat(timespec="seconds"), "kind": kind, "kept": bool(kept)})
+        self._save()
+
+    def get(self, note_id: str) -> Optional[dict]:
+        return next((n for n in self.notes if n["id"] == note_id), None)
+
+    def mark_done(self, note_id: str) -> Optional[dict]:
+        note = self.get(note_id)
+        if note is not None:
+            note["status"], note["done_at"] = DONE, datetime.now().isoformat(timespec="seconds")
+            self._save()
+        return note
+
+    def forget(self, note_id: str) -> bool:
+        before = len(self.notes)
+        self.notes = [n for n in self.notes if n["id"] != note_id]
+        if len(self.notes) != before:
+            self._save()
+            return True
+        return False
+
+    def of_kind(self, kind: Optional[str] = None, open_only: bool = False) -> list[dict]:
+        return [n for n in self.notes if (kind is None or n["kind"] == kind) and (not open_only or n["status"] == OPEN)]
+
+
+# ------------------------------------------------------------------ in the conversation
+
+
+def _private(conversation) -> bool:
+    from core.conversation_modes import PERSONAL_MODES
+
+    return conversation is None or bool(getattr(conversation, "off_record", False) or getattr(conversation, "journal",
+                                                                                              False)
+                                        or getattr(conversation, "private_turn", False)
+                                        or getattr(conversation, "mode", None) in PERSONAL_MODES)
+
+
+def answer_offer(context, conversation, prompt: str) -> Optional[str]:
+    """Before a turn: "keep it" after an offer keeps the note; anything else lets it go."""
+    pending = getattr(conversation, "pending_note", None) if conversation is not None else None
+    if not pending:
+        return None
+    conversation.pending_note = None
+    store = getattr(context, "life_notes", None)
+    if store is None:
+        return None
+    if not _KEEP.match(prompt or "") or not (prompt or "").strip():
+        store.offered(pending["kind"], False)
+        return None
+    note = store.add(pending["kind"], pending["what"], pending.get("who", ""), pending.get("by", ""),
+                     pending.get("why", ""), getattr(conversation, "conversation_id", None))
+    store.offered(pending["kind"], True)
+    ask = {"commitment": "what did I promise?", "decision": "what did I decide?", "idea": "what ideas haven't I tried?",
+           "dropped_goal": "what goals have I set aside?"}[note["kind"]]
+    return f"Kept: {describe(note)}. Ask “{ask}” any time."
+
+
+def offer_after(context, conversation, prompt: str) -> Optional[str]:
+    """After MIA's reply: the note the person's words carried, offered once for a yes."""
+    if _private(conversation) or getattr(context, "life_notes", None) is None:
+        return None
+    found = noticed(prompt)
+    if found is None:
+        return None
+    if any(n["kind"] == found["kind"] and n["what"].lower() == found["what"].lower()
+           for n in context.life_notes.of_kind(found["kind"], open_only=True)):
+        return None  # already kept
+    conversation.pending_note = found
+    return offer_text(found)

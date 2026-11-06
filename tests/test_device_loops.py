@@ -14,7 +14,7 @@ def test_a_turn_is_traced_with_its_device(monkeypatch):
     import core.turn_trace as tt
 
     seen = []
-    monkeypatch.setattr(at, "_turn", lambda context, conversation, prompt: SimpleNamespace(replies=["hi"]))
+    monkeypatch.setattr(at, "_turn", lambda context, conversation, prompt: SimpleNamespace(replies=["hi"], route="model"))
     monkeypatch.setattr(tt, "record", lambda context, conversation, prompt, turn, seconds, surface="": seen.append(surface))
     at.run_assistant_turn(None, None, "hello", "glasses")
     at.run_assistant_turn(None, None, "hello")

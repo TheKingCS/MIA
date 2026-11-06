@@ -426,7 +426,42 @@ def _resources(context, sheet, prompt, today):
                         "live isn't on the sheet.", "general guidance")
 
 
+_RECALL_KINDS = (
+    ("commitment", re.compile(r"\b(promis\w*|commit\w*|said i'?d|owe)\b", re.IGNORECASE)),
+    ("dropped_goal", re.compile(r"\b(abandon\w*|gave up|given up|giving up|set aside|dropp\w*)\b", re.IGNORECASE)),
+    ("decision", re.compile(r"\b(decid\w*|decisions?|chose|chosen|went with)\b", re.IGNORECASE)),
+    ("idea", re.compile(r"\b(ideas?|never (pursued|tried)|haven'?t tried|want(ed)? to try)\b", re.IGNORECASE)),
+)
+_RECALL_NONE = {"commitment": "No promises kept yet.", "decision": "No decisions kept yet.", "idea": "No ideas kept yet.",
+                "dropped_goal": "No goals set aside kept yet."}
+
+
+def _notes(context, sheet, kind, open_only=False):
+    from core.life_notes import describe
+
+    store = getattr(context, "life_notes", None)
+    found = store.of_kind(kind, open_only=open_only) if store is not None else []
+    for note in found[-12:]:
+        done = " (done)" if note.get("status") == "done" else ""
+        sheet.add(FACT, f"{describe(note)}{done}, noted {note.get('at', '')[:10]}.".replace(".,", ","),
+                  "what you told MIA")
+    return found
+
+
+def _recall(context, sheet, prompt, today):
+    """DEC-0054 (E3, E6, E10, E15): what they promised, decided, want to try and set aside, as kept on their yes."""
+    kinds = [k for k, words in _RECALL_KINDS if words.search(prompt or "")] or [k for k, _ in _RECALL_KINDS]
+    for kind in kinds:
+        if not _notes(context, sheet, kind):
+            sheet.add(MISSING, _RECALL_NONE[kind], "what you told MIA")
+    sheet.add(ESTIMATE, "Only what they said and agreed to keep is here: when they mention one, MIA offers to keep it.",
+              "how MIA remembers")
+    if "decision" in kinds or "dropped_goal" in kinds:
+        _look(context, sheet, "show_my_why", "your goals")
+
+
 def _open_loops(context, sheet, prompt, today):
+    _notes(context, sheet, "commitment", open_only=True)
     _look(context, sheet, "list_tasks", "Projects")
     _look(context, sheet, "list_projects", "Projects")
     _look(context, sheet, "list_missions", "Missions")
@@ -575,6 +610,12 @@ PLANS: tuple[Plan, ...] = (
           "What opportunities exist that connect my current skills, equipment, land, and business goals?",
           "What business opportunities am I overlooking?", "How can I make more money with what I have?"),
          r"\b(resources|opportunit\w+|make more money|more income)\b", _resources),
+    Plan("recall", "What you said you'd do, decided, want to try and set aside",
+         ("What did I promise someone?", "What commitments have I made?", "What did I say I'd do?",
+          "What decisions have I made about this project?", "What did we decide?", "What did I decide about the roof?",
+          "What ideas have I mentioned but never pursued?", "What ideas haven't I tried?",
+          "What goals have I abandoned, and why?", "What goals have I set aside?", "What have I given up on?"),
+         r"\b(promis\w*|commitments?|decid\w*|decisions?|ideas?|abandon\w*|gave up|given up|set aside)\b", _recall),
     Plan("open loops", "What's unfinished",
          ("What commitments have I made that I haven't completed?", "What projects have I started but not completed?",
           "What have I left unfinished?", "What's still open?"),
@@ -602,17 +643,13 @@ NOT_A_PLAN = (
     'What would an ideal week of progression look like?',
     'What did we discuss about this project last time?',
     'Why did I originally decide to pursue this?',
-    'What did I promise someone?',
     'What have I repeatedly struggled with?',
     'Have I mentioned this problem before?',
-    'What decisions have I made about this project?',
     'What patterns have you noticed in my behavior?',
     'What changed between my original plan and where I am now?',
-    'What ideas have I mentioned but never pursued?',
     'What lessons have I learned from previous experiences?',
     'What important information have I told you about this person?',
     'What were the reasons behind my last major decision?',
-    'What goals have I abandoned, and why?',
     'How does this piece of equipment work?',
     "What's the best way to repair this?",
     'What materials would I need for this project?',

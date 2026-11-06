@@ -111,6 +111,17 @@ def run_assistant_turn(context: AppContext, conversation: Conversation, prompt: 
     if conversation is not None:
         conversation.surface = surface  # for a rating said out loud (core/failure_log.py)
     turn = _turn(context, conversation, prompt)
+    if turn.route != "fixed":  # never after the safety floor or a reply to the log itself
+        from core.life_notes import offer_after
+
+        try:
+            offer = offer_after(context, conversation, prompt)
+        except Exception:
+            log.exception("Couldn't offer to keep a note")
+            offer = None
+        if offer:  # a promise, decision, idea or goal set aside, offered for a yes (DEC-0054)
+            add_message(conversation, "assistant", offer)
+            turn.replies.append(offer)
     record(context, conversation, prompt, turn, time.monotonic() - started, surface)
     return turn
 
