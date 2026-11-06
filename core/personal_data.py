@@ -99,6 +99,7 @@ from core.failure_log import FailureLog
 from core.answer_ratings import AnswerRatings
 from core.operating_journal import OperatingJournal
 from core.recreation import RecreationLog
+from core.gps_tracks import GpsTracks
 from core.turn_trace import TurnTraces
 from core.saga import SagaMoments
 from core.creations import Creations
@@ -161,6 +162,7 @@ PERSONAL_STORES: tuple[tuple[str, type], ...] = (
     ("ratings", AnswerRatings),  # 👍 and 👎 on her answers (DEC-0067)
     ("operating_journal", OperatingJournal),  # how they mean to operate, and how they do (DEC-0097)
     ("recreation", RecreationLog),  # games and sports played (DEC-0098)
+    ("gps_tracks", GpsTracks),  # walks, rides and drives from GPX: where they went is theirs (DEC-0099)
     ("quest_book", QuestBook),
     ("world_map", WorldMap),
     ("memory_vault", MemoryVault),

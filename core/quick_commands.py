@@ -179,6 +179,11 @@ def handle(context, text: str) -> Optional[str]:
     said = gap_reply(context, text)  # "build it" / "bring it back", to her latest capability-gap offer
     if said is not None:
         return said
+    from core.gps_tracks import reply as track_reply
+
+    said = track_reply(context, text)  # "how far was my last hike?" (DEC-0099)
+    if said is not None:
+        return said
     from core.tak import reply as grid_reply
 
     said = grid_reply(context, text)  # "add a waypoint called Spring at 18S UJ 23478 06483" (DEC-0099)

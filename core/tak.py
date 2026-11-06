@@ -48,21 +48,36 @@ def cot_event(waypoint, now: Optional[datetime] = None) -> str:
             f'<remarks>{escape(remarks)}</remarks><precisionlocation altsrc="???" geopointsrc="USER"/></detail></event>')
 
 
-def kml(waypoints, title: str = "MIA's places") -> str:
-    """Pure logic. The waypoints as KML placemarks, each with its grid reference."""
+def kml(waypoints, title: str = "MIA's places", tracks=()) -> str:
+    """Pure logic. The waypoints as KML placemarks, each with its grid reference; tracks as lines."""
     marks = "".join(
         f"<Placemark><name>{escape(w.name)}</name><description>"
         f"{escape(' · '.join(x for x in (geo_grid.to_mgrs(w.latitude, w.longitude), w.category, w.notes) if x))}"
         f"</description><Point><coordinates>{w.longitude:.7f},{w.latitude:.7f},0</coordinates></Point></Placemark>"
         for w in waypoints)
+    lines = "".join(
+        f"<Placemark><name>{escape(t['name'])}</name><description>{escape(_track_line(t))}</description>"
+        f"<LineString><coordinates>{_coordinates(t['points'])}</coordinates>"
+        f"</LineString></Placemark>" for t in tracks)
     return (f'<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document>'
-            f"<name>{escape(title)}</name>{marks}</Document></kml>")
+            f"<name>{escape(title)}</name>{marks}{lines}</Document></kml>")
 
 
-def data_package(waypoints, name: str = "MIA places", now: Optional[datetime] = None) -> bytes:
-    """Pure logic. A TAK data package (zip): one .cot per waypoint, the KML, and the manifest that lists them."""
+def _coordinates(points: list) -> str:
+    return " ".join("%.6f,%.6f,0" % (p["lon"], p["lat"]) for p in points)
+
+
+def _track_line(track: dict) -> str:
+    from core.gps_tracks import describe
+
+    return describe(track)
+
+
+def data_package(waypoints, name: str = "MIA places", now: Optional[datetime] = None, tracks=()) -> bytes:
+    """Pure logic. A TAK data package (zip): one .cot per waypoint, the KML (with tracks as lines), and the
+    manifest that lists them."""
     entries = {f"{w.waypoint_id}/{w.waypoint_id}.cot": cot_event(w, now) for w in waypoints}
-    entries["MIA_places.kml"] = kml(waypoints, name)
+    entries["MIA_places.kml"] = kml(waypoints, name, tracks)
     contents = "".join(f'<Content ignore="false" zipEntry={quoteattr(path)}/>' for path in entries)
     manifest = (f'<MissionPackageManifest version="2"><Configuration>'
                 f'<Parameter name="uid" value="{uuid.uuid4()}"/><Parameter name="name" value={quoteattr(name)}/>'

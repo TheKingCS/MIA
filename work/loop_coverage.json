@@ -495,6 +495,10 @@
   "store:freedom_log": {
    "status": "todo"
   },
+  "store:gps_tracks": {
+   "status": "none",
+   "why": "where a person went, from their own GPX files: no MIA behaviour in it to improve yet; its numbers are worked out in code and tested"
+  },
   "store:grow_lab": {
    "status": "todo"
   },

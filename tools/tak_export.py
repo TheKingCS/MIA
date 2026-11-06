@@ -27,13 +27,15 @@ def main(argv: list[str]) -> int:
     logging.disable(logging.INFO)
     context = build_context()
     waypoints = context.waypoints.all_waypoints() if getattr(context, "waypoints", None) is not None else []
-    if not waypoints:
+    tracks = context.gps_tracks.tracks if getattr(context, "gps_tracks", None) is not None else []
+    if not waypoints and not tracks:
         print("No waypoints yet: add one (\"add a waypoint called Spring at 18S UJ 23478 06483\").")
         return 1
     target = Path(argv[0]) if argv else Path.home() / "Documents" / "MIA_places.zip"
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_bytes(tak.data_package(waypoints))
-    print(f"{len(waypoints)} waypoint{'s' if len(waypoints) != 1 else ''} in {target}")
+    target.write_bytes(tak.data_package(waypoints, tracks=tracks))
+    print(f"{len(waypoints)} waypoint{'s' if len(waypoints) != 1 else ''} and {len(tracks)} "
+          f"track{'s' if len(tracks) != 1 else ''} in {target}")
     return 0
 
 

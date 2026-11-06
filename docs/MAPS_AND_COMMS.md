@@ -29,8 +29,9 @@ they're built on.*
 
 ## 3. Next, in order
 
-1. **Tracks**: a walk or a drive as points with times (GPX import from a phone or GPS, and the phone recording
-   one); shown on the map; length, climb and time in code; exported to TAK as a route.
+1. ✅ **Tracks** (`core/gps_tracks.py`, 2026-11-06): GPX import (`python -m tools.tracks add walk.gpx`), distance,
+   climb past GPS jitter, moving time, start and end grids, in the person's own folder; a line in the TAK
+   package; "how far was my last hike?". Still to do: the phone recording one, and drawing them on MIA's map.
 2. **Sharing on the local network**: CoT over UDP multicast (SA's usual address, 239.2.3.1:6969 (verify)), so a
    TAK app on the same Wi-Fi sees MIA's places live. A person's own places only, by an action they approve, and
    off again by one word.

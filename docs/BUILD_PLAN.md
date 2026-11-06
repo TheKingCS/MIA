@@ -143,7 +143,9 @@ first. Each is a step below.
 14. 🔨 **Maps and comms, inspired by defense systems** (DEC-0099; `docs/MAPS_AND_COMMS.md`): built 2026-11-06: MGRS
     grid references in code (`core/geo_grid.py`, checked against pyproj and the mgrs package), waypoints by grid by
     voice, and MIA's places as a TAK data package of Cursor on Target events and KML (`core/tak.py`,
-    `python -m tools.tak_export`) for ATAK-CIV. Next: tracks (GPX), CoT on the local network by approval, vector
+    `python -m tools.tak_export`) for ATAK-CIV; tracks from GPX (`core/gps_tracks.py`, `python -m tools.tracks add`;
+    distance, climb, moving time, grids; lines in the TAK package; "how far was my last hike?"). Next: CoT on the
+    local network by approval, vector
     offline maps (PMTiles), Meshtastic mesh radios (needs hardware), the shared picture of people by consent and
     sensors.
 15. ⬜ **Sight**: a local vision model through the glasses' camera and the phone (what is this, read this label,
