@@ -42,6 +42,10 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   Muse's, if Zac wants one.
 - **Working web screens** (formatting only, the look is muse's): `web/operating.html`, `web/play.html`,
   `web/news.html`, `web/council.html`.
+- **Found by the loops, 2026-11-06:** T-0050 (fixed: git output read as UTF-8), T-0049 (fixed: `dev.lab` counted
+  practice), T-0051 (the phone's old `cryptography`/`starlette`/`fastapi`: Zac chooses; Claude recommends keeping
+  them for now with the exposure written down, then Android Keystore over time). `phone.vulnerable` audits the
+  phone's packages weekly from its build.
 - **Known flaky:** the reference library's (one cause fixed 2026-11-06: an open libzim handle on delete), a native
   Qt crash mid-suite (seen twice), and `test_inbox.py`'s reading-corrections test (once in a full run).
   The one failing test is Zac's uncommitted Plaid work (`test_import_transaction_transfer_is_skipped`).

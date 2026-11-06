@@ -16,7 +16,11 @@ discussed, returns, time, held back) take the routing audit to 84 of 112 benchma
 from 70; a Kept screen (`web/kept.html`) shows the notes. The phone's web view now takes and chooses photos for
 Look (it builds; not yet tried on the phone). A rating said out loud ("thumbs
 up", "that's a bad answer") works on the glasses (T-0010). A finding for goods that won't make market day.
-Fixed: deleting a reference pack failed on Windows now and then (the old flaky test).
+Fixed: deleting a reference pack failed on Windows now and then (the old flaky test). Running every loop for
+real found three things: a test failing on the committed code (a commit subject with "⏸" broke reading git on
+Windows: fixed, T-0050), `dev.lab` counting practice proposals (fixed, T-0049), and the phone's bundled
+`cryptography`, `starlette` and `fastapi` carrying known advisories with no newer Android wheels (T-0051, a choice
+for Zac). Edits on the desktop's Qt screens now count as corrections.
 
 **2026-11-06 to 07, Claude on the PC, overnight while Zac slept (build plan steps 1 to 17).** Phases A and C
 of `docs/BUILD_PLAN.md` are done and most of D is built; the queued tasks T-0040, T-0042, T-0044 and T-0045
