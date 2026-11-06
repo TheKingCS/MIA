@@ -62,10 +62,11 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 ## Muse
 
 - [ ] **Handoff numbers:** H-0080 and H-0081 were each used twice (`H-0080_chatgpt-...`, `H-0081_chatgpt-...`). The
-      next free number is **H-0086**.
+      next free number is **H-0087** (H-0086 is Muse's savings-hound reply).
 - [ ] **Screens waiting on your look**: working screens are built on the shared frame (2026-11-07), formatting
       only: `web/operating.html` (the Operating Journal), `web/play.html` (games and training load), `web/news.html`
-      (Good News Radio), `web/council.html` (owner only). Still engine-only: the Night School panel's look, and the
+      (Good News Radio), `web/council.html` (owner only), and 2026-11-06 `web/kept.html` (promises, decisions,
+      ideas and goals set aside, DEC-0054; not yet rendered in a browser on the PC). Still engine-only: the Night School panel's look, and the
       education transcript (if DEC-0102 is approved).
 
 ## ChatGPT (Chat)
