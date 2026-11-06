@@ -844,6 +844,13 @@ def create_app(context: AppContext) -> FastAPI:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "That article isn't in the library.")
         return found
 
+    @app.get("/api/observations")
+    def observations_screen(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.observations_web import screen  # what MIA noticed: findings across apps, insights by source
+
+        with app.state.turn_lock:
+            return screen(view_for(context, profile_id))
+
     @app.get("/api/navigation")
     def navigation_screen(start: str = "", end: str = "", profile_id: str = Depends(require_profile_id)) -> dict:
         from core.navigation_web import screen  # waypoints, a route between two, the sun and moon

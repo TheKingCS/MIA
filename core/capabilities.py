@@ -64,7 +64,7 @@ LIMITS = {
     "power": "No web screen yet.",
     "character": "",
     "reward_shop": "",
-    "observations": "No web screen yet.",
+    "observations": "Read only: each is resolved where it lives (the upkeep, the mission, the bill).",
     "relationships": "",
     "notes": "",
     "classroom": "Lesson notes, skill rewards and the textbook tutor are on the desktop.",

@@ -165,6 +165,13 @@
       "page": "shop.html"
     },
     {
+      "id": "observations",
+      "name": "Observations",
+      "icon": "🔍",
+      "tagline": "What MIA noticed.",
+      "page": "observations.html"
+    },
+    {
       "id": "relationships",
       "name": "People & Pets",
       "icon": "👥",

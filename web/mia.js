@@ -221,6 +221,12 @@
     council: () => demo ? Promise.resolve({ messages: [], members: [] }) : call("GET", "/api/council"),
     councilSay: (body) => demo ? Promise.resolve({}) : call("POST", "/api/council", body),
     // The Operating Journal, games played and Good News Radio (DEC-0097, 0098, 0096); changes go through actions.
+    observations: () => demo ? Promise.resolve({
+      findings: [{ title: "A bill before payday", claim: "Rent is due Friday; your pay comes Monday, and the account is $120 short.",
+        why: "Paid late, it costs a fee.", next: "Move it to Monday, or move $120 over.", app: "money", sure: "DERIVED" }],
+      insights: [{ source: "Upkeep", items: [{ title: "Oil change is overdue", message: "The mower's oil change was due 12 days ago.",
+        next: "Mark it done, or reschedule it.", since: "2026-11-01" }] }] })
+      : call("GET", "/api/observations"),
     navigation: (start = "", end = "") => demo ? Promise.resolve({ day: "2026-11-06", waypoints: [
       { id: "w1", name: "Spring", category: "Water", lat: 40.01, lon: -105.0, grid: "13T DE 91476 30318" },
       { id: "w2", name: "Trailhead", category: "Trail", lat: 40.0, lon: -105.0, grid: "13T DE 91497 29207" }],
