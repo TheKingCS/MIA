@@ -645,7 +645,7 @@ steps there: more seasonal starters, a basemap under the world map
 one conversation everywhere, the voice guide. **Expansion audit**
 (`docs/EXPANSION_AUDIT.md`, DEC-0030 approved): phase B crafting is
 built (Workshop → Recipes / Builds). DEC-0030 approved (2026-10-17). Built since: the phone side of DEC-0022 (`docs/HOME_COMPUTER_SETUP.md`), phase C Orders & Quotes, phase D Grow Lab, and show-off mode (DEC-0031). Next:
-DEC-0022 on the real PC (model comparison; two-way sync with photos, files, conversations and the journal, heavy jobs and the **memory vault (phase E)** are built, 2026-10-18; vault next: copying while MIA is closed via an Android foreground service, near-duplicates, search, captions on the PC), then phase C (quotes from a recipe, customers and orders, a portfolio page),
+DEC-0022 on the real PC (model comparison; two-way sync with photos, files, conversations and the journal, heavy jobs and the **memory vault (phase E)** are built, 2026-10-18; vault next: copying while MIA is closed via an Android foreground service, near-duplicates; search and captions on the PC are built, 2026-11-06: `core/vault_captions.py`), then phase C (quotes from a recipe, customers and orders, a portfolio page),
 D (grow lab), E (memory vault, after DEC-0022's phone↔PC link). Receiving
 from a scanned receipt into a recipe's materials is a small follow-up.
 

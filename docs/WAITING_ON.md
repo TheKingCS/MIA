@@ -50,6 +50,11 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       the phone; name the first places to map (the property's corners, the well, trailheads).
 
 ### Using MIA (whenever)
+- [ ] **Promises and decisions** (DEC-0054, built 2026-11-06): tell her "I promised Sam I'd fix his gate by
+      Saturday" and say "keep it" when she offers; she mentions it the day before. "What did I promise?", the Kept
+      page in the sidebar, "I kept my promise to Sam".
+- [ ] **Find a photo by what's in it**: once the vault has photos on the PC, she describes them at night; then
+      "find my photos of the creek".
 - [ ] **The council from your phone**: after MIA restarts on the PC, "The Council" is in your sidebar (yours only).
       Write to them there; @claude or @codex asks one member.
 - [ ] **Write your first Operating Journal lines** by talking to her ("add to my operating journal: work out 4 times
