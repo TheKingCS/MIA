@@ -140,11 +140,12 @@ first. Each is a step below.
     track in the music library (the last week kept). "What's the good news?", "good news, the calm one", "that
     story was misleading" (`news.misleading`; a source called misleading twice is dropped). Not yet: the model
     phrasing the script (it's made in code), a screen.
-14. ⬜ **Maps and comms, inspired by defense systems** (DEC-0099): research first (Part 3), then an offline map of
-    the property and trails with MGRS grid references, waypoints and tracks; a shared picture of places, people (by
-    consent) and sensors, Lattice-style; and later mesh messaging that works without cell service (Meshtastic
-    LoRa radios), speaking open civilian standards (Cursor on Target, ATAK-CIV) so a TAK app can see MIA's
-    picture.
+14. 🔨 **Maps and comms, inspired by defense systems** (DEC-0099; `docs/MAPS_AND_COMMS.md`): built 2026-11-06: MGRS
+    grid references in code (`core/geo_grid.py`, checked against pyproj and the mgrs package), waypoints by grid by
+    voice, and MIA's places as a TAK data package of Cursor on Target events and KML (`core/tak.py`,
+    `python -m tools.tak_export`) for ATAK-CIV. Next: tracks (GPX), CoT on the local network by approval, vector
+    offline maps (PMTiles), Meshtastic mesh radios (needs hardware), the shared picture of people by consent and
+    sensors.
 15. ⬜ **Sight**: a local vision model through the glasses' camera and the phone (what is this, read this label,
     inspect this part), within inspection's permission levels.
 16. ⬜ **The council from the phone**: an owner-only Council screen in MIA's web and phone app; the glasses' speaker

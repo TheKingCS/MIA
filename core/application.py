@@ -1853,12 +1853,15 @@ class MIAApplication:
                     "name": {"type": "string", "description": "A short name for the waypoint."},
                     "latitude": {"type": "number", "description": "Latitude in decimal degrees."},
                     "longitude": {"type": "number", "description": "Longitude in decimal degrees."},
+                    "grid": {"type": "string",
+                             "description": "Or an MGRS grid reference instead of latitude and longitude, "
+                                            "like 18S UJ 23478 06483."},
                     "category": {
                         "type": "string",
                         "description": "Optional category: Campsite, Trailhead, Water Source, Viewpoint, or Other.",
                     },
                 },
-                "required": ["name", "latitude", "longitude"],
+                "required": ["name"],
             },
             handler=self._action_add_waypoint,
             trigger_phrases=("add a waypoint", "save a waypoint", "new waypoint", "mark a waypoint"),
@@ -3773,7 +3776,14 @@ class MIAApplication:
             waypoints = [w for w in waypoints if query in f"{w.name} {w.notes}".lower()]
         if not waypoints:
             return "No matching waypoints found." if query else "You have no waypoints saved."
-        lines = [f"- '{w.name}' ({w.latitude:.5f}, {w.longitude:.5f})" for w in waypoints]
+        from core.geo_grid import GridError, to_mgrs
+
+        def grid(w) -> str:
+            try:
+                return f", grid {to_mgrs(w.latitude, w.longitude)}"
+            except GridError:  # the poles: no MGRS there
+                return ""
+        lines = [f"- '{w.name}' ({w.latitude:.5f}, {w.longitude:.5f}{grid(w)})" for w in waypoints]
         return "Your waypoints:\n" + "\n".join(lines)
 
     @staticmethod
@@ -4003,11 +4013,18 @@ class MIAApplication:
         name = str(arguments.get("name", "")).strip()
         if not name:
             return "I need a name to save a waypoint."
+        from core.geo_grid import GridError, from_mgrs
+
         try:
-            latitude = float(arguments.get("latitude"))
-            longitude = float(arguments.get("longitude"))
+            if str(arguments.get("grid") or "").strip():  # an MGRS grid reference, read in code (DEC-0099)
+                latitude, longitude = from_mgrs(str(arguments["grid"]))
+            else:
+                latitude = float(arguments.get("latitude"))
+                longitude = float(arguments.get("longitude"))
+        except GridError as problem:
+            return str(problem)
         except (TypeError, ValueError):
-            return "I need a valid latitude and longitude to save a waypoint."
+            return "I need a valid latitude and longitude, or a grid reference, to save a waypoint."
         category = str(arguments.get("category", "") or "").strip()
         if category not in WAYPOINT_CATEGORIES:
             category = ""  # unrecognized value -> uncategorized, same fail-safe as the UI's blank option

@@ -179,6 +179,11 @@ def handle(context, text: str) -> Optional[str]:
     said = gap_reply(context, text)  # "build it" / "bring it back", to her latest capability-gap offer
     if said is not None:
         return said
+    from core.tak import reply as grid_reply
+
+    said = grid_reply(context, text)  # "add a waypoint called Spring at 18S UJ 23478 06483" (DEC-0099)
+    if said is not None:
+        return said
     from core.good_news import reply as news_reply
 
     said = news_reply(context, text)  # "what's the good news?", "good news, the calm one" (DEC-0096)

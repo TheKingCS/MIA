@@ -31,12 +31,18 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 - [ ] **The phone:** install build 143 or newer (`adb install -r`), then reopen MIA on the glasses.
 - [ ] Pick the council's voices; try Make Something; try Council Mode on the glasses.
 
+- [ ] **Maps and comms** (`docs/MAPS_AND_COMMS.md` section 4): for mesh messaging without cell service, buy two
+      or more Meshtastic LoRa radios (US 915 MHz; one stays on the PC); say whether to install ATAK-CIV on
+      the phone; name the first places to map (the property's corners, the well, trailheads).
+
 ### Using MIA (whenever)
 - [ ] **Write your first Operating Journal lines** by talking to her ("add to my operating journal: work out 4 times
       a week"), then ask "am I living how I said I want to?".
 - [ ] **Try Good News Radio:** "what's the good news?", "good news, the late night one", or play "Good News Radio,
       Sunny, Nov 6". Say "that story was misleading" when one is.
 - [ ] Log a game: "played pickleball for an hour, it was hard".
+- [ ] Add a place by grid ("add a waypoint called Spring at 18S UJ 23478 06483") and open
+      `python -m tools.tak_export`'s `MIA_places.zip` in ATAK-CIV.
 - [ ] **Later:** when the dev window's Night School panel says the evidence supports it, let her choose her own
       lessons (`"mode": "self"` in `work/night_school.json`).
 
