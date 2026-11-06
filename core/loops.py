@@ -290,6 +290,30 @@ def _notes_offers(context) -> Optional[Reading]:
                    + (f" ({', '.join(k.replace('_', ' ') for k in kinds)})" if kinds else ""))
 
 
+def _courses_stalled(context) -> Optional[Reading]:
+    """Their own courses (the Classroom): of those started and not finished, the ones no lesson moved in 30 days."""
+    room = getattr(context, "classroom", None)
+    if room is None or not hasattr(room, "all_subjects"):
+        return None
+    cut = _since(30)[:19]
+    started = stalled = 0
+    names = []
+    for subject in room.all_subjects():
+        for course in room.courses_for_subject(subject.subject_id):
+            lessons = room.lessons_for_course(course.course_id)
+            done = [l for l in lessons if l.completed]
+            if not done or len(done) == len(lessons):
+                continue  # not started, or finished
+            started += 1
+            if max(l.completed_at or "" for l in done)[:19] < cut:
+                stalled += 1
+                names.append(course.name)
+    if not started:
+        return None
+    return Reading(round(stalled / started, 2), started, f"{stalled} of {started} courses under way haven't moved in 30 "
+                   "days" + (f": {', '.join(names[:4])}" if names else ""))
+
+
 def _gate_expired(context) -> Optional[Reading]:
     entries = _gate_entries(context)
     if entries is None:
@@ -873,6 +897,8 @@ LOOPS: tuple[Loop, ...] = (
     Loop("journal.pace", "life", "how often they operate the way they said they mean to", "person", _journal_pace,
          better="higher", acts="watch", covers=("store:operating_journal", "action:operating",
                                                 "check:operating_journal")),
+    Loop("classroom.stalled", "life", "courses under way that no lesson moved in 30 days", "person",
+         _courses_stalled, acts="watch", covers=("store:classroom",)),
     Loop("recreation.load", "life", "this week's play load against the four weeks before (past 1.5: easing off helps)",
          "person", _play_load, floor=1.5, acts="watch", covers=("store:recreation", "action:play")),
     Loop("news.misleading", "proactivity", "Good News Radio stories they called misleading, in 30 days", "person",

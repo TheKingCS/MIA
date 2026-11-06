@@ -197,3 +197,18 @@ def test_the_phones_own_packages_are_audited(tmp_path, monkeypatch):
     monkeypatch.setattr(dev_checks, "vulnerable", lambda packages: {"checked": 2, "packages": {"cryptography": ["A", "B"]}})
     reading = BY_ID["phone.vulnerable"].measure(None)
     assert (reading.value, reading.n) == (1, 2) and reading.detail.endswith("cryptography 42.0.8 (2)")
+
+
+
+def test_courses_under_way_that_stalled():
+    recent = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    lesson = lambda done, at="": SimpleNamespace(completed=done, completed_at=at)  # noqa: E731
+    courses = {"c1": SimpleNamespace(course_id="c1", name="Welding"), "c2": SimpleNamespace(course_id="c2", name="Spanish"),
+               "c3": SimpleNamespace(course_id="c3", name="Done one"), "c4": SimpleNamespace(course_id="c4", name="Not begun")}
+    lessons = {"c1": [lesson(True, "2026-01-02T10:00:00"), lesson(False)], "c2": [lesson(True, recent), lesson(False)],
+               "c3": [lesson(True, "2026-01-02T10:00:00")], "c4": [lesson(False)]}
+    room = SimpleNamespace(all_subjects=lambda: [SimpleNamespace(subject_id="s1")],
+                           courses_for_subject=lambda sid: list(courses.values()),
+                           lessons_for_course=lambda cid: lessons[cid])
+    reading = BY_ID["classroom.stalled"].measure(SimpleNamespace(classroom=room))
+    assert (reading.value, reading.n) == (0.5, 2) and reading.detail.endswith(": Welding")

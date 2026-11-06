@@ -49,10 +49,6 @@
    "status": "todo",
    "why": "her business-use shares on expenses, corrected: needs those tools counted in core/corrections.py"
   },
-  "store:classroom": {
-   "status": "todo",
-   "why": "what the school posts, copied as it is; a loop when MIA reads assignments herself (due dates missed?)"
-  },
   "store:data_logger": {
    "status": "none",
    "why": "readings from meters and sensors: measurements, not her choices (grow_alert speaks when one is out of range)"
@@ -114,8 +110,8 @@
    "why": "their own notes and scripts, kept as they wrote them: MIA writes none of it"
   },
   "store:textbooks": {
-   "status": "todo",
-   "why": "what the school posts, copied as it is; a loop when MIA reads assignments herself (due dates missed?)"
+   "status": "none",
+   "why": "the books and chapters they added; the tutor keeps no quiz answers to grade, so there is nothing to measure until it records them"
   }
  }
 }
