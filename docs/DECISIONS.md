@@ -1544,3 +1544,10 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   on how it's watched. Night School's teacher drafts loops for the next family each night as a task for
   the usual paths; `dev.loop_coverage` measures the reach.
 - Related: DEC-0094, DEC-0100
+
+### DEC-0103: The savings hound: receipts-first couponing for groceries and household needs
+- Status: PROPOSED
+- Proposed by: muse, 2026-11-06 · Reviewed by: claude (H-0085) · Approved by: — (only Zac approves)
+- Decision: MIA hunts savings on groceries and household needs, from receipt price history: receipt line items through the Inbox build floor prices (a cautious low percentile of what he actually paid, never one odd sale); household needs ride inside the grocery list as a kind, with a "runs out about every N weeks" from purchase history; a stock-up suggestion appears in the weekly review when a staple is at or under its floor; an honest savings ledger (offered / redeemed / saved-vs-normal kept separate). She proposes; the user approves in the existing review; no accounts or enrollments in his name without his say-so, and a coupon for something unneeded never counts as a saving.
+- Why: MIA has no cart build and no prices today (H-0085's correction of H-0081), so the price data has to come first, and receipts are the best first source: offline, already on the PC, his own records. Household needs inside the grocery list is less to keep in sync than a standalone list. Clipping in his name never happens through an unsanctioned channel; scraping store pages is refused.
+- Related: H-0081, H-0085, H-0086, DEC-0002, DEC-0014, DEC-0052, DEC-0053, DEC-0054. DEC-0102 is reserved for the benchmark-ladder draft (H-0084).
