@@ -46,91 +46,76 @@
    "why": "it reports the loops: what it says is only as good as they are, and they are watched"
   },
   "store:business_use": {
-   "status": "todo"
+   "status": "todo",
+   "why": "her business-use shares on expenses, corrected: needs those tools counted in core/corrections.py"
   },
   "store:classroom": {
-   "status": "todo"
-  },
-  "store:conversations": {
-   "status": "todo"
+   "status": "todo",
+   "why": "what the school posts, copied as it is; a loop when MIA reads assignments herself (due dates missed?)"
   },
   "store:data_logger": {
-   "status": "todo"
+   "status": "none",
+   "why": "readings from meters and sensors: measurements, not her choices (grow_alert speaks when one is out of range)"
   },
   "store:energy": {
-   "status": "todo"
+   "status": "none",
+   "why": "readings from meters and sensors: measurements, not her choices (grow_alert speaks when one is out of range)"
   },
   "store:finance": {
-   "status": "todo"
+   "status": "todo",
+   "why": "after the Plaid work lands (Zac): imported transactions recategorized, a bank link failing"
   },
   "store:gps_tracks": {
    "status": "none",
    "why": "where a person went, from their own GPX files: no MIA behaviour in it to improve yet; its numbers are worked out in code and tested"
   },
   "store:homestead": {
-   "status": "todo"
-  },
-  "store:insights": {
-   "status": "todo"
+   "status": "none",
+   "why": "only its setup writes it so far; a loop comes with the first app or action that does"
   },
   "store:intents": {
-   "status": "todo"
-  },
-  "store:inventory": {
-   "status": "todo"
+   "status": "none",
+   "why": "their reasons in their own words; MIA keeps them and never judges them"
   },
   "store:life_events": {
-   "status": "todo"
+   "status": "none",
+   "why": "the history beside the stores, never rewritten; what lands in it is judged by the loops of the stores that write it"
   },
   "store:links": {
-   "status": "todo"
+   "status": "none",
+   "why": "how things relate, stated by people or derived from records: as good as the records, which have their own loops"
   },
   "store:lite_captures": {
-   "status": "todo"
-  },
-  "store:memory_vault": {
-   "status": "todo"
-  },
-  "store:my_record_sets": {
-   "status": "todo"
-  },
-  "store:notifications": {
-   "status": "todo"
+   "status": "none",
+   "why": "their own notes and scripts, kept as they wrote them: MIA writes none of it"
   },
   "store:online_reminders": {
-   "status": "todo"
+   "status": "todo",
+   "why": "reminders delivered online: one that arrived late or twice"
   },
   "store:passwords": {
    "status": "none",
    "why": "secrets: never measured"
   },
   "store:personal_life_events": {
-   "status": "todo"
+   "status": "none",
+   "why": "the history beside the stores, never rewritten; what lands in it is judged by the loops of the stores that write it"
   },
   "store:plaid": {
-   "status": "todo"
+   "status": "todo",
+   "why": "after the Plaid work lands (Zac): imported transactions recategorized, a bank link failing"
   },
   "store:private_journal": {
    "status": "none",
    "why": "private: never measured"
   },
-  "store:record_sets": {
-   "status": "todo"
-  },
-  "store:saga_moments": {
-   "status": "todo"
-  },
   "store:scripts": {
-   "status": "todo"
-  },
-  "store:security": {
-   "status": "todo"
+   "status": "none",
+   "why": "their own notes and scripts, kept as they wrote them: MIA writes none of it"
   },
   "store:textbooks": {
-   "status": "todo"
-  },
-  "store:waypoints": {
-   "status": "todo"
+   "status": "todo",
+   "why": "what the school posts, copied as it is; a loop when MIA reads assignments herself (due dates missed?)"
   }
  }
 }

@@ -256,6 +256,25 @@ def _apps() -> tuple[str, ...]:
                                                            .glob("*/module.py")))
 
 
+def _vault_coverage(context) -> Optional[Reading]:
+    """On the phone: photos and videos over a week old that are still only on the phone (core/memory_vault.py)."""
+    vault = getattr(context, "memory_vault", None)
+    if vault is None or not getattr(vault, "items", None):
+        return None
+    from core.memory_vault import is_on
+
+    if not is_on(context):
+        return None
+    cut = (datetime.now() - timedelta(days=7)).isoformat(timespec="seconds")  # taken_at is the phone's own time
+    old = [i for i in vault.items.values() if vault.on_phone(i) and (i.get("taken_at") or "") < cut]
+    if not old:
+        return None
+    waiting = sum(1 for i in old if not i.get("on_pc"))
+    state = (vault.status or {}).get("state", "")
+    return Reading(round(waiting / len(old), 2), len(old), f"{waiting} of {len(old)} over a week old are only on the "
+                   f"phone" + (f"; the vault is {state.replace('_', ' ')}" if state else ""))
+
+
 def _gate_expired(context) -> Optional[Reading]:
     entries = _gate_entries(context)
     if entries is None:
@@ -790,7 +809,7 @@ LOOPS: tuple[Loop, ...] = (
     # A. Conversation and intelligence
     Loop("answers.failures", "answers", "turns that went wrong, per 100", "person",
          _per_100_turns(()), min_n=20, files=("core/assistant_turn.py",),
-         covers=("flow:talk", "module:assistant", "action:failures")),
+         covers=("flow:talk", "module:assistant", "action:failures", "store:conversations")),
     Loop("answers.thumbs", "answers", "answers rated 👍", "person", _thumbs, better="higher", floor=0.7, min_n=5,
          covers=("flow:talk", "store:ratings", "action:answer")),
     Loop("answers.rephrased", "answers", "asked again in other words, per 100 turns", "person",
@@ -829,6 +848,8 @@ LOOPS: tuple[Loop, ...] = (
          floor=0.1, min_n=5, files=("core/sight.py",), covers=("flow:sight",)),
     Loop("glasses.voice", "devices", "glasses turns unanswered or slow, in 7 days", "person", _glasses_voice,
          floor=0.15, min_n=10, files=("core/glasses_voice.py",), covers=("flow:glasses",)),
+    Loop("vault.coverage", "devices", "photos over a week old still only on the phone", "person", _vault_coverage,
+         floor=0.1, min_n=20, files=("core/memory_vault.py", "core/home_link.py"), covers=("store:memory_vault",)),
     Loop("phone.link", "devices", "hours since their phone last reached this PC", "person", _phone_link,
          acts="watch", covers=("flow:phone",)),
     Loop("loop.prediction", "corrections", "the Loop's planned work days that didn't match what happened, 4 weeks",
@@ -849,14 +870,15 @@ LOOPS: tuple[Loop, ...] = (
     Loop("email.left_open", "corrections", "drafts left open over a week", "person", _email_left_open, acts="watch",
          covers=("flow:email",)),
     Loop("gate.dismissed", "proactivity", "unprompted messages dismissed, in 7 days", "person", _gate_dismissed,
-         floor=0.5, min_n=5, files=("core/communication_gate.py",), covers=("flow:gate", "store:communication")),
+         floor=0.5, min_n=5, files=("core/communication_gate.py",),
+         covers=("flow:gate", "store:communication", "store:notifications")),
     Loop("gate.expired", "proactivity", "messages held back that expired before they went out", "person",
          _gate_expired, acts="watch", min_n=3, covers=("flow:gate",)),
     Loop("screens.broken", "devices", "desktop apps and web pages that broke, in 7 days", "person", _screens_broken,
          floor=0, files=("gui/main_window.py", "web/shell.js"), covers=_apps()),
     Loop("checks.dismissed", "proactivity", "the daily check whose messages are dismissed most, in 30 days", "person",
          _checks_dismissed, floor=0.6, min_n=10, files=("core/application.py",),
-         covers=tuple(sorted({f"check:{c}" for c in CHECK_TOPICS.values()}))),
+         covers=tuple(sorted({f"check:{c}" for c in CHECK_TOPICS.values()})) + ("store:insights",)),
     # Theirs to change (DEC-0014: a miss is gentle): a target missed most days is offered for easing, never a task
     Loop("missions.recurring", "life", "daily recurring missions not done, in 30 days", "person", _recurring_missed,
          floor=0.5, min_n=10, acts="offer", covers=("check:recurring_mission",)),
@@ -899,7 +921,7 @@ LOOPS: tuple[Loop, ...] = (
     Loop("dev.limits", "development", "usage limits hit in a week", "device", _limits, acts="watch", covers=("dev:usage",)),
     Loop("dev.council_cost", "development", "calls per council turn", "device", _council_cost, acts="watch", covers=("dev:council",)),
     Loop("dev.chronicles", "development", "Chronicles candidates waiting", "device", _chronicles, acts="watch",
-         covers=("dev:chronicles", "check:chronicle")),
+         covers=("dev:chronicles", "check:chronicle", "store:saga_moments")),
     # The weekly benchmarks (step 5, core/benchmarks.py, run by tools/weekly_bench.py from Night School)
     Loop("answers.benchmark", "answers", "benchmark questions that fell since last week", "device",
          _bench("intelligence", "falls"), floor=0, every=7, files=("core/question_plans.py", "core/tool_loop.py"),

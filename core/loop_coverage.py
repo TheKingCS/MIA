@@ -180,6 +180,8 @@ CORRECTED_IN = {
     "store:obligations": "money", "store:business": "money", "store:ledger": "money",
     "store:kitchen": "kitchen", "store:craft_recipes": "home", "store:real_estate": "home", "store:places": "home",
     "store:world_map": "home", "store:dungeon": "missions", "store:journal": "memories", "store:relationships": "people",
+    "store:security": "home", "store:inventory": "home", "store:waypoints": "home",
+    "store:record_sets": "creations", "store:my_record_sets": "creations",
 }
 
 

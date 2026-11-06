@@ -151,3 +151,19 @@ def test_the_screens_that_broke(monkeypatch):
     reading = BY_ID["screens.broken"].measure(SimpleNamespace(failures=object()))
     assert (reading.value, reading.n, reading.detail) == (3, 3, "3 in 7 days: app:garage, budget")
     assert "module:garage" in BY_ID["screens.broken"].covers and "module:module_browser" in BY_ID["screens.broken"].covers
+
+
+def test_photos_still_only_on_the_phone(monkeypatch):
+    import core.memory_vault as mv
+
+    monkeypatch.setattr(mv, "is_on", lambda context: True)
+    old, new = "2026-01-02T10:00:00", datetime.now().isoformat(timespec="seconds")
+    items = {f"s{n}": {"taken_at": old, "sources": [f"p{n}"], "on_pc": n < 18} for n in range(20)}
+    items["fresh"] = {"taken_at": new, "sources": ["pf"], "on_pc": False}  # under a week: not judged yet
+    items["gone"] = {"taken_at": old, "sources": ["px"], "on_pc": False}  # no longer on the phone
+    vault = SimpleNamespace(items=items, status={"state": "waiting_wifi"},
+                            on_phone=lambda i: [p for p in i["sources"] if p != "px"])
+    reading = BY_ID["vault.coverage"].measure(SimpleNamespace(memory_vault=vault))
+    assert (reading.value, reading.n) == (0.1, 20) and reading.detail.endswith("the vault is waiting wifi")
+    monkeypatch.setattr(mv, "is_on", lambda context: False)
+    assert BY_ID["vault.coverage"].measure(SimpleNamespace(memory_vault=vault)) is None  # switched off: nothing to judge

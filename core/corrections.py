@@ -58,7 +58,7 @@ AREAS = {
     "memories": ("memory", "remember", "forget", "journal"),
     "creations": ("creation", "records", "workflow"),
     "home": ("grow", "flock", "pet", "property", "security", "place", "trip", "expedition", "map", "product",
-             "material", "component", "craft", "goods", "job", "batch", "experiment"),
+             "material", "component", "craft", "goods", "job", "batch", "experiment", "inventory", "waypoint"),
     "tasks": ("task", "routine", "plan", "project", "loop"),
     "people": ("person", "relationship"),
     "music": ("playlist", "track", "music"),

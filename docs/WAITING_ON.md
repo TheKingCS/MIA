@@ -79,8 +79,13 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 - [ ] The phone build bundles Chaquopy's `cryptography` 42.0.8, which the dependency audit doesn't cover yet.
 - [ ] Flaky: `tests/test_reference_library_manager.py` (2026-11-07: one cause found and fixed: deleting a pack failed
       on Windows while libzim still held the file; if `test_search_all_packs_returns_snippet_from_matching_pack` fails
-      again, look for another open handle), and one native Qt crash mid-suite, seen once.
-- [ ] A record `vault.coverage` waits on: photo-transfer failures, which only the phone sees (a phone build).
+      again, look for another open handle), and one native Qt crash mid-suite, seen once;
+      `tests/test_inbox.py::test_what_she_read_and_the_person_corrected_is_noted` failed once in a full run (2026-11-06),
+      never alone.
+- [ ] `vault.coverage` is built from the vault's own list (photos over a week old still only on the phone,
+      2026-11-06); photo-transfer failures, which only the phone sees, could sharpen it in a phone build.
+- [ ] Loop coverage (225 of 254): 6 to do, each with its why in `work/loop_coverage.json` (Plaid's two after
+      Zac's work; business-use shares; Classroom and textbooks; online reminders).
 - [ ] Step 4 leftovers: edits on the desktop's Qt screens, Plaid re-categorizations (after Zac's Plaid work), OCR
       field corrections, the Loop's predictions.
 - [ ] Step 8: more cross-domain plans (the benchmark's G questions); calibration against outcomes.
