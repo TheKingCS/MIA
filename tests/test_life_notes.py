@@ -103,3 +103,43 @@ def test_the_loop_counts_offers_turned_down(tmp_path):
         store.offered("idea" if not kept else "commitment", kept)
     reading = {l.id: l for l in loops.LOOPS}["notes.offers"].measure(SimpleNamespace(life_notes=store))
     assert (reading.value, reading.n, reading.detail) == (0.5, 4, "2 of 4 turned down (idea)")
+
+
+def test_what_she_was_told_about_someone(tmp_path):
+    from core.question_plans import PLAN_BY_NAME, Sheet
+
+    sam = SimpleNamespace(name="Sam Rivera", relationship="Brother", person_id="p1")
+    looked = []
+    registry = SimpleNamespace(_actions={"get_person": 1},
+                               execute=lambda context, tool, arguments: looked.append(arguments) or "Sam Rivera, your brother.")
+    memories = [SimpleNamespace(text="Sam is allergic to peanuts", category="Family"),
+                SimpleNamespace(text="Samantha from work likes tea", category="Work")]
+    notes = LifeNotes(data_dir=tmp_path)
+    notes.add("commitment", "fix his gate", who="Sam", by="Saturday")
+    context = SimpleNamespace(relationships=SimpleNamespace(all_people=lambda: [sam]), assistant_actions=registry,
+                              user_memories=SimpleNamespace(all_memories=lambda: memories), life_notes=notes)
+    for asked in ("What have I told you about Sam?", "What do you know about my brother?"):
+        sheet = Sheet("person", "")
+        PLAN_BY_NAME["person"].gather(context, sheet, asked, None)
+        texts = [f.text for f in sheet.facts]
+        assert texts[1:] == ["You told MIA: Sam is allergic to peanuts", "a promise to Sam: fix his gate (by Saturday)"]
+    assert looked[-1] == {"name": "Sam Rivera"}
+    sheet = Sheet("person", "")
+    PLAN_BY_NAME["person"].gather(context, sheet, "What important information have I told you about this person?", None)
+    assert [f.kind for f in sheet.facts] == ["missing"]  # who isn't said: she asks
+
+
+def test_what_they_keep_running_into(tmp_path):
+    from core.question_plans import PLAN_BY_NAME, Sheet
+
+    memories = [SimpleNamespace(text="Mornings are hard after night shifts", category="Struggles & Patterns"),
+                SimpleNamespace(text="Likes fishing", category="Fishing")]
+    insights = [SimpleNamespace(source_type="patterns", title="Workouts slip on Mondays", message="3 of 4 skipped",
+                                status="open"),
+                SimpleNamespace(source_type="maintenance", title="Oil change", message="due", status="open")]
+    context = SimpleNamespace(user_memories=SimpleNamespace(all_memories=lambda: memories),
+                              insights=SimpleNamespace(all_insights=lambda: insights), life_notes=None)
+    sheet = Sheet("patterns", "")
+    PLAN_BY_NAME["patterns"].gather(context, sheet, "What have I repeatedly struggled with?", None)
+    assert [f.text for f in sheet.facts] == ["You told MIA: Mornings are hard after night shifts",
+                                             "Workouts slip on Mondays: 3 of 4 skipped"]

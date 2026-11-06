@@ -11,7 +11,8 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 ### Decisions
 - [ ] **The education ladder** (H-0080 / H-0084): approve, amend or reject **DEC-0102**; pick MIA's **second
       language**; pick the **first two tracks** (Claude suggests Applied Money, then Psychology).
-- [ ] **The savings hound** (muse's couponing proposal / H-0085): approve it or not; groceries and household only
+- [ ] **The savings hound**, now **DEC-0103 (PROPOSED)** (H-0086: Muse took the receipts-first correction): approve,
+      amend or reject it; groceries and household only
       to start (Claude: yes); household needs inside the grocery list (Claude: yes); **are you fine scanning
       receipts into the Inbox** as the price source?
 - [ ] **The rest of the Interconnection Architecture doc** (it arrived cut off after "## 3. Five Layers"): paste it,
@@ -79,7 +80,8 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 - [ ] The phone build bundles Chaquopy's `cryptography` 42.0.8, which the dependency audit doesn't cover yet.
 - [ ] Flaky: `tests/test_reference_library_manager.py` (2026-11-07: one cause found and fixed: deleting a pack failed
       on Windows while libzim still held the file; if `test_search_all_packs_returns_snippet_from_matching_pack` fails
-      again, look for another open handle), and one native Qt crash mid-suite, seen once;
+      again, look for another open handle), and a native Qt crash mid-suite (no summary printed), seen twice (the
+      second 2026-11-06);
       `tests/test_inbox.py::test_what_she_read_and_the_person_corrected_is_noted` failed once in a full run (2026-11-06),
       never alone.
 - [ ] `vault.coverage` is built from the vault's own list (photos over a week old still only on the phone,

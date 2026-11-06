@@ -460,6 +460,68 @@ def _recall(context, sheet, prompt, today):
         _look(context, sheet, "show_my_why", "your goals")
 
 
+def _named_person(context, prompt: str):
+    """The person in People & Pets the question names, by name or by what they are to them ("my sister")."""
+    people = getattr(context, "relationships", None)
+    words = set(re.findall(r"[a-z']+", (prompt or "").lower()))
+    for person in people.all_people() if people is not None else []:
+        if person.name and set(person.name.lower().split()) & words:
+            return person
+    for person in people.all_people() if people is not None else []:
+        rel = (person.relationship or "").lower()
+        if rel and re.search(rf"\bmy {re.escape(rel)}\b", (prompt or "").lower()):
+            return person
+    return None
+
+
+def _person(context, sheet, prompt, today):
+    """E13: what they've told MIA about someone: their People & Pets record, the memories that name them, and the
+    promises, decisions and ideas that involve them."""
+    from core.life_notes import describe
+
+    person = _named_person(context, prompt)
+    if person is None:
+        sheet.add(MISSING, "Which person? Say their name (or what they are to you, like \"my sister\"), and they "
+                           "need to be in People & Pets.", "People & Pets")
+        return
+    _look(context, sheet, "get_person", "People & Pets", name=person.name)
+    names = {w for w in person.name.lower().split() if len(w) > 1}
+    memories = getattr(context, "user_memories", None)
+    told = [m for m in (memories.all_memories() if memories is not None else [])
+            if names & set(re.findall(r"[a-z']+", m.text.lower()))]
+    for m in told[-10:]:
+        sheet.add(FACT, f"You told MIA: {m.text}", "Memories")
+    notes = getattr(context, "life_notes", None)
+    for note in (notes.notes if notes is not None else []):
+        if names & set(re.findall(r"[a-z']+", f"{note.get('who', '')} {note.get('what', '')}".lower())):
+            sheet.add(FACT, describe(note) + (" (done)" if note.get("status") == "done" else ""), "what you told MIA")
+    if not told:
+        sheet.add(MISSING, f"No memories about {person.name} yet.", "Memories")
+
+
+def _patterns(context, sheet, prompt, today):
+    """E4, E8: what they keep running into, as they told MIA, and the patterns her code found in their records."""
+    memories = getattr(context, "user_memories", None)
+    found = [m for m in (memories.all_memories() if memories is not None else [])
+             if m.category == "Struggles & Patterns"]
+    for m in found[-10:]:
+        sheet.add(FACT, f"You told MIA: {m.text}", "Memories (struggles and patterns)")
+    insights = getattr(context, "insights", None)
+    seen = [i for i in (insights.all_insights() if insights is not None else []) if i.source_type == "patterns"]
+    for i in seen[-8:]:
+        sheet.add(CALCULATION, f"{i.title}: {i.message}" + (" (no longer true)" if i.status != "open" else ""),
+                  "patterns in your records")
+    notes = getattr(context, "life_notes", None)
+    for note in (notes.of_kind("dropped_goal") if notes is not None else []):
+        from core.life_notes import describe
+
+        sheet.add(FACT, describe(note), "what you told MIA")
+    if not found and not seen:
+        sheet.add(MISSING, "Nothing yet: no struggles they've told MIA about, and no pattern in the records so far.",
+                  "Memories")
+    _look(context, sheet, "get_journal_themes", "the journal")
+
+
 def _open_loops(context, sheet, prompt, today):
     _notes(context, sheet, "commitment", open_only=True)
     _look(context, sheet, "list_tasks", "Projects")
@@ -614,8 +676,18 @@ PLANS: tuple[Plan, ...] = (
          ("What did I promise someone?", "What commitments have I made?", "What did I say I'd do?",
           "What decisions have I made about this project?", "What did we decide?", "What did I decide about the roof?",
           "What ideas have I mentioned but never pursued?", "What ideas haven't I tried?",
-          "What goals have I abandoned, and why?", "What goals have I set aside?", "What have I given up on?"),
+          "What goals have I abandoned, and why?", "What goals have I set aside?", "What have I given up on?",
+          "What were the reasons behind my last major decision?", "Why did I decide that?"),
          r"\b(promis\w*|commitments?|decid\w*|decisions?|ideas?|abandon\w*|gave up|given up|set aside)\b", _recall),
+    Plan("person", "What you've told MIA about someone",
+         ("What important information have I told you about this person?", "What do you know about my sister?",
+          "What have I told you about my dad?", "Tell me what you remember about my friend.",
+          "What do I know about my neighbor?"),
+         r"\b(told you about|know about|remember about)\b", _person),
+    Plan("patterns", "What you keep running into",
+         ("What have I repeatedly struggled with?", "What patterns have you noticed in my behavior?",
+          "What do I keep running into?", "What do I keep struggling with?", "What patterns do you see in me?"),
+         r"\b(struggl\w*|patterns?|keep running into)\b", _patterns),
     Plan("open loops", "What's unfinished",
          ("What commitments have I made that I haven't completed?", "What projects have I started but not completed?",
           "What have I left unfinished?", "What's still open?"),
@@ -643,13 +715,9 @@ NOT_A_PLAN = (
     'What would an ideal week of progression look like?',
     'What did we discuss about this project last time?',
     'Why did I originally decide to pursue this?',
-    'What have I repeatedly struggled with?',
     'Have I mentioned this problem before?',
-    'What patterns have you noticed in my behavior?',
     'What changed between my original plan and where I am now?',
     'What lessons have I learned from previous experiences?',
-    'What important information have I told you about this person?',
-    'What were the reasons behind my last major decision?',
     'How does this piece of equipment work?',
     "What's the best way to repair this?",
     'What materials would I need for this project?',
