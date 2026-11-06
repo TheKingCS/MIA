@@ -1,65 +1,25 @@
 {
  "about": "core/loop_coverage.py (DEC-0101): every process MIA has, with a loop or a reason. status: todo (needs a loop), proposed (a task drafts it), none (why: no loop needed).",
  "processes": {
-  "action:answer": {
-   "status": "todo"
-  },
   "action:app": {
-   "status": "todo"
+   "status": "none",
+   "why": "which apps show and which are favourites is their own choice; MIA judges nothing in it"
   },
   "action:camera": {
-   "status": "todo"
-  },
-  "action:character": {
-   "status": "todo"
-  },
-  "action:communication": {
-   "status": "todo"
-  },
-  "action:failures": {
-   "status": "todo"
+   "status": "none",
+   "why": "removing a camera they added is their own choice; the feed itself is a device, not a decision of hers"
   },
   "action:firstboot": {
-   "status": "todo"
-  },
-  "action:journal": {
-   "status": "todo"
-  },
-  "action:lab": {
-   "status": "todo"
-  },
-  "action:loop": {
-   "status": "todo"
-  },
-  "action:market": {
-   "status": "todo"
-  },
-  "action:music": {
-   "status": "todo"
-  },
-  "action:myfile": {
-   "status": "todo"
-  },
-  "action:obligation": {
-   "status": "todo"
-  },
-  "action:person": {
-   "status": "todo"
-  },
-  "action:playlist": {
-   "status": "todo"
+   "status": "none",
+   "why": "once per device; the glasses first boot is watched through glasses.voice once it is done"
   },
   "action:profile": {
-   "status": "todo"
+   "status": "none",
+   "why": "their own settings: nothing MIA chose, so nothing of hers to correct"
   },
   "action:setting": {
-   "status": "todo"
-  },
-  "action:shop": {
-   "status": "todo"
-  },
-  "action:track": {
-   "status": "todo"
+   "status": "none",
+   "why": "their own settings: nothing MIA chose, so nothing of hers to correct"
   },
   "check:birthday": {
    "status": "none",
@@ -85,9 +45,6 @@
    "status": "none",
    "why": "it reports the loops: what it says is only as good as they are, and they are watched"
   },
-  "store:business": {
-   "status": "todo"
-  },
   "store:business_use": {
    "status": "todo"
   },
@@ -97,13 +54,7 @@
   "store:conversations": {
    "status": "todo"
   },
-  "store:craft_recipes": {
-   "status": "todo"
-  },
   "store:data_logger": {
-   "status": "todo"
-  },
-  "store:dungeon": {
    "status": "todo"
   },
   "store:energy": {
@@ -128,15 +79,6 @@
   "store:inventory": {
    "status": "todo"
   },
-  "store:journal": {
-   "status": "todo"
-  },
-  "store:kitchen": {
-   "status": "todo"
-  },
-  "store:ledger": {
-   "status": "todo"
-  },
   "store:life_events": {
    "status": "todo"
   },
@@ -155,34 +97,24 @@
   "store:notifications": {
    "status": "todo"
   },
-  "store:obligations": {
-   "status": "todo"
-  },
   "store:online_reminders": {
    "status": "todo"
   },
   "store:passwords": {
-   "status": "todo"
+   "status": "none",
+   "why": "secrets: never measured"
   },
   "store:personal_life_events": {
-   "status": "todo"
-  },
-  "store:places": {
    "status": "todo"
   },
   "store:plaid": {
    "status": "todo"
   },
   "store:private_journal": {
-   "status": "todo"
-  },
-  "store:real_estate": {
-   "status": "todo"
+   "status": "none",
+   "why": "private: never measured"
   },
   "store:record_sets": {
-   "status": "todo"
-  },
-  "store:relationships": {
    "status": "todo"
   },
   "store:saga_moments": {
@@ -198,9 +130,6 @@
    "status": "todo"
   },
   "store:waypoints": {
-   "status": "todo"
-  },
-  "store:world_map": {
    "status": "todo"
   }
  }

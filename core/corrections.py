@@ -47,18 +47,22 @@ _lock = threading.Lock()
 # area -> words its kinds start with or contain (an action's family before the dot, or a tool's name)
 AREAS = {
     "money": ("bill", "income", "expense", "debt", "budget", "asset_value", "portfolio", "freedom", "insurance",
-              "sale", "order", "quote", "customer", "shop_expense", "payment", "spend"),
+              "sale", "order", "quote", "customer", "shop_expense", "payment", "spend", "obligation", "market"),
     "kitchen": ("recipe", "pantry", "meal", "grocery", "cook", "food"),
     "workouts": ("workout", "exercise", "fitness", "training", "run", "lift"),
-    "missions": ("mission", "quest", "objective", "pathway", "boss", "raid", "dungeon", "party", "reward"),
+    "missions": ("mission", "quest", "objective", "pathway", "boss", "raid", "dungeon", "party", "reward", "shop",
+                 "character"),
     "calendar": ("event", "calendar", "reminder", "alarm"),
     "maintenance": ("maintenance", "asset", "gear", "reading", "vehicle"),
     "inbox": ("inbox", "document", "scan"),
-    "memories": ("memory", "remember", "forget"),
+    "memories": ("memory", "remember", "forget", "journal"),
     "creations": ("creation", "records", "workflow"),
     "home": ("grow", "flock", "pet", "property", "security", "place", "trip", "expedition", "map", "product",
              "material", "component", "craft", "goods", "job", "batch", "experiment"),
-    "tasks": ("task", "routine", "plan", "project"),
+    "tasks": ("task", "routine", "plan", "project", "loop"),
+    "people": ("person", "relationship"),
+    "music": ("playlist", "track", "music"),
+    "files": ("myfile",),
 }
 
 

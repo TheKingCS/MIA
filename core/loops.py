@@ -649,6 +649,21 @@ def _coder(_context) -> Optional[Reading]:
     return Reading(row["rate"] or 0.0, row["attempts"], f"{row['passed']} of {row['attempts']} shadow attempts passed")
 
 
+def _lab_landed(_context) -> Optional[Reading]:
+    """Her lab proposals from the last 60 days that are settled: how many went in and stayed."""
+    from core import dev_lab
+
+    cut = _since(60)[:19]
+    settled = [p for p in dev_lab.all_proposals() if p.created_at[:19] >= cut
+               and p.status in (dev_lab.MERGED, dev_lab.REVERTED, dev_lab.REJECTED)]
+    if not settled:
+        return None
+    landed = sum(1 for p in settled if p.status == dev_lab.MERGED)
+    turned = sum(1 for p in settled if p.status == dev_lab.REJECTED)
+    return Reading(round(landed / len(settled), 2), len(settled), f"{landed} of {len(settled)} went in; {turned} turned "
+                   f"down, {len(settled) - landed - turned} reverted")
+
+
 def _limits(_context) -> Optional[Reading]:
     from core import dev_usage
 
@@ -774,9 +789,10 @@ def _night_choice(_context) -> Optional[Reading]:
 LOOPS: tuple[Loop, ...] = (
     # A. Conversation and intelligence
     Loop("answers.failures", "answers", "turns that went wrong, per 100", "person",
-         _per_100_turns(()), min_n=20, files=("core/assistant_turn.py",), covers=("flow:talk", "module:assistant")),
+         _per_100_turns(()), min_n=20, files=("core/assistant_turn.py",),
+         covers=("flow:talk", "module:assistant", "action:failures")),
     Loop("answers.thumbs", "answers", "answers rated 👍", "person", _thumbs, better="higher", floor=0.7, min_n=5,
-         covers=("flow:talk", "store:ratings")),
+         covers=("flow:talk", "store:ratings", "action:answer")),
     Loop("answers.rephrased", "answers", "asked again in other words, per 100 turns", "person",
          _per_100_turns(("rephrased",)), min_n=20, files=("core/assistant_turn.py",), covers=("flow:talk",)),
     Loop("answers.talked_instead", "answers", "had the tool but only talked, per 100 turns", "person",
@@ -822,7 +838,7 @@ LOOPS: tuple[Loop, ...] = (
     Loop("gate.saturation", "proactivity", "days the daily limit of unprompted messages was hit, in 7", "person",
          _gate_saturation, floor=2, covers=("flow:gate",)),
     Loop("gate.unwelcome", "proactivity", "kinds of message on a break for being dismissed", "person", _gate_unwelcome,
-         acts="watch", covers=("flow:gate",)),
+         acts="watch", covers=("flow:gate", "action:communication")),
     # B. Proactivity, and C. corrections (drafted at Night School, T-0047)
     Loop("actions.failed", "corrections", "things approved that broke when they ran, in 7 days", "person",
          _actions_failed, floor=0, files=("core/actions.py",), covers=("flow:actions",)),
@@ -850,7 +866,7 @@ LOOPS: tuple[Loop, ...] = (
     *(Loop(f"corrections.{area}", "corrections", f"her changes in {area} corrected within 3 days", "person",
            _corrections(area), floor=0.25, min_n=5) for area in (
         "money", "kitchen", "workouts", "missions", "calendar", "maintenance", "inbox", "memories", "creations",
-        "home", "tasks")),
+        "home", "tasks", "people", "music", "files")),
     # D. Her creations
     Loop("creations.maker", "creations", "designs that missed their checks the first time (Make Something)", "person",
          _maker, floor=0.5, min_n=5, files=("core/creation_maker.py",), covers=("module:web_home",)),
@@ -878,6 +894,8 @@ LOOPS: tuple[Loop, ...] = (
          files=("core/dev_knowledge.py",), covers=("dev:knowledge",)),
     Loop("dev.coder", "development", "MIA's coder: shadow attempts passed", "device", _coder, better="higher",
          acts="watch", covers=("dev:shadow",)),
+    Loop("dev.lab", "development", "her lab proposals that went in, of those settled in 60 days", "device", _lab_landed,
+         better="higher", floor=0.5, min_n=5, files=("core/dev_lab.py", "core/mia_coder.py"), covers=("action:lab",)),
     Loop("dev.limits", "development", "usage limits hit in a week", "device", _limits, acts="watch", covers=("dev:usage",)),
     Loop("dev.council_cost", "development", "calls per council turn", "device", _council_cost, acts="watch", covers=("dev:council",)),
     Loop("dev.chronicles", "development", "Chronicles candidates waiting", "device", _chronicles, acts="watch",

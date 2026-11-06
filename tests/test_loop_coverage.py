@@ -28,9 +28,9 @@ def test_the_inventory_reads_the_code(tmp_path):
     assert "store:journal" in every and "check:loops" in every and "module:notes" in every
     assert "action:bill" in every and "flow:talk" in every and "dev:night_school" in every
     path = tmp_path / "coverage.json"
-    loop_coverage.save_decisions({"store:journal": {"status": "none", "why": "private: never measured"}}, path)
+    loop_coverage.save_decisions({"store:private_journal": {"status": "none", "why": "private: never measured"}}, path)
     rows = {r["id"]: r for r in loop_coverage.report(path=path)["rows"]}
-    assert rows["store:journal"]["state"] == "declined" and rows["flow:talk"]["state"] == "covered"
+    assert rows["store:private_journal"]["state"] == "declined" and rows["flow:talk"]["state"] == "covered"
     assert rows["store:passwords"]["state"] == "new" and rows["module:notes"]["state"] == "covered"  # screens.broken
     loop_coverage.mark(["store:passwords"], "proposed", task="T-0099", path=path)
     assert loop_coverage.decisions(path)["store:passwords"] == {"status": "proposed", "task": "T-0099"}
@@ -39,7 +39,8 @@ def test_the_inventory_reads_the_code(tmp_path):
 def test_the_corrections_loops_cover_their_areas_action_families():
     rows = {r["id"]: r for r in loop_coverage.report()["rows"]}
     assert rows["action:bill"]["loops"] == ["corrections.money"] and rows["action:recipe"]["loops"] == ["corrections.kitchen"]
-    assert rows["action:music"]["state"] == "todo"  # no area: still to do
+    assert rows["action:playlist"]["loops"] == ["corrections.music"] and rows["store:relationships"]["loops"] == [
+        "corrections.people"]  # a store, by the hand-chosen list
 
 
 def test_the_hand_chosen_corrections_list_names_real_processes():
