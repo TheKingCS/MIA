@@ -44,7 +44,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from core.leveling import compute_prestige_level_progress, prestige_color_for_tier
+# format_level_footer_line lives in core, shared with Skills (T-0042: modules never import each other).
+from core.leveling import compute_prestige_level_progress, format_level_footer_line, prestige_color_for_tier
 from core.mission_manager import Mission, Objective
 from gui.add_edit_mission_dialog import AddEditMissionDialog
 from gui.add_edit_objective_dialog import AddEditObjectiveDialog
@@ -86,16 +87,6 @@ def format_objective_row(objective: Objective, progress: float, is_complete: boo
 def format_rewards_line(reward_credits: int, reward_xp: int) -> str:
     """Pure formatting logic — testable without Qt (see tests/test_missions_module.py)."""
     return f"${reward_credits:,}    {reward_xp:,} XP"
-
-
-def format_level_footer_line(level: int, xp_into_level: int, xp_needed: int, prestige_tier: int = 0) -> str:
-    """Pure formatting logic — testable without Qt (see tests/test_missions_module.py).
-    `prestige_tier` defaults to 0 so every existing call keeps working
-    unchanged; the "· PRESTIGE N" segment is omitted entirely at tier 0
-    (never prestiged), same restraint modules/skills/module.py's own
-    format_header_stats_line() already established."""
-    prestige_part = f"    PRESTIGE {prestige_tier}" if prestige_tier > 0 else ""
-    return f"Level {level}    {xp_into_level:,} / {xp_needed:,}{prestige_part}"
 
 
 def format_objectives_heading(completed: int, total: int) -> str:

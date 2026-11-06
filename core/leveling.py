@@ -126,3 +126,11 @@ def compute_prestige_level_progress(total_xp: int, prestige_tier: int) -> tuple[
         capped_needed = xp_required_for_level(100)
         return 100, capped_needed, capped_needed
     return level, xp_into_level, xp_needed
+
+
+def format_level_footer_line(level: int, xp_into_level: int, xp_needed: int, prestige_tier: int = 0) -> str:
+    """Pure formatting logic, shared by the Missions and Skills screens (moved here from
+    modules/missions/module.py, T-0042: modules never import each other). The "PRESTIGE N"
+    segment is left out at tier 0 (never prestiged)."""
+    prestige_part = f"    PRESTIGE {prestige_tier}" if prestige_tier > 0 else ""
+    return f"Level {level}    {xp_into_level:,} / {xp_needed:,}{prestige_part}"

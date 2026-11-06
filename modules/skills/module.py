@@ -68,7 +68,7 @@ from gui.widgets.blueprint_frame import BlueprintFrame
 from gui.widgets.glow import apply_panel_glow
 from gui.widgets.photo_background_frame import PhotoBackgroundFrame
 from gui.widgets.skill_tree_canvas import SkillTreeCanvas
-from modules.missions.module import format_level_footer_line
+from core.leveling import format_level_footer_line  # shared with Missions (T-0042)
 from modules.module_base import ModuleBase
 
 # Maximum width for a skill card's wrapping labels (see
