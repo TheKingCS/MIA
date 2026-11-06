@@ -40,6 +40,8 @@ REASONS: dict[str, tuple[str, str]] = {
     "journal_reflection": ("the weekly reflection", "you turned on the weekly journal reflection"),
     "capability_gap": ("things I can't do yet", "you asked for something more than once that I can't do yet, and I "
                                                 "found what it would take; each one at most once a fortnight"),
+    "operating_journal": ("your Operating Journal", "on Sundays, when some of your lines are yours to rate (I can't "
+                                                    "see them in your records), I ask how the week went once"),
     "self_report": ("my weekly report", "on Sundays I tell the PC's owner what got better in me and what I'm working on"),
 }
 

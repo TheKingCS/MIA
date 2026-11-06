@@ -353,6 +353,20 @@ def _seasons(context, sheet, prompt, today):
         sheet.add(MISSING if line.startswith("Nothing recorded") else CALCULATION, line, "your history")
 
 
+def _operating(context, sheet, prompt, today):
+    """The Operating Journal (DEC-0097, core/operating_journal.py): each line against what the records show."""
+    from core import operating_journal
+    from core.region import money
+
+    lines = operating_journal.picture(context, today, money_word=lambda v: money(v))
+    if not lines:
+        sheet.add(MISSING, "There's no Operating Journal yet: say \"add to my operating journal\" and how you mean "
+                           "to operate (\"work out 4 times a week\", \"cook at home 5 nights a week\").", "the Operating Journal")
+    for line in lines:
+        sheet.add(CALCULATION, line, "the Operating Journal")
+    _look(context, sheet, "get_loop", "the Loop (your routine)")
+
+
 def _open_loops(context, sheet, prompt, today):
     _look(context, sheet, "list_tasks", "Projects")
     _look(context, sheet, "list_projects", "Projects")
@@ -477,6 +491,11 @@ PLANS: tuple[Plan, ...] = (
           "How does this month compare to last month?", "What changed in my life this year?",
           "Was this a better month than last?"),
          r"\b(chang\w*|different|compar\w*|how (was|did)|better|worse)\b.*\b(month|year)\b|\bmy year\b", _seasons),
+    Plan("operating", "How you're operating",
+         ("Am I living how I said I want to?", "How am I doing against my operating journal?",
+          "Am I keeping my rules?", "How does my week compare to how I want to operate?",
+          "Am I operating the way I want to?", "What's my operating journal say?"),
+         r"\boperating\b|\bmy rules\b|\bhow i (said i )?want to (live|operate)\b", _operating),
     Plan("open loops", "What's unfinished",
          ("What commitments have I made that I haven't completed?", "What projects have I started but not completed?",
           "What have I left unfinished?", "What's still open?"),

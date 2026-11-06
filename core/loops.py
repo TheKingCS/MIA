@@ -334,6 +334,19 @@ def _gaps(context) -> Optional[Reading]:
     return Reading(s["repeated"], s["gaps"], f"{s['repeated']} asked more than once, of {s['gaps']}" + (f" ({by})" if by else ""))
 
 
+def _journal_pace(context) -> Optional[Reading]:
+    if getattr(context, "operating_journal", None) is None:
+        return None
+    from core import operating_journal
+
+    found = operating_journal.pace(context)
+    if found is None:
+        return None
+    share, n, by = found
+    return Reading(share, n, f"{round(share * n)} of {n} full weeks or months at their own pace: " + ", ".join(
+        f"{area} {a}/{b}" for area, (a, b) in sorted(by.items())))
+
+
 def _unused_creations(context) -> Optional[Reading]:
     store = getattr(context, "creations", None)
     if store is None:
@@ -572,6 +585,10 @@ LOOPS: tuple[Loop, ...] = (
          covers=("store:ratings",)),
     Loop("memory.quality", "answers", "memories corrected within 14 days of being kept", "person", _memory_quality,
          floor=0.15, min_n=5, files=("core/user_memory_manager.py",), covers=("store:user_memories", "module:memories")),
+    # The Operating Journal (DEC-0097): theirs to see, never a task or a nudge (DEC-0014)
+    Loop("journal.pace", "life", "how often they operate the way they said they mean to", "person", _journal_pace,
+         better="higher", acts="watch", covers=("store:operating_journal", "action:operating",
+                                                "check:operating_journal")),
     Loop("gate.saturation", "proactivity", "days the daily limit of unprompted messages was hit, in 7", "person",
          _gate_saturation, floor=2, covers=("flow:gate",)),
     Loop("gate.unwelcome", "proactivity", "kinds of message on a break for being dismissed", "person", _gate_unwelcome,

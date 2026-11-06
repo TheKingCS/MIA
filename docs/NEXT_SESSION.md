@@ -37,7 +37,9 @@ Step 8 has begun: questions across domains compose plans; `afford` and `slipped`
 are, checked by `answers.calibration`. Flaky, seen once each: the reference-library test above, and one
 native Qt crash mid-suite (a rerun was clean).
 Step 9 is built: capability gaps (`core/capability_gaps.py`, `python -m tools.gaps`). Step 10 too: seasons of
-memory (`core/seasons.py`). Next: step 11, the Operating Journal (DEC-0097).
+memory (`core/seasons.py`). Step 11 too: the Operating Journal (`core/operating_journal.py`); **Zac:** write
+your first lines by talking to MIA ("add to my operating journal: work out 4 times a week"), then ask
+"am I living how I said I want to?". Next: step 12, recreation in the health cluster (DEC-0098).
 A flaky test seen once: `tests/test_reference_library_manager.py::test_search_all_packs_returns_snippet_from_matching_pack`.
 
 **Glasses navigation: `docs/GLASSES_NAVIGATION_PLAN.md` is a draft waiting on

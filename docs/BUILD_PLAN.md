@@ -112,10 +112,13 @@ first. Each is a step below.
     biggest moments); the `seasons` question plan puts it on a sheet for the model to phrase ("what changed this
     month?", "how was my year?", "how did October go?"); each closed month and year is kept once in the person's
     folder for the Chronicle's yearly edition (which isn't built yet: step 17). No money for a child.
-11. ⬜ **The Operating Journal** (DEC-0097): a template, filled by talking to MIA or on a screen, for how Zac means
-    to operate (values, priorities, the ideal day and week, rules he keeps) and a regular entry for how he did;
-    MIA compares intent with what the records show (the Loop, missions, money, workouts), and the gap becomes a
-    loop he sees, never a judgment. 🧑 *Zac writes the first one with MIA.*
+11. ✅ **The Operating Journal** (DEC-0097; `core/operating_journal.py`, 2026-11-06): the person's lines (values,
+    priorities, the ideal day and week, rules), each read by code for what the records can check (workouts, meals,
+    people, tasks, missions, upkeep a week; spending in a category a month) or else self-rated 1 to 5 each week;
+    how they did as plain numbers by week, never a judgment (the `operating` plan: "am I living how I said I want
+    to?"); talked to with "add to my operating journal: ..." and "rate early mornings 4"; on Sundays one question
+    for the lines only they can rate; `journal.pace` is theirs to see, never a task. Not yet: a screen for it
+    (muse's look). 🧑 *Zac writes the first one with MIA.*
 12. ⬜ **Recreation in the health cluster** (DEC-0098): sports and play logged as activities (what, with whom,
     how long, how hard), counting toward training load, skills and the Chronicle; voice-loggable ("played
     pickleball for an hour").

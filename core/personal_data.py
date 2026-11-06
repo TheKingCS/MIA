@@ -97,6 +97,7 @@ from core.the_loop import LoopBook
 from core.training_session import TrainingStore
 from core.failure_log import FailureLog
 from core.answer_ratings import AnswerRatings
+from core.operating_journal import OperatingJournal
 from core.turn_trace import TurnTraces
 from core.saga import SagaMoments
 from core.creations import Creations
@@ -157,6 +158,7 @@ PERSONAL_STORES: tuple[tuple[str, type], ...] = (
     ("creations", Creations),  # screens MIA made for this person (DEC-0091)
     ("my_record_sets", RecordSets),  # their own record sets (DEC-0089)
     ("ratings", AnswerRatings),  # 👍 and 👎 on her answers (DEC-0067)
+    ("operating_journal", OperatingJournal),  # how they mean to operate, and how they do (DEC-0097)
     ("quest_book", QuestBook),
     ("world_map", WorldMap),
     ("memory_vault", MemoryVault),

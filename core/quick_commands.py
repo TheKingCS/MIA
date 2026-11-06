@@ -162,6 +162,11 @@ def handle(context, text: str) -> Optional[str]:
     said = gap_reply(context, text)  # "build it" / "bring it back", to her latest capability-gap offer
     if said is not None:
         return said
+    from core.operating_journal import reply as journal_reply
+
+    said = journal_reply(context, text)  # "add to my operating journal: ...", "rate early mornings 4" (DEC-0097)
+    if said is not None:
+        return said
 
     fit = getattr(context, "fitness", None)
     plan = fit.plan if fit is not None else None

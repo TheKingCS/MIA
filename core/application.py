@@ -720,6 +720,7 @@ class MIAApplication:
             ("self_report", self._check_self_report),
             ("capability_gaps", self._check_capability_gaps),
             ("seasons_of_memory", self._check_seasons_of_memory),
+            ("operating_journal", self._check_operating_journal),
         ]
         # 2026-09-27, Cognitive Extension slice C: checks no longer notify
         # directly. Each one offers what it would say (_offer()), and the
@@ -775,6 +776,12 @@ class MIAApplication:
         from core import seasons
 
         seasons.close_past(self.context, now.date())
+
+    def _check_operating_journal(self, now: datetime, today_iso: str) -> None:
+        """The Operating Journal (DEC-0097): on Sundays, the lines only the person can rate, asked once, gently."""
+        from core.operating_journal import weekly_offer
+
+        self._offers.extend(weekly_offer(self.context, now.date()))
 
     def _check_workflows(self, now: datetime, today_iso: str) -> None:
         """Workflows MIA made whose trigger has come round (core/workflows.py, DEC-0092): run them;

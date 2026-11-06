@@ -136,8 +136,8 @@ def test_a_child_can_only_take_child_actions(world):
     kitchen_and_workout = ("recipe.", "pantry.", "grocery.", "meal.", "exercise.", "workout.", "training.",
                            "mission.", "objective.", "pathway.", "character.", "fitness.", "plan.")
     # Children also keep their own Journal and Music playlists (2026-10-16).
-    # ...and their own Reward Shop and boss fights (DEC-0028).
-    assert {k for k in child_ok if not k.startswith(kitchen_and_workout + ("firstboot.", "journal.", "playlist.", "shop", "boss.", "person.", "pet.", "memory.", "batch.", "grow.", "quest.", "map.", "raid.", "party.", "place."))} == {"task.done", "routine.log", "app.visibility",
+    # ...and their own Reward Shop and boss fights (DEC-0028), and their own Operating Journal (DEC-0097).
+    assert {k for k in child_ok if not k.startswith(kitchen_and_workout + ("firstboot.", "journal.", "operating.", "playlist.", "shop", "boss.", "person.", "pet.", "memory.", "batch.", "grow.", "quest.", "map.", "raid.", "party.", "place."))} == {"task.done", "routine.log", "app.visibility",
                                                                                  "app.favorite", "profile.edit",
                                                                                  "setting.set", "communication.resume",
                                                                                  "loop.checkin_done",  # their own weekly debrief (DEC-0047)
