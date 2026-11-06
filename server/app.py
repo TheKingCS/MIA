@@ -844,6 +844,13 @@ def create_app(context: AppContext) -> FastAPI:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "That article isn't in the library.")
         return found
 
+    @app.get("/api/navigation")
+    def navigation_screen(start: str = "", end: str = "", profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.navigation_web import screen  # waypoints, a route between two, the sun and moon
+
+        with app.state.turn_lock:
+            return screen(view_for(context, profile_id), start[:40], end[:40])
+
     @app.get("/api/household")
     def household_screen(profile_id: str = Depends(require_profile_id)) -> dict:
         from core.household_routines import screen  # the household's routines; logging one is routine.log

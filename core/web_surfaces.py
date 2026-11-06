@@ -150,7 +150,7 @@ APPS: tuple[App, ...] = (
     App("maps", "Maps", "🗺", "Know the ground.", None,
         "Waypoints, a real offline basemap, and official trail maps.", OUTDOORS, ("maps",),
         "Which trail maps do I have?"),
-    App("navigation", "Navigation", "🧭", "Find the way.", None,
+    App("navigation", "Navigation", "🧭", "Find the way.", "navigation.html",
         "Waypoints, distance/bearing, and sun/moon reference.", OUTDOORS, ("waypoints",),
         "How far is camp from the trailhead?"),
     App("knowledge", "Knowledge", "📚", "The offline library.", "knowledge.html",

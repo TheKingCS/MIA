@@ -207,6 +207,13 @@
       "page": "vault.html"
     },
     {
+      "id": "navigation",
+      "name": "Navigation",
+      "icon": "🧭",
+      "tagline": "Find the way.",
+      "page": "navigation.html"
+    },
+    {
       "id": "knowledge",
       "name": "Knowledge",
       "icon": "📚",

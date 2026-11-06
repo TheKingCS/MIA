@@ -59,7 +59,7 @@ Screens: `docs/design_handoff/screens/<name>.png` (placeholder data).
 | Maps: Waypoints | Waypoints | `maps__01_waypoints` | |  | |
 | Maps: Basemap | Offline basemap | `maps__02_basemap` | |  | |
 | Maps: Trail maps | Trail map PDFs | `maps__03_trail_maps` | |  | |
-| Navigation | Distance, bearing, sun and moon | `navigation` | |  | |
+| Navigation | Distance, bearing, sun and moon | `navigation` | ✅ `/api/navigation` | ✅ waypoints with grid references, distance and bearing between two, sunrise, sunset and the moon at one (2026-11-06) (not yet: adding, editing and deleting a waypoint on the page; by voice works) | |
 | Assistant | Full chat with MIA, history, voice | `assistant` | |  | |
 | Inbox | Documents to file, email intake | `(none)` | ✅ `/api/inbox` + `inbox.file`, `inbox.dismiss`, `inbox.note`; `/api/inbox/upload` | ✅ send a photo, file or note; the phone's Share menu (phone app); waiting items with MIA's reading, File It (what it's for, total, category, maintenance steps, details), Dismiss, history (email setup stays on the PC) | |
 | Calendar | Events and alarms | `(inside Dashboard/Home)` | |  | |

@@ -221,6 +221,12 @@
     council: () => demo ? Promise.resolve({ messages: [], members: [] }) : call("GET", "/api/council"),
     councilSay: (body) => demo ? Promise.resolve({}) : call("POST", "/api/council", body),
     // The Operating Journal, games played and Good News Radio (DEC-0097, 0098, 0096); changes go through actions.
+    navigation: (start = "", end = "") => demo ? Promise.resolve({ day: "2026-11-06", waypoints: [
+      { id: "w1", name: "Spring", category: "Water", lat: 40.01, lon: -105.0, grid: "13T DE 91476 30318" },
+      { id: "w2", name: "Trailhead", category: "Trail", lat: 40.0, lon: -105.0, grid: "13T DE 91497 29207" }],
+      route: start && end ? { from: start, to: end, km: 1.11, miles: 0.69, bearing: 0, toward: "N" } : null,
+      sky: { at: "w2", name: "Trailhead", sunrise: "06:31", sunset: "16:51", moon: "Full moon" } })
+      : call("GET", "/api/navigation?start=" + encodeURIComponent(start) + "&end=" + encodeURIComponent(end)),
     household: () => demo ? Promise.resolve({ done: 1, total: 3, routines: [
       { id: "t1", name: "Dishes", every: "day", done: true, progress: 1, target: 1, streak: 6 },
       { id: "t2", name: "Make the bed", every: "day", done: false, progress: 0, target: 1, streak: 0 },
