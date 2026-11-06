@@ -39,7 +39,7 @@ import shutil
 import time
 import uuid
 from dataclasses import asdict, dataclass, field
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
@@ -336,6 +336,7 @@ class InboxManager:
         item = self.get_item(item_id)
         if item is None or item.status != PENDING:
             raise ValueError("That item isn't waiting in the inbox.")
+        corrected = reading_corrections(item, amount, category, asset_id)
         asset_id = item.asset_id if asset_id is None else asset_id
         project_id = item.project_id if project_id is None else project_id
         amount = item.amount if amount is None else amount
@@ -408,7 +409,35 @@ class InboxManager:
         item.asset_id, item.project_id = asset_id or "", project_id or ""
         item.filed_note = "Filed: " + ", ".join(done) + "."
         self._save()
+        self._note_reading(item, corrected)
         return item.filed_note
+
+    def _note_reading(self, item, corrected: list[str]) -> None:
+        """For the inbox.reading loop (build plan step 4): each filed item, which of the fields MIA read the person
+        corrected (field names only, never values)."""
+        try:
+            self.data_dir.mkdir(parents=True, exist_ok=True)
+            with open(self.data_dir / "inbox_reading.jsonl", "a", encoding="utf-8") as out:
+                out.write(json.dumps({"at": datetime.now().isoformat(timespec="seconds"), "doc_type": item.doc_type,
+                                      "corrected": corrected}) + "\n")
+        except OSError:
+            log.exception("Inbox: couldn't note the reading")
+
+    def readings(self, days: int = 60) -> list[dict]:
+        since = (datetime.now() - timedelta(days=days)).isoformat(timespec="seconds")
+        try:
+            lines = (self.data_dir / "inbox_reading.jsonl").read_text(encoding="utf-8").splitlines()
+        except OSError:
+            return []
+        out = []
+        for line in lines:
+            try:
+                found = json.loads(line)
+            except ValueError:
+                continue
+            if found.get("at", "") >= since:
+                out.append(found)
+        return out
 
     def _documents_to_attach(self, item: InboxItem) -> list[str]:
         """The real documents: an email's attachments rather than the
@@ -442,6 +471,22 @@ class InboxManager:
             if score > best_score:
                 best, best_score = item, score
         return best
+
+
+def reading_corrections(item: InboxItem, amount, category, asset_id) -> list[str]:
+    """Pure logic. Which of the fields MIA read from a document the person changed when filing it (build plan
+    step 4's inbox.reading): "amount", "amount missed" (she read none), "category", "equipment". Names only."""
+    out = []
+    if amount is not None:
+        if not item.amount:
+            out.append("amount missed")
+        elif abs(float(amount) - float(item.amount)) > 0.005:
+            out.append("amount")
+    if category and item.category and category != item.category:
+        out.append("category")
+    if asset_id is not None and item.asset_id and asset_id != item.asset_id:
+        out.append("equipment")
+    return out
 
 
 def describe_detail_updates(proposals: list[DetailProposal]) -> str:

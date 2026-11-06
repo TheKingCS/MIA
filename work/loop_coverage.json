@@ -91,9 +91,6 @@
   "action:grow": {
    "status": "todo"
   },
-  "action:inbox": {
-   "status": "todo"
-  },
   "action:income": {
    "status": "todo"
   },
@@ -496,9 +493,6 @@
    "status": "todo"
   },
   "store:homestead": {
-   "status": "todo"
-  },
-  "store:inbox": {
    "status": "todo"
   },
   "store:insights": {

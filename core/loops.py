@@ -437,6 +437,23 @@ def _loop_prediction(context) -> Optional[Reading]:
                    f"{found['extra']} worked days it hadn't planned")
 
 
+def _inbox_reading(context) -> Optional[Reading]:
+    inbox = getattr(context, "inbox", None)
+    if inbox is None or not hasattr(inbox, "readings"):
+        return None
+    found = inbox.readings()
+    if not found:
+        return None
+    fixed = [r for r in found if r.get("corrected")]
+    by: dict[str, int] = {}
+    for r in fixed:
+        for f in r["corrected"]:
+            by[f] = by.get(f, 0) + 1
+    return Reading(round(len(fixed) / len(found), 2), len(found), f"{len(fixed)} of {len(found)} filed documents had a "
+                   f"field corrected" + (": " + ", ".join(f"{k} {n}" for k, n in sorted(by.items(), key=lambda kv: -kv[1]))
+                                         if by else ""))
+
+
 def _unused_creations(context) -> Optional[Reading]:
     store = getattr(context, "creations", None)
     if store is None:
@@ -694,6 +711,8 @@ LOOPS: tuple[Loop, ...] = (
          acts="watch", covers=("flow:phone",)),
     Loop("loop.prediction", "corrections", "the Loop's planned work days that didn't match what happened, 4 weeks",
          "person", _loop_prediction, floor=0.3, min_n=8, files=("core/the_loop.py",), covers=("store:loop", "check:loop")),
+    Loop("inbox.reading", "corrections", "documents whose read fields were corrected when filed, in 60 days", "person",
+         _inbox_reading, floor=0.25, min_n=5, files=("core/inbox_manager.py",), covers=("store:inbox", "action:inbox")),
     Loop("gate.saturation", "proactivity", "days the daily limit of unprompted messages was hit, in 7", "person",
          _gate_saturation, floor=2, covers=("flow:gate",)),
     Loop("gate.unwelcome", "proactivity", "kinds of message on a break for being dismissed", "person", _gate_unwelcome,
