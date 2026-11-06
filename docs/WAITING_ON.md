@@ -105,7 +105,9 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       **reliable trigger** (2026-11-06): one more test in `tests/test_server_app.py` that creates a second profile
       and logs it in (any route after) makes the full suite die later with "Fatal Python error: Aborted" / an
       access violation inside anyio's event loop, at `tests/test_user_sync.py::test_through_the_server`; never in
-      a subset. Something builds up per signed-in person across test clients (not a Qt object: no store is one).
+      a subset. Signing in alone didn't trigger it; a request as that person afterwards (`/api/diagnostics` or
+      `/api/council`, both a 403) did, so look at what building a person's view on a worker thread leaves behind
+      (not a Qt object: no store is one; not the reference library: it isn't per person).
       Worked around by checking the 403 inside the council test, which already signs a second person in;
       `tests/test_inbox.py::test_what_she_read_and_the_person_corrected_is_noted` failed once in a full run (2026-11-06),
       never alone.
