@@ -34,6 +34,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from core.corrections import screen_edit
 from core.relationships_manager import Pet, Person, days_until_birthday
 from gui.add_edit_pet_dialog import AddEditPetDialog
 from gui.add_edit_person_dialog import AddEditPersonDialog
@@ -177,6 +178,7 @@ class RelationshipsModule(ModuleBase):
             birthday=dialog.entered_birthday, favorite_things=dialog.entered_favorite_things,
             gift_ideas=dialog.entered_gift_ideas, notes=dialog.entered_notes, email=dialog.entered_email,
         )
+        screen_edit(self.context, "person.edit", person_id)  # someone she added, fixed by hand (step 4)
         self._refresh_person_list()
 
     def _on_delete_person(self) -> None:
@@ -185,6 +187,7 @@ class RelationshipsModule(ModuleBase):
             QMessageBox.information(None, "No Person Selected", "Select a person to delete.")
             return
         self.context.relationships.delete_person(person_id)
+        screen_edit(self.context, "person.delete", person_id)
         self._refresh_person_list()
 
     # ------------------------------------------------------------------

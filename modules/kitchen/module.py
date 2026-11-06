@@ -61,6 +61,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from core.corrections import screen_edit
 from core.kitchen_manager import (
     GroceryListItem,
     MealLogEntry,
@@ -440,10 +441,12 @@ class KitchenModule(ModuleBase):
             notes=dialog.entered_notes,
             locked=dialog.entered_locked,
         )
+        screen_edit(self.context, "recipe.edit", recipe_id)  # her recipe, fixed by hand: a correction (step 4)
         self._show_recipe_detail_page(recipe_id)
 
     def _on_delete_recipe(self, recipe_id: str) -> None:
         self.context.kitchen.delete_recipe(recipe_id)
+        screen_edit(self.context, "recipe.delete", recipe_id)
         self._show_recipe_list_page()
 
     # ------------------------------------------------------------------
@@ -1025,6 +1028,7 @@ class KitchenModule(ModuleBase):
             QMessageBox.information(None, "No Entry Selected", "Select a meal log entry to delete.")
             return
         self.context.kitchen.delete_meal_log_entry(entry_id)
+        screen_edit(self.context, "meal.delete", entry_id)
         self._refresh_meal_log_list()
 
     # ------------------------------------------------------------------

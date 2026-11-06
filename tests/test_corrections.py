@@ -108,3 +108,25 @@ def test_undo_that_through_the_undo_log(tmp_path):
     assert corrections.summary(who) == {"money": {"changes": 1, "corrected": 0, "kinds": {}}}
     undo_last(who, "p1")
     assert corrections.summary(who)["money"]["corrected"] == 1
+
+
+def test_her_tools_are_matched_by_what_they_change():
+    """A tool's name against an action's family: the same kind of record in the same area."""
+    assert corrections._same_thing("add_calendar_event", "event") and corrections._same_thing("log_meal", "meal")
+    assert corrections._same_thing("add_maintenance_task", "maintenance_task")
+    assert not corrections._same_thing("add_task", "maintenance_task")  # a project task isn't an upkeep task
+    assert not corrections._same_thing("add_recipe", "event")
+
+
+def test_an_edit_on_a_desktop_screen_corrects_her_tool(tmp_path):
+    from core import life_events
+
+    who = person(tmp_path)
+    corrections.mia_changed(who, "add_recipe", {"name": "Chili"})
+    found = corrections.screen_edit(who, "recipe.edit", "r1")
+    assert found["kind"] == "add_recipe" and found["area"] == "kitchen"
+    corrections.mia_changed(who, "add_person", {"name": "Sam"})
+    with life_events.acting("assistant"):  # inside an action or a tool: counted there, never twice
+        assert corrections.screen_edit(who, "person.edit", "p1") is None
+    assert corrections.screen_edit(who, "person.delete", "p1")["area"] == "people"
+    assert corrections.screen_edit(None, "recipe.edit", "r1") is None  # no person: nothing kept, nothing raised

@@ -46,6 +46,7 @@ from PySide6.QtWidgets import (
 from core.ownership import possessive
 from core.data_logger_manager import Reading
 from core.gamification import SkillWeight
+from core.corrections import screen_edit
 from core.maintenance_manager import (
     MaintenanceAsset,
     MaintenanceTask,
@@ -834,6 +835,7 @@ class MaintenanceModule(ModuleBase):
             priority=dialog.entered_priority,
             tracks_lifetime_usage=dialog.entered_tracks_lifetime_usage,
         )
+        screen_edit(self.context, "maintenance_task.edit", task_id)  # her upkeep task, fixed by hand (step 4)
         self._refresh_task_list()
 
     def _on_mark_complete(self) -> None:
@@ -906,6 +908,7 @@ class MaintenanceModule(ModuleBase):
             return
 
         self.context.maintenance.delete_task(task_id)
+        screen_edit(self.context, "maintenance_task.delete", task_id)
         self._refresh_task_list()
 
     # ------------------------------------------------------------------

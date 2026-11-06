@@ -151,6 +151,23 @@ def mia_changed(context, kind: str, params: Optional[dict] = None, now: Optional
                      "area": area_of(kind), "ids": ids_in(params)})
 
 
+_VERBS = frozenset(("add", "log", "create", "record", "set", "update", "edit", "delete", "remove", "plan", "mark",
+                    "adjust", "start", "schedule", "new", "make", "put", "rename", "item", "entry"))
+
+
+def _nouns(family: str) -> set:
+    """Pure logic. What a family is about: `add_calendar_event` -> {calendar, event}; `event` -> {event}."""
+    return {w for w in str(family or "").split("_") if w and w not in _VERBS}
+
+
+def _same_thing(hers: str, theirs: str) -> bool:
+    """Pure logic. The same kind of record: the same family, or (a tool's name against an action's family) a noun
+    in common within the same area."""
+    if hers == theirs:
+        return True
+    return bool(_nouns(hers) & _nouns(theirs)) and area_of(hers) == area_of(theirs) != "other"
+
+
 def _corrects(folder: Path, family: str, ids: list[str], now: datetime, label: str = "") -> Optional[dict]:
     """The latest of MIA's changes this one corrects: same family (or the same undo label), within WITHIN,
     the same record when both name ids, and not corrected already."""
@@ -163,7 +180,7 @@ def _corrects(folder: Path, family: str, ids: list[str], now: datetime, label: s
         if label:
             if entry.get("kind") != label and f"action_{entry.get('kind')}" != label:
                 continue
-        elif entry.get("family") != family:
+        elif not _same_thing(entry.get("family", ""), family):
             continue
         elif ids and entry.get("ids") and not set(ids) & set(entry["ids"]):
             continue
@@ -186,6 +203,22 @@ def person_changed(context, kind: str, params: Optional[dict] = None, now: Optio
              "kind": found["kind"], "area": found["area"], "corrects": found.get("id")}
     _append(folder, entry)
     return entry
+
+
+def screen_edit(context, kind: str, record_id: str = "") -> Optional[dict]:
+    """A record edited or deleted on one of the desktop's Qt screens, which change stores directly (the web's go
+    through actions, counted there): a correction when it's of a kind MIA just changed. Inside an action or an
+    Assistant tool (life_events.acting) it's counted there instead, so never twice. Never raises: the record never
+    breaks the change."""
+    from core import life_events
+
+    if getattr(life_events._local, "source", None):
+        return None
+    try:
+        return person_changed(context, kind, {"id": record_id} if record_id else None)
+    except Exception:
+        log.exception("Couldn't keep the correction record for %s.", kind)
+        return None
 
 
 def undone(context, label: str, now: Optional[datetime] = None) -> Optional[dict]:
