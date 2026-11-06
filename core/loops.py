@@ -241,6 +241,21 @@ def _recurring_missed(context) -> Optional[Reading]:
                    f"({worst[1][1]} of {worst[1][0]})")
 
 
+def _screens_broken(context) -> Optional[Reading]:
+    """Desktop apps and web pages that broke, in 7 days (gui/main_window.py and web/shell.js note them)."""
+    if getattr(context, "failures", None) is None:
+        return None
+    found = _failures(context, ("page_error",))
+    pages = sorted({e.get("page", "") for e in found} - {""})
+    return Reading(len(found), max(1, len(found)), f"{len(found)} in 7 days" + (f": {', '.join(pages[:6])}" if pages
+                                                                              else ""))
+
+
+def _apps() -> tuple[str, ...]:
+    return tuple(f"module:{p.parent.name}" for p in sorted((Path(__file__).resolve().parents[1] / "modules")
+                                                           .glob("*/module.py")))
+
+
 def _gate_expired(context) -> Optional[Reading]:
     entries = _gate_entries(context)
     if entries is None:
@@ -821,6 +836,8 @@ LOOPS: tuple[Loop, ...] = (
          floor=0.5, min_n=5, files=("core/communication_gate.py",), covers=("flow:gate", "store:communication")),
     Loop("gate.expired", "proactivity", "messages held back that expired before they went out", "person",
          _gate_expired, acts="watch", min_n=3, covers=("flow:gate",)),
+    Loop("screens.broken", "devices", "desktop apps and web pages that broke, in 7 days", "person", _screens_broken,
+         floor=0, files=("gui/main_window.py", "web/shell.js"), covers=_apps()),
     Loop("checks.dismissed", "proactivity", "the daily check whose messages are dismissed most, in 30 days", "person",
          _checks_dismissed, floor=0.6, min_n=10, files=("core/application.py",),
          covers=tuple(sorted({f"check:{c}" for c in CHECK_TOPICS.values()}))),

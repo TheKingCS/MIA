@@ -122,9 +122,11 @@ def test_a_failing_refresh_never_takes_the_window_down():
         def _refresh(self):
             raise RuntimeError("boom")
 
-    window = SimpleNamespace(_stale_modules={"b"}, module_manager=SimpleNamespace(get=lambda _id: Broken(None)))
+    noted = []
+    window = SimpleNamespace(_stale_modules={"b"}, module_manager=SimpleNamespace(get=lambda _id: Broken(None)),
+                             _note_broken=lambda mid, problem: noted.append((mid, str(problem))))
     MainWindow._refresh_module(window, "b")
-    assert window._stale_modules == set()
+    assert window._stale_modules == set() and noted == [("b", "boom")]  # noted for the screens.broken loop
 
 
 # ------------------------------------------------------------------ phone conversations in History

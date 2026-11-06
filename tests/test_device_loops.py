@@ -122,3 +122,32 @@ def test_recurring_missions_missed():
     reading = BY_ID["missions.recurring"].measure(context)
     assert (reading.value, reading.n) == (0.33, 12)  # today, 40 days ago and the one-off aren't counted
     assert reading.detail == "4 of 12 not done; most often missed: Run (4 of 4)"
+
+
+def test_an_app_that_breaks_on_opening_is_noted_not_fatal(monkeypatch):
+    from gui.main_window import MainWindow
+    import core.child_accounts as ca
+    import core.failure_actions as fa
+
+    noted, said = [], []
+    monkeypatch.setattr(ca, "app_allowed", lambda context, module_id: True)
+    monkeypatch.setattr(fa, "page_error", lambda context, page, message: noted.append((page, message)))
+
+    class Broken:
+        def on_load(self):
+            raise ValueError("no data file")
+
+    window = SimpleNamespace(module_manager=SimpleNamespace(get=lambda mid: Broken()), context=None,
+                             _module_widgets={}, statusBar=lambda: SimpleNamespace(showMessage=lambda *a: said.append(a)))
+    window._note_broken = lambda mid, problem: MainWindow._note_broken(window, mid, problem)
+    MainWindow.open_module(window, "garage")
+    assert noted == [("app:garage", "ValueError: no data file")] and window._module_widgets == {} and said
+
+
+def test_the_screens_that_broke(monkeypatch):
+    found = [{"kind": "page_error", "page": "app:garage"}, {"kind": "page_error", "page": "budget"},
+             {"kind": "page_error", "page": "app:garage"}]
+    monkeypatch.setattr(loops, "_failures", lambda context, kinds, days=7: [e for e in found if e["kind"] in kinds])
+    reading = BY_ID["screens.broken"].measure(SimpleNamespace(failures=object()))
+    assert (reading.value, reading.n, reading.detail) == (3, 3, "3 in 7 days: app:garage, budget")
+    assert "module:garage" in BY_ID["screens.broken"].covers and "module:module_browser" in BY_ID["screens.broken"].covers

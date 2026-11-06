@@ -757,8 +757,14 @@ class MainWindow(QMainWindow):
             return
 
         if module_id not in self._module_widgets:
-            module.on_load()
-            widget = module.get_widget()
+            try:
+                module.on_load()
+                widget = module.get_widget()
+            except Exception as problem:  # an app that breaks on opening is noted (the screens.broken loop), never fatal
+                log.exception("Opening module '%s' failed.", module_id)
+                self._note_broken(module_id, problem)
+                self.statusBar().showMessage(f"{module_id} couldn't open; it's been noted.", 6000)
+                return
             self._module_widgets[module_id] = widget
             self._stack.addWidget(widget)
             log.info("Opened module '%s' for the first time.", module_id)
@@ -790,8 +796,17 @@ class MainWindow(QMainWindow):
             return
         try:
             module.refresh()
-        except Exception:  # a module's refresh must never take the window down
+        except Exception as problem:  # a module's refresh must never take the window down
             log.exception("Refreshing module '%s' failed.", module_id)
+            self._note_broken(module_id, problem)
+
+    def _note_broken(self, module_id: str, problem: Exception) -> None:
+        from core.failure_actions import page_error
+
+        try:
+            page_error(self.context, f"app:{module_id}", f"{type(problem).__name__}: {problem}")
+        except Exception:
+            log.exception("Noting the broken module '%s' failed.", module_id)
 
     def show_home(self) -> None:
         """
