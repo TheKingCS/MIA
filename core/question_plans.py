@@ -344,6 +344,15 @@ def _slipped(context, sheet, prompt, today):
     _look(context, sheet, "get_workout_summary", "Workout")
 
 
+def _seasons(context, sheet, prompt, today):
+    """Seasons of memory (build plan step 10, core/seasons.py): a month or a year against the one before, in code."""
+    from core import seasons
+
+    label, lines = seasons.season(context, seasons.kind_in(prompt, today), today)
+    for line in lines:
+        sheet.add(MISSING if line.startswith("Nothing recorded") else CALCULATION, line, "your history")
+
+
 def _open_loops(context, sheet, prompt, today):
     _look(context, sheet, "list_tasks", "Projects")
     _look(context, sheet, "list_projects", "Projects")
@@ -463,6 +472,11 @@ PLANS: tuple[Plan, ...] = (
          ("What slipped this week and why?", "What fell behind this week?", "What did I let slip?",
           "Why didn't I get everything done this week?", "What am I behind on?"),
          r"\b(slip(ped)?|fell behind|fall(ing)? behind|behind on)\b", _slipped),
+    Plan("seasons", "How this stretch of your life compares",
+         ("What changed this month?", "What's different this year?", "How was my year?", "How did last month go?",
+          "How does this month compare to last month?", "What changed in my life this year?",
+          "Was this a better month than last?"),
+         r"\b(chang\w*|different|compar\w*|how (was|did)|better|worse)\b.*\b(month|year)\b|\bmy year\b", _seasons),
     Plan("open loops", "What's unfinished",
          ("What commitments have I made that I haven't completed?", "What projects have I started but not completed?",
           "What have I left unfinished?", "What's still open?"),

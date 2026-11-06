@@ -107,8 +107,11 @@ first. Each is a step below.
    back" shows the app; "build it" opens a task (`source: gap:<id>`) that names the gap, never the person's
    words, which stay in their folder (`python -m tools.gaps show <id>` on this PC). Screens and workflows point
    to Make Something. Loop: `gaps.repeated`.
-10. ⬜ **Seasons of memory**: what changed this month and this year, summarized from history in code, phrased by
-    the model; the Chronicle's yearly edition grows from it.
+10. ✅ **Seasons of memory** (`core/seasons.py`, 2026-11-06): a month or a year against the one before, in code from
+    the history and memories (what grew, what's new, what stopped, the numbers, money, what she came to know, the
+    biggest moments); the `seasons` question plan puts it on a sheet for the model to phrase ("what changed this
+    month?", "how was my year?", "how did October go?"); each closed month and year is kept once in the person's
+    folder for the Chronicle's yearly edition (which isn't built yet: step 17). No money for a child.
 11. ⬜ **The Operating Journal** (DEC-0097): a template, filled by talking to MIA or on a screen, for how Zac means
     to operate (values, priorities, the ideal day and week, rules he keeps) and a regular entry for how he did;
     MIA compares intent with what the records show (the Loop, missions, money, workouts), and the gap becomes a

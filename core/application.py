@@ -719,6 +719,7 @@ class MIAApplication:
             ("night_school", self._check_night_school),
             ("self_report", self._check_self_report),
             ("capability_gaps", self._check_capability_gaps),
+            ("seasons_of_memory", self._check_seasons_of_memory),
         ]
         # 2026-09-27, Cognitive Extension slice C: checks no longer notify
         # directly. Each one offers what it would say (_offer()), and the
@@ -767,6 +768,13 @@ class MIAApplication:
         from core import capability_gaps
 
         self._offers.extend(capability_gaps.offers(self.context))
+
+    def _check_seasons_of_memory(self, now: datetime, today_iso: str) -> None:
+        """Seasons of memory (core/seasons.py, step 10): each closed month and year kept once, in the person's
+        folder, for "how did last month go?" and the Chronicle's yearly edition."""
+        from core import seasons
+
+        seasons.close_past(self.context, now.date())
 
     def _check_workflows(self, now: datetime, today_iso: str) -> None:
         """Workflows MIA made whose trigger has come round (core/workflows.py, DEC-0092): run them;

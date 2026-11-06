@@ -301,6 +301,10 @@
   "check:season": {
    "status": "todo"
   },
+  "check:seasons_of_memory": {
+   "status": "none",
+   "why": "it keeps a summary of the history once a month; what it says is answered through the seasons plan, watched by the answers.* loops and calibration like every plan"
+  },
   "check:self_report": {
    "status": "none",
    "why": "it reports the loops: what it says is only as good as they are, and they are watched"
