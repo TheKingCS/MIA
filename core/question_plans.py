@@ -142,6 +142,32 @@ def _week_review(context, sheet, prompt, today):
     _look(context, sheet, "get_dungeon_loot", "the Dungeon (their job)")
 
 
+def _time(context, sheet, prompt, today):
+    """A11: where their recorded time goes: work hours, workouts, games and sports, a week of the calendar, and how
+    they said they mean to spend it."""
+    from core.calendar_view import calendar_items
+
+    _look(context, sheet, "get_dungeon_loot", "the Dungeon (their job)")
+    _look(context, sheet, "get_workout_summary", "Workout")
+    _play(context, sheet)
+    today = today or date.today()
+    monday = today - timedelta(days=today.weekday())
+    try:
+        items = calendar_items(context, monday, monday + timedelta(days=6), today)
+    except Exception:
+        items = []
+    if items:
+        kinds = {}
+        for i in items:
+            kinds[i.get("kind", "event")] = kinds.get(i.get("kind", "event"), 0) + 1
+        sheet.add(CALCULATION, f"This week's calendar has {len(items)} things: "
+                  + ", ".join(f"{n} {k.replace('_', ' ')}" for k, n in sorted(kinds.items(), key=lambda kv: -kv[1]))
+                  + ".", "Calendar")
+    _operating(context, sheet, prompt, today)
+    sheet.add(ESTIMATE, "Only recorded time is here: screens, sleep, chores and driving aren't tracked, so \"too much\" "
+                        "is against what they said they want, not a measure of everything.", "how this was worked out")
+
+
 def _money_month(context, sheet, prompt, today):
     budget = getattr(context, "budget", None)
     if budget is None:
@@ -656,6 +682,10 @@ PLANS: tuple[Plan, ...] = (
           "What is my current inventory worth?", "How many products do I need to sell to cover my monthly expenses?",
           "Which products take the least time to produce relative to their profit?", "What sells best?"),
          r"\b(products?|margins?|sells? best|inventory worth)\b", _products),
+    Plan("time", "Where your time goes",
+         ("What am I spending too much time on?", "Where does my time go?", "How do I spend my week?",
+          "Am I working too much?", "What takes up most of my time?"),
+         r"\b(my time|too much time|spend my (week|time|days)|working too much)\b", _time),
     Plan("returns", "What your assets earn",
          ("Which of my assets are generating the best returns?", "What earns me the most money?",
           "Which property makes the most?", "Where am I getting the best return?", "What are my returns?"),
@@ -762,7 +792,6 @@ PLANS: tuple[Plan, ...] = (
 # findings and open-ended ones, and small talk. When one of these is the
 # nearest example, no plan runs and the normal turn does.
 NOT_A_PLAN = (
-    'What am I spending too much time on?',
     'What permits or registrations do I need to verify?',
     'Which investment would generate the fastest return?',
     'What should I build next to increase revenue?',

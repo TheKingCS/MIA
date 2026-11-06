@@ -241,3 +241,22 @@ def test_what_their_assets_earn():
     assert looked == ["list_properties", "get_property_summary", "list_products", "list_goods_on_hand",
                       "get_ledger_summary"]
     assert sheet.facts[-1].kind == "estimate" and "outside MIA" in sheet.facts[-1].text
+
+
+def test_where_their_time_goes(monkeypatch):
+    from datetime import date
+
+    import core.calendar_view as cv
+    from core.question_plans import PLAN_BY_NAME, Sheet
+
+    monkeypatch.setattr(cv, "calendar_items", lambda context, start, end, today=None: [
+        {"kind": "event"}, {"kind": "shift"}, {"kind": "shift"}, {"kind": "shift"}])
+    looked = []
+    registry = SimpleNamespace(_actions={"get_dungeon_loot": 1, "get_workout_summary": 1},
+                               execute=lambda context, tool, arguments: looked.append(tool) or f"{tool} says so.")
+    sheet = Sheet("time", "")
+    PLAN_BY_NAME["time"].gather(SimpleNamespace(assistant_actions=registry), sheet,
+                                "What am I spending too much time on?", date(2026, 11, 6))
+    assert looked == ["get_dungeon_loot", "get_workout_summary"]
+    assert "This week's calendar has 4 things: 3 shift, 1 event." in [f.text for f in sheet.facts]
+    assert sheet.facts[-1].kind == "estimate"
