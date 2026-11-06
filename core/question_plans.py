@@ -301,6 +301,17 @@ def _business_month(context, sheet, prompt, today):
     _look(context, sheet, "list_jobs", "Workshop")
 
 
+def _running_costs(context, sheet, prompt, today):
+    """C12: what the workshop costs to run: the business's expenses and its business-use share of household bills,
+    what builds use in materials, and the equipment that needs upkeep."""
+    _look(context, sheet, "get_ledger_summary", "the business")
+    _look(context, sheet, "get_business_use", "the business")
+    _look(context, sheet, "get_build_costs", "the Workshop")
+    _look(context, sheet, "list_maintenance_assets", "Maintenance (equipment)")
+    sheet.add(ESTIMATE, "Running costs here are what's recorded: power, rent or tools bought outside the business's "
+                        "books aren't on the sheet unless they were tagged to it.", "how this was worked out")
+
+
 def _market_prep(context, sheet, prompt, today):
     _look(context, sheet, "list_goods_on_hand", "Workshop")
     _look(context, sheet, "list_materials", "Workshop")
@@ -706,6 +717,10 @@ PLANS: tuple[Plan, ...] = (
           "How much should I pay myself from the business?", "How much money can I safely reinvest into my business?",
           "Is my business actually growing?", "How's the business doing?"),
          r"\b(the business|my business|business (make|made|doing|growing)|deduct)", _business_month),
+    Plan("running costs", "What the workshop costs to run",
+         ("How much does it cost to operate my workshop?", "What does my workshop cost to run?",
+          "What are my business's running costs?", "How much does the shop cost me a month?"),
+         r"\b(cost to (operate|run)|running costs?|operating costs?)\b", _running_costs),
     Plan("market prep", "Getting ready for market",
          ("What materials should I purchase before the next market?", "What do I need for the market?",
           "Am I ready for market day?"),
@@ -806,7 +821,6 @@ NOT_A_PLAN = (
     'What permits or registrations do I need to verify?',
     'Which investment would generate the fastest return?',
     'What should I build next to increase revenue?',
-    'How much does it cost to operate my workshop?',
     'Which materials should I buy in bulk?',
     'What equipment investment would improve production efficiency the most?',
     'Is it more profitable to make products to order or maintain inventory?',

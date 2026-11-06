@@ -277,3 +277,18 @@ def test_what_might_be_holding_them_back(tmp_path):
     assert "You told MIA: Mornings are hard after night shifts" in texts
     assert "a goal set aside: the half marathon, because my knee hurts" in texts
     assert any(t.startswith("a promise to Sam: fix his gate") for t in texts)  # still open
+
+
+
+def test_what_the_workshop_costs_to_run():
+    from core.question_plans import PLAN_BY_NAME, Sheet
+
+    looked = []
+    registry = SimpleNamespace(_actions={"get_ledger_summary": 1, "get_business_use": 1, "get_build_costs": 1,
+                                         "list_maintenance_assets": 1},
+                               execute=lambda context, tool, arguments: looked.append(tool) or f"{tool} says so.")
+    sheet = Sheet("running costs", "")
+    PLAN_BY_NAME["running costs"].gather(SimpleNamespace(assistant_actions=registry), sheet,
+                                         "How much does it cost to operate my workshop?", None)
+    assert looked == ["get_ledger_summary", "get_business_use", "get_build_costs", "list_maintenance_assets"]
+    assert sheet.facts[-1].kind == "estimate"
