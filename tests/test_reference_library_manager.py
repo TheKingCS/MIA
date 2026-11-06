@@ -496,3 +496,20 @@ def test_search_all_packs_blank_query_returns_nothing(isolated_root):
 def test_search_all_packs_no_packs_installed_returns_nothing(isolated_root):
     manager = _make_manager()
     assert manager.search_all_packs("anything") == []
+
+
+
+def test_titles_and_an_article_for_the_web_screen(isolated_root):
+    isolated_root.mkdir(parents=True)
+    _build_zim(isolated_root / "demo.zim", title="Demo Pack", pages={
+        "home": ("Home Page", "<html><body>Nothing relevant here.</body></html>"),
+        "hypothermia": ("Hypothermia", "<html><body><h1>Hypothermia</h1><script>x()</script>"
+                                       "<p>Symptoms include shivering and confusion.</p></body></html>"),
+    })
+    manager = _make_manager()
+    hits = manager.search_titles("hypothermia")
+    assert [(h["pack_title"], h["title"]) for h in hits] == [("Demo Pack", "Hypothermia")]
+    article = manager.article_text("demo", hits[0]["path"])
+    assert article["title"] == "Hypothermia" and "shivering and confusion" in article["text"]
+    assert "x()" not in article["text"]  # plain text: no script, no foreign HTML
+    assert manager.article_text("demo", "nowhere") is None and manager.article_text("gone", "home") is None

@@ -193,6 +193,13 @@
       "page": "vault.html"
     },
     {
+      "id": "knowledge",
+      "name": "Knowledge",
+      "icon": "📚",
+      "tagline": "The offline library.",
+      "page": "knowledge.html"
+    },
+    {
       "id": "passwords",
       "name": "Passwords",
       "icon": "🔐",

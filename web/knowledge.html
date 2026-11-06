@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Knowledge — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
+</head>
+<body data-app="knowledge" data-icon="assistant" class="mod-knowledge">
+  <!--
+    Knowledge: the offline reference library (core/reference_library_manager.py): packs, search, an article as
+    plain text. MIA.knowledge(), MIA.knowledgeArticle(). Formatting only; the look is muse's (claude, 2026-11-06).
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <header class="hero">
+        <h1>Knowledge</h1>
+        <p class="tagline" id="know-sub"></p>
+      </header>
+      <div id="panel"></div>
+    </main>
+  </div>
+  <script src="mia.js?v=17"></script>
+  <script src="icons.js"></script>
+  <script src="sound.js"></script>
+  <script src="places-watch.js"></script>
+  <script src="shell.js"></script>
+  <script src="knowledge.js"></script>
+</body>
+</html>

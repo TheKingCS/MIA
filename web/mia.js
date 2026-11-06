@@ -221,6 +221,13 @@
     council: () => demo ? Promise.resolve({ messages: [], members: [] }) : call("GET", "/api/council"),
     councilSay: (body) => demo ? Promise.resolve({}) : call("POST", "/api/council", body),
     // The Operating Journal, games played and Good News Radio (DEC-0097, 0098, 0096); changes go through actions.
+    knowledge: (q = "") => demo ? Promise.resolve({ available: true, root: "reference_library", packs: [
+      { id: "wikipedia_en_medicine", title: "Wikipedia: Medicine", description: "Medical articles, offline", articles: 52000 }],
+      hits: q ? [{ pack_id: "wikipedia_en_medicine", pack_title: "Wikipedia: Medicine", path: "A/Hypothermia", title: "Hypothermia" }] : [] })
+      : call("GET", "/api/knowledge?q=" + encodeURIComponent(q)),
+    knowledgeArticle: (pack, path) => demo ? Promise.resolve({ title: "Hypothermia",
+      text: "Hypothermia is defined as a body core temperature below 35.0 °C. Symptoms depend on the temperature..." })
+      : call("GET", "/api/knowledge/article?pack=" + encodeURIComponent(pack) + "&path=" + encodeURIComponent(path)),
     diagnostics: () => demo ? Promise.resolve({ error: "", checks: [
       { id: "pc_ready", title: "Is the PC ready for MIA?", ok: true, passed: 5, failed: [], unknown: [] },
       { id: "network", title: "The network", ok: false, passed: 2, failed: ["The wired connection is running at 100 Mb/s, under a gigabit."], unknown: [] },

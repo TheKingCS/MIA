@@ -153,7 +153,7 @@ APPS: tuple[App, ...] = (
     App("navigation", "Navigation", "🧭", "Find the way.", None,
         "Waypoints, distance/bearing, and sun/moon reference.", OUTDOORS, ("waypoints",),
         "How far is camp from the trailhead?"),
-    App("knowledge", "Knowledge", "📚", "The offline library.", None,
+    App("knowledge", "Knowledge", "📚", "The offline library.", "knowledge.html",
         "Offline reference material and personal knowledge base.", KNOW, (), "How do I purify water?"),
     App("toolbox", "Toolbox", "🧰", "Quick tools.", None,
         "Calculators, unit conversion, and other quick tools.", KNOW, ("toolbox",), "Convert 5 gallons to liters."),

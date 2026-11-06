@@ -398,6 +398,30 @@ class ReferenceLibraryManager:
             hits.append(ReferenceSearchHit(path=path, title=title))
         return hits
 
+    def search_titles(self, query: str, per_pack: int = 8) -> list[dict]:
+        """For the Knowledge web screen: every pack's best matches, pack by pack: [{pack_id, pack_title, path,
+        title}]."""
+        out = []
+        for pack in self.list_packs():
+            for hit in self.search(pack.pack_id, query, limit=per_pack):
+                out.append({"pack_id": pack.pack_id, "pack_title": pack.title, "path": hit.path, "title": hit.title})
+        return out
+
+    def article_text(self, pack_id: str, entry_path: str, max_chars: int = 20_000) -> Optional[dict]:
+        """An article as plain text, for reading on the web screen (no foreign HTML in MIA's page): {title, text}."""
+        found = self.get_entry_content(pack_id, entry_path)
+        if found is None:
+            return None
+        content, mimetype = found
+        if not str(mimetype).startswith("text/"):
+            return None
+        archive = self._archive_for_pack(pack_id)
+        try:
+            title = archive.get_entry_by_path(entry_path).title if archive is not None else entry_path
+        except KeyError:
+            title = entry_path
+        return {"title": title, "text": _html_to_snippet(content, max_chars=max_chars)}
+
     def search_all_packs(self, query: str, limit: int = 5) -> list[ReferenceSnippet]:
         """
         Fan `query` out across every installed pack's full-text search

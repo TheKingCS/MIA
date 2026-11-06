@@ -63,7 +63,7 @@ Screens: `docs/design_handoff/screens/<name>.png` (placeholder data).
 | Assistant | Full chat with MIA, history, voice | `assistant` | |  | |
 | Inbox | Documents to file, email intake | `(none)` | ✅ `/api/inbox` + `inbox.file`, `inbox.dismiss`, `inbox.note`; `/api/inbox/upload` | ✅ send a photo, file or note; the phone's Share menu (phone app); waiting items with MIA's reading, File It (what it's for, total, category, maintenance steps, details), Dismiss, history (email setup stays on the PC) | |
 | Calendar | Events and alarms | `(inside Dashboard/Home)` | |  | |
-| Knowledge | Offline reference library | `knowledge` | |  | |
+| Knowledge | Offline reference library | `knowledge` | ✅ `/api/knowledge`, `/api/knowledge/article` | ✅ the packs, search across every pack, an article read as plain text (2026-11-06) (not yet: installing or deleting a pack, pictures in articles) | |
 | Toolbox | Calculators and conversions | `toolbox` | |  | |
 | The Lab | Sensor experiments | `lab` | |  | |
 | Field Kit: Devices | Connected devices | `field_kit__01_devices` | |  | |

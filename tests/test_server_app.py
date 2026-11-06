@@ -639,6 +639,9 @@ def test_the_new_screens_and_the_journal_keeps_its_own_route(client, context):
     assert play["played"] == [] and len(play["weeks"]) == 5 and "hard" in play["efforts"]
     news = client.get("/api/news", headers=owner).json()
     assert news["on"] is False and len(news["personalities"]) == 4
+    know = client.get("/api/knowledge?q=water", headers=owner).json()  # the offline library
+    assert know["hits"] == [] and "packs" in know  # no library in a test: nothing found, never an error
+    assert client.get("/api/knowledge/article?pack=none&path=x", headers=owner).status_code == 404
     kept = client.get("/api/life-notes", headers=owner).json()  # Kept (DEC-0054)
     assert [k["kind"] for k in kept["kinds"]] == ["commitment", "decision", "idea", "dropped_goal"]
     assert all(k["notes"] == [] for k in kept["kinds"])

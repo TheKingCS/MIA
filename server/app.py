@@ -822,6 +822,28 @@ def create_app(context: AppContext) -> FastAPI:
         with app.state.turn_lock:
             return screen(view_for(context, profile_id))
 
+    # Knowledge (the offline reference library, core/reference_library_manager.py): packs, search, an article as
+    # plain text. Read only; nothing about the person is in it.
+    @app.get("/api/knowledge")
+    def knowledge_packs(q: str = "", profile_id: str = Depends(require_profile_id)) -> dict:
+        library = getattr(context, "reference_library", None)
+        if library is None:
+            return {"available": False, "packs": [], "hits": [], "root": ""}
+        with app.state.turn_lock:
+            packs = [{"id": p.pack_id, "title": p.title, "description": p.description, "articles": p.article_count}
+                     for p in library.list_packs()]
+            hits = library.search_titles(q.strip()[:200]) if q.strip() else []
+        return {"available": True, "packs": packs, "hits": hits, "root": str(library.root_path)}
+
+    @app.get("/api/knowledge/article")
+    def knowledge_article(pack: str, path: str, profile_id: str = Depends(require_profile_id)) -> dict:
+        library = getattr(context, "reference_library", None)
+        with app.state.turn_lock:
+            found = library.article_text(pack, path) if library is not None else None
+        if found is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "That article isn't in the library.")
+        return found
+
     @app.get("/api/life-notes")
     def life_notes_screen(profile_id: str = Depends(require_profile_id)) -> dict:
         from core.life_notes import screen  # promises, decisions, ideas, goals set aside (DEC-0054)
