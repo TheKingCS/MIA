@@ -126,8 +126,16 @@ def _today(context, sheet, prompt, today):
     _look(context, sheet, "show_my_why", "your goals")
 
 
+def _play(context, sheet):
+    from core import recreation
+
+    for line in recreation.lines(context):
+        sheet.add(CALCULATION, line, "Recreation")
+
+
 def _week_review(context, sheet, prompt, today):
     _look(context, sheet, "get_weekly_checkin", "the weekly check-in")
+    _play(context, sheet)
     _look(context, sheet, "get_life_events", "your history", period="week")
     _look(context, sheet, "get_workout_summary", "Workout")
     _look(context, sheet, "get_dungeon_loot", "the Dungeon (their job)")

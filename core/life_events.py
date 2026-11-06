@@ -65,6 +65,7 @@ TYPES = {
     "mission_completed": "missions completed",
     "skill_evidence": "skill evidence",
     "workout_logged": "workouts",
+    "played": "games and sports played",
     "meal_logged": "meals logged",
     "maintenance_done": "maintenance done",
     "rent_received": "rent received",
@@ -93,7 +94,7 @@ AUDIT_ONLY = frozenset({"safety_escalation"})
 MONEY_TYPES = frozenset({"bill_paid", "income_received", "expense_added", "income_added", "debt_payment",
                          "rent_received", "property_expense", "imported", "insurance_switched"})
 # What counts as getting something done ("what did I get done?").
-WINS = ("bill_paid", "debt_payment", "mission_completed", "workout_logged", "maintenance_done", "task_done",
+WINS = ("bill_paid", "debt_payment", "mission_completed", "workout_logged", "played", "maintenance_done", "task_done",
         "project_completed", "rent_received", "income_received", "meal_logged", "build_finished", "harvest",
         "questline_finished", "insurance_switched", "dungeon_cleared")
 

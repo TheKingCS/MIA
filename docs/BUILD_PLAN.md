@@ -119,9 +119,12 @@ first. Each is a step below.
     to?"); talked to with "add to my operating journal: ..." and "rate early mornings 4"; on Sundays one question
     for the lines only they can rate; `journal.pace` is theirs to see, never a task. Not yet: a screen for it
     (muse's look). 🧑 *Zac writes the first one with MIA.*
-12. ⬜ **Recreation in the health cluster** (DEC-0098): sports and play logged as activities (what, with whom,
-    how long, how hard), counting toward training load, skills and the Chronicle; voice-loggable ("played
-    pickleball for an hour").
+12. ✅ **Recreation in the health cluster** (DEC-0098; `core/recreation.py`, 2026-11-06): games and sports logged by
+    voice ("played pickleball for an hour with Sam, it was hard") or the `play.log` action: what, with whom, how
+    long, how hard (1 to 10 or words); training load by session-RPE (minutes × effort) beside workouts' minutes,
+    in the week review; skill XP by the sport; a `played` life event for the history, the seasons, the Operating
+    Journal ("play pickleball twice a week") and the Chronicle's "Week Of Play"; `recreation.load` watches the
+    week against the four before (past 1.5: easing off helps), theirs to see. Not yet: a screen (muse's look).
 
 ### Phase D: New capabilities
 

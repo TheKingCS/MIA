@@ -347,6 +347,19 @@ def _journal_pace(context) -> Optional[Reading]:
         f"{area} {a}/{b}" for area, (a, b) in sorted(by.items())))
 
 
+def _play_load(context) -> Optional[Reading]:
+    if getattr(context, "recreation", None) is None:
+        return None
+    from core import recreation
+
+    weeks = recreation.load(context)
+    ratio = recreation.acute_chronic(weeks)
+    if ratio is None:
+        return None
+    return Reading(ratio, 5, f"this week's play load {weeks[-1]['play_load']:g} against a weekly "
+                             f"{sum(w['play_load'] for w in weeks[:-1]) / 4:g} before")
+
+
 def _unused_creations(context) -> Optional[Reading]:
     store = getattr(context, "creations", None)
     if store is None:
@@ -589,6 +602,8 @@ LOOPS: tuple[Loop, ...] = (
     Loop("journal.pace", "life", "how often they operate the way they said they mean to", "person", _journal_pace,
          better="higher", acts="watch", covers=("store:operating_journal", "action:operating",
                                                 "check:operating_journal")),
+    Loop("recreation.load", "life", "this week's play load against the four weeks before (past 1.5: easing off helps)",
+         "person", _play_load, floor=1.5, acts="watch", covers=("store:recreation", "action:play")),
     Loop("gate.saturation", "proactivity", "days the daily limit of unprompted messages was hit, in 7", "person",
          _gate_saturation, floor=2, covers=("flow:gate",)),
     Loop("gate.unwelcome", "proactivity", "kinds of message on a break for being dismissed", "person", _gate_unwelcome,

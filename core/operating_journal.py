@@ -49,6 +49,8 @@ WEEKS = 4
 # what a line can count, from the history: words -> (life event type, the area, the plain word)
 COUNTED = (
     (r"work ?out|exercise|train(ing)?|lift|go to the gym|hit the gym|run\b|ride", "workout_logged", "health", "workouts"),
+    (r"play (a |some )?(sports?|games?|pickleball|tennis|basketball|soccer|golf|ball)|get out and play", "played", "health",
+     "games played"),
     (r"cook|meal ?prep|eat at home|home.?cooked|log (my )?meals", "meal_logged", "kitchen", "meals logged"),
     (r"(call|see|catch up with|visit|text) (a )?(friend|family|people|my (mom|dad|parents|brother|sister))",
      "caught_up", "people", "people caught up with"),

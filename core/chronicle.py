@@ -36,6 +36,8 @@ THREADS = (
      lambda n: f"You finished {_n(n, 'mission')}."),
     ("training", ("workout_logged", "training_done"), "The Training Week", "This was a week of sweat.",
      lambda n: f"You trained {_times(n)}."),
+    ("play", ("played",), "The Week Of Play", "You made time to play.",
+     lambda n: f"You played {_times(n)}."),
     ("practice", ("skill_practice", "skill"), "The Practice Week", "You kept sharpening your skills.",
      lambda n: f"You practiced your skills {_times(n)}."),
     ("upkeep", ("maintenance_done",), "The Week You Kept Things Running", "You kept everything running.",

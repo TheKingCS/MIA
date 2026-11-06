@@ -144,6 +144,23 @@ def _workout(context, text: str) -> Optional[str]:
     return done.result if done.status == "executed" else (done.result or "That didn't work; nothing was changed.")
 
 
+def _played(context, text: str) -> Optional[str]:
+    from core.actions import ActionError
+    from core.recreation import parse
+
+    found = parse(text)
+    actions = getattr(context, "actions", None)
+    if found is None or actions is None or getattr(context, "recreation", None) is None:
+        return None
+    params = {"what": found["what"], "minutes": found["minutes"], "effort": found["effort"], "with": found["with"],
+              "date": found["date"]}
+    try:
+        done = actions.approve(context, actions.propose(context, "play.log", params, proposed_by="person").proposal_id)
+    except ActionError as problem:
+        return str(problem)
+    return f"{done.result} (Say “undo that” to take it back.)" if done.status == "executed" else done.result
+
+
 def handle(context, text: str) -> Optional[str]:
     """Does it, if it's a quick command; returns MIA's reply, or None."""
     from core.actions import ActionError
@@ -162,6 +179,9 @@ def handle(context, text: str) -> Optional[str]:
     said = gap_reply(context, text)  # "build it" / "bring it back", to her latest capability-gap offer
     if said is not None:
         return said
+    played = _played(context, text)  # "played pickleball for an hour with Sam, it was hard" (DEC-0098)
+    if played is not None:
+        return played
     from core.operating_journal import reply as journal_reply
 
     said = journal_reply(context, text)  # "add to my operating journal: ...", "rate early mornings 4" (DEC-0097)

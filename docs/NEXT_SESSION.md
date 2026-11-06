@@ -39,7 +39,9 @@ native Qt crash mid-suite (a rerun was clean).
 Step 9 is built: capability gaps (`core/capability_gaps.py`, `python -m tools.gaps`). Step 10 too: seasons of
 memory (`core/seasons.py`). Step 11 too: the Operating Journal (`core/operating_journal.py`); **Zac:** write
 your first lines by talking to MIA ("add to my operating journal: work out 4 times a week"), then ask
-"am I living how I said I want to?". Next: step 12, recreation in the health cluster (DEC-0098).
+"am I living how I said I want to?". Step 12 too: recreation (`core/recreation.py`; say "played pickleball
+for an hour, it was hard"). Phase C is done. Next: Phase D, step 13, Good News Radio (DEC-0096), which
+needs Zac's source list and its switch for going online (DEC-0053).
 A flaky test seen once: `tests/test_reference_library_manager.py::test_search_all_packs_returns_snippet_from_matching_pack`.
 
 **Glasses navigation: `docs/GLASSES_NAVIGATION_PLAN.md` is a draft waiting on
