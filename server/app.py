@@ -2180,6 +2180,13 @@ def create_app(context: AppContext) -> FastAPI:
         except ValueError as problem:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
 
+    @app.post("/api/vault/hashes")
+    def vault_hashes(body: VaultShasRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        try:  # how each photo looks, so near-duplicates are offered like bursts (core/memory_vault.py)
+            return {"hashes": _shelf(profile_id).hashes(body.shas)}
+        except ValueError as problem:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
+
     @app.post("/api/sync/game")
     def sync_game(values: dict, profile_id: str = Depends(require_profile_id)) -> dict:
         from core.sync import set_game_numbers

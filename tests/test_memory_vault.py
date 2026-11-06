@@ -146,6 +146,8 @@ class PretendPC:
             return {"ok": self.shelf.verify(payload["shas"])}
         if path == "/api/vault/scores":
             return {"scores": self.shelf.scores(payload["shas"])}
+        if path == "/api/vault/hashes":
+            return {"hashes": self.shelf.hashes(payload["shas"])}
         if path.startswith("/api/vault/blob/") and method == "PUT":
             self.pieces += 1
             if self.cut_after is not None and self.pieces > self.cut_after:
@@ -310,3 +312,39 @@ def test_the_pc_scores_the_sharper_better_lit_shot_higher(tmp_path):
     scores = {n: mv.score_photo(tmp_path / f"{n}.jpg") for n in ("sharp", "blurry", "dark")}
     assert scores["sharp"] > scores["blurry"] > scores["dark"]
     assert mv.score_photo(tmp_path / "missing.jpg") is None
+
+
+
+def test_the_same_scene_shot_again_is_offered_like_a_burst():
+    """Near-duplicates (2026-11-06): within minutes, and looking nearly the same by the PC's hash."""
+    same, close, other = "f0f0f0f0f0f0f0f0", "f0f0f0f0f0f0f0f1", "0f0f0f0f0f0f0f0f"
+    item = lambda sha, at, h="": {"sha": sha, "kind": "photo", "taken_at": at, "dhash": h, "size": 1}  # noqa: E731
+    found = mv.bursts([item("a", "2026-10-01T10:00:00", same), item("b", "2026-10-01T10:04:00", close),
+                       item("c", "2026-10-01T10:09:00", other),  # five minutes on, but another scene
+                       item("d", "2026-10-01T10:30:00", other),  # the same as c, but 21 minutes on
+                       item("e", "2026-10-01T11:00:00"), item("f", "2026-10-01T11:00:01")])  # a burst, no hashes
+    assert [[i["sha"] for i in g] for g in found] == [["a", "b"], ["e", "f"]]
+    assert mv.alike(same, close) and not mv.alike(same, other) and not mv.alike(same, "")
+
+
+def test_the_pc_hashes_what_it_holds(tmp_path):
+    from PIL import Image
+
+    shelf = VaultShelf(tmp_path / "pc")
+    for name, colour in (("a.jpg", (200, 30, 30)), ("b.jpg", (205, 30, 30))):
+        img = Image.new("RGB", (64, 48), colour)
+        for x in range(32):
+            img.putpixel((x, 10), (0, 0, 0))
+        img.save(tmp_path / name)
+    shas = []
+    for name in ("a.jpg", "b.jpg"):
+        data = (tmp_path / name).read_bytes()
+        from core.sync import file_digest
+
+        sha = file_digest(tmp_path / name)
+        shelf.receive(sha, 0, data, len(data), name, "2026-10-01T10:00:00", "photo")
+        shas.append(sha)
+    got = shelf.hashes(shas)
+    assert set(got) == set(shas) and all(len(h) == 16 for h in got.values())
+    assert mv.alike(got[shas[0]], got[shas[1]])  # nearly the same picture
+    assert VaultShelf(tmp_path / "pc").index[shas[0]]["dhash"] == got[shas[0]]  # worked out once, kept

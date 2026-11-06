@@ -59,6 +59,10 @@ PHOTO_EXT = frozenset({".jpg", ".jpeg", ".png", ".heic", ".heif", ".webp", ".gif
 VIDEO_EXT = frozenset({".mp4", ".mov", ".3gp", ".mkv", ".webm", ".m4v"})
 CHUNK_BYTES = 8 * 1024 * 1024
 BURST_SECONDS = 2
+# Near-duplicates (2026-11-06): the same scene shot again within minutes, judged by how alike the photos look
+# (a difference hash the PC works out; at most SIMILAR_BITS of its 64 bits differ)
+SIMILAR_SECONDS = 600
+SIMILAR_BITS = 6
 SCAN_BUDGET_BYTES = 400 * 1024 * 1024  # fingerprinted per round, so a big camera roll doesn't stall the phone
 SEND_SECONDS = 50  # per round
 LOOP_SECONDS = 60
@@ -216,23 +220,35 @@ def date_from_name(name: str) -> str:
         return ""
 
 
+def alike(a: str, b: str, bits: int = SIMILAR_BITS) -> bool:
+    """Pure logic. Two photos' difference hashes (16 hex digits) close enough to be the same scene."""
+    try:
+        return bin(int(a, 16) ^ int(b, 16)).count("1") <= bits
+    except (TypeError, ValueError):
+        return False
+
+
 def bursts(items: Iterable[dict], gap: int = BURST_SECONDS) -> list[list[dict]]:
     """Pure logic. Photos taken within `gap` seconds of the one before,
-    two or more: a burst. Oldest first."""
+    two or more: a burst. A photo taken within SIMILAR_SECONDS of the one
+    before that looks nearly the same (both hashed by the PC) joins it too:
+    the same scene shot again. Oldest first."""
     photos = sorted((i for i in items if i.get("kind") == "photo" and i.get("taken_at")), key=lambda i: i["taken_at"])
-    groups, run, last = [], [], None
+    groups, run, last, last_item = [], [], None, None
     for item in photos:
         try:
             at = datetime.fromisoformat(item["taken_at"])
         except ValueError:
             continue
-        if last is not None and (at - last).total_seconds() <= gap:
+        apart = (at - last).total_seconds() if last is not None else None
+        if apart is not None and (apart <= gap or (apart <= SIMILAR_SECONDS and item.get("dhash")
+                                                   and alike(item["dhash"], last_item.get("dhash", "")))):
             run.append(item)
         else:
             if len(run) >= 2:
                 groups.append(run)
             run = [item]
-        last = at
+        last, last_item = at, item
     if len(run) >= 2:
         groups.append(run)
     return groups
@@ -245,6 +261,26 @@ def best_of(group: list[dict]) -> dict:
     if all(isinstance(i.get("score"), (int, float)) for i in group):
         return max(group, key=lambda i: (i["score"], i.get("size", 0)))
     return max(group, key=lambda i: i.get("size", 0))
+
+
+def dhash_photo(path: Path) -> Optional[str]:
+    """A 64-bit difference hash, 16 hex digits: alike photos have alike hashes (needs Pillow; None without it)."""
+    try:
+        from PIL import Image
+    except ImportError:
+        return None
+    try:
+        with Image.open(path) as img:
+            img.draft("L", (64, 64))
+            small = img.convert("L").resize((9, 8))
+            px = list(small.tobytes())  # one byte a pixel in grayscale
+            value = 0
+            for row in range(8):
+                for col in range(8):
+                    value = (value << 1) | (px[row * 9 + col] > px[row * 9 + col + 1])
+            return f"{value:016x}"
+    except Exception:  # a damaged or unusual file: no hash, never a crash
+        return None
 
 
 def score_photo(path: Path) -> Optional[float]:
@@ -552,6 +588,29 @@ def fetch_scores(context, vault: MemoryVault, call=None, lock=None) -> int:
     return len(got)
 
 
+def fetch_hashes(context, vault: MemoryVault, call=None, lock=None, batch: int = 400) -> int:
+    """Ask the PC how each photo it holds looks (a difference hash), so the same scene shot again within minutes
+    is offered like a burst. A batch a round."""
+    from core.home_link import home_call
+
+    call = call or home_call
+    lock = lock or threading.Lock()
+    want = [i["sha"] for i in vault.items.values() if i.get("kind") == "photo" and i.get("on_pc") and "dhash" not in i]
+    if not want:
+        return 0
+    try:
+        got = call(context, "/api/vault/hashes", {"shas": want[:batch]}, timeout=300).get("hashes", {})
+    except Exception as problem:  # a PC not restarted onto this code yet: bursts still work, near-duplicates wait
+        log.info("The PC didn't hash photos this round: %s", problem)
+        return 0
+    with lock:
+        for sha in want[:batch]:
+            if sha in vault.items:
+                vault.items[sha]["dhash"] = got.get(sha) or ""  # "" when the PC couldn't read it: asked once
+        vault.save()
+    return len(got)
+
+
 class VaultLoop:
     """Every LOOP_SECONDS while the vault is on: read the camera roll, and
     when the PC is reachable (on Wi-Fi unless the person said otherwise)
@@ -617,6 +676,7 @@ def round_(context, lock, call=None) -> dict:
     else:
         try:
             sent = send(context, vault, call=call, lock=lock)
+            fetch_hashes(context, vault, call=call, lock=lock)
             fetch_scores(context, vault, call=call, lock=lock)
             state = "sending" if vault.waiting() else "safe"
             found.update(sent)
@@ -713,6 +773,25 @@ class VaultShelf:
                 out[sha] = path is not None and file_digest(path) == sha
             except OSError:
                 out[sha] = False
+        return out
+
+    def hashes(self, shas: Iterable[str]) -> dict:
+        """Each photo's difference hash, worked out once and kept in the index."""
+        out, changed = {}, False
+        for sha in shas:
+            sha = _clean_sha(sha)
+            entry = self.index.get(sha)
+            path = self.path_of(sha)
+            if entry is None or path is None:
+                continue
+            if "dhash" not in entry:
+                entry["dhash"] = dhash_photo(path)
+                changed = True
+            if entry["dhash"]:
+                out[sha] = entry["dhash"]
+        if changed:
+            with self._lock:
+                self._save()
         return out
 
     def scores(self, shas: Iterable[str]) -> dict:
