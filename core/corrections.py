@@ -55,7 +55,7 @@ AREAS = {
     "calendar": ("event", "calendar", "reminder", "alarm"),
     "maintenance": ("maintenance", "asset", "gear", "reading", "vehicle"),
     "inbox": ("inbox", "document", "scan"),
-    "memories": ("memory", "remember", "forget", "journal"),
+    "memories": ("memory", "remember", "forget", "journal", "life_note"),
     "creations": ("creation", "records", "workflow"),
     "home": ("grow", "flock", "pet", "property", "security", "place", "trip", "expedition", "map", "product",
              "material", "component", "craft", "goods", "job", "batch", "experiment", "inventory", "waypoint"),

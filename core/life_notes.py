@@ -249,6 +249,50 @@ class LifeNotes:
         return [n for n in self.notes if (kind is None or n["kind"] == kind) and (not open_only or n["status"] == OPEN)]
 
 
+# ------------------------------------------------------------------ said out loud
+
+_LEAD = r"^\s*(?:(?:hey\s+)?mia[,:]?\s+)?"
+_DONE = re.compile(_LEAD + r"(?:i\s+)?(?:kept|did|finished|fulfilled|completed|mark|marked)\s+(?:my |the |that )?"
+                   r"(?P<kind>promise|idea)(?:\s+(?:to|for|about)\s+(?P<who>[\w' ]+?))?(?:\s+(?:as\s+)?done)?[.!]*\s*$",
+                   re.IGNORECASE)
+_FORGET = re.compile(_LEAD + r"forget\s+(?:my |the |that )?(?P<kind>promise|decision|idea|goal)"
+                     r"(?:\s+(?:to|for|about)\s+(?P<who>[\w' ]+?))?[.!]*\s*$", re.IGNORECASE)
+_KIND_WORD = {"promise": "commitment", "decision": "decision", "idea": "idea", "goal": "dropped_goal"}
+
+
+def _which(store, kind: str, about: str) -> Optional[dict]:
+    """The latest open note of that kind, about someone or something when it's said."""
+    about = (about or "").lower().strip()
+    found = [n for n in store.of_kind(kind, open_only=True)
+             if not about or about in f"{n.get('who', '')} {n.get('what', '')}".lower()]
+    return found[-1] if found else None
+
+
+def reply(context, text: str) -> Optional[str]:
+    """Quick commands: "I kept my promise to Sam", "forget the idea about honey"; through the action contract."""
+    store = getattr(context, "life_notes", None)
+    actions = getattr(context, "actions", None)
+    if store is None or actions is None:
+        return None
+    m, kind_of = _DONE.match(text or ""), "life_note.done"
+    if m is None:
+        m, kind_of = _FORGET.match(text or ""), "life_note.forget"
+    if m is None:
+        return None
+    kind = _KIND_WORD[m.group("kind").lower()]
+    note = _which(store, kind, m.group("who") or "")
+    if note is None:
+        return f"I don't have {SAID[kind]}" + (f" about {m.group('who')}" if m.group("who") else "") + " kept."
+    from core.actions import ActionError
+
+    try:
+        done = actions.approve(context, actions.propose(context, kind_of, {"note_id": note["id"]},
+                                                        proposed_by="person").proposal_id)
+    except ActionError as problem:
+        return str(problem)
+    return f"{done.result} (Say “undo that” to take it back.)" if done.status == "executed" else done.result
+
+
 # ------------------------------------------------------------------ in the conversation
 
 

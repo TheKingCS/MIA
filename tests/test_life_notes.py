@@ -173,3 +173,21 @@ def test_a_promise_with_a_day_is_mentioned_the_day_before_and_on_it(tmp_path):
     store.mark_done(note["id"])
     assert life_notes.reminders(context, today + timedelta(days=1)) == []
     assert LifeNotes(data_dir=tmp_path).get(note["id"])["reminded"] == ["tomorrow", "today"]
+
+
+def test_kept_or_forgotten_by_voice(tmp_path, monkeypatch):
+    from core import actions
+    from core.actions import ActionCenter
+
+    monkeypatch.setattr(actions, "_who", lambda context: "p1")
+    store = LifeNotes(data_dir=tmp_path)
+    store.add("commitment", "fix his gate", who="Sam", by="tomorrow")
+    store.add("commitment", "call the bank")
+    store.add("idea", "sell honey at the market")
+    person = SimpleNamespace(life_notes=store, actions=ActionCenter(), config=None, undo=None, events=None)
+    said = life_notes.reply(person, "I kept my promise to Sam")
+    assert said.startswith("Done: a promise to Sam: fix his gate (by tomorrow). Nicely kept.")
+    assert life_notes.reply(person, "forget the idea about honey").startswith("Forgotten: an idea: sell honey")
+    assert life_notes.reply(person, "I kept my promise to Alex") == "I don't have a promise about Alex kept."
+    assert [n["what"] for n in store.of_kind("commitment", open_only=True)] == ["call the bank"]
+    assert life_notes.reply(person, "I kept my word") is None

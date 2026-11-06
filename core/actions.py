@@ -321,6 +321,7 @@ import core.calendar_actions  # noqa: E402,F401
 import core.gap_actions  # noqa: E402,F401  (capability gaps, build plan step 9)
 import core.operating_actions  # noqa: E402,F401  (the Operating Journal, DEC-0097)
 import core.play_actions  # noqa: E402,F401  (recreation, DEC-0098)
+import core.life_note_actions  # noqa: E402,F401  (promises, decisions, ideas, goals set aside, DEC-0054)
 import core.map_share_actions  # noqa: E402,F401  (places on TAK apps on this network, DEC-0099)  (your own calendar events)
 import core.more_actions  # noqa: E402,F401  (Journal, Workshop, Expeditions, Music, Files)
 import core.inbox_actions  # noqa: E402,F401  (the Inbox: file, dismiss, send a note)
