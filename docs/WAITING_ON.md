@@ -9,6 +9,9 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 ## Zac
 
 ### Decisions
+- [ ] **The phone's old security packages (T-0051)**: keep them with the exposure written down, build newer ones,
+      or move the phone's encryption to Android Keystore over time (Claude: keep now, Keystore over time). Details
+      under Claude below.
 - [ ] **The education ladder** (H-0080 / H-0084): approve, amend or reject **DEC-0102**; pick MIA's **second
       language**; pick the **first two tracks** (Claude suggests Applied Money, then Psychology).
 - [ ] **The savings hound**, now **DEC-0103 (PROPOSED)** (H-0086: Muse took the receipts-first correction): approve,
