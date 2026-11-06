@@ -59,18 +59,21 @@ first. Each is a step below.
    dependency audit (`dev.vulnerable` against osv.dev, `dev.outdated` against PyPI). Heavy loops run from Night
    School and `tools.work loops --run`, never in the app's check. First run: `cryptography` 47 had three HIGH
    advisories, raised to 50.0.2 (T-0048).
-3. 🔨 **The remaining usage loops**: built 2026-11-06: `answers.numbers` (a number she hadn't looked up, so the
+3. ✅ **The remaining usage loops**: built 2026-11-06: `answers.numbers` (a number she hadn't looked up, so the
    plain facts were shown), `memory.quality` (memories edited or deleted within 14 days), `gate.saturation`,
    `gate.unwelcome`, `creations.held`, `data.recovered`, and T-0047's six (`actions.*`, `email.*`, `gate.dismissed`,
    `gate.expired`), and (2026-11-07) `glasses.voice` (turns now traced by device) and `phone.link` (when a linked
    phone last reached the PC, kept by `core/phone_link.py`) and `creations.maker` (designs that missed their checks
-   the first time). Still to do: `vault.coverage` (photo-transfer failures, which only the phone sees).
+   the first time), and (2026-11-06, later) `vault.coverage` (photos over a week old still only on the phone, from
+   the vault's own list), `checks.dismissed`, `missions.recurring`, `screens.broken`, `dev.lab` and `notes.offers`:
+   every process now has a loop or a reason (228 of 257 covered, 23 declined, 6 to do with their why).
 4. 🔨 **Corrections in every area** (`core/corrections.py`, built 2026-11-06): MIA's changes (actions she proposed
    that were approved, her Assistant tools' changes) are watched for 3 days; the person undoing one, or editing or
    deleting something of the same kind (the same record when both name its id), corrects her once;
    `corrections.all` and one loop per area (money, kitchen, workouts, missions, calendar, maintenance, inbox,
-   memories, creations, home, tasks). Not yet: edits made on the desktop's Qt screens (they don't go through
-   actions), Plaid re-categorizations learned as rules (waits on Zac's Plaid work). Built 2026-11-07:
+   memories, creations, home, tasks, and since 2026-11-06 people, music, files). Built 2026-11-06: edits on the
+   desktop's Qt screens (recipes, meals, upkeep tasks, people: `corrections.screen_edit`) and her tools matched by
+   what they change. Not yet: Plaid re-categorizations learned as rules (waits on Zac's Plaid work). Built:
    `loop.prediction` (the Loop's planned work days against the days worked) and `inbox.reading` (fields of a read
    document the person corrected when filing it).
 5. ✅ **The weekly benchmarks on a schedule** (`core/benchmarks.py`, `tools/weekly_bench.py`, 2026-11-06): Night
@@ -101,7 +104,10 @@ first. Each is a step below.
    (`core/calibration.py`) so `answers.calibration` checks sure answers are rated up more than the rest. Next in
    it, built 2026-11-07: four more cross-domain plans (projects, habits, priorities, resources: 11 benchmark
    questions moved from the model alone to a plan) and calibration against outcomes (projected debt-free and
-   freedom dates kept and checked a month after they come, `answers.projections`).
+   freedom dates kept and checked a month after they come, `answers.projections`). Built 2026-11-06: DEC-0054's
+   notes (`core/life_notes.py`: promises, decisions, ideas and goals set aside, kept on a yes) and seven plans
+   over them and the records (recall, person, patterns, discussed, returns, time, held back): the routing audit
+   answers 84 of 112 benchmark questions by a plan; the 16 left to the model are research, how-to and coaching.
 
 ### Phase C: The gaps in her intelligence
 
