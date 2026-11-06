@@ -252,6 +252,15 @@ def _products(context, sheet, prompt, today):
     _look(context, sheet, "get_ledger_summary", "the business")
 
 
+def _returns(context, sheet, prompt, today):
+    """B19: what their assets earn: each rental's income and cap rate, each product's margin, the business."""
+    _rentals(context, sheet, prompt, today)
+    _products(context, sheet, prompt, today)
+    sheet.add(ESTIMATE, "Returns here are from what's recorded: a property's value, a product's materials and what "
+                        "sold. Investments outside MIA (stocks, retirement accounts) aren't on the sheet.",
+              "how this was worked out")
+
+
 def _product_cost(context, sheet, prompt, today):
     _look(context, sheet, "list_products", "Workshop", query=_subject(prompt))
     _look(context, sheet, "get_build_costs", "Workshop", build=_subject(prompt))
@@ -647,6 +656,10 @@ PLANS: tuple[Plan, ...] = (
           "What is my current inventory worth?", "How many products do I need to sell to cover my monthly expenses?",
           "Which products take the least time to produce relative to their profit?", "What sells best?"),
          r"\b(products?|margins?|sells? best|inventory worth)\b", _products),
+    Plan("returns", "What your assets earn",
+         ("Which of my assets are generating the best returns?", "What earns me the most money?",
+          "Which property makes the most?", "Where am I getting the best return?", "What are my returns?"),
+         r"\b(returns?|earns? (me )?the most|best return)\b", _returns),
     Plan("product cost", "What one thing costs to make",
          ("What is my actual cost to produce a raised garden bed?", "How much should I charge for a custom engraved planter?",
           "How much does it cost me to make a bench?", "What should I price this at?"),
@@ -750,7 +763,6 @@ PLANS: tuple[Plan, ...] = (
 # nearest example, no plan runs and the normal turn does.
 NOT_A_PLAN = (
     'What am I spending too much time on?',
-    'Which of my assets are generating the best returns?',
     'What permits or registrations do I need to verify?',
     'Which investment would generate the fastest return?',
     'What should I build next to increase revenue?',

@@ -225,3 +225,19 @@ def test_what_they_said_about_it_before(tmp_path):
     sheet = Sheet("discussed", "")
     PLAN_BY_NAME["discussed"].gather(context, sheet, "Have I mentioned this problem before?", None)
     assert [f.kind for f in sheet.facts] == ["missing"] and "Name it" in sheet.facts[0].text
+
+
+def test_what_their_assets_earn():
+    from core.question_plans import PLAN_BY_NAME, Sheet
+
+    looked = []
+    registry = SimpleNamespace(_actions={"list_properties": 1, "get_property_summary": 1, "list_products": 1,
+                                         "list_goods_on_hand": 1, "get_ledger_summary": 1},
+                               execute=lambda context, tool, arguments: looked.append(tool) or f"{tool} says so.")
+    estate = SimpleNamespace(all_properties=lambda: [SimpleNamespace(name="Duplex")])
+    sheet = Sheet("returns", "")
+    PLAN_BY_NAME["returns"].gather(SimpleNamespace(assistant_actions=registry, real_estate=estate), sheet,
+                                   "Which of my assets are generating the best returns?", None)
+    assert looked == ["list_properties", "get_property_summary", "list_products", "list_goods_on_hand",
+                      "get_ledger_summary"]
+    assert sheet.facts[-1].kind == "estimate" and "outside MIA" in sheet.facts[-1].text
