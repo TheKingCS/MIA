@@ -522,6 +522,52 @@ def _patterns(context, sheet, prompt, today):
     _look(context, sheet, "get_journal_themes", "the journal")
 
 
+_ASKING = frozenset((
+    "what", "did", "do", "does", "we", "i", "you", "us", "our", "my", "me", "your", "discuss", "discussed", "discussing",
+    "talk", "talked", "talking", "say", "said", "about", "last", "time", "have", "has", "had", "ever", "before",
+    "mention", "mentioned", "told", "tell", "the", "a", "an", "of", "on", "for", "to", "in", "is", "are", "was", "were",
+    "when", "where", "how", "why", "who", "which", "been", "be", "it", "this", "that", "these", "those", "any",
+    "anything", "already", "again", "earlier", "previously", "remember", "with", "and", "or", "go", "over", "went",
+))
+_GENERIC = frozenset(("project", "problem", "thing", "issue", "idea", "plan", "stuff", "situation", "one"))
+
+
+def _discussed(context, sheet, prompt, today):
+    """E1, E5: what they said about something in earlier conversations (their own words, never a private journal or
+    an off-the-record one, which aren't kept), and the memories and kept notes that name it."""
+    from core.life_notes import describe
+
+    words = [w for w in re.findall(r"[a-z']+", (prompt or "").lower()) if w not in _ASKING and len(w) > 2]
+    if not words or set(words) <= _GENERIC:
+        sheet.add(MISSING, "About what? Name it (\"what did we discuss about the roof?\") and I'll look back through "
+                           "our conversations.", "your conversations")
+        return
+    stems = [w.rstrip("s")[:6] for w in words if w not in _GENERIC] or [w.rstrip("s")[:6] for w in words]
+    has = lambda text: all(s in text.lower() for s in stems)  # noqa: E731
+    store = getattr(context, "conversations", None)
+    found = []
+    for c in (store.all_conversations() if store is not None else []):
+        if c.journal or c.off_record:
+            continue
+        said = [m for m in c.messages if m.role == "user" and m.content.strip() != (prompt or "").strip()
+                and has(m.content)]
+        if said:
+            found.append((said[-1].timestamp or c.updated_at or "", c, said[-1]))
+    for at, c, m in sorted(found, key=lambda f: f[0], reverse=True)[:5]:
+        text = " ".join(m.content.split())
+        sheet.add(FACT, f"On {at[:10] or 'an earlier day'}, in “{c.title}”, they said: “{text[:160]}"
+                        f"{'…' if len(text) > 160 else ''}”", "your conversations")
+    memories = getattr(context, "user_memories", None)
+    for mem in [m for m in (memories.all_memories() if memories is not None else []) if has(m.text)][-5:]:
+        sheet.add(FACT, f"You told MIA: {mem.text}", "Memories")
+    notes = getattr(context, "life_notes", None)
+    for note in [n for n in (notes.notes if notes is not None else []) if has(f"{n.get('what', '')} {n.get('why', '')}")]:
+        sheet.add(FACT, describe(note), "what you told MIA")
+    if not sheet.facts:
+        sheet.add(MISSING, f"Nothing about {' '.join(words)} in our earlier conversations, memories or notes.",
+                  "your conversations")
+
+
 def _open_loops(context, sheet, prompt, today):
     _notes(context, sheet, "commitment", open_only=True)
     _look(context, sheet, "list_tasks", "Projects")
@@ -689,6 +735,11 @@ PLANS: tuple[Plan, ...] = (
          ("What have I repeatedly struggled with?", "What patterns have you noticed in my behavior?",
           "What do I keep running into?", "What do I keep struggling with?", "What patterns do you see in me?"),
          r"\b(struggl\w*|patterns?|keep running into)\b", _patterns),
+    Plan("discussed", "What you said about it before",
+         ("What did we discuss about this project last time?", "Have I mentioned this problem before?",
+          "What did we talk about with the roof?", "Have I told you about the leak before?",
+          "When did we last talk about the truck?", "What did I say about the garden last time?"),
+         r"\b(discuss\w*|talk(ed)? about|mentioned|last time)\b", _discussed),
     Plan("open loops", "What's unfinished",
          ("What commitments have I made that I haven't completed?", "What projects have I started but not completed?",
           "What have I left unfinished?", "What's still open?"),
@@ -714,8 +765,6 @@ NOT_A_PLAN = (
     'What habits are interfering with my goals?',
     'How can I break this large objective into smaller missions?',
     'What would an ideal week of progression look like?',
-    'What did we discuss about this project last time?',
-    'Have I mentioned this problem before?',
     'What changed between my original plan and where I am now?',
     'What lessons have I learned from previous experiences?',
     'How does this piece of equipment work?',

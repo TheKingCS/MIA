@@ -203,3 +203,25 @@ def test_the_kept_screen(tmp_path):
     promises = data["kinds"][0]
     assert promises["title"] == "Promises" and [n["status"] for n in promises["notes"]] == ["open", "done"]
     assert promises["notes"][0]["line"] == "a promise to Sam: fix his gate (by tomorrow)" and promises["notes"][0]["due"]
+
+
+def test_what_they_said_about_it_before(tmp_path):
+    from core.conversation_manager import Conversation, ConversationMessage
+    from core.question_plans import PLAN_BY_NAME, Sheet
+
+    said = lambda text, at: ConversationMessage(role="user", content=text, timestamp=at)  # noqa: E731
+    talks = [Conversation("c1", title="The roof", messages=[said("The roof leaks over the porch again", "2026-10-02T09:00")]),
+             Conversation("c2", title="Private", journal=True, messages=[said("the roof makes me anxious", "2026-10-03")]),
+             Conversation("c3", title="Shopping", messages=[said("buy milk", "2026-10-04")])]
+    notes = LifeNotes(data_dir=tmp_path)
+    notes.add("decision", "a metal roof", why="it lasts")
+    context = SimpleNamespace(conversations=SimpleNamespace(all_conversations=lambda: talks), user_memories=None,
+                              life_notes=notes)
+    sheet = Sheet("discussed", "")
+    PLAN_BY_NAME["discussed"].gather(context, sheet, "What did we discuss about the roof last time?", None)
+    assert [f.text for f in sheet.facts] == [
+        "On 2026-10-02, in “The roof”, they said: “The roof leaks over the porch again”",
+        "a decision: a metal roof, because it lasts"]  # never the journal's
+    sheet = Sheet("discussed", "")
+    PLAN_BY_NAME["discussed"].gather(context, sheet, "Have I mentioned this problem before?", None)
+    assert [f.kind for f in sheet.facts] == ["missing"] and "Name it" in sheet.facts[0].text
