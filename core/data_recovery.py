@@ -35,6 +35,12 @@ def notify_data_corruption(context: AppContext, filename: str) -> None:
     failure via log.exception()), so this must never itself become a
     new crash. Graceful no-op with no notifications service, same
     stance as every other optional-service check in this codebase."""
+    try:  # the data.recovered loop (core/loops.py): the file's name only, on this device
+        from core.dev_store import DEV_DATA, DevStore
+
+        DevStore(DEV_DATA / "recovered").append({"file": str(filename)[:120]})
+    except Exception:
+        log.exception("Couldn't keep the recovery of '%s' for the loops", filename)
     if context.notifications is None:
         return
     try:

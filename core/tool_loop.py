@@ -202,6 +202,12 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
             return ChatReply(content=again.strip(), tool_calls=[])
         log.warning("Tool loop answer had numbers the lookups didn't (%s); saying the results instead.",
                     ", ".join(sorted(wrong)))
+        failures = getattr(context, "failures", None)
+        if failures is not None:  # for the answers.numbers loop: the tools, never the words
+            try:
+                failures.record("invented_number", tool=",".join(n for n, _t in results)[:200])
+            except Exception:
+                log.exception("Couldn't note the invented number.")
     if not said.strip() or wrong:
         return ChatReply(content=_plain(results), tool_calls=[])
     from core.plain_words import strip_markdown

@@ -53,16 +53,16 @@ Scope: **device** (the PC and the development platform) or **person** (one perso
 | `answers.benchmark` | Zac's 112-question benchmark | score (`tools/intelligence_check.py`) | no drop | task per question that fell | step 5 |
 | `answers.corpus` | Personality and tone | golden conversations (`tools/conversation_check.py`) | no drop | task | step 5 |
 | `answers.routing` | Questions reaching the right plan | `tools/bench_audit.py` coverage | no drop | task | step 5 |
-| `answers.numbers` | A number she didn't look up | answers replaced by the fact sheet (`core/question_plans.answer`) | 0 | task | step 3 |
-| `memory.quality` | Memories she keeps | memories edited or deleted within 14 days of being kept | ≤ 15% | lesson for the extractor | step 3 |
+| `answers.numbers` | A number she didn't look up | answers replaced by the fact sheet (`core/question_plans.answer`) | 0 | task | built |
+| `memory.quality` | Memories she keeps | memories edited or deleted within 14 days of being kept | ≤ 15% | lesson for the extractor | built |
 | `phone.model` | The phone's model | golden set (`tools/model_check.py`) | no drop | task | step 5 |
 
 ### B. Proactivity (what she says unasked)
 
 | Loop | Watches | Signal | Floor / trend | Triggers | Status |
 |---|---|---|---|---|---|
-| `gate.unwelcome` | Messages people stop | "pause this kind" (`communication.resume` history) and dismissals | trend | lower that kind's priority (a proposal) | step 3 |
-| `gate.saturation` | Too many offers | days the daily limit was hit | ≤ 2 a week | task: merge or drop a kind | step 3 |
+| `gate.unwelcome` | Messages people stop | "pause this kind" (`communication.resume` history) and dismissals | trend | lower that kind's priority (a proposal) | built |
+| `gate.saturation` | Too many offers | days the daily limit was hit | ≤ 2 a week | task: merge or drop a kind | built |
 | `findings.acted` | Whether her findings matter | findings followed by the suggested action within 7 days | trend | retire or improve a finding kind | later (step 9) |
 
 ### C. Corrections in every area (the universal "she got it wrong")
@@ -85,14 +85,14 @@ area, the same code:
 | `creations.unused` | Screens nobody opens | published, not opened in 30 days (`core/creations.py`) | built |
 | `creations.maker` | Designs that fail their checks | maker retries and failures | step 3 |
 | `workflows.failing` | Workflows that stop | runs ending "stopped" | built |
-| `creations.held` | Screens broken by a change | creations that no longer pass their checks | step 3 |
+| `creations.held` | Screens broken by a change | creations that no longer pass their checks | built |
 
 ### E. Devices and data
 
 | Loop | Watches | Signal | Status |
 |---|---|---|---|
 | `pc.disk` | Room to work | free disk on the PC (`core/system_health.py`) | built |
-| `data.recovered` | Corrupt files | data-recovery events (`core/data_recovery.py`) | step 3 |
+| `data.recovered` | Corrupt files | data-recovery events (`core/data_recovery.py`) | built |
 | `vault.coverage` | Photos kept safe | phone media not yet on the PC, and transfer failures | step 3 |
 | `glasses.voice` | Speech through the glasses | glasses turns rephrased or failed | step 3 |
 | `relay.health` | The sealed relay | failed or slow relay calls | later |
@@ -102,7 +102,7 @@ area, the same code:
 
 | Loop | Watches | Signal | Floor / trend | Status |
 |---|---|---|---|---|
-| `dev.tests` | The suite | failures beyond the known ones (weekly full run) | 0 new | step 2 |
+| `dev.tests` | The suite | failures beyond the known ones (weekly full run) | 0 new | built (`dev.suite`) |
 | `dev.layering` | The layering rule | breaks (`core/dev_map.py`) | 0 | built |
 | `dev.doc_drift` | Docs against code | files the current-truth docs name that don't exist | 0 | built |
 | `dev.stuck` | Work going nowhere | tasks in review or claimed for 7+ days | 0 | built |
@@ -111,8 +111,8 @@ area, the same code:
 | `dev.coder` | MIA's own coder | shadow pass rate (the ledger) | trend | built |
 | `dev.limits` | Usage limits | limit hits per provider per week (`core/dev_usage.py`) | trend | built |
 | `dev.council_cost` | Council chatter | calls per council turn | trend | built |
-| `dev.reverts` | Merges undone | reverts per merge | 0 | step 2 |
-| `dev.dependencies` | Outdated or vulnerable packages | `pip list --outdated` and advisories | 0 critical | step 2 |
+| `dev.reverts` | Merges undone | reverts per merge | 0 | built |
+| `dev.dependencies` | Outdated or vulnerable packages | `pip list --outdated` and advisories | 0 critical | built (`dev.vulnerable`, `dev.outdated`) |
 | `dev.chronicles` | Story material waiting | candidates waiting | trend | built |
 
 ### G. Planned features (each built with its loop)

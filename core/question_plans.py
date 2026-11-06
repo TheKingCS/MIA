@@ -612,9 +612,10 @@ def request(context, conversation, prompt: str, today: Optional[date] = None) ->
     return messages, sheet
 
 
-def finish(content: str, sheet: Sheet, prompt: str) -> str:
+def finish(content: str, sheet: Sheet, prompt: str, context=None) -> str:
     """The model's answer when it keeps to the sheet's numbers; else the
-    sheet in plain words (never a number MIA didn't look up)."""
+    sheet in plain words (never a number MIA didn't look up), noted for the
+    answers.numbers loop."""
     from core.plain_words import strip_markdown
 
     said = strip_markdown(content or "")
@@ -624,6 +625,12 @@ def finish(content: str, sheet: Sheet, prompt: str) -> str:
     if wrong:
         log.warning("Question plan %s: the answer had numbers not on the sheet (%s); using the sheet.",
                     sheet.plan, ", ".join(sorted(wrong)))
+        failures = getattr(context, "failures", None)
+        if failures is not None:
+            try:
+                failures.record("invented_number", tool=f"plan:{sheet.plan}")
+            except Exception:  # the note never breaks the answer
+                log.exception("Couldn't note the invented number.")
         return sheet.plain()
     return said
 
@@ -639,4 +646,4 @@ def answer(context, conversation, prompt: str, today: Optional[date] = None) -> 
     if llm is None:
         return sheet.plain(), sheet
     reply = llm.chat_with_tools(messages, [])
-    return finish(reply.content if reply is not None else "", sheet, prompt), sheet
+    return finish(reply.content if reply is not None else "", sheet, prompt, context), sheet

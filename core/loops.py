@@ -192,6 +192,72 @@ def _gate_expired(context) -> Optional[Reading]:
     return Reading(round(lapsed / held, 2), held, f"{lapsed} of {held} held back expired before they went out")
 
 
+def _memory_quality(context) -> Optional[Reading]:
+    store = getattr(context, "user_memories", None)
+    if store is None or not hasattr(store, "corrections"):
+        return None
+    fixed = store.corrections(30)
+    kept = [m for m in store.all_memories() if m.created_at >= _since(30)[:19]]
+    gone = sum(1 for c in fixed if c.get("how") == "deleted")
+    made = len(kept) + gone  # what she kept in 30 days, the deleted ones included
+    if not made:
+        return None
+    by = {}
+    for c in fixed:
+        by[c.get("category", "Other")] = by.get(c.get("category", "Other"), 0) + 1
+    return Reading(round(len(fixed) / made, 2), made, f"{len(fixed)} of {made} new memories corrected"
+                   + (" (" + ", ".join(f"{k} {n}" for k, n in sorted(by.items())) + ")" if by else ""))
+
+
+def _gate_saturation(context) -> Optional[Reading]:
+    entries = _gate_entries(context)
+    if entries is None:
+        return None
+    full = {e["at"][:10] for e in entries if str(e.get("reason", "")).startswith("already said")}
+    days = {e["at"][:10] for e in entries if e.get("at")}
+    return Reading(len(full), max(1, len(days)), f"the daily limit was hit on {len(full)} of {len(days)} days") \
+        if days else None
+
+
+def _gate_unwelcome(context) -> Optional[Reading]:
+    gate = getattr(context, "communication", None)
+    if gate is None or not hasattr(gate, "paused"):
+        return None
+    paused = sorted(p["topic"] for p in gate.paused())
+    return Reading(len(paused), max(1, len(paused)), f"{len(paused)} kinds on a break"
+                   + (f": {', '.join(paused[:6])}" if paused else ""))
+
+
+def _creations_held(context) -> Optional[Reading]:
+    store = getattr(context, "creations", None)
+    if store is None:
+        return None
+    from core.creation_spec import check
+    from core.workflows import check as check_workflow
+
+    live = store.published()
+    if not live:
+        return None
+    broken = []
+    for c in live:  # the same checks it passed to be published (core/creation_actions.py)
+        try:
+            spec = store.shown(c["id"]).get("spec") or {}
+            if check_workflow(spec, context) if spec.get("kind") == "workflow" else check(spec):
+                broken.append(c["id"])
+        except Exception:
+            broken.append(c.get("id", "?"))
+    return Reading(len(broken), len(live), f"{len(broken)} of {len(live)} published screens no longer pass their checks")
+
+
+def _recovered(_context) -> Optional[Reading]:
+    if not _has_repo():
+        return None
+    since = _since(7)
+    found = [r for r in DevStore(DEV_DATA / "recovered").tail(200) if r.get("at", "") >= since]
+    files = sorted({r.get("file", "") for r in found})
+    return Reading(len(found), max(1, len(found)), f"{len(found)} in 7 days" + (f": {', '.join(files[:6])}" if files else ""))
+
+
 def _unused_creations(context) -> Optional[Reading]:
     store = getattr(context, "creations", None)
     if store is None:
@@ -420,6 +486,15 @@ LOOPS: tuple[Loop, ...] = (
          _count_of(("model_down", "garbled")), floor=0, covers=("flow:talk", "flow:pc")),
     Loop("answers.undo_soon", "answers", "what she did, undone right away, per 100 turns", "person",
          _per_100_turns(("undo_soon",)), min_n=20, covers=("flow:undo",)),
+    Loop("answers.numbers", "answers", "answers with a number she hadn't looked up, per 100 turns", "person",
+         _per_100_turns(("invented_number",)), floor=2, min_n=20, files=("core/question_plans.py", "core/tool_loop.py"),
+         covers=("flow:talk",)),
+    Loop("memory.quality", "answers", "memories corrected within 14 days of being kept", "person", _memory_quality,
+         floor=0.15, min_n=5, files=("core/user_memory_manager.py",), covers=("store:user_memories", "module:memories")),
+    Loop("gate.saturation", "proactivity", "days the daily limit of unprompted messages was hit, in 7", "person",
+         _gate_saturation, floor=2, covers=("flow:gate",)),
+    Loop("gate.unwelcome", "proactivity", "kinds of message on a break for being dismissed", "person", _gate_unwelcome,
+         acts="watch", covers=("flow:gate",)),
     # B. Proactivity, and C. corrections (drafted at Night School, T-0047)
     Loop("actions.failed", "corrections", "things approved that broke when they ran, in 7 days", "person",
          _actions_failed, floor=0, files=("core/actions.py",), covers=("flow:actions",)),
@@ -438,7 +513,11 @@ LOOPS: tuple[Loop, ...] = (
          acts="offer", covers=("store:creations", "action:creation")),
     Loop("workflows.failing", "creations", "workflow runs that stopped", "person", _failing_workflows, floor=0,
          files=("core/workflows.py",), covers=("flow:workflows", "check:workflows")),
+    Loop("creations.held", "creations", "published screens that no longer pass their checks", "person",
+         _creations_held, floor=0, files=("core/creation_spec.py",), covers=("store:creations",)),
     # E. Devices
+    Loop("data.recovered", "devices", "data files found corrupt and reset, in 7 days", "device", _recovered, floor=0,
+         files=("core/data_recovery.py",), covers=("flow:data",)),
     Loop("pc.disk", "devices", "free space on the PC", "device", _disk, better="higher", floor=20, unit="GB", covers=("flow:pc",)),
     # F. Her development
     Loop("dev.layering", "development", "breaks of the layering rule", "device", _layering, floor=0,

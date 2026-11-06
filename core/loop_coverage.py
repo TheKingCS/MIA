@@ -60,6 +60,7 @@ FLOWS = {
     "flow:search": "Ctrl+K search across apps",
     "flow:email": "email drafts and what's sent",
     "flow:actions": "Propose, Approve, Execute, Record, Undo for every action",
+    "flow:data": "every store's file: read, written, recovered when it's corrupt",
 }
 DEV = {
     "dev:code": "the code's shape: layering, docs that match",

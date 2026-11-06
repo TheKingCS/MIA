@@ -21,7 +21,10 @@ dependency audit (`core/dev_checks.py`). Its first run found `cryptography` 47 w
 PC's venv is on 50.0.2 now (T-0048); **restart MIA on the PC** to load it. Still open: the phone build
 bundles Chaquopy's `cryptography` 42.0.8, which the audit doesn't cover yet. T-0047 is built: six loops over
 actions, email drafts and the gate (failed and declined actions now go into the person's Fix-It Log by kind
-only). Next: the rest of step 3; the phone's sync loop needs the PC to keep when the phone last reached it.
+only). Most of step 3 is built too (`answers.numbers`, `memory.quality`, `gate.saturation`, `gate.unwelcome`,
+`creations.held`, `data.recovered`); what's left waits on records MIA doesn't keep yet (BUILD_PLAN step 3).
+Tests no longer run the PC's loops for real (they had: readings in data/dev, a task in work/tasks);
+the guard now watches work/tasks and the history too. Next: step 4, corrections in every area.
 A flaky test seen once: `tests/test_reference_library_manager.py::test_search_all_packs_returns_snippet_from_matching_pack`.
 
 **Glasses navigation: `docs/GLASSES_NAVIGATION_PLAN.md` is a draft waiting on

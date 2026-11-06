@@ -116,6 +116,26 @@ for _module in (inventory_manager_module, component_manager_module, material_man
 skill_manager_module._SKILL_XP_LOG_FILE = _TEST_RUNTIME_DIR / "skill_xp_log.json"
 skill_manager_module._SKILL_PROGRESS_FILE = _TEST_RUNTIME_DIR / "skill_progress.json"
 
+# 2026-11-06: tests that run MIA's daily checks (test_communication_gate)
+# ran the PC's improvement loops for real: readings into data/dev/ and a
+# task opened in work/tasks/ (T-0049). The development platform's records
+# default to a temp dir, and the device's loops act as on a computer
+# without the repo (they measure nothing, open nothing) unless a test says
+# otherwise (tests/test_loops.py patches `_has_repo`).
+import core.council as council_module  # noqa: E402
+import core.council_voices as council_voices_module  # noqa: E402
+import core.dev_store as dev_store_module  # noqa: E402
+import core.dev_usage as dev_usage_module  # noqa: E402
+import core.loops as loops_module  # noqa: E402
+import core.night_school as night_school_module  # noqa: E402
+
+_TEST_DEV_DIR = Path(tempfile.mkdtemp(prefix="mia_test_dev_"))
+for _module in (dev_store_module, council_module, council_voices_module, dev_usage_module, loops_module,
+                night_school_module):
+    _module.DEV_DATA = _TEST_DEV_DIR
+council_voices_module.SAMPLES = _TEST_DEV_DIR / "voices"
+loops_module._has_repo = lambda: False
+
 
 # Guard: the test suite must never touch the real data/ folder. Snapshot
 # it at session start and fail the run, naming the files, if anything was
@@ -133,6 +153,10 @@ def _data_snapshot() -> dict[str, float]:
         }
     if _REAL_CONFIG_FILE.exists():
         snapshot["../config/config.json"] = _REAL_CONFIG_FILE.stat().st_mtime
+    work = _REAL_DATA_DIR.parent / "work"  # the development record: tasks and the history (2026-11-06, T-0049)
+    for p in [work / "activity.jsonl", *sorted((work / "tasks").glob("*.md"))]:
+        if p.exists():
+            snapshot[f"../work/{p.relative_to(work).as_posix()}"] = p.stat().st_mtime
     return snapshot
 
 

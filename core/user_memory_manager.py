@@ -56,7 +56,7 @@ import json
 import re
 import uuid
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
@@ -69,6 +69,8 @@ log = get_logger(__name__)
 
 _DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 _USER_MEMORIES_FILE = _DATA_DIR / "user_memories.json"
+_CORRECTIONS_FILE = "memory_corrections.jsonl"  # beside the memories: category and age only
+CORRECTED_WITHIN = 14  # days: a memory changed this soon after she kept it was kept wrong
 
 MEMORY_CATEGORIES = [
     "Family", "Programming", "Fitness", "Fishing", "Projects", "Travel",
@@ -392,13 +394,57 @@ class UserMemoryManager:
             raise ValueError(f"No memory with id '{memory_id}'.")
         if not text.strip():
             raise ValueError("A memory needs some words.")
+        if memory.text != text.strip():
+            self._note_correction(memory, "edited")
         memory.text = text.strip()
         self._save()
         return memory
 
     def delete_memory(self, memory_id: str) -> None:
+        memory = self.get_memory(memory_id)
+        if memory is not None:
+            self._note_correction(memory, "deleted")
         self._memories = [m for m in self._memories if m.memory_id != memory_id]
         self._save()
+
+    # ------------------------------------------------------------------
+    # Corrections (the memory.quality loop, core/loops.py)
+    # ------------------------------------------------------------------
+
+    def _note_correction(self, memory: UserMemory, how: str) -> None:
+        """A memory under CORRECTED_WITHIN days old, edited or deleted: a judgment of what she kept.
+        Kept beside the memories, with its category and age only, never its words."""
+        try:
+            kept = datetime.fromisoformat(memory.created_at)
+        except ValueError:
+            return
+        if datetime.now() - kept > timedelta(days=CORRECTED_WITHIN):
+            return
+        line = {"at": datetime.now().isoformat(timespec="seconds"), "how": how, "category": memory.category,
+                "kept_at": memory.created_at}
+        try:
+            self.data_dir.mkdir(parents=True, exist_ok=True)
+            with open(self.data_dir / _CORRECTIONS_FILE, "a", encoding="utf-8") as out:
+                out.write(json.dumps(line) + "\n")
+        except OSError:
+            log.exception("Couldn't note a memory correction.")
+
+    def corrections(self, days: int = 30) -> list[dict]:
+        """Memories corrected soon after she kept them, in the last `days`."""
+        since = (datetime.now() - timedelta(days=days)).isoformat(timespec="seconds")
+        try:
+            lines = (self.data_dir / _CORRECTIONS_FILE).read_text(encoding="utf-8").splitlines()
+        except OSError:
+            return []
+        out = []
+        for line in lines:
+            try:
+                found = json.loads(line)
+            except ValueError:
+                continue
+            if found.get("at", "") >= since:
+                out.append(found)
+        return out
 
     def clear_all(self) -> None:
         self._memories = []
