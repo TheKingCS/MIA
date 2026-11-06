@@ -86,8 +86,11 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       camera and asking the question by voice are still to do.
 - [ ] **T-0051, security (phone):** the audit covers the phone's own packages now (`phone.vulnerable`, weekly):
       `cryptography` 42.0.8 (11 advisories), `starlette` 0.27.0 (14), `fastapi` 0.99.1 (1). They're pinned by
-      the phone's `pydantic<2`; its server listens on 127.0.0.1 only. The fix moves the phone to pydantic 2 (if
-      Chaquopy has the wheels) and needs a real phone test: a build for Zac to try.
+      the phone's `pydantic<2`; its server listens on 127.0.0.1 only. Chaquopy has no newer `cryptography` for
+      Android and no `pydantic-core`, so there's no simple upgrade. **Zac: choose** (a) keep them, the exposure
+      written down (only apps on the phone can reach its server), (b) build `cryptography` for Android ourselves,
+      or (c) move the phone's encryption to Android Keystore (Kotlin) and its server off fastapi over time.
+      Claude: (a) now, (c) over time. Details in `work/tasks/T-0051.md`.
 - [ ] Flaky: `tests/test_reference_library_manager.py` (2026-11-07: one cause found and fixed: deleting a pack failed
       on Windows while libzim still held the file; if `test_search_all_packs_returns_snippet_from_matching_pack` fails
       again, look for another open handle), and a native Qt crash mid-suite (no summary printed), seen twice (the
