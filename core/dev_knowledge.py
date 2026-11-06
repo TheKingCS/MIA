@@ -165,6 +165,28 @@ def briefing(task, folder: Path = KNOWLEDGE) -> str:
 
 # ------------------------------------------------------------------ the retrospective
 
+# T-0044: her first 32 write-ups (2026-11-04, 08:25) were written from records with no process in them and
+# described failures and reviews that never happened; all withdrawn. The record-substance guard landed after them.
+GUARDED_SINCE = "2026-11-04T09:00"
+_CLAIMS_FAILURE = re.compile(r"\b(fail\w*|bug|broke\w*|error|crash\w*|revert\w*|wrong|mistake|caught)\b", re.I)
+_CLAIMS_REVIEW = re.compile(r"\b(review\w*|objection|disagree\w*)\b", re.I)
+
+
+def supported(entry: dict, events: list[dict]) -> str:
+    """Pure logic. Why an entry claims what its task's record doesn't show ("" when the record bears it out):
+    a failure, bug or fix needs a failure in the record; a review or disagreement needs a review."""
+    text = f"{entry.get('title', '')} {entry.get('body', '')}"
+    failed = any(e.get("action") in ("loop", "review", "resolve", "approve", "shadow")
+                 and re.search(r"\b(fail\w*|changes|revert\w*|not ready|new failures?)\b", str(e.get("detail", "")), re.I)
+                 for e in events)
+    reviewed = any(e.get("action") in ("review", "resolve") for e in events)
+    if (entry.get("kind") in ("debugging", "failed-experiment") or _CLAIMS_FAILURE.search(text)) and not failed:
+        return "it describes a failure the record doesn't show"
+    if _CLAIMS_REVIEW.search(text) and not reviewed:
+        return "it describes a review the record doesn't show"
+    return ""
+
+
 RETRO_SCHEMA = {"type": "object", "properties": {"entries": {"type": "array", "items": {"type": "object", "properties": {
     "kind": {"type": "string", "enum": list(KINDS)}, "title": {"type": "string"}, "body": {"type": "string"},
     "concerns": {"type": "array", "items": {"type": "string"}}, "from": {"type": "array", "items": {"type": "string"}}},
@@ -236,6 +258,8 @@ def retrospective(task_id: str, ask: Optional[Callable[[str, dict], str]] = None
         return []
     kept = []
     for p in proposed[:3]:
+        if not isinstance(p, dict) or supported(p, events):
+            continue  # a claim the record doesn't bear out is never kept (T-0044)
         cited = [r for r in p.get("from") or [] if r in refs]
         if f"task:{task.id}" not in cited:
             cited.insert(0, f"task:{task.id}")

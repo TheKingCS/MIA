@@ -463,11 +463,14 @@ def _reviewers(_context) -> Optional[Reading]:
 def _knowledge(_context) -> Optional[Reading]:
     from core import dev_knowledge
 
-    hers = [e for e in dev_knowledge.entries() if e.get("by") == "mia"]
+    # Only what she's written since the guards (T-0044): the first batch is history, not how she writes now.
+    hers = [e for e in dev_knowledge.entries() if e.get("by") == "mia"
+            and str(e.get("created", "")) >= dev_knowledge.GUARDED_SINCE]
     if not hers:
         return None
     withdrawn = sum(1 for e in hers if e.get("status") == "withdrawn")
-    return Reading(round(withdrawn / len(hers), 2), len(hers), f"{withdrawn} of {len(hers)} of her write-ups withdrawn")
+    return Reading(round(withdrawn / len(hers), 2), len(hers), f"{withdrawn} of {len(hers)} of her write-ups withdrawn "
+                   f"since {dev_knowledge.GUARDED_SINCE[:10]}")
 
 
 def _coder(_context) -> Optional[Reading]:
@@ -681,7 +684,7 @@ LOOPS: tuple[Loop, ...] = (
          covers=("dev:tasks", "dev:missions")),
     Loop("dev.reviewers", "development", "the weakest reviewer's cautious rate", "device", _reviewers,
          better="higher", floor=0.5, covers=("dev:review",)),
-    Loop("dev.knowledge", "development", "MIA's write-ups withdrawn", "device", _knowledge, floor=0.3,
+    Loop("dev.knowledge", "development", "MIA's write-ups withdrawn", "device", _knowledge, floor=0.3, min_n=5,
          files=("core/dev_knowledge.py",), covers=("dev:knowledge",)),
     Loop("dev.coder", "development", "MIA's coder: shadow attempts passed", "device", _coder, better="higher",
          acts="watch", covers=("dev:shadow",)),

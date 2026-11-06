@@ -92,3 +92,29 @@ def test_a_thin_record_teaches_nothing_and_wrong_entries_are_withdrawn(tmp_path)
     dk.withdraw(e["id"], "claude", "the record shows no failure", folder=know)
     assert dk.entries(know)[0]["status"] == "withdrawn" and "Withdrawn by claude" in dk.entries(know)[0]["body"]
     assert dk.for_task(SimpleNamespace(title="invented failure first", body="", files=[]), know, derived=True, min_hits=1) == []
+
+def test_a_claim_the_record_doesnt_show_is_never_kept():
+    """T-0044: her first write-ups described failures and reviews that never happened."""
+    from core.dev_knowledge import supported
+
+    quiet = [{"action": "claim", "detail": "files: x"}, {"action": "loop", "detail": "ready: 12 passed"},
+             {"action": "approve", "detail": "merged abc1234"}]
+    assert "failure" in supported({"kind": "debugging", "title": "A bug in task moves", "body": "It failed at first."}, quiet)
+    assert "review" in supported({"kind": "lesson", "title": "Thorough tests", "body": "A reviewer asked for more tests."}, quiet)
+    assert supported({"kind": "method", "title": "Moves keep the order", "body": "Tasks move with their history."}, quiet) == ""
+    rough = quiet + [{"action": "loop", "detail": "not ready: new failures tests/test_x.py"},
+                     {"action": "review", "detail": "changes: needs a test"}]
+    assert supported({"kind": "debugging", "title": "The first try failed", "body": "A reviewer asked for a test."}, rough) == ""
+
+
+def test_the_loop_counts_only_what_she_wrote_since_the_guards(monkeypatch):
+    from core import dev_knowledge, loops
+
+    old = [{"by": "mia", "status": "withdrawn", "created": "2026-11-04T08:25:21+00:00"}] * 32
+    new = [{"by": "mia", "status": "derived", "created": "2026-11-07T02:00:00+00:00"}] * 4 + \
+          [{"by": "mia", "status": "withdrawn", "created": "2026-11-07T02:00:00+00:00"}]
+    monkeypatch.setattr(dev_knowledge, "entries", lambda folder=None: old + new)
+    reading = {l.id: l for l in loops.LOOPS}["dev.knowledge"].measure(None)
+    assert (reading.value, reading.n) == (0.2, 5)
+    monkeypatch.setattr(dev_knowledge, "entries", lambda folder=None: old)
+    assert {l.id: l for l in loops.LOOPS}["dev.knowledge"].measure(None) is None
