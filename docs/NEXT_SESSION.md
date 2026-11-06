@@ -16,7 +16,8 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   (`core/corrections.py`); weekly benchmarks graded by code (`core/benchmarks.py`, `python -m tools.weekly_bench`);
   the standing mission M-0001 (paused until Zac starts it) and MIA's Sunday self-report. Loop coverage
   (`core/loop_coverage.py`): 228 of 257 processes covered (2026-11-06), 23 declined with a reason, 6 to do, each
-  with its why; a test fails on a new process nobody decided how to watch.
+  with its why; a test fails on a new process nobody decided how to watch. Every loop as built: `docs/LOOPS.md`
+  (generated: after adding a loop, run `python -m core.loop_catalog`; a test checks it).
 - **Night School (DEC-0100, `docs/NIGHT_SCHOOL.md`):** starts at 01:30 from MIA's daily check once MIA restarts
   with the new code (Zac sleeps in the morning: see WAITING_ON). First real full night run by hand 2026-11-07
   08:55: one lesson passed (phone_link, kept in the lab for Zac), two failed.
