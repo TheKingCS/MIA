@@ -5,7 +5,7 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-11-07*
+*Last updated: 2026-11-06 (morning)*
 
 **What Zac and the other agents need to do is in `docs/WAITING_ON.md`** (kept current every session).
 
@@ -15,15 +15,16 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   the dev suite, reverts and dependency audit (`core/dev_checks.py`); corrections in every area
   (`core/corrections.py`); weekly benchmarks graded by code (`core/benchmarks.py`, `python -m tools.weekly_bench`);
   the standing mission M-0001 (paused until Zac starts it) and MIA's Sunday self-report. Loop coverage
-  (`core/loop_coverage.py`): 142 of 250 processes covered, the rest to do or declined with a reason; a test fails
-  on a new process nobody decided how to watch.
+  (`core/loop_coverage.py`): 228 of 257 processes covered (2026-11-06), 23 declined with a reason, 6 to do, each
+  with its why; a test fails on a new process nobody decided how to watch.
 - **Night School (DEC-0100, `docs/NIGHT_SCHOOL.md`):** starts at 01:30 from MIA's daily check once MIA restarts
   with the new code (Zac sleeps in the morning: see WAITING_ON). First real full night run by hand 2026-11-07
   08:55: one lesson passed (phone_link, kept in the lab for Zac), two failed.
 - **Phase B:** step 7 (the module contract) waits on the rest of Zac's Interconnection Architecture doc. Step 8
   (cross-domain) built: composed plans, `afford`, `slipped`, `projects`, `habits`, `priorities`, `resources`
-  (82 of 112 benchmark questions answered by a plan or code), sureness in every plan answer, calibration by
-  ratings and by projected dates checked when they come.
+  and, 2026-11-06, `recall`, `person` and `patterns` from DEC-0054's notes and the memories (the routing audit:
+  79 of 112 benchmark questions answered by a plan, 21 by the model alone, most of those research and how-to),
+  sureness in every plan answer, calibration by ratings and by projected dates checked when they come.
 - **Phase C (done):** capability gaps (`core/capability_gaps.py`), seasons of memory (`core/seasons.py`), the
   Operating Journal (`core/operating_journal.py`), recreation (`core/recreation.py`).
 - **Phase D:** Good News Radio (on for Zac; `core/good_news.py`); maps and comms (MGRS, TAK package and
@@ -32,9 +33,16 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   (`web/council.html`); the Chronicles' weekly issue (`core/chronicle_issue.py`; waits on Zac approving archive
   events; consistent characters need T-0036's bigger image model).
 - **Phase E (done):** T-0040, T-0042, T-0044, T-0045. T-0041's rest waits on real use of MIA's creations.
+- **DEC-0054 built (T-0018, 2026-11-06):** `core/life_notes.py` (promises, decisions, ideas, goals set aside,
+  kept on "keep it", a dated promise mentioned the day before and on it, done or forgotten by voice) and the
+  goods-before-market-day finding. Left: the "still using it?" mark on subscriptions (it touches
+  `core/budget_manager.py`, which holds Zac's Plaid work in progress: after it lands) and a screen for the notes.
+- **T-0010:** a rating said out loud works everywhere, the glasses included; a 👍/👎 on the glasses screen is
+  Muse's, if Zac wants one.
 - **Working web screens** (formatting only, the look is muse's): `web/operating.html`, `web/play.html`,
   `web/news.html`, `web/council.html`.
-- **Known flaky (seen once each):** `test_search_all_packs_returns_snippet_from_matching_pack`, one native Qt crash.
+- **Known flaky:** the reference library's (one cause fixed 2026-11-06: an open libzim handle on delete), a native
+  Qt crash mid-suite (seen twice), and `test_inbox.py`'s reading-corrections test (once in a full run).
   The one failing test is Zac's uncommitted Plaid work (`test_import_transaction_transfer_is_skipped`).
 
 **Next for Claude:** the glasses' and phone's Look button (sight), Meshtastic once radios exist, vector offline

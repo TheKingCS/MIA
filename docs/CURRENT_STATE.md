@@ -2,7 +2,19 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-11-07 (the build plan's phases A to E, overnight), by claude.*
+session. Last updated: 2026-11-06 (loop coverage, DEC-0054 built, recall plans), by claude.*
+
+**2026-11-06 (morning, Zac asleep), Claude on the PC, continuing the build plan.** Every process now has a
+loop or a reason: coverage 228 of 257 (6 still to do, each with its why in `work/loop_coverage.json`). New
+loops: which daily check is dismissed most, recurring missions missed, apps and pages that broke (a desktop
+app that breaks on opening is now noted instead of taking the window down), her lab proposals that land,
+photos still only on the phone (`vault.coverage`), offers to keep a note turned down. **DEC-0054 is built
+(T-0018)**: `core/life_notes.py` spots a promise, a decision, an idea or a goal set aside in what someone says,
+offers to keep it after her reply, keeps it only on "keep it", mentions a promise with a day the day before
+and on it, and marks it done or forgets it by voice. New question plans (recall, person, patterns) take the
+routing audit to 79 of 112 benchmark questions answered by a plan, from 70. A rating said out loud ("thumbs
+up", "that's a bad answer") works on the glasses (T-0010). A finding for goods that won't make market day.
+Fixed: deleting a reference pack failed on Windows now and then (the old flaky test).
 
 **2026-11-06 to 07, Claude on the PC, overnight while Zac slept (build plan steps 1 to 17).** Phases A and C
 of `docs/BUILD_PLAN.md` are done and most of D is built; the queued tasks T-0040, T-0042, T-0044 and T-0045
