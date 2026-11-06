@@ -7,6 +7,8 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 *Last updated: 2026-11-06*
 
+**What Zac and the other agents need to do is in `docs/WAITING_ON.md`** (kept current every session).
+
 **Night School is running (DEC-0100, DEC-0101, 2026-11-06; `docs/NIGHT_SCHOOL.md`).** Every night from
 01:30, MIA's daily check starts it in its own process: she picks what to study and why, Claude Code
 (read-only) sets exercises for the build plan's next step, each with a test that fails first, her coder does
