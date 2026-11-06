@@ -25,6 +25,9 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       show I-0001`, `... approve I-0001`.
 
 ### At the PC
+- [ ] **Night School's start time:** it's set for 01:30, but you work nights and sleep in the morning. Set
+      `"start"` in `work/night_school.json` to when you're usually asleep (say `"09:30"`); it runs four hours
+      from then. (On 2026-11-07 Claude started one by hand at 08:55, while you slept.)
 - [ ] **Restart MIA** so she loads `cryptography` 50.0.2 (47 had three HIGH advisories, T-0048).
 - [ ] **Start the standing mission** when you want the council working the loops' tasks:
       `python -m tools.work mission start M-0001`.
