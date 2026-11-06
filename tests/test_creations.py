@@ -320,6 +320,28 @@ def test_files_that_cant_become_a_screen():
     assert fields[0]["type"] == "date" and rows[1]["when"] == "2026-03-04"
 
 
+def test_a_json_export_becomes_a_record_set_too(world):
+    """T-0040: JSON (a list of records, one list inside an object, or JSON Lines) read like a CSV."""
+    import json
+
+    from core import record_import
+
+    records = [{"date": "2026-10-02", "item": "Feed", "cost": {"amount": 32.5, "currency": "USD"}, "tags": ["farm", "flock"],
+                "paid": True},
+               {"date": "2026-10-09", "item": "Seeds", "cost": {"amount": 12, "currency": "USD"}, "tags": [], "paid": False}]
+    fields, rows = record_import.infer(json.dumps({"export": records, "count": 2}))
+    types = {f["name"]: f["type"] for f in fields}
+    assert types["date"] == "date" and types["cost_amount"] == "money" and fields[2]["label"] == "cost.amount"
+    assert rows[0]["tags"] == "farm, flock" and rows[1]["paid"] == "no"
+    lines = "\n".join(json.dumps(r) for r in records)
+    assert record_import.infer(lines)[1] == rows  # JSON Lines, the same
+    made = record_import.draft(world, "Farm costs", json.dumps(records))
+    assert made["status"] == "draft" and "log" in made["versions"][-1]["blueprint"]
+    for bad in ('{"a": 1}', "[1, 2, 3]", "{not json"):
+        with pytest.raises(record_import.ImportError_):
+            record_import.infer(bad)
+
+
 def test_how_her_blueprints_are_used_is_observed(world):
     """DEC-0093: opens and records per blueprint, observed, nothing inferred from it yet."""
     w = world

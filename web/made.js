@@ -159,7 +159,7 @@
       try { const made = await MIA.make(ask.value.trim()); location.href = "made.html?id=" + made.id; }
       catch (e) { note.textContent = e.message; go.disabled = false; }
     } }, "Make it");
-    const file = el("input", { type: "file", accept: ".csv,text/csv", "aria-label": "A CSV file" });
+    const file = el("input", { type: "file", accept: ".csv,text/csv,.json,application/json,.jsonl", "aria-label": "A CSV or JSON file" });
     const fileNote = el("p", { class: "dim" });
     file.addEventListener("change", async () => {
       const f = file.files && file.files[0];
@@ -169,7 +169,7 @@
       catch (e) { fileNote.textContent = e.message; }
     });
     $("panel").replaceChildren(
-      section("Bring a file", el("p", {}, "A spreadsheet saved as CSV, of anything: MIA reads its columns, makes a screen " +
+      section("Bring a file", el("p", {}, "A spreadsheet saved as CSV, or a JSON export, of anything: MIA reads its columns, makes a screen " +
         "for it, and keeps the rows until you publish."), file, fileNote),
       section("Ask for a new one", el("p", {}, "Describe something you keep track of, and MIA designs a screen for it from her own parts. " +
         "You'll see a draft first; nothing changes until you publish it."), ask, el("div", { class: "made-row" }, go), note),

@@ -179,6 +179,11 @@ def handle(context, text: str) -> Optional[str]:
     said = gap_reply(context, text)  # "build it" / "bring it back", to her latest capability-gap offer
     if said is not None:
         return said
+    from core.diagnostics import reply as checkup_reply
+
+    said = checkup_reply(context, text)  # "check my PC", "check the network" (T-0040)
+    if said is not None:
+        return said
     from core.gps_tracks import reply as track_reply
 
     said = track_reply(context, text)  # "how far was my last hike?" (DEC-0099)

@@ -63,14 +63,63 @@ def _number(text: str) -> Optional[float]:
         return None
 
 
-def infer(text: str) -> tuple[list[dict], list[dict]]:
-    """Pure logic. A CSV -> (fields, rows of values keyed by field name)."""
+def _cell(value) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, bool):
+        return "yes" if value else "no"
+    if isinstance(value, (list, tuple)):
+        return ", ".join(_cell(v) for v in value if not isinstance(v, (dict, list)))
+    return str(value)
+
+
+def json_table(text: str) -> list[list[str]]:
+    """Pure logic. JSON (a list of objects, an object holding one such list, or JSON Lines) -> a header row and
+    rows, nested objects flattened one level ("address.city"), like a CSV's (T-0040)."""
+    import json
+
     try:
-        sample = text[:4096]
-        dialect = csv.Sniffer().sniff(sample, delimiters=",;\t") if sample.strip() else csv.excel
-    except csv.Error:
-        dialect = csv.excel
-    table = [row for row in csv.reader(io.StringIO(text), dialect) if any(c.strip() for c in row)]
+        data = json.loads(text)
+    except ValueError:
+        try:
+            data = [json.loads(line) for line in text.splitlines() if line.strip()]
+        except ValueError:
+            raise ImportError_("That isn't JSON a record set can come from.") from None
+    if isinstance(data, dict):
+        lists = [v for v in data.values() if isinstance(v, list) and v and all(isinstance(x, dict) for x in v)]
+        if len(lists) != 1:
+            raise ImportError_("The JSON needs one list of records (objects) to bring in.")
+        data = lists[0]
+    if not isinstance(data, list) or not data or not all(isinstance(x, dict) for x in data):
+        raise ImportError_("The JSON needs a list of records (objects).")
+    rows, header = [], []
+    for item in data[:MAX_ROWS]:
+        flat = {}
+        for key, value in item.items():
+            if isinstance(value, dict):
+                for k2, v2 in value.items():
+                    if not isinstance(v2, (dict, list)):
+                        flat[f"{key}.{k2}"] = v2
+            else:
+                flat[str(key)] = value
+        for key in flat:
+            if key not in header:
+                header.append(key)
+        rows.append(flat)
+    return [header] + [[_cell(r.get(k)) for k in header] for r in rows]
+
+
+def infer(text: str) -> tuple[list[dict], list[dict]]:
+    """Pure logic. A CSV or JSON -> (fields, rows of values keyed by field name)."""
+    if text.lstrip()[:1] in ("[", "{"):
+        table = json_table(text)
+    else:
+        try:
+            sample = text[:4096]
+            dialect = csv.Sniffer().sniff(sample, delimiters=",;\t") if sample.strip() else csv.excel
+        except csv.Error:
+            dialect = csv.excel
+        table = [row for row in csv.reader(io.StringIO(text), dialect) if any(c.strip() for c in row)]
     if len(table) < 2:
         raise ImportError_("The file needs a header row and at least one row of data.")
     header, body = table[0][:MAX_COLUMNS], table[1:MAX_ROWS + 1]
