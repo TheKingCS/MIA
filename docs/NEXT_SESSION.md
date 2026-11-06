@@ -24,7 +24,9 @@ actions, email drafts and the gate (failed and declined actions now go into the 
 only). Most of step 3 is built too (`answers.numbers`, `memory.quality`, `gate.saturation`, `gate.unwelcome`,
 `creations.held`, `data.recovered`); what's left waits on records MIA doesn't keep yet (BUILD_PLAN step 3).
 Tests no longer run the PC's loops for real (they had: readings in data/dev, a task in work/tasks);
-the guard now watches work/tasks and the history too. Next: step 4, corrections in every area.
+the guard now watches work/tasks and the history too. Step 4's core is built: corrections in every area
+(`core/corrections.py`, one loop per area). Left in it: desktop Qt edits, Plaid re-categorizations (after
+Zac's Plaid work lands), OCR field corrections, the Loop's predictions. Next: step 5, the weekly benchmarks.
 A flaky test seen once: `tests/test_reference_library_manager.py::test_search_all_packs_returns_snippet_from_matching_pack`.
 
 **Glasses navigation: `docs/GLASSES_NAVIGATION_PLAN.md` is a draft waiting on

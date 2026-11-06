@@ -421,8 +421,18 @@ class ActionCenter:
             proposal.status = EXECUTED
             undo = getattr(context, "undo", None)
             if undo is not None and change.files:
+                change.by = "mia" if proposal.proposed_by == "mia" else "person"
                 undo.add(change)
                 proposal._change = change
+            from core import corrections  # her changes watched; the person's edits checked against them
+
+            try:
+                if proposal.proposed_by == "mia":
+                    corrections.mia_changed(context, proposal.kind, proposal.params)
+                else:
+                    corrections.person_changed(context, proposal.kind, proposal.params)
+            except Exception:  # the record never breaks the change
+                log.exception("Couldn't keep the correction record for %s.", proposal.kind)
             publish(context, "records.changed", action=f"action_{proposal.kind}")
             try:
                 proposal.reward = reward_for(before, _moment(context, proposal), proposal.kind)

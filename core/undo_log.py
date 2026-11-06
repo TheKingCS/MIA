@@ -44,6 +44,7 @@ class Change:
     at: str = field(default_factory=lambda: datetime.now().isoformat(timespec="seconds"))
     files: dict = field(default_factory=dict)  # Path -> previous bytes, or None if it didn't exist
     events: list = field(default_factory=list)  # life events recorded during it (their ids)
+    by: str = "person"  # "mia" when she made it: undoing it corrects her (core/corrections.py)
 
 
 @contextmanager
@@ -167,5 +168,9 @@ def undo_last(context, profile_id: Optional[str]) -> Optional[Change]:
     from core.main_thread import publish
 
     publish(context, "records.changed", action="undo")
+    if change.by == "mia":
+        from core import corrections
+
+        corrections.undone(context, change.label)
     log.info("Undid '%s' for %s (%d file(s)).", change.label, profile_id, len(change.files))
     return change

@@ -72,7 +72,7 @@ area, the same code:
 
 | Loop | Watches | Signal | Status |
 |---|---|---|---|
-| `corrections.<area>` (money, kitchen, workout, missions, calendar, maintenance, inbox, memories, creations...) | MIA's changes later corrected | an action proposed by MIA undone, or the same record edited by the person within 3 days | step 4 |
+| `corrections.<area>` (money, kitchen, workout, missions, calendar, maintenance, inbox, memories, creations...) | MIA's changes later corrected | an action proposed by MIA undone, or the same record edited by the person within 3 days | built (`core/corrections.py`) |
 | `money.categories` | Plaid categories | transactions re-categorized by the person (and the rule that would have got it right) | step 4 |
 | `inbox.reading` | OCR and document reading | fields corrected after a read | step 4 |
 | `loop.prediction` | The Loop's predicted week | predicted shifts and routines against what was logged | step 4 |

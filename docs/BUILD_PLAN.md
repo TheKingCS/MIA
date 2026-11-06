@@ -65,9 +65,13 @@ first. Each is a step below.
    `gate.expired`). Still to do, each waiting on a record MIA doesn't keep yet: `phone.link` and the phone's sync
    (when the phone last reached the PC), `glasses.voice` (turns aren't traced by surface), `vault.coverage`
    (transfer failures), `creations.maker` (the maker's retries).
-4. ⬜ **Corrections in every area**: an action MIA proposed that the person undid or re-edited within 3 days,
-   counted by area; Plaid re-categorizations learned as rules; OCR field corrections; the Loop's predictions
-   against what happened.
+4. 🔨 **Corrections in every area** (`core/corrections.py`, built 2026-11-06): MIA's changes (actions she proposed
+   that were approved, her Assistant tools' changes) are watched for 3 days; the person undoing one, or editing or
+   deleting something of the same kind (the same record when both name its id), corrects her once;
+   `corrections.all` and one loop per area (money, kitchen, workouts, missions, calendar, maintenance, inbox,
+   memories, creations, home, tasks). Not yet: edits made on the desktop's Qt screens (they don't go through
+   actions), Plaid re-categorizations learned as rules (waits on Zac's Plaid work), OCR field corrections, the
+   Loop's predictions against what happened.
 5. ⬜ **The weekly benchmarks on a schedule**: the 112-question benchmark, the corpus, the routing audit, the
    phone model check, a shadow attempt, run by the runner when the PC is idle; each question that falls is a task.
 6. ⬜ **Loops feed missions**: a standing "Keep MIA healthy" mission whose tasks are the loops' tasks; MIA's

@@ -258,6 +258,28 @@ def _recovered(_context) -> Optional[Reading]:
     return Reading(len(found), max(1, len(found)), f"{len(found)} in 7 days" + (f": {', '.join(files[:6])}" if files else ""))
 
 
+def _corrections(area: str = ""):
+    def measure(context) -> Optional[Reading]:
+        if getattr(context, "failures", None) is None and getattr(context, "traces", None) is None:
+            return None
+        from core import corrections
+
+        found = corrections.summary(context, 30)
+        rows = ({area: found[area]} if area in found else {}) if area else found
+        changes = sum(r["changes"] for r in rows.values())
+        fixed = sum(r["corrected"] for r in rows.values())
+        if not changes:
+            return None
+        kinds: dict[str, int] = {}
+        for r in rows.values():
+            for k, n in r["kinds"].items():
+                kinds[k] = kinds.get(k, 0) + n
+        worst = sorted(kinds.items(), key=lambda kv: -kv[1])[:5]
+        return Reading(round(fixed / changes, 2), changes, f"{fixed} of {changes} of her changes corrected in 30 days"
+                       + (": " + ", ".join(f"{k} {n}" for k, n in worst) if worst else ""))
+    return measure
+
+
 def _unused_creations(context) -> Optional[Reading]:
     store = getattr(context, "creations", None)
     if store is None:
@@ -508,6 +530,13 @@ LOOPS: tuple[Loop, ...] = (
          floor=0.5, min_n=5, files=("core/communication_gate.py",), covers=("flow:gate", "store:communication")),
     Loop("gate.expired", "proactivity", "messages held back that expired before they went out", "person",
          _gate_expired, acts="watch", min_n=3, covers=("flow:gate",)),
+    # C. Corrections in every area (step 4, core/corrections.py): undone, or edited or deleted within 3 days
+    Loop("corrections.all", "corrections", "her changes corrected within 3 days, every area", "person", _corrections(),
+         floor=0.2, min_n=10, covers=("flow:actions", "flow:undo")),
+    *(Loop(f"corrections.{area}", "corrections", f"her changes in {area} corrected within 3 days", "person",
+           _corrections(area), floor=0.25, min_n=5) for area in (
+        "money", "kitchen", "workouts", "missions", "calendar", "maintenance", "inbox", "memories", "creations",
+        "home", "tasks")),
     # D. Her creations
     Loop("creations.unused", "creations", "published screens nobody opens", "person", _unused_creations, floor=0,
          acts="offer", covers=("store:creations", "action:creation")),

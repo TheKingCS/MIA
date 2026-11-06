@@ -389,7 +389,12 @@ class AssistantActionRegistry:
 
                     with record_change(name, person_id(context)) as change:
                         result = action.handler(context, arguments)
+                    change.by = "mia"
                     undo.add(change)
+                    if change.files:  # it changed something: watched for the person correcting it
+                        from core import corrections
+
+                        corrections.mia_changed(context, name, arguments)
                 else:
                     result = action.handler(context, arguments)
         except Exception as exc:
