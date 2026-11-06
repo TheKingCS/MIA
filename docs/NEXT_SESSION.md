@@ -5,52 +5,40 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-11-06*
+*Last updated: 2026-11-07*
 
 **What Zac and the other agents need to do is in `docs/WAITING_ON.md`** (kept current every session).
 
-**Night School is running (DEC-0100, DEC-0101, 2026-11-06; `docs/NIGHT_SCHOOL.md`).** Every night from
-01:30, MIA's daily check starts it in its own process: she picks what to study and why, Claude Code
-(read-only) sets exercises for the build plan's next step, each with a test that fails first, her coder does
-them in the lab, code grades them, and the teacher writes the lesson she gets next time. Then one shadow
-attempt at real work, and loops drafted for the next family of processes nobody watches
-(`core/loop_coverage.py`; `tests/test_loop_coverage.py` fails on a new store, action family, check or app
-with no loop and no reason). See: `python -m tools.night_school`, the dev window's Night School panel.
-Zac: real exercises she passes wait in `python -m tools.lab list` for `approve`; switch her to choosing
-her own lessons (`"mode": "self"` in `work/night_school.json`) when the panel says the evidence supports it.
-Build plan step 2 is done (2026-11-06): the weekly suite on the committed code, reverts per merge, and the
-dependency audit (`core/dev_checks.py`). Its first run found `cryptography` 47 with three HIGH advisories: the
-PC's venv is on 50.0.2 now (T-0048); **restart MIA on the PC** to load it. Still open: the phone build
-bundles Chaquopy's `cryptography` 42.0.8, which the audit doesn't cover yet. T-0047 is built: six loops over
-actions, email drafts and the gate (failed and declined actions now go into the person's Fix-It Log by kind
-only). Most of step 3 is built too (`answers.numbers`, `memory.quality`, `gate.saturation`, `gate.unwelcome`,
-`creations.held`, `data.recovered`); what's left waits on records MIA doesn't keep yet (BUILD_PLAN step 3).
-Tests no longer run the PC's loops for real (they had: readings in data/dev, a task in work/tasks);
-the guard now watches work/tasks and the history too. Step 4's core is built: corrections in every area
-(`core/corrections.py`, one loop per area). Left in it: desktop Qt edits, Plaid re-categorizations (after
-Zac's Plaid work lands), OCR field corrections, the Loop's predictions. Step 5 is built: Night School runs
-the benchmark, the corpus and the routing audit weekly (`python -m tools.weekly_bench`), graded by code
-against the week before, grades only. Step 6 is built, so Phase A of the build plan is done: the
-standing mission M-0001 "Keep MIA healthy" works the loops' and Night School's tasks (paused; **Zac:**
-`python -m tools.work mission start M-0001` when you want the council on them), and MIA sends her weekly
-self-report on Sundays. Next: Phase B, step 7 (the module contract), which needs the rest of Zac's
-Interconnection Architecture doc (it arrived cut off after section 3).
-Step 8 has begun: questions across domains compose plans; `afford` and `slipped`; answers say how sure they
-are, checked by `answers.calibration`. Flaky, seen once each: the reference-library test above, and one
-native Qt crash mid-suite (a rerun was clean).
-Step 9 is built: capability gaps (`core/capability_gaps.py`, `python -m tools.gaps`). Step 10 too: seasons of
-memory (`core/seasons.py`). Step 11 too: the Operating Journal (`core/operating_journal.py`); **Zac:** write
-your first lines by talking to MIA ("add to my operating journal: work out 4 times a week"), then ask
-"am I living how I said I want to?". Step 12 too: recreation (`core/recreation.py`; say "played pickleball
-for an hour, it was hard"). Phase C is done. Step 13 too: Good News Radio is on for Zac (sources and going
-online approved 2026-11-06); ask "what's the good news?" or play "Good News Radio, Sunny, Nov 6".
-`music_library/` (the music's default folder, in the repo) is now gitignored. Step 14 has begun: MGRS grids,
-waypoints by grid, a TAK data package and tracks from GPX (`docs/MAPS_AND_COMMS.md`). Step 15 has begun: sight
-on the PC (`core/sight.py`, `POST /api/sight`, Qwen2.5-VL 7B); the glasses' and phone's Look button is next.
-Step 16 has begun: the council from the phone (`web/council.html`, owner only). Step 17 too: the Chronicles'
-weekly issue (`core/chronicle_issue.py`), waiting on Zac's approved events. Next: Phase E, the queued tasks
-(T-0042 first).
-A flaky test seen once: `tests/test_reference_library_manager.py::test_search_all_packs_returns_snippet_from_matching_pack`.
+**Where the build plan stands (`docs/BUILD_PLAN.md`, 2026-11-07).** Phases A and C are done; most of D is built.
+
+- **Phase A, the loops (done):** 60-odd loops in `core/loops.py` (daily; heavy ones weekly from Night School);
+  the dev suite, reverts and dependency audit (`core/dev_checks.py`); corrections in every area
+  (`core/corrections.py`); weekly benchmarks graded by code (`core/benchmarks.py`, `python -m tools.weekly_bench`);
+  the standing mission M-0001 (paused until Zac starts it) and MIA's Sunday self-report. Loop coverage
+  (`core/loop_coverage.py`): 142 of 250 processes covered, the rest to do or declined with a reason; a test fails
+  on a new process nobody decided how to watch.
+- **Night School (DEC-0100, `docs/NIGHT_SCHOOL.md`):** starts at 01:30 from MIA's daily check once MIA restarts
+  with the new code (Zac sleeps in the morning: see WAITING_ON). First real full night run by hand 2026-11-07
+  08:55: one lesson passed (phone_link, kept in the lab for Zac), two failed.
+- **Phase B:** step 7 (the module contract) waits on the rest of Zac's Interconnection Architecture doc. Step 8
+  (cross-domain) built: composed plans, `afford`, `slipped`, `projects`, `habits`, `priorities`, `resources`
+  (82 of 112 benchmark questions answered by a plan or code), sureness in every plan answer, calibration by
+  ratings and by projected dates checked when they come.
+- **Phase C (done):** capability gaps (`core/capability_gaps.py`), seasons of memory (`core/seasons.py`), the
+  Operating Journal (`core/operating_journal.py`), recreation (`core/recreation.py`).
+- **Phase D:** Good News Radio (on for Zac; `core/good_news.py`); maps and comms (MGRS, TAK package and
+  local-network sharing, GPX tracks; `docs/MAPS_AND_COMMS.md`; mesh and vector maps next); sight on the PC
+  (`core/sight.py`; the glasses' and phone's Look button is Kotlin work next); the council from the phone
+  (`web/council.html`); the Chronicles' weekly issue (`core/chronicle_issue.py`; waits on Zac approving archive
+  events; consistent characters need T-0036's bigger image model).
+- **Phase E (done):** T-0040, T-0042, T-0044, T-0045. T-0041's rest waits on real use of MIA's creations.
+- **Working web screens** (formatting only, the look is muse's): `web/operating.html`, `web/play.html`,
+  `web/news.html`, `web/council.html`.
+- **Known flaky (seen once each):** `test_search_all_packs_returns_snippet_from_matching_pack`, one native Qt crash.
+  The one failing test is Zac's uncommitted Plaid work (`test_import_transaction_transfer_is_skipped`).
+
+**Next for Claude:** the glasses' and phone's Look button (sight), Meshtastic once radios exist, vector offline
+maps, a bigger image model with consistent characters (T-0036), the module contract once the doc arrives.
 
 **Glasses navigation: `docs/GLASSES_NAVIGATION_PLAN.md` is a draft waiting on
 Zac's five questions.** Recipes open by shelf; Music plays on the phone

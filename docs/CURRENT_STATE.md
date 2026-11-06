@@ -2,7 +2,16 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-11-06 (improvement loops, Night School, loop coverage), by claude.*
+session. Last updated: 2026-11-07 (the build plan's phases A to E, overnight), by claude.*
+
+**2026-11-06 to 07, Claude on the PC, overnight while Zac slept (build plan steps 1 to 17).** Phases A and C
+of `docs/BUILD_PLAN.md` are done and most of D is built; the queued tasks T-0040, T-0042, T-0044 and T-0045
+are done. Highlights: 60-odd improvement loops and a coverage map (142 of 250 processes watched); Night
+School's first full night (one lesson passed); weekly benchmarks graded by code; corrections in every area;
+capability gaps; seasons of memory; the Operating Journal; recreation; Good News Radio (on); MGRS, TAK and
+GPX; sight on the PC; the council from the phone; the Chronicles' weekly issue; four working web screens;
+`cryptography` 50 (three HIGH advisories in 47). What needs Zac is in `docs/WAITING_ON.md`; the plan's state
+is at the top of `docs/NEXT_SESSION.md`.
 
 **2026-11-06, Claude on the PC (DEC-0094 to DEC-0101).** Zac's master overview and ideas are filed
 (`docs/HANDOFFS/H-0083...`; the Interconnection Architecture arrived cut off after section 3, so the rest is
