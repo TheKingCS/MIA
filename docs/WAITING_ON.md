@@ -111,3 +111,6 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 - [ ] The Chronicle's yearly edition, from the kept seasons (step 17).
 - [ ] The Chronicles' panels: characters that stay the same across panels (T-0036). The bigger model is in
       (2026-11-06): SDXL-Turbo, 0.7 s a panel; samples in `C:\Users\zacrh\DevTools\imagegen\out\sdxl_*.png`.
+      **Zac:** to give a series one look, save the picture you like as
+      `C:\Users\zacrh\DevTools\imagegen\series_reference.png`: every panel starts from it (palette and line
+      work; see `out\consistency_sheet_90.png`).

@@ -35,7 +35,10 @@ def draw(issue: dict) -> str:
     prompts = out / "prompts.json"
     prompts.write_text(json.dumps(panel_prompts(issue)), encoding="utf-8")
     script = Path(__file__).resolve().parent / "chronicle_panels.py"
-    done = subprocess.run([str(python), str(script), str(prompts), str(out), str(model)], capture_output=True,
+    # The series' look, when Zac has chosen one: each panel starts from it (T-0036). Off the repo, like the model.
+    reference = IMAGEGEN / "series_reference.png"
+    done = subprocess.run([str(python), str(script), str(prompts), str(out), str(model)]
+                          + ([str(reference)] if reference.exists() else []), capture_output=True,
                           text=True, encoding="utf-8", errors="replace", timeout=1800)
     return f"panels in {out}" if done.returncode == 0 else f"panels failed: {(done.stderr or done.stdout)[-300:]}"
 
