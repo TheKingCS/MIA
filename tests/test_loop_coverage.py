@@ -34,3 +34,9 @@ def test_the_inventory_reads_the_code(tmp_path):
     assert rows["module:notes"]["state"] == "new"
     loop_coverage.mark(["module:notes"], "proposed", task="T-0099", path=path)
     assert loop_coverage.decisions(path)["module:notes"] == {"status": "proposed", "task": "T-0099"}
+
+
+def test_the_corrections_loops_cover_their_areas_action_families():
+    rows = {r["id"]: r for r in loop_coverage.report()["rows"]}
+    assert rows["action:bill"]["loops"] == ["corrections.money"] and rows["action:recipe"]["loops"] == ["corrections.kitchen"]
+    assert rows["action:music"]["state"] == "todo"  # no area: still to do

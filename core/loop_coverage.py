@@ -146,6 +146,17 @@ def covered_by(loops=None) -> dict[str, list[str]]:
     for loop in loops:
         for p in getattr(loop, "covers", ()) or ():
             out.setdefault(p, []).append(loop.id)
+    # A corrections.<area> loop (core/corrections.py) watches every action family of its area for MIA's changes
+    # being undone or corrected: it covers them, by the same area rule the loop counts with.
+    areas = {loop.id.split(".", 1)[1]: loop.id for loop in loops if loop.id.startswith("corrections.")
+             and loop.id != "corrections.all"}
+    if areas:
+        from core.corrections import area_of
+
+        for pid in _actions():
+            area = area_of(pid.split(":", 1)[1])
+            if area in areas and areas[area] not in out.get(pid, []):
+                out.setdefault(pid, []).append(areas[area])
     return out
 
 
