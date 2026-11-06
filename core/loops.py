@@ -303,6 +303,25 @@ def _bench(kind: str, what: str):
     return measure
 
 
+def _calibration(context) -> Optional[Reading]:
+    if getattr(context, "ratings", None) is None:
+        return None
+    from core import calibration
+
+    by = calibration.rated(context)
+    sure = by.get("sure", {"up": 0, "down": 0})
+    rest = {"up": sum(v["up"] for k, v in by.items() if k != "sure"), "down": sum(v["down"] for k, v in by.items() if k != "sure")}
+    n_sure, n_rest = sure["up"] + sure["down"], rest["up"] + rest["down"]
+    if not n_sure:
+        return None
+    up_sure = sure["up"] / n_sure
+    detail = f"{sure['up']} of {n_sure} sure answers rated up"
+    if not n_rest:
+        return Reading(round(up_sure, 2), n_sure, detail)
+    up_rest = rest["up"] / n_rest
+    return Reading(round(up_sure - up_rest, 2), n_sure, detail + f", against {rest['up']} of {n_rest} of the others")
+
+
 def _unused_creations(context) -> Optional[Reading]:
     store = getattr(context, "creations", None)
     if store is None:
@@ -534,6 +553,9 @@ LOOPS: tuple[Loop, ...] = (
     Loop("answers.numbers", "answers", "answers with a number she hadn't looked up, per 100 turns", "person",
          _per_100_turns(("invented_number",)), floor=2, min_n=20, files=("core/question_plans.py", "core/tool_loop.py"),
          covers=("flow:talk",)),
+    Loop("answers.calibration", "answers", "how much better her sure answers land than the rest (👍 share)", "person",
+         _calibration, better="higher", floor=0, min_n=5, files=("core/question_plans.py",),
+         covers=("store:ratings",)),
     Loop("memory.quality", "answers", "memories corrected within 14 days of being kept", "person", _memory_quality,
          floor=0.15, min_n=5, files=("core/user_memory_manager.py",), covers=("store:user_memories", "module:memories")),
     Loop("gate.saturation", "proactivity", "days the daily limit of unprompted messages was hit, in 7", "person",

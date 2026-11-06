@@ -33,6 +33,9 @@ standing mission M-0001 "Keep MIA healthy" works the loops' and Night School's t
 `python -m tools.work mission start M-0001` when you want the council on them), and MIA sends her weekly
 self-report on Sundays. Next: Phase B, step 7 (the module contract), which needs the rest of Zac's
 Interconnection Architecture doc (it arrived cut off after section 3).
+Step 8 has begun: questions across domains compose plans; `afford` and `slipped`; answers say how sure they
+are, checked by `answers.calibration`. Flaky, seen once each: the reference-library test above, and one
+native Qt crash mid-suite (a rerun was clean).
 A flaky test seen once: `tests/test_reference_library_manager.py::test_search_all_packs_returns_snippet_from_matching_pack`.
 
 **Glasses navigation: `docs/GLASSES_NAVIGATION_PLAN.md` is a draft waiting on

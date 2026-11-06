@@ -53,10 +53,11 @@ class Sheet:
     title: str
     facts: list = field(default_factory=list)
     looked_up: list = field(default_factory=list)  # tool names run
+    composed: list = field(default_factory=list)  # other plans gathered onto it (step 8)
 
     def add(self, kind: str, text: str, source: str = "") -> None:
         text = " ".join(str(text or "").split())
-        if text:
+        if text and not any(f.text == text for f in self.facts):  # two plans on one sheet: each fact once
             self.facts.append(Fact(kind, text, source))
 
     def as_text(self) -> str:
@@ -294,6 +295,55 @@ def _noticed(context, sheet, prompt, today):
     _look(context, sheet, "list_maintenance_tasks", "upkeep")
 
 
+def _afford(context, sheet, prompt, today):
+    """Cross-domain (build plan step 8): a purchase against the month's money and the freedom date, worked out
+    by core/freedom.plan() twice, as things stand and with the purchase."""
+    from dataclasses import replace
+
+    from core import freedom
+
+    amount = _amount_in(prompt)
+    monthly = bool(re.search(r"\b(a|per|each|every) month\b|\bmonthly\b", prompt.lower()))
+    if amount:
+        sheet.add(FACT, f"The amount asked about: {_money(context, amount)}{' a month' if monthly else ', once'}.",
+                  "your question")
+    else:
+        sheet.add(MISSING, "The question doesn't say how much it costs.", "your question")
+    _money_month(context, sheet, prompt, today)
+    try:
+        inputs, _history = freedom.gather(context, today)
+        now = freedom.plan(inputs, today)
+    except Exception:
+        log.exception("The afford plan couldn't work out the freedom fund")
+        now = None
+    if now is None or not now.get("date"):
+        sheet.add(MISSING, (now or {}).get("why_no_date") or "No freedom date to compare with.", "Freedom")
+        return
+    sheet.add(CALCULATION, f"Freedom date as things stand: {now['date']} ({_money(context, now['left'] or 0)} to go, "
+                           f"saving about {_money(context, inputs.pace)} a month).", "Freedom")
+    if not amount:
+        return
+    after = freedom.plan(replace(inputs, pace=inputs.pace - amount) if monthly else
+                         replace(inputs, saved=max(0.0, inputs.saved - amount)), today)
+    if after.get("date"):
+        later = (date.fromisoformat(after["date"]) - date.fromisoformat(now["date"])).days
+        sheet.add(CALCULATION, f"With it: {after['date']}, {later} days later." if later > 0 else
+                  "With it: the same freedom date.", "a freedom calculation")
+    else:
+        sheet.add(CALCULATION, "With it the fund stops growing: at that cost there's no freedom date.",
+                  "a freedom calculation")
+    sheet.add(ESTIMATE, "Both dates assume the last three months' saving pace holds.", "Freedom")
+
+
+def _slipped(context, sheet, prompt, today):
+    """Cross-domain (step 8): what slipped this week and the reasons the records hold, from several apps."""
+    _look(context, sheet, "get_life_events", "your history", period="week")
+    _look(context, sheet, "get_deadlines", "Compliance")
+    _open_loops(context, sheet, prompt, today)
+    _noticed(context, sheet, prompt, today)
+    _look(context, sheet, "get_workout_summary", "Workout")
+
+
 def _open_loops(context, sheet, prompt, today):
     _look(context, sheet, "list_tasks", "Projects")
     _look(context, sheet, "list_projects", "Projects")
@@ -403,6 +453,16 @@ PLANS: tuple[Plan, ...] = (
           "What have I been neglecting?", "What have I let slide?",
           "What patterns have you noticed?", "Anything I should be worried about?", "What stands out to you?"),
          r"\b(noticed|should i know|anything i'm missing|stands? out|worried about)\b", _noticed),
+    # Cross-domain plans (build plan step 8): several apps on one sheet, the arithmetic by code
+    Plan("afford", "Whether you can afford it",
+         ("Can I afford a $3,000 truck and still hit my freedom date?", "Can I afford this?",
+          "If I buy a $1,200 trailer, how much does it push back my freedom date?",
+          "Can I afford $150 a month for a gym?", "Will buying this set me back?"),
+         r"\b(afford|push(es)? (back|out)|set me back)\b", _afford),
+    Plan("slipped", "What slipped this week",
+         ("What slipped this week and why?", "What fell behind this week?", "What did I let slip?",
+          "Why didn't I get everything done this week?", "What am I behind on?"),
+         r"\b(slip(ped)?|fell behind|fall(ing)? behind|behind on)\b", _slipped),
     Plan("open loops", "What's unfinished",
          ("What commitments have I made that I haven't completed?", "What projects have I started but not completed?",
           "What have I left unfinished?", "What's still open?"),
@@ -475,6 +535,7 @@ CHANGE_VERBS = frozenset((
     "finish", "complete", "save", "track", "note", "write", "buy", "sell", "file", "tag", "link", "unlink",
 ))
 PLAN_BY_NAME = {p.name: p for p in PLANS}
+CROSS_DOMAIN = ("afford", "slipped")  # build plan step 8: plans over several apps
 
 
 # ---------------------------------------------------------------- choosing a plan
@@ -510,16 +571,53 @@ def match_scored(context, prompt: str) -> Optional[tuple[Plan, Optional[float]]]
         return None
     lowered = said.lower()
     hits = [p for p in PLANS if re.search(p.words, lowered)]
+    across = [p for p in hits if p.name in CROSS_DOMAIN]  # the more specific: it gathers the others' facts too
+    if len(across) == 1:
+        return across[0], None
     return (hits[0], None) if len(hits) == 1 else None
 
 
-def gather(context, plan: Plan, prompt: str, today: Optional[date] = None) -> Sheet:
+_JOINED = re.compile(r"\b(and|still|while|if|but|also|plus)\b")
+COMPOSE_MAX = 2  # other plans one question can bring onto the sheet
+
+
+def composed_with(plan: Plan, prompt: str) -> list[Plan]:
+    """Pure logic. A question that joins domains ("can I pay down the card and still save for the truck?"):
+    the other plans whose own words it uses, to gather onto the same sheet (build plan step 8)."""
+    lowered = (prompt or "").lower()
+    if not _JOINED.search(lowered):
+        return []
+    return [p for p in PLANS if p is not plan and re.search(p.words, lowered)][:COMPOSE_MAX]
+
+
+def gather(context, plan: Plan, prompt: str, today: Optional[date] = None, also: tuple = ()) -> Sheet:
     sheet = Sheet(plan.name, plan.title)
-    try:
-        plan.gather(context, sheet, prompt, today or date.today())
-    except Exception:
-        log.exception("Question plan %s failed while gathering", plan.name)
+    for each in (plan, *also):
+        try:
+            each.gather(context, sheet, prompt, today or date.today())
+        except Exception:
+            log.exception("Question plan %s failed while gathering", each.name)
+    if also:
+        sheet.title = " and ".join([plan.title, *(p.title for p in also)])
+        sheet.composed = [p.name for p in also]
     return sheet
+
+
+SURE, LIKELY, UNSURE = "sure", "likely", "unsure"
+
+
+def sureness(sheet: Sheet) -> tuple[str, str]:
+    """Pure logic. How sure an answer from this sheet can be, and why: from what the sheet holds, never a guess."""
+    known = [f for f in sheet.facts if f.kind in (FACT, CALCULATION)]
+    estimates = [f for f in sheet.facts if f.kind == ESTIMATE]
+    missing = [f for f in sheet.facts if f.kind == MISSING]
+    if not known or len(missing) >= max(1, len(known)):
+        return UNSURE, f"{len(missing)} thing{'s' if len(missing) != 1 else ''} it needs {'are' if len(missing) != 1 else 'is'} not recorded"
+    if missing or estimates:
+        parts = ([f"{len(estimates)} estimate{'s' if len(estimates) != 1 else ''}"] if estimates else []) + \
+                ([f"{len(missing)} missing"] if missing else [])
+        return LIKELY, " and ".join(parts)
+    return SURE, "everything on it is recorded or worked out from records"
 
 
 # ---------------------------------------------------------------- the answer
@@ -533,7 +631,9 @@ ANSWER_PROTOCOL = (
     "sheet; never suggest an app, feature or task the sheet doesn't mention. Each line names the app it came from: "
     "the Dungeon is their paid job, not a game or a workout. "
     "Talk like a person, not a report, in plain text: no headings, bold or symbols. Never give legal or tax "
-    "rulings; say to check with a professional."
+    "rulings; say to check with a professional. The sheet ends with how sure you can be: when it's likely or "
+    "unsure, say so in a few plain words (\"if the pace holds\", \"I don't have your X recorded\"); when it's "
+    "sure, just answer."
 )
 _NUMBER = re.compile(r"\d[\d,]*(?:\.\d+)?")
 
@@ -585,14 +685,15 @@ def request(context, conversation, prompt: str, today: Optional[date] = None) ->
             return None
         plan, asked = found[0], prompt
         conversation_state.remember_plan(conversation, plan.name, prompt)
-    sheet = gather(context, plan, asked, today)
+    sheet = gather(context, plan, asked, today, tuple(composed_with(plan, prompt)))
     if not sheet.facts:
         return None
+    sure, why = sureness(sheet)
     from core.assistant_chat import trim_history
     from core.personality import CHARACTER, IDENTITY
 
     system = (f"{IDENTITY}{CHARACTER}\n\n{ANSWER_PROTOCOL}\n\nFact sheet ({sheet.title}, today "
-              f"{(today or date.today()).isoformat()}):\n{sheet.as_text()}")
+              f"{(today or date.today()).isoformat()}):\n{sheet.as_text()}\n\nHow sure you can be: {sure} ({why}).")
     messages = [{"role": "system", "content": system}]
     history = trim_history(conversation.messages) if conversation is not None else []
     # The question was just added to the conversation by the caller; the history before it.
@@ -631,7 +732,10 @@ def finish(content: str, sheet: Sheet, prompt: str, context=None) -> str:
                 failures.record("invented_number", tool=f"plan:{sheet.plan}")
             except Exception:  # the note never breaks the answer
                 log.exception("Couldn't note the invented number.")
-        return sheet.plain()
+        said = sheet.plain()
+    from core import calibration
+
+    calibration.note(context, sheet.plan, sureness(sheet)[0], said)
     return said
 
 

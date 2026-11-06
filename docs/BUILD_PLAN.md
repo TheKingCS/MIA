@@ -91,9 +91,13 @@ first. Each is a step below.
    child rules; the event catalogue generated from code; a test fails a module that breaks it. The one layering
    break the map found (T-0042) goes first. 🧑 *The rest of the Interconnection Architecture (it was cut off at
    section 3) comes before this is final.*
-8. ⬜ **Cross-domain reasoning**: scenario tests across domains ("can I afford X and still hit my freedom date",
-   "what slipped this week and why"); a planner that composes question plans; answers that say how sure they are,
-   checked later by the `answers.calibration` loop.
+8. 🔨 **Cross-domain reasoning** (2026-11-06): a question that joins domains gathers the other plans it names onto one
+   sheet (`composed_with()` in `core/question_plans.py`); two cross-domain plans, `afford` (the freedom plan worked
+   out twice, with and without the purchase, once or monthly) and `slipped` (history, deadlines, open loops, what
+   she noticed); every plan answer is marked sure, likely or unsure from its sheet, told to the model, and noted
+   (`core/calibration.py`) so `answers.calibration` checks sure answers are rated up more than the rest. Next in
+   it: more cross-domain plans (from the benchmark's G questions), and calibration against outcomes (a projected
+   date checked when it comes).
 
 ### Phase C: The gaps in her intelligence
 
