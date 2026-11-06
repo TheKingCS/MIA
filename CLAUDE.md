@@ -188,6 +188,18 @@ children.
   stores write through `core.atomic_write.atomic_write_text`; keep new
   stores on it (and give them `_load()` or a `data_dir` constructor) so
   "undo that" can restore and reload them.
+- **Improvement loops** (DEC-0094, DEC-0101) — every process (store,
+  action family, daily check, app, flow) has a loop in `core/loops.py`
+  or a reason in `work/loop_coverage.json`; `tests/test_loop_coverage.py`
+  fails on a new one nobody decided about. After adding a loop, run
+  `python -m core.loop_catalog` (`docs/LOOPS.md` is generated; a test
+  checks it). A screen that edits a store directly (the Qt apps) calls
+  `corrections.screen_edit()` so a person fixing MIA's work counts.
+  In `docs/BUILD_PLAN.md`, ⏸ marks a step whose rest waits on someone:
+  Night School skips it.
+- **Notes from conversation** (DEC-0054, `core/life_notes.py`) — a
+  promise, decision, idea or goal set aside is offered after her reply
+  and kept only on "keep it"; never in a private or personal turn.
 - **Engine read model** (2026-10-05, `docs/ENGINE_PHASE1_PLAN.md`) —
   stores are the current state; `core/life_events.py` is the history
   beside them (a store calls `life_events.record(self, ...)` after a
