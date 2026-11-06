@@ -28,7 +28,11 @@ the guard now watches work/tasks and the history too. Step 4's core is built: co
 (`core/corrections.py`, one loop per area). Left in it: desktop Qt edits, Plaid re-categorizations (after
 Zac's Plaid work lands), OCR field corrections, the Loop's predictions. Step 5 is built: Night School runs
 the benchmark, the corpus and the routing audit weekly (`python -m tools.weekly_bench`), graded by code
-against the week before, grades only. Next: step 6, loops feed missions and her weekly self-report.
+against the week before, grades only. Step 6 is built, so Phase A of the build plan is done: the
+standing mission M-0001 "Keep MIA healthy" works the loops' and Night School's tasks (paused; **Zac:**
+`python -m tools.work mission start M-0001` when you want the council on them), and MIA sends her weekly
+self-report on Sundays. Next: Phase B, step 7 (the module contract), which needs the rest of Zac's
+Interconnection Architecture doc (it arrived cut off after section 3).
 A flaky test seen once: `tests/test_reference_library_manager.py::test_search_all_packs_returns_snippet_from_matching_pack`.
 
 **Glasses navigation: `docs/GLASSES_NAVIGATION_PLAN.md` is a draft waiting on

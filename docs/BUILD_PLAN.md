@@ -78,8 +78,11 @@ first. Each is a step below.
    grades only, never an answer. Loops: `answers.benchmark` (questions that fell: a task naming them),
    `answers.benchmark_clean`, `answers.corpus`, `answers.routing`. The shadow attempt is Night School's own. The
    phone's model check stays in CI's Model check workflow.
-6. ⬜ **Loops feed missions**: a standing "Keep MIA healthy" mission whose tasks are the loops' tasks; MIA's
-   weekly self-report through the gate ("what got better, what I'm working on").
+6. ✅ **Loops feed missions** (2026-11-06): the standing mission M-0001, "Keep MIA healthy", works every task the
+   loops open (`source: loop:`) and Night School drafts (`source: night:`) through the usual runner, lab and
+   reviewers, a week's budget at a time (`takes` in `core/work_runner.py`; Zac starts it: `python -m tools.work
+   mission start M-0001`). MIA's weekly self-report (`core/self_report.py`): Sundays, to the PC's owner, through
+   the gate: loops that got better or slipped, what she fixed, what she's working on, Night School's week.
 
 ### Phase B: The fabric (the Interconnection Architecture, DEC-0095)
 

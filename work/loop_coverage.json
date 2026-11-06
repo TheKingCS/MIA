@@ -301,6 +301,10 @@
   "check:season": {
    "status": "todo"
   },
+  "check:self_report": {
+   "status": "none",
+   "why": "it reports the loops: what it says is only as good as they are, and they are watched"
+  },
   "check:skill_decline_insight": {
    "status": "todo"
   },
@@ -317,9 +321,6 @@
    "status": "todo"
   },
   "check:warranty": {
-   "status": "todo"
-  },
-  "dev:missions": {
    "status": "todo"
   },
   "flow:glasses": {

@@ -71,8 +71,13 @@ class Mission:
     your_turn_limit: int = 3
     started: str = ""
     body: str = ""
+    # A standing mission also works tasks from these sources (DEC-0094, step 6: "loop:" for the loops' tasks)
+    takes: list[str] = field(default_factory=list)
 
-    FIELDS = ("id", "goal", "status", "scope", "roles", "tasks", "hours", "calls", "your_turn_limit", "started")
+    FIELDS = ("id", "goal", "status", "scope", "roles", "tasks", "hours", "calls", "your_turn_limit", "started", "takes")
+
+    def works(self, task) -> bool:
+        return task.source == self.id or any(task.source.startswith(p) for p in self.takes)
 
     def to_text(self) -> str:
         lines = ["---"] + [f"{k}: {', '.join(v) if isinstance(v, list) else v}" for k in self.FIELDS
@@ -94,6 +99,7 @@ def _parse(text: str) -> Optional[Mission]:
                        roles=[s.strip() for s in raw.get("roles", "").split(",") if s.strip()],
                        tasks=int(raw.get("tasks", 5)), hours=float(raw.get("hours", 8)), calls=int(raw.get("calls", 60)),
                        your_turn_limit=int(raw.get("your_turn_limit", 3)), started=raw.get("started", ""),
+                       takes=[s.strip() for s in raw.get("takes", "").split(",") if s.strip()],
                        body=m.group(2).strip())
     except (KeyError, ValueError):
         return None
@@ -245,7 +251,7 @@ def step(mission_id: str, registry, *, loop=None, review=None, learn=None, shado
         save(mission, folder)
         return said(f"stop: {why}")
     tasks = tasks_mod.load(tasks_dir)
-    mine = [t for t in tasks.values() if t.source == mission.id]
+    mine = [t for t in tasks.values() if mission.works(t)]
 
     # Reviews first: a written change waiting for its reviewers is the cheapest step forward.
     for task in [t for t in mine if t.status == "review"]:

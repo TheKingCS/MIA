@@ -717,6 +717,7 @@ class MIAApplication:
             ("workflows", self._check_workflows),
             ("loops", self._check_loops),
             ("night_school", self._check_night_school),
+            ("self_report", self._check_self_report),
         ]
         # 2026-09-27, Cognitive Extension slice C: checks no longer notify
         # directly. Each one offers what it would say (_offer()), and the
@@ -752,6 +753,12 @@ class MIAApplication:
         from core import night_school
 
         night_school.maybe_start()
+
+    def _check_self_report(self, now: datetime, today_iso: str) -> None:
+        """MIA's weekly self-report (core/self_report.py, step 6): Sundays, to the PC's owner, through the gate."""
+        from core import self_report
+
+        self._offers.extend(self_report.offer(self.context, now))
 
     def _check_workflows(self, now: datetime, today_iso: str) -> None:
         """Workflows MIA made whose trigger has come round (core/workflows.py, DEC-0092): run them;
