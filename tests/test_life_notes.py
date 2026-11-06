@@ -292,3 +292,15 @@ def test_what_the_workshop_costs_to_run():
                                          "How much does it cost to operate my workshop?", None)
     assert looked == ["get_ledger_summary", "get_business_use", "get_build_costs", "list_maintenance_assets"]
     assert sheet.facts[-1].kind == "estimate"
+
+
+
+def test_only_keep_it_keeps_and_one_question_at_a_time(tmp_path):
+    context = SimpleNamespace(life_notes=LifeNotes(data_dir=tmp_path))
+    chat = _chat()
+    life_notes.offer_after(context, chat, "I should try selling honey")
+    assert life_notes.answer_offer(context, chat, "yes") is None  # a bare yes may be for something else
+    life_notes.offer_after(context, chat, "I should try selling honey")
+    assert life_notes.answer_offer(context, chat, "Yes, keep it.").startswith("Kept: an idea: selling honey")
+    chat.pending_offer = SimpleNamespace(shown=True)  # she already asked to log something this turn
+    assert life_notes.offer_after(context, chat, "I promised Sam I'd fix his gate") is None

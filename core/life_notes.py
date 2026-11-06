@@ -17,8 +17,9 @@ a form, each shown back for a yes before it's kept (Propose → Approve):
 Spotted in code (`noticed()`): first-person statements only, never a
 question, never in a private journal or an off-the-record turn. After
 MIA's reply she asks once ("Want me to keep that as a promise to Sam?
-Say “keep it”."); "keep it" or "yes" next keeps it, anything else lets
-it go. Each note is the person's own (a personal store,
+Say “keep it”."), never in a turn that already asked something else;
+"keep it" next keeps it (a bare "yes" doesn't: it may answer something
+else), anything else lets it go. Each note is the person's own (a personal store,
 `life_notes.json`), with its date and the conversation it came from,
 and can be marked done or forgotten. They answer "what did I promise?",
 "what did we decide?", "what ideas haven't I tried?", "what goals have
@@ -74,8 +75,9 @@ _PATTERNS = (
 )
 _QUESTION = re.compile(r"^\s*(?:should|could|would|can|do|does|did|is|are|was|what|why|how|when|where|who|which)\b",
                        re.IGNORECASE)
-_KEEP = re.compile(r"^\s*(?:(?:yes|yeah|yep|sure|ok(?:ay)?|please)[,.!\s]*)?(?:keep (?:it|that)|yes|yeah|yep|please do|"
-                   r"sure)?\s*(?:please)?[.!]*\s*$", re.IGNORECASE)
+# "Keep it" only: a bare "yes" may answer something else in the same reply (her own question, a passing-mention offer)
+_KEEP = re.compile(r"^\s*(?:(?:yes|yeah|yep|sure|ok(?:ay)?|please)[,.!\s]*)?keep (?:it|that|them)(?:\s+please)?[.!]*\s*$",
+                   re.IGNORECASE)
 
 
 def _clean(text: str) -> str:
@@ -346,6 +348,9 @@ def offer_after(context, conversation, prompt: str) -> Optional[str]:
     """After MIA's reply: the note the person's words carried, offered once for a yes."""
     if _private(conversation) or getattr(context, "life_notes", None) is None:
         return None
+    passing = getattr(conversation, "pending_offer", None)
+    if passing is not None and getattr(passing, "shown", False):
+        return None  # she already asked something this turn (core/passing_mentions.py): one question at a time
     found = noticed(prompt)
     if found is None:
         return None
