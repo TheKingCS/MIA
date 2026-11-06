@@ -191,7 +191,7 @@ CHECK_TOPICS = {
     "skill_momentum_insight": "skill_momentum_insight", "walkthrough_suggestion": "walkthrough_suggestion",
     "journal_reflection": "journal_reflection", "warranty": "warranty", "memory_callback": "memory_callback",
     "grow_alert": "grow_alert", "season": "season", "insurance_renewal": "insurance_renewal", "chronicle": "chronicle",
-    "finding_": "findings", "obligation_deadline": "obligation_reminders",
+    "finding_": "findings", "obligation_deadline": "obligation_reminders", "promise_due": "promises",
 }
 
 

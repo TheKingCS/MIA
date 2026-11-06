@@ -723,6 +723,7 @@ class MIAApplication:
             ("operating_journal", self._check_operating_journal),
             ("good_news", self._check_good_news),
             ("chronicle_issue", self._check_chronicle_issue),
+            ("promises", self._check_promises),
         ]
         # 2026-09-27, Cognitive Extension slice C: checks no longer notify
         # directly. Each one offers what it would say (_offer()), and the
@@ -784,6 +785,12 @@ class MIAApplication:
         from core.operating_journal import weekly_offer
 
         self._offers.extend(weekly_offer(self.context, now.date()))
+
+    def _check_promises(self, now: datetime, today_iso: str) -> None:
+        """A promise with a day (DEC-0054, core/life_notes.py): the day before and on the day, once each."""
+        from core.life_notes import reminders
+
+        self._offers.extend(reminders(self.context, now.date()))
 
     def _check_good_news(self, now: datetime, today_iso: str) -> None:
         """Good News Radio (core/good_news.py, DEC-0096): when someone switched it on, today's episode is made

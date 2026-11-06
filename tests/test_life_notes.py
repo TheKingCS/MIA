@@ -143,3 +143,33 @@ def test_what_they_keep_running_into(tmp_path):
     PLAN_BY_NAME["patterns"].gather(context, sheet, "What have I repeatedly struggled with?", None)
     assert [f.text for f in sheet.facts] == ["You told MIA: Mornings are hard after night shifts",
                                              "Workouts slip on Mondays: 3 of 4 skipped"]
+
+
+@pytest.mark.parametrize("by, due", [
+    ("tomorrow", "2026-11-07"), ("tonight", "2026-11-06"), ("Saturday", "2026-11-07"), ("friday", "2026-11-13"),
+    ("next Monday", "2026-11-09"), ("the weekend", "2026-11-07"), ("the 15th", "2026-11-15"), ("the 3rd", "2026-12-03"),
+    ("next week", "2026-11-13"), ("whenever", None),
+])
+def test_the_day_a_promise_means(by, due):
+    from datetime import date
+
+    found = life_notes.due_date(by, date(2026, 11, 6))  # a Friday
+    assert (found.isoformat() if found else None) == due
+
+
+def test_a_promise_with_a_day_is_mentioned_the_day_before_and_on_it(tmp_path):
+    from datetime import date, timedelta
+
+    store = LifeNotes(data_dir=tmp_path)
+    note = store.add("commitment", "fix his gate", who="Sam", by="tomorrow")
+    store.add("commitment", "call the bank")  # no day: never mentioned
+    context = SimpleNamespace(life_notes=store)
+    today = date.today()
+    [first] = life_notes.reminders(context, today)
+    assert (first.topic, first.message) == ("promise_due", "Your promise to Sam: fix his gate, tomorrow.")
+    assert life_notes.reminders(context, today) == []  # once
+    [second] = life_notes.reminders(context, today + timedelta(days=1))
+    assert second.title == "A promise for today"
+    store.mark_done(note["id"])
+    assert life_notes.reminders(context, today + timedelta(days=1)) == []
+    assert LifeNotes(data_dir=tmp_path).get(note["id"])["reminded"] == ["tomorrow", "today"]

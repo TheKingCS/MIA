@@ -42,6 +42,8 @@ REASONS: dict[str, tuple[str, str]] = {
                                                 "found what it would take; each one at most once a fortnight"),
     "operating_journal": ("your Operating Journal", "on Sundays, when some of your lines are yours to rate (I can't "
                                                     "see them in your records), I ask how the week went once"),
+    "promise_due": ("your promises", "you told me about a promise with a day and said to keep it; I mention it the "
+                                     "day before and on the day"),
     "self_report": ("my weekly report", "on Sundays I tell the PC's owner what got better in me and what I'm working on"),
 }
 

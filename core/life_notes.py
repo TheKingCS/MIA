@@ -34,7 +34,7 @@ from __future__ import annotations
 import json
 import re
 import uuid
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
@@ -108,6 +108,71 @@ def describe(note: dict) -> str:
     return f"{head}: {note.get('what', '')}{tail}"
 
 
+_DAYS = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
+
+
+def due_date(by: str, said: date) -> Optional[date]:
+    """Pure logic. The day a "by ..." means, from the day it was said; None when it isn't a day."""
+    by = (by or "").lower().strip()
+    if by in ("today", "tonight"):
+        return said
+    if by == "tomorrow":
+        return said + timedelta(days=1)
+    if by == "next week":
+        return said + timedelta(days=7)
+    if by == "next month":
+        return said + timedelta(days=30)
+    if by in ("the weekend", "this weekend"):
+        by = "saturday"
+    m = re.fullmatch(r"(?:(next|this) )?(" + "|".join(_DAYS) + ")", by)
+    if m:
+        # The next one after today ("next Friday" is said both ways, so it's the next one too: a day early is safe)
+        return said + timedelta(days=(_DAYS.index(m.group(2)) - said.weekday()) % 7 or 7)
+    m = re.fullmatch(r"the (\d{1,2})(?:st|nd|rd|th)?", by)
+    if m:
+        day = int(m.group(1))
+        for months in range(0, 3):
+            year, month = said.year + (said.month - 1 + months) // 12, (said.month - 1 + months) % 12 + 1
+            try:
+                found = date(year, month, day)
+            except ValueError:
+                continue
+            if found >= said:
+                return found
+    return None
+
+
+def reminders(context, today: Optional[date] = None) -> list:
+    """The daily check (DEC-0054): a promise with a day, the day before and on the day, once each, through the
+    gate. Marked as said in the note itself."""
+    from core.communication_gate import TIMELY, Candidate
+
+    store = getattr(context, "life_notes", None)
+    if store is None:
+        return []
+    today = today or date.today()
+    out = []
+    for note in store.of_kind("commitment", open_only=True):
+        if not note.get("due"):
+            continue
+        try:
+            due = date.fromisoformat(note["due"])
+        except ValueError:
+            continue
+        stage = "today" if due == today else "tomorrow" if due == today + timedelta(days=1) else ""
+        if not stage or stage in note.get("reminded", []):
+            continue
+        who = f" to {note['who']}" if note.get("who") else ""
+        out.append(Candidate(topic="promise_due", title="A promise" + (" for today" if stage == "today" else
+                                                                       " for tomorrow"),
+                             message=f"Your promise{who}: {note['what']}, {stage}.", urgency=TIMELY, source="life_notes",
+                             fingerprint=f"promise:{note['id']}:{stage}"))
+        note.setdefault("reminded", []).append(stage)
+    if out:
+        store._save()
+    return out
+
+
 def offer_text(note: dict) -> str:
     kind = note.get("kind", "")
     head = SAID.get(kind, "a note") + (f" to {note['who']}" if kind == "commitment" and note.get("who") else "")
@@ -151,6 +216,9 @@ class LifeNotes:
         note = {"id": uuid.uuid4().hex[:10], "kind": kind, "what": what[:160], "who": _clean(who)[:40],
                 "by": _clean(by)[:30], "why": _clean(why)[:200], "status": OPEN,
                 "at": datetime.now().isoformat(timespec="seconds"), "conversation_id": conversation_id or ""}
+        due = due_date(note["by"], date.today()) if note["by"] else None
+        if due is not None:
+            note["due"] = due.isoformat()  # a promise with a day is mentioned the day before and on it (reminders())
         self.notes.append(note)
         self._save()
         return note
