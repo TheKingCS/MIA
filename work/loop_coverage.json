@@ -322,25 +322,13 @@
   "dev:missions": {
    "status": "todo"
   },
-  "flow:actions": {
-   "status": "proposed",
-   "task": "T-0047"
-  },
-  "flow:email": {
-   "status": "proposed",
-   "task": "T-0047"
-  },
-  "flow:gate": {
-   "status": "proposed",
-   "task": "T-0047"
-  },
   "flow:glasses": {
    "status": "todo",
    "why": "teacher: It needs a loop, but nothing is kept to measure yet. core/glasses_feed.py keeps voice turns in an in-memory deque (_voice, maxlen 50), and glasses_voice.handle() doesn't write what it heard or whether"
   },
   "flow:phone": {
-   "status": "proposed",
-   "task": "T-0047"
+   "status": "todo",
+   "why": "T-0047: phone.sync_stale needs a durable record of when the phone last reached the PC (server/app.py keeps last_seen in memory only)"
   },
   "flow:search": {
    "status": "todo",
@@ -469,9 +457,6 @@
   "store:classroom": {
    "status": "todo"
   },
-  "store:communication": {
-   "status": "todo"
-  },
   "store:components": {
    "status": "todo"
   },
@@ -485,9 +470,6 @@
    "status": "todo"
   },
   "store:dungeon": {
-   "status": "todo"
-  },
-  "store:email_drafts": {
    "status": "todo"
   },
   "store:energy": {

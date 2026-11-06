@@ -43,6 +43,7 @@ ROOT = Path(__file__).resolve().parent.parent
 WHO = "MIA (loops)"
 REGRESSION = 0.25  # worse than its own recent median by this share counts as a slide
 HISTORY = 8  # the readings a trend is taken from
+ACTION_KINDS = ("action_failed", "declined")
 
 
 @dataclass(frozen=True)
@@ -89,7 +90,9 @@ def _turns(context, days: int = 7) -> list[dict]:
 def _failures(context, kinds: tuple[str, ...] = (), days: int = 7) -> list[dict]:
     log = getattr(context, "failures", None)
     found = log.events(days=days) if log is not None else []
-    return [e for e in found if not kinds or e.get("kind") in kinds]
+    if not kinds:  # "what went wrong in a turn": an action's own outcome has its loops (actions.*)
+        return [e for e in found if e.get("kind") not in ACTION_KINDS]
+    return [e for e in found if e.get("kind") in kinds]
 
 
 def _per_100_turns(kinds: tuple[str, ...]):
@@ -130,6 +133,63 @@ def _count_of(kinds: tuple[str, ...]):
         hits = _failures(context, kinds)
         return Reading(float(len(hits)), max(1, len(hits)), f"{len(hits)} in 7 days")
     return measure
+
+
+def _actions_failed(context) -> Optional[Reading]:
+    if getattr(context, "failures", None) is None:
+        return None
+    found = _failures(context, ("action_failed",))
+    kinds = sorted({e.get("tool", "") for e in found} - {""})
+    return Reading(len(found), max(1, len(found)), f"{len(found)} in 7 days" + (f": {', '.join(kinds[:6])}" if kinds else ""))
+
+
+def _email_discarded(context) -> Optional[Reading]:
+    store = getattr(context, "email_drafts", None)
+    if store is None:
+        return None
+    settled = [d for d in store.drafts() if d.created_at >= _since(30)[:19] and d.status in ("sent", "discarded")]
+    if not settled:
+        return None
+    thrown = sum(1 for d in settled if d.status == "discarded")
+    return Reading(round(thrown / len(settled), 2), len(settled), f"{thrown} of {len(settled)} drafts discarded in 30 days")
+
+
+def _email_left_open(context) -> Optional[Reading]:
+    store = getattr(context, "email_drafts", None)
+    if store is None:
+        return None
+    waiting = store.open_drafts()
+    old = [d for d in waiting if d.created_at < _since(7)[:19]]
+    return Reading(len(old), max(1, len(waiting)), f"{len(old)} of {len(waiting)} open drafts are over a week old")
+
+
+def _gate_entries(context) -> Optional[list[dict]]:
+    gate = getattr(context, "communication", None)
+    if gate is None or not hasattr(gate, "entries_since"):
+        return None
+    return gate.entries_since(_since(7)[:19])
+
+
+def _gate_dismissed(context) -> Optional[Reading]:
+    entries = _gate_entries(context)
+    if entries is None:
+        return None
+    sent = [e for e in entries if e.get("action") == "act" and e.get("urgency") != "urgent"]
+    if not sent:
+        return None
+    gone = sum(1 for e in sent if e.get("dismissed_at"))
+    return Reading(round(gone / len(sent), 2), len(sent), f"{gone} of {len(sent)} dismissed in 7 days")
+
+
+def _gate_expired(context) -> Optional[Reading]:
+    entries = _gate_entries(context)
+    if entries is None:
+        return None
+    held = sum(1 for e in entries if e.get("action") == "defer")
+    if not held:
+        return None
+    lapsed = sum(1 for e in entries if e.get("action") == "drop" and str(e.get("reason", "")).startswith("waited too long"))
+    return Reading(round(lapsed / held, 2), held, f"{lapsed} of {held} held back expired before they went out")
 
 
 def _unused_creations(context) -> Optional[Reading]:
@@ -360,6 +420,19 @@ LOOPS: tuple[Loop, ...] = (
          _count_of(("model_down", "garbled")), floor=0, covers=("flow:talk", "flow:pc")),
     Loop("answers.undo_soon", "answers", "what she did, undone right away, per 100 turns", "person",
          _per_100_turns(("undo_soon",)), min_n=20, covers=("flow:undo",)),
+    # B. Proactivity, and C. corrections (drafted at Night School, T-0047)
+    Loop("actions.failed", "corrections", "things approved that broke when they ran, in 7 days", "person",
+         _actions_failed, floor=0, files=("core/actions.py",), covers=("flow:actions",)),
+    Loop("actions.declined", "corrections", "suggestions she made that were turned down, per 100 turns", "person",
+         _per_100_turns(("declined",)), min_n=20, covers=("flow:actions",)),
+    Loop("email.discarded", "corrections", "drafts thrown away instead of sent, in 30 days", "person", _email_discarded,
+         floor=0.4, min_n=5, files=("core/email_drafts.py",), covers=("flow:email", "store:email_drafts")),
+    Loop("email.left_open", "corrections", "drafts left open over a week", "person", _email_left_open, acts="watch",
+         covers=("flow:email",)),
+    Loop("gate.dismissed", "proactivity", "unprompted messages dismissed, in 7 days", "person", _gate_dismissed,
+         floor=0.5, min_n=5, files=("core/communication_gate.py",), covers=("flow:gate", "store:communication")),
+    Loop("gate.expired", "proactivity", "messages held back that expired before they went out", "person",
+         _gate_expired, acts="watch", min_n=3, covers=("flow:gate",)),
     # D. Her creations
     Loop("creations.unused", "creations", "published screens nobody opens", "person", _unused_creations, floor=0,
          acts="offer", covers=("store:creations", "action:creation")),

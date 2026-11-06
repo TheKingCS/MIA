@@ -68,6 +68,8 @@ KINDS = {
     "undo_soon": ("you undid what she did right away", 3),
     "slow": ("a slow answer", 1),
     "page_error": ("a page broke", 3),
+    "action_failed": ("something you approved broke when it ran", 3),
+    "declined": ("you turned down what she suggested", 1),
 }
 REPHRASE_SECONDS = 120
 UNDO_SECONDS = 180
@@ -126,6 +128,8 @@ def issue_key(kind: str, tool: str = "", page: str = "", error: str = "") -> str
         return f"page:{page}:{(error or '')[:60]}"
     if kind == "talked_instead":
         return f"routing:{tool}"
+    if kind in ("action_failed", "declined"):
+        return f"{'action' if kind == 'action_failed' else 'declined'}:{tool}"
     if kind in ("said_wrong", "rephrased", "undo_soon", "thumbs_down"):
         return f"turn:{tool or 'chat'}"
     return kind

@@ -59,7 +59,9 @@ first. Each is a step below.
    dependency audit (`dev.vulnerable` against osv.dev, `dev.outdated` against PyPI). Heavy loops run from Night
    School and `tools.work loops --run`, never in the app's check. First run: `cryptography` 47 had three HIGH
    advisories, raised to 50.0.2 (T-0048).
-3. ⬜ **The remaining usage loops**: numbers she didn't look up, memory quality, the gate's unwelcome kinds and
+3. 🔨 **The remaining usage loops** (started 2026-11-06, T-0047: `actions.failed`, `actions.declined`,
+   `email.discarded`, `email.left_open`, `gate.dismissed`, `gate.expired`; the phone's sync waits on a durable
+   last-contact record): numbers she didn't look up, memory quality, the gate's unwelcome kinds and
    saturation, maker failures, held creations, data recovery, vault coverage, glasses voice, phone link.
 4. ⬜ **Corrections in every area**: an action MIA proposed that the person undid or re-edited within 3 days,
    counted by area; Plaid re-categorizations learned as rules; OCR field corrections; the Loop's predictions

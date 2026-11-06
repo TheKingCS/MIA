@@ -131,6 +131,10 @@ class EmailDrafts:
                 draft.sent_at = datetime.now().isoformat(timespec="seconds")
             self._save()
 
+    def drafts(self) -> list[EmailDraft]:
+        """Every draft kept (the latest few dozen), oldest first."""
+        return list(self._drafts)
+
     def open_drafts(self) -> list[EmailDraft]:
         return [d for d in reversed(self._drafts) if d.status == DRAFT]
 

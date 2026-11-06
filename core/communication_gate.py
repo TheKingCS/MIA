@@ -474,6 +474,10 @@ class CommunicationGate:
         """The most recent message MIA sent on her own."""
         return next((e for e in reversed(self._log) if e.get("action") == ACT), None)
 
+    def entries_since(self, since: str) -> list[dict]:
+        """Every decision logged at or after `since` (an ISO time), for the gate.* loops."""
+        return [dict(e) for e in self._log if e.get("at", "") >= since]
+
     def entries_for_day(self, day: Optional[str] = None) -> list[dict]:
         day = day or datetime.now().date().isoformat()
         return [e for e in self._log if e.get("at", "").startswith(day)]

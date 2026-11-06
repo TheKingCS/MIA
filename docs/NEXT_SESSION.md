@@ -19,8 +19,10 @@ her own lessons (`"mode": "self"` in `work/night_school.json`) when the panel sa
 Build plan step 2 is done (2026-11-06): the weekly suite on the committed code, reverts per merge, and the
 dependency audit (`core/dev_checks.py`). Its first run found `cryptography` 47 with three HIGH advisories: the
 PC's venv is on 50.0.2 now (T-0048); **restart MIA on the PC** to load it. Still open: the phone build
-bundles Chaquopy's `cryptography` 42.0.8, which the audit doesn't cover yet. Next: step 3 (the remaining
-usage loops) and T-0047 (the flow loops Night School's teacher drafted).
+bundles Chaquopy's `cryptography` 42.0.8, which the audit doesn't cover yet. T-0047 is built: six loops over
+actions, email drafts and the gate (failed and declined actions now go into the person's Fix-It Log by kind
+only). Next: the rest of step 3; the phone's sync loop needs the PC to keep when the phone last reached it.
+A flaky test seen once: `tests/test_reference_library_manager.py::test_search_all_packs_returns_snippet_from_matching_pack`.
 
 **Glasses navigation: `docs/GLASSES_NAVIGATION_PLAN.md` is a draft waiting on
 Zac's five questions.** Recipes open by shelf; Music plays on the phone

@@ -429,6 +429,8 @@ class ActionCenter:
             except Exception:  # a celebration never breaks the change itself
                 log.exception("Couldn't work out the reward for %s.", proposal.kind)
         proposal.decided_at = datetime.now().isoformat(timespec="seconds")
+        if proposal.status == FAILED:
+            _note(context, "action_failed", proposal)
         return proposal
 
     def reject(self, context, proposal_id: str) -> Proposal:
@@ -436,6 +438,8 @@ class ActionCenter:
         if proposal.status == PROPOSED:
             proposal.status = REJECTED
             proposal.decided_at = datetime.now().isoformat(timespec="seconds")
+            if proposal.proposed_by == "mia":
+                _note(context, "declined", proposal)
         return proposal
 
     def undo(self, context, proposal_id: str) -> Proposal:
@@ -453,6 +457,17 @@ class ActionCenter:
         proposal.status, proposal._change = UNDONE, None
         proposal.decided_at = datetime.now().isoformat(timespec="seconds")
         return proposal
+
+
+def _note(context, kind: str, proposal: Proposal) -> None:
+    """Into the person's Fix-It Log (core/failure_log.py), for the actions.* loops: the action's kind only."""
+    failures = getattr(context, "failures", None)
+    if failures is None:
+        return
+    try:
+        failures.record(kind, tool=proposal.kind, surface="actions")
+    except Exception:  # the record never breaks the action
+        log.exception("Couldn't note the %s action.", proposal.kind)
 
 
 def _moment(context, proposal) -> dict:
