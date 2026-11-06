@@ -99,9 +99,9 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       written down (only apps on the phone can reach its server), (b) build `cryptography` for Android ourselves,
       or (c) move the phone's encryption to Android Keystore (Kotlin) and its server off fastapi over time.
       Claude: (a) now, (c) over time. Details in `work/tasks/T-0051.md`.
-- [ ] Flaky: `tests/test_reference_library_manager.py` (2026-11-07: one cause found and fixed: deleting a pack failed
-      on Windows while libzim still held the file; if `test_search_all_packs_returns_snippet_from_matching_pack` fails
-      again, look for another open handle); and the native crash mid-suite (no summary printed), which now has a
+- [ ] Flaky: `tests/test_reference_library_manager.py`: two causes found and fixed (an open libzim handle on delete;
+      and, 2026-11-06, a freshly written file's timestamp reading a few ms ahead of `time.time()` on Windows, 1 file
+      in 10, so a pack looked "still copying"); and the native crash mid-suite (no summary printed), which now has a
       **reliable trigger** (2026-11-06): one more test in `tests/test_server_app.py` that creates a second profile
       and logs it in (any route after) makes the full suite die later with "Fatal Python error: Aborted" / an
       access violation inside anyio's event loop, at `tests/test_user_sync.py::test_through_the_server`; never in

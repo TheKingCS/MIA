@@ -95,8 +95,13 @@ def _no_quiet_period(monkeypatch):
     Most tests build a .zim fixture and expect it discoverable
     immediately; only the dedicated quiet-period test below needs the
     real still-copying guard, so it re-overrides this per-test.
+
+    Below zero, not zero: on Windows a file just written can carry a
+    timestamp a few milliseconds ahead of time.time() (the file system's
+    clock and Python's tick differently), and with 0 such a pack read as
+    "still copying" now and then (the library's flaky tests, 2026-11-06).
     """
-    monkeypatch.setattr(reference_library_manager_module, "_MIN_QUIET_SECONDS", 0)
+    monkeypatch.setattr(reference_library_manager_module, "_MIN_QUIET_SECONDS", -60)
 
 
 def _make_manager() -> ReferenceLibraryManager:
