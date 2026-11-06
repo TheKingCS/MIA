@@ -2,7 +2,7 @@
 
 *Generated from `core/loops.py` by `python -m core.loop_catalog`; never edit by hand (a test keeps it current). The design and the reasons: `docs/IMPROVEMENT_LOOPS.md`; what each process is watched by: `python -m tools.night_school coverage`.*
 
-80 loops in 7 areas.
+81 loops in 7 areas.
 
 ## Answers
 
@@ -96,6 +96,7 @@
 | `phone.link` | hours since their phone last reached this PC | person | trend | shown, never acted on | `flow:phone` |
 | `screens.broken` | desktop apps and web pages that broke, in 7 days | person | ≤ 0 | opens a task | `module:assistant`, `module:budget`, `module:character`, `module:classroom`, `module:dashboard`, `module:diagnostics` and 29 more |
 | `search.empty` | Ctrl+K searches that found nothing, in 30 days | device | ≤ 0.3 (from 10) | opens a task | `flow:search` |
+| `vault.captions` | photos on this PC not described yet (so they can't be found) | device | trend | shown, never acted on | `check:vault_captions` |
 | `vault.coverage` | photos over a week old still only on the phone | person | ≤ 0.1 (from 20) | opens a task | `store:memory_vault` |
 
 ## Life

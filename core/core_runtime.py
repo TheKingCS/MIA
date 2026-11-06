@@ -274,6 +274,9 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     register_loop_actions(registry)  # the loop: when things happen (DEC-0047)
     register_checkin_actions(registry)  # the Sunday check-in (DEC-0047)
     register_failure_actions(registry)  # the Fix-It Log (DEC-0049)
+    from core.vault_captions import register_vault_caption_actions
+
+    register_vault_caption_actions(registry)  # "find my photos of the creek" (the memory vault, described on the PC)
 
     registry.register(AssistantAction(
         name="add_alarm",

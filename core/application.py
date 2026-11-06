@@ -724,6 +724,7 @@ class MIAApplication:
             ("good_news", self._check_good_news),
             ("chronicle_issue", self._check_chronicle_issue),
             ("promises", self._check_promises),
+            ("vault_captions", self._check_vault_captions),
         ]
         # 2026-09-27, Cognitive Extension slice C: checks no longer notify
         # directly. Each one offers what it would say (_offer()), and the
@@ -791,6 +792,14 @@ class MIAApplication:
         from core.life_notes import reminders
 
         self._offers.extend(reminders(self.context, now.date()))
+
+    def _check_vault_captions(self, now: datetime, today_iso: str) -> None:
+        """The photos this PC keeps for the phone, described at night so they can be found (core/vault_captions.py),
+        in a process of its own: the vision model takes a few seconds a photo."""
+        from core import vault_captions
+
+        if vault_captions.due(now):
+            vault_captions.launch()
 
     def _check_good_news(self, now: datetime, today_iso: str) -> None:
         """Good News Radio (core/good_news.py, DEC-0096): when someone switched it on, today's episode is made

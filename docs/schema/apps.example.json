@@ -241,7 +241,13 @@
           "shown": true,
           "can_hide": true,
           "ask": "Are my photos backed up?",
-          "tools": [],
+          "tools": [
+            {
+              "name": "find_photos",
+              "does": "Find photos",
+              "detail": "Find the person's photos by what's in them (the memory vault, described on this PC): 'photos of the creek', 'the dog in the snow'."
+            }
+          ],
           "favorite": false
         },
         {

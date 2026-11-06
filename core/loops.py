@@ -314,6 +314,20 @@ def _courses_stalled(context) -> Optional[Reading]:
                    "days" + (f": {', '.join(names[:4])}" if names else ""))
 
 
+def _captions_waiting(_context) -> Optional[Reading]:
+    """Photos this PC keeps for the phone that aren't described yet, so they can't be found by what's in them."""
+    if not _has_repo():
+        return None
+    from core.memory_vault import VaultShelf
+    from core.vault_captions import shelves
+
+    photos = [e for folder in shelves() for e in VaultShelf(folder).index.values() if e.get("kind", "photo") == "photo"]
+    if not photos:
+        return None
+    waiting = sum(1 for e in photos if not e.get("caption"))
+    return Reading(round(waiting / len(photos), 2), len(photos), f"{waiting} of {len(photos)} photos not described yet")
+
+
 def _gate_expired(context) -> Optional[Reading]:
     entries = _gate_entries(context)
     if entries is None:
@@ -1001,6 +1015,8 @@ LOOPS: tuple[Loop, ...] = (
          floor=0.2, min_n=3, covers=("dev:merge",)),
     Loop("dev.vulnerable", "development", "installed packages with a known vulnerability", "device", _vulnerable,
          floor=0, every=7, heavy=True, files=("requirements.txt",), covers=("dev:dependencies",)),
+    Loop("vault.captions", "devices", "photos on this PC not described yet (so they can't be found)", "device",
+         _captions_waiting, acts="watch", covers=("check:vault_captions",)),
     Loop("phone.vulnerable", "development", "packages the phone app bundles with a known vulnerability", "device",
          _phone_vulnerable, floor=0, every=7, heavy=True, files=("android-phone/app/build.gradle.kts",),
          covers=("dev:dependencies", "flow:phone")),
