@@ -78,3 +78,42 @@ def test_talking_in_grid_references():
     assert tak.reply(context, "what's the grid for spring?").startswith("Spring is at 18S UJ 2347")
     assert "isn't a grid reference" not in (tak.reply(context, "add waypoint Camp at 18S UJ 2347806483") or "")
     assert tak.reply(context, "what's for dinner") is None
+
+
+def test_places_go_to_tak_apps_on_this_network_only_by_approval(monkeypatch):
+    from core import actions
+    from core.actions import ActionCenter
+
+    sent = []
+    monkeypatch.setattr(actions, "_who", lambda context: "p1")
+    monkeypatch.setattr(tak, "send", lambda events: sent.extend((e, (tak.SA_GROUP, tak.SA_PORT)) for e in events) or len(events))
+    context = SimpleNamespace(waypoints=SimpleNamespace(all_waypoints=lambda: [waypoint()]), config=None, undo=None,
+                              events=None)
+    center = ActionCenter()
+    proposal = center.propose(context, "map.tak_share", {})
+    assert "on TAK apps on this network" in proposal.summary and sent == []  # nothing goes until approved
+    assert center.approve(context, proposal.proposal_id).result.startswith("Sent 1 place")
+    assert sent[0][1] == ("239.2.3.1", 6969) and "MIA-w1" in sent[0][0]
+    assert not actions.ACTION_TYPES["map.tak_share"].child_ok
+
+
+def test_the_multicast_stays_on_this_network(monkeypatch):
+    import socket
+
+    calls = []
+
+    class Socket:
+        def __init__(self, *args):
+            pass
+
+        def setsockopt(self, level, option, value):
+            calls.append(("ttl", value) if option == socket.IP_MULTICAST_TTL else ("other", value))
+
+        def sendto(self, data, where):
+            calls.append(("to", where))
+
+        def close(self):
+            calls.append(("closed", None))
+    monkeypatch.setattr(socket, "socket", Socket)
+    assert tak.send(["<event/>", "<event/>"]) == 2
+    assert calls == [("ttl", 1), ("to", ("239.2.3.1", 6969)), ("to", ("239.2.3.1", 6969)), ("closed", None)]  # one hop

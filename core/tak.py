@@ -91,6 +91,29 @@ def data_package(waypoints, name: str = "MIA places", now: Optional[datetime] = 
     return out.getvalue()
 
 
+# ------------------------------------------------------------------ the local network (by approval)
+
+SA_GROUP, SA_PORT = "239.2.3.1", 6969  # TAK's situational-awareness multicast
+
+
+def send(events: list[str], group: str = SA_GROUP, port: int = SA_PORT, sock=None) -> int:
+    """Cursor on Target events to TAK apps on this network, once each (UDP multicast, one hop: it never leaves the
+    local network). Returns how many were sent."""
+    import socket
+
+    own = sock is None
+    if own:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+        sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 1)
+    try:
+        for event in events:
+            sock.sendto(event.encode("utf-8"), (group, port))
+        return len(events)
+    finally:
+        if own:
+            sock.close()
+
+
 # ------------------------------------------------------------------ talking to it
 
 _GRID = r"(\d{1,2}\s*[C-HJ-NP-X]\s*[A-HJ-NP-Z][A-HJ-NP-V]\s*\d{0,5}\s*\d{0,5})"
