@@ -24,7 +24,7 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   (cross-domain) built: composed plans, `afford`, `slipped`, `projects`, `habits`, `priorities`, `resources`
   and, 2026-11-06, `recall`, `person`, `patterns`, `discussed`, `returns`, `time` and `held back` (the routing
   audit: 84 of 112 benchmark questions answered by a plan, 11 by tools, 16 by the model alone: research, how-to
-  and open-ended coaching, where the model belongs),
+  and open-ended coaching, where the model belongs; the benchmark with the model: 85 of 112 clean, from 60),
   sureness in every plan answer, calibration by ratings and by projected dates checked when they come.
 - **Phase C (done):** capability gaps (`core/capability_gaps.py`), seasons of memory (`core/seasons.py`), the
   Operating Journal (`core/operating_journal.py`), recreation (`core/recreation.py`).
@@ -52,7 +52,8 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 **Next for Claude:** the glasses' own camera and the question by voice for Look (the phone's web view takes and
 chooses photos now, 2026-11-06, built but untried on the phone), Meshtastic once radios exist, vector offline
-maps, a bigger image model with consistent characters (T-0036), the module contract once the doc arrives, and
+maps, the same character across panels (T-0036: SDXL-Turbo is in, 2026-11-06; an IP-Adapter next), the module
+contract once the doc arrives, and
 DEC-0054's last piece (a "still using it?" mark on subscriptions, after Zac's Plaid work lands).
 
 **Glasses navigation: `docs/GLASSES_NAVIGATION_PLAN.md` is a draft waiting on

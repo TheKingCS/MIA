@@ -13,7 +13,10 @@ photos still only on the phone (`vault.coverage`), offers to keep a note turned 
 offers to keep it after her reply, keeps it only on "keep it", mentions a promise with a day the day before
 and on it, and marks it done or forgets it by voice. Seven new question plans (recall, person, patterns,
 discussed, returns, time, held back) take the routing audit to 84 of 112 benchmark questions answered by a plan,
-from 70; a Kept screen (`web/kept.html`) shows the notes. The phone's web view now takes and chooses photos for
+from 70, and the benchmark run with the local model grades 85 of 112 answers clean, from 60 (none flagged,
+none worse); a Kept screen (`web/kept.html`) shows the notes. The Chronicles draw with SDXL-Turbo now (0.7 s a
+panel, much better than SD-Turbo), and a series' look can hold across panels from a reference picture Zac picks.
+Her coder finds a passage whose spacing she got wrong (a Night School lesson failed on that). The phone's web view now takes and chooses photos for
 Look (it builds; not yet tried on the phone). A rating said out loud ("thumbs
 up", "that's a bad answer") works on the glasses (T-0010). A finding for goods that won't make market day.
 Fixed: deleting a reference pack failed on Windows now and then (the old flaky test). Running every loop for
