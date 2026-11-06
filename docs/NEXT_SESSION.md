@@ -22,8 +22,9 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   08:55: one lesson passed (phone_link, kept in the lab for Zac), two failed.
 - **Phase B:** step 7 (the module contract) waits on the rest of Zac's Interconnection Architecture doc. Step 8
   (cross-domain) built: composed plans, `afford`, `slipped`, `projects`, `habits`, `priorities`, `resources`
-  and, 2026-11-06, `recall`, `person` and `patterns` from DEC-0054's notes and the memories (the routing audit:
-  79 of 112 benchmark questions answered by a plan, 21 by the model alone, most of those research and how-to),
+  and, 2026-11-06, `recall`, `person`, `patterns`, `discussed`, `returns`, `time` and `held back` (the routing
+  audit: 84 of 112 benchmark questions answered by a plan, 11 by tools, 16 by the model alone: research, how-to
+  and open-ended coaching, where the model belongs),
   sureness in every plan answer, calibration by ratings and by projected dates checked when they come.
 - **Phase C (done):** capability gaps (`core/capability_gaps.py`), seasons of memory (`core/seasons.py`), the
   Operating Journal (`core/operating_journal.py`), recreation (`core/recreation.py`).
@@ -45,8 +46,10 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   Qt crash mid-suite (seen twice), and `test_inbox.py`'s reading-corrections test (once in a full run).
   The one failing test is Zac's uncommitted Plaid work (`test_import_transaction_transfer_is_skipped`).
 
-**Next for Claude:** the glasses' and phone's Look button (sight), Meshtastic once radios exist, vector offline
-maps, a bigger image model with consistent characters (T-0036), the module contract once the doc arrives.
+**Next for Claude:** the glasses' own camera and the question by voice for Look (the phone's web view takes and
+chooses photos now, 2026-11-06, built but untried on the phone), Meshtastic once radios exist, vector offline
+maps, a bigger image model with consistent characters (T-0036), the module contract once the doc arrives, and
+DEC-0054's last piece (a "still using it?" mark on subscriptions, after Zac's Plaid work lands).
 
 **Glasses navigation: `docs/GLASSES_NAVIGATION_PLAN.md` is a draft waiting on
 Zac's five questions.** Recipes open by shelf; Music plays on the phone

@@ -11,8 +11,10 @@ app that breaks on opening is now noted instead of taking the window down), her 
 photos still only on the phone (`vault.coverage`), offers to keep a note turned down. **DEC-0054 is built
 (T-0018)**: `core/life_notes.py` spots a promise, a decision, an idea or a goal set aside in what someone says,
 offers to keep it after her reply, keeps it only on "keep it", mentions a promise with a day the day before
-and on it, and marks it done or forgets it by voice. New question plans (recall, person, patterns) take the
-routing audit to 79 of 112 benchmark questions answered by a plan, from 70. A rating said out loud ("thumbs
+and on it, and marks it done or forgets it by voice. Seven new question plans (recall, person, patterns,
+discussed, returns, time, held back) take the routing audit to 84 of 112 benchmark questions answered by a plan,
+from 70; a Kept screen (`web/kept.html`) shows the notes. The phone's web view now takes and chooses photos for
+Look (it builds; not yet tried on the phone). A rating said out loud ("thumbs
 up", "that's a bad answer") works on the glasses (T-0010). A finding for goods that won't make market day.
 Fixed: deleting a reference pack failed on Windows now and then (the old flaky test).
 
