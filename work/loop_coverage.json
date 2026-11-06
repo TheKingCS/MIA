@@ -90,8 +90,8 @@
    "why": "their own notes and scripts, kept as they wrote them: MIA writes none of it"
   },
   "store:online_reminders": {
-   "status": "todo",
-   "why": "reminders delivered online: one that arrived late or twice"
+   "status": "none",
+   "why": "a list they asked for, delivered whole the moment the connection returns: nothing is chosen or timed, so nothing to learn from"
   },
   "store:passwords": {
    "status": "none",
