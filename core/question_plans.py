@@ -603,6 +603,13 @@ def _discussed(context, sheet, prompt, today):
                   "your conversations")
 
 
+def _held_back(context, sheet, prompt, today):
+    """D4, cross-domain: what they keep running into, what slipped this week, what's unfinished, and the goals they
+    set aside, on one sheet: the model names the thread through them, the records are the evidence."""
+    _patterns(context, sheet, prompt, today)
+    _slipped(context, sheet, prompt, today)  # what's unfinished too
+
+
 def _open_loops(context, sheet, prompt, today):
     _notes(context, sheet, "commitment", open_only=True)
     _look(context, sheet, "list_tasks", "Projects")
@@ -783,6 +790,10 @@ PLANS: tuple[Plan, ...] = (
           "What did we talk about with the roof?", "Have I told you about the leak before?",
           "When did we last talk about the truck?", "What did I say about the garden last time?"),
          r"\b(discuss\w*|talk(ed)? about|mentioned|last time)\b", _discussed),
+    Plan("held back", "What might be holding you back",
+         ("What is holding me back?", "What's getting in my way?", "Why am I stuck?", "What's slowing me down?",
+          "Why can't I make progress?"),
+         r"\b(holding me back|in my way|stuck|slowing me down|make progress)\b", _held_back),
     Plan("open loops", "What's unfinished",
          ("What commitments have I made that I haven't completed?", "What projects have I started but not completed?",
           "What have I left unfinished?", "What's still open?"),
@@ -800,7 +811,6 @@ NOT_A_PLAN = (
     'What equipment investment would improve production efficiency the most?',
     'Is it more profitable to make products to order or maintain inventory?',
     'What business opportunities am I overlooking?',
-    'What is holding me back?',
     'How can I turn this frustrating situation into a challenge?',
     'What habits are helping me progress?',
     'What habits are interfering with my goals?',
@@ -842,7 +852,7 @@ CHANGE_VERBS = frozenset((
     "finish", "complete", "save", "track", "note", "write", "buy", "sell", "file", "tag", "link", "unlink",
 ))
 PLAN_BY_NAME = {p.name: p for p in PLANS}
-CROSS_DOMAIN = ("afford", "slipped", "projects", "habits", "priorities", "resources")  # build plan step 8: plans over several apps
+CROSS_DOMAIN = ("afford", "slipped", "projects", "habits", "priorities", "resources", "held back", "time")  # build plan step 8: plans over several apps
 
 
 # ---------------------------------------------------------------- choosing a plan

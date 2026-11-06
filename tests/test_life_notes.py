@@ -260,3 +260,20 @@ def test_where_their_time_goes(monkeypatch):
     assert looked == ["get_dungeon_loot", "get_workout_summary"]
     assert "This week's calendar has 4 things: 3 shift, 1 event." in [f.text for f in sheet.facts]
     assert sheet.facts[-1].kind == "estimate"
+
+
+def test_what_might_be_holding_them_back(tmp_path):
+    from core.question_plans import PLAN_BY_NAME, Sheet
+
+    notes = LifeNotes(data_dir=tmp_path)
+    notes.add("dropped_goal", "the half marathon", why="my knee hurts")
+    notes.add("commitment", "fix his gate", who="Sam")
+    memories = [SimpleNamespace(text="Mornings are hard after night shifts", category="Struggles & Patterns")]
+    context = SimpleNamespace(user_memories=SimpleNamespace(all_memories=lambda: memories), insights=None,
+                              life_notes=notes)
+    sheet = Sheet("held back", "")
+    PLAN_BY_NAME["held back"].gather(context, sheet, "What is holding me back?", None)
+    texts = [f.text for f in sheet.facts]
+    assert "You told MIA: Mornings are hard after night shifts" in texts
+    assert "a goal set aside: the half marathon, because my knee hurts" in texts
+    assert any(t.startswith("a promise to Sam: fix his gate") for t in texts)  # still open
