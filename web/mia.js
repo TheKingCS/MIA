@@ -221,7 +221,15 @@
     council: () => demo ? Promise.resolve({ messages: [], members: [] }) : call("GET", "/api/council"),
     councilSay: (body) => demo ? Promise.resolve({}) : call("POST", "/api/council", body),
     // The Operating Journal, games played and Good News Radio (DEC-0097, 0098, 0096); changes go through actions.
-    lifeNotes: () => demo ? Promise.resolve({ kinds: [] }) : call("GET", "/api/life-notes"),
+    lifeNotes: () => demo ? Promise.resolve({ kinds: [
+      { kind: "commitment", title: "Promises", notes: [
+        { id: "n1", line: "a promise to Sam: fix his gate (by Saturday)", status: "open", at: "2026-11-06", due: "2026-11-07" },
+        { id: "n2", line: "a promise to my sister: call her", status: "done", at: "2026-10-30", due: "" }] },
+      { kind: "decision", title: "Decisions", notes: [
+        { id: "n3", line: "a decision: the metal roof, because it lasts longer", status: "open", at: "2026-11-02", due: "" }] },
+      { kind: "idea", title: "Ideas", notes: [
+        { id: "n4", line: "an idea: selling honey at the market", status: "open", at: "2026-11-01", due: "" }] },
+      { kind: "dropped_goal", title: "Goals set aside", notes: [] }] }) : call("GET", "/api/life-notes"),
     operatingJournal: () => demo ? Promise.resolve({ lines: [], sections: {} }) : call("GET", "/api/operating-journal"),
     play: () => demo ? Promise.resolve({ played: [], weeks: [], lines: [], efforts: {} }) : call("GET", "/api/play"),
     news: () => demo ? Promise.resolve({ on: false, day: null, stories: [], personalities: [] }) : call("GET", "/api/news"),
