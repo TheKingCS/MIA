@@ -24,6 +24,7 @@ def test_the_next_step_of_the_plan():
     assert step["number"] == 2 and step["title"] == "The development loops that need running"
     assert "reverts per merge" in step["text"] and "remaining usage" not in step["text"]
     assert ns.plan_step("1. ✅ **Done**") is None
+    assert ns.plan_step("1. ⏸ **Waits on Zac**: the rest.\n2. 🔨 **Next**: this.")["number"] == 2
 
 
 def test_what_she_chooses_and_why():

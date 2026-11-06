@@ -5,7 +5,8 @@ functions we have covered this session and then start from step 1." Built from H
 Interconnection Architecture, Good News Radio, Zac's notes) and everything decided since 2026-11-03 (DEC-0068 to
 DEC-0099). The checklist is the order of work; `work/tasks/` holds each step as tasks as it starts.*
 
-Legend: ✅ done · 🔨 in progress · ⬜ to do · 🧑 needs Zac (the PC, the glasses, a choice)
+Legend: ✅ done · 🔨 in progress · ⏸ waiting (what's left waits on someone; Night School skips it) · ⬜ to do ·
+🧑 needs Zac (the PC, the glasses, a choice)
 
 ---
 
@@ -67,7 +68,7 @@ first. Each is a step below.
    the first time), and (2026-11-06, later) `vault.coverage` (photos over a week old still only on the phone, from
    the vault's own list), `checks.dismissed`, `missions.recurring`, `screens.broken`, `dev.lab` and `notes.offers`:
    every process now has a loop or a reason (228 of 257 covered, 23 declined, 6 to do with their why).
-4. 🔨 **Corrections in every area** (`core/corrections.py`, built 2026-11-06): MIA's changes (actions she proposed
+4. ⏸ **Corrections in every area** (`core/corrections.py`, built 2026-11-06): MIA's changes (actions she proposed
    that were approved, her Assistant tools' changes) are watched for 3 days; the person undoing one, or editing or
    deleting something of the same kind (the same record when both name its id), corrects her once;
    `corrections.all` and one loop per area (money, kitchen, workouts, missions, calendar, maintenance, inbox,
@@ -90,7 +91,7 @@ first. Each is a step below.
 
 ### Phase B: The fabric (the Interconnection Architecture, DEC-0095)
 
-7. 🔨 **The module contract** (first piece, 2026-11-07: the event catalogue, `docs/EVENTS.md` from
+7. ⏸ **The module contract** (first piece, 2026-11-07: the event catalogue, `docs/EVENTS.md` from
    `core/event_catalog.py`, kept current by a test, with no listener waiting on an event nothing sends; the rest
    waits on Zac's full Interconnection doc) (`docs/MODULE_CONTRACT.md`, a contract test): each module declares the events it
    emits and consumes, the life-event types it records, its links, its read sources for ACAF, its tools and its

@@ -136,7 +136,8 @@ def choosing(store: Optional[DevStore] = None) -> dict:
 # ------------------------------------------------------------------ what she chooses (pure)
 
 def plan_step(text: Optional[str] = None) -> Optional[dict]:
-    """The next unfinished step of the build plan: {number, title, text}."""
+    """The next unfinished step of the build plan: {number, title, text}. A step marked ⏸ is skipped: what's left
+    of it waits on someone (Zac's Plaid work, his document), so there's nothing to study yet."""
     if text is None:
         try:
             text = PLAN.read_text(encoding="utf-8")
