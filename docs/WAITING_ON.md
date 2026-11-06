@@ -101,8 +101,8 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       Claude: (a) now, (c) over time. Details in `work/tasks/T-0051.md`.
 - [ ] Flaky: `tests/test_reference_library_manager.py`: two causes found and fixed (an open libzim handle on delete;
       and, 2026-11-06, a freshly written file's timestamp reading a few ms ahead of `time.time()` on Windows, 1 file
-      in 10, so a pack looked "still copying"); and the native crash mid-suite (no summary printed), which now has a
-      **reliable trigger** (2026-11-06): one more test in `tests/test_server_app.py` that creates a second profile
+      in 10, so a pack looked "still copying"); and the native crash mid-suite (no summary printed), which has a
+      **likely trigger** (2026-11-06; it crashed 5 runs in a row, then passed 3 with the same trigger): one more test in `tests/test_server_app.py` that creates a second profile
       and logs it in (any route after) makes the full suite die later with "Fatal Python error: Aborted" / an
       access violation inside anyio's event loop, at `tests/test_user_sync.py::test_through_the_server`; never in
       a subset. Signing in alone didn't trigger it; a request as that person afterwards (`/api/diagnostics` or
