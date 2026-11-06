@@ -167,3 +167,17 @@ def test_photos_still_only_on_the_phone(monkeypatch):
     assert (reading.value, reading.n) == (0.1, 20) and reading.detail.endswith("the vault is waiting wifi")
     monkeypatch.setattr(mv, "is_on", lambda context: False)
     assert BY_ID["vault.coverage"].measure(SimpleNamespace(memory_vault=vault)) is None  # switched off: nothing to judge
+
+
+
+def test_the_lab_loop_counts_real_proposals_only(monkeypatch):
+    """T-0049: Night School's exercises and the shadow attempts are rejected by design; they never count."""
+    import core.dev_lab as lab
+
+    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    p = lambda status, evidence="": SimpleNamespace(status=status, evidence=evidence, created_at=now)  # noqa: E731
+    found = [p("merged"), p("merged"), p("rejected"), p("reverted"), p("ready"),
+             p("rejected", "Night School exercise"), p("rejected", "Task T-0007 (shadow)")]
+    monkeypatch.setattr(lab, "all_proposals", lambda: found)
+    reading = BY_ID["dev.lab"].measure(None)
+    assert (reading.value, reading.n, reading.detail) == (0.5, 4, "2 of 4 went in; 1 turned down, 1 reverted")

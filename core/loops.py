@@ -684,11 +684,13 @@ def _coder(_context) -> Optional[Reading]:
 
 
 def _lab_landed(_context) -> Optional[Reading]:
-    """Her lab proposals from the last 60 days that are settled: how many went in and stayed."""
+    """Her lab proposals from the last 60 days that are settled: how many went in and stayed. Night School's
+    exercises and the shadow attempts never merge by design (night.lessons and dev.coder grade those)."""
     from core import dev_lab
 
     cut = _since(60)[:19]
-    settled = [p for p in dev_lab.all_proposals() if p.created_at[:19] >= cut
+    practice = lambda p: p.evidence == "Night School exercise" or "(shadow)" in p.evidence  # noqa: E731
+    settled = [p for p in dev_lab.all_proposals() if p.created_at[:19] >= cut and not practice(p)
                and p.status in (dev_lab.MERGED, dev_lab.REVERTED, dev_lab.REJECTED)]
     if not settled:
         return None
