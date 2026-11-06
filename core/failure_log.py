@@ -81,6 +81,11 @@ _REPORT = re.compile(r"^\s*(?:(?:hey\s+)?mia[,:]?\s+)?(?:please\s+)?(?:report (?
 _WRONG = re.compile(r"\b(?:no,? i meant|that'?s (?:wrong|not (?:right|it|what i (?:asked|meant|said|wanted)))|"
                     r"you got (?:it|that) wrong|wrong (?:answer|tool|thing)|not what i (?:asked|meant|wanted)|"
                     r"i didn'?t (?:ask|say) (?:that|for that)|that'?s not what i)\b", re.IGNORECASE)
+# A rating said out loud, the whole message (T-0010: on the glasses, where there's no button to press)
+_RATE_UP = re.compile(r"^\s*(?:(?:hey\s+)?mia[,:]?\s+)?(?:thumbs up|good (?:answer|one|job)|great (?:answer|job)|"
+                      r"that'?s (?:right|correct|perfect)|perfect answer|spot on|nailed it|well done)[\s.!]*$", re.IGNORECASE)
+_RATE_DOWN = re.compile(r"^\s*(?:(?:hey\s+)?mia[,:]?\s+)?(?:thumbs down|(?:that'?s |that was )?(?:a )?bad answer)[\s.!]*$",
+                        re.IGNORECASE)
 _UNDO = re.compile(r"^\s*(?:(?:hey\s+)?mia[,:]?\s+)?undo\b", re.IGNORECASE)
 _TEACH = re.compile(r"^\s*(?:(?:hey\s+)?mia[,:]?\s+)?when i say\s+[\"“']?(.+?)[\"”']?,?\s+i mean\s+(.+?)\s*\.?$", re.IGNORECASE)
 _REMEMBER_YES = re.compile(r"^\s*(?:yes|yeah|yep|sure|ok(?:ay)?)?[,.!\s]*(?:remember (?:that|it)|please do|do it)?\s*[.!]?\s*$",
@@ -320,6 +325,19 @@ def _age(message) -> Optional[float]:
     return (datetime.now(timezone.utc) - at).total_seconds() if at is not None else None
 
 
+def _rated(context, book, conversation, rating: str, prompt: str, reply: str) -> str:
+    """A 👍 or 👎 said out loud: kept as a rating, as the buttons keep it (DEC-0067), with the device it came from."""
+    ratings = getattr(context, "ratings", None)
+    if ratings is not None:
+        config = getattr(context, "config", None)
+        ratings.rate(rating, prompt, reply, getattr(conversation, "surface", "") or "", "",
+                     config.get("llm.model", "") if config is not None else "")
+    if rating == "down":
+        book.record("thumbs_down", prompt=prompt, reply=reply, mode=conversation.mode)
+        return "Thanks: logged, so it gets fixed."
+    return "Thanks: noted."
+
+
 def observe_prompt(context, conversation, prompt: str) -> Optional[str]:
     """Before a turn (core/talk_it_out.pre_turn): what the person's words
     say about the last answer. Returns a reply when the message is for the
@@ -348,6 +366,9 @@ def observe_prompt(context, conversation, prompt: str) -> Optional[str]:
         return None
     age = _age(last_reply)
     tool = getattr(conversation, "last_tool", "") or ""
+    up, down = _RATE_UP.match(text), _RATE_DOWN.match(text)
+    if up or down:
+        return _rated(context, book, conversation, "up" if up else "down", last_user.content, last_reply.content)
     if _WRONG.search(text):
         book.record("said_wrong", prompt=text, before=last_user.content, reply=last_reply.content, tool=tool,
                     mode=conversation.mode)

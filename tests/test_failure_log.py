@@ -144,3 +144,21 @@ def test_the_log_by_voice(mia):
     assert _get_issues(w, {}).startswith("Nothing's gone wrong")
     observe_tool_error(w, "log_shift", "KeyError")
     assert _get_issues(w, {}).startswith("1 open issue in the last two weeks. The log shift tool broke (1×).")
+
+
+def test_a_rating_said_out_loud(mia, tmp_path):
+    """T-0010: on the glasses there's no button, so "thumbs up" or "bad answer" rates her last reply."""
+    from core.answer_ratings import AnswerRatings
+    from core.failure_log import observe_prompt
+
+    w, c = mia, mia.chat
+    w.ratings = AnswerRatings(data_dir=tmp_path)
+    c.surface = "glasses"
+    _say(c, "user", "what's on today?")
+    _say(c, "assistant", "Two events: the dentist and practice.")
+    assert observe_prompt(w, c, "Mia, thumbs up!") == "Thanks: noted."
+    assert observe_prompt(w, c, "that's a bad answer") == "Thanks: logged, so it gets fixed."
+    kept = w.ratings.ratings
+    assert [(r["rating"], r["surface"]) for r in kept][-2:] == [("up", "glasses"), ("down", "glasses")]
+    assert w.failures.events()[-1]["kind"] == "thumbs_down"
+    assert observe_prompt(w, c, "that's right, now add milk") is None  # a whole message only

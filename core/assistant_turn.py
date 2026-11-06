@@ -108,6 +108,8 @@ def run_assistant_turn(context: AppContext, conversation: Conversation, prompt: 
     from core.turn_trace import record
 
     started = time.monotonic()
+    if conversation is not None:
+        conversation.surface = surface  # for a rating said out loud (core/failure_log.py)
     turn = _turn(context, conversation, prompt)
     record(context, conversation, prompt, turn, time.monotonic() - started, surface)
     return turn
