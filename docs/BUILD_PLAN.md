@@ -87,7 +87,9 @@ first. Each is a step below.
 
 ### Phase B: The fabric (the Interconnection Architecture, DEC-0095)
 
-7. ⬜ **The module contract** (`docs/MODULE_CONTRACT.md`, a contract test): each module declares the events it
+7. 🔨 **The module contract** (first piece, 2026-11-07: the event catalogue, `docs/EVENTS.md` from
+   `core/event_catalog.py`, kept current by a test, with no listener waiting on an event nothing sends; the rest
+   waits on Zac's full Interconnection doc) (`docs/MODULE_CONTRACT.md`, a contract test): each module declares the events it
    emits and consumes, the life-event types it records, its links, its read sources for ACAF, its tools and its
    child rules; the event catalogue generated from code; a test fails a module that breaks it. The one layering
    break the map found (T-0042) goes first. 🧑 *The rest of the Interconnection Architecture (it was cut off at
