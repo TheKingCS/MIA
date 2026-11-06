@@ -304,3 +304,20 @@ def pace(context, today: Optional[date] = None) -> Optional[tuple[float, int, di
     if not total:
         return None
     return round(hits / total, 2), total, by
+
+
+def screen(context, today: Optional[date] = None) -> dict:
+    """The Operating Journal's web screen (web/operating.html): every line with how it's checked and how it's going."""
+    journal = getattr(context, "operating_journal", None)
+    if journal is None:
+        return {"lines": [], "sections": SECTION_WORDS}
+    pictures = dict(zip((l["id"] for l in journal.lines), picture(context, today)))
+    out = []
+    for line in journal.lines:
+        h = line["habit"]
+        how = (f"checked against your {h['word']} each {h['per']}" if h["kind"] == "count"
+               else f"checked against what's spent on {h['category']} each month" if h["kind"] == "spending"
+               else "yours to rate, 1 to 5, each week")
+        out.append({"id": line["id"], "text": line["text"], "section": line["section"], "how": how,
+                    "self_rated": h["kind"] == "self", "now": pictures.get(line["id"], "")})
+    return {"lines": out, "sections": SECTION_WORDS}

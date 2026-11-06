@@ -521,3 +521,19 @@ def launch() -> None:
                          stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
                          creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0)
                          | getattr(subprocess, "DETACHED_PROCESS", 0) if sys.platform == "win32" else 0)
+
+
+def screen(context, now: Optional[datetime] = None) -> dict:
+    """Good News Radio's web screen (web/news.html): today's stories with how each is known and its links, the
+    scripts by personality, and whether it's on."""
+    now = now or datetime.now()
+    record = episode(now.date()) or episode(now.date() - timedelta(days=1))
+    personalities = [{"key": k, "name": p["name"]} for k, p in PERSONALITIES.items()]
+    if record is None:
+        return {"on": is_on(context), "day": None, "stories": [], "personalities": personalities,
+                "now": personality_for(now.hour)}
+    stories = [{"title": s["title"], "topic": s["topic"], "known": s["known"], "caveats": s["caveats"],
+                "links": s["links"], "outlets": sorted({SOURCE_BY_ID.get(x, (0, x))[1] for x in s["sources"]})}
+               for s in record["stories"]]
+    return {"on": is_on(context), "day": record["day"], "stories": stories, "scripts": record["scripts"],
+            "tracks": record.get("tracks", {}), "personalities": personalities, "now": personality_for(now.hour)}

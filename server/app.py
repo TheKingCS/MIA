@@ -805,6 +805,28 @@ def create_app(context: AppContext) -> FastAPI:
             background.add_task(turn)
         return {"id": message["id"], "thread": message["thread"]}
 
+    # Screens for the Operating Journal (DEC-0097), games played (DEC-0098) and Good News Radio (DEC-0096): read
+    # here, assembled in core; every change goes through /api/actions like any screen's (DEC-0017).
+    @app.get("/api/operating-journal")
+    def operating_journal_screen(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.operating_journal import screen
+
+        with app.state.turn_lock:
+            return screen(view_for(context, profile_id))
+
+    @app.get("/api/play")
+    def play_screen(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.recreation import screen
+
+        with app.state.turn_lock:
+            return screen(view_for(context, profile_id))
+
+    @app.get("/api/news")
+    def news_screen(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.good_news import screen
+
+        return screen(view_for(context, profile_id))
+
     @app.post("/api/sight")
     async def sight(request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
         """Sight (core/sight.py, build plan step 15): a photo from the glasses, the phone or the PC, and the question

@@ -168,6 +168,15 @@ APPS: tuple[App, ...] = (
     App("files", "Files", "🗂", "Your files.", "files.html", "Browse and manage local files and data.", KNOW, ()),
     App("music", "Music", "🎵", "Your music.", "music.html", "Local audio library, playlists, and playback.", KNOW,
         ("music",), "Play something relaxing."),
+    App("operating_journal", "Operating Journal", "🧭", "How you mean to live, and how you do.", "operating.html",
+        "Your values, priorities, ideal day and week and rules, each checked against your records or rated by you "
+        "(DEC-0097).", LIFE, (), "Am I living how I said I want to?"),
+    App("play", "Play", "🏓", "Games and sports, counted.", "play.html",
+        "Games and sports you play: who with, how long, how hard, and your training load (DEC-0098).", LIFE, (),
+        "Played pickleball for an hour, it was hard."),
+    App("good_news", "Good News Radio", "📻", "What went right today.", "news.html",
+        "Good news from credible sources, each story saying how it's known, read by four radio personalities "
+        "(DEC-0096).", KNOW, (), "What's the good news?"),
     App("assistant", "MIA Assistant", "🗨", "Always here. Always with you.", "assistant.html",
         "Conversational assistant and local AI.", KNOW, ("communication", "undo", "system"), "Undo that."),
     App("diagnostics", "Diagnostics", "🩺", "How MIA is doing.", None,
@@ -180,7 +189,8 @@ APPS: tuple[App, ...] = (
 )
 APPS_BY_ID = {a.module_id: a for a in APPS}
 # Apps that exist only as web screens (no PySide6 module of their own).
-WEB_ONLY = frozenset({"calendar", "reward_shop", "business", "security", "vault", "insurance", "passwords", "flock", "freedom", "compliance", "dungeon", "issues"})
+WEB_ONLY = frozenset({"calendar", "reward_shop", "business", "security", "vault", "insurance", "passwords", "flock", "freedom", "compliance", "dungeon", "issues",
+                      "operating_journal", "play", "good_news"})
 # Apps folded into others (Zac, 2026-10-16): Garage holds vehicles, equipment
 # and tools; Real Estate holds buildings and appliances; the Calendar shows all
 # upkeep. Shown nowhere; the desktop keeps their modules loaded only because

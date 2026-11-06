@@ -138,6 +138,11 @@ council_voices_module.SAMPLES = _TEST_DEV_DIR / "voices"
 import core.phone_link as phone_link_module  # noqa: E402
 
 phone_link_module.FILE = _TEST_DEV_DIR / "phone_link.json"  # a test's linked phone never writes the real one
+import core.chronicle_issue as chronicle_issue_module  # noqa: E402
+import core.good_news as good_news_module  # noqa: E402
+
+good_news_module.DATA = _TEST_DEV_DIR / "good_news"  # never today's real episode
+chronicle_issue_module.PANELS = _TEST_DEV_DIR / "chronicles"
 loops_module._has_repo = lambda: False
 
 

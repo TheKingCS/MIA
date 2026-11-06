@@ -220,6 +220,10 @@
     // The council (core/council.py, build plan step 16): the PC owner's only.
     council: () => demo ? Promise.resolve({ messages: [], members: [] }) : call("GET", "/api/council"),
     councilSay: (body) => demo ? Promise.resolve({}) : call("POST", "/api/council", body),
+    // The Operating Journal, games played and Good News Radio (DEC-0097, 0098, 0096); changes go through actions.
+    operatingJournal: () => demo ? Promise.resolve({ lines: [], sections: {} }) : call("GET", "/api/operating-journal"),
+    play: () => demo ? Promise.resolve({ played: [], weeks: [], lines: [], efforts: {} }) : call("GET", "/api/play"),
+    news: () => demo ? Promise.resolve({ on: false, day: null, stories: [], personalities: [] }) : call("GET", "/api/news"),
     // Her voice saying one line; rejected where this MIA has none (the words still show).
     // Music on the glasses: the phone plays it (Music.kt), through the relay. Elsewhere, the Music screen.
     musicPlay: () => demo ? Promise.resolve(DEMO_PLAYING) : Promise.reject(new MiaError(400, "Music plays from the glasses' page.")),

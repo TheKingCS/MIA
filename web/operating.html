@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Operating Journal — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
+</head>
+<body data-app="operating_journal" data-icon="assistant" class="mod-operating">
+  <!--
+    Your Operating Journal (DEC-0097): your lines, how each is checked, and how it's going. MIA.operatingJournal() (core/operating_journal.py).
+    Formatting only; the look is muse's (claude, 2026-11-07).
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <header class="hero">
+        <h1>Operating Journal</h1>
+        <p class="tagline" id="operating-sub"></p>
+      </header>
+      <div id="panel"></div>
+    </main>
+  </div>
+  <script src="mia.js?v=17"></script>
+  <script src="icons.js"></script>
+  <script src="sound.js"></script>
+  <script src="places-watch.js"></script>
+  <script src="shell.js"></script>
+  <script src="operating.js"></script>
+</body>
+</html>

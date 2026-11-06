@@ -214,6 +214,27 @@
       "page": "music.html"
     },
     {
+      "id": "operating_journal",
+      "name": "Operating Journal",
+      "icon": "🧭",
+      "tagline": "How you mean to live, and how you do.",
+      "page": "operating.html"
+    },
+    {
+      "id": "play",
+      "name": "Play",
+      "icon": "🏓",
+      "tagline": "Games and sports, counted.",
+      "page": "play.html"
+    },
+    {
+      "id": "good_news",
+      "name": "Good News Radio",
+      "icon": "📻",
+      "tagline": "What went right today.",
+      "page": "news.html"
+    },
+    {
       "id": "assistant",
       "name": "MIA Assistant",
       "icon": "🗨",

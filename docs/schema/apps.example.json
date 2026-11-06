@@ -243,6 +243,34 @@
           "ask": "Are my photos backed up?",
           "tools": [],
           "favorite": false
+        },
+        {
+          "id": "operating_journal",
+          "name": "Operating Journal",
+          "icon": "🧭",
+          "tagline": "How you mean to live, and how you do.",
+          "description": "Your values, priorities, ideal day and week and rules, each checked against your records or rated by you (DEC-0097).",
+          "page": "operating.html",
+          "on_web": true,
+          "shown": true,
+          "can_hide": true,
+          "ask": "Am I living how I said I want to?",
+          "tools": [],
+          "favorite": false
+        },
+        {
+          "id": "play",
+          "name": "Play",
+          "icon": "🏓",
+          "tagline": "Games and sports, counted.",
+          "description": "Games and sports you play: who with, how long, how hard, and your training load (DEC-0098).",
+          "page": "play.html",
+          "on_web": true,
+          "shown": true,
+          "can_hide": true,
+          "ask": "Played pickleball for an hour, it was hard.",
+          "tools": [],
+          "favorite": false
         }
       ]
     },
@@ -668,6 +696,20 @@
           "shown": true,
           "can_hide": true,
           "ask": "Play something relaxing.",
+          "tools": [],
+          "favorite": false
+        },
+        {
+          "id": "good_news",
+          "name": "Good News Radio",
+          "icon": "📻",
+          "tagline": "What went right today.",
+          "description": "Good news from credible sources, each story saying how it's known, read by four radio personalities (DEC-0096).",
+          "page": "news.html",
+          "on_web": true,
+          "shown": true,
+          "can_hide": true,
+          "ask": "What's the good news?",
           "tools": [],
           "favorite": false
         },

@@ -625,3 +625,14 @@ def test_only_the_owner_sees_the_council_in_the_sidebar(client, context):
     bea = next(p for p in context.profiles.list_profiles() if p.name == "Bea")
     token = client.post("/api/login", json={"profile_id": bea.profile_id, "password": "pass1234"}).json()["token"]
     assert client.get("/api/shell", headers={"Authorization": f"Bearer {token}"}).json()["owner"] == []
+
+
+def test_the_new_screens_and_the_journal_keeps_its_own_route(client, context):
+    owner = {"Authorization": f"Bearer {_login(client, context)}"}
+    assert "available" in client.get("/api/journal", headers=owner).json()  # the Journal's own screen, untouched
+    journal = client.get("/api/operating-journal", headers=owner).json()
+    assert journal["lines"] == [] and "rules" in journal["sections"]
+    play = client.get("/api/play", headers=owner).json()
+    assert play["played"] == [] and len(play["weeks"]) == 5 and "hard" in play["efforts"]
+    news = client.get("/api/news", headers=owner).json()
+    assert news["on"] is False and len(news["personalities"]) == 4

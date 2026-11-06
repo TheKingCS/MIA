@@ -218,3 +218,11 @@ def lines(context, today: Optional[date] = None) -> list[str]:
         out.append(f"This week's play load is {ratio:g} times the four weeks before"
                    + (" (past 1.5, a jump that usually means easing off a little)." if ratio > ACUTE_CHRONIC_HIGH else "."))
     return out
+
+
+def screen(context, today: Optional[date] = None) -> dict:
+    """Recreation's web screen (web/play.html): the latest games, and the load by week."""
+    log = getattr(context, "recreation", None)
+    played = sorted(log.entries, key=lambda e: e["date"], reverse=True)[:30] if log is not None else []
+    return {"played": [{k: e[k] for k in ("id", "what", "minutes", "effort", "with", "date", "load")} for e in played],
+            "weeks": load(context, today), "lines": lines(context, today), "efforts": EFFORT_WORDS}
