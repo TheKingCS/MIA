@@ -95,8 +95,9 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       2026-11-06); photo-transfer failures, which only the phone sees, could sharpen it in a phone build.
 - [ ] Loop coverage (225 of 254): 6 to do, each with its why in `work/loop_coverage.json` (Plaid's two after
       Zac's work; business-use shares; Classroom and textbooks; online reminders).
-- [ ] Step 4 leftovers: edits on the desktop's Qt screens, Plaid re-categorizations (after Zac's Plaid work), OCR
-      field corrections, the Loop's predictions.
+- [ ] Step 4's last leftover: Plaid re-categorizations (after Zac's Plaid work). Done: OCR field corrections
+      (`inbox.reading`), the Loop's predictions (`loop.prediction`), and 2026-11-06 the desktop's Qt edits of recipes,
+      meals, upkeep tasks and people (`corrections.screen_edit`); other Qt screens can join it the same way.
 - [ ] Step 8: more cross-domain plans (the benchmark's G questions); calibration against outcomes.
 - [ ] The Chronicle's yearly edition, from the kept seasons (step 17).
 - [ ] The Chronicles' panels: a bigger image model and characters that stay the same across panels (T-0036).
