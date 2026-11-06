@@ -274,10 +274,23 @@ def shell(context, today: Optional[date] = None) -> dict:
                  for a in apps if a.page],
         "on_pc_only": [a.name for a in apps if not a.page],
         "made": _made(context),
+        "owner": _owner_pages(context, pid),
         "weather": {"status": "PLANNED", "text": None},
         "sound": _sound(context),
         "places": _places(context),
     }
+
+
+def _owner_pages(context, pid) -> list:
+    """Pages only the PC's owner has (the first account): the council (build plan step 16)."""
+    from core.person_settings import _is_first_account
+
+    try:
+        if pid and _is_first_account(context, pid):
+            return [{"id": "council", "name": "The Council", "icon": "assistant", "page": "council.html"}]
+    except Exception:
+        log.debug("Shell: owner pages unavailable", exc_info=True)
+    return []
 
 
 def _made(context) -> list:

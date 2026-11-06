@@ -155,8 +155,11 @@ first. Each is a step below.
     the photo isn't kept, only each look's kind and timing (`sight.failed`). Tried for real: a photo described,
     a label read exactly (1.4 s warm, about 28 s for the model's first load). Not yet: the glasses' and the
     phone's Look button (Kotlin).
-16. ⬜ **The council from the phone**: an owner-only Council screen in MIA's web and phone app; the glasses' speaker
-    card and each member's voice on the phone (T-0035). 🧑 *Testing on the real glasses.*
+16. 🔨 **The council from the phone** (2026-11-06): `web/council.html`, the same chat as the dev window, for the PC's
+    owner only (`GET`/`POST /api/council`, 403 for anyone else; the sidebar shows it to the owner alone): the
+    latest messages, who's ready, Reply, @name to ask one member; a message starts the council's turn in the
+    background, within its budget. Not yet: the glasses' speaker card and each member's voice on the phone
+    (T-0035). 🧑 *Testing on the real glasses.*
 17. ⬜ **The Chronicles' weekly issue**: scripts from approved events, continuity checks in code, panels from the
     local image model with a bigger model and consistent characters (T-0036). 🧑 *Zac approves each issue.*
 

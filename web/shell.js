@@ -199,6 +199,10 @@
       .concat((shell.made || []).map((m) => el("a", { class: cls, href: m.page,
         "aria-current": here === "made" && made === m.id ? "page" : null },
         el("span", { class: "ico", "aria-hidden": "true" }, icon(m.icon, "✦")), el("span", { class: "label" }, m.name))))
+      // Pages only the PC's owner has (the council, build plan step 16).
+      .concat((shell.owner || []).map((o) => el("a", { class: cls, href: o.page,
+        "aria-current": document.body.classList.contains("mod-" + o.id) ? "page" : null },
+        el("span", { class: "ico", "aria-hidden": "true" }, icon(o.icon, "✦")), el("span", { class: "label" }, o.name))))
       .concat(shell.person && shell.person.child ? [] : [el("a", { class: cls, href: "made.html",  // ask her for one
         "aria-current": here === "made" && !made ? "page" : null },
         el("span", { class: "ico", "aria-hidden": "true" }, "＋"), el("span", { class: "label" }, "Make Something"))]);

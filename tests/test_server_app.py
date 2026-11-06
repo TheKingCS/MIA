@@ -577,3 +577,51 @@ def test_a_web_screen_counts_itself(client, context, tmp_path, monkeypatch):
     assert res.status_code == 200 and res.json() == {"counted": True}
     assert context.usage_tracker.page_usage()["workout.html"]["count"] == 1
     assert client.post("/api/usage/page", json={"page": "x.html"}).status_code == 401  # signed in only
+
+
+# ----------------------------------------------------------------------
+# The council from the phone (build plan step 16) and sight (step 15)
+# ----------------------------------------------------------------------
+
+def test_the_council_is_the_owners_only(client, context, monkeypatch):
+    from core import council, council_floor
+
+    said, ran = [], []
+    monkeypatch.setattr(council, "recent", lambda n=60: [{"id": "m1", "at": "2026-11-06T10:00:00", "who": "claude",
+                                                          "text": "Ready.", "secret": "never shown"}])
+    monkeypatch.setattr(council, "members", lambda: {"claude": {"role": "Engine"}, "codex": {"role": "Review"}})
+    monkeypatch.setattr(council_floor, "ready_members", lambda: {"claude"})
+    monkeypatch.setattr(council_floor, "plan", lambda text, ready: {})
+    monkeypatch.setattr(council, "post", lambda who, text, **kw: said.append((who, text)) or {
+        "id": "m2", "thread": "m2", "text": text})
+    monkeypatch.setattr(council_floor, "run", lambda message: ran.append(message["id"]))
+    owner = {"Authorization": f"Bearer {_login(client, context)}"}
+    got = client.get("/api/council", headers=owner).json()
+    assert got["messages"][0]["text"] == "Ready." and "secret" not in got["messages"][0]
+    assert got["members"] == [{"name": "claude", "role": "Engine", "ready": True},
+                              {"name": "codex", "role": "Review", "ready": False}]
+    assert client.post("/api/council", json={"text": "@claude status?"}, headers=owner).json()["id"] == "m2"
+    assert said == [("zac", "@claude status?")] and ran == ["m2"]  # the turn ran after the reply
+    context.profiles.create_profile("Bea", password="pass1234")
+    bea = next(p for p in context.profiles.list_profiles() if p.name == "Bea")
+    token = client.post("/api/login", json={"profile_id": bea.profile_id, "password": "pass1234"}).json()["token"]
+    assert client.get("/api/council", headers={"Authorization": f"Bearer {token}"}).status_code == 403
+
+
+def test_sight_takes_a_photo_and_a_question(client, context, monkeypatch):
+    from core import sight
+
+    monkeypatch.setattr(sight, "_ollama", lambda model, prompt, image: "A garden trowel.")
+    owner = {"Authorization": f"Bearer {_login(client, context)}", "x-question": "what is this?"}
+    got = client.post("/api/sight", content=b"\xff\xd8photo", headers=owner).json()
+    assert got["said"] == "From the photo: A garden trowel." and got["kind"] == "what"
+    assert client.post("/api/sight", content=b"", headers=owner).status_code == 422
+
+
+def test_only_the_owner_sees_the_council_in_the_sidebar(client, context):
+    owner = {"Authorization": f"Bearer {_login(client, context)}"}
+    assert [o["page"] for o in client.get("/api/shell", headers=owner).json()["owner"]] == ["council.html"]
+    context.profiles.create_profile("Bea", password="pass1234")
+    bea = next(p for p in context.profiles.list_profiles() if p.name == "Bea")
+    token = client.post("/api/login", json={"profile_id": bea.profile_id, "password": "pass1234"}).json()["token"]
+    assert client.get("/api/shell", headers={"Authorization": f"Bearer {token}"}).json()["owner"] == []

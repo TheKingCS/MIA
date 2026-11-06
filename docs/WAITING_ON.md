@@ -36,6 +36,8 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       the phone; name the first places to map (the property's corners, the well, trailheads).
 
 ### Using MIA (whenever)
+- [ ] **The council from your phone**: after MIA restarts on the PC, "The Council" is in your sidebar (yours only).
+      Write to them there; @claude or @codex asks one member.
 - [ ] **Write your first Operating Journal lines** by talking to her ("add to my operating journal: work out 4 times
       a week"), then ask "am I living how I said I want to?".
 - [ ] **Try Good News Radio:** "what's the good news?", "good news, the late night one", or play "Good News Radio,

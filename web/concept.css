@@ -1786,3 +1786,8 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
 .sync-x { min-width: 44px; min-height: 44px; border: 0; background: none; color: inherit; font-size: 20px; cursor: pointer; }
 .mod-sync .bar { height: 4px; margin-top: 12px; }
 .mod-sync .bar-fill { height: 100%; background: rgb(var(--rgb-accent)); }
+
+/* The council from the phone (web/council.js): formatting only, the look is muse's. */
+.council-text { white-space: pre-wrap; margin: 4px 0 0; }
+.council-msg { align-items: flex-start; }
+.council-msg.mine .council-text { opacity: 0.85; }

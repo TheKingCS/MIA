@@ -217,6 +217,9 @@
     // User Sync (core/user_sync.py). In the demo, only with ?sync; ?sync=review, =phone or =next starts there.
     userSync: () => demo ? Promise.resolve(params.has("sync") ? demoSync() : { done: true, offer: false, active: false }) : call("GET", "/api/user-sync"),
     userSyncStep: (step) => demo ? Promise.resolve({ ...demoSync(), say: "" }) : call("POST", "/api/user-sync", step),
+    // The council (core/council.py, build plan step 16): the PC owner's only.
+    council: () => demo ? Promise.resolve({ messages: [], members: [] }) : call("GET", "/api/council"),
+    councilSay: (body) => demo ? Promise.resolve({}) : call("POST", "/api/council", body),
     // Her voice saying one line; rejected where this MIA has none (the words still show).
     // Music on the glasses: the phone plays it (Music.kt), through the relay. Elsewhere, the Music screen.
     musicPlay: () => demo ? Promise.resolve(DEMO_PLAYING) : Promise.reject(new MiaError(400, "Music plays from the glasses' page.")),

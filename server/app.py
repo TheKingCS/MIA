@@ -758,6 +758,47 @@ def create_app(context: AppContext) -> FastAPI:
     # (a receipt photo, a manual PDF). Raw body + X-Filename header, so no
     # multipart parser dependency. Only writes the file; the desktop's
     # inbox scan takes it from there within a minute.
+    # The council from the phone (build plan step 16): the same chat as the dev window (core/council.py), for the
+    # PC's owner only (the first account): it spends his providers' usage, and it's his development platform.
+    def _owner_only(profile_id: str) -> None:
+        from core.person_settings import _is_first_account
+
+        if not _is_first_account(context, profile_id):
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "The council is the PC owner's.")
+
+    @app.get("/api/council")
+    def council_read(profile_id: str = Depends(require_profile_id)) -> dict:
+        _owner_only(profile_id)
+        from core import council, council_floor
+
+        shown = ("id", "at", "who", "text", "reply_to", "thread", "kind", "task")
+        return {"messages": [{k: m.get(k, "") for k in shown} for m in council.recent(60)],
+                "members": [{"name": name, "role": info.get("role", ""), "ready": name in council_floor.ready_members()}
+                            for name, info in sorted(council.members().items())]}
+
+    @app.post("/api/council")
+    def council_say(body: dict, background: BackgroundTasks, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Zac's message to the council, from the phone. Only his messages set it going (DEC-0081), each within its
+        own budget, in the background after the reply: a turn can take minutes."""
+        _owner_only(profile_id)
+        from core import council, council_floor
+
+        text = str(body.get("text", ""))[:4000]
+        try:
+            message = council.post("zac", text, reply_to=str(body.get("reply_to", ""))[:40],
+                                   plan=council_floor.plan(text, sorted(council_floor.ready_members())))
+        except council.CouncilError as problem:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from problem
+        if not council_floor.STOP.match(message["text"]):
+            def turn() -> None:
+                try:
+                    council_floor.run(message)
+                except Exception as problem:  # the chat says so rather than going quiet
+                    council.post("mia", f"(The council stopped: {problem})", reply_to=message["id"], kind="note",
+                                 thread=message.get("thread", ""), turn=message["id"])
+            background.add_task(turn)
+        return {"id": message["id"], "thread": message["thread"]}
+
     @app.post("/api/sight")
     async def sight(request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
         """Sight (core/sight.py, build plan step 15): a photo from the glasses, the phone or the PC, and the question
