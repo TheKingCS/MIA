@@ -44,3 +44,18 @@ def test_the_chronicle_from_real_history(tmp_path, monkeypatch):
     first = life_events.events_for(world, types=["workout_logged"])[0]
     life_events.record(world.workout, "undone", "Undid a workout", payload={"reverses": [first.event_id]})
     assert chronicle_page(world)["this_week"]["story"][1] == "You trained twice."
+
+
+
+def test_the_yearly_edition_grows_from_the_kept_months():
+    """Step 17: each month core/seasons.py keeps as it closes, in the year's edition, oldest first."""
+    from core.chronicle import months_of
+
+    kept = {"2026-10": {"lines": ["Nothing recorded in October.", "You trained 12 times, 4 more than September.",
+                                  "Eggs: 210", "Money in: 4,000", "A new thing: pickleball"]},
+            "2026-09": {"lines": ["You trained 8 times."]}, "2025-12": {"lines": ["Last year's"]},
+            "2026": {"lines": ["the year"]}}
+    assert months_of(kept, 2026) == [
+        {"month": "September", "lines": ["You trained 8 times."]},
+        {"month": "October", "lines": ["You trained 12 times, 4 more than September.", "Eggs: 210", "Money in: 4,000"]}]
+    assert months_of({}, 2026) == []

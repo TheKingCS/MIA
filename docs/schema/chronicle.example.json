@@ -134,7 +134,24 @@
           "count": 1
         }
       ],
-      "total": 26
+      "total": 26,
+      "months": [
+        {
+          "month": "September",
+          "lines": [
+            "You trained 8 times, 3 more than August.",
+            "A new thing: the handstand practice."
+          ]
+        },
+        {
+          "month": "October",
+          "lines": [
+            "You trained 12 times, 4 more than September.",
+            "You cooked 4 times.",
+            "You finished 3 missions."
+          ]
+        }
+      ]
     }
   ]
 }

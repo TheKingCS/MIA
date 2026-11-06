@@ -172,6 +172,19 @@ def year_edition(items: list, year: int, today: date) -> dict:
             "end": end.isoformat(), "ready": ready, "so_far": not ready, **told, "name": name, "story": story}
 
 
+MONTH_LINES = 3
+
+
+def months_of(kept: dict, year: int) -> list[dict]:
+    """Pure logic. The year's closed months as kept by core/seasons.py (each against the month before), oldest
+    first, a few lines each: the yearly edition grows from them."""
+    out = []
+    for key in sorted(k for k in kept if len(k) == 7 and k.startswith(f"{year}-")):
+        lines = [l for l in kept[key].get("lines") or [] if not str(l).startswith("Nothing recorded")]
+        out.append({"month": f"{date.fromisoformat(key + '-01'):%B}", "lines": lines[:MONTH_LINES]})
+    return out
+
+
 def chronicle_page(context, today: Optional[date] = None) -> dict:
     """This week (or the one that just ended, on a Sunday), the weeks
     before it that have a story, and the yearly editions."""
@@ -190,8 +203,16 @@ def chronicle_page(context, today: Optional[date] = None) -> dict:
     years = [year_edition(items, today.year, today)]
     if any(d < f"{today.year}-01-01" for d, _t, _h in items):
         years.append(year_edition(items, today.year - 1, today))
+    from core import seasons
     from core.memory_vault import photos_between
 
+    try:
+        kept = seasons.kept(context)
+    except Exception:
+        log.exception("Chronicle: the kept seasons couldn't be read")
+        kept = {}
+    for edition in years:  # month by month, from the seasons kept as each month closed (step 17)
+        edition["months"] = months_of(kept, int(edition["id"]))
     for chapter in [this_week, *weeks, *years]:
         chapter["photos"] = photos_between(context, chapter["start"], chapter["end"])  # the memory vault's
     return {"available": True, "as_of": today.isoformat(), "this_week": this_week, "weeks": weeks, "years": years}

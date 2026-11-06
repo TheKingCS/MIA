@@ -19,6 +19,9 @@
       el("div", { class: "chron-story" }, c.story.map((line) => el("p", {}, line))),
       c.highlights.length ? el("div", { class: "chron-high" }, el("span", { class: "chron-label" }, "Highlights"),
         el("ul", {}, c.highlights.map((h) => el("li", {}, h)))) : null,
+      // The yearly edition, month by month (core/seasons.py keeps each month as it closes).
+      c.months && c.months.length ? el("div", { class: "chron-high" }, el("span", { class: "chron-label" }, "Month by month"),
+        ...c.months.map((m) => el("div", {}, el("h3", {}, m.month), el("ul", {}, m.lines.map((l) => el("li", {}, l)))))) : null,
       // The memory vault's photos from these days (core/memory_vault.photos_between).
       c.photos && c.photos.count ? el("a", { class: "chron-photos", href: "vault.html#photos" },
         (() => {

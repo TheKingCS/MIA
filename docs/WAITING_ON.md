@@ -107,13 +107,12 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       never alone.
 - [ ] `vault.coverage` is built from the vault's own list (photos over a week old still only on the phone,
       2026-11-06); photo-transfer failures, which only the phone sees, could sharpen it in a phone build.
-- [ ] Loop coverage (225 of 254): 6 to do, each with its why in `work/loop_coverage.json` (Plaid's two after
-      Zac's work; business-use shares; Classroom and textbooks; online reminders).
+- [ ] Loop coverage (230 of 258): 3 to do, all after Zac's Plaid work (Plaid's two stores, business-use shares).
 - [ ] Step 4's last leftover: Plaid re-categorizations (after Zac's Plaid work). Done: OCR field corrections
       (`inbox.reading`), the Loop's predictions (`loop.prediction`), and 2026-11-06 the desktop's Qt edits of recipes,
       meals, upkeep tasks and people (`corrections.screen_edit`); other Qt screens can join it the same way.
-- [ ] Step 8: more cross-domain plans (the benchmark's G questions); calibration against outcomes.
-- [ ] The Chronicle's yearly edition, from the kept seasons (step 17).
+- [ ] Step 8: the routing audit answers 90 of 112 benchmark questions by a plan (2026-11-06); the 10 left to the
+      model are research, how-to and one reframing question. Next: calibration against more outcomes than dates.
 - [ ] The Chronicles' panels: characters that stay the same across panels (T-0036). The bigger model is in
       (2026-11-06): SDXL-Turbo, 0.7 s a panel; samples in `C:\Users\zacrh\DevTools\imagegen\out\sdxl_*.png`.
       **Zac:** to give a series one look, save the picture you like as
