@@ -135,6 +135,9 @@ for _module in (dev_store_module, benchmarks_module, council_module, council_voi
                 night_school_module):
     _module.DEV_DATA = _TEST_DEV_DIR
 council_voices_module.SAMPLES = _TEST_DEV_DIR / "voices"
+import core.phone_link as phone_link_module  # noqa: E402
+
+phone_link_module.FILE = _TEST_DEV_DIR / "phone_link.json"  # a test's linked phone never writes the real one
 loops_module._has_repo = lambda: False
 
 

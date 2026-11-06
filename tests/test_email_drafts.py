@@ -155,7 +155,7 @@ def test_the_phone_gets_the_draft_and_its_send_button(home, monkeypatch):
 
     real_turn = app_module.run_assistant_turn
 
-    def drafting_turn(view, conversation, text):
+    def drafting_turn(view, conversation, text, surface=""):
         _action_draft_email(view, {"to": "pat@example.com", "subject": "Hi", "body": "Hello Pat"})
         return real_turn(view, conversation, text)
 

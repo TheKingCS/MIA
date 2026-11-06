@@ -333,7 +333,12 @@ def create_app(context: AppContext) -> FastAPI:
         import hashlib
 
         found = (context.config.get("home_link.devices", {}) or {}).get(hashlib.sha256(key.encode()).hexdigest())
-        return found.get("profile_id") if isinstance(found, dict) else None
+        profile_id = found.get("profile_id") if isinstance(found, dict) else None
+        if profile_id:
+            from core.phone_link import seen
+
+            seen(profile_id)  # for the phone.link loop: when a linked phone last reached this PC
+        return profile_id
 
     def _remember(profile_id: Optional[str]) -> None:
         """The phone stays signed in between starts until the person logs out."""
@@ -616,7 +621,8 @@ def create_app(context: AppContext) -> FastAPI:
             if manager is not None and manager.get_conversation(conversation.conversation_id) is conversation:
                 manager.save()
 
-    def respond(profile_id: str, transcript: str, background: BackgroundTasks, hearing: Optional[float] = None) -> dict:
+    def respond(profile_id: str, transcript: str, background: BackgroundTasks, hearing: Optional[float] = None,
+                surface: str = "phone") -> dict:
         # The phone user's own view: their conversations, memories, journal
         # and reasons, whoever is signed in at the desktop (core/personal_data.py).
         view = view_for(context, profile_id)
@@ -625,7 +631,7 @@ def create_app(context: AppContext) -> FastAPI:
         drafts = getattr(view, "email_drafts", None)
         with app.state.turn_lock:
             before = drafts.latest() if drafts is not None else None
-            turn: AssistantTurn = run_assistant_turn(view, conversation, transcript)
+            turn: AssistantTurn = run_assistant_turn(view, conversation, transcript, surface)
             after_phone_turn(conversation, transcript, view)
             # An email MIA drafted this turn, shown with Send / Copy / mail app
             # (core/email_drafts.py); sent only when the phone's Send is pressed.
@@ -1022,7 +1028,8 @@ def create_app(context: AppContext) -> FastAPI:
             with app.state.turn_lock:
                 return hear(view, words) or welcome.hear(view, words)
 
-        return {**handle(view, profile_id, text, lambda words: respond(profile_id, words, background), sync), "where": "here"}
+        return {**handle(view, profile_id, text, lambda words: respond(profile_id, words, background, surface="glasses"),
+                         sync), "where": "here"}
 
     @app.get("/api/glasses/{app_id}/{item_id}")
     def glasses_item(app_id: str, item_id: str, mission: str = "",

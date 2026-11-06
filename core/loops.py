@@ -390,6 +390,23 @@ def _sight_failed(context) -> Optional[Reading]:
     return Reading(round(missed / len(found), 2), len(found), f"{missed} of {len(found)} looks unanswered, {slow} over 30 s")
 
 
+def _glasses_voice(context) -> Optional[Reading]:
+    mine = [t for t in _turns(context, 7) if t.get("surface") == "glasses"]
+    if not mine:
+        return None
+    bad = sum(1 for t in mine if not t.get("model_answered", True) or (t.get("seconds") or 0) > 25)
+    return Reading(round(bad / len(mine), 2), len(mine), f"{bad} of {len(mine)} glasses turns unanswered or over 25 s")
+
+
+def _phone_link(context) -> Optional[Reading]:
+    from core import phone_link
+    from core.person_settings import person_id
+
+    pid = person_id(context)
+    hours = phone_link.hours_since(pid) if pid else None
+    return Reading(hours, 1, f"{hours:g} hours since their phone last reached this PC") if hours is not None else None
+
+
 def _unused_creations(context) -> Optional[Reading]:
     store = getattr(context, "creations", None)
     if store is None:
@@ -641,6 +658,10 @@ LOOPS: tuple[Loop, ...] = (
          _news_misleading, floor=0.05, min_n=20, files=("core/good_news.py",), covers=("check:good_news",)),
     Loop("sight.failed", "answers", "photos she couldn't answer about, in 30 days", "person", _sight_failed,
          floor=0.1, min_n=5, files=("core/sight.py",), covers=("flow:sight",)),
+    Loop("glasses.voice", "devices", "glasses turns unanswered or slow, in 7 days", "person", _glasses_voice,
+         floor=0.15, min_n=10, files=("core/glasses_voice.py",), covers=("flow:glasses",)),
+    Loop("phone.link", "devices", "hours since their phone last reached this PC", "person", _phone_link,
+         acts="watch", covers=("flow:phone",)),
     Loop("gate.saturation", "proactivity", "days the daily limit of unprompted messages was hit, in 7", "person",
          _gate_saturation, floor=2, covers=("flow:gate",)),
     Loop("gate.unwelcome", "proactivity", "kinds of message on a break for being dismissed", "person", _gate_unwelcome,

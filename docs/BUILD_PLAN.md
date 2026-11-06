@@ -62,9 +62,9 @@ first. Each is a step below.
 3. 🔨 **The remaining usage loops**: built 2026-11-06: `answers.numbers` (a number she hadn't looked up, so the
    plain facts were shown), `memory.quality` (memories edited or deleted within 14 days), `gate.saturation`,
    `gate.unwelcome`, `creations.held`, `data.recovered`, and T-0047's six (`actions.*`, `email.*`, `gate.dismissed`,
-   `gate.expired`). Still to do, each waiting on a record MIA doesn't keep yet: `phone.link` and the phone's sync
-   (when the phone last reached the PC), `glasses.voice` (turns aren't traced by surface), `vault.coverage`
-   (transfer failures), `creations.maker` (the maker's retries).
+   `gate.expired`), and (2026-11-07) `glasses.voice` (turns now traced by device) and `phone.link` (when a linked
+   phone last reached the PC, kept by `core/phone_link.py`). Still to do: `vault.coverage` (transfer failures),
+   `creations.maker` (the maker's retries).
 4. 🔨 **Corrections in every area** (`core/corrections.py`, built 2026-11-06): MIA's changes (actions she proposed
    that were approved, her Assistant tools' changes) are watched for 3 days; the person undoing one, or editing or
    deleting something of the same kind (the same record when both name its id), corrects her once;

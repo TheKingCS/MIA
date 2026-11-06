@@ -75,8 +75,8 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 - [ ] The phone build bundles Chaquopy's `cryptography` 42.0.8, which the dependency audit doesn't cover yet.
 - [ ] Flaky, seen once each: `tests/test_reference_library_manager.py::test_search_all_packs_returns_snippet_from_matching_pack`,
       and one native Qt crash mid-suite.
-- [ ] Records some loops wait on: when the phone last reached the PC (`phone.link`), turns traced by surface
-      (`glasses.voice`), photo-transfer failures (`vault.coverage`), the screen maker's retries (`creations.maker`).
+- [ ] Records some loops wait on: photo-transfer failures (`vault.coverage`), the screen maker's retries
+      (`creations.maker`). (`phone.link` and `glasses.voice` are built, 2026-11-07.)
 - [ ] Step 4 leftovers: edits on the desktop's Qt screens, Plaid re-categorizations (after Zac's Plaid work), OCR
       field corrections, the Loop's predictions.
 - [ ] Step 8: more cross-domain plans (the benchmark's G questions); calibration against outcomes.

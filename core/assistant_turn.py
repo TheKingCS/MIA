@@ -102,13 +102,14 @@ def _personal(conversation) -> bool:
     return getattr(conversation, "mode", None) in PERSONAL_MODES or bool(getattr(conversation, "journal", False))
 
 
-def run_assistant_turn(context: AppContext, conversation: Conversation, prompt: str) -> AssistantTurn:
-    """One turn, traced (core/turn_trace.py): how it was answered, and how long it took."""
+def run_assistant_turn(context: AppContext, conversation: Conversation, prompt: str, surface: str = "") -> AssistantTurn:
+    """One turn, traced (core/turn_trace.py): how it was answered, how long it took, and on which device
+    ("glasses", "phone"; "" for the PC), for the glasses.voice loop."""
     from core.turn_trace import record
 
     started = time.monotonic()
     turn = _turn(context, conversation, prompt)
-    record(context, conversation, prompt, turn, time.monotonic() - started)
+    record(context, conversation, prompt, turn, time.monotonic() - started, surface)
     return turn
 
 

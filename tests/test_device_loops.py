@@ -1,0 +1,45 @@
+"""Step 3's leftovers: turns traced by device, so glasses.voice can watch the glasses' turns; and a durable record of
+when a linked phone last reached the PC (core/phone_link.py), for phone.link."""
+
+from datetime import datetime, timedelta, timezone
+from types import SimpleNamespace
+
+from core import loops, phone_link
+
+BY_ID = {l.id: l for l in loops.LOOPS}
+
+
+def test_a_turn_is_traced_with_its_device(monkeypatch):
+    import core.assistant_turn as at
+    import core.turn_trace as tt
+
+    seen = []
+    monkeypatch.setattr(at, "_turn", lambda context, conversation, prompt: SimpleNamespace(replies=["hi"]))
+    monkeypatch.setattr(tt, "record", lambda context, conversation, prompt, turn, seconds, surface="": seen.append(surface))
+    at.run_assistant_turn(None, None, "hello", "glasses")
+    at.run_assistant_turn(None, None, "hello")
+    assert seen == ["glasses", ""]
+
+
+def test_the_glasses_voice_loop():
+    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    turns = ([{"at": now, "surface": "glasses", "seconds": 4, "model_answered": True}] * 8
+             + [{"at": now, "surface": "glasses", "seconds": 40, "model_answered": True},
+                {"at": now, "surface": "glasses", "seconds": 3, "model_answered": False}]
+             + [{"at": now, "surface": "phone", "seconds": 90, "model_answered": False}] * 5)
+    person = SimpleNamespace(traces=SimpleNamespace(recent=lambda n: turns))
+    reading = BY_ID["glasses.voice"].measure(person)
+    assert (reading.value, reading.n) == (0.2, 10) and loops.judge(BY_ID["glasses.voice"], reading, [])["state"] == "below"
+
+
+def test_when_the_phone_last_reached_the_pc(tmp_path, monkeypatch):
+    path = tmp_path / "phone_link.json"
+    monkeypatch.setattr(phone_link, "_written", {})
+    start = datetime(2026, 11, 6, 12, tzinfo=timezone.utc).timestamp()
+    phone_link.seen("p1", path, now=start)
+    phone_link.seen("p1", path, now=start + 60)  # a minute later: not written again
+    assert phone_link.last(path)["p1"] == "2026-11-06T12:00:00+00:00"
+    phone_link.seen("p1", path, now=start + 600)
+    assert phone_link.last(path)["p1"] == "2026-11-06T12:10:00+00:00"
+    later = datetime(2026, 11, 7, 0, 10, tzinfo=timezone.utc)
+    assert phone_link.hours_since("p1", path, later) == 12.0 and phone_link.hours_since("p2", path, later) is None

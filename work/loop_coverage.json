@@ -331,14 +331,6 @@
   "check:warranty": {
    "status": "todo"
   },
-  "flow:glasses": {
-   "status": "todo",
-   "why": "teacher: It needs a loop, but nothing is kept to measure yet. core/glasses_feed.py keeps voice turns in an in-memory deque (_voice, maxlen 50), and glasses_voice.handle() doesn't write what it heard or whether"
-  },
-  "flow:phone": {
-   "status": "todo",
-   "why": "T-0047: phone.sync_stale needs a durable record of when the phone last reached the PC (server/app.py keeps last_seen in memory only)"
-  },
   "flow:search": {
    "status": "todo",
    "why": "teacher: It needs a loop, but nothing is recorded. core/search_manager.py SearchManager.search() keeps no queries, no zero-result searches and no choices, and a provider that raises is only logged. A loop such"
