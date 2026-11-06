@@ -53,7 +53,7 @@ Screens: `docs/design_handoff/screens/<name>.png` (placeholder data).
 | People | People: birthdays, gift ideas, notes | `relationships__01_people` | ✅ `/api/people` + `person.*`, `person.caught_up` | ✅ People (who they are, birthday and age they're turning, favorites, gift ideas, notes, email, when you last caught up, Caught Up Today feeds Charisma), Birthdays (the next 60 days with gift ideas); add, edit, delete | |
 | Pets | Pets: vet history | `relationships__02_pets` | ✅ `/api/people` + `pet.*` | ✅ Pets (species, birthday or adoption day, vet and medical notes, notes; birthdays in the Birthdays tab); add, edit, delete | |
 | Notes | Dated, tagged notes and journal | `notes` | ✅ `/api/journal` + journal actions | ✅ Journal: entries, search, tags, write, read, edit, delete; Talk It Out (private entries stay encrypted) | |
-| Classroom | Subjects, courses, lessons, textbooks and study | `classroom` | |  | |
+| Classroom | Subjects, courses, lessons, textbooks and study | `classroom` | ✅ `/api/classroom` + subject, course and lesson actions | ✅ subjects with how far along, courses, lessons ticked done (skill XP once) or not, add and take out, all undoable (2026-11-06) (not yet: lesson notes and skill rewards, textbooks and the tutor) | |
 | Expeditions | Trips: routes, gear, weather, distance | `expeditions` | ✅ `/api/expeditions` + expedition actions | ✅ now / coming up / past, trips, start / finish, packing list, photos, videos and files (not yet: route, splits, weather) | |
 | Memories | Trip recaps, stats, photos | `memories` | |  | |
 | Maps: Waypoints | Waypoints | `maps__01_waypoints` | |  | |

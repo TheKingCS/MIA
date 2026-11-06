@@ -172,6 +172,13 @@
       "page": "journal.html"
     },
     {
+      "id": "classroom",
+      "name": "Classroom",
+      "icon": "🎓",
+      "tagline": "Keep learning.",
+      "page": "classroom.html"
+    },
+    {
       "id": "inbox",
       "name": "Inbox",
       "icon": "📥",

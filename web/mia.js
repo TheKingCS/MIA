@@ -221,6 +221,14 @@
     council: () => demo ? Promise.resolve({ messages: [], members: [] }) : call("GET", "/api/council"),
     councilSay: (body) => demo ? Promise.resolve({}) : call("POST", "/api/council", body),
     // The Operating Journal, games played and Good News Radio (DEC-0097, 0098, 0096); changes go through actions.
+    classroom: () => demo ? Promise.resolve({ available: true, subjects: [
+      { id: "s1", name: "Welding", category: "Trade skills", done: 2, total: 4, courses: [
+        { id: "c1", name: "MIG basics", done: 2, total: 3, lessons: [
+          { id: "l1", name: "Safety and setup", done: true, done_at: "2026-10-20" },
+          { id: "l2", name: "Bead on plate", done: true, done_at: "2026-10-27" },
+          { id: "l3", name: "Butt joints", done: false, done_at: "" }] },
+        { id: "c2", name: "Stick welding", done: 0, total: 1, lessons: [{ id: "l4", name: "Striking an arc", done: false, done_at: "" }] }] }] })
+      : call("GET", "/api/classroom"),
     knowledge: (q = "") => demo ? Promise.resolve({ available: true, root: "reference_library", packs: [
       { id: "wikipedia_en_medicine", title: "Wikipedia: Medicine", description: "Medical articles, offline", articles: 52000 }],
       hits: q ? [{ pack_id: "wikipedia_en_medicine", pack_title: "Wikipedia: Medicine", path: "A/Hypothermia", title: "Hypothermia" }] : [] })

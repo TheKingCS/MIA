@@ -134,7 +134,7 @@ APPS: tuple[App, ...] = (
     App("notes", "Journal", "📓", "Write it down.", "journal.html",
         "Dated, searchable, taggable journal entries.", LIFE, ("notes", "journal", "private_journal"),
         "Make a note: call the plumber Friday."),
-    App("classroom", "Classroom", "🎓", "Keep learning.", None,
+    App("classroom", "Classroom", "🎓", "Keep learning.", "classroom.html",
         "Your own subjects, courses, and lessons.", LIFE, ("classroom", "textbooks"), "Quiz me on chapter 2."),
     App("inbox", "Inbox", "📥", "Paperwork, handled.", "inbox.html",
         "Receipts, manuals and documents MIA files for you.", MONEY, ("inbox", "email"),

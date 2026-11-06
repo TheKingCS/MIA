@@ -103,7 +103,7 @@
 
 | Loop | Watches | Scope | Floor | When it slips | Covers |
 |---|---|---|---|---|---|
-| `classroom.stalled` | courses under way that no lesson moved in 30 days | person | trend | shown, never acted on | `store:classroom` |
+| `classroom.stalled` | courses under way that no lesson moved in 30 days | person | trend | shown, never acted on | `store:classroom`, `action:subject`, `action:course`, `action:lesson` |
 | `journal.pace` | how often they operate the way they said they mean to | person | trend | shown, never acted on | `store:operating_journal`, `action:operating`, `check:operating_journal` |
 | `missions.recurring` | daily recurring missions not done, in 30 days | person | ≤ 0.5 (from 10) | offers it to them | `check:recurring_mission` |
 | `recreation.load` | this week's play load against the four weeks before (past 1.5: easing off helps) | person | ≤ 1.5 | shown, never acted on | `store:recreation`, `action:play` |

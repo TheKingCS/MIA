@@ -844,6 +844,13 @@ def create_app(context: AppContext) -> FastAPI:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "That article isn't in the library.")
         return found
 
+    @app.get("/api/classroom")
+    def classroom_screen(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.classroom_manager import screen  # the person's own study; changes go through actions
+
+        with app.state.turn_lock:
+            return screen(view_for(context, profile_id))
+
     @app.get("/api/life-notes")
     def life_notes_screen(profile_id: str = Depends(require_profile_id)) -> dict:
         from core.life_notes import screen  # promises, decisions, ideas, goals set aside (DEC-0054)
