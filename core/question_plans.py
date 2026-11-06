@@ -38,6 +38,7 @@ log = get_logger(__name__)
 
 FACT, CALCULATION, ESTIMATE, MISSING = "fact", "calculation", "estimate", "missing"
 MATCH_AT = 0.66  # cosine similarity to the nearest example (measured: small talk stayed below)
+EXAMPLE_AT = 0.92  # this close to a plan's own example, a "how can I...?" question is that plan's, not a how-to
 
 
 @dataclass
@@ -375,6 +376,49 @@ def _operating(context, sheet, prompt, today):
     _look(context, sheet, "get_loop", "the Loop (your routine)")
 
 
+def _projects(context, sheet, prompt, today):
+    """Cross-domain (step 8; G7, G11): the projects, their open tasks, what builds cost, what the business makes."""
+    _look(context, sheet, "list_projects", "Projects")
+    _look(context, sheet, "list_tasks", "Projects")
+    _look(context, sheet, "get_build_costs", "the Workshop")
+    _look(context, sheet, "get_ledger_summary", "the business")
+    _look(context, sheet, "show_my_why", "your goals")
+
+
+def _habits(context, sheet, prompt, today):
+    """Cross-domain (step 8; D12, D13): how they mean to operate against the records, and the rhythms the Loop
+    has learned."""
+    _operating(context, sheet, prompt, today)
+    _look(context, sheet, "get_workout_summary", "Workout")
+    _look(context, sheet, "get_life_events", "your history", period="month")
+
+
+def _priorities(context, sheet, prompt, today):
+    """Cross-domain (step 8; G10, G12, G15): money, freedom, projects, how they mean to operate, and the year."""
+    from core import seasons
+
+    _money_month(context, sheet, prompt, today)
+    _look(context, sheet, "get_freedom_progress", "Freedom")
+    _look(context, sheet, "list_projects", "Projects")
+    _operating(context, sheet, prompt, today)
+    _label, lines = seasons.season(context, "year", today)
+    for line in lines[:4]:
+        sheet.add(MISSING if line.startswith("Nothing recorded") else CALCULATION, line, "your year so far")
+
+
+def _resources(context, sheet, prompt, today):
+    """Cross-domain (step 8; G9, G13, C20): what they make and sell, their equipment and land, their skills and
+    stock, for ideas from their own records."""
+    _look(context, sheet, "list_products", "the Workshop")
+    _look(context, sheet, "get_ledger_summary", "the business")
+    _look(context, sheet, "list_maintenance_assets", "Maintenance (equipment)")
+    _look(context, sheet, "list_properties", "Real Estate (land)")
+    _look(context, sheet, "list_goods_on_hand", "the Homestead")
+    _progress(context, sheet, prompt, today)
+    sheet.add(ESTIMATE, "Ideas from these records are starting points, not market research: what sells where they "
+                        "live isn't on the sheet.", "general guidance")
+
+
 def _open_loops(context, sheet, prompt, today):
     _look(context, sheet, "list_tasks", "Projects")
     _look(context, sheet, "list_projects", "Projects")
@@ -504,6 +548,26 @@ PLANS: tuple[Plan, ...] = (
           "Am I keeping my rules?", "How does my week compare to how I want to operate?",
           "Am I operating the way I want to?", "What's my operating journal say?"),
          r"\boperating\b|\bmy rules\b|\bhow i (said i )?want to (live|operate)\b", _operating),
+    Plan("projects", "Your projects",
+         ("Which of my current projects deserves the most attention?", "Which of my projects could support another "
+          "project financially?", "How are my projects going?", "What should I build next?",
+          "Which project should I work on?"),
+         r"\bprojects?\b", _projects),
+    Plan("habits", "Your habits",
+         ("What habits are helping me progress?", "What habits are interfering with my goals?", "What are my habits?",
+          "What routines am I keeping?", "Which habits should I change?"),
+         r"\bhabits?\b|\broutines?\b", _habits),
+    Plan("priorities", "Where your time and money go",
+         ("How should I distribute my available time and money between my competing priorities?",
+          "What should I stop doing so I can make more progress?",
+          "If you were helping me plan the next year of my life, what would you recommend?",
+          "What should I prioritize this year?", "Where should my time and money go?"),
+         r"\b(time and money|competing priorities|stop doing|next year|this year'?s plan)\b", _priorities),
+    Plan("resources", "What you have to work with",
+         ("How can I use my available resources to generate more income?",
+          "What opportunities exist that connect my current skills, equipment, land, and business goals?",
+          "What business opportunities am I overlooking?", "How can I make more money with what I have?"),
+         r"\b(resources|opportunit\w+|make more money|more income)\b", _resources),
     Plan("open loops", "What's unfinished",
          ("What commitments have I made that I haven't completed?", "What projects have I started but not completed?",
           "What have I left unfinished?", "What's still open?"),
@@ -576,7 +640,7 @@ CHANGE_VERBS = frozenset((
     "finish", "complete", "save", "track", "note", "write", "buy", "sell", "file", "tag", "link", "unlink",
 ))
 PLAN_BY_NAME = {p.name: p for p in PLANS}
-CROSS_DOMAIN = ("afford", "slipped")  # build plan step 8: plans over several apps
+CROSS_DOMAIN = ("afford", "slipped", "projects", "habits", "priorities", "resources")  # build plan step 8: plans over several apps
 
 
 # ---------------------------------------------------------------- choosing a plan
@@ -599,14 +663,19 @@ def match_scored(context, prompt: str) -> Optional[tuple[Plan, Optional[float]]]
 
     said = (prompt or "").strip()
     first = re.sub(r"^(please|hey mia|mia|ok|okay)[, ]+", "", said.lower()).split(" ", 1)[0].strip(",.!?")
-    if not said or first in CHANGE_VERBS or looks_like_how_to_question(said) or looks_like_teaching_request(said):
+    if not said or first in CHANGE_VERBS:
         return None
+    how_to = looks_like_how_to_question(said) or looks_like_teaching_request(said)
     from core.meaning import nearest
 
     found = nearest(context, said, [(p.name, e) for p in PLANS for e in p.examples] + [("-", e) for e in NOT_A_PLAN])
     if found is not None:
         name, score = found
+        if how_to and score < EXAMPLE_AT:  # "how do I add a bill?" is the help docs'; "how can I quit faster?" is a plan's
+            return None
         return (PLAN_BY_NAME[name], score) if name in PLAN_BY_NAME and score >= MATCH_AT else None
+    if how_to:
+        return None
     # No embedding model here (the phone): the plan's own words, when exactly one plan's match.
     if not looks_like_question(said):
         return None

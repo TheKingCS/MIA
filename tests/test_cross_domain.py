@@ -90,3 +90,19 @@ def test_calibration_sure_has_to_be_earned(tmp_path):
     assert calibration.rated(person) == {"sure": {"up": 3, "down": 3}, "likely": {"up": 4, "down": 0}}
     reading = BY_ID["answers.calibration"].measure(person)
     assert reading.value == -0.5 and loops.judge(BY_ID["answers.calibration"], reading, [])["state"] == "below"
+
+
+def test_a_how_can_i_question_that_is_a_plans_own_example(life, monkeypatch):
+    """G2 went to the help docs: "How can I...?" looked like a how-to. An exact example is the plan's."""
+    monkeypatch.setattr(meaning, "nearest", lambda c, text, examples: ("freedom", 1.0))
+    assert qp.match(life, "How can I get out of my current job faster?").name == "freedom"
+    monkeypatch.setattr(meaning, "nearest", lambda c, text, examples: ("debts", 0.8))
+    assert qp.match(life, "How do I add a bill?") is None  # still the help docs'
+
+
+def test_the_new_cross_domain_plans_gather(life):
+    for name in ("projects", "habits", "priorities", "resources"):
+        sheet = qp.gather(life, qp.PLAN_BY_NAME[name], "", TODAY)
+        assert sheet.facts, name
+    resources = qp.gather(life, qp.PLAN_BY_NAME["resources"], "", TODAY)
+    assert any("not market research" in f.text for f in resources.facts)
