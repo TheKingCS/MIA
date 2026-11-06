@@ -30,7 +30,9 @@ skipped).
    fails now and passes when the work is done**. It marks an exercise *real* when it's progress on the
    plan worth keeping.
 5. **She does them.** Her own coder (`qwen3-coder:30b`, no tools, find-and-replace edits; a new file
-   is written whole) works in the lab.
+   is written whole) works in the lab. If her first try doesn't pass the exercise's own test, she gets
+   one more with what pytest said, as anyone would read the error and fix it (2026-11-06); a passage
+   whose spacing she got wrong is still found when it's the only one like it.
    - **Code grades her**, not the teacher. First the exercise's test must fail before she begins; one
      that already passes is thrown out as the teacher's mistake. Then it must pass after her change,
      with nothing new failing in the full suite.
