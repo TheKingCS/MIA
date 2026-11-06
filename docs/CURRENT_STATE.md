@@ -12,7 +12,7 @@ photos still only on the phone (`vault.coverage`), offers to keep a note turned 
 (T-0018)**: `core/life_notes.py` spots a promise, a decision, an idea or a goal set aside in what someone says,
 offers to keep it after her reply, keeps it only on "keep it", mentions a promise with a day the day before
 and on it, and marks it done or forgets it by voice. Seven new question plans (recall, person, patterns,
-discussed, returns, time, held back) take the routing audit to 84 of 112 benchmark questions answered by a plan,
+discussed, returns, time, held back, running costs) take the routing audit to 88 of 112 answered by a plan,
 from 70, and the benchmark run with the local model grades 85 of 112 answers clean, from 60 (none flagged,
 none worse); a Kept screen (`web/kept.html`) shows the notes. The Chronicles draw with SDXL-Turbo now (0.7 s a
 panel, much better than SD-Turbo), and a series' look can hold across panels from a reference picture Zac picks.

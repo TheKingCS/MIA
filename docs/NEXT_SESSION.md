@@ -22,8 +22,8 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   08:55: one lesson passed (phone_link, kept in the lab for Zac), two failed.
 - **Phase B:** step 7 (the module contract) waits on the rest of Zac's Interconnection Architecture doc. Step 8
   (cross-domain) built: composed plans, `afford`, `slipped`, `projects`, `habits`, `priorities`, `resources`
-  and, 2026-11-06, `recall`, `person`, `patterns`, `discussed`, `returns`, `time` and `held back` (the routing
-  audit: 84 of 112 benchmark questions answered by a plan, 11 by tools, 16 by the model alone: research, how-to
+  and, 2026-11-06, `recall`, `person`, `patterns`, `discussed`, `returns`, `time`, `held back` and `running costs` (the routing
+  audit: 88 of 112 benchmark questions answered by a plan, 11 by tools, 12 by the model alone: research, how-to
   and open-ended coaching, where the model belongs; the benchmark with the model: 85 of 112 clean, from 60),
   sureness in every plan answer, calibration by ratings and by projected dates checked when they come.
 - **Phase C (done):** capability gaps (`core/capability_gaps.py`), seasons of memory (`core/seasons.py`), the
