@@ -122,6 +122,7 @@ skill_manager_module._SKILL_PROGRESS_FILE = _TEST_RUNTIME_DIR / "skill_progress.
 # default to a temp dir, and the device's loops act as on a computer
 # without the repo (they measure nothing, open nothing) unless a test says
 # otherwise (tests/test_loops.py patches `_has_repo`).
+import core.benchmarks as benchmarks_module  # noqa: E402
 import core.council as council_module  # noqa: E402
 import core.council_voices as council_voices_module  # noqa: E402
 import core.dev_store as dev_store_module  # noqa: E402
@@ -130,7 +131,7 @@ import core.loops as loops_module  # noqa: E402
 import core.night_school as night_school_module  # noqa: E402
 
 _TEST_DEV_DIR = Path(tempfile.mkdtemp(prefix="mia_test_dev_"))
-for _module in (dev_store_module, council_module, council_voices_module, dev_usage_module, loops_module,
+for _module in (dev_store_module, benchmarks_module, council_module, council_voices_module, dev_usage_module, loops_module,
                 night_school_module):
     _module.DEV_DATA = _TEST_DEV_DIR
 council_voices_module.SAMPLES = _TEST_DEV_DIR / "voices"

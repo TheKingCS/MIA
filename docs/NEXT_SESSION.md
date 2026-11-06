@@ -26,7 +26,9 @@ only). Most of step 3 is built too (`answers.numbers`, `memory.quality`, `gate.s
 Tests no longer run the PC's loops for real (they had: readings in data/dev, a task in work/tasks);
 the guard now watches work/tasks and the history too. Step 4's core is built: corrections in every area
 (`core/corrections.py`, one loop per area). Left in it: desktop Qt edits, Plaid re-categorizations (after
-Zac's Plaid work lands), OCR field corrections, the Loop's predictions. Next: step 5, the weekly benchmarks.
+Zac's Plaid work lands), OCR field corrections, the Loop's predictions. Step 5 is built: Night School runs
+the benchmark, the corpus and the routing audit weekly (`python -m tools.weekly_bench`), graded by code
+against the week before, grades only. Next: step 6, loops feed missions and her weekly self-report.
 A flaky test seen once: `tests/test_reference_library_manager.py::test_search_all_packs_returns_snippet_from_matching_pack`.
 
 **Glasses navigation: `docs/GLASSES_NAVIGATION_PLAN.md` is a draft waiting on

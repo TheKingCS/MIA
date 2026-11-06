@@ -50,9 +50,9 @@ Scope: **device** (the PC and the development platform) or **person** (one perso
 | `answers.slow` | Too slow | share of turns over 25 s | ≤ 10% | task | built |
 | `answers.model_down` | The model not answering | `model_down` + `garbled` | 0 a week | task | built |
 | `answers.undo_soon` | Did the wrong thing | `undo_soon` per action | trend | task, by action kind | built |
-| `answers.benchmark` | Zac's 112-question benchmark | score (`tools/intelligence_check.py`) | no drop | task per question that fell | step 5 |
-| `answers.corpus` | Personality and tone | golden conversations (`tools/conversation_check.py`) | no drop | task | step 5 |
-| `answers.routing` | Questions reaching the right plan | `tools/bench_audit.py` coverage | no drop | task | step 5 |
+| `answers.benchmark` | Zac's 112-question benchmark | score (`tools/intelligence_check.py`) | no drop | task per question that fell | built |
+| `answers.corpus` | Personality and tone | golden conversations (`tools/conversation_check.py`) | no drop | task | built |
+| `answers.routing` | Questions reaching the right plan | `tools/bench_audit.py` coverage | no drop | task | built |
 | `answers.numbers` | A number she didn't look up | answers replaced by the fact sheet (`core/question_plans.answer`) | 0 | task | built |
 | `memory.quality` | Memories she keeps | memories edited or deleted within 14 days of being kept | ≤ 15% | lesson for the extractor | built |
 | `phone.model` | The phone's model | golden set (`tools/model_check.py`) | no drop | task | step 5 |

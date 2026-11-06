@@ -63,7 +63,7 @@ STOP_FILE = ROOT / "work" / "STOP"
 PLAN = ROOT / "docs" / "BUILD_PLAN.md"
 WHO = "MIA (night school)"
 DEFAULTS = {"enabled": True, "start": "01:30", "hours": 4.0, "mode": "plan", "lessons": 3, "shadow": 1,
-            "loop_families": 1, "teachers": ["claude-code", "codex"], "teacher_calls": 8}
+            "loop_families": 1, "teachers": ["claude-code", "codex"], "teacher_calls": 8, "benchmarks": True}
 MODES = ("plan", "self")
 LESSON_MINUTES = 45  # a lesson isn't started with less of the window left than this
 TEST_NAME = re.compile(r"^tests/test_night_[a-z0-9_]{3,60}\.py$")
@@ -586,6 +586,17 @@ def night(now: Optional[datetime] = None, *, ask: Optional[Callable[[str, str], 
             record["notes"].append(f"loops for {family[0]['id']} and its family weren't drafted: {str(problem)[:120]}")
         calls += 1
 
+    # 7a. The weekly benchmarks (core/benchmarks.py): graded by code, on this PC only
+    from core import benchmarks
+
+    if benchmarks.due() and not STOP_FILE.exists() and left() > 60 and cfg.get("benchmarks", True):
+        record["benchmarks"] = benchmarks.run_now(int(min(benchmarks.RUN_MINUTES, left() - 10)))
+        bench_loops = tuple(l for l in loops.LOOPS if l.id.startswith("answers.") and l.scope == "device")
+        try:
+            loops.run(None, "device", loops=bench_loops, force=True, heavy=True, tasks_dir=tasks_dir, log=log)
+        except Exception as problem:
+            record["notes"].append(f"the benchmark loops couldn't run: {str(problem)[:120]}")
+
     # 8. The report
     record["teacher_calls"] = calls
     record["ended"] = clock().isoformat(timespec="seconds")
@@ -680,6 +691,8 @@ def describe(record: dict) -> str:
             lines.append(f"      Lesson: {l['note']}")
     for s in record.get("shadow", []):
         lines.append(f"  Real work, {s['task']}: {s['outcome']} ({s.get('summary', '')[:100]})")
+    if record.get("benchmarks"):
+        lines.append(f"  Benchmarks: {record['benchmarks'][-200:]}")
     for f in record.get("loops", []):
         lines.append(f"  Loops drafted for {', '.join(f['processes'])}" + (f": {f['task']}" if f.get("task") else ""))
     for n in record.get("notes", []):

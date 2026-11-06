@@ -280,6 +280,29 @@ def _corrections(area: str = ""):
     return measure
 
 
+def _bench(kind: str, what: str):
+    def measure(_context) -> Optional[Reading]:
+        if not _has_repo():
+            return None
+        from core import benchmarks
+
+        found = benchmarks.latest(kind)
+        if found is None or not found["rows"]:
+            return None
+        rows = found["rows"]
+        if what == "falls":
+            fell = found["falls"]
+            return Reading(len(fell), len(rows), f"{len(fell)} of {len(rows)} fell since the run before"
+                           + (": " + "; ".join(f"{f['id']} ({f['why']})" for f in fell[:6]) if fell else ""))
+        if what == "clean":
+            return Reading(round(found["clean"] / len(rows), 2), len(rows), f"{found['clean']} of {len(rows)} clean")
+        if what == "flagged":
+            return Reading(round(found["flagged"] / len(rows), 2), len(rows), f"{found['flagged']} of {len(rows)} flagged")
+        left = sum(1 for r in rows if r["route"] == "model only")
+        return Reading(left, len(rows), f"{left} of {len(rows)} questions reach no plan, lookup or tool")
+    return measure
+
+
 def _unused_creations(context) -> Optional[Reading]:
     store = getattr(context, "creations", None)
     if store is None:
@@ -563,6 +586,16 @@ LOOPS: tuple[Loop, ...] = (
     Loop("dev.council_cost", "development", "calls per council turn", "device", _council_cost, acts="watch", covers=("dev:council",)),
     Loop("dev.chronicles", "development", "Chronicles candidates waiting", "device", _chronicles, acts="watch",
          covers=("dev:chronicles", "check:chronicle")),
+    # The weekly benchmarks (step 5, core/benchmarks.py, run by tools/weekly_bench.py from Night School)
+    Loop("answers.benchmark", "answers", "benchmark questions that fell since last week", "device",
+         _bench("intelligence", "falls"), floor=0, every=7, files=("core/question_plans.py", "core/tool_loop.py"),
+         covers=("flow:talk",)),
+    Loop("answers.benchmark_clean", "answers", "benchmark questions answered by a plan or code, unflagged", "device",
+         _bench("intelligence", "clean"), better="higher", acts="watch", every=7, covers=("flow:talk",)),
+    Loop("answers.corpus", "answers", "conversation answers code flagged (filler, closing offers, lists...)", "device",
+         _bench("corpus", "flagged"), every=7, files=("core/response_composer.py",), covers=("flow:talk", "flow:glasses")),
+    Loop("answers.routing", "answers", "benchmark questions that reach no plan, lookup or tool", "device",
+         _bench("routing", "model only"), every=7, files=("core/question_plans.py",), covers=("flow:tools",)),
     Loop("dev.suite", "development", "tests failing on the committed code that aren't known failures", "device",
          _suite_unexpected, floor=0, every=7, heavy=True, covers=("dev:suite",)),
     Loop("dev.suite_time", "development", "seconds the full suite takes", "device", _suite_time, acts="watch",

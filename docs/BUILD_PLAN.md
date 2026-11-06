@@ -72,8 +72,12 @@ first. Each is a step below.
    memories, creations, home, tasks). Not yet: edits made on the desktop's Qt screens (they don't go through
    actions), Plaid re-categorizations learned as rules (waits on Zac's Plaid work), OCR field corrections, the
    Loop's predictions against what happened.
-5. ⬜ **The weekly benchmarks on a schedule**: the 112-question benchmark, the corpus, the routing audit, the
-   phone model check, a shadow attempt, run by the runner when the PC is idle; each question that falls is a task.
+5. ✅ **The weekly benchmarks on a schedule** (`core/benchmarks.py`, `tools/weekly_bench.py`, 2026-11-06): Night
+   School runs the 112-question benchmark, the conversation corpus (glasses and phone) and the routing audit once a
+   week on this PC; code grades each against the week before (route worse, newly flagged, newly slow) and keeps
+   grades only, never an answer. Loops: `answers.benchmark` (questions that fell: a task naming them),
+   `answers.benchmark_clean`, `answers.corpus`, `answers.routing`. The shadow attempt is Night School's own. The
+   phone's model check stays in CI's Model check workflow.
 6. ⬜ **Loops feed missions**: a standing "Keep MIA healthy" mission whose tasks are the loops' tasks; MIA's
    weekly self-report through the gate ("what got better, what I'm working on").
 
