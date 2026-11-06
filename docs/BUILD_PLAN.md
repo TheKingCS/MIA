@@ -63,8 +63,8 @@ first. Each is a step below.
    plain facts were shown), `memory.quality` (memories edited or deleted within 14 days), `gate.saturation`,
    `gate.unwelcome`, `creations.held`, `data.recovered`, and T-0047's six (`actions.*`, `email.*`, `gate.dismissed`,
    `gate.expired`), and (2026-11-07) `glasses.voice` (turns now traced by device) and `phone.link` (when a linked
-   phone last reached the PC, kept by `core/phone_link.py`). Still to do: `vault.coverage` (transfer failures),
-   `creations.maker` (the maker's retries).
+   phone last reached the PC, kept by `core/phone_link.py`) and `creations.maker` (designs that missed their checks
+   the first time). Still to do: `vault.coverage` (photo-transfer failures, which only the phone sees).
 4. 🔨 **Corrections in every area** (`core/corrections.py`, built 2026-11-06): MIA's changes (actions she proposed
    that were approved, her Assistant tools' changes) are watched for 3 days; the person undoing one, or editing or
    deleting something of the same kind (the same record when both name its id), corrects her once;

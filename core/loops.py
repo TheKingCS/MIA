@@ -407,6 +407,25 @@ def _phone_link(context) -> Optional[Reading]:
     return Reading(hours, 1, f"{hours:g} hours since their phone last reached this PC") if hours is not None else None
 
 
+def _maker(context) -> Optional[Reading]:
+    if getattr(context, "failures", None) is None:
+        return None
+    from core.creation_maker import maker_log
+
+    found = maker_log(context)
+    if not found:
+        return None
+    missed = [m for m in found if m.get("outcome") != "first"]
+    failed = sum(1 for m in found if m.get("outcome") == "failed")
+    common: dict[str, int] = {}
+    for m in missed:
+        for p in m.get("problems", []):
+            common[p] = common.get(p, 0) + 1
+    top = sorted(common.items(), key=lambda kv: -kv[1])[:2]
+    return Reading(round(len(missed) / len(found), 2), len(found), f"{len(missed)} of {len(found)} designs missed their "
+                   f"checks the first time, {failed} never passed" + (": " + "; ".join(p for p, _n in top) if top else ""))
+
+
 def _unused_creations(context) -> Optional[Reading]:
     store = getattr(context, "creations", None)
     if store is None:
@@ -687,6 +706,8 @@ LOOPS: tuple[Loop, ...] = (
         "money", "kitchen", "workouts", "missions", "calendar", "maintenance", "inbox", "memories", "creations",
         "home", "tasks")),
     # D. Her creations
+    Loop("creations.maker", "creations", "designs that missed their checks the first time (Make Something)", "person",
+         _maker, floor=0.5, min_n=5, files=("core/creation_maker.py",), covers=("module:web_home",)),
     Loop("creations.unused", "creations", "published screens nobody opens", "person", _unused_creations, floor=0,
          acts="offer", covers=("store:creations", "action:creation")),
     Loop("workflows.failing", "creations", "workflow runs that stopped", "person", _failing_workflows, floor=0,

@@ -354,3 +354,22 @@ def test_how_her_blueprints_are_used_is_observed(world):
     counts = {rs["id"]: len(rs["records"]) for rs in w.record_sets.sets}
     assert w.creations.evaluation(counts) == [{"blueprint": "tracker", "made": 1, "published": 1, "retired": 0,
                                                "days_opened": 2, "records": 1}]
+
+
+def test_each_design_is_noted_for_the_maker_loop(world, tmp_path):
+    """Step 3's creations.maker: designs that missed their checks the first time, and what the checks said."""
+    from types import SimpleNamespace
+
+    from core import loops
+
+    world.failures = SimpleNamespace(data_dir=tmp_path / "me")
+    creation_maker.make(world, "keep track of the seeds I save please", ask=model(DESIGN))
+    broken = {**DESIGN, "icon": "not-an-icon", "fields": []}
+    creation_maker.make(world, "keep track of my bees please", ask=model(broken, DESIGN))
+    with pytest.raises(creation_maker.MakerError):
+        creation_maker.make(world, "keep track of the goats please", ask=model(broken, broken))
+    log = creation_maker.maker_log(world)
+    assert [m["outcome"] for m in log] == ["first", "retried", "failed"] and log[2]["problems"]
+    assert "bees" not in str(log) and "goats" not in str(log)  # never the request
+    reading = {l.id: l for l in loops.LOOPS}["creations.maker"].measure(world)
+    assert (reading.value, reading.n) == (0.67, 3) and "1 never passed" in reading.detail

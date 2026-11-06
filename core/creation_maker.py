@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import json
 import re
+from pathlib import Path
 from typing import Callable, Optional
 
 from core import blueprints as bp
@@ -229,9 +230,49 @@ def make_workflow(context, need: str, ask: Optional[Callable[[str, dict], str]] 
                 **({"limits": design["limits"]} if design.get("limits") else {})}
         problems = check_workflow(spec, context, child=child) or _miscounts(spec, need, context, child)
         if not problems:
+            _note(context, "workflow", "first" if _attempt == 0 else "retried", [])
             return store.draft(spec, [], made_by="mia", why=need, blueprint="")
         again = "\nYour last design had these problems; fix them:\n- " + "\n- ".join(problems[:8])
+    _note(context, "workflow", "failed", problems)
     raise MakerError("I couldn't make a workflow that passes its checks: " + "; ".join(problems[:4]))
+
+
+def _note(context, kind: str, outcome: str, problems: list) -> None:
+    """For the creations.maker loop: each design, how it went and what its checks said (never the request)."""
+    from datetime import datetime
+
+    folder = getattr(getattr(context, "failures", None), "data_dir", None)
+    if folder is None:
+        return
+    try:
+        Path(folder).mkdir(parents=True, exist_ok=True)
+        with open(Path(folder) / "maker_log.jsonl", "a", encoding="utf-8") as out:
+            out.write(json.dumps({"at": datetime.now().isoformat(timespec="seconds"), "kind": kind, "outcome": outcome,
+                                  "problems": [str(p)[:120] for p in problems[:4]]}) + "\n")
+    except OSError:
+        pass
+
+
+def maker_log(context, days: int = 30) -> list[dict]:
+    from datetime import datetime, timedelta
+
+    folder = getattr(getattr(context, "failures", None), "data_dir", None)
+    if folder is None:
+        return []
+    since = (datetime.now() - timedelta(days=days)).isoformat(timespec="seconds")
+    try:
+        lines = (Path(folder) / "maker_log.jsonl").read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return []
+    out = []
+    for line in lines:
+        try:
+            found = json.loads(line)
+        except ValueError:
+            continue
+        if found.get("at", "") >= since:
+            out.append(found)
+    return out
 
 
 def make(context, need: str, ask: Optional[Callable[[str, dict], str]] = None, child: bool = False) -> dict:
@@ -263,6 +304,8 @@ def make(context, need: str, ask: Optional[Callable[[str, dict], str]] = None, c
         spec, blueprint = spec_from(design, blueprints, need)
         problems = check(spec, child=child)
         if not problems:
+            _note(context, "screen", "first" if _attempt == 0 else "retried", [])
             return store.draft(spec, [], made_by="mia", why=need, blueprint=blueprint)
         again = "\nYour last design had these problems; fix them:\n- " + "\n- ".join(problems[:8])
+    _note(context, "screen", "failed", problems)
     raise MakerError("I couldn't make a screen that passes its checks: " + "; ".join(problems[:4]))
