@@ -14,6 +14,7 @@ import android.util.Log
 import android.view.Gravity
 import android.webkit.GeolocationPermissions
 import android.webkit.PermissionRequest
+import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
@@ -35,6 +36,7 @@ class MainActivity : Activity() {
     // A screen asked where the phone is (World Map's I'm Here, location
     // quests, DEC-0028): answered once Android's own permission is.
     private var geoAsk: Pair<String, GeolocationPermissions.Callback>? = null
+    private var fileAsk: ValueCallback<Array<Uri>>? = null  // a page's file input, waiting on Android's picker
     // The memory vault's door to the camera roll (Gallery.kt), window.MIAAndroid on MIA's screens.
     private val gallery = Gallery(this)
     // Location quests while MIA is closed (Places.kt). Talking through the
@@ -213,6 +215,23 @@ class MainActivity : Activity() {
                         requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), Voice.VOICE_REQUEST)
                     }
                 }
+
+                // A screen's file input (Look's "choose a photo", the Inbox): Android's own picker, for MIA's
+                // pages only. Without this the web view ignores the tap. Taking a new photo needs a camera
+                // capture with a FileProvider: not yet, so the picker offers what's already on the phone.
+                override fun onShowFileChooser(view: WebView, callback: ValueCallback<Array<Uri>>,
+                                               params: FileChooserParams): Boolean {
+                    if (!view.url.orEmpty().startsWith("http://127.0.0.1:$PORT/")) { callback.onReceiveValue(null); return true }
+                    fileAsk?.onReceiveValue(null)  // one at a time: an earlier one that never came back is cancelled
+                    fileAsk = callback
+                    try {
+                        startActivityForResult(params.createIntent(), FILE_REQUEST)
+                    } catch (e: ActivityNotFoundException) {
+                        fileAsk = null
+                        callback.onReceiveValue(null)
+                    }
+                    return true
+                }
             }
             addJavascriptInterface(gallery, "MIAAndroid")
             addJavascriptInterface(placesBridge, "MIAPhonePlaces")
@@ -268,6 +287,10 @@ class MainActivity : Activity() {
         super.onActivityResult(requestCode, resultCode, data)
         // Android's own Trash dialog (the memory vault's Free Up Space) closed.
         if (requestCode == Gallery.TRASH_REQUEST) gallery.done(resultCode == RESULT_OK)
+        if (requestCode == FILE_REQUEST) {  // the picker closed: what was picked, or nothing
+            fileAsk?.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(resultCode, data))
+            fileAsk = null
+        }
     }
 
     @Deprecated("Activity.onBackPressed is fine for this spike")
@@ -280,5 +303,6 @@ class MainActivity : Activity() {
         const val TAG = "MIA_SPIKE"
         const val PORT = 8765
         const val GEO_REQUEST = 41
+        const val FILE_REQUEST = 47
     }
 }

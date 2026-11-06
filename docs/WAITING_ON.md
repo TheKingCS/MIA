@@ -37,7 +37,8 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       list` (`python -m tools.lab approve <id>`).
 - [ ] **Plaid:** finish the work in progress in `core/budget_manager.py` and `core/plaid_manager.py` (its test,
       `test_import_transaction_transfer_is_skipped`, fails until then), and link every card and bank.
-- [ ] **The phone:** install build 143 or newer (`adb install -r`), then reopen MIA on the glasses.
+- [ ] **The phone:** install build 143 or newer (`adb install -r`), then reopen MIA on the glasses. The CI build
+      from 2026-11-06's push or later also lets Look (and the Inbox) choose a photo on the phone: try it.
 - [ ] Pick the council's voices; try Make Something; try Council Mode on the glasses.
 
 - [ ] **Maps and comms** (`docs/MAPS_AND_COMMS.md` section 4): for mesh messaging without cell service, buy two
@@ -77,7 +78,10 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 ## Claude (for a later session)
 
 - [ ] **Sight on the glasses and the phone**: a Look button (camera, then the question by voice) that sends the
-      photo to `POST /api/sight` (built, `core/sight.py`); then a phone build for Zac to install.
+      photo to `POST /api/sight` (built, `core/sight.py`); then a phone build for Zac to install. 2026-11-06: the
+      phone's web view now answers a page's file input with Android's picker (`MainActivity.onShowFileChooser`; it
+      builds, not yet tried on the phone), so Look's "choose a photo" works there; taking a new photo from the page
+      needs a camera capture with a FileProvider next.
 - [ ] The phone build bundles Chaquopy's `cryptography` 42.0.8, which the dependency audit doesn't cover yet.
 - [ ] Flaky: `tests/test_reference_library_manager.py` (2026-11-07: one cause found and fixed: deleting a pack failed
       on Windows while libzim still held the file; if `test_search_all_packs_returns_snippet_from_matching_pack` fails
