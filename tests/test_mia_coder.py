@@ -75,3 +75,25 @@ def test_she_can_write_a_new_file_the_task_lists(repo):
     where = lab.folder(p)
     assert (where / "core" / "counter.py").read_text() == "def count():\n    return 1\n"
     assert (where / "core" / "thing.py").read_text() == "VALUE = 1\n"  # a file with text in it is never replaced whole
+
+
+
+def test_a_passage_with_its_spacing_wrong_is_still_found_once():
+    """Night School, 2026-11-06: her edit to a table row was skipped for its spacing."""
+    text = "# Loops\n\n| id   |  what |\n|------|-------|\n| a.b  | one   |\n| c.d  | two   |\n\nend\n"
+    start, end = mia_coder.locate(text, "| a.b | one |")
+    assert text[start:end] == "| a.b  | one   |"  # the whole row, its line break kept
+    start, end = mia_coder.locate(text, "|  c.d |  two |\n")
+    assert text[start:end] == "| c.d  | two   |\n"
+    assert mia_coder.locate(text, "| x.y | three |") is None
+    assert mia_coder.locate("    x = 1\ny = 2\n    x = 1\n", "x = 1") is None  # two of them, spacing aside
+    exact = "def f():\n    return 1\n"
+    assert mia_coder.locate(exact, "return 1") == (exact.index("return 1"), exact.index("return 1") + 8)
+
+
+def test_her_edit_lands_on_the_one_matching_row(repo):
+    (repo / "core" / "table.md").write_text("| a.b  | one   |\n| c.d  | two   |\n")
+    said = mia_coder.coder(reply({"core/table.md": ("| a.b | one |", "| a.b | ONE |")}))(
+        "Plan: Files: core/table.md", repo, "python")
+    assert "changed core/table.md" in said
+    assert (repo / "core" / "table.md").read_text() == "| a.b | ONE |\n| c.d  | two   |\n"

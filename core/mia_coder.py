@@ -76,6 +76,34 @@ def _ollama(prompt: str, schema: dict) -> str:
         return json.loads(answer.read()).get("response", "")
 
 
+def _squash(line: str) -> str:
+    return " ".join(line.split())
+
+
+def locate(text: str, find: str) -> Optional[tuple[int, int]]:
+    """Pure logic. Where `find` is in `text`: exactly, once; else the one run of whole lines that matches it line by
+    line with runs of spaces counted as one (a small model gets a table row's or an indent's spacing wrong: Night
+    School, 2026-11-06). None when it's missing or there's more than one."""
+    if find and text.count(find) == 1:
+        start = text.index(find)
+        return start, start + len(find)
+    want = [_squash(l) for l in find.strip("\n").splitlines()]
+    if not want or not any(want):
+        return None
+    lines = text.splitlines(keepends=True)
+    starts = [0]
+    for line in lines:
+        starts.append(starts[-1] + len(line))
+    hits = [i for i in range(len(lines) - len(want) + 1)
+            if all(_squash(lines[i + k]) == want[k] for k in range(len(want)))]
+    if len(hits) != 1:
+        return None
+    end = starts[hits[0] + len(want)]
+    if text[:end].endswith("\n") and not find.endswith("\n"):
+        end -= 1  # keep the line break after the passage, as an exact match would
+    return starts[hits[0]], end
+
+
 def coder(ask: Optional[Callable[[str, dict], str]] = None) -> Callable[[str, Path, str], str]:
     """A coder for core/dev_lab.write: (task, lab folder, python) -> what it said."""
     from core.dev_lab import touches_protected
@@ -113,10 +141,11 @@ def coder(ask: Optional[Callable[[str, dict], str]] = None) -> Callable[[str, Pa
                 target.write_text(replace, encoding="utf-8")
                 changed.append(f)
                 continue
-            if not find or text.count(find) != 1:
+            span = locate(text, find) if find else None
+            if span is None:
                 skipped.append(f"{f}: its passage {'is missing' if not find or find not in text else 'appears more than once'}")
                 continue
-            target.write_text(text.replace(find, replace, 1), encoding="utf-8")
+            target.write_text(text[:span[0]] + replace + text[span[1]:], encoding="utf-8")
             changed.append(f)
         note = (f" (changed {', '.join(sorted(set(changed)))})" if changed else " (changed nothing)") + \
             (f"; skipped {'; '.join(skipped[:3])}" if skipped else "")
