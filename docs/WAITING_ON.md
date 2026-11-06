@@ -59,9 +59,10 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 
 - [ ] **Handoff numbers:** H-0080 and H-0081 were each used twice (`H-0080_chatgpt-...`, `H-0081_chatgpt-...`). The
       next free number is **H-0086**.
-- [ ] **Screens waiting on your look** (the engine and actions are built; Claude can build working screens on the
-      shared frame once you've set the look): the Operating Journal, Recreation (games played and training load),
-      Good News Radio, the Night School panel and the education transcript (if DEC-0102 is approved).
+- [ ] **Screens waiting on your look**: working screens are built on the shared frame (2026-11-07), formatting
+      only: `web/operating.html` (the Operating Journal), `web/play.html` (games and training load), `web/news.html`
+      (Good News Radio), `web/council.html` (owner only). Still engine-only: the Night School panel's look, and the
+      education transcript (if DEC-0102 is approved).
 
 ## ChatGPT (Chat)
 
