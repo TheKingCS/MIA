@@ -25,7 +25,9 @@ def draw(issue: dict) -> str:
     from core.chronicle_issue import PANELS, panel_prompts
 
     python = IMAGEGEN / ".venv" / "Scripts" / "python.exe"
-    model = IMAGEGEN / "sd-turbo-onnx"
+    # SDXL-Turbo when it's set up (T-0036: cleaner panels, 0.7 s each at 512 px), else SD-Turbo's drafts
+    model = next((IMAGEGEN / m for m in ("sdxl-turbo-onnx", "sd-turbo-onnx") if (IMAGEGEN / m).exists()),
+                 IMAGEGEN / "sd-turbo-onnx")
     if not python.exists() or not model.exists():
         return "no panels: the local image model isn't set up here"
     out = PANELS / issue["id"]

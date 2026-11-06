@@ -20,11 +20,14 @@ from pathlib import Path
 
 def main(prompts_path: str, out_dir: str, model_dir: str) -> int:
     import torch
-    from optimum.onnxruntime import ORTStableDiffusionPipeline
+    from optimum.onnxruntime import ORTStableDiffusionPipeline, ORTStableDiffusionXLPipeline
 
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
-    pipe = ORTStableDiffusionPipeline.from_pretrained(model_dir, provider="DmlExecutionProvider")
+    # SDXL-Turbo or SD-Turbo, by what the folder says it is; both draw best at 512 px in 4 steps (T-0036)
+    kind = json.loads((Path(model_dir) / "model_index.json").read_text(encoding="utf-8")).get("_class_name", "")
+    pipeline = ORTStableDiffusionXLPipeline if "XL" in kind else ORTStableDiffusionPipeline
+    pipe = pipeline.from_pretrained(model_dir, provider="DmlExecutionProvider")
     for n, item in enumerate(json.loads(Path(prompts_path).read_text(encoding="utf-8"))):
         started = time.time()
         image = pipe(item["prompt"][:900], num_inference_steps=4, guidance_scale=0.0, height=512, width=512,
