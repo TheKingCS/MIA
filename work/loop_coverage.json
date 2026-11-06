@@ -7,21 +7,6 @@
   "action:app": {
    "status": "todo"
   },
-  "action:asset": {
-   "status": "todo"
-  },
-  "action:batch": {
-   "status": "todo"
-  },
-  "action:bill": {
-   "status": "todo"
-  },
-  "action:boss": {
-   "status": "todo"
-  },
-  "action:budget_target": {
-   "status": "todo"
-  },
   "action:camera": {
    "status": "todo"
   },
@@ -31,82 +16,10 @@
   "action:communication": {
    "status": "todo"
   },
-  "action:component": {
-   "status": "todo"
-  },
-  "action:craft": {
-   "status": "todo"
-  },
-  "action:craft_recipe": {
-   "status": "todo"
-  },
-  "action:customer": {
-   "status": "todo"
-  },
-  "action:debt": {
-   "status": "todo"
-  },
-  "action:dungeon": {
-   "status": "todo"
-  },
-  "action:event": {
-   "status": "todo"
-  },
-  "action:exercise": {
-   "status": "todo"
-  },
-  "action:expedition": {
-   "status": "todo"
-  },
-  "action:expense": {
-   "status": "todo"
-  },
-  "action:experiment": {
-   "status": "todo"
-  },
   "action:failures": {
    "status": "todo"
   },
   "action:firstboot": {
-   "status": "todo"
-  },
-  "action:fitness": {
-   "status": "todo"
-  },
-  "action:flock": {
-   "status": "todo"
-  },
-  "action:freedom": {
-   "status": "todo"
-  },
-  "action:gear": {
-   "status": "todo"
-  },
-  "action:goods": {
-   "status": "todo"
-  },
-  "action:grocery": {
-   "status": "todo"
-  },
-  "action:grow": {
-   "status": "todo"
-  },
-  "action:income": {
-   "status": "todo"
-  },
-  "action:income_source": {
-   "status": "todo"
-  },
-  "action:insurance": {
-   "status": "todo"
-  },
-  "action:insurance_policy": {
-   "status": "todo"
-  },
-  "action:insurance_quote": {
-   "status": "todo"
-  },
-  "action:job": {
    "status": "todo"
   },
   "action:journal": {
@@ -118,28 +31,7 @@
   "action:loop": {
    "status": "todo"
   },
-  "action:maintenance": {
-   "status": "todo"
-  },
-  "action:maintenance_task": {
-   "status": "todo"
-  },
-  "action:map": {
-   "status": "todo"
-  },
   "action:market": {
-   "status": "todo"
-  },
-  "action:material": {
-   "status": "todo"
-  },
-  "action:meal": {
-   "status": "todo"
-  },
-  "action:memory": {
-   "status": "todo"
-  },
-  "action:mission": {
    "status": "todo"
   },
   "action:music": {
@@ -148,73 +40,16 @@
   "action:myfile": {
    "status": "todo"
   },
-  "action:objective": {
-   "status": "todo"
-  },
   "action:obligation": {
-   "status": "todo"
-  },
-  "action:order": {
-   "status": "todo"
-  },
-  "action:pantry": {
-   "status": "todo"
-  },
-  "action:party": {
-   "status": "todo"
-  },
-  "action:pathway": {
    "status": "todo"
   },
   "action:person": {
    "status": "todo"
   },
-  "action:pet": {
-   "status": "todo"
-  },
-  "action:place": {
-   "status": "todo"
-  },
-  "action:plan": {
-   "status": "todo"
-  },
   "action:playlist": {
    "status": "todo"
   },
-  "action:portfolio": {
-   "status": "todo"
-  },
-  "action:product": {
-   "status": "todo"
-  },
   "action:profile": {
-   "status": "todo"
-  },
-  "action:property": {
-   "status": "todo"
-  },
-  "action:quest": {
-   "status": "todo"
-  },
-  "action:quote": {
-   "status": "todo"
-  },
-  "action:raid": {
-   "status": "todo"
-  },
-  "action:recipe": {
-   "status": "todo"
-  },
-  "action:records": {
-   "status": "todo"
-  },
-  "action:routine": {
-   "status": "todo"
-  },
-  "action:sale": {
-   "status": "todo"
-  },
-  "action:security": {
    "status": "todo"
   },
   "action:setting": {
@@ -223,81 +58,24 @@
   "action:shop": {
    "status": "todo"
   },
-  "action:shop_expense": {
-   "status": "todo"
-  },
-  "action:shop_reward": {
-   "status": "todo"
-  },
-  "action:task": {
-   "status": "todo"
-  },
   "action:track": {
    "status": "todo"
   },
-  "action:training": {
-   "status": "todo"
-  },
-  "action:trip": {
-   "status": "todo"
-  },
-  "action:workout": {
-   "status": "todo"
-  },
   "check:birthday": {
-   "status": "todo"
-  },
-  "check:budget_nudge": {
-   "status": "todo"
-  },
-  "check:calendar_digest": {
-   "status": "todo"
-  },
-  "check:checkin": {
-   "status": "todo"
+   "status": "none",
+   "why": "a greeting once a year: there is nothing in how it lands to learn from"
   },
   "check:chronicle_issue": {
    "status": "none",
    "why": "Zac approves every issue by hand, and its continuity rules are checked in code before he sees it"
   },
-  "check:findings": {
-   "status": "todo"
-  },
   "check:fix_report": {
-   "status": "todo"
-  },
-  "check:grow_alert": {
-   "status": "todo"
-  },
-  "check:insurance_renewal": {
-   "status": "todo"
-  },
-  "check:journal_reflection": {
-   "status": "todo"
-  },
-  "check:maintenance_insight": {
-   "status": "todo"
-  },
-  "check:memory_callback": {
-   "status": "todo"
-  },
-  "check:mission_insight": {
-   "status": "todo"
-  },
-  "check:obligation_reminders": {
-   "status": "todo"
-  },
-  "check:pattern_insight": {
-   "status": "todo"
-  },
-  "check:recurring_mission": {
-   "status": "todo"
+   "status": "none",
+   "why": "it writes the fix report for Claude; the failures it lists are watched by answers.failures"
   },
   "check:rewards": {
-   "status": "todo"
-  },
-  "check:season": {
-   "status": "todo"
+   "status": "none",
+   "why": "it unlocks what the person already earned by rules they can see; it judges nothing of its own"
   },
   "check:seasons_of_memory": {
    "status": "none",
@@ -306,27 +84,6 @@
   "check:self_report": {
    "status": "none",
    "why": "it reports the loops: what it says is only as good as they are, and they are watched"
-  },
-  "check:skill_decline_insight": {
-   "status": "todo"
-  },
-  "check:skill_momentum_insight": {
-   "status": "todo"
-  },
-  "check:skill_pattern_insight": {
-   "status": "todo"
-  },
-  "check:smart_suggestion": {
-   "status": "todo"
-  },
-  "check:walkthrough_suggestion": {
-   "status": "todo"
-  },
-  "check:warranty": {
-   "status": "todo"
-  },
-  "module:budget": {
-   "status": "todo"
   },
   "module:character": {
    "status": "todo"
@@ -338,9 +95,6 @@
    "status": "todo"
   },
   "module:diagnostics": {
-   "status": "todo"
-  },
-  "module:expeditions": {
    "status": "todo"
   },
   "module:field_kit": {
@@ -358,9 +112,6 @@
   "module:household": {
    "status": "todo"
   },
-  "module:inbox": {
-   "status": "todo"
-  },
   "module:kitchen": {
    "status": "todo"
   },
@@ -370,16 +121,7 @@
   "module:lab": {
    "status": "todo"
   },
-  "module:maintenance": {
-   "status": "todo"
-  },
   "module:maps": {
-   "status": "todo"
-  },
-  "module:memories": {
-   "status": "todo"
-  },
-  "module:missions": {
    "status": "todo"
   },
   "module:module_browser": {
@@ -418,19 +160,7 @@
   "module:toolbox": {
    "status": "todo"
   },
-  "module:web_home": {
-   "status": "todo"
-  },
-  "module:workout": {
-   "status": "todo"
-  },
   "module:workshop": {
-   "status": "todo"
-  },
-  "store:alarms": {
-   "status": "todo"
-  },
-  "store:boss_book": {
    "status": "todo"
   },
   "store:business": {
@@ -439,13 +169,7 @@
   "store:business_use": {
    "status": "todo"
   },
-  "store:calendar": {
-   "status": "todo"
-  },
   "store:classroom": {
-   "status": "todo"
-  },
-  "store:components": {
    "status": "todo"
   },
   "store:conversations": {
@@ -463,27 +187,12 @@
   "store:energy": {
    "status": "todo"
   },
-  "store:expeditions": {
-   "status": "todo"
-  },
   "store:finance": {
-   "status": "todo"
-  },
-  "store:fitness": {
-   "status": "todo"
-  },
-  "store:flock": {
-   "status": "todo"
-  },
-  "store:freedom_log": {
    "status": "todo"
   },
   "store:gps_tracks": {
    "status": "none",
    "why": "where a person went, from their own GPX files: no MIA behaviour in it to improve yet; its numbers are worked out in code and tested"
-  },
-  "store:grow_lab": {
-   "status": "todo"
   },
   "store:homestead": {
    "status": "todo"
@@ -491,16 +200,10 @@
   "store:insights": {
    "status": "todo"
   },
-  "store:insurance": {
-   "status": "todo"
-  },
   "store:intents": {
    "status": "todo"
   },
   "store:inventory": {
-   "status": "todo"
-  },
-  "store:jobs": {
    "status": "todo"
   },
   "store:journal": {
@@ -519,12 +222,6 @@
    "status": "todo"
   },
   "store:lite_captures": {
-   "status": "todo"
-  },
-  "store:maintenance": {
-   "status": "todo"
-  },
-  "store:materials": {
    "status": "todo"
   },
   "store:memory_vault": {
@@ -557,15 +254,6 @@
   "store:private_journal": {
    "status": "todo"
   },
-  "store:products": {
-   "status": "todo"
-  },
-  "store:projects": {
-   "status": "todo"
-  },
-  "store:quest_book": {
-   "status": "todo"
-  },
   "store:real_estate": {
    "status": "todo"
   },
@@ -573,9 +261,6 @@
    "status": "todo"
   },
   "store:relationships": {
-   "status": "todo"
-  },
-  "store:reward_shop": {
    "status": "todo"
   },
   "store:saga_moments": {
@@ -587,25 +272,10 @@
   "store:security": {
    "status": "todo"
   },
-  "store:tasks": {
-   "status": "todo"
-  },
   "store:textbooks": {
    "status": "todo"
   },
-  "store:training": {
-   "status": "todo"
-  },
-  "store:trips": {
-   "status": "todo"
-  },
-  "store:user_memories": {
-   "status": "todo"
-  },
   "store:waypoints": {
-   "status": "todo"
-  },
-  "store:workout": {
    "status": "todo"
   },
   "store:world_map": {

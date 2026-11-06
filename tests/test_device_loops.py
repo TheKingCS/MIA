@@ -82,3 +82,43 @@ def test_a_search_is_noted_when_it_ends_never_its_words(tmp_path, monkeypatch):
     assert "recipe" not in str(kept)
     reading = BY_ID["search.empty"].measure(None)
     assert (reading.value, reading.n) == (0.5, 2) and "broken" in reading.detail
+
+
+def test_every_check_that_speaks_through_the_gate_is_in_checks_dismissed():
+    """A daily check that offers a message under a topic the loop can't place would go unwatched."""
+    import re
+    from pathlib import Path
+
+    text = (Path(__file__).resolve().parents[1] / "core" / "application.py").read_text(encoding="utf-8")
+    for name, fn in re.findall(r'\("([a-z_]+)", self\.(_check_[a-z_]+)\)', text):
+        body = re.search(r"\n    def " + fn + r"\(.*?(?=\n    def |\Z)", text, re.S).group(0)
+        for topic in re.findall(r'topic=f?["\']([a-z_]+)', body):
+            if topic != "birthday":  # a greeting once a year: declined in work/loop_coverage.json
+                assert loops._check_of(topic) == name, (name, topic)
+
+
+def test_which_check_is_dismissed_most():
+    entries = ([{"topic": "pattern_insight", "action": "act", "dismissed_at": "x"}] * 5
+               + [{"topic": "pattern_insight", "action": "act"}]
+               + [{"topic": "finding_budget", "action": "act", "dismissed_at": "x"}] * 2
+               + [{"topic": "finding_rent", "action": "act"}] * 3
+               + [{"topic": "checkin", "action": "act", "dismissed_at": "x"}] * 3  # 3 sent: too few to judge
+               + [{"topic": "grow_alert", "action": "act", "urgency": "urgent", "dismissed_at": "x"}] * 9
+               + [{"topic": "unknown", "action": "act", "dismissed_at": "x"}] * 9)
+    context = SimpleNamespace(communication=SimpleNamespace(entries_since=lambda since: entries))
+    reading = BY_ID["checks.dismissed"].measure(context)
+    assert (reading.value, reading.n) == (0.83, 11)
+    assert reading.detail == "dismissed most: pattern insight 5 of 6, findings 2 of 5"
+
+
+def test_recurring_missions_missed():
+    today = datetime.now(timezone.utc).date()
+    day = lambda n: (today - timedelta(days=n)).isoformat()
+    m = lambda name, n, status, tid="t1": SimpleNamespace(name=name, occurrence_key=day(n), status=status,
+                                                         recurring_template_id=tid)
+    found = ([m("Stretch", n, "completed") for n in range(1, 9)] + [m("Run", n, "active", "t2") for n in range(1, 5)]
+             + [m("Run", 0, "active", "t2"), m("Run", 40, "active", "t2"), m("One-off", 2, "active", None)])
+    context = SimpleNamespace(missions=SimpleNamespace(all_missions=lambda: found))
+    reading = BY_ID["missions.recurring"].measure(context)
+    assert (reading.value, reading.n) == (0.33, 12)  # today, 40 days ago and the one-off aren't counted
+    assert reading.detail == "4 of 12 not done; most often missed: Run (4 of 4)"

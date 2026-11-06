@@ -181,6 +181,66 @@ def _gate_dismissed(context) -> Optional[Reading]:
     return Reading(round(gone / len(sent), 2), len(sent), f"{gone} of {len(sent)} dismissed in 7 days")
 
 
+# The daily checks in core/application.py that speak through the gate, by the topic they offer under
+# (tests/test_loop_coverage.py keeps this in step with the code).
+CHECK_TOPICS = {
+    "calendar_digest": "calendar_digest", "checkin": "checkin", "budget_nudge": "budget_nudge",
+    "smart_suggestion": "smart_suggestion", "maintenance_insight": "maintenance_insight",
+    "mission_insight": "mission_insight", "pattern_insight": "pattern_insight",
+    "skill_pattern_insight": "skill_pattern_insight", "skill_decline_insight": "skill_decline_insight",
+    "skill_momentum_insight": "skill_momentum_insight", "walkthrough_suggestion": "walkthrough_suggestion",
+    "journal_reflection": "journal_reflection", "warranty": "warranty", "memory_callback": "memory_callback",
+    "grow_alert": "grow_alert", "season": "season", "insurance_renewal": "insurance_renewal", "chronicle": "chronicle",
+    "finding_": "findings", "obligation_deadline": "obligation_reminders",
+}
+
+
+def _check_of(topic: str) -> str:
+    return CHECK_TOPICS.get(topic) or next((c for t, c in CHECK_TOPICS.items() if t.endswith("_") and
+                                            topic.startswith(t)), "")
+
+
+def _checks_dismissed(context) -> Optional[Reading]:
+    """Which daily check's messages are dismissed most, over 30 days: the one to make worth reading."""
+    gate = getattr(context, "communication", None)
+    if gate is None or not hasattr(gate, "entries_since"):
+        return None
+    by = {}
+    for e in gate.entries_since(_since(30)[:19]):
+        check = _check_of(e.get("topic", ""))
+        if check and e.get("action") == "act" and e.get("urgency") != "urgent":
+            sent, gone = by.get(check, (0, 0))
+            by[check] = (sent + 1, gone + (1 if e.get("dismissed_at") else 0))
+    rated = sorted(((gone / sent, sent, gone, c) for c, (sent, gone) in by.items() if sent >= 4), reverse=True)
+    if not rated:
+        return None
+    worst = ", ".join(f"{c.replace('_', ' ')} {g} of {s}" for _, s, g, c in rated[:3])
+    return Reading(round(rated[0][0], 2), sum(s for _, s, _, _ in rated), f"dismissed most: {worst}")
+
+
+def _recurring_missed(context) -> Optional[Reading]:
+    """Daily recurring missions in the last 30 days (today aside) that weren't done: a target set too high."""
+    missions = getattr(context, "missions", None)
+    if missions is None or not hasattr(missions, "all_missions"):
+        return None
+    today = _now().date()
+    cut = (today - timedelta(days=30)).isoformat()
+    by = {}
+    for m in missions.all_missions():
+        key = m.occurrence_key or ""
+        if not m.recurring_template_id or len(key) != 10 or not cut <= key < today.isoformat():
+            continue
+        made, missed = by.get(m.name, (0, 0))
+        by[m.name] = (made + 1, missed + (0 if m.status == "completed" else 1))
+    made = sum(n for n, _ in by.values())
+    if not made:
+        return None
+    missed = sum(x for _, x in by.values())
+    worst = max(by.items(), key=lambda kv: (kv[1][1] / kv[1][0], kv[1][0]))
+    return Reading(round(missed / made, 2), made, f"{missed} of {made} not done; most often missed: {worst[0]} "
+                   f"({worst[1][1]} of {worst[1][0]})")
+
+
 def _gate_expired(context) -> Optional[Reading]:
     entries = _gate_entries(context)
     if entries is None:
@@ -761,6 +821,12 @@ LOOPS: tuple[Loop, ...] = (
          floor=0.5, min_n=5, files=("core/communication_gate.py",), covers=("flow:gate", "store:communication")),
     Loop("gate.expired", "proactivity", "messages held back that expired before they went out", "person",
          _gate_expired, acts="watch", min_n=3, covers=("flow:gate",)),
+    Loop("checks.dismissed", "proactivity", "the daily check whose messages are dismissed most, in 30 days", "person",
+         _checks_dismissed, floor=0.6, min_n=10, files=("core/application.py",),
+         covers=tuple(sorted({f"check:{c}" for c in CHECK_TOPICS.values()}))),
+    # Theirs to change (DEC-0014: a miss is gentle): a target missed most days is offered for easing, never a task
+    Loop("missions.recurring", "life", "daily recurring missions not done, in 30 days", "person", _recurring_missed,
+         floor=0.5, min_n=10, acts="offer", covers=("check:recurring_mission",)),
     # C. Corrections in every area (step 4, core/corrections.py): undone, or edited or deleted within 3 days
     Loop("corrections.all", "corrections", "her changes corrected within 3 days, every area", "person", _corrections(),
          floor=0.2, min_n=10, covers=("flow:actions", "flow:undo")),
