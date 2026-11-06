@@ -148,8 +148,13 @@ first. Each is a step below.
     local network by approval, vector
     offline maps (PMTiles), Meshtastic mesh radios (needs hardware), the shared picture of people by consent and
     sensors.
-15. ⬜ **Sight**: a local vision model through the glasses' camera and the phone (what is this, read this label,
-    inspect this part), within inspection's permission levels.
+15. 🔨 **Sight** (`core/sight.py`, 2026-11-06): a photo and a question, answered on this PC by a local vision model
+    (Qwen2.5-VL 7B in Ollama, `sight.model`): what is this, read this label (Tesseract first, its words exact),
+    inspect this part (condition, wear, what to check by hand); `POST /api/sight` for the glasses, the phone and
+    the PC; authorized one photo at a time, never a running camera; never identifies a person (refused in code);
+    the photo isn't kept, only each look's kind and timing (`sight.failed`). Tried for real: a photo described,
+    a label read exactly (1.4 s warm, about 28 s for the model's first load). Not yet: the glasses' and the
+    phone's Look button (Kotlin).
 16. ⬜ **The council from the phone**: an owner-only Council screen in MIA's web and phone app; the glasses' speaker
     card and each member's voice on the phone (T-0035). 🧑 *Testing on the real glasses.*
 17. ⬜ **The Chronicles' weekly issue**: scripts from approved events, continuity checks in code, panels from the

@@ -758,6 +758,20 @@ def create_app(context: AppContext) -> FastAPI:
     # (a receipt photo, a manual PDF). Raw body + X-Filename header, so no
     # multipart parser dependency. Only writes the file; the desktop's
     # inbox scan takes it from there within a minute.
+    @app.post("/api/sight")
+    async def sight(request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Sight (core/sight.py, build plan step 15): a photo from the glasses, the phone or the PC, and the question
+        about it in the x-question header ("what is this?", "read this label", "inspect this part"). Answered on this
+        PC by its local vision model; the photo isn't kept. Never identifies a person."""
+        from core.sight import SightError, look
+
+        data = await request.body()
+        question = unquote(request.headers.get("x-question", "what is this?"))[:300]
+        try:
+            return look(view_for(context, profile_id), data, question)
+        except SightError as problem:
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(problem)) from problem
+
     @app.post("/api/inbox/upload")
     async def inbox_upload(request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
         if context.inbox is None:

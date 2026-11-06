@@ -377,6 +377,19 @@ def _news_misleading(context) -> Optional[Reading]:
                    + (": " + ", ".join(f"{s} {n}" for s, n in sorted(by.items(), key=lambda kv: -kv[1])) if by else ""))
 
 
+def _sight_failed(context) -> Optional[Reading]:
+    if getattr(context, "failures", None) is None:
+        return None
+    from core import sight
+
+    found = sight.looks(context)
+    if not found:
+        return None
+    missed = sum(1 for l in found if not l.get("answered"))
+    slow = sum(1 for l in found if l.get("seconds", 0) > 30)
+    return Reading(round(missed / len(found), 2), len(found), f"{missed} of {len(found)} looks unanswered, {slow} over 30 s")
+
+
 def _unused_creations(context) -> Optional[Reading]:
     store = getattr(context, "creations", None)
     if store is None:
@@ -623,6 +636,8 @@ LOOPS: tuple[Loop, ...] = (
          "person", _play_load, floor=1.5, acts="watch", covers=("store:recreation", "action:play")),
     Loop("news.misleading", "proactivity", "Good News Radio stories they called misleading, in 30 days", "person",
          _news_misleading, floor=0.05, min_n=20, files=("core/good_news.py",), covers=("check:good_news",)),
+    Loop("sight.failed", "answers", "photos she couldn't answer about, in 30 days", "person", _sight_failed,
+         floor=0.1, min_n=5, files=("core/sight.py",), covers=("flow:sight",)),
     Loop("gate.saturation", "proactivity", "days the daily limit of unprompted messages was hit, in 7", "person",
          _gate_saturation, floor=2, covers=("flow:gate",)),
     Loop("gate.unwelcome", "proactivity", "kinds of message on a break for being dismissed", "person", _gate_unwelcome,

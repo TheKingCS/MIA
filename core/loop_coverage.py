@@ -61,6 +61,7 @@ FLOWS = {
     "flow:email": "email drafts and what's sent",
     "flow:actions": "Propose, Approve, Execute, Record, Undo for every action",
     "flow:data": "every store's file: read, written, recovered when it's corrupt",
+    "flow:sight": "looking at a photo: what is this, read this, inspect this part",
 }
 DEV = {
     "dev:code": "the code's shape: layering, docs that match",

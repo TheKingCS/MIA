@@ -41,6 +41,8 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 - [ ] **Try Good News Radio:** "what's the good news?", "good news, the late night one", or play "Good News Radio,
       Sunny, Nov 6". Say "that story was misleading" when one is.
 - [ ] Log a game: "played pickleball for an hour, it was hard".
+- [ ] A vision model is installed for sight (`ollama pull qwen2.5vl:7b`, about 6 GB; `ollama rm qwen2.5vl:7b` takes
+      it back off). Nothing to do unless you'd rather not keep it.
 - [ ] Add a place by grid ("add a waypoint called Spring at 18S UJ 23478 06483") and open
       `python -m tools.tak_export`'s `MIA_places.zip` in ATAK-CIV.
 - [ ] **Later:** when the dev window's Night School panel says the evidence supports it, let her choose her own
@@ -61,6 +63,8 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 
 ## Claude (for a later session)
 
+- [ ] **Sight on the glasses and the phone**: a Look button (camera, then the question by voice) that sends the
+      photo to `POST /api/sight` (built, `core/sight.py`); then a phone build for Zac to install.
 - [ ] The phone build bundles Chaquopy's `cryptography` 42.0.8, which the dependency audit doesn't cover yet.
 - [ ] Flaky, seen once each: `tests/test_reference_library_manager.py::test_search_all_packs_returns_snippet_from_matching_pack`,
       and one native Qt crash mid-suite.

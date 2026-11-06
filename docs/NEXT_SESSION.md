@@ -45,8 +45,9 @@ your first lines by talking to MIA ("add to my operating journal: work out 4 tim
 for an hour, it was hard"). Phase C is done. Step 13 too: Good News Radio is on for Zac (sources and going
 online approved 2026-11-06); ask "what's the good news?" or play "Good News Radio, Sunny, Nov 6".
 `music_library/` (the music's default folder, in the repo) is now gitignored. Step 14 has begun: MGRS grids,
-waypoints by grid, a TAK data package (`docs/MAPS_AND_COMMS.md`). Next in it: tracks (GPX), then step 15,
-sight.
+waypoints by grid, a TAK data package and tracks from GPX (`docs/MAPS_AND_COMMS.md`). Step 15 has begun: sight
+on the PC (`core/sight.py`, `POST /api/sight`, Qwen2.5-VL 7B); the glasses' and phone's Look button is next.
+Then step 16, the council from the phone.
 A flaky test seen once: `tests/test_reference_library_manager.py::test_search_all_packs_returns_snippet_from_matching_pack`.
 
 **Glasses navigation: `docs/GLASSES_NAVIGATION_PLAN.md` is a draft waiting on
