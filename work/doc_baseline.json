@@ -223,7 +223,6 @@
   "core/undo_log.py": 8,
   "core/units.py": 2,
   "core/update_manager.py": 2,
-  "core/usage_tracker.py": 15,
   "core/voice_catalog.py": 3,
   "core/voice_loop.py": 4,
   "core/volume_manager.py": 11,

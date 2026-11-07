@@ -56,12 +56,14 @@ _PAGE_FILE = _DATA_DIR / "page_usage.json"  # the web screens (2026-10-30), coun
 
 @dataclass
 class ModuleUsage:
+    """How one app has been used: when it was first and last opened, and how many times."""
     module_id: str
     first_opened: str = ""  # ISO datetime
     last_opened: str = ""  # ISO datetime
     open_count: int = 0
 
     def to_dict(self) -> dict:
+        """The row as saved in module_usage.json."""
         return {
             "module_id": self.module_id,
             "first_opened": self.first_opened,
@@ -71,6 +73,7 @@ class ModuleUsage:
 
     @staticmethod
     def from_dict(data: dict) -> "ModuleUsage":
+        """A row from its saved dict."""
         return ModuleUsage(
             module_id=data.get("module_id", ""),
             first_opened=data.get("first_opened", ""),
@@ -80,7 +83,12 @@ class ModuleUsage:
 
 
 class UsageTracker:
+    """Which apps have really been opened through MIA (module_usage.json: one row per app, never pruned) and which
+    have been suggested already, so a walkthrough is only ever suggested once; plus a tally of web screens opened
+    (page_usage.json, counts only).
+    """
     def __init__(self, context: AppContext) -> None:
+        """Loads the usage and listens for module.opened."""
         self.context = context
         self._usage: dict[str, ModuleUsage] = {}
         self._suggested_module_ids: set[str] = set()
@@ -92,6 +100,7 @@ class UsageTracker:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads the usage rows and the suggested apps; a damaged file is logged, reported and starts empty."""
         if not _USAGE_FILE.exists():
             return
         try:
@@ -107,6 +116,7 @@ class UsageTracker:
         self._suggested_module_ids = set(raw.get("suggested_module_ids", []))
 
     def _save(self) -> None:
+        """Writes the usage rows and the suggested apps atomically."""
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
         data = {
             "usage": [usage.to_dict() for usage in self._usage.values()],
@@ -119,9 +129,11 @@ class UsageTracker:
     # ------------------------------------------------------------------
 
     def _on_module_opened(self, module_id: str) -> None:
+        """On module.opened: count it."""
         self.record_open(module_id)
 
     def record_open(self, module_id: str, when: Optional[str] = None) -> None:
+        """Counts an app being opened (its first open, its last, how many)."""
         now = when or datetime.now().isoformat(timespec="seconds")
         usage = self._usage.get(module_id)
         if usage is None:
@@ -152,12 +164,14 @@ class UsageTracker:
             log.warning("Couldn't save page usage")
 
     def page_usage(self) -> dict:
+        """The web screens' tallies (page -> count, first, last), or {}."""
         try:
             return json.loads(_PAGE_FILE.read_text(encoding="utf-8")) if _PAGE_FILE.exists() else {}
         except (OSError, ValueError):
             return {}
 
     def mark_suggested(self, module_id: str) -> None:
+        """Notes that an app's walkthrough was suggested, so it never is again."""
         self._suggested_module_ids.add(module_id)
         self._save()
 
@@ -166,15 +180,19 @@ class UsageTracker:
     # ------------------------------------------------------------------
 
     def usage_for(self, module_id: str) -> Optional[ModuleUsage]:
+        """One app's usage row, or None when it's never been opened."""
         return self._usage.get(module_id)
 
     def all_usage(self) -> list[ModuleUsage]:
+        """Every app's usage row."""
         return list(self._usage.values())
 
     def has_been_opened(self, module_id: str) -> bool:
+        """Whether an app has ever been opened."""
         return module_id in self._usage
 
     def has_been_suggested(self, module_id: str) -> bool:
+        """Whether an app's walkthrough has been suggested."""
         return module_id in self._suggested_module_ids
 
     def never_opened_module_ids(self, all_module_ids: list[str]) -> list[str]:
