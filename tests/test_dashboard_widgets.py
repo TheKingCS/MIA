@@ -18,16 +18,20 @@ class _FakeConfig:
     """Minimal stand-in for ConfigManager — `.get(key, default)` plus `.set()`/`.save()`."""
 
     def __init__(self, overrides: dict) -> None:
+        """Keeps the overrides; not saved yet."""
         self._overrides = overrides
         self.saved = False
 
     def get(self, key: str, default=None):
+        """An override, or the default."""
         return self._overrides.get(key, default)
 
     def set(self, key: str, value) -> None:
+        """Sets a value."""
         self._overrides[key] = value
 
     def save(self) -> None:
+        """Notes it was saved."""
         self.saved = True
 
 

@@ -26,10 +26,12 @@ MORNING = datetime(2026, 9, 28, 7, 0)
 
 
 def c(topic, urgency=AMBIENT, message=None, **kw):
+    """A candidate message on a topic (ambient unless said), titled from the topic."""
     return Candidate(topic=topic, title=topic.title(), message=message or f"{topic} message", urgency=urgency, **kw)
 
 
 def sent(at, candidate, urgency=None, digest_id=""):
+    """A record of a message sent at a time, as the gate's log keeps one."""
     return {"at": at.isoformat(timespec="seconds"), "key": candidate.key(), "topic": candidate.topic,
             "urgency": urgency or candidate.urgency, "digest_id": digest_id}
 
@@ -78,6 +80,7 @@ def test_a_digest_counts_once_against_the_budget():
 
 
 def test_spacing_between_messages():
+    """Within 90 minutes of the last message a timely one is put off until the gap is up and an ambient one is dropped; after it, a message goes."""
     state = GateState(sent=[sent(MORNING, c("first"))])
     timely, ambient = decide_batch([c("calendar", TIMELY), c("tip")], MORNING + timedelta(minutes=60), state, SETTINGS)
     assert timely.action == DEFER and timely.candidate.not_before == "2026-09-28T08:30:00"
@@ -105,6 +108,7 @@ def test_no_quiet_hours():
 
 
 def test_compose_digest():
+    """One waiting message goes as itself; several are merged into one titled with how many, each under its topic."""
     assert compose_digest([c("tip")]) == ("Tip", "tip message")
     title, message = compose_digest([c("calendar"), c("budget")])
     assert title == "MIA has 2 things for you" and "Calendar: calendar message" in message and "Budget: budget message" in message
@@ -114,15 +118,19 @@ def test_compose_digest():
 
 
 class FakeNotifications:
+    """Notifications that remember what was sent."""
     def __init__(self):
+        """Nothing sent yet."""
         self.sent = []
 
     def notify(self, title, message, level="info", source="system"):
+        """Remembers the title and message."""
         self.sent.append((title, message))
 
 
 @pytest.fixture
 def ctx(tmp_path, monkeypatch):
+    """A context for the gate: the config, its log and the conversations on temporary files, with fake notifications."""
     monkeypatch.setattr(config_module, "_CONFIG_FILE", tmp_path / "config.json")
     monkeypatch.setattr(gate_module, "_DATA_DIR", tmp_path)
     monkeypatch.setattr(gate_module, "_LOG_FILE", tmp_path / "communication_log.json")

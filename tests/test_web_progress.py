@@ -20,12 +20,14 @@ TODAY = date.today()
 
 @pytest.fixture
 def world(tmp_path, monkeypatch):
+    """The shared test world with an action center."""
     context = build_world(tmp_path, monkeypatch)
     context.actions = ActionCenter()
     return context
 
 
 def run(context, kind, actions=None, **params):
+    """Proposes an action and approves it; returns both."""
     centre = actions or context.actions
     proposal = centre.propose(context, kind, params)
     return proposal, centre.approve(context, proposal.proposal_id)
@@ -37,6 +39,7 @@ def as_person(world, profile):
 
 
 def xp(world, profile) -> int:
+    """A profile's total XP now."""
     return world.profiles.get_profile(profile.profile_id).total_xp
 
 
@@ -107,6 +110,7 @@ def test_an_objective_that_counts_itself_cannot_be_ticked(world):
 
 
 def test_skills_page(world):
+    """The Skills page gives a skill's level, XP into it and needed, its status and this week's XP."""
     world.skills.add_skill_xp(world.me.profile_id, "strength", 35)
     page = skills_page(world, TODAY)
     strength = next(s for s in page["skills"] if s["id"] == "strength")
@@ -120,6 +124,7 @@ def test_skills_page(world):
 
 
 def test_character_and_prestige(world):
+    """The Character page shows the person; prestige is refused before level 100, offered once it's reached, starts again with a green badge and can be undone."""
     from core.leveling import XP_PER_PRESTIGE_CYCLE
     from core.rewards_manager import RewardsManager
 
@@ -139,6 +144,7 @@ def test_character_and_prestige(world):
 
 
 def test_starting_a_pathway(world, tmp_path, monkeypatch):
+    """Starting a pathway says its first step, puts its mission on the Missions page as MIA's, can't be started twice, and shows active on its skill."""
     import core.pathway_manager as pathway_module
     from core.pathway_manager import PathwayManager
 
@@ -165,6 +171,7 @@ def test_a_child_plays_too_but_cannot_delete_missions(world):
 
 
 def test_the_endpoints(world):
+    """The missions, skills and character endpoints answer for the person signed in."""
     from fastapi.testclient import TestClient
 
     import server.app as server_app

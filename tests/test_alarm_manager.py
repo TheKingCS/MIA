@@ -30,6 +30,7 @@ from core.event_bus import EventBus
 
 class _FakeNotifications:
     def __init__(self) -> None:
+        """None raised yet."""
         self.calls: list[dict] = []
 
     def notify(self, title: str, message: str, level: str = "info", source: str = "system") -> None:

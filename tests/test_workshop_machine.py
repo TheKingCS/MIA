@@ -28,25 +28,32 @@ from core.workshop_machine import (
 
 
 class _FakeMachine(WorkshopMachine):
+    """A workshop machine that's always idle and takes any job."""
     def __init__(self, machine_id: str, display_name: str) -> None:
+        """Its id, name and description."""
         self.machine_id = machine_id
         self.display_name = display_name
         self.description = f"{display_name} description"
 
     def get_status(self) -> MachineStatusReport:
+        """Idle."""
         return MachineStatusReport(state="idle")
 
     def send_job(self, job_data: dict) -> MachineJobHandle:
+        """Takes the job as job-1."""
         return MachineJobHandle(job_id="job-1", machine_id=self.machine_id)
 
     def pause(self) -> None:
+        """Does nothing."""
         pass
 
     def stop(self) -> None:
+        """Does nothing."""
         pass
 
 
 def _make_registry() -> WorkshopMachineRegistry:
+    """A machine registry on a bare context."""
     context = AppContext(config=None, events=EventBus())
     return WorkshopMachineRegistry(context)
 
@@ -56,6 +63,7 @@ def _make_registry() -> WorkshopMachineRegistry:
 # ----------------------------------------------------------------------
 
 def test_register_and_get():
+    """A registered machine comes back by its id."""
     registry = _make_registry()
     machine = _FakeMachine("cnc", "CNC Router")
     registry.register(machine)

@@ -24,6 +24,7 @@ from core.profile_manager import ProfileManager
 
 @pytest.fixture
 def home(tmp_path, monkeypatch):
+    """A household of two people, each with their own data, on temporary files; returns the context and both profiles."""
     monkeypatch.setattr(config_module, "_CONFIG_FILE", tmp_path / "config.json")
     monkeypatch.setattr(profile_module, "_DATA_PROFILES_DIR", tmp_path / "profiles")
     context = AppContext(config=ConfigManager(), events=EventBus())
@@ -40,18 +41,23 @@ def home(tmp_path, monkeypatch):
 
 
 class _FakeSMTP:
+    """Stands in for a mail server: a login that can fail, and the messages sent."""
     def __init__(self, fail_login=False):
+        """Whether the login fails, nothing sent yet."""
         self.logged_in, self.sent, self.fail_login = None, [], fail_login
 
     def login(self, user, password):
+        """Logs in, or fails with a bad-login error."""
         if self.fail_login:
             raise smtplib.SMTPAuthenticationError(535, b"bad")
         self.logged_in = (user, password)
 
     def send_message(self, message):
+        """Remembers the message."""
         self.sent.append(message)
 
     def quit(self):
+        """Does nothing."""
         pass
 
 

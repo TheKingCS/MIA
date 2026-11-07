@@ -24,9 +24,11 @@ class _FakeConfig:
     """Minimal stand-in for ConfigManager, just enough for `.get(key, default)`."""
 
     def __init__(self, overrides: dict) -> None:
+        """Keeps the overrides."""
         self._overrides = overrides
 
     def get(self, key: str, default=None):
+        """An override, or the default."""
         return self._overrides.get(key, default)
 
 

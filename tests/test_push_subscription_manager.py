@@ -19,6 +19,7 @@ from core.push_subscription_manager import PushSubscriptionManager
 
 class _FakeConfig:
     def get(self, key: str, default=None):
+        """The default."""
         return default
 
 

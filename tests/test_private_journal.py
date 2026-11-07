@@ -15,6 +15,7 @@ PASS = "correct horse battery"
 
 @pytest.fixture
 def journal_files(tmp_path, monkeypatch):
+    """Points the private journal's files at a temporary folder (with a smaller key, for speed). Returns it."""
     monkeypatch.setattr(pj, "_DATA_DIR", tmp_path)
     monkeypatch.setattr(pj, "_KEYS_FILE", tmp_path / "private_journal_keys.json")
     monkeypatch.setattr(pj, "_ENTRIES_FILE", tmp_path / "private_journal.json")
@@ -23,10 +24,12 @@ def journal_files(tmp_path, monkeypatch):
 
 
 def _manager():
+    """A private journal manager."""
     return PrivateJournalManager(SimpleNamespace(notifications=None))
 
 
 def _entry(entry_id="s1", text="Work dragged today and I kept thinking about the greenhouse."):
+    """A journal entry about a long shift (mood drained, themes work and greenhouse)."""
     return PrivateJournalEntry(
         entry_id=entry_id, title="Long shift", mood="drained", themes=["work", "greenhouse"],
         summary="You talked about a long shift.", exchanges=[JournalExchange("user", text, "2026-09-27T17:00:00")],
@@ -34,6 +37,7 @@ def _entry(entry_id="s1", text="Work dragged today and I kept thinking about the
 
 
 def test_not_set_up(journal_files):
+    """Before setup the journal is neither set up nor unlocked, and saving is refused."""
     journal = _manager()
     assert not journal.is_set_up() and not journal.is_unlocked()
     with pytest.raises(SecretsError):
@@ -41,6 +45,7 @@ def test_not_set_up(journal_files):
 
 
 def test_short_passphrase_refused(journal_files):
+    """A short passphrase is refused at setup."""
     with pytest.raises(SecretsError):
         _manager().setup("short")
 
@@ -91,6 +96,7 @@ def test_save_replaces_by_id_and_delete(journal_files):
 
 
 def test_search(journal_files):
+    """Search finds an entry by its words or its themes (plurals too); an empty search finds them all."""
     journal = _manager()
     journal.setup(PASS)
     journal.save_entry(_entry("a"))
@@ -103,6 +109,7 @@ def test_search(journal_files):
 
 
 def test_setup_twice_refused(journal_files):
+    """Setting up the journal a second time is refused."""
     journal = _manager()
     journal.setup(PASS)
     with pytest.raises(SecretsError):

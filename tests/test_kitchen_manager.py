@@ -61,6 +61,7 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _make_context() -> AppContext:
+    """A bare context: a config and an event bus."""
     return AppContext(config=ConfigManager(), events=EventBus())
 
 
@@ -692,9 +693,11 @@ def test_recipes_makeable_now_uses_current_recipes_and_pantry(isolated_paths):
 
 class _FakeNotifications:
     def __init__(self):
+        """None raised yet."""
         self.calls: list[dict] = []
 
     def notify(self, title, message, level="info", source="system"):
+        """Remembers a notification."""
         self.calls.append({"title": title, "message": message, "level": level, "source": source})
 
 

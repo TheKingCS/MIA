@@ -18,6 +18,7 @@ class _FakeNotifications:
         self.calls = []
 
     def notify(self, title, message, level="info", source="system"):
+        """Remembers a notification."""
         self.calls.append({"title": title, "message": message, "level": level, "source": source})
 
 

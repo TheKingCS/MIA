@@ -35,7 +35,9 @@ from core.event_bus import EventBus
 
 
 class _FakeCompletedProcess:
+    """A finished command with its output."""
     def __init__(self, stdout: str) -> None:
+        """Keeps the output."""
         self.stdout = stdout
 
 
@@ -195,6 +197,7 @@ def test_list_block_devices_returns_empty_on_malformed_json(monkeypatch):
 # ----------------------------------------------------------------------
 
 def _fake_boot_lookup(root_source: str, pkname: str):
+    """A stand-in for running findmnt and lsblk that names the boot disk as given."""
     def fake_run(args, capture_output, text, timeout, check):
         if args[0] == "findmnt":
             return _FakeCompletedProcess(root_source)
@@ -278,14 +281,18 @@ def test_list_serial_devices_returns_empty_when_enumeration_fails(monkeypatch):
 # ----------------------------------------------------------------------
 
 class _RecordingEvents:
+    """An event bus that remembers what was published."""
     def __init__(self) -> None:
+        """Nothing published yet."""
         self.published: list[tuple[str, dict]] = []
 
     def publish(self, event_name, **kwargs):
+        """Remembers the event and its data."""
         self.published.append((event_name, kwargs))
 
 
 def _make_framework() -> tuple[DeviceFramework, _RecordingEvents]:
+    """A device framework and the events it publishes."""
     events = _RecordingEvents()
     context = AppContext(config=ConfigManager(), events=events)
     return DeviceFramework(context), events
@@ -369,6 +376,7 @@ def test_refresh_returns_current_device_lists(monkeypatch):
 # ----------------------------------------------------------------------
 
 def _fake_partition_query(disk_name: str, children: list[dict], disk_mountpoint=None):
+    """A stand-in for lsblk's JSON answer: a disk with these partitions."""
     payload = json.dumps({
         "blockdevices": [
             {"name": disk_name, "mountpoint": disk_mountpoint, "type": "disk", "children": children},

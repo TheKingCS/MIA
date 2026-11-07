@@ -54,6 +54,7 @@ def ctx(tmp_path, monkeypatch):
 
 
 def say(ctx, action, **arguments):
+    """Runs an Assistant tool with these arguments and returns what MIA says."""
     return ctx.assistant_actions.execute(ctx, action, arguments)
 
 

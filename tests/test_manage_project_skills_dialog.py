@@ -13,20 +13,27 @@ from gui.manage_project_skills_dialog import format_skill_weight_row
 
 
 class _FakeSkillDefinition:
+    """A skill with only a name."""
     def __init__(self, name):
+        """Keeps the name."""
         self.name = name
 
 
 class _FakeSkills:
+    """Skills to look up by id."""
     def __init__(self, definitions):
+        """Keeps the skills by id."""
         self._definitions = definitions
 
     def get_skill(self, skill_id):
+        """A skill by id, or None."""
         return self._definitions.get(skill_id)
 
 
 class _FakeContext:
+    """A context with only skills."""
     def __init__(self, skills=None):
+        """Keeps the skills."""
         self.skills = skills
 
 

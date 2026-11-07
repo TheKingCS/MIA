@@ -31,6 +31,7 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _make_context() -> AppContext:
+    """A bare context: a config and an event bus."""
     return AppContext(config=ConfigManager(), events=EventBus())
 
 

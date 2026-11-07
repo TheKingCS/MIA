@@ -27,12 +27,15 @@ BLOB = bytes(range(256)) * 12_000  # about 3 MB
 
 
 class _Hub(BaseHTTPRequestHandler):
+    """A tiny download server for a model file: it honours Range requests (resuming) and remembers each range asked for."""
     ranges: list = []
 
     def log_message(self, *args):
+        """Says nothing per request."""
         pass
 
     def do_GET(self):
+        """Sends the file, or the rest of it from the byte a Range asks for (206)."""
         start = 0
         if self.headers.get("Range"):
             type(self).ranges.append(self.headers["Range"])
@@ -72,12 +75,14 @@ needs_posix = pytest.mark.skipif(sys.platform == "win32", reason="llama-server r
 
 
 def _free_port() -> int:
+    """A free local port."""
     with socket.socket() as s:
         s.bind(("127.0.0.1", 0))
         return s.getsockname()[1]
 
 
 def _wait(check, seconds=20):
+    """Waits up to the seconds given for a check to come true; whether it did."""
     deadline = time.monotonic() + seconds
     while time.monotonic() < deadline:
         if check():
@@ -88,6 +93,7 @@ def _wait(check, seconds=20):
 
 @pytest.fixture
 def hub():
+    """Runs the download server for the test and gives the model's URL."""
     server = HTTPServer(("127.0.0.1", 0), _Hub)
     _Hub.ranges = []
     threading.Thread(target=server.serve_forever, daemon=True).start()
@@ -97,6 +103,7 @@ def hub():
 
 @pytest.fixture
 def phone(tmp_path, monkeypatch, hub):
+    """The phone's local models with one tiny model from the hub and a fake llama-server script, stopped after the test."""
     monkeypatch.setattr(config_module, "_CONFIG_FILE", tmp_path / "config.json")
     model = local_model.LocalModel("tiny", "Tiny", "A stand-in.", "tiny.gguf", hub, 3)
     monkeypatch.setattr(local_model, "MODELS", (model,))
@@ -191,6 +198,7 @@ def test_pinned_to_the_fast_cores_with_a_smaller_cache():
 
 
 def _cpus(tmp_path, speeds):
+    """A fake /sys CPU folder with a core per speed given (and one folder that isn't a core). Returns it."""
     for n, speed in enumerate(speeds):
         folder = tmp_path / f"cpu{n}" / "cpufreq"
         folder.mkdir(parents=True)

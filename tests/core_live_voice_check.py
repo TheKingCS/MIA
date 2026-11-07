@@ -149,12 +149,14 @@ VOICE_CASES = [
 
 
 def _build_context() -> AppContext:
+    """MIA's core context as it runs."""
     config = ConfigManager()
     events = EventBus()
     return build_core_context(config, events)
 
 
 def _seed_fixtures(context: AppContext) -> None:
+    """The records the cases ask about: an alarm, a note, inventory, waypoints and the rest."""
     context.alarms.add_alarm(label="Wake Up", time="07:00")
     context.journal.add_entry(title="Groceries", body="buy milk and eggs")
     context.inventory.add_item(name="M3 bolts", quantity=25)
@@ -169,6 +171,7 @@ def _seed_fixtures(context: AppContext) -> None:
 
 
 def _run_case(context: AppContext, prompt: str, expected) -> tuple[bool, str, list[str]]:
+    """One prompt through the real model with its tools: whether the tool expected was called (or none when none is expected), what happened, and the tools called."""
     conversation = Conversation(conversation_id="check")
     messages, tools = build_chat_request(context, conversation, prompt)
     reply = context.llm.chat_with_tools(messages, tools=tools)
@@ -184,6 +187,7 @@ def _run_case(context: AppContext, prompt: str, expected) -> tuple[bool, str, li
 
 
 def _run_golden_cases(context: AppContext) -> int:
+    """Tier 1: every golden prompt as text; prints each result and returns how many failed."""
     print("=== Tier 1: clean-text golden set (Core's curated registry) ===")
     failures = []
     for description, prompt, expected in GOLDEN_CASES:
@@ -197,6 +201,7 @@ def _run_golden_cases(context: AppContext) -> int:
 
 
 def _run_voice_cases(context: AppContext) -> int:
+    """Tier 2: each prompt spoken by Piper, heard back by Vosk, then through the model; skipped without the voice models. Returns how many failed."""
     print("=== Tier 2: real Piper TTS -> real Vosk STT -> tool-calling ===")
     if not (context.voice.is_tts_available() and context.voice.is_stt_available()):
         print("Voice models unavailable — skipping tier 2 (see deploy/download_voice_models.sh).")
@@ -223,6 +228,7 @@ def _run_voice_cases(context: AppContext) -> int:
 
 
 def main() -> int:
+    """Runs both tiers against the local model (says how to start Ollama when it isn't reachable). Returns the exit code."""
     context = _build_context()
     _seed_fixtures(context)
 

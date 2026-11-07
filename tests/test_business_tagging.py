@@ -25,6 +25,7 @@ TODAY = date(2026, 9, 28)
 
 @pytest.fixture
 def ctx(tmp_path, monkeypatch):
+    """A context with the budget and properties on temporary files, and the businesses the charges are tagged to."""
     for module in (budget_module, real_estate_module):
         original = module._DATA_DIR
         for attr, value in list(vars(module).items()):
@@ -44,18 +45,21 @@ _counter = [0]
 
 
 def bank_charge(ctx, description, amount=20.0, when="2026-09-20", **fields):
+    """A bank charge as Plaid would import it."""
     _counter[0] += 1
     return ctx.budget.add_expense(amount=amount, description=description, date=when,
                                   plaid_transaction_id=f"txn-{_counter[0]}", **fields)
 
 
 def owner_sorted(ctx, description, entity_id, times):
+    """The owner tags this store's charges to a business, this many times (what MIA learns from)."""
     for _ in range(times):
         charge = bank_charge(ctx, description, when="2026-08-01")
         apply_choice(ctx, charge.entry_id, entity_id)
 
 
 def test_merchant_names():
+    """Bank descriptions are reduced to the store (numbers, store ids and punctuation dropped)."""
     assert merchant_key("SHELL OIL 57444 BOWLING GRN") == merchant_key("Shell") == "shell"
     assert merchant_key("The Home Depot #1234") == "home depot"
     assert merchant_key("LOWE'S #0123") == "lowes"
@@ -125,6 +129,7 @@ def test_nothing_happens_without_a_business(tmp_path, monkeypatch):
 
 
 def test_voice_tools(ctx):
+    """By voice: the untagged charges are listed with MIA's guess, tagged to a business or as personal (and remembered), a business that doesn't exist is said, and then everything is sorted."""
     say = lambda name, **args: ctx.assistant_actions.execute(ctx, name, args)  # noqa: E731
     assert say("list_untagged_charges") == "Every bank charge is sorted."
     owner_sorted(ctx, "Shell", ctx.lawn.entity_id, 1)
@@ -140,6 +145,7 @@ def test_voice_tools(ctx):
 
 
 def test_review_dialog(ctx):
+    """The review dialog lists charges waiting and ones tagged automatically, MIA's guess picked to start; saving keeps choices and corrections, and leaves Decide later waiting."""
     from PySide6.QtWidgets import QApplication
 
     from gui.business_tags_dialog import LATER, BusinessTagsDialog

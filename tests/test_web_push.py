@@ -33,6 +33,7 @@ from core.web_push import _relay_notification_to_all_subscriptions
 
 class _FakeConfig:
     def get(self, key: str, default=None):
+        """The default."""
         return default
 
 

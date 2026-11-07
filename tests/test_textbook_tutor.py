@@ -38,6 +38,7 @@ PAGES = [
 
 @pytest.fixture(scope="module")
 def qapp():
+    """The Qt application, made once."""
     return QApplication.instance() or QApplication([])
 
 
@@ -87,6 +88,7 @@ def make_ctx(tmp_path, monkeypatch):
 
 @pytest.fixture
 def ctx(tmp_path, monkeypatch, qapp):
+    """The inbox tests' context (with Qt running)."""
     return make_ctx(tmp_path, monkeypatch)
 
 

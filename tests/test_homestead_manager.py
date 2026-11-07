@@ -22,9 +22,11 @@ from core.homestead_manager import HomesteadManager, parse_snapshot_content
 
 class _FakeConfig:
     def __init__(self, overrides: dict) -> None:
+        """Keeps the overrides."""
         self._overrides = overrides
 
     def get(self, key: str, default=None):
+        """An override, or the default."""
         return self._overrides.get(key, default)
 
 

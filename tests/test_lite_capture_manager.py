@@ -26,10 +26,13 @@ from core.lite_capture_manager import LiteCaptureManager, format_capture_journal
 
 
 class _FakeConfig:
+    """A config of overrides."""
     def __init__(self, overrides: dict) -> None:
+        """Keeps the overrides."""
         self._overrides = overrides
 
     def get(self, key: str, default=None):
+        """An override, or the default."""
         return self._overrides.get(key, default)
 
 
@@ -41,15 +44,18 @@ class _FakeVoice:
     for GenerateWorker/LLM calls."""
 
     def __init__(self, transcript: str = "Real field note text.", available: bool = True) -> None:
+        """The transcript to give, and whether speech to text is available."""
         self._transcript = transcript
         self._available = available
 
     def transcribe(self, wav_path):
+        """The transcript, or None when unavailable."""
         return self._transcript if self._available else None
 
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the captures' and the journal's files at a temporary folder."""
     data_dir = tmp_path / "data"
     monkeypatch.setattr(lite_capture_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(lite_capture_manager_module, "_PROPOSALS_FILE", data_dir / "capture_proposals.json")
@@ -60,6 +66,7 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _make_context(capture_dir, transcript="Real field note text.", voice_available=True, with_journal=True) -> AppContext:
+    """A context reading captures from a folder, with the fake voice (and the journal when asked)."""
     context = AppContext(
         config=_FakeConfig({"lite_capture.import_folder": str(capture_dir)}), events=EventBus(),
     )
@@ -70,6 +77,7 @@ def _make_context(capture_dir, transcript="Real field note text.", voice_availab
 
 
 def _write_capture(capture_dir, capture_id="cap1", captured_at="2026-09-14T14:32:00", audio_filename=None, profile_id=None, write_audio=True):
+    """Writes a field capture into the folder: its manifest (when, the audio file, who) and the audio."""
     capture_dir.mkdir(parents=True, exist_ok=True)
     audio_filename = audio_filename if audio_filename is not None else f"{capture_id}.wav"
     manifest = {"captured_at": captured_at, "audio_filename": audio_filename}

@@ -50,6 +50,7 @@ from gui.home_dashboard import (
 
 
 def test_format_clock_time():
+    """The clock shows hours, minutes and seconds with leading zeros."""
     assert format_clock_time(datetime(2026, 7, 14, 9, 5, 3)) == "09:05:03"
 
 
@@ -136,6 +137,7 @@ def test_format_activity_log_line_multiple_entries_joined():
 
 
 def _snapshot(source: str, summary: dict) -> FinancialSnapshot:
+    """A finance snapshot from a source with this summary."""
     return FinancialSnapshot(
         source=source, generated_at="2026-07-16T00:00:00.000Z", imported_at="2026-07-16T00:00:00.000Z",
         data={"source": source, "summary": summary},
@@ -217,6 +219,7 @@ def test_format_net_worth_line_includes_plaid_snapshot():
 
 
 def _homestead_snapshot(summary: dict, top_alert: dict | None = None) -> HomesteadSnapshot:
+    """A homestead snapshot with this summary and top alert."""
     return HomesteadSnapshot(
         source="mia_homestead", generated_at="2026-08-30T22:33:19Z", imported_at="2026-08-30T22:33:19Z",
         data={"source": "mia_homestead", "summary": summary, "top_alert": top_alert},
@@ -278,6 +281,7 @@ def test_format_homestead_line_truncates_long_alert_message():
 
 
 def _task(interval_days=None, last_completed=None):
+    """An oil change task on a calendar interval."""
     return MaintenanceTask(
         task_id="t1", asset_id="a1", title="Oil change",
         interval_days=interval_days, last_completed=last_completed,
@@ -320,6 +324,7 @@ def test_format_maintenance_line_one_time_and_never_completed_are_not_due():
 
 
 def _meter_task(meter_interval=5000.0, last_completed_meter_value=40000.0):
+    """An oil change task every 5,000 miles, last done at 40,000."""
     return MaintenanceTask(
         task_id="tm1", asset_id="a1", title="Oil change", trigger_type="mileage",
         meter_unit="miles", meter_interval=meter_interval,
@@ -328,6 +333,7 @@ def _meter_task(meter_interval=5000.0, last_completed_meter_value=40000.0):
 
 
 def _reading(value, task_id="tm1"):
+    """A meter reading for a task."""
     return Reading(reading_id="r", series_id=f"maintenance_{task_id}", value=value, unit="", note="", timestamp="2026-09-01T00:00:00")
 
 
@@ -379,6 +385,7 @@ def test_format_lite_captures_line_plural():
 
 
 def _bill(due_date="2026-09-07", recurrence=None, last_paid_date=None):
+    """An electric bill of 120 due on a day."""
     return Bill(bill_id="b1", name="Electric", amount=120.0, due_date=due_date, recurrence=recurrence, last_paid_date=last_paid_date)
 
 

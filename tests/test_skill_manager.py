@@ -40,6 +40,7 @@ def _write_definitions(data_dir, skills: list[dict]) -> None:
 
 
 def _make_context() -> AppContext:
+    """A bare context: a config and an event bus."""
     return AppContext(config=ConfigManager(), events=EventBus())
 
 
@@ -50,9 +51,11 @@ class _FakeNotifications:
     title/message/source without a real NotificationManager."""
 
     def __init__(self):
+        """None raised yet."""
         self.calls: list[dict] = []
 
     def notify(self, title, message, level="info", source="system"):
+        """Remembers a notification."""
         self.calls.append({"title": title, "message": message, "level": level, "source": source})
 
 

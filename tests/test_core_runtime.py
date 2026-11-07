@@ -66,6 +66,7 @@ from core.event_bus import EventBus
 
 @pytest.fixture
 def context(tmp_path, monkeypatch):
+    """MIA's headless core context (no window) with every store on temporary files, the config too."""
     data_dir = tmp_path / "data"
     # Same real reason test_assistant_action_handlers.py's own fixture
     # isolates this: several handlers/managers call context.config.save()
@@ -175,6 +176,7 @@ def test_add_alarm_creates_alarm(context):
 
 
 def test_list_alarms_empty(context):
+    """With no alarms, listing them says so."""
     assert "no alarms" in _action_list_alarms(context, {}).lower()
 
 
@@ -223,6 +225,7 @@ def test_add_note_creates_entry(context):
 
 
 def test_list_notes_empty(context):
+    """With no notes, listing them says so."""
     assert "no notes" in _action_list_notes(context, {}).lower()
 
 
@@ -274,6 +277,7 @@ def test_add_inventory_item_bad_quantity_defaults_to_zero(context):
 
 
 def test_list_inventory_empty(context):
+    """With nothing in the inventory, listing it says it's empty."""
     assert "empty" in _action_list_inventory(context, {}).lower()
 
 
@@ -393,6 +397,7 @@ def test_add_waypoint_unknown_category_falls_back_silently(context):
 
 
 def test_list_waypoints_empty(context):
+    """With no waypoints, listing them says so."""
     assert "no waypoints" in _action_list_waypoints(context, {}).lower()
 
 
@@ -455,6 +460,7 @@ def test_add_mission_links_to_a_real_trip(context):
 
 
 def test_list_missions_empty(context):
+    """With no missions, listing them says so."""
     assert "no missions" in _action_list_missions(context, {}).lower()
 
 

@@ -22,6 +22,7 @@ from core.phone_server import (
 
 
 def free_port() -> int:
+    """A free local port."""
     with socket.socket() as s:
         s.bind(("127.0.0.1", 0))
         return s.getsockname()[1]
@@ -29,6 +30,7 @@ def free_port() -> int:
 
 @pytest.fixture
 def ctx(tmp_path, monkeypatch):
+    """A context for the phone server on a free port, with one profile that has a password."""
     monkeypatch.setattr(config_module, "_CONFIG_FILE", tmp_path / "config.json")
     context = AppContext(config=ConfigManager(), events=EventBus())
     context.config.set("server.port", free_port())
@@ -45,6 +47,7 @@ def ctx(tmp_path, monkeypatch):
 
 
 def get(port, path, token=None):
+    """A GET to the running server (signed in when given a token), as JSON."""
     request = urllib.request.Request(f"http://127.0.0.1:{port}{path}")
     if token:
         request.add_header("Authorization", f"Bearer {token}")
@@ -53,6 +56,7 @@ def get(port, path, token=None):
 
 
 def login(port):
+    """Signs in to the running server and returns the token."""
     body = json.dumps({"profile_id": "zac", "password": "pw"}).encode()
     request = urllib.request.Request(f"http://127.0.0.1:{port}/api/login", data=body,
                                      headers={"Content-Type": "application/json"})
@@ -87,6 +91,7 @@ def test_port_in_use_is_explained(ctx):
 
 
 def test_tailscale_parsing():
+    """Tailscale's status gives whether it's running and the phone address; its serve config tells whether it forwards to MIA's port; the serve command, a missing install and a stopped Tailscale are each said."""
     status = json.dumps({"BackendState": "Running", "Self": {"DNSName": "mia-home.tail1234.ts.net."}})
     assert parse_tailscale_status(status) == (True, "https://mia-home.tail1234.ts.net")
     assert parse_tailscale_status(json.dumps({"BackendState": "NeedsLogin", "Self": {}})) == (False, "")
@@ -114,6 +119,7 @@ def test_tailscale_info_with_a_fake_cli():
 
 
 def test_status_checklist():
+    """Phone access off says so; on, the checklist says MIA is listening, that a password is needed, the Tailscale command to run, when the phone last connected, and the phone address once ready."""
     off = PhoneServerStatus(enabled=False, running=False, host="127.0.0.1", port=8765)
     assert describe_status(off, None, 0) == ["Phone access is off."]
     on = PhoneServerStatus(enabled=True, running=True, host="127.0.0.1", port=8765, profiles_with_password=0,
@@ -128,6 +134,7 @@ def test_status_checklist():
 
 
 def test_last_seen_wording():
+    """When the phone was last seen reads as just now, minutes, hours or days ago."""
     assert describe_last_seen(30) == "just now"
     assert describe_last_seen(300) == "5 minutes ago"
     assert describe_last_seen(3700) == "1 hour ago"

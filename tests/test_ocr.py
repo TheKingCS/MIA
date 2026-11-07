@@ -26,6 +26,7 @@ needs_tesseract = pytest.mark.skipif(shutil.which("tesseract") is None, reason="
 
 @pytest.fixture(scope="module")
 def qapp():
+    """The Qt application, made once."""
     return QApplication.instance() or QApplication([])
 
 

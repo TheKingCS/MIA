@@ -21,6 +21,7 @@ PASS = "correct horse battery"
 
 @pytest.fixture(scope="module")
 def qapp():
+    """The Qt application, made once."""
     return QApplication.instance() or QApplication([])
 
 

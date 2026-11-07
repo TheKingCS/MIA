@@ -43,6 +43,7 @@ _MODULES = [
 
 @pytest.fixture
 def ctx(tmp_path, monkeypatch):
+    """A context for these tools: their stores on temporary files, and the Assistant's tools."""
     for module in _MODULES:
         original = module._DATA_DIR
         for attr, value in list(vars(module).items()):
@@ -62,6 +63,7 @@ def ctx(tmp_path, monkeypatch):
 
 
 def say(ctx, action: str, **arguments) -> str:
+    """Runs an Assistant tool with these arguments and returns what MIA says."""
     return ctx.assistant_actions.execute(ctx, action, arguments)
 
 
@@ -69,6 +71,7 @@ def say(ctx, action: str, **arguments) -> str:
 
 
 def _truck_and_mower(ctx):
+    """A pickup truck (oil change, tire rotation) and a riding mower (blade sharpening). Returns both."""
     truck = ctx.maintenance.add_asset("Pickup Truck", "Vehicle")
     mower = ctx.maintenance.add_asset("Riding Mower", "Power Equipment")
     ctx.maintenance.add_task(truck.asset_id, "Oil change", interval_days=120)
@@ -117,6 +120,7 @@ def test_log_reading_goes_to_the_assets_meter_task(ctx):
 
 
 def test_update_asset_details(ctx):
+    """An asset's make and model are updated by voice, found by a word of its name."""
     _, mower = _truck_and_mower(ctx)
     reply = say(ctx, "update_maintenance_asset", asset_name="mower", manufacturer="John Deere", model="Z315E")
     assert "John Deere" in reply
@@ -170,6 +174,7 @@ def test_a_kind_of_thing_finds_everything_of_that_kind(ctx):
 
 
 def test_watered_the_tomatoes(ctx):
+    """"Watered the tomatoes" marks the tomato bed's Water task done."""
     bed = ctx.maintenance.add_asset("Tomato Bed", "Garden/Plant")
     ctx.maintenance.add_task(bed.asset_id, "Water", interval_days=2)
     assert say(ctx, "complete_maintenance_task", title="watered", asset_name="tomatoes") == "Marked 'Water' complete for Tomato Bed."
@@ -289,6 +294,7 @@ def test_material_quantity_and_price(ctx):
 
 
 def test_product_stock(ctx):
+    """Adding to a product's stock by voice (a plural name too) says the new count."""
     ctx.products.add_product("Cutting Board", quantity_in_stock=3)
     assert say(ctx, "adjust_product_stock", name="cutting boards", delta=5) == "Added 5 Cutting Board. 8 in stock."
 

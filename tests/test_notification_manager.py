@@ -27,9 +27,11 @@ from core.notification_manager import NotificationManager
 
 class _FakeConfig:
     def __init__(self, overrides: dict) -> None:
+        """Keeps the overrides."""
         self._overrides = overrides
 
     def get(self, key: str, default=None):
+        """An override, or the default."""
         return self._overrides.get(key, default)
 
 
