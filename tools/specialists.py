@@ -41,7 +41,7 @@ def main(argv: list[str]) -> int:
                 print(f"  note {n['id']} [{n['status']}] {n['title']}")
             return 0
         if command == "ask":
-            print(sp.answer(" ".join(argv[1:])))
+            print(sp.answer(" ".join(argv[1:]), keep_question=True))  # Zac at the PC: his question to keep
             return 0
         if command == "study":
             from core.night_school import _default_ask

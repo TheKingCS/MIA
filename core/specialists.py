@@ -33,7 +33,9 @@ sources (a note without one is refused). The specialist's pages in `docs/special
 
 **How MIA uses it**: the `ask_specialist` tool answers from the workbooks (a
 specialist named, or every one), with the note's sources and whether it's
-confirmed; `python -m tools.specialists` lists, shows, confirms and runs them.
+confirmed. A question no note answers is never written into a workbook (they
+are in the repo, and a person's words stay in their own folder): the
+specialist only counts it, and study hall takes the most-asked one first; `python -m tools.specialists` lists, shows, confirms and runs them.
 """
 
 from __future__ import annotations
@@ -171,7 +173,8 @@ def book(sid: str, folder: Path = BOOKS) -> dict:
         data = {}
     return {"notes": list(data.get("notes") or []),
             "questions": list(data.get("questions") if "questions" in data else spec.starts_from),
-            "studied": str(data.get("studied") or "")}
+            "studied": str(data.get("studied") or ""),
+            "unanswered": int(data.get("unanswered") or 0)}
 
 
 def _save(sid: str, data: dict, folder: Path = BOOKS) -> None:
@@ -277,17 +280,29 @@ def search(question: str, sid: str = "", folder: Path = BOOKS, limit: int = 3) -
     return found[:limit]
 
 
-def answer(question: str, sid: str = "", folder: Path = BOOKS) -> str:
+def _asked_unanswered(sid: str, folder: Path = BOOKS) -> None:
+    """Counts one question a specialist was asked and couldn't answer: never the words, which are the person's."""
+    data = book(sid, folder)
+    data["unanswered"] = data["unanswered"] + 1
+    _save(sid, data, folder)
+
+
+def answer(question: str, sid: str = "", folder: Path = BOOKS, keep_question: bool = False) -> str:
     """What MIA's specialists know about a question, in plain words: the best note, its sources, and whether a
-    person has confirmed it; or that no specialist has a note on it yet (and the question is added for the one
-    whose area it is, to study)."""
+    person has confirmed it; or that no specialist has a note on it yet. Then the specialist whose area it is is
+    told: with keep_question (Zac adding one at the PC) the question goes on its list; otherwise (someone asking by
+    voice) only that it was asked something it couldn't answer, because the workbooks are in the repo and a
+    person's words stay in their own folder."""
     found = search(question, sid, folder)
     if not found:
         area = BY_ID.get(sid) or next(iter(who_knows(question)), None)
         if area is not None:
-            add_question(area.id, question, folder)
-            return (f"My {area.name.lower()} specialist doesn't have a note on that yet; I've added it to what it "
-                    "studies next.")
+            if keep_question:
+                add_question(area.id, question, folder)
+            else:
+                _asked_unanswered(area.id, folder)
+            return (f"My {area.name.lower()} specialist doesn't have a note on that yet; it'll study its area "
+                    "sooner for being asked.")
         return "None of my specialists has a note on that yet."
     _score, spec_id, note = found[0]
     status = "confirmed by a person" if note["status"] == "confirmed" else "written by a model, not confirmed yet"
@@ -323,8 +338,12 @@ Reply with only a JSON object:
 
 
 def next_to_study(folder: Path = BOOKS) -> Specialist:
-    """The specialist that studied longest ago (never first, in the charter's order)."""
-    return min(SPECIALISTS, key=lambda s: (book(s.id, folder)["studied"], SPECIALISTS.index(s)))
+    """The specialist asked most often what it couldn't answer since it last studied; then the one that studied
+    longest ago (never first, in the charter's order)."""
+    def rank(s):
+        b = book(s.id, folder)
+        return (-b["unanswered"], b["studied"], SPECIALISTS.index(s))
+    return min(SPECIALISTS, key=rank)
 
 
 def _library_search() -> Optional[Callable[[str, int], list]]:
@@ -390,6 +409,7 @@ def study(ask: Callable[[str], str], sid: str = "", folder: Path = BOOKS, pages:
         add_question(spec.id, str(q), folder)
     data = book(spec.id, folder)
     data["studied"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    data["unanswered"] = 0  # it has studied since
     _save(spec.id, data, folder)
     if pages is not None:
         write_pages(pages, folder)
