@@ -166,3 +166,15 @@ def test_the_dungeon_by_voice(work):
     assert _plan_shift(w, {"day": "tomorrow", "overtime": True}) == "On the schedule."
     assert _when("yesterday", False) == (date.today() - timedelta(days=1)).isoformat()
     assert date.fromisoformat(_when("saturday", True)).weekday() == 5
+
+
+def test_the_week_counts_its_runs_cleared_out_of_all_of_them():
+    from types import SimpleNamespace as R
+
+    from core.web_dungeon import _week_runs
+
+    monday = date(2026, 11, 2)
+    runs = [R(date="2026-11-02", status="cleared"), R(date="2026-11-03", status="cleared"),
+            R(date="2026-11-05", status="planned"), R(date="2026-11-10", status="planned"),  # next week
+            R(date="2026-11-04", status="skipped")]
+    assert _week_runs(runs, monday, monday + timedelta(days=6)) == {"runs_cleared": 2, "runs": 3}

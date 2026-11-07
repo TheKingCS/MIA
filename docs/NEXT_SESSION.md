@@ -67,8 +67,9 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       Money (net worth with "+$X this month" and its six-month line: `core/net_worth_history.py` keeps one point a
       day, noted when Money is read, so the line starts the day it ships and grows with use), Garage and the asset
       page (machine cards with meter and plain due words; Spent this year, condition, one Needs You card with a big
-      Done, what it cost lately: `core/web_equipment.due_words`, `meter_reading`, `_upkeep_this_year`).
-      Still to do per app, against its canvas artboard: Dungeon's run card, Compliance's groups, Insurance's quote compare, Real Estate cards,
+      Done, what it cost lately: `core/web_equipment.due_words`, `meter_reading`, `_upkeep_this_year`), the Dungeon
+      (today's run card with gold projected loot and a big Run Cleared, the overtime boss card, the week's runs meter).
+      Still to do per app, against its canvas artboard: Compliance's groups, Insurance's quote compare, Real Estate cards,
       Workshop's build card, Orders' stage rail, Inbox's "goes to", Calendar, Journal, People, Classroom, Guitar,
       Vault, Operating, Play, Observations, the outdoors pages, Knowledge, Music, Files, Passwords, News, Look,
       Settings, Profile, Fix-It, Diagnostics; Power, Toolbox, Lab and Field Kit need web pages first (WEB_PARITY).

@@ -5,7 +5,7 @@ core.web_dungeon
 The Dungeon screen (DEC-0046, core/work_dungeon.py), put together here so
 the web only formats, and the same numbers MIA says in Talk and in Game
 Master mode: today's run, this week's loot (earned, projected, the boss
-bonus), the month and the year at this pace, what an overtime hour is
+bonus) and its runs (cleared out of all, for the canvas's week meter), the month and the year at this pace, what an overtime hour is
 worth right now, loot banked (paychecks from the bank), the hard-mode
 record, and how far one run moves the next dungeon (the Freedom plan).
 Served as /api/dungeon.
@@ -66,8 +66,16 @@ def _run_row(run, split: dict, d) -> dict:
             "xp": run_xp(run.hours, run.affixes, boss), "note": run.note}
 
 
+def _week_runs(mine: list, week0: date, week1: date) -> dict:
+    """Pure logic. This week's runs for the canvas's "3 / 5 runs" meter (DEC-0113): how many are cleared out of
+    every run this week, cleared or planned (a removed or skipped run isn't counted)."""
+    week = [r for r in mine if week0.isoformat() <= r.date <= week1.isoformat() and r.status in ("cleared", "planned")]
+    return {"runs_cleared": sum(r.status == "cleared" for r in week), "runs": len(week)}
+
+
 def dungeon_view(context, d, runs: list, today: date) -> dict:
-    """One dungeon's numbers."""
+    """One dungeon's numbers: its rates, today's run, the week (loot, hours, runs cleared of all), the month, the
+    pace, overtime right now, loot banked, planned and waiting runs, and the hard-mode record."""
     from core.work_dungeon import AFFIX_BY_ID, AFFIXES, boss_bonus, loot, split_hours, take_home_share, week_of
 
     cleared = split_hours(d, runs)
@@ -138,6 +146,7 @@ def dungeon_view(context, d, runs: list, today: date) -> dict:
                   "multiplier": d.overtime_multiplier, "after": d.overtime_after, "week_starts": d.week_starts},
         "today": _run_row(today_run, projected, d) if today_run else None,
         "week": {"start": week0.isoformat(), "end": week1.isoformat(), "hours": round(hours_week, 2), "overtime": w_ot,
+                 **_week_runs(mine, week0, week1),
                  "earned": w_loot, "earned_text": _money(w_loot), "bonus_text": _money(w_bonus) if w_bonus else "",
                  "projected": p_loot, "projected_text": _money(p_loot), "projected_hours": round(p_reg + p_ot, 2),
                  "projected_overtime": p_ot, "projected_bonus_text": _money(p_bonus) if p_bonus else "",

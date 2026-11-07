@@ -483,3 +483,25 @@ body.cook-live .mia-orb-button, body.cook-live .bottom-bar { display: none; }
 .asset-when { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); white-space: nowrap; }
 .asset-focus .kind { justify-self: start; }
 @media (min-width: 861px) { .asset-focus .btn-big { width: auto; min-width: 260px; } }
+
+/* ---------------------------------------------------------------- The Dungeon: today's run (DEC-0113)
+   The canvas's run card, the overtime boss and the week's runs. Loot is gold (earned), the boss amber. */
+.dg-run-card { display: grid; gap: 10px; margin-bottom: var(--gap); }
+.dg-run-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.dg-run-card h2 { margin: 0; font-size: var(--text-xl); text-transform: none; }
+.dg-loot { display: flex; justify-content: space-between; align-items: baseline; padding: 10px 12px; border-radius: var(--radius);
+  background: rgba(var(--rgb-win), 0.08); border: 1px solid rgba(var(--rgb-win), 0.25); }
+.dg-loot strong { font-family: var(--font-mono); font-size: var(--text-lg); color: var(--win); }
+.dg-run-card p { margin: 0; }
+.dg-fields { display: grid; grid-template-columns: minmax(90px, 140px) minmax(0, 1fr); gap: 10px; }
+.dg-fields .form-row { margin: 0; }
+.dg-boss, .dg-week { display: grid; gap: 8px; margin-bottom: var(--gap); padding: 14px; }
+.dg-boss { border-color: rgba(var(--rgb-amber), 0.4); }
+.dg-boss-label { color: var(--attention); }
+.dg-boss-hours, .dg-week-n { font-family: var(--font-mono); font-size: var(--text-sm); }
+.dg-week-money { display: flex; justify-content: space-between; gap: 10px; font-size: var(--text-sm); font-family: var(--font-mono); }
+@media (min-width: 861px) { .dg-run-card .btn-big { justify-self: start; width: auto; min-width: 260px; } }
+.dg-run-top .label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); }
+.dg-run-top .dg-boss-label { color: var(--attention); }
+.dg-fields input { width: 100%; min-width: 0; box-sizing: border-box; }
+.dg-fields .form-row { min-width: 0; }

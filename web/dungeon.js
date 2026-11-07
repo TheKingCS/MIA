@@ -88,13 +88,44 @@
         on.length ? buttons(...on.map((a) => btn("Make " + a.name + " A Quest", "btn-ghost btn-small", () => quest(a)))) : "");
     }
     lines();
-    return section(t ? "Today's Planned Run" : "Enter The Dungeon", null,
-      el("label", { class: "form-row", for: "dg-hours" }, el("span", {}, "Hours"), hours),
-      el("p", { class: "dim" }, "Hard mode today? Tap what made it hard: MIA keeps the dates, and it's worth more XP."),
+    // The canvas's run card (DEC-0113): today's run, its projected loot, hard mode, and one big Run Cleared.
+    const projected = t ? t.loot_text : d.overtime_now.boss_shift_text;
+    return el("section", { class: "glass surface-focus dg-run-card", "aria-labelledby": "dg-run-" + d.id },
+      el("div", { class: "dg-run-top" }, el("span", { class: "label" }, t ? "Today's Run" : "Enter The Dungeon"),
+        el("span", { class: "label" }, (t ? t.hours : d.values.shift_hours || 8) + " h shift")),
+      el("h2", { id: "dg-run-" + d.id }, d.name),
+      projected ? el("div", { class: "dg-loot" }, el("span", {}, "Projected loot"), el("strong", {}, projected)) : null,
+      el("p", { class: "dim" }, "Hard mode today? Name what made it hard: MIA keeps the dates, and it's worth more XP."),
       el("div", { class: "dg-affixes" }, ...chips), gm,
       el("div", { class: "dg-affixes dg-overtime" }, boss),
-      el("label", { class: "form-row", for: "dg-note" }, el("span", {}, "Note (optional)"), note),
-      buttons(btn("Clear The Run", "btn-amber", () => clearToday(d, hours, note))));
+      el("div", { class: "dg-fields" },
+        el("label", { class: "form-row", for: "dg-hours" }, el("span", {}, "Hours"), hours),
+        el("label", { class: "form-row", for: "dg-note" }, el("span", {}, "Note (optional)"), note)),
+      el("button", { type: "button", class: "btn btn-big btn-green", onclick: () => clearToday(d, hours, note) }, "Run Cleared"));
+  }
+
+  // The canvas's boss card: overtime is the boss; what it pays, and when it starts this week.
+  function bossCard(d) {
+    const o = d.overtime_now;
+    if (!d.set_up || !o.hour_text) return null;
+    const next = d.planned.find((r) => r.boss);
+    return el("section", { class: "glass dg-boss", "aria-label": "Overtime boss" },
+      el("div", { class: "dg-run-top" }, el("span", { class: "label dg-boss-label" }, "Boss · Overtime"),
+        el("span", { class: "dg-boss-hours" }, o.in_overtime ? "You're in it" : o.hours_to_overtime + " h to go")),
+      el("span", {}, (next ? day(next.date) + ", " + next.hours + " h called in · " : "") + "every overtime hour is " + o.hour_text +
+        (d.rates && d.rates.multiplier ? " (" + d.rates.multiplier + "× pay)" : "")));
+  }
+
+  // The canvas's week: runs cleared out of this week's runs, earned so far against what the week should bring.
+  function weekCard(d) {
+    const w = d.week;
+    if (!d.set_up || !w.runs) return null;
+    return el("section", { class: "glass dg-week", "aria-label": "This week" },
+      el("div", { class: "dg-run-top" }, el("span", { class: "label" }, "This Week"),
+        el("span", { class: "dg-week-n" }, w.runs_cleared + " / " + w.runs + " runs")),
+      el("div", { class: "meter", role: "progressbar", "aria-valuenow": String(w.runs_cleared), "aria-valuemin": "0", "aria-valuemax": String(w.runs) },
+        el("div", { class: "meter-fill", style: "width:" + Math.round(100 * w.runs_cleared / w.runs) + "%" })),
+      el("div", { class: "dg-week-money" }, el("span", {}, "Earned " + w.earned_text), el("span", { class: "dim" }, "Projected " + w.projected_text)));
   }
 
   function overtimeLine(d) {
@@ -113,7 +144,7 @@
     return page.dungeons.map((d) => el("div", { class: "dg-dungeon" },
       page.dungeons.length > 1 ? el("h2", { class: "dg-name" }, d.name) : null,
       !d.set_up ? el("p", { class: "dim" }, "Put in the pay an hour (Setup) to see the loot.") : null,
-      enter(d), overtimeLine(d),
+      enter(d), d.today && d.today.status === "cleared" ? overtimeLine(d) : bossCard(d), weekCard(d),
       d.waiting.length ? section("Did These Happen?", null, el("p", { class: "dim" }, "Planned runs from past days. Clear the ones you worked; remove the rest, nothing's lost."),
         el("ul", { class: "dg-runs" }, d.waiting.map((r) => runLine(d, r, buttons(btn("Clear It", "btn-green btn-small", () => clearPast(d, r)),
           btn("Remove", "btn-ghost btn-small", () => remove(r))))))) : null,
