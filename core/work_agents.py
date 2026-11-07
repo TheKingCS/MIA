@@ -41,6 +41,9 @@ class AgentError(ValueError):
 
 @dataclass
 class Provider:
+    """One provider of development work (work/agents.json): its name, kind (a CLI, a local model, MIA herself), what
+    it can do (write, review...), and its command or model.
+    """
     name: str
     kind: str
     can: list[str] = field(default_factory=list)
@@ -68,6 +71,9 @@ class Provider:
 
 @dataclass
 class Role:
+    """One development role: its name, provider, permission tier, the docs it reads, and the providers that may take
+    it in order when the first has no time.
+    """
     role: str
     provider: str
     tier: str
@@ -77,10 +83,12 @@ class Role:
 
 @dataclass
 class Registry:
+    """The development agents: every provider and role, and the rules for what a role may do (may())."""
     providers: dict[str, Provider]
     roles: dict[str, Role]
 
     def role(self, name: str) -> Role:
+        """A role by name; AgentError when it isn't in work/agents.json."""
         found = self.roles.get(name)
         if found is None:
             raise AgentError(f"No role {name!r} in work/agents.json.")
@@ -124,4 +132,5 @@ def parse(data: dict) -> Registry:
 
 
 def load(path: Path = REGISTRY) -> Registry:
+    """The registry from work/agents.json."""
     return parse(json.loads(Path(path).read_text(encoding="utf-8")))

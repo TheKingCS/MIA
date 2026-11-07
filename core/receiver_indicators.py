@@ -62,16 +62,21 @@ class ConsoleReceiverIndicators:
     """
 
     def on_idle(self) -> None:
+        """Logs that the receiver is waiting for push-to-talk."""
         log.info("[receiver] idle — waiting for push-to-talk")
 
     def on_listening(self) -> None:
+        """Logs that it's listening."""
         log.info("[receiver] listening…")
 
     def on_thinking(self) -> None:
+        """Logs that it's thinking."""
         log.info("[receiver] thinking…")
 
     def on_speaking(self) -> None:
+        """Logs that it's speaking."""
         log.info("[receiver] speaking…")
 
     def on_notify(self, message: str) -> None:
+        """Logs a notification it was given."""
         log.info("[receiver] notification: %s", message)

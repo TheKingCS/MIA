@@ -14,6 +14,7 @@ from core.actions import ACTION_TYPES, ActionError, ActionType, _need
 
 
 def _describe_log(context, params) -> str:
+    """The sentence the approval card shows for `play.log` (Propose); raises ActionError when it can't be done. It names the game, the minutes and who with."""
     what = " ".join(str(params.get("what") or "").split())
     if not what:
         raise ActionError("What did you play?")
@@ -23,6 +24,7 @@ def _describe_log(context, params) -> str:
 
 
 def _log(context, params) -> str:
+    """Does `play.log` once approved, and says what happened. It gives the training load, and asks how long or how hard when they didn't say."""
     entry = _need(context, "recreation").log(params.get("what", ""), params.get("minutes") or 0, params.get("effort"),
                                              params.get("with") or [], params.get("date") or None)
     asked = "" if entry["effort_said"] else " How hard was it, 1 to 10? Say \"it was a 7\" next time and I'll count it."
@@ -31,6 +33,7 @@ def _log(context, params) -> str:
 
 
 def _entry(context, params) -> dict:
+    """The logged game the params name, or ActionError."""
     found = next((e for e in _need(context, "recreation").entries if e["id"] == str(params.get("entry_id", ""))), None)
     if found is None:
         raise ActionError("That game isn't in your log.")
@@ -38,10 +41,12 @@ def _entry(context, params) -> dict:
 
 
 def _describe_delete(context, params) -> str:
+    """The sentence the approval card shows for `play.delete` (Propose); raises ActionError when it can't be done."""
     return f"Take {_entry(context, params)['what']} on {_entry(context, params)['date']} out of your log"
 
 
 def _delete(context, params) -> str:
+    """Does `play.delete` once approved, and says what happened."""
     _need(context, "recreation").delete(_entry(context, params)["id"])
     return "Taken out."
 

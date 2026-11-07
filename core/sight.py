@@ -89,6 +89,7 @@ def refuses(question: str) -> bool:
 
 
 def _ollama(model: str, prompt: str, image: bytes, url: str = "http://127.0.0.1:11434") -> str:
+    """Asks the local vision model about one photo (sent as base64, temperature 0.2); returns its answer."""
     body = json.dumps({"model": model, "prompt": prompt, "images": [base64.b64encode(image).decode("ascii")],
                        "stream": False, "options": {"temperature": 0.2}}).encode("utf-8")
     request = urllib.request.Request(f"{url}/api/generate", data=body, headers={"Content-Type": "application/json"})
@@ -97,6 +98,7 @@ def _ollama(model: str, prompt: str, image: bytes, url: str = "http://127.0.0.1:
 
 
 def _tesseract(context, image: bytes) -> str:
+    """The words Tesseract reads in a photo, cleaned; empty when Tesseract isn't set up or can't read it (logged)."""
     from core import ocr
 
     config = getattr(context, "config", None)
@@ -150,6 +152,7 @@ def look(context, image: bytes, question: str = "what is this?", ask: Optional[C
 # ------------------------------------------------------------------ the record (never the photo or the answer)
 
 def _folder(context) -> Optional[Path]:
+    """The person's folder looks are noted in (the failure log's, else the traces'), or None."""
     for name in ("failures", "traces"):
         found = getattr(getattr(context, name, None), "data_dir", None)
         if found is not None:
@@ -158,6 +161,9 @@ def _folder(context) -> Optional[Path]:
 
 
 def _note(context, kind: str, answered: bool, seconds: float) -> None:
+    """Notes one look (sight_log.jsonl): its kind, whether it was answered and how long it took; never the photo or
+    the question.
+    """
     folder = _folder(context)
     if folder is None:
         return
@@ -171,6 +177,7 @@ def _note(context, kind: str, answered: bool, seconds: float) -> None:
 
 
 def looks(context, days: int = 30) -> list[dict]:
+    """The looks of the last `days` days (30); a bad line is skipped."""
     folder = _folder(context)
     if folder is None:
         return []
