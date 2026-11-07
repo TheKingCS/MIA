@@ -100,7 +100,8 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       `docs/schema/settings.example.json`).
       Profile (initial, name and email; About You rows that open their editors; Security; Sign Out; no household per
       DEC-0119; the demo now has `docs/schema/profile.example.json`).
-      Still to do per app, against its canvas artboard: Fix-It, Diagnostics; Power, Toolbox, Lab and Field Kit need web pages first (WEB_PARITY).
+      Fix-It (a big Report a Problem, Open · Worst First cards with ×N and the latest thing said, learned phrasings).
+      Still to do per app, against its canvas artboard: Diagnostics; Power, Toolbox, Lab and Field Kit need web pages first (WEB_PARITY).
 - [ ] Glasses: the shared orb on `web/glasses.html`.
 - Note: DEC-0119 (MIA for Zac alone) came after the canvas: drop household members from Party's leaderboard and
   Profile's household card when those screens are built.

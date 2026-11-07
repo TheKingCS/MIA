@@ -28,9 +28,15 @@
 
   function issue(i) {
     const set = (status) => act({ kind: "failures.status", params: { key: i.key, status } });
-    return el("article", { class: "glass money-section fx-issue " + i.status },
-      el("div", { class: "row-title" }, i.title + " · " + i.count + "×" + (i.reopened ? " · came back" : "")),
-      el("div", { class: "row-sub dim" }, i.said.join(" · ") + " · last " + when(i.last)),
+    // The design canvas (DEC-0113): the title with how many times on the right, the latest thing said, what happened
+    // folded under it, and Mark Fixed / Ignore.
+    const latest = i.examples.length ? i.examples[i.examples.length - 1] : null;
+    const said = latest && (latest.prompt || latest.before || latest.note);
+    return el("article", { class: "glass fx-card " + i.status + (i.weight >= 3 && i.status === "open" ? " worst" : "") },
+      el("div", { class: "fx-top" }, el("span", { class: "fx-title" }, i.title + (i.reopened ? " · came back" : "")),
+        el("span", { class: "fx-n" }, "×" + i.count)),
+      said ? el("p", { class: "fx-latest" }, "Latest: “" + said + "”") : null,
+      el("p", { class: "fx-said" }, i.said.join(" · ") + " · last " + when(i.last)),
       el("details", {}, el("summary", {}, "What happened"), ...i.examples.map(example)),
       el("div", { class: "row-buttons" }, i.status === "open"
         ? [btn("Mark Fixed", "btn-ghost btn-small", () => set("fixed")), btn("Ignore", "btn-ghost btn-small", () => set("ignored"))]
@@ -48,21 +54,23 @@
       el("div", { class: "cell ok" }, el("span", { class: "n" }, s.learned), el("span", { class: "t" }, "Learned")));
     const open = p.issues.filter((i) => i.status === "open");
     const done = p.issues.filter((i) => i.status !== "open");
-    $("panel").replaceChildren(
-      section("Open Issues", btn("Report A Problem", "btn-amber btn-small", report),
-        open.length ? el("div", { class: "fx-list" }, open.map(issue))
-          : el("p", { class: "empty" }, "Nothing's gone wrong lately that MIA knows of. Tap 👎 under an answer, or say “report a problem”, when something does."),
-        el("p", { class: "dim" }, "MIA notices on her own too: errors, a request she couldn't match, asking again in other words, an undo right after she acted, slow answers, a page that broke.")),
-      p.phrases.length ? section("What MIA Learned You Mean", null,
-        el("p", { class: "dim" }, "Only what you confirmed. Teach her more: “when I say got off work, I mean log my shift”."),
-        el("ul", { class: "dg-runs" }, p.phrases.map((ph) => el("li", { class: "dg-run" },
-          el("div", {}, el("div", { class: "row-title" }, "“" + ph.said + "”"), el("div", { class: "row-sub dim" }, ph.meaning || ph.does)),
-          el("div", { class: "row-buttons" }, btn("Forget", "btn-ghost btn-small", () => act({ kind: "failures.forget", params: { phrase_id: ph.phrase_id } }))))))) : null,
+    $("panel").replaceChildren(...[
+      el("button", { type: "button", class: "btn btn-big btn-green fx-report-btn", onclick: report }, "Report a Problem"),
+      el("h2", { class: "fx-label" }, "Open · Worst First"),
+      open.length ? el("div", { class: "fx-list" }, open.map(issue))
+        : el("p", { class: "empty" }, "Nothing's gone wrong lately that MIA knows of. Tap 👎 under an answer, or say “report a problem”, when something does."),
+      el("p", { class: "dim fx-note" }, "MIA notices on her own too: errors, a request she couldn't match, asking again in other words, an undo right after she acted, slow answers, a page that broke."),
+      p.phrases.length ? el("section", { class: "glass fx-learned", "aria-label": "What MIA learned" },
+        el("span", { class: "fx-label" }, "What MIA Learned You Mean"),
+        ...p.phrases.map((ph) => el("div", { class: "fx-phrase" },
+          el("span", {}, "“" + ph.said + "” → " + (ph.meaning || ph.does)),
+          btn("Forget", "btn-ghost btn-small", () => act({ kind: "failures.forget", params: { phrase_id: ph.phrase_id } })))),
+        el("p", { class: "dim fx-note" }, "Only what you confirmed. Teach her more: “when I say got off work, I mean log my shift”.")) : null,
       p.report ? section("Fix Report For Claude", btn("Copy", "btn-ghost btn-small", () => {
           (navigator.clipboard ? navigator.clipboard.writeText(p.report) : Promise.reject()).then(() => say("Copied."), () => say("Select the text to copy it."));
         }),
         el("p", { class: "dim" }, "Claude reads this on your PC and turns each issue into a test before fixing it. It stays on your devices."),
         el("pre", { class: "fx-report" }, p.report)) : null,
-      done.length ? section("Fixed And Ignored", null, el("div", { class: "fx-list" }, done.map(issue))) : null);
+      done.length ? section("Fixed And Ignored", null, el("div", { class: "fx-list" }, done.map(issue))) : null].filter(Boolean));
   });
 })();
