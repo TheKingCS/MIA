@@ -79,3 +79,13 @@ One voice, three lengths (`core/response_composer.py`):
 behind, lazy, should have, shame, disappointing, broke your streak, lost
 your streak, wasted. Tests check the Chronicle, buffs, MIA Remembers and
 the crafting results against them.
+
+## Humor (Zac, 2026-11-07)
+
+"Funny sometimes, not constantly, when appropriate, and it would be nice to be surprised by it." The small model
+rarely starts a joke on its own, so `core.personality.humor_for()` decides in code: on about one light conversation
+turn in four (`HUMOR_CHANCE`, config `assistant.humor_chance`, 0 turns it off) she's nudged toward one opening line of
+wit, in one of six flavors picked at random, each shown by an example. Never on a heavy, worried, grieving, hurt,
+urgent, dangerous, faith or private turn (`light_moment()`), never at their expense, and she may skip it when nothing's
+funny. Tried on llama3.2 3B: it lifts replies ("Cluck Norris" for a rooster) but not every line lands; a bigger chat
+model would do better.

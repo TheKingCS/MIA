@@ -280,7 +280,7 @@ def looks_like_action_request(text: str, keywords: Iterable[str] = _ACTION_REQUE
 # Short, deliberately — see this module's docstring on why length is a
 # real, previously-measured regression risk for llama3.2:3b, and why
 # the warmer clauses are only added to the info-question path.
-from core.personality import CHARACTER, EXAMPLES, IDENTITY, deep_line  # noqa: E402  (DEC-0067)
+from core.personality import CHARACTER, EXAMPLES, IDENTITY, deep_line, humor_for  # noqa: E402  (DEC-0067)
 
 _IDENTITY_LINE = (
     "You are MIA (Multifunctional Intelligent Assistant), the user's personal assistant, running on their own devices."
@@ -540,7 +540,8 @@ def build_system_message(context, is_action_request: bool, is_teaching_request: 
     — see `build_chat_request()`, which checks teaching status first
     and skips action-matching entirely when it fires). A conversation
     turn about faith, meaning or morality also gets the Highest Self's
-    guidance line (`core.personality.deep_line`).
+    guidance line (`core.personality.deep_line`), and a light one, now
+    and then by chance, a nudge toward one line of wit (`humor_for`).
     """
     if is_action_request:
         return _IDENTITY_LINE
@@ -568,6 +569,9 @@ def build_system_message(context, is_action_request: bool, is_teaching_request: 
         deep = deep_line(prompt)  # faith, meaning, morality (the Highest Self, section 7)
         if deep:
             parts.append(deep)
+        funny = humor_for(context, prompt)  # now and then, on a light turn (Zac, 2026-11-07)
+        if funny:
+            parts.append(funny)
     parts.append(closing_instruction)
     return "\n\n".join(parts)
 
