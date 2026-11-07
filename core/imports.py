@@ -86,7 +86,8 @@ def _split(line: str) -> tuple[str, dict, str]:
 
 
 def _unescape(value: str) -> str:
-    """An iCalendar or vCard value with its escapes undone (\n, \, , \; and \\)."""
+    """An iCalendar or vCard value with its escapes undone (backslash-n is a new line; an escaped comma,
+    semicolon or backslash is the character itself), trimmed."""
     return (value.replace("\\n", "\n").replace("\\N", "\n").replace("\\,", ",").replace("\\;", ";")
             .replace("\\\\", "\\")).strip()
 
