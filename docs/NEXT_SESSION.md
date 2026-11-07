@@ -37,7 +37,10 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
 - [x] Talk: her orb and state in the header (Ready, Listening, Thinking, Speaking, Can't Reach), What I used.
 - [x] Sidebar: Home, Apps, Pinned (favorites), life areas folded (`shell()` gained `favorites`, `groups`, each app's
       `group`).
-- [ ] Workout: Today / Active (full screen) / Rest (draining ring) / Done, per the canvas and workout.md.
+- [x] Workout: Today leads with one big Start; a live session takes the whole screen as Active (count large, how
+      it was counted), Rest (draining ring) and Done (planned → done); tuck it away and a bar brings it back. Engine:
+      `training_session.view()` gained each count's `how`, `last_counted`, `weight`, `rest_total`. Left for Workout:
+      "+30 s" on rest needs a `training.rest_more` action; Progress charts (volume, frequency) per the canvas.
 - [ ] Kitchen: Today, Recipe, Cook mode (engine first: `core/cooking_session.py`, `cooking.*` actions).
 - [ ] Every other app, group by group as on the canvas's Phone page.
 - [ ] Glasses: the shared orb on `web/glasses.html`.

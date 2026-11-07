@@ -259,7 +259,8 @@ def target_text(step: Step) -> str:
 
 
 def view(s: Session, now: datetime) -> dict:
-    """What every surface shows: plain values, the words ready."""
+    """What every surface shows: plain values, the words ready. Each count comes with how it was made (`how`,
+    `last_counted`), the set's weight when one was logged, and while resting the whole rest (`rest_total`)."""
     settle(s, now)
     step = current(s)
     if step is not None and step.complete:  # resting after an exercise's last set: what's coming is the next one
@@ -270,13 +271,20 @@ def view(s: Session, now: datetime) -> dict:
            "rest_left": rest_left(s, now), "exercises": len(s.steps),
            "done_exercises": sum(1 for st in s.steps if st.complete), "steps": [
                {"name": st.name, "target": target_text(st), "sets": st.sets, "done": len(st.done), "skipped": st.skipped,
-                "counts": [d["reps"] if d["reps"] is not None else d["seconds"] for d in st.done]} for st in s.steps]}
+                "counts": [d["reps"] if d["reps"] is not None else d["seconds"] for d in st.done],
+                # how each count was made, beside it (DEC-0113 canvas: "Counted · said"); never shown as verified
+                "how": [d.get("counted") or "told" for d in st.done]} for st in s.steps]}
+    if s.status == RESTING and s.rest_until:  # the whole rest, so a ring can drain (the canvas's Rest)
+        done_step = next((st for st in reversed(s.steps) if st.done), None)
+        out["rest_total"] = done_step.rest_seconds if done_step is not None else REST_SECONDS
     if step is not None:
         last = step.done[-1] if step.done else None
         out["now"] = {"name": step.name, "set": min(len(step.done) + 1, step.sets),  # the set being done, or next
                       "sets": step.sets, "target": target_text(step), "reps": step.reps, "hold_seconds": step.hold_seconds,
                       "cadence_seconds": step.cadence_seconds,
-                      "last": (last["reps"] if last["reps"] is not None else last["seconds"]) if last else None}
+                      "last": (last["reps"] if last["reps"] is not None else last["seconds"]) if last else None,
+                      "last_counted": last.get("counted") if last else None,
+                      "weight": next((d["weight"] for d in reversed(step.done) if d.get("weight")), None)}
     out["next"] = upcoming.name if upcoming is not None else None
     return out
 
