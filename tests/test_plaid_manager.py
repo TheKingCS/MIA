@@ -46,6 +46,7 @@ from core.secrets_manager import SecretsError
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the Plaid vault at a temporary folder. Returns the folder."""
     data_dir = tmp_path / "data"
     monkeypatch.setattr(plaid_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(plaid_manager_module, "_VAULT_FILE", data_dir / "plaid_vault.enc")
@@ -73,11 +74,13 @@ def isolated_paths_with_budget(tmp_path, monkeypatch):
 
 
 def _make_manager() -> PlaidManager:
+    """A Plaid manager on a bare context."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     return PlaidManager(context)
 
 
 def _make_manager_with_budget() -> PlaidManager:
+    """A Plaid manager on a context with a budget, for importing."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     context.budget = BudgetManager(context)
     return PlaidManager(context)
@@ -85,6 +88,7 @@ def _make_manager_with_budget() -> PlaidManager:
 
 def _fake_transaction(transaction_id="txn-1", amount=45.0, name="Coffee Shop", merchant_name=None,
                        date="2026-09-01", primary="FOOD_AND_DRINK", detailed="FOOD_AND_DRINK_COFFEE"):
+    """A Plaid transaction as the API returns one (id, amount, name, merchant, date, category)."""
     return SimpleNamespace(
         transaction_id=transaction_id, amount=amount, name=name, merchant_name=merchant_name,
         date=date, personal_finance_category=SimpleNamespace(primary=primary, detailed=detailed),
@@ -461,6 +465,7 @@ def test_investments_holdings_get_request_constructs_from_real_sdk():
 
 def _fake_holding(account_id="acct-1", security_id="sec-1", quantity=10.0, institution_price=150.0,
                    institution_value=1500.0, iso_currency_code="USD"):
+    """An investment holding as the API returns one."""
     return SimpleNamespace(
         account_id=account_id, security_id=security_id, quantity=quantity,
         institution_price=institution_price, institution_value=institution_value,
@@ -469,6 +474,7 @@ def _fake_holding(account_id="acct-1", security_id="sec-1", quantity=10.0, insti
 
 
 def _fake_security(security_id="sec-1", name="Apple Inc.", ticker_symbol="AAPL"):
+    """A security as the API returns one (name and ticker)."""
     return SimpleNamespace(security_id=security_id, name=name, ticker_symbol=ticker_symbol)
 
 
@@ -814,16 +820,19 @@ def test_sync_balance_only_item_unaffected(isolated_paths_with_budget):
 # ------------------------------------------------------------------
 
 def _get_response(sessions):
+    """A link-token response with these sessions."""
     return SimpleNamespace(link_sessions=sessions)
 
 
 def _session(item_add_results=None, results=None):
+    """A link session with these results (or item-add results)."""
     if results is None:
         results = SimpleNamespace(item_add_results=item_add_results or [])
     return SimpleNamespace(results=results)
 
 
 def _item_add_result(public_token: Optional[str]):
+    """An item-add result carrying a public token (or none)."""
     return SimpleNamespace(public_token=public_token)
 
 
@@ -921,10 +930,12 @@ def _counting_clock():
 # ------------------------------------------------------------------
 
 def _apr(apr_type, pct):
+    """A card APR of a type and percentage."""
     return SimpleNamespace(apr_type=apr_type, apr_percentage=pct)
 
 
 def _card(account_id="card-1", aprs=None, minimum_payment_amount=35.0, last_statement_balance=None):
+    """A credit card's liability: its APRs (a 24.99% purchase APR by default), minimum payment and statement balance."""
     return SimpleNamespace(
         account_id=account_id,
         aprs=aprs if aprs is not None else [_apr("purchase_apr", 24.99)],
@@ -934,6 +945,7 @@ def _card(account_id="card-1", aprs=None, minimum_payment_amount=35.0, last_stat
 
 
 def _student(account_id="loan-1", loan_name="Sallie Mae Loan", rate=5.5, minimum_payment_amount=180.0):
+    """A student loan's liability: its name, rate and minimum payment."""
     return SimpleNamespace(
         account_id=account_id, loan_name=loan_name, interest_rate_percentage=rate,
         minimum_payment_amount=minimum_payment_amount, last_statement_balance=None,
@@ -941,6 +953,7 @@ def _student(account_id="loan-1", loan_name="Sallie Mae Loan", rate=5.5, minimum
 
 
 def _liability_account(account_id="card-1", name="Freedom", mask="1234", current=1500.0):
+    """An account a liability belongs to: its name, mask and current balance."""
     return SimpleNamespace(account_id=account_id, name=name, mask=mask, balances=SimpleNamespace(current=current))
 
 
@@ -1059,6 +1072,7 @@ def test_finish_liabilities_upgrade_flips_flag(isolated_paths):
 
 
 def _liabilities_response(credit=None, student=None, accounts=None):
+    """A liabilities response: the accounts, cards and student loans (a mortgage present but ignored)."""
     return SimpleNamespace(
         accounts=accounts if accounts is not None else [_liability_account()],
         liabilities=SimpleNamespace(credit=credit or [], student=student or [], mortgage=[{"ignored": True}]),
@@ -1143,6 +1157,7 @@ def test_sync_imports_student_loans_too(isolated_paths_with_budget):
 
 
 def _sync_ready_manager(isolated_dir, liabilities_enabled, liabilities_get):
+    """A manager set up and unlocked with one connected bank (cards and loans access on or off), a fake client answering accounts and liabilities, and a finance stand-in. Returns it."""
     manager = _make_manager_with_budget()
     manager.setup(client_id="cid", secret="sec", environment="sandbox", passphrase="hunter2")
     manager._vault.items.append(PlaidItem(
@@ -1202,25 +1217,31 @@ import plaid as _plaid
 
 
 def _api_error(error_code):
+    """A Plaid API error (400) with an error code in its JSON body."""
     exc = _plaid.ApiException(status=400, reason="Bad Request")
     exc.body = _json.dumps({"error_code": error_code, "error_type": "ITEM_ERROR"})
     return exc
 
 
 class _FakeFinance:
+    """Stands in for the finance store: a set of snapshot sources to remove from."""
     def __init__(self, sources):
+        """Starts with these sources."""
         self.sources = set(sources)
 
     def remove_snapshots(self, sources):
+        """Removes the sources it has; returns how many."""
         removed = [s for s in sources if s in self.sources]
         self.sources -= set(removed)
         return len(removed)
 
     def all_latest_snapshots(self):
+        """A snapshot per source left."""
         return [SimpleNamespace(source=s) for s in sorted(self.sources)]
 
 
 def _manager_with_items(item_ids, with_budget=False):
+    """A manager set up with a connected bank per id (and a budget when asked), its vault saved."""
     manager = _make_manager_with_budget() if with_budget else _make_manager()
     manager.setup(client_id="cid", secret="sec", environment="sandbox", passphrase="hunter2")
     for item_id in item_ids:
@@ -1244,6 +1265,7 @@ def test_plaid_error_code_none_for_missing_or_non_json_body():
 
 
 def test_verify_passphrase(isolated_paths):
+    """The vault passphrase checks out, and a wrong one doesn't."""
     manager = _manager_with_items([])
     assert manager.verify_passphrase("hunter2") is True
     assert manager.verify_passphrase("wrong") is False
@@ -1411,6 +1433,7 @@ def test_sync_liabilities_records_item_id_on_new_debt(isolated_paths_with_budget
 # ------------------------------------------------------------------
 
 def _loan(account_id, subtype, current, kind="loan", name="Auto Loan", mask="4821"):
+    """A loan account as the API returns one (type, subtype, balance)."""
     return {"account_id": account_id, "name": name, "official_name": None, "type": kind, "subtype": subtype,
             "mask": mask, "balances": {"current": current}}
 

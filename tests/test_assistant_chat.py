@@ -42,6 +42,7 @@ def test_formats_speaker_and_text():
 
 
 def test_formats_assistant_reply():
+    """A chat line is the speaker, a colon, and what they said."""
     assert format_chat_line("Assistant", "hi there") == "Assistant: hi there"
 
 
@@ -113,26 +114,33 @@ class _FakeAssistantActions:
     """
 
     def __init__(self, keywords, tools):
+        """Keeps the keywords that match and the tools they offer."""
         self._keywords = keywords
         self._tools = tools
 
     def matching_actions(self, prompt, context=None):
+        """The tools when the prompt holds a keyword, else none."""
         lowered = f" {prompt.lower().strip()} "
         if any(keyword in lowered for keyword in self._keywords):
             return self._tools
         return []
 
     def to_ollama_tools(self, actions=None):
+        """The tools as given (or all of them)."""
         return actions if actions is not None else self._tools
 
 
 class _FakeDeviceHelp:
+    """Stands in for the help docs: marks a prompt as grounded."""
     def build_grounded_prompt(self, prompt):
+        """The prompt wrapped as GROUNDED[...]."""
         return f"GROUNDED[{prompt}]"
 
 
 class _FakeContext:
+    """A context with only what the chat request reads: actions, help, profiles and memories."""
     def __init__(self, assistant_actions=None, device_help=None, profiles=None, user_memories=None):
+        """Keeps what's given."""
         self.assistant_actions = assistant_actions
         self.device_help = device_help
         self.profiles = profiles
@@ -140,6 +148,7 @@ class _FakeContext:
 
 
 def _empty_conversation():
+    """A conversation with no messages."""
     return Conversation(conversation_id="c1")
 
 
@@ -308,29 +317,39 @@ def test_trim_history_zero_limit_returns_empty():
 # ----------------------------------------------------------------------
 
 class _FakeProfile:
+    """A profile with a name and maybe a birthday."""
     def __init__(self, name, birthday=None):
+        """Keeps the name and birthday."""
         self.name = name
         self.birthday = birthday
 
 
 class _FakeProfiles:
+    """Profiles with one active."""
     def __init__(self, active):
+        """Keeps the active profile."""
         self._active = active
 
     def get_active_profile(self):
+        """The active profile."""
         return self._active
 
 
 class _FakeUserMemories:
+    """Memories to read back."""
     def __init__(self, memories):
+        """Keeps the memories."""
         self._memories = memories
 
     def all_memories(self):
+        """Every memory."""
         return self._memories
 
 
 class _FakeMemory:
+    """A memory with only its text."""
     def __init__(self, text):
+        """Keeps the text."""
         self.text = text
 
 
@@ -506,10 +525,13 @@ def test_clean_generated_title_truncates_overly_long_output():
 # ----------------------------------------------------------------------
 
 class _FakeDestructiveLookup:
+    """Says which tools are destructive."""
     def __init__(self, destructive_names):
+        """Keeps the destructive names."""
         self._destructive_names = set(destructive_names)
 
     def is_destructive(self, name):
+        """Whether a tool is destructive."""
         return name in self._destructive_names
 
 

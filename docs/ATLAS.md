@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1070 files, 239,168 lines; 1070 files describe themselves; 12,579 of 13,816 classes and functions are documented.
+1070 files, 239,268 lines; 1070 files describe themselves; 12,679 of 13,816 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -658,7 +658,7 @@
 
 ## tests/: the test suite: what each part must do
 
-357 files, 64,386 lines; 4,579 of 5,727 classes and functions documented
+357 files, 64,486 lines; 4,679 of 5,727 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -682,7 +682,7 @@
 - `tests/test_assistant_action_gating.py`: Regression tests tying modules.assistant.module.looks_like_action_request() to the REAL trigger_phrases registered in core.application's _register_assistant_actions() (milestone 5.7-5.9) — not a hand-copied keyword list. Two real gaps were found only by live-model testing and are pinned here so they
 - `tests/test_assistant_action_handlers.py`: Unit tests for core.application.MIAApplication's assistant action handlers (_action_*) — milestone 5.7's read/list actions, plus regression coverage for the pre-existing write actions that had no direct unit test before (only exercised via test_llm_manager.py's chat_with_tools mocks and manual/live- *(19 undocumented)*
 - `tests/test_assistant_actions.py`: Unit tests for core.assistant_actions.AssistantActionRegistry. No LLM or Ollama involved — these test the registry's own execute() to_ollama_tools() logic directly with fake handlers. *(2 undocumented)*
-- `tests/test_assistant_chat.py`: Unit tests for core.assistant_chat's pure logic — format_chat_line, looks_like_action_request, build_chat_request, and split_safe_tool_calls — no Qt event loop needed. Moved here from tests/test_assistant_module.py (2026-07-14 aesthetic pass part 4) alongside the functions themselves moving from mod *(22 undocumented)*
+- `tests/test_assistant_chat.py`: Unit tests for core.assistant_chat's pure logic — format_chat_line, looks_like_action_request, build_chat_request, and split_safe_tool_calls — no Qt event loop needed. Moved here from tests/test_assistant_module.py (2026-07-14 aesthetic pass part 4) alongside the functions themselves moving from mod
 - `tests/test_assistant_domain_actions.py`: Runs the Assistant's conversational actions (core/assistant_domain_actions.py plus the reworked Maintenance handlers in core/application.py) through the real registry against real managers on temp data — i.e. "the user said X, the model called tool Y with their words; did the right record change?" *(6 undocumented)*
 - `tests/test_assistant_energy_actions.py`: Energy by voice (core/assistant_energy_actions.py, T-0053): each source with its latest reading per meter, one named source, and the empty cases.
 - `tests/test_assistant_life_actions.py`: Workout, people & pets, household routine, and Classroom Assistant tools (core/assistant_life_actions.py) run through the real registry against real managers on temp data, plus their pure parsers. *(8 undocumented)*
@@ -864,7 +864,7 @@
 - `tests/test_model_registry.py`: MIA about herself (core/model_registry.py): "What AI model are you using?" answered from the runtime, saying where each fact came from, never from the model's guess. *(1 undocumented)*
 - `tests/test_module_manager.py`: Unit tests for core.module_manager.ModuleManager. *(1 undocumented)*
 - `tests/test_module_validator.py`: Unit tests for core.module_validator.validate_module_folder. *(3 undocumented)*
-- `tests/test_music_manager.py`: Unit tests for core.music_manager. The CRUD/scan_library() section is entirely Qt-free (matches this project's established convention — see tests/test_avatar_manager.py monkeypatching QMediaDevices rather than constructing a real QApplication). The playback section monkeypatches MusicManager._ensure *(24 undocumented)*
+- `tests/test_music_manager.py`: Unit tests for core.music_manager. The CRUD/scan_library() section is entirely Qt-free (matches this project's established convention — see tests/test_avatar_manager.py monkeypatching QMediaDevices rather than constructing a real QApplication). The playback section monkeypatches MusicManager._ensure
 - `tests/test_music_module.py`: Unit tests for modules.music.module's pure formatting functions — no Qt event loop needed, same shape as tests/test_power_module.py.
 - `tests/test_named_tool.py`: The tool a message names in its own words (2026-10-19, the PC model's misses): AssistantActionRegistry.named_action() and core/assistant_chat.settle_on_named_tool(). Pure logic, no model. *(4 undocumented)*
 - `tests/test_navigation_module.py`: Unit tests for modules.navigation.module's pure functions. format_sun_moon_summary() is tested against real coordinates (not mocked) since astral itself is the "real dependency" here (offline, deterministic, no network) — same reasoning as test_system_health.py mocking psutil but this module having  *(1 undocumented)*
@@ -897,7 +897,7 @@
 - `tests/test_phone_server.py`: Phone access from Settings (core/phone_server.py): starting and stopping the real server live, the Tailscale checks, and the status checklist. *(7 undocumented)*
 - `tests/test_phone_voice_js.py`: Runs server/static/voice.js (the phone's microphone/end-of-speech/WAV code) under Node via tests/js/voice_harness.js, and checks the WAV it produces against the server's own validator — so the phone and the computer at home are proven to agree on the audio format. Skipped when Node isn't installed. *(1 undocumented)*
 - `tests/test_places.py`: Location quests (DEC-0028 #13): places with what arriving does; the phone only gets them when the person switched noticing on; arriving records it and clears the map's fog there. *(4 undocumented)*
-- `tests/test_plaid_manager.py`: Unit tests for core.plaid_manager — the vault encrypt/decrypt round trip (real core.secrets_manager calls, no network) and poll_for_public_token()'s/extract_completed_public_token()'s stopping logic against fake, duck-typed response objects (SimpleNamespace, not real plaid.model classes — those requ *(23 undocumented)*
+- `tests/test_plaid_manager.py`: Unit tests for core.plaid_manager — the vault encrypt/decrypt round trip (real core.secrets_manager calls, no network) and poll_for_public_token()'s/extract_completed_public_token()'s stopping logic against fake, duck-typed response objects (SimpleNamespace, not real plaid.model classes — those requ
 - `tests/test_plain_words.py`: Markdown out of what MIA says (core/plain_words.py).
 - `tests/test_plan_import.py`: "Paste a plan" (core/plan_import.py, 2026-10-14): a whole plan and its recipes as text, the way a chat writes it, into MIA in one undoable action. Placeholder values only (DEC-0002). *(1 undocumented)*
 - `tests/test_port_scanner.py`: Unit tests for core.port_scanner. Uses a real local TCP server bound to an ephemeral port (socket.bind(("127.0.0.1", 0))) rather than mocking sockets or reaching out to a real remote host — deterministic (no network/internet dependency) while still exercising the real connect_ex() path, not a hand-c
@@ -973,7 +973,7 @@
 - `tests/test_trip_manager.py`: Unit tests for core.trip_manager. Isolates _DATA_DIR/_TRIPS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_waypoint_manager.py's isolated_paths). planned_route_distance_km() is checked against the same known real-world distance test_waypoint_manager.py already uses (New York <-> *(5 undocumented)*
 - `tests/test_trip_map_view.py`: Unit tests for gui.trip_map_view's pure functions (project_to_scene_xy, compute_bounds), same style as tests/test_navigation_module.py — no Qt event loop, no QGraphicsScene/View instantiated.
 - `tests/test_turn_trace.py`: Turn traces (DEC-0067, core/turn_trace.py): one line per turn, how it was answered and how long it took; never a private turn, never a password. *(1 undocumented)*
-- `tests/test_unit_converter.py`: Unit tests for modules.toolbox.calculators.unit_converter.convert(). *(31 undocumented)*
+- `tests/test_unit_converter.py`: Unit tests for modules.toolbox.calculators.unit_converter.convert().
 - `tests/test_update_manager.py`: Unit tests for core.update_manager. Isolates _PROJECT_ROOT into a tmp_path scratch area (same monkeypatch pattern as test_backup_manager.py) so these tests never touch the real project files. Git-commit tests `git init` a throwaway repo in tmp_path — never the real project repo — with a local (not g *(2 undocumented)*
 - `tests/test_usage_loops.py`: Build plan step 3, the remaining usage loops (core/loops.py): numbers she didn't look up, memories corrected soon after she kept them, the gate's daily limit and the kinds it put on a break, published screens a later change broke, and data files found corrupt. Each record keeps kinds and counts, nev *(1 undocumented)*
 - `tests/test_usage_tracker.py`: Unit tests for core.usage_tracker. Isolates _DATA_DIR/_USAGE_FILE into a tmp_path scratch area (same monkeypatch pattern as test_activity_log_manager.py's isolated_paths). *(3 undocumented)*

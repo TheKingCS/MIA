@@ -37,6 +37,7 @@ from core.music_manager import MusicManager, Playlist, Track
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the music store's files and its default library folder at a temporary folder, so no test reads or writes the real ones."""
     data_dir = tmp_path / "data"
     monkeypatch.setattr(music_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(music_manager_module, "_TRACKS_FILE", data_dir / "music_tracks.json")
@@ -47,16 +48,19 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _make_context() -> AppContext:
+    """A bare context: a config and an event bus."""
     return AppContext(config=ConfigManager(), events=EventBus())
 
 
 def _make_manager(context: AppContext) -> MusicManager:
+    """A music manager on the context, set as its music."""
     manager = MusicManager(context)
     context.music = manager
     return manager
 
 
 def _write_wav(path: Path, seconds: float = 0.2, title: str = "", artist: str = "") -> None:
+    """Writes a short mono WAV (a steady tone) at the path, with an ID3 title and artist when given."""
     path.parent.mkdir(parents=True, exist_ok=True)
     frame_count = int(44100 * seconds)
     with wave.open(str(path), "wb") as w:
@@ -192,6 +196,7 @@ def test_track_from_dict_backward_compatible_with_old_shape():
 # ------------------------------------------------------------------
 
 def _configure_root(context: AppContext, root: Path) -> None:
+    """Points the music library at a folder."""
     context.config.set("music.library_root_path", str(root))
 
 
@@ -323,46 +328,60 @@ def test_scan_library_prunes_deleted_file_and_orphans_playlist_entry(isolated_pa
 # ------------------------------------------------------------------
 
 class _FakeAudioOutput:
+    """Stands in for Qt's audio output: just a volume to set and read."""
     def __init__(self):
+        """Starts at 0.7 volume."""
         self._volume = 0.7
 
     def setVolume(self, value: float) -> None:
+        """Sets the volume."""
         self._volume = value
 
     def volume(self) -> float:
+        """The volume set."""
         return self._volume
 
 
 class _FakePlayer:
+    """Stands in for Qt's media player: a source, a play state, a position and a 200-second duration, with no sound."""
     def __init__(self):
+        """Stopped at 0 with nothing loaded."""
         self.source = None
         self._state = "stopped"
         self._position_ms = 0
         self._duration_ms = 200_000
 
     def setSource(self, url) -> None:
+        """Loads a source."""
         self.source = url
 
     def play(self) -> None:
+        """Playing."""
         self._state = "playing"
 
     def pause(self) -> None:
+        """Paused."""
         self._state = "paused"
 
     def stop(self) -> None:
+        """Stopped, back to 0."""
         self._state = "stopped"
         self._position_ms = 0
 
     def setPosition(self, ms: int) -> None:
+        """Moves to a position (ms)."""
         self._position_ms = ms
 
     def position(self) -> int:
+        """The position (ms)."""
         return self._position_ms
 
     def duration(self) -> int:
+        """The duration (ms)."""
         return self._duration_ms
 
     def playbackState(self):
+        """The state as Qt's own PlaybackState."""
         from PySide6.QtMultimedia import QMediaPlayer
 
         return {
@@ -373,6 +392,7 @@ class _FakePlayer:
 
 
 def _install_fake_player(manager: MusicManager) -> _FakePlayer:
+    """Gives the manager the fake player and audio output instead of Qt's. Returns the player."""
     fake_player = _FakePlayer()
     fake_audio = _FakeAudioOutput()
     manager._player = fake_player
@@ -382,6 +402,7 @@ def _install_fake_player(manager: MusicManager) -> _FakePlayer:
 
 
 def _make_manager_with_fake_player(tmp_path) -> tuple[MusicManager, Path]:
+    """A manager with one real (fake-content) track, t1, and the fake player. Returns it and the file."""
     manager = _make_manager(_make_context())
     real_file = tmp_path / "a.mp3"
     real_file.write_bytes(b"fake audio bytes")
@@ -414,6 +435,7 @@ def test_play_track_starts_playback_and_now_playing_reflects_it(isolated_paths, 
 
 
 def test_pause_and_resume(isolated_paths, tmp_path):
+    """Pausing stops playing and resuming plays again."""
     manager, _ = _make_manager_with_fake_player(tmp_path)
     manager.play_track("t1")
     manager.pause()
@@ -423,6 +445,7 @@ def test_pause_and_resume(isolated_paths, tmp_path):
 
 
 def test_stop_clears_queue(isolated_paths, tmp_path):
+    """Stopping leaves nothing playing."""
     manager, _ = _make_manager_with_fake_player(tmp_path)
     manager.play_track("t1")
     manager.stop()
@@ -430,6 +453,7 @@ def test_stop_clears_queue(isolated_paths, tmp_path):
 
 
 def test_seek_updates_position(isolated_paths, tmp_path):
+    """Seeking moves what's playing to that second."""
     manager, _ = _make_manager_with_fake_player(tmp_path)
     manager.play_track("t1")
     manager.seek(42.0)

@@ -13,6 +13,7 @@ from modules.toolbox.calculators.unit_converter import convert
 
 
 def test_meters_to_feet():
+    """1 meter is 3.28084 feet."""
     assert convert("Length", "Meters (m)", "Feet (ft)", 1.0) == pytest.approx(3.28084, rel=1e-4)
 
 
@@ -21,14 +22,17 @@ def test_same_unit_is_identity():
 
 
 def test_kilometers_to_miles():
+    """1 kilometer is 0.621371 miles."""
     assert convert("Length", "Kilometers (km)", "Miles (mi)", 1.0) == pytest.approx(0.621371, rel=1e-4)
 
 
 def test_yards_to_feet():
+    """1 yard is 3 feet."""
     assert convert("Length", "Yards (yd)", "Feet (ft)", 1.0) == pytest.approx(3.0)
 
 
 def test_yards_to_meters():
+    """1 yard is 0.9144 meters."""
     assert convert("Length", "Yards (yd)", "Meters (m)", 1.0) == pytest.approx(0.9144)
 
 
@@ -37,43 +41,53 @@ def test_cups_to_fluid_ounces():
 
 
 def test_tablespoons_to_teaspoons():
+    """1 US tablespoon is 3 US teaspoons."""
     assert convert("Volume", "US Tablespoons (tbsp)", "US Teaspoons (tsp)", 1.0) == pytest.approx(3.0)
 
 
 def test_quart_to_pints():
+    """1 US quart is 2 US pints."""
     assert convert("Volume", "US Quarts (qt)", "US Pints (pt)", 1.0) == pytest.approx(2.0)
 
 
 def test_gallon_to_quarts():
+    """1 US gallon is 4 US quarts."""
     assert convert("Volume", "US Gallons (gal)", "US Quarts (qt)", 1.0) == pytest.approx(4.0)
 
 
 def test_gallon_to_cups():
+    """1 US gallon is 16 US cups."""
     assert convert("Volume", "US Gallons (gal)", "US Cups (cup)", 1.0) == pytest.approx(16.0)
 
 
 def test_teaspoons_to_milliliters():
+    """1 US teaspoon is 4.92892 milliliters."""
     assert convert("Volume", "US Teaspoons (tsp)", "Milliliters (mL)", 1.0) == pytest.approx(4.92892159375)
 
 
 def test_liters_to_gallons():
+    """3.785411784 liters is 1 US gallon."""
     assert convert("Volume", "Liters (L)", "US Gallons (gal)", 3.785411784) == pytest.approx(1.0)
 
 
 def test_kilograms_to_pounds():
+    """1 kilogram is 2.20462 pounds."""
     assert convert("Weight", "Kilograms (kg)", "Pounds (lb)", 1.0) == pytest.approx(2.20462, rel=1e-4)
 
 
 def test_celsius_to_fahrenheit():
+    """0 degrees Celsius is 32 Fahrenheit, and 100 is 212."""
     assert convert("Temperature", "Celsius (°C)", "Fahrenheit (°F)", 0.0) == pytest.approx(32.0)
     assert convert("Temperature", "Celsius (°C)", "Fahrenheit (°F)", 100.0) == pytest.approx(212.0)
 
 
 def test_fahrenheit_to_celsius():
+    """32 degrees Fahrenheit is 0 Celsius."""
     assert convert("Temperature", "Fahrenheit (°F)", "Celsius (°C)", 32.0) == pytest.approx(0.0)
 
 
 def test_celsius_to_kelvin():
+    """0 degrees Celsius is 273.15 kelvin."""
     assert convert("Temperature", "Celsius (°C)", "Kelvin (K)", 0.0) == pytest.approx(273.15)
 
 
@@ -129,14 +143,17 @@ def test_knots_to_km_per_hour():
 # ----------------------------------------------------------------------
 
 def test_bar_to_pascals():
+    """1 bar is 100,000 pascals."""
     assert convert("Pressure", "Bar", "Pascals (Pa)", 1.0) == pytest.approx(100_000.0)
 
 
 def test_kpa_to_pascals():
+    """1 kilopascal is 1,000 pascals."""
     assert convert("Pressure", "Kilopascals (kPa)", "Pascals (Pa)", 1.0) == pytest.approx(1000.0)
 
 
 def test_atm_to_psi():
+    """1 atmosphere is 14.6959 PSI."""
     assert convert("Pressure", "Atmospheres (atm)", "PSI", 1.0) == pytest.approx(14.6959, rel=1e-4)
 
 
@@ -145,14 +162,17 @@ def test_atm_to_psi():
 # ----------------------------------------------------------------------
 
 def test_kilocalories_to_joules():
+    """1 kilocalorie is 4,184 joules."""
     assert convert("Energy", "Kilocalories (kcal)", "Joules (J)", 1.0) == pytest.approx(4184.0)
 
 
 def test_kwh_to_joules():
+    """1 kilowatt-hour is 3,600,000 joules."""
     assert convert("Energy", "Kilowatt-hours (kWh)", "Joules (J)", 1.0) == pytest.approx(3_600_000.0)
 
 
 def test_btu_to_joules():
+    """1 BTU is 1,055.05585262 joules."""
     assert convert("Energy", "BTU", "Joules (J)", 1.0) == pytest.approx(1055.05585262)
 
 
@@ -161,10 +181,12 @@ def test_btu_to_joules():
 # ----------------------------------------------------------------------
 
 def test_horsepower_to_watts():
+    """1 horsepower is 745.6998716 watts."""
     assert convert("Power", "Horsepower (hp)", "Watts (W)", 1.0) == pytest.approx(745.6998716, rel=1e-6)
 
 
 def test_kilowatts_to_watts():
+    """1 kilowatt is 1,000 watts."""
     assert convert("Power", "Kilowatts (kW)", "Watts (W)", 1.0) == pytest.approx(1000.0)
 
 
@@ -173,14 +195,17 @@ def test_kilowatts_to_watts():
 # ----------------------------------------------------------------------
 
 def test_hours_to_minutes():
+    """1 hour is 60 minutes."""
     assert convert("Time", "Hours (hr)", "Minutes (min)", 1.0) == pytest.approx(60.0)
 
 
 def test_days_to_hours():
+    """1 day is 24 hours."""
     assert convert("Time", "Days", "Hours (hr)", 1.0) == pytest.approx(24.0)
 
 
 def test_weeks_to_days():
+    """1 week is 7 days."""
     assert convert("Time", "Weeks", "Days", 1.0) == pytest.approx(7.0)
 
 
@@ -189,18 +214,22 @@ def test_weeks_to_days():
 # ----------------------------------------------------------------------
 
 def test_kilobytes_to_bytes():
+    """1 kilobyte is 1,024 bytes (binary units)."""
     assert convert("Data Storage", "Kilobytes (KB)", "Bytes (B)", 1.0) == pytest.approx(1024.0)
 
 
 def test_megabytes_to_kilobytes():
+    """1 megabyte is 1,024 kilobytes."""
     assert convert("Data Storage", "Megabytes (MB)", "Kilobytes (KB)", 1.0) == pytest.approx(1024.0)
 
 
 def test_gigabytes_to_megabytes():
+    """1 gigabyte is 1,024 megabytes."""
     assert convert("Data Storage", "Gigabytes (GB)", "Megabytes (MB)", 1.0) == pytest.approx(1024.0)
 
 
 def test_terabytes_to_gigabytes():
+    """1 terabyte is 1,024 gigabytes."""
     assert convert("Data Storage", "Terabytes (TB)", "Gigabytes (GB)", 1.0) == pytest.approx(1024.0)
 
 
@@ -209,10 +238,12 @@ def test_terabytes_to_gigabytes():
 # ----------------------------------------------------------------------
 
 def test_degrees_to_radians():
+    """180 degrees is pi radians."""
     assert convert("Angle", "Degrees (°)", "Radians (rad)", 180.0) == pytest.approx(3.14159265358979, rel=1e-9)
 
 
 def test_gradians_to_degrees():
+    """100 gradians is 90 degrees."""
     assert convert("Angle", "Gradians (grad)", "Degrees (°)", 100.0) == pytest.approx(90.0)
 
 
