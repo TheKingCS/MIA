@@ -98,6 +98,7 @@ from core.budget_manager import BudgetManager
 from core.intent_manager import IntentManager
 from core.personal_data import PersonalData
 from core.project_manager import ProjectManager
+from core.net_worth_history import NetWorthHistory
 from core.real_estate_manager import RealEstateManager
 
 log = get_logger(__name__)
@@ -215,6 +216,7 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
     context.intents = IntentManager(context)
     context.budget = BudgetManager(context)
     context.projects = ProjectManager(context)
+    context.net_worth = NetWorthHistory(context)
     context.real_estate = RealEstateManager(context)
     # 2026-10-05 (Engine Phase 1): the rest of what Life State v2 reads
     # (core/context_assembler.py), so a headless MIA (the state export,

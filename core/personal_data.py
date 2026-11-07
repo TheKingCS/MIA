@@ -54,6 +54,7 @@ from typing import Optional
 
 from core.alarm_manager import AlarmManager
 from core.budget_manager import BudgetManager
+from core.net_worth_history import NetWorthHistory
 from core.business_use import BusinessUseManager
 from core.calendar_manager import CalendarManager
 from core.classroom_manager import ClassroomManager
@@ -222,6 +223,7 @@ HOUSEHOLD_STORES: tuple[tuple[str, type], ...] = (
     ("maintenance", MaintenanceManager),
     ("insights", InsightManager),
     ("budget", BudgetManager),
+    ("net_worth", NetWorthHistory),  # one net worth point a day, for Money's line (DEC-0113)
     ("real_estate", RealEstateManager),
     ("energy", EnergyManager),
     ("plaid", PlaidManager),
@@ -247,6 +249,7 @@ LEGACY_FILES = FIRST_LEGACY_FILES + (
 # instead of the household's (set_private_budget()).
 PRIVATE_MONEY_STORES: tuple[tuple[str, type], ...] = (
     ("budget", BudgetManager),
+    ("net_worth", NetWorthHistory),
     ("plaid", PlaidManager),
 )
 

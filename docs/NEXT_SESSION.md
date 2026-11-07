@@ -63,9 +63,10 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       (attention panels, overdue chips and rows; red stays for real errors); tabs as a rail lit from below. Checked
       in demo mode on 60 pages (no new script errors; presence.html's old error is the page to retire).
       Done per app: Missions (ready-to-complete focus card, next objective, XP, source), Freedom (each figure tagged
-      Fact/Calculation/Missing by `core.freedom.figure_kind`), Skills (capability status and next honest step first).
-      Still to do per app, against its canvas artboard: Money's net-worth line (needs net-worth history in the
-      engine), Garage/Asset, Dungeon's run card, Compliance's groups, Insurance's quote compare, Real Estate cards,
+      Fact/Calculation/Missing by `core.freedom.figure_kind`), Skills (capability status and next honest step first),
+      Money (net worth with "+$X this month" and its six-month line: `core/net_worth_history.py` keeps one point a
+      day, noted when Money is read, so the line starts the day it ships and grows with use).
+      Still to do per app, against its canvas artboard: Garage/Asset, Dungeon's run card, Compliance's groups, Insurance's quote compare, Real Estate cards,
       Workshop's build card, Orders' stage rail, Inbox's "goes to", Calendar, Journal, People, Classroom, Guitar,
       Vault, Operating, Play, Observations, the outdoors pages, Knowledge, Music, Files, Passwords, News, Look,
       Settings, Profile, Fix-It, Diagnostics; Power, Toolbox, Lab and Field Kit need web pages first (WEB_PARITY).

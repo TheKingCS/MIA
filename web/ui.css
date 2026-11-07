@@ -441,3 +441,13 @@ body.cook-live .mia-orb-button, body.cook-live .bottom-bar { display: none; }
 .meter-fill { height: 100%; background: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
 .sk-next { margin-top: 6px; padding-top: 10px; border-top: 1px solid var(--line); }
 .sk-next p { margin: 4px 0 0; font-size: var(--text-sm); }
+
+/* ---------------------------------------------------------------- Money: the net worth line (DEC-0113)
+   The canvas's Money artboard: the total, "+$X this month", and the last six months as one cyan line. */
+.nw-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.nw-change { font-family: var(--font-mono); font-size: var(--text-sm); color: var(--text-dim); }
+.nw-change.up { color: var(--ok); }
+.nw-line { width: 100%; height: 60px; display: block; margin-top: 6px; }
+.nw-line .stroke { fill: none; stroke: var(--accent); stroke-width: 2; vector-effect: non-scaling-stroke; }
+.nw-line .area { fill: rgba(var(--rgb-accent), 0.08); stroke: none; }
+.nw-note { margin: 4px 0 0; font-size: var(--text-sm); }

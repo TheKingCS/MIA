@@ -152,6 +152,7 @@ from core.insight_manager import InsightManager
 from core.intent_manager import IntentManager
 from core.project_manager import PROJECT_STATUSES, ProjectManager
 from core.plaid_manager import PlaidManager
+from core.net_worth_history import NetWorthHistory
 from core.real_estate_manager import Property, RealEstateManager, equity as property_equity
 from core.reference_library_manager import ReferenceLibraryManager
 from core.rewards_manager import RewardsManager
@@ -450,6 +451,7 @@ class MIAApplication:
         self.context.maintenance = MaintenanceManager(self.context)
         self.context.insights = InsightManager(self.context)
         self.context.budget = BudgetManager(self.context)
+        self.context.net_worth = NetWorthHistory(self.context)
         self.context.real_estate = RealEstateManager(self.context)
         self.context.energy = EnergyManager(self.context)
         self.context.plaid = PlaidManager(self.context)

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1086 files, 245,562 lines; 1086 files describe themselves; 13,481 of 14,151 classes and functions are documented.
+1088 files, 245,807 lines; 1088 files describe themselves; 13,502 of 14,172 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-390 files, 113,902 lines; 6,032 of 6,121 classes and functions documented
+391 files, 114,057 lines; 6,044 of 6,133 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -247,6 +247,7 @@
 - `core/music_manager.py`: Local audio library + playlists + real playback for the Music module (modules/music/module.py) — 2026-09-09. Replaces the pure-placeholder Music stub, closing the last remaining "pure stub module" in this project.
 - `core/my_files.py`: Files on the web (Zac, 2026-10-16: the Files app was empty on the phone). Each person has their own MIA files folder, `my_files/` inside their own data folder (core/personal_data.py), the same folder as their journal: upload from the phone, open, make folders, rename, delete. It is never the compute
 - `core/navigation_web.py`: Navigation's web screen (web/navigation.html): the waypoints with their grid references (core/geo_grid.py, MGRS), the distance and bearing from one to another, and the sun and moon at one of them on a day. The same reading as the desktop's Navigation module (modules/navigation), assembled here so th
+- `core/net_worth_history.py`: Net worth over time, for the line on Money's Overview (DEC-0113, the design canvas's Money artboard: "net worth, +$X this month, and its line"). MIA only ever knew net worth *now* (core/finance_summary.py's `_net_worth`: each linked account's latest total plus property equity); this keeps one point 
 - `core/night_school.py`: Night School (DEC-0100; Zac, 2026-11-06: "MIAs night school module where she spends time every night with Claude learning how to build herself into the best version of herself, doing tests, building her skills and proving her capabilities. I want that happening asap."). The full design is `docs/NIGH
 - `core/notification_manager.py`: A system-wide notification service any module can raise an alert through — low battery, backup complete, a medication reminder, a weather warning, etc. — without needing to know anything about how notifications are displayed.
 - `core/nutrition.py`: A recipe's nutrition facts per serving (DEC-0020): what the person typed into the recipe wins, nutrient by nutrient; the rest is worked out from its ingredients with MIA's built-in food table (core/food_table.py). Each answer says where it came from, so a screen can show "from your recipe" or "worke
@@ -669,7 +670,7 @@
 
 ## tests/: the test suite: what each part must do
 
-361 files, 65,827 lines; 5,214 of 5,795 classes and functions documented
+362 files, 65,891 lines; 5,223 of 5,804 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -882,6 +883,7 @@
 - `tests/test_named_tool.py`: The tool a message names in its own words (2026-10-19, the PC model's misses): AssistantActionRegistry.named_action() and core/assistant_chat.settle_on_named_tool(). Pure logic, no model. *(4 undocumented)*
 - `tests/test_navigation_module.py`: Unit tests for modules.navigation.module's pure functions. format_sun_moon_summary() is tested against real coordinates (not mocked) since astral itself is the "real dependency" here (offline, deterministic, no network) — same reasoning as test_system_health.py mocking psutil but this module having  *(1 undocumented)*
 - `tests/test_navigation_web.py`: Navigation's web screen (core/navigation_web.py): waypoints with grid references, distance and bearing, the sun and the moon.
+- `tests/test_net_worth_history.py`: Tests for core/net_worth_history.py: one net worth point a day, the change this month, and the Overview's line.
 - `tests/test_night_school.py`: Night School (DEC-0100, core/night_school.py): she chooses what to study, her teacher sets exercises with a test that fails first, code grades her, the teacher's lesson comes back the next time, practice never merges, and her picks are scored against her teacher's before she's trusted to choose.
 - `tests/test_notes_module.py`: Unit test for modules.notes.module.format_entry_row — pure formatting logic, no Qt event loop needed (importing the module only defines widget classes; nothing here instantiates one).
 - `tests/test_notification_manager.py`: Unit tests for core.notification_manager — previously untested (a real, pre-existing gap, not something this file tries to backfill in full). Added now specifically to cover notify()'s new "notifications.enabled" gate (2026-07-15 "ForMIA" design handoff's Quick Bus widget) — the first real, non-cosm *(3 undocumented)*
@@ -1035,7 +1037,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-72 files, 12,662 lines
+72 files, 12,688 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
