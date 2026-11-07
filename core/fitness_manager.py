@@ -53,6 +53,10 @@ KG_PER_LB = 0.45359237
 
 
 def empty_plan() -> dict:
+    """A blank fitness plan: targets (protein, calories and approach, weigh-in days, target weight and date, workouts a
+    week), training (days and the rotation), the skill tree, milestones, meals (packed lunch, lunch rotation, prep
+    day, preferences: dislikes, allergies, diet) and units. None means not set, never a made-up value.
+    """
     return {"targets": {"protein_g": None, "calories": None, "calorie_approach": "", "weigh_in_days": [],
                         "target_weight": None, "target_date": None, "workouts_per_week": None},
             "training": {"days": [], "rotation": []},
@@ -124,6 +128,7 @@ def parse_skill_step(line: str) -> Optional[dict]:
 
 
 def skill_step_text(step: dict) -> str:
+    """A skill step in words: its name and target ("Handstand 30s", "Pull-up 10 reps")."""
     if step.get("target_seconds"):
         return f"{step.get('name', '')} {step['target_seconds']}s"
     if step.get("target_reps"):
@@ -188,6 +193,7 @@ class FitnessManager:
     """`context.fitness`: one person's plan, weigh-ins, food and practice."""
 
     def __init__(self, context, data_dir: Optional[Path] = None) -> None:
+        """Opens the person's fitness file (fitness.json in their folder, data/ by default)."""
         self.context = context
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self.path = self.data_dir / "fitness.json"
@@ -197,6 +203,10 @@ class FitnessManager:
     # ------------------------------------------------------------------ storage
 
     def _load(self) -> None:
+        """Reads the file into its parts: the plan (merged over a blank one so new fields appear), weigh-ins, food, skill
+        practice, training days and steps done, habits, the meal plan and prep sessions. A damaged file is logged and
+        starts fresh. Undo calls this to reload.
+        """
         try:
             raw = json.loads(self.path.read_text(encoding="utf-8")) if self.path.exists() else {}
         except (OSError, ValueError):
@@ -215,16 +225,21 @@ class FitnessManager:
                       "prep": list(raw.get("prep") or [])}  # date (or week's Monday) -> ["lunch", "prep", ...]
 
     def _save(self) -> None:
+        """Writes the whole file atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self.path, json.dumps(self._data, indent=1, ensure_ascii=False), encoding="utf-8")
 
     def _record(self, type_: str, summary: str, payload: dict) -> None:
+        """Records a fitness change in the life-event history."""
         life_events.record(self, type_, summary, [], payload)
 
     # ------------------------------------------------------------------ the plan
 
     @property
     def plan(self) -> dict:
+        """A copy of the plan with units filled in, and the training days taken from the Loop's training rhythm when it has
+        one (DEC-0052: which days you train is the Loop's; the plan says what each day is).
+        """
         plan = json.loads(json.dumps(self._data["plan"]))
         plan["units"] = plan.get("units") or self.default_units()
         # DEC-0052: which days you train is the Loop's; the plan says what each day is.
@@ -236,6 +251,9 @@ class FitnessManager:
         return plan
 
     def _training_rhythm(self):
+        """The Loop's training rhythm for this person, or None (logged) when it can't be read: the plan works without
+        it.
+        """
         try:
             from core.the_loop import training_rhythm
 
@@ -259,6 +277,7 @@ class FitnessManager:
         return True
 
     def default_units(self) -> str:
+        """lb in the US, Liberia and Myanmar, kg everywhere else (lb when the country can't be told)."""
         from core.region import country_of
 
         try:
@@ -288,6 +307,9 @@ class FitnessManager:
     # ------------------------------------------------------------------ weigh-ins
 
     def log_weight(self, weight: float, on: Optional[str] = None, unit: Optional[str] = None, note: str = "") -> dict:
+        """Logs a weigh-in (one per day: a second replaces the first), rejecting a number that can't be a body weight,
+        and records it in the history.
+        """
         if not 20 <= float(weight) <= 1500:
             raise ValueError("That doesn't look like a body weight.")
         day = on or date.today().isoformat()
@@ -301,13 +323,18 @@ class FitnessManager:
         return entry
 
     def delete_weight(self, entry_id: str) -> None:
+        """Deletes a weigh-in."""
         self._data["weigh_ins"] = [w for w in self._data["weigh_ins"] if w["id"] != entry_id]
         self._save()
 
     def weigh_ins(self) -> list[dict]:
+        """Every weigh-in, oldest first."""
         return list(self._data["weigh_ins"])
 
     def weight_trend(self, today: Optional[date] = None) -> dict:
+        """The weight picture up to today in the plan's units: latest, weekly change, the target and the date it's on
+        track for.
+        """
         today = today or date.today()
         units = self.plan["units"]
         points = [(date.fromisoformat(w["date"]), convert(w["weight"], w.get("unit", units), units))
@@ -323,6 +350,9 @@ class FitnessManager:
 
     def log_food(self, meal: str, name: str, nutrients: Optional[dict] = None, on: Optional[str] = None,
                  recipe_id: str = "", servings: float = 1.0, source: str = "quick", planned_id: str = "") -> dict:
+        """Logs something eaten (an unknown meal becomes a snack), with whatever nutrients are known (None when not), and
+        records it in the history.
+        """
         meal = meal if meal in MEALS else "snack"
         entry = {"id": uuid.uuid4().hex[:10], "date": on or date.today().isoformat(), "meal": meal, "name": name,
                  "recipe_id": recipe_id, "servings": servings, "source": source, "planned_id": planned_id}
@@ -337,6 +367,7 @@ class FitnessManager:
         return entry
 
     def delete_food(self, entry_id: str) -> None:
+        """Deletes a food entry."""
         self._data["food"] = [f for f in self._data["food"] if f["id"] != entry_id]
         self._save()
 
@@ -345,6 +376,7 @@ class FitnessManager:
         return [f for f in self._data["food"] if f.get("recipe_id") == recipe_id]
 
     def food_on(self, day: str) -> list[dict]:
+        """What was logged as eaten on a day."""
         return [f for f in self._data["food"] if f["date"] == day]
 
     def day_totals(self, day: Optional[str] = None) -> dict:
@@ -357,6 +389,7 @@ class FitnessManager:
                 "meals_logged": sorted({e["meal"] for e in eaten}, key=MEALS.index)}
 
     def daily_history(self, days: int = 28, today: Optional[date] = None) -> list[dict]:
+        """Each of the last `days` days' food totals, oldest first, for the charts."""
         today = today or date.today()
         return [{"date": d, **self.day_totals(d)["totals"]}
                 for d in ((today - timedelta(days=i)).isoformat() for i in range(days - 1, -1, -1))]
@@ -365,6 +398,7 @@ class FitnessManager:
 
     def log_skill(self, skill: str, step: str = "", seconds: Optional[float] = None, reps: Optional[int] = None,
                   minutes: Optional[float] = None, on: Optional[str] = None, note: str = "") -> dict:
+        """Logs skill practice (a hold in seconds, reps or minutes) and records it in the history."""
         entry = {"id": uuid.uuid4().hex[:10], "date": on or date.today().isoformat(), "skill": skill, "step": step,
                  "seconds": seconds, "reps": reps, "minutes": minutes, "note": note}
         self._data["skill_sessions"].append(entry)
@@ -374,17 +408,21 @@ class FitnessManager:
         return entry
 
     def skill_sessions(self, skill: Optional[str] = None) -> list[dict]:
+        """Every practice logged, or one skill's (case-insensitive)."""
         return [s for s in self._data["skill_sessions"] if skill is None or s["skill"].lower() == skill.lower()]
 
     def best_hold(self, skill: str, step: str = "") -> Optional[float]:
+        """The longest hold logged for a skill (and step), or None."""
         holds = [s["seconds"] for s in self.skill_sessions(skill) if s.get("seconds") and (not step or s["step"] == step)]
         return max(holds) if holds else None
 
     def best_reps(self, skill: str, step: str = "") -> Optional[int]:
+        """The most reps logged for a skill (and step), or None."""
         counts = [s["reps"] for s in self.skill_sessions(skill) if s.get("reps") and (not step or s["step"] == step)]
         return max(counts) if counts else None
 
     def practice_minutes(self, skill: str, day: Optional[str] = None) -> float:
+        """Minutes practiced on a skill on a day (today by default)."""
         day = day or date.today().isoformat()
         return sum(s.get("minutes") or 0 for s in self.skill_sessions(skill) if s["date"] == day)
 
@@ -404,6 +442,7 @@ class FitnessManager:
         return {**rotation[index], "index": index, "done": done_today is not None}
 
     def complete_training(self, today: Optional[date] = None) -> Optional[dict]:
+        """Marks today's training done (once) and records it; returns today's training, or None on a rest day."""
         day = (today or date.today()).isoformat()
         todays = self.today_training(today)
         if todays is None or todays["done"]:
@@ -432,6 +471,9 @@ class FitnessManager:
         return {**todays, "steps_done": done}
 
     def steps_done(self, day: Optional[str] = None) -> list[int]:
+        """Which of a day's training steps are done: all of them when the day's training is done, else the ones ticked
+        plus the ones a logged workout covered.
+        """
         day = day or date.today().isoformat()
         if any(t["date"] == day for t in self._data["training_done"]):
             todays = self.today_training(date.fromisoformat(day))
@@ -475,14 +517,17 @@ class FitnessManager:
             self._record("habit", f"Done: {name}", {"habit": name, "date": day})
 
     def has_habit(self, name: str, day: Optional[str] = None) -> bool:
+        """Whether a daily yes (packed lunch, protein hit...) is marked for a day."""
         return name in self._data["habits"].get(day or date.today().isoformat(), [])
 
     def training_days_done(self, since: str) -> list[dict]:
+        """The training days finished since a date."""
         return [t for t in self._data["training_done"] if t["date"] >= since]
 
     # ------------------------------------------------------------------ meal plan (core/meal_plan.py has the logic)
 
     def planned(self, day: str) -> dict:
+        """A day's planned meals (meal -> recipe, servings and the prep session it comes from)."""
         return dict(self._data["meal_plan"].get(day, {}))
 
     def plan_meal(self, day: str, meal: str, recipe_id: Optional[str], servings: float = 1.0, prep_id: str = "") -> None:
@@ -498,9 +543,13 @@ class FitnessManager:
         self._save()
 
     def prep_sessions(self, since: str = "", until: str = "9999") -> list[dict]:
+        """The meal-prep sessions between two dates."""
         return [p for p in self._data["prep"] if since <= p["date"] <= until]
 
     def add_prep(self, day: str, recipe_id: str, servings: float, covers: list[str]) -> dict:
+        """Plans a prep session: cook a recipe on a day for the meals it covers, putting each covered meal on the meal
+        plan from that session, and records it.
+        """
         session = {"id": uuid.uuid4().hex[:8], "date": day, "recipe_id": recipe_id, "servings": servings,
                    "covers": list(covers), "done": False}
         self._data["prep"].append(session)
@@ -513,6 +562,7 @@ class FitnessManager:
         return session
 
     def finish_prep(self, prep_id: str) -> dict:
+        """Marks a prep session cooked and records it (ValueError when it's gone)."""
         session = next((p for p in self._data["prep"] if p["id"] == prep_id), None)
         if session is None:
             raise ValueError("There's no prep session like that.")
@@ -522,6 +572,7 @@ class FitnessManager:
         return dict(session)
 
     def delete_prep(self, prep_id: str) -> None:
+        """Deletes a prep session and the planned meals that came from it."""
         self._data["prep"] = [p for p in self._data["prep"] if p["id"] != prep_id]
         for slots in self._data["meal_plan"].values():
             for meal in [m for m, v in slots.items() if v.get("prep_id") == prep_id]:
@@ -535,6 +586,7 @@ class FitnessManager:
     # ------------------------------------------------------------------ milestones
 
     def complete_milestone(self, milestone_id: str, on: Optional[str] = None) -> dict:
+        """Marks a plan milestone reached (once) and records it (ValueError when it isn't in the plan)."""
         plan = self._data["plan"]
         milestone = next((m for m in plan.get("milestones", []) if m.get("id") == milestone_id), None)
         if milestone is None:

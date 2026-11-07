@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 226,528 lines; 1043 files describe themselves; 3,451 of 13,517 classes and functions are documented.
+1043 files, 226,580 lines; 1043 files describe themselves; 3,483 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 100,434 lines; 2,720 of 5,630 classes and functions documented
+367 files, 100,486 lines; 2,752 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -135,7 +135,7 @@
 - `core/first_account.py`: Making the first account on a device (2026-10-07, DEC-0019 Phase 2): the phone app opens to "create your account" (name, email, password, country, what you want MIA to help with) instead of making a person called "You". Only when no account here has a password yet: after that, people sign in, and mo *(1 undocumented)*
 - `core/first_boot.py`: The first time a person meets MIA (slice 2 of docs/GLASSES_FIRST_BOOT_PLAN.md, Zac's brief of 2026-10-29): she doesn't launch, she awakens. This keeps how far each person has got, so the sequence can be left and picked up again on any device, and writes the words she says, so a screen only plays the *(8 undocumented)*
 - `core/fitness_actions.py`: What the fitness screens and plain-word commands change (DEC-0020, H-0026), as action kinds: proposed, approved, recorded, undoable, and credited to the person (core/actions.py). Each logs into the person's fitness store (core/fitness_manager.py) and then brings the fitness missions up to date (core
-- `core/fitness_manager.py`: A person's fitness plan and what they log against it (DEC-0020, docs/KITCHEN_FITNESS_PLAN.md, Muse's H-0026): weigh-ins and their trend, what they ate and its nutrition, timed skill practice (handstand holds in seconds), and milestones. Personal (core/personal_data.py PERSONAL_STORES): each person's *(32 undocumented)*
+- `core/fitness_manager.py`: A person's fitness plan and what they log against it (DEC-0020, docs/KITCHEN_FITNESS_PLAN.md, Muse's H-0026): weigh-ins and their trend, what they ate and its nutrition, timed skill practice (handstand holds in seconds), and milestones. Personal (core/personal_data.py PERSONAL_STORES): each person's
 - `core/fitness_missions.py`: A person's fitness plan as missions (DEC-0020, H-0026): made from the plan (core/fitness_manager.py) each day and week, on the existing mission path (Missions screen, XP, skills, complete, undo). *(5 undocumented)*
 - `core/flock.py`: Chickens (DEC-0037): a flock log that turns eggs into money you can see. *(16 undocumented)*
 - `core/flock_actions.py`: Chickens' actions (DEC-0037, core/flock.py) on the action contract: proposed in plain words, approved, run, undoable. *(24 undocumented)*
