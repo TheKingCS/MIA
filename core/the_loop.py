@@ -63,11 +63,17 @@ CHORE_LEAD = 30  # chores are learned from when they're done: they start about t
 
 
 def _now() -> str:
+    """Now, as an ISO timestamp to the second."""
     return datetime.now().isoformat(timespec="seconds")
 
 
 @dataclass
 class Rhythm:
+    """One thing that recurs in the week: its kind (work, routine, training, checkin or custom) and what it points at
+    (a dungeon, a chore category or template), the weekdays it happens (0 = Monday), when it starts and ends (an end
+    earlier than the start is the next day), where each of those came from ("yours": the person said it, never
+    overwritten; "learned": from what happened, and from how many times), and the reminder some minutes before.
+    """
     rhythm_id: str
     name: str
     kind: str = "custom"
@@ -113,11 +119,13 @@ def parse_clock(text: str) -> str:
 
 
 def minutes(hhmm: str) -> int:
+    """Minutes since midnight for "HH:MM"."""
     h, m = hhmm.split(":")
     return int(h) * 60 + int(m)
 
 
 def clock(total: int) -> str:
+    """"HH:MM" for minutes since midnight (wrapping past midnight)."""
     total %= 24 * 60
     return f"{total // 60:02d}:{total % 60:02d}"
 
@@ -229,13 +237,21 @@ def work_day(start: str, end: str, days: list[int], now: datetime, grace_hours: 
 
 
 class LoopBook:
+    """The Loop's store (loop.json in the person's folder, written through atomic_write_text so undo can restore it):
+    the rhythms, the days each work run was already planned (never planned again), the last day each reminder went
+    out, when it last learned, and the Sundays whose check-in was done.
+    """
     def __init__(self, context, data_dir: Optional[Path] = None) -> None:
+        """Points at the person's file (data/ by default) and loads it."""
         self.context = context
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._file = self.data_dir / _FILE
         self._load()
 
     def _load(self) -> None:
+        """Reads loop.json, keeping only the fields a rhythm knows; an unreadable file is logged, reported
+        (notify_data_corruption) and starts empty.
+        """
         self.rhythms: list[Rhythm] = []
         self.made: dict[str, list[str]] = {}  # rhythm_id -> days its work run was planned (never planned again)
         self.fired: dict[str, str] = {}  # rhythm_id -> the last day its reminder went out
@@ -256,9 +272,11 @@ class LoopBook:
             notify_data_corruption(self.context, _FILE)
 
     def reload(self) -> None:
+        """Reads the file again (after undo restored it)."""
         self._load()
 
     def _save(self) -> None:
+        """Writes everything atomically, keeping 60 days of planned-run days and the last 60 check-ins."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         cutoff = (date.today() - timedelta(days=60)).isoformat()
         self.made = {k: [d for d in v if d >= cutoff] for k, v in self.made.items()}
@@ -267,12 +285,15 @@ class LoopBook:
                                                   "checkins": self.checkins[-60:]}, indent=2))
 
     def get(self, rhythm_id: str) -> Optional[Rhythm]:
+        """The rhythm with this id, or None."""
         return next((r for r in self.rhythms if r.rhythm_id == rhythm_id), None)
 
     def find(self, kind: str, ref: str = "") -> Optional[Rhythm]:
+        """The rhythm of a kind pointing at a ref (a dungeon's work rhythm, the Household chores...), or None."""
         return next((r for r in self.rhythms if r.kind == kind and r.ref == ref), None)
 
     def add(self, name: str, kind: str = "custom", ref: str = "", icon: str = "🔁", **fields) -> Rhythm:
+        """Adds a rhythm (a name and a known kind are required) with whatever fields are given."""
         if not str(name or "").strip():
             raise ValueError("A rhythm needs a name.")
         if kind not in KINDS:
@@ -314,17 +335,21 @@ class LoopBook:
         return r
 
     def delete(self, rhythm_id: str) -> None:
+        """Deletes a rhythm."""
         self.rhythms = [r for r in self.rhythms if r.rhythm_id != rhythm_id]
         self._save()
 
     def note_made(self, rhythm_id: str, day: str) -> None:
+        """Notes that a rhythm's work run was planned for a day (saved with the next save), so it's never planned again."""
         self.made.setdefault(rhythm_id, []).append(day)
 
     def note_fired(self, rhythm_id: str, day: str) -> None:
+        """Notes the day a rhythm's reminder went out and saves, so it goes out once a day."""
         self.fired[rhythm_id] = day
         self._save()
 
     def save(self) -> None:
+        """Saves now (after several note_made calls)."""
         self._save()
 
 
@@ -332,6 +357,9 @@ class LoopBook:
 
 
 def _routine_templates(context, r: Rhythm) -> list:
+    """The active recurring-mission templates a routine rhythm covers (its template, or every template in its
+    category).
+    """
     store = getattr(context, "recurring_missions", None)
     if store is None:
         return []
@@ -460,6 +488,7 @@ def learn(context, today: Optional[date] = None) -> None:
 
 
 def _day(text: str) -> Optional[date]:
+    """A date from text (its first ten characters), or None."""
     try:
         return date.fromisoformat(str(text or "")[:10])
     except ValueError:
@@ -467,6 +496,7 @@ def _day(text: str) -> Optional[date]:
 
 
 def _stamp(text: str) -> Optional[datetime]:
+    """A datetime from ISO text, or None."""
     try:
         return datetime.fromisoformat(str(text or ""))
     except ValueError:
@@ -584,6 +614,11 @@ def reminders(context, now: Optional[datetime] = None) -> list[tuple[Rhythm, str
 
 
 def _reminder(context, r: Rhythm, today: date, start: datetime) -> Optional[tuple[str, str]]:
+    """What a rhythm's reminder says today, as (title, message), or None when there's nothing to remind about: a work
+    run already cleared (else when it opens and ends, the hours, the break, and the loot it should bring), chores all
+    done (else how many and which), the weekly check-in's line, today's training unless it's done or it's a rest day,
+    or a custom rhythm's name and time.
+    """
     when = clock_text(r.start)
     if r.kind == "work":
         dungeons = getattr(context, "dungeon", None)
@@ -725,6 +760,9 @@ def week(context, today: Optional[date] = None, start: Optional[date] = None) ->
 
 
 def rhythm_view(r: Rhythm) -> dict:
+    """A rhythm as a screen shows it: days and times in words, hours, where each value came from, the reminder, and a
+    one-line summary ("days not known yet" when it hasn't learned them).
+    """
     hours = span_hours(r.start, r.end)
     learned = r.learned_from
     return {"id": r.rhythm_id, "name": r.name, "kind": r.kind, "icon": r.icon, "days": r.days,
@@ -737,6 +775,9 @@ def rhythm_view(r: Rhythm) -> dict:
 
 
 def loop_page(context, today: Optional[date] = None) -> dict:
+    """The Loop page's data: every rhythm (made first if missing; a work rhythm with its paid hours and break) and the
+    week, or {available: False} without a Loop.
+    """
     book = getattr(context, "loop", None)
     if book is None:
         return {"available": False}

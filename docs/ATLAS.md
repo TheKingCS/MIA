@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 227,275 lines; 1043 files describe themselves; 3,907 of 13,517 classes and functions are documented.
+1043 files, 227,316 lines; 1043 files describe themselves; 3,929 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 101,181 lines; 3,176 of 5,630 classes and functions documented
+367 files, 101,222 lines; 3,198 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -318,7 +318,7 @@
 - `core/task_manager.py`: A single Task under a core.project_manager.Project — one concrete to-do item, checked off when done. Same persisted-JSON pattern as core/trip_manager.py, minus that module's photo/journal/gear extensions, which don't apply to a plain task list. *(14 undocumented)*
 - `core/textbook_manager.py`: The textbook tutor's library (2026-09-28): "a feature where MIA gets textbooks that can be added to her that she can reference to help educate the user on subjects of their choice... understand it and assist a user in understanding it." *(19 undocumented)*
 - `core/textbook_study.py`: The study and quiz conversation modes of the textbook tutor (2026-09-28): which book and chapter a conversation is on, and the passages MIA answers from each turn. The library itself is core/textbook_manager.py; the tone lines are in core/conversation_modes.py (STUDY, QUIZ). *(1 undocumented)*
-- `core/the_loop.py`: The Loop (DEC-0047, step 1; Zac 2026-10-27): the normal week, run as the same grind every week, and MIA learning *when* it happens so she knows when to start each part and remind you. *(22 undocumented)*
+- `core/the_loop.py`: The Loop (DEC-0047, step 1; Zac 2026-10-27): the normal week, run as the same grind every week, and MIA learning *when* it happens so she knows when to start each part and remind you.
 - `core/tile_fetch_worker.py`: Fetches individual missing basemap tiles off the GUI thread for gui/widgets/tile_map_view.py's live pan/zoom — same "network I/O never blocks a paint/input handler" reasoning as modules/field_kit/port_scan_worker.py's PortScanWorker, but shaped as a long-lived queue-processing thread rather than a o *(4 undocumented)*
 - `core/today.py`: "Today" (2026-10-01): one list of what needs you today, from every app, so nobody has to open eight screens to find out. Shown at the top of Home (gui/home_dashboard.py), on the phone (`/api/today`), and by the Assistant ("what's on today?"). *(15 undocumented)*
 - `core/tool_loop.py`: The tool loop (DEC-0052 step 2b; docs/REASONING_PLAN.md section 3b; docs/TOOL_CALLING_RESEARCH.md R4). Before: a turn was one round; the model picked lookups, MIA said each result as it was, and nothing was combined or followed up. Now, when the model asks only to *look things up*: *(4 undocumented)*
