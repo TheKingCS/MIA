@@ -1002,3 +1002,25 @@ body.cook-live .mia-orb-button, body.cook-live .bottom-bar { display: none; }
 .lk-actions .btn-big { font-size: var(--text-md, 16px); }
 .lk-answer .kind { white-space: normal; }
 .lk-photo { padding: 0; }
+
+/* ---------------------------------------------------------------- Settings (DEC-0113)
+   A small label over one card per group; each setting a row: name and note left, its control right. */
+.st-group { margin-bottom: var(--gap); }
+.st-label { margin: 0 0 8px; font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-dim); }
+.st-card { display: grid; padding: 0 14px; }
+.st-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 14px; min-height: 60px; padding: 8px 0;
+  border-top: 1px solid var(--line); }
+.st-card > :first-child { border-top: 0; }
+.st-row.wide { grid-template-columns: 1fr; }
+.st-text { display: grid; gap: 2px; min-width: 0; }
+.st-text label { font-weight: 500; }
+.st-note { font-size: var(--text-sm); color: var(--text-dim); }
+.st-intro { margin: 10px 0 0; }
+.st-control select, .st-control input[type="number"], .st-control input[type="text"] { min-height: 38px; padding: 0 10px; border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong); background: rgba(var(--rgb-panel), 0.9); color: var(--text); font: inherit; max-width: 220px; }
+.st-row.wide .st-control input[type="text"] { max-width: none; width: 100%; box-sizing: border-box; }
+.st-card .acct-actions { padding: 10px 0; border-top: 1px solid var(--line); }
+.switch input:checked + span { background: var(--accent); }
+.st-control .switch { display: inline-block; vertical-align: middle; }
+.st-control input[type="number"] { width: 84px; }

@@ -40,9 +40,14 @@
     return t;
   }
 
-  const setting = (s) => el("div", { class: "setting" + (s.kind === "text" ? " wide" : "") },
-    el("label", { for: "s-" + s.key.replace(/\./g, "-") }, s.label), control(s),
-    s.help ? el("p", { class: "help" }, s.help) : "");
+  // The design canvas (DEC-0113): each setting a row, its name and a short note on the left and its control (a
+  // switch for on/off) on the right; a group is a small label over one card of rows.
+  const setting = (s) => el("div", { class: "st-row" + (s.kind === "text" ? " wide" : "") },
+    el("div", { class: "st-text" }, el("label", { for: "s-" + s.key.replace(/\./g, "-") }, s.label),
+      s.help ? el("span", { class: "st-note" }, s.help) : null),
+    el("div", { class: "st-control" }, control(s)));
+  const group = (title, ...rows) => el("section", { class: "st-group", "aria-label": title },
+    el("h2", { class: "st-label" }, title), el("div", { class: "glass st-card" }, ...rows.filter(Boolean)));
 
   // Hear each tune without earning a win first (Muse, H-0057).
   function soundCheck() {
@@ -54,12 +59,12 @@
 
   function breaks() {
     if (!page.breaks.length) return "";
-    return section("Taking a break from",
-      el("p", { class: "dim" }, "You kept dismissing these, so MIA stopped sending them for a while."),
-      el("div", { class: "rows" }, page.breaks.map((b) => el("div", { class: "row" },
-        el("div", {}, el("div", { class: "row-title" }, b.label), el("div", { class: "row-sub" }, "until " + b.until)),
-        el("button", { type: "button", class: "btn btn-ghost", onclick: () => act({ kind: "communication.resume", params: { topic: b.topic } }) },
-          "Bring it back")))));
+    return group("MIA Is Taking a Break From",
+      el("p", { class: "st-note st-intro" }, "You kept dismissing these, so MIA stopped sending them for a while."),
+      ...page.breaks.map((b) => el("div", { class: "st-row" },
+        el("div", { class: "st-text" }, el("span", {}, b.label), el("span", { class: "st-note" }, "until " + b.until)),
+        el("div", { class: "st-control" }, el("button", { type: "button", class: "btn btn-ghost btn-small",
+          onclick: () => act({ kind: "communication.resume", params: { topic: b.topic } }) }, "Resume")))));
   }
 
   // The home computer's bigger model (DEC-0022, core/home_link.py).
@@ -140,7 +145,7 @@
 
   function draw() {
     $("panel").replaceChildren(
-      ...page.groups.map((g) => section(g.title, ...g.settings.map(setting), g.title === "Sound" ? soundCheck() : "")),
+      ...page.groups.map((g) => group(g.title, ...g.settings.map(setting), g.title === "Sound" ? soundCheck() : null)),
       breaks(),
       page.home_link ? homeLink(page.home_link) : "",
       page.model_test ? section("MIA's model on this phone",
