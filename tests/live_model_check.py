@@ -645,6 +645,22 @@ GOLDEN_CASES = [
     ("business tags: what's waiting", "Which bank charges still need a business?", "list_untagged_charges"),
     ("business tags: sort one", "The Shell charge was for lawn care", "tag_charge", {"business": "lawn"}),
     ("small talk: a dog", "What's a good name for a dog?", None),
+    # Full use by voice (DEC-0125, 2026-11-07): every app answers; all 15 passed on this PC's model that night.
+    ("character: level", "What level am I?", "get_character"),
+    ("skills: growing", "Which skills am I growing?", "get_skills"),
+    ("reward shop: what's in reach", "What can I buy with my credits?", "list_rewards"),
+    ("reward shop: buy one", "Buy the movie night reward", "buy_reward"),
+    ("insurance: renewal", "When does my car insurance renew?", "get_insurance"),
+    ("kept: promises", "What did I promise?", "list_kept"),
+    ("operating journal: how it's going", "Am I living how I said I want to?", "get_operating_journal"),
+    ("play: this week", "How much have I played this week?", "get_play"),
+    ("files: the folder", "What's in my MIA folder?", "find_my_files"),
+    ("vault: backed up", "Are my photos backed up?", "get_vault_status"),
+    ("power: log a reading", "Log the propane at 60 percent", "log_energy_reading"),
+    ("cameras: working", "Are the cameras working?", "list_cameras"),
+    ("expeditions: next trip", "What's my next trip?", "list_trips"),
+    ("power: the battery", "How's the battery?", "get_power_status"),
+    ("maintenance: vehicles", "What upkeep is due on my vehicles?", "list_maintenance_tasks"),
 ]
 
 
