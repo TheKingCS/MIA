@@ -2,7 +2,9 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-11-06 (loop coverage, DEC-0054 built, recall plans), by claude.*
+session. Last updated: 2026-11-07 (DEC-0104 to 0109: documentation, models, curriculum, self-audit, specialists), by claude.*
+
+**2026-11-07, Claude on the PC, with Zac.** MIA learns to build and know herself. **Documentation (DEC-0104)** is worked down file by file (5,700+ of 13,500 definitions; `python -m tools.docs next`), and **Claude writes her Knowledge Vault entries for what it builds (DEC-0105**, K-0038 to K-0054). `get_mia_docs` and the council now answer from her code's docstrings and the vault, not only `docs/`. **Her own models (DEC-0106)**: a model forge (`core/model_forge.py`) made her first, a tool router trained on her tools' own words (80% first pick, 95% top five on requests it never saw), running in the shadow on every traced turn; each model is assigned to the issue it serves, from a playbook of five kinds. **Her curriculum (DEC-0107)**: ten computing tracks (engineering to pen testing on herself only), one Night School lesson a night. **She audits herself weekly (DEC-0108)**: her code (187 places to look), her interconnections, and an evolving best-practices series (`docs/practices/`); acting on the first audit, 34 stores joined her history (`life_events.on_change`), 20 link kinds were added, and the life state gained an `areas` section: 49% to 76% of store connections made. **Specialists (DEC-0109)**: nine knowledge workers (construction, homesteading, radio, strategy, making, outdoors, research, testing, engineering) with sourced workbooks, a study hall in Night School grounded in her offline library when it has packs, and `ask_specialist` by voice. The suite: 5,210 passing.
 
 **2026-11-06 (morning, Zac asleep), Claude on the PC, continuing the build plan.** Every process now has a
 loop or a reason: coverage 229 of 257 (3 still to do, all waiting on the Plaid work; 25 declined with a reason). New

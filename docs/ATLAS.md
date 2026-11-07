@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1058 files, 233,525 lines; 1058 files describe themselves; 5,877 of 13,680 classes and functions are documented.
+1058 files, 233,582 lines; 1058 files describe themselves; 5,880 of 13,683 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-373 files, 106,505 lines; 5,100 of 5,747 classes and functions documented
+373 files, 106,546 lines; 5,102 of 5,749 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -652,7 +652,7 @@
 
 ## tests/: the test suite: what each part must do
 
-352 files, 63,732 lines; 341 of 5,698 classes and functions documented
+352 files, 63,748 lines; 342 of 5,699 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*

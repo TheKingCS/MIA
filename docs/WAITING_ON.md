@@ -72,7 +72,8 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 
 ### Using MIA (whenever)
 - [ ] **Try the new web pages** (after the restart, in the sidebar): Kept, Classroom, Household, Navigation, Maps,
-      Observations, Memories, Knowledge (copy Kiwix `.zim` packs into `reference_library\` first), and
+      Observations, Memories, Knowledge (copy Kiwix `.zim` packs into `reference_library\` first: her specialists also cite them
+      when they study, DEC-0109), and
       Diagnostics (yours only). Each is working but plain: Muse does the look. Tell Claude what's wrong or missing.
 - [ ] **Maps:** once your area is cut (above), open Maps, tap where something is (the well, a gate, a trailhead)
       and name it; it's a waypoint everywhere (Navigation, the glasses, the TAK export).

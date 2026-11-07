@@ -26,9 +26,10 @@ is.
 
 **How it studies** (`study()`, from Night School, one specialist a night, the
 one that studied longest ago): her teacher is given the specialist's charter,
-its limits, its open questions and the titles it already has, and writes up
-to `NOTES_PER_NIGHT` new notes, each with its sources (a note without one is
-refused). The specialist's pages in `docs/specialists/` are rewritten after.
+its limits, its open questions, the titles it already has, and excerpts from
+her own offline reference library (Kiwix packs) for those questions to cite
+(`grounding()`), and writes up to `NOTES_PER_NIGHT` new notes, each with its
+sources (a note without one is refused). The specialist's pages in `docs/specialists/` are rewritten after.
 
 **How MIA uses it**: the `ask_specialist` tool answers from the workbooks (a
 specialist named, or every one), with the note's sources and whether it's
@@ -305,6 +306,9 @@ Its limits: {limits} {common}
 Its open questions (answer some of these first):
 {questions}
 
+From MIA's own offline reference library (prefer these; cite one as "Reference library: <pack>, '<article>'"):
+{library}
+
 Notes it already has (don't repeat them):
 {titles}
 
@@ -323,19 +327,56 @@ def next_to_study(folder: Path = BOOKS) -> Specialist:
     return min(SPECIALISTS, key=lambda s: (book(s.id, folder)["studied"], SPECIALISTS.index(s)))
 
 
+def _library_search() -> Optional[Callable[[str, int], list]]:
+    """Her offline reference library's search across every pack (core/reference_library_manager.py), or None when
+    it can't be opened here."""
+    try:
+        from core.app_context import AppContext
+        from core.config_manager import ConfigManager
+        from core.event_bus import EventBus
+        from core.reference_library_manager import ReferenceLibraryManager
+
+        library = ReferenceLibraryManager(AppContext(config=ConfigManager(), events=EventBus()))
+        return library.search_all_packs if library.list_packs() else None
+    except Exception:
+        return None
+
+
+def grounding(questions: list[str], search: Optional[Callable[[str, int], list]], per_question: int = 2,
+              chars: int = 600) -> str:
+    """Excerpts from her reference library for a specialist's first open questions, each labelled with its pack and
+    article so a note can cite it; "(no reference packs installed)" without a library or a hit."""
+    if search is None:
+        return "(no reference packs installed)"
+    lines = []
+    for q in questions[:3]:
+        try:
+            hits = search(q, per_question)
+        except Exception:
+            continue
+        for h in hits:
+            lines.append(f"- {h.pack_title}, '{h.article_title}' (for: {q}): {' '.join(h.snippet.split())[:chars]}")
+    return "\n".join(lines) or "(nothing in the reference packs for these questions)"
+
+
 def study(ask: Callable[[str], str], sid: str = "", folder: Path = BOOKS, pages: Optional[Path] = PAGES,
-          count: int = NOTES_PER_NIGHT) -> dict:
+          count: int = NOTES_PER_NIGHT, search: Optional[Callable[[str, int], list]] = None,
+          use_library: bool = True) -> dict:
     """One study session for a specialist (the next in turn unless named): its teacher (`ask`, a prompt in and the
-    reply out) writes notes from its charter and open questions; each valid one is kept as derived, a bad one is
-    counted and skipped; new questions are added. Returns what happened."""
+    reply out) writes notes from its charter and open questions, given excerpts from her offline reference library
+    to cite when it has packs (`search`, else found here unless use_library is False); each valid note is kept as
+    derived, a bad one is counted and skipped; new questions are added. Returns what happened."""
     from core.night_school import _json_in
 
     spec = BY_ID[sid] if sid else next_to_study(folder)
     data = book(spec.id, folder)
     live = [n["title"] for n in data["notes"] if n["status"] != "withdrawn"]
+    if search is None and use_library:
+        search = _library_search()
     said = _json_in(ask(STUDY_PROMPT.format(
         name=spec.name, charter=spec.charter, limits=spec.limits, common=COMMON_LIMITS,
         questions="\n".join(f"- {q}" for q in data["questions"][:8]) or "(none: choose what matters most)",
+        library=grounding(data["questions"], search),
         titles="\n".join(f"- {t}" for t in live[-40:]) or "(none yet)", count=count, max_body=MAX_BODY)))
     kept, refused = [], []
     for raw in (said.get("notes") or [])[:count]:

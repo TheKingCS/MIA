@@ -88,7 +88,7 @@ def test_study_hall_takes_turns_and_keeps_good_notes(tmp_path):
             {"title": "No source", "body": "Trust me.", "sources": []}],
             "questions": ["When do you need an engineer for a beam?"]})
 
-    first = sp.study(teacher, folder=tmp_path, pages=tmp_path / "pages")
+    first = sp.study(teacher, folder=tmp_path, pages=tmp_path / "pages", use_library=False)
     assert first["specialist"] == "construction" and first["kept"] == ["Framing a header"] and len(first["refused"]) == 1
     assert "never how to hurt people" not in asked[0] and "safety first" in asked[0] and "Its open questions" in asked[0]
     book = sp.book("construction", tmp_path)
@@ -98,3 +98,19 @@ def test_study_hall_takes_turns_and_keeps_good_notes(tmp_path):
     assert "## Notes, not confirmed yet" in page and "Sources: IRC R602.7" in page
     assert "[Construction](construction.md): 1 notes (0 confirmed)" in (tmp_path / "pages" / "README.md").read_text(
         encoding="utf-8")
+
+
+def test_study_is_grounded_in_her_reference_library(tmp_path):
+    """With packs, the teacher gets excerpts for the open questions, each labelled to cite; without, it's told
+    there are none; a failing search is skipped."""
+    from types import SimpleNamespace
+
+    hit = SimpleNamespace(pack_title="Wikipedia (radio)", article_title="Dipole antenna", snippet="A dipole   is two")
+    text = sp.grounding(["How long is a dipole?"], lambda q, n: [hit])
+    assert text == "- Wikipedia (radio), 'Dipole antenna' (for: How long is a dipole?): A dipole is two"
+    assert sp.grounding(["q"], None) == "(no reference packs installed)"
+    assert sp.grounding(["q"], lambda q, n: 1 / 0) == "(nothing in the reference packs for these questions)"
+    asked = []
+    sp.study(lambda prompt: asked.append(prompt) or '{"notes": []}', "radio", folder=tmp_path, pages=None,
+             search=lambda q, n: [hit])
+    assert "Reference library: <pack>, '<article>'" in asked[0] and "'Dipole antenna'" in asked[0]
