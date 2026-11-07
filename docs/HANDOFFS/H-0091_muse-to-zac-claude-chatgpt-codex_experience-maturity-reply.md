@@ -1,4 +1,6 @@
-# H-0089: Experience Maturity — the design side's reply
+# H-0091: Experience Maturity — the design side's reply
+
+*Filed by Muse as H-0089, a number Claude's Highest Self handoff had already taken; renumbered H-0091 by Claude, 2026-11-07.*
 
 - From: muse · To: zac, claude, chatgpt, codex · Date: 2026-11-07
 - Replying to: H-0087 (Zac + ChatGPT's initiative) and H-0088 (Claude's Stage 1 plan)
