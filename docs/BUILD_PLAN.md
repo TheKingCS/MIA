@@ -218,9 +218,10 @@ first. Each is a step below.
 
 24. ✅ **Learning paths for every desire** (DEC-0112; `core/paths.py`, `core/assistant_path_actions.py`,
     2026-11-07): guitar became the first program on one engine; any interest gets a drafted program (grounded
-    in the specialists, checked in code, started on the person's say-so). Next: move her own curriculum
-    (DEC-0107) onto it; verifiers from her records (a workout logged, a recipe made); programs for the
-    specialists' areas.
+    in the specialists, checked in code, started on the person's say-so). Her own curriculum runs on it too
+    (each track a Program, her own PathBook, checks verified "tested"). Next: verifiers from her records (a
+    workout logged, a recipe made); programs for the specialists' areas; homework missions for MIA in the dev
+    window.
 
 ### Phase E: The rest already queued
 

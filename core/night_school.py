@@ -504,7 +504,8 @@ def night(now: Optional[datetime] = None, *, ask: Optional[Callable[[str, str], 
           suite=None, one_test=_one_test, shadow=None, clock: Optional[Callable[[], datetime]] = None,
           config: Optional[dict] = None, store: Optional[DevStore] = None, tasks_dir=None, log=None) -> dict:
     """One night of school, as far as the window, the budget and her teacher allow: her progress, what she'd
-    study, the focus, her teacher's exercises (one for her curriculum, DEC-0107), her lessons graded by code, a shadow
+    study, the focus, her teacher's exercises (one for her curriculum, DEC-0107, chosen from and recorded on her own
+    learning paths, DEC-0112), her lessons graded by code, a shadow
     attempt at real work, study hall for one specialist (DEC-0109), loops drafted, the weekly benchmarks and the
     weekly self-audit (DEC-0108). Returns the night's record."""
     from core import dev_ledger, loop_coverage, loops
@@ -554,8 +555,8 @@ def night(now: Optional[datetime] = None, *, ask: Optional[Callable[[str, str], 
     if cfg.get("curriculum", True):
         from core import curriculum
 
-        objective = curriculum.next_objective(curriculum.progress(
-            l for n in nights(store=store) for l in n.get("lessons", [])))
+        mine = curriculum.mia_book()  # her own learning paths (DEC-0112): the same engine a person learns on
+        objective = curriculum.next_objective(curriculum.progress_of(mine))
         if objective is not None:
             record["objective"] = objective.id
 
@@ -606,7 +607,11 @@ def night(now: Optional[datetime] = None, *, ask: Optional[Callable[[str, str], 
                       notes=notes_for(ex.get("skill") or "engine changes", store))
         her_change = done.pop("_diff", "")
         if objective is not None and ex.get("objective") == objective.id:
-            done["objective"] = objective.id  # what core/curriculum.progress() counts
+            done["objective"] = objective.id
+            if done["outcome"] in ("pass", "fail"):  # her own path keeps it: practice, and an attempt (DEC-0112)
+                from core import curriculum
+
+                curriculum.record_lesson(mine, objective.id, done["outcome"] == "pass", title=done.get("title", ""))
         if done["outcome"] in ("pass", "fail") and done.get("proposal"):
             grader = _teacher(list(cfg["teachers"]), calls, int(cfg["teacher_calls"]))
             if grader:

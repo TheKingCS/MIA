@@ -1750,8 +1750,11 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   `POST /api/paths/<id>/verify`, the page `web/guitar.html?path=<id>`; `paths.practice` watches the weeks; the
   life state's areas count them. Guitar's own store and tools from DEC-0111 became this engine the same day.
   The principle is written into her best practices ("Learning and growth") and CLAUDE.md.
-- MIA herself: her computing curriculum (DEC-0107) already runs this loop through Night School (objectives, lessons
-  graded by tests, stages by level). Moving it onto this engine, so one code path serves both, is the next step.
+- MIA herself, on the same engine (done the same day): each of her ten curriculum tracks (DEC-0107) is a Program
+  (`core/curriculum.PROGRAMS`: stages by level, each objective a check verified "tested" by Night School's grading,
+  which nothing sent can pass); her own PathBook (`data/dev/mia_paths`) keeps each lesson as practice and an
+  attempt, each track's stage and her stats; an objective passes at mastery (two lessons passed), as before; Night
+  School reads what to study next from it. She learns through the same code a person does.
 - Why: one way of growing, proven on guitar, used for everything: a person and MIA learn the same way.
 - Honest limits: a drafted program is only as good as the local model and the specialists' notes behind it; that's
   why it's a proposal, checked in shape by code, never in truth.

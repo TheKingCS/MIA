@@ -18,9 +18,15 @@ twice: she learns, and the code she learns on improves.
 **How it's used** (core/night_school.py): every night, one of her lessons
 is for her next curriculum objective (`next_objective()`): the track she's
 furthest behind in, its first objective she hasn't mastered. An objective
-is mastered after `MASTERY` lessons for it passed (`progress()`), read from
-the nights' own records. Her teacher sets that lesson, as it sets the
-others.
+is mastered after `MASTERY` lessons for it passed. Her teacher sets that
+lesson, as it sets the others.
+
+**On the learning-path engine** (DEC-0112): she learns through the same code
+a person does (core/paths.py). Each track is a `Program` (`PROGRAMS`, stages
+by level, each objective a check verified "tested"); her own PathBook
+(`mia_book()`, data/dev/mia_paths) keeps every lesson as practice and an
+attempt (`record_lesson()`), each track's stage, and her stats, and
+`progress_of()` reads what she has mastered from it.
 
 **The security tracks have rules** (`SECURITY_RULES`, given to her teacher
 with every security or pen-testing lesson): she attacks only herself: her
@@ -35,6 +41,7 @@ proves it and a fix, through the lab like any change: Zac approves it.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Iterable, Optional
 
 LEVELS = ("foundation", "working", "expert")
@@ -236,3 +243,79 @@ def lesson_brief(objective: Objective) -> str:
     if objective.track in ("security", "pentest"):
         text += " " + SECURITY_RULES
     return text
+
+
+# ------------------------------------------------------------------ on the learning-path engine (DEC-0112)
+#
+# MIA learns through the same code a person does (core/paths.py): each track is a Program whose stages are its
+# levels, each objective a check verified "tested" (Night School's test fails before and passes after), and her own
+# PathBook (data/dev/mia_paths) keeps her practice, her attempts and the stage of each track, as a person's does.
+# A check counts as passed once it's mastered (MASTERY lessons passed); every lesson before that is kept as an
+# attempt not yet passed, its value the passes so far.
+
+BOOK_DIR = Path(__file__).resolve().parent.parent / "data" / "dev" / "mia_paths"
+
+
+def _tested(context, program, check, payload) -> dict:
+    """The verifier for MIA's own checks: they're tested by Night School's grading, never by something sent."""
+    raise ValueError("MIA's curriculum checks are tested by Night School: a test that fails before and passes after.")
+
+
+def program_for(track: Track):
+    """A track as a learning-path program: a stage for each level it has (in order), a lesson for each objective
+    (how she practises it, and where to start), and a check for each, verified "tested"."""
+    from core.paths import Check, Lesson, Program, Stage
+
+    stages = []
+    for level in LEVELS:
+        mine = [o for o in track.objectives if o.level == level]
+        if not mine:
+            continue
+        lessons = tuple(Lesson(f"{o.id}_practice", f"{o.id}: {o.can}",
+                               (o.practice,) + ((f"Start from: {', '.join(o.files)}",) if o.files else ()), track.why)
+                        for o in mine)
+        checks = tuple(Check(o.id, f"She can {o.can}", "tested") for o in mine)
+        stages.append(Stage(len(stages) + 1, level.capitalize(), f"{track.name}, {level}", lessons, checks))
+    return Program(f"mia_{track.id}", track.name, "", "🧠", track.why, (), tuple(stages),
+                   verifiers={"tested": _tested}, plan=(45, 7))
+
+
+PROGRAMS = {t.id: program_for(t) for t in TRACKS}
+
+
+def mia_book(folder: Optional[Path] = None):
+    """MIA's own learning paths, every track started (her goal is the track's why; a lesson a night is her plan)."""
+    from core.paths import PathBook
+
+    book = PathBook(None, data_dir=folder or BOOK_DIR)
+    for track in TRACKS:
+        if book.path(PROGRAMS[track.id].id) is None:
+            book.start(PROGRAMS[track.id], track.why, 45, 7)
+    return book
+
+
+def progress_of(book) -> dict[str, dict]:
+    """For each objective, from her own book: how many lessons were tried and passed, and whether it's mastered."""
+    out = {o: {"tried": 0, "passed": 0, "mastered": False} for o in BY_ID}
+    for track in TRACKS:
+        record = book.path(PROGRAMS[track.id].id) or {"attempts": []}
+        for a in record["attempts"]:
+            row = out.get(a["check"])
+            if row is None:
+                continue
+            row["tried"] += 1
+            row["passed"] += a.get("detail") == "lesson passed"
+            row["mastered"] = row["mastered"] or bool(a["passed"])
+    return out
+
+
+def record_lesson(book, objective_id: str, passed: bool, minutes: float = 45, title: str = "") -> dict:
+    """One Night School lesson for an objective, on her own path: a practice session, and an attempt, passed when
+    this lesson brings the objective to MASTERY passes. Returns the attempt."""
+    objective = BY_ID[objective_id]
+    program = PROGRAMS[objective.track]
+    book.log_practice(program, minutes, title or objective.can)
+    passes = progress_of(book)[objective_id]["passed"] + (1 if passed else 0)
+    mastered_now = passed and passes >= MASTERY and not book.passed(program.id, objective_id)
+    return book.attempt(program, objective_id, mastered_now, value=float(passes), how="tested",
+                        detail="lesson passed" if passed else "lesson failed")

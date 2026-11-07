@@ -107,6 +107,9 @@ def school(tmp_path, monkeypatch):
     from core import dev_ledger, loop_coverage, loops, self_audit, work_review
 
     monkeypatch.setattr(self_audit, "due", lambda *a, **k: False)  # a test night never audits the real code
+    from core import curriculum
+
+    monkeypatch.setattr(curriculum, "BOOK_DIR", tmp_path / "mia_paths")  # her own learning paths, kept here
     from core import specialists
 
     monkeypatch.setattr(specialists, "study", lambda ask, *a, **k: {"specialist": "radio", "kept": [], "refused": []})

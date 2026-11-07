@@ -3,7 +3,7 @@
 *MIA's evolving best practices (DEC-0108), one document per area: principles that hold, and what was learned building her, gathered from the Knowledge Vault. Written by `core/practices.py`.*
 
 - [Building AI](ai_building.md): 13 principles, 8 lessons learned
-- [Learning and growth](growth.md): 8 principles, 4 lessons learned
+- [Learning and growth](growth.md): 8 principles, 5 lessons learned
 - [Software development](development.md): 8 principles, 0 lessons learned
 - [Testing and debugging](testing.md): 7 principles, 3 lessons learned
 - [Security and privacy](security.md): 7 principles, 0 lessons learned

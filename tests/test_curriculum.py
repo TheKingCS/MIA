@@ -4,8 +4,9 @@ tests.test_curriculum
 
 MIA's curriculum (core/curriculum.py, DEC-0107): the tracks are whole and
 point at real files, mastery is counted from the nights' lessons, the next
-objective takes the tracks in turn, security lessons carry their rules, and
-a night of school sets one lesson for it.
+objective takes the tracks in turn, security lessons carry their rules, a
+night of school sets one lesson for it, and it all runs on the same
+learning-path engine a person's paths do (DEC-0112).
 """
 
 from __future__ import annotations
@@ -13,6 +14,9 @@ from __future__ import annotations
 import json
 from datetime import datetime, timedelta
 from pathlib import Path
+from types import SimpleNamespace
+
+import pytest
 
 from core import curriculum as cur
 from core import night_school as ns
@@ -73,8 +77,8 @@ def test_security_lessons_carry_the_rules():
 
 
 def test_a_night_sets_one_lesson_for_her_curriculum(school):
-    """The syllabus asks for the curriculum exercise by its objective, and the lesson she passes for it is counted
-    toward that objective."""
+    """The syllabus asks for the curriculum exercise by its objective, and the lesson she passes for it is kept on
+    her own learning path (practice and an attempt) and counted toward that objective."""
     asked = []
 
     def ask(provider, prompt):
@@ -91,8 +95,10 @@ def test_a_night_sets_one_lesson_for_her_curriculum(school):
     assert night["objective"] == "engineering.1" and '"objective": "engineering.1"' in asked[0]
     assert night["lessons"][0]["objective"] == "engineering.1" and night["lessons"][0]["outcome"] == "pass"
     assert "Curriculum: engineering.1" in ns.describe(night)
-    rows = cur.progress(l for n in ns.nights(store=school.store) for l in n.get("lessons", []))
-    assert rows["engineering.1"]["passed"] == 1
+    book = cur.mia_book()  # her own learning paths: the lesson is there as practice and an attempt (DEC-0112)
+    rows = cur.progress_of(book)
+    assert rows["engineering.1"] == {"tried": 1, "passed": 1, "mastered": False}
+    assert book.path("mia_engineering")["sessions"][-1]["worked_on"] == "Count the stuck tasks"
     off = ns.night(datetime(2026, 11, 8, 1, 30), ask=ask, lab=FakeLab(school.tmp), one_test=lambda w, n: False,
                    shadow=lambda tid: {"outcome": "pass"}, clock=lambda: datetime(2026, 11, 8, 1, 30),
                    config=dict(ns.DEFAULTS, curriculum=False), store=school.store, tasks_dir=school.tasks,
@@ -109,3 +115,27 @@ def test_her_self_assessment_names_a_model_that_could_help():
     assert why["loop answers.no_tool"].endswith("(a model of her own could help: a router that picks which of her "
                                                 "tools fit what was said)")
     assert "model" not in why["loop pc.disk"]
+
+
+def test_her_curriculum_runs_on_the_same_engine_as_a_persons_paths(tmp_path):
+    """Each track is a sound Program (stages by level, every objective a check verified "tested", which nothing sent
+    can pass); her own book starts every track; a lesson is practice and an attempt; the objective is passed (and
+    the stage moves on) only at MASTERY, as before; progress_of reads it all back."""
+    from core import paths
+
+    assert set(cur.PROGRAMS) == {t.id for t in cur.TRACKS}
+    for program in cur.PROGRAMS.values():
+        assert paths.problems(program) == [] and all(c.how == "tested" for s in program.stages for c in s.checks)
+    with pytest.raises(ValueError, match="Night School"):
+        paths.verify(SimpleNamespace(paths=cur.mia_book(tmp_path)), cur.PROGRAMS["testing"], "testing.1", b"x")
+    book = cur.mia_book(tmp_path)
+    assert sorted(book.started()) == sorted(p.id for p in cur.PROGRAMS.values())
+    first = cur.record_lesson(book, "testing.1", True, title="a failing test")
+    assert first["passed"] is False and first["value"] == 1.0
+    cur.record_lesson(book, "testing.1", False)
+    done = cur.record_lesson(book, "testing.1", True)
+    assert done["passed"] is True and book.passed("mia_testing", "testing.1")
+    assert book.path("mia_testing")["stage"] == 2  # testing's foundation had one objective: it moves on
+    assert cur.progress_of(book)["testing.1"] == {"tried": 3, "passed": 2, "mastered": True}
+    s = paths.stats(book, cur.PROGRAMS["testing"])
+    assert s["sessions"] == 3 and s["stage_name"] == "Working"

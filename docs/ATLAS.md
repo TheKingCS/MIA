@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1069 files, 236,646 lines; 1069 files describe themselves; 6,384 of 13,789 classes and functions are documented.
+1069 files, 236,772 lines; 1069 files describe themselves; 6,390 of 13,795 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-379 files, 108,962 lines; 5,585 of 5,835 classes and functions documented
+379 files, 109,050 lines; 5,590 of 5,840 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -622,7 +622,7 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-31 files, 3,114 lines; 35 of 91 classes and functions documented
+31 files, 3,119 lines; 35 of 91 classes and functions documented
 
 - `tools/audit.py`: MIA's self-audit from the command line (DEC-0108; core/self_audit.py, core/practices.py).
 - `tools/bench_audit.py`: What MIA's routing does today with each Intelligence Benchmark question (tests/intelligence_bench.py, docs/INTELLIGENCE_BENCHMARK.md): a question plan (core/question_plans.py: lookups by code, one answer), answered by code (a direct lookup), offered which tools, or left to the model with no tools at *(3 undocumented)*
@@ -658,7 +658,7 @@
 
 ## tests/: the test suite: what each part must do
 
-356 files, 64,220 lines; 362 of 5,719 classes and functions documented
+356 files, 64,253 lines; 363 of 5,720 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -733,7 +733,7 @@
 - `tests/test_crafting.py`: Crafting recipes (DEC-0030 phase B): the smallest real end-to-end workflow. A recipe → what's short → a shopping list → receive what you bought → build it → photos → sell it → the build's real profit. Inventory has to add up, nothing doubles on retry, and every step can be undone. *(6 undocumented)*
 - `tests/test_creations.py`: ACAF's first working demonstration (DEC-0088 to DEC-0091): from one sentence about information MIA has no screen for, she makes a record set and a screen, checked, previewed, published on approval, used, undone and rolled back, all through her own design system and the action contract. *(15 undocumented)*
 - `tests/test_cross_domain.py`: Cross-domain reasoning (build plan step 8): questions that span apps gather several plans onto one sheet; "can I afford it and still hit my freedom date" is worked out by the freedom plan twice; every plan answer says how sure it can be, from the sheet, and answers.calibration checks that "sure" is  *(10 undocumented)*
-- `tests/test_curriculum.py`: MIA's curriculum (core/curriculum.py, DEC-0107): the tracks are whole and point at real files, mastery is counted from the nights' lessons, the next objective takes the tracks in turn, security lessons carry their rules, and a night of school sets one lesson for it.
+- `tests/test_curriculum.py`: MIA's curriculum (core/curriculum.py, DEC-0107): the tracks are whole and point at real files, mastery is counted from the nights' lessons, the next objective takes the tracks in turn, security lessons carry their rules, a night of school sets one lesson for it, and it all runs on the same learning-
 - `tests/test_daily_occasions.py`: Unit tests for core.daily_occasions' pure decision logic — no Qt, no real clock, no manager instances needed. *(19 undocumented)*
 - `tests/test_dashboard_module.py`: Unit tests for modules.dashboard.module's pure functions, same style as tests/test_expeditions_module.py (no Qt event loop, no fixtures). *(11 undocumented)*
 - `tests/test_dashboard_telemetry.py`: The dashboard's system numbers (core/dashboard_telemetry.py): uptime as "3h 42m" and network speed in Mb/s from two byte-counter readings. *(8 undocumented)*

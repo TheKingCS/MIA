@@ -148,11 +148,11 @@ def _router_shadow(context) -> Optional[Reading]:
 
 
 def _curriculum(context) -> Optional[Reading]:
-    """Measure: the share of her curriculum's objectives mastered (DEC-0107), from Night School's records. None before
-    any curriculum lesson."""
-    from core import curriculum, night_school
+    """Measure: the share of her curriculum's objectives mastered (DEC-0107), from her own learning paths
+    (core/curriculum.mia_book, DEC-0112). None before any curriculum lesson."""
+    from core import curriculum
 
-    rows = curriculum.progress(l for n in night_school.nights() for l in n.get("lessons", []))
+    rows = curriculum.progress_of(curriculum.mia_book())
     tried = sum(r["tried"] for r in rows.values())
     if not tried:
         return None

@@ -15,6 +15,7 @@
 
 ## Learned building her
 
+- **MIA's own curriculum runs on the learning-path engine** (K-0059): core/curriculum.py now makes each of its ten tracks a Program for core/paths.py (program_for: stages by level, a lesson per objective saying how she practises it, a check per objective verified "tested"), and keeps her…
 - **One loop for every desire: learning paths** (K-0058): core/paths.py.
 - **How MIA teaches, tracks and verifies a person's skill (guitar)** (K-0057): core/guitar.py and core/guitar_ear.py, DEC-0111.
 - **Why specialists keep sourced notes that a person confirms** (K-0053): core/specialists.py gives each area of what MIA knows a worker with a charter, limits and a workbook of notes.

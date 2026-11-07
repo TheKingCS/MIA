@@ -43,9 +43,14 @@ def main(argv: list[str]) -> int:
     if command == "curriculum":
         from core import curriculum
 
-        rows = curriculum.progress(l for n in night_school.nights() for l in n.get("lessons", []))
+        from core import paths
+
+        book = curriculum.mia_book()
+        rows = curriculum.progress_of(book)
         for s in curriculum.standing(rows):
-            print(f"{s['name']}: {s['mastered']} of {s['of']} mastered (level: {s['level']})")
+            stats = paths.stats(book, curriculum.PROGRAMS[s["track"]])
+            print(f"{s['name']}: {s['mastered']} of {s['of']} mastered (level: {s['level']}); this week "
+                  f"{stats['week_days']} nights, {stats['hours']:g} hours in all")
         nxt = curriculum.next_objective(rows)
         print(f"Next: {nxt.id}, she can {nxt.can}." if nxt else "Every objective is mastered.")
         return 0
