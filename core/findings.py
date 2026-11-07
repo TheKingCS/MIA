@@ -45,6 +45,9 @@ RENEWAL_DAYS = 45
 
 @dataclass
 class Finding:
+    """One thing MIA noticed: a stable key (the same situation keeps it), a title, the claim, why, the records it's
+    about, the next step, how sure it is, whether it's worth saying unprompted, and the app it belongs to.
+    """
     key: str  # stable: the same situation keeps the same key
     title: str
     claim: str
@@ -57,12 +60,14 @@ class Finding:
 
 
 def _money(amount: float) -> str:
+    """An amount in the person's currency."""
     from core.region import money
 
     return money(amount)
 
 
 def _day(iso: str) -> Optional[date]:
+    """A date from ISO text (a timestamp's date part), or None."""
     try:
         return date.fromisoformat(str(iso or "")[:10])
     except ValueError:
@@ -70,6 +75,9 @@ def _day(iso: str) -> Optional[date]:
 
 
 def _say_day(day: date, today: date) -> str:
+    """Pure logic. A day said for speaking: today, tomorrow, a weekday with its date in the week ahead, else the
+    date (a past weekday was heard as last week).
+    """
     if day == today:
         return "today"
     if day == today + timedelta(days=1):
@@ -79,6 +87,7 @@ def _say_day(day: date, today: date) -> str:
 
 
 def _next_on(anchor: str, recurrence, today: date, ahead: int = 45) -> Optional[date]:
+    """The next day a repeating thing falls on, within `ahead` days (45), or None."""
     from core.calendar_manager import occurs_on
 
     if not anchor:

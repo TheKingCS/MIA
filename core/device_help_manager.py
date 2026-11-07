@@ -189,6 +189,7 @@ _MAX_REFORMULATED_QUERY_WORDS = 4
 
 @dataclass
 class HelpChunk:
+    """One passage the help can answer from: where it's from (a doc or a module), its heading, and its text."""
     source: str  # e.g. "docs/ARCHITECTURE.md" or "Module: Notes"
     heading: str
     text: str  # full chunk text, including its own heading line
@@ -240,6 +241,7 @@ def score_chunk(query_words: set[str], chunk: HelpChunk) -> int:
 
 
 def _tokenize(text: str) -> set[str]:
+    """Pure logic. A text's words, lowercase."""
     return set(_WORD_RE.findall(text.lower()))
 
 
@@ -254,6 +256,9 @@ class DeviceHelpManager:
     """Core-level device-help retrieval service (`AppContext.device_help`)."""
 
     def __init__(self, context: AppContext) -> None:
+        """Nothing read yet: the docs are chunked on first use; the module list and the reference library are wired
+        in later.
+        """
         self.context = context
         self._doc_chunks: Optional[list[HelpChunk]] = None
         self._module_lister: Optional[Callable[[], list]] = None
@@ -287,6 +292,7 @@ class DeviceHelpManager:
         self._doc_chunks = chunks
 
     def _safe_list_modules(self) -> list:
+        """The modules, from the lister it was given; none (logged) when the lister fails."""
         if self._module_lister is None:
             return []
         try:
@@ -296,6 +302,9 @@ class DeviceHelpManager:
             return []
 
     def _module_chunks(self) -> list[HelpChunk]:
+        """A passage for each module, saying "The <Name> module: ..." in its text (the small model needed the word
+        module beside the name to answer about it).
+        """
         chunks = []
         for module in self._safe_list_modules():
             # Explicitly says "The <Name> module" in the body text, not

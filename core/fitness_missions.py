@@ -44,10 +44,12 @@ DAILY, WEEKLY = "fitness_daily", "fitness_weekly"
 
 
 def monday(day: date) -> date:
+    """Pure logic. The Monday of a day's week."""
     return day - timedelta(days=day.weekday())
 
 
 def _rep_text(exercise: dict) -> str:
+    """Pure logic. An exercise said shortly: its name with sets by reps (or seconds held)."""
     sets, reps, hold = exercise.get("sets"), exercise.get("reps"), exercise.get("hold_seconds")
     amount = f"{hold:g} s" if hold else (str(reps) if reps not in (None, "") else "")
     return f"{exercise.get('name', 'Exercise')}" + (f" {sets}×{amount}" if sets and amount else f" {amount}" if amount else "")
@@ -163,6 +165,7 @@ def progress(fit, kind: str, key: str, objectives: list, today: date) -> list[fl
 
 
 def _mine(context, pid) -> list:
+    """This person's missions the fitness plan made (by their occurrence key)."""
     missions = getattr(context, "missions", None)
     if missions is None:
         return []
@@ -170,6 +173,7 @@ def _mine(context, pid) -> list:
 
 
 def _kind(mission) -> str:
+    """The kind of fitness mission, from its occurrence key."""
     return mission.occurrence_key[len(PREFIX):].rsplit(":", 1)[0]
 
 
@@ -279,4 +283,5 @@ def tick(context, mission, index: int, today: Optional[date] = None) -> str:
 
 
 def is_fitness(mission) -> bool:
+    """Whether a mission is one the fitness plan made."""
     return (getattr(mission, "occurrence_key", None) or "").startswith(PREFIX)

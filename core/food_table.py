@@ -32,6 +32,9 @@ NUTRIENTS = ("kcal", "protein_g", "fat_g", "carbs_g", "fiber_g", "sugar_g", "sod
 
 @dataclass(frozen=True)
 class Food:
+    """One food in the nutrition table: its USDA FoodData Central id, name, category, nutrients per 100 g (missing
+    is unknown), the grams in a portion (a cup...), and its words for matching.
+    """
     fdc_id: str
     name: str
     category: str
@@ -222,6 +225,7 @@ _SINGULAR = {"chilies": "chili", "chillies": "chili", "chilis": "chili", "chiles
 
 
 def _singular(word: str) -> str:
+    """Pure logic. A word made singular (berries, tomatoes, eggs), with the table's own exceptions."""
     if word in _SINGULAR:
         return _SINGULAR[word]
     if len(word) > 3 and word.endswith("ies"):
@@ -267,10 +271,15 @@ def load(path: Optional[Path] = None) -> list[Food]:
 
 
 def available() -> bool:
+    """Whether the food table is here."""
     return bool(load())
 
 
 def _score(query: list[str], food: Food, wants_cooked: bool) -> float:
+    """Pure logic. How well a food matches what was asked: every word must be in it; the food's own name being the
+    words asked counts most; fewer extra words, no brand or unusual form, and raw or cooked as asked count for it.
+    Below 0 is no match.
+    """
     if not query or not set(query) <= food.words:
         return -1.0
     name = food.name.lower()
@@ -342,6 +351,7 @@ def all_words_kept(words: list[str]) -> list[str]:
 
 
 def by_id(fdc_id: str, foods: Optional[list[Food]] = None) -> Optional[Food]:
+    """The food with this id, or None."""
     return next((f for f in (load() if foods is None else foods) if f.fdc_id == str(fdc_id)), None)
 
 
