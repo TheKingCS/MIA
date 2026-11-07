@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 229,473 lines; 1043 files describe themselves; 5,328 of 13,517 classes and functions are documented.
+1043 files, 229,500 lines; 1043 files describe themselves; 5,347 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 103,375 lines; 4,597 of 5,630 classes and functions documented
+367 files, 103,402 lines; 4,616 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -200,7 +200,7 @@
 - `core/loop_catalog.py`: The loops as built (DEC-0094, DEC-0101): `docs/LOOPS.md` is the code's own list of every loop in `core/loops.py`, by area, with what it watches, its floor, what it does when it slips and the processes it covers. It's generated, never edited by hand, and `tests/test_loop_catalog.py` fails when it fal
 - `core/loop_coverage.py`: How MIA's improvement loops keep spreading to every process (DEC-0101; Zac, 2026-11-06: "She also needs a method for developing these loops into all processes that could benefit from a self improvement loop and continue to do so throughout her development"). *(8 undocumented)*
 - `core/loops.py`: MIA's improvement loops (DEC-0094; the map is `docs/IMPROVEMENT_LOOPS.md`; Zac, 2026-11-06: "almost every process has the potential for some kind of self assessment and improvement loop and we should identify those and build it").
-- `core/mail_send.py`: Sending an email draft from your own address (2026-10-01, accounts stage 3, core/email_drafts.py). Optional: without it, Copy and "open in my mail app" always work. *(9 undocumented)*
+- `core/mail_send.py`: Sending an email draft from your own address (2026-10-01, accounts stage 3, core/email_drafts.py). Optional: without it, Copy and "open in my mail app" always work.
 - `core/main_thread.py`: Publishing events safely from background threads (2026-09-28). *(2 undocumented)*
 - `core/maintenance_insights.py`: The Maintenance-domain scan for "connective infrastructure" phase 3 (Insight + Recommendation) — see core/insight_manager.py's own docstring for why these are real, new persisted entities. Pure decision logic, no Qt, no manager instance of its own, wired into core/application.py's existing daily-che
 - `core/maintenance_manager.py`: Backs the Maintenance module (modules/maintenance/module.py) — recurring upkeep tracking for anything the user owns that needs it: vehicles, power equipment (mower, e-bike), appliances, the property itself, and tools. Same persisted-JSON pattern as core.journal_manager.JournalManager core.calendar_m
@@ -228,7 +228,7 @@
 - `core/money_actions.py`: Every change the Money screen can make (2026-10-06, DEC-0017: the web does everything the PC app's Budget screen does), as action kinds on the contract in core/actions.py: Propose → Approve → Execute → Record → Undo. *(8 undocumented)*
 - `core/more_actions.py`: Every change the Journal, Workshop, Expeditions, Music and Files screens make (Zac, 2026-10-16: "they are empty right now and just bring up a chat with MIA"), as action kinds on the contract in core/actions.py, most from the shared table in core/record_actions.py.
 - `core/music_manager.py`: Local audio library + playlists + real playback for the Music module (modules/music/module.py) — 2026-09-09. Replaces the pure-placeholder Music stub, closing the last remaining "pure stub module" in this project.
-- `core/my_files.py`: Files on the web (Zac, 2026-10-16: the Files app was empty on the phone). Each person has their own MIA files folder, `my_files/` inside their own data folder (core/personal_data.py), the same folder as their journal: upload from the phone, open, make folders, rename, delete. It is never the compute *(10 undocumented)*
+- `core/my_files.py`: Files on the web (Zac, 2026-10-16: the Files app was empty on the phone). Each person has their own MIA files folder, `my_files/` inside their own data folder (core/personal_data.py), the same folder as their journal: upload from the phone, open, make folders, rename, delete. It is never the compute
 - `core/navigation_web.py`: Navigation's web screen (web/navigation.html): the waypoints with their grid references (core/geo_grid.py, MGRS), the distance and bearing from one to another, and the sun and moon at one of them on a day. The same reading as the desktop's Navigation module (modules/navigation), assembled here so th
 - `core/night_school.py`: Night School (DEC-0100; Zac, 2026-11-06: "MIAs night school module where she spends time every night with Claude learning how to build herself into the best version of herself, doing tests, building her skills and proving her capabilities. I want that happening asap."). The full design is `docs/NIGH *(6 undocumented)*
 - `core/notification_manager.py`: A system-wide notification service any module can raise an alert through — low battery, backup complete, a medication reminder, a weather warning, etc. — without needing to know anything about how notifications are displayed.

@@ -73,11 +73,16 @@ def _changed() -> None:
 
 
 class MyFiles:
+    """A person's own files folder (my_files/ in their folder), never the computer's whole disk: every path a request
+    names is relative to it and checked to stay inside (no "..", no absolute paths, no links out).
+    """
     def __init__(self, root: Path) -> None:
+        """The folder these files live in."""
         self.root = Path(root)
 
     @classmethod
     def for_context(cls, context) -> "MyFiles":
+        """The signed-in person's files folder (beside their journal); ValueError when it isn't set up."""
         journal = getattr(context, "journal", None)
         if journal is None or getattr(journal, "data_dir", None) is None:
             raise ValueError("Files aren't set up on this MIA.")
@@ -96,9 +101,13 @@ class MyFiles:
         return path
 
     def relative(self, path: Path) -> str:
+        """A path inside the folder, as the relative path a screen uses."""
         return path.resolve().relative_to(self.root.resolve()).as_posix()
 
     def listing(self, folder: str = "") -> dict:
+        """One folder's contents for the screen: its subfolders (with how many things each holds) and files (kind, size,
+        when changed), links left out, the breadcrumb trail, and how much the whole folder uses.
+        """
         here = self.resolve(folder)
         if not here.is_dir():
             raise ValueError("That folder isn't there anymore.")
@@ -125,6 +134,7 @@ class MyFiles:
                 "used": total, "used_text": size_text(total)}
 
     def make_folder(self, folder: str, name: str) -> str:
+        """Makes a folder (its name checked; ValueError if something has that name already)."""
         target = self.resolve(folder) / clean_name(name)
         if target.exists():
             raise ValueError(f"There's already something called {target.name} here.")
@@ -149,12 +159,14 @@ class MyFiles:
         return self.relative(target)
 
     def file(self, relative: str) -> Path:
+        """A file's real path, for opening or downloading; ValueError when it isn't a file there."""
         path = self.resolve(relative)
         if not path.is_file() or path.is_symlink():
             raise ValueError("That file isn't there anymore.")
         return path
 
     def is_folder(self, relative: str) -> bool:
+        """Whether a path is a folder (ValueError for the whole files folder itself, or something that isn't there)."""
         path = self.resolve(relative)
         if path == self.root.resolve():
             raise ValueError("That's your whole files folder.")
@@ -163,6 +175,7 @@ class MyFiles:
         return path.is_dir()
 
     def rename(self, relative: str, name: str) -> str:
+        """Renames a file or folder (its new name checked; not the whole folder); returns its new relative path."""
         path = self.resolve(relative)
         if path == self.root.resolve() or not path.exists():
             raise ValueError("That isn't there anymore.")
@@ -174,6 +187,7 @@ class MyFiles:
         return self.relative(target)
 
     def delete(self, relative: str) -> None:
+        """Deletes a file, or a folder with everything in it (this can't be undone)."""
         if self.is_folder(relative):
             shutil.rmtree(self.resolve(relative))
         else:

@@ -75,6 +75,7 @@ def build_message(sender: str, to: list[str], subject: str, body: str, cc: Optio
 
 
 def _connect(host: str, port: int, security: str) -> smtplib.SMTP:
+    """An SMTP connection to the mail server: SSL from the start, or STARTTLS, with a timeout."""
     if security == "ssl":
         return smtplib.SMTP_SSL(host, port, timeout=_TIMEOUT_SECONDS)
     client = smtplib.SMTP(host, port, timeout=_TIMEOUT_SECONDS)
@@ -91,6 +92,9 @@ class MailSender:
     main context, for whoever is signed in)."""
 
     def __init__(self, context, folder: Optional[Path]) -> None:
+        """Sending from this person's own address: settings in their person settings, the password encrypted in their
+        folder and held in memory only once unlocked.
+        """
         self.context = context
         self.folder = Path(folder) if folder is not None else None
         self._password: Optional[str] = None
@@ -98,26 +102,34 @@ class MailSender:
     # ------------------------------------------------------------ settings
 
     def setting(self, key: str, default=None):
+        """One of this person's sending settings (email.send.<key>)."""
         return person_settings.get(self.context, f"email.send.{key}", default)
 
     @property
     def address(self) -> str:
+        """The address mail is sent from ("" until set up)."""
         return self.setting("address", "") or ""
 
     @property
     def _vault(self) -> Optional[Path]:
+        """Where the encrypted mail password is kept, or None without a folder."""
         return self.folder / _VAULT_NAME if self.folder is not None else None
 
     @property
     def configured(self) -> bool:
+        """Whether sending is set up: an address, a server, and a stored password."""
         return bool(self.address and self.setting("host") and self._vault is not None and self._vault.exists())
 
     @property
     def unlocked(self) -> bool:
+        """Whether the password is in memory (sending can happen without asking for the passphrase)."""
         return self._password is not None
 
     def setup(self, address: str, password: str, passphrase: str, host: str = "", port: int = 0,
               security: str = "") -> None:
+        """Sets up sending: checks the address, takes the server given or guesses it for the big providers (SendError when
+        it can't), saves the settings, and stores the password encrypted with the passphrase.
+        """
         if not looks_like_email(address):
             raise SendError("That doesn't look like an email address.")
         if not password or not passphrase:
@@ -135,6 +147,7 @@ class MailSender:
         self._password = password
 
     def unlock(self, passphrase: str) -> bool:
+        """Opens the stored password with the passphrase; False when it's wrong or nothing is stored."""
         if self._vault is None or not self._vault.exists():
             return False
         try:
