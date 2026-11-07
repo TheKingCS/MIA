@@ -1582,3 +1582,29 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   versioned, sourced and read by MIA's tools (`for_task()` puts the entries about a task's files into the
   instructions of whoever works on it, her own coder and Night School included).
 - Related: DEC-0073 (the vault), DEC-0100 (Night School), DEC-0104
+
+### DEC-0106: MIA builds AI models of her own, in stages, each kept only if it wins
+- Status: APPROVED
+- Proposed by: zac, 2026-11-07 ("I want her capable of building a custom AI ... based on her own infrastructure and
+  research ... custom building similar or different AI models. And also be able to restore herself ... this level
+  of architecture would also make her more self aware, enable to run, and exists efficiently"; on the staged plan:
+  "Let's build it") · Built by: claude, 2026-11-07 (stage 1)
+- Decision: MIA learns to make models in her own model forge (`core/model_forge.py`, `tools/model_forge.py`), in
+  stages that each have to earn the next:
+  1. **Small specialist models** trained on her own records, starting with a tool router (built 2026-11-07:
+     trained only on her tools' own words, scored on real requests it never saw).
+  2. **Shadow use:** a model runs beside what she uses now, on new requests, and its record is kept.
+  3. **Fine-tuning** a local model (LoRA on 7B to 14B, on the new PC's GPU) once her corpus of task records,
+     Night School lessons and ratings holds hundreds of good examples.
+  4. **Distillation:** her own small models learning from bigger teachers, to run fast and offline.
+  Every model keeps a card (what it is, trained on what, tested on what, its scores against what she uses now).
+  A model goes into use only when it beats the current way on requests it never saw, and Zac approves it.
+  Training a large model from scratch is out of reach on one home GPU; she learns how it's done and practises on
+  small ones.
+- Why: models of her own make her faster, offline and suited to how her people talk; building them needs her
+  to understand her own architecture (DEC-0104, DEC-0105, and `core/self_docs.py` now answering from her code and
+  the vault), which is also what restoring herself and running efficiently need.
+- Honest limits: the first router scores 81% first pick and 97% in its top five on held-out requests, below the
+  keyword router (100%, but tuned on those same requests); it doesn't know the names of a person's own records yet.
+- Related: DEC-0073 (the vault), DEC-0100 (Night School), DEC-0104, DEC-0105,
+  `docs/DEVELOPMENTAL_INDEPENDENCE_REVIEW.md` (fine-tuning, later)

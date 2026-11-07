@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 230,236 lines; 1043 files describe themselves; 5,720 of 13,523 classes and functions are documented.
+1046 files, 230,645 lines; 1046 files describe themselves; 5,743 of 13,546 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 104,092 lines; 4,987 of 5,634 classes and functions documented
+368 files, 104,352 lines; 5,002 of 5,649 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -222,6 +222,7 @@
 - `core/mission_manager.py`: Missions/Gamification — docs/ROADMAP.md milestone v0.18, the second of three new subsystems from the 2026-07-14 wearable-companion vision update (see docs/VISION.md). Turns a stated goal/hobby into a tracked Mission with one or more Objectives (e.g. a "Master Angler" mission for a fishing trip: one 
 - `core/mission_patterns.py`: The first real "pattern inference" signal — core/pathway_manager.py's own docstring names this "Phase 6: MIA inferring a pattern from history," the one piece of the original "learns about itself" vision still missing after core/discovery_manager.py proved out generating from a snapshot of CURRENT st
 - `core/model_bench.py`: "Can the model on this device do MIA's job?" (2026-10-07, DEC-0019, docs/PHONE_MODEL_TEST.md). Replays MIA's golden set (tests live_model_check.py) against a model and reports two things: *(2 undocumented)*
+- `core/model_forge.py`: MIA's model forge (DEC-0106, stage 1): where she trains small models of her own, measures them honestly, and keeps a card saying what each one is.
 - `core/model_registry.py`: Which AI model MIA is running, asked of the runtime itself (2026-10-21, the intelligence spec's first slice: "What AI model are you using?" was answered with "I don't have that kind of technical information"). *(2 undocumented)*
 - `core/module_manager.py`: Discovers and manages MIA modules. *(3 undocumented)*
 - `core/module_validator.py`: Validates a candidate module folder against the compatibility contract in docs/MODULE_SPEC.md, before it's installed into modules/. *(1 undocumented)*
@@ -610,7 +611,7 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-28 files, 2,855 lines; 28 of 85 classes and functions documented
+29 files, 2,927 lines; 31 of 88 classes and functions documented
 
 - `tools/bench_audit.py`: What MIA's routing does today with each Intelligence Benchmark question (tests/intelligence_bench.py, docs/INTELLIGENCE_BENCHMARK.md): a question plan (core/question_plans.py: lookups by code, one answer), answered by code (a direct lookup), offered which tools, or left to the model with no tools at *(3 undocumented)*
 - `tools/chronicle_issue.py`: The Chronicles' weekly issue (core/chronicle_issue.py, build plan step 17). *(1 undocumented)*
@@ -628,6 +629,7 @@
 - `tools/make_food_table.py`: Builds data/foods.tsv, MIA's built-in food table (DEC-0020), from the USDA's FoodData Central "SR Legacy" download: about 7,800 everyday foods, public domain (CC0, https://fdc.nal.usda.gov). Kept per 100 g: calories, protein, fat, carbohydrate, fiber, sugars, sodium; plus each food's household measu *(4 undocumented)*
 - `tools/make_model_bench.py`: Freezes MIA's golden set (tests/live_model_check.py) into data/model_bench_cases.json for the model test (core/model_bench.py, docs/PHONE_MODEL_TEST.md): for each case, the exact messages and offered tools MIA's request builder makes with the PC's full set of tools, against the live check's placehol *(2 undocumented)*
 - `tools/model_check.py`: Runs one of the phone's models (core/local_model.MODELS) through MIA's golden set (core/model_bench.py) with llama.cpp's server on a computer, started exactly as the phone starts it. CI's "Model check" workflow uses it to compare the models' accuracy; speed belongs to the phone's own Model test scre *(1 undocumented)*
+- `tools/model_forge.py`: MIA's model forge from the command line (DEC-0106; core/model_forge.py).
 - `tools/night_school.py`: Night School from the command line (DEC-0100, core/night_school.py). *(1 undocumented)*
 - `tools/offline_map.py`: Cut an area of OpenStreetMap into a vector offline map (core/offline_maps.py), kept in data/maps/ and drawn on the web's Maps page.
 - `tools/pc_check.py`: Is this computer ready to be MIA's home base? (DEC-0022, DEC-0033.) Everything the phone, the glasses and the cameras need from it, each with what to do if it isn't there yet: *(4 undocumented)*
@@ -643,7 +645,7 @@
 
 ## tests/: the test suite: what each part must do
 
-346 files, 63,101 lines; 303 of 5,660 classes and functions documented
+347 files, 63,178 lines; 308 of 5,665 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -839,6 +841,7 @@
 - `tests/test_mission_patterns.py`: Unit tests for core.mission_patterns — isolates _DATA_DIR for mission/insight/profile files into a tmp_path scratch area, same monkeypatch pattern as test_mission_insights.py's own isolated_paths. *(23 undocumented)*
 - `tests/test_missions_module.py`: Unit tests for modules.missions.module's pure functions, same style as tests/test_expeditions_module.py (no Qt event loop, no fixtures). *(26 undocumented)*
 - `tests/test_model_bench.py`: The model test (core/model_bench.py) and the llama.cpp backend (core/llm_manager.OpenAIBackend), 2026-10-07, DEC-0019: scoring follows the live check's rules, the frozen cases match the golden set, and the backend speaks llama-server's chat API, tested against a tiny fake server on 127.0.0.1. *(13 undocumented)*
+- `tests/test_model_forge.py`: MIA's model forge (core/model_forge.py, DEC-0106): the features, a router that learns from its tools' own words and is scored honestly on requests it never saw, its card, and saving and loading it.
 - `tests/test_model_registry.py`: MIA about herself (core/model_registry.py): "What AI model are you using?" answered from the runtime, saying where each fact came from, never from the model's guess. *(6 undocumented)*
 - `tests/test_module_manager.py`: Unit tests for core.module_manager.ModuleManager. *(19 undocumented)*
 - `tests/test_module_validator.py`: Unit tests for core.module_validator.validate_module_folder. *(17 undocumented)*

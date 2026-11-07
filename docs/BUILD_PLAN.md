@@ -180,6 +180,14 @@ first. Each is a step below.
     events: checked, in character, panels drawn (storyboard quality). Not yet: consistent characters and a
     bigger image model (T-0036). 🧑 *Zac approves each issue.*
 
+19. 🔨 **Her own models** (DEC-0106; `core/model_forge.py`, `tools/model_forge.py`): stage 1 built 2026-11-07,
+    the tool router: softmax regression in numpy, trained only on her tools' own words (1,987 examples, 222
+    tools), settings chosen on half the routing corpus and scored on the other half: 81% first pick, 97% in the
+    top five; its card in `data/models/router/`. Not in use. Next: (a) give it the names of her records, as the
+    keyword router has (its misses are "the peppers", "plywood", "555 timers"); (b) run it in the shadow on new
+    requests, the Fix-It Log's misses first, and keep its record; (c) a Night School lesson family on the forge;
+    (d) fine-tuning on the PC's GPU once the corpus is big enough. 🧑 *Zac approves any model going into use.*
+
 ### Phase E: The rest already queued
 
 18. ⬜ T-0042 (the Skills module reaching into Missions), T-0040 (JSON imports, diagnostics), T-0041 (blueprint
@@ -196,6 +204,7 @@ first. Each is a step below.
 | Evaluation of small models | How to measure tool choice, faithfulness and calibration on 14B models; what fine-tuning on Zac's ratings would need | 5, 8 |
 | Self-improving agent practice | What's known to work for agents learning from feedback without drifting (eval-gated changes, held-out tests) | 1 to 6 |
 | Character consistency in local image models | Reference conditioning (IP-Adapter) on DirectML; style training | 17 |
+| Small models of her own | LoRA fine-tuning on ROCm (the 7900 XTX) for 7B to 14B models; how big a corpus a useful fine-tune needs; distilling a router or a classifier from a bigger model's answers | 19 |
 
 ## Part 4: Testing that keeps her honest
 
