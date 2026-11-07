@@ -67,11 +67,15 @@ class VaultError(Exception):
 
 
 class VaultLocked(VaultError):
+    """Raised when something needs the vault open and it's locked."""
     pass
 
 
 @dataclass
 class Login:
+    """One login, as it is only while the vault is open: title, username, password, site, note, folder and when it
+    last changed. Never stored like this: each is sealed on its own in the file.
+    """
     entry_id: str
     title: str
     username: str = ""
@@ -93,14 +97,19 @@ class Login:
 
 
 def _b64(data: bytes) -> str:
+    """Bytes as base64 text, for the JSON file."""
     return base64.b64encode(data).decode("ascii")
 
 
 def _unb64(text: str) -> bytes:
+    """Base64 text back to bytes."""
     return base64.b64decode(text.encode("ascii"))
 
 
 def _derive(secret: str, salt: bytes, params: dict) -> bytes:
+    """A 32-byte key from a secret (the master password or recovery code) with scrypt, using the salt and cost
+    parameters stored with it (slow and memory-hard on purpose).
+    """
     from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 
     return Scrypt(salt=salt, length=32, n=int(params["n"]), r=int(params["r"]), p=int(params["p"])).derive(
@@ -108,6 +117,9 @@ def _derive(secret: str, salt: bytes, params: dict) -> bytes:
 
 
 def _wrap(secret: str, vault_key: bytes) -> dict:
+    """Seals the vault key with a secret: a fresh salt and nonce, a key derived from the secret, AES-256-GCM (bound to
+    "mia-vault-key"). What's stored is the salt, nonce, sealed key and the scrypt parameters.
+    """
     from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
     salt, nonce = os.urandom(16), os.urandom(12)
@@ -116,6 +128,9 @@ def _wrap(secret: str, vault_key: bytes) -> dict:
 
 
 def _unwrap(secret: str, wrap: dict) -> Optional[bytes]:
+    """The vault key opened with a secret, or None when the secret is wrong or the record is damaged (GCM's tag check
+    fails).
+    """
     from cryptography.exceptions import InvalidTag
     from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
@@ -127,6 +142,9 @@ def _unwrap(secret: str, wrap: dict) -> Optional[bytes]:
 
 
 def _seal(vault_key: bytes, entry_id: str, payload: dict) -> dict:
+    """Encrypts one login's fields with the vault key (AES-256-GCM, a fresh nonce), its id bound in so records can't
+    be swapped between ids.
+    """
     from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
     nonce = os.urandom(12)
@@ -135,6 +153,7 @@ def _seal(vault_key: bytes, entry_id: str, payload: dict) -> dict:
 
 
 def _open_record(vault_key: bytes, record: dict) -> Optional[dict]:
+    """One login's fields decrypted, or None when it can't be (wrong key, damaged, or moved to another id)."""
     from cryptography.exceptions import InvalidTag
     from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
@@ -153,6 +172,7 @@ def recovery_code() -> str:
 
 
 def _clean_code(code: str) -> str:
+    """A recovery code as typed, reduced to its letters and digits in capitals (spaces and dashes don't matter)."""
     return "".join(ch for ch in str(code or "").upper() if ch.isalnum())
 
 
@@ -167,12 +187,16 @@ class PasswordVault:
     """One person's vault (a personal store: their folder)."""
 
     def __init__(self, context=None, data_dir: Optional[Path] = None) -> None:
+        """Opens the person's vault file (in their folder, data/ by default). Nothing is decrypted here."""
         self.context = context
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._file = self.data_dir / FILE_NAME
         self._load()
 
     def _load(self) -> None:
+        """Reads the header (the two sealed copies of the key) and the sealed logins; a file it can't read is logged and
+        left unchanged on disk.
+        """
         self.header: dict = {}
         self.records: list[dict] = []
         if not self._file.exists():
@@ -185,22 +209,29 @@ class PasswordVault:
             log.exception("Couldn't read %s (it's unchanged on disk).", FILE_NAME)
 
     def _save(self) -> None:
+        """Writes the header and sealed logins atomically (the only form that's ever written)."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._file, json.dumps({"version": 1, "header": self.header, "entries": self.records},
                                                  indent=1))
 
     @property
     def _key_id(self) -> str:
+        """Which vault this is, by its file's full path: the key held in memory is kept under it."""
         return str(self._file.resolve())
 
     # -- state
     def is_set_up(self) -> bool:
+        """Whether a vault has been made (it has a master-password copy of the key)."""
         return bool(self.header.get("password"))
 
     def is_unlocked(self) -> bool:
+        """Whether the vault is open now (without counting as a use)."""
         return self._vault_key(touch=False) is not None
 
     def _vault_key(self, touch: bool = True) -> Optional[bytes]:
+        """The vault key from this process's memory, or None when it's locked or has gone unused for
+        LOCK_AFTER_SECONDS (5 minutes: it locks itself then). touch=True counts this as a use.
+        """
         with _lock:
             held = _open.get(self._key_id)
             if held is None:
@@ -214,12 +245,14 @@ class PasswordVault:
             return key
 
     def _need_key(self) -> bytes:
+        """The vault key, or VaultLocked."""
         key = self._vault_key()
         if key is None:
             raise VaultLocked("The vault is locked. Unlock it with your master password.")
         return key
 
     def count(self) -> int:
+        """How many logins are in the vault (shown even while it's locked; nothing else is)."""
         return len(self.records)
 
     # -- making, opening, locking
@@ -238,6 +271,9 @@ class PasswordVault:
         return code
 
     def unlock(self, master: str = "", recovery: str = "") -> None:
+        """Opens the vault with the master password or the recovery code, holding its key in memory only. From the fifth
+        wrong try, a wait of 15 s that doubles with each more (capped at about 4 hours), enforced here.
+        """
         if not self.is_set_up():
             raise VaultError("There's no vault yet.")
         with _lock:
@@ -258,10 +294,14 @@ class PasswordVault:
             _open[self._key_id] = (key, time.monotonic())
 
     def lock(self) -> None:
+        """Locks the vault now (forgets the key in memory)."""
         with _lock:
             _open.pop(self._key_id, None)
 
     def change_master(self, current: str, new: str) -> None:
+        """Changes the master password: checks the current one, then re-seals the same vault key with the new one (the
+        logins aren't touched). Needs the vault open.
+        """
         if _unwrap(current, self.header.get("password") or {}) is None:
             raise VaultError("That's not your current master password.")
         _check_master(new)
@@ -277,6 +317,9 @@ class PasswordVault:
 
     # -- logins
     def logins(self) -> list[Login]:
+        """Every login, decrypted (needs the vault open), by folder then title; one that can't be opened is logged and left
+        as it is.
+        """
         key = self._need_key()
         out = []
         for r in self.records:
@@ -290,6 +333,7 @@ class PasswordVault:
         return sorted(out, key=lambda l: (l.folder.lower(), l.title.lower()))
 
     def get(self, entry_id: str) -> Login:
+        """One login by id, decrypted, or VaultError when it isn't there."""
         found = next((l for l in self.logins() if l.entry_id == entry_id), None)
         if found is None:
             raise VaultError("That login isn't in the vault anymore.")
@@ -315,6 +359,7 @@ class PasswordVault:
         return login
 
     def delete(self, entry_id: str) -> None:
+        """Deletes a login (needs the vault open; VaultError when it isn't there)."""
         self._need_key()
         if not any(r.get("entry_id") == entry_id for r in self.records):
             raise VaultError("That login isn't in the vault anymore.")
@@ -349,12 +394,14 @@ class PasswordVault:
 
 
 def _check_master(master: str) -> None:
+    """A master password must be at least 10 characters (VaultError suggesting a few unrelated words)."""
     if len(master or "") < MIN_MASTER_LENGTH:
         raise VaultError(f"Make the master password at least {MIN_MASTER_LENGTH} characters. "
                          "A few unrelated words make a strong one you can remember.")
 
 
 def _now() -> str:
+    """Now, as an ISO timestamp to the second."""
     return datetime.now().isoformat(timespec="seconds")
 
 
@@ -400,6 +447,9 @@ def read_csv(text: str) -> list[dict]:
 
 
 def _site_name(url: str) -> str:
+    """A site's host name from a URL (or a bare domain), without "www.": an imported login's title when it has none,
+    and the site a list shows.
+    """
     from urllib.parse import urlparse
 
     host = urlparse(url if "://" in url else "https://" + url).hostname or ""

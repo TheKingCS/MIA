@@ -191,7 +191,6 @@
   "core/party.py": 4,
   "core/passing_mentions.py": 6,
   "core/password_strength.py": 2,
-  "core/password_vault.py": 28,
   "core/pathway_manager.py": 20,
   "core/person_settings.py": 4,
   "core/personal_data.py": 21,
