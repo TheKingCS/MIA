@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 229,789 lines; 1043 files describe themselves; 5,522 of 13,517 classes and functions are documented.
+1043 files, 229,828 lines; 1043 files describe themselves; 5,540 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 103,691 lines; 4,791 of 5,630 classes and functions documented
+367 files, 103,730 lines; 4,809 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -300,7 +300,7 @@
 - `core/security_cams.py`: Security (DEC-0033; Zac, 2026-10-18: "an app for Security or Smart Home where I can monitor camera feeds"): your cameras, watched from MIA, with no cloud in between. The smart-home half (lights, locks, thermostat) comes later through a local Home Assistant (docs/ROADMAP.md).
 - `core/self_docs.py`: MIA about her own design, from her own documents (DEC-0041; the intelligence spec's Phase 2C/3, docs/INTELLIGENCE_AUDIT.md): "how does the freedom estimate work?", "why can't the phone connect banks?", "what did we decide about eggs?", answered with the passage and the file it came from, never from  *(7 undocumented)*
 - `core/self_report.py`: MIA's weekly self-report (build plan step 6, DEC-0094): once a week, to the PC's owner, through the communication gate: what got better, what's slipping, what she's working on, and how Night School went. Assembled in code from her own records (the loops' history, Night School, the benchmarks, the ta *(2 undocumented)*
-- `core/show_off.py`: Show-off mode (DEC-0031): "MIA, show off for my friends" starts a short narrated tour of what MIA can do, on the person's **real** profile, in front of other people. So the tour is built here, in code, from a filtered copy of the person's data, and the screens it shows are its own cards, never the r *(9 undocumented)*
+- `core/show_off.py`: Show-off mode (DEC-0031): "MIA, show off for my friends" starts a short narrated tour of what MIA can do, on the person's **real** profile, in front of other people. So the tour is built here, in code, from a filtered copy of the person's data, and the screens it shows are its own cards, never the r
 - `core/sight.py`: Sight (build plan step 15): a photo the person takes, with the glasses' camera, the phone or the PC, and a question about it, answered by a local vision model on this PC (Ollama, `sight.model`, Qwen2.5-VL 7B by default). Nothing leaves the PC. *(5 undocumented)*
 - `core/skill_leveling.py`: Pure XP/Level math for a single Skill in "My Hero's Path" — same "derive it, don't persist a second copy that can drift" philosophy as core/leveling.py's profile-wide Level, but scaled down: a single skill's XP pool fills from a handful of small per-activity grants (core.gamification.grant_xp()'s sk
 - `core/skill_manager.py`: "My Hero's Path" — a skill-tree layer underneath core/gamification.py's existing XP system, added 2026-09-11 at the user's own explicit request to turn real activity across MIA's modules into RPG-style character progression, NOT a replacement for the profile-wide Level/Missions system already built 
@@ -361,7 +361,7 @@
 - `core/web_surfaces.py`: What the web front end's shell and Home show (2026-10-06, DEC-0017: the web becomes all of MIA, function first, in the concept's look). Assembled here, in code, so `web/` holds no logic (DEC-0013): which apps a person sees, their level and XP, the greeting, Today's Focus, the upcoming list and the a *(6 undocumented)*
 - `core/weekly_checkin.py`: The Sunday check-in (DEC-0047 rule 5; Zac, 2026-10-27): Sunday morning, a recap of the week just past and the layout of the week ahead. *(6 undocumented)*
 - `core/welcome.py`: What comes after User Sync (slice 5 of docs/GLASSES_FIRST_BOOT_PLAN.md): the first mission, the tour of Home, the app menu with its optional tours, and the moment MIA hands over.
-- `core/why_graph.py`: "Remember Why", slice B of docs/COGNITIVE_EXTENSION_PROPOSAL.md: the owner's reasons as a chain, with live evidence from their own records, assembled in code so the model can only phrase it, never invent it. *(9 undocumented)*
+- `core/why_graph.py`: "Remember Why", slice B of docs/COGNITIVE_EXTENSION_PROPOSAL.md: the owner's reasons as a chain, with live evidence from their own records, assembled in code so the model can only phrase it, never invent it.
 - `core/work_activity.py`: Who did what to the development work, and when (DEC-0068, step 2 of `docs/DEV_ECOSYSTEM_AUDIT.md`): `work/activity.jsonl`, one line per event, only ever added to. Every change `tools/work.py` makes to a task is recorded here, so the history is searchable and a task interrupted halfway can be picked  *(1 undocumented)*
 - `core/work_agents.py`: Who can do the development work, and what each may do (DEC-0068/0069, step 3 of `docs/DEV_ECOSYSTEM_AUDIT.md`). Roles live in `work/agents.json`: each is a provider (Claude Code, Ollama, Codex...), a model, a permission tier and the documents it reads first. Roles are configuration; providers are ad *(5 undocumented)*
 - `core/work_dashboard.py`: The development dashboard's data (DEC-0068/0070, step 5 of `docs/DEV_ECOSYSTEM_AUDIT.md`), served as `/api/dev` to `web/dev.html`: one view over the work and the contributors. Read-only: it shows the tasks, the agents and whether each is here, the review and approval queue, and the activity history, *(2 undocumented)*

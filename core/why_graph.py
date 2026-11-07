@@ -62,10 +62,12 @@ _WORK_WORDS = re.compile(r"\b(work|job|shift|factory|paycheck|income|overtime|wa
 
 
 def _money(value: float) -> str:
+    """An amount in the person's currency, whole units."""
     return f"{money(value, ',.0f')}"
 
 
 def _month_name(month: str) -> str:
+    """"2026-06" as "June 2026" (text that isn't a month comes back as it is)."""
     try:
         return datetime.strptime(month, "%Y-%m").strftime("%B %Y")
     except ValueError:
@@ -74,6 +76,9 @@ def _month_name(month: str) -> str:
 
 @dataclass
 class WhyLink:
+    """One link in a why chain: the intent, its name, the reason in their words, whether it's done (and why), and the
+    facts that back it, worked out now.
+    """
     intent_id: str
     name: str
     reason: str = ""
@@ -84,12 +89,16 @@ class WhyLink:
 
 @dataclass
 class WhySheet:
+    """The fact sheet for "remember why": the chains of reasons with their evidence, recent wins, and what changed since
+    the first checkpoint. The model only phrases it.
+    """
     chains: list[list[WhyLink]] = field(default_factory=list)
     wins: list[str] = field(default_factory=list)
     changes: list[str] = field(default_factory=list)
 
     @property
     def is_empty(self) -> bool:
+        """True when there are no reasons to talk about."""
         return not self.chains
 
     def to_text(self) -> str:
@@ -123,6 +132,9 @@ class WhySheet:
 
 
 def headline_numbers(context, today: Optional[date] = None) -> dict:
+    """The numbers checkpoints compare, read now: total debt and open debts, income in the last 30 days, rentals,
+    land and their rent, and projects complete and active.
+    """
     today = today or date.today()
     start = (today - timedelta(days=_RECENT_DAYS)).isoformat()
     numbers: dict = {}
@@ -165,6 +177,7 @@ def _checkpoints_file(context=None) -> Path:
 
 
 def load_checkpoints(context=None) -> list[dict]:
+    """The monthly checkpoints (why_checkpoints.json); a missing or damaged file gives none (logged)."""
     path = _checkpoints_file(context)
     if not path.exists():
         return []
@@ -273,6 +286,7 @@ def _evidence_for(intent, context, numbers: dict, first_checkpoint: Optional[dic
 
 
 def _wins(context, today: date) -> list[str]:
+    """Up to six recent wins: missions completed and projects finished in the last 30 days, then Wins memories."""
     cutoff = (today - timedelta(days=_RECENT_DAYS)).isoformat()
     wins: list[str] = []
     missions = getattr(context, "missions", None)
@@ -291,6 +305,10 @@ def _wins(context, today: date) -> list[str]:
 
 
 def build_why_sheet(context, today: Optional[date] = None, record_checkpoint: bool = True) -> WhySheet:
+    """The WhySheet: takes this month's checkpoint if due, then for each chain of intents (primary first) the
+    links with their reasons and evidence (a link done when achieved or its debt is paid), what changed since the first
+    earlier checkpoint, and recent wins.
+    """
     today = today or date.today()
     intents_manager = getattr(context, "intents", None)
     intents = intents_manager.all_intents() if intents_manager is not None else []

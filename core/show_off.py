@@ -49,10 +49,12 @@ def wants_show_off(text: str) -> bool:
 
 
 def _step(key: str, title: str, say: str, **data) -> dict:
+    """One tour card: its key, title, the scripted line MIA says, and whatever the card shows."""
     return {"key": key, "title": title, "say": say, **data}
 
 
 def _safely(fn, *args):
+    """A card from its builder, or None (logged quietly) when it fails, so one broken card never stops the tour."""
     try:
         return fn(*args)
     except Exception:
@@ -61,6 +63,9 @@ def _safely(fn, *args):
 
 
 def _level(context, today):
+    """The first tour cards: hello (first name only), the level and how far to the next with the top three skills,
+    and the six attribute stats (when there are any). Read from the Character page.
+    """
     from core.web_progress import character_page
 
     page = character_page(context, today)
@@ -87,6 +92,9 @@ def _level(context, today):
 
 
 def _buffs(context, today):
+    """Tour card: the buffs earned, leaving out the ones that would say something about money, people, health or the
+    journal. None when there's nothing to show.
+    """
     from core.buffs import buffs
 
     shown = [{"name": b["name"], "icon": b["icon"], "stat": b["stat"].capitalize()}
@@ -98,6 +106,9 @@ def _buffs(context, today):
 
 
 def _missions(context, today):
+    """Tour card: up to three active missions with objectives, by progress, and one mission boss (never a debt
+    boss). None when there's nothing to show.
+    """
     from core.boss_battles import bosses
 
     missions = getattr(context, "missions", None)
@@ -120,6 +131,7 @@ def _missions(context, today):
 
 
 def _gear(context, today):
+    """Tour card: up to four assets' condition bars, best first. None when there's nothing to show."""
     from core.web_equipment import _task_row, condition
 
     maintenance = getattr(context, "maintenance", None)
@@ -138,6 +150,9 @@ def _gear(context, today):
 
 
 def _crafting(context, today):
+    """Tour card: the most-built recipe (what it needs and its steps, never a price), how many recipes and
+    finished builds, and one photo of a finished build (an after shot first). None when there's nothing to show.
+    """
     from core.web_craft import craft_section
 
     craft = craft_section(context)
@@ -157,6 +172,9 @@ def _crafting(context, today):
 
 
 def _shop(context, today):
+    """Tour card: the Reward Shop's credits left (game currency) and three rewards; only when the shop is on and has
+    rewards. None when there's nothing to show.
+    """
     from core.game_layer import shop_page
 
     page = shop_page(context)
@@ -169,6 +187,9 @@ def _shop(context, today):
 
 
 def _chronicle(context, today):
+    """Tour card: this week's Chronicle chapter, its first four lines, with the money, journal, people and eating
+    threads left out. None when there's nothing to show.
+    """
     from core.chronicle import _gather, tell, week_bounds
 
     monday, sunday = week_bounds(today)
