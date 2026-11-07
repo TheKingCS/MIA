@@ -43,6 +43,9 @@ EXAMPLE_AT = 0.92  # this close to a plan's own example, a "how can I...?" quest
 
 @dataclass
 class Fact:
+    """One line on a sheet: its kind (fact from the records, calculation, estimate, or missing), the text, and where it
+    came from.
+    """
     kind: str  # FACT | CALCULATION | ESTIMATE | MISSING
     text: str
     source: str = ""  # the app or lookup it came from
@@ -50,6 +53,9 @@ class Fact:
 
 @dataclass
 class Sheet:
+    """What a plan gathered for one question: its lines (each once, even with two plans on one sheet), the tools it ran,
+    and the other plans composed onto it. The model writes its answer from this; without a model it's said plainly.
+    """
     plan: str
     title: str
     facts: list = field(default_factory=list)
@@ -57,6 +63,7 @@ class Sheet:
     composed: list = field(default_factory=list)  # other plans gathered onto it (step 8)
 
     def add(self, kind: str, text: str, source: str = "") -> None:
+        """Adds a line (whitespace tidied) unless the sheet already has the same text."""
         text = " ".join(str(text or "").split())
         if text and not any(f.text == text for f in self.facts):  # two plans on one sheet: each fact once
             self.facts.append(Fact(kind, text, source))
@@ -78,6 +85,9 @@ class Sheet:
 
 @dataclass
 class Plan:
+    """One question plan: its name and title, the example questions it answers (matched by meaning), its own words (a
+    regex, used when there's no embedding model) and the gatherer that fills a sheet.
+    """
     name: str
     title: str
     examples: tuple  # questions it answers (Zac's benchmark, plus phrasings)
@@ -106,12 +116,14 @@ def _look(context, sheet: Sheet, tool: str, source: str, **arguments) -> str:
 
 
 def _money(context, amount: float) -> str:
+    """An amount in the person's currency."""
     from core.region import money
 
     return money(amount)
 
 
 def _month_bounds(day: date) -> tuple[date, date]:
+    """The first and last day of a date's month."""
     first = day.replace(day=1)
     last = (first + timedelta(days=32)).replace(day=1) - timedelta(days=1)
     return first, last
@@ -121,6 +133,7 @@ def _month_bounds(day: date) -> tuple[date, date]:
 
 
 def _today(context, sheet, prompt, today):
+    """Plan gatherer (what matters today): today's picture, compliance deadlines, the calendar and their goals."""
     _look(context, sheet, "get_today", "Today")
     _look(context, sheet, "get_deadlines", "Compliance")
     _look(context, sheet, "list_calendar_events", "Calendar")
@@ -128,6 +141,7 @@ def _today(context, sheet, prompt, today):
 
 
 def _play(context, sheet):
+    """Adds the recreation lines (play this week against before, core/recreation.py) as calculations."""
     from core import recreation
 
     for line in recreation.lines(context):
@@ -135,6 +149,9 @@ def _play(context, sheet):
 
 
 def _week_review(context, sheet, prompt, today):
+    """Plan gatherer (how the week went): the weekly check-in, play, the week's history, workouts and the job's
+    loot.
+    """
     _look(context, sheet, "get_weekly_checkin", "the weekly check-in")
     _play(context, sheet)
     _look(context, sheet, "get_life_events", "your history", period="week")
@@ -169,6 +186,9 @@ def _time(context, sheet, prompt, today):
 
 
 def _money_month(context, sheet, prompt, today):
+    """Plan gatherer (money this month): in, out and net so far this month and last month, the five biggest
+    spending categories, how much came from the bank sync against by hand, the bills, and untagged charges.
+    """
     budget = getattr(context, "budget", None)
     if budget is None:
         sheet.add(MISSING, "No budget is set up.", "Money")
@@ -202,6 +222,10 @@ def _money_month(context, sheet, prompt, today):
 
 
 def _debts(context, sheet, prompt, today):
+    """Plan gatherer (debts and paying them off): the debts and payoff order, then a simulation at the minimums (each payoff
+    date, debt-free date, interest; the date is recorded to be checked when it comes) and with extra a month (the amount
+    asked, else 200) to the first debt. Missing minimums are said.
+    """
     from core.debt_math import simulate
 
     budget = getattr(context, "budget", None)
@@ -234,6 +258,9 @@ def _debts(context, sheet, prompt, today):
 
 
 def _freedom(context, sheet, prompt, today):
+    """Plan gatherer (leaving the job): Freedom's progress, the job's pay rate and recent weekly pace, the business
+    ledger and the financial check-in.
+    """
     _look(context, sheet, "get_freedom_progress", "Freedom")
     try:
         from core.web_dungeon import job_pay
@@ -254,6 +281,9 @@ def _freedom(context, sheet, prompt, today):
 
 
 def _next_dollar(context, sheet, prompt, today):
+    """Plan gatherer (where the next dollar goes): the amount asked about, the debt picture, Freedom and the
+    check-in, plus a rule of thumb clearly marked as an estimate, not advice.
+    """
     amount = _amount_in(prompt)
     if amount:
         sheet.add(FACT, f"The amount asked about: {_money(context, amount)}.", "your question")
@@ -266,6 +296,7 @@ def _next_dollar(context, sheet, prompt, today):
 
 
 def _rentals(context, sheet, prompt, today):
+    """Plan gatherer (the rentals): the properties and each one's summary (the first five)."""
     estate = getattr(context, "real_estate", None)
     _look(context, sheet, "list_properties", "Real Estate")
     for p in (estate.all_properties() if estate is not None and hasattr(estate, "all_properties") else [])[:5]:
@@ -273,6 +304,7 @@ def _rentals(context, sheet, prompt, today):
 
 
 def _products(context, sheet, prompt, today):
+    """Plan gatherer (what sells and what it makes): products, goods on hand and the business ledger."""
     _look(context, sheet, "list_products", "Workshop")
     _look(context, sheet, "list_goods_on_hand", "Workshop")
     _look(context, sheet, "get_ledger_summary", "the business")
@@ -288,6 +320,9 @@ def _returns(context, sheet, prompt, today):
 
 
 def _product_cost(context, sheet, prompt, today):
+    """Plan gatherer (what one thing costs to make): the product, its build costs and materials, and that labour and
+    overhead aren't recorded (an estimate line).
+    """
     _look(context, sheet, "list_products", "Workshop", query=_subject(prompt))
     _look(context, sheet, "get_build_costs", "Workshop", build=_subject(prompt))
     _look(context, sheet, "list_materials", "Workshop")
@@ -296,6 +331,7 @@ def _product_cost(context, sheet, prompt, today):
 
 
 def _business_month(context, sheet, prompt, today):
+    """Plan gatherer (the business this month): the ledger, business use, and the jobs."""
     _look(context, sheet, "get_ledger_summary", "the business")
     _look(context, sheet, "get_business_use", "the business")
     _look(context, sheet, "list_jobs", "Workshop")
@@ -313,12 +349,14 @@ def _running_costs(context, sheet, prompt, today):
 
 
 def _market_prep(context, sheet, prompt, today):
+    """Plan gatherer (getting ready for market): goods on hand, materials and the calendar."""
     _look(context, sheet, "list_goods_on_hand", "Workshop")
     _look(context, sheet, "list_materials", "Workshop")
     _look(context, sheet, "list_calendar_events", "Calendar")
 
 
 def _progress(context, sheet, prompt, today):
+    """Plan gatherer (goals and progress): their goals, missions, learning and the month's history."""
     _look(context, sheet, "show_my_why", "your goals")
     _look(context, sheet, "list_missions", "Missions")
     _look(context, sheet, "get_learning_progress", "Skills")
@@ -326,6 +364,7 @@ def _progress(context, sheet, prompt, today):
 
 
 def _coming_up(context, sheet, prompt, today):
+    """Plan gatherer (what's coming up): deadlines, the calendar, birthdays in 30 days, upkeep and bills."""
     _look(context, sheet, "get_deadlines", "Compliance")
     _look(context, sheet, "list_calendar_events", "Calendar")
     _look(context, sheet, "list_upcoming_birthdays", "People", within_days=30)
@@ -334,6 +373,7 @@ def _coming_up(context, sheet, prompt, today):
 
 
 def _tonight(context, sheet, prompt, today):
+    """Plan gatherer (before bed): today's picture, alarms, the calendar and the Loop."""
     _look(context, sheet, "get_today", "Today")
     _look(context, sheet, "list_alarms", "Alarms")
     _look(context, sheet, "list_calendar_events", "Calendar")
@@ -483,6 +523,9 @@ _RECALL_NONE = {"commitment": "No promises kept yet.", "decision": "No decisions
 
 
 def _notes(context, sheet, kind, open_only=False):
+    """Adds the life notes of one kind (core/life_notes.py; open ones only when asked), the last twelve, as facts
+    "from what you told MIA".
+    """
     from core.life_notes import describe
 
     store = getattr(context, "life_notes", None)
@@ -622,6 +665,7 @@ def _held_back(context, sheet, prompt, today):
 
 
 def _open_loops(context, sheet, prompt, today):
+    """Plan gatherer (what's unfinished; also gathered by another plan): open promises, tasks, projects and missions."""
     _notes(context, sheet, "commitment", open_only=True)
     _look(context, sheet, "list_tasks", "Projects")
     _look(context, sheet, "list_projects", "Projects")
@@ -873,6 +917,7 @@ CROSS_DOMAIN = ("afford", "slipped", "projects", "habits", "priorities", "resour
 
 
 def match(context, prompt: str) -> Optional[Plan]:
+    """The plan a question wants (the best-scoring of match_scored), or None."""
     found = match_scored(context, prompt)
     return found[0] if found else None
 
@@ -927,6 +972,9 @@ def composed_with(plan: Plan, prompt: str) -> list[Plan]:
 
 
 def gather(context, plan: Plan, prompt: str, today: Optional[date] = None, also: tuple = ()) -> Sheet:
+    """Fills a sheet for a plan (and any plans composed onto it) by running their gatherers; a gatherer that fails is
+    logged and the rest still run.
+    """
     sheet = Sheet(plan.name, plan.title)
     for each in (plan, *also):
         try:
@@ -994,6 +1042,9 @@ def invented_numbers(answer: str, sheet_text: str, prompt: str) -> set[str]:
 
 
 def _personal(conversation) -> bool:
+    """Whether a conversation is a personal one (a personal mode, or the journal): plans never answer there, it stays
+    a conversation.
+    """
     from core.conversation_modes import PERSONAL_MODES
 
     return getattr(conversation, "mode", None) in PERSONAL_MODES or bool(getattr(conversation, "journal", False))
