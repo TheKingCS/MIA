@@ -119,6 +119,9 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
     from core.actions import ActionCenter
 
     context.actions = ActionCenter()
+    from core.browser import Browsers
+
+    context.browsers = Browsers(context)
     context.notifications = NotificationManager(context)
     context.calendar = CalendarManager(context)
     context.alarms = AlarmManager(context)

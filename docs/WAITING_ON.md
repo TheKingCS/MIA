@@ -8,6 +8,14 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 
 ## Zac
 
+### Try it
+- [ ] **MIA's browser (DEC-0117, `docs/BROWSER.md`):** restart MIA, then say "open the county website" (or any
+      site): her own Edge window opens. Try "read the page", "click ...", and something that commits (she should
+      ask first, and a "yes" after she names the button presses it). Then teach her one real task: open where it
+      starts, "learn this: <name>", do it in her window, "done", and "do <name>" twice. Tell Claude what she got
+      wrong. One choice for you in the doc's Known limits: whether typing in ordinary fields should be limited to
+      words you said that turn.
+
 ### Decisions
 - [ ] **The Highest Self (H-0089 → H-0090, DEC-0114 PROPOSED):** read H-0090 (one page) and decide its four questions (the foundation, faith for everyone's MIA, three new modes, keep the tuned prompt); and rate MIA's twelve new answers in `pc-check/conversation-highest-self-tune2.md` (faith, meaning, vulnerability, grand plans, dependency, free will, flattery): your ratings decide the next tuning.
 - [ ] **Experience Maturity (H-0087 → H-0088, DEC-0113 PROPOSED):** read H-0088 (one page) and decide: the direction

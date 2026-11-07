@@ -111,7 +111,9 @@ def _journal_ready(context: AppContext) -> bool:
 
 def pre_turn(context: AppContext, conversation: Conversation, prompt: str) -> PreTurn:
     """Call BEFORE adding the user's message to the conversation, so the
-    message itself is stored with the privacy its own words asked for."""
+    message itself is stored with the privacy its own words asked for. A
+    plain yes is handled here first, in code: to the offer MIA just made,
+    or to the browser step she just asked about (DEC-0117)."""
     result = PreTurn()
     conversation.private_turn = _looks_like_journal_read(prompt)
 
@@ -121,6 +123,15 @@ def pre_turn(context: AppContext, conversation: Conversation, prompt: str) -> Pr
     if offer is not None and getattr(offer, "shown", False) and not offer.expired() and is_yes(prompt):
         result.fixed_reply = carry_out(context, offer)
         return result
+    # A yes to the browser step MIA just asked about (DEC-0117): approved in code, as this person.
+    if is_yes(prompt):
+        from core.browser import yes_to_waiting
+
+        last = next((m.content for m in reversed(conversation.messages) if m.role == "assistant"), "")
+        done = yes_to_waiting(context, last)
+        if done is not None:
+            result.fixed_reply = done
+            return result
 
     # MIA asked which kind of support last turn (core/support_choice.py).
     awaiting, conversation.awaiting_support = conversation.awaiting_support, False

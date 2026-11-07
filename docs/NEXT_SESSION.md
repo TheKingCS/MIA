@@ -5,7 +5,14 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-11-06 (morning)*
+*Last updated: 2026-11-07 (afternoon)*
+
+**New 2026-11-07: MIA's browser (DEC-0117, `docs/BROWSER.md`).** Edge through Playwright in her own profile per
+person; every step is sorted in code (`core/browser_safety.py`); commits wait as `browser.commit` for the person's
+OK (screen or a coded yes); secrets never typed; tasks taught by showing (`core/browser_routines.py`), learned after
+two clean runs (`browser.runs` loop). Tests: `tests/test_browser.py` (a pretend Edge); smoke-tested on real Edge.
+Next for it: Zac's first real try (WAITING_ON), a web screen listing taught tasks and their runs, and a routing
+corpus check that "open the website" reaches `browse`.
 
 **What Zac and the other agents need to do is in `docs/WAITING_ON.md`** (kept current every session).
 

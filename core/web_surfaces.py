@@ -187,7 +187,7 @@ APPS: tuple[App, ...] = (
         "A photo and a question (what is this, read this label, inspect this part), answered on your PC; never who "
         "a person is (build plan step 15).", KNOW, (), "What is this?"),
     App("assistant", "MIA Assistant", "🗨", "Always here. Always with you.", "assistant.html",
-        "Conversational assistant and local AI.", KNOW, ("communication", "undo", "system"), "Undo that."),
+        "Conversational assistant and local AI.", KNOW, ("communication", "undo", "system", "browser"), "Undo that."),
     App("diagnostics", "Diagnostics", "🩺", "How MIA is doing.", None,
         "System health, logs, and hardware status.", KNOW, (), "How is the computer doing?"),
     App("module_browser", "Apps", "🧩", "Everything MIA can do.", "apps.html",

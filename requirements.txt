@@ -110,3 +110,7 @@ pytest>=7.4
 # by tests/test_server_app.py) as of the fastapi/uvicorn pin above —
 # not something the running app itself imports.
 httpx2>=2.12,<3.0
+
+# MIA's own browser (core/browser.py, DEC-0117): drives Microsoft Edge in a
+# profile of her own. Optional: without it her browser tools say so.
+playwright>=1.45,<2.0

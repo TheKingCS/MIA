@@ -1814,3 +1814,19 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   `core.code_atlas.named_as_sentence()` is the rule; `tests/test_documentation.py` checks it.
 - Related: DEC-0104, DEC-0110
 
+
+### DEC-0117: MIA has her own browser, and is taught tasks by being shown
+- Status: APPROVED
+- Decided by: zac, 2026-11-07 ("MIA needs access to a browser and to be able to safely operate within the browser
+  and be taught how to do tasks in the browser"; then chose: her own Edge profile, read and navigate freely,
+  show her then she practises)
+- Decision: MIA drives Microsoft Edge through Playwright in a profile of her own, one per person, in their folder,
+  with none of their own sign-ins. She reads, searches, follows links and types into ordinary fields by herself.
+  Anything that commits (submit, buy, send, sign in or up, delete, download, accept, and any button not plainly
+  harmless) waits as the action `browser.commit` with a screenshot, approved by the person on a screen or by a yes in
+  code, never by the model. She never types into password, card, bank or ID fields: the person signs in themselves.
+  Tasks are taught by doing them once in her window (steps kept by label, passwords never), replayed with each
+  commit waiting, and learned after two clean runs in a row (`browser.runs` loop).
+- Where: `core/browser_safety.py`, `core/browser.py`, `core/browser_routines.py`,
+  `core/assistant_browser_actions.py`, `docs/BROWSER.md`, `tests/test_browser.py`
+- Related: DEC-0012 (the web front end and its actions), DEC-0094 (loops), DEC-0112 (learning paths: the same practise-until-verified shape)

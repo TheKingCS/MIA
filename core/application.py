@@ -80,6 +80,8 @@ from core.assistant_self_actions import register_capability_actions, register_se
 from core.specialists import register_specialist_actions
 from core.assistant_energy_actions import register_energy_actions
 from core.assistant_path_actions import register_path_actions
+from core.assistant_browser_actions import register_browser_actions
+from core.browser import Browsers
 from core.assistant_goods_actions import register_goods_actions
 from core.assistant_dungeon_actions import register_checkin_actions, register_dungeon_actions, register_loop_actions
 from core.failure_actions import register_failure_actions
@@ -328,6 +330,8 @@ class MIAApplication:
         self.context.undo = UndoLog()
         # Propose → Approve → Execute → Record → Undo (core/actions.py).
         self.context.actions = ActionCenter()
+        # MIA's own browser (DEC-0117): nothing starts until she's asked to open a page.
+        self.context.browsers = Browsers(self.context)
         self.context.notifications = NotificationManager(self.context)
         # Mobile access, Phase 1 (2026-09-12) — cheap to construct
         # unconditionally like every other manager here; only the
@@ -1542,6 +1546,7 @@ class MIAApplication:
         register_specialist_actions(self.context.assistant_actions)  # her specialists' workbooks (DEC-0109)
         register_energy_actions(self.context.assistant_actions)  # solar, generator, propane by voice (T-0053)
         register_path_actions(self.context.assistant_actions)  # learning paths: guitar and more (DEC-0111, DEC-0112)
+        register_browser_actions(self.context.assistant_actions)  # MIA's own browser, taught by showing (DEC-0117)
         register_goods_actions(self.context.assistant_actions)  # eggs, goods, freedom, deadlines by voice
         register_dungeon_actions(self.context.assistant_actions)  # the Dungeon: shifts, loot, quests (DEC-0046)
         register_loop_actions(self.context.assistant_actions)  # the loop: when things happen (DEC-0047)
@@ -5530,7 +5535,7 @@ class MIAApplication:
         return results
 
     def run(self) -> int:
-        """Start the boot sequence and enter the Qt event loop."""
+        """Start the boot sequence and enter the Qt event loop (her browser windows close when it ends)."""
         log.info("MIA starting up (version %s)", self.config.get("system.version"))
 
         self.splash = SplashScreen()
@@ -5558,6 +5563,8 @@ class MIAApplication:
             self._boot_step_personality_matrix,
         ]
         self._run_boot_steps(boot_steps, index=0)
+        # Her browser windows close with her (DEC-0117).
+        self.qt_app.aboutToQuit.connect(self.context.browsers.close_all)
 
         return self.qt_app.exec()
 

@@ -2,7 +2,7 @@
 
 *Generated from `core/loops.py` by `python -m core.loop_catalog`; never edit by hand (a test keeps it current). The design and the reasons: `docs/IMPROVEMENT_LOOPS.md`; what each process is watched by: `python -m tools.night_school coverage`.*
 
-89 loops in 8 areas.
+90 loops in 8 areas.
 
 ## Answers
 
@@ -109,6 +109,7 @@
 
 | Loop | Watches | Scope | Floor | When it slips | Covers |
 |---|---|---|---|---|---|
+| `browser.runs` | runs of taught browser tasks that finished clean (DEC-0117) | person | ≥ 0.8 (from 3) | offers it to them | `store:browser_routines` |
 | `classroom.stalled` | courses under way that no lesson moved in 30 days | person | trend | shown, never acted on | `store:classroom`, `action:subject`, `action:course`, `action:lesson` |
 | `journal.pace` | how often they operate the way they said they mean to | person | trend | shown, never acted on | `store:operating_journal`, `action:operating`, `check:operating_journal` |
 | `missions.recurring` | daily recurring missions not done, in 30 days | person | ≤ 0.5 (from 10) | offers it to them | `check:recurring_mission` |

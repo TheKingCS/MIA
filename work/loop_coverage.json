@@ -5,6 +5,10 @@
    "status": "none",
    "why": "which apps show and which are favourites is their own choice; MIA judges nothing in it"
   },
+  "action:browser": {
+   "status": "none",
+   "why": "each held browser step is the person's own yes; one that fails counts in actions.failed, and taught tasks are watched by browser.runs"
+  },
   "action:camera": {
    "status": "none",
    "why": "removing a camera they added is their own choice; the feed itself is a device, not a decision of hers"

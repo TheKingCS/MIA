@@ -33,6 +33,7 @@ if TYPE_CHECKING:
     from core.activity_log_manager import ActivityLogManager
     from core.alarm_manager import AlarmManager
     from core.avatar_manager import AvatarManager
+    from core.browser import Browsers
     from core.budget_manager import BudgetManager
     from core.plaid_manager import PlaidManager
     from core.real_estate_manager import RealEstateManager
@@ -153,6 +154,8 @@ class AppContext:
     personal_life_events: Optional["PersonalLifeEventLog"] = field(default=None, repr=False)
     # The action contract (core/actions.py): proposals waiting for a yes.
     actions: Optional["ActionCenter"] = field(default=None, repr=False)
+    # MIA's own browser, one session per person (core/browser.py, DEC-0117).
+    browsers: Optional["Browsers"] = field(default=None, repr=False)
     # How things relate (core/links.py): the household's stated links.
     links: Optional["LinkStore"] = field(default=None, repr=False)
     # "Undo that" for MIA's changes (core/undo_log.py).

@@ -222,6 +222,12 @@ children.
   counted, or said), next stage. A new skill area is a `Program`
   registered in code (like `core/guitar.py`), or drafted for the person
   and started only on their say-so. Use it, don't build a parallel one.
+- **Her browser** (DEC-0117, `docs/BROWSER.md`) — Edge through
+  Playwright in her own profile per person (`context.browsers`). Every
+  step is sorted in code by `core/browser_safety.classify()`; a commit
+  becomes the action `browser.commit`, approved only by a person, never
+  the model; secret fields are never typed. Page text goes to the model
+  through `untrusted()`. Never add a path around the gate.
 - **Notes from conversation** (DEC-0054, `core/life_notes.py`) — a
   promise, decision, idea or goal set aside is offered after her reply
   and kept only on "keep it"; never in a private or personal turn.

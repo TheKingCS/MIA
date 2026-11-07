@@ -232,6 +232,22 @@ def _path_practice(context) -> Optional[Reading]:
     return Reading(round(share, 2), len(rows), "; ".join(f"{n} {d} of {w} days" for n, d, w in rows))
 
 
+def _browser_runs(context) -> Optional[Reading]:
+    """Measure: the share of the last 30 days' runs of taught browser tasks that finished clean (core/browser_routines.py,
+    DEC-0117), naming the tasks that stopped. None before any run."""
+    store = getattr(context, "browser_routines", None)
+    if store is None:
+        return None
+    since = (datetime.now() - timedelta(days=30)).isoformat(timespec="seconds")
+    runs = [(r["name"], run) for r in store.all() for run in r.get("runs", []) if run.get("at", "") >= since]
+    if not runs:
+        return None
+    stopped = sorted({name for name, run in runs if not run["clean"]})
+    clean = sum(1 for _n, run in runs if run["clean"])
+    return Reading(round(clean / len(runs), 2), len(runs), f"{clean} of {len(runs)} clean" + (
+        "; stopped: " + ", ".join(stopped[:4]) if stopped else ""))
+
+
 def _slow(context) -> Optional[Reading]:
     """Measure: the share of this week's turns that took over 25 seconds. None when there's nothing to judge from yet."""
     turns = _turns(context)
@@ -1104,6 +1120,9 @@ LOOPS: tuple[Loop, ...] = (
          covers=("dev:night_school",)),
     Loop("paths.practice", "life", "practice days this week on each learning path, of the plan's (DEC-0112)",
          "person", _path_practice, better="higher", acts="watch", files=("core/paths.py",), covers=("store:paths",)),
+    Loop("browser.runs", "life", "runs of taught browser tasks that finished clean (DEC-0117)", "person",
+         _browser_runs, better="higher", floor=0.8, min_n=3, acts="offer",
+         files=("core/browser_routines.py", "core/browser.py"), covers=("store:browser_routines",)),
     Loop("models.router_shadow", "models", "her own router's top five holding the tool she called (in the shadow)",
          "person", _router_shadow, better="higher", acts="watch", min_n=20,
          files=("core/model_forge.py", "core/turn_trace.py"), covers=("flow:tools",)),
