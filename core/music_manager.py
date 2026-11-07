@@ -102,6 +102,10 @@ _TAG_KEYS = {
 
 @dataclass
 class Track:
+    """One song in the library: the real file it points at (never copied), its tags (title, artist, album, genre,
+    track number), duration, and the file's size and modified time at the last scan (so an unchanged file's tags
+    aren't read again).
+    """
     track_id: str
     file_path: str  # absolute path — the real, referenced file, never copied
     title: str
@@ -116,6 +120,7 @@ class Track:
     last_scanned_at: str = ""
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in its JSON file."""
         return {
             "track_id": self.track_id, "file_path": self.file_path, "title": self.title,
             "artist": self.artist, "album": self.album, "genre": self.genre,
@@ -126,6 +131,7 @@ class Track:
 
     @staticmethod
     def from_dict(data: dict) -> "Track":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return Track(
             track_id=data.get("track_id", uuid.uuid4().hex[:10]),
             file_path=data.get("file_path", ""),
@@ -144,12 +150,14 @@ class Track:
 
 @dataclass
 class Playlist:
+    """A named playlist: the songs on it by track id, in order."""
     playlist_id: str
     name: str
     track_ids: list[str] = field(default_factory=list)
     created_at: str = ""
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in its JSON file."""
         return {
             "playlist_id": self.playlist_id, "name": self.name,
             "track_ids": list(self.track_ids), "created_at": self.created_at,
@@ -157,6 +165,7 @@ class Playlist:
 
     @staticmethod
     def from_dict(data: dict) -> "Playlist":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return Playlist(
             playlist_id=data.get("playlist_id", uuid.uuid4().hex[:10]),
             name=data.get("name", ""),
@@ -167,6 +176,7 @@ class Playlist:
 
 @dataclass
 class ScanResult:
+    """What a library scan did: songs added, updated, unchanged and removed, and whether the music folder was missing."""
     added: int = 0
     updated: int = 0
     unchanged: int = 0
@@ -176,6 +186,9 @@ class ScanResult:
 
 @dataclass
 class NowPlaying:
+    """What's playing right now: the song, position and length, playing or paused, the volume, and where it is in the
+    queue (and the playlist it came from).
+    """
     track_id: str
     title: str
     artist: str
@@ -190,6 +203,7 @@ class NowPlaying:
 
 
 def _first_tag_value(tags, keys: tuple[str, ...]) -> str:
+    """The first non-empty value among a file's tags under any of these keys (tag names differ by format), or ""."""
     for key in keys:
         try:
             value = tags[key]
@@ -251,7 +265,12 @@ def read_track_tags(path: Path) -> dict:
 
 
 class MusicManager:
+    """The music library and player: songs scanned from the music folder (music.library_root_path), playlists, and a
+    QMediaPlayer made only when something first plays. Tracks and playlists are saved as JSON through
+    atomic_write_text; the queue and position live only in memory.
+    """
     def __init__(self, context: AppContext) -> None:
+        """Loads the library and playlists. The player isn't made here (cheap boot): _ensure_player makes it on first use."""
         self.context = context
         self._tracks: list[Track] = []
         self._playlists: list[Playlist] = []
@@ -268,10 +287,14 @@ class MusicManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads the tracks and playlists (undo calls this to reload)."""
         self._tracks = self._load_file(_TRACKS_FILE, Track.from_dict)
         self._playlists = self._load_file(_PLAYLISTS_FILE, Playlist.from_dict)
 
     def _load_file(self, path: Path, from_dict) -> list:
+        """One file's records; missing is empty, a damaged file is logged, reported (notify_data_corruption) and starts
+        empty.
+        """
         if not path.exists():
             return []
         try:
@@ -283,14 +306,17 @@ class MusicManager:
             return []
 
     def _save_tracks(self) -> None:
+        """Saves the library atomically."""
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
         atomic_write_text(_TRACKS_FILE, json.dumps([t.to_dict() for t in self._tracks], indent=2), encoding="utf-8")
 
     def _save_playlists(self) -> None:
+        """Saves the playlists atomically."""
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
         atomic_write_text(_PLAYLISTS_FILE, json.dumps([p.to_dict() for p in self._playlists], indent=2), encoding="utf-8")
 
     def _resolve_root_path(self) -> Path:
+        """The music folder: the configured music.library_root_path, else the default."""
         configured = self.context.config.get("music.library_root_path", "")
         if configured:
             return Path(configured).expanduser()
@@ -298,6 +324,7 @@ class MusicManager:
 
     @property
     def root_path(self) -> Path:
+        """The music folder the library scans."""
         return self._resolve_root_path()
 
     # ------------------------------------------------------------------
@@ -391,18 +418,21 @@ class MusicManager:
     # ------------------------------------------------------------------
 
     def get_track(self, track_id: str) -> Optional[Track]:
+        """The song with this id, or None."""
         for track in self._tracks:
             if track.track_id == track_id:
                 return track
         return None
 
     def all_tracks(self) -> list[Track]:
+        """Every song by artist, album, track number, then title."""
         return sorted(
             self._tracks,
             key=lambda t: (t.artist.lower(), t.album.lower(), t.track_number or 0, t.title.lower()),
         )
 
     def search_tracks(self, query: str) -> list[Track]:
+        """The songs whose title, artist or album contains the query (all of them for an empty one)."""
         needle = query.lower().strip()
         if not needle:
             return self.all_tracks()
@@ -464,6 +494,7 @@ class MusicManager:
     # ------------------------------------------------------------------
 
     def create_playlist(self, name: str) -> Playlist:
+        """Makes an empty playlist."""
         playlist = Playlist(
             playlist_id=uuid.uuid4().hex[:10], name=name,
             created_at=datetime.now().isoformat(timespec="seconds"),
@@ -473,6 +504,7 @@ class MusicManager:
         return playlist
 
     def rename_playlist(self, playlist_id: str, name: str) -> Optional[Playlist]:
+        """Renames a playlist (None when it's gone)."""
         playlist = self.get_playlist(playlist_id)
         if playlist is None:
             return None
@@ -481,19 +513,23 @@ class MusicManager:
         return playlist
 
     def delete_playlist(self, playlist_id: str) -> None:
+        """Deletes a playlist; its songs stay in the library."""
         self._playlists = [p for p in self._playlists if p.playlist_id != playlist_id]
         self._save_playlists()
 
     def get_playlist(self, playlist_id: str) -> Optional[Playlist]:
+        """The playlist with this id, or None."""
         for playlist in self._playlists:
             if playlist.playlist_id == playlist_id:
                 return playlist
         return None
 
     def all_playlists(self) -> list[Playlist]:
+        """Every playlist, by name."""
         return sorted(self._playlists, key=lambda p: p.name.lower())
 
     def add_track_to_playlist(self, playlist_id: str, track_id: str) -> bool:
+        """Adds a song to the end of a playlist; False when the playlist is gone or already has it."""
         playlist = self.get_playlist(playlist_id)
         if playlist is None or track_id in playlist.track_ids:
             return False
@@ -502,6 +538,7 @@ class MusicManager:
         return True
 
     def remove_track_from_playlist(self, playlist_id: str, track_id: str) -> bool:
+        """Takes a song off a playlist; False when it wasn't on it."""
         playlist = self.get_playlist(playlist_id)
         if playlist is None or track_id not in playlist.track_ids:
             return False
@@ -531,6 +568,9 @@ class MusicManager:
     # ------------------------------------------------------------------
 
     def _ensure_player(self) -> "QMediaPlayer":
+        """The QMediaPlayer, made on first use with its audio output at the last volume, moving to the next song when one
+        ends and logging playback errors.
+        """
         if self._player is None:
             from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer
 
@@ -545,15 +585,18 @@ class MusicManager:
         return self._player
 
     def _on_media_status_changed(self, status) -> None:
+        """When a song ends, plays the next one in the queue."""
         from PySide6.QtMultimedia import QMediaPlayer
 
         if status == QMediaPlayer.MediaStatus.EndOfMedia:
             self.next_track()
 
     def _on_error(self, error, error_string: str) -> None:
+        """Logs a playback error (never raises)."""
         log.warning("Music playback error: %s", error_string)
 
     def _load_track_into_player(self, track: Track) -> bool:
+        """Starts playing a song's file; False (logged) when the file is no longer there."""
         from PySide6.QtCore import QUrl
 
         path = Path(track.file_path)
@@ -566,6 +609,7 @@ class MusicManager:
         return True
 
     def play_track(self, track_id: str) -> bool:
+        """Plays one song on its own (a queue of one)."""
         track = self.get_track(track_id)
         if track is None:
             return False
@@ -575,6 +619,7 @@ class MusicManager:
         return self._load_track_into_player(track)
 
     def play_playlist(self, playlist_id: str, start_index: int = 0) -> bool:
+        """Plays a playlist from a position; False when it's empty or the position isn't on it."""
         tracks = self.tracks_for_playlist(playlist_id)
         if not tracks or not (0 <= start_index < len(tracks)):
             return False
@@ -584,14 +629,17 @@ class MusicManager:
         return self._load_track_into_player(tracks[start_index])
 
     def pause(self) -> None:
+        """Pauses (nothing when nothing has played)."""
         if self._player is not None:
             self._player.pause()
 
     def resume(self) -> None:
+        """Resumes after a pause."""
         if self._player is not None:
             self._player.play()
 
     def stop(self) -> None:
+        """Stops and clears the queue."""
         if self._player is not None:
             self._player.stop()
         self._queue = []
@@ -599,6 +647,7 @@ class MusicManager:
         self._queue_playlist_id = None
 
     def next_track(self) -> bool:
+        """Plays the next song in the queue, skipping songs no longer in the library; False at the end."""
         if not self._queue or self._queue_index + 1 >= len(self._queue):
             return False
         self._queue_index += 1
@@ -608,6 +657,7 @@ class MusicManager:
         return self._load_track_into_player(track)
 
     def previous_track(self) -> bool:
+        """Plays the song before, skipping ones no longer in the library; False at the start."""
         if not self._queue or self._queue_index <= 0:
             return False
         self._queue_index -= 1
@@ -617,16 +667,19 @@ class MusicManager:
         return self._load_track_into_player(track)
 
     def seek(self, position_seconds: float) -> None:
+        """Jumps to a position in the song, in seconds."""
         if self._player is not None:
             self._player.setPosition(int(position_seconds * 1000))
 
     def set_volume(self, percent: int) -> None:
+        """Sets the volume (0-100), remembered as music.last_volume."""
         percent = max(0, min(100, percent))
         self._ensure_player()
         self._audio_output.setVolume(percent / 100.0)
         self.context.config.set("music.last_volume", percent)
 
     def now_playing(self) -> Optional[NowPlaying]:
+        """What's playing (or paused) now with its position and queue place, or None when nothing is."""
         if self._player is None or not self._queue:
             return None
         from PySide6.QtMultimedia import QMediaPlayer
