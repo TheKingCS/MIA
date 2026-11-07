@@ -2,7 +2,8 @@
 DEC-0017/0018 (2026-10-06): Kitchen, Workout and Real Estate on the web.
 The pages (core/web_screens.py) and every change as an action kind
 (core/kitchen_actions.py, core/workout_actions.py, core/estate_actions.py),
-each proposed, approved, recorded and undoable.
+each proposed, approved, recorded and undoable; a recipe's amounts scaled to
+the servings asked for.
 """
 
 from datetime import date, timedelta
@@ -86,6 +87,21 @@ def test_a_locked_recipe_says_which_mission_unlocks_it(world):
     assert card["locked"] and card["unlocked_by_mission"] == "Cook 3 healthy meals"
     with pytest.raises(ActionError, match="still locked"):
         world.actions.propose(world, "meal.log", {"recipe_id": recipe.recipe_id})
+
+
+def test_a_recipe_scales_to_the_servings_asked_for_in_kitchen_fractions(world):
+    from core.units import kitchen_amount
+    from core.web_screens import recipe_page, scale_factor
+
+    recipe = world.kitchen.add_recipe("Chili", servings=4)
+    for name, quantity, unit in (("rice", 1, "cup"), ("salt", 0, ""), ("flour", 300, "g")):
+        world.kitchen.add_ingredient(recipe.recipe_id, name, quantity, unit)
+    page = recipe_page(world, recipe.recipe_id, TODAY, servings=6)
+    assert page["shown_servings"] == 6 and page["servings"] == 4
+    assert [i["amount"] for i in page["ingredients"]] == ["1 ½ cups", "", "450 g"]
+    assert recipe_page(world, recipe.recipe_id, TODAY)["ingredients"][0]["amount"] == "1 cup"
+    assert scale_factor(4, "lots") == (4, 1.0) and scale_factor(4, 0) == (1, 0.25) and scale_factor(2, 999)[0] == 100
+    assert (kitchen_amount(0.333, "cup"), kitchen_amount(2.75, "lb"), kitchen_amount(0.02, "tsp")) == ("⅓ cup", "2 ¾ lb", "a pinch")
 
 
 def test_kitchen_is_for_children_too_but_not_deleting_recipes(world):

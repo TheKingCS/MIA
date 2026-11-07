@@ -5,6 +5,7 @@
  "name": "Turkey chili",
  "category": "Lunch",
  "servings": 6,
+ "shown_servings": 6,
  "prep_minutes": 15,
  "cook_minutes": 60,
  "source": "",
@@ -20,31 +21,36 @@
    "name": "ground turkey",
    "quantity": 2.0,
    "unit": "lb",
-   "status": "on_list"
+   "status": "on_list",
+   "amount": "2 lb"
   },
   {
    "name": "black beans",
    "quantity": 2.0,
    "unit": "can",
-   "status": "on_list"
+   "status": "on_list",
+   "amount": "2 cans"
   },
   {
    "name": "diced tomatoes",
    "quantity": 1.0,
    "unit": "can",
-   "status": "on_list"
+   "status": "on_list",
+   "amount": "1 can"
   },
   {
    "name": "onion",
    "quantity": 1.0,
    "unit": "",
-   "status": "have"
+   "status": "have",
+   "amount": "1"
   },
   {
    "name": "chili powder",
    "quantity": 2.0,
    "unit": "tbsp",
-   "status": "on_list"
+   "status": "on_list",
+   "amount": "2 tbsp"
   }
  ],
  "to_buy": [],
@@ -57,7 +63,9 @@
   "sugar_g": 2.4,
   "sodium_mg": 332.7,
   "source": "computed",
-  "not_found": []
+  "not_found": [],
+  "no_amount": [],
+  "to_taste": []
  },
  "locked": false,
  "unlocked_by_mission": null,

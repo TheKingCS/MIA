@@ -401,7 +401,7 @@
         })
       : call("GET", "/api/glasses/feed" + (since ? "?since=" + encodeURIComponent(since) : "")),
     kitchen: () => read("/api/kitchen", "kitchen"),
-    recipe: (id) => read("/api/kitchen/recipe/" + encodeURIComponent(id), "recipe"),
+    recipe: (id, servings) => read("/api/kitchen/recipe/" + encodeURIComponent(id) + (servings ? "?servings=" + servings : ""), "recipe"),
     fitness: () => read("/api/fitness", "fitness"),
     fitnessWeek: (day) => read("/api/fitness/week" + (day ? "?day=" + encodeURIComponent(day) : ""), "fitness_week"),
     workout: () => read("/api/workout", "workout"),

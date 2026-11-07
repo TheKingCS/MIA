@@ -78,8 +78,8 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       keep running, Back / Next Step / I Made This. Engine: `core/cooking_session.py` (a personal store, `cooking`),
       `core/cooking_actions.py` (`cooking.start/next/back/go_to/timer/timer_cancel/made/stop`; made = `meal.cook`),
       `cooking` on the Kitchen and recipe reads. Cook mode by voice is done (`core/assistant_cooking_actions.py`:
-      cook_start / cook_step / cook_timer / cook_finish, DEC-0125). Left: the glasses' cooking panel, servings scaling
-      on the recipe page.
+      cook_start / cook_step / cook_timer / cook_finish, DEC-0125). Servings scaling is done (a − N + stepper; core scales
+      each amount to kitchen fractions: `web_screens.scale_factor`, `units.kitchen_amount`). Left: the glasses' cooking panel.
 - [~] Every other app: the shared frame now matches the canvas on every page (`web/ui.css`, "every app's frame"):
       status strips with the label above, a white value and an index bar; "needs you" amber instead of red fills
       (attention panels, overdue chips and rows; red stays for real errors); tabs as a rail lit from below. Checked

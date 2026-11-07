@@ -1533,11 +1533,11 @@ def create_app(context: AppContext) -> FastAPI:
         return _screen(profile_id, "kitchen", kitchen_page)
 
     @app.get("/api/kitchen/recipe/{recipe_id}")
-    def web_recipe(recipe_id: str, profile_id: str = Depends(require_profile_id)) -> dict:
-        """One recipe, opened from its card (core/web_screens.recipe_page)."""
+    def web_recipe(recipe_id: str, servings: str = "", profile_id: str = Depends(require_profile_id)) -> dict:
+        """One recipe, opened from its card (core/web_screens.recipe_page); ?servings= scales its amounts."""
         from core.web_screens import recipe_page
 
-        page = _screen(profile_id, "kitchen", lambda view: recipe_page(view, recipe_id))
+        page = _screen(profile_id, "kitchen", lambda view: recipe_page(view, recipe_id, servings=servings or None))
         if not page["available"]:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "There's no recipe like that.")
         return page
