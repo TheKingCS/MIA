@@ -34,6 +34,16 @@ Windows: fixed, T-0050), `dev.lab` counting practice proposals (fixed, T-0049), 
 `cryptography`, `starlette` and `fastapi` carrying known advisories with no newer Android wheels (T-0051, a choice
 for Zac). Edits on the desktop's Qt screens now count as corrections.
 
+**Documentation for everything (DEC-0104, Zac 2026-11-06: "so that if mia ever needed to redo this entire process
+herself, she could").** Every one of the 1,042 files now says what it is; `core/code_atlas.py` counts the rest,
+`work/doc_baseline.json` is a ratchet (a file's undocumented count only goes down, a new file arrives fully
+documented, `tests/test_documentation.py` holds it), `docs/ATLAS.md` is the generated map and `docs/REBUILD.md` the
+rebuild order. `python -m tools.docs next|show|apply` works the backlog: biggest engine files first, each
+docstring written from reading the code, put in place and the ratchet lowered in one step. Done so far, fully:
+`core/application.py`, `more_actions`, `loops`, `glasses`, `kitchen_manager`, `fitness_actions`, `music_manager`,
+`assistant_domain_actions`, `workout_manager`, `actions` and today's new code: 3,351 of 13,517 definitions
+documented (from 2,713). `core/budget_manager.py` waits until Zac's Plaid work is committed.
+
 **2026-11-06 to 07, Claude on the PC, overnight while Zac slept (build plan steps 1 to 17).** Phases A and C
 of `docs/BUILD_PLAN.md` are done and most of D is built; the queued tasks T-0040, T-0042, T-0044 and T-0045
 are done. Highlights: 60-odd improvement loops and a coverage map (142 of 250 processes watched); Night

@@ -607,6 +607,14 @@ every step below in order, from a blank machine, with Windows notes.
 
 *History since 2026-11-03: open work is in `work/tasks/`.*
 
+**Every session, ongoing (DEC-0104): document what you touch, and work the backlog.**
+`.venv\Scripts\python -m tools.docs next 15` lists the files with the most undocumented definitions (engine
+first); `show <file>` prints each with its code; write the docstrings by reading the code (what it is, what it
+does, how when that isn't plain; check any claim you aren't sure of), put them in a JSON
+`{"core/x.py": {"func": "...", "Cls.meth": "..."}}` and `apply` it (inserts them, lowers the ratchet,
+regenerates `docs/ATLAS.md`). Skip `core/budget_manager.py` and `core/plaid_manager.py` while Zac's Plaid work is
+uncommitted. 3,351 of 13,517 documented on 2026-11-06.
+
 **The mission system is locked in (DEC-0047, `docs/MISSION_SYSTEM.md`).**
 Build order (Zac said begin, 2026-10-27): 1) the Loop ✅ built
 (`core/the_loop.py`), 2) the Sunday check-in ✅ built
