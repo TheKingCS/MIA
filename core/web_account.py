@@ -21,6 +21,7 @@ from dataclasses import dataclass, field
 from typing import Any, Optional
 
 from core.logger import get_logger
+from core.personality import HUMOR_DEFAULT
 from core.startup_sounds import DEFAULT_STARTUP
 from core.startup_sounds import options as startup_options
 
@@ -65,6 +66,12 @@ SETTINGS: tuple[Setting, ...] = (
             "you wrote."),
     Setting("journal.reflection_weekday", "When MIA speaks up", "Reflection day", "choice", 6,
             options=tuple(enumerate(WEEKDAYS))),
+    # How funny she is (2026-11-07): the same setting "be funnier" / "no jokes for now" moves (set_humor), here too
+    # so it can be changed without talking (DEC-0125).
+    Setting("assistant.humor_level", "MIA", "How funny MIA is", "choice", HUMOR_DEFAULT,
+            "Or tell her: \"be funnier\", \"tone down the jokes\", \"no jokes for now\".",
+            options=(("off", "No jokes"), ("rare", "The odd joke"), ("sometimes", "Now and then, when it fits"),
+                     ("often", "Often"), ("lots", "As funny as she can be"))),
     Setting("assistant.ask_support_kind", "Support and safety", "When I sound worn down, ask what kind of support "
             "I want", "toggle", True, "Just listen, help figure it out, or remind me why. After the same answer "
             "three times, MIA uses it without asking."),
