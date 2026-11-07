@@ -121,7 +121,6 @@
   "modules/assistant/module.py": 26,
   "modules/budget/module.py": 73,
   "modules/classroom/module.py": 30,
-  "modules/field_kit/module.py": 27,
   "modules/kitchen/module.py": 34,
   "modules/maintenance/module.py": 30,
   "modules/settings/module.py": 37,

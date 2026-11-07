@@ -110,12 +110,14 @@ def format_script_row(script: Script) -> str:
 
 
 class FieldKitModule(ModuleBase):
+    """The Field Kit app (desktop): connected drives and serial devices (browse, eject, move expedition data on and off), the person's own scripts to run with live output, and security tools (identify a hash, password strength, subnet calculator, port scan)."""
     module_id = "field_kit"
     display_name = "Field Kit"
     description = "Detect and manage connected devices; run your own scripts."
     icon = "\U0001F6E0"  # hammer and wrench
 
     def __init__(self, context) -> None:
+        """Nothing built yet, no script or scan running, and no drive auto-imported yet."""
         super().__init__(context)
         self._device_list_layout: Optional[QVBoxLayout] = None
         self._device_timer: Optional[QTimer] = None
@@ -146,6 +148,7 @@ class FieldKitModule(ModuleBase):
         self._scan_worker: Optional[PortScanWorker] = None
 
     def get_widget(self) -> QWidget:
+        """The page: Devices, Scripts and Security tabs."""
         widget = QWidget()
         outer = QVBoxLayout(widget)
         outer.setContentsMargins(24, 24, 24, 24)
@@ -172,6 +175,7 @@ class FieldKitModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_devices_tab(self) -> QWidget:
+        """The Devices tab: the list of connected devices, refreshed on a timer."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
@@ -192,6 +196,7 @@ class FieldKitModule(ModuleBase):
         return tab
 
     def _refresh_devices(self) -> None:
+        """Re-reads the connected devices (on the Home edition, a drive carrying expedition exports, a docked Core, is imported automatically), then rebuilds the rows (old ones hidden and detached first): drives, then serial devices, or that none are connected."""
         if self.context.devices is None or self._device_list_layout is None:
             return
         storage, serial_devices = self.context.devices.refresh()
@@ -234,6 +239,7 @@ class FieldKitModule(ModuleBase):
             row_index += 1
 
     def _build_storage_row(self, device: BlockDevice) -> QWidget:
+        """A drive's row: its name, with Browse Files, Eject Safely, Export Expedition Data Here and Import Expedition Data From Here."""
         row = QWidget()
         layout = QHBoxLayout(row)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -260,6 +266,7 @@ class FieldKitModule(ModuleBase):
         return row
 
     def _build_serial_row(self, device: SerialDevice) -> QWidget:
+        """A serial device's row: its name."""
         row = QWidget()
         layout = QHBoxLayout(row)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -271,6 +278,7 @@ class FieldKitModule(ModuleBase):
         return row
 
     def _on_browse_clicked(self, device: BlockDevice) -> None:
+        """Opens the drive in the Files app (says so when it isn't mounted)."""
         if not device.mountpoint:
             QMessageBox.information(
                 None, "Not mounted", f"'{device.display_name}' has no mounted filesystem to browse."
@@ -279,6 +287,7 @@ class FieldKitModule(ModuleBase):
         self.context.events.publish("files.browse_path_requested", path=device.mountpoint)
 
     def _on_eject_clicked(self, device: BlockDevice) -> None:
+        """Ejects the drive safely and says how it went."""
         success, message = eject_storage_device(device.name)
         if success:
             QMessageBox.information(None, "Ejected", message)
@@ -287,6 +296,7 @@ class FieldKitModule(ModuleBase):
         self._refresh_devices()
 
     def _on_export_expedition_data_clicked(self, device: BlockDevice) -> None:
+        """Writes the expedition bundle to the drive (mia_expedition_export_<time>.zip) and says where, or why not."""
         if not device.mountpoint:
             QMessageBox.information(
                 None, "Not mounted", f"'{device.display_name}' has no mounted filesystem to export to."
@@ -302,6 +312,7 @@ class FieldKitModule(ModuleBase):
             QMessageBox.warning(None, "Export Failed", "\n".join(result.errors))
 
     def _on_import_expedition_data_clicked(self, device: BlockDevice) -> None:
+        """Imports an expedition bundle picked from the drive: merges what's new, reloads the expedition stores, and says how many of each came in (and any warnings)."""
         if not device.mountpoint:
             QMessageBox.information(
                 None, "Not mounted", f"'{device.display_name}' has no mounted filesystem to import from."
@@ -420,6 +431,7 @@ class FieldKitModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_scripts_tab(self) -> QWidget:
+        """The Scripts tab: the filter, the scripts with New, Edit and Delete, Run and Stop, and the output."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
@@ -464,6 +476,7 @@ class FieldKitModule(ModuleBase):
         return tab
 
     def _refresh_scripts(self) -> None:
+        """Lists the scripts matching the filter (name, category or content), all when it's empty."""
         if self.context.scripts is None or self._script_list is None:
             return
         query = self._script_filter_edit.text().strip()
@@ -476,12 +489,14 @@ class FieldKitModule(ModuleBase):
             self._script_list.addItem(item)
 
     def _selected_script_id(self) -> Optional[str]:
+        """The selected script's id, or None."""
         item = self._script_list.currentItem()
         if item is None:
             return None
         return item.data(Qt.ItemDataRole.UserRole)
 
     def _on_add_script(self) -> None:
+        """Adds a script from the dialog (name, interpreter, content, category)."""
         dialog = AddEditScriptDialog()
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -494,6 +509,7 @@ class FieldKitModule(ModuleBase):
         self._refresh_scripts()
 
     def _on_edit_script(self) -> None:
+        """Edits the selected script in the dialog (asks for a selection first)."""
         script_id = self._selected_script_id()
         if script_id is None:
             QMessageBox.information(None, "No Script Selected", "Select a script to edit.")
@@ -512,6 +528,7 @@ class FieldKitModule(ModuleBase):
         self._refresh_scripts()
 
     def _on_delete_script(self) -> None:
+        """Deletes the selected script after confirming (asks for a selection first)."""
         script_id = self._selected_script_id()
         if script_id is None:
             QMessageBox.information(None, "No Script Selected", "Select a script to delete.")
@@ -524,6 +541,7 @@ class FieldKitModule(ModuleBase):
         self._refresh_scripts()
 
     def _on_run_script(self) -> None:
+        """Runs the selected script in the background, one at a time, its output streamed into the box; Run off and Stop on while it runs."""
         if self._script_worker is not None:
             return
         script_id = self._selected_script_id()
@@ -543,10 +561,12 @@ class FieldKitModule(ModuleBase):
         self._script_worker.start()
 
     def _on_stop_script(self) -> None:
+        """Stops the running script and everything it started."""
         if self._script_worker is not None:
             self._script_worker.stop()
 
     def _on_script_finished(self, returncode: int) -> None:
+        """Notes the exit code, turns Run back on and lets the worker go."""
         self._script_output.appendPlainText(f"$ Exited with code {returncode}.")
         self._run_button.setEnabled(True)
         self._stop_button.setEnabled(False)
@@ -559,6 +579,7 @@ class FieldKitModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_security_tab(self) -> QWidget:
+        """The Security tab: hash identifier, password strength (hidden as typed), subnet calculator, and port scan."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
@@ -630,11 +651,13 @@ class FieldKitModule(ModuleBase):
 
     @staticmethod
     def _section_label(text: str) -> QLabel:
+        """A section heading on the Security tab."""
         label = QLabel(text)
         label.setStyleSheet("font-weight: 600; margin-top: 12px;")
         return label
 
     def _on_identify_hash(self) -> None:
+        """Says what kind of hash the value could be, or that none matched."""
         value = self._hash_input.text().strip()
         if not value:
             self._hash_result_label.setText("Enter a hash to identify.")
@@ -646,6 +669,7 @@ class FieldKitModule(ModuleBase):
             self._hash_result_label.setText("Possible: " + ", ".join(candidates))
 
     def _on_password_changed(self, text: str) -> None:
+        """Rates the password as it's typed: strength, bits of entropy, and what's wrong with it. Nothing is kept."""
         if not text:
             self._password_result_label.setText("")
             return
@@ -655,6 +679,7 @@ class FieldKitModule(ModuleBase):
         self._password_result_label.setText("\n".join(lines))
 
     def _on_calculate_subnet(self) -> None:
+        """Works out a CIDR's network, broadcast, netmask, address and host counts and usable range; says when it isn't valid."""
         cidr = self._subnet_input.text().strip()
         if not cidr:
             self._subnet_result_label.setText("Enter a CIDR, e.g. 192.168.1.0/24.")
@@ -676,6 +701,7 @@ class FieldKitModule(ModuleBase):
         self._subnet_result_label.setText("\n".join(lines))
 
     def _on_scan_ports(self) -> None:
+        """Scans a host's common ports in the background, one scan at a time."""
         if self._scan_worker is not None:
             return
         host = self._scan_host_input.text().strip()
@@ -690,6 +716,7 @@ class FieldKitModule(ModuleBase):
         self._scan_worker.start()
 
     def _on_scan_finished(self, result: PortScanResult) -> None:
+        """Shows the open ports of how many scanned (or none, or why it couldn't), and turns Scan back on."""
         if result.error:
             self._scan_result_label.setText(result.error)
         elif not result.open_ports:
