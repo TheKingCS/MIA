@@ -216,7 +216,6 @@
   "core/self_report.py": 2,
   "core/show_off.py": 9,
   "core/sight.py": 5,
-  "core/skill_manager.py": 18,
   "core/starter_templates.py": 7,
   "core/startup_briefing.py": 1,
   "core/subnet_calculator.py": 1,

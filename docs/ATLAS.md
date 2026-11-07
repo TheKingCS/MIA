@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 228,049 lines; 1043 files describe themselves; 4,391 of 13,517 classes and functions are documented.
+1043 files, 228,076 lines; 1043 files describe themselves; 4,409 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 101,955 lines; 3,660 of 5,630 classes and functions documented
+367 files, 101,982 lines; 3,678 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -303,7 +303,7 @@
 - `core/show_off.py`: Show-off mode (DEC-0031): "MIA, show off for my friends" starts a short narrated tour of what MIA can do, on the person's **real** profile, in front of other people. So the tour is built here, in code, from a filtered copy of the person's data, and the screens it shows are its own cards, never the r *(9 undocumented)*
 - `core/sight.py`: Sight (build plan step 15): a photo the person takes, with the glasses' camera, the phone or the PC, and a question about it, answered by a local vision model on this PC (Ollama, `sight.model`, Qwen2.5-VL 7B by default). Nothing leaves the PC. *(5 undocumented)*
 - `core/skill_leveling.py`: Pure XP/Level math for a single Skill in "My Hero's Path" — same "derive it, don't persist a second copy that can drift" philosophy as core/leveling.py's profile-wide Level, but scaled down: a single skill's XP pool fills from a handful of small per-activity grants (core.gamification.grant_xp()'s sk
-- `core/skill_manager.py`: "My Hero's Path" — a skill-tree layer underneath core/gamification.py's existing XP system, added 2026-09-11 at the user's own explicit request to turn real activity across MIA's modules into RPG-style character progression, NOT a replacement for the profile-wide Level/Missions system already built  *(18 undocumented)*
+- `core/skill_manager.py`: "My Hero's Path" — a skill-tree layer underneath core/gamification.py's existing XP system, added 2026-09-11 at the user's own explicit request to turn real activity across MIA's modules into RPG-style character progression, NOT a replacement for the profile-wide Level/Missions system already built 
 - `core/skill_patterns.py`: Pattern Insight slices 2, 3, and 4 — scoped directly with the user, not assumed (see core/mission_patterns.py's own docstring for slice 1, repeated Mission abandonment, and mia_system_vision's "Phase 6" framing this whole thread continues). Same observe -> insight -> recommend loop; all three slices
 - `core/smart_suggestions.py`: Pure decision logic for a proactive "Smart Suggestions" daily check — docs/VISION.md's principle 3 ("Proactive, not just reactive") names three concrete examples: "recovery after intense workouts, a grocery trip when supplies run low, a birthday gift reminder before the date."
 - `core/starter_templates.py`: Starter sets (2026-10-01): a new MIA is empty, and an empty app is hard to start with. A starter set fills in the usual things for a kind of life, so there's something to check off on day one: *(7 undocumented)*

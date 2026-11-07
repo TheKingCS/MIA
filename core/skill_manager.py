@@ -78,6 +78,9 @@ def _event_date(timestamp: str) -> Optional[date]:
 
 @dataclass
 class SkillDefinition:
+    """One skill in the taxonomy (hand-written in data/skill_definitions.json): name, category, description, icon,
+    tier, and the skills that must have some XP before it unlocks (any category: the taxonomy is a graph).
+    """
     skill_id: str
     name: str
     category: str
@@ -93,6 +96,7 @@ class SkillDefinition:
     tier: int = 1
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in its JSON file."""
         return {
             "skill_id": self.skill_id,
             "name": self.name,
@@ -105,6 +109,7 @@ class SkillDefinition:
 
     @staticmethod
     def from_dict(data: dict) -> "SkillDefinition":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return SkillDefinition(
             skill_id=data["skill_id"],
             name=data.get("name", data["skill_id"]),
@@ -118,6 +123,9 @@ class SkillDefinition:
 
 @dataclass
 class SkillProgress:
+    """One person's progress in one skill: total XP, and when it was last trained (the one timestamp kept, since XP
+    comes from many places and none of them alone could say).
+    """
     profile_id: str
     skill_id: str
     total_xp: int = 0
@@ -137,6 +145,7 @@ class SkillProgress:
     last_touched: str = ""
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in its JSON file."""
         return {
             "profile_id": self.profile_id, "skill_id": self.skill_id,
             "total_xp": self.total_xp, "last_touched": self.last_touched,
@@ -144,6 +153,7 @@ class SkillProgress:
 
     @staticmethod
     def from_dict(data: dict) -> "SkillProgress":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return SkillProgress(
             profile_id=data["profile_id"],
             skill_id=data["skill_id"],
@@ -167,6 +177,7 @@ class SkillXpEvent:
     timestamp: str  # ISO datetime
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in its JSON file."""
         return {
             "profile_id": self.profile_id, "skill_id": self.skill_id,
             "amount": self.amount, "timestamp": self.timestamp,
@@ -174,6 +185,7 @@ class SkillXpEvent:
 
     @staticmethod
     def from_dict(data: dict) -> "SkillXpEvent":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return SkillXpEvent(
             profile_id=data["profile_id"], skill_id=data["skill_id"],
             amount=data.get("amount", 0), timestamp=data.get("timestamp", ""),
@@ -181,7 +193,12 @@ class SkillXpEvent:
 
 
 class SkillManager:
+    """Skills: the definitions (read-only, from data/skill_definitions.json), each person's progress
+    (skill_progress.json) and a 90-day log of every XP grant (skill_xp_log.json), written through atomic_write_text so
+    undo can restore them. All skill XP comes in through add_skill_xp.
+    """
     def __init__(self, context: AppContext) -> None:
+        """Loads the definitions, then everyone's progress and the XP log; the two paths tell undo which files to reload."""
         self.context = context
         self._definitions: dict[str, SkillDefinition] = {}
         self._progress: dict[tuple[str, str], SkillProgress] = {}
@@ -202,6 +219,7 @@ class SkillManager:
     # ------------------------------------------------------------------
 
     def _load_definitions(self) -> None:
+        """Reads the skill definitions (none when the file is missing; a damaged one is logged and reported)."""
         if not _SKILL_DEFINITIONS_FILE.exists():
             log.info("No skill_definitions.json found — no skills registered yet.")
             return
@@ -216,9 +234,11 @@ class SkillManager:
             self._definitions[definition.skill_id] = definition
 
     def all_skills(self) -> list[SkillDefinition]:
+        """Every skill defined."""
         return list(self._definitions.values())
 
     def get_skill(self, skill_id: str) -> Optional[SkillDefinition]:
+        """The skill with this id, or None."""
         return self._definitions.get(skill_id)
 
     def categories(self) -> list[str]:
@@ -228,6 +248,7 @@ class SkillManager:
         return sorted({d.category for d in self._definitions.values()})
 
     def skills_in_category(self, category: str) -> list[SkillDefinition]:
+        """The skills in one category."""
         return [d for d in self._definitions.values() if d.category == category]
 
     # ------------------------------------------------------------------
@@ -235,6 +256,7 @@ class SkillManager:
     # ------------------------------------------------------------------
 
     def _load_progress(self) -> None:
+        """Reads everyone's progress; a damaged file is logged, reported and starts with none."""
         if not _SKILL_PROGRESS_FILE.exists():
             return
         try:
@@ -248,11 +270,13 @@ class SkillManager:
             self._progress[(progress.profile_id, progress.skill_id)] = progress
 
     def _save_progress(self) -> None:
+        """Writes everyone's progress atomically."""
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
         payload = {"progress": [p.to_dict() for p in self._progress.values()]}
         atomic_write_text(_SKILL_PROGRESS_FILE, json.dumps(payload, indent=2), encoding="utf-8")
 
     def _load_xp_log(self) -> None:
+        """Reads the XP log; a damaged file is logged, reported and starts empty."""
         if not _SKILL_XP_LOG_FILE.exists():
             return
         try:
@@ -268,6 +292,9 @@ class SkillManager:
         # an unparseable/blank timestamp is kept rather than dropped
         # (same "no evidence, don't guess" stance as _event_date's own
         # callers elsewhere), since there's no safe way to judge its age.
+        """Writes the XP log atomically, dropping events older than 90 days (one whose date can't be read is kept: its age
+        can't be judged).
+        """
         cutoff = datetime.now().date() - timedelta(days=_XP_LOG_MAX_AGE_DAYS)
         self._xp_log = [
             e for e in self._xp_log
