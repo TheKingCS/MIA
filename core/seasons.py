@@ -46,10 +46,12 @@ CHANGE = 0.2  # a count this much higher or lower is "more" or "fewer"; less is 
 # ------------------------------------------------------------------ periods (pure)
 
 def _month_start(day: date) -> date:
+    """Pure logic. The first day of a day's month."""
     return day.replace(day=1)
 
 
 def _prev_month_start(day: date) -> date:
+    """Pure logic. The first day of the month before."""
     return (_month_start(day) - timedelta(days=1)).replace(day=1)
 
 
@@ -94,11 +96,15 @@ def kind_in(prompt: str, today: Optional[date] = None) -> str:
 # ------------------------------------------------------------------ the comparison
 
 def _in(events: list, span: tuple[date, date]) -> list:
+    """Pure logic. The life events whose day falls in a span (both ends included)."""
     a, b = span[0].isoformat(), span[1].isoformat()
     return [e for e in events if a <= e.day <= b]
 
 
 def _total(events: list, types: tuple, key: str = "amount") -> float:
+    """Pure logic. The sum of one payload field (the amount by default) over the events of the given types; a value
+    that isn't a number is skipped.
+    """
     total = 0.0
     for e in events:
         if e.type in types:
@@ -204,6 +210,7 @@ def season(context, kind: str = "month", today: Optional[date] = None) -> tuple[
 # ------------------------------------------------------------------ kept seasons
 
 def _folder(context) -> Optional[Path]:
+    """The person's folder seasons are kept in (the failure log's, else the traces'), or None."""
     for name in ("failures", "traces"):
         found = getattr(getattr(context, name, None), "data_dir", None)
         if found is not None:
@@ -212,6 +219,7 @@ def _folder(context) -> Optional[Path]:
 
 
 def kept(context) -> dict:
+    """Every season kept so far (seasons.json), by its key; none when it's missing or unreadable."""
     folder = _folder(context)
     if folder is None:
         return {}

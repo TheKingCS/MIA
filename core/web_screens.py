@@ -28,11 +28,13 @@ EXPIRING_DAYS = 3
 
 
 def _values(record, item) -> dict:
+    """A record's form values: each of its fields from the item."""
     data = asdict(item)
     return {f.name: data.get(f.name) for f in record.fields}
 
 
 def _r(value) -> float:
+    """A number rounded to cents (0 for nothing)."""
     return round(float(value or 0), 2)
 
 
@@ -40,6 +42,10 @@ def _r(value) -> float:
 
 
 def kitchen_page(context, today: Optional[date] = None) -> dict:
+    """The data the Kitchen screen shows, assembled here (the web only draws it): recipes (what's missing for each, whether it can be made, times
+    made, favourites, ratings, photos; locked ones with the mission that unlocks them), the pantry with what expires,
+    the grocery list, meals logged, and the forms.
+    """
     from core.kitchen_actions import RECORDS, form_spec, ingredients_text
     from core.kitchen_manager import days_until_expiration, recipe_missing_ingredients
     from core.person_settings import person_id
@@ -206,6 +212,7 @@ def recipe_photo_url(kitchen, recipe) -> str:
 
 
 def _ingredients_text(recipe) -> str:
+    """A recipe's ingredients as the text its form edits."""
     from core.kitchen_actions import ingredients_text
 
     return ingredients_text(recipe.ingredients)
@@ -226,6 +233,10 @@ def _streak_days(sessions, today: date) -> int:
 
 
 def workout_page(context, today: Optional[date] = None) -> dict:
+    """The data the Workout screen shows, assembled here (the web only draws it): exercises with their records and progress, sessions newest first (each
+    summarised by exercise, reps and sets), this week's count and minutes, the streak, today's daily missions, and
+    the forms.
+    """
     from core.workout_actions import RECORDS, form_spec
 
     today = today or date.today()
@@ -284,6 +295,9 @@ def workout_page(context, today: Optional[date] = None) -> dict:
 
 
 def estate_page(context, today: Optional[date] = None) -> dict:
+    """The data the Real Estate screen shows, assembled here (the web only draws it): each property with its value, loan and payment, this month's income and
+    expenses and the year's net operating income (with a budget), its upkeep tasks, and the missions linked to it.
+    """
     from core import links as links_module
     from core.estate_actions import RECORDS, form_spec
     from core.real_estate_manager import equity, has_loan_terms, monthly_payment

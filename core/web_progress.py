@@ -29,12 +29,14 @@ RECENT_DAYS = 60
 
 
 def _person(context):
+    """The signed-in person's id."""
     from core.person_settings import person_id
 
     return person_id(context)
 
 
 def _profile(context):
+    """The signed-in person's profile, or None."""
     pid = _person(context)
     profiles = getattr(context, "profiles", None)
     return profiles.get_profile(pid) if profiles is not None and pid else None
@@ -57,6 +59,7 @@ def level_block(profile) -> dict:
 
 
 def _rarity(index: int) -> dict:
+    """A rarity's index and its name, for a card."""
     from core.rarity import rarity_name_for_index
 
     return {"rarity": index, "rarity_name": rarity_name_for_index(index)}
@@ -66,6 +69,10 @@ def _rarity(index: int) -> dict:
 
 
 def missions_page(context, today: Optional[date] = None) -> dict:
+    """The data the Missions screen shows, assembled here (the web only draws it): today's fitness missions made first, then each mission's card
+    (objectives and who each is for, progress, skill rewards, the asset, task or recipes it's tied to, its streak),
+    the skills to pick from, the forms, and the person's level.
+    """
     from core.mission_actions import ABANDON_LABELS, RECORDS, form_spec, is_mine
 
     today = today or date.today()
@@ -178,6 +185,9 @@ def _pathway_steps(context, pid) -> dict:
 
 
 def skills_page(context, today: Optional[date] = None) -> dict:
+    """The data the Skills screen shows, assembled here (the web only draws it): each skill's level, status (locked, learning, demonstrated), what it
+    needs, the XP this week and its pathways; the one honest next step; counts; rewards; and recent achievements.
+    """
     from core.skill_leveling import compute_skill_level_progress, next_honest_step
 
     today = today or date.today()
@@ -283,6 +293,11 @@ def rewards_block(context, pid) -> dict:
 
 
 def character_page(context, today: Optional[date] = None) -> dict:
+    """The data the Character screen shows, assembled here (the web only draws it): the person's level, their
+    lifetime stats, the collection of rewards by rarity, emblems, buffs, this week's Chronicle, the six attributes
+    (a part that fails is logged and left empty), their top five skills, missions completed and the latest, and
+    when they joined.
+    """
     from core.rarity import RARITY_NAMES
     from core.rewards_manager import STAT_DEFINITIONS
 

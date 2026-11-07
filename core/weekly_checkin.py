@@ -34,16 +34,19 @@ DONE_XP = 15
 
 
 def _money(x) -> str:
+    """An amount in the person's currency."""
     from core.region import money
 
     return money(x)
 
 
 def _day_text(d: date) -> str:
+    """A date as "Sat, Nov 7"."""
     return f"{d:%a}, {d:%b} {d.day}"
 
 
 def _span(a: date, b: date) -> str:
+    """Two dates as a span ("Nov 1 – 7", or "Oct 30 – Nov 5" across months)."""
     return f"{a:%b} {a.day} – {b:%b} {b.day}" if a.month != b.month else f"{a:%b} {a.day} – {b.day}"
 
 
@@ -81,6 +84,7 @@ def _loot(context, since: date, until: date) -> dict:
 
 
 def _quests_done(context, since: date, until: date) -> list[str]:
+    """The missions (not recurring ones) completed in the span, by name."""
     missions = getattr(context, "missions", None)
     if missions is None:
         return []
@@ -162,6 +166,7 @@ def _events_on(calendar, day: date, loop_names: tuple) -> list:
 
 
 def _quests_open(context) -> list[dict]:
+    """Up to six active missions (not recurring ones), each with how far along it is, furthest first."""
     missions = getattr(context, "missions", None)
     if missions is None:
         return []
@@ -176,6 +181,10 @@ def _quests_open(context) -> list[dict]:
 
 
 def checkin(context, today: Optional[date] = None) -> dict:
+    """The weekly check-in: last week (its Chronicle chapter, the loop's rows, the loot and pay banked, quests
+    done, what MIA noticed) and the week ahead (its days, planned runs, projected loot, quests in progress, the next
+    dungeon), and whether this week's check-in is done. A child sees no money.
+    """
     from core.chronicle import _gather, tell
     from core.child_accounts import is_child
     from core.the_loop import week
