@@ -47,6 +47,7 @@ def second_person(text: str) -> str:
 
 
 def _memories_about(context, text: str) -> list[str]:
+    """What she remembers that's relevant to a text, said to the person ("you"), at most two."""
     from core.user_memory_manager import relevant_memories
 
     store = getattr(context, "user_memories", None)
@@ -56,10 +57,14 @@ def _memories_about(context, text: str) -> list[str]:
 
 
 def _when(days: int) -> str:
+    """Pure logic. today, tomorrow, or in n days."""
     return "today" if days == 0 else "tomorrow" if days == 1 else f"in {days} days"
 
 
 def _birthdays(context, today: date) -> list[dict]:
+    """Birthdays coming up a week ahead, the day before and on the day, each with the gift ideas, favourites and memories she has about
+    the person (one with nothing to add is left out, except on the day); pets the day before and on the day.
+    """
     from core.web_more import next_birthday
 
     people = getattr(context, "relationships", None)
@@ -93,6 +98,7 @@ def _birthdays(context, today: date) -> list[dict]:
 
 
 def _calendar(context, today: date) -> list[dict]:
+    """Tomorrow's events she remembers something about, with what she remembers."""
     from core.calendar_manager import occurs_on
 
     calendar = getattr(context, "calendar", None)
@@ -112,6 +118,7 @@ def _calendar(context, today: date) -> list[dict]:
 
 
 def _upkeep(context, today: date) -> list[dict]:
+    """Upkeep due within two days that has a note or a memory about it, with up to three of them."""
     from core.maintenance_manager import next_occurrence_date
     from core.web_equipment import _readings
 

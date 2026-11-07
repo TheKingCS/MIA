@@ -37,6 +37,9 @@ class GridError(ValueError):
 
 
 def zone_of(lat: float, lon: float) -> int:
+    """Pure logic. The UTM zone a point is in, with the exceptions for southwest Norway (32V) and Svalbard (31X
+    to 37X).
+    """
     lon = ((lon + 180) % 360) - 180
     zone = int((lon + 180) // 6) + 1
     if 56 <= lat < 64 and 3 <= lon < 12:
@@ -47,12 +50,16 @@ def zone_of(lat: float, lon: float) -> int:
 
 
 def band_of(lat: float) -> str:
+    """Pure logic. The MGRS latitude band letter; GridError outside 80°S to 84°N (the poles use UPS)."""
     if not -80 <= lat <= 84:
         raise GridError("MGRS covers 80°S to 84°N; the poles use UPS.")
     return BANDS[min(int((lat + 80) // 8), 19)]
 
 
 def _meridian(phi: float) -> float:
+    """Pure logic. The distance along the meridian from the equator to a latitude (radians), on the WGS84
+    ellipsoid.
+    """
     e4, e6 = E2 * E2, E2 ** 3
     return A * ((1 - E2 / 4 - 3 * e4 / 64 - 5 * e6 / 256) * phi
                 - (3 * E2 / 8 + 3 * e4 / 32 + 45 * e6 / 1024) * math.sin(2 * phi)
@@ -101,6 +108,9 @@ def from_utm(zone: int, northern: bool, easting: float, northing: float) -> tupl
 
 
 def _square(zone: int, easting: float, northing: float) -> str:
+    """Pure logic. The 100 km square's two letters for an easting and northing in a zone (the row letters shift by
+    five in even zones).
+    """
     column = COLUMNS[(zone - 1) % 3][int(easting // 100000) - 1]
     row = int(northing // 100000) % 20
     if zone % 2 == 0:
@@ -123,6 +133,9 @@ _MGRS = re.compile(r"^\s*(\d{1,2})\s*([C-HJ-NP-X])\s*([A-HJ-NP-Z])\s*([A-HJ-NP-V
 
 
 def parse(reference: str) -> tuple[int, str, str, str, str]:
+    """Pure logic. An MGRS reference as (zone, band, column letter, row letter, digits); GridError when it isn't
+    one or its digits don't split evenly.
+    """
     m = _MGRS.match(reference or "")
     if not m:
         raise GridError("That isn't a grid reference (like 18S UJ 23396 06441).")

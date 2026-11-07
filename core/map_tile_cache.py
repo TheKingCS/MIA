@@ -95,7 +95,11 @@ WORLDWIDE_BOUNDS: tuple[float, float, float, float] = (-85.0, -180.0, 85.0, 180.
 
 
 class MapTileCache:
+    """Map tiles kept on this computer for offline maps (data/map_tiles/<source>/<z>/<x>/<y>): one fetched when
+    it's missing, and a whole area downloaded only when the person asks.
+    """
     def __init__(self, context: AppContext) -> None:
+        """Keeps the context; tiles live in the shared tile folder."""
         self.context = context
 
     # ------------------------------------------------------------------
@@ -103,13 +107,16 @@ class MapTileCache:
     # ------------------------------------------------------------------
 
     def tile_path(self, source: str, zoom: int, x: int, y: int) -> Path:
+        """Where one tile is kept."""
         _, extension = TILE_SOURCES[source]
         return _TILE_CACHE_DIR / source / str(zoom) / str(x) / f"{y}.{extension}"
 
     def is_cached(self, source: str, zoom: int, x: int, y: int) -> bool:
+        """Whether a tile is already here."""
         return self.tile_path(source, zoom, x, y).exists()
 
     def _tile_url(self, source: str, zoom: int, x: int, y: int) -> str:
+        """The address one tile is downloaded from."""
         template, _ = TILE_SOURCES[source]
         return template.format(z=zoom, y=y, x=x)
 

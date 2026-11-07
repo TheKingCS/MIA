@@ -14,6 +14,7 @@ from core.actions import ACTION_TYPES, ActionError, ActionType
 
 
 def _gap(context, params) -> dict:
+    """The capability gap the params name, or ActionError."""
     from core import capability_gaps
 
     gap = capability_gaps.get(context, str(params.get("gap_id", "")))
@@ -23,6 +24,7 @@ def _gap(context, params) -> dict:
 
 
 def _describe_build(context, params) -> str:
+    """The sentence the approval card shows for `gap.build` (Propose); raises ActionError when it can't be done. Only a gap that needs code, and isn't asked for yet."""
     gap = _gap(context, params)
     if gap["need"] != "code":
         raise ActionError(f"That one doesn't need building: {gap['what']}.")
@@ -32,6 +34,7 @@ def _describe_build(context, params) -> str:
 
 
 def _build(context, params) -> str:
+    """Does `gap.build` once approved, and says what happened. It opens a development task for the gap; only on the PC with MIA's development."""
     from core import capability_gaps, loops
 
     if not loops._has_repo():
@@ -41,11 +44,13 @@ def _build(context, params) -> str:
 
 
 def _describe_dismiss(context, params) -> str:
+    """The sentence the approval card shows for `gap.dismiss` (Propose); raises ActionError when it can't be done."""
     _gap(context, params)
     return "Stop offering it"
 
 
 def _dismiss(context, params) -> str:
+    """Does `gap.dismiss` once approved, and says what happened. The gap is marked declined and never offered again."""
     from core import capability_gaps
 
     capability_gaps.mark(context, _gap(context, params)["id"], "declined")
