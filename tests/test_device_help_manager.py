@@ -19,19 +19,25 @@ from core.reference_library_manager import ReferenceSnippet
 
 
 class _FakeConfig:
+    """A config that only has defaults."""
     def get(self, key: str, default=None):
+        """The default."""
         return default
 
 
 class _FakeModule:
+    """A module with a name, description and id."""
     def __init__(self, display_name: str, description: str, module_id: str = "") -> None:
+        """Keeps the name, description and id."""
         self.display_name = display_name
         self.description = description
         self.module_id = module_id
 
 
 class _FakeReferenceLibrary:
+    """Stands in for the offline library: fixed snippets (or per query), or an error, remembering what was searched."""
     def __init__(self, snippets=None, error: bool = False, snippets_by_query: dict = None) -> None:
+        """The snippets to give (or an error to raise), and nothing searched yet."""
         self._snippets = snippets or []
         self._snippets_by_query = snippets_by_query or {}
         self._error = error
@@ -40,6 +46,7 @@ class _FakeReferenceLibrary:
         self.all_queries: list[str] = []
 
     def search_all_packs(self, query, limit=3):
+        """Remembers the query and limit, then raises or gives the snippets."""
         self.last_query = query
         self.last_limit = limit
         self.all_queries.append(query)
@@ -51,16 +58,20 @@ class _FakeReferenceLibrary:
 
 
 class _FakeLLM:
+    """Stands in for the model: a fixed reply (search words), remembering the prompt."""
     def __init__(self, reply: str = "hypothermia frostbite cold exposure") -> None:
+        """The reply to give."""
         self._reply = reply
         self.last_prompt = None
 
     def generate(self, prompt):
+        """Remembers the prompt and gives the reply."""
         self.last_prompt = prompt
         return self._reply
 
 
 def _make_manager(llm=None) -> DeviceHelpManager:
+    """A help manager with this model (or none)."""
     context = AppContext(config=_FakeConfig(), events=None)
     context.llm = llm
     return DeviceHelpManager(context)

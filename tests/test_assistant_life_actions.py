@@ -37,6 +37,7 @@ _MODULES = [classroom_module, mission_module, recurring_module, relationships_mo
 
 @pytest.fixture
 def ctx(tmp_path, monkeypatch):
+    """A context for the life tools: their stores on temporary files, and the Assistant's tools."""
     for module in _MODULES:
         original = module._DATA_DIR
         for attr, value in list(vars(module).items()):
@@ -54,6 +55,7 @@ def ctx(tmp_path, monkeypatch):
 
 
 def say(ctx, action, **arguments):
+    """Runs an Assistant tool with these arguments and returns what MIA says."""
     return ctx.assistant_actions.execute(ctx, action, arguments)
 
 
@@ -68,6 +70,7 @@ def say(ctx, action, **arguments):
     ("ran 3 miles", {"name": "ran 3 miles", "sets": 0, "reps": 0, "weight": 0.0}),
 ])
 def test_parse_exercise_line(line, expected):
+    """A spoken exercise line is read into its exercise, sets, reps and weight."""
     assert parse_exercise_line(line) == expected
 
 
@@ -76,6 +79,7 @@ def test_parse_exercise_line(line, expected):
     ("3/3", "2000-03-03"), ("3/3/90", "1990-03-03"), ("Feb 30", None), ("someday", None), ("", None),
 ])
 def test_parse_birthday(text, iso):
+    """A birthday said in words is read into a date."""
     assert parse_birthday(text) == iso
 
 
@@ -110,6 +114,7 @@ def test_log_workout_reuses_existing_exercise_and_reports_pr(ctx):
 
 
 def test_workout_summary(ctx):
+    """With no workouts it says so; after one, it's this week's count and the last one."""
     assert "No workouts logged yet" in say(ctx, "get_workout_summary")
     say(ctx, "log_workout", exercises=["20 push-ups"])
     assert say(ctx, "get_workout_summary") == "1 workout(s) this week. Your last one was today (Push-Ups)."
@@ -126,6 +131,7 @@ def test_add_and_enrich_a_person(ctx):
 
 
 def test_add_person_duplicate(ctx):
+    """Adding someone already in People (any case) says so."""
     ctx.relationships.add_person("Sarah")
     assert "already in People" in say(ctx, "add_person", name="sarah")
 
@@ -137,6 +143,7 @@ def test_update_person_bad_birthday_is_refused(ctx):
 
 def test_upcoming_birthdays(ctx):
     # Year 2000 (a leap year) keeps every month/day valid, including Feb 29.
+    """Birthdays coming up soon are listed, ones far off aren't."""
     ctx.relationships.add_person("Sarah", birthday=(date.today() + timedelta(days=5)).replace(year=2000).isoformat())
     ctx.relationships.add_person("Ray", birthday=(date.today() + timedelta(days=200)).replace(year=2000).isoformat())
     reply = say(ctx, "list_upcoming_birthdays")
@@ -154,6 +161,7 @@ def test_pets_medical_history_is_dated(ctx):
 
 
 def test_household_routine_lifecycle(ctx):
+    """A household routine is added (not twice), logged by voice, and done for the week at its count."""
     assert "don't have any household routines" in say(ctx, "list_household_routines")
     assert say(ctx, "add_household_routine", name="Laundry", times=2, recurrence="weekly") == "Added Laundry: 2 times a week. I'll track your streak."
     assert "already have" in say(ctx, "add_household_routine", name="laundry")

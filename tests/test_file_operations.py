@@ -27,18 +27,22 @@ from modules.files_mod.file_operations import (
 # ----------------------------------------------------------------------
 
 def test_format_size_bytes():
+    """500 bytes shows as 500 B."""
     assert format_size(500) == "500 B"
 
 
 def test_format_size_kilobytes():
+    """1,536 bytes shows as 1.5 KB."""
     assert format_size(1536) == "1.5 KB"
 
 
 def test_format_size_megabytes():
+    """5 MB shows as 5.0 MB."""
     assert format_size(5 * 1024 * 1024) == "5.0 MB"
 
 
 def test_format_size_zero():
+    """Zero bytes shows as 0 B."""
     assert format_size(0) == "0 B"
 
 
@@ -52,6 +56,7 @@ def test_format_size_negative_raises():
 # ----------------------------------------------------------------------
 
 def test_create_folder(tmp_path):
+    """A new folder is made where asked."""
     result = create_folder(tmp_path, "new_folder")
     assert result == tmp_path / "new_folder"
     assert result.is_dir()
@@ -78,6 +83,7 @@ def test_create_folder_collision_raises(tmp_path):
 # ----------------------------------------------------------------------
 
 def test_rename_file(tmp_path):
+    """A file renamed keeps its contents under the new name."""
     original = tmp_path / "old.txt"
     original.write_text("hello")
 
@@ -96,6 +102,7 @@ def test_rename_empty_name_raises(tmp_path):
 
 
 def test_rename_collision_raises(tmp_path):
+    """Renaming onto a name that's taken is refused."""
     original = tmp_path / "old.txt"
     original.write_text("hello")
     (tmp_path / "taken.txt").write_text("already here")
@@ -109,6 +116,7 @@ def test_rename_collision_raises(tmp_path):
 # ----------------------------------------------------------------------
 
 def test_delete_file(tmp_path):
+    """A deleted file is gone."""
     target = tmp_path / "doomed.txt"
     target.write_text("bye")
     delete_item(target)
@@ -116,6 +124,7 @@ def test_delete_file(tmp_path):
 
 
 def test_delete_directory_recursively(tmp_path):
+    """A deleted folder is gone with everything in it."""
     target = tmp_path / "doomed_dir"
     target.mkdir()
     (target / "nested.txt").write_text("also bye")

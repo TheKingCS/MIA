@@ -19,32 +19,41 @@ from tests.test_server_app import context  # noqa: F401  (the computer's MIA, wi
 
 
 class _Backend:
+    """A model backend by name that's up or down, counting its calls; its reply says which model answered."""
     def __init__(self, name, up=True):
+        """The model's name, up or down, no calls yet."""
         self._model, self.up, self.calls = name, up, 0
 
     def chat(self, messages, tools, timeout):
+        """Counts the call; raises when down, else replies naming itself."""
         self.calls += 1
         if not self.up:
             raise LLMUnavailableError("down")
         return ChatReply(content=f"from {self._model}")
 
     def generate(self, prompt, timeout):
+        """The same reply as chat."""
         return self.chat([], [], timeout).content
 
     def is_available(self, timeout):
+        """Whether it's up."""
         return self.up
 
 
 class _ComputerLLM:
+    """The home computer's model (qwen2.5:14b)."""
     def __init__(self):
+        """Its backend and timeout."""
         self.backend, self._timeout = _Backend("qwen2.5:14b"), 5
 
     def is_available(self):
+        """Whether its backend is up."""
         return self.backend.up
 
 
 @pytest.fixture
 def link(context, tmp_path, monkeypatch):  # noqa: F811
+    """A phone and its home computer: the phone's calls go to the computer's real server (refused when the computer is unreachable); the phone has its own small model. Returns the phone, the computer and the reachability switch."""
     context.llm = _ComputerLLM()
     computer = TestClient(server_app_module.create_app(context))
     state = {"reachable": True}
@@ -101,6 +110,7 @@ def test_a_device_key_survives_a_restart_and_is_needed(link):
 
 
 def test_addresses():
+    """A home computer's address gets http:// and loses a trailing slash; another scheme is refused."""
     assert home_link.clean_url("pc.tailnet:8765/") == "http://pc.tailnet:8765"
     with pytest.raises(home_link.HomeLinkError):
         home_link.clean_url("ftp://pc")

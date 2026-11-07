@@ -22,33 +22,43 @@ from core.event_bus import EventBus
 
 
 class _FakeConfig:
+    """A config of overrides that notes when it's saved."""
     def __init__(self, overrides: dict | None = None) -> None:
+        """Keeps the overrides; not saved yet."""
         self._overrides = overrides or {}
         self.saved = False
 
     def get(self, key: str, default=None):
+        """An override, or the default."""
         return self._overrides.get(key, default)
 
     def set(self, key: str, value) -> None:
+        """Sets a value."""
         self._overrides[key] = value
 
     def save(self) -> None:
+        """Notes it was saved."""
         self.saved = True
 
 
 class _FakeCameraDevice:
+    """A camera with an id and a description, as Qt lists one."""
     def __init__(self, device_id: bytes, description: str) -> None:
+        """Keeps the id and description."""
         self._device_id = device_id
         self._description = description
 
     def id(self):
+        """The camera's id."""
         return self._device_id
 
     def description(self) -> str:
+        """The camera's description."""
         return self._description
 
 
 def _make_manager(overrides: dict | None = None) -> AvatarManager:
+    """An avatar manager on a fake config with these overrides."""
     context = AppContext(config=_FakeConfig(overrides), events=EventBus())
     return AvatarManager(context)
 

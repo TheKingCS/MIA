@@ -33,23 +33,28 @@ ORGANIZED = "Title: Long shift blues\nMood: drained\nThemes: work, greenhouse\nS
 
 
 class FakeLLM:
+    """Stands in for the model: a fixed reply, a fixed organized journal entry, and every call remembered."""
     def __init__(self):
+        """The reply and journal organization to give, no calls yet."""
         self.reply = ChatReply(content="That sounds exhausting.")
         self.generated = ORGANIZED
         self.chat_calls = []
         self.generate_calls = []
 
     def chat_with_tools(self, messages, tools):
+        """Remembers the call and gives the reply."""
         self.chat_calls.append((messages, tools))
         return self.reply
 
     def generate(self, prompt):
+        """Remembers the prompt and gives the organized entry."""
         self.generate_calls.append(prompt)
         return self.generated
 
 
 @pytest.fixture
 def ctx(tmp_path, monkeypatch):
+    """A context for talking it out: the config, conversations, memories and journal on temporary files, with the fake model."""
     monkeypatch.setattr(config_module, "_CONFIG_FILE", tmp_path / "config.json")
     monkeypatch.setattr(conversation_module, "_DATA_DIR", tmp_path)
     monkeypatch.setattr(conversation_module, "_CONVERSATIONS_FILE", tmp_path / "conversations.json")
@@ -70,6 +75,7 @@ def ctx(tmp_path, monkeypatch):
 
 
 def turn(ctx, text):
+    """One turn as the voice and phone run it, its follow-up done and the conversation saved."""
     conversation = ctx.conversations.get_or_create_active_conversation()
     result = run_assistant_turn(ctx, conversation, text)
     run_followup(ctx, conversation, result.followup)
@@ -80,6 +86,7 @@ def turn(ctx, text):
 
 
 def saved_conversation_text(ctx) -> str:
+    """What reached conversations.json."""
     return (ctx.tmp / "conversations.json").read_text()
 
 
@@ -221,6 +228,7 @@ def test_journal_tools_and_private_turns(ctx):
 
 
 def test_themes_tool(ctx):
+    """The journal themes tool counts the sessions in the last 30 days and the themes and moods found."""
     ctx.private_journal.setup(PASS)
     turn(ctx, "I want to journal")
     turn(ctx, "work again")
@@ -236,6 +244,7 @@ def test_themes_tool(ctx):
     ("**Title:** \"Money wins\"\n- Mood: proud\n* Themes: Debt, Family.\nSummary: You talked about debt.", "Money wins", ["debt", "family"]),
 ])
 def test_parse_organization(raw, title, themes):
+    """The model's organization of a journal entry is read into a title and themes."""
     organized = parse_journal_organization(raw)
     assert organized["title"] == title and organized["themes"] == themes
 

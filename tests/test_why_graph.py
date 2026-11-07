@@ -40,6 +40,7 @@ TODAY = date(2026, 9, 27)
 
 @pytest.fixture
 def ctx(tmp_path, monkeypatch):
+    """A context for the why tests: the stores the reasons draw on (budget, properties, intents, projects, missions, memories) on temporary files, and the Assistant's tools."""
     for module in _MODULES:
         original = module._DATA_DIR
         for attr, value in list(vars(module).items()):
@@ -58,10 +59,12 @@ def ctx(tmp_path, monkeypatch):
 
 
 def say(ctx, action, **arguments):
+    """Runs an Assistant tool with these arguments and returns what MIA says."""
     return ctx.assistant_actions.execute(ctx, action, arguments)
 
 
 def build_chain(ctx):
+    """Links factory work to paying off debt to control over my time, by voice."""
     say(ctx, "link_my_reason", goal="Factory work", serves="Pay off debt", reason="the factory pays the bills")
     return say(ctx, "link_my_reason", goal="pay off debt", serves="Control over my time")
 
@@ -78,6 +81,7 @@ def test_linking_builds_and_reads_back_the_chain(ctx):
 
 
 def test_cycle_is_refused(ctx):
+    """A reason can't be linked to serve something it already serves: it's refused and nothing changes."""
     build_chain(ctx)
     reply = say(ctx, "link_my_reason", goal="Control over my time", serves="Factory work")
     assert "can't link it the other way" in reply
@@ -105,6 +109,7 @@ def test_intent_fields_round_trip(ctx):
 
 
 def seed_life(ctx):
+    """Two debts, a rented duplex with a month's rent, and land: the facts a chain of reasons can point to."""
     ctx.budget.add_debt("Chase card", 3000, 24.9)
     ctx.budget.add_debt("Truck loan", 12000, 6.9, debt_type="Auto Loan")
     maple = ctx.real_estate.add_property("Maple duplex", property_type="Rental")
@@ -172,6 +177,7 @@ def test_paid_off_debt_goal_becomes_done(ctx):
 
 
 def test_marking_achieved(ctx):
+    """A goal marked achieved shows as done in the chain and in show my why."""
     build_chain(ctx)
     assert "Marked 'Pay off debt' achieved" in say(ctx, "mark_goal_achieved", goal="debt")
     assert build_why_sheet(ctx, TODAY).chains[0][1].done
@@ -179,6 +185,7 @@ def test_marking_achieved(ctx):
 
 
 def test_wins(ctx):
+    """Wins come from completed missions and from memories kept as wins."""
     build_chain(ctx)
     mission = ctx.missions.add_mission("Frame the coop")
     ctx.missions.update_mission(mission.mission_id, status="completed")
@@ -204,15 +211,18 @@ def test_describe_changes_is_quiet_when_nothing_moved():
     "No bullshit. Remind me why.",
 ])
 def test_perspective_phrases(text):
+    """Each of these phrases switches to the Remember why mode."""
     assert detect_mode_change(text).mode == PERSPECTIVE
 
 
 @pytest.mark.parametrize("text", ["What's the point of the tomato bed", "I love my job", "Why is the sky blue?"])
 def test_not_perspective(text):
+    """None of these phrases switches to the Remember why mode."""
     assert detect_mode_change(text).mode != PERSPECTIVE
 
 
 def _perspective_request(ctx, prompt="Remind me why I'm doing all this"):
+    """The chat request for a message in the Remember why mode."""
     conversation = Conversation(conversation_id="c1", mode=PERSPECTIVE)
     return build_chat_request(ctx, conversation, prompt)
 

@@ -36,46 +36,57 @@ class _FakeConfig:
     `.set()`/`.save()` for the voice-switching tests below."""
 
     def __init__(self, overrides: dict) -> None:
+        """Keeps the overrides; not saved yet."""
         self._overrides = overrides
         self.saved = False
 
     def get(self, key: str, default=None):
+        """An override, or the default."""
         return self._overrides.get(key, default)
 
     def set(self, key: str, value) -> None:
+        """Sets a value."""
         self._overrides[key] = value
 
     def save(self) -> None:
+        """Notes it was saved."""
         self.saved = True
 
 
 class _FakeSTTBackend:
+    """Stands in for speech to text: a fixed transcript, or a failure."""
     available = True
 
     def __init__(self, text: str = "hello", fail: bool = False) -> None:
+        """The text to give, and whether to fail."""
         self._text = text
         self._fail = fail
 
     def transcribe(self, wav_path: Path) -> str:
+        """The text, or VoiceUnavailableError when failing."""
         if self._fail:
             raise VoiceUnavailableError("boom")
         return self._text
 
 
 class _FakeTTSBackend:
+    """Stands in for text to speech: remembers what it was asked to say, or fails."""
     available = True
 
     def __init__(self, fail: bool = False) -> None:
+        """Whether to fail, and nothing said yet."""
         self._fail = fail
         self.synthesized: list = []
 
     def synthesize(self, text: str, output_path: Path) -> None:
+        """Remembers the text and file, or raises VoiceUnavailableError when failing."""
         if self._fail:
             raise VoiceUnavailableError("boom")
         self.synthesized.append((text, output_path))
 
 
 def _make_manager() -> VoiceManager:
+    """A voice manager on a fake config."""
     context = AppContext(config=_FakeConfig({}), events=None)
     return VoiceManager(context)
 

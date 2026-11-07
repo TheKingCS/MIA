@@ -12,12 +12,14 @@ TODAY = date(2026, 11, 2)
 
 
 def make(tmp_path, monkeypatch):
+    """The shared test world with an action center."""
     world = build_world(tmp_path, monkeypatch)
     world.actions = ActionCenter()
     return world
 
 
 def card(world, app_id):
+    """The glasses' card for an app."""
     data = glasses_apps(world, TODAY)
     return next(a for a in data["apps"] + data["others"] if a["id"] == app_id)
 
@@ -80,6 +82,7 @@ def test_a_vehicle_opens_to_its_own_page(tmp_path, monkeypatch):
 
 
 def signed_in(world):
+    """A server client signed in as the world's person."""
     from fastapi.testclient import TestClient
 
     import server.app as server_app
@@ -121,21 +124,27 @@ def test_recipes_open_by_shelf(tmp_path, monkeypatch):
 
 
 class Songs:
+    """A music library holding these tracks and playlists, none uploaded."""
     def __init__(self, tracks, playlists=()):
+        """Keeps the tracks and playlists."""
         self.tracks, self.playlists = tracks, playlists
         self.root_path = Path(".")
 
     def all_tracks(self):
+        """Every track."""
         return self.tracks
 
     def all_playlists(self):
+        """Every playlist."""
         return self.playlists
 
     def uploaded(self, track):
+        """No track is uploaded."""
         return False
 
 
 def song(track_id, title, artist):
+    """A three-minute track with a title and artist."""
     return SimpleNamespace(track_id=track_id, title=title, artist=artist, album="", genre="", duration_seconds=180, track_number=1)
 
 

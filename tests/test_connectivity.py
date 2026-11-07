@@ -32,34 +32,44 @@ from core.event_bus import EventBus
 
 
 class _Config:
+    """A config holding only the values given."""
     def __init__(self, values=None):
+        """Keeps the values."""
         self.values = values or {}
 
     def get(self, key, default=None):
+        """A value, or the default."""
         return self.values.get(key, default)
 
 
 class _Clock:
+    """A clock the test moves by hand (starting at 1000 seconds)."""
     def __init__(self):
+        """Starts at 1000."""
         self.now = 1000.0
 
     def __call__(self):
+        """The time now."""
         return self.now
 
 
 def _context(values=None) -> AppContext:
+    """A context with that config and an event bus."""
     return AppContext(config=_Config(values), events=EventBus())
 
 
 def _connect_ok(address, timeout):
+    """A connection that always works."""
     return None
 
 
 def _connect_fail(address, timeout):
+    """A connection that always fails (unreachable)."""
     raise OSError("unreachable")
 
 
 def _monitor(connect, values=None, clock=None):
+    """A connectivity monitor using that connection and clock, set on its context."""
     ctx = _context(values)
     monitor = ConnectivityMonitor(ctx, connect=connect, clock=clock or _Clock())
     ctx.connectivity = monitor
@@ -70,6 +80,7 @@ def _monitor(connect, values=None, clock=None):
 
 
 def test_parse_probe_host():
+    """A probe host is host:port with a number for the port; anything else is refused."""
     assert parse_probe_host("1.1.1.1:443") == ("1.1.1.1", 443)
     assert parse_probe_host("example.com:80") == ("example.com", 80)
     assert parse_probe_host("nope") is None
@@ -211,6 +222,7 @@ def test_refresh_async_runs_one_check_at_a_time():
 
 
 def _message(status):
+    """The conversation system message when connectivity reads this status."""
     ctx = _context()
     ctx.connectivity = type("Fixed", (), {"status": status})()
     return build_system_message(ctx, is_action_request=False)

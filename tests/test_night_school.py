@@ -39,6 +39,7 @@ def test_what_she_chooses_and_why():
 
 
 def exercise(**kw):
+    """One exercise as the teacher sets it (title, skill, files, task, its failing test), with any field changed."""
     base = {"title": "Count the stuck tasks", "skill": "engine changes", "files": ["core/work_dungeon.py"],
             "task": "Add a function.", "test_name": "tests/test_night_stuck_count.py",
             "test_code": "def test_it():\n    assert False\n", "real": False}
@@ -56,29 +57,36 @@ def test_an_exercise_she_can_do():
 
 
 class FakeLab:
+    """Stands in for the lab: proposals are made, written (or not) and checked (passing or not), and what's rejected is remembered."""
     WRITTEN, READY = "written", "ready"
 
     def __init__(self, root, passes=True, writes=True):
+        """Whether its checks pass and its coder writes, and nothing proposed yet."""
         self.root, self.passes, self.writes, self.rejected, self.n = root, passes, writes, [], 0
 
     def create(self, title, problem, evidence="", plan=""):
+        """Makes a numbered proposal and keeps its plan."""
         self.n += 1
         self.plan = plan
         return SimpleNamespace(proposal_id=f"p{self.n}", status="drafted", note="", coder_said="")
 
     def folder(self, p):
+        """A proposal's folder."""
         return self.root / p.proposal_id
 
     def write(self, pid, coder=None):
+        """The coder's turn: written, or not ready with the coder having changed nothing."""
         return SimpleNamespace(proposal_id=pid, status=self.WRITTEN if self.writes else "not ready",
                                note="" if self.writes else "The coder changed nothing.", coder_said="added it")
 
     def check(self, pid, suite=None):
+        """The tests: ready, or not ready with the new failure named."""
         return SimpleNamespace(proposal_id=pid, status=self.READY if self.passes else "not ready",
                                note="" if self.passes else "New failures: tests/test_night_stuck_count.py::test_it",
                                tests={"summary": "4950 passed"})
 
     def reject(self, pid, why=""):
+        """Remembers a rejected proposal."""
         self.rejected.append(pid)
 
 
@@ -104,6 +112,7 @@ def test_a_lesson_is_graded_by_code_and_practice_never_merges(tmp_path):
 
 @pytest.fixture
 def school(tmp_path, monkeypatch):
+    """A night school with everything in a temporary folder and the outside held still: no real audit, curriculum or specialists, a fixed build plan, a teacher with budget, one loop below target, nothing in the ledger or coverage."""
     from core import dev_ledger, loop_coverage, loops, self_audit, work_review
 
     monkeypatch.setattr(self_audit, "due", lambda *a, **k: False)  # a test night never audits the real code
@@ -130,6 +139,7 @@ def school(tmp_path, monkeypatch):
 
 
 def teacher(agrees=True):
+    """A fake teacher: sets two exercises (agreeing with the pick or naming a better one) and gives a review note; returns it and what it was asked."""
     asked = []
 
     def ask(provider, prompt):
@@ -182,6 +192,7 @@ def test_the_night_stops_when_told(school):
 
 
 def test_when_school_starts(tmp_path, monkeypatch):
+    """Night school starts inside its window and not before; not with too little of the window left; a window across midnight belongs to the night before; only once a night; never when switched off."""
     monkeypatch.setattr(ns, "STOP_FILE", tmp_path / "STOP")
     monkeypatch.setattr(ns, "DEV_DATA", tmp_path)
     cfg = dict(ns.DEFAULTS)

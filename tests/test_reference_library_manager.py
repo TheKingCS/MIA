@@ -31,14 +31,18 @@ class _FakeConfig:
     """Minimal stand-in for ConfigManager, just enough for `.get(key, default)`."""
 
     def __init__(self, overrides: dict) -> None:
+        """Keeps the overrides."""
         self._overrides = overrides
 
     def get(self, key: str, default=None):
+        """An override, or the default."""
         return self._overrides.get(key, default)
 
 
 class _TextItem(ZimWriterItem):
+    """One article for a test ZIM pack: its path, title, content and type, marked as a front article."""
     def __init__(self, path: str, title: str, content: str, mimetype: str = "text/html"):
+        """Keeps the article's path, title, content and type."""
         super().__init__()
         self._path = path
         self._title = title
@@ -46,18 +50,23 @@ class _TextItem(ZimWriterItem):
         self._mimetype = mimetype
 
     def get_path(self) -> str:
+        """The article's path in the pack."""
         return self._path
 
     def get_title(self) -> str:
+        """The article's title."""
         return self._title
 
     def get_mimetype(self) -> str:
+        """The article's type."""
         return self._mimetype
 
     def get_contentprovider(self):
+        """The article's content."""
         return StringProvider(self._content)
 
     def get_hints(self) -> dict:
+        """Marks it a front article (one that search finds)."""
         return {Hint.FRONT_ARTICLE: 1}
 
 
@@ -69,6 +78,7 @@ def _build_zim(
     language: str = "eng",
     pages: dict | None = None,
 ) -> Path:
+    """Writes a small real ZIM pack at the path: its title, description, language and articles."""
     pages = pages or {
         "home": ("Home Page", "<html><body><h1>Home</h1><p>Hello world reference test</p></body></html>")
     }
@@ -84,6 +94,7 @@ def _build_zim(
 
 @pytest.fixture
 def isolated_root(tmp_path, monkeypatch):
+    """Points the reference library at a temporary folder. Returns it."""
     root = tmp_path / "reference_library"
     monkeypatch.setattr(reference_library_manager_module, "_DEFAULT_ROOT", root)
     return root
@@ -105,6 +116,7 @@ def _no_quiet_period(monkeypatch):
 
 
 def _make_manager() -> ReferenceLibraryManager:
+    """A reference library manager on a bare context."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     return ReferenceLibraryManager(context)
 
