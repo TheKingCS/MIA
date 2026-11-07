@@ -1024,3 +1024,23 @@ body.cook-live .mia-orb-button, body.cook-live .bottom-bar { display: none; }
 .switch input:checked + span { background: var(--accent); }
 .st-control .switch { display: inline-block; vertical-align: middle; }
 .st-control input[type="number"] { width: 84px; }
+
+/* ---------------------------------------------------------------- Profile (DEC-0113) */
+.pf-head { display: flex; align-items: center; gap: 14px; margin-bottom: var(--gap); }
+.pf-head h2 { margin: 0; font-size: var(--text-xl); text-transform: none; }
+.pf-avatar { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; flex: none; font-size: 24px; font-weight: 700;
+  color: var(--accent); border: 1px solid rgba(var(--rgb-accent), 0.5); background: rgba(var(--rgb-accent), 0.08); }
+.pf-card { display: grid; padding: 0 14px; margin-bottom: var(--gap); }
+.pf-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; min-height: 56px; padding: 0;
+  border: 0; border-top: 1px solid var(--line); background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer;
+  text-transform: none; }
+.pf-card > .pf-row:first-child { border-top: 0; }
+.pf-k { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); }
+.pf-v { text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pf-go { color: var(--text-dim); font-size: 18px; }
+.pf-row[aria-expanded="true"] .pf-go { transform: rotate(90deg); color: var(--accent); }
+.pf-card .money-section { background: none; border: 0; box-shadow: none; padding: 0 0 12px; margin: 0; }
+.pf-card .money-section .sect { display: none; }
+.pf-security { padding: 14px; gap: 10px; }
+.pf-label { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); }
+.pf-end { display: flex; gap: 10px; justify-content: space-between; flex-wrap: wrap; }

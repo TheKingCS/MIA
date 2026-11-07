@@ -1,0 +1,57 @@
+{
+  "signed_in": true,
+  "profile_id": "demo",
+  "name": "Robin",
+  "email": "robin@example.com",
+  "country": "US",
+  "countries": [
+    {
+      "code": "US",
+      "name": "United States"
+    },
+    {
+      "code": "CA",
+      "name": "Canada"
+    },
+    {
+      "code": "GB",
+      "name": "United Kingdom"
+    },
+    {
+      "code": "IE",
+      "name": "Ireland"
+    },
+    {
+      "code": "AU",
+      "name": "Australia"
+    },
+    {
+      "code": "NZ",
+      "name": "New Zealand"
+    },
+    {
+      "code": "OTHER",
+      "name": "Somewhere else"
+    }
+  ],
+  "interests": [
+    "Homestead",
+    "Fitness",
+    "Making"
+  ],
+  "interest_options": [
+    "Homestead",
+    "Fitness",
+    "Making",
+    "Money",
+    "Learning",
+    "Outdoors"
+  ],
+  "household": null,
+  "has_password": true,
+  "has_recovery_code": true,
+  "min_password": 6,
+  "me": null,
+  "child": false,
+  "since": "2026-10-01"
+}

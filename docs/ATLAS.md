@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1089 files, 246,951 lines; 1089 files describe themselves; 13,545 of 14,215 classes and functions are documented.
+1089 files, 246,964 lines; 1089 files describe themselves; 13,545 of 14,215 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -1038,7 +1038,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-72 files, 13,153 lines
+72 files, 13,166 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
@@ -1096,7 +1096,7 @@
 - `web/places.js`: places.js — My Places (claude, 2026-10-17, DEC-0028 #13). Renders MIA.places() (core/places.py): each place, what arriving there does, Add Place (where you are now, or typed in), Remove, and the switch that lets this device notice when you arrive (Settings → Location quests). Formatting only; the wa
 - `web/plan.js`: plan.js — My plan (claude, 2026-10-14, DEC-0020, Muse's H-0028): one screen, reached from both Kitchen and Workout. Goals, the training week (which days, and what each training day is), skills to practice, meals and preferences, milestones. Renders MIA.fitness() (plan, plan_text); every save is a fi
 - `web/play.js`: play.js — games and sports (claude, 2026-11-07, DEC-0098). Renders MIA.play() (core/recreation.py): the training load by week as bars and the latest games, as the design canvas has them (DEC-0113). Logging and taking one out go through actions (play.log, play.delete). Formatting only; the look is mu
-- `web/profile.js`: profile.js — the Profile screen (claude, 2026-10-07; Zac: the gear's Profile). Renders MIA.profile() (core/web_account.py): your level, name, email, country, what MIA helps with, household, password and recovery code. Name, email, country and interests are one action (profile.edit), so they're confi
+- `web/profile.js`: profile.js — the Profile screen (claude, 2026-10-07; Zac: the gear's Profile). Renders MIA.profile() (core/web_account.py) as the design canvas has it (DEC-0113): your name, email, country, what MIA helps with, the password and the recovery code; no household (DEC-0119). Name, email, country and int
 - `web/real-estate.js`: real-estate.js — the Real Estate screen (claude, 2026-10-06, DEC-0017/0018). Renders MIA.realEstate() (core/web_screens.py): each property with its status, where it is, rent, what's owed, equity and cash flow, its upkeep (its own Maintenance asset, opened on asset.html) and related missions. Since Z
 - `web/recipe.js`: recipe.js — one recipe, opened from a meal or recipe card (claude, 2026-10-14, Zac's idea; 2026-11-07, DEC-0113: Start Cooking opens cook mode, web/cook.js). Renders MIA.recipe(id) (core/web_screens. recipe_page): nutrition per serving, each ingredient with whether the house has it, the steps (tick 
 - `web/security.js`: security.js — Security (claude, 2026-10-18, DEC-0033). Renders MIA.security() (core/security_cams.py) in tabs: Cameras (a live grid: each tile asks MIA for the camera's picture every few seconds while it's on screen; tap one for a full view, refreshed every second, with Save Picture), Pictures (what
