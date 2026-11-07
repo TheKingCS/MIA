@@ -19,7 +19,9 @@ from PySide6.QtWidgets import QDialog, QLabel, QPlainTextEdit, QVBoxLayout
 
 
 class FilePreviewDialog(QDialog):
+    """A preview of a file, its text or its image, made with for_text or for_image."""
     def __init__(self, title: str, parent=None) -> None:
+        """An empty preview titled with the file's name."""
         super().__init__(parent)
         self.setWindowTitle(title)
         self.resize(600, 500)
@@ -27,6 +29,7 @@ class FilePreviewDialog(QDialog):
 
     @classmethod
     def for_text(cls, title: str, text: str, parent=None) -> "FilePreviewDialog":
+        """A preview of text, read-only."""
         dialog = cls(title, parent)
         view = QPlainTextEdit()
         view.setObjectName("LogView")
@@ -37,6 +40,7 @@ class FilePreviewDialog(QDialog):
 
     @classmethod
     def for_image(cls, title: str, pixmap: QPixmap, parent=None) -> "FilePreviewDialog":
+        """A preview of an image, scaled to fit 560 by 460."""
         dialog = cls(title, parent)
         label = QLabel()
         label.setAlignment(Qt.AlignmentFlag.AlignCenter)

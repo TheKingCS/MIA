@@ -42,7 +42,9 @@ def format_skill_reward_row(context, skill_id: str, xp: int) -> str:
 
 
 class ManageMissionSkillsDialog(QDialog):
+    """Which skills a mission rewards, and how much XP each, with a way to add one."""
     def __init__(self, context, mission: Mission, parent=None) -> None:
+        """The mission's skill rewards, a skill and XP to add, Add and Close."""
         super().__init__(parent)
         self.context = context
         self.mission = mission
@@ -80,11 +82,13 @@ class ManageMissionSkillsDialog(QDialog):
         self._refresh_weight_list()
 
     def _refresh_weight_list(self) -> None:
+        """Lists each skill the mission rewards with its XP."""
         self.weight_list.clear()
         for weight in self.mission.skill_rewards:
             self.weight_list.addItem(QListWidgetItem(format_skill_reward_row(self.context, weight.skill_id, weight.xp)))
 
     def _on_add(self) -> None:
+        """Adds the skill picked with its XP to the mission's rewards."""
         skill_id = self.skill_combo.currentData()
         if skill_id is None:
             return

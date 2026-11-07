@@ -28,7 +28,9 @@ _ISO_DATE_FORMAT = "yyyy-MM-dd"
 
 
 class AddEditPersonDialog(QDialog):
+    """Adding or editing a person: track birthday, name, relationship, email, favorite things, gift ideas, notes."""
     def __init__(self, parent=None, person: Optional[Person] = None) -> None:
+        """The fields with OK and Cancel; editing, they start from the person given."""
         super().__init__(parent)
         self.setWindowTitle("Edit Person" if person is not None else "New Person")
         self.setFixedSize(360, 560)
@@ -97,9 +99,11 @@ class AddEditPersonDialog(QDialog):
         self._email: str = ""
 
     def _on_birthday_toggle(self, checked: bool) -> None:
+        """The birthday is editable only while Track birthday is ticked."""
         self.birthday_edit.setEnabled(checked)
 
     def _prefill(self, person: Optional[Person]) -> None:
+        """Fills the fields from the person being edited, when there is one."""
         if person is None:
             return
         self.name_edit.setText(person.name)
@@ -113,6 +117,7 @@ class AddEditPersonDialog(QDialog):
         self.notes_edit.setPlainText(person.notes)
 
     def _on_accept(self) -> None:
+        """Keeps what was entered and closes; an empty name is pointed out in its box instead."""
         name = self.name_edit.text().strip()
         if not name:
             self.name_edit.setPlaceholderText("Name can't be empty!")

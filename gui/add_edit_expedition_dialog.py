@@ -32,7 +32,9 @@ _ISO_DATE_FORMAT = "yyyy-MM-dd"
 
 
 class AddEditExpeditionDialog(QDialog):
+    """Adding or editing an expedition: name, start date, end date, location, notes."""
     def __init__(self, parent=None, expedition: Optional[Expedition] = None) -> None:
+        """The fields with OK and Cancel; editing, they start from the expedition given."""
         super().__init__(parent)
         self.setWindowTitle("Edit Expedition" if expedition is not None else "New Expedition")
         self.setFixedSize(360, 520)
@@ -82,6 +84,7 @@ class AddEditExpeditionDialog(QDialog):
         self._notes: str = ""
 
     def _prefill(self, expedition: Optional[Expedition]) -> None:
+        """Fills the fields from the expedition being edited, when there is one."""
         today = QDate.currentDate()
         if expedition is not None:
             self.name_edit.setText(expedition.name)
@@ -100,6 +103,7 @@ class AddEditExpeditionDialog(QDialog):
             self.end_date_edit.setDate(today)
 
     def _on_accept(self) -> None:
+        """Keeps what was entered and closes; an empty name is pointed out in its box instead."""
         name = self.name_edit.text().strip()
         if not name:
             self.name_edit.setPlaceholderText("Name can't be empty!")

@@ -22,7 +22,9 @@ EXAMPLES = "e.g. \"milk and eggs\", \"oil change on the truck today\", \"dentist
 
 
 class QuickCaptureDialog(QDialog):
+    """Quick capture: say what's on your mind in a line and MIA files it where it belongs, with Undo."""
     def __init__(self, context, parent=None) -> None:
+        """The line to type in, what was done, Undo and Close."""
         super().__init__(parent)
         self.context = context
         self.setWindowTitle("Quick capture")
@@ -49,6 +51,7 @@ class QuickCaptureDialog(QDialog):
         self._busy = False
 
     def _on_submit(self) -> None:
+        """Files the line in the background (one at a time), saying Filing… meanwhile; the result comes back on the main thread."""
         text = self.edit.text().strip()
         if not text or self._busy:
             return
@@ -65,6 +68,7 @@ class QuickCaptureDialog(QDialog):
         threading.Thread(target=work, daemon=True, name="mia-quick-capture").start()
 
     def _show(self, result) -> None:
+        """Shows what MIA did with it, ready for the next line, with Undo on when something was filed."""
         self._busy = False
         self.edit.setEnabled(True)
         self.edit.clear()
@@ -73,6 +77,7 @@ class QuickCaptureDialog(QDialog):
         self.undo_button.setEnabled(result.filed)
 
     def _on_undo(self) -> None:
+        """Undoes this person's last change and says so (or that there was nothing to undo)."""
         change = undo_last(self.context, person_id(self.context))
         self.undo_button.setEnabled(False)
         self.result_label.setText("Undone." if change is not None else "Nothing to undo.")

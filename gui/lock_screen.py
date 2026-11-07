@@ -38,9 +38,11 @@ log = get_logger(__name__)
 
 
 class LockScreen(QWidget):
+    """The lock screen for one profile: welcome back by name, the password when the profile has one (with Forgot password?), and unlocked emitted once they're in."""
     unlocked = Signal()
 
     def __init__(self, context: AppContext, profile: Profile) -> None:
+        """Keeps the context and the profile and builds the screen."""
         super().__init__()
         self.context = context
         self.profile = profile
@@ -49,6 +51,7 @@ class LockScreen(QWidget):
         self._build_ui()
 
     def _build_ui(self) -> None:
+        """The screen: a lock (or a wave without a password) and welcome back with their name; then the password box with Unlock and Forgot password?, or Continue when the profile has no password."""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(30, 30, 30, 30)
         layout.setSpacing(14)
@@ -101,11 +104,13 @@ class LockScreen(QWidget):
             layout.addWidget(continue_button)
 
     def _on_forgot(self) -> None:
+        """Opens password recovery for this profile."""
         from gui.account_dialogs import RecoverPasswordDialog
 
         RecoverPasswordDialog(self.context, self.profile.email or self.profile.profile_id, self).exec()
 
     def _try_unlock(self) -> None:
+        """Checks the password: right, it emits unlocked; wrong, it says so, clears the box and keeps the focus there."""
         password = self.password_edit.text()
         if self.context.profiles.verify_password(self.profile.profile_id, password):
             log.info("Profile '%s' unlocked.", self.profile.profile_id)

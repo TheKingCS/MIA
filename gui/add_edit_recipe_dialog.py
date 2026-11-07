@@ -38,7 +38,9 @@ from core.kitchen_manager import RECIPE_CATEGORIES, Recipe
 
 
 class AddEditRecipeDialog(QDialog):
+    """Adding or editing a recipe: locked, name, category, servings, prep time, cook time, instructions, nutrition, source, notes."""
     def __init__(self, parent=None, recipe: Optional[Recipe] = None) -> None:
+        """The fields with OK and Cancel; editing, they start from the recipe given."""
         super().__init__(parent)
         self.setWindowTitle("Edit Recipe" if recipe is not None else "New Recipe")
         self.setFixedSize(380, 790)
@@ -143,6 +145,7 @@ class AddEditRecipeDialog(QDialog):
         self._locked: bool = False
 
     def _prefill(self, recipe: Optional[Recipe]) -> None:
+        """Fills the fields from the recipe being edited, when there is one."""
         if recipe is None:
             return
         self.name_edit.setText(recipe.name)
@@ -161,6 +164,7 @@ class AddEditRecipeDialog(QDialog):
         self.locked_checkbox.setChecked(recipe.locked)
 
     def _on_accept(self) -> None:
+        """Keeps what was entered and closes; an empty name is pointed out in its box instead."""
         name = self.name_edit.text().strip()
         if not name:
             self.name_edit.setPlaceholderText("Name can't be empty!")

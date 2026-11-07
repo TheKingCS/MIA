@@ -31,7 +31,9 @@ _POLL_INTERVAL_MS = 3000
 
 
 class PlaidConnectProgressDialog(QDialog):
+    """Waiting while a bank is connected in the browser: it checks Plaid every few seconds and closes with the token once it's done."""
     def __init__(self, plaid_manager, link_token: str, parent=None) -> None:
+        """Says to finish in the browser, and starts checking on a timer."""
         super().__init__(parent)
         self._plaid_manager = plaid_manager
         self._link_token = link_token
@@ -58,6 +60,7 @@ class PlaidConnectProgressDialog(QDialog):
         self._timer.start()
 
     def _check_once(self) -> None:
+        """Asks Plaid once whether the connection is finished: with a token, keeps it and closes; on an error, stops and says what went wrong."""
         try:
             token = self._plaid_manager.check_public_token_once(self._link_token)
         except Exception as exc:  # noqa: BLE001 — surface any real API error rather than hang forever
@@ -71,6 +74,7 @@ class PlaidConnectProgressDialog(QDialog):
             self.accept()
 
     def reject(self) -> None:
+        """Stops checking and cancels."""
         self._timer.stop()
         super().reject()
 

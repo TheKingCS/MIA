@@ -39,7 +39,9 @@ _ISO_DATE_FORMAT = "yyyy-MM-dd"
 
 
 class AddEditProjectDialog(QDialog):
+    """Adding or editing a project: name, status, intent, due date, budget, description."""
     def __init__(self, context, parent=None, project: Optional[Project] = None) -> None:
+        """The fields with OK and Cancel; editing, they start from the project given."""
         super().__init__(parent)
         self.context = context
         self.setWindowTitle("Edit Project" if project is not None else "New Project")
@@ -102,6 +104,7 @@ class AddEditProjectDialog(QDialog):
         self._budget: float = 0.0
 
     def _prefill(self, project: Optional[Project]) -> None:
+        """Fills the fields from the project being edited, when there is one."""
         if project is not None:
             self.name_edit.setText(project.name)
             index = self.status_combo.findData(project.status)
@@ -118,6 +121,7 @@ class AddEditProjectDialog(QDialog):
             self.due_date_edit.setDate(QDate.currentDate())
 
     def _on_accept(self) -> None:
+        """Keeps what was entered and closes; an empty name is pointed out in its box instead."""
         name = self.name_edit.text().strip()
         if not name:
             self.name_edit.setPlaceholderText("Name can't be empty!")

@@ -20,7 +20,9 @@ from core.classroom_manager import Course
 
 
 class AddEditCourseDialog(QDialog):
+    """Adding or editing a course: name, description."""
     def __init__(self, context, parent=None, course: Optional[Course] = None) -> None:
+        """The fields with OK and Cancel; editing, they start from the course given."""
         super().__init__(parent)
         self.context = context
         self.setWindowTitle("Edit Course" if course is not None else "New Course")
@@ -51,12 +53,14 @@ class AddEditCourseDialog(QDialog):
         self._description: str = ""
 
     def _prefill(self, course: Optional[Course]) -> None:
+        """Fills the fields from the course being edited, when there is one."""
         if course is None:
             return
         self.name_edit.setText(course.name)
         self.description_edit.setPlainText(course.description)
 
     def _on_accept(self) -> None:
+        """Keeps what was entered and closes; an empty name is pointed out in its box instead."""
         name = self.name_edit.text().strip()
         if not name:
             self.name_edit.setPlaceholderText("Name can't be empty!")

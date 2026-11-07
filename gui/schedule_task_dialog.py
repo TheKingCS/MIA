@@ -35,7 +35,9 @@ _ISO_DATE_FORMAT = "yyyy-MM-dd"
 
 
 class ScheduleTaskDialog(QDialog):
+    """Scheduling maintenance on a day, with what else is on the calendar that day."""
     def __init__(self, parent=None, calendar: Optional[CalendarManager] = None, default_date: Optional[str] = None) -> None:
+        """The date (the one given, else today) and the day's other events, with OK and Cancel."""
         super().__init__(parent)
         self.setWindowTitle("Schedule Maintenance")
         self.setFixedSize(340, 220)
@@ -67,6 +69,7 @@ class ScheduleTaskDialog(QDialog):
         self._refresh_conflict_warning(self.date_edit.date())
 
     def _refresh_conflict_warning(self, qdate: QDate) -> None:
+        """Says what else is on the calendar that day, or that nothing is."""
         if self._calendar is None:
             self.conflict_label.setText("")
             return
@@ -80,6 +83,7 @@ class ScheduleTaskDialog(QDialog):
             self.conflict_label.setText(f"Already {len(events)} {noun} scheduled that day: {titles}")
 
     def _on_accept(self) -> None:
+        """Keeps the date and closes."""
         self._date = self.date_edit.date().toString(_ISO_DATE_FORMAT)
         self.accept()
 

@@ -38,7 +38,9 @@ _RECURRENCE_LABELS = [("Never", None)] + [(r.capitalize(), r) for r in RECURRENC
 
 
 class AddEditBillDialog(QDialog):
+    """Adding or editing a bill: tax relevant, name, amount, category, due date, repeats, entity, notes."""
     def __init__(self, parent=None, bill: Optional[Bill] = None, entities: Optional[list] = None) -> None:
+        """The fields with OK and Cancel; editing, they start from the bill given."""
         super().__init__(parent)
         self.setWindowTitle("Edit Bill" if bill is not None else "New Bill")
         self.setFixedSize(360, 520)
@@ -110,6 +112,7 @@ class AddEditBillDialog(QDialog):
         self._notes: str = ""
 
     def _prefill(self, bill: Optional[Bill]) -> None:
+        """Fills the fields from the bill being edited, when there is one."""
         if bill is not None:
             self.name_edit.setText(bill.name)
             self.amount_spin.setValue(bill.amount)
@@ -130,6 +133,7 @@ class AddEditBillDialog(QDialog):
             self.due_date_edit.setDate(QDate.currentDate())
 
     def _on_accept(self) -> None:
+        """Keeps what was entered and closes; an empty name is pointed out in its box instead."""
         name = self.name_edit.text().strip()
         if not name:
             self.name_edit.setPlaceholderText("Name can't be empty!")

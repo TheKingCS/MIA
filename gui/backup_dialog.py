@@ -24,7 +24,9 @@ from PySide6.QtWidgets import (
 
 
 class BackupPassphraseDialog(QDialog):
+    """Backup options: whether to encrypt the backup with a passphrase (which can't be recovered if lost)."""
     def __init__(self, parent=None) -> None:
+        """Encrypt with a passphrase, the passphrase twice, and the warning, with OK and Cancel."""
         super().__init__(parent)
         self.setWindowTitle("Backup Options")
         self.setFixedSize(380, 260)
@@ -67,6 +69,7 @@ class BackupPassphraseDialog(QDialog):
         self._passphrase: str = ""
 
     def _on_encrypt_toggle(self, checked: bool) -> None:
+        """The passphrase boxes and the warning show only while encrypting is ticked; unticking clears them."""
         self.passphrase_edit.setEnabled(checked)
         self.confirm_edit.setEnabled(checked)
         self.warning_label.setVisible(checked)
@@ -75,6 +78,7 @@ class BackupPassphraseDialog(QDialog):
             self.confirm_edit.clear()
 
     def _on_accept(self) -> None:
+        """Without encryption, closes with no passphrase; with it, checks one is given and both match (saying which isn't), then keeps it and closes."""
         if not self.encrypt_checkbox.isChecked():
             self._passphrase = ""
             self.accept()

@@ -32,11 +32,14 @@ from core.journal_manager import JournalEntry
 
 
 def _parse_tags(raw: str) -> list[str]:
+    """Pure logic. Comma-separated tags as a list, blanks dropped."""
     return [tag.strip() for tag in raw.split(",") if tag.strip()]
 
 
 class AddEditJournalEntryDialog(QDialog):
+    """Adding or editing an entry: title, tags, entry."""
     def __init__(self, parent=None, entry: Optional[JournalEntry] = None) -> None:
+        """The fields with OK and Cancel; editing, they start from the entry given."""
         super().__init__(parent)
         self.setWindowTitle("Edit Entry" if entry is not None else "New Entry")
         self.setFixedSize(420, 480)
@@ -72,12 +75,14 @@ class AddEditJournalEntryDialog(QDialog):
         self._tags: list[str] = []
 
     def _prefill(self, entry: Optional[JournalEntry]) -> None:
+        """Fills the fields from the entry being edited, when there is one."""
         if entry is not None:
             self.title_edit.setText(entry.title)
             self.tags_edit.setText(", ".join(entry.tags))
             self.body_edit.setPlainText(entry.body)
 
     def _on_accept(self) -> None:
+        """Keeps what was entered and closes; an empty title is pointed out in its box instead."""
         title = self.title_edit.text().strip()
         if not title:
             self.title_edit.setPlaceholderText("Title can't be empty!")

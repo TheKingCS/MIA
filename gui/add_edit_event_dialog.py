@@ -36,12 +36,14 @@ _RECURRENCE_LABELS = [("Never", None)] + [(r.capitalize(), r) for r in RECURRENC
 
 
 class AddEditEventDialog(QDialog):
+    """Adding or editing an event: all day, title, date, time, repeats, notes."""
     def __init__(
         self,
         parent=None,
         default_date: Optional[str] = None,
         event: Optional[CalendarEvent] = None,
     ) -> None:
+        """The fields with OK and Cancel; editing, they start from the event given."""
         super().__init__(parent)
         self.setWindowTitle("Edit Event" if event is not None else "New Event")
         self.setFixedSize(360, 440)
@@ -96,6 +98,7 @@ class AddEditEventDialog(QDialog):
         self._recurrence: Optional[str] = None
 
     def _prefill(self, default_date: Optional[str], event: Optional[CalendarEvent]) -> None:
+        """Fills the fields from the event being edited (all day when it has no time); a new one starts on the day given, else today."""
         if event is not None:
             self.title_edit.setText(event.title)
             self.date_edit.setDate(QDate.fromString(event.date, _ISO_DATE_FORMAT))
@@ -117,9 +120,11 @@ class AddEditEventDialog(QDialog):
         self._on_all_day_toggle(self.all_day_checkbox.isChecked())
 
     def _on_all_day_toggle(self, checked: bool) -> None:
+        """The time is editable only when the event isn't all day."""
         self.time_edit.setEnabled(not checked)
 
     def _on_accept(self) -> None:
+        """Keeps what was entered and closes; an empty title is pointed out in its box instead."""
         title = self.title_edit.text().strip()
         if not title:
             self.title_edit.setPlaceholderText("Title can't be empty!")

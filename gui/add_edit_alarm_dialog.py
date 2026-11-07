@@ -37,7 +37,9 @@ _DAY_LABELS = ("Mo", "Tu", "We", "Th", "Fr", "Sa", "Su")
 
 
 class AddEditAlarmDialog(QDialog):
+    """Adding or editing an alarm: label, time, repeat."""
     def __init__(self, parent=None, alarm: Optional[Alarm] = None) -> None:
+        """The fields with OK and Cancel; editing, they start from the alarm given."""
         super().__init__(parent)
         self.setWindowTitle("Edit Alarm" if alarm is not None else "New Alarm")
         self.setFixedSize(340, 300)
@@ -82,6 +84,7 @@ class AddEditAlarmDialog(QDialog):
         self._days: list[int] = []
 
     def _prefill(self, alarm: Optional[Alarm]) -> None:
+        """Fills the fields from the alarm being edited, when there is one."""
         if alarm is not None:
             self.label_edit.setText(alarm.label)
             self.time_edit.setTime(QTime.fromString(alarm.time, _TIME_FORMAT))
@@ -91,6 +94,7 @@ class AddEditAlarmDialog(QDialog):
             self.time_edit.setTime(QTime.currentTime())
 
     def _on_accept(self) -> None:
+        """Keeps what was entered and closes."""
         self._label = self.label_edit.text().strip()
         self._time = self.time_edit.time().toString(_TIME_FORMAT)
         self._days = [i for i, cb in enumerate(self._day_checkboxes) if cb.isChecked()]

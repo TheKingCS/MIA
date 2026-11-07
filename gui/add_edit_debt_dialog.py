@@ -37,7 +37,9 @@ _ISO_DATE_FORMAT = "yyyy-MM-dd"
 
 
 class AddEditDebtDialog(QDialog):
+    """Adding or editing a debt: has a promotional APR, name, balance, standard interest rate, minimum payment, debt type, promo APR, promo expires, entity, notes."""
     def __init__(self, parent=None, debt: Optional[Debt] = None, entities: Optional[list] = None) -> None:
+        """The fields with OK and Cancel; editing, they start from the debt given."""
         super().__init__(parent)
         self.setWindowTitle("Edit Debt" if debt is not None else "New Debt")
         self.setFixedSize(360, 620)
@@ -126,10 +128,12 @@ class AddEditDebtDialog(QDialog):
         self._notes: str = ""
 
     def _on_promo_toggle(self, checked: bool) -> None:
+        """The promo APR and its end date are editable only while Has a promotional APR is ticked."""
         self.promo_rate_spin.setEnabled(checked)
         self.promo_expires_edit.setEnabled(checked)
 
     def _prefill(self, debt: Optional[Debt]) -> None:
+        """Fills the fields from the debt being edited, when there is one."""
         if debt is not None:
             self.name_edit.setText(debt.name)
             self.balance_spin.setValue(debt.balance)
@@ -147,6 +151,7 @@ class AddEditDebtDialog(QDialog):
             self.notes_edit.setPlainText(debt.notes)
 
     def _on_accept(self) -> None:
+        """Keeps what was entered (the promo rate and date only when ticked, else none) and closes; an empty name is pointed out in its box instead."""
         name = self.name_edit.text().strip()
         if not name:
             self.name_edit.setPlaceholderText("Name can't be empty!")

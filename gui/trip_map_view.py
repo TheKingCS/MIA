@@ -81,12 +81,15 @@ class _ZoomableGraphicsView(QGraphicsView):
     _ZOOM_FACTOR = 1.15
 
     def wheelEvent(self, event) -> None:
+        """Zooms in or out with the scroll wheel."""
         factor = self._ZOOM_FACTOR if event.angleDelta().y() > 0 else 1 / self._ZOOM_FACTOR
         self.scale(factor, factor)
 
 
 class TripMapView(QWidget):
+    """A trip's route drawn from its waypoints: points joined in order, scrolling to zoom."""
     def __init__(self, context: AppContext, trip_id: str, parent=None) -> None:
+        """The view for a trip, drawn now."""
         super().__init__(parent)
         self.context = context
         self.trip_id = trip_id
@@ -104,6 +107,7 @@ class TripMapView(QWidget):
         self.refresh()
 
     def refresh(self) -> None:
+        """Draws the trip's waypoints in order, joined by lines and labelled; asks for waypoints when the route has none."""
         self._scene.clear()
 
         trip = self.context.trips.get_trip(self.trip_id)

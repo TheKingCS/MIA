@@ -27,7 +27,9 @@ _CONFIRM_WORD = "reset"
 
 
 class ResetPlaidDialog(QDialog):
+    """Resetting the Plaid setup: the current environment and connections, whether to delete what was imported too, the vault passphrase, and a word to type to confirm."""
     def __init__(self, environment: str, connected_count: int, parent=None) -> None:
+        """The explanation, Also delete data imported from Plaid, the passphrase and the confirmation word, with OK off until both are given."""
         super().__init__(parent)
         self.setWindowTitle("Reset Plaid Setup")
         self.setFixedSize(460, 400)
@@ -76,13 +78,16 @@ class ResetPlaidDialog(QDialog):
         self._update_ok_enabled()
 
     def _update_ok_enabled(self, *_args) -> None:
+        """OK is on only once the confirmation word is typed and a passphrase is given."""
         ready = self.confirm_edit.text().strip().lower() == _CONFIRM_WORD and bool(self.passphrase_edit.text())
         self._buttons.button(QDialogButtonBox.StandardButton.Ok).setEnabled(ready)
 
     @property
     def entered_passphrase(self) -> str:
+        """The vault passphrase typed."""
         return self.passphrase_edit.text()
 
     @property
     def purge_imported_data(self) -> bool:
+        """Whether imported transactions and bank-synced debts should be deleted too."""
         return self.purge_checkbox.isChecked()

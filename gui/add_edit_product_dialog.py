@@ -33,7 +33,9 @@ from core.region import symbol
 
 
 class AddEditProductDialog(QDialog):
+    """Adding or editing a product: name, description, quantity in stock, base price, notes."""
     def __init__(self, parent=None, product: Optional[Product] = None) -> None:
+        """The fields with OK and Cancel; editing, they start from the product given."""
         super().__init__(parent)
         self.setWindowTitle("Edit Product" if product is not None else "New Product")
         self.setFixedSize(360, 480)
@@ -83,6 +85,7 @@ class AddEditProductDialog(QDialog):
         self._notes: str = ""
 
     def _prefill(self, product: Optional[Product]) -> None:
+        """Fills the fields from the product being edited, when there is one."""
         if product is not None:
             self.name_edit.setText(product.name)
             self.description_edit.setText(product.description)
@@ -91,6 +94,7 @@ class AddEditProductDialog(QDialog):
             self.notes_edit.setPlainText(product.notes)
 
     def _on_accept(self) -> None:
+        """Keeps what was entered and closes; an empty name is pointed out in its box instead."""
         name = self.name_edit.text().strip()
         if not name:
             self.name_edit.setPlaceholderText("Name can't be empty!")

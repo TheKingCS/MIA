@@ -51,7 +51,9 @@ def format_skill_weight_row(context, skill_id: str, xp: int) -> str:
 
 
 class ManageProjectSkillsDialog(QDialog):
+    """Which skills a project trains, and how much XP each, with a way to add one."""
     def __init__(self, context, project: Project, parent=None) -> None:
+        """The project's skills, a skill and XP to add, Add and Close."""
         super().__init__(parent)
         self.context = context
         self.project = project
@@ -89,11 +91,13 @@ class ManageProjectSkillsDialog(QDialog):
         self._refresh_weight_list()
 
     def _refresh_weight_list(self) -> None:
+        """Lists each skill the project trains with its XP."""
         self.weight_list.clear()
         for weight in self.project.skill_weights:
             self.weight_list.addItem(QListWidgetItem(format_skill_weight_row(self.context, weight.skill_id, weight.xp)))
 
     def _on_add(self) -> None:
+        """Adds the skill picked with its XP to the project."""
         skill_id = self.skill_combo.currentData()
         if skill_id is None:
             return

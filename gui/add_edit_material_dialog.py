@@ -28,7 +28,9 @@ from core.region import symbol
 
 
 class AddEditMaterialDialog(QDialog):
+    """Adding or editing a material: name, unit, unit cost, quantity on hand, reorder threshold, supplier, location, notes."""
     def __init__(self, parent=None, material: Optional[Material] = None) -> None:
+        """The fields with OK and Cancel; editing, they start from the material given."""
         super().__init__(parent)
         self.setWindowTitle("Edit Material" if material is not None else "New Material")
         self.setFixedSize(360, 560)
@@ -97,6 +99,7 @@ class AddEditMaterialDialog(QDialog):
         self._notes: str = ""
 
     def _prefill(self, material: Optional[Material]) -> None:
+        """Fills the fields from the material being edited, when there is one."""
         if material is not None:
             self.name_edit.setText(material.name)
             self.unit_edit.setText(material.unit)
@@ -108,6 +111,7 @@ class AddEditMaterialDialog(QDialog):
             self.notes_edit.setPlainText(material.notes)
 
     def _on_accept(self) -> None:
+        """Keeps what was entered and closes; an empty name is pointed out in its box instead."""
         name = self.name_edit.text().strip()
         if not name:
             self.name_edit.setPlaceholderText("Name can't be empty!")

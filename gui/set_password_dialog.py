@@ -28,7 +28,9 @@ from PySide6.QtWidgets import (
 
 
 class SetPasswordDialog(QDialog):
+    """Changing a profile's password: keep one (a new one, or the same) or remove it."""
     def __init__(self, has_password: bool, parent=None) -> None:
+        """Protect this profile with a password, and the new password, with OK and Cancel."""
         super().__init__(parent)
         self.setWindowTitle("Change Password")
         self.setFixedSize(340, 150)
@@ -60,11 +62,13 @@ class SetPasswordDialog(QDialog):
         self._new_password: str = ""
 
     def _on_password_toggle(self, checked: bool) -> None:
+        """The password box is usable only while protection is ticked; unticking clears it."""
         self.password_edit.setEnabled(checked)
         if not checked:
             self.password_edit.clear()
 
     def _on_accept(self) -> None:
+        """Keeps whether a password is wanted and the new one, and closes; turning protection on for a profile that had none needs one typed."""
         wants_password = self.password_checkbox.isChecked()
         if wants_password and not self._has_password and not self.password_edit.text():
             self.password_edit.setPlaceholderText("Password can't be empty!")

@@ -36,7 +36,9 @@ def format_volume_line(status: Optional[VolumeStatus]) -> str:
 
 
 class VolumeQuickControl(QWidget):
+    """The system volume in a strip: the level, a slider and mute."""
     def __init__(self, context: AppContext) -> None:
+        """The label, the slider and the mute button, filled in from the volume now."""
         super().__init__()
         self.context = context
 
@@ -64,6 +66,7 @@ class VolumeQuickControl(QWidget):
         self.refresh()
 
     def refresh(self) -> None:
+        """Shows the volume now (left alone while the slider's dragged) and whether it's muted; everything's off where volume control isn't available."""
         available = self.context.volume is not None and self.context.volume.is_available()
         status = self.context.volume.read() if available else None
         self._label.setText(format_volume_line(status))
@@ -77,11 +80,13 @@ class VolumeQuickControl(QWidget):
         self._mute_button.setToolTip("Unmute" if muted else "Mute")
 
     def _on_slider_released(self) -> None:
+        """Sets the volume to where the slider was let go."""
         if self.context.volume is not None:
             self.context.volume.set_volume(self._slider.value())
         self.refresh()
 
     def _on_mute_clicked(self) -> None:
+        """Mutes or unmutes."""
         if self.context.volume is not None:
             self.context.volume.toggle_mute()
         self.refresh()

@@ -35,7 +35,9 @@ _RECURRENCE_LABELS = [("Never", None)] + [(r.capitalize(), r) for r in RECURRENC
 
 
 class AddEditIncomeSourceDialog(QDialog):
+    """Adding or editing an income source: name, expected amount, category, next date, repeats, entity, notes."""
     def __init__(self, parent=None, income_source: Optional[IncomeSource] = None, entities: Optional[list] = None) -> None:
+        """The fields with OK and Cancel; editing, they start from the income source given."""
         super().__init__(parent)
         self.setWindowTitle("Edit Income Source" if income_source is not None else "New Income Source")
         self.setFixedSize(360, 500)
@@ -103,6 +105,7 @@ class AddEditIncomeSourceDialog(QDialog):
         self._notes: str = ""
 
     def _prefill(self, income_source: Optional[IncomeSource]) -> None:
+        """Fills the fields from the income source being edited, when there is one."""
         if income_source is not None:
             self.name_edit.setText(income_source.name)
             self.amount_spin.setValue(income_source.expected_amount)
@@ -122,6 +125,7 @@ class AddEditIncomeSourceDialog(QDialog):
             self.next_date_edit.setDate(QDate.currentDate())
 
     def _on_accept(self) -> None:
+        """Keeps what was entered and closes; an empty name is pointed out in its box instead."""
         name = self.name_edit.text().strip()
         if not name:
             self.name_edit.setPlaceholderText("Name can't be empty!")

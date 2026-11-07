@@ -28,7 +28,9 @@ _ISO_DATE_FORMAT = "yyyy-MM-dd"
 
 
 class MarkIncomeReceivedDialog(QDialog):
+    """Marking income received: the day, and the amount only when it was different this time."""
     def __init__(self, parent=None, default_amount: float = 0.0) -> None:
+        """Received on (today to start), Amount was different this time, and the amount (the expected one to start), with OK and Cancel."""
         super().__init__(parent)
         self.setWindowTitle("Mark Income Received")
         self.setFixedSize(320, 220)
@@ -65,9 +67,11 @@ class MarkIncomeReceivedDialog(QDialog):
         self._amount: Optional[float] = None
 
     def _on_override_toggle(self, checked: bool) -> None:
+        """The amount is editable only while Amount was different is ticked."""
         self.amount_spin.setEnabled(checked)
 
     def _on_accept(self) -> None:
+        """Keeps the date, and the amount only when it was different (else None: the expected one), and closes."""
         self._received_date = self.received_date_edit.date().toString(_ISO_DATE_FORMAT)
         self._amount = self.amount_spin.value() if self.override_checkbox.isChecked() else None
         self.accept()

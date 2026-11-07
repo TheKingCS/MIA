@@ -27,7 +27,9 @@ from PySide6.QtWidgets import (
 
 
 class AddTrailMapDialog(QDialog):
+    """Adding a trail map: the park and state, and either the PDF's URL or a PDF already on this device."""
     def __init__(self, parent=None) -> None:
+        """The fields (park name, state, PDF URL), or Browse for a local PDF, with OK and Cancel."""
         super().__init__(parent)
         self.setWindowTitle("Add Trail Map")
         self.setFixedSize(420, 320)
@@ -75,11 +77,13 @@ class AddTrailMapDialog(QDialog):
         self._url: str = ""
 
     def _on_url_edited(self, text: str) -> None:
+        """Typing a URL drops a local file picked before (one source at a time)."""
         if text:
             self._local_file_path = None
             self._local_file_label.setText("No file selected.")
 
     def _on_browse(self) -> None:
+        """Picks a local PDF, shows its path and clears the URL."""
         file_path, _ = QFileDialog.getOpenFileName(self, "Select Trail Map PDF", "", "PDF files (*.pdf)")
         if not file_path:
             return
@@ -88,6 +92,7 @@ class AddTrailMapDialog(QDialog):
         self.url_edit.clear()
 
     def _on_accept(self) -> None:
+        """Checks a park name, a state, and a URL or a local file (saying which is missing), then keeps them and closes."""
         park_name = self.park_name_edit.text().strip()
         state = self.state_edit.text().strip()
         url = self.url_edit.text().strip()

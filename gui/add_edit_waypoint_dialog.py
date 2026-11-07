@@ -38,7 +38,9 @@ from core.waypoint_manager import WAYPOINT_CATEGORIES, Waypoint
 
 
 class AddEditWaypointDialog(QDialog):
+    """Adding or editing a waypoint: name, latitude, longitude, category, notes."""
     def __init__(self, parent=None, waypoint: Optional[Waypoint] = None) -> None:
+        """The fields with OK and Cancel; editing, they start from the waypoint given."""
         super().__init__(parent)
         self.setWindowTitle("Edit Waypoint" if waypoint is not None else "New Waypoint")
         self.setFixedSize(360, 460)
@@ -90,6 +92,7 @@ class AddEditWaypointDialog(QDialog):
         self._category: str = ""
 
     def _prefill(self, waypoint: Optional[Waypoint]) -> None:
+        """Fills the fields from the waypoint being edited, when there is one."""
         if waypoint is not None:
             self.name_edit.setText(waypoint.name)
             self.latitude_spin.setValue(waypoint.latitude)
@@ -99,6 +102,7 @@ class AddEditWaypointDialog(QDialog):
             self.category_combo.setCurrentIndex(index if index != -1 else 0)
 
     def _on_accept(self) -> None:
+        """Keeps what was entered and closes; an empty name is pointed out in its box instead."""
         name = self.name_edit.text().strip()
         if not name:
             self.name_edit.setPlaceholderText("Name can't be empty!")

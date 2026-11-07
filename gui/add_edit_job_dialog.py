@@ -31,7 +31,9 @@ from core.job_manager import JOB_STATUSES, Job
 
 
 class AddEditJobDialog(QDialog):
+    """Adding or editing a job: name, description, status, labor hours, notes."""
     def __init__(self, parent=None, job: Optional[Job] = None) -> None:
+        """The fields with OK and Cancel; editing, they start from the job given."""
         super().__init__(parent)
         self.setWindowTitle("Edit Job" if job is not None else "New Job")
         self.setFixedSize(360, 480)
@@ -80,6 +82,7 @@ class AddEditJobDialog(QDialog):
         self._notes: str = ""
 
     def _prefill(self, job: Optional[Job]) -> None:
+        """Fills the fields from the job being edited, when there is one."""
         if job is not None:
             self.name_edit.setText(job.name)
             self.description_edit.setText(job.description)
@@ -90,6 +93,7 @@ class AddEditJobDialog(QDialog):
             self.notes_edit.setPlainText(job.notes)
 
     def _on_accept(self) -> None:
+        """Keeps what was entered and closes; an empty name is pointed out in its box instead."""
         name = self.name_edit.text().strip()
         if not name:
             self.name_edit.setPlaceholderText("Name can't be empty!")

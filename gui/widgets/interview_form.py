@@ -41,7 +41,9 @@ def format_interview_intro(profile_name: str) -> str:
 
 
 class InterviewForm(QWidget):
+    """The getting-to-know-you form: which parts of life MIA should track, and anything else about their goals and responsibilities."""
     def __init__(self, context, profile_name: str = "", parent: QWidget = None) -> None:
+        """A tick box per part of life, and the notes box."""
         super().__init__(parent)
         self._checkboxes: dict[str, QCheckBox] = {}
 
@@ -83,7 +85,9 @@ class InterviewForm(QWidget):
         self._intro_label.setText(format_interview_intro(profile_name))
 
     def selected_interests(self) -> list[str]:
+        """The parts of life ticked."""
         return [category for category, checkbox in self._checkboxes.items() if checkbox.isChecked()]
 
     def entered_notes(self) -> str:
+        """What they wrote about themselves."""
         return self._notes_edit.toPlainText().strip()

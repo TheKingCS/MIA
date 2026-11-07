@@ -44,7 +44,9 @@ _INDENT_PER_DEPTH = 24
 
 
 class MemoryConnectionsDialog(QDialog):
+    """Memory Connections: memories MIA has noticed are connected, grouped automatically into trees, never hand-linked."""
     def __init__(self, context: AppContext, parent=None) -> None:
+        """The explanation, the trees, and Close."""
         super().__init__(parent)
         self.context = context
         self.setWindowTitle("Memory Connections")
@@ -76,6 +78,7 @@ class MemoryConnectionsDialog(QDialog):
         self._refresh()
 
     def _refresh(self) -> None:
+        """A card per tree of connected memories; says when there are no memories yet, or none that connect."""
         all_memories = self.context.user_memories.all_memories() if self.context.user_memories is not None else []
         trees = memory_relationship_trees(all_memories)
 
@@ -101,6 +104,7 @@ class MemoryConnectionsDialog(QDialog):
             self._list_layout.addWidget(card)
 
     def _add_node(self, layout: QVBoxLayout, node: MemoryTreeNode, depth: int) -> None:
+        """One memory in a tree, indented by its depth with its category, then its children under it."""
         row = QHBoxLayout()
         if depth > 0:
             row.addSpacerItem(QSpacerItem(depth * _INDENT_PER_DEPTH, 1, QSizePolicy.Policy.Fixed))

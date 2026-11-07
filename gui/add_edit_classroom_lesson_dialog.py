@@ -42,7 +42,9 @@ from core.gamification import SkillWeight
 
 
 class AddEditLessonDialog(QDialog):
+    """Adding or editing a lesson: name, notes, trains skill, XP."""
     def __init__(self, context, parent=None, lesson: Optional[Lesson] = None) -> None:
+        """The fields with OK and Cancel; editing, they start from the lesson given."""
         super().__init__(parent)
         self.context = context
         self.setWindowTitle("Edit Lesson" if lesson is not None else "New Lesson")
@@ -88,6 +90,7 @@ class AddEditLessonDialog(QDialog):
         self._skill_rewards: list[SkillWeight] = []
 
     def _prefill(self, lesson: Optional[Lesson]) -> None:
+        """Fills the fields from the lesson being edited, when there is one."""
         if lesson is None:
             return
         self.name_edit.setText(lesson.name)
@@ -99,6 +102,7 @@ class AddEditLessonDialog(QDialog):
             self.xp_spin.setValue(weight.xp)
 
     def _on_accept(self) -> None:
+        """Keeps what was entered (the skill it trains with its XP, when one is picked) and closes; an empty name is pointed out in its box instead."""
         name = self.name_edit.text().strip()
         if not name:
             self.name_edit.setPlaceholderText("Name can't be empty!")

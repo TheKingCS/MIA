@@ -33,7 +33,9 @@ _ISO_DATE_FORMAT = "yyyy-MM-dd"
 
 
 class AddEditPropertyDialog(QDialog):
+    """Adding or editing a property: name, type, purchase date, placed in service date, purchase price, land value, current value, mortgage balance, original loan amount, interest rate, loan term, loan start date, entity, notes."""
     def __init__(self, parent=None, property_: Optional[Property] = None, entities: Optional[list] = None) -> None:
+        """The fields with OK and Cancel; editing, they start from the property given."""
         super().__init__(parent)
         self.setWindowTitle("Edit Property" if property_ is not None else "New Property")
         self.setFixedSize(360, 860)
@@ -152,6 +154,7 @@ class AddEditPropertyDialog(QDialog):
         self._notes: str = ""
 
     def _prefill(self, property_: Optional[Property]) -> None:
+        """Fills the fields from the property being edited, when there is one."""
         if property_ is not None:
             self.name_edit.setText(property_.name)
             if property_.property_type in PROPERTY_TYPES:
@@ -191,6 +194,7 @@ class AddEditPropertyDialog(QDialog):
             self.loan_start_date_edit.setDate(new_date)
 
     def _on_accept(self) -> None:
+        """Keeps what was entered and closes; an empty name is pointed out in its box instead."""
         name = self.name_edit.text().strip()
         if not name:
             self.name_edit.setPlaceholderText("Name can't be empty!")

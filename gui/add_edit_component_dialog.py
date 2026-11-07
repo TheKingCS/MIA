@@ -28,7 +28,9 @@ from core.component_manager import Component
 
 
 class AddEditComponentDialog(QDialog):
+    """Adding or editing a component: name, category, value, package, quantity, location, notes."""
     def __init__(self, parent=None, component: Optional[Component] = None) -> None:
+        """The fields with OK and Cancel; editing, they start from the component given."""
         super().__init__(parent)
         self.setWindowTitle("Edit Component" if component is not None else "New Component")
         self.setFixedSize(360, 560)
@@ -88,6 +90,7 @@ class AddEditComponentDialog(QDialog):
         self._notes: str = ""
 
     def _prefill(self, component: Optional[Component]) -> None:
+        """Fills the fields from the component being edited, when there is one."""
         if component is not None:
             self.name_edit.setText(component.name)
             self.category_edit.setText(component.category)
@@ -98,6 +101,7 @@ class AddEditComponentDialog(QDialog):
             self.notes_edit.setPlainText(component.notes)
 
     def _on_accept(self) -> None:
+        """Keeps what was entered and closes; an empty name is pointed out in its box instead."""
         name = self.name_edit.text().strip()
         if not name:
             self.name_edit.setPlaceholderText("Name can't be empty!")

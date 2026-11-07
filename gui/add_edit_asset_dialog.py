@@ -51,6 +51,7 @@ _ISO_DATE_FORMAT = "yyyy-MM-dd"
 
 
 class AddEditAssetDialog(QDialog):
+    """Adding or editing an asset: name, category, belongs to, manufacturer, model, serial number, purchase date, purchase price, warranty until, notes, documents, latest usage."""
     def __init__(
         self,
         parent=None,
@@ -58,6 +59,7 @@ class AddEditAssetDialog(QDialog):
         maintenance: Optional[MaintenanceManager] = None,
         context=None,
     ) -> None:
+        """The fields with OK and Cancel; editing, they start from the asset given."""
         super().__init__(parent)
         self.setWindowTitle("Edit Asset" if asset is not None else "New Asset")
         self.setFixedSize(380, 700)
@@ -188,6 +190,7 @@ class AddEditAssetDialog(QDialog):
         self._warranty_until: str = ""
 
     def _prefill(self, asset: Optional[MaintenanceAsset]) -> None:
+        """Fills the fields from the asset being edited, when there is one."""
         if asset is not None:
             self.name_edit.setText(asset.name)
             index = self.owner_combo.findData(asset.owner_profile_id)

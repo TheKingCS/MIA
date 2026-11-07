@@ -27,7 +27,9 @@ from core.script_library_manager import INTERPRETERS, Script
 
 
 class AddEditScriptDialog(QDialog):
+    """Adding or editing a script: name, category, interpreter, script."""
     def __init__(self, parent=None, script: Optional[Script] = None) -> None:
+        """The fields with OK and Cancel; editing, they start from the script given."""
         super().__init__(parent)
         self.setWindowTitle("Edit Script" if script is not None else "New Script")
         self.setFixedSize(480, 520)
@@ -70,6 +72,7 @@ class AddEditScriptDialog(QDialog):
         self._content: str = ""
 
     def _prefill(self, script: Optional[Script]) -> None:
+        """Fills the fields from the script being edited, when there is one."""
         if script is not None:
             self.name_edit.setText(script.name)
             self.category_edit.setText(script.category)
@@ -79,6 +82,7 @@ class AddEditScriptDialog(QDialog):
             self.content_edit.setPlainText(script.content)
 
     def _on_accept(self) -> None:
+        """Keeps what was entered and closes; an empty name is pointed out in its box instead."""
         name = self.name_edit.text().strip()
         if not name:
             self.name_edit.setPlaceholderText("Name can't be empty!")

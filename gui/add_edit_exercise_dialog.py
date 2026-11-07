@@ -24,7 +24,9 @@ from core.workout_manager import EXERCISE_CATEGORIES, Exercise
 
 
 class AddEditExerciseDialog(QDialog):
+    """Adding or editing an exercise: name, category, equipment, notes."""
     def __init__(self, parent=None, exercise: Optional[Exercise] = None) -> None:
+        """The fields with OK and Cancel; editing, they start from the exercise given."""
         super().__init__(parent)
         self.setWindowTitle("Edit Exercise" if exercise is not None else "New Exercise")
         self.setFixedSize(340, 380)
@@ -67,6 +69,7 @@ class AddEditExerciseDialog(QDialog):
         self._notes: str = ""
 
     def _prefill(self, exercise: Optional[Exercise]) -> None:
+        """Fills the fields from the exercise being edited, when there is one."""
         if exercise is None:
             return
         self.name_edit.setText(exercise.name)
@@ -76,6 +79,7 @@ class AddEditExerciseDialog(QDialog):
         self.notes_edit.setPlainText(exercise.notes)
 
     def _on_accept(self) -> None:
+        """Keeps what was entered and closes; an empty name is pointed out in its box instead."""
         name = self.name_edit.text().strip()
         if not name:
             self.name_edit.setPlaceholderText("Name can't be empty!")

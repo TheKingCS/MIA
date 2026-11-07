@@ -38,7 +38,9 @@ _ISO_DATE_FORMAT = "yyyy-MM-dd"
 
 
 class AddEditIncomeDialog(QDialog):
+    """Adding or editing an income: tax relevant, amount, category, description, date, entity, notes."""
     def __init__(self, parent=None, entry: Optional[IncomeEntry] = None, entities: Optional[list] = None) -> None:
+        """The fields with OK and Cancel; editing, they start from the income given."""
         super().__init__(parent)
         self.setWindowTitle("Edit Income" if entry is not None else "New Income")
         self.setFixedSize(360, 480)
@@ -104,6 +106,7 @@ class AddEditIncomeDialog(QDialog):
         self._notes: str = ""
 
     def _prefill(self, entry: Optional[IncomeEntry]) -> None:
+        """Fills the fields from the income being edited, when there is one."""
         if entry is not None:
             self.amount_spin.setValue(entry.amount)
             if entry.category in INCOME_CATEGORIES:
@@ -120,6 +123,7 @@ class AddEditIncomeDialog(QDialog):
             self.date_edit.setDate(QDate.currentDate())
 
     def _on_accept(self) -> None:
+        """Keeps what was entered and closes."""
         self._amount = self.amount_spin.value()
         self._category = self.category_combo.currentText()
         self._description = self.description_edit.text().strip()

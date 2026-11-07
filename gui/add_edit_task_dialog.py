@@ -32,7 +32,9 @@ _ISO_DATE_FORMAT = "yyyy-MM-dd"
 
 
 class AddEditTaskDialog(QDialog):
+    """Adding or editing a task: done, title, due date, notes."""
     def __init__(self, parent=None, task: Optional[Task] = None) -> None:
+        """The fields with OK and Cancel; editing, they start from the task given."""
         super().__init__(parent)
         self.setWindowTitle("Edit Task" if task is not None else "New Task")
         self.setFixedSize(360, 460)
@@ -73,6 +75,7 @@ class AddEditTaskDialog(QDialog):
         self._notes: str = ""
 
     def _prefill(self, task: Optional[Task]) -> None:
+        """Fills the fields from the task being edited, when there is one."""
         if task is not None:
             self.title_edit.setText(task.title)
             self.done_check.setChecked(task.done)
@@ -85,6 +88,7 @@ class AddEditTaskDialog(QDialog):
             self.due_date_edit.setDate(QDate.currentDate())
 
     def _on_accept(self) -> None:
+        """Keeps what was entered and closes; an empty title is pointed out in its box instead."""
         title = self.title_edit.text().strip()
         if not title:
             self.title_edit.setPlaceholderText("Title can't be empty!")

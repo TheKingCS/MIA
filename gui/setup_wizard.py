@@ -42,6 +42,7 @@ class _WelcomePage(QWizardPage):
     sign in with (accounts, 2026-10-01)."""
 
     def __init__(self) -> None:
+        """The first page: what MIA should call them, an optional email and password to sign in with, and their country."""
         super().__init__()
         self.setTitle("Welcome to MIA")
         self.setSubTitle("Let's set up your system for the first time.")
@@ -80,6 +81,7 @@ class _WelcomePage(QWizardPage):
         layout.addWidget(self.error_label)
 
     def validatePage(self) -> bool:  # noqa: N802 (Qt override signature)
+        """Goes on only when an email given looks like one and comes with a password (saying which isn't right)."""
         email = self.email_edit.text().strip()
         if email and not looks_like_email(email):
             self.error_label.setText("That doesn't look like an email address.")
@@ -95,6 +97,7 @@ class _DateTimePage(QWizardPage):
     """Confirms the system date and time to store alongside setup."""
 
     def __init__(self) -> None:
+        """The date and time page."""
         super().__init__()
         self.setTitle("Confirm Date & Time")
         self.setSubTitle("MIA uses this to timestamp your setup. Adjust if needed.")
@@ -118,6 +121,7 @@ class SetupWizard(QWizard):
     """
 
     def __init__(self, context: AppContext) -> None:
+        """The first-time setup: the welcome page, then date and time; finishing saves the setup."""
         super().__init__()
         self.context = context
         self.setWindowTitle("MIA — First-Time Setup")
@@ -132,6 +136,7 @@ class SetupWizard(QWizard):
         self.accepted.connect(self._save_setup)
 
     def _save_setup(self) -> None:
+        """Saves the first setup: the date, time and country, the first profile (signed in, with its email and password; a password shows its recovery code once), marks setup done, asks MIA's setup questions, and announces user.setup_complete."""
         name = self.field("user_name")
         date_str = self._datetime_page.date_edit.date().toString("yyyy-MM-dd")
         time_str = self._datetime_page.time_edit.time().toString("HH:mm")

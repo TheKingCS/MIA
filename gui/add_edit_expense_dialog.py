@@ -35,10 +35,12 @@ _ISO_DATE_FORMAT = "yyyy-MM-dd"
 
 
 class AddEditExpenseDialog(QDialog):
+    """Adding or editing an expense: tax relevant, amount, category, description, date, entity, for build, for tool or equipment, payee, notes."""
     def __init__(
         self, parent=None, entry: Optional[ExpenseEntry] = None, entities: Optional[list] = None,
         projects: Optional[list] = None, assets: Optional[list] = None,
     ) -> None:
+        """The fields with OK and Cancel; editing, they start from the expense given."""
         super().__init__(parent)
         self.setWindowTitle("Edit Expense" if entry is not None else "New Expense")
         self.setFixedSize(360, 640)
@@ -126,6 +128,7 @@ class AddEditExpenseDialog(QDialog):
         self._asset_id: str = ""
 
     def _prefill(self, entry: Optional[ExpenseEntry]) -> None:
+        """Fills the fields from the expense being edited, when there is one."""
         if entry is not None:
             self.amount_spin.setValue(entry.amount)
             if entry.category in EXPENSE_CATEGORIES:
@@ -146,6 +149,7 @@ class AddEditExpenseDialog(QDialog):
             self.date_edit.setDate(QDate.currentDate())
 
     def _on_accept(self) -> None:
+        """Keeps what was entered and closes."""
         self._amount = self.amount_spin.value()
         self._category = self.category_combo.currentText()
         self._description = self.description_edit.text().strip()

@@ -67,6 +67,7 @@ _CALENDAR_PAGE, _METER_PAGE, _SENSOR_PAGE = 0, 1, 2
 
 
 class AddEditMaintenanceTaskDialog(QDialog):
+    """Adding or editing a task: auto-schedule a calendar event once due, asset, task, trigger, priority, notes."""
     def __init__(
         self,
         parent=None,
@@ -74,6 +75,7 @@ class AddEditMaintenanceTaskDialog(QDialog):
         task: Optional[MaintenanceTask] = None,
         default_asset_id: Optional[str] = None,
     ) -> None:
+        """The fields with OK and Cancel; editing, they start from the task given."""
         super().__init__(parent)
         self.setWindowTitle("Edit Task" if task is not None else "New Task")
         self.setFixedSize(380, 570)

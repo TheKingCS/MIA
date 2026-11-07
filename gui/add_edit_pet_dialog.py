@@ -29,7 +29,9 @@ _ISO_DATE_FORMAT = "yyyy-MM-dd"
 
 
 class AddEditPetDialog(QDialog):
+    """Adding or editing a pet: track birthday / adoption date, name, species, medical notes, notes."""
     def __init__(self, parent=None, pet: Optional[Pet] = None) -> None:
+        """The fields with OK and Cancel; editing, they start from the pet given."""
         super().__init__(parent)
         self.setWindowTitle("Edit Pet" if pet is not None else "New Pet")
         self.setFixedSize(360, 480)
@@ -85,9 +87,11 @@ class AddEditPetDialog(QDialog):
         self._notes: str = ""
 
     def _on_birthday_toggle(self, checked: bool) -> None:
+        """The birthday is editable only while Track birthday is ticked."""
         self.birthday_edit.setEnabled(checked)
 
     def _prefill(self, pet: Optional[Pet]) -> None:
+        """Fills the fields from the pet being edited, when there is one."""
         if pet is None:
             return
         self.name_edit.setText(pet.name)
@@ -99,6 +103,7 @@ class AddEditPetDialog(QDialog):
         self.notes_edit.setPlainText(pet.notes)
 
     def _on_accept(self) -> None:
+        """Keeps what was entered and closes; an empty name is pointed out in its box instead."""
         name = self.name_edit.text().strip()
         if not name:
             self.name_edit.setPlaceholderText("Name can't be empty!")

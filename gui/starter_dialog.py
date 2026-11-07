@@ -41,7 +41,9 @@ def part_summary(part) -> str:
 
 
 class StarterDialog(QDialog):
+    """Adding a starter set: pick a set, untick any part that doesn't fit, and add it (it can be undone)."""
     def __init__(self, context, parent=None, starter_id: Optional[str] = None) -> None:
+        """The explanation, the set picker, its parts, Add and Close."""
         super().__init__(parent)
         self.context = context
         self.result_text = ""
@@ -80,6 +82,7 @@ class StarterDialog(QDialog):
         self._show_parts()
 
     def _show_parts(self) -> None:
+        """Lists the chosen set's parts, each ticked, with what it adds."""
         while self._parts_layout.count():
             widget = self._parts_layout.takeAt(0).widget()
             if widget is not None:
@@ -99,6 +102,7 @@ class StarterDialog(QDialog):
         self.message_label.setText("")
 
     def _on_add(self) -> None:
+        """Adds the ticked parts (asking for at least one) and says what was added, and that it can be undone."""
         chosen = [pid for pid, check in self.part_checks.items() if check.isChecked()]
         if not chosen:
             self.message_label.setText("Tick at least one part.")

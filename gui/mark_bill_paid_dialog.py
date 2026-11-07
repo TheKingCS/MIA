@@ -29,7 +29,9 @@ _ISO_DATE_FORMAT = "yyyy-MM-dd"
 
 
 class MarkBillPaidDialog(QDialog):
+    """Marking a bill paid: the day, and the amount only when it was different this time."""
     def __init__(self, parent=None, default_amount: float = 0.0) -> None:
+        """Paid on (today to start), Amount was different this time, and the amount (the bill's to start), with OK and Cancel."""
         super().__init__(parent)
         self.setWindowTitle("Mark Bill Paid")
         self.setFixedSize(320, 220)
@@ -66,9 +68,11 @@ class MarkBillPaidDialog(QDialog):
         self._amount: Optional[float] = None
 
     def _on_override_toggle(self, checked: bool) -> None:
+        """The amount is editable only while Amount was different is ticked."""
         self.amount_spin.setEnabled(checked)
 
     def _on_accept(self) -> None:
+        """Keeps the date, and the amount only when it was different (else None: the bill's own), and closes."""
         self._paid_date = self.paid_date_edit.date().toString(_ISO_DATE_FORMAT)
         self._amount = self.amount_spin.value() if self.override_checkbox.isChecked() else None
         self.accept()

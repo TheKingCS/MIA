@@ -38,7 +38,9 @@ from core.budget_manager import BUSINESS_ENTITY_TYPES, BusinessEntity
 
 
 class AddEditBusinessEntityDialog(QDialog):
+    """Adding or editing an entity: name, type, notes."""
     def __init__(self, parent=None, entity: Optional[BusinessEntity] = None) -> None:
+        """The fields with OK and Cancel; editing, they start from the entity given."""
         super().__init__(parent)
         self.setWindowTitle("Edit Entity" if entity is not None else "New Entity")
         self.setFixedSize(340, 300)
@@ -75,6 +77,7 @@ class AddEditBusinessEntityDialog(QDialog):
         self._notes: str = ""
 
     def _prefill(self, entity: Optional[BusinessEntity]) -> None:
+        """Fills the fields from the entity being edited, when there is one."""
         if entity is not None:
             self.name_edit.setText(entity.name)
             if entity.entity_type in BUSINESS_ENTITY_TYPES:
@@ -82,6 +85,7 @@ class AddEditBusinessEntityDialog(QDialog):
             self.notes_edit.setPlainText(entity.notes)
 
     def _on_accept(self) -> None:
+        """Keeps what was entered and closes; an empty name is pointed out in its box instead."""
         name = self.name_edit.text().strip()
         if not name:
             self.name_edit.setPlaceholderText("Name can't be empty!")

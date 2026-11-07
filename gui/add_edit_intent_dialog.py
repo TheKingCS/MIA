@@ -32,7 +32,9 @@ from core.intent_manager import INTENT_STATUSES, Intent
 
 
 class AddEditIntentDialog(QDialog):
+    """Adding or editing an intent: make this my current focus, name, status, description, this serves."""
     def __init__(self, parent=None, intent: Optional[Intent] = None, intents: Sequence[Intent] = ()) -> None:
+        """The fields with OK and Cancel; editing, they start from the intent given."""
         super().__init__(parent)
         self.setWindowTitle("Edit Intent" if intent is not None else "New Intent")
         self.setFixedSize(380, 560)
@@ -91,6 +93,7 @@ class AddEditIntentDialog(QDialog):
         self._reason: str = ""
 
     def _prefill(self, intent: Optional[Intent]) -> None:
+        """Fills the fields from the intent being edited, when there is one."""
         if intent is not None:
             self.name_edit.setText(intent.name)
             index = self.status_combo.findData(intent.status)
@@ -102,6 +105,7 @@ class AddEditIntentDialog(QDialog):
             self.reason_edit.setText(intent.reason)
 
     def _on_accept(self) -> None:
+        """Keeps what was entered and closes; an empty name is pointed out in its box instead."""
         name = self.name_edit.text().strip()
         if not name:
             self.name_edit.setPlaceholderText("Name can't be empty!")

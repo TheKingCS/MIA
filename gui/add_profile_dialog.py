@@ -29,7 +29,9 @@ from core.profile_manager import looks_like_email
 
 
 class AddProfileDialog(QDialog):
+    """Adding a profile: its name, an optional email to sign in with, an optional password, and whether it's a child's account (which joins a household with a parent's approval)."""
     def __init__(self, parent=None, context=None) -> None:
+        """The fields: name, email, the password (with its tick box), and the child's-account choice with its household, with OK and Cancel."""
         super().__init__(parent)
         self.context = context
         self.setWindowTitle("New Profile")
@@ -85,11 +87,13 @@ class AddProfileDialog(QDialog):
         self._email: str = ""
 
     def _on_password_toggle(self, checked: bool) -> None:
+        """The password box is usable only while password protection is ticked; unticking clears it."""
         self.password_edit.setEnabled(checked)
         if not checked:
             self.password_edit.clear()
 
     def _on_accept(self) -> None:
+        """Checks the profile before closing: a name; a password when protection is ticked; an email that looks like one and isn't already used, which needs a password too; a child's account picks a household and its member's password matches. Each problem is said and nothing closes."""
         name = self.name_edit.text().strip()
         if not name:
             self.name_edit.setPlaceholderText("Name can't be empty!")
@@ -130,6 +134,7 @@ class AddProfileDialog(QDialog):
 
     @property
     def is_child(self) -> bool:
+        """Whether this is a child's account (False where the choice isn't offered)."""
         return self.child_checkbox is not None and self.child_checkbox.isChecked()
 
     @property

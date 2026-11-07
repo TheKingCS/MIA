@@ -38,7 +38,9 @@ _ISO_DATE_FORMAT = "yyyy-MM-dd"
 
 
 class AddEditTripDialog(QDialog):
+    """Adding or editing a trip: name, activity type, start date, end date, notes."""
     def __init__(self, parent=None, trip: Optional[Trip] = None) -> None:
+        """The fields with OK and Cancel; editing, they start from the trip given."""
         super().__init__(parent)
         self.setWindowTitle("Edit Trip" if trip is not None else "New Trip")
         self.setFixedSize(360, 520)
@@ -90,6 +92,7 @@ class AddEditTripDialog(QDialog):
         self._notes: str = ""
 
     def _prefill(self, trip: Optional[Trip]) -> None:
+        """Fills the fields from the trip being edited, when there is one."""
         today = QDate.currentDate()
         if trip is not None:
             self.name_edit.setText(trip.name)
@@ -107,6 +110,7 @@ class AddEditTripDialog(QDialog):
             self.end_date_edit.setDate(today)
 
     def _on_accept(self) -> None:
+        """Keeps what was entered and closes; an empty name is pointed out in its box instead."""
         name = self.name_edit.text().strip()
         if not name:
             self.name_edit.setPlaceholderText("Name can't be empty!")

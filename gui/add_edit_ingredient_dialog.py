@@ -26,7 +26,9 @@ from PySide6.QtWidgets import (
 
 
 class AddEditIngredientDialog(QDialog):
+    """Adding or editing an ingredient: name, quantity, unit, notes."""
     def __init__(self, parent=None, ingredient: Optional[dict] = None) -> None:
+        """The fields with OK and Cancel; editing, they start from the ingredient given."""
         super().__init__(parent)
         self.setWindowTitle("Edit Ingredient" if ingredient is not None else "Add Ingredient")
         self.setFixedSize(340, 320)
@@ -69,6 +71,7 @@ class AddEditIngredientDialog(QDialog):
         self._notes: str = ""
 
     def _prefill(self, ingredient: Optional[dict]) -> None:
+        """Fills the fields from the ingredient being edited, when there is one."""
         if ingredient is None:
             return
         self.name_edit.setText(str(ingredient.get("name", "")))
@@ -77,6 +80,7 @@ class AddEditIngredientDialog(QDialog):
         self.notes_edit.setText(str(ingredient.get("notes", "")))
 
     def _on_accept(self) -> None:
+        """Keeps what was entered and closes; an empty name is pointed out in its box instead."""
         name = self.name_edit.text().strip()
         if not name:
             self.name_edit.setPlaceholderText("Name can't be empty!")

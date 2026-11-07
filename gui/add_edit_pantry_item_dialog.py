@@ -33,7 +33,9 @@ _ISO_DATE_FORMAT = "yyyy-MM-dd"
 
 
 class AddEditPantryItemDialog(QDialog):
+    """Adding or editing a pantry item: track expiration date, name, quantity, unit, category, notes."""
     def __init__(self, parent=None, item: Optional[PantryItem] = None) -> None:
+        """The fields with OK and Cancel; editing, they start from the pantry item given."""
         super().__init__(parent)
         self.setWindowTitle("Edit Pantry Item" if item is not None else "New Pantry Item")
         self.setFixedSize(360, 420)
@@ -94,9 +96,11 @@ class AddEditPantryItemDialog(QDialog):
         self._notes: str = ""
 
     def _on_expiration_toggle(self, checked: bool) -> None:
+        """The use-by date is editable only while Track expiration date is ticked."""
         self.expiration_date_edit.setEnabled(checked)
 
     def _prefill(self, item: Optional[PantryItem]) -> None:
+        """Fills the fields from the pantry item being edited, when there is one."""
         if item is None:
             return
         self.name_edit.setText(item.name)
@@ -110,6 +114,7 @@ class AddEditPantryItemDialog(QDialog):
         self.notes_edit.setText(item.notes)
 
     def _on_accept(self) -> None:
+        """Keeps what was entered and closes; an empty name is pointed out in its box instead."""
         name = self.name_edit.text().strip()
         if not name:
             self.name_edit.setPlaceholderText("Name can't be empty!")

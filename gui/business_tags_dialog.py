@@ -33,7 +33,9 @@ def format_charge(expense) -> str:
 
 
 class BusinessTagsDialog(QDialog):
+    """Review Business Tags: which business each bank charge is for, the ones waiting and the ones tagged automatically; MIA learns from the answers."""
     def __init__(self, context, parent=None) -> None:
+        """The explanation and two tables: charges waiting for a choice, and charges tagged automatically, with Save and Cancel."""
         super().__init__(parent)
         self.context = context
         self.setWindowTitle("Review Business Tags")
@@ -66,6 +68,7 @@ class BusinessTagsDialog(QDialog):
         layout.addWidget(buttons)
 
     def _table(self, rows, entities, allow_later: bool) -> QTableWidget:
+        """A table of charges: each with its choice (Decide later when allowed, Personal, or a business) and why."""
         table = QTableWidget(len(rows), 3)
         table.setHorizontalHeaderLabels(["Charge", "Business", "Why"])
         table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
@@ -87,6 +90,7 @@ class BusinessTagsDialog(QDialog):
         return table
 
     def _save(self) -> None:
+        """Saves the choices: Decide later is skipped; an automatic tag kept as it was is confirmed; anything changed is applied (and learned from)."""
         for entry_id, combo, original in self._rows:
             choice = combo.currentData()
             if choice == LATER:

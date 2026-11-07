@@ -29,12 +29,14 @@ from core.energy_manager import ENERGY_SOURCE_TYPES, EnergyManager, EnergySource
 
 
 class AddEditEnergySourceDialog(QDialog):
+    """Adding or editing an energy source: name, type, notes, latest usage."""
     def __init__(
         self,
         parent=None,
         source: Optional[EnergySource] = None,
         energy: Optional[EnergyManager] = None,
     ) -> None:
+        """The fields with OK and Cancel; editing, they start from the energy source given."""
         super().__init__(parent)
         self.setWindowTitle("Edit Energy Source" if source is not None else "New Energy Source")
         self.setFixedSize(360, 400)
@@ -84,6 +86,7 @@ class AddEditEnergySourceDialog(QDialog):
         self._notes: str = ""
 
     def _prefill(self, source: Optional[EnergySource]) -> None:
+        """Fills the fields from the energy source being edited, when there is one."""
         if source is not None:
             self.name_edit.setText(source.name)
             if source.source_type in ENERGY_SOURCE_TYPES:
@@ -111,6 +114,7 @@ class AddEditEnergySourceDialog(QDialog):
         self._usage_label.setText("  ·  ".join(parts) if parts else "No readings logged yet.")
 
     def _on_accept(self) -> None:
+        """Keeps what was entered and closes; an empty name is pointed out in its box instead."""
         name = self.name_edit.text().strip()
         if not name:
             self.name_edit.setPlaceholderText("Name can't be empty!")

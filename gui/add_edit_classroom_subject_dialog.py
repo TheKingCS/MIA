@@ -19,7 +19,9 @@ from core.classroom_manager import Subject
 
 
 class AddEditSubjectDialog(QDialog):
+    """Adding or editing a subject: name, category, description."""
     def __init__(self, context, parent=None, subject: Optional[Subject] = None) -> None:
+        """The fields with OK and Cancel; editing, they start from the subject given."""
         super().__init__(parent)
         self.context = context
         self.setWindowTitle("Edit Subject" if subject is not None else "New Subject")
@@ -56,6 +58,7 @@ class AddEditSubjectDialog(QDialog):
         self._description: str = ""
 
     def _prefill(self, subject: Optional[Subject]) -> None:
+        """Fills the fields from the subject being edited, when there is one."""
         if subject is None:
             return
         self.name_edit.setText(subject.name)
@@ -63,6 +66,7 @@ class AddEditSubjectDialog(QDialog):
         self.description_edit.setPlainText(subject.description)
 
     def _on_accept(self) -> None:
+        """Keeps what was entered and closes; an empty name is pointed out in its box instead."""
         name = self.name_edit.text().strip()
         if not name:
             self.name_edit.setPlaceholderText("Name can't be empty!")

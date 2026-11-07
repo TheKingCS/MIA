@@ -22,7 +22,9 @@ MAX_ROWS = 10
 
 
 class TodayCard(QFrame):
+    """Today on the dashboard: what needs the person today and soon, grouped by when, each opening where it lives."""
     def __init__(self, context, parent=None) -> None:
+        """Keeps the context and shows today."""
         super().__init__(parent)
         self.context = context
         self.setObjectName("DashboardCard")
@@ -33,6 +35,7 @@ class TodayCard(QFrame):
         self.refresh()
 
     def refresh(self) -> None:
+        """Rebuilds the card only when what's due has changed: each item under its group (today, then later), or that nothing needs them today."""
         items = today_items(self.context)
         signature = [i.as_dict() for i in items]
         if signature == self._shown:
@@ -74,5 +77,6 @@ class TodayCard(QFrame):
             self._layout.addWidget(more)
 
     def _open(self, item) -> None:
+        """Opens the item where it lives (its app and record)."""
         self.context.events.publish("assistant.open_module_requested", module_id=item.module_id,
                                     record_id=item.record_id)

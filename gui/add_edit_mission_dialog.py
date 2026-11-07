@@ -51,7 +51,9 @@ _NO_ABANDON_REASON = "(none)"
 
 
 class AddEditMissionDialog(QDialog):
+    """Adding or editing a mission: name, icon, region, summary, difficulty, type, rewards (XP and credits), a linked trip or project, the party, and when editing its status (and why it was abandoned)."""
     def __init__(self, context, parent=None, mission: Optional[Mission] = None) -> None:
+        """The fields with OK and Cancel; status and abandon reason only when editing; editing, they start from the mission given."""
         super().__init__(parent)
         self.context = context
         self._editing = mission is not None
@@ -176,6 +178,7 @@ class AddEditMissionDialog(QDialog):
         self._participant_profile_ids: list[str] = []
 
     def _prefill(self, mission: Optional[Mission]) -> None:
+        """Fills the fields from the mission being edited; a new one starts with the clipboard icon."""
         if mission is None:
             self.icon_edit.setText("\U0001F4CB")
             return
@@ -196,6 +199,7 @@ class AddEditMissionDialog(QDialog):
             self.abandon_reason_combo.setCurrentIndex(reason_index if reason_index != -1 else 0)
 
     def _on_accept(self) -> None:
+        """Keeps what was entered (a blank icon or type gets the defaults; the abandon reason only when abandoned) and closes; an empty name is pointed out in its box instead."""
         name = self.name_edit.text().strip()
         if not name:
             self.name_edit.setPlaceholderText("Name can't be empty!")

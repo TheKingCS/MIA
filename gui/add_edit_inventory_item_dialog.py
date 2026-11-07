@@ -27,7 +27,9 @@ from core.inventory_manager import InventoryItem
 
 
 class AddEditInventoryItemDialog(QDialog):
+    """Adding or editing an item: name, quantity, category, location, notes."""
     def __init__(self, parent=None, item: Optional[InventoryItem] = None) -> None:
+        """The fields with OK and Cancel; editing, they start from the item given."""
         super().__init__(parent)
         self.setWindowTitle("Edit Item" if item is not None else "New Item")
         self.setFixedSize(360, 460)
@@ -75,6 +77,7 @@ class AddEditInventoryItemDialog(QDialog):
         self._notes: str = ""
 
     def _prefill(self, item: Optional[InventoryItem]) -> None:
+        """Fills the fields from the item being edited, when there is one."""
         if item is not None:
             self.name_edit.setText(item.name)
             self.quantity_spin.setValue(item.quantity)
@@ -83,6 +86,7 @@ class AddEditInventoryItemDialog(QDialog):
             self.notes_edit.setPlainText(item.notes)
 
     def _on_accept(self) -> None:
+        """Keeps what was entered and closes; an empty name is pointed out in its box instead."""
         name = self.name_edit.text().strip()
         if not name:
             self.name_edit.setPlaceholderText("Name can't be empty!")

@@ -40,7 +40,9 @@ from gui.presence_widget import PresenceWidget
 
 
 class SplashScreen(QWidget):
+    """The boot screen: MIA's presence orb with her name, a status line and a progress bar while she starts."""
     def __init__(self) -> None:
+        """The frameless boot screen, built and centred."""
         super().__init__()
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.SplashScreen)
         # A resizable default size, not setFixedSize() — MIAApplication
@@ -54,6 +56,7 @@ class SplashScreen(QWidget):
         self._center_on_screen()
 
     def _build_ui(self) -> None:
+        """The orb (MIA on it), the subtitle, the status line and an indeterminate progress bar."""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(40, 32, 40, 32)
         layout.setSpacing(12)
@@ -102,6 +105,7 @@ class SplashScreen(QWidget):
         layout.addStretch(1)
 
     def _center_on_screen(self) -> None:
+        """Centres the screen on the display."""
         screen = self.screen()
         if screen is None:
             return
@@ -116,5 +120,6 @@ class SplashScreen(QWidget):
         self._status_label.setText(message)
 
     def closeEvent(self, event) -> None:
+        """Stops the orb's animation as the screen closes."""
         self._core.stop()
         super().closeEvent(event)
