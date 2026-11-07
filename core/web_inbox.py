@@ -34,7 +34,7 @@ def _kind(name: str) -> str:
 
 
 def item_card(context, item) -> dict:
-    """One inbox item as the screen shows it."""
+    """One inbox item as the screen shows it, with a receipt's effects to tick (and any note, like which vehicle)."""
     from core.inbox_classify import DOC_TYPE_LABELS, ScheduleItem
     from core.region import money
 
@@ -68,6 +68,10 @@ def item_card(context, item) -> dict:
         "files": [{"name": f, "kind": _kind(f)} for f in item.files],
         "excerpt": item.excerpt, "note": item.note, "reading": item.reading, "readable": item.readable,
         "schedule": schedule, "details": details,
+        "receipt_kind": item.receipt_kind,
+        "effects": [{"index": i, "text": e.get("label", ""), "on": bool(e.get("on"))}
+                    for i, e in enumerate(item.effects or []) if e.get("kind") != "note"],
+        "effect_notes": [e.get("label", "") for e in (item.effects or []) if e.get("kind") == "note"],
         "lines": [{"text": str(line.get("description") or line.get("name") or ""), "amount": money(line["amount"]) if line.get("amount") is not None else ""}
                   for line in (item.items or []) if isinstance(line, dict)][:30],
         "filed_note": item.filed_note,

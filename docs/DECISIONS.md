@@ -1865,3 +1865,19 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   stay; removing `core/child_accounts.py` and the per-person plumbing is a separate cleanup Zac approves on its own.
   No personal data in the repo still holds (DEC-0002).
 - Related: DEC-0115, DEC-0001, DEC-0002
+
+### DEC-0120: MIA reads Zac's own mailbox for receipts, and receipts do things
+- Status: APPROVED
+- Decided by: zac, 2026-11-07 ("I want MIA able to read my emails so she can use it to gain context on things
+  getting done, being purchased... see my receipt and know I got my oil changed or bought groceries and stock my
+  pantry with what's on the receipt, and same for Lowe's receipts and materials")
+- Decision: (1) The inbox's email intake gains an everyday-mailbox mode (`core/inbox_mail.fetch_receipts`): the
+  folder is opened read-only and messages fetched with PEEK, so nothing is marked read, moved or deleted; only
+  receipts, orders and service confirmations are taken, judged from sender and subject, and other mail is never
+  downloaded. (2) A receipt's meaning is worked out in code (`core/receipt_effects.py`): groceries stock the pantry
+  and tick the grocery list, a car service is marked done on the vehicle (with the odometer when shown), building
+  supplies add to the workshop's materials at the price paid. (3) As with everything in the inbox, nothing happens
+  until Zac files it; the effects come ticked and he can untick any.
+- Also: DEC-0119's child-account code stays (Zac: "fine to leave"); it reaches MIA's prompts only when a child is
+  signed in, so it can't confuse her.
+- Related: the inbox (2026-09-28), DEC-0030 (receipt lines), DEC-0119
