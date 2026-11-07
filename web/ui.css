@@ -1292,3 +1292,19 @@ body.mod-maps .hero { display: none; }
 .ck-cartons p { margin: 2px 0 0; font-size: var(--text-sm); }
 .ck-logbook summary { cursor: pointer; list-style: none; }
 .ck-logbook summary::-webkit-details-marker { display: none; }
+
+/* ---------------------------------------------------------------- Greenhouse today (DEC-0113 canvas; web/equipment.js) */
+.gh-needs { display: grid; padding: 10px 14px; margin-bottom: var(--gap); border-color: rgba(var(--rgb-amber), 0.35); }
+.pw-label.attn { color: var(--attention); margin: 0 0 4px; }
+.gh-need { display: flex; justify-content: space-between; align-items: center; gap: 10px; min-height: 52px; border-top: 1px solid var(--line); }
+.pw-label + .gh-need { border-top: 0; }
+.gh-need > div { display: grid; min-width: 0; }
+.gh-need .dim, .gh-bed .dim { font-size: 12px; }
+.gh-what { font-weight: 600; }
+.gh-beds { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); margin-bottom: var(--gap); }
+.gh-bed { display: grid; gap: 8px; padding: 12px 14px; }
+.gh-bed-top, .gh-bed-foot { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.gh-stages { display: flex; gap: 4px; }
+.gh-stages span { flex: 1; height: 4px; border-radius: 999px; background: rgba(var(--rgb-line), 0.18); }
+.gh-stages span.on { background: var(--atmo); }
+.gh-stage { font-size: var(--text-sm); color: var(--atmo); }

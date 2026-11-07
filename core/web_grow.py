@@ -7,6 +7,8 @@ Greenhouse by Zac 2026-10-17): every **place** (each tank or bed is a
 Greenhouse asset; older places are names typed before that) with what's
 growing there, its latest readings against your ranges (only ever a
 warning), and what it has yielded; plus experiments and harvest totals.
+Each planting carries its stage (growth_stage: Planted, Sprouting, Growing,
+Picking, from what's known) for the canvas's stage meter (DEC-0113).
 From core/grow_lab.py, the Data Logger and Maintenance; the web only
 formats. Money (a batch's cost) is never shown to a child.
 """
@@ -19,8 +21,28 @@ from typing import Optional
 GREENHOUSE_CATEGORIES = ("Garden/Plant",)
 
 
+STAGES = ("Planted", "Sprouting", "Growing", "Picking")
+
+
+def growth_stage(status: str, days_growing, harvested: int, main_yield: float = 0.0, main_unit: str = "") -> dict:
+    """Pure logic. Where a planting is, for the canvas's stage meter (DEC-0113 Greenhouse): its step on Planted →
+    Sprouting → Growing → Picking (0 to 3) and a line about the harvest. It goes by what's known (days since planting
+    and harvests logged), never a guessed harvest date: under a week Planted, under three Sprouting, then Growing, and
+    Picking once anything is harvested. A batch that's finished or lost says so."""
+    if status and status != "Growing":
+        done = status.lower()
+        return {"n": 3 if harvested else 0, "label": status, "line": f"{main_yield:g} {main_unit} in all".strip()
+                if harvested and main_yield else done.capitalize()}
+    if harvested:
+        so_far = f"{main_yield:g} {main_unit} so far".strip() if main_yield else f"{harvested} picked"
+        return {"n": 3, "label": "Picking", "line": "Picking now · " + so_far}
+    days = days_growing if isinstance(days_growing, int) else None
+    n = 0 if days is None or days < 7 else 1 if days < 21 else 2
+    return {"n": n, "label": STAGES[n], "line": f"Day {days}" if days is not None else "Planted"}
+
+
 def grow_page(context, today: Optional[date] = None) -> dict:
-    """The Grow Lab screen's data: batches with their figures, experiments, the logger's readings with each checked against its range, and the forms; costs only for an adult. Not available without the lab."""
+    """The Grow Lab screen's data: batches with their figures and stage (growth_stage), experiments, the logger's readings with each checked against its range, and the forms; costs only for an adult. Not available without the lab."""
     from core.child_accounts import is_child
     from core.grow_actions import BATCH, EXPERIMENT
     from core.grow_lab import MEASURES, batch_figures, check_range, series_id
@@ -53,7 +75,8 @@ def grow_page(context, today: Optional[date] = None) -> dict:
                 "system": lab.place_name(b.asset_id or b.system), "method": b.method, "planted": b.planted,
                 "count": b.count, "status": b.status, "lost": b.lost, "loss_note": b.loss_note,
                 "cost": "" if child or not b.cost else money(b.cost), "harvests": list(reversed(b.harvests))[:5],
-                "figures": f, "notes": b.notes, "values": values}
+                "figures": f, "notes": b.notes, "values": values,
+                "stage": growth_stage(b.status, f["days_growing"], len(b.harvests), f["main_yield"], f["main_unit"])}
 
     batches = [batch_card(b) for b in sorted(lab.batches, key=lambda b: (b.status != "Growing", b.planted or ""))]
 

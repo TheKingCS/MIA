@@ -128,6 +128,8 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       Diagnostics (Passed / Look At / Unread tiles, a dotted row per check-up, Run Again).
       Chickens (Log Today's Eggs first: four big one-tap counts; This Week / Lay Rate / Feed per Dozen; two weeks of eggs
       with today lit; Cartons on Hand with Carton Them; feed, birds and the log below).
+      Greenhouse (a Today tab first: Needs You with upkeep due and readings out of range, then each planting with
+      its stage meter from `core/web_grow.growth_stage`, which goes by days planted and harvests, never a guessed date).
       Household (Done Today with its meter, a card per routine with its streak in words and Did It, paused ones
       apart; Add a Routine / Pause / Resume as `routine.add/pause/resume`, and by voice).
       Power has its web page (`core/web_power.py`, `/api/power`, `web/power.html`; energy sources and the battery),

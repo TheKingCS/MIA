@@ -18,7 +18,7 @@
   let page = null;
   const grow = scope === "greenhouse" ? window.MIAGrow : null;
   let growPage = null;
-  let tab = location.hash.slice(1) || "assets";
+  let tab = location.hash.slice(1) || (scope === "greenhouse" ? "today" : "assets");
 
   const btn = (label, cls, onclick) => el("button", { type: "button", class: "btn " + cls, onclick }, label);
   const chip = (row) => el("span", { class: "when " + (row.urgency === "overdue" || row.needs_attention ? "overdue" : row.urgency === "due_soon" ? "today" : "") }, row.text);
@@ -124,6 +124,29 @@
     $("panel").replaceChildren(...views[tab]());
   }
 
+  // The canvas's Greenhouse (DEC-0113): Needs You first (upkeep due, with Done, and any reading out of range), then
+  // what's growing, each with its stage meter (Planted, Sprouting, Growing, Picking) and harvest line from core
+  // (web_grow.growth_stage).
+  function greenhouseToday() {
+    const needs = page.attention.map((r) => el("div", { class: "gh-need" },
+      el("div", {}, el("span", { class: "gh-what" }, r.title), el("span", { class: "dim" }, [r.asset, r.text].filter(Boolean).join(" · "))),
+      r.action ? btn("Done", "btn-ghost btn-small", () => done(r)) : null));
+    growPage.alerts.forEach((a) => needs.push(el("div", { class: "gh-need" },
+      el("div", {}, el("span", { class: "gh-what" }, a.label + " is " + a.side), el("span", { class: "dim" },
+        a.system + " · read " + a.value + (a.unit ? " " + a.unit : "") + ", range " + a.low + " to " + a.high)),
+      btn("Water", "btn-ghost btn-small", () => { tab = "water"; history.replaceState(null, "", "#water"); draw(); }))));
+    const growing = growPage.batches.filter((b) => b.status === "Growing");
+    return [
+      needs.length ? el("section", { class: "glass gh-needs", "aria-label": "Needs you" }, el("p", { class: "pw-label attn" }, "Needs You"), ...needs) : null,
+      el("p", { class: "pw-label" }, "Growing"),
+      growing.length ? el("div", { class: "gh-beds" }, ...growing.map((b) => el("article", { class: "glass gh-bed" },
+        el("div", { class: "gh-bed-top" }, el("span", { class: "gh-what" }, b.crop + (b.variety ? " · " + b.variety : "")), el("span", { class: "dim" }, b.system)),
+        el("div", { class: "gh-stages", "aria-label": b.stage.label }, ...[0, 1, 2, 3].map((i) => el("span", { class: i <= b.stage.n ? "on" : "" }))),
+        el("div", { class: "gh-bed-foot" }, el("span", { class: "gh-stage" }, b.stage.label), el("span", { class: "dim" }, b.stage.line)))))
+        : el("p", { class: "empty" }, "Nothing growing yet. Add a planting under Growing, or tell MIA: \"I planted 12 lettuce in bed 1\"."),
+    ].filter(Boolean);
+  }
+
   function drawGreenhouse(BUCKETS, views) {
     const c = growPage.counts;
     $("strip").replaceChildren(
@@ -131,12 +154,13 @@
       el("div", { class: "cell " + (c.alerts ? "bad" : "ok") }, el("span", { class: "n" }, c.alerts), el("span", { class: "t" }, "Out Of Range")),
       el("div", { class: "cell " + (page.attention.length ? "bad" : "ok") }, el("span", { class: "n" }, page.attention.length), el("span", { class: "t" }, "Needs Attention")));
     const all = {
+      today: greenhouseToday,
       assets: () => assetsView().concat(...BUCKETS.filter(([id]) => id !== "past_due" && page.tasks.some((r) => r.bucket === id)).map(([id]) => views[id]())),
       growing: grow.views.growing, water: grow.views.water,
       experiments: grow.views.experiments, harvests: grow.views.harvests,
     };
-    const TABS = [["assets", "Assets"], ["growing", "Growing"], ["water", "Water"], ["experiments", "Experiments"], ["harvests", "Harvests"]];
-    if (!all[tab]) tab = "assets";
+    const TABS = [["today", "Today"], ["assets", "Assets"], ["growing", "Growing"], ["water", "Water"], ["experiments", "Experiments"], ["harvests", "Harvests"]];
+    if (!all[tab]) tab = "today";
     $("tabs").hidden = false;
     $("tabs").replaceChildren(...TABS.map(([id, l]) => el("button", { type: "button", role: "tab", "aria-selected": String(id === tab),
       onclick: () => { tab = id; history.replaceState(null, "", "#" + id); draw(); } }, l)));
