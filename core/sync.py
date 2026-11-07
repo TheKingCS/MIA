@@ -236,8 +236,8 @@ def merge_lines(base: str, local: str, remote: str) -> str:
 
 
 def merge_file(name: str, base: Optional[bytes], local: bytes, remote: bytes, prefer_local: bool) -> bytes:
-    """Pure logic. One data file merged from its base and both sides: some files are taken whole from the preferred
-    (newer) side (WHOLE_FILE), .jsonl histories are merged line by line, the password vault and the private journal
+    """Pure logic. One data file merged from its base and both sides: the journal's keys file is taken whole from the
+    preferred (newer) side (WHOLE_FILE), .jsonl histories are merged line by line, the password vault and the private journal
     merge their encrypted entries whole (the newer one of each wins, a new master password header comes whole), and
     every other JSON file goes through merge_json. A file that isn't readable JSON takes the newer side.
     """
