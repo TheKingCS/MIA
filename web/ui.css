@@ -979,3 +979,26 @@ body.cook-live .mia-orb-button, body.cook-live .bottom-bar { display: none; }
 .nw-sources summary { cursor: pointer; font-size: var(--text-sm); color: var(--accent); }
 .nw-sources ul { margin: 6px 0 0; padding-left: 18px; font-size: var(--text-sm); }
 .nw-sources a { color: var(--accent); }
+
+/* ---------------------------------------------------------------- Look (DEC-0113) */
+.lk-head h2 { margin: 0 0 var(--gap); font-size: var(--text-2xl); text-transform: none; }
+.lk-photo { position: relative; display: grid; place-items: center; aspect-ratio: 4 / 3; max-height: 360px; overflow: hidden;
+  margin-bottom: 10px; }
+.lk-photo img { width: 100%; height: 100%; object-fit: cover; }
+.lk-tag { position: absolute; left: 10px; bottom: 10px; padding: 3px 8px; border-radius: var(--radius-sm); background: rgba(0, 0, 0, 0.55);
+  font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text); }
+.lk-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.lk-chip { min-height: 40px; padding: 0 14px; border-radius: var(--radius-pill); border: 1px solid var(--line-strong); background: none;
+  color: var(--text); font: inherit; font-size: var(--text-sm); cursor: pointer; text-transform: none; }
+.lk-chip[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: rgba(var(--rgb-accent), 0.08); }
+.lk-ask { box-sizing: border-box; width: 100%; min-height: 44px; padding: 0 12px; margin-bottom: var(--gap); border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong); background: rgba(var(--rgb-panel), 0.9); color: var(--text); font: inherit; }
+.lk-answer { display: grid; gap: 6px; padding: 12px 14px; margin-bottom: var(--gap); justify-items: start; }
+.lk-answer[hidden] { display: none; }
+.lk-first { margin: 0; font-weight: 600; }
+.lk-rest { margin: 0; font-size: var(--text-sm); color: var(--text-dim); }
+.lk-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.lk-note { margin-top: 10px; font-size: var(--text-sm); text-align: center; }
+.lk-actions .btn-big { font-size: var(--text-md, 16px); }
+.lk-answer .kind { white-space: normal; }
+.lk-photo { padding: 0; }
