@@ -127,6 +127,7 @@ GIST = {
 
 
 def _tools_by_domain(context) -> dict[str, list]:
+    """Every Assistant tool, grouped by its domain."""
     registry = getattr(context, "assistant_actions", None)
     out: dict[str, list] = {}
     if registry is None:
@@ -254,6 +255,7 @@ def _stem(word: str) -> str:
 
 
 def _words(text: str) -> set[str]:
+    """Pure logic. A text's words, stemmed, the little ones left out."""
     return {_stem(w) for w in _WORD.findall(text.lower()) if w not in _SKIP}
 
 
@@ -303,4 +305,5 @@ def can_i(context, thing: str) -> str:
 
 
 def find_app(context, app_id: str) -> Optional[dict]:
+    """One app's entry in the capability map, by id, or None."""
     return next((a for a in capability_map(context) if a["id"] == app_id), None)

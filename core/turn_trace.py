@@ -38,7 +38,11 @@ MAX_TEXT = 1200
 
 
 class TurnTraces:
+    """A person's turn traces (turn_traces.jsonl in their own folder, the latest 2,000, written through
+    atomic_write_text): one line a turn, how she answered.
+    """
     def __init__(self, context=None, data_dir: Optional[Path] = None) -> None:
+        """Loads the traces from the person's folder (or data/)."""
         self.context = context
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._file = self.data_dir / _FILE
@@ -46,6 +50,9 @@ class TurnTraces:
         self._load()
 
     def _load(self) -> None:
+        """Reads the traces, one JSON line each; a missing file gives none, an unreadable one is logged, and a bad
+        line is skipped.
+        """
         try:
             lines = self._file.read_text(encoding="utf-8").splitlines()
         except FileNotFoundError:
@@ -61,11 +68,13 @@ class TurnTraces:
                 continue
 
     def add(self, trace: dict) -> None:
+        """Keeps one trace (the oldest drop off past the limit) and writes the file atomically."""
         self.traces = (self.traces + [trace])[-MAX_KEPT:]
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._file, "\n".join(json.dumps(t, ensure_ascii=False) for t in self.traces) + "\n")
 
     def recent(self, count: int = 50) -> list[dict]:
+        """The latest traces, oldest first."""
         return self.traces[-count:]
 
 

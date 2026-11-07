@@ -38,6 +38,9 @@ log = get_logger(__name__)
 
 @dataclass(frozen=True)
 class App:
+    """One app as the web knows it: its module id, name, icon, tagline, web page (None when it isn't on the web yet),
+    description, life area, the Assistant tool domains that work in it, and an example of what to say.
+    """
     module_id: str
     name: str
     icon: str
@@ -230,6 +233,9 @@ QUICK_ACTIONS = (
 
 
 def _visible(context, app: App) -> bool:
+    """Whether an app shows in this person's sidebar: Home always; never a retired app; for a child only the
+    allowed ones; never one their focus tucks away (shown when settings can't be read).
+    """
     from core.child_accounts import app_allowed
 
     if app.module_id == "web_home":
@@ -249,6 +255,7 @@ def _visible(context, app: App) -> bool:
 
 
 def _level(profile) -> dict:
+    """A profile's level, total XP, and how far into the level it is."""
     from core.leveling import compute_level_progress
 
     total = int(getattr(profile, "total_xp", 0) or 0)
@@ -257,6 +264,7 @@ def _level(profile) -> dict:
 
 
 def _profile(context):
+    """The signed-in person's id and profile (None when there's none)."""
     from core.person_settings import person_id
 
     pid = person_id(context)
@@ -276,6 +284,9 @@ def greeting(hour: int, name: Optional[str]) -> str:
 
 
 def shell(context, today: Optional[date] = None) -> dict:
+    """The shared frame's data (/api/shell): the person and their level, the date, the apps they can open on the web,
+    the ones still on the PC only, the screens MIA made, the owner's pages, sound, and places.
+    """
     from core.child_accounts import is_child
 
     today = today or date.today()
@@ -413,6 +424,9 @@ def _glance(state: dict) -> list[dict]:
 
 
 def dashboard(context, now: Optional[datetime] = None) -> dict:
+    """Home's data: the greeting, the date, what needs doing today (from the life state's due items), what's
+    coming, quick actions, the glance, recent wins (only real wins, never spending), and something to remember.
+    """
     from core.context_assembler import assemble_life_state_v2
 
     now = now or datetime.now()
