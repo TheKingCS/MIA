@@ -85,7 +85,6 @@
   "core/device_profile.py": 3,
   "core/discovery_manager.py": 10,
   "core/document_text.py": 12,
-  "core/dungeon_actions.py": 22,
   "core/email_drafts.py": 12,
   "core/energy_manager.py": 14,
   "core/equipment_actions.py": 12,

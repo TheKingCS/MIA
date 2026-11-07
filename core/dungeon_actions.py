@@ -46,16 +46,19 @@ DUNGEON = Record("dungeon", "dungeon", "dungeon_id", "get_dungeon", "add_dungeon
 
 
 def _money(x: float) -> str:
+    """An amount in the person's currency."""
     from core.region import money
 
     return money(x)
 
 
 def _book(context):
+    """The person's Dungeon store, or ActionError when it isn't here."""
     return _need(context, "dungeon")
 
 
 def _dungeon(context, params):
+    """The dungeon the params name, or the only one when there's just one; ActionError asking which, or to set one up."""
     book = _book(context)
     wanted = str(params.get("dungeon_id") or "")
     found = book.get_dungeon(wanted) if wanted else (book.dungeons[0] if len(book.dungeons) == 1 else None)
@@ -66,6 +69,7 @@ def _dungeon(context, params):
 
 
 def _day(params) -> str:
+    """The date in the params (blank or "today" is today), or ActionError."""
     raw = str(params.get("date") or "").strip()
     if not raw or raw.lower() == "today":
         return date.today().isoformat()
@@ -76,6 +80,7 @@ def _day(params) -> str:
 
 
 def _hours(params, d, needed: bool = True) -> float:
+    """The hours in the params (0 to 24), or the dungeon's usual shift when blank; with needed=False a blank is 0."""
     raw = params.get("hours")
     if raw in (None, ""):
         if not needed:
@@ -91,14 +96,17 @@ def _hours(params, d, needed: bool = True) -> float:
 
 
 def _no_hours() -> float:
+    """Raises ActionError asking how many hours (when there's no usual shift to fall back on)."""
     raise ActionError("How many hours?")
 
 
 def _flag(raw) -> bool:
+    """Whether a param says yes (true, yes, on, overtime, boss...)."""
     return str(raw).strip().lower() in ("1", "true", "yes", "on", "overtime", "boss")
 
 
 def _when(day: str) -> str:
+    """"today" or "on <date>"."""
     return "today" if day == date.today().isoformat() else f"on {day}"
 
 
@@ -112,6 +120,9 @@ def _with(context, d, run_date: str, hours: float, run_id: str = "") -> tuple[fl
 
 
 def _loot_words(d, regular: float, overtime: float) -> str:
+    """What a run earns in words (" about <money> loot", plus the boss bonus when there's overtime), or "" when the
+    job has no pay rate.
+    """
     if not d.hourly:
         return ""
     words = f" — about {_money(loot(d, regular, overtime))} loot"
@@ -124,6 +135,10 @@ def _loot_words(d, regular: float, overtime: float) -> str:
 
 
 def _run_plan(context, params):
+    """What clearing a run takes: the dungeon, the day (blank: the shift's own day, so a night shift cleared after
+    midnight counts for the day it began), the hours (the planned run's when blank), hard-mode modifiers, whether it's
+    a boss, the planned run if any, and a note.
+    """
     d = _dungeon(context, params)
     if str(params.get("date") or "").strip().lower() in ("", "today"):
         # A night shift cleared after midnight counts for the day it started (core/the_loop.py).
@@ -140,6 +155,7 @@ def _run_plan(context, params):
 
 
 def _run_describe(context, params) -> str:
+    """The sentence the approval card shows for `dungeon.run` (Propose); raises ActionError when it can't be done. It says the hours, hard mode, the loot and the XP."""
     d, day, hours, affixes, boss, planned, _ = _run_plan(context, params)
     regular, overtime = _with(context, d, day, hours, planned.run_id if planned else "")
     hard = affix_names(affixes)
@@ -151,6 +167,9 @@ def _run_describe(context, params) -> str:
 
 
 def _run_execute(context, params) -> str:
+    """Does `dungeon.run` once approved, and says what happened. Today's planned run is cleared (else a new run added); XP, credits (one per
+    hour) and Teamwork, Organization (hard mode) and Endurance (a boss) skill XP are granted.
+    """
     from core.gamification import SkillWeight, grant_xp
 
     d, day, hours, affixes, boss, planned, note = _run_plan(context, params)
@@ -178,6 +197,7 @@ def _run_execute(context, params) -> str:
 
 
 def _plan_values(context, params):
+    """What planning a run takes: the dungeon, a day not in the past, the hours, and whether it's overtime."""
     d = _dungeon(context, params)
     day = _day(params)
     if day < date.today().isoformat():
@@ -187,6 +207,9 @@ def _plan_values(context, params):
 
 
 def _plan_describe(context, params) -> str:
+    """The sentence the approval card shows for `dungeon.plan` (Propose); raises ActionError when it can't be done. It works out the projected loot as if the run were already on the
+    schedule.
+    """
     from core.work_dungeon import Run
 
     d, day, hours, boss = _plan_values(context, params)
@@ -198,12 +221,14 @@ def _plan_describe(context, params) -> str:
 
 
 def _plan_execute(context, params) -> str:
+    """Does `dungeon.plan` once approved, and says what happened."""
     d, day, hours, boss = _plan_values(context, params)
     _book(context).add_run(d.dungeon_id, day, hours, status="planned", boss=boss)
     return "On the schedule."
 
 
 def _run_of(context, params):
+    """The run the params name, or ActionError."""
     run = _book(context).get_run(str(params.get("run_id") or ""))
     if run is None:
         raise ActionError("That run isn't there anymore.")
@@ -211,6 +236,7 @@ def _run_of(context, params):
 
 
 def _delete_describe(context, params) -> str:
+    """The sentence the approval card shows for `dungeon.run_delete` (Propose); raises ActionError when it can't be done. The XP a cleared run earned stays."""
     run = _run_of(context, params)
     d = _book(context).get_dungeon(run.dungeon_id)
     kind = "planned run" if run.status == "planned" else "run"
@@ -219,6 +245,7 @@ def _delete_describe(context, params) -> str:
 
 
 def _delete_execute(context, params) -> str:
+    """Does `dungeon.run_delete` once approved, and says what happened."""
     _book(context).delete_run(_run_of(context, params).run_id)
     return "Taken back."
 
@@ -227,6 +254,9 @@ def _delete_execute(context, params) -> str:
 
 
 def _quest_values(context, params):
+    """A quest made from a challenge: a known hard-mode modifier (its name, line and XP) or the person's own words
+    (a side quest), the goal, and the reward (25 XP plus the modifier's).
+    """
     raw = str(params.get("challenge") or "").strip()
     if not raw:
         raise ActionError("Which challenge should become the quest?")
@@ -241,11 +271,15 @@ def _quest_values(context, params):
 
 
 def _quest_describe(context, params) -> str:
+    """The sentence the approval card shows for `dungeon.quest` (Propose); raises ActionError when it can't be done."""
     name, summary, goal, xp, _ = _quest_values(context, params)
     return f"A new quest, “{name}”: {goal.lower()}. Reward +{xp} XP"
 
 
 def _quest_execute(context, params) -> str:
+    """Does `dungeon.quest` once approved, and says what happened. It's a hard side-quest mission MIA assigns, with one objective and its
+    reward.
+    """
     from core.gamification import SkillWeight
 
     name, summary, goal, xp, a = _quest_values(context, params)
@@ -258,6 +292,9 @@ def _quest_execute(context, params) -> str:
 
 
 def _register() -> None:
+    """Adds the dungeon record kinds and the run, plan, take-back and quest kinds to ACTION_TYPES. Runs once, when
+    this module is imported.
+    """
     kinds = list(record_kinds(DUNGEON)) + [
         ActionType("dungeon.run", "Clear A Run", {"dungeon_id": "the dungeon", "date": "the day (blank: today)",
                                                  "hours": "hours worked", "hard_mode": "what made it hard",
