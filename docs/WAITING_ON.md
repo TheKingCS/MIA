@@ -9,6 +9,10 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 ## Zac
 
 ### Try it
+- [ ] **The phone app, no test header, keeps your place (2026-11-07):** install the new build (GitHub's Android build
+      from this push, or `app-debug.apk` built on the PC: `adb install -r android-phoneppuild\outputspk\debugpp-debug.apk`).
+      It's called "MIA" now, with no title bar; lock the phone on any page with Talk open and come back: same page,
+      same scroll, Talk still open with what you'd typed.
 - [ ] **Your email for receipts (DEC-0120):** in Gmail, make an app password (Google Account, Security, 2-Step
       Verification, App passwords; don't paste it into a chat). Then MIA, Inbox, Email Settings: imap.gmail.com, your
       address, the app password, your journal passphrase, and **Yes** to "everyday mailbox". She looks back 30 days

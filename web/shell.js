@@ -8,7 +8,9 @@
  *     bottom, and how many apps are still only in the PC app;
  *   - MIA, everywhere: the orb button opens a Talk panel (MIA.talk);
  *   - MIAShell.act(action): the one way a screen changes anything —
- *     propose → the engine's sentence in a confirm → approve → undo toast.
+ *     propose → the engine's sentence in a confirm → approve → undo toast;
+ *   - where you were: the scroll, an open Talk and its half-typed message,
+ *     back when the page reopens (after the phone locks, 2026-11-07).
  *
  * A page:  <body data-app="garage"> ... <script src="mia.js"></script>
  *          <script src="shell.js"></script>
@@ -339,7 +341,7 @@
       })));
   }
 
-  function toggleTalk(open, prefill) {
+  function toggleTalk(open, prefill, quiet) {
     const panel = $("#talk-panel");
     if (!panel) return;
     const show = open == null ? panel.hidden : open;
@@ -357,9 +359,35 @@
     if (show) {
       const input = $("#talk-input");
       if (prefill != null) input.value = prefill;
-      input.focus();
+      if (!quiet) input.focus();  // quiet: reopened where you left it, without popping the keyboard up
     }
   }
+
+  // ---------------------------------------------------------------- where you were (Zac, 2026-11-07)
+  // "Remembers where you were so you don't lose your place every time the phone locks": each page keeps how far it
+  // was scrolled, whether Talk was open and what was half typed there, in this device's own storage (never the
+  // engine), and goes back to it when the page opens again within PLACE_HOURS. The phone app reopens the last page
+  // itself (MainActivity.remember); this puts you back inside it.
+  const PLACE_KEY = "mia.place." + location.pathname + location.search;
+  const PLACE_HOURS = 12;
+  function keepPlace() {
+    try {
+      const panel = $("#talk-panel"), input = $("#talk-input");
+      localStorage.setItem(PLACE_KEY, JSON.stringify({ y: Math.round(window.scrollY), talk: !!(panel && !panel.hidden),
+        draft: input ? input.value : "", at: Date.now() }));
+    } catch (e) { /* no storage here: nothing kept */ }
+  }
+  function backToPlace() {
+    let place = null;
+    try { place = JSON.parse(localStorage.getItem(PLACE_KEY) || "null"); } catch (e) { place = null; }
+    if (!place || !place.at || Date.now() - place.at > PLACE_HOURS * 3600e3) return;
+    if (place.y) requestAnimationFrame(() => window.scrollTo(0, place.y));
+    if (place.talk) toggleTalk(true, place.draft || null, true);
+  }
+  let placeTimer = null;
+  window.addEventListener("scroll", () => { clearTimeout(placeTimer); placeTimer = setTimeout(keepPlace, 400); }, { passive: true });
+  document.addEventListener("visibilitychange", () => { if (document.hidden) keepPlace(); });
+  window.addEventListener("pagehide", keepPlace);
 
   // ---------------------------------------------------------------- start
   let render = null;
@@ -453,6 +481,7 @@
       if (!options || options.talk !== false) mountTalk();
       if (MIA.pageOpened) MIA.pageOpened(location.pathname.split("/").pop() || "index.html").catch(() => {});  // a count (page-usage audit)
       await refresh();
+      backToPlace();  // the scroll and Talk you left, after the phone locked or the app was closed
       if (!options || options.refreshOnChange !== false) {
         MIA.onChange(async () => {
           try { renderNav(await MIA.shell()); } catch (e) { /* keep the old one */ }

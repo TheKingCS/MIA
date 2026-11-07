@@ -7,6 +7,11 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 *Last updated: 2026-11-07 (afternoon)*
 
+**New 2026-11-07 (night): the phone keeps your place.** The app is "MIA" with no title bar (theme NoActionBar); it
+reopens the last page (MainActivity.remember / lastPlace, SharedPreferences, never the token), and every page keeps
+its scroll, an open Talk and its draft for 12 hours (web/shell.js keepPlace / backToPlace, localStorage). Checked in
+Edge with Playwright; not yet on the real phone.
+
 **New 2026-11-07 (night): receipts that do things (DEC-0120), filed on their own with exact Undo (DEC-0121).** The inbox's email intake reads Zac's everyday
 mailbox read-only, taking only receipts and orders (`core/inbox_mail.fetch_receipts`); a receipt proposes what it
 means (`core/receipt_effects.py`: pantry and grocery list, a service done on the vehicle, workshop materials), done on
