@@ -842,3 +842,28 @@ body.cook-live .mia-orb-button, body.cook-live .bottom-bar { display: none; }
 .mp-route select { min-height: 36px; padding: 0 8px; border-radius: var(--radius-sm); border: 1px solid var(--line-strong);
   background: rgba(var(--rgb-panel), 0.9); color: var(--text); font: inherit; font-weight: 600; }
 .mp-route .prop-trio-cell small { font-family: var(--font-mono); font-size: 11px; }
+
+/* ---------------------------------------------------------------- Navigation (DEC-0113)
+   A compass with its needle on the bearing, the waypoints with their grid, sun and moon. */
+.nv-bearing { display: grid; justify-items: center; gap: 10px; padding: 18px; margin-bottom: var(--gap); }
+.nv-compass { width: 200px; height: 200px; }
+.nv-compass .ring { fill: none; stroke: rgba(var(--rgb-line), 0.2); }
+.nv-compass .ticks { stroke: rgba(var(--rgb-line), 0.35); }
+.nv-compass .dirs text { font-family: var(--font-mono); font-size: 12px; fill: var(--text-dim); text-anchor: middle; }
+.nv-compass .needle { fill: var(--accent); }
+.nv-compass .tail { fill: rgba(var(--rgb-line), 0.3); }
+.nv-read { display: flex; gap: 20px; align-items: baseline; font-family: var(--font-mono); font-size: var(--text-lg); }
+.nv-read .dim { font-size: var(--text-sm); }
+.nv-pick { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: center; font-size: var(--text-sm); color: var(--text-dim); }
+.nv-pick select { min-height: 36px; padding: 0 8px; border-radius: var(--radius-sm); border: 1px solid var(--line-strong);
+  background: rgba(var(--rgb-panel), 0.9); color: var(--text); font: inherit; }
+.nv-list { display: grid; padding: 12px 14px; margin-bottom: var(--gap); }
+.nv-label { margin: 0 0 4px; font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-dim); }
+.nv-wp { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 52px; border-top: 1px solid var(--line); }
+.nv-grid { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); }
+.nv-hint { margin: 8px 0 0; font-size: var(--text-sm); }
+.nv-sky { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.nv-tile { display: grid; gap: 4px; padding: 12px 14px; }
+.nv-tile strong { font-family: var(--font-mono); font-weight: 600; }
+.nv-tile .dim { font-size: 12px; }

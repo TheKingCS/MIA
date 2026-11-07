@@ -87,7 +87,8 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       Maps (the route card under the map: from the first
       waypoint to the one picked, distance, bearing, sunrise and sunset; no climb until MIA has elevation; the
       canvas's full-screen map with floating controls is still to do).
-      Still to do per app, against its canvas artboard: Navigation, World Map, Knowledge, Music, Files, Passwords, News, Look,
+      Navigation (a compass with the needle on the bearing, waypoints with their grid, sun and moon tiles).
+      Still to do per app, against its canvas artboard: World Map, Knowledge, Music, Files, Passwords, News, Look,
       Settings, Profile, Fix-It, Diagnostics; Power, Toolbox, Lab and Field Kit need web pages first (WEB_PARITY).
 - [ ] Glasses: the shared orb on `web/glasses.html`.
 - Note: DEC-0119 (MIA for Zac alone) came after the canvas: drop household members from Party's leaderboard and

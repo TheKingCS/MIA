@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1089 files, 246,780 lines; 1089 files describe themselves; 13,542 of 14,212 classes and functions are documented.
+1089 files, 246,796 lines; 1089 files describe themselves; 13,542 of 14,212 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -1038,7 +1038,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-72 files, 13,030 lines
+72 files, 13,046 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
@@ -1085,7 +1085,7 @@
 - `web/model-test.js`: model-test.js — the model test (claude, 2026-10-07, DEC-0019, docs/PHONE_MODEL_TEST.md). Renders MIA.modelTest() (core/local_model.py): each small model with Download / Start / Delete, the running model, a test run's progress, and each model's last results: how often it picked MIA's right tool, and 
 - `web/money.js`: money.js — the Money screen (claude, 2026-10-06, DEC-0017). Renders MIA.money(); every button proposes a money action and the engine decides. Only formatting here (the currency symbol comes from the engine).
 - `web/music.js`: music.js — the Music screen (claude, 2026-10-16; Zac: the app only opened a chat). Renders MIA.music() (core/web_more.py): Songs (search), Playlists and Artists. A song plays right here, in the browser, streamed from MIA (/api/music/track/<id>/audio, fetched with this tab's sign-in); the next one in
-- `web/navigation.js`: navigation.js — Navigation (claude, 2026-11-06). Renders MIA.navigation(start, end) (core/navigation_web.py): the waypoints with their grid references, the distance and bearing between two, and the sun and moon at the first. Read only; a waypoint is added by voice ("add a waypoint called Spring at 1
+- `web/navigation.js`: navigation.js — Navigation (claude, 2026-11-06). Renders MIA.navigation(start, end) (core/navigation_web.py): the waypoints with their grid references, the distance and bearing between two on a compass (the design canvas, DEC-0113), and the sun and moon at the first. Read only; a waypoint is added b
 - `web/news.js`: news.js — Good News Radio (claude, 2026-11-07, DEC-0096). Renders MIA.news() (core/good_news.py): today's stories, how each is known (confirmed by two outlets, from the source itself, or one outlet), its caveats and its links, and each personality's script. Formatting only; the look is muse's.
 - `web/observations.js`: observations.js — what MIA noticed (claude, 2026-11-06). Renders MIA.observations() (core/observations_web.py): findings across apps (each with why and one next step) and the open insights by where they came from. Read only: each is resolved where it lives. Formatting only; the look is muse's.
 - `web/operating.js`: operating.js — the Operating Journal (claude, 2026-11-07, DEC-0097). Renders MIA.operatingJournal() (core/operating_journal.py): each line, how it's checked, and its meter with how it's going, in plain numbers (DEC-0113). Adding, rating and taking a line out go through actions (operating.add / .rate
