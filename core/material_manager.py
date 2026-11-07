@@ -69,6 +69,9 @@ _USAGE_LOG_FILE = _DATA_DIR / "material_usage_log.json"
 
 @dataclass
 class Material:
+    """A workshop material: its unit, cost per unit, how much is on hand, the level to reorder at, supplier,
+    location, notes, and who first added it.
+    """
     material_id: str
     name: str
     unit: str = ""  # e.g. "sheet", "kg", "spool", "ft"
@@ -85,6 +88,7 @@ class Material:
     added_by_profile_id: Optional[str] = None
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in its JSON file."""
         return {
             "material_id": self.material_id,
             "name": self.name,
@@ -101,6 +105,7 @@ class Material:
 
     @staticmethod
     def from_dict(data: dict) -> "Material":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return Material(
             material_id=data.get("material_id", uuid.uuid4().hex[:10]),
             name=data.get("name", ""),
@@ -135,6 +140,7 @@ class MaterialUsageEntry:
     timestamp: str = ""  # ISO datetime
 
     def to_dict(self) -> dict:
+        """The usage entry as the plain dict saved in the usage log."""
         return {
             "entry_id": self.entry_id,
             "material_id": self.material_id,
@@ -145,6 +151,7 @@ class MaterialUsageEntry:
 
     @staticmethod
     def from_dict(data: dict) -> "MaterialUsageEntry":
+        """A usage entry from its saved dict."""
         return MaterialUsageEntry(
             entry_id=data.get("entry_id", uuid.uuid4().hex[:10]),
             material_id=data.get("material_id", ""),
@@ -161,8 +168,12 @@ def materials_needing_restock(materials: list[Material]) -> list[Material]:
 
 
 class MaterialManager:
+    """The household's materials (materials.json) and every quantity change with who made it (material_usage_log.json), in the household's
+    folder, written through atomic_write_text so undo can restore them.
+    """
     def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
         # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        """Points at the household's files (data/ by default) and loads both."""
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._materials_file = self.data_dir / "materials.json" if data_dir is not None else _MATERIALS_FILE
         self._usage_log_file = self.data_dir / "material_usage_log.json" if data_dir is not None else _USAGE_LOG_FILE
@@ -177,6 +188,7 @@ class MaterialManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads the materials; a damaged file is logged, reported (notify_data_corruption) and starts empty."""
         if not self._materials_file.exists():
             self._materials = []
             return
@@ -189,6 +201,7 @@ class MaterialManager:
             self._materials = []
 
     def _load_usage_log(self) -> None:
+        """Reads the usage log; a damaged file is logged, reported and starts empty."""
         if not self._usage_log_file.exists():
             self._usage_log = []
             return
@@ -201,6 +214,7 @@ class MaterialManager:
             self._usage_log = []
 
     def _save(self) -> None:
+        """Writes the materials atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._materials_file,
             json.dumps([m.to_dict() for m in self._materials], indent=2),
@@ -208,6 +222,7 @@ class MaterialManager:
         )
 
     def _save_usage_log(self) -> None:
+        """Writes the usage log atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(
             self._usage_log_file,
@@ -216,6 +231,7 @@ class MaterialManager:
         )
 
     def _active_profile_id(self) -> Optional[str]:
+        """Who is signed in (for crediting a change), or None."""
         active_profile = self.context.profiles.get_active_profile() if self.context.profiles is not None else None
         return active_profile.profile_id if active_profile is not None else None
 
@@ -234,6 +250,7 @@ class MaterialManager:
         location: str = "",
         notes: str = "",
     ) -> Material:
+        """Adds a material (cost, quantity and reorder level never negative), credited to whoever is signed in."""
         material = Material(
             material_id=uuid.uuid4().hex[:10],
             name=name,
@@ -280,6 +297,7 @@ class MaterialManager:
         return material
 
     def update_material(self, material_id: str, **fields) -> Material:
+        """Changes its fields and stamps updated_at (ValueError for an unknown one or field, or updated_at itself)."""
         material = self.get_material(material_id)
         if material is None:
             raise ValueError(f"No material with id '{material_id}'.")
@@ -300,6 +318,7 @@ class MaterialManager:
         return material
 
     def delete_material(self, material_id: str) -> None:
+        """Deletes it."""
         self._materials = [m for m in self._materials if m.material_id != material_id]
         self._save()
 
@@ -308,12 +327,14 @@ class MaterialManager:
     # ------------------------------------------------------------------
 
     def get_material(self, material_id: str) -> Optional[Material]:
+        """The one with this id, or None."""
         for material in self._materials:
             if material.material_id == material_id:
                 return material
         return None
 
     def all_materials(self) -> list[Material]:
+        """Every one, by name."""
         return sorted(self._materials, key=lambda m: m.name.lower())
 
     def search(self, query: str) -> list[Material]:
@@ -330,6 +351,7 @@ class MaterialManager:
         return sorted(matches, key=lambda m: m.name.lower())
 
     def materials_needing_restock(self) -> list[Material]:
+        """The materials at or below their reorder level."""
         return materials_needing_restock(self._materials)
 
     # ------------------------------------------------------------------

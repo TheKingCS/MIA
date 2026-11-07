@@ -49,6 +49,7 @@ _USAGE_LOG_FILE = _DATA_DIR / "inventory_usage_log.json"
 
 @dataclass
 class InventoryItem:
+    """Something kept in the household's inventory: how many, category, where it is, notes, and who first added it."""
     item_id: str
     name: str
     quantity: int = 0
@@ -65,6 +66,7 @@ class InventoryItem:
     added_by_profile_id: Optional[str] = None
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in its JSON file."""
         return {
             "item_id": self.item_id,
             "name": self.name,
@@ -78,6 +80,7 @@ class InventoryItem:
 
     @staticmethod
     def from_dict(data: dict) -> "InventoryItem":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return InventoryItem(
             item_id=data.get("item_id", uuid.uuid4().hex[:10]),
             name=data.get("name", ""),
@@ -107,6 +110,7 @@ class InventoryUsageEntry:
     timestamp: str = ""  # ISO datetime
 
     def to_dict(self) -> dict:
+        """The usage entry as the plain dict saved in the usage log."""
         return {
             "entry_id": self.entry_id,
             "item_id": self.item_id,
@@ -117,6 +121,7 @@ class InventoryUsageEntry:
 
     @staticmethod
     def from_dict(data: dict) -> "InventoryUsageEntry":
+        """A usage entry from its saved dict."""
         return InventoryUsageEntry(
             entry_id=data.get("entry_id", uuid.uuid4().hex[:10]),
             item_id=data.get("item_id", ""),
@@ -127,8 +132,12 @@ class InventoryUsageEntry:
 
 
 class InventoryManager:
+    """The household's inventory (inventory_items.json) and every quantity change with who made it (inventory_usage_log.json), in the household's
+    folder, written through atomic_write_text so undo can restore them.
+    """
     def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
         # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        """Points at the household's files (data/ by default) and loads both."""
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._items_file = self.data_dir / "inventory_items.json" if data_dir is not None else _ITEMS_FILE
         self._usage_log_file = self.data_dir / "inventory_usage_log.json" if data_dir is not None else _USAGE_LOG_FILE
@@ -143,6 +152,7 @@ class InventoryManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads the inventory; a damaged file is logged, reported (notify_data_corruption) and starts empty."""
         if not self._items_file.exists():
             self._items = []
             return
@@ -155,6 +165,7 @@ class InventoryManager:
             self._items = []
 
     def _load_usage_log(self) -> None:
+        """Reads the usage log; a damaged file is logged, reported and starts empty."""
         if not self._usage_log_file.exists():
             self._usage_log = []
             return
@@ -172,6 +183,7 @@ class InventoryManager:
         self._load_usage_log()
 
     def _save(self) -> None:
+        """Writes the inventory atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._items_file,
             json.dumps([i.to_dict() for i in self._items], indent=2),
@@ -179,6 +191,7 @@ class InventoryManager:
         )
 
     def _save_usage_log(self) -> None:
+        """Writes the usage log atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(
             self._usage_log_file,
@@ -187,6 +200,7 @@ class InventoryManager:
         )
 
     def _active_profile_id(self) -> Optional[str]:
+        """Who is signed in (for crediting a change), or None."""
         active_profile = self.context.profiles.get_active_profile() if self.context.profiles is not None else None
         return active_profile.profile_id if active_profile is not None else None
 
@@ -202,6 +216,7 @@ class InventoryManager:
         location: str = "",
         notes: str = "",
     ) -> InventoryItem:
+        """Adds an item (quantity never negative), credited to whoever is signed in."""
         item = InventoryItem(
             item_id=uuid.uuid4().hex[:10],
             name=name,
@@ -218,6 +233,7 @@ class InventoryManager:
         return item
 
     def update_item(self, item_id: str, **fields) -> InventoryItem:
+        """Changes its fields and stamps updated_at (ValueError for an unknown one or field, or updated_at itself)."""
         item = self.get_item(item_id)
         if item is None:
             raise ValueError(f"No inventory item with id '{item_id}'.")
@@ -260,6 +276,7 @@ class InventoryManager:
         return item
 
     def delete_item(self, item_id: str) -> None:
+        """Deletes it."""
         self._items = [i for i in self._items if i.item_id != item_id]
         self._save()
 
@@ -268,12 +285,14 @@ class InventoryManager:
     # ------------------------------------------------------------------
 
     def get_item(self, item_id: str) -> Optional[InventoryItem]:
+        """The one with this id, or None."""
         for item in self._items:
             if item.item_id == item_id:
                 return item
         return None
 
     def all_items(self) -> list[InventoryItem]:
+        """Every one, by name."""
         return sorted(self._items, key=lambda i: i.name.lower())
 
     def search(self, query: str) -> list[InventoryItem]:
