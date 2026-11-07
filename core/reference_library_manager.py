@@ -73,12 +73,14 @@ class ReferencePack:
 
 @dataclass
 class ReferenceSearchHit:
+    """One article a search found in a pack: its path in the pack and its title."""
     path: str
     title: str
 
 
 @dataclass
 class PackInstallResult:
+    """What installing a pack from a file did: whether it passed, the errors if not, and the pack's id and title."""
     passed: bool
     errors: list[str] = field(default_factory=list)
     pack_id: Optional[str] = None
@@ -109,27 +111,35 @@ class _HTMLTextExtractor(HTMLParser):
     """
 
     def __init__(self) -> None:
+        """Collects an article's visible text, skipping what's inside <script> and <style>."""
         super().__init__()
         self._parts: list[str] = []
         self._skip_depth = 0
 
     def handle_starttag(self, tag: str, attrs) -> None:
+        """Entering a script or style: stop collecting."""
         if tag in ("script", "style"):
             self._skip_depth += 1
 
     def handle_endtag(self, tag: str) -> None:
+        """Leaving a script or style: collect again."""
         if tag in ("script", "style") and self._skip_depth > 0:
             self._skip_depth -= 1
 
     def handle_data(self, data: str) -> None:
+        """Keeps text that isn't inside a script or style."""
         if self._skip_depth == 0:
             self._parts.append(data)
 
     def get_text(self) -> str:
+        """The collected text, whitespace collapsed."""
         return " ".join(" ".join(self._parts).split())
 
 
 def _html_to_snippet(html_bytes: bytes, max_chars: int = _SNIPPET_MAX_CHARS) -> str:
+    """An article's HTML as a short plain-text snippet (at most 500 characters, then an ellipsis); "" when it can't
+    be read.
+    """
     extractor = _HTMLTextExtractor()
     try:
         extractor.feed(html_bytes.decode("utf-8", errors="replace"))
@@ -142,7 +152,12 @@ def _html_to_snippet(html_bytes: bytes, max_chars: int = _SNIPPET_MAX_CHARS) -> 
 
 
 class ReferenceLibraryManager:
+    """The offline Reference Library: Kiwix ZIM packs (Wikipedia slices, WikiHow, iFixit...) found in their own folder
+    (reference_library.root_path, outside data/ since packs can be gigabytes), opened with libzim, read and
+    searched. A missing or broken pack is skipped, never crashes the app.
+    """
     def __init__(self, context: AppContext) -> None:
+        """Points at the packs folder and makes it (a missing content drive is only logged: the library is just empty)."""
         self.context = context
         self._root_path = self._resolve_root_path()
         self._archives: dict[str, Archive] = {}
@@ -162,6 +177,7 @@ class ReferenceLibraryManager:
             log.warning("Could not create/access reference library folder: %s", self._root_path)
 
     def _resolve_root_path(self) -> Path:
+        """Where packs live: reference_library.root_path when configured, else reference_library/ at the repo root."""
         configured = self.context.config.get("reference_library.root_path", "")
         if configured:
             return Path(configured).expanduser()
@@ -195,6 +211,7 @@ class ReferenceLibraryManager:
         return sorted(packs, key=lambda p: p.title.lower())
 
     def get_pack(self, pack_id: str) -> Optional[ReferencePack]:
+        """The pack with this id, or None."""
         for pack in self.list_packs():
             if pack.pack_id == pack_id:
                 return pack
@@ -286,6 +303,9 @@ class ReferenceLibraryManager:
         return True, f"Deleted '{pack.title}'."
 
     def _get_archive(self, pack_id: str, file_path: Path) -> Optional[Archive]:
+        """Opens a pack's ZIM file once and keeps it: skips one modified in the last 5 seconds (likely still copying)
+        and one that already failed with the same size and time (a replaced file is tried again).
+        """
         if Archive is None:
             return None
         if pack_id in self._archives:
@@ -317,12 +337,14 @@ class ReferenceLibraryManager:
 
     @staticmethod
     def _get_metadata(archive: Archive, key: str, default: str = "") -> str:
+        """One of a pack's metadata values as text, or the default."""
         try:
             return archive.get_metadata(key).decode("utf-8", errors="replace")
         except (KeyError, RuntimeError):
             return default
 
     def _build_pack(self, pack_id: str, file_path: Path, archive: Archive) -> ReferencePack:
+        """A pack's description from its archive: title (its id when it has none), description, language, article count."""
         return ReferencePack(
             pack_id=pack_id,
             file_path=str(file_path),
@@ -369,6 +391,7 @@ class ReferenceLibraryManager:
         return bytes(item.content), item.mimetype
 
     def _archive_for_pack(self, pack_id: str) -> Optional[Archive]:
+        """The open archive for a pack id, opening it from <id>.zim when needed, or None."""
         if pack_id in self._archives:
             return self._archives[pack_id]
         zim_path = self._root_path / f"{pack_id}.zim"
@@ -382,6 +405,9 @@ class ReferenceLibraryManager:
     # ------------------------------------------------------------------
 
     def search(self, pack_id: str, query: str, limit: int = 20) -> list[ReferenceSearchHit]:
+        """Searches a pack's full-text index: up to `limit` articles with their titles ([] for an empty query or a pack
+        without an index).
+        """
         query = query.strip()
         archive = self._archive_for_pack(pack_id)
         if archive is None or not query or not archive.has_fulltext_index:

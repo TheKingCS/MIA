@@ -179,7 +179,6 @@
   "core/record_import.py": 4,
   "core/record_sets.py": 8,
   "core/recreation.py": 6,
-  "core/reference_library_manager.py": 17,
   "core/region.py": 4,
   "core/response_composer.py": 2,
   "core/rewards_manager.py": 10,
