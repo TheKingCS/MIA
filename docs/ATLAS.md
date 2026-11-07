@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1070 files, 239,069 lines; 1070 files describe themselves; 8,299 of 13,814 classes and functions are documented.
+1070 files, 239,139 lines; 1070 files describe themselves; 8,369 of 13,814 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -397,7 +397,7 @@
 
 ## gui/: the desktop's Qt shell and dialogs
 
-122 files, 21,681 lines; 1,013 of 1,083 classes and functions documented
+122 files, 21,751 lines; 1,083 of 1,083 classes and functions documented
 
 - `gui/__init__.py`: Presentation layer only. Everything in this package talks to the rest of the system through core.app_context.AppContext and modules.module_base. ModuleBase — never by importing module internals or reaching into core services directly beyond what AppContext exposes.
 - `gui/account_dialogs.py`: Accounts and households on the desktop (2026-10-01, docs/ROADMAP.md "People and ownership"; core/profile_manager.py, core/household_manager.py):
@@ -453,7 +453,7 @@
 - `gui/email_draft_dialog.py`: The email draft window (2026-10-01, core/email_drafts.py): what MIA wrote, editable, with **Send** (only here, only when pressed, from your own address, core/mail_send.py), **Copy**, and **Open in my mail app**. Closing keeps the draft. `SendingSetupDialog` sets up sending (Settings → Sending Email)
 - `gui/file_preview_dialog.py`: A read-only preview dialog for the Files module (modules/files_mod module.py) — text content in a monospace view, or an image scaled to fit, depending on which classmethod constructs it. Kept as one dialog class with two display modes rather than two separate classes since the surrounding chrome (ti
 - `gui/flash_confirm_dialog.py`: Confirmation dialog for Field Kit's OS + MIA flashing/provisioning action (docs/ROADMAP.md milestone 11.3) — writing an image to the wrong device is unrecoverable (a bricked Pi, or a wiped real drive), so this is deliberately the most cautious confirmation flow in the app, one step beyond `gui/delet
-- `gui/home_dashboard.py`: The screen shown immediately after login — a real "home screen," not just the module grid. 2026-07-14 aesthetic pass, part 3 (docs/ROADMAP.md): the user's own framing was "after logging in the menu should display a dashboard" with system power, the current mission, the time, and volume control — the *(70 undocumented)*
+- `gui/home_dashboard.py`: The screen shown immediately after login — a real "home screen," not just the module grid. 2026-07-14 aesthetic pass, part 3 (docs/ROADMAP.md): the user's own framing was "after logging in the menu should display a dashboard" with system power, the current mission, the time, and volume control — the
 - `gui/list_widget_helpers.py`: Small, shared QListWidget helpers reused across every module that builds a filterable list of records (Budget's bills/income/expenses, Real Estate's properties, Music's library/playlists, ...) — same "modules import a plain helper from gui/" precedent already used throughout this app for dialog clas
 - `gui/lock_screen.py`: Shown at boot in the single-profile case, either because that profile has a password set (without this screen, the single-profile fast boot path — straight to the main menu, no selector — would make a profile password meaningless), or because the user has explicitly turned on "Always show login scre
 - `gui/log_asset_reading_dialog.py`: Small dialog for logging a general per-asset usage stat — fuel consumption, odometer, engine hours, whatever the user wants to track — independent of any specific maintenance task's due-date calculation. Used by modules/maintenance/module.py's Assets tab "Log Usage…" action, backed by core.maintenan

@@ -578,6 +578,7 @@ class HomeDashboard(QFrame):
     open_apps_requested = Signal()
 
     def __init__(self, context: AppContext) -> None:
+        """Home on the desktop: the clock, the briefing (spoken, with Replay), the dashboard's cards (which, and in what order, the person chooses), the avatar camera, quick toggles, Open Apps, and a chat bar to talk to MIA. No turn or worker is running yet."""
         super().__init__()
         self.context = context
         self.setObjectName("HomeDashboard")
@@ -1032,13 +1033,16 @@ class HomeDashboard(QFrame):
         self._refresh_data()
 
     def _on_widgets_changed(self) -> None:
+        """Rebuilds the cards when the person changes which show or their order."""
         self._build_widgets_grid()
 
     def _on_customize_clicked(self) -> None:
+        """Opens Customize Dashboard."""
         dialog = DashboardCustomizeDialog(self.context, self)
         dialog.exec()
 
     def _build_power_widget(self, descriptor: WidgetDescriptor) -> QWidget:
+        """The Power card: its icon and name, and a line the refresh fills in; clicking it opens Power."""
         card, body = self._build_simple_card(
             descriptor.icon,
             descriptor.display_name,
@@ -1048,6 +1052,7 @@ class HomeDashboard(QFrame):
         return card
 
     def _build_mission_widget(self, descriptor: WidgetDescriptor) -> QWidget:
+        """The Mission card: its icon and name, and a line the refresh fills in; clicking it opens Missions, in a lit blueprint frame."""
         card, body = self._build_simple_card(
             descriptor.icon,
             descriptor.display_name,
@@ -1070,6 +1075,7 @@ class HomeDashboard(QFrame):
         return wrapper
 
     def _build_current_project_widget(self, descriptor: WidgetDescriptor) -> QWidget:
+        """The Current project card: its icon and name, and a line the refresh fills in; clicking it opens the Toolbox."""
         card, body = self._build_simple_card(
             descriptor.icon,
             descriptor.display_name,
@@ -1086,16 +1092,19 @@ class HomeDashboard(QFrame):
         # No on_click — there's no dedicated Finance module/screen to
         # open yet (this pass is dashboard-only, per docs/ROADMAP.md),
         # same reasoning Activity Log's card has none.
+        """The Real estate card: its icon and name, and a line the refresh fills in."""
         card, body = self._build_simple_card(descriptor.icon, descriptor.display_name)
         self._widget_bodies["real_estate"] = body
         return card
 
     def _build_kraken_agent_widget(self, descriptor: WidgetDescriptor) -> QWidget:
+        """The Kraken agent card: its icon and name, and a line the refresh fills in."""
         card, body = self._build_simple_card(descriptor.icon, descriptor.display_name)
         self._widget_bodies["kraken_agent"] = body
         return card
 
     def _build_net_worth_widget(self, descriptor: WidgetDescriptor) -> QWidget:
+        """The Net worth card: its icon and name, and a line the refresh fills in."""
         card, body = self._build_simple_card(descriptor.icon, descriptor.display_name)
         self._widget_bodies["net_worth"] = body
         return card
@@ -1106,11 +1115,13 @@ class HomeDashboard(QFrame):
         # repo (the real detail view is mia-homestead's own
         # viewer/dashboard.html, a separate project/machine, not
         # something this dashboard opens).
+        """The Homestead card: its icon and name, and a line the refresh fills in."""
         card, body = self._build_simple_card(descriptor.icon, descriptor.display_name)
         self._widget_bodies["homestead"] = body
         return card
 
     def _build_maintenance_widget(self, descriptor: WidgetDescriptor) -> QWidget:
+        """The Maintenance card: its icon and name, and a line the refresh fills in; clicking it opens Maintenance."""
         card, body = self._build_simple_card(
             descriptor.icon,
             descriptor.display_name,
@@ -1120,6 +1131,7 @@ class HomeDashboard(QFrame):
         return card
 
     def _build_observations_widget(self, descriptor: WidgetDescriptor) -> QWidget:
+        """The Observations card: its icon and name, and a line the refresh fills in; clicking it opens Observations."""
         card, body = self._build_simple_card(
             descriptor.icon,
             descriptor.display_name,
@@ -1135,6 +1147,7 @@ class HomeDashboard(QFrame):
         # here, there's no dedicated module screen this summarizes down
         # from (it spans several), same "no related page" reasoning
         # Activity Log/Real Estate/Kraken Agent already establish.
+        """The Life state card: its icon and name, and a line the refresh fills in."""
         card, body = self._build_simple_card(descriptor.icon, descriptor.display_name)
         self._widget_bodies["life_state"] = body
         return card
@@ -1146,6 +1159,7 @@ class HomeDashboard(QFrame):
         # opens Toolbox itself; the user picks Field Captures from
         # there. A real, honest limitation, not worth a new navigation
         # mechanism just for this one card.
+        """The Field captures card: its icon and name, and a line the refresh fills in; clicking it opens the Toolbox."""
         card, body = self._build_simple_card(
             descriptor.icon,
             descriptor.display_name,
@@ -1155,6 +1169,7 @@ class HomeDashboard(QFrame):
         return card
 
     def _build_budget_widget(self, descriptor: WidgetDescriptor) -> QWidget:
+        """The Budget card: its icon and name, and a line the refresh fills in; clicking it opens Budget."""
         card, body = self._build_simple_card(
             descriptor.icon,
             descriptor.display_name,
@@ -1164,6 +1179,7 @@ class HomeDashboard(QFrame):
         return card
 
     def _build_property_portfolio_widget(self, descriptor: WidgetDescriptor) -> QWidget:
+        """The Property portfolio card: its icon and name, and a line the refresh fills in; clicking it opens Real Estate."""
         card, body = self._build_simple_card(
             descriptor.icon,
             descriptor.display_name,
@@ -1173,6 +1189,7 @@ class HomeDashboard(QFrame):
         return card
 
     def _build_music_widget(self, descriptor: WidgetDescriptor) -> QWidget:
+        """The Music card: its icon and name, and a line the refresh fills in; clicking it opens Music."""
         card, body = self._build_simple_card(
             descriptor.icon,
             descriptor.display_name,
@@ -1182,6 +1199,7 @@ class HomeDashboard(QFrame):
         return card
 
     def _build_kitchen_widget(self, descriptor: WidgetDescriptor) -> QWidget:
+        """The Kitchen card: its icon and name, and a line the refresh fills in; clicking it opens Kitchen."""
         card, body = self._build_simple_card(
             descriptor.icon,
             descriptor.display_name,
@@ -1191,6 +1209,7 @@ class HomeDashboard(QFrame):
         return card
 
     def _build_workout_widget(self, descriptor: WidgetDescriptor) -> QWidget:
+        """The Workout card: its icon and name, and a line the refresh fills in; clicking it opens Workout."""
         card, body = self._build_simple_card(
             descriptor.icon,
             descriptor.display_name,
@@ -1200,6 +1219,7 @@ class HomeDashboard(QFrame):
         return card
 
     def _build_relationships_widget(self, descriptor: WidgetDescriptor) -> QWidget:
+        """The Relationships card: its icon and name, and a line the refresh fills in; clicking it opens People & Pets."""
         card, body = self._build_simple_card(
             descriptor.icon,
             descriptor.display_name,
@@ -1209,6 +1229,7 @@ class HomeDashboard(QFrame):
         return card
 
     def _build_activity_log_widget(self, descriptor: WidgetDescriptor) -> QWidget:
+        """The Activity log card: its icon and name, and a line the refresh fills in."""
         card, body = self._build_simple_card(descriptor.icon, descriptor.display_name)
         # The "ForMIA" stencil's log/feed variant is monospace, unlike
         # every other widget's body text — a distinct object name so
@@ -1279,6 +1300,7 @@ class HomeDashboard(QFrame):
         return card
 
     def _avatar_camera_menu_actions(self) -> list[tuple[str, Callable[[], None]]]:
+        """The avatar camera menu: a Use choice per camera found (or No cameras found); none without the avatar service."""
         if self.context.avatar is None:
             return []
         devices = self.context.avatar.list_devices()
@@ -1290,11 +1312,13 @@ class HomeDashboard(QFrame):
         ]
 
     def _on_avatar_camera_selected(self, device) -> None:
+        """Uses the camera picked for the avatar and shows it."""
         if self.context.avatar is not None:
             self.context.avatar.set_selected_device_id(device.device_id)
         self._refresh_avatar_camera()
 
     def _refresh_avatar_camera(self) -> None:
+        """Shows the chosen camera, or that cameras aren't available or none is chosen."""
         if self._avatar_camera_widget is None or self.context.avatar is None:
             return
         if not self.context.avatar.is_available():
@@ -1307,6 +1331,7 @@ class HomeDashboard(QFrame):
         self._avatar_camera_widget.start(device_id)
 
     def _build_toggle_row(self, label_text: str, checked: bool, on_toggled: Callable[[bool], None]) -> QHBoxLayout:
+        """A labelled on/off switch row, calling back when flipped."""
         row = QHBoxLayout()
         label = QLabel(label_text)
         label.setObjectName("DashboardSectionBody")
@@ -1319,10 +1344,12 @@ class HomeDashboard(QFrame):
         return row
 
     def _on_voice_input_toggled(self, checked: bool) -> None:
+        """Saves whether push-to-talk is on."""
         self.context.config.set("voice.push_to_talk_enabled", checked)
         self.context.config.save()
 
     def _on_notifications_toggled(self, checked: bool) -> None:
+        """Saves whether notifications are on."""
         self.context.config.set("notifications.enabled", checked)
         self.context.config.save()
 
@@ -1440,6 +1467,7 @@ class HomeDashboard(QFrame):
         return card, body_label
 
     def _build_briefing_banner(self) -> QWidget:
+        """The briefing card: today's briefing text with Replay."""
         card = QFrame()
         card.setObjectName("DashboardCard")
         layout = QVBoxLayout(card)
@@ -1469,6 +1497,7 @@ class HomeDashboard(QFrame):
         return card
 
     def _power_highlight(self) -> Optional[str]:
+        """The briefing's power line (the battery percent), or None without a battery reading."""
         if self.context.power is None:
             return None
         status = self.context.power.read()
@@ -1477,6 +1506,7 @@ class HomeDashboard(QFrame):
         return f"{status.percent:.0f}% battery"
 
     def _mission_highlight(self) -> Optional[str]:
+        """The briefing's missions line (how many are active), or None when none are."""
         if self.context.missions is None:
             return None
         count = sum(1 for m in self.context.missions.all_missions() if m.status == "active")
@@ -1486,6 +1516,7 @@ class HomeDashboard(QFrame):
         return f"{count} active {noun}"
 
     def _current_project_highlight(self) -> Optional[str]:
+        """The briefing's projects line (how many are in progress), or None when none are."""
         if self.context.projects is None:
             return None
         count = sum(1 for p in self.context.projects.all_projects() if p.status != "Complete")
@@ -1720,6 +1751,7 @@ class HomeDashboard(QFrame):
         # permanently taking width, an extra chip row here forced this
         # whole screen into an unwanted horizontal scrollbar (found via
         # a real screenshot at 1491px, not assumed).
+        """The chat bar: Ask Mia anything (Enter sends), Hold to Talk, Stop and Send."""
         bar = QFrame()
         bar.setObjectName("DashboardChatBar")
         layout = QHBoxLayout(bar)
@@ -1752,6 +1784,7 @@ class HomeDashboard(QFrame):
         return bar
 
     def _on_send(self) -> None:
+        """Sends what's typed, one turn at a time, on the active conversation: the safety floor and its fixed reply first (even with no model), any notice, an answer from code when there is one; otherwise a question plan or the model with tools, off the UI thread."""
         prompt = self._input.text().strip()
         if not prompt or self._worker is not None:
             return
@@ -1790,6 +1823,7 @@ class HomeDashboard(QFrame):
         self._worker.start()
 
     def _on_reply(self, reply: Optional[ChatReply]) -> None:
+        """Handles the model's reply: a question plan's answer is finished in code; tool calls are run (a destructive one bundled with others is skipped and said) and each result spoken; plain words are kept, spoken, may offer to note something, title the conversation (never a private one) and add memories."""
         plan, self._plan = getattr(self, "_plan", None), None
         if plan is not None:  # never a number MIA didn't look up (core/question_plans.finish)
             reply = ChatReply(content=plan_finish(reply.content if reply is not None else "", *plan), tool_calls=[])
@@ -1822,17 +1856,20 @@ class HomeDashboard(QFrame):
         self._extract_memories(conversation, user_message)
 
     def _on_worker_finished(self) -> None:
+        """The turn is over: input back on, the worker let go."""
         self._set_busy(False)
         if self._worker is not None:
             self._worker.deleteLater()
             self._worker = None
 
     def _set_busy(self, busy: bool) -> None:
+        """Turns the input, Send and Talk off while she thinks, back on after."""
         self._input.setEnabled(not busy)
         self._send_button.setEnabled(not busy)
         self._talk_button.setEnabled(not busy)
 
     def _maybe_generate_title(self, conversation, user_message: str, assistant_message: str) -> None:
+        """Asks the model for a title for a conversation still under the default one, in the background (one at a time)."""
         if conversation.title != DEFAULT_TITLE or self._title_worker is not None:
             return
         prompt = build_title_generation_prompt(user_message, assistant_message)
@@ -1843,11 +1880,13 @@ class HomeDashboard(QFrame):
         self._title_worker.start()
 
     def _on_title_generated(self, conversation_id: str, raw_title: Optional[str]) -> None:
+        """Sets the generated title, once cleaned and found usable."""
         title = clean_generated_title(raw_title)
         if title is not None:
             self.context.conversations.set_title(conversation_id, title)
 
     def _on_title_worker_finished(self) -> None:
+        """Lets the title worker go."""
         if self._title_worker is not None:
             self._title_worker.deleteLater()
             self._title_worker = None
@@ -1855,6 +1894,7 @@ class HomeDashboard(QFrame):
     def _extract_memories(self, conversation, user_message: str) -> None:
         # Memory extraction, or organizing a journal session, or nothing
         # off the record — core/talk_it_out.py decides.
+        """After a turn, works out in the background what's worth remembering from what was said, one at a time."""
         if self._memory_worker is not None:
             return
         followup = plan_followup(self.context, conversation, user_message)
@@ -1898,11 +1938,13 @@ class HomeDashboard(QFrame):
         self._interview_memory_worker.start()
 
     def _on_interview_notes_extracted(self, profile_id: str, raw_text: Optional[str]) -> None:
+        """Keeps the memories found in a profile's interview notes, and marks the notes done."""
         for category, fact in parse_extracted_memories(raw_text):
             self.context.user_memories.add_memory(fact, category=category)
         self.context.profiles.mark_interview_notes_extracted(profile_id)
 
     def _on_interview_memory_worker_finished(self) -> None:
+        """Lets the interview-notes worker go."""
         if self._interview_memory_worker is not None:
             self._interview_memory_worker.deleteLater()
             self._interview_memory_worker = None
@@ -1927,20 +1969,24 @@ class HomeDashboard(QFrame):
         self._capture_memory_worker.start()
 
     def _on_capture_memories_extracted(self, raw_text: Optional[str]) -> None:
+        """Keeps the memories found in a field capture."""
         for category, fact in parse_extracted_memories(raw_text):
             self.context.user_memories.add_memory(fact, category=category)
 
     def _on_capture_memory_worker_finished(self) -> None:
+        """Lets the capture worker go."""
         if self._capture_memory_worker is not None:
             self._capture_memory_worker.deleteLater()
             self._capture_memory_worker = None
 
     def _on_memory_worker_finished(self) -> None:
+        """Lets the memory worker go."""
         if self._memory_worker is not None:
             self._memory_worker.deleteLater()
             self._memory_worker = None
 
     def _speak(self, text: str) -> None:
+        """Says something aloud in the background (one at a time), with Stop on and Replay off while she speaks."""
         if self.context.voice is None or self._tts_worker is not None:
             return
         output_path = Path(tempfile.gettempdir()) / "mia_dashboard_reply.wav"
@@ -1951,6 +1997,7 @@ class HomeDashboard(QFrame):
         self._replay_briefing_button.setEnabled(False)
 
     def _on_tts_finished(self) -> None:
+        """She's done speaking: Stop off, Replay back on."""
         if self._tts_worker is not None:
             self._tts_worker.deleteLater()
             self._tts_worker = None
@@ -1958,6 +2005,7 @@ class HomeDashboard(QFrame):
         self._replay_briefing_button.setEnabled(True)
 
     def _on_replay_briefing(self) -> None:
+        """Says the briefing again."""
         self._speak(self._briefing_label.text())
 
     def _on_stop_speaking(self) -> None:
@@ -1969,6 +2017,7 @@ class HomeDashboard(QFrame):
             self.context.voice.stop_playback()
 
     def _on_talk_pressed(self) -> None:
+        """Starts recording while Talk is held, when push-to-talk is on and the microphone works."""
         if self.context.voice is None or self._worker is not None or self._recording:
             return
         if not self.context.config.get("voice.push_to_talk_enabled", True):
@@ -1979,6 +2028,7 @@ class HomeDashboard(QFrame):
         self._set_talk_button_recording(True)
 
     def _on_talk_released(self) -> None:
+        """Stops recording, transcribes it, and sends the words."""
         if self.context.voice is None or not self._recording:
             return
         self._recording = False
@@ -2004,6 +2054,7 @@ class HomeDashboard(QFrame):
         self._talk_button.style().polish(self._talk_button)
 
     def _build_apps_launch_card(self) -> QWidget:
+        """Open Apps: shows the Apps grid."""
         button = QPushButton("▦  Open Apps")
         button.setObjectName("AppsLaunchButton")
         button.clicked.connect(self.open_apps_requested.emit)
@@ -2014,6 +2065,7 @@ class HomeDashboard(QFrame):
     # ------------------------------------------------------------------
 
     def _tick_clock(self) -> None:
+        """Updates the clock's time and date."""
         now = datetime.now()
         self._clock_time_label.setText(format_clock_time(now))
         self._clock_date_label.setText(format_clock_date(now.date()))
@@ -2109,6 +2161,7 @@ class HomeDashboard(QFrame):
             self._refresh_life_state()
 
     def _refresh_life_state(self) -> None:
+        """The Life state card's line: the signed-in person's life state at a glance today (or that no one is signed in)."""
         line = "No active profile"
         if self.context.profiles is not None:
             active_profile = self.context.profiles.get_active_profile()
@@ -2118,26 +2171,32 @@ class HomeDashboard(QFrame):
         self._set_widget_body_text("life_state", line)
 
     def _refresh_observations(self) -> None:
+        """The Observations card's line: what MIA has noticed and not closed yet."""
         open_insights = self.context.insights.open_insights() if self.context.insights else []
         self._set_widget_body_text("observations", format_observations_line(open_insights))
 
     def _refresh_lite_captures(self) -> None:
+        """The Field captures card's line: how many captures wait for review."""
         pending_count = len(self.context.lite_captures.pending_proposals()) if self.context.lite_captures else 0
         self._set_widget_body_text("lite_captures", format_lite_captures_line(pending_count))
 
     def _refresh_budget(self) -> None:
+        """The Budget card's line: the bills, and what's due soon."""
         bills = self.context.budget.all_bills() if self.context.budget else []
         self._set_widget_body_text("budget", format_budget_line(bills, date.today()))
 
     def _refresh_property_portfolio(self) -> None:
+        """The Property portfolio card's line: the properties tracked."""
         properties = self.context.real_estate.all_properties() if self.context.real_estate else []
         self._set_widget_body_text("property_portfolio", format_property_portfolio_line(properties))
 
     def _refresh_music(self) -> None:
+        """The Music card's line: what's playing."""
         now_playing = self.context.music.now_playing() if self.context.music else None
         self._set_widget_body_text("music", format_music_line(now_playing))
 
     def _refresh_kitchen(self) -> None:
+        """The Kitchen card's line: pantry items within three days of their use-by, and recipes the pantry can make now."""
         kitchen = self.context.kitchen
         expiring, makeable, has_pantry = (0, 0, False)
         if kitchen is not None:
@@ -2151,34 +2210,41 @@ class HomeDashboard(QFrame):
         self._set_widget_body_text("kitchen", format_kitchen_line(expiring, makeable, has_pantry))
 
     def _refresh_workout(self) -> None:
+        """The Workout card's line: when the last workout was."""
         last_session_date = self.context.workout.last_session_date() if self.context.workout else None
         self._set_widget_body_text("workout", format_workout_line(last_session_date, date.today()))
 
     def _refresh_relationships(self) -> None:
+        """The Relationships card's line: the next birthday coming up."""
         nearest_birthday = (
             self.context.relationships.nearest_upcoming_birthday(date.today()) if self.context.relationships else None
         )
         self._set_widget_body_text("relationships", format_relationships_line(nearest_birthday))
 
     def _refresh_real_estate(self) -> None:
+        """The Real estate card's line: from the real-estate agent's latest snapshot."""
         snapshot = self.context.finance.latest_snapshot(_REAL_ESTATE_SOURCE) if self.context.finance else None
         self._set_widget_body_text("real_estate", format_real_estate_line(snapshot))
 
     def _refresh_kraken_agent(self) -> None:
+        """The Kraken agent card's line: from its latest snapshot."""
         snapshot = self.context.finance.latest_snapshot(_KRAKEN_SOURCE) if self.context.finance else None
         self._set_widget_body_text("kraken_agent", format_kraken_line(snapshot))
 
     def _refresh_net_worth(self) -> None:
+        """The Net worth card's line: the latest account snapshots plus the equity in the properties."""
         snapshots = self.context.finance.all_latest_snapshots() if self.context.finance else []
         properties = self.context.real_estate.all_properties() if self.context.real_estate else []
         property_equity_total = sum(property_equity(p) for p in properties) if properties else None
         self._set_widget_body_text("net_worth", format_net_worth_line(snapshots, property_equity_total))
 
     def _refresh_homestead(self) -> None:
+        """The Homestead card's line: from the homestead's latest snapshot."""
         snapshot = self.context.homestead.latest_snapshot(_HOMESTEAD_SOURCE) if self.context.homestead else None
         self._set_widget_body_text("homestead", format_homestead_line(snapshot))
 
     def _refresh_maintenance(self) -> None:
+        """The Maintenance card's line: what's due (meter tasks from their readings); then schedules the due tasks set to auto-schedule."""
         if not self.context.maintenance:
             self._set_widget_body_text("maintenance", format_maintenance_line([], date.today()))
             return
@@ -2218,14 +2284,17 @@ class HomeDashboard(QFrame):
                 self.context.maintenance.schedule_task(task.task_id, today.isoformat())
 
     def _refresh_activity_log(self) -> None:
+        """The Activity log card's line: the most recent activity."""
         entries = self.context.activity_log.recent(limit=_ACTIVITY_LOG_LIMIT) if self.context.activity_log else []
         self._set_widget_body_text("activity_log", format_activity_log_line(entries))
 
     def _refresh_power(self) -> None:
+        """The Power card's line: the battery's state."""
         status = self.context.power.read() if self.context.power else None
         self._set_widget_body_text("power", format_power_line(status))
 
     def _refresh_mission(self) -> None:
+        """The Mission card's line: the first active mission and its objectives done of total."""
         mission = None
         completed = total = 0
         if self.context.missions is not None:
@@ -2241,6 +2310,7 @@ class HomeDashboard(QFrame):
         self._set_widget_body_text("mission", format_active_mission_line(mission, completed, total))
 
     def _refresh_current_project(self) -> None:
+        """The Current project card's line: the first unfinished project and how many are in progress."""
         project = None
         active_count = 0
         if self.context.projects is not None:
