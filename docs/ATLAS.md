@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 226,830 lines; 1043 files describe themselves; 3,634 of 13,517 classes and functions are documented.
+1043 files, 226,870 lines; 1043 files describe themselves; 3,662 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 100,736 lines; 2,903 of 5,630 classes and functions documented
+367 files, 100,776 lines; 2,931 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -217,7 +217,7 @@
 - `core/memory_vault.py`: The memory vault (DEC-0030 phase E, Zac 2026-10-18): the phone's photos and videos, kept safe on the home computer, so the phone can let them go.
 - `core/message_reasons.py`: "Why are you telling me this?" (2026-10-01, accounts stage 5): a plain answer for each kind of message MIA sends on her own (core/communication_gate.py topics), plus finding the kind someone means by their own words ("stop telling me about the budget"). *(3 undocumented)*
 - `core/mia_coder.py`: MIA's own coder, and her shadow attempts (DEC-0074, T-0027; `docs/DEVELOPMENTAL_INDEPENDENCE_REVIEW.md` sections 3.3 and 4.3). *(2 undocumented)*
-- `core/mission_actions.py`: Every change the Missions, Skills and Character screens make (2026-10-06, DEC-0017/0018), as action kinds on the contract in core/actions.py: missions (add, edit, delete, complete, give up on with a reason, reopen), their objectives (add, remove, count one more), the skill a mission teaches, startin *(28 undocumented)*
+- `core/mission_actions.py`: Every change the Missions, Skills and Character screens make (2026-10-06, DEC-0017/0018), as action kinds on the contract in core/actions.py: missions (add, edit, delete, complete, give up on with a reason, reopen), their objectives (add, remove, count one more), the skill a mission teaches, startin
 - `core/mission_insights.py`: The Missions-domain scan for the observe -> understand -> insight -> recommend -> act -> result loop (core/insight_manager.py) — the second domain this loop covers, after core/maintenance_insights.py (see its own docstring for the full reasoning behind Insight/Recommendation; this file mirrors its s
 - `core/mission_manager.py`: Missions/Gamification — docs/ROADMAP.md milestone v0.18, the second of three new subsystems from the 2026-07-14 wearable-companion vision update (see docs/VISION.md). Turns a stated goal/hobby into a tracked Mission with one or more Objectives (e.g. a "Master Angler" mission for a fishing trip: one 
 - `core/mission_patterns.py`: The first real "pattern inference" signal — core/pathway_manager.py's own docstring names this "Phase 6: MIA inferring a pattern from history," the one piece of the original "learns about itself" vision still missing after core/discovery_manager.py proved out generating from a snapshot of CURRENT st

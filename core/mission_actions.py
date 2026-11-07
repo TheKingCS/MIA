@@ -24,6 +24,7 @@ from core.record_actions import (Field, Record, add_describe, delete_describe, d
 
 
 def _difficulties():
+    """The mission difficulty choices, imported late so this module loads before the mission store."""
     from core.mission_manager import DIFFICULTY_LEVELS
 
     return tuple(DIFFICULTY_LEVELS)
@@ -58,6 +59,7 @@ _SKILL_XP = Field("xp", "XP", "int", True)
 
 
 def _person(context):
+    """Who these actions are for (person_settings.person_id)."""
     from core.person_settings import person_id
 
     return person_id(context)
@@ -71,6 +73,9 @@ def is_mine(mission, profile_id) -> bool:
 
 
 def _mission(context, params, active: bool = False):
+    """The mission the params name, only if it's this person's (their own, shared, or a group quest they're on);
+    with active=True it must still be active. ActionError otherwise.
+    """
     mission = _need(context, "missions").get_mission(str(params.get("mission_id", "")))
     if mission is None or not is_mine(mission, _person(context)):
         raise ActionError("That mission isn't there anymore.")
@@ -101,6 +106,7 @@ def _add(context, params) -> str:
 
 
 def _rewards_said(context, mission) -> str:
+    """A mission's rewards in words (+XP, +credits, +skill XP), or that they were already given."""
     if mission.rewards_credited:
         return "its rewards were already given"
     bits = []
@@ -116,6 +122,7 @@ def _rewards_said(context, mission) -> str:
 
 
 def _describe_complete(context, params) -> str:
+    """The sentence the approval card shows for `mission.complete` (Propose); raises ActionError when it can't be done. It shows objectives still undone and the rewards."""
     mission = _mission(context, params, active=True)
     done, total = context.missions.group_objective_progress(mission.mission_id)
     said = _rewards_said(context, mission)
@@ -124,6 +131,9 @@ def _describe_complete(context, params) -> str:
 
 
 def _complete(context, params) -> str:
+    """Does `mission.complete` once approved, and says what happened. The store credits the rewards (once); a questline's next chapter opens
+    and its story is told.
+    """
     mission = _mission(context, params, active=True)
     context.missions.update_mission(mission.mission_id, status="completed")
     from core.questlines import advance
@@ -142,17 +152,20 @@ def _reason(params) -> str:
 
 
 def _describe_abandon(context, params) -> str:
+    """The sentence the approval card shows for `mission.abandon` (Propose); raises ActionError when it can't be done. It names the reason given."""
     mission = _mission(context, params, active=True)
     return f"Give up on {mission.name} for now ({ABANDON_LABELS[_reason(params)].lower()})"
 
 
 def _abandon(context, params) -> str:
+    """Does `mission.abandon` once approved, and says what happened. The reason is kept, and sent with mission.abandoned."""
     mission = _mission(context, params, active=True)
     context.missions.update_mission(mission.mission_id, status="abandoned", abandon_reason=_reason(params))
     return f"{mission.name} is set aside. You can pick it back up any time."
 
 
 def _describe_reopen(context, params) -> str:
+    """The sentence the approval card shows for `mission.reopen` (Propose); raises ActionError when it can't be done. It warns that rewards already given won't come twice."""
     mission = _mission(context, params)
     if mission.status == "active":
         raise ActionError(f"{mission.name} is already active.")
@@ -161,6 +174,7 @@ def _describe_reopen(context, params) -> str:
 
 
 def _reopen(context, params) -> str:
+    """Does `mission.reopen` once approved, and says what happened."""
     mission = _mission(context, params)
     context.missions.update_mission(mission.mission_id, status="active", abandon_reason="")
     return f"{mission.name} is active again."
@@ -170,6 +184,7 @@ def _reopen(context, params) -> str:
 
 
 def _objective(context, params):
+    """The mission, index and objective the params name, or ActionError."""
     mission = _mission(context, params)
     try:
         index = int(params.get("index"))
@@ -180,12 +195,14 @@ def _objective(context, params):
 
 
 def _describe_objective_add(context, params) -> str:
+    """The sentence the approval card shows for `objective.add` (Propose); raises ActionError when it can't be done."""
     mission = _mission(context, params)
     what, target = parse(_OBJECTIVE, params.get("description")), parse(_TARGET, params.get("target"))
     return f"Add to {mission.name}: {what}" + (f" (×{target:g})" if target != 1 else "")
 
 
 def _objective_add(context, params) -> str:
+    """Does `objective.add` once approved, and says what happened. A new objective is a tally with a target of at least 1."""
     mission = _mission(context, params)
     context.missions.add_objective(mission.mission_id, parse(_OBJECTIVE, params.get("description")), "tally",
                                    max(parse(_TARGET, params.get("target")), 1.0))
@@ -193,17 +210,22 @@ def _objective_add(context, params) -> str:
 
 
 def _describe_objective_delete(context, params) -> str:
+    """The sentence the approval card shows for `objective.delete` (Propose); raises ActionError when it can't be done."""
     mission, _index, objective = _objective(context, params)
     return f"Take “{objective.description}” off {mission.name}"
 
 
 def _objective_delete(context, params) -> str:
+    """Does `objective.delete` once approved, and says what happened."""
     mission, index, objective = _objective(context, params)
     context.missions.delete_objective(mission.mission_id, index)
     return f"“{objective.description}” is off {mission.name}."
 
 
 def _describe_tick(context, params) -> str:
+    """The sentence the approval card shows for `objective.tick` (Propose); raises ActionError when it can't be done. Only an active mission's tally counts by hand (a task's or trip's counts
+    itself); a fitness-plan mission's tap logs it (a meal-plan one counts from the meals eaten).
+    """
     mission, index, objective = _objective(context, params)
     if mission.status != "active":
         raise ActionError(f"{mission.name} is {mission.status}.")
@@ -225,6 +247,9 @@ def _describe_tick(context, params) -> str:
 
 
 def _tick(context, params) -> str:
+    """Does `objective.tick` once approved, and says what happened. A fitness-plan mission logs through core/fitness_missions.py; otherwise the
+    count moves (never below 0).
+    """
     mission, index, objective = _objective(context, params)
     from core.fitness_missions import is_fitness, tick
 
@@ -243,6 +268,7 @@ def _tick(context, params) -> str:
 
 
 def _skill(context, params):
+    """The skill the params name, or ActionError."""
     skill = _need(context, "skills").get_skill(str(params.get("skill_id", "")))
     if skill is None:
         raise ActionError("Pick a skill.")
@@ -250,6 +276,7 @@ def _skill(context, params):
 
 
 def _describe_skill_reward(context, params) -> str:
+    """The sentence the approval card shows for `mission.skill_reward` (Propose); raises ActionError when it can't be done. On a completed mission it says the XP counts now."""
     mission = _mission(context, params)
     skill, xp = _skill(context, params), parse(_SKILL_XP, params.get("xp"))
     if xp <= 0:
@@ -259,6 +286,7 @@ def _describe_skill_reward(context, params) -> str:
 
 
 def _skill_reward(context, params) -> str:
+    """Does `mission.skill_reward` once approved, and says what happened. On a completed mission only this new skill's XP is credited."""
     mission = _mission(context, params)
     skill = _skill(context, params)
     context.missions.add_skill_reward(mission.mission_id, skill.skill_id, parse(_SKILL_XP, params.get("xp")))
@@ -269,6 +297,9 @@ def _skill_reward(context, params) -> str:
 
 
 def _pathway(context, params):
+    """The pathway the params name with the pathway store and the person; ActionError when it's gone, empty, or the
+    person is already on it.
+    """
     pathways = _need(context, "pathways")
     pathway = pathways.get_pathway(str(params.get("pathway_id", "")))
     if pathway is None or not pathway.steps:
@@ -281,11 +312,13 @@ def _pathway(context, params):
 
 
 def _describe_pathway(context, params) -> str:
+    """The sentence the approval card shows for `pathway.start` (Propose); raises ActionError when it can't be done. It names the first step."""
     _pathways, pathway, _who = _pathway(context, params)
     return f"Start the pathway {pathway.name}: first, {pathway.steps[0].name} ({len(pathway.steps)} steps)"
 
 
 def _start_pathway(context, params) -> str:
+    """Does `pathway.start` once approved, and says what happened. Its first mission is the person's."""
     pathways, pathway, who = _pathway(context, params)
     if not who:
         raise ActionError("Pathways belong to a person; sign in first.")
@@ -298,6 +331,7 @@ def _start_pathway(context, params) -> str:
 
 
 def _profile(context):
+    """The signed-in person's profile, or ActionError."""
     who = _person(context)
     profile = _need(context, "profiles").get_profile(who) if who else None
     if profile is None:
@@ -306,6 +340,7 @@ def _profile(context):
 
 
 def _describe_prestige(context, params) -> str:
+    """The sentence the approval card shows for `character.prestige` (Propose); raises ActionError when it can't be done. Only once level 100 is maxed out."""
     from core.leveling import is_eligible_to_prestige, prestige_color_for_tier
 
     profile = _profile(context)
@@ -316,6 +351,7 @@ def _describe_prestige(context, params) -> str:
 
 
 def _prestige(context, params) -> str:
+    """Does `character.prestige` once approved, and says what happened. Back to level 1 with a new badge; XP, skills and rewards stay."""
     profile = _profile(context)
     tier = context.profiles.prestige(profile.profile_id)
     if tier is None:
@@ -327,6 +363,9 @@ def _prestige(context, params) -> str:
 
 
 def _kinds() -> list[ActionType]:
+    """Every mission, objective, skill, pathway and prestige action kind, all child-safe except deleting a mission;
+    edit and delete are guarded so only the person's own missions change.
+    """
     record = RECORDS["mission"]
     names = {f.name: f.label for f in record.fields}
     return [
@@ -357,6 +396,7 @@ ACTION_TYPES.update(MISSION_ACTIONS)
 
 
 def form_spec() -> dict:
+    """The forms these actions use on screens: a mission's fields, an objective, the reason for giving up, a skill reward."""
     forms = {"mission": record_form(RECORDS["mission"])}
     forms["objective"] = {"noun": "objective", "id_param": "mission_id", "fields": [field_dict(_OBJECTIVE), field_dict(_TARGET)]}
     forms["abandon"] = {"noun": "mission", "id_param": "mission_id", "fields": [field_dict(_REASON)]}

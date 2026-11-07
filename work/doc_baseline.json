@@ -172,7 +172,6 @@
   "core/memory_manager.py": 10,
   "core/message_reasons.py": 3,
   "core/mia_coder.py": 2,
-  "core/mission_actions.py": 28,
   "core/model_bench.py": 2,
   "core/model_registry.py": 2,
   "core/module_manager.py": 3,
