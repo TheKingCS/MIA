@@ -22,6 +22,7 @@ from core.actions import ACTION_TYPES, ActionError, ActionType
 
 
 def _creations(context):
+    """The person's creations store, or ActionError when it isn't here."""
     store = getattr(context, "creations", None)
     if store is None:
         raise ActionError("Creations aren't available here.")
@@ -29,6 +30,7 @@ def _creations(context):
 
 
 def _child(context) -> bool:
+    """Whether the signed-in person has a child account (False when that can't be told)."""
     try:
         from core.child_accounts import is_child
 
@@ -38,6 +40,7 @@ def _child(context) -> bool:
 
 
 def sets_for(context, owner: str):
+    """The record-set store a creation keeps its records in: the household's or the person's own."""
     store = getattr(context, "record_sets" if owner == "household" else "my_record_sets", None)
     if store is None:
         raise ActionError("Record sets aren't available here.")
@@ -45,6 +48,7 @@ def sets_for(context, owner: str):
 
 
 def _get(context, params) -> dict:
+    """The creation the params name, or ActionError."""
     from core.creations import CreationError
 
     try:
@@ -54,6 +58,10 @@ def _get(context, params) -> dict:
 
 
 def _describe_publish(context, params) -> str:
+    """The sentence the approval card shows for `creation.publish` (Propose); raises ActionError when it can't be done. It says what's being switched on or added: a workflow with what
+    it may do, a screen from a source of MIA's own records, one with rows imported from a file, a new version in place
+    of the old, or a first publish and where its records will be kept.
+    """
     found = _get(context, params)
     latest = found["versions"][-1]
     if latest["version"] == found["version"]:
@@ -77,6 +85,10 @@ def _describe_publish(context, params) -> str:
 
 
 def _publish(context, params) -> str:
+    """Does `creation.publish` once approved, and says what happened. Checked again first (a workflow against what it may do, a screen against
+    its spec); the record set is made now (none for a source's screen), and an imported file's rows go in, all in one
+    undoable step.
+    """
     from core.creation_spec import check
     from core.record_sets import RecordError
 
@@ -114,6 +126,7 @@ def _publish(context, params) -> str:
 
 
 def _describe_rollback(context, params) -> str:
+    """The sentence the approval card shows for `creation.rollback` (Propose); raises ActionError when it can't be done. There has to be an earlier version."""
     found = _get(context, params)
     if len(found["published_versions"]) < 2:
         raise ActionError("There's no earlier version to go back to.")
@@ -121,19 +134,25 @@ def _describe_rollback(context, params) -> str:
 
 
 def _rollback(context, params) -> str:
+    """Does `creation.rollback` once approved, and says what happened."""
     found = _creations(context).roll_back(_get(context, params)["id"])
     return f"{found['title']} is back to version {found['version']}."
 
 
 def _describe_retire(context, params) -> str:
+    """The sentence the approval card shows for `creation.retire` (Propose); raises ActionError when it can't be done. Its records are kept."""
     return f"Take “{_get(context, params)['title']}” out of your apps (its records are kept)"
 
 
 def _retire(context, params) -> str:
+    """Does `creation.retire` once approved, and says what happened."""
     return f"{_creations(context).retire(_get(context, params)['id'])['title']} is out of your apps."
 
 
 def _published_set(context, params) -> tuple[dict, dict]:
+    """A published creation and its record set; ActionError when it isn't published or shows MIA's own history (added to
+    in that app instead).
+    """
     found = _get(context, params)
     shown = _creations(context).shown(found["id"])["spec"]
     if shown.get("source"):
@@ -151,6 +170,7 @@ def _published_set(context, params) -> tuple[dict, dict]:
 
 
 def _describe_add(context, params) -> str:
+    """The sentence the approval card shows for `records.add` (Propose); raises ActionError when it can't be done. It shows the first fields filled in; at least one is needed."""
     from core.record_sets import RecordError, coerce
 
     found, rs = _published_set(context, params)
@@ -166,6 +186,7 @@ def _describe_add(context, params) -> str:
 
 
 def _add(context, params) -> str:
+    """Does `records.add` once approved, and says what happened."""
     from core.record_sets import RecordError
 
     found, rs = _published_set(context, params)
@@ -177,6 +198,7 @@ def _add(context, params) -> str:
 
 
 def _describe_remove(context, params) -> str:
+    """The sentence the approval card shows for `records.remove` (Propose); raises ActionError when it can't be done."""
     found, rs = _published_set(context, params)
     if not any(r["id"] == params.get("record_id") for r in rs["records"]):
         raise ActionError("That record isn't there.")
@@ -184,6 +206,7 @@ def _describe_remove(context, params) -> str:
 
 
 def _remove(context, params) -> str:
+    """Does `records.remove` once approved, and says what happened."""
     found, rs = _published_set(context, params)
     sets_for(context, found["owner"]).remove(rs["id"], str(params.get("record_id", "")))
     return f"Removed from {found['title']}."
