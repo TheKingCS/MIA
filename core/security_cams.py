@@ -107,6 +107,9 @@ def on_home_network(host: str) -> bool:
 
 
 def _private(ip) -> bool:
+    """Whether an IP address is on a home network: private, link-local or Tailscale's 100.64/10, never loopback,
+    multicast or unspecified.
+    """
     if ip.is_loopback or ip.is_multicast or ip.is_unspecified:
         return False
     return ip.is_private or ip.is_link_local or ip in ipaddress.ip_network("100.64.0.0/10")
@@ -121,6 +124,9 @@ def clean_host(text: str) -> str:
 
 
 def picture_url(brand: str, host: str, path: str = "", user: str = "", password: str = "") -> Optional[str]:
+    """The camera's still-picture URL for its brand (the path given, for an "Other" brand), with the login filled in
+    where the brand puts it; None when the brand has no still picture.
+    """
     snap = BRANDS.get(brand, (None, None, ""))[0]
     if snap is None:
         return None
@@ -132,6 +138,9 @@ def picture_url(brand: str, host: str, path: str = "", user: str = "", password:
 
 
 def rtsp_url(brand: str, host: str, path: str = "", user: str = "", password: str = "") -> Optional[str]:
+    """The camera's RTSP stream URL for its brand (the path given, for "Other"), with the login quoted in and port 554
+    when none is given; None when the brand has no stream.
+    """
     stream = BRANDS.get(brand, (None, None, ""))[1]
     if stream is None:
         return None
@@ -149,6 +158,9 @@ def rtsp_url(brand: str, host: str, path: str = "", user: str = "", password: st
 
 @dataclass
 class Camera:
+    """One camera: its name, where it is, its brand and its address on the home network (with a path for an "Other"
+    brand). Its login is kept apart, in security_logins.json.
+    """
     camera_id: str
     name: str
     location: str = "Other"
@@ -159,7 +171,12 @@ class Camera:
 
 
 class SecurityBook:
+    """The household's cameras (security_cameras.json, written through atomic_write_text so removing one can be
+    undone), their logins kept apart and never shown, the last frame of each (briefly cached), the last problem each
+    had, the home computer's cameras as last seen from a phone, and saved pictures.
+    """
     def __init__(self, context, data_dir: Optional[Path] = None) -> None:
+        """Points at the household's files (data/ by default) and loads the cameras."""
         self.context = context
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._file = self.data_dir / _FILE
@@ -171,6 +188,9 @@ class SecurityBook:
         self._load()
 
     def _load(self) -> None:
+        """Reads the cameras, keeping only the fields a camera knows; an unreadable file is logged, reported
+        (notify_data_corruption) and starts empty.
+        """
         self.cameras = []
         if not self._file.exists():
             return
@@ -183,25 +203,32 @@ class SecurityBook:
             notify_data_corruption(self.context, _FILE)
 
     def reload(self) -> None:
+        """Reads the file again (after undo restored it)."""
         self._load()
 
     def _save(self) -> None:
+        """Writes the cameras atomically (never their logins)."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._file, json.dumps({"cameras": [asdict(c) for c in self.cameras]}, indent=2,
                                                  ensure_ascii=False))
 
     # Logins: a separate file, never shown, never in an action's record.
     def _logins(self) -> dict:
+        """Every camera's login, from its own file ({} when there's none or it can't be read)."""
         try:
             return json.loads((self.data_dir / _LOGINS).read_text(encoding="utf-8"))
         except (OSError, ValueError):
             return {}
 
     def login(self, camera_id: str) -> tuple[str, str]:
+        """A camera's (user, password), or empty strings."""
         entry = self._logins().get(camera_id) or {}
         return str(entry.get("user") or ""), str(entry.get("password") or "")
 
     def set_login(self, camera_id: str, user: str, password: Optional[str]) -> None:
+        """Saves a camera's login (password None keeps the one it had) to the logins file, readable only by this user where
+        the system allows it (0600).
+        """
         logins = self._logins()
         old = logins.get(camera_id) or {}
         logins[camera_id] = {"user": user, "password": old.get("password", "") if password is None else password}
@@ -214,6 +241,7 @@ class SecurityBook:
             pass
 
     def get(self, camera_id: str) -> Optional[Camera]:
+        """The camera with this id, or None."""
         return next((c for c in self.cameras if c.camera_id == camera_id), None)
 
     def save_camera(self, camera_id: Optional[str], name: str, location: str, brand: str, host: str, path: str,
@@ -241,6 +269,7 @@ class SecurityBook:
         return cam
 
     def remove(self, camera_id: str) -> None:
+        """Removes a camera."""
         self.cameras = [c for c in self.cameras if c.camera_id != camera_id]
         self._save()
 
@@ -278,6 +307,9 @@ class SecurityBook:
         return data
 
     def _grab(self, cam: Camera) -> bytes:
+        """One picture from a camera: refuses an address that isn't on the home network, then reads its still picture over
+        HTTP, else one frame of its RTSP stream; CameraError when it can't.
+        """
         host_only = cam.host.rsplit(":", 1)[0] if cam.host.count(":") == 1 else cam.host
         if not on_home_network(host_only):
             raise CameraError("That address isn't on your home network.")
@@ -293,9 +325,11 @@ class SecurityBook:
     # ------------------------------------------------------------------ pictures
 
     def pictures_dir(self) -> Path:
+        """Where saved pictures go (security/pictures/ in the household's folder)."""
         return self.data_dir / "security" / "pictures"
 
     def save_picture(self, camera_id: str) -> str:
+        """Saves a camera's current frame as a dated JPEG and returns its file name."""
         data = self.frame(camera_id)
         folder = self.pictures_dir()
         folder.mkdir(parents=True, exist_ok=True)
@@ -304,6 +338,7 @@ class SecurityBook:
         return name
 
     def pictures(self) -> list[dict]:
+        """The saved pictures (the newest 200), each with its camera's name and when."""
         folder = self.pictures_dir()
         names = {**self.remote_names, **{c.camera_id: c.name for c in self.cameras}}
         out = []
@@ -318,6 +353,9 @@ class SecurityBook:
         return out
 
     def picture_path(self, name: str) -> Path:
+        """A saved picture's file, only for a name in the exact form save_picture makes (so a name can't reach another
+        file); CameraError otherwise.
+        """
         if not re.fullmatch(r"\d{8}-\d{6}_[0-9a-f]{10}\.jpg", name or ""):
             raise CameraError("No such picture.")
         path = self.pictures_dir() / name
@@ -326,10 +364,14 @@ class SecurityBook:
         return path
 
     def delete_picture(self, name: str) -> None:
+        """Deletes a saved picture."""
         self.picture_path(name).unlink()
 
 
 def _http_picture(url: str, user: str, password: str) -> bytes:
+    """Fetches a still picture: never follows a redirect, tries basic then digest login, reads at most MAX_BYTES, and
+    checks it's really a JPEG; each failure becomes a CameraError saying what to check.
+    """
     import requests
     from requests.auth import HTTPDigestAuth
 
@@ -354,6 +396,9 @@ def _http_picture(url: str, user: str, password: str) -> bytes:
 
 
 def _rtsp_picture(url: str) -> bytes:
+    """One JPEG frame from an RTSP stream through ffmpeg (over TCP, with a timeout); CameraError when ffmpeg isn't
+    installed, the stream doesn't answer, or the login is wrong.
+    """
     ffmpeg = shutil.which("ffmpeg")
     if not ffmpeg:
         raise CameraError("This camera streams video (RTSP), which needs ffmpeg on this device. "
@@ -402,6 +447,10 @@ def _home_cameras(context, book) -> dict:
 
 
 def security_page(context) -> dict:
+    """The Security page's data: each camera (its login's user and whether it has a password, never the password; its
+    last problem; its frame URL; whether it needs ffmpeg), the home computer's cameras when this is a linked phone,
+    sorted by location, and the saved pictures.
+    """
     book = getattr(context, "security", None)
     if book is None:
         return {"available": False}
