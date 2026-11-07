@@ -105,12 +105,16 @@ class Candidate:
     expires: str = ""
 
     def key(self) -> str:
+        """The candidate's identity for spotting repeats: a short hash of its topic and its facts (fingerprint, else the
+        message).
+        """
         raw = f"{self.topic}|{self.fingerprint or self.message}"
         return hashlib.sha1(raw.encode("utf-8")).hexdigest()[:16]
 
 
 @dataclass
 class Decision:
+    """What the gate decided for one candidate: act (sent, alone or in a digest), defer (waits), or drop, and why."""
     candidate: Candidate
     action: str  # act | defer | drop
     reason: str
@@ -127,6 +131,7 @@ class GateState:
 
 
 def _parse(iso: str) -> Optional[datetime]:
+    """A datetime from ISO text, or None."""
     try:
         return datetime.fromisoformat(iso)
     except (TypeError, ValueError):
@@ -262,6 +267,9 @@ class CommunicationGate:
     def __init__(self, context, data_dir: Optional[Path] = None) -> None:
         # Whose data: a person's own folder (core/personal_data.py), or the
         # shared data/ folder by default.
+        """The person's gate: its decision log, what's waiting, breaks they've taken from a topic (and ended), from
+        communication_log.json in their folder; listens for notification.dismissed. `clock` can be replaced in tests.
+        """
         self.data_dir = Path(data_dir) if data_dir is not None else _LOG_FILE.parent
         self._log_file = self.data_dir / _LOG_FILE.name if data_dir is not None else _LOG_FILE
         self.context = context
@@ -280,6 +288,7 @@ class CommunicationGate:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads the log, what's waiting and the breaks; an unreadable file is logged and starts fresh."""
         if not self._log_file.exists():
             return
         try:
@@ -292,6 +301,7 @@ class CommunicationGate:
             log.exception("communication_log.json unreadable — starting fresh.")
 
     def _save(self, now: datetime) -> None:
+        """Writes everything atomically, keeping only the last _KEEP_LOG_DAYS of decisions."""
         cutoff = (now - timedelta(days=_KEEP_LOG_DAYS)).isoformat()
         self._log = [e for e in self._log if e.get("at", "") >= cutoff]
         self.data_dir.mkdir(parents=True, exist_ok=True)
@@ -311,6 +321,7 @@ class CommunicationGate:
                 for key, default in DEFAULT_SETTINGS.items()}
 
     def set_daily_budget(self, count: int) -> int:
+        """Sets how many unprompted messages a day the person allows (1 to 20; their own setting)."""
         from core import person_settings
 
         count = max(1, min(20, int(count)))
@@ -332,6 +343,7 @@ class CommunicationGate:
         return updated is not None and now - updated <= _BUSY_WINDOW
 
     def _state(self, now: datetime) -> GateState:
+        """What the decision needs now: what's been sent, whether the person is busy, and whether everything is paused."""
         sent = [e for e in self._log if e.get("action") == ACT]
         return GateState(sent=sent, user_busy=self._user_busy(now), paused=self._all_paused(now))
 
@@ -349,6 +361,7 @@ class CommunicationGate:
     # ------------------------------------------------------------------
 
     def offer(self, candidate: Candidate, now: Optional[datetime] = None) -> list[Decision]:
+        """Offers one candidate (see offer_batch)."""
         return self.offer_batch([candidate], now)
 
     def offer_batch(self, candidates: list[Candidate], now: Optional[datetime] = None) -> list[Decision]:
@@ -400,6 +413,9 @@ class CommunicationGate:
         return decisions
 
     def _take_due_pending(self, now: datetime) -> list[Candidate]:
+        """Takes the waiting messages whose time has come; one waiting past its expiry is dropped and logged (it's no
+        longer current), the rest keep waiting.
+        """
         due, waiting = [], []
         for raw in self._pending:
             expires = _parse(raw.get("expires", ""))
@@ -432,6 +448,9 @@ class CommunicationGate:
             events.unsubscribe("notification.dismissed", self._on_notification_dismissed)
 
     def _on_notification_dismissed(self, notification_id: str = "", **_kwargs) -> None:
+        """When the person dismisses a message MIA sent, notes when on its log entry (what the dismissed-message
+        loops read).
+        """
         now = self.clock()
         changed = False
         for entry in self._log:
@@ -479,8 +498,10 @@ class CommunicationGate:
         return [dict(e) for e in self._log if e.get("at", "") >= since]
 
     def entries_for_day(self, day: Optional[str] = None) -> list[dict]:
+        """The gate's decisions on one day (today by default)."""
         day = day or datetime.now().date().isoformat()
         return [e for e in self._log if e.get("at", "").startswith(day)]
 
     def pending(self) -> list[dict]:
+        """The messages waiting to go out."""
         return list(self._pending)
