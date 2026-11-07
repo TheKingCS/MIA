@@ -42,6 +42,9 @@ SOON_DAYS = 3
 
 @dataclass
 class TodayItem:
+    """One thing on today's list: when it is (overdue, today, waiting, soon), what, a detail, a time for timed things,
+    the app to act on it in and its record, an icon, and the action a surface can propose for it.
+    """
     when: str  # overdue | today | waiting | soon
     title: str
     detail: str = ""
@@ -54,24 +57,29 @@ class TodayItem:
     action: Optional[dict] = None
 
     def as_dict(self) -> dict:
+        """The item as a plain dict for /api/today."""
         return dict(self.__dict__)
 
 
 def _act(kind: str, **params) -> dict:
+    """The action a surface can propose for an item (core/actions.suggested)."""
     from core.actions import suggested
 
     return suggested(kind, **params)
 
 
 def _days(n: int) -> str:
+    """"tomorrow" or "in N days"."""
     return "tomorrow" if n == 1 else f"in {n} days"
 
 
 def _late(n: int) -> str:
+    """"1 day late" or "N days late"."""
     return "1 day late" if n == 1 else f"{n} days late"
 
 
 def _safe(source: str, gather) -> list[TodayItem]:
+    """One source's items; a source that fails is logged and left out, never hiding the rest of the day."""
     try:
         return list(gather())
     except Exception:  # one broken source never hides the rest of the day
@@ -83,6 +91,9 @@ def _safe(source: str, gather) -> list[TodayItem]:
 
 
 def _calendar(context, today: date):
+    """Today's calendar: today's events, with their time and the first line of
+    their notes.
+    """
     from core.daily_occasions import calendar_events_today
 
     calendar = getattr(context, "calendar", None)
@@ -94,6 +105,7 @@ def _calendar(context, today: date):
 
 
 def _alarms(context, today: date):
+    """Today's alarms: every enabled alarm that rings today."""
     alarms = getattr(context, "alarms", None)
     if alarms is None:
         return
@@ -103,6 +115,9 @@ def _alarms(context, today: date):
 
 
 def _bills(context, today: date):
+    """Today's bills: overdue bills, bills due today and in the next 3 days (each offering Mark paid), and
+    paydays today (offering Mark received).
+    """
     from core.budget_manager import days_until_bill_due, days_until_income_due
     from core.region import money
 
@@ -130,6 +145,9 @@ def _bills(context, today: date):
 
 
 def _maintenance(context, today: date):
+    """Today's upkeep: overdue tasks, tasks due today and soon (each offering Done); something that belongs to
+    someone else in the household is left off.
+    """
     from core.maintenance_manager import days_until_due, task_urgency
 
     maintenance = getattr(context, "maintenance", None)
@@ -161,6 +179,7 @@ def _maintenance(context, today: date):
 
 
 def _tasks(context, today: date):
+    """Today's tasks: tasks past their date and due today (each offering Done)."""
     tasks = getattr(context, "tasks", None)
     if tasks is None:
         return
@@ -180,6 +199,7 @@ def _tasks(context, today: date):
 
 
 def _birthdays(context, today: date):
+    """Today's birthdays: birthdays today and in the next 3 days."""
     relationships = getattr(context, "relationships", None)
     if relationships is None:
         return
@@ -203,6 +223,7 @@ def _birthdays(context, today: date):
 
 
 def _pantry(context, today: date):
+    """Today's pantry: what expires today or tomorrow, in one "Use up soon" line."""
     from core.kitchen_manager import days_until_expiration
 
     kitchen = getattr(context, "kitchen", None)
@@ -219,6 +240,7 @@ def _pantry(context, today: date):
 
 
 def _waiting(context, today: date):
+    """Today's waiting on you: documents in the inbox to file and email drafts not sent yet."""
     inbox = getattr(context, "inbox", None)
     pending = inbox.pending() if inbox is not None else []
     if pending:
@@ -236,6 +258,9 @@ _SOURCES = (("calendar", _calendar), ("alarms", _alarms), ("bills", _bills), ("m
 
 
 def today_items(context, today: Optional[date] = None) -> list[TodayItem]:
+    """The signed-in person's day from every source: overdue first, then today (timed things in time order first),
+    what's waiting, then soon. A child's list leaves out bills, upkeep and the inbox.
+    """
     today = today or date.today()
     items: list[TodayItem] = []
     from core.child_accounts import is_child
