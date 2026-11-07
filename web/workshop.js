@@ -16,10 +16,11 @@
   "use strict";
   const { el, act, form } = MIAShell;
   const $ = (id) => document.getElementById(id);
-  const TABS = [["recipes", "Recipes"], ["goods", "Goods"], ["builds", "Builds"], ["materials", "Materials"], ["products", "Products"],
+  // Builds first, as the design canvas has it (DEC-0113).
+  const TABS = [["builds", "Builds"], ["recipes", "Recipes"], ["goods", "Goods"], ["materials", "Materials"], ["products", "Products"],
     ["jobs", "Jobs"], ["parts", "Parts"], ["money", "Money"]];
   let page = null;
-  let tab = TABS.some(([t]) => t === location.hash.slice(1)) ? location.hash.slice(1) : "recipes";
+  let tab = TABS.some(([t]) => t === location.hash.slice(1)) ? location.hash.slice(1) : "builds";
   let openRecipe = null;
 
   const btn = (label, cls, onclick) => el("button", { type: "button", class: "btn " + cls, onclick }, label);
@@ -74,6 +75,14 @@
     const v = await form((r.is_batch ? "Craft " : "Build ") + r.name,
       [{ name: "times", label: r.is_batch ? "How many batches (one makes " + r.makes_text + ")" : "How many", type: "int", required: true, options: [], default: 1 }], {});
     if (v && await act({ kind: "craft.start", params: { recipe_id: r.id, times: v.times } })) { tab = "builds"; history.replaceState(null, "", "#builds"); }
+  }
+  // Start a Build: pick the recipe, then how many (the canvas's big button on Builds).
+  async function pickAndStart() {
+    if (!page.recipes.length) { tab = "recipes"; history.replaceState(null, "", "#recipes"); draw(); MIAShell.say("Save a recipe first: what it needs and its steps."); return; }
+    const v = await form("Start A Build", [{ name: "recipe", label: "Which recipe", type: "choice", required: true,
+      options: page.recipes.map((r) => r.name), default: page.recipes[0].name }], {});
+    const r = v && page.recipes.find((x) => x.name === v.recipe);
+    if (r) startBuild(r);
   }
   async function bought(r) {
     const v = await form("Bought For " + r.name, r.receive_fields, {});
@@ -201,6 +210,25 @@
         btn("Delete", "btn-ghost btn-small", () => del("craft_recipe", r))));
   }
 
+  // The canvas's build card (DEC-0113) for what's on the bench: its budget (what the recipe says it should cost),
+  // what's spent and the hours, then the next step with one tap to tick it.
+  function benchCard(b) {
+    const res = b.result, next = b.steps.find((s) => !s.done);
+    return el("article", { class: "glass surface-focus ws-build" },
+      el("div", { class: "ws-build-top" }, el("span", { class: "ws-label" }, "In Progress"),
+        el("span", { class: "ws-label" }, b.steps.length ? b.steps_done + " / " + b.steps.length + " steps" : "Started " + day(b.started))),
+      el("h2", {}, b.name),
+      el("div", { class: "prop-trio" },
+        el("div", { class: "prop-trio-cell" }, el("span", { class: "prop-trio-t" }, "Budget"), el("strong", {}, b.budget_text || "—")),
+        el("div", { class: "prop-trio-cell" + (b.budget && res.cost > b.budget ? " over" : "") }, el("span", { class: "prop-trio-t" }, "Spent"),
+          el("strong", {}, res.cost_text)),
+        el("div", { class: "prop-trio-cell" }, el("span", { class: "prop-trio-t" }, "Hours"), el("strong", {}, n(b.hours || 0)))),
+      el("p", { class: "ws-next" }, b.next ? "Next: " + b.next : b.steps.length ? "Every step's done: finish it." : "No steps written down."),
+      buttons(next ? btn("Step Done", "btn-ghost btn-small", () => act({ kind: "craft.step", params: { job_id: b.id, index: next.index } })) : null,
+        btn("Add Cost", "btn-ghost btn-small", () => cost(b)), btn("Finish", "btn-green", () => finish(b))),
+      photos(b));
+  }
+
   function buildCard(b) {
     const res = b.result;
     return el("article", { class: "glass craft-card open" },
@@ -318,9 +346,19 @@
     ].filter(Boolean),
     builds: () => {
       const active = page.builds.filter((b) => !b.finished), done = page.builds.filter((b) => b.finished);
+      const be = page.best_earner;
       return [
-        section("Building Now", null, active.length ? el("div", { class: "craft-grid" }, active.map(buildCard))
-          : el("p", { class: "empty" }, "Nothing on the bench. Open a recipe and Start Build.")),
+        ...(active.length ? active.map(benchCard) : [section("Building Now", null, el("p", { class: "empty" }, "Nothing on the bench."))]),
+        page.sell_first && page.sell_first.length ? el("section", { class: "glass ws-panel", "aria-label": "Sell first" },
+          el("h2", { class: "ws-label" }, "Sell First"),
+          el("div", { class: "ws-sell" }, page.sell_first.map((g) => el("div", { class: "ws-sell-row" },
+            el("span", {}, g.name), el("span", { class: "ws-keeps " + (g.state === "past" ? "past" : "") },
+              g.state === "past" ? "Past sell-by " + day(g.sell_by) : "Sell by " + day(g.sell_by)),
+            el("span", { class: "ws-n" }, g.left_text))))) : null,
+        be ? el("section", { class: "glass ws-panel ws-best", "aria-label": "Best earner per hour" },
+          el("span", { class: "ws-label" }, "Best Earner · Per Hour"),
+          el("span", {}, be.name + " · ", el("strong", {}, be.per_hour_text))) : null,
+        el("button", { type: "button", class: "btn btn-big btn-green ws-start", onclick: pickAndStart }, "Start A Build"),
         done.length ? section("Finished", null, el("div", { class: "craft-grid" }, done.map(buildCard))) : null,
       ].filter(Boolean);
     },
@@ -376,7 +414,7 @@
       el("div", { class: "cell soon" }, el("span", { class: "n" }, c.open_jobs), el("span", { class: "t" }, "Building")),
       el("div", { class: "cell " + (c.low ? "bad" : "ok") }, el("span", { class: "n" }, c.low), el("span", { class: "t" }, "Low Materials")),
       c.goods ? el("div", { class: "cell " + (c.sell_first ? "soon" : "ok") }, el("span", { class: "n" }, n(c.goods)),
-        el("span", { class: "t" }, c.sell_first ? c.sell_first + " To Sell First" : "Goods On Hand")) : null,
+        el("span", { class: "t" }, "Goods On Hand" + (c.sell_first ? " · " + c.sell_first + " sell first" : ""))) : null,
     ].filter(Boolean));
     $("tabs").hidden = false;
     $("tabs").replaceChildren(...TABS.map(([id, l]) => el("button", { type: "button", role: "tab", "aria-selected": String(id === tab),

@@ -71,8 +71,9 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       (today's run card with gold projected loot and a big Run Cleared, the overtime boss card, the week's runs meter), Compliance (one panel per group, each obligation
       a row with the one step `core/web_compliance.next_step` says comes next), Insurance (You Have, then
       quotes side by side each with `core/insurance.verdict`'s sentence, and a big Draft A Quote Request), Real Estate (the property card: its word from `core/web_screens.property_badge`,
-      Rent Due amber; Rent / Cash Flow / Equity in one row).
-      Still to do per app, against its canvas artboard: Workshop's build card, Orders' stage rail, Inbox's "goes to", Calendar, Journal, People, Classroom, Guitar,
+      Rent Due amber; Rent / Cash Flow / Equity in one row), Workshop (Builds first: the bench card with Budget / Spent /
+      Hours and the next step, Sell First, Best Earner per hour, a big Start A Build).
+      Still to do per app, against its canvas artboard: Orders' stage rail, Inbox's "goes to", Calendar, Journal, People, Classroom, Guitar,
       Vault, Operating, Play, Observations, the outdoors pages, Knowledge, Music, Files, Passwords, News, Look,
       Settings, Profile, Fix-It, Diagnostics; Power, Toolbox, Lab and Field Kit need web pages first (WEB_PARITY).
 - [ ] Glasses: the shared orb on `web/glasses.html`.

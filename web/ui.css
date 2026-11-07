@@ -563,3 +563,24 @@ body.cook-live .mia-orb-button, body.cook-live .bottom-bar { display: none; }
 .prop-more { margin: 0; font-size: var(--text-sm); }
 .property-card .attention-line { color: var(--attention); font-size: var(--text-sm); }
 .prop-trio-cell strong small { font-size: 11px; font-weight: 400; color: var(--text-dim); }
+
+/* ---------------------------------------------------------------- Workshop: the bench (DEC-0113)
+   Each build in progress as the canvas's card (Budget / Spent / Hours, the next step), then what to sell first,
+   the best earner per hour, and one big Start A Build. Workshop's own steel is the app accent. */
+.ws-build { display: grid; gap: 10px; margin-bottom: var(--gap); }
+.ws-build h2 { margin: 0; font-size: var(--text-xl); text-transform: none; }
+.ws-build-top { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.ws-label { margin: 0; font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-dim); }
+.ws-next { margin: 0; color: rgb(var(--rgb-atmo)); }
+.prop-trio-cell.over strong { color: var(--attention); }
+.ws-panel { display: grid; gap: 8px; padding: 14px; margin-bottom: var(--gap); }
+.ws-sell { display: grid; }
+.ws-sell-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 12px; align-items: baseline; padding: 6px 0;
+  border-top: 1px solid var(--line); font-size: var(--text-sm); }
+.ws-sell-row:first-child { border-top: 0; }
+.ws-keeps { font-family: var(--font-mono); font-size: 12px; color: var(--attention); }
+.ws-n { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); }
+.ws-best strong { font-family: var(--font-mono); color: var(--ok); }
+.ws-start { margin-bottom: var(--gap); }
+@media (min-width: 861px) { .ws-start { width: auto; min-width: 260px; } }

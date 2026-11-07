@@ -89,7 +89,7 @@ def journal_page(context, today: Optional[date] = None) -> dict:
 def workshop_page(context, today: Optional[date] = None) -> dict:
     """The data the Workshop screen shows, assembled here (the web only draws it); {"available": False} when none of its stores is here. Parts, materials (low ones first), products and
     their listings, jobs (not recipe builds) with their costs, the shop's money and totals, counts, the picks and
-    forms, and the recipes, builds, receipts and goods from web_craft.
+    forms, and the recipes, builds, receipts, best earner and goods (with what to sell first) from web_craft.
     """
     from core.region import money
 
@@ -163,6 +163,7 @@ def workshop_page(context, today: Optional[date] = None) -> dict:
         "forms": {**{k: v for k, v in _forms().items() if k in ("component", "material", "product", "job", "sale",
                                                                 "shop_expense", "product_sale")}, **craft["forms"]},
         "recipes": craft["recipes"], "builds": craft["builds"], "receipts": craft["receipts"],
+        "best_earner": craft.get("best_earner"),
         **goods,
     }
 

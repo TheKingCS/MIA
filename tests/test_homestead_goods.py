@@ -1,6 +1,7 @@
 """Homestead goods (DEC-0036): batches in kitchen units, stock with a
 made date and a sell-by, sold oldest first, leftovers tossed as a loss,
-and a market day's tally read from the books."""
+a market day's tally read from the books, and the Builds tab's Sell First
+and Best Earner (DEC-0113)."""
 
 from datetime import date, timedelta
 
@@ -142,3 +143,23 @@ def test_a_finished_batch_from_yesterday_is_sold_before_todays(shop):
     p = do(w, "goods.toss", job_id=second.job_id)
     assert p.summary.startswith("Toss 2 of Sourdough")
     assert _lots(w, recipe.recipe_id) == []
+
+
+def test_the_batches_to_sell_first_come_soonest_first():
+    from core.web_craft import sell_first
+
+    goods = [{"name": "Jam", "lots": [{"sell_by": "2026-11-20", "days_left": 13, "left_text": "6 jars", "state": "keeps"}]},
+             {"name": "Bread", "lots": [{"sell_by": "2026-11-09", "days_left": 2, "left_text": "4", "state": "sell first"},
+                                        {"sell_by": "2026-11-06", "days_left": -1, "left_text": "1", "state": "past"}]}]
+    assert [(r["name"], r["days_left"]) for r in sell_first(goods)] == [("Bread", -1), ("Bread", 2)]
+
+
+def test_the_best_earner_is_the_most_profit_an_hour_from_sold_builds():
+    from core.web_craft import best_earner
+
+    rows = [{"name": "Bench", "actual": {"per_hour": "$12.00/h", "per_hour_value": 12.0}},
+            {"name": "Boards", "actual": {"per_hour": "$22.40/h", "per_hour_value": 22.4}},
+            {"name": "Honey", "actual": {"per_hour": "$-6.60/h", "per_hour_value": -6.6}},
+            {"name": "New", "actual": {"per_hour": "", "per_hour_value": None}}]
+    assert best_earner(rows) == {"name": "Boards", "per_hour_text": "$22.40/h"}
+    assert best_earner(rows[2:]) is None  # nothing has earned yet

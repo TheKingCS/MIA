@@ -6,7 +6,10 @@ The Workshop's Recipes and Builds tabs (DEC-0030 phase B): put together
 here from core/craft_recipes.py, Materials, Jobs, Products and the
 Ledger, so the web only formats. Part of `workshop_page()`. The Goods
 tab (DEC-0036: homestead goods on hand, batch by batch, the market day
-and labels) is `goods_section()`.
+and labels) is `goods_section()`. For the design canvas's Builds tab
+(DEC-0113) it also gives each build its budget and next step, the best
+earner per hour (`best_earner`) and the batches to sell first
+(`sell_first`).
 """
 
 from __future__ import annotations
@@ -34,8 +37,8 @@ def _row(r: dict) -> dict:
 
 def craft_section(context) -> dict:
     """The Workshop's crafting part: each recipe with what it needs from the shelf and its steps, each build
-    with its steps done, photos and result (sold, cost, profit, per hour, after labor), the labor rate,
-    and the receipts and forms.
+    with its steps done, the step that's next, what its recipe says it should cost, photos and result (sold, cost,
+    profit, per hour, after labor), the best earner per hour, the labor rate, and the receipts and forms.
     """
     from core.build_media import media
     from core.craft_actions import CRAFT_RECIPE, receive_form
@@ -65,7 +68,11 @@ def craft_section(context) -> dict:
             photos = media(context, job.job_id)
         except (OSError, ValueError):
             photos = []
+        planned = check(recipe, stock, job.times)["est_material_cost"] if recipe is not None else 0.0
         card = {"id": job.job_id, "name": job.name, "recipe_id": job.recipe_id,
+                # the canvas's build card (DEC-0113): what the recipe says it should cost, and the step that's next
+                "budget": round(planned, 2), "budget_text": _money(planned) if planned else "",
+                "next": next((s for i, s in enumerate(steps) if i not in job.steps_done), None),
                 "recipe": recipe.name if recipe is not None else "(recipe deleted)", "times": job.times,
                 "status": job.status, "finished": done, "started": (job.created_at or "")[:10],
                 "steps": [{"index": i, "text": s, "done": i in job.steps_done} for i, s in enumerate(steps)],
@@ -115,14 +122,27 @@ def craft_section(context) -> dict:
                        "profit": _money(avg("profit", sold)) if sold else "",
                        "hours": avg("hours", history) if history else None,
                        "per_hour": _money(avg("profit", sold) / avg("hours", sold)) + "/h"
-                       if sold and avg("hours", sold) else ""},
+                       if sold and avg("hours", sold) else "",
+                       "per_hour_value": round(avg("profit", sold) / avg("hours", sold), 2)
+                       if sold and avg("hours", sold) else None},
             "values": {f.name: getattr(recipe, f.name) for f in CRAFT_RECIPE.fields},
         })
     from core.receipt_match import receipts
 
     return {"recipes": recipes, "builds": builds, "forms": {"craft_recipe": record_form(CRAFT_RECIPE)},
+            "best_earner": best_earner(recipes),
             "labor_rate": labor_rate,
             "receipts": [{"id": r["id"], "name": r["name"]} for r in receipts(context)]}
+
+
+def best_earner(recipes: list) -> Optional[dict]:
+    """Pure logic. The recipe that has earned the most per hour, from builds sold with their hours logged (the
+    canvas's "Best Earner · Per Hour", DEC-0113): {"name", "per_hour_text"}; None until one has earned anything."""
+    scored = [r for r in recipes if ((r.get("actual") or {}).get("per_hour_value") or 0) > 0]
+    if not scored:
+        return None
+    top = max(scored, key=lambda r: r["actual"]["per_hour_value"])
+    return {"name": top["name"], "per_hour_text": top["actual"]["per_hour"]}
 
 
 def find_build(context, job_id: str) -> Optional[dict]:
@@ -130,10 +150,22 @@ def find_build(context, job_id: str) -> Optional[dict]:
     return next((b for b in craft_section(context)["builds"] if b["id"] == job_id), None)
 
 
+def sell_first(goods: list, limit: int = 4) -> list[dict]:
+    """Pure logic. The batches to sell before they turn (the canvas's "Sell First", DEC-0113): each lot whose
+    freshness says sell first or past its sell-by, soonest first, with what's left: [{"name", "sell_by",
+    "days_left", "left_text", "state"}]."""
+    rows = [{"name": g["name"], "sell_by": lot["sell_by"], "days_left": lot["days_left"], "left_text": lot["left_text"],
+             "state": lot["state"]}
+            for g in goods for lot in g["lots"] if lot["state"] in ("sell first", "past")]
+    rows.sort(key=lambda r: (r["days_left"] if r["days_left"] is not None else 10_000, r["name"].lower()))
+    return rows[:limit]
+
+
 def goods_section(context, today=None) -> dict:
     """The Goods tab (DEC-0036): what's made and not sold, per recipe and
-    batch (freshness, sell-by), the open market day's tally, the last
-    ones, how many usually sell, and each lot's label."""
+    batch (freshness, sell-by), the batches to sell first, the open market
+    day's tally, the last ones, how many usually sell, and each lot's
+    label."""
     from datetime import date as _date
 
     from core.goods import demand, freshness, label, lots
@@ -195,6 +227,7 @@ def goods_section(context, today=None) -> dict:
     closed.sort(key=lambda m: (m.date, m.created_at), reverse=True)
     from core.goods_starters import starter_list
 
-    return {"goods": goods, "market": card(open_day) if open_day is not None else None,
+    return {"goods": goods, "sell_first": sell_first(goods),
+            "market": card(open_day) if open_day is not None else None,
             "markets": [card(m) for m in closed[:8]], "label": settings, "label_form": LABEL_FORM,
             "starters": starter_list()}
