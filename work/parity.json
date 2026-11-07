@@ -14,12 +14,12 @@
       "why": "the glasses' own camera: 'what am I looking at' through them (the phone's camera works by voice since 2026-11-07)"
     },
     "module_browser:glasses": {
-      "status": "todo",
-      "why": "a glasses ask: open an app on the phone"
+      "status": "none",
+      "why": "choosing apps is a bigger screen's job; on the glasses it's said to the orb (set_app_visibility, set_app_focus)"
     },
     "settings:glasses": {
-      "status": "todo",
-      "why": "a glasses ask: change a setting by voice there"
+      "status": "none",
+      "why": "settings are changed by voice through the orb (\"be funnier\", text size, contrast); no card needed on the display"
     }
   }
 }

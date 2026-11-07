@@ -1206,3 +1206,11 @@ body.cook-live .mia-orb-button, body.cook-live .bottom-bar { display: none; }
 .rc-step { display: inline-flex; align-items: center; gap: 6px; }
 .rc-step .btn { min-width: 36px; padding: 0 10px; font-family: var(--font-mono); }
 .rc-step-n { font-family: var(--font-mono); font-size: var(--text-sm); min-width: 88px; text-align: center; }
+
+/* ---------------------------------------------------------------- Say: the screen's voice twin (DEC-0125)
+   One quiet line under the title: the app's own ask, which a tap puts in Talk. */
+.say-line { display: inline-flex; align-items: baseline; gap: 8px; margin-top: 6px; padding: 4px 0; background: none; border: 0;
+  color: var(--text-dim); font: inherit; font-size: var(--text-sm); cursor: pointer; text-align: left; position: relative;
+  text-transform: none; letter-spacing: normal; }
+.say-line:hover { color: var(--text); }
+.say-label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }

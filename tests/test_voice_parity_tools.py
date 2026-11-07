@@ -3,7 +3,7 @@ tests.test_voice_parity_tools
 ===============================
 
 The tools that made Character, Skills, the Reward Shop, Insurance, Kept,
-the Operating Journal, Play and Files usable by voice (DEC-0125):
+the Operating Journal, Play, Files and the Memory Vault usable by voice (DEC-0125):
 each answers from its screen's own data, and buying a reward goes
 through the shop's own action.
 """
@@ -127,3 +127,15 @@ def test_find_my_files_stays_inside_the_persons_folder(tmp_path, monkeypatch):
     said = records._action_find_my_files(None, {"name": "taxes"})
     assert "money/taxes 2025.pdf" in said and "outside" not in said
     assert "money/" in records._action_find_my_files(None, {})
+
+
+def test_are_my_photos_backed_up_is_answered_from_the_vault_s_summary(monkeypatch):
+    """How many are safe at home, how many wait on the phone, and when the last ones went."""
+    page = {"available": True, "on": True, "state_words": "",
+            "summary": {"photos": 210, "videos": 4, "on_pc": 212, "waiting": 2, "waiting_size": "8 MB",
+                        "last_sent": "2026-11-07T06:40:00"}}
+    monkeypatch.setattr("core.memory_vault.vault_page", lambda context: page)
+    said = records._action_get_vault_status(None, {})
+    assert said == "212 of 214 photos and videos are safe on the home computer; 2 still only on the phone (8 MB). Last sent 2026-11-07."
+    page["on"] = False
+    assert "isn't on" in records._action_get_vault_status(None, {})

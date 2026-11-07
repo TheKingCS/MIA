@@ -87,7 +87,7 @@ APPS: tuple[App, ...] = (
         ("flock",), "How many eggs this week?"),
     App("garage", "Garage", "🚗", "Keep it running. Keep it ready.", "garage.html",
         "At-a-glance status for vehicles and motorized equipment.", HOME, ("maintenance", "ownership"),
-        "What's overdue on my vehicles?"),
+        "What upkeep is due on my vehicles?"),
     App("kitchen", "Kitchen", "🍳", "Good food. Good mood.", "kitchen.html",
         "Recipes, pantry, grocery list, and meal tracking.", HOME, ("kitchen", "groceries"),
         "What can I make with what's in the pantry?"),
@@ -118,7 +118,7 @@ APPS: tuple[App, ...] = (
         ("components", "materials", "jobs", "products", "ledger", "goods"), "How much plywood do I have?"),
     App("business", "Orders & Quotes", "🧾", "Customers, quotes and orders.", "business.html",
         "Quotes from your recipes, customers, orders and payments, and a portfolio of what you've built (DEC-0030).",
-        MONEY, ("ledger",), "What do customers still owe me?"),
+        MONEY, ("ledger",), "How much profit did I make this month?"),
     App("insurance", "Insurance", "☂️", "Covered, for less.", "insurance.html",
         "Your policies in one place, what's worth a look, and quotes compared fairly (DEC-0034).", MONEY, ("insurance",),
         "When does my car insurance renew?"),
@@ -128,7 +128,7 @@ APPS: tuple[App, ...] = (
     App("power", "Power", "🔋", "Energy, tracked.", "power.html",
         "Battery status and manual energy/utility tracking.", HOME, ("power",), "How's the battery?"),
     App("character", "Character", "👤", "Your story so far.", "character.html",
-        "A living record of what you've actually done.", LIFE, ("character",), "What have I done this week?"),
+        "A living record of what you've actually done.", LIFE, ("character",), "What level am I?"),
     App("reward_shop", "Reward Shop", "🎁", "Spend what you earn.", "shop.html",
         "Real rewards you set, bought with the credits you earn (DEC-0028).", LIFE, ("reward_shop",), "What can I buy with my credits?"),
     App("observations", "Observations", "🔍", "What MIA noticed.", "observations.html",
@@ -139,7 +139,7 @@ APPS: tuple[App, ...] = (
         "Dated, searchable, taggable journal entries.", LIFE, ("notes", "journal", "private_journal"),
         "Make a note: call the plumber Friday."),
     App("classroom", "Classroom", "🎓", "Keep learning.", "classroom.html",
-        "Your own subjects, courses, and lessons.", LIFE, ("classroom", "textbooks", "learning"), "Quiz me on chapter 2."),
+        "Your own subjects, courses, and lessons.", LIFE, ("classroom", "textbooks", "learning"), "How is my learning progress?"),
     App("inbox", "Inbox", "📥", "Paperwork, handled.", "inbox.html",
         "Receipts, manuals and documents MIA files for you.", MONEY, ("inbox", "email"),
         "What's waiting in my inbox?"),
@@ -170,7 +170,7 @@ APPS: tuple[App, ...] = (
         "Your logins in a vault only your master password opens; MIA's assistant never sees them (DEC-0035).", KNOW,
         (), ""),
     App("files", "Files", "🗂", "Your files.", "files.html", "Browse and manage local files and data.", KNOW, ("files",),
-        "Find my resume."),
+        "What's in my MIA folder?"),
     App("music", "Music", "🎵", "Your music.", "music.html", "Local audio library, playlists, and playback.", KNOW,
         ("music",), "Play something relaxing."),
     App("operating_journal", "Operating Journal", "🧭", "How you mean to live, and how you do.", "operating.html",
@@ -194,7 +194,7 @@ APPS: tuple[App, ...] = (
         "MIA's own web browser: what she's on, the steps waiting for your OK with their screenshots, and the tasks you "
         "taught her by showing (DEC-0117).", KNOW, ("browser",), "Open the county website."),
     App("diagnostics", "Diagnostics", "🩺", "How MIA is doing.", None,
-        "System health, logs, and hardware status.", KNOW, (), "How is the computer doing?"),
+        "System health, logs, and hardware status.", KNOW, (), "How is my system health?"),
     App("module_browser", "Apps", "🧩", "Everything MIA can do.", "apps.html",
         "View, enable/disable, install, and rescan modules.", KNOW, ()),
     App("settings", "Settings", "⚙", "Make MIA yours.", None,
@@ -290,7 +290,7 @@ def greeting(hour: int, name: Optional[str]) -> str:
 
 def shell(context, today: Optional[date] = None) -> dict:
     """The shared frame's data (/api/shell): the person and their level, the date, the apps they can open on the web
-    (each with its life area, for the grouped sidebar), the areas in order and their favorites, the ones still on the
+    (each with its life area, for the grouped sidebar, and its ask, shown as "Say: …" on its screen), the areas in order and their favorites, the ones still on the
     PC only, the screens MIA made, the owner's pages, sound, and places.
     """
     from core.child_accounts import is_child
@@ -303,8 +303,9 @@ def shell(context, today: Optional[date] = None) -> dict:
         "person": {"profile_id": pid, "name": getattr(profile, "name", None), "child": child,
                    **_level(profile)},
         "date": date_text(today),
+        # Each app's ask (DEC-0125): the frame shows it under the page's title as "Say: …", its voice twin.
         "apps": [{"id": a.module_id, "name": a.name, "icon": a.icon, "tagline": a.tagline, "page": a.page,
-                  "group": a.group} for a in apps if a.page],
+                  "group": a.group, "ask": a.ask} for a in apps if a.page],
         # The sidebar's order (2026-11-07): Start Here and the favorites, then each life area under its heading.
         "groups": list(GROUPS),
         "favorites": _favorites(context),
