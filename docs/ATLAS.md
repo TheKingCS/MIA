@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1124 files, 252,372 lines; 1124 files describe themselves; 13,805 of 14,477 classes and functions are documented.
+1125 files, 252,452 lines; 1125 files describe themselves; 13,809 of 14,481 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-410 files, 117,651 lines; 6,230 of 6,319 classes and functions documented
+410 files, 117,686 lines; 6,231 of 6,320 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -689,7 +689,7 @@
 
 ## tests/: the test suite: what each part must do
 
-373 files, 67,295 lines; 5,338 of 5,921 classes and functions documented
+374 files, 67,333 lines; 5,341 of 5,924 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -868,6 +868,7 @@
 - `tests/test_lite_captures_tool.py`: Unit tests for modules.toolbox.tools.lite_captures_tool's pure format_capture_card_text(), same style as tests/test_discovery_tool.py (no Qt event loop, no fixtures). *(1 undocumented)*
 - `tests/test_llm_manager.py`: Unit tests for core.llm_manager. No real Ollama server involved — urllib.request.urlopen is monkeypatched to a fake so these exercise the manager/backend's success and graceful-degradation paths in isolation, same fake-dependency approach as test_reference_library_manager.py's _FakeConfig.
 - `tests/test_local_model.py`: The phone's own model (core/local_model.py, 2026-10-07, DEC-0019): downloading (and carrying on after a break), starting llama.cpp's server and pointing Talk at it, running the test, and starting the same model again after MIA restarts. A small Python script stands in for llama-server, and a local H
+- `tests/test_look_by_voice.py`: Look asked out loud (DEC-0125, core/sight.py `wants_look`): "look at this" opens Look with the question and the camera, since no tool can take the photo; ordinary talk about looking at something doesn't.
 - `tests/test_loop_catalog.py`: docs/LOOPS.md is the code's own list of MIA's loops (core/loop_catalog.py): generated, kept current by this test.
 - `tests/test_loop_coverage.py`: Every process MIA has is watched by a loop or has a reason not to be (DEC-0101, core/loop_coverage.py). When this fails, something new joined MIA without anyone deciding how it will be watched: give it a loop in core/loops.py (its `covers`) or a line in work/loop_coverage.json (status todo, or none 
 - `tests/test_loops.py`: MIA's improvement loops (DEC-0094, core/loops.py): measured in code, judged against a floor and their own trend, a task opened once while a loop is below, offers for the person through the gate, never a change by itself. *(3 undocumented)*
@@ -1067,7 +1068,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-78 files, 14,135 lines
+78 files, 14,142 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
