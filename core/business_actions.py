@@ -51,21 +51,25 @@ ORDER = Record("order", "order", "order_id", "get_order", "add_order", "update_o
 
 
 def _money(x) -> str:
+    """An amount in the person's currency."""
     from core.region import money
 
     return money(x)
 
 
 def _book(context):
+    """The household's business book, or ActionError when it isn't here."""
     return _need(context, "business")
 
 
 def _who(context, customer_id: str) -> str:
+    """" for <customer>" when a customer is named, else ""."""
     c = _book(context).get_customer(customer_id or "") if customer_id else None
     return f" for {c.name}" if c is not None else ""
 
 
 def _check_refs(context, params) -> None:
+    """Refuses a customer or recipe id that no longer exists (ActionError), before a quote or order is changed."""
     book = _book(context)
     if params.get("customer_id") and book.get_customer(str(params["customer_id"])) is None:
         raise ActionError("That customer isn't there anymore.")
@@ -107,6 +111,7 @@ def quote_figures(context, quote) -> dict:
 
 
 def _quote(context, params):
+    """The quote the params name, or ActionError."""
     q = _book(context).get_quote(str(params.get("quote_id") or ""))
     if q is None:
         raise ActionError("That quote isn't there anymore.")
@@ -114,6 +119,7 @@ def _quote(context, params):
 
 
 def _order(context, params):
+    """The order the params name, or ActionError."""
     o = _book(context).get_order(str(params.get("order_id") or ""))
     if o is None:
         raise ActionError("That order isn't there anymore.")
@@ -121,6 +127,9 @@ def _order(context, params):
 
 
 def _quote_status(status):
+    """Builds the describe/execute pair for marking a quote with a status (Sent, Declined); an accepted quote is
+    refused.
+    """
     def describe(context, params):
         q = _quote(context, params)
         if q.status == "Accepted":
@@ -135,6 +144,7 @@ def _quote_status(status):
 
 
 def _accept_describe(context, params) -> str:
+    """The sentence the approval card shows for `quote.accept` (Propose); raises ActionError when it can't be done. It names the price (worked out, or set by hand)."""
     q = _quote(context, params)
     if q.status == "Accepted":
         raise ActionError(f"{q.title} is already accepted.")
@@ -142,6 +152,7 @@ def _accept_describe(context, params) -> str:
 
 
 def _accept(context, params) -> str:
+    """Does `quote.accept` once approved, and says what happened. An order is made from the quote, and the quote is marked accepted with it."""
     q = _quote(context, params)
     book = _book(context)
     price = quote_figures(context, q)["price"]
@@ -152,6 +163,7 @@ def _accept(context, params) -> str:
 
 
 def _amount(params) -> float:
+    """What was paid, from the params (commas and a leading currency sign allowed), more than 0."""
     try:
         value = float(str(params.get("amount") or 0).replace(",", "").lstrip("$"))
     except ValueError:
@@ -162,6 +174,7 @@ def _amount(params) -> float:
 
 
 def _paid(context, order) -> float:
+    """How much has been paid on an order so far (its payments in the ledger)."""
     ledger = getattr(context, "ledger", None)
     if ledger is None:
         return 0.0
@@ -169,6 +182,7 @@ def _paid(context, order) -> float:
 
 
 def _pay_describe(context, params) -> str:
+    """The sentence the approval card shows for `order.pay` (Propose); raises ActionError when it can't be done. It calls the first one short of the price the deposit, and says what's left."""
     o = _order(context, params)
     amount = _amount(params)
     left = round(o.price - _paid(context, o), 2)
@@ -178,6 +192,7 @@ def _pay_describe(context, params) -> str:
 
 
 def _pay(context, params) -> str:
+    """Does `order.pay` once approved, and says what happened. The payment is workshop revenue, tied to the order's build when there is one."""
     o = _order(context, params)
     amount = _amount(params)
     ledger = _need(context, "ledger")
@@ -189,6 +204,7 @@ def _pay(context, params) -> str:
 
 
 def _build_describe(context, params) -> str:
+    """The sentence the approval card shows for `order.build` (Propose); raises ActionError when it can't be done. The order needs a recipe and no build yet."""
     o = _order(context, params)
     if not o.recipe_id:
         raise ActionError(f"{o.title} has no recipe to build from. Edit it to pick one.")
@@ -198,6 +214,9 @@ def _build_describe(context, params) -> str:
 
 
 def _build(context, params) -> str:
+    """Does `order.build` once approved, and says what happened. It starts the recipe's build (craft.start), ties the payments so far to it, and
+    marks the order Building.
+    """
     from core.craft_actions import _start
 
     o = _order(context, params)
@@ -215,6 +234,7 @@ def _build(context, params) -> str:
 
 
 def _status_describe(context, params) -> str:
+    """The sentence the approval card shows for `order.status` (Propose); raises ActionError when it can't be done. Delivered says what's still to be paid."""
     from core.business_book import ORDER_STATUSES
 
     o = _order(context, params)
@@ -229,6 +249,7 @@ def _status_describe(context, params) -> str:
 
 
 def _status(context, params) -> str:
+    """Does `order.status` once approved, and says what happened. Delivered (the first time) takes what its build made out of stock."""
     o = _order(context, params)
     status = str(params["status"])
     was = o.status
@@ -278,6 +299,7 @@ def quote_email(context, quote) -> tuple[list[str], str, str]:
 
 
 def _email_describe(context, params) -> str:
+    """The sentence the approval card shows for `quote.email` (Propose); raises ActionError when it can't be done. MIA only drafts; the person presses Send."""
     q = _quote(context, params)
     if getattr(context, "email_drafts", None) is None:
         raise ActionError("Email drafts aren't available here.")
@@ -287,6 +309,7 @@ def _email_describe(context, params) -> str:
 
 
 def _email(context, params) -> str:
+    """Does `quote.email` once approved, and says what happened. The draft is made, never sent."""
     q = _quote(context, params)
     to, subject, body = quote_email(context, q)
     context.email_drafts.create(to, subject, body)
@@ -294,6 +317,7 @@ def _email(context, params) -> str:
 
 
 def _feature_describe(context, params) -> str:
+    """The sentence the approval card shows for `portfolio.feature` (Propose); raises ActionError when it can't be done."""
     job = _need(context, "jobs").get_job(str(params.get("job_id") or ""))
     if job is None:
         raise ActionError("That build isn't there anymore.")
@@ -302,12 +326,17 @@ def _feature_describe(context, params) -> str:
 
 
 def _feature(context, params) -> str:
+    """Does `portfolio.feature` once approved, and says what happened."""
     job = _need(context, "jobs").get_job(str(params.get("job_id") or ""))
     on = _book(context).toggle_featured(job.job_id)
     return f"{job.name} is {'featured' if on else 'no longer featured'}."
 
 
 def _register() -> None:
+    """Adds the customer, quote and order record kinds (an edit checks its customer and recipe still exist) and the
+    send, decline, email, accept, pay, build, status and feature kinds to ACTION_TYPES. Runs once, when this module
+    is imported.
+    """
     kinds = list(record_kinds(CUSTOMER))
     for record, noun in ((QUOTE, "Add the quote"), (ORDER, "Add the order")):
         for k in record_kinds(record):
