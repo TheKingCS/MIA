@@ -145,6 +145,11 @@ def merge_json(base: Any, local: Any, remote: Any, prefer_local: bool) -> Any:
 
 
 def _merge_list(base, local: list, remote: list, prefer_local: bool) -> list:
+    """Pure logic. The three-way merge of a list. Records with ids are matched by id: one removed on a side where the
+    other left it as it was stays removed, one added on either side stays, and one on both is merged field by field
+    (merge_json). Without ids: when both only added to the end (a log), both additions are kept in time order; a list
+    of plain values or of timestamped messages (a conversation) is the union; anything else takes the preferred side.
+    """
     key = _id_key(local) or _id_key(remote) or (_id_key(base) if base is not _MISSING else None)
     every = [i for i in local + remote + (base if base is not _MISSING else [])]
     if key is not None and all(isinstance(i, dict) and isinstance(i.get(key), (str, int)) for i in every):
@@ -231,6 +236,11 @@ def merge_lines(base: str, local: str, remote: str) -> str:
 
 
 def merge_file(name: str, base: Optional[bytes], local: bytes, remote: bytes, prefer_local: bool) -> bytes:
+    """Pure logic. One data file merged from its base and both sides: some files are taken whole from the preferred
+    (newer) side (WHOLE_FILE), .jsonl histories are merged line by line, the password vault and the private journal
+    merge their encrypted entries whole (the newer one of each wins, a new master password header comes whole), and
+    every other JSON file goes through merge_json. A file that isn't readable JSON takes the newer side.
+    """
     if name in WHOLE_FILE:
         return local if prefer_local else remote
     if name.endswith(".jsonl"):
@@ -275,6 +285,9 @@ def merge_game(base: dict, local: dict, remote: dict) -> dict:
 
 
 def syncable(name: str) -> bool:
+    """Whether a data file syncs: a synced kind of file (SYNC_SUFFIXES), not one that belongs to one device
+    (NEVER_SYNC), not hidden.
+    """
     return name.endswith(SYNC_SUFFIXES) and name not in NEVER_SYNC and not name.startswith(".")
 
 
@@ -329,6 +342,9 @@ def journal_key(folder: Optional[Path]) -> str:
 
 
 def game_numbers(context, profile_id: str) -> dict:
+    """A profile's game numbers (XP, credits, prestige, unlocked rewards...) for syncing, or {} when the profile isn't
+    there.
+    """
     profiles = getattr(context, "profiles", None)
     profile = profiles.get_profile(profile_id) if profiles is not None else None
     if profile is None:
@@ -337,6 +353,9 @@ def game_numbers(context, profile_id: str) -> dict:
 
 
 def set_game_numbers(context, profile_id: str, values: dict) -> None:
+    """Writes merged game numbers into a profile's record in the config (profiles are read from the config each time, so
+    nothing needs reloading).
+    """
     config = context.config
     record = dict(config.get(f"profiles.{profile_id}") or {})
     if not record:
@@ -378,10 +397,12 @@ class Fingerprints:
     time), so a sync every few seconds doesn't read every photo again."""
 
     def __init__(self) -> None:
+        """A cache of file fingerprints, so a file whose size and modified time haven't changed isn't read again."""
         self._known: dict[str, tuple[int, int, str]] = {}
         self._lock = threading.Lock()
 
     def of(self, path: Path) -> str:
+        """A file's SHA-256, from the cache when its size and modified time are unchanged, else read and remembered."""
         st = path.stat()
         key = str(path)
         with self._lock:
@@ -395,6 +416,7 @@ class Fingerprints:
 
 
 def file_digest(path: Path) -> str:
+    """A file's SHA-256, read in 1 MB pieces (never whole in memory)."""
     h = hashlib.sha256()
     with open(path, "rb") as f:
         for chunk in iter(lambda: f.read(1 << 20), b""):
@@ -406,6 +428,7 @@ FINGERPRINTS = Fingerprints()
 
 
 def _wanted_file(rel: Path) -> bool:
+    """Whether a file in a synced folder is synced: nothing hidden, no partial (.part) or temporary (.tmp) files."""
     return not any(part.startswith(".") for part in rel.parts) and not rel.name.endswith((".part", ".tmp"))
 
 
@@ -463,6 +486,9 @@ def receive_file(path: Path, chunks, expect_sha: str) -> None:
 
 
 def _other_copy(path: Path) -> Path:
+    """A free name for keeping the other side's version beside this one ("name (2).jpg", "name (3).jpg"...), so a file
+    changed on both sides is never lost.
+    """
     n = 2
     while True:
         candidate = path.with_name(f"{path.stem} ({n}){path.suffix}")
@@ -498,13 +524,18 @@ class SyncState:
     """What the last sync left behind, per device (data/.sync/)."""
 
     def __init__(self, root: Path) -> None:
+        """The phone's sync memory, in data/.sync/: the base copy of each file as of the last sync, the fingerprints of
+        the files and photos, the game numbers then, and the last status.
+        """
         self.root = root
 
     def base(self, scope: str, name: str) -> Optional[bytes]:
+        """A data file as it was at the last sync, or None when it has never synced."""
         path = self.root / scope / name
         return path.read_bytes() if path.is_file() else None
 
     def set_base(self, scope: str, name: str, data: bytes) -> None:
+        """Saves a data file's base copy (written to a temporary file and moved into place)."""
         path = self.root / scope / name
         path.parent.mkdir(parents=True, exist_ok=True)
         tmp = path.with_name(path.name + ".tmp")
@@ -512,39 +543,46 @@ class SyncState:
         tmp.replace(path)
 
     def file_bases(self) -> dict:
+        """Each synced photo or file's fingerprint as of the last sync ({} when unreadable)."""
         try:
             return json.loads((self.root / "files.json").read_text(encoding="utf-8"))
         except (OSError, ValueError):
             return {}
 
     def set_file_bases(self, values: dict) -> None:
+        """Saves the photos' and files' fingerprints (written to a temporary file and moved into place)."""
         self.root.mkdir(parents=True, exist_ok=True)
         tmp = self.root / "files.json.tmp"
         tmp.write_text(json.dumps(values), encoding="utf-8")
         tmp.replace(self.root / "files.json")
 
     def game(self) -> dict:
+        """The game numbers as of the last sync ({} when unreadable)."""
         try:
             return json.loads((self.root / "game.json").read_text(encoding="utf-8"))
         except (OSError, ValueError):
             return {}
 
     def set_game(self, values: dict) -> None:
+        """Saves the game numbers as of this sync."""
         self.root.mkdir(parents=True, exist_ok=True)
         (self.root / "game.json").write_text(json.dumps(values), encoding="utf-8")
 
     def status(self) -> dict:
+        """The last sync's status: when, how much went each way, any problem."""
         try:
             return json.loads((self.root / "status.json").read_text(encoding="utf-8"))
         except (OSError, ValueError):
             return {}
 
     def set_status(self, **values) -> None:
+        """Updates the status with these values (keeping the rest)."""
         self.root.mkdir(parents=True, exist_ok=True)
         (self.root / "status.json").write_text(json.dumps({**self.status(), **values}), encoding="utf-8")
 
 
 def state_for(context) -> SyncState:
+    """The sync memory for this device, in the shared data folder's .sync/."""
     personal = getattr(context, "personal_data", None)
     shared = personal.shared_dir if personal is not None else Path(__file__).resolve().parent.parent / "data"
     return SyncState(Path(shared) / ".sync")
@@ -731,12 +769,16 @@ def _sync_files(context, call, pid: str, state: SyncState, theirs_all: dict, don
 
 
 def _quote(text: str) -> str:
+    """Text quoted for a URL (nothing left unescaped)."""
     import urllib.parse
 
     return urllib.parse.quote(text, safe="")
 
 
 def _send_file(context, call, q: str, path: Path, sha: str, expect: str) -> None:
+    """Streams a photo or file to the PC (PUT /api/sync/blob) with its fingerprint and the version it's replacing, so
+    the PC can refuse it if its copy changed meanwhile; the timeout grows with the file's size.
+    """
     size = path.stat().st_size
     with open(path, "rb") as body:
         call(context, f"/api/sync/blob?{q}&sha={sha}&expect={expect}", timeout=max(60, size / 250_000),
@@ -759,6 +801,7 @@ def _fetch_file(context, call, q: str, path: Path, sha: str) -> None:
 
 
 def _push(context, call, scope: str, name: str, data: bytes, expect: str) -> None:
+    """Sends a merged data file to the PC (/api/sync/file) with the version it expects to replace."""
     import base64
 
     call(context, "/api/sync/file", {"scope": scope, "name": name, "expect": expect,
@@ -775,6 +818,7 @@ class SyncLoop:
     store without the server's turn lock."""
 
     def __init__(self, context, lock) -> None:
+        """The phone's background sync loop; the lock keeps it from colliding with other phone work."""
         self.context, self.lock = context, lock
         self._stop = threading.Event()
         self._wake = threading.Event()
@@ -784,18 +828,25 @@ class SyncLoop:
         self.thread: Optional[threading.Thread] = None
 
     def start(self) -> None:
+        """Starts the loop's thread (mia-sync, a daemon) once."""
         if self.thread is None:
             self.thread = threading.Thread(target=self._run, name="mia-sync", daemon=True)
             self.thread.start()
 
     def stop(self) -> None:
+        """Asks the loop to stop and wakes it so it notices."""
         self._stop.set()
         self._wake.set()
 
     def poke(self) -> None:
+        """Wakes the loop to sync now."""
         self._wake.set()
 
     def _run(self) -> None:
+        """The loop: every LOOP_SECONDS, when the phone is linked, it syncs if poked, if something changed (live's
+        version moved) or if it's been quiet for QUIET_SECONDS. A failure is saved as the status and waits
+        BACKOFF_SECONDS before trying again.
+        """
         from core import live
         from core.home_link import HomeLinkError, linked
 
@@ -824,6 +875,9 @@ class SyncLoop:
 
 
 def status(context) -> dict:
+    """Sync's status for a screen: linked or not, the last sync, any problem or note, and how many files were pushed,
+    pulled and merged.
+    """
     from core.home_link import linked
 
     s = state_for(context).status()

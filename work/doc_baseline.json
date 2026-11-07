@@ -250,7 +250,6 @@
   "core/startup_briefing.py": 1,
   "core/subnet_calculator.py": 1,
   "core/support_choice.py": 1,
-  "core/sync.py": 29,
   "core/system_check.py": 4,
   "core/system_health.py": 1,
   "core/tak.py": 3,

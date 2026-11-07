@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 226,726 lines; 1043 files describe themselves; 3,577 of 13,517 classes and functions are documented.
+1043 files, 226,780 lines; 1043 files describe themselves; 3,606 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 100,632 lines; 2,846 of 5,630 classes and functions documented
+367 files, 100,686 lines; 2,875 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -310,7 +310,7 @@
 - `core/startup_briefing.py`: Pure logic for the "Good evening, Zac. Welcome back." launch greeting — docs/VISION.md's 2026-07-15 companion-philosophy update, "Startup Dashboard Briefing." *(1 undocumented)*
 - `core/subnet_calculator.py`: Subnet/CIDR calculator — docs/ROADMAP.md milestone 11.5, Field Kit's Security/Network Toolkit. A thin wrapper around stdlib `ipaddress` (handles both IPv4 and IPv6 correctly) rather than hand-rolling bitmask math — "don't reinvent the wheel", same reasoning behind this project's other integration de *(1 undocumented)*
 - `core/support_choice.py`: "When it's ambiguous, MIA asks instead of guessing" (2026-09-28), the part of slice B that was deferred (docs/COGNITIVE_EXTENSION_PROPOSAL.md, sections 8 and 9). *(1 undocumented)*
-- `core/sync.py`: Two-way sync between the phone and the home computer (DEC-0022, the step after the link; Zac, 2026-10-18). A change on either one shows up on the other: missions, the kitchen, money, the journal, quests, everything that lives in MIA's data files, and the XP and credits you earned. *(29 undocumented)*
+- `core/sync.py`: Two-way sync between the phone and the home computer (DEC-0022, the step after the link; Zac, 2026-10-18). A change on either one shows up on the other: missions, the kitchen, money, the journal, quests, everything that lives in MIA's data files, and the XP and credits you earned.
 - `core/system_check.py`: "Is everything set up?" (2026-10-01, accounts stage 5): one list that says what works on this device, what's missing, and exactly what to do about each, so a new person (or a new Raspberry Pi) doesn't have to guess why voice or photos of receipts don't work. *(4 undocumented)*
 - `core/system_health.py`: Point-in-time system health readings (CPU/RAM/disk/network/temperature) via `psutil` — originally lived in modules/diagnostics/module.py (v0.7 milestone 7.1) as that module's "own exclusive concern", deliberately not promoted to core/ at the time since nothing else needed it. Moved here when milesto *(1 undocumented)*
 - `core/tak.py`: MIA's places in the open, civilian standards a TAK app speaks (build plan step 14, DEC-0099): Cursor on Target events and KML, packed as a TAK data package (a zip with a `MANIFEST/manifest.xml`) that ATAK-CIV, iTAK and WinTAK import, so the person's waypoints show on their TAK map with MIA's names,  *(3 undocumented)*
