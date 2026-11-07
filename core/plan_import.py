@@ -79,6 +79,7 @@ def _item(line: str) -> str:
 
 
 def _number(text: str) -> Optional[str]:
+    """Pure logic. The first number in a text (commas ignored), as text, or None."""
     found = _NUMBER.search(text.replace(",", ""))
     return found.group(0) if found else None
 
@@ -309,6 +310,10 @@ def _name_key(name: str) -> str:
 
 
 def _read(context, params) -> dict:
+    """What a pasted plan holds, checked: its goals, training, skills, milestones, meals and recipes; lunches in the
+    rotation are matched to recipes by name, and one named without a recipe gets a name-only recipe; ActionError when
+    there's no plan in it or the Kitchen is needed and missing.
+    """
     if getattr(context, "fitness", None) is None:
         raise ActionError("Plans aren't set up on this MIA.")
     found = parse(str(params.get("text") or ""))
@@ -345,6 +350,9 @@ def _read(context, params) -> dict:
 
 
 def _describe(context, params) -> str:
+    """The sentence the approval card shows for `plan.import` (Propose): what the plan sets and which recipes it
+    adds or updates, and the lines it skipped.
+    """
     found = _read(context, params)
     plan, parts = found["plan"], []
     t = plan.get("targets") or {}
@@ -386,6 +394,9 @@ def _describe(context, params) -> str:
 
 
 def _apply(context, params) -> str:
+    """Does `plan.import` once approved: adds or updates its recipes (matched by name), saves the plan (keeping
+    milestones already reached), makes today's fitness missions, and says what went in.
+    """
     from core.fitness_actions import _clean_plan
     from core.fitness_missions import ensure
     from core.kitchen_actions import parse_ingredients

@@ -27,6 +27,7 @@ RAID_XP = 100
 
 @dataclass(frozen=True)
 class Raid:
+    """One raid, a co-op household mission: its id, name, icon, summary and objectives."""
     raid_id: str
     name: str
     icon: str
@@ -58,6 +59,7 @@ def share_out(objectives: list[str], people: list[str]) -> list[tuple[str, str]]
 
 
 def week_of(day: date) -> tuple[date, date]:
+    """Pure logic. A day's week, Monday to Sunday."""
     monday = day - timedelta(days=day.weekday())
     return monday, monday + timedelta(days=6)
 
@@ -66,6 +68,7 @@ def week_of(day: date) -> tuple[date, date]:
 
 
 def _me(context) -> Optional[str]:
+    """The signed-in person's id."""
     from core.person_settings import person_id
 
     return person_id(context)
@@ -86,6 +89,7 @@ def members(context) -> list:
 
 
 def opted_in(context, profile_id: str) -> bool:
+    """Whether a person chose to be on the household leaderboard (their party.leaderboard setting)."""
     config = getattr(context, "config", None)
     record = (config.get(f"profiles.{profile_id}") or {}) if config is not None else {}
     return bool((record.get("settings") or {}).get("party.leaderboard"))

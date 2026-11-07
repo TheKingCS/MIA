@@ -67,6 +67,9 @@ PERSONAL_SETTINGS = (
 
 
 def person_id(context) -> Optional[str]:
+    """Whose settings these are: the context's own person (the phone's view), else the signed-in profile; None
+    with neither.
+    """
     own = getattr(context, "profile_id", None)
     if isinstance(own, str) and own:
         return own
@@ -76,12 +79,16 @@ def person_id(context) -> Optional[str]:
 
 
 def _is_first_account(context, profile_id: str) -> bool:
+    """Whether a profile is the device's first account (which keeps the old device-wide settings)."""
     profiles = getattr(context, "profiles", None)
     listed = profiles.list_profiles() if profiles is not None else []
     return bool(listed) and sorted(listed, key=lambda p: p.created_at or "")[0].profile_id == profile_id
 
 
 def get(context, key: str, default: Any = None) -> Any:
+    """A setting for this person: a personal setting from their own record (the device's value for the first account,
+    else the default); any other setting from the device's config.
+    """
     config = getattr(context, "config", None)
     if config is None:
         return default
@@ -96,6 +103,7 @@ def get(context, key: str, default: Any = None) -> Any:
 
 
 def put(context, key: str, value: Any) -> None:
+    """Saves a setting: a personal one into this person's record, any other into the device's config."""
     config = context.config
     profile_id = person_id(context)
     if key not in PERSONAL_SETTINGS or profile_id is None or config.get(f"profiles.{profile_id}") is None:

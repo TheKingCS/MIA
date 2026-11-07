@@ -30,6 +30,7 @@ REFLECTION_HOUR = 18  # evening: the week is mostly behind
 
 
 def _week_start(now: datetime) -> str:
+    """The moment a week ago, as ISO text."""
     return (now - timedelta(days=7)).isoformat(timespec="seconds")
 
 
@@ -48,6 +49,7 @@ def reflection_notice(count: int) -> Optional[tuple[str, str]]:
 
 
 def _and(items: list[str]) -> str:
+    """Pure logic. Items said as a list (a, b and c)."""
     return items[0] if len(items) == 1 else ", ".join(items[:-1]) + " and " + items[-1]
 
 
@@ -72,6 +74,9 @@ def weekly_reflection(entries, now: datetime) -> str:
 
 
 def _action_journal_reflection(context, arguments: dict) -> str:
+    """Tool get_journal_reflection: the week from the private journal (how often they wrote, what came
+    up most, how their mood moved), only when it's set up and unlocked.
+    """
     journal = getattr(context, "private_journal", None)
     if journal is None or not journal.is_set_up():
         return "You haven't set up a private journal yet. You can do that in Notes under Private Journal."
@@ -81,6 +86,7 @@ def _action_journal_reflection(context, arguments: dict) -> str:
 
 
 def journal_reflection_action() -> AssistantAction:
+    """The get_journal_reflection tool."""
     return AssistantAction(
         name="get_journal_reflection", domain="journal",
         description="Reflect on the user's week from their private journal: how often they journaled, what came up most, "

@@ -51,15 +51,18 @@ def _base_url(context) -> Optional[str]:
 
 
 def _model(context) -> str:
+    """The embedding model to use (llm.embed_model, else nomic-embed-text)."""
     config = getattr(context, "config", None)
     return (config.get("llm.embed_model", _DEFAULT_MODEL) if config is not None else _DEFAULT_MODEL) or _DEFAULT_MODEL
 
 
 def _key(model: str, kind: str, text: str) -> str:
+    """The cache key for one text's embedding: a hash of the model, the kind and the text."""
     return hashlib.sha1(f"{model}|{kind}|{text}".encode("utf-8")).hexdigest()
 
 
 def _load_cache() -> None:
+    """Reads the embedding cache from disk, once."""
     global _loaded
     if _loaded:
         return
@@ -71,6 +74,7 @@ def _load_cache() -> None:
 
 
 def _save_cache() -> None:
+    """Writes the embedding cache to disk (a failure is only a warning)."""
     try:
         _CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
         _CACHE_FILE.write_text(json.dumps(_memory), encoding="utf-8")
