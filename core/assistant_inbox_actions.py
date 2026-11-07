@@ -19,16 +19,21 @@ _S = {"type": "string"}
 
 
 def _inbox(context: AppContext):
+    """The inbox store, or None when it isn't here."""
     return getattr(context, "inbox", None)
 
 
 def _asset_name(context: AppContext, asset_id: str) -> str:
+    """The name of the asset an item is for, or empty."""
     maintenance = getattr(context, "maintenance", None)
     asset = maintenance.get_asset(asset_id) if maintenance and asset_id else None
     return asset.name if asset else ""
 
 
 def _describe(context: AppContext, item) -> str:
+    """How an inbox item is said aloud: its label, what it's for, its maintenance steps, the asset details it has, and
+    whether it couldn't be read.
+    """
     text = item.label
     name = _asset_name(context, item.asset_id)
     if name:
@@ -44,6 +49,7 @@ def _describe(context: AppContext, item) -> str:
 
 
 def _action_list_inbox(context: AppContext, arguments: dict) -> str:
+    """Tool list_inbox: how many are waiting and the first five, described."""
     inbox = _inbox(context)
     if inbox is None:
         return "The inbox isn't available right now."
@@ -56,6 +62,9 @@ def _action_list_inbox(context: AppContext, arguments: dict) -> str:
 
 
 def _find_by_name(options, words: str):
+    """The one option (asset or project) a name means: an exact name first, else the single one that contains it or
+    is contained in it; None otherwise.
+    """
     lowered = words.lower().strip()
     if not lowered:
         return None
@@ -67,6 +76,10 @@ def _find_by_name(options, words: str):
 
 
 def _action_file_inbox_item(context: AppContext, arguments: dict) -> str:
+    """Tool file_inbox_item: files the item named (the oldest when blank) under the tool or build they said,
+    with a corrected amount and its maintenance tasks unless they said no; a manual with steps and no tool asks which
+    tool. It files at once, with no approval card.
+    """
     inbox = _inbox(context)
     if inbox is None:
         return "The inbox isn't available right now."
@@ -105,6 +118,7 @@ def _action_file_inbox_item(context: AppContext, arguments: dict) -> str:
 
 
 def _action_dismiss_inbox_item(context: AppContext, arguments: dict) -> str:
+    """Tool dismiss_inbox_item: takes the item named out of the inbox without filing it."""
     inbox = _inbox(context)
     if inbox is None or not inbox.pending():
         return "There's nothing waiting in your inbox."
@@ -116,6 +130,7 @@ def _action_dismiss_inbox_item(context: AppContext, arguments: dict) -> str:
 
 
 def register_inbox_actions(registry: AssistantActionRegistry) -> None:
+    """Registers the inbox tools: list_inbox, file_inbox_item and dismiss_inbox_item."""
     registry.register(AssistantAction(
         name="list_inbox", domain="inbox",
         description="List the documents waiting in the user's inbox (receipts, manuals, warranties sent to MIA).",

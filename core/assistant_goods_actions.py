@@ -33,6 +33,9 @@ def _run(context, kind: str, params: dict) -> str:
 
 
 def _get_eggs(context, arguments: dict) -> str:
+    """Tool get_eggs: for each flock, eggs today and this week, the lay rate from its hens, loose eggs, cartons on
+    hand and feed cost a dozen, read from the Chickens page.
+    """
     from core.web_flock import flock_page
 
     page = flock_page(context)
@@ -54,6 +57,7 @@ def _get_eggs(context, arguments: dict) -> str:
 
 
 def _log_eggs(context, arguments: dict) -> str:
+    """Tool log_eggs: proposes `flock.eggs` for the flock named (or the only one), asking which when it can't tell."""
     book = getattr(context, "flock", None)
     if book is None or not book.flocks:
         return "No flock in MIA yet: add it under Apps → Chickens."
@@ -68,6 +72,9 @@ def _log_eggs(context, arguments: dict) -> str:
 
 
 def _recipe_named(context, name: str):
+    """The Workshop recipe a spoken name means: an exact match first, else the one recipe whose name contains it
+    (or is contained in it); None when there's no single answer.
+    """
     from core.craft_recipes import key
 
     book = getattr(context, "craft_recipes", None)
@@ -83,6 +90,7 @@ def _recipe_named(context, name: str):
 
 
 def _get_goods(context, arguments: dict) -> str:
+    """Tool list_goods_on_hand: each homestead good on hand, noting the ones to sell oldest first."""
     from core.web_craft import goods_section
 
     goods = [g for g in goods_section(context)["goods"] if g["on_hand"]]
@@ -98,6 +106,9 @@ def _get_goods(context, arguments: dict) -> str:
 
 
 def _sell_goods(context, arguments: dict) -> str:
+    """Tool sell_goods: proposes `goods.sell` for the recipe named, with the quantity (1 by default) and a price only
+    when they said one.
+    """
     recipe = _recipe_named(context, str(arguments.get("item") or ""))
     if recipe is None:
         return "Which of your goods? Say it the way the recipe is named in the Workshop."
@@ -111,6 +122,10 @@ def _sell_goods(context, arguments: dict) -> str:
 
 
 def _get_freedom(context, arguments: dict) -> str:
+    """Tool get_freedom_progress: days to go and the date at their pace (or why there's no date yet, or that the
+    fund is full), how much is saved of the goal, this week's total, and how much of a month the homestead covers.
+    Grown-ups only.
+    """
     from core.freedom import freedom_page
 
     page = freedom_page(context)
@@ -132,6 +147,9 @@ def _get_freedom(context, arguments: dict) -> str:
 
 
 def _get_deadlines(context, arguments: dict) -> str:
+    """Tool get_deadlines: overdue obligations, then the ones due soon (noting the unverified), or the next two
+    when nothing is due in 30 days, and how many are still to verify. Grown-ups only.
+    """
     from core.web_compliance import compliance_page
 
     page = compliance_page(context)
@@ -157,6 +175,9 @@ def _get_deadlines(context, arguments: dict) -> str:
 
 
 def register_goods_actions(registry: AssistantActionRegistry) -> None:
+    """Registers the flock, goods, freedom and compliance tools: get_eggs, log_eggs, list_goods_on_hand,
+    sell_goods, get_freedom_progress and get_deadlines.
+    """
     none = {"type": "object", "properties": {}, "required": []}
     registry.register(AssistantAction(
         name="get_eggs", domain="flock",

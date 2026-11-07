@@ -57,10 +57,12 @@ _SCREEN = re.compile(r"\b(track|keep track|log (my|the|each)|keep a (list|log|re
 
 
 def _now() -> datetime:
+    """The current time, in UTC."""
     return datetime.now(timezone.utc)
 
 
 def _folder(context) -> Optional[Path]:
+    """The person's folder the gaps live in (the failure log's, else the traces'), or None."""
     for name in ("failures", "traces"):
         found = getattr(getattr(context, name, None), "data_dir", None)
         if found is not None:
@@ -69,6 +71,7 @@ def _folder(context) -> Optional[Path]:
 
 
 def load(context) -> list[dict]:
+    """Every capability gap (capability_gaps.json); none when it's missing or unreadable."""
     folder = _folder(context)
     if folder is None:
         return []
@@ -79,6 +82,7 @@ def load(context) -> list[dict]:
 
 
 def _save(context, gaps: list[dict]) -> None:
+    """Writes the gaps atomically (nothing when there's no folder)."""
     folder = _folder(context)
     if folder is None:
         return
@@ -165,6 +169,7 @@ def refresh(context, days: int = 60, now: Optional[datetime] = None) -> list[dic
 
 
 def _short(text: str, n: int = 70) -> str:
+    """Text on one line, cut to n characters with an ellipsis."""
     text = " ".join(str(text or "").split())
     return text if len(text) <= n else text[: n - 1].rstrip() + "…"
 
@@ -240,10 +245,12 @@ def reply(context, text: str) -> Optional[str]:
 
 
 def get(context, gap_id: str) -> Optional[dict]:
+    """The gap with this id, or None."""
     return next((g for g in load(context) if g["id"] == gap_id), None)
 
 
 def mark(context, gap_id: str, status: str, **fields) -> Optional[dict]:
+    """Sets a gap's status (and any other fields), saves, and returns it; None when it's gone."""
     gaps = load(context)
     found = next((g for g in gaps if g["id"] == gap_id), None)
     if found is None:
@@ -276,6 +283,9 @@ def open_task(context, gap_id: str, tasks_dir=None, log_path=None) -> str:
 
 
 def summary(context) -> dict:
+    """How many gaps there are, how many were asked repeatedly and aren't done, and the open ones counted by what they
+    need.
+    """
     gaps = load(context)
     by: dict[str, int] = {}
     for g in gaps:
