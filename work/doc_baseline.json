@@ -63,7 +63,6 @@
   "core/council_floor.py": 2,
   "core/council_session.py": 2,
   "core/council_voices.py": 1,
-  "core/craft_recipes.py": 17,
   "core/creation_actions.py": 15,
   "core/creation_maker.py": 4,
   "core/creation_sources.py": 5,

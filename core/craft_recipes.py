@@ -80,6 +80,7 @@ class Line:
 
 
 def _qty(text: str) -> float:
+    """A quantity from a recipe line: a number or a fraction ("1/2"; 0 over 0)."""
     if "/" in text:
         top, bottom = text.split("/", 1)
         return float(top) / float(bottom) if float(bottom) else 0.0
@@ -117,6 +118,10 @@ def key(name: str) -> str:
 
 @dataclass
 class CraftRecipe:
+    """One crafting recipe, the person's own shop card: what it needs (one material per line), dimensions, cut list,
+    tools, steps, hours, price each (0: not for sale), the product its builds make, and for a batch how many it makes,
+    of what, how long it keeps, and what its label says (net amount, allergens, ingredients).
+    """
     recipe_id: str
     name: str
     category: str = ""  # furniture, planter, shelf... the person's own words
@@ -143,20 +148,27 @@ class CraftRecipe:
 
     @property
     def lines(self) -> list[Line]:
+        """The recipe's material lines, parsed (parse_lines)."""
         return parse_lines(self.materials)
 
     @property
     def step_list(self) -> list[str]:
+        """The recipe's steps, one per line, bullets stripped."""
         return [s.strip().lstrip("-•*").strip() for s in (self.steps or "").splitlines() if s.strip()]
 
     @staticmethod
     def from_dict(d: dict) -> "CraftRecipe":
+        """A recipe from its saved dict, keeping only the fields a recipe knows."""
         known = CraftRecipe.__dataclass_fields__
         return CraftRecipe(**{k: v for k, v in d.items() if k in known})
 
 
 class CraftRecipeBook:
+    """The household's crafting recipes (craft_recipes.json, written through atomic_write_text so undo can restore
+    it).
+    """
     def __init__(self, context, data_dir: Optional[Path] = None) -> None:
+        """Points at the household's file (data/ by default) and loads it."""
         self.context = context
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._file = self.data_dir / _FILE
@@ -164,6 +176,7 @@ class CraftRecipeBook:
         self._load()
 
     def _load(self) -> None:
+        """Reads the recipes; an unreadable file is logged, reported and starts empty."""
         self._recipes = []
         if not self._file.exists():
             return
@@ -174,19 +187,24 @@ class CraftRecipeBook:
             notify_data_corruption(self.context, _FILE)
 
     def reload(self) -> None:
+        """Reads the file again (after undo restored it)."""
         self._load()
 
     def _save(self) -> None:
+        """Writes every recipe atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._file, json.dumps([asdict(r) for r in self._recipes], indent=2))
 
     def all_recipes(self) -> list[CraftRecipe]:
+        """Every recipe, by name."""
         return sorted(self._recipes, key=lambda r: r.name.lower())
 
     def get_recipe(self, recipe_id: str) -> Optional[CraftRecipe]:
+        """The recipe with this id, or None."""
         return next((r for r in self._recipes if r.recipe_id == recipe_id), None)
 
     def add_recipe(self, name: str, **fields) -> CraftRecipe:
+        """Adds a recipe (a name is required) with its fields, checked by _apply."""
         if not str(name or "").strip():
             raise ValueError("A recipe needs a name.")
         now = datetime.now().isoformat(timespec="seconds")
@@ -197,6 +215,7 @@ class CraftRecipeBook:
         return recipe
 
     def update_recipe(self, recipe_id: str, **fields) -> CraftRecipe:
+        """Changes a recipe's fields (checked) and stamps updated_at; ValueError when it's gone."""
         recipe = self.get_recipe(recipe_id)
         if recipe is None:
             raise ValueError("That recipe isn't there anymore.")
@@ -206,11 +225,15 @@ class CraftRecipeBook:
         return recipe
 
     def delete_recipe(self, recipe_id: str) -> None:
+        """Deletes a recipe (its builds stay)."""
         self._recipes = [r for r in self._recipes if r.recipe_id != recipe_id]
         self._save()
 
     @staticmethod
     def _apply(recipe: CraftRecipe, fields: dict) -> None:
+        """Sets a recipe's fields, checked: hours and price never negative, makes at least one (blank is one), shelf days
+        whole and not negative.
+        """
         for name, value in fields.items():
             if name in ("recipe_id", "created_at", "updated_at") or not hasattr(recipe, name):
                 raise ValueError(f"A recipe has no '{name}'.")
@@ -299,6 +322,7 @@ def uses(recipe: CraftRecipe, materials: list, times: int = 1) -> dict:
 
 
 def makes_count(recipe: CraftRecipe, times: int = 1) -> float:
+    """How many a build of `times` makes (the recipe's batch size times how many)."""
     return float(getattr(recipe, "makes", 1) or 1) * max(1, times)
 
 
