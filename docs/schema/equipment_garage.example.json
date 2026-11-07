@@ -330,7 +330,8 @@
               "task_id": "6cbf096c22"
             },
             "asks_meter": false
-          }
+          },
+          "due": "Past due 14 days"
         },
         {
           "id": "7a4464beaf",
@@ -371,7 +372,8 @@
               "task_id": "7a4464beaf"
             },
             "asks_meter": false
-          }
+          },
+          "due": "Past due 11 days"
         },
         {
           "id": "deed2f7833",
@@ -412,7 +414,8 @@
               "task_id": "deed2f7833"
             },
             "asks_meter": true
-          }
+          },
+          "due": "Due in 37 engine hours"
         }
       ],
       "task_count": 3,
@@ -423,7 +426,8 @@
         }
       ],
       "warranty_until": null,
-      "scope": "garage"
+      "scope": "garage",
+      "meter": "13 engine hours"
     },
     {
       "id": "d7ea2a25b1",
@@ -472,7 +476,8 @@
               "task_id": "68e719deaa"
             },
             "asks_meter": false
-          }
+          },
+          "due": "Past due 9 days"
         },
         {
           "id": "495a698f89",
@@ -513,13 +518,15 @@
               "task_id": "495a698f89"
             },
             "asks_meter": false
-          }
+          },
+          "due": "Due in 9 days"
         }
       ],
       "task_count": 2,
       "quick_stats": [],
       "warranty_until": null,
-      "scope": "garage"
+      "scope": "garage",
+      "meter": null
     },
     {
       "id": "8c260faa4f",
@@ -568,13 +575,15 @@
               "task_id": "d4364f8f41"
             },
             "asks_meter": false
-          }
+          },
+          "due": "Due in 3 days"
         }
       ],
       "task_count": 1,
       "quick_stats": [],
       "warranty_until": null,
-      "scope": "garage"
+      "scope": "garage",
+      "meter": null
     },
     {
       "id": "6fd206ec1b",
@@ -623,13 +632,15 @@
               "task_id": "101ce96064"
             },
             "asks_meter": false
-          }
+          },
+          "due": "Due in 4 days"
         }
       ],
       "task_count": 1,
       "quick_stats": [],
       "warranty_until": null,
-      "scope": "garage"
+      "scope": "garage",
+      "meter": null
     }
   ],
   "attention": [
@@ -672,7 +683,8 @@
           "task_id": "6cbf096c22"
         },
         "asks_meter": false
-      }
+      },
+      "due": "Past due 14 days"
     },
     {
       "id": "7a4464beaf",
@@ -713,7 +725,8 @@
           "task_id": "7a4464beaf"
         },
         "asks_meter": false
-      }
+      },
+      "due": "Past due 11 days"
     },
     {
       "id": "68e719deaa",
@@ -754,7 +767,8 @@
           "task_id": "68e719deaa"
         },
         "asks_meter": false
-      }
+      },
+      "due": "Past due 9 days"
     }
   ],
   "next_up": [
@@ -797,7 +811,8 @@
           "task_id": "d4364f8f41"
         },
         "asks_meter": false
-      }
+      },
+      "due": "Due in 3 days"
     },
     {
       "id": "101ce96064",
@@ -838,7 +853,8 @@
           "task_id": "101ce96064"
         },
         "asks_meter": false
-      }
+      },
+      "due": "Due in 4 days"
     },
     {
       "id": "495a698f89",
@@ -879,7 +895,8 @@
           "task_id": "495a698f89"
         },
         "asks_meter": false
-      }
+      },
+      "due": "Due in 9 days"
     }
   ],
   "all_assets": [
@@ -952,7 +969,8 @@
           "task_id": "6cbf096c22"
         },
         "asks_meter": false
-      }
+      },
+      "due": "Past due 14 days"
     },
     {
       "id": "7a4464beaf",
@@ -993,7 +1011,8 @@
           "task_id": "7a4464beaf"
         },
         "asks_meter": false
-      }
+      },
+      "due": "Past due 11 days"
     },
     {
       "id": "68e719deaa",
@@ -1034,7 +1053,8 @@
           "task_id": "68e719deaa"
         },
         "asks_meter": false
-      }
+      },
+      "due": "Past due 9 days"
     },
     {
       "id": "d4364f8f41",
@@ -1075,7 +1095,8 @@
           "task_id": "d4364f8f41"
         },
         "asks_meter": false
-      }
+      },
+      "due": "Due in 3 days"
     },
     {
       "id": "101ce96064",
@@ -1116,7 +1137,8 @@
           "task_id": "101ce96064"
         },
         "asks_meter": false
-      }
+      },
+      "due": "Due in 4 days"
     },
     {
       "id": "495a698f89",
@@ -1157,7 +1179,8 @@
           "task_id": "495a698f89"
         },
         "asks_meter": false
-      }
+      },
+      "due": "Due in 9 days"
     },
     {
       "id": "deed2f7833",
@@ -1198,7 +1221,8 @@
           "task_id": "deed2f7833"
         },
         "asks_meter": true
-      }
+      },
+      "due": "Due in 37 engine hours"
     }
   ]
 }

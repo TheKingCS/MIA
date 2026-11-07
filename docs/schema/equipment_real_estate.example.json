@@ -328,7 +328,8 @@
               "task_id": "58cb39bfd5"
             },
             "asks_meter": false
-          }
+          },
+          "due": "Past due 6 days"
         },
         {
           "id": "e9e5f5f7cb",
@@ -369,13 +370,15 @@
               "task_id": "e9e5f5f7cb"
             },
             "asks_meter": false
-          }
+          },
+          "due": "Due in 29 days"
         }
       ],
       "task_count": 2,
       "quick_stats": [],
       "warranty_until": null,
-      "scope": "real_estate"
+      "scope": "real_estate",
+      "meter": null
     },
     {
       "id": "a0df037886",
@@ -424,13 +427,15 @@
               "task_id": "96e2e226b0"
             },
             "asks_meter": false
-          }
+          },
+          "due": "Due in 29 days"
         }
       ],
       "task_count": 1,
       "quick_stats": [],
       "warranty_until": "2027-05-03",
-      "scope": "real_estate"
+      "scope": "real_estate",
+      "meter": null
     }
   ],
   "attention": [
@@ -473,7 +478,8 @@
           "task_id": "58cb39bfd5"
         },
         "asks_meter": false
-      }
+      },
+      "due": "Past due 6 days"
     }
   ],
   "next_up": [
@@ -516,7 +522,8 @@
           "task_id": "e9e5f5f7cb"
         },
         "asks_meter": false
-      }
+      },
+      "due": "Due in 29 days"
     },
     {
       "id": "96e2e226b0",
@@ -557,7 +564,8 @@
           "task_id": "96e2e226b0"
         },
         "asks_meter": false
-      }
+      },
+      "due": "Due in 29 days"
     }
   ],
   "all_assets": [
@@ -630,7 +638,8 @@
           "task_id": "58cb39bfd5"
         },
         "asks_meter": false
-      }
+      },
+      "due": "Past due 6 days"
     },
     {
       "id": "e9e5f5f7cb",
@@ -671,7 +680,8 @@
           "task_id": "e9e5f5f7cb"
         },
         "asks_meter": false
-      }
+      },
+      "due": "Due in 29 days"
     },
     {
       "id": "96e2e226b0",
@@ -712,7 +722,8 @@
           "task_id": "96e2e226b0"
         },
         "asks_meter": false
-      }
+      },
+      "due": "Due in 29 days"
     }
   ]
 }

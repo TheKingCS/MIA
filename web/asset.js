@@ -125,7 +125,7 @@
         : el("p", { class: "dim" }, "No missions about it yet.")),
       card("Details", page.details.length || page.notes ? details() : el("p", { class: "dim" }, "Add its make, model and serial number with Edit.")),
       card("Documents", page.documents.length ? el("div", { class: "rows" }, page.documents.slice(0, 4).map(documentRow))
-        : el("p", { class: "dim" }, "No documents yet.")))],
+        : el("p", { class: "dim" }, "No documents yet.")), spentLately())],
     maintenance: () => [card("Maintenance", btn("Add task", "btn-amber", addTask),
       page.tasks.length ? el("div", { class: "rows" }, page.tasks.map((r) => taskRow(r))) : el("p", { class: "dim" }, "No tasks yet. Add one, like an oil change every 50 hours."))],
     missions: () => [card("Missions", page.missions.length ? el("div", { class: "rows" }, page.missions.map(missionRow))
@@ -151,6 +151,34 @@
       : el("p", { class: "dim" }, "What happens to it will show up here."))],
     parts: () => [card("Parts", el("p", { class: "dim" }, "Parts aren't tracked per asset yet. Coming: filters, blades and belts it takes, with what you have on the shelf."))],
   };
+  // Needs You (the canvas): the first thing waiting as one focus card with a big Done (asking the meter reading
+  // when the task is on a meter), and anything else waiting as rows under it.
+  function needsYou() {
+    const [first, ...rest] = page.attention;
+    if (!first) return [];
+    const how = [first.trigger === "calendar" ? (first.interval_days ? "Every " + first.interval_days + " days" : null)
+      : (first.meter_interval ? "Every " + first.meter_interval + " " + (first.unit || "") : null),
+      first.last_completed ? "last done " + first.last_completed : null, first.predicted].filter(Boolean).join(" · ");
+    return [el("section", { class: "glass surface-focus asset-focus", "aria-label": "Needs you" },
+      el("span", { class: "kind attention" }, "Needs You"),
+      el("h2", {}, first.title + (first.due ? " · " + first.due.toLowerCase() : "")),
+      how ? el("p", { class: "dim" }, how) : null,
+      first.action ? el("button", { type: "button", class: "btn btn-big btn-green", onclick: () => done(first) },
+        first.action.asks_meter ? "Done · Asks the " + (first.unit || "reading") : "Done") : null,
+      rest.length ? el("div", { class: "rows" }, rest.map((r) => taskRow(r, true))) : null)];
+  }
+  function spentLately() {
+    const c = page.costs;
+    if (!c || !c.recent || !c.recent.length) return null;
+    return card("Spent on it lately", el("div", { class: "rows" }, c.recent.map((r) => el("div", { class: "row money-row asset-spend" },
+      el("span", { class: "asset-when" }, day(r.date)), el("span", { class: "row-title" }, r.what),
+      el("span", { class: "money-amount" }, fmt(r.amount))))));
+  }
+  function day(iso) {
+    if (!iso) return "";
+    const d = new Date(iso + "T00:00:00");
+    return d.toLocaleDateString(undefined, { month: "short", day: "2-digit", year: d.getFullYear() === new Date().getFullYear() ? undefined : "numeric" });
+  }
   function figure(label, value) {
     return el("div", { class: "figure" }, el("span", { class: "figure-n" }, value), el("span", { class: "figure-t" }, label));
   }
@@ -167,18 +195,23 @@
       if (motif && drawing) motif.replaceChildren(drawing);  // the plate's art is this asset's area, not the Garage's
     }
     $("hero-name").textContent = page.name;
-    $("hero-sub").textContent = [page.category, page.details.filter((d) => d.label === "Make" || d.label === "Model").map((d) => d.value).join(" ")]
+    const bought = (page.details.find((d) => d.label === "Bought on") || {}).value;
+    $("hero-sub").textContent = [page.category, bought ? "Bought " + String(bought).slice(0, 4) : null,
+      page.details.filter((d) => d.label === "Make" || d.label === "Model").map((d) => d.value).join(" ")]
       .filter(Boolean).join(" · ");
     $("hero-buttons").replaceChildren(btn("Edit", "btn-ghost", editAsset), btn("Delete", "btn-ghost danger", deleteAsset));
     $("stats").replaceChildren(...page.quick_stats.map((s) => el("div", { class: "glass stat-tile" },
       el("span", { class: "stat-t" }, s.title), el("span", { class: "stat-n" }, s.text),
       btn("Log", "btn-ghost", () => s.task_id ? logTask(s.task_id, s.title) : logMeter(s.meter)))),
+      // The canvas's strip (DEC-0113): its readings, then what upkeep cost this year and its condition.
+      page.costs ? el("div", { class: "glass stat-tile" }, el("span", { class: "stat-t" }, "Spent this year"),
+        el("span", { class: "stat-n" }, fmt(page.costs.this_year))) : null,
+      page.condition ? el("div", { class: "glass stat-tile" }, el("span", { class: "stat-t" }, "Condition"),
+        el("span", { class: "stat-n tone-" + page.condition.tone }, page.condition.percent + "%"),
+        el("span", { class: "stat-sub" }, page.condition.label)) : null,
       ...(page.scope === "greenhouse" ? []  // its water readings live in Growing (grow.js)
         : [el("button", { type: "button", class: "glass stat-tile stat-add", onclick: () => logMeter("") }, "+ Log a reading")]));
-    $("attention").replaceChildren(...[page.condition ? el("section", { class: "glass gear-panel" }, MIAShell.conditionBar(page.condition, true),
-      el("p", { class: "dim" }, page.condition.percent >= 100 ? "Everything's fresh." : "Doing its upkeep fills the bar back up.")) : null].filter(Boolean),
-    ...(page.attention.length ? [el("section", { class: "attention-panel" },
-      el("h3", {}, "⚠ Needs attention"), el("div", { class: "rows" }, page.attention.map(taskRow)))] : []));
+    $("attention").replaceChildren(...needsYou());
     $("tabs").replaceChildren(...TABS.map(([t, label]) => el("button", { type: "button", role: "tab", "aria-selected": String(t === tab),
       onclick: () => { tab = t; history.replaceState(null, "", location.search + "#" + t); draw(); } }, label)));
     $("panel").replaceChildren(...VIEWS[tab]());

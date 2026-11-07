@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1088 files, 245,807 lines; 1088 files describe themselves; 13,502 of 14,172 classes and functions are documented.
+1088 files, 245,951 lines; 1088 files describe themselves; 13,509 of 14,179 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-391 files, 114,057 lines; 6,044 of 6,133 classes and functions documented
+391 files, 114,126 lines; 6,048 of 6,137 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -670,7 +670,7 @@
 
 ## tests/: the test suite: what each part must do
 
-362 files, 65,891 lines; 5,223 of 5,804 classes and functions documented
+362 files, 65,929 lines; 5,226 of 5,807 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1005,7 +1005,7 @@
 - `tests/test_waypoint_actions.py`: Waypoints from the web (core/waypoint_actions.py): added from a tap on the map, taken out from Navigation. *(3 undocumented)*
 - `tests/test_waypoint_manager.py`: Unit tests for core.waypoint_manager. haversine_distance_km() initial_bearing_degrees() are checked against real, well-known distances/bearings (New York <-> Los Angeles, London <-> Paris) rather than only synthetic values, so a sign error or unit mistake can't accidentally cancel out and still pass *(4 undocumented)*
 - `tests/test_waypoint_map_canvas.py`: Unit tests for gui.widgets.waypoint_map_canvas's project_waypoints() — pure math, no Qt/QWidget instantiation needed. See that module's own docstring for why this is a schematic layout, not a real map projection.
-- `tests/test_web_equipment.py`: DEC-0017 (2026-10-06): Garage, Property, Greenhouse and Maintenance on the web, and one page per asset (Zac's mower concept): the data (core/web_equipment.py) and every change as an action kind (core/equipment_actions.py, maintenance.done with a meter value). *(5 undocumented)*
+- `tests/test_web_equipment.py`: DEC-0017 (2026-10-06): Garage, Property, Greenhouse and Maintenance on the web, and one page per asset (Zac's mower concept): the data (core/web_equipment.py) and every change as an action kind (core/equipment_actions.py, maintenance.done with a meter value); and the design canvas's Garage card and  *(5 undocumented)*
 - `tests/test_web_fitness.py`: The fitness screens' data (core/web_fitness.py, DEC-0020): today, the weight line, missions and "is it working?" in one plain sentence, the meal-plan week, and the endpoints. Placeholder values. *(3 undocumented)*
 - `tests/test_web_fresh.py`: The web screens are never served from a stale browser copy (Zac, 2026-10-16: after a phone update the old Dashboard kept showing).
 - `tests/test_web_inbox.py`: The Inbox screen on the web and the phone (Zac, 2026-10-16: "build the inbox for sending stuff to MIA"): core/web_inbox.py shows what's waiting (reading the folder first, so the phone needs no timer), and core/inbox_actions.py files, dismisses and sends notes through Propose → Approve. *(3 undocumented)*
@@ -1037,7 +1037,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-72 files, 12,688 lines
+72 files, 12,725 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game

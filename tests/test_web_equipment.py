@@ -2,7 +2,9 @@
 DEC-0017 (2026-10-06): Garage, Property, Greenhouse and Maintenance on
 the web, and one page per asset (Zac's mower concept): the data
 (core/web_equipment.py) and every change as an action kind
-(core/equipment_actions.py, maintenance.done with a meter value).
+(core/equipment_actions.py, maintenance.done with a meter value); and the
+design canvas's Garage card and asset page (DEC-0113): due words, the meter
+reading, this year's upkeep.
 """
 
 from datetime import date, timedelta
@@ -199,3 +201,39 @@ def test_gear_condition_bars():
     assert condition([{"life": 0.6}, {"life": 0.5}])["label"] == "Good"
     assert condition([{"life": 0.3}])["label"] == "Worn"
     assert condition([{"life": 0.0}, {"life": 0.1}])["tone"] == "bad"
+
+
+def test_each_task_says_when_it_is_due_in_plain_words(world):
+    page = equipment_page(world, "garage", TODAY)
+    due = {t["title"]: t["due"] for t in page["assets"][0]["tasks"]}
+    assert due == {"Check oil": "Past due 13 days", "Sharpen blades": "Due in 24 days"}
+    tomorrow = world.maintenance.add_task(world.mower.asset_id, "Grease", interval_days=10,
+                                          last_completed=(TODAY - timedelta(days=9)).isoformat())
+    later = world.maintenance.add_task(world.mower.asset_id, "Winterize", interval_days=365,
+                                       last_completed=TODAY.isoformat())
+    rows = {r["title"]: r["due"] for r in equipment_page(world, "garage", TODAY)["tasks"]}
+    assert rows["Grease"] == "Due tomorrow"
+    assert rows["Winterize"] == (TODAY + timedelta(days=365)).strftime("%b %Y")
+    assert tomorrow and later
+
+
+def test_a_meter_task_says_what_is_left_and_the_card_shows_the_reading(world):
+    task = world.maintenance.add_task(world.mower.asset_id, "Change oil", trigger_type="runtime",
+                                      meter_unit="h", meter_interval=50)
+    run(world, "maintenance.done", task_id=task.task_id, meter_value="100")
+    run(world, "maintenance.reading", task_id=task.task_id, value="1212")
+    [mower] = equipment_page(world, "garage", TODAY)["assets"]
+    assert mower["meter"] == "1,212 h"
+    row = next(r for r in equipment_page(world, "garage", TODAY)["tasks"] if r["title"] == "Change oil")
+    assert row["due"] == "Past due 1,062 h"
+
+
+def test_the_asset_page_says_what_upkeep_cost_this_year_and_lately(world):
+    b, mower = world.budget, world.mower.asset_id
+    b.add_expense(400, "Equipment", "The mower itself", date=f"{TODAY.year}-01-02", asset_id=mower, asset_purchase=True)
+    b.add_expense(30, "Maintenance", "Blades", date=f"{TODAY.year - 1}-06-01", asset_id=mower)
+    b.add_expense(12.5, "Maintenance", "Oil", date=TODAY.isoformat(), asset_id=mower)
+    costs = asset_page(world, mower, TODAY)["costs"]
+    assert costs["this_year"] == 12.5  # the purchase and last year's blades don't count
+    assert [r["what"] for r in costs["recent"]] == ["Oil", "Blades"]
+    assert costs["recent"][0] == {"date": TODAY.isoformat(), "what": "Oil", "amount": 12.5}

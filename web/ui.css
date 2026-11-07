@@ -451,3 +451,35 @@ body.cook-live .mia-orb-button, body.cook-live .bottom-bar { display: none; }
 .nw-line .stroke { fill: none; stroke: var(--accent); stroke-width: 2; vector-effect: non-scaling-stroke; }
 .nw-line .area { fill: rgba(var(--rgb-accent), 0.08); stroke: none; }
 .nw-note { margin: 4px 0 0; font-size: var(--text-sm); }
+
+/* ---------------------------------------------------------------- Garage: the machine card (DEC-0113)
+   Name and meter on one line, the condition bar, then each next task with its due words: amber when it
+   needs you or is close, grey when it's a way off. */
+.asset-head { display: flex; justify-content: space-between; align-items: baseline; }
+.asset-meter { font-family: var(--font-mono); font-size: var(--text-sm); color: var(--text); white-space: nowrap; flex: none; }
+.asset-kind { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim);
+  white-space: nowrap; flex: none; }
+.asset-model { margin: 0; font-size: var(--text-sm); }
+.asset-tasks { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.asset-tasks li { display: flex; justify-content: space-between; gap: 10px; font-size: var(--text-sm); }
+.asset-due { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); white-space: nowrap; }
+.asset-due.soon { color: var(--soon); }
+.asset-card { display: flex; flex-direction: column; justify-content: flex-start; gap: 8px; }
+.asset-card.attention, .glance .glass.attention { border-color: rgba(var(--rgb-amber), 0.5); }  /* needs you is amber, not an error */
+.asset-card > p.dim { margin: 0; font-size: var(--text-sm); }
+
+/* ---------------------------------------------------------------- Asset: the canvas's page (DEC-0113)
+   Its readings, this year's upkeep and its condition in the strip; Needs You as one focus card with a big
+   Done; what it cost lately as dated rows. */
+.stat-tile .stat-sub { font-size: var(--text-sm); color: var(--text-dim); }
+.stat-n.tone-ok { color: var(--ok); }
+.stat-n.tone-soon { color: var(--soon); }
+.stat-n.tone-bad { color: var(--attention); }  /* worn gear needs care: amber, not an error */
+.asset-focus { display: grid; gap: 8px; margin-bottom: var(--gap); }
+.asset-focus h2 { margin: 0; font-size: var(--text-lg); text-transform: none; }
+.asset-focus p { margin: 0; }
+.asset-focus .btn-big { justify-self: start; }
+.asset-spend { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: baseline; }
+.asset-when { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); white-space: nowrap; }
+.asset-focus .kind { justify-self: start; }
+@media (min-width: 861px) { .asset-focus .btn-big { width: auto; min-width: 260px; } }

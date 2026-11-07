@@ -327,13 +327,15 @@
               "task_id": "cd4ef5ed1b"
             },
             "asks_meter": false
-          }
+          },
+          "due": "Past due 2 days"
         }
       ],
       "task_count": 1,
       "quick_stats": [],
       "warranty_until": null,
-      "scope": "greenhouse"
+      "scope": "greenhouse",
+      "meter": null
     }
   ],
   "attention": [
@@ -376,7 +378,8 @@
           "task_id": "cd4ef5ed1b"
         },
         "asks_meter": false
-      }
+      },
+      "due": "Past due 2 days"
     }
   ],
   "next_up": [],
@@ -450,7 +453,8 @@
           "task_id": "cd4ef5ed1b"
         },
         "asks_meter": false
-      }
+      },
+      "due": "Past due 2 days"
     }
   ]
 }

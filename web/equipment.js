@@ -53,16 +53,19 @@
           el("a", { class: "btn btn-ghost", href: "asset.html?id=" + encodeURIComponent(row.asset_id) }, "Open"))));
   }
 
+  // The canvas's Garage card (DEC-0113): the machine and its meter, its condition, then its next tasks in plain due
+  // words (amber when it needs you or is close, grey when it's a way off). The engine words them (web_equipment.due_words).
   function assetCard(a) {
     return el("a", { class: "glass asset-card" + (a.overdue ? " attention" : ""), href: "asset.html?id=" + encodeURIComponent(a.id) },
       el("div", { class: "asset-head" },
         el("h3", {}, a.name),
-        el("span", { class: "chip" }, a.category)),
-      a.make_model ? el("p", { class: "dim" }, a.make_model) : null,
+        a.meter ? el("span", { class: "asset-meter" }, a.meter) : el("span", { class: "asset-kind" }, a.category)),
+      a.make_model ? el("p", { class: "dim asset-model" }, a.make_model) : null,
       MIAShell.conditionBar(a.condition),
       grow && growPage ? grow.summary(a.id) : null,
       el("ul", { class: "asset-tasks" }, a.tasks.length ? a.tasks.map((t) =>
-        el("li", { class: t.needs_attention ? "overdue" : "" }, el("span", {}, t.title), chip(t)))
+        el("li", { class: t.needs_attention ? "overdue" : "" }, el("span", {}, t.title),
+          el("span", { class: "asset-due" + (t.needs_attention || t.urgency === "due_soon" ? " soon" : "") }, t.due || t.text)))
         : el("li", { class: "dim" }, "No tasks yet")),
       a.quick_stats.length ? el("p", { class: "dim" }, a.quick_stats.map((q) => q.title + ": " + q.text).join(" · ")) : null,
       a.task_count > a.tasks.length ? el("p", { class: "dim" }, "+" + (a.task_count - a.tasks.length) + " more") : null);
@@ -70,16 +73,17 @@
 
   function assetsView() {
     const kids = [];
-    if (page.attention.length) {
-      kids.push(el("section", { class: "attention-panel" },
-        el("h3", {}, "⚠ Needs attention"),
-        el("div", { class: "rows" }, page.attention.map((r) => taskRow(r, true)))));
-    }
+    // The machines first, as the canvas has it; what needs you follows, each with its Done.
     kids.push(el("section", { class: "glass money-section" },
       el("div", { class: "sect" }, el("h2", {}, "Assets"), btn("Add", "btn-amber", addAsset)),
       page.assets.length ? el("div", { class: "asset-grid" }, page.assets.map(assetCard))
         : el("p", { class: "empty" }, el("strong", {}, "Nothing here yet."), grow ? "Add each grow bed and tank: its plants, water and harvests are kept under it."
           : "Add something, or tell MIA: “I bought a new lawn mower”.")));
+    if (page.attention.length) {
+      kids.push(el("section", { class: "attention-panel" },
+        el("h3", {}, "Needs You"),
+        el("div", { class: "rows" }, page.attention.map((r) => taskRow(r, true)))));
+    }
     if (page.next_up.length) {
       kids.push(el("section", { class: "glass money-section" },
         el("div", { class: "sect" }, el("h2", {}, "Next up")),
@@ -95,7 +99,7 @@
     $("hero-tagline").textContent = page.tagline;
     $("strip").replaceChildren(
       el("div", { class: "cell ok" }, el("span", { class: "n" }, page.assets.length), el("span", { class: "t" }, "Tracked")),
-      el("div", { class: "cell " + (page.attention.length ? "bad" : "ok") }, el("span", { class: "n" }, page.attention.length), el("span", { class: "t" }, "Needs attention")),
+      el("div", { class: "cell " + (page.attention.length ? "bad" : "ok") }, el("span", { class: "n" }, page.attention.length), el("span", { class: "t" }, "Needs You")),
       el("div", { class: "cell soon" }, el("span", { class: "n" }, page.next_up.length), el("span", { class: "t" }, "Next up")));
     // Past Due / Due Today / Due Soon (Zac, 2026-10-16), from every task's bucket.
     const BUCKETS = [["past_due", "Past Due", "Nothing past due. Everything's cared for."],
