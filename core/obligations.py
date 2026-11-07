@@ -63,11 +63,17 @@ OVERDUE_EVERY_DAYS = 7
 
 
 def _now() -> str:
+    """Now, as an ISO timestamp to the second."""
     return datetime.now().isoformat(timespec="seconds")
 
 
 @dataclass
 class Obligation:
+    """One tax or compliance obligation: what it's for and who it's owed to (authority, jurisdiction, the entity or
+    activity), the period, when it's due (to file, to pay if different, a verified extension to file), whether a
+    weekend or holiday moves it, its status, how it repeats, fee and estimate, documents, the next action, where its
+    rule came from and when it was last verified (and how often to re-check), its reminders, proof, and notes.
+    """
     obligation_id: str
     title: str
     kind: str = "other"
@@ -102,16 +108,19 @@ class Obligation:
 
 
 def _nth_weekday(year: int, month: int, weekday: int, n: int) -> date:
+    """Pure logic. The nth given weekday of a month (the third Monday of February...)."""
     first = date(year, month, 1)
     return first + timedelta(days=(weekday - first.weekday()) % 7 + 7 * (n - 1))
 
 
 def _last_weekday(year: int, month: int, weekday: int) -> date:
+    """Pure logic. The last given weekday of a month (the last Monday of May)."""
     last = (date(year, month + 1, 1) if month < 12 else date(year + 1, 1, 1)) - timedelta(days=1)
     return last - timedelta(days=(last.weekday() - weekday) % 7)
 
 
 def _observed(day: date) -> date:
+    """Pure logic. A holiday's observed day: Friday when it falls on a Saturday, Monday when on a Sunday."""
     return day - timedelta(days=1) if day.weekday() == 5 else day + timedelta(days=1) if day.weekday() == 6 else day
 
 
@@ -139,6 +148,7 @@ def business_day(day: date, dc: bool = True) -> date:
 
 
 def _day(text: str) -> Optional[date]:
+    """A date from text (its first ten characters), or None."""
     try:
         return date.fromisoformat(str(text or "")[:10])
     except ValueError:
@@ -321,13 +331,20 @@ def starter_list(state_code: str = "") -> list[dict]:
 
 
 class ObligationBook:
+    """The household's obligations (obligations.json, written through atomic_write_text so undo can restore it), and
+    the reminders already given, so each goes out once.
+    """
     def __init__(self, context, data_dir: Optional[Path] = None) -> None:
+        """Points at the household's file (data/ by default) and loads it."""
         self.context = context
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._file = self.data_dir / _FILE
         self._load()
 
     def _load(self) -> None:
+        """Reads the obligations and the reminders given (the last 500), keeping only fields an obligation knows; an
+        unreadable file is logged, reported and starts empty.
+        """
         self.obligations: list[Obligation] = []
         self.noted: list[str] = []
         if not self._file.exists():
@@ -342,17 +359,21 @@ class ObligationBook:
             notify_data_corruption(self.context, _FILE)
 
     def reload(self) -> None:
+        """Reads the file again (after undo restored it)."""
         self._load()
 
     def _save(self) -> None:
+        """Writes everything atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._file, json.dumps({"obligations": [asdict(o) for o in self.obligations],
                                                   "noted": self.noted[-500:]}, indent=2))
 
     def get(self, obligation_id: str) -> Optional[Obligation]:
+        """The obligation with this id, or None."""
         return next((o for o in self.obligations if o.obligation_id == obligation_id), None)
 
     def add(self, title: str, **fields) -> Obligation:
+        """Adds an obligation (a title is required) with its fields, checked by _apply."""
         if not str(title or "").strip():
             raise ValueError("What's the obligation called?")
         o = Obligation(obligation_id=uuid.uuid4().hex[:10], title=title.strip(), created_at=_now())
@@ -362,6 +383,7 @@ class ObligationBook:
         return o
 
     def update(self, obligation_id: str, **fields) -> Obligation:
+        """Changes an obligation's fields (checked), stamping when it was closed, or clearing that when it's reopened."""
         o = self.get(obligation_id)
         if o is None:
             raise ValueError("That obligation isn't there anymore.")
@@ -374,11 +396,15 @@ class ObligationBook:
         return o
 
     def delete(self, obligation_id: str) -> None:
+        """Deletes an obligation."""
         self.obligations = [o for o in self.obligations if o.obligation_id != obligation_id]
         self._save()
 
     @staticmethod
     def _apply(o: Obligation, fields: dict) -> None:
+        """Sets an obligation's fields, checked: kind, jurisdiction, status and recurrence from their lists, dates real
+        dates, fee and estimate never negative, re-verify at least every day, and reminders a sorted set of whole days.
+        """
         for name, value in fields.items():
             if name in ("obligation_id", "created_at") or not hasattr(o, name):
                 raise ValueError(f"An obligation has no '{name}'.")

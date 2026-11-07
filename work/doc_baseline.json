@@ -152,7 +152,6 @@
   "core/night_school.py": 6,
   "core/notification_manager.py": 13,
   "core/obligation_actions.py": 13,
-  "core/obligations.py": 16,
   "core/online_watch.py": 9,
   "core/operating_actions.py": 8,
   "core/operating_journal.py": 8,
