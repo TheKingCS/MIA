@@ -169,7 +169,6 @@
   "core/local_model.py": 15,
   "core/loop_actions.py": 12,
   "core/loop_coverage.py": 8,
-  "core/loops.py": 62,
   "core/mail_send.py": 9,
   "core/main_thread.py": 2,
   "core/maintenance_manager.py": 32,

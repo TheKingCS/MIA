@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 225,861 lines; 1043 files describe themselves; 2,987 of 13,517 classes and functions are documented.
+1043 files, 225,950 lines; 1043 files describe themselves; 3,049 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 99,767 lines; 2,256 of 5,630 classes and functions documented
+367 files, 99,856 lines; 2,318 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -199,7 +199,7 @@
 - `core/loop_actions.py`: The Loop's actions (DEC-0047, core/the_loop.py) on the action contract: what the person says about when things happen, in plain words, undoable. *(12 undocumented)*
 - `core/loop_catalog.py`: The loops as built (DEC-0094, DEC-0101): `docs/LOOPS.md` is the code's own list of every loop in `core/loops.py`, by area, with what it watches, its floor, what it does when it slips and the processes it covers. It's generated, never edited by hand, and `tests/test_loop_catalog.py` fails when it fal
 - `core/loop_coverage.py`: How MIA's improvement loops keep spreading to every process (DEC-0101; Zac, 2026-11-06: "She also needs a method for developing these loops into all processes that could benefit from a self improvement loop and continue to do so throughout her development"). *(8 undocumented)*
-- `core/loops.py`: MIA's improvement loops (DEC-0094; the map is `docs/IMPROVEMENT_LOOPS.md`; Zac, 2026-11-06: "almost every process has the potential for some kind of self assessment and improvement loop and we should identify those and build it"). *(62 undocumented)*
+- `core/loops.py`: MIA's improvement loops (DEC-0094; the map is `docs/IMPROVEMENT_LOOPS.md`; Zac, 2026-11-06: "almost every process has the potential for some kind of self assessment and improvement loop and we should identify those and build it").
 - `core/mail_send.py`: Sending an email draft from your own address (2026-10-01, accounts stage 3, core/email_drafts.py). Optional: without it, Copy and "open in my mail app" always work. *(9 undocumented)*
 - `core/main_thread.py`: Publishing events safely from background threads (2026-09-28). *(2 undocumented)*
 - `core/maintenance_insights.py`: The Maintenance-domain scan for "connective infrastructure" phase 3 (Insight + Recommendation) — see core/insight_manager.py's own docstring for why these are real, new persisted entities. Pure decision logic, no Qt, no manager instance of its own, wired into core/application.py's existing daily-che

@@ -48,6 +48,9 @@ ACTION_KINDS = ("action_failed", "declined")
 
 @dataclass(frozen=True)
 class Reading:
+    """One measurement a loop took: the value it's judged on, how many things it was worked out from (a loop needs min_n
+    before it judges), and a detail line of numbers and kinds only, never anything personal.
+    """
     value: float
     n: int = 1  # how many things it was worked out from
     detail: str = ""  # numbers and kinds only
@@ -55,6 +58,12 @@ class Reading:
 
 @dataclass(frozen=True)
 class Loop:
+    """One improvement loop (DEC-0094): what it watches (`what`, over a device or a person), the measure that reads it, which
+    direction is better, the floor it must stay on (or None to watch the trend), the fewest readings it judges from,
+    what it does when it slips (open a task, offer it, or only show it), the files to look at, the processes it covers
+    (core/loop_coverage.py), how many days between readings, and whether it's heavy (needs a real run: Night School
+    and the CLI, never the app's own check).
+    """
     id: str
     area: str
     what: str
@@ -72,22 +81,28 @@ class Loop:
 
 
 def _now() -> datetime:
+    """Now, in UTC (every loop timestamp is UTC)."""
     return datetime.now(timezone.utc)
 
 
 def _since(days: int, now: Optional[datetime] = None) -> str:
+    """The ISO time `days` ago, to compare stored timestamps against."""
     return ((now or _now()) - timedelta(days=days)).isoformat(timespec="seconds")
 
 
 # ------------------------------------------------------------------ the person's loops (their use)
 
 def _turns(context, days: int = 7) -> list[dict]:
+    """The Assistant turns traced in the last `days` days (core/traces)."""
     traces = getattr(context, "traces", None)
     cut = _since(days)
     return [t for t in (traces.recent(5000) if traces is not None else []) if str(t.get("at", "")) >= cut]
 
 
 def _failures(context, kinds: tuple[str, ...] = (), days: int = 7) -> list[dict]:
+    """The failure-log events of the last `days` days: of the given kinds, or, with no kinds, every kind except an
+    action's own outcome (those have their own actions.* loops).
+    """
     log = getattr(context, "failures", None)
     found = log.events(days=days) if log is not None else []
     if not kinds:  # "what went wrong in a turn": an action's own outcome has its loops (actions.*)
@@ -96,6 +111,7 @@ def _failures(context, kinds: tuple[str, ...] = (), days: int = 7) -> list[dict]
 
 
 def _per_100_turns(kinds: tuple[str, ...]):
+    """Builds a measure: how many of the given failures happened per 100 turns this week, broken down by kind."""
     def measure(context) -> Optional[Reading]:
         turns = len(_turns(context))
         if not turns:
@@ -110,6 +126,7 @@ def _per_100_turns(kinds: tuple[str, ...]):
 
 
 def _thumbs(context) -> Optional[Reading]:
+    """Measure: the share of rated answers that were thumbs up. None when there's nothing to judge from yet."""
     ratings = getattr(context, "ratings", None)
     if ratings is None:
         return None
@@ -119,6 +136,7 @@ def _thumbs(context) -> Optional[Reading]:
 
 
 def _slow(context) -> Optional[Reading]:
+    """Measure: the share of this week's turns that took over 25 seconds. None when there's nothing to judge from yet."""
     turns = _turns(context)
     if not turns:
         return None
@@ -127,6 +145,7 @@ def _slow(context) -> Optional[Reading]:
 
 
 def _count_of(kinds: tuple[str, ...]):
+    """Builds a measure: how many of the given failures happened in 7 days."""
     def measure(context) -> Optional[Reading]:
         if getattr(context, "failures", None) is None:
             return None
@@ -136,6 +155,7 @@ def _count_of(kinds: tuple[str, ...]):
 
 
 def _actions_failed(context) -> Optional[Reading]:
+    """Measure: how many approved actions failed in 7 days, naming the kinds. None when there's nothing to judge from yet."""
     if getattr(context, "failures", None) is None:
         return None
     found = _failures(context, ("action_failed",))
@@ -144,6 +164,7 @@ def _actions_failed(context) -> Optional[Reading]:
 
 
 def _email_discarded(context) -> Optional[Reading]:
+    """Measure: the share of the last 30 days' settled email drafts that were thrown away rather than sent. None when there's nothing to judge from yet."""
     store = getattr(context, "email_drafts", None)
     if store is None:
         return None
@@ -155,6 +176,7 @@ def _email_discarded(context) -> Optional[Reading]:
 
 
 def _email_left_open(context) -> Optional[Reading]:
+    """Measure: how many open email drafts are over a week old. None when there's nothing to judge from yet."""
     store = getattr(context, "email_drafts", None)
     if store is None:
         return None
@@ -164,6 +186,7 @@ def _email_left_open(context) -> Optional[Reading]:
 
 
 def _gate_entries(context) -> Optional[list[dict]]:
+    """The communication gate's decisions of the last 7 days, or None when there's no gate."""
     gate = getattr(context, "communication", None)
     if gate is None or not hasattr(gate, "entries_since"):
         return None
@@ -171,6 +194,7 @@ def _gate_entries(context) -> Optional[list[dict]]:
 
 
 def _gate_dismissed(context) -> Optional[Reading]:
+    """Measure: the share of non-urgent messages MIA sent this week that the person dismissed. None when there's nothing to judge from yet."""
     entries = _gate_entries(context)
     if entries is None:
         return None
@@ -196,6 +220,7 @@ CHECK_TOPICS = {
 
 
 def _check_of(topic: str) -> str:
+    """Which daily check a gate topic comes from (CHECK_TOPICS; a key ending in "_" matches every topic it starts)."""
     return CHECK_TOPICS.get(topic) or next((c for t, c in CHECK_TOPICS.items() if t.endswith("_") and
                                             topic.startswith(t)), "")
 
@@ -252,6 +277,7 @@ def _screens_broken(context) -> Optional[Reading]:
 
 
 def _apps() -> tuple[str, ...]:
+    """Every module as a `module:<id>` process name, for the loops that cover the apps."""
     return tuple(f"module:{p.parent.name}" for p in sorted((Path(__file__).resolve().parents[1] / "modules")
                                                            .glob("*/module.py")))
 
@@ -329,6 +355,7 @@ def _captions_waiting(_context) -> Optional[Reading]:
 
 
 def _gate_expired(context) -> Optional[Reading]:
+    """Measure: of the messages the gate held back this week, the share that waited too long and were dropped. None when there's nothing to judge from yet."""
     entries = _gate_entries(context)
     if entries is None:
         return None
@@ -340,6 +367,7 @@ def _gate_expired(context) -> Optional[Reading]:
 
 
 def _memory_quality(context) -> Optional[Reading]:
+    """Measure: the share of the last 30 days' new memories the person corrected or deleted, by category. None when there's nothing to judge from yet."""
     store = getattr(context, "user_memories", None)
     if store is None or not hasattr(store, "corrections"):
         return None
@@ -357,6 +385,7 @@ def _memory_quality(context) -> Optional[Reading]:
 
 
 def _gate_saturation(context) -> Optional[Reading]:
+    """Measure: on how many days this week the daily message limit was hit. None when there's nothing to judge from yet."""
     entries = _gate_entries(context)
     if entries is None:
         return None
@@ -367,6 +396,7 @@ def _gate_saturation(context) -> Optional[Reading]:
 
 
 def _gate_unwelcome(context) -> Optional[Reading]:
+    """Measure: how many kinds of message the person has put on a break. None when there's nothing to judge from yet."""
     gate = getattr(context, "communication", None)
     if gate is None or not hasattr(gate, "paused"):
         return None
@@ -376,6 +406,7 @@ def _gate_unwelcome(context) -> Optional[Reading]:
 
 
 def _creations_held(context) -> Optional[Reading]:
+    """Measure: how many published screens no longer pass the checks they passed to be published. None when there's nothing to judge from yet."""
     store = getattr(context, "creations", None)
     if store is None:
         return None
@@ -397,6 +428,7 @@ def _creations_held(context) -> Optional[Reading]:
 
 
 def _recovered(_context) -> Optional[Reading]:
+    """Measure (needs the repo, so the PC only): how many times in 7 days a data file was recovered from a bad write, naming the files. None when there's nothing to judge from yet."""
     if not _has_repo():
         return None
     since = _since(7)
@@ -406,6 +438,9 @@ def _recovered(_context) -> Optional[Reading]:
 
 
 def _corrections(area: str = ""):
+    """Builds a measure: the share of MIA's changes (in one area, or all) the person corrected in 30 days, with the
+    kinds most corrected.
+    """
     def measure(context) -> Optional[Reading]:
         if getattr(context, "failures", None) is None and getattr(context, "traces", None) is None:
             return None
@@ -428,6 +463,9 @@ def _corrections(area: str = ""):
 
 
 def _bench(kind: str, what: str):
+    """Builds a measure from the latest benchmark of a kind (core/benchmarks.py): how many rows fell since the run before
+    ("falls"), the share clean or flagged, or how many questions reach no plan, lookup or tool.
+    """
     def measure(_context) -> Optional[Reading]:
         if not _has_repo():
             return None
@@ -451,6 +489,9 @@ def _bench(kind: str, what: str):
 
 
 def _calibration(context) -> Optional[Reading]:
+    """Measure: how much more often her "sure" answers are rated up than her others (or the up share of sure ones,
+    when there are no others). None when there's nothing to judge from yet.
+    """
     if getattr(context, "ratings", None) is None:
         return None
     from core import calibration
@@ -470,6 +511,9 @@ def _calibration(context) -> Optional[Reading]:
 
 
 def _gaps(context) -> Optional[Reading]:
+    """Measure: of the things people asked that she couldn't do (core/capability_gaps.py), how many were asked more than
+    once. None when there's nothing to judge from yet.
+    """
     if getattr(context, "failures", None) is None:
         return None
     from core import capability_gaps
@@ -482,6 +526,7 @@ def _gaps(context) -> Optional[Reading]:
 
 
 def _journal_pace(context) -> Optional[Reading]:
+    """Measure: the share of full weeks or months the operating journal kept its own pace, by area. None when there's nothing to judge from yet."""
     if getattr(context, "operating_journal", None) is None:
         return None
     from core import operating_journal
@@ -495,6 +540,7 @@ def _journal_pace(context) -> Optional[Reading]:
 
 
 def _play_load(context) -> Optional[Reading]:
+    """Measure: this week's play load against the four weeks before (acute:chronic, core/recreation.py). None when there's nothing to judge from yet."""
     if getattr(context, "recreation", None) is None:
         return None
     from core import recreation
@@ -508,6 +554,7 @@ def _play_load(context) -> Optional[Reading]:
 
 
 def _news_misleading(context) -> Optional[Reading]:
+    """Measure: the share of good-news stories heard in 30 days that someone called misleading. None when there's nothing to judge from yet."""
     if getattr(context, "failures", None) is None:
         return None
     from core import good_news
@@ -525,6 +572,7 @@ def _news_misleading(context) -> Optional[Reading]:
 
 
 def _sight_failed(context) -> Optional[Reading]:
+    """Measure: the share of camera looks (core/sight.py) that got no answer, and how many took over 30 s. None when there's nothing to judge from yet."""
     if getattr(context, "failures", None) is None:
         return None
     from core import sight
@@ -538,6 +586,7 @@ def _sight_failed(context) -> Optional[Reading]:
 
 
 def _glasses_voice(context) -> Optional[Reading]:
+    """Measure: the share of this week's glasses turns unanswered or over 25 s. None when there's nothing to judge from yet."""
     mine = [t for t in _turns(context, 7) if t.get("surface") == "glasses"]
     if not mine:
         return None
@@ -546,6 +595,7 @@ def _glasses_voice(context) -> Optional[Reading]:
 
 
 def _phone_link(context) -> Optional[Reading]:
+    """Measure: hours since the signed-in person's phone last reached this PC. None when there's nothing to judge from yet."""
     from core import phone_link
     from core.person_settings import person_id
 
@@ -555,6 +605,9 @@ def _phone_link(context) -> Optional[Reading]:
 
 
 def _maker(context) -> Optional[Reading]:
+    """Measure: the share of designs that missed their checks the first time, how many never passed, and the commonest
+    problems. None when there's nothing to judge from yet.
+    """
     if getattr(context, "failures", None) is None:
         return None
     from core.creation_maker import maker_log
@@ -574,6 +627,7 @@ def _maker(context) -> Optional[Reading]:
 
 
 def _loop_prediction(context) -> Optional[Reading]:
+    """Measure: how far the Loop's plan was off: work days planned but not worked, plus days worked it hadn't planned. None when there's nothing to judge from yet."""
     from core.the_loop import predictions
 
     found = predictions(context)
@@ -585,6 +639,7 @@ def _loop_prediction(context) -> Optional[Reading]:
 
 
 def _inbox_reading(context) -> Optional[Reading]:
+    """Measure: the share of filed inbox documents that had a field corrected, by field. None when there's nothing to judge from yet."""
     inbox = getattr(context, "inbox", None)
     if inbox is None or not hasattr(inbox, "readings"):
         return None
@@ -602,6 +657,7 @@ def _inbox_reading(context) -> Optional[Reading]:
 
 
 def _projections(context) -> Optional[Reading]:
+    """Measure: the share of projected dates that came true within a month (checks what's come due first). None when there's nothing to judge from yet."""
     if getattr(context, "failures", None) is None:
         return None
     from core import calibration
@@ -616,6 +672,9 @@ def _projections(context) -> Optional[Reading]:
 
 
 def _search_empty(_context) -> Optional[Reading]:
+    """Measure (needs the repo, so the PC only): the share of 30 days' Ctrl+K searches that found nothing, how many found things nobody opened,
+    and which providers failed. None when there's nothing to judge from yet.
+    """
     if not _has_repo():
         return None
     since = _since(30)
@@ -630,6 +689,7 @@ def _search_empty(_context) -> Optional[Reading]:
 
 
 def _unused_creations(context) -> Optional[Reading]:
+    """Measure: how many published screens nobody has opened in 30 days. None when there's nothing to judge from yet."""
     store = getattr(context, "creations", None)
     if store is None:
         return None
@@ -642,6 +702,7 @@ def _unused_creations(context) -> Optional[Reading]:
 
 
 def _failing_workflows(context) -> Optional[Reading]:
+    """Measure: how many of this week's workflow runs stopped. None when there's nothing to judge from yet."""
     store = getattr(context, "creations", None)
     if store is None:
         return None
@@ -656,15 +717,18 @@ def _failing_workflows(context) -> Optional[Reading]:
 # ------------------------------------------------------------------ the device's loops (the PC and the platform)
 
 def _disk(_context) -> Optional[Reading]:
+    """Measure: GB free on the disk MIA lives on."""
     free = shutil.disk_usage(ROOT).free / 1e9
     return Reading(round(free), 1, f"{free:.0f} GB free")
 
 
 def _has_repo() -> bool:
+    """Whether this is the development checkout (work/ exists); the dev loops read nothing elsewhere."""
     return (ROOT / "work").exists()
 
 
 def _layering(_context) -> Optional[Reading]:
+    """Measure: how many imports break the core/modules/gui layering (core/dev_map.py), naming the first few."""
     from core import dev_map
 
     breaks = dev_map.layering()
@@ -672,6 +736,7 @@ def _layering(_context) -> Optional[Reading]:
 
 
 def _doc_drift(_context) -> Optional[Reading]:
+    """Measure: how many places the docs name something the code doesn't have (core/dev_map.py)."""
     from core import dev_map
 
     found = dev_map.doc_mismatches()
@@ -679,6 +744,7 @@ def _doc_drift(_context) -> Optional[Reading]:
 
 
 def _stuck(_context) -> Optional[Reading]:
+    """Measure: how many claimed work tasks haven't moved in 7 days."""
     from core import work_tasks
 
     cut = (_now() - timedelta(days=7)).date().isoformat()
@@ -689,6 +755,7 @@ def _stuck(_context) -> Optional[Reading]:
 
 
 def _reviewers(_context) -> Optional[Reading]:
+    """Measure: the weakest reviewer's lower bound (Wilson) on passing reviews, among providers with 5 or more attempts."""
     from core import dev_ledger
 
     rows = [(p, r["reviewing"]) for p, r in dev_ledger.ledger().items() if r["reviewing"]["attempts"] >= 5]
@@ -700,6 +767,9 @@ def _reviewers(_context) -> Optional[Reading]:
 
 
 def _knowledge(_context) -> Optional[Reading]:
+    """Measure: the share of her own knowledge write-ups withdrawn since the guards (T-0044); the first batch is
+    history, not how she writes now.
+    """
     from core import dev_knowledge
 
     # Only what she's written since the guards (T-0044): the first batch is history, not how she writes now.
@@ -713,6 +783,7 @@ def _knowledge(_context) -> Optional[Reading]:
 
 
 def _coder(_context) -> Optional[Reading]:
+    """Measure: the share of the local coder's shadow attempts at fixing failing tests that passed."""
     from core import dev_ledger
 
     row = dev_ledger.ledger().get("ollama-coder", {}).get("fix failing tests", {})
@@ -739,6 +810,7 @@ def _lab_landed(_context) -> Optional[Reading]:
 
 
 def _limits(_context) -> Optional[Reading]:
+    """Measure: how many development calls hit a provider's usage limit this week, by provider."""
     from core import dev_usage
 
     cut = _since(7)
@@ -751,6 +823,7 @@ def _limits(_context) -> Optional[Reading]:
 
 
 def _council_cost(_context) -> Optional[Reading]:
+    """Measure: model calls per planning turn Zac had with the council this week."""
     from core import council, dev_usage
 
     cut = _since(7)
@@ -762,6 +835,7 @@ def _council_cost(_context) -> Optional[Reading]:
 
 
 def _chronicles(_context) -> Optional[Reading]:
+    """Measure: how many Chronicles candidates are waiting for Zac."""
     from core import saga
 
     return Reading(float(len(saga.candidates())), 1, "candidates waiting for Zac")
@@ -783,6 +857,7 @@ def _docs(_context) -> Optional[Reading]:
 
 
 def _loop_coverage(_context) -> Optional[Reading]:
+    """Measure (needs the repo, so the PC only): the share of MIA's processes a loop covers (declined ones aside), with how many are proposed. None when there's nothing to judge from yet."""
     if not _has_repo():
         return None
     from core import loop_coverage
@@ -794,6 +869,9 @@ def _loop_coverage(_context) -> Optional[Reading]:
 
 
 def _suite_unexpected(_context) -> Optional[Reading]:
+    """Measure (needs the repo, so the PC only): unexpected test failures on the last suite run (1 when it didn't finish), and known
+    failures that pass again so they can come off the list. None when there's nothing to judge from yet.
+    """
     if not _has_repo():
         return None
     from core import dev_checks
@@ -810,6 +888,7 @@ def _suite_unexpected(_context) -> Optional[Reading]:
 
 
 def _suite_time(_context) -> Optional[Reading]:
+    """Measure (needs the repo, so the PC only): how long the last suite run took, in seconds. None when there's nothing to judge from yet."""
     if not _has_repo():
         return None
     from core import dev_checks
@@ -819,6 +898,7 @@ def _suite_time(_context) -> Optional[Reading]:
 
 
 def _reverts(_context) -> Optional[Reading]:
+    """Measure (needs the repo, so the PC only): the share of 30 days' merges that were reverted. None when there's nothing to judge from yet."""
     if not _has_repo():
         return None
     from core import dev_checks, work_activity
@@ -831,6 +911,7 @@ def _reverts(_context) -> Optional[Reading]:
 
 
 def _vulnerable(_context) -> Optional[Reading]:
+    """Measure (needs the repo, so the PC only): how many installed packages have a known vulnerability. None when there's nothing to judge from yet."""
     if not _has_repo():
         return None
     from core import dev_checks
@@ -858,6 +939,7 @@ def _phone_vulnerable(_context) -> Optional[Reading]:
 
 
 def _outdated(_context) -> Optional[Reading]:
+    """Measure (needs the repo, so the PC only): how many installed packages are behind their latest version. None when there's nothing to judge from yet."""
     if not _has_repo():
         return None
     from core import dev_checks
@@ -871,6 +953,7 @@ def _outdated(_context) -> Optional[Reading]:
 
 
 def _night_lessons(_context) -> Optional[Reading]:
+    """Measure (needs the repo, so the PC only): the share of this week's Night School lessons that passed. None when there's nothing to judge from yet."""
     if not _has_repo():
         return None
     from core import night_school
@@ -883,6 +966,9 @@ def _night_lessons(_context) -> Optional[Reading]:
 
 
 def _night_choice(_context) -> Optional[Reading]:
+    """Measure (needs the repo, so the PC only): the share of the last 30 judged nights her own pick of what to study
+    matched her teacher's. None when no night has been judged yet.
+    """
     if not _has_repo():
         return None
     from core import night_school
@@ -1052,6 +1138,7 @@ LOOPS: tuple[Loop, ...] = (
 # ------------------------------------------------------------------ judging (pure)
 
 def worse(loop: Loop, value: float, than: float) -> bool:
+    """Pure logic. Whether value is worse than `than` for this loop (higher is worse when lower is better)."""
     return value > than if loop.better == "lower" else value < than
 
 
@@ -1076,6 +1163,7 @@ def judge(loop: Loop, reading: Optional[Reading], earlier: list[float]) -> dict:
 # ------------------------------------------------------------------ running
 
 def _store(context, scope: str) -> DevStore:
+    """Where a loop's readings are kept: the device's dev data, or the person's own folder for a person-scoped loop."""
     if scope == "device":
         return DevStore(DEV_DATA / "loops")
     home = getattr(getattr(context, "traces", None), "data_dir", None) or getattr(context, "my_dir", None)
@@ -1083,6 +1171,7 @@ def _store(context, scope: str) -> DevStore:
 
 
 def history(context, scope: str, limit: int = 600) -> dict[str, list[dict]]:
+    """Every loop's stored readings for a scope, grouped by loop id (the newest `limit` rows)."""
     out: dict[str, list[dict]] = {}
     for r in _store(context, scope).tail(limit):
         out.setdefault(r.get("loop", ""), []).append(r)
