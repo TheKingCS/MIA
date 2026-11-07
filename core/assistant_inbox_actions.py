@@ -129,8 +129,60 @@ def _action_dismiss_inbox_item(context: AppContext, arguments: dict) -> str:
     return f"Took the {item.label} out of your inbox without filing it."
 
 
+def _action_undo_receipt(context, arguments: dict) -> str:
+    """Tool undo_receipt: undoes a filed receipt exactly (the one named, else the latest MIA filed on her own from
+    email): its expense taken out of Money and its pantry, service and material changes put back; it waits again."""
+    inbox = getattr(context, "inbox", None)
+    if inbox is None:
+        return "The inbox isn't set up here."
+    words = {w for w in str(arguments.get("item") or "").lower().replace("'", "").split() if len(w) > 2} - {
+        "the", "receipt", "that", "one", "undo", "from", "email"}
+    filed = inbox.auto_filed(days=60) or [i for i in inbox.all_items() if i.status == "filed"]
+    if words:
+        filed = [i for i in filed if words & set(f"{i.label} {i.vendor} {i.subject}".lower().replace("'", "").split())] \
+            or filed[:0]
+    if not filed:
+        return "I couldn't find a filed receipt like that. The Inbox lists what I filed, each with Undo."
+    try:
+        return inbox.unfile(filed[0].item_id) + " It's waiting in the Inbox to file again or dismiss."
+    except ValueError as problem:
+        return str(problem)
+
+
+def _action_set_receipt_autofile(context, arguments: dict) -> str:
+    """Tool set_receipt_autofile: whether MIA files emailed receipts on her own (on by default) or leaves them
+    waiting for the person."""
+    on = str(arguments.get("on", "true")).strip().lower() not in ("false", "off", "no", "0")
+    context.config.set("inbox.auto_file", on)
+    context.config.save()
+    return ("I'll file emailed receipts on my own again, and you can Undo any." if on else
+            "Done: emailed receipts will wait in the Inbox for you to file.")
+
+
 def register_inbox_actions(registry: AssistantActionRegistry) -> None:
-    """Registers the inbox tools: list_inbox, file_inbox_item and dismiss_inbox_item."""
+    """Registers the inbox tools: list_inbox, file_inbox_item, dismiss_inbox_item, undo_receipt (a filing taken back
+    exactly) and set_receipt_autofile."""
+    registry.register(AssistantAction(
+        name="undo_receipt", domain="inbox",
+        description="Undo a receipt MIA filed (by default the latest she filed from email): takes its expense out of "
+                    "Money and puts back what it changed in the pantry, garage or materials.",
+        parameters={"type": "object", "properties": {
+            "item": {**_S, "description": "Which receipt, e.g. 'the Kroger receipt'. Empty for the latest."},
+        }, "required": []},
+        handler=_action_undo_receipt,
+        trigger_phrases=("undo the receipt", "undo that receipt", "unfile", "that receipt was wrong",
+                         "wrong receipt", "undo the kroger", "undo the lowe", "that wasn't my", "take back the receipt"),
+    ))
+    registry.register(AssistantAction(
+        name="set_receipt_autofile", domain="inbox",
+        description="Turn on or off MIA filing emailed receipts on her own.",
+        parameters={"type": "object", "properties": {
+            "on": {"type": "boolean", "description": "true to file them automatically, false to wait for the user."},
+        }, "required": ["on"]},
+        handler=_action_set_receipt_autofile,
+        trigger_phrases=("stop filing receipts", "file receipts automatically", "file my receipts automatically",
+                         "don't file receipts", "ask me before filing"),
+    ))
     registry.register(AssistantAction(
         name="list_inbox", domain="inbox",
         description="List the documents waiting in the user's inbox (receipts, manuals, warranties sent to MIA).",

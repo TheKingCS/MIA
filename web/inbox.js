@@ -160,6 +160,11 @@
           btn("📎 Upload A File", "btn-ghost", () => pick()),
           btn("✏ Write A Note", "btn-ghost", note)),
         el("p", { class: "dim" }, "Receipts, manuals, warranties, invoices, anything. From any app on your phone, tap Share and pick MIA. MIA reads it and suggests where it goes; nothing is filed until you say so.")),
+      (page.auto || []).length ? section("Filed By MIA From Your Email", null,
+        el("p", { class: "dim" }, "She files emailed receipts on her own. If one is wrong, Undo takes back exactly what it did and puts it in Waiting."),
+        el("div", { class: "rows" }, page.auto.map((a) => el("div", { class: "row money-row" },
+          el("div", {}, el("div", { class: "row-title" }, a.label), el("div", { class: "row-sub" }, a.did + " · " + day(a.received))),
+          btn("Undo", "btn-ghost btn-small", () => act({ kind: "inbox.unfile", params: { item_id: a.id } })))))) : null,
       section("Waiting", null, page.pending.length ? el("div", { class: "inbox-list" }, page.pending.map(card))
         : el("p", { class: "empty" }, "Nothing waiting. Send MIA a receipt or a manual.")),
       page.done.length ? section("Filed And Dismissed", btn(showDone ? "Hide" : "Show", "btn-ghost btn-small", () => { showDone = !showDone; draw(); }),

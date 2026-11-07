@@ -80,7 +80,7 @@ def item_card(context, item) -> dict:
 
 
 def inbox_page(context) -> dict:
-    """The Inbox screen's data: it takes in anything sent since the last look (a failed scan is logged, not raised), then the items waiting, the last 25 handled, and what each can be filed to (maintenance, projects, expense categories). Not available without an inbox."""
+    """The Inbox screen's data: it takes in anything sent since the last look (a failed scan is logged, not raised), then the items waiting, what MIA filed from email on her own in the last 30 days (each with Undo), the last 25 handled, and what each can be filed to (maintenance, projects, expense categories). Not available without an inbox."""
     inbox = getattr(context, "inbox", None)
     if inbox is None:
         return {"available": False}
@@ -98,6 +98,10 @@ def inbox_page(context) -> dict:
     return {
         "available": True,
         "pending": pending, "done": done,
+        # What MIA filed from email on her own: each with what it did and an Undo (inbox.unfile).
+        "auto": [{"id": i.item_id, "label": i.label, "did": i.filed_note.replace("Filed by MIA: ", "").rstrip("."),
+                  "received": i.received_at} for i in inbox.auto_filed()],
+        "auto_on": getattr(context, "config", None) is None or context.config.get("inbox.auto_file", True) is not False,
         "counts": {"waiting": len(pending), "reading": sum(1 for p in pending if p["reading"]),
                    "filed": sum(1 for i in items if i.status == "filed")},
         "picks": {

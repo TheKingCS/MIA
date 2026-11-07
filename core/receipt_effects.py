@@ -21,9 +21,12 @@ happened:
   hardware lines): each line adds to the workshop's materials at the price
   paid, to a material it matches or as a new one.
 
-Each is an **effect**: a sentence and whether it's ticked. Nothing happens
-until the person files the receipt (`inbox.file`), when `apply()` does the
-ticked ones. Matching uses core/receipt_match.py's store-receipt word
+Each is an **effect**: a sentence and whether it's ticked. `apply()` does
+the ticked ones when the receipt is filed: by the person (`inbox.file`),
+or on MIA's own for an emailed receipt (core/inbox_manager.auto_file).
+Each one done returns an undo record saying exactly what changed and what
+it was before, and `reverse()` puts just that back when the filing is
+undone (`inbox.unfile`), leaving later changes alone. Matching uses core/receipt_match.py's store-receipt word
 matching; nothing is guessed when nothing fits. Receipt text is data read
 by code, never instructions to MIA.
 """
@@ -292,71 +295,155 @@ def propose(context, item, text: str = "") -> tuple[str, list[dict]]:
 # ------------------------------------------------------------------ applying
 
 
-def apply(context, effects: list[dict], chosen: Optional[list[int]] = None) -> list[str]:
-    """Does the chosen effects (the ticked ones when `chosen` is None); returns what was done, a phrase each kind.
-    One that can't be done any more (a pantry item deleted since) is skipped, not raised."""
+def apply(context, effects: list[dict], chosen: Optional[list[int]] = None) -> tuple[list[str], list[dict]]:
+    """Does the chosen effects (the ticked ones when `chosen` is None). Returns what was done (a phrase each kind) and
+    an undo record for each one done, saying exactly what changed, so `reverse()` can put it back later without
+    touching anything else. One that can't be done any more (a pantry item deleted since) is skipped, not raised."""
     picked = [e for i, e in enumerate(effects) if (e.get("on") if chosen is None else i in chosen)]
     counts: dict[str, int] = {}
+    records: list[dict] = []
     for effect in picked:
         try:
-            if _do(context, effect):
-                counts[effect["kind"]] = counts.get(effect["kind"], 0) + 1
+            record = _do(context, effect)
         except (ValueError, KeyError, AttributeError) as problem:
             log.warning("A receipt effect couldn't be done (%s): %s", effect.get("kind"), problem)
-    words = {"pantry_add": ("pantry item topped up", "pantry items topped up"),
-             "pantry_new": ("new item in the pantry", "new items in the pantry"),
-             "grocery_check": ("grocery item ticked off", "grocery items ticked off"),
-             "maintenance_done": ("service marked done", "services marked done"),
-             "maintenance_new": ("service now tracked", "services now tracked"),
-             "material_add": ("material topped up", "materials topped up"),
-             "material_new": ("new material", "new materials")}
-    return [f"{n} {words[k][0 if n == 1 else 1]}" for k, n in counts.items() if k in words]
+            continue
+        if record is not None:
+            records.append(record)
+            counts[effect["kind"]] = counts.get(effect["kind"], 0) + 1
+    return [f"{n} {_WORDS[k][0 if n == 1 else 1]}" for k, n in counts.items() if k in _WORDS], records
 
 
-def _do(context, effect: dict) -> bool:
-    """One effect, through the store that owns it."""
+_WORDS = {"pantry_add": ("pantry item topped up", "pantry items topped up"),
+          "pantry_new": ("new item in the pantry", "new items in the pantry"),
+          "grocery_check": ("grocery item ticked off", "grocery items ticked off"),
+          "maintenance_done": ("service marked done", "services marked done"),
+          "maintenance_new": ("service now tracked", "services now tracked"),
+          "material_add": ("material topped up", "materials topped up"),
+          "material_new": ("new material", "new materials")}
+
+
+def _do(context, effect: dict) -> Optional[dict]:
+    """One effect, through the store that owns it; returns its undo record (what changed, and what it was before), or
+    None when there was nothing to do."""
     kind = effect["kind"]
     if kind == "pantry_add":
         kitchen = context.kitchen
         item = kitchen.get_pantry_item(effect["pantry_id"])
         if item is None:
-            return False
+            return None
         kitchen.update_pantry_item(item.item_id, quantity=item.quantity + float(effect["quantity"]))
-    elif kind == "pantry_new":
-        context.kitchen.add_pantry_item(effect["name"], quantity=float(effect["quantity"]),
-                                        category=effect.get("category") or "Other", notes="From a receipt")
-    elif kind == "grocery_check":
+        return {"kind": kind, "pantry_id": item.item_id, "quantity": float(effect["quantity"])}
+    if kind == "pantry_new":
+        item = context.kitchen.add_pantry_item(effect["name"], quantity=float(effect["quantity"]),
+                                               category=effect.get("category") or "Other", notes="From a receipt")
+        return {"kind": kind, "pantry_id": item.item_id}
+    if kind == "grocery_check":
         if context.kitchen.get_grocery_item(effect["grocery_id"]) is None:
-            return False
+            return None
         context.kitchen.set_grocery_item_checked(effect["grocery_id"], True)
-    elif kind == "maintenance_done":
+        return {"kind": kind, "grocery_id": effect["grocery_id"]}
+    if kind == "maintenance_done":
         maintenance = context.maintenance
         task = maintenance.get_task(effect["task_id"])
         if task is None:
-            return False
+            return None
+        record = {"kind": kind, "task_id": task.task_id, "last_completed": task.last_completed,
+                  "last_meter": getattr(task, "last_completed_meter_value", None), "reading_id": ""}
         miles = effect.get("miles")
         if miles and task.is_meter_task:
-            maintenance.log_reading(task.task_id, float(miles), task.meter_unit or "miles", "From a service receipt")
+            reading = maintenance.log_reading(task.task_id, float(miles), task.meter_unit or "miles",
+                                              "From a service receipt")
+            record["reading_id"] = getattr(reading, "reading_id", "")
         maintenance.mark_complete(task.task_id, effect.get("date"), float(miles) if miles and task.is_meter_task
                                   else None)
-    elif kind == "maintenance_new":
+        return record
+    if kind == "maintenance_new":
         maintenance = context.maintenance
         if maintenance.get_asset(effect["asset_id"]) is None:
-            return False
+            return None
         task = maintenance.add_task(effect["asset_id"], effect["title"], interval_days=182,
                                     notes="Started from a service receipt; change how often in Garage.")
         maintenance.mark_complete(task.task_id, effect.get("date"))
-    elif kind == "material_add":
+        return {"kind": kind, "task_id": task.task_id}
+    if kind == "material_add":
         materials = context.materials
         material = materials.get_material(effect["material_id"])
         if material is None:
-            return False
+            return None
+        record = {"kind": kind, "material_id": material.material_id, "quantity": float(effect["quantity"]),
+                  "unit_cost": material.unit_cost}
         materials.adjust_quantity(material.material_id, float(effect["quantity"]))
         if effect.get("unit_cost"):
             materials.update_material(material.material_id, unit_cost=float(effect["unit_cost"]))
+        return record
+    if kind == "material_new":
+        material = context.materials.add_material(name=effect["name"], unit="each",
+                                                  unit_cost=float(effect.get("unit_cost") or 0),
+                                                  quantity_on_hand=float(effect["quantity"]), notes="From a receipt")
+        return {"kind": kind, "material_id": material.material_id}
+    return None
+
+
+# ------------------------------------------------------------------ undoing (a receipt filed wrongly)
+
+
+def reverse(context, records: list[dict]) -> int:
+    """Puts back exactly what the undo records say a filing changed, newest first: quantities taken back out, new
+    pantry items, tasks and materials removed, a service's previous done date and mileage restored, a grocery item
+    unticked. Whatever changed in between (other groceries, other services) is left alone; a record whose thing is
+    gone already is skipped. Returns how many were put back."""
+    undone = 0
+    for record in reversed(records or []):
+        try:
+            undone += 1 if _undo(context, record) else 0
+        except (ValueError, KeyError, AttributeError) as problem:
+            log.warning("Undoing a receipt effect failed (%s): %s", record.get("kind"), problem)
+    return undone
+
+
+def _undo(context, record: dict) -> bool:
+    """One undo record, through the store that owns it."""
+    kind = record["kind"]
+    if kind == "pantry_add":
+        item = context.kitchen.get_pantry_item(record["pantry_id"])
+        if item is None:
+            return False
+        context.kitchen.update_pantry_item(item.item_id, quantity=max(0.0, item.quantity - record["quantity"]))
+    elif kind == "pantry_new":
+        if context.kitchen.get_pantry_item(record["pantry_id"]) is None:
+            return False
+        context.kitchen.delete_pantry_item(record["pantry_id"])
+    elif kind == "grocery_check":
+        if context.kitchen.get_grocery_item(record["grocery_id"]) is None:
+            return False
+        context.kitchen.set_grocery_item_checked(record["grocery_id"], False)
+    elif kind == "maintenance_done":
+        maintenance = context.maintenance
+        task = maintenance.get_task(record["task_id"])
+        if task is None:
+            return False
+        fields = {"last_completed": record.get("last_completed")}
+        if task.is_meter_task:
+            fields["last_completed_meter_value"] = record.get("last_meter")
+        maintenance.update_task(record["task_id"], **fields)
+        logger = getattr(context, "data_logger", None)
+        if record.get("reading_id") and logger is not None:
+            logger.delete_reading(record["reading_id"])
+    elif kind == "maintenance_new":
+        if context.maintenance.get_task(record["task_id"]) is None:
+            return False
+        context.maintenance.delete_task(record["task_id"])
+    elif kind == "material_add":
+        materials = context.materials
+        if materials.get_material(record["material_id"]) is None:
+            return False
+        materials.adjust_quantity(record["material_id"], -record["quantity"])
+        materials.update_material(record["material_id"], unit_cost=record.get("unit_cost") or 0)
     elif kind == "material_new":
-        context.materials.add_material(name=effect["name"], unit="each", unit_cost=float(effect.get("unit_cost") or 0),
-                                       quantity_on_hand=float(effect["quantity"]), notes="From a receipt")
+        if context.materials.get_material(record["material_id"]) is None:
+            return False
+        context.materials.delete_material(record["material_id"])
     else:
         return False
     return True

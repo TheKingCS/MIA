@@ -1881,3 +1881,16 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Also: DEC-0119's child-account code stays (Zac: "fine to leave"); it reaches MIA's prompts only when a child is
   signed in, so it can't confuse her.
 - Related: the inbox (2026-09-28), DEC-0030 (receipt lines), DEC-0119
+
+### DEC-0121: Emailed receipts file themselves; every filing can be undone exactly
+- Status: APPROVED
+- Decided by: zac, 2026-11-07 ("I want the actions from reading the emails to not need my approval every time... that
+  feature should be automated, but should still have a clear way to undo them if it gets it wrong")
+- Decision: an emailed receipt is filed on MIA's own (`InboxManager.auto_file`): its expense and ticked effects
+  (pantry, service done, materials) happen without a proposal. It waits instead when the same amount is already
+  logged (a forwarded copy, or an order email and its receipt), when it's an invoice (a bill still to pay), or when
+  automatic filing is turned off (`inbox.auto_file`, by asking her). Every filing keeps exactly what it did, so Undo
+  (`inbox.unfile`: the Inbox's "Filed by MIA" list, or "undo the Kroger receipt") takes back just that, any time,
+  leaving later changes alone, and the receipt waits again. An undone automatic filing counts as correcting her
+  (core/corrections.py). Amends DEC-0120's "nothing happens until filed" for emailed receipts.
+- Related: DEC-0120, DEC-0012 (actions), DEC-0094 (loops)

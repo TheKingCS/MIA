@@ -4,7 +4,9 @@
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
 session. Last updated: 2026-11-07 (DEC-0104 to 0109: documentation, models, curriculum, self-audit, specialists), by claude.*
 
-**2026-11-07 (night): receipts that do things (DEC-0120).** MIA can read Zac's own mailbox for receipts and orders without touching it, and a receipt now means something: groceries stock the pantry and tick the grocery list, an oil change is marked done on the truck at its mileage, a Lowe's run adds to the workshop's materials at the price paid. Each is proposed and done when he files the receipt.
+**2026-11-07 (night): the phone keeps your place.** The phone app is just "MIA" now, with no test header, and it opens where you left it: the same page, scrolled where you were, with Talk still open and what you'd typed.
+
+**2026-11-07 (night): receipts that do things (DEC-0120).** MIA can read Zac's own mailbox for receipts and orders without touching it, and a receipt now means something: groceries stock the pantry and tick the grocery list, an oil change is marked done on the truck at its mileage, a Lowe's run adds to the workshop's materials at the price paid. Emailed receipts file themselves (DEC-0121); each filing remembers exactly what it changed, so Undo, on the Inbox screen or by voice, takes back just that, even days later.
 
 **2026-11-07 (late): more projects and a design brief.** The plans shelf grew to fifteen built-in plans (a chicken coop and run, shelving, a bookshelf, a lean-to, a compost bin, a cold frame, a picnic table, a firewood rack, deck stairs and more), plus a cut list for any project of Zac's own. A brief for Claude Design scopes every screen and flow. DEC-0119: MIA is for Zac alone, never for children.
 

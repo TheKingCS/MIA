@@ -6,8 +6,10 @@ Receipts that do things (core/receipt_effects.py) and the everyday
 mailbox they come from (core/inbox_mail.fetch_receipts): a grocery receipt
 stocks the pantry and ticks the grocery list, an oil change is marked done
 on the truck at the receipt's mileage, a Lowe's receipt adds to the
-materials at the price paid; nothing happens until it's filed; and the
-mailbox is read without marking anything read, taking only receipts.
+materials at the price paid; an emailed receipt files itself (unless it
+looks logged already, or that's turned off), and Undo, on screen or by
+voice, takes back exactly what it did; and the mailbox is read without
+marking anything read, taking only receipts.
 """
 
 from __future__ import annotations
@@ -94,44 +96,96 @@ def emailed(text: str, subject: str, sender: str) -> bytes:
     return message.as_bytes()
 
 
-def test_groceries_stock_the_pantry(ctx):
-    """Milk tops up the milk already there, eggs, chicken and bananas go in on their shelves, eggs come off the
-    grocery list; only once it's filed."""
+def test_an_emailed_grocery_receipt_files_itself_and_undoes_exactly(ctx):
+    """Emailed, it files on its own: milk tops up the milk already there, chicken and bananas go in on their shelves,
+    eggs come off the grocery list, the total goes in Money. Undo takes back exactly that (milk bought since stays)
+    and the receipt waits again."""
     [item] = drop(ctx, "message.eml", emailed(GROCERY, "Your Kroger receipt", "receipts@kroger.com"), source="email")
-    assert item.receipt_kind == effects.GROCERY
-    labels = [e["label"] for e in item.effects]
-    assert "Add 1 to Whole milk in the pantry" in labels and "Tick Eggs off the grocery list" in labels
-    assert ctx.kitchen.get_pantry_item(ctx.milk.item_id).quantity == 1  # nothing yet
-    note = ctx.inbox.file_item(item.item_id)
+    assert item.receipt_kind == effects.GROCERY and item.auto and item.status == "filed"
+    assert item.filed_note.startswith("Filed by MIA:")
     assert ctx.kitchen.get_pantry_item(ctx.milk.item_id).quantity == 2
     shelves = {p.name: p.category for p in ctx.kitchen.all_pantry_items()}
     assert shelves.get("Boneless chicken breast") == "Meat" and shelves.get("Bananas") == "Produce"
     assert ctx.kitchen.get_grocery_item(ctx.eggs.item_id).checked
-    assert "pantry" in note and "ticked off" in note
+    assert [e.amount for e in ctx.budget.all_expenses()] == [17.64]
+    assert ctx.inbox.auto_filed()[0].item_id == item.item_id
+    ctx.kitchen.update_pantry_item(ctx.milk.item_id, quantity=3)  # a gallon bought since, by hand
+    said = ctx.inbox.unfile(item.item_id)
+    assert "took the expense out of Money" in said and not ctx.budget.all_expenses()
+    assert ctx.kitchen.get_pantry_item(ctx.milk.item_id).quantity == 2
+    assert "Boneless chicken breast" not in {p.name for p in ctx.kitchen.all_pantry_items()}
+    assert not ctx.kitchen.get_grocery_item(ctx.eggs.item_id).checked
+    again = ctx.inbox.get_item(item.item_id)
+    assert again.status == "pending" and not again.auto and again.note.startswith("Undone")
 
 
-def test_an_oil_change_is_marked_done_at_its_mileage(ctx):
-    """The truck's oil change is done on the receipt's date at 84,512 miles; the air filter, which has no task yet,
-    starts being tracked."""
+def test_an_oil_change_is_done_at_its_mileage_and_undone(ctx):
+    """The truck's oil change is done on the receipt's date at 84,512 miles and the air filter starts being tracked;
+    Undo puts the oil change back as it was and removes the new task and the odometer reading."""
+    before = ctx.maintenance.get_task(ctx.oil.task_id).last_completed
     [item] = drop(ctx, "message.eml", emailed(OIL_CHANGE, "Your service receipt", "valvoline.com"), source="email")
-    assert item.receipt_kind == effects.AUTO
-    ctx.inbox.file_item(item.item_id)
+    assert item.receipt_kind == effects.AUTO and item.auto
     task = ctx.maintenance.get_task(ctx.oil.task_id)
     assert task.last_completed == "2026-11-03" and task.last_completed_meter_value == 84512
-    titles = [t.title for t in ctx.maintenance.tasks_for_asset(ctx.truck.asset_id)]
-    assert "Engine air filter" in titles
+    assert "Engine air filter" in [t.title for t in ctx.maintenance.tasks_for_asset(ctx.truck.asset_id)]
+    assert ctx.maintenance.readings_for_task(ctx.oil.task_id)
+    ctx.inbox.unfile(item.item_id)
+    task = ctx.maintenance.get_task(ctx.oil.task_id)
+    assert task.last_completed == before and task.last_completed_meter_value is None
+    assert "Engine air filter" not in [t.title for t in ctx.maintenance.tasks_for_asset(ctx.truck.asset_id)]
+    assert not ctx.maintenance.readings_for_task(ctx.oil.task_id)
 
 
 def test_lowes_adds_materials_at_the_price_paid(ctx):
-    """Six studs join the four on hand at $3.98; plywood and screws are new materials; unticking one leaves it out."""
+    """Dropped in by hand it waits; filed with the screws unticked, six studs join the four on hand at $3.98 and
+    plywood is new; Undo puts the studs back to four at $3.50 and removes the plywood."""
     [item] = drop(ctx, "receipt.txt", LOWES)
-    assert item.receipt_kind == effects.BUILDING
+    assert item.receipt_kind == effects.BUILDING and item.status == "pending"  # only emailed receipts file themselves
     keep = [i for i, e in enumerate(item.effects) if "SCREWS" not in e["label"].upper()]
     ctx.inbox.file_item(item.item_id, effect_indexes=keep)
     studs = ctx.materials.get_material(ctx.studs.material_id)
     assert studs.quantity_on_hand == 10 and studs.unit_cost == 3.98
     names = [m.name.lower() for m in ctx.materials.all_materials()]
     assert any("plywood" in n for n in names) and not any("screw" in n for n in names)
+    ctx.inbox.unfile(item.item_id)
+    studs = ctx.materials.get_material(ctx.studs.material_id)
+    assert studs.quantity_on_hand == 4 and studs.unit_cost == 3.5
+    assert [m.material_id for m in ctx.materials.all_materials()] == [ctx.studs.material_id]
+
+
+def test_when_it_waits_instead(ctx):
+    """The same purchase arriving twice (a forward, or an order email and its receipt) is logged once: the second
+    waits, saying why. With automatic filing turned
+    off (by asking), emailed receipts wait too; asked, she turns it back on."""
+    from core.assistant_inbox_actions import _action_set_receipt_autofile
+
+    [first] = drop(ctx, "message.eml", emailed(GROCERY, "Your Kroger receipt", "receipts@kroger.com"), source="email")
+    [second] = drop(ctx, "message.eml", emailed(GROCERY, "Fwd: Your Kroger receipt", "me@example.com"), source="email")
+    assert first.auto and second.status == "pending" and "already logged" in second.note
+    assert "wait in the Inbox" in _action_set_receipt_autofile(ctx, {"on": False})
+    [third] = drop(ctx, "message.eml", emailed(OIL_CHANGE, "Your service receipt", "valvoline.com"), source="email")
+    assert third.status == "pending" and not third.auto
+    assert "on my own again" in _action_set_receipt_autofile(ctx, {"on": "true"})
+
+
+def test_undo_by_voice_and_on_screen(ctx):
+    """"Undo the Kroger receipt" finds it by name; the Inbox screen lists what MIA filed with an Undo, which goes
+    through the action contract."""
+    from core.actions import ActionCenter
+    from core.assistant_inbox_actions import _action_undo_receipt
+    from core.web_inbox import inbox_page
+
+    [item] = drop(ctx, "message.eml", emailed(GROCERY, "Your Kroger receipt", "receipts@kroger.com"), source="email")
+    page = inbox_page(ctx)
+    assert page["auto"][0]["id"] == item.item_id and page["auto_on"]
+    assert "Undid" in _action_undo_receipt(ctx, {"item": "the kroger receipt"})
+    assert ctx.inbox.get_item(item.item_id).status == "pending"
+    ctx.inbox.file_item(item.item_id)
+    ctx.actions = ActionCenter()
+    proposal = ctx.actions.propose(ctx, "inbox.unfile", {"item_id": item.item_id})
+    assert proposal.summary.startswith("Undo filing")
+    assert ctx.actions.approve(ctx, proposal.proposal_id).status == "executed"
+    assert ctx.inbox.get_item(item.item_id).status == "pending"
 
 
 class FakeMailbox:

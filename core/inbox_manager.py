@@ -27,8 +27,18 @@ says so, in the Inbox screen or by voice. Filing:
 - a receipt or invoice becomes a Budget expense (tagged to the tool
   or build it's for, Finance #2) and the receipt goes on the item's page.
 
+**Emailed receipts file themselves** (Zac, 2026-11-07: "automated, but
+a clear way to undo"): `auto_file()` files a receipt that came by email
+(not one already logged, and only while `inbox.auto_file` is on), with
+its ticked effects (core/receipt_effects.py). Every filing keeps exactly
+what it did (the expense's id, each effect's undo record), so `unfile()`
+takes back just that, days later too, and leaves everything changed since
+alone; the Inbox lists what MIA filed with an Undo, and "undo the Kroger
+receipt" works by voice.
+
 New documents are announced through the communication gate, merged
-with anything else MIA has to say (core/communication_gate.py).
+with anything else MIA has to say (core/communication_gate.py), what
+she filed on her own first, with how to undo it.
 """
 
 from __future__ import annotations
@@ -78,8 +88,9 @@ class InboxItem:
     """One document that came into the inbox (from the folder, the phone or email): its files, the email's subject,
     sender and date, and MIA's reading of it, all only proposed until the person files it: what kind of document,
     whether it could be read, the item or project it's for, a receipt's amount, date, vendor, category and lines, a
-    manual's maintenance schedule, details about the thing it's for, whether OCR is still reading it, and for a
-    receipt what it says happened (groceries, a car service, building supplies) with the effects offered.
+    manual's maintenance schedule, details about the thing it's for, whether OCR is still reading it, for a receipt
+    what it says happened (groceries, a car service, building supplies) with the effects offered, and once filed what
+    the filing did (the expense, each effect's undo record) and whether MIA filed it on her own.
     """
     item_id: str
     received_at: str
@@ -114,6 +125,11 @@ class InboxItem:
     # the effects offered (stock the pantry, mark the oil change done, add materials), done only when filed.
     receipt_kind: str = ""
     effects: list[dict] = field(default_factory=list)
+    # Filing, kept so it can be undone exactly (Zac, 2026-11-07): the expense it logged, each effect's undo record,
+    # and whether MIA filed it on her own (an emailed receipt) rather than the person.
+    expense_id: str = ""
+    undo: list[dict] = field(default_factory=list)
+    auto: bool = False
     items_note: str = ""
 
     @staticmethod
@@ -213,9 +229,10 @@ class InboxManager:
 
     def scan(self, now: Optional[float] = None) -> list[InboxItem]:
         """Turn every settled file in the inbox folder into a pending item,
-        and pick up finished OCR. Returns the items that are ready to
-        announce: new ones MIA could read right away, and photos/scans
-        whose reading just finished (not ones still being read)."""
+        and pick up finished OCR; an emailed receipt then files itself
+        (`auto_file`). Returns the items that are ready to announce: new
+        ones MIA could read right away, and photos/scans whose reading
+        just finished (not ones still being read)."""
         ready: list[InboxItem] = []
         changed = False
         for item in [i for i in self._items if i.reading and i.status == PENDING]:
@@ -238,6 +255,8 @@ class InboxManager:
                 changed = True
                 if not item.reading:
                     ready.append(item)
+        for item in ready:  # an emailed receipt files itself (and can be undone)
+            self.auto_file(item)
         if changed:
             self._save()
         return ready
@@ -372,8 +391,10 @@ class InboxManager:
         "warranty_until"); None applies the ones ticked by default (the
         item's empty fields). `effect_indexes`: which of a receipt's
         effects to do (core/receipt_effects.py: stock the pantry, mark a
-        service done, add materials); None does the ticked ones. Returns
-        what was done, in one sentence."""
+        service done, add materials); None does the ticked ones. What it
+        did is kept on the item (the expense's id, each effect's undo
+        record) so `unfile()` can take it back exactly. Returns what was
+        done, in one sentence."""
         item = self.get_item(item_id)
         if item is None or item.status != PENDING:
             raise ValueError("That item isn't waiting in the inbox.")
@@ -392,7 +413,7 @@ class InboxManager:
             if not amount or amount <= 0:
                 raise ValueError("I need the amount before I can file this receipt.")
             budget = self.context.budget
-            budget.add_expense(
+            expense = budget.add_expense(
                 amount=amount,
                 category=category or ("Tools & Equipment" if is_purchase else item.category) or "Shopping",
                 description=(f"Bought {asset.name}" if is_purchase and asset else
@@ -408,10 +429,12 @@ class InboxManager:
                 project = self.context.projects.get_project(project_id)
                 if project:
                     done[-1] += f" on {project.name}"
+            item.expense_id = getattr(expense, "entry_id", "") or ""
             if item.effects:
                 from core.receipt_effects import apply
 
-                done += apply(self.context, item.effects, effect_indexes)
+                said, item.undo = apply(self.context, item.effects, effect_indexes)
+                done += said
 
         if asset is not None:
             attached = 0
@@ -493,6 +516,99 @@ class InboxManager:
         attachments = [f for f in item.files if not f.lower().endswith(".eml")]
         return attachments or item.files
 
+    # ------------------------------------------------------------------
+    # Filing on her own, and undoing a filing (Zac, 2026-11-07: "automated, but a clear way to undo")
+    # ------------------------------------------------------------------
+
+    def auto_file(self, item: InboxItem) -> bool:
+        """Files an emailed receipt on MIA's own, when it's safe to: inbox.auto_file is on (the default), it's a
+        receipt (not an invoice: a bill still to pay) with a total, and it isn't logged already (`_logged_already`: a
+        forwarded copy, or an order email and its receipt). Its ticked effects are done. Returns whether it
+        filed; one it can't is left waiting, with why."""
+        config = getattr(self.context, "config", None)
+        if config is not None and config.get("inbox.auto_file", True) is False:
+            return False
+        if item.status != PENDING or item.source != "email" or item.doc_type != RECEIPT or not item.amount:
+            return False
+        if self._logged_already(item):
+            item.note = "Not filed on its own: an expense like it is already logged (an order and its receipt?)."
+            return False
+        try:
+            self.file_item(item.item_id)
+        except ValueError as problem:
+            item.note = f"Not filed on its own: {problem}"
+            return False
+        item.auto = True
+        item.filed_note = item.filed_note.replace("Filed:", "Filed by MIA:", 1)
+        self._save()
+        try:
+            from core import corrections
+
+            corrections.mia_changed(self.context, "inbox.auto_file", {"item_id": item.item_id})
+        except Exception:
+            log.exception("Inbox: noting an automatic filing failed")
+        return True
+
+    def _logged_already(self, item: InboxItem) -> bool:
+        """Whether the same amount is already logged: within a day from any store (a forwarded copy reads its store
+        from the forwarder), or within 3 days from the same store (an order email and its receipt)."""
+        budget = getattr(self.context, "budget", None)
+        if budget is None:
+            return False
+        try:
+            when = date.fromisoformat(item.doc_date or item.email_date or date.today().isoformat())
+        except ValueError:
+            when = date.today()
+        store = (item.vendor or "").lower().strip()
+        for expense in budget.all_expenses(include_uncounted=True):
+            if abs(float(expense.amount) - float(item.amount)) > 0.005:
+                continue
+            try:
+                days = abs((date.fromisoformat(expense.date) - when).days)
+            except ValueError:
+                continue
+            payee = (expense.payee or expense.description or "").lower()
+            if days <= 1 or (days <= 3 and (not store or store in payee or payee in store)):
+                return True  # the same cents the same day is the same purchase whatever the store reads as (a forward)
+        return False
+
+    def unfile(self, item_id: str) -> str:
+        """Undoes a filing exactly: the expense it logged is deleted and each of its effects put back (pantry
+        quantities, a service's done date, materials...), leaving everything changed since alone; the item waits again,
+        to be filed right or dismissed. ValueError when it isn't filed. Returns what was undone."""
+        from core.receipt_effects import reverse
+
+        item = self.get_item(item_id)
+        if item is None or item.status != FILED:
+            raise ValueError("That isn't filed, so there's nothing to undo.")
+        undone = []
+        budget = getattr(self.context, "budget", None)
+        if item.expense_id and budget is not None and budget.get_expense(item.expense_id) is not None:
+            budget.delete_expense(item.expense_id)
+            undone.append("took the expense out of Money")
+        put_back = reverse(self.context, item.undo)
+        if put_back:
+            undone.append(f"put back {put_back} change{'s' if put_back != 1 else ''} it made")
+        was_auto = item.auto
+        item.status, item.auto, item.undo, item.expense_id = PENDING, False, [], ""
+        item.filed_note = ""
+        item.note = "Undone: " + (", ".join(undone) or "nothing it changed was left") + ". File it again or dismiss it."
+        self._save()
+        if was_auto:
+            try:
+                from core import corrections
+
+                corrections.undone(self.context, "inbox.auto_file")
+            except Exception:
+                log.exception("Inbox: noting an undone filing failed")
+        return f"Undid {item.label}: " + (", ".join(undone) or "nothing it changed was left") + "."
+
+    def auto_filed(self, days: int = 30) -> list[InboxItem]:
+        """What MIA filed on her own in the last `days`, newest first (for Undo on the Inbox screen and by voice)."""
+        cutoff = (datetime.now() - timedelta(days=days)).isoformat(timespec="seconds")
+        return sorted((i for i in self._items if i.auto and i.status == FILED and i.received_at >= cutoff),
+                      key=lambda i: i.received_at, reverse=True)
+
     def dismiss(self, item_id: str) -> None:
         """Dismisses an item without filing it (ValueError when it's gone)."""
         item = self.get_item(item_id)
@@ -547,8 +663,19 @@ def describe_detail_updates(proposals: list[DetailProposal]) -> str:
 
 
 def describe_new_items(items: list[InboxItem], context) -> str:
-    """Pure-ish: the announcement for newly arrived documents."""
+    """Pure-ish: the announcement for newly arrived documents: what MIA filed from email on her own (with how to undo
+    it), then what waits to be filed."""
     maintenance = getattr(context, "maintenance", None)
+    filed = [i for i in items if i.auto]
+    items = [i for i in items if not i.auto]
+    said = ""
+    if filed:
+        said = ("Filed from your email: " + "; ".join(f"{i.label} ({i.filed_note.replace('Filed by MIA: ', '').rstrip('.')})"
+                                                     for i in filed[:3])
+                + (f" and {len(filed) - 3} more" if len(filed) > 3 else "")
+                + ". If I got one wrong, Undo it in the Inbox or tell me \"undo the receipt\".")
+    if not items:
+        return said
     parts = []
     for item in items[:4]:
         text = item.label
@@ -559,4 +686,5 @@ def describe_new_items(items: list[InboxItem], context) -> str:
             text += f"; it has its {news})" if news else ")"
         parts.append(text)
     more = f" and {len(items) - 4} more" if len(items) > 4 else ""
-    return "New in your inbox: " + "; ".join(parts) + more + ". Open Inbox to file them, or tell me \"file it\"."
+    return ((said + " ") if said else "") + "New in your inbox: " + "; ".join(parts) + more + \
+        ". Open Inbox to file them, or tell me \"file it\"."

@@ -11,6 +11,8 @@ core/actions.py:
   core/inbox_manager.file_item(): a receipt becomes a Budget expense, a
   manual goes on the tool's page, and so on.
 - `inbox.dismiss`: not something to file.
+- `inbox.unfile`: undo a filing, exactly (above all one MIA did on her own from email): the expense deleted, the
+  pantry, services and materials it changed put back, and the item waiting again.
 - `inbox.note`: send MIA a few words (a link, a reminder, something to
   keep), saved into the inbox like any other document.
 
@@ -168,7 +170,32 @@ def _send_note(context, params) -> str:
     return "Sent. It's in your inbox."
 
 
+def _filed(context, params):
+    """The filed inbox item the params name; ActionError otherwise."""
+    item = _need(context, "inbox").get_item(str(params.get("item_id") or ""))
+    if item is None or item.status != "filed":
+        raise ActionError("That isn't filed, so there's nothing to undo.")
+    return item
+
+
+def _describe_unfile(context, params) -> str:
+    """The sentence the approval card shows for `inbox.unfile`: which item, and what filing it did (now taken back)."""
+    item = _filed(context, params)
+    did = item.filed_note.split(":", 1)[-1].strip().rstrip(".") or "filed it"
+    return f"Undo filing {item.label} ({did}); it waits in the inbox again"
+
+
+def _unfile(context, params) -> str:
+    """Does `inbox.unfile` once approved: the filing taken back exactly (core/inbox_manager.InboxManager.unfile)."""
+    item = _filed(context, params)
+    try:
+        return context.inbox.unfile(item.item_id)
+    except ValueError as problem:
+        raise ActionError(str(problem)) from None
+
+
 for _a in (
+    ActionType("inbox.unfile", "Undo", {"item_id": "the filed inbox item"}, _describe_unfile, _unfile),
     ActionType("inbox.file", "File It", {"item_id": "the inbox item", "asset_id": "optional: what it's for",
                                          "project_id": "optional: the build", "amount": "optional: the total",
                                          "category": "optional", "schedule": "optional: which steps, e.g. 0,2",

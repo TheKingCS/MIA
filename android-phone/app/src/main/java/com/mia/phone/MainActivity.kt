@@ -69,14 +69,31 @@ class MainActivity : Activity() {
         }
     }
 
-    /** Where to open: a place just arrived at (its notification), a share, or Home. */
+    /** Where to open: a place just arrived at (its notification), a share, or where you were last (Home the first
+     *  time). */
     private fun startPage(opened: Intent?, shared: Boolean): String {
         val arrive = opened?.getStringExtra("arrive")
         return when {
             arrive != null -> "index.html?arrive=" + Uri.encode(arrive)
             shared -> "inbox.html"
-            else -> "index.html"
+            else -> lastPlace() ?: "index.html"
         }
+    }
+
+    /** Keeps the page MIA is showing (its name and query, never the sign-in token after the #) in the app's own
+     *  preferences, so the next start opens there. Only MIA's own screens; a place-arrival page isn't kept. */
+    private fun remember(url: String) {
+        val prefix = "http://127.0.0.1:$PORT/web/"
+        if (!url.startsWith(prefix)) return
+        val page = url.removePrefix(prefix).substringBefore('#')
+        if (page.isEmpty() || page.contains("arrive=")) return
+        getSharedPreferences(PLACE_PREFS, MODE_PRIVATE).edit().putString(PLACE_KEY, page).apply()
+    }
+
+    /** The page MIA was showing last, or null the first time (or when what was kept isn't one of her pages). */
+    private fun lastPlace(): String? {
+        val page = getSharedPreferences(PLACE_PREFS, MODE_PRIVATE).getString(PLACE_KEY, null) ?: return null
+        return page.takeIf { Regex("^[\\w.-]+\\.html(\\?[^#]*)?$").matches(it) }
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -189,6 +206,13 @@ class MainActivity : Activity() {
                     val picture = request.requestHeaders["Accept"]?.startsWith("image/") == true
                     if (own || picture || request.url.scheme !in listOf("http", "https")) return null
                     return WebResourceResponse("text/plain", "utf-8", 403, "Refused", emptyMap(), ByteArrayInputStream(ByteArray(0)))
+                }
+
+                // Every page MIA shows (and every in-page step that changes the address) is remembered, so the next
+                // start opens where you were instead of Home, after the phone locks and Android closes the app.
+                override fun doUpdateVisitedHistory(view: WebView, url: String, isReload: Boolean) {
+                    super.doUpdateVisitedHistory(view, url, isReload)
+                    remember(url)
                 }
             }
             // Without this, the web view silently answers "no" to any
@@ -330,5 +354,7 @@ class MainActivity : Activity() {
         const val PORT = 8765
         const val GEO_REQUEST = 41
         const val FILE_REQUEST = 47
+        const val PLACE_PREFS = "mia_place"  // where you were in the app (remember / lastPlace)
+        const val PLACE_KEY = "page"
     }
 }
