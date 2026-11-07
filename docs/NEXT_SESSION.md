@@ -92,7 +92,8 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       Knowledge (Search / Packs / Plans Shelf tabs; result cards with a snippet from
       `ReferenceLibraryManager.search_titles`; its test needs libzim, so run it on the PC).
       Music (song rows you tap to play, the one playing in cyan; a Now Playing bar held at the bottom).
-      Still to do per app, against its canvas artboard: Files, Passwords, News, Look,
+      Files (the path, Upload, one list with line icons and a meta line, ⋯ for Rename and Delete).
+      Still to do per app, against its canvas artboard: Passwords, News, Look,
       Settings, Profile, Fix-It, Diagnostics; Power, Toolbox, Lab and Field Kit need web pages first (WEB_PARITY).
 - [ ] Glasses: the shared orb on `web/glasses.html`.
 - Note: DEC-0119 (MIA for Zac alone) came after the canvas: drop household members from Party's leaderboard and

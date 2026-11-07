@@ -11,12 +11,9 @@
   const $ = (id) => document.getElementById(id);
   let page = null;
   let here = decodeURIComponent(location.hash.slice(1));
-  const ICON = { image: "🖼", pdf: "📄", audio: "🎵", video: "🎬", text: "📝", file: "📦" };
 
   const btn = (label, cls, onclick) => el("button", { type: "button", class: "btn " + cls, onclick }, label);
   const buttons = (...list) => el("div", { class: "row-buttons" }, list.filter(Boolean));
-  const section = (title, actions, ...body) =>
-    el("section", { class: "glass money-section" }, el("div", { class: "sect" }, el("h2", {}, title), actions), ...body);
   const day = (iso) => iso ? new Date(iso + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "";
   const fileUrl = (path) => "/api/files/file?path=" + encodeURIComponent(path);
 
@@ -87,31 +84,44 @@
     dialog.showModal();
   }
 
+  // The design canvas (DEC-0113): the path, Upload, then one list: line icons (folders in cyan), the name and a
+  // short meta line, and ⋯ for Rename and Delete. Only this folder, never the whole disk.
+  const KIND = { image: "Image", pdf: "PDF", audio: "Audio", video: "Video", text: "Text", file: "File" };
+  const SVG = { folder: "M3 6.5A1.5 1.5 0 0 1 4.5 5H10l2 2.5h7.5A1.5 1.5 0 0 1 21 9v9.5a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5Z",
+    doc: "M6 3.5h9l3.5 3.5v13.5H6ZM15 3.5V7h3.5" };
+  const glyph = (which) => {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 24 24"); svg.setAttribute("aria-hidden", "true"); svg.setAttribute("class", "fl-ico " + which);
+    svg.innerHTML = '<path d="' + SVG[which] + '"/>';
+    return svg;
+  };
+  let menu = null;  // the row whose ⋯ is open
+  function row(item, isFolder) {
+    const key = (isFolder ? "d:" : "f:") + item.path;
+    const meta = isFolder ? "Folder · " + item.count + (item.count === 1 ? " item" : " items")
+      : [KIND[item.kind] || "File", item.size_text, day(item.modified)].filter(Boolean).join(" · ");
+    return el("div", { class: "fl-row" },
+      el("button", { type: "button", class: "fl-open", onclick: () => (isFolder ? go(item.path) : open(item)), "aria-label": (isFolder ? "Open folder " : "Open ") + item.name },
+        glyph(isFolder ? "folder" : "doc"),
+        el("span", { class: "fl-text" }, el("span", { class: "fl-name" }, item.name), el("span", { class: "fl-meta" }, meta))),
+      menu === key ? buttons(btn("Rename", "btn-ghost btn-small", () => rename(item)), btn("Delete", "btn-ghost btn-small", () => remove(item)))
+        : el("button", { type: "button", class: "fl-more", "aria-label": "More for " + item.name, onclick: () => { menu = key; draw(); } }, "⋯"));
+  }
   function draw() {
     $("strip").replaceChildren(
       el("div", { class: "cell ok" }, el("span", { class: "n" }, page.folders.length), el("span", { class: "t" }, "Folders Here")),
       el("div", { class: "cell ok" }, el("span", { class: "n" }, page.files.length), el("span", { class: "t" }, "Files Here")),
       el("div", { class: "cell ok" }, el("span", { class: "n" }, page.used_text), el("span", { class: "t" }, "Used")));
-    const crumbs = el("nav", { class: "file-crumbs", "aria-label": "Folder" }, page.crumbs.map((c, i) => [
-      i ? el("span", { class: "dim" }, " › ") : null,
-      i === page.crumbs.length - 1 ? el("strong", {}, c.name) : el("a", { href: "#", onclick: (ev) => { ev.preventDefault(); go(c.path); } }, c.name)]).flat());
-    const rows = [
-      ...page.folders.map((d) => el("div", { class: "row money-row file-row" },
-        el("button", { type: "button", class: "file-open", onclick: () => go(d.path), "aria-label": "Open folder " + d.name },
-          el("span", { class: "file-ico", "aria-hidden": "true" }, "📁"),
-          el("span", {}, el("span", { class: "row-title" }, d.name), el("span", { class: "row-sub" }, d.count + (d.count === 1 ? " item" : " items")))),
-        buttons(btn("Rename", "btn-ghost btn-small", () => rename(d)), btn("Delete", "btn-ghost btn-small", () => remove(d))))),
-      ...page.files.map((f) => el("div", { class: "row money-row file-row" },
-        el("button", { type: "button", class: "file-open", onclick: () => open(f), "aria-label": "Open " + f.name },
-          el("span", { class: "file-ico", "aria-hidden": "true" }, ICON[f.kind] || ICON.file),
-          el("span", {}, el("span", { class: "row-title" }, f.name), el("span", { class: "row-sub" }, f.size_text + " · " + day(f.modified)))),
-        buttons(btn("Rename", "btn-ghost btn-small", () => rename(f)), btn("Delete", "btn-ghost btn-small", () => remove(f))))),
-    ];
+    const crumbs = el("nav", { class: "fl-crumbs", "aria-label": "Folder path" }, page.crumbs.map((c, i) => [
+      i ? el("span", { class: "dim" }, "/") : null,
+      i === page.crumbs.length - 1 ? el("span", { class: "fl-here" }, c.name) : el("a", { href: "#", onclick: (ev) => { ev.preventDefault(); go(c.path); } }, c.name)]).flat());
+    const rows = [...page.folders.map((d) => row(d, true)), ...page.files.map((f) => row(f, false))];
     $("panel").replaceChildren(
-      el("div", { class: "journal-actions" }, btn("Upload", "btn-amber", upload), btn("New Folder", "btn-ghost", newFolder)),
-      section(page.crumbs[page.crumbs.length - 1].name, null, page.path ? crumbs : null,
-        rows.length ? el("div", { class: "rows" }, rows) : el("p", { class: "empty" }, page.path ? "This folder is empty." : "No files yet. Upload photos, receipts, manuals: anything you want to keep with MIA.")),
-      el("p", { class: "dim" }, "These are your own files, kept in your MIA folder. Other people on this MIA can't see them."));
+      crumbs,
+      el("div", { class: "journal-actions fl-actions" }, btn("Upload", "btn-green", upload), btn("New Folder", "btn-ghost", newFolder)),
+      rows.length ? el("div", { class: "glass fl-list" }, rows)
+        : el("p", { class: "empty" }, page.path ? "This folder is empty." : "No files yet. Upload photos, receipts, manuals: anything you want to keep with MIA."),
+      el("p", { class: "dim fl-note" }, "Only this folder. Never the computer's whole disk. Your own files: other people on this MIA can't see them."));
   }
 
   MIAShell.start(async () => {
