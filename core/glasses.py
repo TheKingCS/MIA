@@ -13,10 +13,15 @@ menu. Assembled here, in code, so `web/glasses.js` holds no logic
   its menu. **Pinned for the glasses = the person's favorite apps** (Zac,
   2026-10-16), in the order they starred them: those are the cards; the
   rest wait behind an "All apps" card. With no favorites, every app shows
-  in the glasses' order. Served as `/api/glasses`.
+  in the glasses' order. Served as `/api/glasses`, with Home's one line
+  (`priority`) and its tone (`priority_tone`: amber orb when it needs you,
+  the canvas's GlassesHome, DEC-0113).
 - `glasses_panel(context, app_id, item_id)`: what one menu item shows: a
   title and a few lines, each line optionally carrying the action it
   proposes. Served as `/api/glasses/{app_id}/{item_id}`.
+  The live workout's panel also carries a `hero` (`training_hero`: the
+  exercise, set and weight, one big number and what it is; the canvas's
+  GlassesTraining).
 
 A menu item is either a `panel` (a short readout, some lines of which
 can be acted on) or an `ask` (a question handed to MIA, as if said
@@ -308,9 +313,36 @@ def _workout_live(context, today):
     return _quick(_workout_live_lines(context, today))
 
 
+HOW_COUNTED = {"said": "Said", "cadence": "MIA pace", "told": "Told", "tapped": "Tapped"}
+
+
+def training_hero(s: dict) -> Optional[dict]:
+    """Pure logic. The canvas's Active Training on the glasses (DEC-0113 GlassesTraining): the exercise, the set and
+    weight, one big number and what it is, and what's next, from a live session's view (core/training_session.view).
+    Resting: the rest left, then the set it leads to. Otherwise the last set's count against the goal, or the goal
+    before the first set. MIA doesn't count reps live on the glasses, so the big number is never a guess. None when
+    the session is done."""
+    if s.get("status") == "complete":
+        return None
+    n = s.get("now") or {}
+    goal = n.get("hold_seconds") or n.get("reps") or 0
+    sets = f"Set {n.get('set')} / {n.get('sets')}" + (f" · {n['weight']}" if n.get("weight") else "")
+    then = f"Then: {s['next']}" if s.get("next") else ""
+    if s.get("status") == "resting":
+        left = int(s.get("rest_left") or 0)
+        return {"name": n.get("name") or "", "set": sets, "big": f"{left // 60}:{left % 60:02d}", "of": "",
+                "how": "Rest", "next": f"Then: {n.get('name') or 'the next set'}", "resting": True}
+    if n.get("last") is not None:
+        return {"name": n.get("name") or "", "set": sets, "big": str(n["last"]), "of": f"/ {goal}" if goal else "",
+                "how": "Last set · " + HOW_COUNTED.get(n.get("last_counted") or "told", "Told"), "next": then,
+                "resting": False}
+    return {"name": n.get("name") or "", "set": sets, "big": str(goal) if goal else "—", "of": "",
+            "how": "Target · " + (n.get("target") or ""), "next": then, "resting": False}
+
+
 def _workout_live_lines(context, today):
-    """Panel: the live training session: the exercise and set now, the rest countdown (skip rest, +30 s), set done,
-    pause or resume, skip, what's next and finish; with no session, a line to start today's workout (or a rest day) (a menu item's readout; lines with an allowed action can be approved from the glasses).
+    """Panel: the live training session: the exercise and set now (and its `hero`, training_hero), the rest countdown
+    (skip rest, +30 s), set done, pause or resume, skip, what's next and finish; with no session, a line to start today's workout (or a rest day) (a menu item's readout; lines with an allowed action can be approved from the glasses).
     """
     from core.web_fitness import live_session
 
@@ -345,7 +377,7 @@ def _workout_live_lines(context, today):
             lines.append(_line("Next", s["next"], ""))
         lines.append(_line("Finish", f"{s['done_exercises']}/{s['exercises']} exercises", "",
                            {"kind": "training.finish", "label": "Finish", "params": {}}))
-    return _panel(f"Training: {s['title']}", lines, "")
+    return {**_panel(f"Training: {s['title']}", lines, ""), "hero": training_hero(s)}
 
 
 def _workout_training(context, today):
@@ -1120,9 +1152,16 @@ def priority_now(apps: list[dict]) -> str:
     return step or ""
 
 
+def priority_tone(apps: list[dict]) -> str:
+    """Pure logic. How Home's line reads (the canvas's orb, DEC-0113): "attention" when an app needs the person (her
+    orb turns amber), "" for a mission step or nothing."""
+    return "attention" if any(a.get("tone") == "attention" and a.get("status") for a in apps) else ""
+
+
 def glasses_apps(context, today: Optional[date] = None, mission_id: Optional[str] = None) -> dict:
     """The person's glasses cards: their pinned apps (favorites), then the
-    rest behind "All apps". Each card has a status line and its menu."""
+    rest behind "All apps". Each card has a status line and its menu; Home's
+    line is `priority`, with `priority_tone` for her orb."""
     from core.focus_presets import favorite_apps
     from core.web_surfaces import dashboard
 
@@ -1160,6 +1199,7 @@ def glasses_apps(context, today: Optional[date] = None, mission_id: Optional[str
     pinned = [card(by_id[i]) for i in pinned_ids]
     others = [card(a) for a in apps if a.module_id not in pinned_ids]
     return {"as_of": today.isoformat(), "pinned": bool(pinned), "priority": priority_now(pinned + others),
+            "priority_tone": priority_tone(pinned + others),
             "apps": pinned or others, "others": others if pinned else [],
             "hint": "" if pinned else "Star your favorite apps to pin them here.",
             "kinds": sorted(GLASSES_KINDS)}

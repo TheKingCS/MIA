@@ -1736,5 +1736,77 @@
         }
       }
     ]
+  },
+  "workout/live": {
+    "title": "Training: Leg Day",
+    "more": 0,
+    "empty": "",
+    "live": true,
+    "hero": {
+      "name": "Back Squat",
+      "set": "Set 2 / 4 · 135 lb",
+      "big": "6",
+      "of": "/ 8",
+      "how": "Last set · Said",
+      "next": "Then: Romanian Deadlift",
+      "resting": false
+    },
+    "lines": [
+      {
+        "text": "Back Squat",
+        "detail": "Set 2/4 · 4 x 8 · last 6",
+        "tone": "attention"
+      },
+      {
+        "text": "Set done",
+        "detail": "say the count, or tap",
+        "tone": "",
+        "action": {
+          "kind": "training.set",
+          "label": "Next set",
+          "params": {
+            "counted": "tapped"
+          },
+          "quick": true
+        }
+      },
+      {
+        "text": "Pause",
+        "detail": "",
+        "tone": "",
+        "action": {
+          "kind": "training.pause",
+          "label": "Pause",
+          "params": {},
+          "quick": true
+        }
+      },
+      {
+        "text": "Skip this exercise",
+        "detail": "Back Squat",
+        "tone": "",
+        "action": {
+          "kind": "training.skip",
+          "label": "Skip",
+          "params": {},
+          "quick": true
+        }
+      },
+      {
+        "text": "Next",
+        "detail": "Romanian Deadlift",
+        "tone": ""
+      },
+      {
+        "text": "Finish",
+        "detail": "0/4 exercises",
+        "tone": "",
+        "action": {
+          "kind": "training.finish",
+          "label": "Finish",
+          "params": {}
+        }
+      }
+    ]
   }
 }

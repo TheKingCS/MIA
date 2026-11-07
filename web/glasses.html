@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="color-scheme" content="dark">
   <title>MIA · Glasses</title>
-  <link rel="stylesheet" href="glasses.css?v=27">
+  <link rel="stylesheet" href="glasses.css?v=29">
 </head>
 <body>
   <!--
@@ -13,7 +13,8 @@
     layout, 2026-10-16). One fixed 600x600 composition, scaled to fit any
     screen; only the conversation log scrolls. Pure black: on the glasses it's see-through.
     Two moves do everything: move (next / previous) and select; every
-    list ends with a Back row. Home is her orb alone; select it to talk.
+    list ends with a Back row. Home is her orb, her state and the one line that matters now (the canvas's
+    GlassesHome, DEC-0113); select the orb to talk.
   -->
   <div id="stage">
     <section id="home" aria-label="MIA">
@@ -24,7 +25,12 @@
         <div class="saturn front"><i class="s s1"></i><i class="s s2"></i><i class="s s3"></i></div>
         <i class="p p1"></i><i class="p p2"></i><i class="p p3"></i>
       </div>
+      <!-- The canvas's Home (DEC-0113): her state, one spoken-length line, the latest card, a dot per card. -->
+      <p id="home-state">MIA · Ready</p>
+      <p id="home-line"></p>
       <p id="caption" aria-live="polite"></p>
+      <div id="home-feed" hidden></div>
+      <div id="home-dots" aria-hidden="true"></div>
     </section>
     <section id="screen" hidden aria-live="polite"></section>
     <!-- Meeting MIA (core/first_boot.py): she doesn't launch, she awakens. -->
@@ -50,6 +56,6 @@
   <script src="icons.js?v=8"></script>
   <script src="sound.js"></script>
   <script src="places-watch.js"></script>
-  <script src="glasses.js?v=24"></script>
+  <script src="glasses.js?v=26"></script>
 </body>
 </html>

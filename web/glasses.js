@@ -61,6 +61,7 @@
   async function load() {
     try { data = await MIA.glasses(mission); } catch (e) { data = data || { apps: [], others: [] }; }
     if (!data || !Array.isArray(data.apps)) data = { apps: [], others: [] };
+    paintHome();
     if (window.MIASound && !load.sound) {  // the person's sound settings, once
       load.sound = true;
       MIA.shell().then((s) => { MIASound.configure(s.sound); if (window.MIAPlaces) MIAPlaces.configure(s.places); }).catch(() => {});
@@ -88,8 +89,31 @@
   // as the Presence System (docs/GLASSES_FIRST_BOOT_PLAN.md, slice 1).
   const STATE_NAMES = { listening: "Listening", thinking: "Thinking", interrupted: "Stopped", unavailable: "Offline" };
   let speaking = false;
+  // The canvas's Home (DEC-0113 GlassesHome): her state as a label, the one line that matters now
+  // (core/glasses.priority; amber when it needs you), the latest card for a while, and a dot per card.
+  const FEED_KEEP_MS = 10 * 60 * 1000;
+  let homeCard = null, celebrating = false;
+  function paintHome() {
+    const d = data || {};
+    $("home-line").textContent = d.priority || d.hint || "Select me to talk.";
+    const feed = $("home-feed");
+    const fresh = homeCard && Date.now() - homeCard.at < FEED_KEEP_MS ? homeCard.card : null;
+    feed.hidden = !fresh;
+    if (fresh) {
+      feed.className = fresh.level === "warning" || fresh.level === "critical" ? "attn" : "";
+      feed.replaceChildren(...[fresh.xp ? el("span", "f-xp", "+" + esc(fresh.xp) + " XP") : el("span", "f-xp", esc(fresh.icon || "✦")),
+        el("span", "f-head", esc(fresh.headline || fresh.text || ""))]);
+    }
+    const n = Math.min(7, (d.apps || []).length);
+    $("home-dots").replaceChildren(...Array.from({ length: n }, (_, i) => el("i", i === 0 ? "on" : "")));
+    paintOrb();
+  }
   function paintOrb() {
-    home.className = [voiceState === "idle" ? "" : voiceState, speaking ? "speaking" : ""].join(" ").trim();
+    const needs = voiceState === "idle" && !speaking && data && data.priority_tone === "attention";
+    home.className = [voiceState === "idle" ? "" : voiceState, speaking ? "speaking" : "", needs ? "needs" : "",
+      celebrating ? "celebrate" : ""].join(" ").trim();
+    const label = $("home-state");
+    if (label) label.textContent = "MIA · " + (speaking ? "Speaking" : STATE_NAMES[voiceState] || (needs ? "Needs You" : "Ready"));
     const tag = document.querySelector(".log-state");
     if (tag) {
       tag.textContent = "MIA · " + (speaking ? "Speaking" : STATE_NAMES[voiceState] || "Ready");
@@ -234,10 +258,11 @@
     return k;
   }
   // A window of five rows around the selection: the selection moves it, nothing scrolls.
-  function rowsOf(items, sel) {
-    const n = items.length, start = Math.max(0, Math.min(sel - 2, n - 5));
+  function rowsOf(items, sel, size) {
+    size = size || 5;  // a hero above (the live workout) leaves room for two
+    const n = items.length, start = Math.max(0, Math.min(sel - Math.floor(size / 2), n - size));
     const ul = el("ul", "rows");
-    items.slice(start, start + 5).forEach((it, k) => {
+    items.slice(start, start + size).forEach((it, k) => {
       const i = start + k;
       const li = el("li", [i === sel ? "sel" : "", it.back ? "back" : "", it.cap ? "cap" : "", it.tone ? "t-" + it.tone : ""].join(" ").trim());
       li.append(el("span", "t", esc(it.back ? "‹ " + it.text : it.text)));
@@ -246,11 +271,22 @@
       li.dataset.row = String(i);
       ul.append(li);
     });
-    const more = el("p", "more", (start > 0 ? "▲ " + start + " above" : "") + (start > 0 && start + 5 < n ? " · " : "") +
-      (start + 5 < n ? "▼ " + (n - start - 5) + " more" : ""));
+    const more = el("p", "more", (start > 0 ? "▲ " + start + " above" : "") + (start > 0 && start + size < n ? " · " : "") +
+      (start + size < n ? "▼ " + (n - start - size) + " more" : ""));
     return [ul, more];
   }
   const BACK_ROW = { text: "Back", back: true, kind: "back" };
+  // The live workout's hero: the exercise, set and weight, one big number (rest left, the last set's count, or the
+  // goal: never a guess) and what it is, and what's next. All from core.
+  function trainingHero(h) {
+    const box = el("div", "t-hero" + (h.resting ? " resting" : ""));
+    box.append(el("p", "t-name", esc(h.name)), el("p", "t-set", esc(h.set)));
+    const big = el("p", "t-big");
+    big.append(el("span", "n", esc(h.big)));
+    if (h.of) big.append(el("span", "of", esc(h.of)));
+    box.append(big, el("p", "t-foot", "<span>" + esc(h.how) + "</span><span>" + esc(h.next) + "</span>"));
+    return box;
+  }
 
   // An app's own screens: the frame from the design (corners, where you are,
   // what move and select do), its numbers, and its rows.
@@ -389,6 +425,7 @@
     }
     panel.lines.forEach((l) => {
       if (want && l.bucket !== want) return;
+      if (panel.hero && !actionOf(l)) return;  // the hero already says it (where you are, what's next)
       rows.push({ kind: "line", line: l, text: l.text, detail: l.detail, tone: l.tone,
         verb: actionOf(l) ? actionOf(l).label : l.pick ? l.pick.label : l.open ? l.open.label : l.play ? l.play.label : l.recipe ? "Open" : "" });
     });
@@ -819,10 +856,11 @@
       const rows = panelRows();
       if (!panel) body.append(el("p", "empty", "…"));
       else {
-        if (panel.title && panel.title !== item.label) body.append(el("p", "title", esc(panel.title)));
+        if (panel.hero) body.append(trainingHero(panel.hero));  // the canvas's Active Training (core/glasses.training_hero)
+        else if (panel.title && panel.title !== item.label) body.append(el("p", "title", esc(panel.title)));
         if (!panel.lines.length) body.append(el("p", "empty", esc(panel.empty || "Nothing here.")));
         else if (rows.length === (sorts() ? 2 : 1)) body.append(el("p", "empty", "Nothing here."));
-        body.append(...rowsOf(rows, row));
+        body.append(...rowsOf(rows, row, panel.hero ? 2 : 5));
         if (panel.more) body.append(el("p", "more", "+ " + panel.more + " more on your phone"));
       }
       const r = rows[row] || BACK_ROW;
@@ -899,6 +937,9 @@
       if (first) return;
       for (const c of fresh) {
         if (c.level === "voice") { heard(c); continue; }
+        homeCard = { card: c, at: Date.now() };  // Home shows the latest for a while; something earned glows gold once
+        if (c.xp && view === "home") { celebrating = true; setTimeout(() => { celebrating = false; paintOrb(); }, 1700); }
+        if (view === "home") paintHome();
         if (view === "hud") hudQueue.push(c);
       }
       if (view === "hud" && hudQueue.length && !hudCard) hudNext();
