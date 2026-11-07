@@ -63,47 +63,52 @@
   function bars(series) {
     const top = Math.max(1, ...series.map((d) => d.eggs));
     return el("div", { class: "egg-bars", role: "img", "aria-label": "Eggs a day, last two weeks: " + series.map((d) => d.eggs).join(", ") },
-      series.map((d) => el("div", { class: "egg-bar", title: day(d.date) + ": " + d.eggs },
+      series.map((d, i) => el("div", { class: "egg-bar" + (i === series.length - 1 ? " now" : ""), title: day(d.date) + ": " + d.eggs },
         el("span", { class: "fill", style: "height:" + Math.round((d.eggs / top) * 100) + "%" }),
         el("span", { class: "lbl" }, new Date(d.date + "T00:00:00").toLocaleDateString(undefined, { weekday: "narrow" })))));
   }
 
+  // The design canvas (DEC-0113): Log Today's Eggs first (four big taps, the tap is the approval), the week in three
+  // figures, two weeks of eggs with today lit, cartons on hand with Carton Them; feed, birds and the log below.
   function flockCard(f) {
     const x = f.figures;
     const good = f.good;
-    return el("article", { class: "glass craft-card open" },
-      el("div", { class: "craft-head static" },
-        el("div", {}, el("h3", {}, f.name), el("p", { class: "dim" }, [f.hens + " hens", f.roosters ? f.roosters + " roosters" : null, f.breed,
-          f.started ? "since " + day(f.started) : null].filter(Boolean).join(" · "))),
-        buttons(btn("Edit", "btn-ghost btn-small", () => editFlock(f)))),
-      tiles(["Today", String(x.today)], ["This Week", String(x.week)], x.lay_rate_text ? ["Lay Rate", x.lay_rate_text] : null,
-        ["Loose", String(x.loose)], x.feed_per_dozen_text ? ["Feed / Dozen", x.feed_per_dozen_text] : null),
-      el("h4", {}, "Collected"),
-      el("div", { class: "egg-taps" }, [1, 2, 3, 4, 5, 6, 8, 10, 12].map((n) => btn("+" + n, "btn-green btn-small", () => logEggs(f, n))),
-        btn("Other…", "btn-ghost btn-small", () => otherCount(f))),
-      bars(f.series),
-      el("h4", {}, "Where They Go"),
-      buttons(btn("Into Cartons", "btn-amber", () => useEggs(f, "carton")), btn("For Baking", "btn-ghost btn-small", () => useEggs(f, "baking")),
-        btn("Eaten At Home", "btn-ghost btn-small", () => useEggs(f, "home"))),
-      good ? el("p", { class: "dim" }, good.name + ": " + good.on_hand_text + " on hand" + (good.price_text ? " · " + good.price_text + " each" : ""),
-        good.oldest ? " · oldest " + day(good.oldest_made) + " " : null, good.oldest ? chip(...FRESH[good.oldest.state]) : null)
-        : el("p", { class: "dim" }, "Cartons go into a good you sell: add “Eggs” under Workshop → Recipes (makes 1 dozen, the price, how many days they keep), then Edit this flock."),
-      el("h4", {}, "Feed And Birds"),
-      buttons(btn("Bought Feed", "btn-ghost btn-small", () => feed(f)), btn("Hens Came Or Went", "btn-ghost btn-small", () => birds(f))),
-      x.feed_month_text ? el("p", { class: "dim" }, "Feed in the last 30 days: " + x.feed_month_text) : null,
-      f.log.length ? [el("h4", {}, "Log"), el("div", { class: "rows" }, f.log.map((e) => el("div", { class: "row money-row" },
-        el("div", {}, el("div", { class: "row-title" }, e.text), el("div", { class: "row-sub" }, day(e.date) + (e.note ? " · " + e.note : ""))),
-        btn("Take Back", "btn-ghost btn-small", () => act({ kind: "flock.entry_delete", params: { entry_id: e.id } })))))] : null,
+    const cartons = (good ? good.on_hand_text + " · " : "") + x.loose + " loose egg" + (x.loose === 1 ? "" : "s");
+    return el("article", { class: "fl-flock" },
+      el("div", { class: "fl-flock-head" }, el("div", {}, el("h2", {}, f.name), el("p", { class: "dim" }, [f.hens + " hens",
+        f.roosters ? f.roosters + " roosters" : null, f.breed, f.started ? "since " + day(f.started) : null].filter(Boolean).join(" · "))),
+        btn("Edit", "btn-ghost btn-small", () => editFlock(f))),
+      el("section", { class: "glass ck-log", "aria-label": "Log today's eggs" },
+        el("div", { class: "ck-log-top" }, el("span", { class: "pw-label" }, "Log Today's Eggs"), el("span", { class: "ck-sofar" }, x.today + " so far")),
+        el("div", { class: "ck-taps" }, ...[1, 2, 3, 6].map((n) => el("button", { type: "button", class: "ck-num", onclick: () => logEggs(f, n) }, "+" + n))),
+        el("div", { class: "ck-log-foot" }, el("span", { class: "dim" }, "One tap logs it. Undo shows in the message."),
+          btn("Other…", "btn-ghost btn-small", () => otherCount(f)))),
+      el("div", { class: "ck-figs" },
+        el("div", { class: "glass ck-fig" }, el("span", { class: "pw-label" }, "This Week"), el("strong", {}, String(x.week))),
+        el("div", { class: "glass ck-fig" }, el("span", { class: "pw-label" }, "Lay Rate"), el("strong", {}, x.lay_rate_text || "—")),
+        el("div", { class: "glass ck-fig" }, el("span", { class: "pw-label" }, "Feed / Doz"), el("strong", {}, x.feed_per_dozen_text || "—"))),
+      el("section", { class: "glass ck-panel" }, el("span", { class: "pw-label" }, "Two Weeks of Eggs"), bars(f.series)),
+      el("section", { class: "glass ck-cartons", "aria-label": "Cartons" },
+        el("div", {}, el("span", { class: "pw-label" }, "Cartons on Hand"), el("p", {}, cartons),
+          good && good.oldest ? el("p", { class: "dim" }, "Oldest " + day(good.oldest_made) + " ", chip(...FRESH[good.oldest.state])) : null),
+        btn("Carton Them", "btn-ghost", () => useEggs(f, "carton"))),
+      good ? null : el("p", { class: "dim" }, "Cartons go into a good you sell: add “Eggs” under Workshop → Recipes (makes 1 dozen, the price, how many days they keep), then Edit this flock."),
+      el("section", { class: "glass ck-panel" }, el("span", { class: "pw-label" }, "Eggs, Feed And Birds"),
+        buttons(btn("For Baking", "btn-ghost btn-small", () => useEggs(f, "baking")), btn("Eaten At Home", "btn-ghost btn-small", () => useEggs(f, "home")),
+          btn("Bought Feed", "btn-ghost btn-small", () => feed(f)), btn("Hens Came Or Went", "btn-ghost btn-small", () => birds(f))),
+        x.feed_month_text ? el("p", { class: "dim" }, "Feed in the last 30 days: " + x.feed_month_text) : null,
+        good && good.price_text ? el("p", { class: "dim" }, good.name + ": " + good.price_text + " each") : null),
+      f.log.length ? el("details", { class: "glass ck-panel ck-logbook" }, el("summary", {}, el("span", { class: "pw-label" }, "Log · " + f.log.length)),
+        el("div", { class: "rows" }, f.log.map((e) => el("div", { class: "row money-row" },
+          el("div", {}, el("div", { class: "row-title" }, e.text), el("div", { class: "row-sub" }, day(e.date) + (e.note ? " · " + e.note : ""))),
+          btn("Take Back", "btn-ghost btn-small", () => act({ kind: "flock.entry_delete", params: { entry_id: e.id } })))))) : null,
       f.notes ? el("p", { class: "dim" }, f.notes) : null);
   }
 
   function draw() {
     const t = page.total;
-    $("strip").replaceChildren(
-      el("div", { class: "cell ok" }, el("span", { class: "n" }, t.hens), el("span", { class: "t" }, "Hens")),
-      el("div", { class: "cell ok" }, el("span", { class: "n" }, t.today), el("span", { class: "t" }, "Eggs Today")),
-      el("div", { class: "cell ok" }, el("span", { class: "n" }, t.week), el("span", { class: "t" }, "This Week")),
-      el("div", { class: "cell " + (t.loose >= 12 ? "soon" : "ok") }, el("span", { class: "n" }, t.loose), el("span", { class: "t" }, "Loose Eggs")));
+    $("strip").hidden = true;  // the canvas leads with logging today's eggs; the totals are in each flock's figures
+    $("hero-tagline").textContent = t.hens + " hens · " + t.today + " eggs today";
     $("panel").replaceChildren(...(page.flocks.length ? page.flocks.map(flockCard)
       : [section("Your Flock", null, el("p", { class: "empty" }, "Add your flock: how many hens, the breed, when they came. Then log eggs with one tap a day."))]),
       buttons(btn("Add A Flock", "btn-amber", addFlock)));
