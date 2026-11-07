@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1070 files, 238,899 lines; 1070 files describe themselves; 8,129 of 13,814 classes and functions are documented.
+1070 files, 238,934 lines; 1070 files describe themselves; 8,164 of 13,814 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -397,7 +397,7 @@
 
 ## gui/: the desktop's Qt shell and dialogs
 
-122 files, 21,511 lines; 843 of 1,083 classes and functions documented
+122 files, 21,546 lines; 878 of 1,083 classes and functions documented
 
 - `gui/__init__.py`: Presentation layer only. Everything in this package talks to the rest of the system through core.app_context.AppContext and modules.module_base. ModuleBase — never by importing module internals or reaching into core services directly beyond what AppContext exposes.
 - `gui/account_dialogs.py`: Accounts and households on the desktop (2026-10-01, docs/ROADMAP.md "People and ownership"; core/profile_manager.py, core/household_manager.py): *(30 undocumented)*
@@ -476,7 +476,7 @@
 - `gui/plaid_connect_progress_dialog.py`: Shown while waiting for the user to finish connecting a bank in their system browser (Plaid's Hosted Link, opened via webbrowser.open() — see core/plaid_manager.py's module docstring for why there's no embedded Link widget). Polls core.plaid_manager.PlaidManager.check_public_token_once() on a QTimer
 - `gui/plaid_setup_dialog.py`: One-time setup dialog for Plaid connectivity — collects the app's own client_id/secret (obtained by the user from their own Plaid Dashboard signup at plaid.com; MIA never creates that account on their behalf), which environment to use, and a new vault passphrase to encrypt them with (core.plaid_mana
 - `gui/presence_widget.py`: PresenceWidget: MIA's living "core presence" — the visual entity `docs/VISION.md`'s Home visual-identity section calls for, at the user's own framing: *"MIA should have an avatar/core presence that reacts during interactions. When listening, thinking, loading modules, or completing tasks, the visual
-- `gui/private_journal_panel.py`: The Private Journal tab in Notes (Cognitive Extension slice A, see docs/COGNITIVE_EXTENSION_PROPOSAL.md): set up the encrypted journal, unlock it, read and delete what MIA saved from journaling conversations. Everything here goes through self.context.private_journal (core/private_journal.py). *(13 undocumented)*
+- `gui/private_journal_panel.py`: The Private Journal tab in Notes (Cognitive Extension slice A, see docs/COGNITIVE_EXTENSION_PROPOSAL.md): set up the encrypted journal, unlock it, read and delete what MIA saved from journaling conversations. Everything here goes through self.context.private_journal (core/private_journal.py).
 - `gui/profile_interview_dialog.py`: Shown right after a new profile is created from the profile-select screen's "Add Profile" flow (gui/add_profile_dialog.py stays a small, focused name+password dialog, unchanged — this is a separate, second dialog, not folded into it, same reasoning `AddProfileDialog`'s own docstring already gives fo
 - `gui/profile_select.py`: Shown at boot when more than one profile exists (the "shared device" case — e.g. a family using one MIA unit), and also reachable at any time via the "Switch User" button in the main window header — that path always shows this screen regardless of profile count, since it's also how a second profile 
 - `gui/quick_capture_dialog.py`: The quick capture box (core/quick_capture.py): type anything, press Enter, MIA files it. It stays open for the next one; each result has Undo. The Assistant runs off the screen's thread, so typing never freezes.
@@ -517,10 +517,10 @@
 - `gui/widgets/sensor_chart.py`: build_sensor_chart_view() — the Sensor Monitor screen's (Design restyle Phase 3, 2026-09-12) reading-history chart. Reuses this codebase's existing charting mechanism (`PySide6.QtCharts`, already used by `modules/lab/module.py`/`modules/budget/module.py` — not a new hand-rolled `QPainter` plot) rath
 - `gui/widgets/skill_tree_canvas.py`: SkillTreeCanvas — a QWidget subclass that draws prerequisite connector lines behind its own child widgets (design restyle Phase 4, 2026-09-12, the "My Hero's Path" skill tree screen). Same "small QPainter-based visual atom, reused across screens" shape as gui/widgets/blueprint_frame.py/circular_gaug
 - `gui/widgets/theme_chart.py`: apply_dark_chart_theme() — a small shared helper that themes a `PySide6.QtCharts.QChart` to match `DARK_FIELD_THEME` (`gui/styles.py`). Real, pre-existing gap this closes: `modules/lab module.py` and `modules/budget/module.py` already chart `DataLoggerManager`/budget data via QtCharts, but neither t
-- `gui/widgets/tile_map_view.py`: A real pannable/zoomable basemap widget — the actual "offline maps" imagery, unlike gui/widgets/waypoint_map_canvas.py's schematic waypoint plot (which deliberately has no basemap imagery at all; see that module's docstring for why). Renders tiles from core.map_tile_cache.MapTileCache, fetching what *(12 undocumented)*
+- `gui/widgets/tile_map_view.py`: A real pannable/zoomable basemap widget — the actual "offline maps" imagery, unlike gui/widgets/waypoint_map_canvas.py's schematic waypoint plot (which deliberately has no basemap imagery at all; see that module's docstring for why). Renders tiles from core.map_tile_cache.MapTileCache, fetching what
 - `gui/widgets/toggle_switch.py`: ToggleSwitch: a small pill-shaped on/off switch — the "Quick Bus" widget's toggle rows in the 2026-07-15 "ForMIA" design handoff's `WIDGET_STENCIL.md` ("28×15px teal pill with a 11×11 dark knob offset 2px from the active edge").
 - `gui/widgets/volume_quick_control.py`: A compact mute-button + slider, meant to live inside a `QWidgetAction` in `gui/main_window.py`'s new profile-avatar dropdown menu.
-- `gui/widgets/waypoint_map_canvas.py`: A schematic 2D plot of core.waypoint_manager.Waypoint points — built for modules/maps/module.py, replacing that module's placeholder screen. *(10 undocumented)*
+- `gui/widgets/waypoint_map_canvas.py`: A schematic 2D plot of core.waypoint_manager.Waypoint points — built for modules/maps/module.py, replacing that module's placeholder screen.
 
 ## modules/: the desktop's apps, one folder each
 

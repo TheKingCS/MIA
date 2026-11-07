@@ -70,6 +70,7 @@ class TileMapView(QWidget):
     def __init__(
         self, tile_cache: MapTileCache, source: str = "usgs_topo", parent: Optional[QWidget] = None
     ) -> None:
+        """A slippy map over the tile cache for the source given, centred near the KY/TN border at zoom 7, with a background worker fetching missing tiles."""
         super().__init__(parent)
         self.setMinimumHeight(320)
         self.setMouseTracking(True)
@@ -88,6 +89,7 @@ class TileMapView(QWidget):
         self._fetch_worker.start()
 
     def stop(self) -> None:
+        """Stops the tile worker (when the app closes)."""
         self._fetch_worker.tile_ready.disconnect(self._on_tile_ready)
         self._fetch_worker.stop()
 
@@ -96,6 +98,7 @@ class TileMapView(QWidget):
     # ------------------------------------------------------------------
 
     def set_center(self, lat: float, lon: float, zoom: Optional[int] = None) -> None:
+        """Moves the map to a point, and to a zoom (kept within the limits) when given."""
         self._center_lat = lat
         self._center_lon = lon
         if zoom is not None:
@@ -103,10 +106,12 @@ class TileMapView(QWidget):
         self.update()
 
     def set_source(self, source: str) -> None:
+        """Shows another basemap source."""
         self._source = source
         self.update()
 
     def source(self) -> str:
+        """The basemap source shown."""
         return self._source
 
     def visible_bounds(self) -> tuple[float, float, float, float]:
@@ -123,6 +128,7 @@ class TileMapView(QWidget):
     # ------------------------------------------------------------------
 
     def paintEvent(self, event) -> None:
+        """Draws every tile in view (and one around it) for the centre and zoom, then the source's attribution in the corner."""
         painter = QPainter(self)
         painter.fillRect(self.rect(), _BACKGROUND_COLOR)
 
@@ -152,6 +158,7 @@ class TileMapView(QWidget):
         painter.end()
 
     def _paint_tile(self, painter: QPainter, tile_x: int, tile_y: int, screen_x: float, screen_y: float) -> None:
+        """Draws one tile from memory or the cache; one not cached yet is a placeholder square, and is asked for from the worker."""
         key = (self._source, self._zoom, tile_x, tile_y)
         pixmap = self._pixmap_cache.get(key)
         if pixmap is None:
@@ -169,6 +176,7 @@ class TileMapView(QWidget):
         painter.drawPixmap(int(screen_x), int(screen_y), pixmap)
 
     def _on_tile_ready(self, source: str, zoom: int, x: int, y: int, path: str) -> None:
+        """Repaints when a tile for what's on screen arrives."""
         if source == self._source and zoom == self._zoom:
             self.update()
 
@@ -177,10 +185,12 @@ class TileMapView(QWidget):
     # ------------------------------------------------------------------
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
+        """Starts a drag with the left button."""
         if event.button() == Qt.MouseButton.LeftButton:
             self._drag_last_pos = event.position()
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
+        """Pans the map with the drag."""
         if self._drag_last_pos is None:
             return
         current_pos = event.position()
@@ -195,9 +205,11 @@ class TileMapView(QWidget):
         self.update()
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
+        """Ends the drag."""
         self._drag_last_pos = None
 
     def wheelEvent(self, event: QWheelEvent) -> None:
+        """Zooms in or out one level with the wheel, within the limits."""
         delta = 1 if event.angleDelta().y() > 0 else -1
         new_zoom = max(_MIN_ZOOM, min(_MAX_ZOOM, self._zoom + delta))
         if new_zoom != self._zoom:

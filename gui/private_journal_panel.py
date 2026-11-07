@@ -65,7 +65,9 @@ def render_private_entry_html(entry: PrivateJournalEntry) -> str:
 
 
 class PrivateJournalPanel(QWidget):
+    """The private journal: conversations MIA saved when asked to journal, organized and encrypted; she can always save, reading needs the passphrase. Set up, unlock, lock, search, read, delete."""
     def __init__(self, context, parent: Optional[QWidget] = None) -> None:
+        """The explanation, the status with Set Up, Unlock and Lock, the search box, the entries beside the reader, and Delete."""
         super().__init__(parent)
         self.context = context
         self._entries: list[PrivateJournalEntry] = []
@@ -124,6 +126,7 @@ class PrivateJournalPanel(QWidget):
         # Refresh on show rather than on an event: journal entries are
         # also saved from the phone server's background thread, and Qt
         # widgets must only be touched from the GUI thread.
+        """Refreshes whenever it's shown."""
         super().showEvent(event)
         self.refresh()
 
@@ -131,9 +134,11 @@ class PrivateJournalPanel(QWidget):
 
     @property
     def _journal(self):
+        """The private journal store."""
         return self.context.private_journal
 
     def refresh(self) -> None:
+        """Shows where the journal stands (unavailable, not set up, locked with how many entries, or unlocked) with the right buttons, and only when unlocked lists the entries matching the search, keeping the selection."""
         journal = self._journal
         set_up = journal is not None and journal.is_set_up()
         unlocked = set_up and journal.is_unlocked()
@@ -170,10 +175,12 @@ class PrivateJournalPanel(QWidget):
                 self._list.setCurrentItem(item)
 
     def _selected_entry_id(self) -> Optional[str]:
+        """The selected entry's id, or None."""
         item = self._list.currentItem()
         return item.data(Qt.ItemDataRole.UserRole) if item is not None else None
 
     def _show_selected(self) -> None:
+        """Shows the selected entry in the reader."""
         entry_id = self._selected_entry_id()
         entry = next((e for e in self._entries if e.entry_id == entry_id), None)
         self._reader.setHtml(render_private_entry_html(entry) if entry is not None else "")
@@ -181,10 +188,12 @@ class PrivateJournalPanel(QWidget):
     # ------------------------------------------------------------------
 
     def _ask_passphrase(self, title: str, label: str) -> Optional[str]:
+        """Asks for a passphrase, hidden as typed; None when cancelled or empty."""
         text, ok = QInputDialog.getText(self, title, label, QLineEdit.EchoMode.Password)
         return text if ok and text else None
 
     def _on_setup(self) -> None:
+        """Sets the journal up with a passphrase typed twice (it can't be recovered if forgotten), then unlocks the other vaults that use the same passphrase."""
         passphrase = self._ask_passphrase(
             "Set Up Private Journal",
             "Choose a passphrase (8+ characters). You can use the same one as your Plaid vault.\n"
@@ -205,6 +214,7 @@ class PrivateJournalPanel(QWidget):
         self.refresh()
 
     def _on_unlock(self) -> None:
+        """Unlocks the journal with its passphrase (a wrong one is said), then the other vaults that use the same one."""
         passphrase = self._ask_passphrase("Unlock Private Journal", "Passphrase:")
         if passphrase is None:
             return
@@ -218,6 +228,7 @@ class PrivateJournalPanel(QWidget):
 
     def _unlock_plaid_too(self, passphrase: str) -> None:
         # The document inbox's mailbox password shares the passphrase too.
+        """Unlocks the inbox's email and Plaid with the same passphrase when they use it and are locked; a failure is only logged."""
         mail = getattr(self.context, "inbox_mail", None)
         if mail is not None and mail.vault.exists() and not mail.vault.unlocked:
             mail.vault.try_unlock(passphrase)
@@ -231,10 +242,12 @@ class PrivateJournalPanel(QWidget):
             log.exception("Plaid unlock alongside the private journal failed.")
 
     def _on_lock(self) -> None:
+        """Locks the journal."""
         self._journal.lock()
         self.refresh()
 
     def _on_delete(self) -> None:
+        """Deletes the selected entry for good after asking."""
         entry_id = self._selected_entry_id()
         if entry_id is None:
             QMessageBox.information(self, "Private Journal", "Select an entry to delete.")

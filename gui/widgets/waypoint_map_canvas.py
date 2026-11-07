@@ -104,6 +104,7 @@ class WaypointMapCanvas(QWidget):
     waypoint_clicked = Signal(str)  # emits waypoint_id
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:
+        """No waypoints, route or highlights yet."""
         super().__init__(parent)
         self.setMinimumHeight(280)
         self._points: list[tuple[str, str, float, float]] = []  # (id, name, lat, lon)
@@ -113,28 +114,34 @@ class WaypointMapCanvas(QWidget):
         self._positions: dict[str, tuple[float, float]] = {}
 
     def set_waypoints(self, waypoints) -> None:
+        """The waypoints to draw (placed to fit the canvas) and repaints."""
         self._points = [(w.waypoint_id, w.name, w.latitude, w.longitude) for w in waypoints]
         self._recompute_positions()
         self.update()
 
     def set_route(self, waypoint_ids: list[str]) -> None:
+        """The route to draw, as waypoint ids in order, and repaints."""
         self._route_ids = list(waypoint_ids)
         self.update()
 
     def set_highlighted(self, from_id: Optional[str], to_id: Optional[str]) -> None:
+        """The from and to waypoints to highlight (and join), and repaints."""
         self._from_id = from_id
         self._to_id = to_id
         self.update()
 
     def resizeEvent(self, event) -> None:
+        """Places the waypoints again to fit the new size."""
         super().resizeEvent(event)
         self._recompute_positions()
 
     def _recompute_positions(self) -> None:
+        """Where each waypoint goes on the canvas, its latitude and longitude projected to fit."""
         triples = [(point_id, lat, lon) for point_id, _, lat, lon in self._points]
         self._positions = project_waypoints(triples, float(self.width()), float(self.height()))
 
     def paintEvent(self, event) -> None:
+        """Draws the background and border, then the route and the waypoints; says when there are no waypoints yet."""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
@@ -153,6 +160,7 @@ class WaypointMapCanvas(QWidget):
         painter.end()
 
     def _paint_route(self, painter: QPainter) -> None:
+        """Draws the route as a dashed line through its waypoints in order (needs two)."""
         route_points = [self._positions[wid] for wid in self._route_ids if wid in self._positions]
         if len(route_points) < 2:
             return
@@ -161,6 +169,7 @@ class WaypointMapCanvas(QWidget):
             painter.drawLine(QPointF(*start), QPointF(*end))
 
     def _paint_waypoints(self, painter: QPainter) -> None:
+        """Draws a line between the from and to waypoints, then each waypoint as a dot (bigger and coloured when it's from or to) with its name."""
         font = QFont(painter.font())
         font.setPointSize(max(font.pointSize() - 1, 7))
         painter.setFont(font)
@@ -192,6 +201,7 @@ class WaypointMapCanvas(QWidget):
             painter.drawText(QPointF(x + radius + 4, y + 4), name)
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
+        """A click on or near a waypoint emits waypoint_clicked with its id."""
         click_pos = event.position()
         for point_id, _, _, _ in self._points:
             pos = self._positions.get(point_id)
