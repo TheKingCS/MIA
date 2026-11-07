@@ -31,7 +31,9 @@ from core.mail_send import SendError, guess_server, send_in_background, sender_f
 
 
 class EmailDraftDialog(QDialog):
+    """An email MIA drafted, to check and edit: Send (only when sending is set up, and only when pressed), Copy, Open in my mail app, Discard, or Keep for later. MIA never sends on her own."""
     def __init__(self, context, draft, profile_id=None, parent=None) -> None:
+        """The draft's To, Subject and body to edit, and the buttons; Send is off until sending is set up for this person."""
         super().__init__(parent)
         self.context, self.draft, self.profile_id = context, draft, profile_id
         self.setWindowTitle("Email draft")
@@ -75,11 +77,13 @@ class EmailDraftDialog(QDialog):
     # ------------------------------------------------------------------
 
     def _drafts(self):
+        """The drafts store of the person the draft belongs to (their own view when known)."""
         personal = getattr(self.context, "personal_data", None)
         view = personal.view(self.profile_id) if personal is not None and self.profile_id else self.context
         return view.email_drafts
 
     def _save_edits(self):
+        """Saves what's in the boxes to the draft (addresses read from To) and returns it."""
         draft = self._drafts().update(self.draft.draft_id, to=addresses_in(self.to_edit.text()),
                                       subject=self.subject_edit.text(), body=self.body_edit.toPlainText())
         if draft is not None:
@@ -87,22 +91,27 @@ class EmailDraftDialog(QDialog):
         return self.draft
 
     def _on_copy(self) -> None:
+        """Copies the draft as text to paste into any email."""
         QGuiApplication.clipboard().setText(as_text(self._save_edits()))
         self.status_label.setText("Copied. Paste it into any email.")
 
     def _on_mail_app(self) -> None:
+        """Opens the draft in the person's own mail app, to send from there."""
         QDesktopServices.openUrl(QUrl(mailto_url(self._save_edits())))
         self.status_label.setText("Opened in your mail app. Send it from there.")
 
     def _on_keep(self) -> None:
+        """Saves the edits and closes, keeping the draft for later."""
         self._save_edits()
         self.accept()
 
     def _on_discard(self) -> None:
+        """Marks the draft discarded and closes."""
         self._drafts().mark(self.draft.draft_id, DISCARDED)
         self.reject()
 
     def _on_send(self) -> None:
+        """Sends the draft as edited, in the background: it needs someone to send to, and the sending passphrase the first time in a session (a wrong one is said)."""
         draft = self._save_edits()
         if not draft.to:
             self.status_label.setText("Who should it go to? Add their email address.")
@@ -121,6 +130,7 @@ class EmailDraftDialog(QDialog):
         send_in_background(self.context, self.profile_id, draft.draft_id, self._on_sent)
 
     def _on_sent(self, ok: bool, message: str) -> None:
+        """Says how sending went: Sent, or what went wrong with Send back on."""
         self.status_label.setText(message)
         if ok:
             self.send_button.setText("Sent")
@@ -133,6 +143,7 @@ class SendingSetupDialog(QDialog):
     passphrase that encrypts it."""
 
     def __init__(self, context, profile_id=None, parent=None) -> None:
+        """Setting up sending from the person's own address: the address, mail password (an app password for Gmail), a passphrase that encrypts it, and the server (filled in for common providers), with Save, Cancel and, when set up, Turn sending off."""
         super().__init__(parent)
         self.context, self.profile_id = context, profile_id
         self.sender = sender_for(context, profile_id)
@@ -173,11 +184,13 @@ class SendingSetupDialog(QDialog):
         layout.addWidget(buttons)
 
     def _on_address_changed(self, text: str) -> None:
+        """Fills in the mail server for a provider it knows from the address."""
         guessed = guess_server(text)
         if guessed is not None:
             self.host_edit.setText(guessed[0])
 
     def _on_save(self) -> None:
+        """Saves the sending setup (a server typed by hand is used on port 587 with STARTTLS); a problem is said and nothing closes."""
         guessed = guess_server(self.address_edit.text())
         host = self.host_edit.text().strip()
         custom = host and (guessed is None or host != guessed[0])
@@ -190,5 +203,6 @@ class SendingSetupDialog(QDialog):
         self.accept()
 
     def _on_turn_off(self) -> None:
+        """Forgets the sending setup and closes."""
         self.sender.forget()
         self.accept()

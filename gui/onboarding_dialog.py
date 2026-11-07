@@ -41,6 +41,7 @@ log = get_logger(__name__)
 
 
 def _bubble(text: str, mine: bool = False) -> QLabel:
+    """A chat bubble for the setup conversation: MIA's on the left, the person's on the right."""
     label = QLabel(text)
     label.setWordWrap(True)
     label.setStyleSheet(
@@ -51,7 +52,9 @@ def _bubble(text: str, mine: bool = False) -> QLabel:
 
 
 class OnboardingDialog(QDialog):
+    """Getting to know you: MIA's setup questions as a short chat (what to help with, how often to speak up, anything else), then her suggested focus and starter sets."""
     def __init__(self, context, profile, module_names: dict[str, str], parent=None) -> None:
+        """The conversation for a profile (on their own view), Skip and Next; MIA says hello and asks the first question."""
         super().__init__(parent)
         self.context = context
         self.profile = profile
@@ -95,11 +98,13 @@ class OnboardingDialog(QDialog):
     # ------------------------------------------------------------------
 
     def _say(self, text: str, mine: bool = False) -> None:
+        """Adds a line to the conversation (MIA's, or the person's answer) and scrolls to it."""
         self._conversation.addWidget(_bubble(text, mine))
         bar = self._scroll.verticalScrollBar()
         QTimer.singleShot(0, lambda: bar.setValue(bar.maximum()))
 
     def _clear_answers(self) -> None:
+        """Removes the last question's answer controls."""
         while self._answer_area.count():
             item = self._answer_area.takeAt(0)
             widget = item.widget()
@@ -109,12 +114,14 @@ class OnboardingDialog(QDialog):
                 widget.deleteLater()
 
     def _next(self, handler) -> None:
+        """Points Next at the handler for the question on screen."""
         if self._handler is not None:
             self.next_button.clicked.disconnect(self._handler)
         self._handler = handler
         self.next_button.clicked.connect(handler)
 
     def _ask_goals(self) -> None:
+        """Asks what MIA should help with most, as toggle buttons."""
         self._say("What should I help you with most? Pick as many as you like.")
         chips = QWidget()
         grid = QVBoxLayout(chips)
@@ -129,6 +136,7 @@ class OnboardingDialog(QDialog):
         self._next(self._on_goals)
 
     def _on_goals(self) -> None:
+        """Keeps the goals picked and asks how often she should speak up on her own (5 a day to start; urgent things and alarms always come through)."""
         self.goals = [g for g, b in self._goal_buttons.items() if b.isChecked()]
         names = dict(GOALS)
         self._say(", ".join(names[g] for g in self.goals) if self.goals else "Not sure yet.", mine=True)
@@ -148,6 +156,7 @@ class OnboardingDialog(QDialog):
         self._next(self._on_speak_up)
 
     def _on_speak_up(self) -> None:
+        """Keeps the answer and asks for anything else she should know (optional)."""
         _key, label, self.speak_up = SPEAK_UP[max(0, self._speak_group.checkedId())]
         self._say(label, mine=True)
         self._clear_answers()
@@ -160,6 +169,7 @@ class OnboardingDialog(QDialog):
         self._next(self._on_notes)
 
     def _on_notes(self) -> None:
+        """Keeps the notes, then suggests a focus for the goals and the starter sets that fit them (ticked), with Sounds good or Show me everything."""
         self.notes = self._notes_edit.toPlainText().strip()
         if self.notes:
             self._say(self.notes, mine=True)
@@ -186,6 +196,7 @@ class OnboardingDialog(QDialog):
         self._next(self._on_agree)
 
     def _on_agree(self) -> None:
+        """Saves the answers with the suggested focus and adds the starter sets ticked (one that fails never stops setup), then closes."""
         self.save(apply_focus=True)
         from core import starter_templates
 
@@ -199,10 +210,12 @@ class OnboardingDialog(QDialog):
 
     def reject(self) -> None:
         # Skipping still keeps what was answered, just not the app focus.
+        """Skipping or Show me everything still saves the answers, without the focus."""
         self.save(apply_focus=False)
         super().reject()
 
     def save(self, apply_focus: bool) -> None:
+        """Marks the questions done; when anything was answered, saves how often to speak up, the interview answers (interests from the goals and the notes), and the focus when asked."""
         person_settings.put(self.person, "setup.questions_done", True)
         if self.recommendation is None and not self.goals:
             return
@@ -217,4 +230,5 @@ class OnboardingDialog(QDialog):
 
 
 def module_names(module_manager) -> dict[str, str]:
+    """Pure logic over the modules. Each module's display name by id ({} without a module manager)."""
     return {m.module_id: m.display_name for m in module_manager.all()} if module_manager is not None else {}

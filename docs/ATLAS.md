@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1070 files, 238,934 lines; 1070 files describe themselves; 8,164 of 13,814 classes and functions are documented.
+1070 files, 238,962 lines; 1070 files describe themselves; 8,192 of 13,814 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -397,7 +397,7 @@
 
 ## gui/: the desktop's Qt shell and dialogs
 
-122 files, 21,546 lines; 878 of 1,083 classes and functions documented
+122 files, 21,574 lines; 906 of 1,083 classes and functions documented
 
 - `gui/__init__.py`: Presentation layer only. Everything in this package talks to the rest of the system through core.app_context.AppContext and modules.module_base. ModuleBase — never by importing module internals or reaching into core services directly beyond what AppContext exposes.
 - `gui/account_dialogs.py`: Accounts and households on the desktop (2026-10-01, docs/ROADMAP.md "People and ownership"; core/profile_manager.py, core/household_manager.py): *(30 undocumented)*
@@ -450,7 +450,7 @@
 - `gui/dashboard_customize_dialog.py`: Lets the user enable/disable and reorder Home dashboard widgets — 2026-07-15, the UI half of core/dashboard_widgets.py's "framework first" build (see that module's docstring for the full reasoning). Deliberately a checkable list + up/down move buttons, not drag-and-drop — matches this project's own 
 - `gui/delete_confirm_dialog.py`: Requires typing the exact item name before Delete is enabled — used for permanent, unrecoverable deletions (modules/files_mod/module.py). Chosen over a plain Yes/No confirmation because a real file manager's delete is genuinely irreversible (no trash/recycle bin — see modules/files_mod/file_operatio
 - `gui/easter_egg.py`: A hidden credits screen, triggered by Ctrl+Shift+Z from anywhere in the main window. Purely cosmetic — no config, no logic, nothing else in the system depends on this file existing.
-- `gui/email_draft_dialog.py`: The email draft window (2026-10-01, core/email_drafts.py): what MIA wrote, editable, with **Send** (only here, only when pressed, from your own address, core/mail_send.py), **Copy**, and **Open in my mail app**. Closing keeps the draft. `SendingSetupDialog` sets up sending (Settings → Sending Email) *(14 undocumented)*
+- `gui/email_draft_dialog.py`: The email draft window (2026-10-01, core/email_drafts.py): what MIA wrote, editable, with **Send** (only here, only when pressed, from your own address, core/mail_send.py), **Copy**, and **Open in my mail app**. Closing keeps the draft. `SendingSetupDialog` sets up sending (Settings → Sending Email)
 - `gui/file_preview_dialog.py`: A read-only preview dialog for the Files module (modules/files_mod module.py) — text content in a monospace view, or an image scaled to fit, depending on which classmethod constructs it. Kept as one dialog class with two display modes rather than two separate classes since the surrounding chrome (ti
 - `gui/flash_confirm_dialog.py`: Confirmation dialog for Field Kit's OS + MIA flashing/provisioning action (docs/ROADMAP.md milestone 11.3) — writing an image to the wrong device is unrecoverable (a bricked Pi, or a wiped real drive), so this is deliberately the most cautious confirmation flow in the app, one step beyond `gui/delet
 - `gui/home_dashboard.py`: The screen shown immediately after login — a real "home screen," not just the module grid. 2026-07-14 aesthetic pass, part 3 (docs/ROADMAP.md): the user's own framing was "after logging in the menu should display a dashboard" with system power, the current mission, the time, and volume control — the *(70 undocumented)*
@@ -470,7 +470,7 @@
 - `gui/memory_connections_dialog.py`: "Memory Connections" — the graph/tree visualization docs/VISION.md flagged as real, separate UI scope, deliberately not attempted in the 2026-09-10 "Memory Palace" pass that built the underlying relation (core.user_memory_manager.related_memories(), surfaced there only as a one-line "Related: ..." p
 - `gui/notification_center.py`: The full notification list, opened from the bell button in the main window header. Shows every notification (read and unread), newest first, color-coded by level, with per-item dismiss and a "Clear All" action.
 - `gui/notification_toast.py`: A brief, non-blocking pop-up shown when a new notification arrives while the app is open. Implemented as a child widget of MainWindow (positioned in its top-right corner) rather than a separate top-level window, since a child widget avoids cross-platform window-manager positioning quirks — it just n
-- `gui/onboarding_dialog.py`: "Getting to know you" (2026-10-01, accounts stage 2): right after a new account is made, MIA asks a few questions, one at a time, as a conversation: what she should help with most, how often to speak up, and anything else she should know. Then she says what she'll put first on the Apps screen (core/ *(14 undocumented)*
+- `gui/onboarding_dialog.py`: "Getting to know you" (2026-10-01, accounts stage 2): right after a new account is made, MIA asks a few questions, one at a time, as a conversation: what she should help with most, how often to speak up, and anything else she should know. Then she says what she'll put first on the Apps screen (core/
 - `gui/password_dialog.py`: A small reusable dialog for prompting a profile's password — used both when selecting a password-protected profile and when deleting one.
 - `gui/pick_item_quantity_dialog.py`: One reusable dialog for three actions that all share the same real shape — "pick an existing item, enter a quantity (and optionally an amount)": modules/workshop/module.py's Jobs tab "Consume Material" and "Produce Product" actions (core/job_manager.py's consume_material() produce_product()), and it
 - `gui/plaid_connect_progress_dialog.py`: Shown while waiting for the user to finish connecting a bank in their system browser (Plaid's Hosted Link, opened via webbrowser.open() — see core/plaid_manager.py's module docstring for why there's no embedded Link widget). Polls core.plaid_manager.PlaidManager.check_public_token_once() on a QTimer
