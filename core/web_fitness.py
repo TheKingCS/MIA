@@ -24,6 +24,7 @@ from core.fitness_manager import WEEKDAYS
 
 
 def _child(context) -> bool:
+    """Whether this is a child account (False when it can't tell)."""
     from core.child_accounts import is_child
 
     try:
@@ -33,6 +34,7 @@ def _child(context) -> bool:
 
 
 def _missions(context, today: date) -> list[dict]:
+    """Today's fitness missions, made if needed, each with its objectives and how many are done."""
     from core.fitness_missions import _kind, ensure
 
     out = []
@@ -78,6 +80,10 @@ def live_session(context) -> Optional[dict]:
 
 
 def fitness_page(context, today: Optional[date] = None) -> dict:
+    """The data the Fitness screen shows, assembled here (the web only draws it): today's training (each step done or not), the skills to practise
+    with their bests, food and meals, missions, milestones, progress, the plan and its text, the live session, and
+    (never for a child) the weight trend.
+    """
     from core.meal_plan import day_plan
 
     fit = getattr(context, "fitness", None)
@@ -175,6 +181,7 @@ def week_page(context, day: Optional[date] = None) -> dict:
 
 
 def _plural(n: float, word: str) -> str:
+    """Pure logic. A number with its word, plural when it isn't one."""
     return f"{n:g} {word}{'' if n == 1 else 's'}"
 
 

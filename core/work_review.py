@@ -63,6 +63,7 @@ def provider_of(who: str) -> str:
 
 
 def _lessons(path: Optional[Path] = None) -> dict:
+    """Every reviewer's lessons (work/review_lessons.json), by provider; none when it can't be read."""
     try:
         return json.loads(Path(path or LESSONS).read_text(encoding="utf-8"))
     except (OSError, ValueError):
@@ -79,6 +80,7 @@ def lessons_for(provider: str, path: Optional[Path] = None) -> str:
 
 
 def add_lesson(provider: str, task_id: str, lesson: str, path: Optional[Path] = None) -> None:
+    """Keeps a lesson for a reviewer (with the task it came from), dropping a repeat; the latest 12 each."""
     from core.atomic_write import atomic_write_text
 
     data = _lessons(path)
@@ -173,6 +175,7 @@ def approvals(task_id: str, log=activity.ACTIVITY) -> list[str]:
 
 
 def latest_verdict(task_id: str, log=activity.ACTIVITY) -> str:
+    """A task's latest review verdict, or empty."""
     reviews = [e for e in activity.search(task_id=task_id, path=log) if e.get("action") == "review"]
     return reviews[-1]["detail"].split(":", 1)[0] if reviews else ""
 
@@ -238,6 +241,7 @@ def resolve(task_id: str, who: str, how: str, folder=tasks_mod.TASKS_DIR, log=ac
 
 
 def _registry() -> Registry:
+    """The development agents' registry."""
     from core.work_agents import load as load_agents
 
     return load_agents()

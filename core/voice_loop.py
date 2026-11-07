@@ -59,6 +59,7 @@ class VoiceLoopController:
         push_to_talk: PushToTalkSource,
         indicators: ReceiverIndicators,
     ) -> None:
+        """The voice loop for the core runtime: push-to-talk, its indicators, and one conversation for the session."""
         self.context = context
         self._push_to_talk = push_to_talk
         self._indicators = indicators
@@ -66,6 +67,7 @@ class VoiceLoopController:
         self._running = False
 
     def stop(self) -> None:
+        """Asks the loop to stop after the turn it's on."""
         self._running = False
 
     def run_forever(self) -> None:
@@ -100,6 +102,7 @@ class VoiceLoopController:
         self._handle_turn(transcript)
 
     def _handle_turn(self, prompt: str) -> None:
+        """One spoken turn: says each reply, then runs its follow-up (not when the model didn't answer)."""
         turn = run_assistant_turn(self.context, self._conversation, prompt)
         for text in turn.replies:
             self._speak(text)
@@ -109,6 +112,7 @@ class VoiceLoopController:
         run_followup(self.context, self._conversation, turn.followup)
 
     def _speak(self, text: str) -> None:
+        """Says a reply aloud (shows it's speaking; logs it); with no voice it's only logged."""
         self._indicators.on_speaking()
         log.info("Saying: %s", text)
         if self.context.voice is None:

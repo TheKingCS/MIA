@@ -58,6 +58,7 @@ def loop_ok(context) -> bool:
 
 
 def _lookups_only(context, calls: list[ToolCall]) -> bool:
+    """Whether every tool call in a reply only reads (a lookup), so the results can be answered from directly."""
     from core.assistant_actions import changes_records
 
     registry = getattr(context, "assistant_actions", None)
@@ -103,6 +104,7 @@ def asks_not_tells(prompt: str) -> bool:
 
 
 def _wants_change(context, reply: ChatReply) -> bool:
+    """Whether a reply asks for any tool that changes a record."""
     from core.assistant_actions import changes_records
 
     return any(changes_records(c.name) for c in reply.tool_calls)
@@ -127,11 +129,13 @@ def _answer_instead(context, llm, messages: list[dict], tools: list[dict], reply
 
 
 def _short(text: str) -> str:
+    """A tool's result cut to RESULT_CHARS (1,500) at a word, marked as cut short."""
     text = str(text or "").strip()
     return text if len(text) <= RESULT_CHARS else text[:RESULT_CHARS].rsplit(" ", 1)[0] + " …(cut short)"
 
 
 def _plain(results: list[tuple[str, str]]) -> str:
+    """Every tool result's text, one after another."""
     return " ".join(text for _name, text in results)
 
 

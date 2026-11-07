@@ -17,12 +17,14 @@ from core.craft_recipes import build_result, check, makes_text
 
 
 def _money(x) -> str:
+    """An amount in the person's currency."""
     from core.region import money
 
     return money(x)
 
 
 def _row(r: dict) -> dict:
+    """One material row of a recipe, with its cost, its line ("2 boards plywood") and what's left after, as text."""
     from core.units import amount_text
 
     return {**r, "unit_cost_text": _money(r["unit_cost"]) if r["unit_cost"] else "",
@@ -31,6 +33,10 @@ def _row(r: dict) -> dict:
 
 
 def craft_section(context) -> dict:
+    """The Workshop's crafting part: each recipe with what it needs from the shelf and its steps, each build
+    with its steps done, photos and result (sold, cost, profit, per hour, after labor), the labor rate,
+    and the receipts and forms.
+    """
     from core.build_media import media
     from core.craft_actions import CRAFT_RECIPE, receive_form
     from core.record_actions import record_form
@@ -120,6 +126,7 @@ def craft_section(context) -> dict:
 
 
 def find_build(context, job_id: str) -> Optional[dict]:
+    """One build's card by id, or None."""
     return next((b for b in craft_section(context)["builds"] if b["id"] == job_id), None)
 
 

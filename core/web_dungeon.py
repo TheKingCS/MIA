@@ -22,6 +22,7 @@ log = get_logger(__name__)
 
 
 def _money(x) -> str:
+    """An amount in the person's currency."""
     from core.region import money
 
     return money(x)
@@ -49,6 +50,9 @@ def banked(context, dungeon, start: date, end: date) -> list:
 
 
 def _run_row(run, split: dict, d) -> dict:
+    """One run (shift) for the screen: its hours split into regular and overtime, its hard-mode modifiers, whether
+    it was a boss, its loot and bonus, and its XP.
+    """
     from core.work_dungeon import AFFIX_BY_ID, boss_bonus, loot, run_xp
 
     regular, overtime = split.get(run.run_id, (run.hours, 0.0))
@@ -199,6 +203,7 @@ def next_dungeon(context, view: Optional[dict], today: date) -> Optional[dict]:
 
 
 def _loop(context, today: date) -> dict:
+    """The loop's page (the normal week); not available when it can't be read (logged)."""
     from core.the_loop import loop_page
 
     try:
@@ -228,6 +233,9 @@ def job_pay(context, today: Optional[date] = None) -> Optional[dict]:
 
 
 def dungeon_page(context, today: Optional[date] = None) -> dict:
+    """The data the Dungeon screen shows, assembled here (the web only draws it): each dungeon (job) with its week, month and pace, this week's
+    totals, the next dungeon, the loop, the hard-mode modifiers and the forms; never for a child.
+    """
     from core.child_accounts import is_child
     from core.dungeon_actions import DUNGEON
     from core.record_actions import record_form
