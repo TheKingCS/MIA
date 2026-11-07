@@ -8,11 +8,6 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 
 ## Zac
 
-### Decide
-- [ ] **Passwords stay screen-only (DEC-0125's one exception)?** Passwords, PINs and card numbers never by voice
-      and never on the glasses' display; everything else in MIA works both ways on every device. Yes or no in the
-      audit doc, or tell Claude.
-
 ### Try it
 - [ ] **The desktop opens on the web (DEC-0124):** close both copies of MIA that are running and start it once. It
       should open straight onto MIA's web screens, full size. Ctrl+Shift+C (or the header's "Main screen") switches to

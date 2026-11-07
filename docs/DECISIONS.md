@@ -1934,6 +1934,6 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   how a feature is presented (the glasses get a card and an ask, the phone a page sized for a thumb), never whether
   it can be used. `core/parity.py` measures it app by app (voice, PC, phone, glasses); every gap is decided in
   `work/parity.json`, to build or deliberately not, and a test fails on one nobody decided about, so parity only
-  grows. `docs/PARITY.md` is the table. The one proposed exception, passwords, PINs and card numbers never by voice
-  or on the glasses, waits on Zac's confirmation in the audit.
+  grows. `docs/PARITY.md` is the table. The one exception (Zac, 2026-11-07: "yes keep passwords screen only"):
+  passwords, PINs and card numbers are never spoken, heard or shown on the glasses; they stay on a screen.
 - Related: DEC-0017, DEC-0062, DEC-0124

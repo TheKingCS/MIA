@@ -81,8 +81,8 @@ Of 50 apps: by voice 37, on the PC 50, on the phone 46, on the glasses 29.
 - `toolbox:glasses`: todo, a glasses ask: convert or calculate (by voice there)
 - `lab:phone`: todo, a web page: experiments and graphs; sensors stay on the PC
 - `field_kit:phone`: todo, a web page: devices and scripts; running them stays on the PC
-- `passwords:voice`: none, passwords, PINs and card numbers never by voice (standing rule; Zac to confirm in the audit)
-- `passwords:glasses`: none, secrets never on the glasses' display (with passwords:voice; Zac to confirm)
+- `passwords:voice`: none, passwords, PINs and card numbers never by voice (Zac, 2026-11-07: "keep passwords screen only")
+- `passwords:glasses`: none, secrets never on the glasses' display (with passwords:voice, Zac 2026-11-07)
 - `files:voice`: todo, tools to find a file and open it
 - `files:glasses`: todo, a glasses ask: find a file, show it on the phone
 - `operating_journal:voice`: todo, tools to read what MIA did and why
