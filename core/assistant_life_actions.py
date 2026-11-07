@@ -66,6 +66,7 @@ def parse_birthday(text: str) -> Optional[str]:
 
 
 def speak_birthday(iso: str) -> str:
+    """A stored birthday said aloud ("March 3", with the year when one is known)."""
     try:
         d = date.fromisoformat(iso)
     except ValueError:
@@ -74,6 +75,9 @@ def speak_birthday(iso: str) -> str:
 
 
 def days_until(iso: str, today: date) -> Optional[int]:
+    """Days until a birthday next comes round (0 today; Feb 29 counts as Mar 1 in other years), or None when it
+    can't be read.
+    """
     try:
         b = date.fromisoformat(iso)
     except ValueError:
@@ -119,6 +123,7 @@ def parse_exercise_line(line: str) -> dict:
 
 
 def _append_line(existing: str, text: str, dated: bool = False) -> str:
+    """Adds a line to the end of notes (or starts them)."""
     line = f"{date.today().isoformat()}: {text}" if dated else text
     return f"{existing.rstrip()}\n{line}" if existing.strip() else line
 
@@ -129,6 +134,7 @@ def _append_line(existing: str, text: str, dated: bool = False) -> str:
 
 
 def _find_or_create_exercise(context: AppContext, name: str):
+    """The exercise a name means, or a new one made for it; with whether it was made."""
     exercises = context.workout.all_exercises()
     exercise, _ = resolve_by_name(exercises, name, lambda e: e.name, "exercise")
     if exercise is not None:
@@ -137,6 +143,9 @@ def _find_or_create_exercise(context: AppContext, name: str):
 
 
 def _action_log_workout(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `log_workout`: logs a workout from what was said ("3 sets of 10 squats at 185"), adding exercises it hasn't seen,
+    with the minutes and notes. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes.
+    """
     lines = _as_list(arguments.get("exercises"))
     duration = _num(arguments.get("duration_minutes"), 0.0) or 0.0
     notes = [str(arguments.get("notes", "") or "").strip()]
@@ -170,6 +179,7 @@ def _action_log_workout(context: AppContext, arguments: dict) -> str:
 
 
 def _action_get_workout_summary(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `get_workout_summary`: how many workouts this week and what the last one was. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
     today = date.today()
     week_start = (today.toordinal() - today.weekday())
     sessions = context.workout.all_sessions()
@@ -186,6 +196,7 @@ def _action_get_workout_summary(context: AppContext, arguments: dict) -> str:
 
 
 def _action_get_personal_record(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `get_personal_record`: an exercise's best set (heaviest, then most reps) and when. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
     exercise, error = resolve_by_name(context.workout.all_exercises(), str(arguments.get("exercise", "")), lambda e: e.name, "exercise")
     if error:
         return error
@@ -202,14 +213,17 @@ def _action_get_personal_record(context: AppContext, arguments: dict) -> str:
 
 
 def _find_person(context: AppContext, name: str):
+    """The person a name means, or the question to ask."""
     return resolve_by_name(context.relationships.all_people(), name, lambda p: p.name, "person")
 
 
 def _find_pet(context: AppContext, name: str):
+    """The pet a name means, or the question to ask."""
     return resolve_by_name(context.relationships.all_pets(), name, lambda p: p.name, "pet")
 
 
 def _action_add_person(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `add_person`: adds someone to People (relationship, birthday, a note, an email); someone already there is said so. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
     name = str(arguments.get("name", "") or "").strip()
     if not name:
         return "Who should I add?"
@@ -227,6 +241,9 @@ def _action_add_person(context: AppContext, arguments: dict) -> str:
 
 
 def _action_update_person(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `update_person`: saves what was said about someone (relationship, birthday, email, notes and the like); a birthday it
+    can't read is asked about. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes.
+    """
     person, error = _find_person(context, str(arguments.get("name", "")))
     if error:
         return error
@@ -261,6 +278,7 @@ def _action_update_person(context: AppContext, arguments: dict) -> str:
 
 
 def _action_get_person(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `get_person`: what MIA knows about someone. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
     person, error = _find_person(context, str(arguments.get("name", "")))
     if error:
         return error
@@ -282,6 +300,7 @@ def _action_get_person(context: AppContext, arguments: dict) -> str:
 
 
 def _action_list_upcoming_birthdays(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `list_upcoming_birthdays`: the birthdays in the next N days (60 by default), soonest first. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
     today = date.today()
     within = int(_num(arguments.get("within_days"), 60) or 60)
     upcoming = sorted(
@@ -296,6 +315,7 @@ def _action_list_upcoming_birthdays(context: AppContext, arguments: dict) -> str
 
 
 def _action_add_pet(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `add_pet`: adds a pet (species, birthday). Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
     name = str(arguments.get("name", "") or "").strip()
     if not name:
         return "What's your pet's name?"
@@ -306,6 +326,7 @@ def _action_add_pet(context: AppContext, arguments: dict) -> str:
 
 
 def _action_update_pet(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `update_pet`: saves what was said about a pet (species, birthday, a medical note, a note). Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
     pet, error = _find_pet(context, str(arguments.get("name", "")))
     if error:
         return error
@@ -334,6 +355,7 @@ def _action_update_pet(context: AppContext, arguments: dict) -> str:
 
 
 def _action_get_pet(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `get_pet`: what MIA knows about a pet. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
     pet, error = _find_pet(context, str(arguments.get("name", "")))
     if error:
         return error
@@ -354,12 +376,14 @@ def _action_get_pet(context: AppContext, arguments: dict) -> str:
 
 
 def _household_templates(context: AppContext) -> list:
+    """The active household routines (recurring-mission templates in the Household category)."""
     if context.recurring_missions is None:
         return []
     return [t for t in context.recurring_missions.all_templates() if t.category == "Household" and t.active]
 
 
 def _action_list_household_routines(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `list_household_routines`: the active household routines with this period's progress and streaks, and how many are done. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
     templates = _household_templates(context)
     if not templates:
         return "You don't have any household routines yet. Want me to set one up, like laundry twice a week?"
@@ -382,6 +406,9 @@ def _action_list_household_routines(context: AppContext, arguments: dict) -> str
 
 
 def _action_log_household_routine(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `log_household_routine`: counts a household routine ("did the laundry") toward this period's mission and says when it's done
+    for the day or week. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes.
+    """
     template, error = resolve_by_name(_household_templates(context), str(arguments.get("routine", "")), lambda t: t.name, "household routine")
     if error:
         return error
@@ -397,6 +424,7 @@ def _action_log_household_routine(context: AppContext, arguments: dict) -> str:
 
 
 def _action_add_household_routine(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `add_household_routine`: sets up a household routine, so many times a day or a week, with a streak. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
     from core.gamification import SkillWeight
 
     if context.recurring_missions is None:
@@ -424,14 +452,17 @@ def _action_add_household_routine(context: AppContext, arguments: dict) -> str:
 
 
 def _all_courses(context: AppContext) -> list:
+    """Every Classroom course, across subjects."""
     return [c for s in context.classroom.all_subjects() for c in context.classroom.courses_for_subject(s.subject_id)]
 
 
 def _all_lessons(context: AppContext) -> list:
+    """Every Classroom lesson, across courses."""
     return [l for c in _all_courses(context) for l in context.classroom.lessons_for_course(c.course_id)]
 
 
 def _action_add_course(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `add_course`: adds a Classroom course under a subject (making the subject when it's new), with its lessons. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
     subject_name = str(arguments.get("subject", "") or "").strip()
     course_name = str(arguments.get("course", "") or "").strip()
     if not subject_name or not course_name:
@@ -449,6 +480,7 @@ def _action_add_course(context: AppContext, arguments: dict) -> str:
 
 
 def _action_add_lesson(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `add_lesson`: adds lessons to a course. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
     course, error = resolve_by_name(_all_courses(context), str(arguments.get("course", "")), lambda c: c.name, "course")
     if error:
         return error
@@ -461,6 +493,7 @@ def _action_add_lesson(context: AppContext, arguments: dict) -> str:
 
 
 def _action_complete_lesson(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `complete_lesson`: marks an unfinished lesson done (its skill XP is granted once) and says the course's progress. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
     lessons = [l for l in _all_lessons(context) if not l.completed]
     lesson, error = resolve_by_name(lessons, str(arguments.get("lesson", "")), lambda l: l.name, "unfinished lesson")
     if error:
@@ -472,6 +505,7 @@ def _action_complete_lesson(context: AppContext, arguments: dict) -> str:
 
 
 def _action_add_lesson_notes(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `add_lesson_notes`: adds a line to a lesson's notes. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
     lesson, error = resolve_by_name(_all_lessons(context), str(arguments.get("lesson", "")), lambda l: l.name, "lesson")
     if error:
         return error
@@ -483,6 +517,7 @@ def _action_add_lesson_notes(context: AppContext, arguments: dict) -> str:
 
 
 def _action_get_learning_progress(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `get_learning_progress`: each subject's lessons done and the next one to do (or one subject's). Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
     subjects = context.classroom.all_subjects()
     if not subjects:
         return "You haven't set up any subjects yet. Tell me what you want to learn and I'll add a course."
@@ -508,6 +543,10 @@ def _action_get_learning_progress(context: AppContext, arguments: dict) -> str:
 
 def register_life_actions(registry: AssistantActionRegistry) -> None:
     # -- workout -------------------------------------------------------------
+    """Registers every tool above with the Assistant's registry, with descriptions, parameters and trigger
+    phrases, plus each domain's everyday words and the names of the person's own records (exercises, people, pets,
+    routines, courses and lessons).
+    """
     registry.register(AssistantAction(
         name="log_workout", domain="workout",
         description="Log a workout the user did. Each exercise as a line like '3x10 squats at 185' or '20 push-ups'; cardio like 'ran 3 miles' is kept as a note.",

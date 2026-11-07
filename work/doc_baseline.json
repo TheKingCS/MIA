@@ -16,7 +16,6 @@
   "core/assistant_goods_actions.py": 8,
   "core/assistant_homestead_actions.py": 11,
   "core/assistant_inbox_actions.py": 8,
-  "core/assistant_life_actions.py": 28,
   "core/assistant_life_event_actions.py": 3,
   "core/assistant_link_actions.py": 4,
   "core/assistant_lookup.py": 4,

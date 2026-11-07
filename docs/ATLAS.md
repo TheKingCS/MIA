@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 227,236 lines; 1043 files describe themselves; 3,879 of 13,517 classes and functions are documented.
+1043 files, 227,275 lines; 1043 files describe themselves; 3,907 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 101,142 lines; 3,148 of 5,630 classes and functions documented
+367 files, 101,181 lines; 3,176 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -31,7 +31,7 @@
 - `core/assistant_goods_actions.py`: Saying it to MIA (2026-10-21): the homestead's newest screens by voice. "How many eggs this week?", "I collected 9 eggs", "What goods do I have on hand?", "Sold 3 loaves of banana bread", "How close am I to freedom?", "What's due for taxes?". Each one runs the same code its screen does (the action k *(8 undocumented)*
 - `core/assistant_homestead_actions.py`: Assistant tools for Finance #2, homestead builds and tools (core/homestead_costs.py): "I spent $240 on lumber for the greenhouse", "I bought a DeWalt drill for $199 for the greenhouse", "How much have I spent on the greenhouse?", "What has the mower cost me?", "Set the greenhouse budget to $5,000". *(11 undocumented)*
 - `core/assistant_inbox_actions.py`: Assistant tools for the document inbox (core/inbox_manager.py): what's waiting, "file it" (with MIA's proposal, or the owner's correction of which tool or build it's for), and "throw that one out". Filing by voice adds every maintenance step MIA found in a manual unless the owner says "without the t *(8 undocumented)*
-- `core/assistant_life_actions.py`: Assistant actions for the personal side of MIA (2026-09-27, following docs/ASSISTANT_AUDIT.md): workouts, people and pets, household routines, and Classroom learning. Same contract as core/assistant_domain_actions.py: handlers are pure functions of (context, arguments), find records from the user's  *(28 undocumented)*
+- `core/assistant_life_actions.py`: Assistant actions for the personal side of MIA (2026-09-27, following docs/ASSISTANT_AUDIT.md): workouts, people and pets, household routines, and Classroom learning. Same contract as core/assistant_domain_actions.py: handlers are pure functions of (context, arguments), find records from the user's 
 - `core/assistant_life_event_actions.py`: "What did I get done this week?", "what changed this month?", "what bills did I pay?" (core/life_events.py, 2026-10-05). Facts from the log, counted in code; the model only phrases them. *(3 undocumented)*
 - `core/assistant_link_actions.py`: "The land loan funds the rental", "the greenhouse depends on selling the lot", "what depends on selling the lot?", "what's connected to the truck?" (core/links.py, 2026-10-05). Names are matched to real records in code; a link is only saved between things that exist. Undoable. *(4 undocumented)*
 - `core/assistant_lookup.py`: How Assistant actions find the user's own records from the words they actually say. People say "the truck" and "did the oil", not "Pickup Truck" and "Oil change", and the model can only pass on their words. *(4 undocumented)*
