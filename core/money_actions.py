@@ -26,6 +26,7 @@ from core.record_actions import Field, Record, field_dict, get, parse, record_fo
 
 
 def _lists():
+    """The expense categories, income categories and debt types, imported late from the budget store."""
     from core.budget_manager import DEBT_TYPES, EXPENSE_CATEGORIES, INCOME_CATEGORIES
 
     return tuple(EXPENSE_CATEGORIES), tuple(INCOME_CATEGORIES), tuple(DEBT_TYPES)
@@ -87,6 +88,9 @@ _CATEGORY = Field("category", "Category", "choice", True, _EXPENSE)
 
 
 def _describe_debt_pay(context, params) -> str:
+    """The sentence the approval card shows for `debt.pay` (Propose); raises ActionError when it can't be done. It names the amount (the minimum payment when none is given) and what will be
+    left.
+    """
     from core.region import money
 
     debt = get(context, RECORDS["debt"], params)
@@ -95,6 +99,7 @@ def _describe_debt_pay(context, params) -> str:
 
 
 def _debt_pay(context, params) -> str:
+    """Does `debt.pay` once approved, and says what happened. The budget store records the payment and lowers the balance."""
     from core.region import money
 
     debt = get(context, RECORDS["debt"], params)
@@ -104,6 +109,7 @@ def _debt_pay(context, params) -> str:
 
 
 def _describe_target(context, params) -> str:
+    """The sentence the approval card shows for `budget_target.set` (Propose); raises ActionError when it can't be done."""
     from core.region import money
 
     category = parse(_CATEGORY, params.get("category"))
@@ -111,12 +117,14 @@ def _describe_target(context, params) -> str:
 
 
 def _set_target(context, params) -> str:
+    """Does `budget_target.set` once approved, and says what happened."""
     category = parse(_CATEGORY, params.get("category"))
     _need(context, "budget").set_budget_target(category, parse(_TARGET, params.get("monthly_amount")))
     return f"{category} has a monthly budget now."
 
 
 def _describe_target_delete(context, params) -> str:
+    """The sentence the approval card shows for `budget_target.delete` (Propose); raises ActionError when it can't be done. A category with no budget is refused."""
     category = parse(_CATEGORY, params.get("category"))
     if _need(context, "budget").get_budget_target(category) is None:
         raise ActionError(f"There's no {category} budget.")
@@ -124,6 +132,7 @@ def _describe_target_delete(context, params) -> str:
 
 
 def _delete_target(context, params) -> str:
+    """Does `budget_target.delete` once approved, and says what happened."""
     category = parse(_CATEGORY, params.get("category"))
     _need(context, "budget").delete_budget_target(category)
     return f"The {category} budget is removed."
@@ -133,6 +142,9 @@ def _delete_target(context, params) -> str:
 
 
 def _kinds() -> list[ActionType]:
+    """Every money action kind: the record kinds for each record (bills, debts...), paying a debt, and setting or
+    removing a monthly budget.
+    """
     kinds = []
     for record in RECORDS.values():
         kinds += record_kinds(record)

@@ -15,10 +15,12 @@ from core.actions import ACTION_TYPES, ActionError, ActionType, _need
 
 
 def _journal(context):
+    """The Operating Journal store, or ActionError when it isn't here."""
     return _need(context, "operating_journal")
 
 
 def _line(context, params) -> dict:
+    """The journal line the params name, or ActionError."""
     found = next((l for l in _journal(context).lines if l["id"] == str(params.get("line_id", ""))), None)
     if found is None:
         raise ActionError("That line isn't in your Operating Journal.")
@@ -26,6 +28,7 @@ def _line(context, params) -> dict:
 
 
 def _describe_add(context, params) -> str:
+    """The sentence the approval card shows for `operating.add` (Propose); raises ActionError when it can't be done."""
     text = " ".join(str(params.get("text") or "").split())
     if not text:
         raise ActionError("Say how you want to operate.")
@@ -33,6 +36,9 @@ def _describe_add(context, params) -> str:
 
 
 def _add(context, params) -> str:
+    """Does `operating.add` once approved, and says what happened. It says how the line will be checked: against a count in their records, against
+    spending in a category, or by their own weekly rating.
+    """
     from core.operating_journal import habit_from
 
     line = _journal(context).add(params.get("text", ""), str(params.get("section") or ""))
@@ -48,15 +54,18 @@ def _add(context, params) -> str:
 
 
 def _describe_remove(context, params) -> str:
+    """The sentence the approval card shows for `operating.remove` (Propose); raises ActionError when it can't be done."""
     return f"Take \"{_line(context, params)['text'][:80]}\" out of your Operating Journal"
 
 
 def _remove(context, params) -> str:
+    """Does `operating.remove` once approved, and says what happened."""
     _journal(context).remove(_line(context, params)["id"])
     return "Taken out."
 
 
 def _describe_rate(context, params) -> str:
+    """The sentence the approval card shows for `operating.rate` (Propose); raises ActionError when it can't be done. The score is 1 to 5."""
     line = _line(context, params)
     try:
         score = int(params.get("score"))
@@ -68,6 +77,7 @@ def _describe_rate(context, params) -> str:
 
 
 def _rate(context, params) -> str:
+    """Does `operating.rate` once approved, and says what happened. The score is this week's for that line."""
     line = _line(context, params)
     _journal(context).rate(line["id"], int(params["score"]))
     return f"Noted: {int(params['score'])} out of 5 for \"{line['text'][:60]}\" this week."

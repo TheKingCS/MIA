@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 229,935 lines; 1043 files describe themselves; 5,606 of 13,517 classes and functions are documented.
+1043 files, 229,967 lines; 1043 files describe themselves; 5,630 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 103,837 lines; 4,875 of 5,630 classes and functions documented
+367 files, 103,869 lines; 4,899 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -133,7 +133,7 @@
 - `core/finance_summary.py`: Finance #4 (2026-09-28): "money on your phone". One read-only snapshot of the owner's finances, as plain JSON-ready data, served by server/app.py's /api/finance/summary to the phone web app and the Android app. *(3 undocumented)*
 - `core/findings.py`: Findings (DEC-0052 step 3; docs/REASONING_PLAN.md section 4): what MIA notices by putting two apps together, worked out in code, never by the model. Each one says what it noticed, the records it came from (`refs`, "kind:id"), why it matters, one suggested next step, how sure it is (REAL from records *(5 undocumented)*
 - `core/first_account.py`: Making the first account on a device (2026-10-07, DEC-0019 Phase 2): the phone app opens to "create your account" (name, email, password, country, what you want MIA to help with) instead of making a person called "You". Only when no account here has a password yet: after that, people sign in, and mo *(1 undocumented)*
-- `core/first_boot.py`: The first time a person meets MIA (slice 2 of docs/GLASSES_FIRST_BOOT_PLAN.md, Zac's brief of 2026-10-29): she doesn't launch, she awakens. This keeps how far each person has got, so the sequence can be left and picked up again on any device, and writes the words she says, so a screen only plays the *(8 undocumented)*
+- `core/first_boot.py`: The first time a person meets MIA (slice 2 of docs/GLASSES_FIRST_BOOT_PLAN.md, Zac's brief of 2026-10-29): she doesn't launch, she awakens. This keeps how far each person has got, so the sequence can be left and picked up again on any device, and writes the words she says, so a screen only plays the
 - `core/fitness_actions.py`: What the fitness screens and plain-word commands change (DEC-0020, H-0026), as action kinds: proposed, approved, recorded, undoable, and credited to the person (core/actions.py). Each logs into the person's fitness store (core/fitness_manager.py) and then brings the fitness missions up to date (core
 - `core/fitness_manager.py`: A person's fitness plan and what they log against it (DEC-0020, docs/KITCHEN_FITNESS_PLAN.md, Muse's H-0026): weigh-ins and their trend, what they ate and its nutrition, timed skill practice (handstand holds in seconds), and milestones. Personal (core/personal_data.py PERSONAL_STORES): each person's
 - `core/fitness_missions.py`: A person's fitness plan as missions (DEC-0020, H-0026): made from the plan (core/fitness_manager.py) each day and week, on the existing mission path (Missions screen, XP, skills, complete, undo). *(5 undocumented)*
@@ -225,7 +225,7 @@
 - `core/model_registry.py`: Which AI model MIA is running, asked of the runtime itself (2026-10-21, the intelligence spec's first slice: "What AI model are you using?" was answered with "I don't have that kind of technical information"). *(2 undocumented)*
 - `core/module_manager.py`: Discovers and manages MIA modules. *(3 undocumented)*
 - `core/module_validator.py`: Validates a candidate module folder against the compatibility contract in docs/MODULE_SPEC.md, before it's installed into modules/. *(1 undocumented)*
-- `core/money_actions.py`: Every change the Money screen can make (2026-10-06, DEC-0017: the web does everything the PC app's Budget screen does), as action kinds on the contract in core/actions.py: Propose → Approve → Execute → Record → Undo. *(8 undocumented)*
+- `core/money_actions.py`: Every change the Money screen can make (2026-10-06, DEC-0017: the web does everything the PC app's Budget screen does), as action kinds on the contract in core/actions.py: Propose → Approve → Execute → Record → Undo.
 - `core/more_actions.py`: Every change the Journal, Workshop, Expeditions, Music and Files screens make (Zac, 2026-10-16: "they are empty right now and just bring up a chat with MIA"), as action kinds on the contract in core/actions.py, most from the shared table in core/record_actions.py.
 - `core/music_manager.py`: Local audio library + playlists + real playback for the Music module (modules/music/module.py) — 2026-09-09. Replaces the pure-placeholder Music stub, closing the last remaining "pure stub module" in this project.
 - `core/my_files.py`: Files on the web (Zac, 2026-10-16: the Files app was empty on the phone). Each person has their own MIA files folder, `my_files/` inside their own data folder (core/personal_data.py), the same folder as their journal: upload from the phone, open, make folders, rename, delete. It is never the compute
@@ -240,7 +240,7 @@
 - `core/offline_maps.py`: Vector offline maps (build plan step 14; Zac's OK for the outside code, 2026-11-06): an area of OpenStreetMap cut from the Protomaps daily world build into one small file (PMTiles), kept on this PC in `data/maps/`, and drawn by MapLibre on the web's Maps page (`web/vendor/`). Unlike the topo tiles (
 - `core/onboarding.py`: The one-time, first-run welcome message injected into a brand-new user's very first conversation — docs/VISION.md's "interactive first-time onboarding... MIA teaches herself through real conversation and real tasks, not docs/slides." See gui/home_dashboard.py's `__init__` for how this gets injected:
 - `core/online_watch.py`: Offline awareness follow-ups (2026-09-28), on top of core/connectivity.py:
-- `core/operating_actions.py`: The Operating Journal (core/operating_journal.py, DEC-0097) through the action contract (core/actions.py): `operating.add` (a line of how they mean to operate), `operating.remove`, and `operating.rate` (a self-rated line, 1 to 5, for this week). The journal writes through atomic_write_text, so "undo *(8 undocumented)*
+- `core/operating_actions.py`: The Operating Journal (core/operating_journal.py, DEC-0097) through the action contract (core/actions.py): `operating.add` (a line of how they mean to operate), `operating.remove`, and `operating.rate` (a self-rated line, 1 to 5, for this week). The journal writes through atomic_write_text, so "undo
 - `core/operating_journal.py`: The Operating Journal (DEC-0097, build plan step 11; Zac, 2026-11-06: "a template that is essentially a journal entry for how I want to operate, and how I do operate so that MIA can learn my goals as well as my actual routine"). *(8 undocumented)*
 - `core/ownership.py`: Whose is it? (2026-10-01) In a shared household some things belong to one person: the truck is Zac's, the sewing machine is Faith's, the tractor is everyone's. A maintenance item (vehicle, tool, appliance) can name its owner (`MaintenanceAsset.owner_profile_id`; None means shared by the household). *(2 undocumented)*
 - `core/party.py`: Party and guild (DEC-0028, the game layer's tenth idea; Zac, 2026-10-17): the household plays together. *(4 undocumented)*

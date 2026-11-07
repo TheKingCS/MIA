@@ -51,11 +51,13 @@ PHASES = {
 
 
 def _progress(context) -> dict:
+    """This person's first-boot progress (their first_boot.progress setting), or empty."""
     saved = person_settings.get(context, KEY) or {}
     return saved if isinstance(saved, dict) else {}
 
 
 def _first_name(context) -> str:
+    """The signed-in person's first name, or empty."""
     who = person_settings.person_id(context)
     profiles = getattr(context, "profiles", None)
     found = next((p for p in profiles.list_profiles() if p.profile_id == who), None) if profiles is not None else None
@@ -64,6 +66,9 @@ def _first_name(context) -> str:
 
 
 def _beats(context, phase: str) -> list[dict]:
+    """A phase's beats with the person's first name put in (or the ", {name}" left out when there's none), each tagged
+    with its phase.
+    """
     name = _first_name(context)
     out = []
     for beat in PHASES[phase]:
@@ -86,6 +91,7 @@ def state(context) -> dict:
 
 
 def _finish(context, progress: dict, skipped: bool) -> None:
+    """Marks the first boot finished in their settings and records it as a life event (met MIA, or skipped the rest)."""
     from core import life_events
 
     progress["finished_at"] = datetime.now().isoformat(timespec="seconds")
@@ -125,20 +131,24 @@ def skip(context) -> dict:
 
 
 def _describe_advance(context, params) -> str:
+    """The sentence the approval card shows for `firstboot.advance` (Propose)."""
     return f"Finish this part of meeting MIA ({str(params.get('phase') or '').strip()})"
 
 
 def _do_advance(context, params) -> str:
+    """Does `firstboot.advance` once approved, and says what happened. Repeating a phase changes nothing."""
     _need(context, "config")
     advance(context, str(params.get("phase") or "").strip())
     return "Noted."
 
 
 def _describe_skip(context, params) -> str:
+    """The sentence the approval card shows for `firstboot.skip` (Propose)."""
     return "Skip the rest of meeting MIA"
 
 
 def _do_skip(context, params) -> str:
+    """Does `firstboot.skip` once approved, and says what happened. What's left is remembered, so it can come back."""
     _need(context, "config")
     skip(context)
     return "Skipped. You can come back to it any time."
