@@ -40,16 +40,19 @@ USE_SAID = {"carton": "into cartons", "baking": "into the bakery", "home": "eate
 
 
 def _money(x: float) -> str:
+    """An amount in the person's currency."""
     from core.region import money
 
     return money(x)
 
 
 def _book(context):
+    """The household's flock store, or ActionError when it isn't here."""
     return _need(context, "flock")
 
 
 def _flock(context, params):
+    """The flock the params name, or the only one when there's just one; ActionError asking which, or to add one."""
     flocks = _book(context).flocks
     wanted = str(params.get("flock_id") or "")
     found = _book(context).get_flock(wanted) if wanted else (flocks[0] if len(flocks) == 1 else None)
@@ -60,6 +63,7 @@ def _flock(context, params):
 
 
 def _number(params, name: str, label: str, whole: bool = False, signed: bool = False) -> float:
+    """A number from the params (0 when blank): not negative unless signed, whole when asked; ActionError otherwise."""
     raw = params.get(name)
     if raw in (None, ""):
         return 0.0
@@ -75,6 +79,7 @@ def _number(params, name: str, label: str, whole: bool = False, signed: bool = F
 
 
 def _day(params) -> str:
+    """The date in the params, or today."""
     raw = str(params.get("date") or "").strip()
     if not raw:
         return date.today().isoformat()
@@ -85,12 +90,14 @@ def _day(params) -> str:
 
 
 def _figures(context, f) -> dict:
+    """A flock's figures today (core/flock.py): eggs on hand, feed cost per egg and per dozen, and the rest."""
     from core.flock import figures
 
     return figures(f, _book(context).entries, date.today())
 
 
 def _when(day: str) -> str:
+    """"" for today, else " on <date>"."""
     return "" if day == date.today().isoformat() else f" on {day}"
 
 
@@ -98,6 +105,7 @@ def _when(day: str) -> str:
 
 
 def _eggs(context, params):
+    """What logging eggs takes: the flock, how many (whole, more than 0) and the day."""
     f = _flock(context, params)
     n = _number(params, "count", "How many eggs", whole=True)
     if n <= 0:
@@ -106,11 +114,13 @@ def _eggs(context, params):
 
 
 def _eggs_describe(context, params) -> str:
+    """The sentence the approval card shows for `flock.eggs` (Propose); raises ActionError when it can't be done."""
     f, n, day = _eggs(context, params)
     return f"{n:g} eggs from {f.name}{_when(day)}"
 
 
 def _eggs_run(context, params) -> str:
+    """Does `flock.eggs` once approved, and says what happened. It grants 2 XP toward Animal Care and says how many loose eggs are on hand."""
     from core.gamification import SkillWeight, grant_xp
 
     f, n, day = _eggs(context, params)
@@ -121,6 +131,7 @@ def _eggs_run(context, params) -> str:
 
 
 def _feed(context, params):
+    """What logging feed takes: the flock, pounds and cost (at least one), and the day."""
     f = _flock(context, params)
     pounds = _number(params, "pounds", "Pounds")
     cost = _number(params, "cost", "What it cost")
@@ -130,6 +141,7 @@ def _feed(context, params):
 
 
 def _feed_describe(context, params) -> str:
+    """The sentence the approval card shows for `flock.feed` (Propose); raises ActionError when it can't be done. It says the cost goes in the business's books."""
     f, pounds, cost, day = _feed(context, params)
     what = " ".join(b for b in (f"{pounds:g} lb" if pounds else "", "of feed", f"for {_money(cost)}" if cost else "") if b)
     tail = "; a cost in the business's books" if cost and getattr(context, "ledger", None) is not None else ""
@@ -137,6 +149,7 @@ def _feed_describe(context, params) -> str:
 
 
 def _feed_run(context, params) -> str:
+    """Does `flock.feed` once approved, and says what happened. The cost also becomes a Materials expense in the workshop ledger."""
     f, pounds, cost, day = _feed(context, params)
     _book(context).log(f.flock_id, "feed", day, pounds=pounds, cost=cost)
     ledger = getattr(context, "ledger", None)
@@ -146,6 +159,7 @@ def _feed_run(context, params) -> str:
 
 
 def _birds(context, params):
+    """What a change in birds takes: the flock, how many (+ added, − lost, whole; never below no hens), why, the day."""
     f = _flock(context, params)
     change = _number(params, "change", "How many", whole=True, signed=True)
     if not change:
@@ -156,12 +170,14 @@ def _birds(context, params):
 
 
 def _birds_describe(context, params) -> str:
+    """The sentence the approval card shows for `flock.birds` (Propose); raises ActionError when it can't be done. It shows the hens before and after."""
     f, change, why, day = _birds(context, params)
     what = f"{change:+g} {'hen' if abs(change) == 1 else 'hens'}".replace("+", "Add ").replace("-", "Lost ")
     return f"{what} ({f.name}: {f.hens} → {f.hens + int(change)}){': ' + why if why else ''}{_when(day)}"
 
 
 def _birds_run(context, params) -> str:
+    """Does `flock.birds` once approved, and says what happened."""
     f, change, why, day = _birds(context, params)
     _book(context).log(f.flock_id, "birds", day, count=change, note=why)
     return f"{f.name} has {f.hens} hens now."
@@ -181,6 +197,10 @@ def _egg_good(context, f, params):
 
 
 def _using(context, params):
+    """What using eggs takes: the flock, the use (carton, baking or home), how many (no more than are loose), and
+    for a carton the good, how many of its unit (dozens worked out from eggs where they can be) and the feed cost of
+    each; for baking the material's name.
+    """
     f = _flock(context, params)
     use = str(params.get("use") or "").strip().lower()
     if use not in USE_SAID:
@@ -210,6 +230,7 @@ def _using(context, params):
 
 
 def _use_describe(context, params) -> str:
+    """The sentence the approval card shows for `flock.use` (Propose); raises ActionError when it can't be done. It says where the eggs go and at what feed cost."""
     p = _using(context, params)
     text = f"{p['eggs']:g} eggs from {p['flock'].name} {USE_SAID[p['use']]}"
     if p["use"] == "carton":
@@ -222,6 +243,9 @@ def _use_describe(context, params) -> str:
 
 
 def _use_run(context, params) -> str:
+    """Does `flock.use` once approved, and says what happened. Cartons go into stock as goods (add_to_stock); baking adds eggs to Materials at
+    the feed cost (averaged in); home is only noted.
+    """
     p = _using(context, params)
     f = p["flock"]
     _book(context).log(f.flock_id, "use", _day(params), count=p["eggs"], use=p["use"])
@@ -247,6 +271,7 @@ def _use_run(context, params) -> str:
 
 
 def _entry(context, params):
+    """The log line the params name, or ActionError."""
     book = _book(context)
     entry = next((e for e in book.entries if e.entry_id == str(params.get("entry_id") or "")), None)
     if entry is None:
@@ -255,6 +280,7 @@ def _entry(context, params):
 
 
 def _entry_said(e) -> str:
+    """A log line in words (eggs collected, feed bought, hens added or lost, eggs used)."""
     if e.kind == "eggs":
         return f"{e.count:g} eggs collected"
     if e.kind == "feed":
@@ -266,18 +292,25 @@ def _entry_said(e) -> str:
 
 
 def _entry_delete_describe(context, params) -> str:
+    """The sentence the approval card shows for `flock.entry_delete` (Propose); raises ActionError when it can't be done. Taking back a use leaves what it put into stock or
+    Materials (changed there).
+    """
     e = _entry(context, params)
     note = " (what it put into stock or Materials stays; change that there)" if e.kind == "use" else ""
     return f"Take back: {_entry_said(e)} on {e.date}{note}"
 
 
 def _entry_delete(context, params) -> str:
+    """Does `flock.entry_delete` once approved, and says what happened."""
     e = _entry(context, params)
     _book(context).delete_entry(e.entry_id)
     return "Taken back."
 
 
 def _register() -> None:
+    """Adds the flock record kinds and the eggs, feed, birds, use and take-back kinds to ACTION_TYPES. Runs once, when
+    this module is imported.
+    """
     kinds = list(record_kinds(FLOCK)) + [
         ActionType("flock.eggs", "Log Eggs", {"flock_id": "the flock", "count": "how many", "date": "the day (blank: today)"},
                    _eggs_describe, _eggs_run),

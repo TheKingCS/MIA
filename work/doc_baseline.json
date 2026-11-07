@@ -103,7 +103,6 @@
   "core/first_boot.py": 8,
   "core/fitness_missions.py": 5,
   "core/flock.py": 16,
-  "core/flock_actions.py": 24,
   "core/focus_presets.py": 8,
   "core/food_table.py": 5,
   "core/freedom.py": 13,
