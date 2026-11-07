@@ -27,6 +27,8 @@ CORPUS: list[tuple[str, str]] = [
     ("Can you track my chickens?", "get_capability"),
     ("What did we decide about eggs?", "get_mia_docs"),
     ("Ask your radio specialist how far a Meshtastic node reaches", "ask_specialist"),
+    ("How's the solar doing?", "get_energy"),
+    ("What did the generator read last?", "get_energy"),
     ("What does your construction specialist say about headers?", "ask_specialist"),
     # ---- Homestead by voice (core/assistant_goods_actions.py, 2026-10-21) -
     ("How many eggs this week?", "get_eggs"),

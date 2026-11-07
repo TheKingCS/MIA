@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1058 files, 233,686 lines; 1058 files describe themselves; 5,943 of 13,683 classes and functions are documented.
+1060 files, 233,792 lines; 1060 files describe themselves; 5,949 of 13,689 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-373 files, 106,650 lines; 5,165 of 5,749 classes and functions documented
+374 files, 106,713 lines; 5,168 of 5,752 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -27,6 +27,7 @@
 - `core/assistant_domain_actions.py`: Assistant actions added by the 2026-09-27 conversational audit (docs/ASSISTANT_AUDIT.md), so what the owner *says* updates the right records: kitchen (recipes, meals, grocery list, pantry), debts and budget targets, asset details and notes (including greenhouse/garden plants, which are Maintenance a
 - `core/assistant_dungeon_actions.py`: The Dungeon by voice (DEC-0046): "How much loot this week?", "I worked 9 hours, we were unstocked", "I picked up an overtime shift Saturday", "Make it a quest". Each runs the same code as the screen (the action kinds in core/dungeon_actions.py, the numbers in core/web_dungeon.py), so the loot matche
 - `core/assistant_email_actions.py`: The Assistant writes emails (2026-10-01, accounts stage 3, core/email_drafts.py). `draft_email` only ever makes a draft: the person sends it by pressing Send (desktop or phone), copies it, or opens it in their mail app. There is deliberately no tool that sends. *(2 undocumented)*
+- `core/assistant_energy_actions.py`: Energy by voice (T-0053, from the weekly interconnection audit, DEC-0108): "how's the solar doing?", "what did the generator read last?". The energy store (core/energy_manager.py: solar, a generator, propane, tracked by hand) had no Assistant tool, so nothing about it could be asked out loud.
 - `core/assistant_focus_actions.py`: Assistant tools for each person's Apps screen (core/focus_presets.py, 2026-10-01): "switch me to student mode", "hide the Lab", "show me the Greenhouse again", "what's my focus?". Changes are the speaker's own. *(5 undocumented)*
 - `core/assistant_goods_actions.py`: Saying it to MIA (2026-10-21): the homestead's newest screens by voice. "How many eggs this week?", "I collected 9 eggs", "What goods do I have on hand?", "Sold 3 loaves of banana bread", "How close am I to freedom?", "What's due for taxes?". Each one runs the same code its screen does (the action k
 - `core/assistant_homestead_actions.py`: Assistant tools for Finance #2, homestead builds and tools (core/homestead_costs.py): "I spent $240 on lumber for the greenhouse", "I bought a DeWalt drill for $199 for the greenhouse", "How much have I spent on the greenhouse?", "What has the mower cost me?", "Set the greenhouse budget to $5,000".
@@ -652,7 +653,7 @@
 
 ## tests/: the test suite: what each part must do
 
-352 files, 63,748 lines; 342 of 5,699 classes and functions documented
+353 files, 63,791 lines; 345 of 5,702 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -678,6 +679,7 @@
 - `tests/test_assistant_actions.py`: Unit tests for core.assistant_actions.AssistantActionRegistry. No LLM or Ollama involved — these test the registry's own execute() to_ollama_tools() logic directly with fake handlers. *(19 undocumented)*
 - `tests/test_assistant_chat.py`: Unit tests for core.assistant_chat's pure logic — format_chat_line, looks_like_action_request, build_chat_request, and split_safe_tool_calls — no Qt event loop needed. Moved here from tests/test_assistant_module.py (2026-07-14 aesthetic pass part 4) alongside the functions themselves moving from mod *(81 undocumented)*
 - `tests/test_assistant_domain_actions.py`: Runs the Assistant's conversational actions (core/assistant_domain_actions.py plus the reworked Maintenance handlers in core/application.py) through the real registry against real managers on temp data — i.e. "the user said X, the model called tool Y with their words; did the right record change?" *(33 undocumented)*
+- `tests/test_assistant_energy_actions.py`: Energy by voice (core/assistant_energy_actions.py, T-0053): each source with its latest reading per meter, one named source, and the empty cases.
 - `tests/test_assistant_life_actions.py`: Workout, people & pets, household routine, and Classroom Assistant tools (core/assistant_life_actions.py) run through the real registry against real managers on temp data, plus their pure parsers. *(18 undocumented)*
 - `tests/test_assistant_routing.py`: Enforces tests/assistant_routing_corpus.py against the real desktop action registry: every realistic request reaches its tool, how-to questions reach the help docs, and small talk stays tool-free. Plus unit tests for the pieces that make that work (record-name lookup, quantity parsing, keyword/recor *(17 undocumented)*
 - `tests/test_atomic_write.py`: Unit tests for core.atomic_write.atomic_write_text — the crash-safety guarantee is the whole point of this module, so these tests exercise the failure path directly (a real exception mid-write), not just the happy path. *(7 undocumented)*

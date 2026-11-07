@@ -78,6 +78,7 @@ from core.assistant_ownership_actions import register_ownership_actions
 from core.assistant_today_actions import register_today_actions
 from core.assistant_self_actions import register_capability_actions, register_self_actions
 from core.specialists import register_specialist_actions
+from core.assistant_energy_actions import register_energy_actions
 from core.assistant_goods_actions import register_goods_actions
 from core.assistant_dungeon_actions import register_checkin_actions, register_dungeon_actions, register_loop_actions
 from core.failure_actions import register_failure_actions
@@ -1538,6 +1539,7 @@ class MIAApplication:
         register_self_actions(self.context.assistant_actions)  # "what model are you?" from the runtime
         register_capability_actions(self.context.assistant_actions)  # what MIA can do, how she's built (DEC-0041)
         register_specialist_actions(self.context.assistant_actions)  # her specialists' workbooks (DEC-0109)
+        register_energy_actions(self.context.assistant_actions)  # solar, generator, propane by voice (T-0053)
         register_goods_actions(self.context.assistant_actions)  # eggs, goods, freedom, deadlines by voice
         register_dungeon_actions(self.context.assistant_actions)  # the Dungeon: shifts, loot, quests (DEC-0046)
         register_loop_actions(self.context.assistant_actions)  # the loop: when things happen (DEC-0047)
