@@ -803,3 +803,30 @@ body.cook-live .mia-orb-button, body.cook-live .bottom-bar { display: none; }
 .obs-open { font-size: var(--text-sm); color: var(--accent); text-decoration: none; justify-self: start; }
 .obs-open:hover { text-decoration: underline; }
 .obs-note { margin-top: var(--gap); font-size: var(--text-sm); }
+
+/* ---------------------------------------------------------------- Expeditions (DEC-0113)
+   The next expedition as one card (heads-up in amber, packing to tick, Start Trip), then the rest as rows. */
+.ex-label { margin: 0; font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-dim); }
+.ex-label.accent { color: var(--accent); }
+.ex-next { display: grid; gap: 10px; margin-bottom: var(--gap); }
+.ex-next h2 { margin: 0; font-size: var(--text-xl); text-transform: none; }
+.ex-next > p { margin: 0; }
+.ex-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.ex-heads { color: var(--attention); font-size: var(--text-sm); }
+.ex-pack { display: grid; gap: 8px; padding-top: 10px; border-top: 1px solid var(--line); }
+.ex-count { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); white-space: nowrap; }
+.ex-gear { display: grid; gap: 4px; }
+.ex-item { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; align-items: center; min-height: 40px; padding: 0 8px;
+  border: 0; border-radius: var(--radius-sm); background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer;
+  text-transform: none; }
+.ex-item:hover { background: rgba(var(--rgb-accent), 0.06); }
+.ex-tick { width: 20px; height: 20px; border-radius: 4px; border: 1px solid var(--line-strong); display: grid; place-items: center;
+  font-size: 12px; color: var(--ok); }
+.ex-item.on { color: var(--text-dim); }
+.ex-item.on .ex-tick { border-color: var(--ok); background: rgba(var(--rgb-ok), 0.16); }
+@media (min-width: 861px) { .ex-start { width: auto; min-width: 240px; } }
+.ex-rows { display: grid; gap: 8px; margin: 8px 0 var(--gap); }
+.ex-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 0 14px;
+  color: var(--text); font: inherit; text-align: left; cursor: pointer; text-transform: none; }
+.ex-actions { margin-top: var(--gap); }

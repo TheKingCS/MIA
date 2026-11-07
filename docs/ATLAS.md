@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1089 files, 246,672 lines; 1089 files describe themselves; 13,540 of 14,210 classes and functions are documented.
+1089 files, 246,746 lines; 1089 files describe themselves; 13,542 of 14,212 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-391 files, 114,438 lines; 6,065 of 6,154 classes and functions documented
+391 files, 114,464 lines; 6,066 of 6,155 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -670,7 +670,7 @@
 
 ## tests/: the test suite: what each part must do
 
-363 files, 66,103 lines; 5,240 of 5,821 classes and functions documented
+363 files, 66,117 lines; 5,241 of 5,822 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1011,7 +1011,7 @@
 - `tests/test_web_fresh.py`: The web screens are never served from a stale browser copy (Zac, 2026-10-16: after a phone update the old Dashboard kept showing).
 - `tests/test_web_inbox.py`: The Inbox screen on the web and the phone (Zac, 2026-10-16: "build the inbox for sending stuff to MIA"): core/web_inbox.py shows what's waiting (reading the folder first, so the phone needs no timer), and core/inbox_actions.py files, dismisses and sends notes through Propose → Approve. *(3 undocumented)*
 - `tests/test_web_money.py`: DEC-0017 (2026-10-06): Money on the web does everything the PC app's Budget screen does. The page's data (core/web_money.py) and every change as an action kind (core/money_actions.py): add, edit, delete bills, income sources, income, expenses and debts; pay a debt; set budgets. Each one proposed, ap *(5 undocumented)*
-- `tests/test_web_more.py`: The Journal, Workshop, Expeditions, Music, Files and People screens (Zac, 2026-10-16: on the phone they "are empty right now and just bring up a chat with MIA"): core/web_more.py builds each page, core/more_actions.py makes every change through Propose → Approve, and core/my_files.py keeps the Files
+- `tests/test_web_more.py`: The Journal, Workshop, Expeditions (with what has to happen before a trip), Music, Files and People screens (Zac, 2026-10-16: on the phone they "are empty right now and just bring up a chat with MIA"): core/web_more.py builds each page, core/more_actions.py makes every change through Propose → Appro
 - `tests/test_web_progress.py`: DEC-0017/0018 (2026-10-06), H-0013: Missions, Skills and Character on the web. The pages (core/web_progress.py) and every change as an action kind (core/mission_actions.py), each proposed, approved, recorded and undoable, with rewards going to the person who approved it.
 - `tests/test_web_push.py`: Unit tests for core.web_push. The actual push-service HTTP call (pywebpush.webpush) is mocked throughout — this is the standard, correct way to test Web Push code without a real browser/push service (see core/web_push.py's own docstring and the Mobile Phase 1 plan). *(5 undocumented)*
 - `tests/test_web_screens.py`: DEC-0017/0018 (2026-10-06): Kitchen, Workout and Real Estate on the web. The pages (core/web_screens.py) and every change as an action kind (core/kitchen_actions.py, core/workout_actions.py, core/estate_actions.py), each proposed, approved, recorded and undoable.
@@ -1038,7 +1038,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-72 files, 12,962 lines
+72 files, 12,996 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game

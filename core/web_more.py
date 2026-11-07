@@ -175,8 +175,9 @@ def workshop_page(context, today: Optional[date] = None) -> dict:
 
 def expeditions_page(context, today: Optional[date] = None) -> dict:
     """The data the Expeditions screen shows, assembled here (the web only draws it); {"available": False} when expeditions or trips aren't here. Each expedition with when it is
-    (now, upcoming, past), days away, its media and its trips (gear packed, distance, photos, journal notes);
-    current ones first, then past ones newest first; counts and forms.
+    (now, upcoming, past), days away, its media and its trips (gear packed, distance, photos, journal notes), the
+    packing and distance across them and what has to happen first (`_trip_heads_up`); current ones first, then past
+    ones newest first; counts and forms.
     """
     today = today or date.today()
     expeditions, trips = getattr(context, "expeditions", None), getattr(context, "trips", None)
@@ -218,6 +219,14 @@ def expeditions_page(context, today: Optional[date] = None) -> dict:
                       "trips": [trip_card(t) for t in its],
                       "values": {"name": e.name, "location": e.location, "start_date": e.start_date,
                                  "end_date": e.end_date, "notes": e.notes}})
+    # The canvas's Coming Up card (DEC-0113): what's packed across its trips, the distance, and anything MIA
+    # noticed elsewhere that has to happen first (core/findings.py, a finding whose key names one of its trips).
+    heads = _trip_heads_up(context, today)
+    for c in cards:
+        gear = [g for t in c["trips"] for g in t["gear"]]
+        c["packed"], c["gear_total"] = sum(1 for g in gear if g["packed"]), len(gear)
+        c["distance_km"] = round(sum(t["distance_km"] or 0 for t in c["trips"]), 1) or None
+        c["heads_up"] = [heads[t["id"]] for t in c["trips"] if t["id"] in heads]
     # Happening now, then coming up (soonest first), then past (latest first).
     current = sorted((c for c in cards if c["when"] != "past"),
                      key=lambda c: (c["when"] != "now", c["start"] or "9999", c["name"].lower()))
@@ -230,6 +239,23 @@ def expeditions_page(context, today: Optional[date] = None) -> dict:
                    "trips": sum(len(c["trips"]) for c in cards)},
         "forms": {k: v for k, v in _forms().items() if k in ("expedition", "trip")},
     }
+
+
+def _trip_heads_up(context, today: date) -> dict:
+    """What has to happen before a trip, by trip id, from MIA's findings (upkeep before the trip): {trip_id: claim}.
+    A findings rule that fails gives nothing, never an error."""
+    from core.findings import findings
+
+    try:
+        found = findings(context, today)
+    except Exception:
+        log.exception("Expeditions: findings failed")
+        return {}
+    out = {}
+    for f in found:
+        if f.key.startswith("upkeep_before_trip:"):
+            out.setdefault(f.key.split(":")[1], f.claim)
+    return out
 
 
 # ------------------------------------------------------------------ music
