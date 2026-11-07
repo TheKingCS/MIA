@@ -23,6 +23,7 @@ from core.record_actions import (Field, Record, add_describe, add_execute, delet
 
 
 def _lists():
+    """The recipe and pantry category choices, imported late so this module loads before the kitchen store."""
     from core.kitchen_manager import PANTRY_CATEGORIES, RECIPE_CATEGORIES
 
     return tuple(RECIPE_CATEGORIES), tuple(PANTRY_CATEGORIES)
@@ -71,6 +72,7 @@ _SIZED = re.compile(r"^\s*(\d+(?:\.\d+)?(?:/\d+)?)?\s*\(\s*(\d+(?:\.\d+)?)\s*-?\
 
 
 def _amount(raw: Optional[str]) -> float:
+    """A quantity from an ingredient line: a number or a fraction ("1/2"); 0 when it can't be read."""
     try:
         if raw and "/" in raw:
             top, bottom = raw.split("/")
@@ -123,10 +125,12 @@ def ingredients_text(ingredients: list) -> str:
 
 
 def _recipe(context, params):
+    """The recipe the params name (record_actions.get raises when it's gone)."""
     return get(context, RECORDS["recipe"], params)
 
 
 def _describe_ingredients(context, params) -> str:
+    """The sentence the approval card shows for `recipe.ingredients` (Propose); raises ActionError when it can't be done. It names the first six."""
     recipe = _recipe(context, params)
     items = parse_ingredients(params.get("ingredients", ""))
     return f"Set {recipe.name}'s ingredients ({len(items)}): " + (", ".join(i["name"] for i in items[:6]) or "none") + (
@@ -134,6 +138,7 @@ def _describe_ingredients(context, params) -> str:
 
 
 def _set_ingredients(context, params) -> str:
+    """Does `recipe.ingredients` once approved, and says what happened. The lines replace the recipe's ingredients."""
     recipe = _recipe(context, params)
     context.kitchen.update_recipe(recipe.recipe_id, ingredients=parse_ingredients(params.get("ingredients", "")))
     return f"{recipe.name}'s ingredients are saved."
@@ -143,16 +148,19 @@ def _set_ingredients(context, params) -> str:
 
 
 def _grocery(context, params):
+    """The grocery line the params name."""
     return get(context, GROCERY, params)
 
 
 def _describe_check(context, params) -> str:
+    """The sentence the approval card shows for `grocery.check` (Propose); raises ActionError when it can't be done. Check off, or put back on the list."""
     item = _grocery(context, params)
     checked = params.get("checked", True) not in (False, "false", 0, "0")
     return f"{'Check off' if checked else 'Uncheck'} {item.name}"
 
 
 def _check(context, params) -> str:
+    """Does `grocery.check` once approved, and says what happened."""
     item = _grocery(context, params)
     checked = params.get("checked", True) not in (False, "false", 0, "0")
     context.kitchen.set_grocery_item_checked(item.item_id, checked)
@@ -160,6 +168,7 @@ def _check(context, params) -> str:
 
 
 def _describe_clear(context, params) -> str:
+    """The sentence the approval card shows for `grocery.clear_checked` (Propose); raises ActionError when it can't be done. Nothing checked is refused."""
     checked = [i for i in _need(context, "kitchen").all_grocery_items() if i.checked]
     if not checked:
         raise ActionError("Nothing is checked off yet.")
@@ -167,11 +176,15 @@ def _describe_clear(context, params) -> str:
 
 
 def _clear(context, params) -> str:
+    """Does `grocery.clear_checked` once approved, and says what happened."""
     context.kitchen.clear_checked_grocery_items()
     return "The checked items are cleared."
 
 
 def _describe_missing(context, params) -> str:
+    """The sentence the approval card shows for `grocery.from_recipe` (Propose); raises ActionError when it can't be done. It lists what's missing from the pantry and not already on the
+    list.
+    """
     from core.kitchen_manager import recipe_missing_ingredients
 
     recipe = _recipe(context, params)
@@ -188,6 +201,7 @@ def _describe_missing(context, params) -> str:
 
 
 def _add_missing(context, params) -> str:
+    """Does `grocery.from_recipe` once approved, and says what happened."""
     recipe = _recipe(context, params)
     added = context.kitchen.add_missing_ingredients_to_grocery_list(recipe.recipe_id)
     return f"Added {len(added)} item{'s' if len(added) != 1 else ''} to the grocery list."
@@ -200,6 +214,7 @@ _NOTES = Field("notes", "Notes", "textarea")
 
 
 def _describe_meal(context, params) -> str:
+    """The sentence the approval card shows for `meal.log` (Propose); raises ActionError when it can't be done. A locked recipe can't be logged."""
     recipe = _recipe(context, params)
     if recipe.locked:
         raise ActionError(f"{recipe.name} is still locked.")
@@ -208,6 +223,7 @@ def _describe_meal(context, params) -> str:
 
 
 def _log_meal(context, params) -> str:
+    """Does `meal.log` once approved, and says what happened. The kitchen's log_meal grants the XP and completes an unlock mission."""
     recipe = _recipe(context, params)
     context.kitchen.log_meal(recipe.recipe_id, parse(_DATE, params.get("date")), parse(_NOTES, params.get("notes")))
     return f"{recipe.name} is in the meal log."
@@ -218,6 +234,9 @@ _USE = Field("pantry", "Take it out of the pantry", "choice", options=("Yes", "N
 
 
 def _cook_args(context, params):
+    """What "I made this" takes, checked: the recipe (not locked), how many batches (1 when blank), and whether to take
+    it out of the pantry (yes unless they say no).
+    """
     recipe = _recipe(context, params)
     if recipe.locked:
         raise ActionError(f"{recipe.name} is still locked.")
@@ -248,6 +267,9 @@ def _describe_cook(context, params) -> str:
 
 
 def _cook(context, params) -> str:
+    """Does `meal.cook` once approved, and says what happened. It logs the meal and, unless told not to, takes the ingredients out of the pantry
+    (core/kitchen_blueprint.use_up), listing anything that ran out on the grocery list.
+    """
     from core.kitchen_blueprint import use_up
 
     recipe, batches, use = _cook_args(context, params)
@@ -264,6 +286,7 @@ def _cook(context, params) -> str:
 
 
 def _meal(context, params):
+    """The meal-log entry the params name and its recipe's name, or ActionError."""
     entry_id = str(params.get("entry_id", ""))
     entry = next((e for e in _need(context, "kitchen").all_meal_log_entries() if e.entry_id == entry_id), None)
     if entry is None:
@@ -273,17 +296,20 @@ def _meal(context, params):
 
 
 def _describe_meal_delete(context, params) -> str:
+    """The sentence the approval card shows for `meal.delete` (Propose); raises ActionError when it can't be done."""
     entry, name = _meal(context, params)
     return f"Remove {name} on {entry.date} from the meal log"
 
 
 def _meal_delete(context, params) -> str:
+    """Does `meal.delete` once approved, and says what happened."""
     entry, name = _meal(context, params)
     context.kitchen.delete_meal_log_entry(entry.entry_id)
     return f"{name} on {entry.date} is removed."
 
 
 def _who(context) -> str:
+    """Whose favorites and ratings these are (person_settings.person_id), or ActionError asking them to sign in."""
     from core.person_settings import person_id
 
     pid = person_id(context)
@@ -293,12 +319,14 @@ def _who(context) -> str:
 
 
 def _describe_favorite(context, params) -> str:
+    """The sentence the approval card shows for `recipe.favorite` (Propose); raises ActionError when it can't be done."""
     recipe = _recipe(context, params)
     on = params.get("favorite", True) not in (False, "false", 0, "0")
     return f"{'Add' if on else 'Remove'} {recipe.name} {'to' if on else 'from'} your favorites"
 
 
 def _favorite(context, params) -> str:
+    """Does `recipe.favorite` once approved, and says what happened. Favorites are the person's own."""
     recipe = _recipe(context, params)
     on = params.get("favorite", True) not in (False, "false", 0, "0")
     context.kitchen.set_recipe_favorite(_who(context), recipe.recipe_id, on)
@@ -306,6 +334,7 @@ def _favorite(context, params) -> str:
 
 
 def _stars(params) -> Optional[int]:
+    """The rating from the params, 1 to 5 stars (None clears it); ActionError for anything else."""
     raw = params.get("rating")
     if raw in (None, "", 0, "0"):
         return None  # clears the rating
@@ -319,11 +348,13 @@ def _stars(params) -> Optional[int]:
 
 
 def _describe_rate(context, params) -> str:
+    """The sentence the approval card shows for `recipe.rate` (Propose); raises ActionError when it can't be done."""
     recipe, stars = _recipe(context, params), _stars(params)
     return f"Clear your rating of {recipe.name}" if stars is None else f"Rate {recipe.name} {'★' * stars}{'☆' * (5 - stars)}"
 
 
 def _rate(context, params) -> str:
+    """Does `recipe.rate` once approved, and says what happened. Ratings are the person's own."""
     recipe, stars = _recipe(context, params), _stars(params)
     context.kitchen.set_recipe_rating(_who(context), recipe.recipe_id, stars)
     return f"Rating cleared for {recipe.name}." if stars is None else f"{recipe.name}: {stars} star{'s' if stars != 1 else ''}."
@@ -333,6 +364,9 @@ def _rate(context, params) -> str:
 
 
 def _kinds() -> list[ActionType]:
+    """Every kitchen action kind: the record kinds from the shared table plus the ones above, all child-safe except
+    deleting a recipe.
+    """
     kinds = []
     for record in RECORDS.values():
         kinds += record_kinds(record, child_ok=True)
@@ -366,6 +400,7 @@ ACTION_TYPES.update(KITCHEN_ACTIONS)
 
 
 def form_spec() -> dict:
+    """The forms the Kitchen screen uses: each record's fields, a grocery line, ingredients, a meal, and "I made this"."""
     forms = {key: record_form(r) for key, r in RECORDS.items()}
     forms["grocery"] = record_form(GROCERY)
     forms["ingredients"] = {"noun": "ingredients", "id_param": "recipe_id", "fields": [field_dict(_INGREDIENTS)]}

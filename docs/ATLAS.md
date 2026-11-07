@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 227,158 lines; 1043 files describe themselves; 3,825 of 13,517 classes and functions are documented.
+1043 files, 227,193 lines; 1043 files describe themselves; 3,852 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 101,064 lines; 3,094 of 5,630 classes and functions documented
+367 files, 101,099 lines; 3,121 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -181,7 +181,7 @@
 - `core/job_manager.py`: MIA Home's fabrication jobs — the second slice of the proposed `mia_home_schema.sql` (see `docs/VISION.md`'s "MIA Home's expanded scope" section and `core/material_manager.py`'s docstring for the first slice), adapted to this project's persisted-JSON-manager convention. Same shape as every other man *(17 undocumented)*
 - `core/journal_manager.py`: Backs the Notes module (modules/notes/module.py) — milestone 3.4 in docs/ROADMAP.md, which upgrades that module from a placeholder into the "Notes/Journal Engine" described in ROADMAP.md's shared core services table: dated, searchable, taggable entries. It's a core service (not module-local) specifi *(10 undocumented)*
 - `core/journal_reflection.py`: The opt-in weekly journal reflection (2026-09-28), the follow-up to Cognitive Extension slice C: once a week (Sunday evening by default), if the owner journaled that week, MIA says a reflection is ready. The details (what came up most, how the mood moved) are given only when the owner asks ("how was *(4 undocumented)*
-- `core/kitchen_actions.py`: Every change the Kitchen screen makes (2026-10-06, DEC-0017/0018), as action kinds on the contract in core/actions.py, from the shared table in core/record_actions.py: recipes (add, edit, delete, their ingredients written one per line), the pantry (add, edit, delete), the grocery list (add, check of *(27 undocumented)*
+- `core/kitchen_actions.py`: Every change the Kitchen screen makes (2026-10-06, DEC-0017/0018), as action kinds on the contract in core/actions.py, from the shared table in core/record_actions.py: recipes (add, edit, delete, their ingredients written one per line), the pantry (add, edit, delete), the grocery list (add, check of
 - `core/kitchen_blueprint.py`: Kitchen recipes as blueprints (DEC-0028 #9, the kitchen half; Zac, 2026-10-17), the same way Workshop recipes work (core/craft_recipes.py): the recipe is the blueprint, the pantry is the materials. *(2 undocumented)*
 - `core/kitchen_manager.py`: MIA's Kitchen Module — recipes, a pantry/inventory list, a grocery list, and a meal log, plus the logic that connects them: which recipes are makeable right now from what's in the pantry, and adding a recipe's missing ingredients to the grocery list in one action.
 - `core/lab_actions.py`: The development lab's changes as action kinds (DEC-0058, core/dev_lab.py): start a proposal (lab, write, check), approve one into the running MIA, reject one. Grown-ups only, never from the glasses; the long steps (the coder, the test suite) run in the background and say when they're done. "Approve" *(9 undocumented)*
