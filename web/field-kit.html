@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Field Kit — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
+  <link rel="stylesheet" href="ui.css">
+</head>
+<body data-app="field_kit" class="mod-field-kit">
+  <!--
+    The Field Kit (DEC-0125, the design canvas's Field Kit, DEC-0113): Devices, Network and Scripts tabs to look at
+    from anywhere; doing things to the computer stays on the PC. MIA.fieldKit() and MIA.fieldKitCheck()
+    (core/web_field_kit.py).
+    Formatting only (claude, 2026-11-07).
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <header class="hero">
+        <h1><span aria-hidden="true" id="hero-icon"></span> Field Kit</h1>
+        <p class="tagline" id="fk-sub"></p>
+      </header>
+      <div class="ptabs" role="tablist" id="tabs" hidden></div>
+      <header hidden>
+      </header>
+      <div id="panel"></div>
+    </main>
+  </div>
+  <script src="mia.js?v=17"></script>
+  <script src="icons.js"></script>
+  <script src="sound.js"></script>
+  <script src="places-watch.js"></script>
+  <script src="shell.js"></script>
+  <script src="field-kit.js"></script>
+</body>
+</html>

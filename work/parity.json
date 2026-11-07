@@ -45,10 +45,6 @@
       "status": "todo",
       "why": "a glasses ask: convert or calculate (by voice there)"
     },
-    "field_kit:phone": {
-      "status": "todo",
-      "why": "a web page: devices and scripts; running them stays on the PC"
-    },
     "passwords:voice": {
       "status": "none",
       "why": "passwords, PINs and card numbers never by voice (Zac, 2026-11-07: \"keep passwords screen only\")"

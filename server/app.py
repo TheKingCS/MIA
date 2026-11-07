@@ -1122,6 +1122,21 @@ def create_app(context: AppContext) -> FastAPI:
         with app.state.turn_lock:
             return lab_page(view_for(context, profile_id), series[:200])
 
+    @app.get("/api/field-kit")
+    def field_kit_screen(profile_id: str = Depends(require_profile_id)) -> dict:
+        """The Field Kit (core/web_field_kit.py): devices plugged in, the network checks and the script library."""
+        from core.web_field_kit import field_kit_page
+
+        with app.state.turn_lock:
+            return field_kit_page(view_for(context, profile_id))
+
+    @app.get("/api/field-kit/check")
+    def field_kit_check(tool: str, value: str = "", profile_id: str = Depends(require_profile_id)) -> dict:
+        """One network check worked out in core (core/web_field_kit.check) on what was typed; nothing is kept."""
+        from core.web_field_kit import check
+
+        return check(tool, value[:300])
+
     @app.get("/api/toolbox/calc")
     def toolbox_calc(request: Request, id: str, profile_id: str = Depends(require_profile_id)) -> dict:
         """One calculator worked out in core (core/web_toolbox.calc) from the query's values; nothing is kept."""

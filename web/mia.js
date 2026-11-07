@@ -326,6 +326,11 @@
     power: () => read("/api/power", "power"),
     // The Lab (core/web_lab.py, DEC-0125): the Data Logger's series, and one in full (?series=).
     lab: (series = "") => read("/api/lab?series=" + encodeURIComponent(series), "lab"),
+    // The Field Kit (core/web_field_kit.py, DEC-0125): devices, network checks (worked out in core), scripts.
+    fieldKit: () => read("/api/field-kit", "field_kit"),
+    fieldKitCheck: (tool, value) => demo
+      ? read("", "field_kit").then((f) => Object.assign({ demo: true }, (f.demo_answers || {})[tool] || { error: "The demo can't check." }))
+      : call("GET", "/api/field-kit/check?" + new URLSearchParams({ tool, value }).toString()),
     // The Toolbox (core/web_toolbox.py, DEC-0125): calculators, alarms, tools; a calculator is worked out in core.
     // The demo can't calculate, so it answers with the example's own result.
     toolbox: () => read("/api/toolbox", "toolbox"),

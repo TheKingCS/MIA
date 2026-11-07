@@ -299,6 +299,14 @@
       "group": "Knowledge, tools & system"
     },
     {
+      "id": "field_kit",
+      "name": "Field Kit",
+      "icon": "🛠",
+      "tagline": "Devices and scripts.",
+      "page": "field-kit.html",
+      "group": "Knowledge, tools & system"
+    },
+    {
       "id": "passwords",
       "name": "Passwords",
       "icon": "🔐",
@@ -388,7 +396,6 @@
     }
   ],
   "on_pc_only": [
-    "Field Kit",
     "Diagnostics",
     "Settings"
   ],
