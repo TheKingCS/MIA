@@ -13,12 +13,16 @@ from core.assistant_actions import AssistantAction, AssistantActionRegistry
 
 
 def _action_get_model_info(context, arguments: dict) -> str:
+    """Tool get_model_info: which model MIA is answering with, asked of the runtime (model_registry), never
+    from memory.
+    """
     from core.model_registry import assistant_info, describe
 
     return describe(assistant_info(context))
 
 
 def register_self_actions(registry: AssistantActionRegistry) -> None:
+    """Registers the get_model_info tool."""
     registry.register(AssistantAction(
         name="get_model_info", domain="system",
         description=("Which AI model MIA is answering with right now, asked of the runtime: its name, family, size, "
@@ -39,24 +43,28 @@ def register_self_actions(registry: AssistantActionRegistry) -> None:
 
 
 def _action_what_can_you_do(context, arguments: dict) -> str:
+    """Tool what_can_you_do: everything MIA can do, app by app, from her own app list."""
     from core.capabilities import overview
 
     return overview(context)
 
 
 def _action_about_yourself(context, arguments: dict) -> str:
+    """Tool get_introduction: who MIA is, in her own words."""
     from core.capabilities import introduction
 
     return introduction(context)
 
 
 def _action_can_you(context, arguments: dict) -> str:
+    """Tool get_capability: whether MIA can do a named thing, and how."""
     from core.capabilities import can_i
 
     return can_i(context, str(arguments.get("thing") or ""))
 
 
 def _action_about_mia(context, arguments: dict) -> str:
+    """Tool get_mia_docs: an answer to a question about MIA from her own documentation (self_docs)."""
     from core.self_docs import answer
 
     return answer(str(arguments.get("question") or ""))
@@ -98,6 +106,9 @@ def _action_lab_proposals(context, arguments: dict) -> str:
 
 
 def register_capability_actions(registry: AssistantActionRegistry) -> None:
+    """Registers the tools about MIA herself: get_lab_proposals, get_inspection, what_can_you_do,
+    get_introduction, get_capability and get_mia_docs.
+    """
     registry.register(AssistantAction(
         name="get_lab_proposals", domain="system",
         description="MIA's development lab: the improvements she has proposed, how their tests went, which wait "

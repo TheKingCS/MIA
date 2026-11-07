@@ -24,10 +24,12 @@ def _clock(when: datetime) -> str:
     return f"{when.hour % 12 or 12}:{when:%M %p}"
 
 def _words(label: str) -> str:
+    """An action label said as words (underscores as spaces)."""
     return label.replace("_", " ")
 
 
 def _action_undo_last_change(context, arguments: dict) -> str:
+    """Tool undo_last_change: undoes this person's most recent change and says what it was."""
     change = undo_last(context, person_id(context))
     if change is None:
         return "There's nothing of mine to undo right now."
@@ -35,6 +37,7 @@ def _action_undo_last_change(context, arguments: dict) -> str:
 
 
 def _action_get_recent_changes(context, arguments: dict) -> str:
+    """Tool get_recent_changes: this person's last five changes, newest first, with their times."""
     undo = getattr(context, "undo", None)
     changes = undo.recent(person_id(context)) if undo is not None else []
     if not changes:
@@ -44,6 +47,7 @@ def _action_get_recent_changes(context, arguments: dict) -> str:
 
 
 def _action_why_that_message(context, arguments: dict) -> str:
+    """Tool get_message_reason: why the communication gate sent its last unprompted message."""
     gate = getattr(context, "communication", None)
     entry = gate.last_sent() if gate is not None else None
     if entry is None:
@@ -52,6 +56,9 @@ def _action_why_that_message(context, arguments: dict) -> str:
 
 
 def _action_mute_message_topic(context, arguments: dict) -> str:
+    """Tool mute_message_topic: pauses one kind of unprompted message (the one named, else the last one
+    sent) for some days (30 by default); urgent things still come through.
+    """
     gate = getattr(context, "communication", None)
     if gate is None:
         return "I can't change that on this device."
@@ -68,12 +75,16 @@ def _action_mute_message_topic(context, arguments: dict) -> str:
 
 
 def _action_check_my_setup(context, arguments: dict) -> str:
+    """Tool check_my_setup: what's set up on this MIA and what to fix, from the system check."""
     from core.system_check import run_checks, summary
 
     return summary(run_checks(context))
 
 
 def register_undo_actions(registry: AssistantActionRegistry) -> None:
+    """Registers the undo and messaging tools: check_my_setup, undo_last_change, get_recent_changes,
+    get_message_reason and mute_message_topic.
+    """
     registry.register(AssistantAction(
         name="check_my_setup", domain="system",
         description="Check what's set up on this MIA (model, voice, reading photos, phone, data, account) and what to fix.",
