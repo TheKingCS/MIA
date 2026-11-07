@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1102 files, 249,714 lines; 1102 files describe themselves; 13,679 of 14,349 classes and functions are documented.
+1102 files, 249,761 lines; 1102 files describe themselves; 13,682 of 14,352 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-398 files, 115,989 lines; 6,149 of 6,238 classes and functions documented
+398 files, 116,015 lines; 6,150 of 6,239 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -677,7 +677,7 @@
 
 ## tests/: the test suite: what each part must do
 
-367 files, 66,710 lines; 5,287 of 5,868 classes and functions documented
+367 files, 66,730 lines; 5,289 of 5,870 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -994,7 +994,7 @@
 - `tests/test_today.py`: Today (core/today.py), 2026-10-01: one list of what needs you today, across every app; on Home, on the phone, and from the Assistant. *(3 undocumented)*
 - `tests/test_tool_loop.py`: The tool loop (DEC-0052 step 2b, core/tool_loop.py): lookups go back to the model and it may look up more, a few rounds at most, never the same lookup twice; one answer at the end that never states a number the lookups didn't; a change is never run inside the loop.
 - `tests/test_trail_map_library.py`: Unit tests for core.trail_map_library. Isolates _DATA_DIR/_TRAIL_MAPS_FILE and root_path into a tmp_path, same pattern as test_reference_library_manager.py. urllib.request.urlopen() is monkeypatched for add_from_url() tests — no real network call in this committed suite (see core/map_tile_cache.py's
-- `tests/test_training_session.py`: The live workout session (DEC-0055, core/training_session.py): prescribed from the plan, performed set by set with how each count was made, rest by itself, pauses, corrections, counting aloud kept honest, and finishing as one ordinary workout log. *(2 undocumented)*
+- `tests/test_training_session.py`: The live workout session (DEC-0055, core/training_session.py): prescribed from the plan, performed set by set with how each count was made, rest by itself (and thirty more seconds of it, tapped or said), pauses, corrections, counting aloud kept honest, and finishing as one ordinary workout log. *(2 undocumented)*
 - `tests/test_trip_detail_dialog.py`: Unit tests for gui.trip_detail_dialog's pure functions, same style as tests/test_navigation_module.py (no Qt event loop, no fixtures).
 - `tests/test_trip_manager.py`: Unit tests for core.trip_manager. Isolates _DATA_DIR/_TRIPS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_waypoint_manager.py's isolated_paths). planned_route_distance_km() is checked against the same known real-world distance test_waypoint_manager.py already uses (New York <-> *(5 undocumented)*
 - `tests/test_trip_map_view.py`: Unit tests for gui.trip_map_view's pure functions (project_to_scene_xy, compute_bounds), same style as tests/test_navigation_module.py — no Qt event loop, no QGraphicsScene/View instantiated.
@@ -1049,7 +1049,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-74 files, 13,580 lines
+74 files, 13,581 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game

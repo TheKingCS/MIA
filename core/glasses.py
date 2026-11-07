@@ -48,7 +48,8 @@ GLASSES_KINDS = frozenset({
     "mission.complete", "objective.tick", "maintenance.done", "grocery.check",
     "task.done", "meal.prep_done", "meal.cook", "routine.log", "app.favorite",
     # the live workout (DEC-0055): moving it along, never a number to type (counts come by voice)
-    "training.start", "training.set", "training.skip_rest", "training.pause", "training.resume", "training.skip",
+    "training.start", "training.set", "training.skip_rest", "training.rest_more", "training.pause", "training.resume",
+    "training.skip",
     "training.finish",
 })
 
@@ -308,7 +309,7 @@ def _workout_live(context, today):
 
 
 def _workout_live_lines(context, today):
-    """Panel: the live training session: the exercise and set now, the rest countdown (skip rest), set done,
+    """Panel: the live training session: the exercise and set now, the rest countdown (skip rest, +30 s), set done,
     pause or resume, skip, what's next and finish; with no session, a line to start today's workout (or a rest day) (a menu item's readout; lines with an allowed action can be approved from the glasses).
     """
     from core.web_fitness import live_session
@@ -329,6 +330,8 @@ def _workout_live_lines(context, today):
         if s["status"] == "resting":
             lines.append(_line(f"Rest {s['rest_left']} s", "then " + (n.get("name") or ""), "",
                                {"kind": "training.skip_rest", "label": "Skip rest", "params": {}}))
+            lines.append(_line("+30 s", "thirty more seconds", "",
+                               {"kind": "training.rest_more", "label": "+30 s", "params": {}}))
         else:
             lines.append(_line("Set done", "say the count, or tap", "",
                                {"kind": "training.set", "label": "Next set", "params": {"counted": "tapped"}}))
