@@ -23,10 +23,12 @@ STATUS_SAID = {"fixed": "Mark fixed", "ignored": "Ignore", "open": "Open again"}
 
 
 def _book(context):
+    """The person's Fix-It Log, or ActionError when it isn't here."""
     return _need(context, "failures")
 
 
 def _report_describe(context, params) -> str:
+    """The sentence the approval card shows for `failures.report` (Propose); raises ActionError when it can't be done. Something has to be said."""
     note = str(params.get("note") or "").strip()
     if not note:
         raise ActionError("What went wrong?")
@@ -34,23 +36,27 @@ def _report_describe(context, params) -> str:
 
 
 def _report_execute(context, params) -> str:
+    """Does `failures.report` once approved, and says what happened. It's logged as a report, with the page it came from."""
     _book(context).record("report", note=str(params.get("note") or ""), page=str(params.get("page") or ""))
     return "Logged, so it gets fixed."
 
 
 def _thumbs_describe(context, params) -> str:
+    """The sentence the approval card shows for `failures.thumbs` (Propose); raises ActionError when it can't be done. It needs the reply it's about."""
     if not str(params.get("reply") or "").strip():
         raise ActionError("Which reply?")
     return "That answer wasn't right" + (f": {str(params.get('note'))[:100]}" if params.get("note") else "")
 
 
 def _thumbs_execute(context, params) -> str:
+    """Does `failures.thumbs` once approved, and says what happened. It's logged with what was asked and answered."""
     _book(context).record("thumbs_down", prompt=str(params.get("prompt") or ""), reply=str(params.get("reply") or ""),
                           note=str(params.get("note") or ""))
     return "Thanks: logged, so it gets fixed."
 
 
 def _rate_describe(context, params) -> str:
+    """The sentence the approval card shows for `answer.rate` (Propose); raises ActionError when it can't be done. A rating is up or down."""
     if not str(params.get("reply") or "").strip():
         raise ActionError("Which reply?")
     if params.get("rating") not in ("up", "down"):
@@ -59,6 +65,9 @@ def _rate_describe(context, params) -> str:
 
 
 def _rate_execute(context, params) -> str:
+    """Does `answer.rate` once approved, and says what happened. Every rating is kept with the model that answered; a 👎 is also logged in
+    the Fix-It Log.
+    """
     ratings = getattr(context, "ratings", None)
     if ratings is not None:
         model = context.config.get("llm.model", "") if getattr(context, "config", None) is not None else ""
@@ -70,6 +79,7 @@ def _rate_execute(context, params) -> str:
 
 
 def _issue(context, params):
+    """The issue (from the last 90 days) and the status the params name, or ActionError."""
     key = str(params.get("key") or "")
     found = next((i for i in _book(context).issues(90) if i["key"] == key), None)
     if found is None:
@@ -81,18 +91,21 @@ def _issue(context, params):
 
 
 def _status_describe(context, params) -> str:
+    """The sentence the approval card shows for `failures.status` (Propose); raises ActionError when it can't be done. A fixed issue opens again by itself if it happens again."""
     issue, status = _issue(context, params)
     return f"{STATUS_SAID[status]}: {issue['title']}" + (
         " (if it happens again, it opens again by itself)" if status == "fixed" else "")
 
 
 def _status_execute(context, params) -> str:
+    """Does `failures.status` once approved, and says what happened."""
     issue, status = _issue(context, params)
     _book(context).set_status(issue["key"], status)
     return "Done."
 
 
 def _phrase(context, params) -> dict:
+    """The learned phrasing the params name, or ActionError."""
     found = next((p for p in _book(context).phrases if p["phrase_id"] == str(params.get("phrase_id") or "")), None)
     if found is None:
         raise ActionError("That isn't remembered anymore.")
@@ -100,15 +113,20 @@ def _phrase(context, params) -> dict:
 
 
 def _forget_describe(context, params) -> str:
+    """The sentence the approval card shows for `failures.forget` (Propose); raises ActionError when it can't be done."""
     return f"Forget that “{_phrase(context, params)['said']}” means something special"
 
 
 def _forget_execute(context, params) -> str:
+    """Does `failures.forget` once approved, and says what happened."""
     _book(context).forget(_phrase(context, params)["phrase_id"])
     return "Forgotten."
 
 
 def _register() -> None:
+    """Adds the Fix-It Log's action kinds to ACTION_TYPES (all child-safe except changing an issue's status). Runs
+    once, when this module is imported.
+    """
     for kind in (
         ActionType("failures.report", "Report A Problem", {"note": "what went wrong", "page": "where"},
                    _report_describe, _report_execute, True),
@@ -128,6 +146,9 @@ _register()
 
 
 def failures_page(context, days: int = 30) -> dict:
+    """The Fix-It Log page's data: open issues, how many this week, fixed, learned phrasings (with what each does),
+    the issues, and the fix report for Claude when there's anything to fix.
+    """
     from datetime import datetime, timedelta, timezone
 
     from core.failure_log import fix_report
@@ -164,6 +185,9 @@ def page_error(context, page: str, message: str) -> Optional[dict]:
 
 
 def _get_issues(context, arguments: dict) -> str:
+    """Assistant tool `get_issues`: the open issues of the last two weeks (the worst three named), and how many
+    phrasings she's learned.
+    """
     page = failures_page(context, 14)
     if not page.get("available"):
         return "The Fix-It Log isn't set up on this MIA."
@@ -179,6 +203,7 @@ def _get_issues(context, arguments: dict) -> str:
 
 
 def register_failure_actions(registry) -> None:
+    """Registers the get_issues tool with the Assistant's registry."""
     from core.assistant_actions import AssistantAction
 
     registry.register(AssistantAction(

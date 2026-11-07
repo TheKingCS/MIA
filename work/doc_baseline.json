@@ -93,7 +93,6 @@
   "core/expedition_media.py": 7,
   "core/expedition_sync.py": 3,
   "core/fact_owners.py": 1,
-  "core/failure_actions.py": 17,
   "core/finance_manager.py": 10,
   "core/finance_summary.py": 3,
   "core/findings.py": 5,

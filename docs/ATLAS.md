@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 228,283 lines; 1043 files describe themselves; 4,548 of 13,517 classes and functions are documented.
+1043 files, 228,308 lines; 1043 files describe themselves; 4,565 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 102,189 lines; 3,817 of 5,630 classes and functions documented
+367 files, 102,214 lines; 3,834 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -127,7 +127,7 @@
 - `core/expedition_media.py`: Photos, videos and files on an expedition (Zac, 2026-10-16: "after planning a trip you should be able to attach pictures and videos and files to it"). Uploads from the phone or the web go to the expedition's own folder, `<trip photo root>/expeditions/<expedition_id>/`; photos a trip already has (add *(7 undocumented)*
 - `core/expedition_sync.py`: Export/import Expedition Mode data as a single bundle file — docs ROADMAP.md milestone 15, built for the "Pi 5 docked to a Home desktop" workflow: `docs/HARDWARE.md`'s storage-split section already anticipated this exact need ("the same drive can be pulled and mounted on a desktop directly"). Reuses *(3 undocumented)*
 - `core/fact_owners.py`: One owner per fact (DEC-0052, docs/REASONING_PLAN.md section 2). A fact MIA knows about a person lives in exactly one store; every other screen, answer and finding reads it from that owner and never keeps a copy, so two places can't disagree. `tests/test_fact_owners.py` fails when a retired copy com *(1 undocumented)*
-- `core/failure_actions.py`: The Fix-It Log's actions (DEC-0049, core/failure_log.py) on the action contract, and its screen (served as /api/failures). *(17 undocumented)*
+- `core/failure_actions.py`: The Fix-It Log's actions (DEC-0049, core/failure_log.py) on the action contract, and its screen (served as /api/failures).
 - `core/failure_log.py`: Where MIA stumbles, so it gets fixed (DEC-0049; Zac, 2026-10-27): "a log that you can be sent to audit the users interactions with MIA, see when she fails, why she fails, when the user runs into an issue and then use that information to fix her ... nearly self developing in a way that doesnt break h
 - `core/finance_manager.py`: Watched-folder ingestion for MIA Home's external financial snapshot exports — the Kraken trading agent and the real estate portfolio dashboard (both built as separate projects, per `docs/VISION.md`'s "MIA Home's expanded scope" section), each producing the same shared JSON export shape documented th *(10 undocumented)*
 - `core/finance_summary.py`: Finance #4 (2026-09-28): "money on your phone". One read-only snapshot of the owner's finances, as plain JSON-ready data, served by server/app.py's /api/finance/summary to the phone web app and the Android app. *(3 undocumented)*
