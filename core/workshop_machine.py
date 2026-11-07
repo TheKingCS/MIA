@@ -54,6 +54,9 @@ class WorkshopMachineError(RuntimeError):
 
 @dataclass
 class MachineStatusReport:
+    """What a machine says about itself: its state (idle, running, paused, error, offline), a message, and
+    how far along a job is.
+    """
     state: str  # "idle" | "running" | "paused" | "error" | "offline"
     message: str = ""
     progress_pct: Optional[float] = None
@@ -61,6 +64,7 @@ class MachineStatusReport:
 
 @dataclass
 class MachineJobHandle:
+    """A job sent to a machine: its id and the machine's."""
     job_id: str
     machine_id: str
 
@@ -107,6 +111,7 @@ class WorkshopMachineRegistry:
     as `core/dashboard_widgets.py`."""
 
     def __init__(self, context: AppContext) -> None:
+        """Starts with no machines registered."""
         self.context = context
         self._machines: dict[str, WorkshopMachine] = {}
 
@@ -121,9 +126,11 @@ class WorkshopMachineRegistry:
         log.info("Registered workshop machine: %s", machine.machine_id)
 
     def all_machines(self) -> list[WorkshopMachine]:
+        """Every registered machine."""
         return list(self._machines.values())
 
     def get(self, machine_id: str) -> Optional[WorkshopMachine]:
+        """The machine with this id, or None."""
         return self._machines.get(machine_id)
 
 
@@ -145,13 +152,17 @@ class LaserEngraverMachine(WorkshopMachine):
     description = "Stub only — no real driver implemented yet."
 
     def get_status(self) -> MachineStatusReport:
+        """Always offline: there's no real driver yet."""
         return MachineStatusReport(state="offline", message="No real driver implemented yet.")
 
     def send_job(self, job_data: dict) -> MachineJobHandle:
+        """Raises WorkshopMachineError: control isn't built yet (a stub)."""
         raise WorkshopMachineError("Laser engraver control isn't implemented yet — this is a stub.")
 
     def pause(self) -> None:
+        """Raises WorkshopMachineError: control isn't built yet (a stub)."""
         raise WorkshopMachineError("Laser engraver control isn't implemented yet — this is a stub.")
 
     def stop(self) -> None:
+        """Raises WorkshopMachineError: control isn't built yet (a stub)."""
         raise WorkshopMachineError("Laser engraver control isn't implemented yet — this is a stub.")

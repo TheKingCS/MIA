@@ -60,6 +60,10 @@ WHO = "runner"
 
 @dataclass
 class Mission:
+    """One mission file (work/missions/M-0001.md): its goal, status (active, paused, done), scope, the roles it may
+    use, its budget (tasks, hours, provider calls), how many tasks may wait for Zac, when it started, the sources a
+    standing mission also takes tasks from, and its body text.
+    """
     id: str
     goal: str
     status: str = "paused"
@@ -77,15 +81,18 @@ class Mission:
     FIELDS = ("id", "goal", "status", "scope", "roles", "tasks", "hours", "calls", "your_turn_limit", "started", "takes")
 
     def works(self, task) -> bool:
+        """Whether a task is this mission's: its source is the mission's id, or starts with one the mission takes."""
         return task.source == self.id or any(task.source.startswith(p) for p in self.takes)
 
     def to_text(self) -> str:
+        """The mission file: a front matter block of its fields (lists comma-separated), then the body."""
         lines = ["---"] + [f"{k}: {', '.join(v) if isinstance(v, list) else v}" for k in self.FIELDS
                            for v in [getattr(self, k)]] + ["---", self.body.strip(), ""]
         return "\n".join(lines)
 
 
 def _parse(text: str) -> Optional[Mission]:
+    """A Mission from a mission file, or None when there's no front matter, no id, or a number that won't read."""
     m = re.match(r"^---\n(.*?)\n---\n?(.*)$", text.replace("\r\n", "\n"), re.S)
     if not m:
         return None
@@ -106,6 +113,7 @@ def _parse(text: str) -> Optional[Mission]:
 
 
 def missions(folder: Path = MISSIONS) -> dict[str, Mission]:
+    """Every mission in the folder (M-*.md) by id; a file that won't parse is left out."""
     out = {}
     for path in sorted(Path(folder).glob("M-*.md")) if Path(folder).exists() else []:
         found = _parse(path.read_text(encoding="utf-8"))
@@ -115,12 +123,16 @@ def missions(folder: Path = MISSIONS) -> dict[str, Mission]:
 
 
 def save(mission: Mission, folder: Path = MISSIONS) -> None:
+    """Writes a mission file atomically."""
     Path(folder).mkdir(parents=True, exist_ok=True)
     atomic_write_text(Path(folder) / f"{mission.id}.md", mission.to_text())
 
 
 def new(goal: str, scope: list[str], roles: list[str] = (), tasks: int = 5, hours: float = 8.0, calls: int = 60,
         folder: Path = MISSIONS, log=activity.ACTIVITY) -> Mission:
+    """A new paused mission with the next M-number, saved and recorded in the activity log as Zac's; it needs a goal
+    and a scope (ValueError otherwise).
+    """
     if not goal.strip() or not scope:
         raise ValueError("A mission needs a goal and a scope (the paths it may change).")
     taken = [int(m[2:]) for m in missions(folder)]
@@ -191,6 +203,7 @@ def over_budget(mission: Mission, used: dict) -> str:
 
 
 def resting(provider: str, state: Callable[[str], dict]) -> bool:
+    """Whether a provider is resting at a usage limit (cooling); a state that can't be read counts as not resting."""
     try:
         return state(provider).get("state") == "cooling"
     except OSError:
@@ -337,6 +350,7 @@ def step(mission_id: str, registry, *, loop=None, review=None, learn=None, shado
 
 
 def _lab():
+    """The dev lab module, imported late (the runner is used where the lab may not be needed)."""
     from core import dev_lab
 
     return dev_lab

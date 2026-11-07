@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 229,828 lines; 1043 files describe themselves; 5,540 of 13,517 classes and functions are documented.
+1043 files, 229,853 lines; 1043 files describe themselves; 5,558 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 103,730 lines; 4,809 of 5,630 classes and functions documented
+367 files, 103,755 lines; 4,827 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -368,12 +368,12 @@
 - `core/work_dungeon.py`: The Dungeon (DEC-0046, Zac 2026-10-27): work as a dungeon you visit and loot every day, stacking resources until you can advance to the next one. MIA is the Game Master: she turns the day's real trouble into the level you're clearing, honestly (the trouble stays real) and without making anyone a vil
 - `core/work_loop.py`: A task, worked by an agent, from claim to the approval queue (DEC-0068/0070, step 3 of `docs/DEV_ECOSYSTEM_AUDIT.md`). It's MIA's lab (`core/dev_lab.py`) with the task records around it, not a second engine: *(1 undocumented)*
 - `core/work_review.py`: Independent review, then Zac's approval (DEC-0069, step 4 of `docs/DEV_ECOSYSTEM_AUDIT.md`). After the loop (`core/work_loop.py`) brings a task to review: *(4 undocumented)*
-- `core/work_runner.py`: Missions, and the runner that works them (DEC-0076 and DEC-0079; Zac, 2026-11-03: "set the council on the mission to develop MIA and let them run at it autonomously" and "delegating tasks based on time available to use each model so that the dev team doesnt have to sit idle when one model is unavail *(9 undocumented)*
+- `core/work_runner.py`: Missions, and the runner that works them (DEC-0076 and DEC-0079; Zac, 2026-11-03: "set the council on the mission to develop MIA and let them run at it autonomously" and "delegating tasks based on time available to use each model so that the dev team doesnt have to sit idle when one model is unavail
 - `core/work_tasks.py`: Development tasks as records (DEC-0068, step 1 of `docs/DEV_ECOSYSTEM_AUDIT.md`): one Markdown file per task in `work/tasks/`, so the team's to-do list is in the repo, in git's history, readable by every session and by a program. `tools/work.py` is the command line over it. *(8 undocumented)*
 - `core/workflows.py`: Workflows MIA makes (ACAF step 3, DEC-0092; `docs/ACAF_REVIEW.md` section 6): something done again and again, written as a specification, not code. A trigger (every day, week or month) and steps from a fixed vocabulary: *(2 undocumented)*
 - `core/workout_actions.py`: Every change the Workout screen makes (2026-10-06, DEC-0017/0018), as action kinds on the contract in core/actions.py: exercises (add, edit, delete) and logging a session the way the concept's form does (an exercise, reps, sets, weight, how long, notes). Workout templates are gone (Zac, 2026-10-16):
 - `core/workout_manager.py`: MIA's Workout Module — an exercise library, named workout templates, logged sessions (sets/reps/weight, real elapsed time from a live session's own stopwatch), personal records, and per-exercise progress.
-- `core/workshop_machine.py`: WorkshopMachine: the interface every controllable workshop-hardware device (laser engraver, CNC, 3D printer, ...) implements, plus WorkshopMachineRegistry holding whichever machines are actually registered. This reconciles a real architecture question from MIA Home's expanded-scope handoff doc (`doc *(9 undocumented)*
+- `core/workshop_machine.py`: WorkshopMachine: the interface every controllable workshop-hardware device (laser engraver, CNC, 3D printer, ...) implements, plus WorkshopMachineRegistry holding whichever machines are actually registered. This reconciles a real architecture question from MIA Home's expanded-scope handoff doc (`doc
 - `core/world_map.py`: The world map with fog of war (DEC-0028, the game layer's sixth idea; Zac, 2026-10-17): the places you've actually been clear the fog, photos are pinned where they were taken, and new ground earns achievements.
 
 ## server/: the web and phone API over the engine
