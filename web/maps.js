@@ -55,31 +55,44 @@
   function paint() {
     const view = el("div", { class: "map-view", role: "img", "aria-label": "Map" });
     let drag = null;
-    view.addEventListener("pointerdown", (e) => { drag = [e.clientX, e.clientY, cx, cy]; view.setPointerCapture(e.pointerId); });
+    view.addEventListener("pointerdown", (e) => { drag = [e.clientX, e.clientY, cx, cy, false]; view.setPointerCapture(e.pointerId); });
     view.addEventListener("pointermove", (e) => {
       if (!drag) return;
+      if (Math.abs(e.clientX - drag[0]) + Math.abs(e.clientY - drag[1]) > 6) drag[4] = true;  // moved: a drag, not a tap
       cx = drag[2] - (e.clientX - drag[0]) / SIZE;
       cy = drag[3] - (e.clientY - drag[1]) / SIZE;
       for (const child of view.children) {  // move what's there; the tiles are fetched again when the drag ends
         child.style.translate = `${e.clientX - drag[0]}px ${e.clientY - drag[1]}px`;
       }
     });
-    view.addEventListener("pointerup", () => { if (drag) { drag = null; draw(view); } });
+    view.addEventListener("pointerup", async (e) => {
+      if (!drag) return;
+      const tapped = !drag[4];
+      drag = null;
+      draw(view);
+      if (!tapped) return;
+      const box = view.getBoundingClientRect();  // a tap: a waypoint there, named first
+      const [lat, lon] = toDeg(cx + (e.clientX - box.left - box.width / 2) / SIZE, cy + (e.clientY - box.top - box.height / 2) / SIZE, zoom);
+      const values = await MIAShell.form("A waypoint here", [{ name: "name", label: "Name", type: "text", required: true }]);
+      if (values) MIAShell.act({ kind: "waypoint.add", params: { name: values.name, lat: lat.toFixed(6), lon: lon.toFixed(6) } });
+    });
     const button = (label, onclick) => el("button", { type: "button", class: "btn btn-ghost btn-small", onclick }, label);
     $("panel").replaceChildren(
       el("section", { class: "glass money-section" },
         el("div", { class: "row-buttons" }, button("+", () => setZoom(view, zoom + 1)), button("−", () => setZoom(view, zoom - 1)),
           data.waypoints.length ? button("Waypoints", () => { zoom = data.zoom; [cx, cy] = toTile(data.center.lat, data.center.lon, zoom); draw(view); }) : null),
         view,
-        el("p", { class: "dim" }, "Tiles are kept on the PC once seen, so they work with no signal later. Add a waypoint by voice: "
-          + "\"add a waypoint called Spring at 18S UJ 23478 06483\".")));
+        el("p", { class: "dim" }, "Tiles are kept on the PC once seen, so they work with no signal later. Tap the map to add a waypoint there, "
+          + "or tell MIA: \"add a waypoint called Spring at 18S UJ 23478 06483\".")));
     draw(view);
   }
 
   MIAShell.start(async () => {
+    const first = data === null;
     data = await MIA.maps();
+    if (!first) { draw(document.querySelector(".map-view")); return; }  // a change elsewhere: new pins, same view
     zoom = data.zoom;
     [cx, cy] = toTile(data.center.lat, data.center.lon, zoom);
     paint();
-  });
+  }, { refreshOnChange: true });
 })();

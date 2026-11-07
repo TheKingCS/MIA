@@ -35,8 +35,10 @@
       el("section", { class: "glass money-section" }, el("h2", {}, "Waypoints"),
         pts.length ? el("div", { class: "sync-rows" }, pts.map((w) => el("div", { class: "sync-row council-msg" },
           el("div", {}, el("p", { class: "council-text" }, w.name + (w.category ? " · " + w.category : "")),
-            el("p", { class: "dim" }, (w.grid || "") + "  (" + w.lat + ", " + w.lon + ")")))))
-          : el("p", { class: "dim" }, "Tell MIA: \"add a waypoint called Spring at 18S UJ 23478 06483\", or mark one on the map.")));
+            el("p", { class: "dim" }, (w.grid || "") + "  (" + w.lat + ", " + w.lon + ")")),
+          el("div", { class: "row-buttons" }, el("button", { type: "button", class: "btn btn-ghost btn-small",
+            onclick: () => MIAShell.act({ kind: "waypoint.delete", params: { waypoint_id: w.id } }) }, "Take out")))))
+          : el("p", { class: "dim" }, "Tap the map (Maps) to add one, or tell MIA: \"add a waypoint called Spring at 18S UJ 23478 06483\".")));
   }
 
   MIAShell.start(draw, { refreshOnChange: true });
