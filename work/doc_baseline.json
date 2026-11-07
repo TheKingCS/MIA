@@ -127,7 +127,6 @@
   "modules/music/module.py": 27,
   "modules/real_estate/module.py": 27,
   "modules/settings/module.py": 37,
-  "modules/workout/module.py": 27,
   "modules/workshop/module.py": 45,
   "tests/assistant_registry.py": 2,
   "tests/conftest.py": 4,

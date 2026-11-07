@@ -116,12 +116,14 @@ def format_session_row(session: WorkoutSession, template_name: str) -> str:
 
 
 class WorkoutModule(ModuleBase):
+    """The Workout app (desktop): exercises, a live session (sets logged as you go, session and rest timers, saved at Finish), the history of sessions, and progress per exercise (the personal record and weight over time). The live session here is the desktop's own, in memory until Finish (the shared one is core/training_session.py)."""
     module_id = "workout"
     display_name = "Workout"
     description = "Exercises, guided sessions, and progress."
     icon = "\U0001F3CB"  # weightlifter
 
     def __init__(self, context) -> None:
+        """Nothing built yet and no session running; the timer that redraws the session and rest clocks."""
         super().__init__(context)
         self._exercise_list: Optional[QListWidget] = None
 
@@ -159,6 +161,7 @@ class WorkoutModule(ModuleBase):
         self._refresh_history_list()
 
     def get_widget(self) -> QWidget:
+        """The page: a photo header, then Exercises, Log Session, History and Progress tabs."""
         page = QWidget()
         page.setStyleSheet("background-color: #070f0d;")
         outer = QVBoxLayout(page)
@@ -237,6 +240,7 @@ class WorkoutModule(ModuleBase):
         return page
 
     def _on_tab_changed(self, index: int) -> None:
+        """Refreshes every tab's lists when the tab changes, so an edit in one shows in the others."""
         self._refresh_exercise_list()
         self._refresh_session_exercise_combo()
         self._refresh_history_list()
@@ -248,6 +252,7 @@ class WorkoutModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_exercises_tab(self) -> QWidget:
+        """The Exercises tab: the list with Add, Edit and Delete."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
@@ -272,6 +277,7 @@ class WorkoutModule(ModuleBase):
         return tab
 
     def _refresh_exercise_list(self) -> None:
+        """Lists every exercise, or says how to add the first."""
         if self._exercise_list is None:
             return
         self._exercise_list.clear()
@@ -283,9 +289,11 @@ class WorkoutModule(ModuleBase):
             add_empty_state_item(self._exercise_list, "No exercises yet — click Add Exercise to get started.")
 
     def _selected_exercise_id(self) -> Optional[str]:
+        """The selected exercise's id, or None."""
         return selected_item_data(self._exercise_list)
 
     def _on_add_exercise(self) -> None:
+        """Adds an exercise from the dialog (name, category, equipment, notes)."""
         dialog = AddEditExerciseDialog()
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -296,6 +304,7 @@ class WorkoutModule(ModuleBase):
         self._refresh_exercise_list()
 
     def _on_edit_exercise(self) -> None:
+        """Edits the selected exercise in the dialog (asks for a selection first)."""
         exercise_id = self._selected_exercise_id()
         if exercise_id is None:
             QMessageBox.information(None, "No Exercise Selected", "Select an exercise to edit.")
@@ -311,6 +320,7 @@ class WorkoutModule(ModuleBase):
         self._refresh_exercise_list()
 
     def _on_delete_exercise(self) -> None:
+        """Deletes the selected exercise (asks for a selection first)."""
         exercise_id = self._selected_exercise_id()
         if exercise_id is None:
             QMessageBox.information(None, "No Exercise Selected", "Select an exercise to delete.")
@@ -496,6 +506,7 @@ class WorkoutModule(ModuleBase):
         return card
 
     def _refresh_session_exercise_combo(self) -> None:
+        """Fills the session's exercise picker, keeping the one picked (signals held)."""
         if self._session_exercise_combo is None:
             return
         current = self._session_exercise_combo.currentData() if self._session_exercise_combo.count() else None
@@ -508,20 +519,24 @@ class WorkoutModule(ModuleBase):
         self._session_exercise_combo.blockSignals(False)
 
     def _current_session_elapsed_ms(self) -> int:
+        """Milliseconds since the session started (0 when none is running), by the monotonic clock."""
         if not self._session_active or self._session_start_monotonic is None:
             return 0
         return int((time.monotonic() - self._session_start_monotonic) * 1000)
 
     def _current_rest_elapsed_ms(self) -> int:
+        """Milliseconds into the current rest (0 when not resting)."""
         if not self._resting or self._rest_start_monotonic is None:
             return 0
         return int((time.monotonic() - self._rest_start_monotonic) * 1000)
 
     def _update_session_display(self) -> None:
+        """Redraws the session and rest clocks."""
         self._session_elapsed_label.setText(f"Session: {format_elapsed(self._current_session_elapsed_ms())}")
         self._rest_elapsed_label.setText(f"Rest: {format_elapsed(self._current_rest_elapsed_ms())}")
 
     def _on_start_session(self) -> None:
+        """Starts a session (asks for an exercise first when there are none): the clock runs and Log Set, Rest and Finish turn on."""
         if not self.context.workout.all_exercises():
             QMessageBox.information(None, "No Exercises Yet", "Add an exercise in the Exercises tab first.")
             return
@@ -538,6 +553,7 @@ class WorkoutModule(ModuleBase):
         self._refresh_session_sets_list()
 
     def _on_log_set(self) -> None:
+        """Logs a set of the picked exercise from the dialog (reps and weight), numbered after that exercise's sets so far."""
         exercise_id = self._session_exercise_combo.currentData()
         if not exercise_id:
             QMessageBox.information(None, "No Exercise Selected", "Pick an exercise first.")
@@ -554,6 +570,7 @@ class WorkoutModule(ModuleBase):
         self._refresh_session_sets_list()
 
     def _refresh_session_sets_list(self) -> None:
+        """Lists this session's sets, newest first, or that none are logged yet."""
         self._session_sets_list.clear()
         for entry in reversed(self._session_sets_logged):
             exercise = self.context.workout.get_exercise(entry["exercise_id"])
@@ -563,6 +580,7 @@ class WorkoutModule(ModuleBase):
             add_empty_state_item(self._session_sets_list, "No sets logged yet this session.")
 
     def _on_toggle_rest(self) -> None:
+        """Starts or ends a rest, its clock with it."""
         if self._resting:
             self._resting = False
             self._rest_start_monotonic = None
@@ -574,6 +592,7 @@ class WorkoutModule(ModuleBase):
             self._rest_button.setText("Done Resting")
 
     def _on_finish_session(self) -> None:
+        """Saves the session (today, its minutes, the calories if entered, every set: the store grants XP and records it in the history), then resets the screen for the next one."""
         duration_minutes = self._current_session_elapsed_ms() / 1000 / 60
         calories = self._session_calories_spin.value() or None
 
@@ -607,6 +626,7 @@ class WorkoutModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_history_tab(self) -> QWidget:
+        """The History tab: the sessions list with Delete, and the selected session's sets."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
@@ -627,6 +647,7 @@ class WorkoutModule(ModuleBase):
         return tab
 
     def _refresh_history_list(self) -> None:
+        """Lists every session (its template, or Freeform), or says how to log the first; then the selected one's sets."""
         if self._history_list is None:
             return
         self._history_list.clear()
@@ -642,9 +663,11 @@ class WorkoutModule(ModuleBase):
         self._refresh_history_detail()
 
     def _selected_session_id(self) -> Optional[str]:
+        """The selected session's id, or None."""
         return selected_item_data(self._history_list)
 
     def _refresh_history_detail(self) -> None:
+        """Lists the selected session's sets, or that it has none."""
         if self._history_detail_list is None:
             return
         self._history_detail_list.clear()
@@ -662,6 +685,7 @@ class WorkoutModule(ModuleBase):
             add_empty_state_item(self._history_detail_list, "No sets logged in this session.")
 
     def _on_delete_session(self) -> None:
+        """Deletes the selected session (recorded as a screen edit, so a person fixing MIA's work counts)."""
         session_id = self._selected_session_id()
         if session_id is None:
             QMessageBox.information(None, "No Session Selected", "Select a session to delete.")
@@ -675,6 +699,7 @@ class WorkoutModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_progress_tab(self) -> QWidget:
+        """The Progress tab: the exercise picker, its personal record, and the chart."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
@@ -698,6 +723,7 @@ class WorkoutModule(ModuleBase):
         return tab
 
     def _refresh_progress_exercise_combo(self) -> None:
+        """Fills the progress exercise picker, keeping the one picked (signals held)."""
         if self._progress_exercise_combo is None:
             return
         current = self._progress_exercise_combo.currentData() if self._progress_exercise_combo.count() else None
@@ -710,6 +736,7 @@ class WorkoutModule(ModuleBase):
         self._progress_exercise_combo.blockSignals(False)
 
     def _refresh_progress(self) -> None:
+        """The picked exercise's personal record (heaviest weight, its reps and date) and its heaviest weight per day charted; says when there's no exercise or no sets yet."""
         if self._progress_pr_label is None:
             return
         exercise_id = self._progress_exercise_combo.currentData()

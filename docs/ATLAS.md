@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1069 files, 237,653 lines; 1069 files describe themselves; 7,052 of 13,808 classes and functions are documented.
+1069 files, 237,680 lines; 1069 files describe themselves; 7,079 of 13,808 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -524,7 +524,7 @@
 
 ## modules/: the desktop's apps, one folder each
 
-93 files, 22,412 lines; 647 of 1,030 classes and functions documented
+93 files, 22,439 lines; 674 of 1,030 classes and functions documented
 
 - `modules/__init__.py`: Every feature of MIA (Assistant, Files, Notes, Maps, etc.) lives here as an independent package. Each module package must:
 - `modules/assistant/__init__.py`: The assistant app's package: its screen and behaviour are in module.py (Assistant Chat UI — docs/ROADMAP.md milestones 5.2 (text chat), 5.3 (voice), 5.4 (device-help grounding), and 5.5 (tool use / action execution). A chat screen (). core/module_manager.py finds it by that file.
@@ -616,7 +616,7 @@
 - `modules/web_home/__init__.py`: The web home app's package: its screen and behaviour are in module.py ("Home (preview)" (2026-10-05, Phase 2, DEC-0012/DEC-0013): MIA's new web front end (`web/`, Muse's) shown inside the desktop window, so the first vertical slice). core/module_manager.py finds it by that file.
 - `modules/web_home/module.py`: "Home (preview)" (2026-10-05, Phase 2, DEC-0012/DEC-0013): MIA's new web front end (`web/`, Muse's) shown inside the desktop window, so the first vertical slice (engine → /api/state → web Home → an action → live update) runs on the real devices (the owner's new computer first, DEC-0015) before anyth
 - `modules/workout/__init__.py`: The workout app's package: its screen and behaviour are in module.py (Workout: an exercise library, a live guided session (real elapsed time from a real stopwatch, not a guess), a session history, and per-exercise progress (person). core/module_manager.py finds it by that file.
-- `modules/workout/module.py`: Workout: an exercise library, a live guided session (real elapsed time from a real stopwatch, not a guess), a session history, and per-exercise progress (personal records + a weight-over-time chart). All persistence/reporting logic lives in core/workout_manager.py (self.context.workout) — this modul *(27 undocumented)*
+- `modules/workout/module.py`: Workout: an exercise library, a live guided session (real elapsed time from a real stopwatch, not a guess), a session history, and per-exercise progress (personal records + a weight-over-time chart). All persistence/reporting logic lives in core/workout_manager.py (self.context.workout) — this modul
 - `modules/workshop/__init__.py`: The workshop app's package: its screen and behaviour are in module.py (Workshop & Electronics — docs/ROADMAP.md milestone 8.3 (Component DB) plus MIA Home's production pipeline (2026-07-16, see docs/VISION.md's "MIA Home's expanded). core/module_manager.py finds it by that file.
 - `modules/workshop/module.py`: Workshop & Electronics — docs/ROADMAP.md milestone 8.3 (Component DB) plus MIA Home's production pipeline (2026-07-16, see docs/VISION.md's "MIA Home's expanded scope" section): Materials/Jobs/Products/Ledger. Five tabs in one module (docs/MODULE_SPEC.md allows exactly one `ModuleBase` subclass per  *(45 undocumented)*
 
