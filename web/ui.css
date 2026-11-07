@@ -1,0 +1,262 @@
+/*
+ * ui.css — the shared pieces from the design canvas (claude, 2026-11-07,
+ * DEC-0113 approved with the canvas "MIA Core Screens" as the reference;
+ * docs/design/MIA_DESIGN_STANDARDS.md says what each piece is for).
+ *
+ * Loaded last on every page, after concept.css, so these pieces win where
+ * they overlap. Values only from tokens.css (DEC-0023: never a literal
+ * color); an app's own data may use --atmo, everything MIA, active or
+ * primary stays --accent.
+ *
+ *   .mia-orb[data-state]   her presence, seven states, any size (--orb-d)
+ *   .finding               "MIA Noticed": kind, headline, why, what she used, one next step
+ *   .kind                  a small tag saying what something is (Deadline, Fact, Estimate, Missing...)
+ *   .stat-strip / .stat    three tiles, white value, colored index bar
+ *   .surface-focus         the one thing that matters now
+ *   .btn-big               the 56 px action for hands-busy modes
+ *   .state-*               empty, loading, error, offline
+ *   .used                  "What I used" under an answer
+ *   .atmo                  text in the app's own accent
+ */
+
+/* ------------------------------------------------------------ the orb */
+.mia-orb {
+  --orb-d: 112px;
+  width: var(--orb-d);
+  height: var(--orb-d);
+  flex: none;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 45%, var(--text) 0%, var(--accent-soft) 14%, var(--accent) 34%,
+    rgba(var(--rgb-accent), 0.45) 60%, rgba(var(--rgb-accent), 0) 72%);
+  box-shadow: 0 0 calc(var(--orb-d) * 0.36) rgba(var(--rgb-accent), 0.32);
+  animation: mia-orb-breathe 5s var(--ease) infinite;
+}
+.mia-orb[data-state="listening"] {
+  box-shadow: 0 0 0 calc(var(--orb-d) * 0.06) rgba(var(--rgb-accent), 0.22),
+    0 0 0 calc(var(--orb-d) * 0.13) rgba(var(--rgb-accent), 0.08);
+  animation: mia-orb-listen 1.6s ease-in-out infinite;
+}
+.mia-orb[data-state="thinking"] { animation: mia-orb-think 1.2s linear infinite; }
+.mia-orb[data-state="speaking"] { filter: brightness(1.2); animation: mia-orb-speak 0.6s ease-in-out infinite; }
+.mia-orb[data-state="needs-you"] {
+  background: radial-gradient(circle at 50% 45%, var(--text) 0%, var(--attention) 34%,
+    rgba(var(--rgb-amber), 0.45) 60%, rgba(var(--rgb-amber), 0) 72%);
+  box-shadow: 0 0 calc(var(--orb-d) * 0.36) var(--attention-glow);
+}
+.mia-orb[data-state="celebrate"] {
+  background: radial-gradient(circle at 50% 45%, var(--text) 0%, var(--win) 34%,
+    rgba(var(--rgb-win), 0.45) 60%, rgba(var(--rgb-win), 0) 72%);
+  box-shadow: 0 0 calc(var(--orb-d) * 0.45) var(--win-glow);
+  animation-iteration-count: 1;
+}
+.mia-orb[data-state="offline"] { filter: grayscale(1); opacity: 0.4; animation: none; }
+@keyframes mia-orb-breathe { 0%, 100% { transform: scale(1); opacity: 0.92; } 50% { transform: scale(1.05); opacity: 1; } }
+@keyframes mia-orb-listen {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(var(--rgb-accent), 0.18), 0 0 0 7px rgba(var(--rgb-accent), 0.06); }
+  50% { box-shadow: 0 0 0 5px rgba(var(--rgb-accent), 0.26), 0 0 0 11px rgba(var(--rgb-accent), 0.08); }
+}
+@keyframes mia-orb-think { from { filter: hue-rotate(0deg) brightness(1); } 50% { filter: brightness(1.15); } to { filter: brightness(1); } }
+@keyframes mia-orb-speak { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.07); } }
+.mia-orb-label {
+  font-family: var(--font-mono); font-size: var(--label-size); letter-spacing: var(--label-track);
+  text-transform: uppercase; color: var(--accent);
+}
+
+/* ------------------------------------------------------------ small tags */
+.kind {
+  display: inline-block;
+  font-family: var(--font-mono); font-size: calc(10.5px * var(--scale)); letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 2px 6px; border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong); color: var(--text-dim);
+  white-space: nowrap;
+}
+.kind.attention, .kind.deadline { color: var(--attention); border-color: rgba(var(--rgb-amber), 0.5); }
+.kind.ok { color: var(--ok); border-color: rgba(var(--rgb-ok), 0.5); }
+.kind.bad { color: var(--bad); border-color: rgba(var(--rgb-bad), 0.5); }
+.kind.accent, .kind.plan { color: var(--accent); border-color: rgba(var(--rgb-accent), 0.45); }
+.kind.win { color: var(--win); border-color: rgba(var(--rgb-win), 0.5); }
+.atmo { color: var(--atmo); }
+
+/* ------------------------------------------------------------ finding: MIA Noticed */
+.finding {
+  display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: flex-start;
+  padding: 16px 18px; margin-bottom: var(--gap);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, rgba(var(--rgb-panel-2), 0.96), rgba(var(--rgb-panel), 0.9));
+  border: 1px solid rgba(var(--rgb-amber), 0.35);
+}
+.finding-body { flex: 1 1 280px; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.finding-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.finding-label {
+  font-family: var(--font-mono); font-size: var(--label-size); letter-spacing: var(--label-track);
+  text-transform: uppercase; color: var(--attention);
+}
+.finding h2, .finding .finding-title { margin: 0; font-size: var(--text-md); font-weight: 600; line-height: 1.35; }
+.finding .finding-why { margin: 0; color: var(--text-dim); font-size: var(--text-sm); }
+.finding-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.finding-actions .btn { min-height: var(--touch); }
+.finding.calm { border-color: var(--line); }
+.finding.calm .finding-label { color: var(--accent); }
+
+/* ------------------------------------------------------------ what she used */
+.used {
+  font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-faint);
+  margin: 6px 0 0;
+}
+.used b { font-weight: 400; color: var(--text-dim); }
+
+/* ------------------------------------------------------------ status strip */
+.stat-strip {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
+  gap: 10px; margin-bottom: var(--gap);
+}
+.stat {
+  display: flex; gap: 12px; align-items: center; padding: 12px 14px;
+  border-radius: var(--radius); border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(var(--rgb-panel-2), 0.96), rgba(var(--rgb-panel), 0.9));
+  text-decoration: none; color: var(--text);
+}
+.stat::before { content: ""; width: 2px; align-self: stretch; border-radius: 2px; background: var(--accent); }
+.stat.ok::before { background: var(--ok); }
+.stat.attention::before { background: var(--attention); }
+.stat.quiet::before { background: var(--text-faint); }
+.stat .stat-label {
+  display: block; font-family: var(--font-mono); font-size: var(--label-size); letter-spacing: var(--label-track);
+  text-transform: uppercase; color: var(--text-faint);
+}
+.stat .stat-value { display: block; font-family: var(--font-mono); font-size: var(--text-lg); margin-top: 2px; }
+
+/* ------------------------------------------------------------ the focus surface */
+.surface-focus {
+  border-radius: var(--radius);
+  background: rgb(var(--rgb-panel-3));
+  border: 1px solid rgba(var(--rgb-accent), 0.42);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(var(--rgb-accent), 0.12);
+}
+
+/* ------------------------------------------------------------ big action (hands-busy) */
+.btn-big {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; min-height: var(--touch-big);
+  border: 0; border-radius: var(--radius-sm);
+  background: var(--accent); color: var(--bg);
+  font: inherit; font-size: var(--text-lg); font-weight: 700; text-decoration: none; cursor: pointer;
+  box-shadow: 0 0 22px var(--accent-glow);
+}
+.btn-big:active { transform: translateY(1px); }
+.btn-big.quiet { background: transparent; color: var(--text); border: 1px solid var(--line-strong); box-shadow: none; }
+
+/* ------------------------------------------------------------ the four states */
+.state-empty, .state-error, .state-offline {
+  display: flex; flex-direction: column; gap: 8px; padding: 18px;
+  border-radius: var(--radius); border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(var(--rgb-panel-2), 0.96), rgba(var(--rgb-panel), 0.9));
+}
+.state-error { border-color: rgba(var(--rgb-bad), 0.4); }
+.state-empty strong, .state-error strong, .state-offline strong { font-size: var(--text-md); }
+.state-empty p, .state-error p, .state-offline p { margin: 0; color: var(--text-dim); font-size: var(--text-sm); }
+.skeleton {
+  display: block; height: 14px; border-radius: var(--radius-sm); margin: 8px 0;
+  background: linear-gradient(90deg, rgba(var(--rgb-line), 0.08), rgba(var(--rgb-line), 0.16), rgba(var(--rgb-line), 0.08));
+  background-size: 200% 100%; animation: mia-skeleton 1.4s linear infinite;
+}
+@keyframes mia-skeleton { from { background-position: 200% 0; } to { background-position: 0 0; } }
+
+/* ------------------------------------------------------------ list rows with a kind on the right */
+.focus-list li .kind { margin-left: auto; align-self: center; }
+.focus-list li .why { display: block; color: var(--text-faint); font-size: var(--text-xs); }
+
+@media (prefers-reduced-motion: reduce) {
+  .mia-orb, .skeleton { animation: none !important; }
+}
+
+/* ------------------------------------------------------------ Home (the canvas's Home, DEC-0113) */
+.home-greet { display: flex; flex-direction: column; gap: 4px; margin: 6px 0 calc(var(--gap) * 1.25); }
+.home-greet h1 { margin: 0; font-size: var(--text-2xl); font-weight: 600; letter-spacing: -0.01em; line-height: 1.15; }
+.home-greet p { margin: 0; }
+.home-date {
+  font-family: var(--font-mono); font-size: var(--label-size); letter-spacing: var(--label-track);
+  text-transform: uppercase; color: var(--accent);
+}
+.home-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: var(--gap); margin-bottom: var(--gap); }
+.home-cols > section { margin: 0; }
+.home-cols h2::before {
+  content: ""; display: inline-block; width: 12px; height: 2px; margin-right: 10px; vertical-align: middle;
+  background: var(--accent);
+}
+.home-cols .focus-list li { display: flex; align-items: center; gap: 12px; }
+
+/* MIA's column, wide screens only: on narrower ones her orb button and Talk panel do this job. */
+.home-mia { display: none; }
+@media (min-width: 1240px) {
+  .layout:has(.home-mia) { grid-template-columns: 232px minmax(0, 1fr) 320px; }
+  .home-mia {
+    display: flex; flex-direction: column; gap: 16px; padding: 28px 20px;
+    border-left: 1px solid var(--line); background: rgba(var(--rgb-panel), 0.55);
+    position: sticky; top: 0; height: 100vh; box-sizing: border-box;
+  }
+  body:has(.home-mia) .mia-orb-button { display: none; }
+}
+.home-mia-top { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 8px 0 4px; }
+.home-mia-log { display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; overflow-y: auto; }
+.home-mia-msg { font-size: var(--text-sm); padding: 10px 12px; border-radius: var(--radius); line-height: 1.45; }
+.home-mia-msg.me { align-self: flex-end; max-width: 85%; background: rgba(var(--rgb-line), 0.10); }
+.home-mia-msg.mia { background: linear-gradient(180deg, rgba(var(--rgb-panel-2), 0.96), rgba(var(--rgb-panel), 0.9)); border: 1px solid var(--line); }
+.home-mia-ask { display: flex; flex-wrap: wrap; gap: 8px; }
+.home-mia-ask .btn { min-height: 36px; font-size: var(--text-xs); color: var(--text-dim); }
+.home-mia-form { display: flex; gap: 8px; }
+.home-mia-form input {
+  flex: 1; min-width: 0; min-height: var(--touch); box-sizing: border-box; padding: 0 12px;
+  border-radius: var(--radius-sm); border: 1px solid var(--line-strong); background: rgba(var(--rgb-bg), 0.6);
+  color: var(--text); font: inherit;
+}
+.home-mia-mic { width: var(--touch); min-height: var(--touch); padding: 0; display: grid; place-items: center; }
+.home-mia-mic::before {
+  content: ""; width: 20px; height: 20px; background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round'%3E%3Cpath d='M9 3h6v11h-6ZM5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7'/%3E%3C/svg%3E") center / contain no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round'%3E%3Cpath d='M9 3h6v11h-6ZM5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.home-mia .mia-orb { --orb-d: 112px; }
+.finding h2, .finding .finding-title, .finding-why, .finding-next, .home-mia-ask .btn { text-transform: none; }
+.finding .finding-next { margin: 0; font-size: var(--text-sm); color: var(--text); }
+.home-greet p { color: var(--text-dim); }
+@media (max-width: 560px) {
+  .stat-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .stat { padding: 10px; gap: 8px; }
+  .stat .stat-label { font-size: calc(10px * var(--scale)); letter-spacing: 0.08em; }
+  .finding-actions { width: 100%; }
+  .finding-actions .btn { flex: 1; }
+}
+/* A late chore is a nudge, not a failure (DEC-0014): amber, like the canvas's Deadline rows. */
+.focus-list li.overdue small, .focus-list li.overdue .why { color: var(--attention); }
+
+/* ------------------------------------------------------------ Talk (the canvas's Talk, DEC-0113) */
+.chat-head { align-items: center; }
+.chat-orb-link { display: grid; place-items: center; width: 48px; height: 48px; }
+.chat-head .mia-orb { --orb-d: 36px; }
+.chat-head h1 { margin: 0; font-size: var(--text-lg); }
+.chat-chips .btn, .chat-chips button { text-transform: none; }
+.chat-bubble.mia p {
+  background: linear-gradient(180deg, rgba(var(--rgb-panel-2), 0.96), rgba(var(--rgb-panel), 0.9));
+  border: 1px solid var(--line);
+}
+.chat-bubble .used summary { cursor: pointer; min-height: 28px; display: flex; align-items: center; }
+.chat-bubble .used div { margin: 4px 0 0; font-family: var(--font); font-size: var(--text-xs); color: var(--text-dim); }
+
+/* ------------------------------------------------------------ the sidebar's sections (DEC-0113) */
+.side-section { display: flex; flex-direction: column; margin-top: 12px; }
+.side-head, .side-group > summary {
+  font-family: var(--font-mono); font-size: var(--label-size); letter-spacing: var(--label-track);
+  text-transform: uppercase; color: var(--text-faint); padding: 6px 10px;
+}
+.side-group { margin-top: 2px; }
+.side-group:first-of-type { margin-top: 12px; }
+.side-group > summary {
+  list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+  min-height: 36px; border-radius: var(--radius-sm); text-transform: none; font-family: var(--font);
+  font-size: var(--text-sm); letter-spacing: 0; color: var(--text-dim);
+}
+.side-group > summary::-webkit-details-marker { display: none; }
+.side-group > summary:hover { color: var(--text); background: rgba(var(--rgb-line), 0.06); }
+.side-group[open] > summary { color: var(--text); }
+.side-count { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-faint); }

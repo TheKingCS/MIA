@@ -124,8 +124,24 @@
   --dur-fast: 120ms;
   --dur: 200ms;
 
-  /* Modules: one accent for every app (DEC-0023); the names stay so
-     older rules keep working. */
+  /* App accents (DEC-0113, amended 2026-11-07): cyan still means MIA,
+     active, selected and the primary action everywhere. An app's OWN
+     data (its numbers, chart bars, header motif) may carry its accent,
+     through --atmo, which each page sets from <body data-app> below.
+     Never a button, a state, a meaning color or the orb. Homestead apps
+     stay cyan until a green that can't be mistaken for --ok is picked. */
+  --rgb-atmo-workout: 255, 138, 61;
+  --rgb-atmo-kitchen: 233, 212, 168;
+  --rgb-atmo-workshop: 143, 167, 191;
+  --atmo: var(--accent);
+  --rgb-atmo: var(--rgb-accent);
+
+  /* Display size for flagship moments (a rep count, a timer, a step),
+     and the big target for hands-busy modes (DEC-0113). */
+  --text-3xl: calc(56px * var(--scale));
+  --touch-big: 56px;
+
+  /* Modules: the older per-module names; all cyan (DEC-0023). */
   --mod-workout: var(--accent);
   --mod-kitchen: var(--accent);
   --mod-finance: var(--accent);
@@ -151,6 +167,15 @@
   --mod-glow: rgba(var(--rgb-accent), 0.24);
   --mod-dim: rgba(var(--rgb-accent), 0.10);
 }
+
+/* An app's accent for its own data (DEC-0113). */
+body[data-app="workout"] { --rgb-atmo: var(--rgb-atmo-workout); --atmo: rgb(var(--rgb-atmo-workout)); }
+body[data-app="kitchen"] { --rgb-atmo: var(--rgb-atmo-kitchen); --atmo: rgb(var(--rgb-atmo-kitchen)); }
+body[data-app="workshop"], body[data-app="business"], body[data-app="made"] {
+  --rgb-atmo: var(--rgb-atmo-workshop); --atmo: rgb(var(--rgb-atmo-workshop));
+}
+
+[data-contrast="high"] body[data-app] { --atmo: #00e5ff; --rgb-atmo: 0, 229, 255; }
 
 [data-contrast="high"] {
   /* pure black, white text, full-strength cyan (and the triplets the panels are built from) */
@@ -190,6 +215,8 @@
   --xp: #00e5ff;
   --xp-glow: transparent;
   --mod: #00e5ff;
+  --atmo: #00e5ff;
+  --rgb-atmo: 0, 229, 255;
   --mod-line: #ffffff;
   --mod-glow: transparent;
   --mod-dim: transparent;

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1080 files, 243,393 lines; 1080 files describe themselves; 13,381 of 14,051 classes and functions are documented.
+1080 files, 243,519 lines; 1080 files describe themselves; 13,383 of 14,053 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-387 files, 112,591 lines; 5,958 of 6,047 classes and functions documented
+387 files, 112,584 lines; 5,958 of 6,047 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -666,7 +666,7 @@
 
 ## tests/: the test suite: what each part must do
 
-359 files, 65,434 lines; 5,188 of 5,769 classes and functions documented
+359 files, 65,458 lines; 5,190 of 5,771 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1007,7 +1007,7 @@
 - `tests/test_web_progress.py`: DEC-0017/0018 (2026-10-06), H-0013: Missions, Skills and Character on the web. The pages (core/web_progress.py) and every change as an action kind (core/mission_actions.py), each proposed, approved, recorded and undoable, with rewards going to the person who approved it.
 - `tests/test_web_push.py`: Unit tests for core.web_push. The actual push-service HTTP call (pywebpush.webpush) is mocked throughout — this is the standard, correct way to test Web Push code without a real browser/push service (see core/web_push.py's own docstring and the Mobile Phase 1 plan). *(5 undocumented)*
 - `tests/test_web_screens.py`: DEC-0017/0018 (2026-10-06): Kitchen, Workout and Real Estate on the web. The pages (core/web_screens.py) and every change as an action kind (core/kitchen_actions.py, core/workout_actions.py, core/estate_actions.py), each proposed, approved, recorded and undoable.
-- `tests/test_web_surfaces.py`: DEC-0017 (2026-10-06): the web shell and Home dashboard, assembled in core/web_surfaces.py so web/ holds no logic. The sidebar is the person's own (child-safe, tucked-away apps hidden), Home is the concept's dashboard: greeting, Today's Focus with each item's action, Upcoming, glance cards. *(5 undocumented)*
+- `tests/test_web_surfaces.py`: DEC-0017 (2026-10-06): the web shell and Home dashboard, assembled in core/web_surfaces.py so web/ holds no logic. The sidebar is the person's own (child-safe, tucked-away apps hidden), Home is the concept's dashboard: greeting, Today's Focus with each item's action and kind, Upcoming, the status st *(5 undocumented)*
 - `tests/test_welcome.py`: What comes after User Sync (core/welcome.py, core/app_intro.py). *(4 undocumented)*
 - `tests/test_what_i_used.py`: What I Used (DEC-0029, ALICE pick 1): a turn gets the memories that match what was asked, returns them with the reply, and each can be fixed or forgotten (and the forgetting undone).
 - `tests/test_why_graph.py`: Slice B, "Remember Why": the reason chain on Intents, the evidence builder (core/why_graph.py), the tools (core/assistant_why_actions.py), and the Perspective path. Checks facts and structure, never wording.
@@ -1030,13 +1030,13 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-71 files, 12,228 lines
+71 files, 12,337 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
 - `web/arcade/progress.js`: Lens Arcade — universal progression. One XP/level/achievement profile shared across every game. Games include this file, then call: ArcadeProgress.award('snake', 'newbest', 50) The module persists to localStorage, handles the daily streak, unlocks achievements, and shows gold toast notifications by 
 - `web/asset.js`: asset.js — one asset's page (claude, 2026-10-06, DEC-0017). Renders MIA.asset(id). Done, readings, tasks, the asset itself and its documents all change through equipment actions (confirm, undo); files go through MIA.upload / MIA.download.
-- `web/assistant.js`: assistant.js — MIA Assistant (DEC-0018, claude). Typed turns go through MIA.talk; spoken ones are recorded here, turned into the mono 16-bit WAV MIA's voice path expects, and sent with MIA.voice. Her spoken reply plays when her computer has a voice.
+- `web/assistant.js`: assistant.js — MIA Assistant (DEC-0018, claude; the canvas's Talk, DEC-0113: her orb and state in the header, What I used under each answer). Typed turns go through MIA.talk; spoken ones are recorded here, turned into the mono 16-bit WAV MIA's voice path expects, and sent with MIA.voice. Her spoken 
 - `web/business.js`: business.js — Orders & Quotes (claude, 2026-10-17, DEC-0030 phase C). Renders MIA.business() (core/web_business.py) in tabs: Orders (what's owed, Payment, Start Build, Ready / Delivered), Quotes (what the price is made of, Sent / Accepted / Declined), Customers, and the Portfolio of finished builds 
 - `web/calendar.js`: calendar.js — the Calendar screen (claude, 2026-10-16). Renders MIA.calendar(month) (core/calendar_view.py): Past Due, Due Today, Due Soon (the next two weeks, by day) and a month grid. Each item says what it is and offers its own action (Done, Mark Paid...); your own events can be removed; Add Even
 - `web/character.js`: character.js — the Character screen (claude, 2026-10-06, DEC-0017/0018, H-0013). Renders MIA.character() (core/web_progress.py): the person's level and prestige, lifetime stats, everything they've unlocked (highest rarity first) and the tally by rarity, prestige emblems, top skills and latest missio
@@ -1099,7 +1099,7 @@
 - `web/sound.js`: sound.js — MIA's sounds (claude, 2026-10-17, DEC-0028 #11). Short tones made in the browser (Web Audio: no sound files to download, works offline): a chime for an objective, a quest-complete arpeggio for a mission, a fanfare for a level. MIA's voice line (from the engine's reward.say, core/actions.v
 - `web/sync.js`: sync.js — User Sync on the phone (claude, 2026-11-02). Renders MIA.userSync() (core/user_sync.py): the question, a box to type the answer, the chips to approve, and the phone's permissions, asked through window.MIAPhonePermissions (Permissions.kt) and reported back. The steps and words are all the e
 - `web/vault.js`: vault.js — Memory Vault (claude, 2026-10-18, DEC-0030 phase E). Renders MIA.vault() (core/memory_vault.py) in tabs: Photos (one month at a time, by day, with what happened that day and the trip it was on; each tile says whether it's safe on the home computer), Free Up Space (photos the PC holds, exa
-- `web/welcome.js`: welcome.js — Home (DEC-0018, claude). Renders MIA.dashboard() and the frame's shell data; ticking a focus item runs its action (confirm, undo).
+- `web/welcome.js`: welcome.js — Home (DEC-0018, claude; the canvas's Home, DEC-0113). Renders MIA.dashboard() and the frame's shell data: the date and greeting, the status strip, MIA's one finding, the focus rows (each with its kind; ticking runs the item's action: confirm, undo), what's upcoming, the level; and on a 
 - `web/workout.js`: workout.js — the Workout screen (claude, 2026-10-06, DEC-0017/0018). Renders MIA.workout() (core/web_screens.py): log a session right on the page (an exercise, reps, sets, weight, how long, notes), the latest entry, today's daily mission and streak, exercises, history, progress and Personal Bests (l
 - `web/workshop.js`: workshop.js — the Workshop screen (claude, 2026-10-16; Zac: the app only opened a chat). Renders MIA.workshop() (core/web_more.py) in tabs: Recipes and Builds (crafting recipes, DEC-0030: what a recipe needs and what's short, the shopping list, Bought It, Start Build, steps, Finish, photos, Sold It 
 - `web/worldmap.js`: worldmap.js — the World Map with fog of war (claude, 2026-10-17, DEC-0028). Renders MIA.worldmap() (core/world_map.py): the cleared tiles over the fog on a canvas, pins (photos where they were taken, places you reached, "?" for waypoints nobody has reached yet), how much ground that is, and the achi

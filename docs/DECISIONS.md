@@ -1761,8 +1761,16 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0094, DEC-0107, DEC-0109, DEC-0111
 
 ### DEC-0113: Experience Maturity, Phase 1: identity, design system, flagship Workout and Kitchen
-- Status: PROPOSED
-- Proposed by: zac with chatgpt (H-0087), 2026-11-07 · Plan: claude (H-0088) · Approved by: — (only Zac approves)
+- Status: APPROVED, amended (2026-11-07)
+- Proposed by: zac with chatgpt (H-0087), 2026-11-07 · Plan: claude (H-0088) · Approved by: zac, 2026-11-07 ("I am in
+  love and can't wait to use this app ... Lets keep building"; chose: approve, the canvas is the reference; build
+  everything, in order)
+- Amendment (zac, 2026-11-07): the ChatGPT concept round is skipped; the "MIA Core Screens" design canvas (H-0092,
+  `docs/design/MIA_DESIGN_STANDARDS.md` §13) is the reference for every screen. Colors as the canvas draws them
+  ("Cyan but with some words and graphs and things with their own pops of color. It should stay how you have built
+  so far"): cyan means MIA everywhere; an app's own data, numbers, charts and header motif may carry its accent
+  (`--atmo`: Workout orange, Kitchen cream, Workshop steel; homestead apps stay cyan). Dark only, high contrast as
+  the alternative. Build order: shared pieces, Home and Talk, Workout, Kitchen, then every other app.
 - Decision (proposed): MIA's emphasis moves from capability to finished experience. Sequence: (1) investigation
   (done: `docs/EXPERIENCE_MATURITY_AUDIT.md`); (2) visual identity (`docs/design/MIA_VISUAL_IDENTITY.md`, concept
   rounds with ChatGPT through the repository library, `docs/design/VISUAL_COLLABORATION.md`) and the design system

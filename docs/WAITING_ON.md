@@ -32,11 +32,7 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       per-person/household plumbing, or leave it dormant (Claude: leave it; it costs nothing and removing it touches
       many files)?
 - [ ] **The Highest Self (H-0089 → H-0090, DEC-0114 PROPOSED):** read H-0090 (one page) and decide its four questions (the foundation, faith for everyone's MIA, three new modes, keep the tuned prompt); and rate MIA's twelve new answers in `pc-check/conversation-highest-self-tune2.md` (faith, meaning, vulnerability, grand plans, dependency, free will, flattery): your ratings decide the next tuning.
-- [ ] **Experience Maturity (H-0087 → H-0088, DEC-0113 PROPOSED):** read H-0088 (one page) and Muse's reply H-0091 (agrees on all four, with a condition each; orb unification first) and decide: the direction
-      and sequence; per-app atmosphere (Claude: yes); dark only (Claude: yes); the image pipeline (library + ChatGPT
-      by hand now, API later); run round one of concepts first. The handoff was numbered H-0084 (taken): filed as H-0087.
-      Then ask ChatGPT for round one with the prompts in `docs/design/MIA_VISUAL_IDENTITY.md` §5 and save the keepers
-      to `docs/design/visual_library/` (GitHub: Add file → Upload files), prompt in `MANIFEST.md`.
+- [x] **Experience Maturity (DEC-0113):** approved by Zac 2026-11-07, amended: the design canvas is the reference, no concept round.
 - [ ] **The phone's old security packages (T-0051)**: keep them with the exposure written down, build newer ones,
       or move the phone's encryption to Android Keystore over time (Claude: keep now, Keystore over time). Details
       under Claude below.
@@ -151,9 +147,7 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 
 ## ChatGPT (Chat)
 
-- [ ] **Round one of MIA's visual concepts (H-0088):** the five prompts in `docs/design/MIA_VISUAL_IDENTITY.md` §5,
-      across the three directions (Workshop OS, Ambient presence, Heads-up instruments); after Zac approves DEC-0113.
-      Then review Workout's built screens against its spec (with Codex).
+- [x] **Round one of visual concepts:** skipped by Zac (DEC-0113 amendment); the canvas replaces it.
 - [ ] **Vision checks** muse asked for: the education ladder (H-0080: which measures matter, which are vanity), and
       the savings hound (where's the noise line for deal findings).
 

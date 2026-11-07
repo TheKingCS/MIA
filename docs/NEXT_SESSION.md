@@ -27,6 +27,23 @@ two clean runs (`browser.runs` loop). Tests: `tests/test_browser.py` (a pretend 
 Next for it: Zac's first real try (WAITING_ON), a web screen listing taught tasks and their runs, and a routing
 corpus check that "open the website" reaches `browse`.
 
+**Canvas build (DEC-0113 approved 2026-11-07; the design canvas "MIA Core Screens" is the reference, H-0092).**
+Build order and where it stands (tick as each lands; screenshots in demo mode: serve a folder with `web/` and
+`schema/` -> `docs/schema/` and open `/web/<page>?demo`):
+- [x] Shared pieces: `web/ui.css` (orb states, finding, kind tags, status strip, focus surface, big action, states,
+      What I used), app accents in `web/tokens.css` (`--atmo` from `<body data-app>`: Workout, Kitchen, Workshop).
+- [x] Home: date, greeting, status strip, MIA Noticed (core/findings.py), focus rows with their kind, Upcoming beside
+      it, MIA's column on wide screens. Engine: `dashboard()` gained `strip`, `finding`, each row's `kind`/`tone`.
+- [x] Talk: her orb and state in the header (Ready, Listening, Thinking, Speaking, Can't Reach), What I used.
+- [x] Sidebar: Home, Apps, Pinned (favorites), life areas folded (`shell()` gained `favorites`, `groups`, each app's
+      `group`).
+- [ ] Workout: Today / Active (full screen) / Rest (draining ring) / Done, per the canvas and workout.md.
+- [ ] Kitchen: Today, Recipe, Cook mode (engine first: `core/cooking_session.py`, `cooking.*` actions).
+- [ ] Every other app, group by group as on the canvas's Phone page.
+- [ ] Glasses: the shared orb on `web/glasses.html`.
+- Note: DEC-0119 (MIA for Zac alone) came after the canvas: drop household members from Party's leaderboard and
+  Profile's household card when those screens are built.
+
 **What Zac and the other agents need to do is in `docs/WAITING_ON.md`** (kept current every session).
 
 **Where the build plan stands (`docs/BUILD_PLAN.md`, 2026-11-07).** Phases A and C are done; most of D is built.
@@ -645,7 +662,7 @@ uncommitted. 6,863 of 13,808 documented on 2026-11-07: every core/, server/ and 
 
 **The Highest Self (H-0089 → H-0090, DEC-0114 PROPOSED):** the doctrine is `docs/design/MIA_HIGHEST_SELF.md`; its core is in `core/personality.py` (two CHARACTER clauses, a tone example, the faith-and-meaning line, the integrity rules, the values pinned by `tests/test_personality_values.py`). Measured on the corpus (`pc-check/conversation-highest-self-*`): routing fixed, doubt and grand plans better, "is God real" still deflected, dependency uneven, answers six words longer. Next, after Zac's ratings and decision: the three modes (Intellectual, Counselor, Creative), then tune on his ratings.
 
-**Experience Maturity (H-0087 → H-0088, DEC-0113 PROPOSED):** Stage 1 is done (the audit, the identity draft, the design system, the collaboration workflow and library, the Workout and Kitchen briefs). Nothing in `web/` changes until Zac decides DEC-0113 and round one of concepts is in `docs/design/visual_library/`. Then: the contrast test, one orb component, named surfaces and controls (with aliases), Workout. Kitchen's cooking session (engine) can start earlier.
+**Experience Maturity (DEC-0113 APPROVED 2026-11-07, amended):** the design canvas "MIA Core Screens" (H-0092, `docs/design/MIA_DESIGN_STANDARDS.md` §13) is the reference; the build runs in order: shared pieces (`web/ui.css`, the orb), Home and Talk, Workout, Kitchen, then every other app. Progress is tracked in the "Canvas build" list below.
 
 **Learning paths (DEC-0112):** any desire runs through `core/paths.py` (guitar is its first program; anything else is drafted and started on the person's say-so). Don't build a parallel learn-a-skill feature: add a `Program`. MIA's own curriculum is ten Programs on her own PathBook (`core/curriculum.mia_book()`, `data/dev/mia_paths`); `python -m tools.night_school curriculum` shows it. **Guitar (DEC-0111):** when Zac has tried it, read his heard-check attempts (his folder's `paths.json`, path `guitar`): if real chords fail that should pass, adjust `CHORD_TONE`/`STRAY` in `core/guitar_ear.py` from those numbers (they were set on synthesized strings).
 

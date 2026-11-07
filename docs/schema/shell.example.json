@@ -15,301 +15,344 @@
       "name": "Home",
       "icon": "✨",
       "tagline": "MIA, and a chat with her.",
-      "page": "index.html"
+      "page": "index.html",
+      "group": "Life, goals & self"
     },
     {
       "id": "dungeon",
       "name": "The Dungeon",
       "icon": "🏰",
       "tagline": "Clear the run. Bank the loot.",
-      "page": "dungeon.html"
+      "page": "dungeon.html",
+      "group": "Money & business"
     },
     {
       "id": "issues",
       "name": "Fix-It Log",
       "icon": "🛠",
       "tagline": "Where MIA stumbled, so it gets fixed.",
-      "page": "issues.html"
+      "page": "issues.html",
+      "group": "Knowledge, tools & system"
     },
     {
       "id": "freedom",
       "name": "Freedom",
       "icon": "🌄",
       "tagline": "Your way out, in numbers.",
-      "page": "freedom.html"
+      "page": "freedom.html",
+      "group": "Money & business"
     },
     {
       "id": "compliance",
       "name": "Compliance",
       "icon": "📋",
       "tagline": "Every deadline, on time.",
-      "page": "compliance.html"
+      "page": "compliance.html",
+      "group": "Money & business"
     },
     {
       "id": "calendar",
       "name": "Calendar",
       "icon": "📅",
       "tagline": "Everything with a date.",
-      "page": "calendar.html"
+      "page": "calendar.html",
+      "group": "Life, goals & self"
     },
     {
       "id": "greenhouse",
       "name": "Greenhouse",
       "icon": "🌱",
       "tagline": "Grow food. Grow freedom.",
-      "page": "greenhouse.html"
+      "page": "greenhouse.html",
+      "group": "Home, homestead & equipment"
     },
     {
       "id": "flock",
       "name": "Chickens",
       "icon": "🐔",
       "tagline": "Eggs, every day.",
-      "page": "flock.html"
+      "page": "flock.html",
+      "group": "Home, homestead & equipment"
     },
     {
       "id": "garage",
       "name": "Garage",
       "icon": "🚗",
       "tagline": "Keep it running. Keep it ready.",
-      "page": "garage.html"
+      "page": "garage.html",
+      "group": "Home, homestead & equipment"
     },
     {
       "id": "kitchen",
       "name": "Kitchen",
       "icon": "🍳",
       "tagline": "Good food. Good mood.",
-      "page": "kitchen.html"
+      "page": "kitchen.html",
+      "group": "Home, homestead & equipment"
     },
     {
       "id": "household",
       "name": "Household",
       "icon": "🧺",
       "tagline": "A home that runs itself.",
-      "page": "household.html"
+      "page": "household.html",
+      "group": "Home, homestead & equipment"
     },
     {
       "id": "workout",
       "name": "Workout",
       "icon": "🏋",
       "tagline": "Stronger body. Clearer mind.",
-      "page": "workout.html"
+      "page": "workout.html",
+      "group": "Life, goals & self"
     },
     {
       "id": "real_estate",
       "name": "Real Estate",
       "icon": "🏘",
       "tagline": "Cash flow. Equity. Freedom.",
-      "page": "real-estate.html"
+      "page": "real-estate.html",
+      "group": "Money & business"
     },
     {
       "id": "missions",
       "name": "Missions",
       "icon": "🏆",
       "tagline": "Explore. Complete. Level up.",
-      "page": "missions.html"
+      "page": "missions.html",
+      "group": "Life, goals & self"
     },
     {
       "id": "skills",
       "name": "Skills",
       "icon": "⚔",
       "tagline": "Do the thing. Earn the level. Unlock the next thing.",
-      "page": "skills.html"
+      "page": "skills.html",
+      "group": "Life, goals & self"
     },
     {
       "id": "budget",
       "name": "Money",
       "icon": "💰",
       "tagline": "Know where it goes.",
-      "page": "money.html"
+      "page": "money.html",
+      "group": "Money & business"
     },
     {
       "id": "workshop",
       "name": "Workshop",
       "icon": "🔩",
       "tagline": "Parts, jobs and products.",
-      "page": "workshop.html"
+      "page": "workshop.html",
+      "group": "Money & business"
     },
     {
       "id": "business",
       "name": "Orders & Quotes",
       "icon": "🧾",
       "tagline": "Customers, quotes and orders.",
-      "page": "business.html"
+      "page": "business.html",
+      "group": "Money & business"
     },
     {
       "id": "insurance",
       "name": "Insurance",
       "icon": "☂️",
       "tagline": "Covered, for less.",
-      "page": "insurance.html"
+      "page": "insurance.html",
+      "group": "Money & business"
     },
     {
       "id": "security",
       "name": "Security",
       "icon": "🛡️",
       "tagline": "Your cameras, at home.",
-      "page": "security.html"
+      "page": "security.html",
+      "group": "Home, homestead & equipment"
     },
     {
       "id": "character",
       "name": "Character",
       "icon": "👤",
       "tagline": "Your story so far.",
-      "page": "character.html"
+      "page": "character.html",
+      "group": "Life, goals & self"
     },
     {
       "id": "reward_shop",
       "name": "Reward Shop",
       "icon": "🎁",
       "tagline": "Spend what you earn.",
-      "page": "shop.html"
+      "page": "shop.html",
+      "group": "Life, goals & self"
     },
     {
       "id": "observations",
       "name": "Observations",
       "icon": "🔍",
       "tagline": "What MIA noticed.",
-      "page": "observations.html"
+      "page": "observations.html",
+      "group": "Life, goals & self"
     },
     {
       "id": "relationships",
       "name": "People & Pets",
       "icon": "👥",
       "tagline": "The ones who matter.",
-      "page": "people.html"
+      "page": "people.html",
+      "group": "Life, goals & self"
     },
     {
       "id": "notes",
       "name": "Journal",
       "icon": "📓",
       "tagline": "Write it down.",
-      "page": "journal.html"
+      "page": "journal.html",
+      "group": "Life, goals & self"
     },
     {
       "id": "classroom",
       "name": "Classroom",
       "icon": "🎓",
       "tagline": "Keep learning.",
-      "page": "classroom.html"
+      "page": "classroom.html",
+      "group": "Life, goals & self"
     },
     {
       "id": "inbox",
       "name": "Inbox",
       "icon": "📥",
       "tagline": "Paperwork, handled.",
-      "page": "inbox.html"
+      "page": "inbox.html",
+      "group": "Money & business"
     },
     {
       "id": "expeditions",
       "name": "Expeditions",
       "icon": "🏕",
       "tagline": "Plan the trip.",
-      "page": "expeditions.html"
+      "page": "expeditions.html",
+      "group": "Outdoors & field"
     },
     {
       "id": "vault",
       "name": "Memory Vault",
       "icon": "🗄",
       "tagline": "Your photos, kept safe.",
-      "page": "vault.html"
+      "page": "vault.html",
+      "group": "Life, goals & self"
     },
     {
       "id": "memories",
       "name": "Memories",
       "icon": "📸",
       "tagline": "Remember the trip.",
-      "page": "memories.html"
+      "page": "memories.html",
+      "group": "Outdoors & field"
     },
     {
       "id": "maps",
       "name": "Maps",
       "icon": "🗺",
       "tagline": "Know the ground.",
-      "page": "maps.html"
+      "page": "maps.html",
+      "group": "Outdoors & field"
     },
     {
       "id": "navigation",
       "name": "Navigation",
       "icon": "🧭",
       "tagline": "Find the way.",
-      "page": "navigation.html"
+      "page": "navigation.html",
+      "group": "Outdoors & field"
     },
     {
       "id": "knowledge",
       "name": "Knowledge",
       "icon": "📚",
       "tagline": "The offline library.",
-      "page": "knowledge.html"
+      "page": "knowledge.html",
+      "group": "Knowledge, tools & system"
     },
     {
       "id": "passwords",
       "name": "Passwords",
       "icon": "🔐",
       "tagline": "Every login, locked.",
-      "page": "passwords.html"
+      "page": "passwords.html",
+      "group": "Knowledge, tools & system"
     },
     {
       "id": "files",
       "name": "Files",
       "icon": "🗂",
       "tagline": "Your files.",
-      "page": "files.html"
+      "page": "files.html",
+      "group": "Knowledge, tools & system"
     },
     {
       "id": "music",
       "name": "Music",
       "icon": "🎵",
       "tagline": "Your music.",
-      "page": "music.html"
+      "page": "music.html",
+      "group": "Knowledge, tools & system"
     },
     {
       "id": "operating_journal",
       "name": "Operating Journal",
       "icon": "🧭",
       "tagline": "How you mean to live, and how you do.",
-      "page": "operating.html"
+      "page": "operating.html",
+      "group": "Life, goals & self"
     },
     {
       "id": "life_notes",
       "name": "Kept",
       "icon": "📌",
       "tagline": "What you said you'd do.",
-      "page": "kept.html"
+      "page": "kept.html",
+      "group": "Life, goals & self"
     },
     {
       "id": "play",
       "name": "Play",
       "icon": "🏓",
       "tagline": "Games and sports, counted.",
-      "page": "play.html"
+      "page": "play.html",
+      "group": "Life, goals & self"
     },
     {
       "id": "good_news",
       "name": "Good News Radio",
       "icon": "📻",
       "tagline": "What went right today.",
-      "page": "news.html"
+      "page": "news.html",
+      "group": "Knowledge, tools & system"
     },
     {
       "id": "sight",
       "name": "Look",
       "icon": "👁",
       "tagline": "Show MIA something.",
-      "page": "look.html"
+      "page": "look.html",
+      "group": "Knowledge, tools & system"
     },
     {
       "id": "assistant",
       "name": "MIA Assistant",
       "icon": "🗨",
       "tagline": "Always here. Always with you.",
-      "page": "assistant.html"
+      "page": "assistant.html",
+      "group": "Knowledge, tools & system"
     },
     {
       "id": "module_browser",
       "name": "Apps",
       "icon": "🧩",
       "tagline": "Everything MIA can do.",
-      "page": "apps.html"
+      "page": "apps.html",
+      "group": "Knowledge, tools & system"
     }
   ],
   "on_pc_only": [
@@ -335,5 +378,19 @@
     "on": true,
     "voice": false
   },
-  "places": []
+  "places": [],
+  "favorites": [
+    "workout",
+    "kitchen",
+    "budget",
+    "missions",
+    "garage"
+  ],
+  "groups": [
+    "Life, goals & self",
+    "Money & business",
+    "Home, homestead & equipment",
+    "Outdoors & field",
+    "Knowledge, tools & system"
+  ]
 }

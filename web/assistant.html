@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="components.css">
   <link rel="stylesheet" href="shell.css">
   <link rel="stylesheet" href="concept.css">
+  <link rel="stylesheet" href="ui.css">
 </head>
 <body data-app="assistant">
   <!--
@@ -22,8 +23,8 @@
     <nav class="side" aria-label="Apps"></nav>
     <main class="layout-main chat-main">
       <header class="chat-head">
-        <a class="home-badge" href="presence.html" aria-label="MIA's presence"><span class="brand-reactor" aria-hidden="true"></span></a>
-        <div><h1>MIA Assistant</h1><p class="dim">Always here. Always with you.</p></div>
+        <a class="chat-orb-link" href="presence.html" aria-label="MIA's presence"><span class="mia-orb" id="chat-orb" data-state="idle"></span></a>
+        <div><h1>MIA</h1><span class="mia-orb-label" id="chat-state" aria-live="polite">Ready</span></div>
       </header>
       <div class="chat-log" id="log" aria-live="polite"></div>
       <div class="chat-chips" id="chips"></div>

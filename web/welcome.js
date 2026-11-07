@@ -1,6 +1,9 @@
 /*
- * welcome.js — Home (DEC-0018, claude). Renders MIA.dashboard() and the
- * frame's shell data; ticking a focus item runs its action (confirm, undo).
+ * welcome.js — Home (DEC-0018, claude; the canvas's Home, DEC-0113). Renders
+ * MIA.dashboard() and the frame's shell data: the date and greeting, the
+ * status strip, MIA's one finding, the focus rows (each with its kind;
+ * ticking runs the item's action: confirm, undo), what's upcoming, the
+ * level; and on a wide screen MIA's column (MIA.history, things to ask).
  */
 (function () {
   "use strict";
@@ -15,13 +18,58 @@
         title: item.action ? item.action.label : "Open it to deal with this", onclick: () => act(item.action) }),
       el("span", { class: "what" },
         item.page ? el("a", { href: item.page }, item.title) : item.title,
-        item.detail ? el("small", {}, item.detail) : null));
+        item.detail ? el("small", {}, item.detail) : null),
+      item.kind ? el("span", { class: "kind " + (item.tone || "") }, item.kind) : null);
+  }
+
+  // The status strip (DEC-0113): three counts from the engine, white values, a colored index bar.
+  function strip(tiles) {
+    return (tiles || []).map((t) => el("div", { class: "stat " + (t.tone || "") },
+      el("span", {}, el("span", { class: "stat-label" }, t.label), el("span", { class: "stat-value" }, String(t.value)))));
+  }
+
+  // MIA Noticed: the one cross-app finding Home leads with, its why, how sure, what she used, and where to act.
+  function finding(f) {
+    const sure = { REAL: "Fact", DERIVED: "Calculation", SIMULATED: "Estimate" }[f.sure] || "";
+    return [
+      el("div", { class: "finding-body" },
+        el("div", { class: "finding-head" }, el("span", { class: "finding-label" }, "MIA Noticed"),
+          sure ? el("span", { class: "kind" }, sure) : null),
+        el("h2", { id: "finding-h" }, f.title),
+        el("p", { class: "finding-why" }, [f.claim, f.why].filter(Boolean).join(" ")),
+        f.next ? el("p", { class: "finding-next" }, f.next) : null,
+        f.app_name ? el("p", { class: "used" }, "Used: ", el("b", {}, f.app_name)) : null),
+      f.page ? el("div", { class: "finding-actions" },
+        el("a", { class: "btn btn-green", href: f.page }, "Open " + (f.app_name || "It"))) : null,
+    ];
+  }
+
+  // MIA's column on a wide screen: the last thing said, things to ask, a talk box that opens the chat.
+  const ASK = ["What should I focus on today?", "What's due this week?", "How are my finances?"];
+  async function miaColumn() {
+    const log = $("home-mia-log");
+    if (!log) return;
+    let messages = [];
+    try {
+      const t = await MIA.history(4);
+      messages = (t && (t.messages || t.thread || t)) || [];
+      if (!Array.isArray(messages)) messages = [];
+    } catch (e) { messages = []; }
+    log.replaceChildren(...messages.slice(-2).map((m) => el("div", { class: "home-mia-msg " + (m.role === "user" ? "me" : "mia") },
+      String(m.content || m.text || ""))));
+    $("home-mia-ask").replaceChildren(...ASK.map((q) => el("a", { class: "btn btn-ghost", href: "assistant.html?ask=" + encodeURIComponent(q) }, q)));
   }
 
   async function render() {
     const [home, shell] = await Promise.all([MIA.dashboard(), MIA.shell()]);
     $("greeting").textContent = home.greeting;
-    $("subtitle").textContent = home.subtitle;
+    $("subtitle").textContent = home.focus.length
+      ? (home.focus.length === 1 ? "One thing needs you today." : home.focus.length + " things need you today.") + " The rest can wait."
+      : home.subtitle;
+    $("date").textContent = home.date || "";
+    $("strip").replaceChildren(...strip(home.strip));
+    $("finding").hidden = !home.finding;
+    if (home.finding) $("finding").replaceChildren(...finding(home.finding));
     $("focus").replaceChildren(...home.focus.slice(0, 6).map(focusRow));
     $("focus-empty").hidden = home.focus.length > 0;
     // MIA Remembers (DEC-0029): what you told her, as it's about to matter.
@@ -52,4 +100,5 @@
   });
 
   MIAShell.start(render);
+  miaColumn();
 })();
