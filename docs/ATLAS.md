@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1093 files, 246,975 lines; 1093 files describe themselves; 13,550 of 14,220 classes and functions are documented.
+1094 files, 247,088 lines; 1094 files describe themselves; 13,555 of 14,225 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -539,7 +539,7 @@
 
 ## modules/: the desktop's apps, one folder each
 
-93 files, 22,835 lines; 1,032 of 1,032 classes and functions documented
+93 files, 22,859 lines; 1,033 of 1,033 classes and functions documented
 
 - `modules/__init__.py`: Every feature of MIA (Assistant, Files, Notes, Maps, etc.) lives here as an independent package. Each module package must:
 - `modules/assistant/__init__.py`: The assistant app's package: its screen and behaviour are in module.py (Assistant Chat UI — docs/ROADMAP.md milestones 5.2 (text chat), 5.3 (voice), 5.4 (device-help grounding), and 5.5 (tool use / action execution). A chat screen (). core/module_manager.py finds it by that file.
@@ -673,7 +673,7 @@
 
 ## tests/: the test suite: what each part must do
 
-363 files, 66,185 lines; 5,242 of 5,823 classes and functions documented
+364 files, 66,224 lines; 5,246 of 5,827 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1012,6 +1012,7 @@
 - `tests/test_web_fitness.py`: The fitness screens' data (core/web_fitness.py, DEC-0020): today, the weight line, missions and "is it working?" in one plain sentence, the meal-plan week, and the endpoints. Placeholder values. *(3 undocumented)*
 - `tests/test_web_fresh.py`: The web screens are never served from a stale browser copy (Zac, 2026-10-16: after a phone update the old Dashboard kept showing).
 - `tests/test_web_guide.py`: Start Here (core/web_guide.py) stays true: every "Try saying" phrase reaches one of MIA's tools (or is one of the few handled in code), every page it opens exists, and the sidebar's data carries the life areas and favorites the grouped sidebar draws.
+- `tests/test_web_home_voice.py`: Talking to MIA on the PC (DEC-0125): the desktop window lets her own page use the microphone for Talk's mic, and nothing else: no other site, no camera. Talk's mic and the shared recorder live in web/shell.js.
 - `tests/test_web_inbox.py`: The Inbox screen on the web and the phone (Zac, 2026-10-16: "build the inbox for sending stuff to MIA"): core/web_inbox.py shows what's waiting (reading the folder first, so the phone needs no timer), and core/inbox_actions.py files, dismisses and sends notes through Propose → Approve. *(3 undocumented)*
 - `tests/test_web_money.py`: DEC-0017 (2026-10-06): Money on the web does everything the PC app's Budget screen does. The page's data (core/web_money.py) and every change as an action kind (core/money_actions.py): add, edit, delete bills, income sources, income, expenses and debts; pay a debt; set budgets. Each one proposed, ap *(5 undocumented)*
 - `tests/test_web_more.py`: The Journal, Workshop, Expeditions, Music and Files screens (Zac, 2026-10-16: on the phone they "are empty right now and just bring up a chat with MIA"): core/web_more.py builds each page, core/more_actions.py makes every change through Propose → Approve, and core/my_files.py keeps the Files screen 
@@ -1041,13 +1042,13 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-73 files, 12,602 lines
+73 files, 12,652 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
 - `web/arcade/progress.js`: Lens Arcade — universal progression. One XP/level/achievement profile shared across every game. Games include this file, then call: ArcadeProgress.award('snake', 'newbest', 50) The module persists to localStorage, handles the daily streak, unlocks achievements, and shows gold toast notifications by 
 - `web/asset.js`: asset.js — one asset's page (claude, 2026-10-06, DEC-0017). Renders MIA.asset(id). Done, readings, tasks, the asset itself and its documents all change through equipment actions (confirm, undo); files go through MIA.upload / MIA.download.
-- `web/assistant.js`: assistant.js — MIA Assistant (DEC-0018, claude). Typed turns go through MIA.talk; spoken ones are recorded here, turned into the mono 16-bit WAV MIA's voice path expects, and sent with MIA.voice. Her spoken reply plays when her computer has a voice.
+- `web/assistant.js`: assistant.js — MIA Assistant (DEC-0018, claude). Typed turns go through MIA.talk; spoken ones are recorded with the shell's recorder (the mono 16-bit WAV MIA's voice path expects) and sent with MIA.voice. Her spoken reply plays when her computer has a voice.
 - `web/browser.js`: browser.js — MIA's own browser (claude, 2026-11-07, DEC-0117). Renders MIA.browser() (core/web_browser.py): the page she's on, each step waiting for your OK (its screenshot, Go ahead / Cancel on the step's own proposal), the task she's learning, and the tasks you taught her (how practised, the last 
 - `web/business.js`: business.js — Orders & Quotes (claude, 2026-10-17, DEC-0030 phase C). Renders MIA.business() (core/web_business.py) in tabs: Orders (what's owed, Payment, Start Build, Ready / Delivered), Quotes (what the price is made of, Sent / Accepted / Declined), Customers, and the Portfolio of finished builds 
 - `web/calendar.js`: calendar.js — the Calendar screen (claude, 2026-10-16). Renders MIA.calendar(month) (core/calendar_view.py): Past Due, Due Today, Due Soon (the next two weeks, by day) and a month grid. Each item says what it is and offers its own action (Done, Mark Paid...); your own events can be removed; Add Even

@@ -9,6 +9,9 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 ## Zac
 
 ### Try it
+- [ ] **Talk to MIA on the PC (2026-11-07):** restart MIA, open Talk (the orb, bottom right), press the mic, say
+      something, press it again. The first time, nothing should ask about the microphone (MIA's own page is allowed);
+      Windows may ask once. Tell Claude if she didn't hear you.
 - [ ] **The desktop opens on the web (DEC-0124):** close both copies of MIA that are running and start it once. It
       should open straight onto MIA's web screens, full size. Ctrl+Shift+C (or the header's "Main screen") switches to
       the classic screens and back; Power, Toolbox, The Lab and Field Kit open from the Apps page ("Open on this PC").

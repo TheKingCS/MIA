@@ -658,10 +658,8 @@ every step below in order, from a blank machine, with Windows notes.
 
 *History since 2026-11-03: open work is in `work/tasks/`.*
 
-**First: talk to MIA on the PC again (DEC-0125).** Web mode (DEC-0124) hides the character panel, where
-hold-to-talk lives, and the web Talk has no mic, so the PC can't be talked to. Then humor on the Settings screen
-(it's voice-only). Both from `docs/design/CORE_SCREENS_REVIEW.md`, which also lists what Claude Design's screens
-show that MIA doesn't do.
+**First: humor on the Settings screen** (it's voice-only), from `docs/design/CORE_SCREENS_REVIEW.md`, which also
+lists what Claude Design's screens show that MIA doesn't do. (Talking on the PC is back: Talk's mic, 2026-11-07.)
 
 **Parity (DEC-0125): close the gaps in `docs/PARITY.md`.** Voice is done but Look (a voice "look at this" that
 takes the photo itself) and Passwords (screen-only by Zac's decision). Next the phone pages (Power, Toolbox, The

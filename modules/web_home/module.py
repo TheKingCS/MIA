@@ -22,6 +22,9 @@ through the Home Preview app") the desktop window opens on this, full size
 and the Qt screens are the classic view (Ctrl+Shift+C). A page asking for
 an app that lives only in the PC app (a `/desktop-open/<id>` link, the
 Apps page's "Open on this PC") is caught here and opened in the window.
+That hid the character panel and its hold-to-talk, so Talk's own mic
+(web/shell.js, DEC-0125) is how the PC is talked to: this window lets MIA's
+own page, and only it, use the microphone (`grants_microphone`).
 """
 
 from __future__ import annotations
@@ -108,7 +111,9 @@ class WebHomeModule(ModuleBase):
         return problem or "Sign in to see your Home."
 
     def get_widget(self) -> QWidget:
-        """The page: the web front end in QtWebEngine (its page catching /desktop-open/ links), or, without QtWebEngine or an address, a message saying why with a way to open it in the system browser."""
+        """The page: the web front end in QtWebEngine (its page catching /desktop-open/ links and letting MIA's own
+        page use the microphone for Talk), or, without QtWebEngine or an address, a message saying why with a way to
+        open it in the system browser."""
         widget = QWidget()
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -120,7 +125,8 @@ class WebHomeModule(ModuleBase):
             log.warning("QtWebEngine isn't available; Home (preview) offers the normal browser.")
         if QWebEngineView is not None and self._url:
             self._view = QWebEngineView(widget)
-            page = _desktop_page(self._view, self._open_on_pc)
+            server = getattr(self.context, "phone_server", None)
+            page = _desktop_page(self._view, self._open_on_pc, getattr(server, "local_url", "") or "")
             if page is not None:
                 self._view.setPage(page)
             self._view.setUrl(QUrl(self._url))
@@ -140,11 +146,18 @@ class WebHomeModule(ModuleBase):
         return widget
 
 
-def _desktop_page(view, open_on_pc):
+def grants_microphone(origin: str, local_url: str, kind: str) -> bool:
+    """Pure logic. Whether the desktop window lets a page use the microphone: only MIA's own page, at the local
+    server's address, and only to hear (Talk's mic, DEC-0125); never a camera, never another site."""
+    return kind == "audio" and origin.rstrip("/") == local_url.rstrip("/")
+
+
+def _desktop_page(view, open_on_pc, local_url: str = ""):
     """The web view's page, catching `/desktop-open/<module id>` links (an app only in the PC app) and handing the
-    id to open_on_pc instead of navigating; None without QtWebEngine."""
+    id to open_on_pc instead of navigating, and letting MIA's own page use the microphone (grants_microphone);
+    None without QtWebEngine."""
     try:
-        from PySide6.QtWebEngineCore import QWebEnginePage
+        from PySide6.QtWebEngineCore import QWebEnginePage, QWebEnginePermission
     except ImportError:
         return None
 
@@ -160,4 +173,15 @@ def _desktop_page(view, open_on_pc):
                 return False
             return super().acceptNavigationRequest(url, nav_type, is_main_frame)
 
-    return DesktopPage(view)
+    page = DesktopPage(view)
+
+    def asked(permission):
+        """Grants the microphone to MIA's own page; turns everything else down."""
+        kind = "audio" if permission.permissionType() == QWebEnginePermission.PermissionType.MediaAudioCapture else "other"
+        if grants_microphone(permission.origin().toString(), local_url, kind):
+            permission.grant()
+        else:
+            permission.deny()
+
+    page.permissionRequested.connect(asked)
+    return page
