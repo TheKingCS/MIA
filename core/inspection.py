@@ -60,6 +60,9 @@ SUBJECTS = {"this_computer": "this computer", "mia": "MIA herself"}
 
 @dataclass
 class Evidence:
+    """One finding: the fact ("cpu.model"), its value, the method and source that gave it, how sure (CONFIRMED to
+    UNKNOWN), when it was seen, when it may be stale, and a note.
+    """
     fact: str  # "cpu.model", "os.version"...
     value: object
     method: str
@@ -81,6 +84,9 @@ class Gap:
 
 @dataclass
 class Method:
+    """One way of finding things out: the subjects it applies to, what it obtains and needs, its permission level
+    (PASSIVE, AUTHORIZED, ACTIVE, DISRUPTIVE), the function that runs it, and whether it's available here.
+    """
     name: str
     subjects: tuple
     obtains: str
@@ -92,6 +98,9 @@ class Method:
 
 @dataclass
 class Report:
+    """One inspection: the subject, when it started and finished, the evidence, what couldn't be determined and why
+    (gaps), contradictions between methods, problems found, and which methods ran or were skipped (and why).
+    """
     subject: str
     started_at: str
     finished_at: str = ""
@@ -104,11 +113,13 @@ class Report:
 
 
 def _now() -> datetime:
+    """Now (local time)."""
     return datetime.now()
 
 
 def _ev(fact: str, value, method: str, source: str, confidence: str = CONFIRMED, recheck_hours: float = 24,
         note: str = "") -> Evidence:
+    """A piece of evidence seen now, to be checked again after `recheck_hours`."""
     now = _now()
     return Evidence(fact, value, method, source, confidence, now.isoformat(timespec="seconds"),
                     (now + timedelta(hours=recheck_hours)).isoformat(timespec="seconds"), note)
@@ -127,6 +138,7 @@ def _run(args: list[str], timeout: float = 8) -> str:
 
 
 def _gib(n: float) -> float:
+    """Bytes as gigabytes, to one decimal."""
     return round(n / 1024 ** 3, 1)
 
 
@@ -134,6 +146,9 @@ def _gib(n: float) -> float:
 
 
 def _os(context):
+    """Method `os` (passive): the operating system's name, version, release and machine, the computer's name, the
+    Python version and when it booted. Returns (evidence, gaps).
+    """
     ev = [_ev("os.name", platform.system(), "os", "the operating system"),
           _ev("os.version", platform.version(), "os", "the operating system"),
           _ev("os.release", platform.release(), "os", "the operating system"),
@@ -151,6 +166,9 @@ def _os(context):
 
 
 def _cpu_memory(context):
+    """Method `cpu_memory` (passive): cores, threads, CPU and memory use, total memory, and the OS's short
+    processor name (probable: the hardware query gives the full one); a gap without psutil. Returns (evidence, gaps).
+    """
     try:
         import psutil
     except ImportError:
@@ -199,6 +217,9 @@ def _windows_hardware(context):
 
 
 def _disks(context):
+    """Method `disks` (passive): each drive's size, free space and use; disk health (SMART) is a gap, needing
+    administrator rights. Returns (evidence, gaps).
+    """
     try:
         import psutil
     except ImportError:
@@ -218,6 +239,10 @@ def _disks(context):
 
 
 def _network(context):
+    """Method `network` (passive): each active adapter's IPv4 addresses and speed, and the ports this computer
+    offers to the network (local-only ones left out); other devices on the network are a gap (a later, asked-first
+    phase). Returns (evidence, gaps).
+    """
     try:
         import psutil
     except ImportError:
@@ -245,6 +270,9 @@ def _network(context):
 
 
 def _devices(context):
+    """Method `devices` (passive): the storage and serial devices plugged in (MIA's device framework); other
+    USB devices are a gap. Returns (evidence, gaps).
+    """
     devices = getattr(context, "devices", None)
     if devices is None:
         return [], [Gap("Connected devices", "the device framework isn't running here", "devices")]
@@ -259,6 +287,9 @@ def _devices(context):
 
 
 def _security(context):
+    """Method `security` (passive): on Windows, whether the firewall is on for every profile (netsh); disk
+    encryption is a gap, needing administrator rights. Returns (evidence, gaps).
+    """
     ev, gaps = [], []
     if platform.system() == "Windows":
         raw = _run(["netsh", "advfirewall", "show", "allprofiles", "state"])
@@ -275,6 +306,9 @@ def _security(context):
 
 
 def _ai_runtime(context):
+    """Method `ai_runtime` (passive): the local model and its parameters, quantization, runtime, version,
+    context and GPU use, from the model registry; a gap when the runtime doesn't answer. Returns (evidence, gaps).
+    """
     try:
         from core.model_registry import runtime_info
 
@@ -291,6 +325,9 @@ def _ai_runtime(context):
 
 
 def _health(context):
+    """Method `health` (passive): the CPU temperature, or a gap saying why it can't be read (Windows keeps it to
+    the maker's tool). Returns (evidence, gaps).
+    """
     problems = []
     try:
         from core.system_health import read_system_health
@@ -311,6 +348,10 @@ def _health(context):
 
 
 def _mia_code(context):
+    """Method `mia_code` (passive, about MIA herself): how many core files and functions, desktop modules,
+    test files and web pages she has, and her latest change (git); whether the suite passes now is a gap (not run
+    during an inspection). Returns (evidence, gaps).
+    """
     import ast
 
     counts = {"core": 0, "modules": 0, "tests": 0, "web": 0}
@@ -341,6 +382,9 @@ def _mia_code(context):
 
 
 def _mia_decisions(context):
+    """Method `mia_decisions` (passive, about MIA herself): how many decisions there are, by status, and
+    which are waiting on Zac (PROPOSED), from docs/DECISIONS.md. Returns (evidence, gaps).
+    """
     import re
 
     path = ROOT / "docs" / "DECISIONS.md"
@@ -359,6 +403,9 @@ def _mia_decisions(context):
 
 
 def _mia_capabilities(context):
+    """Method `mia_capabilities` (passive, about MIA herself): how many apps she has, which are
+    desktop-only, and how many tools this runtime registers. Returns (evidence, gaps).
+    """
     try:
         from core.capabilities import capability_map
 
@@ -374,6 +421,9 @@ def _mia_capabilities(context):
 
 
 def _mia_health(context):
+    """Method `mia_health` (passive, about MIA herself): open Fix-It Log issues in 30 days and the top one,
+    and whether she's online. Returns (evidence, gaps).
+    """
     ev, gaps = [], []
     failures = getattr(context, "failures", None)
     if failures is not None:
@@ -393,6 +443,7 @@ def _mia_health(context):
 
 
 def _windows_only(context) -> bool:
+    """Whether a Windows-only method can run here."""
     return platform.system() == "Windows"
 
 
@@ -494,6 +545,7 @@ def inspect(context, subject: str) -> Report:
 
 
 def save(report: Report) -> Path:
+    """Saves a report to data/inspections/ as <subject>-<time>.json, keeping only the newest KEEP per subject."""
     _DIR.mkdir(parents=True, exist_ok=True)
     stamp = report.started_at.replace(":", "").replace("-", "")
     path = _DIR / f"{report.subject}-{stamp}.json"
@@ -508,6 +560,7 @@ def save(report: Report) -> Path:
 
 
 def latest(subject: str) -> Optional[dict]:
+    """The newest saved report for a subject, or None."""
     files = sorted(_DIR.glob(f"{subject}-*.json")) if _DIR.exists() else []
     try:
         return json.loads(files[-1].read_text(encoding="utf-8")) if files else None
