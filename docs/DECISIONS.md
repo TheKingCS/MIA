@@ -1923,3 +1923,17 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   Kit), which the web Apps page now offers as "Open on this PC" inside the desktop. "Main screen" or Ctrl+Shift+C
   goes back. `gui.web_first` false keeps the old start. Carries DEC-0017 to the desktop.
 - Related: DEC-0012, DEC-0013, DEC-0017, DEC-0023
+
+### DEC-0125: Full use both ways, on every device
+- Status: APPROVED
+- Decided by: zac, 2026-11-07 ("MIA should be absolutely 100% voice capable but I also want 100% capable for use on
+  the phone too. I want full use when I feel like talking and full use when i don't on all devices glasses, phone,
+  pc, etc. We will just have to adjust how we present it for each devices specs")
+- Decision: every feature can be used fully by voice and fully without it, on the PC, the phone and the glasses (and
+  voice-only). Every action has twins: a tool she can use when asked, and a control on a screen. A device changes
+  how a feature is presented (the glasses get a card and an ask, the phone a page sized for a thumb), never whether
+  it can be used. `core/parity.py` measures it app by app (voice, PC, phone, glasses); every gap is decided in
+  `work/parity.json`, to build or deliberately not, and a test fails on one nobody decided about, so parity only
+  grows. `docs/PARITY.md` is the table. The one proposed exception, passwords, PINs and card numbers never by voice
+  or on the glasses, waits on Zac's confirmation in the audit.
+- Related: DEC-0017, DEC-0062, DEC-0124
