@@ -20,6 +20,7 @@ from core.record_actions import Field, Record, field_dict, get, parse, record_fo
 
 
 def _lists():
+    """The asset category, trigger type and priority choices, imported late so this module loads before the store."""
     from core.maintenance_manager import ASSET_CATEGORIES, PRIORITY_LEVELS, TRIGGER_TYPES
 
     return tuple(ASSET_CATEGORIES), tuple(TRIGGER_TYPES), tuple(PRIORITY_LEVELS)
@@ -63,6 +64,7 @@ RECORDS: dict[str, Record] = {r.key: r for r in (
 
 
 def _delete_asset(context, params) -> str:
+    """Does `asset.delete` once approved, and says what happened. Its tasks go with it; its documents are kept, so undo brings it back whole."""
     asset = get(context, RECORDS["asset"], params)
     _need(context, "maintenance").delete_asset(asset.asset_id, keep_documents=True)
     return f"Deleted {asset.name} and its tasks. Undo brings them back."
@@ -78,6 +80,7 @@ _UNIT = Field("unit", "Unit", "text")
 
 
 def _task_and_asset(context, params):
+    """The maintenance task the params name and its asset, or ActionError."""
     task = _need(context, "maintenance").get_task(str(params.get("task_id", "")))
     if task is None:
         raise ActionError("That maintenance task isn't there anymore.")
@@ -85,6 +88,7 @@ def _task_and_asset(context, params):
 
 
 def _describe_task_reading(context, params) -> str:
+    """The sentence the approval card shows for `maintenance.reading` (Propose); raises ActionError when it can't be done."""
     task, asset = _task_and_asset(context, params)
     value = parse(_VALUE, params.get("value"))
     unit = f" {task.meter_unit}" if task.meter_unit else ""
@@ -92,6 +96,7 @@ def _describe_task_reading(context, params) -> str:
 
 
 def _log_task_reading(context, params) -> str:
+    """Does `maintenance.reading` once approved, and says what happened. The reading goes on the task's meter (toward its next service)."""
     task, asset = _task_and_asset(context, params)
     value = parse(_VALUE, params.get("value"))
     _need(context, "data_logger")
@@ -100,6 +105,7 @@ def _log_task_reading(context, params) -> str:
 
 
 def _describe_asset_reading(context, params) -> str:
+    """The sentence the approval card shows for `asset.reading` (Propose); raises ActionError when it can't be done."""
     asset = get(context, RECORDS["asset"], params)
     meter, value = parse(_METER, params.get("meter_name")), parse(_VALUE, params.get("value"))
     unit = parse(_UNIT, params.get("unit"))
@@ -107,6 +113,7 @@ def _describe_asset_reading(context, params) -> str:
 
 
 def _log_asset_reading(context, params) -> str:
+    """Does `asset.reading` once approved, and says what happened. The reading goes on one of the asset's own meters (fuel, mileage)."""
     asset = get(context, RECORDS["asset"], params)
     meter, value = parse(_METER, params.get("meter_name")), parse(_VALUE, params.get("value"))
     _need(context, "data_logger")
@@ -119,6 +126,7 @@ def _log_asset_reading(context, params) -> str:
 
 
 def _document(context, params):
+    """The asset and document the params name, or ActionError when the document isn't on it."""
     asset = get(context, RECORDS["asset"], params)
     name = str(params.get("filename", ""))
     if name not in asset.documents:
@@ -127,11 +135,15 @@ def _document(context, params):
 
 
 def _describe_document_remove(context, params) -> str:
+    """The sentence the approval card shows for `asset.document_remove` (Propose); raises ActionError when it can't be done."""
     asset, name = _document(context, params)
     return f"Remove {name} from {asset.name}"
 
 
 def _remove_document(context, params) -> str:
+    """Does `asset.document_remove` once approved, and says what happened. Only the asset's list changes; the stored file stays, so undo
+    restores it.
+    """
     asset, name = _document(context, params)
     # Only the list changes; the stored copy stays so undo restores it.
     context.maintenance.update_asset(asset.asset_id, documents=[d for d in asset.documents if d != name])
@@ -142,6 +154,9 @@ def _remove_document(context, params) -> str:
 
 
 def _kinds() -> list[ActionType]:
+    """Every equipment action kind: the asset and task record kinds (deleting an asset keeps its documents), and the
+    reading and document kinds.
+    """
     kinds = []
     for record in RECORDS.values():
         kinds += record_kinds(record)
@@ -167,6 +182,9 @@ ACTION_TYPES.update(EQUIPMENT_ACTIONS)
 
 
 def form_spec() -> dict:
+    """The forms the equipment screens use: each record's fields, a task reading, an asset reading, and marking done
+    with an optional meter reading.
+    """
     forms = {key: record_form(r) for key, r in RECORDS.items()}
     forms["task_reading"] = {"noun": "reading", "id_param": "task_id", "fields": [field_dict(_VALUE), field_dict(_NOTE)]}
     forms["asset_reading"] = {"noun": "reading", "id_param": "asset_id",
