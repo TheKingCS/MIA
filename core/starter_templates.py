@@ -66,6 +66,7 @@ class Workout:
 
 @dataclass(frozen=True)
 class Part:
+    """One part of a starter set: its id, label, and what it adds (routines or upkeep)."""
     part_id: str
     label: str
     items: tuple
@@ -73,6 +74,7 @@ class Part:
 
 @dataclass(frozen=True)
 class Starter:
+    """A starter set a person can add in one go: its id, name, description and parts."""
     starter_id: str
     name: str
     description: str
@@ -197,11 +199,17 @@ def describe(starter: Starter) -> str:
 
 @dataclass
 class StarterResult:
+    """What adding a starter set did: what was added, what was already there, and the parts this MIA (or a
+    child) can't take.
+    """
     added: list[str] = field(default_factory=list)
     already: list[str] = field(default_factory=list)
     unavailable: list[str] = field(default_factory=list)  # parts this MIA (or a child) can't take
 
     def describe(self) -> str:
+        """Says it plainly: what was added (or that everything was already here, or nothing), what was
+        already had, and what was left out.
+        """
         if not self.added:
             text = "Everything in that set is already here." if self.already else "Nothing was added."
         else:
@@ -214,10 +222,12 @@ class StarterResult:
 
 
 def _same(a: str, b: str) -> bool:
+    """Whether two names are the same, ignoring case and spaces at the ends."""
     return a.strip().lower() == b.strip().lower()
 
 
 def _add_routine(context, routine: Routine, today: date, result: StarterResult) -> None:
+    """Adds a routine as a recurring mission (10 XP a day, 25 a week, its skill), unless one by that name exists."""
     from core.gamification import SkillWeight
 
     store = context.recurring_missions
@@ -234,6 +244,9 @@ def _add_routine(context, routine: Routine, today: date, result: StarterResult) 
 
 
 def _add_upkeep(context, upkeep: Upkeep, today: date, result: StarterResult) -> None:
+    """Adds an upkeep set: its asset (made if missing, noted as from a starter set) and each task not already
+    there, counted from today so nothing starts overdue.
+    """
     store = context.maintenance
     asset = next((a for a in store.all_assets() if _same(a.name, upkeep.asset)), None)
     if asset is None:

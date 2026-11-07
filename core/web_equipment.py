@@ -62,6 +62,7 @@ def scope_of(category: str) -> str:
 
 
 def _readings(context, task) -> list:
+    """A meter-based task's readings, oldest first ([] for a calendar task, or with no data logger)."""
     if task.trigger_type == "calendar":
         return []
     try:
@@ -161,6 +162,9 @@ def bucket_of(days: Optional[int], urgency: str = "") -> Optional[str]:
 
 
 def _task_row(context, task, asset, today: date) -> dict:
+    """One maintenance task for the screens: its status (due, overdue, its bucket), its form values, and its
+    Done action (asking for the meter reading on a meter task); a quick stat has no action.
+    """
     from core.equipment_actions import RECORDS
 
     readings = _readings(context, task)
@@ -178,17 +182,24 @@ def _task_row(context, task, asset, today: date) -> dict:
 
 
 def _order(row: dict) -> tuple:
+    """How tasks sort: needing attention first, then overdue, due soon, on track, unknown, then the soonest, then by
+    title.
+    """
     rank = {"overdue": 0, "due_soon": 1, "on_track": 2, "unknown": 3}.get(row["urgency"], 4)
     return (not row["needs_attention"], rank, row["days"] if row["days"] is not None else 10_000, row["title"])
 
 
 def _owner(context, asset) -> Optional[str]:
+    """The name of the asset's owner, or None."""
     profiles = getattr(context, "profiles", None)
     owner = profiles.get_profile(asset.owner_profile_id) if profiles is not None and asset.owner_profile_id else None
     return getattr(owner, "name", None)
 
 
 def _asset_card(context, asset, rows: list, today: date) -> dict:
+    """One asset's card: its details, owner, how many tasks need attention, its next three tasks, its quick
+    stats, warranty, scope and condition bar.
+    """
     current = sorted((r for r in rows if not r["quick_stat"]), key=_order)
     return {"id": asset.asset_id, "name": asset.name, "category": asset.category,
             "make_model": " ".join(p for p in (asset.manufacturer, asset.model) if p), "owner": _owner(context, asset),
@@ -199,6 +210,10 @@ def _asset_card(context, asset, rows: list, today: date) -> dict:
 
 
 def equipment_page(context, scope: str = "maintenance", today: Optional[date] = None) -> dict:
+    """The data an equipment screen (maintenance, garage, greenhouse, real estate) shows, assembled here: its
+    assets' cards (most overdue first), what needs attention, what's next (within 30 days), every task in its bucket,
+    the forms, and for maintenance the calendar of the next 60 days.
+    """
     from core.equipment_actions import form_spec
     from core.maintenance_manager import ASSET_CATEGORIES, next_occurrence_date
 
@@ -238,6 +253,10 @@ def equipment_page(context, scope: str = "maintenance", today: Optional[date] = 
 
 
 def asset_page(context, asset_id: str, today: Optional[date] = None) -> Optional[dict]:
+    """One asset's page: its details, notes, tasks and what needs attention, its condition, quick stats and
+    meter readings, the missions about it, its documents, what it has cost (with a budget), and its history (undone
+    changes left out); None when it's gone.
+    """
     from core import life_events
     from core.equipment_actions import RECORDS, form_spec
 

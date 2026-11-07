@@ -31,16 +31,19 @@ from core.fitness_manager import MEALS, add_up
 
 
 def week_of(day: date) -> list[date]:
+    """Pure logic. The seven days, Monday to Sunday, of the week a day falls in."""
     start = day - timedelta(days=day.weekday())
     return [start + timedelta(days=i) for i in range(7)]
 
 
 def _recipe(context, recipe_id: str):
+    """The kitchen's recipe with this id, or None."""
     kitchen = getattr(context, "kitchen", None)
     return kitchen.get_recipe(recipe_id) if kitchen is not None and recipe_id else None
 
 
 def _facts(context, recipe_id: str, servings: float) -> dict:
+    """A recipe's nutrition facts scaled to the servings ({} when the recipe is gone)."""
     from core.nutrition import recipe_facts, scaled
 
     recipe = _recipe(context, recipe_id)
@@ -66,6 +69,9 @@ def day_plan(context, day: date) -> dict:
 
 
 def week_plan(context, day: date) -> dict:
+    """The week's meal plan: each day's plan, the meal-prep sessions (with each recipe's name), and how many
+    meals were planned and eaten.
+    """
     fit = context.fitness
     days = [day_plan(context, d) for d in week_of(day)]
     first, last = days[0]["date"], days[-1]["date"]
@@ -82,12 +88,14 @@ def week_plan(context, day: date) -> dict:
 
 
 def _key(name: str) -> str:
+    """An ingredient's matching key (the kitchen's own: lowercase, singular)."""
     from core.kitchen_manager import ingredient_key
 
     return ingredient_key(name)
 
 
 def _allergic(name: str, allergies: list) -> bool:
+    """Whether an ingredient matches one of the allergies, word for word or as part of its name."""
     words = set(_key(name).split())
     return any(set(_key(a).split()) <= words or _key(a) in _key(name) for a in allergies if a.strip())
 
@@ -146,6 +154,7 @@ def shopping_list(context, day: date) -> dict:
 
 
 def _avoid(recipe, preferences: dict) -> bool:
+    """Whether a recipe's name or ingredients name something the person dislikes or is allergic to."""
     bad = [w for w in (preferences.get("dislikes") or []) + (preferences.get("allergies") or []) if w.strip()]
     text = " ".join([recipe.name] + [str(i.get("name", "")) for i in recipe.ingredients or []]).lower()
     return any(re.search(r"\b" + re.escape(_key(w)), _key(text)) for w in bad)
