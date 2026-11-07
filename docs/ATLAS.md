@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1060 files, 233,816 lines; 1060 files describe themselves; 5,950 of 13,690 classes and functions are documented.
+1060 files, 233,850 lines; 1060 files describe themselves; 5,968 of 13,690 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-374 files, 106,733 lines; 5,169 of 5,753 classes and functions documented
+374 files, 106,767 lines; 5,187 of 5,753 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -16,7 +16,7 @@
 - `core/actions.py`: The action contract (2026-10-05, Phase 2 foundation, DEC-0013): how any surface (the web Home, the phone, the glasses, later MIA herself) changes something in a person's life. Always in five steps:
 - `core/activity_log_manager.py`: The Activity/Memory Log shared service — docs/ROADMAP.md milestone 9.1, the "Activity/Memory Log (system-wide event history via the event bus)" row of the shared core services table (used by the Memories section, "what did I do on Project X" queries, Diagnostics history).
 - `core/alarm_manager.py`: Backs the Alarm tool (modules/toolbox/tools/alarm_tool.py) — persisted to data/alarms.json, same durability pattern as core.calendar_manager.CalendarManager.
-- `core/answer_ratings.py`: Zac's 👍 and 👎 on MIA's answers (DEC-0067's tuning, step 3): what she was asked, what she said, on which device, and how it landed. Personal: each person's own, in their folder (core/personal_data.py). *(6 undocumented)*
+- `core/answer_ratings.py`: Zac's 👍 and 👎 on MIA's answers (DEC-0067's tuning, step 3): what she was asked, what she said, on which device, and how it landed. Personal: each person's own, in their folder (core/personal_data.py).
 - `core/app_context.py`: Defines AppContext: a small bundle of shared services (config, logger factory, event bus) that gets handed to every module and every GUI component.
 - `core/app_intro.py`: What MIA says when she introduces an app (slice 5 of docs/GLASSES_FIRST_BOOT_PLAN.md), in two halves:
 - `core/application.py`: MIAApplication: the orchestrator that boots the system.
@@ -44,7 +44,7 @@
 - `core/assistant_today_actions.py`: "What's on today?" (core/today.py, 2026-10-01): everything that needs the person today, across every app, in one answer. *(2 undocumented)*
 - `core/assistant_turn.py`: One Assistant turn — user text in, the things MIA should say back out — shared by every voice surface: the headless Core loop (`core/voice_loop.py`) and the phone voice endpoint (`server/app.py`). Pulled out of `VoiceLoopController._handle_turn()` unchanged in behavior, so both surfaces answer, act, *(5 undocumented)*
 - `core/assistant_undo_actions.py`: "Undo that" and "what did you just change?" (core/undo_log.py), plus "why did you tell me that?" and "stop telling me about ..." (core/message_reasons.py, core/communication_gate.py), and "is everything set up?" (core/system_check.py). 2026-10-01.
-- `core/assistant_why_actions.py`: Assistant tools for the owner's chain of reasons, slice B ("Remember Why") of docs/COGNITIVE_EXTENSION_PROPOSAL.md. The chain lives on Intents (core/intent_manager.py: `serves_intent_id`, `reason`); the evidence is computed by core/why_graph.py. *(6 undocumented)*
+- `core/assistant_why_actions.py`: Assistant tools for the owner's chain of reasons, slice B ("Remember Why") of docs/COGNITIVE_EXTENSION_PROPOSAL.md. The chain lives on Intents (core/intent_manager.py: `serves_intent_id`, `reason`); the evidence is computed by core/why_graph.py.
 - `core/atomic_write.py`: One shared helper for crash-safe file writes. Every core/*_manager.py persists its state as JSON via a direct `path.write_text(...)` call — which is NOT atomic: a crash, power loss, or disk-full condition mid write can leave that file truncated or corrupted, permanently losing everything in it. A re
 - `core/avatar_manager.py`: Companion-avatar camera source for the Home Dashboard's Companion Avatar widget (gui/home_dashboard.py, gui/widgets/avatar_camera_widget.py). Built for VMagicMirror (https://malaybaku.github.io/VMagicMirror/), a separately-running, Windows-only Unity/VRM avatar app the user has been running alongsid *(4 undocumented)*
 - `core/backup_manager.py`: Export/import MIA's config + data directory as a single backup file, per docs/ROADMAP.md milestone 2.7. Optionally passphrase-encrypted via core/secrets_manager.py. *(3 undocumented)*
@@ -60,7 +60,7 @@
 - `core/business_actions.py`: Quotes, customers, orders and the portfolio (DEC-0030 phase C, core/business_book.py) on the action contract: proposed in plain words, approved, run, undoable.
 - `core/business_book.py`: Quotes, customers, orders and the portfolio (DEC-0030 phase C): the business loop on top of crafting recipes (core/craft_recipes.py), builds (Jobs) and the workshop ledger, never beside them.
 - `core/business_report.py`: Pure, Qt-free composition of a household + real estate "Business Report" HTML document — 2026-09-08, at the user's explicit request: "I want this to be something I can do business reports with my wife from." Same split as core/budget_nudges.py: this module never touches BudgetManager/RealEstateManag *(3 undocumented)*
-- `core/business_tagging.py`: Sorting bank transactions to the owner's businesses (2026-09-28): "auto-tagging business transactions (lawn care, rentals, homestead) to the right business entity after bank sync." *(6 undocumented)*
+- `core/business_tagging.py`: Sorting bank transactions to the owner's businesses (2026-09-28): "auto-tagging business transactions (lawn care, rentals, homestead) to the right business entity after bank sync."
 - `core/business_use.py`: Finance #3 (2026-09-28): the business-use share of personal equipment, starting with the owner's mower ("help me with write offs for my real estate businesses with things like the mower if I do a certain amount of contracted lawn care with it").
 - `core/calculator_engine.py`: CalculatorEngine: a pluggable formula registry with one shared browsing UI (modules/toolbox/module.py), per docs/ROADMAP.md's "Shared core services" table. The goal: every future calculator-shaped tool (unit converter, Ohm's Law, wire gauge, antenna calculator, fuel estimates, coordinate conversion, *(2 undocumented)*
 - `core/calendar_actions.py`: Your own calendar events (Zac, 2026-10-16), through the action contract (core/actions.py): `event.add` and `event.delete`. Everything else on the calendar (upkeep, bills, meals, training, birthdays) is read from its own store by core/calendar_view.py and changed where it lives. The calendar store wr *(6 undocumented)*

@@ -42,6 +42,9 @@ def _intent_named(context: AppContext, name: str) -> tuple[Optional[object], Opt
 
 
 def _find_or_create(context: AppContext, name: str) -> tuple[Optional[object], Optional[str], bool]:
+    """The goal a name means, or a question when it's unclear; a goal with no match is made from the name
+    (capitalised). Returns (goal, question, made).
+    """
     intent, question = _intent_named(context, name)
     if intent is not None or question is not None:
         return intent, question, False
@@ -51,6 +54,9 @@ def _find_or_create(context: AppContext, name: str) -> tuple[Optional[object], O
 
 
 def _action_link_my_reason(context: AppContext, arguments: dict) -> str:
+    """Tool link_my_reason: links what they do to the bigger goal it serves (making either goal when
+    needed), with their reason; a link back the other way is refused.
+    """
     if context.intents is None:
         return "Goals aren't available right now."
     goal_name = str(arguments.get("goal") or "").strip()
@@ -74,6 +80,9 @@ def _action_link_my_reason(context: AppContext, arguments: dict) -> str:
 
 
 def _action_show_my_why(context: AppContext, arguments: dict) -> str:
+    """Tool show_my_why: each chain of reasons (done links marked), the facts behind each link, and what
+    changed; with none yet, how to say one.
+    """
     if context.intents is None:
         return "Goals aren't available right now."
     sheet = build_why_sheet(context)
@@ -92,6 +101,7 @@ def _action_show_my_why(context: AppContext, arguments: dict) -> str:
 
 
 def _action_unlink_my_reason(context: AppContext, arguments: dict) -> str:
+    """Tool unlink_my_reason: a goal no longer leads to anything bigger."""
     goal, question = _intent_named(context, str(arguments.get("goal") or ""))
     if goal is None:
         return question or f"I don't have a goal called '{arguments.get('goal')}'."
@@ -102,6 +112,7 @@ def _action_unlink_my_reason(context: AppContext, arguments: dict) -> str:
 
 
 def _action_mark_goal_achieved(context: AppContext, arguments: dict) -> str:
+    """Tool mark_goal_achieved: marks a goal Achieved, so it's spoken of as done, not ahead."""
     goal, question = _intent_named(context, str(arguments.get("goal") or ""))
     if goal is None:
         return question or f"I don't have a goal called '{arguments.get('goal')}'."
@@ -117,6 +128,7 @@ _WHY_TRIGGERS = (
 
 
 def register_why_actions(registry: AssistantActionRegistry) -> None:
+    """Registers the why tools: link_my_reason, show_my_why, unlink_my_reason and mark_goal_achieved."""
     registry.register(AssistantAction(
         name="link_my_reason", domain="why",
         description=(

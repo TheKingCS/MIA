@@ -57,6 +57,7 @@ def merchant_key(text: str) -> str:
 
 
 def _expense_key(expense) -> str:
+    """The merchant key an expense is matched by (its payee, else its description)."""
     return merchant_key(expense.payee or expense.description)
 
 
@@ -79,6 +80,9 @@ def learn(expenses) -> dict[str, Counter]:
 
 @dataclass
 class Suggestion:
+    """Which business (or personal) an expense probably belongs to, the reason shown to the owner, and whether
+    it's sure enough to tag without asking.
+    """
     entity_id: str  # a BusinessEntity's id, or PERSONAL
     reason: str  # shown to the owner
     sure: bool = False  # safe to apply without asking
@@ -107,6 +111,7 @@ def suggest(expense, history: dict[str, Counter], entities, property_entities: O
 
 
 def _property_entities(context) -> dict:
+    """Each property's business entity, by property id (only the ones with one)."""
     real_estate = getattr(context, "real_estate", None)
     if real_estate is None:
         return {}
@@ -114,6 +119,9 @@ def _property_entities(context) -> dict:
 
 
 def _needs_review(expense, today: date) -> bool:
+    """Whether a bank charge still needs a business: untagged, never reviewed, imported from the bank, and
+    from the last 120 days (a date that won't read counts as recent).
+    """
     if expense.entity_id or expense.entity_reviewed or not expense.plaid_transaction_id:
         return False
     try:
@@ -150,10 +158,14 @@ def apply_choice(context, entry_id: str, entity_id: str) -> None:
 
 @dataclass
 class AutoTagResult:
+    """What auto-tagging did: the charges MIA tagged on her own (with the business) and how many still need
+    the owner.
+    """
     tagged: list  # (expense, entity name) MIA tagged on her own
     waiting: int  # still need the owner
 
     def describe(self) -> str:
+        """Says it plainly: how many were tagged to each business, and how many wait for a business."""
         parts = []
         if self.tagged:
             by_business = Counter(name for _, name in self.tagged)

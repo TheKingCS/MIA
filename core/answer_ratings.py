@@ -34,7 +34,11 @@ MAX_KEPT = 5000
 
 
 class AnswerRatings:
+    """A person's 👍 and 👎 on her answers (answer_ratings.json in their own folder, the latest 5,000, written
+    through atomic_write_text): what was asked, what she said, where, any note, and which model answered.
+    """
     def __init__(self, context=None, data_dir: Optional[Path] = None) -> None:
+        """Loads the ratings from the person's folder (or data/)."""
         self.context = context
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._file = self.data_dir / _FILE
@@ -42,6 +46,7 @@ class AnswerRatings:
         self._load()
 
     def _load(self) -> None:
+        """Reads the ratings; a missing file gives none, a damaged one is logged and starts a new list."""
         try:
             self.ratings = json.loads(self._file.read_text(encoding="utf-8")).get("ratings", [])
         except FileNotFoundError:
@@ -51,10 +56,14 @@ class AnswerRatings:
             self.ratings = []
 
     def _save(self) -> None:
+        """Writes the latest ratings atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._file, json.dumps({"ratings": self.ratings[-MAX_KEPT:]}, indent=1, ensure_ascii=False))
 
     def rate(self, rating: str, asked: str, answer: str, surface: str = "", note: str = "", model: str = "") -> dict:
+        """Keeps one rating (up or down, else ValueError) with what was asked and answered (each cut to 4,000
+        characters), the surface it came from, a note and the model.
+        """
         if rating not in (UP, DOWN):
             raise ValueError("A rating is up or down.")
         entry = {"at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "rating": rating,
@@ -65,5 +74,6 @@ class AnswerRatings:
         return entry
 
     def counts(self) -> dict:
+        """How many answers were rated up and down."""
         return {UP: sum(1 for r in self.ratings if r["rating"] == UP),
                 DOWN: sum(1 for r in self.ratings if r["rating"] == DOWN)}
