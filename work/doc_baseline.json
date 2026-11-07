@@ -7,7 +7,6 @@
   "gui/character_panel.py": 27,
   "gui/home_dashboard.py": 70,
   "gui/main_window.py": 27,
-  "gui/trip_detail_dialog.py": 23,
   "tests/assistant_registry.py": 2,
   "tests/conftest.py": 4,
   "tests/core_live_music_check.py": 3,

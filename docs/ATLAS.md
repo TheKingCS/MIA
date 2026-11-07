@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1070 files, 238,962 lines; 1070 files describe themselves; 8,192 of 13,814 classes and functions are documented.
+1070 files, 238,985 lines; 1070 files describe themselves; 8,215 of 13,814 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -397,7 +397,7 @@
 
 ## gui/: the desktop's Qt shell and dialogs
 
-122 files, 21,574 lines; 906 of 1,083 classes and functions documented
+122 files, 21,597 lines; 929 of 1,083 classes and functions documented
 
 - `gui/__init__.py`: Presentation layer only. Everything in this package talks to the rest of the system through core.app_context.AppContext and modules.module_base. ModuleBase — never by importing module internals or reaching into core services directly beyond what AppContext exposes.
 - `gui/account_dialogs.py`: Accounts and households on the desktop (2026-10-01, docs/ROADMAP.md "People and ownership"; core/profile_manager.py, core/household_manager.py): *(30 undocumented)*
@@ -496,7 +496,7 @@
 - `gui/theme_manager.py`: Theme registry and selection — docs/ROADMAP.md milestone 13.2. Nothing like this existed before this milestone: every dialog/screen hardcoded `gui.styles.DARK_FIELD_THEME` directly, and `config.gui.theme` sat unread in `config/default_config.json`.
 - `gui/today_card.py`: The "Today" card at the top of Home (core/today.py, 2026-10-01): what needs you today across every app, overdue first. Each row opens the app it belongs to. Rebuilt only when the list actually changes, so the dashboard's regular refresh doesn't make it flicker.
 - `gui/trail_map_viewer_dialog.py`: A simple embedded PDF viewer dialog for one core.trail_map_library.TrailMap — uses QtPdf/QtPdfWidgets (confirmed importable in this dev sandbox, unlike QtWebEngineWidgets, see gui/widgets/tile_map_view.py's docstring for that finding), so trail map PDFs open right inside the app rather than needing 
-- `gui/trip_detail_dialog.py`: The Trip detail screen for modules/expeditions/module.py — docs/ROADMAP.md Expedition Mode milestones. Milestone 12.1 gives it just the Route section (pick an existing Waypoint, add it to the trip's ordered planned route, remove one, see the planned-route distance). Milestone 12.3 adds the Gear Chec *(23 undocumented)*
+- `gui/trip_detail_dialog.py`: The Trip detail screen for modules/expeditions/module.py — docs/ROADMAP.md Expedition Mode milestones. Milestone 12.1 gives it just the Route section (pick an existing Waypoint, add it to the trip's ordered planned route, remove one, see the planned-route distance). Milestone 12.3 adds the Gear Chec
 - `gui/trip_map_view.py`: A schematic (non-tiled) plot of a trip's planned route — docs/ROADMAP.md milestone 12.6, Expedition Mode. Deliberately not a real basemap: there's no bundled offline map imagery in this project (same "offline maps, trails" gap already flagged in modules/navigation/module.py's own docstring), so wayp
 - `gui/user_memory_dialog.py`: "What MIA remembers about you" — 2026-07-14 aesthetic pass part 5 (docs/ROADMAP.md), at the user's explicit request: "an ability to... see the AI's stored memories about the user and keep or delete them." Opened from `modules/assistant/module.py`'s "🧠 Memories" button.
 - `gui/widgets/__init__.py`: Small, reusable GUI widgets shared across screens (e.g. ModuleButton). Anything used by more than one gui/ file belongs here rather than being duplicated or defined inline.

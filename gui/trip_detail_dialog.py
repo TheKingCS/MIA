@@ -72,7 +72,9 @@ def format_journal_entry_row(entry: JournalEntry) -> str:
 
 
 class TripDetailDialog(QDialog):
+    """A trip's details: the planned route and its map and distance, checkpoints logged on the way (distance, speed, each leg), the gear to pack, the trip's log entries, and its photos."""
     def __init__(self, context: AppContext, trip_id: str, parent=None) -> None:
+        """Every section for the trip, titled with its name (and activity), then filled in."""
         super().__init__(parent)
         self.context = context
         self.trip_id = trip_id
@@ -234,6 +236,7 @@ class TripDetailDialog(QDialog):
     # ------------------------------------------------------------------
 
     def _refresh(self) -> None:
+        """Refreshes every section."""
         self._refresh_waypoint_combo()
         self._refresh_route_list()
         self._refresh_distance_label()
@@ -245,11 +248,13 @@ class TripDetailDialog(QDialog):
         self._refresh_photo_list()
 
     def _refresh_waypoint_combo(self) -> None:
+        """The waypoints that can be added to the route."""
         self._waypoint_combo.clear()
         for waypoint in self.context.waypoints.all_waypoints():
             self._waypoint_combo.addItem(waypoint.name, waypoint.waypoint_id)
 
     def _refresh_route_list(self) -> None:
+        """The route's waypoints in order (one that's gone is marked missing)."""
         self._route_list.clear()
         trip = self.context.trips.get_trip(self.trip_id)
         if trip is None:
@@ -262,6 +267,7 @@ class TripDetailDialog(QDialog):
             self._route_list.addItem(item)
 
     def _refresh_distance_label(self) -> None:
+        """The planned distance in km, or that the route needs two waypoints."""
         distance = self.context.trips.planned_route_distance_km(self.trip_id)
         if distance is None:
             self._distance_label.setText("Planned distance: add at least 2 waypoints to the route.")
@@ -269,11 +275,13 @@ class TripDetailDialog(QDialog):
             self._distance_label.setText(f"Planned distance: {distance:.2f} km")
 
     def _refresh_split_waypoint_combo(self) -> None:
+        """The waypoints an arrival can be logged at."""
         self._split_waypoint_combo.clear()
         for waypoint in self.context.waypoints.all_waypoints():
             self._split_waypoint_combo.addItem(waypoint.name, waypoint.waypoint_id)
 
     def _refresh_splits_summary(self) -> None:
+        """The checkpoints logged: how many, total distance, average speed, and each leg's distance and speed; or that none are logged yet."""
         trip = self.context.trips.get_trip(self.trip_id)
         if trip is None or not trip.splits:
             self._splits_summary_label.setText("No checkpoints logged yet.")
@@ -298,11 +306,13 @@ class TripDetailDialog(QDialog):
         self._splits_summary_label.setText("\n".join(lines))
 
     def _refresh_inventory_combo(self) -> None:
+        """The inventory items gear can be added from."""
         self._inventory_combo.clear()
         for item in self.context.inventory.all_items():
             self._inventory_combo.addItem(item.name, item.item_id)
 
     def _refresh_gear_list(self) -> None:
+        """The trip's gear, each ticked when packed (signals held so rebuilding doesn't count as ticking)."""
         trip = self.context.trips.get_trip(self.trip_id)
         if trip is None:
             return
@@ -319,11 +329,13 @@ class TripDetailDialog(QDialog):
         self._gear_list.blockSignals(False)
 
     def _refresh_journal_list(self) -> None:
+        """The log entries written for this trip."""
         self._journal_list.clear()
         for entry in self.context.journal.entries_for_trip(self.trip_id):
             self._journal_list.addItem(format_journal_entry_row(entry))
 
     def _refresh_photo_list(self) -> None:
+        """The trip's photos as thumbnails with their names."""
         self._photo_list.clear()
         trip = self.context.trips.get_trip(self.trip_id)
         if trip is None:
@@ -340,6 +352,7 @@ class TripDetailDialog(QDialog):
     # ------------------------------------------------------------------
 
     def _on_add_to_route(self) -> None:
+        """Adds the waypoint picked to the end of the route, then the distance and map."""
         waypoint_id = self._waypoint_combo.currentData()
         if waypoint_id is None:
             return
@@ -349,6 +362,7 @@ class TripDetailDialog(QDialog):
         self._map_view.refresh()
 
     def _on_remove_from_route(self) -> None:
+        """Takes the selected waypoint off the route, then the distance and map."""
         item = self._route_list.currentItem()
         if item is None:
             return
@@ -359,6 +373,7 @@ class TripDetailDialog(QDialog):
         self._map_view.refresh()
 
     def _on_log_arrival(self) -> None:
+        """Logs arriving at the waypoint picked now (a checkpoint)."""
         waypoint_id = self._split_waypoint_combo.currentData()
         if waypoint_id is None:
             return
@@ -366,6 +381,7 @@ class TripDetailDialog(QDialog):
         self._refresh_splits_summary()
 
     def _on_add_gear_from_inventory(self) -> None:
+        """Adds the inventory item picked to the gear list."""
         item_id = self._inventory_combo.currentData()
         if item_id is None:
             return
@@ -376,6 +392,7 @@ class TripDetailDialog(QDialog):
         self._refresh_gear_list()
 
     def _on_add_custom_gear(self) -> None:
+        """Adds the gear typed to the list."""
         label = self._custom_gear_edit.text().strip()
         if not label:
             return
@@ -384,10 +401,12 @@ class TripDetailDialog(QDialog):
         self._refresh_gear_list()
 
     def _on_gear_item_changed(self, item: QListWidgetItem) -> None:
+        """A tick marks gear packed, an untick unpacked."""
         index = self._gear_list.row(item)
         self.context.trips.toggle_gear_packed(self.trip_id, index)
 
     def _on_remove_gear_item(self) -> None:
+        """Removes the selected gear."""
         row = self._gear_list.currentRow()
         if row < 0:
             return
@@ -395,6 +414,7 @@ class TripDetailDialog(QDialog):
         self._refresh_gear_list()
 
     def _on_add_log_entry(self) -> None:
+        """Writes a log entry for the trip (its title, text and conditions) when it has a title, then clears the boxes."""
         title = self._log_title_edit.text().strip()
         if not title:
             return
@@ -410,6 +430,7 @@ class TripDetailDialog(QDialog):
         self._refresh_journal_list()
 
     def _on_add_photos(self) -> None:
+        """Adds photos picked from disk to the trip."""
         file_paths, _ = QFileDialog.getOpenFileNames(
             self, "Add Photo(s)", "", "Images (*.png *.jpg *.jpeg *.gif *.bmp)"
         )
@@ -418,6 +439,7 @@ class TripDetailDialog(QDialog):
         self._refresh_photo_list()
 
     def _on_remove_photo(self) -> None:
+        """Removes the selected photo from the trip."""
         item = self._photo_list.currentItem()
         if item is None:
             return
@@ -426,6 +448,7 @@ class TripDetailDialog(QDialog):
         self._refresh_photo_list()
 
     def _on_preview_photo(self, item: QListWidgetItem) -> None:
+        """Shows a photo larger in its own window."""
         filename = item.data(Qt.ItemDataRole.UserRole)
         path = self.context.trips.photo_path(self.trip_id, filename)
         if not path.exists():
