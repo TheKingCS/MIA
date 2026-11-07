@@ -21,7 +21,8 @@ menu. Assembled here, in code, so `web/glasses.js` holds no logic
   proposes. Served as `/api/glasses/{app_id}/{item_id}`.
   The live workout's panel also carries a `hero` (`training_hero`: the
   exercise, set and weight, one big number and what it is; the canvas's
-  GlassesTraining).
+  GlassesTraining); cook mode's panel ("Cooking Now") carries one from
+  `cooking_hero`: the step large and each timer's time left.
 
 A menu item is either a `panel` (a short readout, some lines of which
 can be acted on) or an `ask` (a question handed to MIA, as if said
@@ -56,6 +57,8 @@ GLASSES_KINDS = frozenset({
     "training.start", "training.set", "training.skip_rest", "training.rest_more", "training.pause", "training.resume",
     "training.skip",
     "training.finish",
+    # cook mode (DEC-0113): the step, a named timer the step offers, "I made this"; stopping without logging is by voice
+    "cooking.next", "cooking.back", "cooking.timer", "cooking.timer_cancel", "cooking.made",
 })
 
 # Apps the glasses don't show as cards: the orb *is* Home and Talk; the
@@ -279,6 +282,54 @@ def _music_list(context, which: str) -> Optional[dict]:
     return _panel(name, _song_lines([t for t in tracks if (t.get("artist") or "Unknown artist") == name]), "No songs.", limit=60)
 
 
+def _clock(seconds: int) -> str:
+    """Pure logic. Seconds as m:ss ("17:42"), or h:mm:ss over an hour."""
+    seconds = max(0, int(seconds))
+    h, m, s = seconds // 3600, seconds % 3600 // 60, seconds % 60
+    return f"{h}:{m:02d}:{s:02d}" if h else f"{m}:{s:02d}"
+
+
+def cooking_hero(v: dict) -> dict:
+    """Pure logic. Cook mode on the glasses (the canvas's cook mode, DEC-0113), from core/cooking_session.view: the
+    recipe, which step of how many, the step itself, and each timer with its time left ("Done" once it has gone off)."""
+    return {"kind": "cook", "name": v.get("title") or "", "set": f"Step {v.get('number')} of {v.get('steps_total')}",
+            "step": v.get("step") or "",
+            "timers": [{"name": t["name"], "left": "Done" if t["done"] else _clock(t["left"]), "done": t["done"]}
+                       for t in v.get("timers") or []]}
+
+
+def _kitchen_cooking(context, today):
+    """Panel: the recipe being cooked (cook mode, core/cooking_session.py): its `hero` (cooking_hero), then Next Step
+    (or I Made This on the last), Back, the timer the step offers and Stop for each running timer, all one press."""
+    from datetime import datetime
+
+    from core import cooking_session as cs
+
+    store = getattr(context, "cooking", None)
+    s = store.live() if store is not None else None
+    if s is None:
+        return _panel("Cooking Now", [], "Nothing's cooking. Open a recipe and Start Cooking, or say \"start cooking\".")
+    v = cs.view(s, datetime.now())
+    lines = []
+    if v["last"]:
+        lines.append(_line("I made this", "logs it and uses the pantry", "",
+                           {"kind": "cooking.made", "label": "I Made This", "params": {"pantry": "yes"}}))
+    else:
+        lines.append(_line("Next step", v["next"] or "", "", {"kind": "cooking.next", "label": "Next Step", "params": {}}))
+    offer = v.get("offer_timer")
+    if offer and not any(t["name"].lower() == offer["name"].lower() for t in v["timers"]):
+        minutes = max(1, round(offer["seconds"] / 60))
+        lines.append(_line(f"{offer['name']} timer", f"{minutes} min", "",
+                           {"kind": "cooking.timer", "label": "Start", "params": {"name": offer["name"], "minutes": minutes}}))
+    for t in v["timers"]:
+        lines.append(_line(f"Stop {t['name'].lower()} timer", "done" if t["done"] else _clock(t["left"]) + " left",
+                           "attention" if t["done"] else "",
+                           {"kind": "cooking.timer_cancel", "label": "Stop", "params": {"name": t["name"]}}))
+    if v["number"] > 1:
+        lines.append(_line("Back a step", v["previous"] or "", "", {"kind": "cooking.back", "label": "Back", "params": {}}))
+    return {**_quick(_panel(f"Cooking: {v['title']}", lines, "")), "hero": cooking_hero(v)}
+
+
 def _kitchen_pantry(context, today):
     """Panel: the pantry, soonest to expire first, flagging what expires within two days (a menu item's readout; lines with an allowed action can be approved from the glasses)."""
     from core.web_screens import kitchen_page
@@ -296,7 +347,8 @@ def _kitchen_pantry(context, today):
     return _panel("My Pantry", lines, "The pantry is empty.", limit=60)
 
 
-QUICK = ("training.set", "training.skip_rest", "training.skip", "training.pause", "training.resume")
+QUICK = ("training.set", "training.skip_rest", "training.skip", "training.pause", "training.resume",
+         "cooking.next", "cooking.back", "cooking.timer", "cooking.timer_cancel")
 
 
 def _quick(panel: dict) -> dict:
@@ -961,7 +1013,7 @@ PANELS: dict[str, tuple[tuple[str, str, Panel], ...]] = {
     "missions": (("pick", "Select Mission", _missions_pick), ("progress", "Log Progress", _missions_progress),
                  ("claim", "Ready To Claim", _missions_claim)),
     "music": (("songs", "Songs", _music_songs), ("playlists", "Playlists", _music_playlists), ("artists", "Artists", _music_artists)),
-    "kitchen": (("recipes", "Recipes", _kitchen_recipes), ("meals", "Today's Meal Plan", _kitchen_meals),
+    "kitchen": (("cooking", "Cooking Now", _kitchen_cooking), ("recipes", "Recipes", _kitchen_recipes), ("meals", "Today's Meal Plan", _kitchen_meals),
                 ("pantry", "My Pantry", _kitchen_pantry), ("grocery", "Grocery List", _kitchen_grocery)),
     "workout": (("live", "Active Training", _workout_live), ("training", "Today's Training", _workout_training), ("practice", "Skill Practice", _workout_practice),
                 ("weight", "Weight", _workout_weight), ("milestones", "Milestones", _workout_milestones)),

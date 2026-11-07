@@ -1,6 +1,6 @@
 """Cook mode (DEC-0113, core/cooking_session.py and core/cooking_actions.py): one recipe being cooked per person,
 step by step, with named timers that keep running across steps, what each step uses, and "I made this" logging the
-meal through the kitchen's own action; and all of it by voice (core/assistant_cooking_actions.py)."""
+meal through the kitchen's own action; and all of it by voice (core/assistant_cooking_actions.py) and on the glasses (core/glasses.py)."""
 
 from datetime import datetime, timedelta
 from types import SimpleNamespace
@@ -126,3 +126,22 @@ def test_cook_mode_works_by_voice_the_same_as_its_buttons(tmp_path, monkeypatch)
     assert tool["cook_timer"](context, {"name": "Rice", "stop": "yes"}) == "Stopped the rice timer."
     assert tool["cook_finish"](context, {"made": "no"}) == "Stopped cooking Turkey Chili. Nothing was logged."
     assert "Nothing's cooking" in tool["cook_step"](context, {})
+
+
+def test_cook_mode_on_the_glasses_shows_the_step_its_timers_and_one_press_moves(tmp_path):
+    from core.glasses import GLASSES_KINDS, _kitchen_cooking, cooking_hero
+
+    context = SimpleNamespace(cooking=cs.CookingStore(SimpleNamespace(), data_dir=tmp_path))
+    assert _kitchen_cooking(context, None)["lines"] == []  # nothing cooking: a line saying how to start
+    store = context.cooking
+    s = store.begin("r1", "Turkey Chili", STEPS, datetime.now())
+    s.index = 2  # "Simmer ... minutes": it offers its own timer
+    store.save()
+    panel = _kitchen_cooking(context, None)
+    assert panel["live"] and panel["hero"]["set"] == "Step 3 of 4" and panel["hero"]["step"] == STEPS[2]
+    kinds = [line["action"]["kind"] for line in panel["lines"]]
+    assert kinds[0] == "cooking.next" and "cooking.back" in kinds and set(kinds) <= GLASSES_KINDS
+    assert all(line["action"].get("quick") for line in panel["lines"])
+    hero = cooking_hero({"title": "Chili", "number": 1, "steps_total": 2, "step": "Boil",
+                         "timers": [{"name": "Rice", "left": 1062, "done": False}, {"name": "Oven", "left": 0, "done": True}]})
+    assert hero["timers"] == [{"name": "Rice", "left": "17:42", "done": False}, {"name": "Oven", "left": "Done", "done": True}]
