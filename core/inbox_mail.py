@@ -48,16 +48,20 @@ class MailSettings:
     """host/port/username/folder live in config (not secret); the password in the vault."""
 
     def __init__(self, context) -> None:
+        """The inbox mailbox's settings, kept in the config under inbox.email.* (never the password)."""
         self.context = context
 
     def get(self, key: str, default=None):
+        """One mailbox setting (inbox.email.<key>)."""
         return self.context.config.get(f"inbox.email.{key}", default)
 
     @property
     def configured(self) -> bool:
+        """Whether a mailbox is set up: a host and username, and a stored (encrypted) password."""
         return bool(self.get("host") and self.get("username")) and _VAULT_FILE.exists()
 
     def save(self, host: str, username: str, port: int = 993, folder: str = "INBOX") -> None:
+        """Saves the mailbox's host, username, port (993 by default) and folder (INBOX by default)."""
         config = self.context.config
         config.set("inbox.email.host", host.strip())
         config.set("inbox.email.username", username.strip())
@@ -67,18 +71,25 @@ class MailSettings:
 
 
 class MailVault:
+    """The mailbox password, encrypted with the person's passphrase in data/inbox_mail.enc (core/secrets_manager.py)
+    and held in memory only while unlocked; locked, MIA just doesn't check mail.
+    """
     def __init__(self) -> None:
+        """Starts locked: nothing is read until unlock()."""
         self._password: Optional[str] = None
 
     @property
     def unlocked(self) -> bool:
+        """Whether the password is in memory now."""
         return self._password is not None
 
     @staticmethod
     def exists() -> bool:
+        """Whether a password has been stored."""
         return _VAULT_FILE.exists()
 
     def store(self, password: str, passphrase: str) -> None:
+        """Encrypts and stores the password with the passphrase, and holds it unlocked."""
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
         blob = encrypt_bytes(json.dumps({"password": password}).encode("utf-8"), passphrase)
         _VAULT_FILE.write_bytes(blob)
@@ -91,6 +102,7 @@ class MailVault:
         self._password = json.loads(decrypt_bytes(_VAULT_FILE.read_bytes(), passphrase))["password"]
 
     def try_unlock(self, passphrase: str) -> bool:
+        """Unlocks with the passphrase; False (rather than an error) when it's wrong or nothing is stored."""
         try:
             self.unlock(passphrase)
             return True
@@ -98,10 +110,12 @@ class MailVault:
             return False
 
     def lock(self) -> None:
+        """Forgets the password in memory."""
         self._password = None
 
     @property
     def password(self) -> Optional[str]:
+        """The password while unlocked, else None."""
         return self._password
 
 
@@ -109,6 +123,7 @@ _TIMEOUT_SECONDS = 30  # a dead network must not leave the check hanging forever
 
 
 def _connect_ssl(host: str, port: int) -> imaplib.IMAP4:
+    """An IMAP connection over SSL, with a timeout."""
     return imaplib.IMAP4_SSL(host, port, timeout=_TIMEOUT_SECONDS)
 
 
@@ -146,6 +161,7 @@ class MailChecker:
     """Runs one check at a time on a background thread."""
 
     def __init__(self, inbox, settings: MailSettings, vault: MailVault) -> None:
+        """Checks the mailbox into the inbox, on a background thread; last_result says how the last check went."""
         self.inbox, self.settings, self.vault = inbox, settings, vault
         self._thread: Optional[threading.Thread] = None
         self.last_result = ""
@@ -161,6 +177,9 @@ class MailChecker:
         return True
 
     def _run(self, fetch) -> None:
+        """One check (on its thread): fetches the new messages, saves each into the inbox as an email file, and says how
+        many came; a mail or network error is logged and said, never raised.
+        """
         try:
             messages = fetch(
                 self.settings.get("host"), self.settings.get("username"), self.vault.password,
