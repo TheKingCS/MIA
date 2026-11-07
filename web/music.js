@@ -13,8 +13,15 @@
   let page = null, query = "", openList = null, artist = null;
   let tab = TABS.some(([t]) => t === location.hash.slice(1)) ? location.hash.slice(1) : "songs";
   let queue = [], at = -1, url = null;
-  const audio = el("audio", { controls: true, preload: "none", class: "music-audio" });
+  const audio = el("audio", { preload: "none", class: "music-audio" });
   audio.addEventListener("ended", () => playAt(at + 1));
+  // The canvas's Now Playing bar (DEC-0113): its progress line follows the song.
+  audio.addEventListener("timeupdate", () => {
+    const fill = document.querySelector(".mu-progress .meter-fill");
+    if (fill && audio.duration) fill.style.width = Math.round(100 * audio.currentTime / audio.duration) + "%";
+  });
+  audio.addEventListener("play", () => drawPlayer());
+  audio.addEventListener("pause", () => drawPlayer());
 
   // Songs already on the phone: Android has to say yes first (Permissions.kt).
   const phoneAsks = () => { try { return window.MIAPhonePermissions && !JSON.parse(window.MIAPhonePermissions.status()).music; } catch (e) { return false; } };
@@ -46,14 +53,19 @@
 
   function drawPlayer(note) {
     const t = at >= 0 ? byId(queue[at]) : null;
+    const icon = (label, text, onclick) => el("button", { type: "button", class: "mu-ctl", "aria-label": label, onclick }, text);
     $("player").replaceChildren(
-      el("div", { class: "music-now" },
-        el("strong", {}, t ? t.title : "Nothing playing"),
-        el("span", { class: "dim" }, note || (t ? [t.artist, t.album].filter(Boolean).join(" · ") : "Pick a song to play it here."))),
-      audio,
-      t ? buttons(btn("‹ Previous", "btn-ghost btn-small", () => playAt(Math.max(0, at - 1))),
-        btn("Next ›", "btn-ghost btn-small", () => playAt(at + 1))) : null);
-    $("player").hidden = false;
+      el("div", { class: "mu-bar" },
+        el("div", { class: "music-now" }, el("span", { class: "mu-label" }, "Now Playing"),
+          el("strong", {}, t ? t.title : "Nothing playing"),
+          el("span", { class: "dim" }, note || (t ? [t.artist, t.album].filter(Boolean).join(" · ") : "Pick a song to play it here."))),
+        t ? el("div", { class: "mu-ctls" }, icon("Previous", "⏮", () => playAt(Math.max(0, at - 1))),
+          icon(audio.paused ? "Play" : "Pause", audio.paused ? "▶" : "❚❚", () => (audio.paused ? audio.play() : audio.pause())),
+          icon("Next", "⏭", () => playAt(at + 1))) : null),
+      el("div", { class: "mu-progress" }, el("div", { class: "meter" }, el("div", { class: "meter-fill", style: "width:0%" }))),
+      audio);
+    $("player").hidden = !t;
+    document.querySelectorAll(".music-row").forEach((r) => r.classList.toggle("playing", !!t && r.dataset.id === (t && t.id)));
   }
 
   async function toPlaylist(t) {
@@ -92,12 +104,14 @@
 
   function songRows(ids, extra) {
     if (!ids.length) return el("p", { class: "empty" }, "No songs here.");
-    return el("div", { class: "rows" }, ids.map((id, i) => {
+    return el("div", { class: "mu-rows" }, ids.map((id, i) => {
       const t = byId(id);
       const playing = at >= 0 && queue[at] === id;
-      return el("div", { class: "row money-row music-row" + (playing ? " playing" : "") },
-        el("button", { type: "button", class: "music-play", "aria-label": "Play " + t.title, onclick: () => play(ids, i) }, playing ? "♪" : "▶"),
-        el("div", {}, el("div", { class: "row-title" }, t.title), el("div", { class: "row-sub" }, [t.artist, t.album, t.duration].filter(Boolean).join(" · "))),
+      // The canvas's song row: tap it to play; title and artist, its length on the right; the one playing in cyan.
+      return el("div", { class: "music-row" + (playing ? " playing" : ""), "data-id": id },
+        el("button", { type: "button", class: "mu-song", "aria-label": "Play " + t.title, onclick: () => play(ids, i) },
+          el("span", { class: "mu-titles" }, el("span", { class: "mu-title" }, t.title), el("span", { class: "mu-artist" }, [t.artist, t.album].filter(Boolean).join(" · "))),
+          el("span", { class: "mu-len" }, t.duration || "")),
         extra ? extra(t) : null);
     }));
   }
@@ -110,7 +124,8 @@
         oninput: (ev) => { query = ev.target.value; const pos = ev.target.selectionStart; draw(); const box = document.querySelector(".journal-search"); box.focus(); box.setSelectionRange(pos, pos); } });
       return section("Songs", buttons(ids.length ? btn("Play All", "btn-green", () => play(ids)) : null,
           btn("Upload Songs", "btn-amber", uploadSongs)), search,
-        songRows(ids, (t) => buttons(btn("+ Playlist", "btn-ghost btn-small", () => toPlaylist(t)),
+        songRows(ids, (t) => buttons(el("button", { type: "button", class: "btn btn-ghost btn-small mu-add", "aria-label": "Add " + t.title + " to a playlist",
+          onclick: () => toPlaylist(t) }, "+"),
           byId(t.id).uploaded ? btn("Delete", "btn-ghost btn-small", () => act({ kind: "track.delete", params: { track_id: t.id } })) : null)));
     },
     playlists: () => {
@@ -163,7 +178,7 @@
       $("panel").replaceChildren(el("p", { class: "empty" }, "Music isn't set up on this MIA."));
       return;
     }
-    if (!$("player")) $("strip").after(el("section", { class: "glass music-player", id: "player", "aria-label": "Now playing", hidden: true }));
+    if (!$("player")) $("panel").after(el("section", { class: "glass music-player", id: "player", "aria-label": "Now playing", hidden: true }));
     drawPlayer();
     draw();
   });
