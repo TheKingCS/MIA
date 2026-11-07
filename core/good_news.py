@@ -129,6 +129,7 @@ CAVEATS = (
 # ------------------------------------------------------------------ feeds (pure)
 
 def _text(node) -> str:
+    """All the text inside an XML element ("" for none)."""
     return "".join(node.itertext()).strip() if node is not None else ""
 
 
@@ -170,6 +171,7 @@ def parse_feed(xml_text: str, source_id: str) -> list[dict]:
 
 
 def _fetch(url: str) -> str:
+    """One public feed, fetched with MIA's own user agent (at most 3 MB, 20-second timeout)."""
     request = urllib.request.Request(url, headers={"User-Agent": AGENT})
     with urllib.request.urlopen(request, timeout=20) as answer:
         return answer.read(3_000_000).decode("utf-8", errors="replace")
@@ -214,6 +216,7 @@ def caveats(item: dict) -> list[str]:
 
 
 def _alike(a: str, b: str) -> float:
+    """How alike two headlines are (0 to 1), to spot the same story from different outlets."""
     from core.failure_log import similar
 
     return similar(a, b)
@@ -264,6 +267,7 @@ def pick(stories: list[dict], n: int = STORIES, per_topic: int = 2, flagged: tup
 
 
 def _stamp(text: str) -> float:
+    """A timestamp from ISO text, as seconds (0 when it can't be read)."""
     try:
         return datetime.fromisoformat(text).timestamp()
     except ValueError:
@@ -298,6 +302,7 @@ ASKED = (("late night", r"late.?night|night owl|talk show"), ("evening", r"calm|
 
 
 def personality_for(hour: int, asked: str = "") -> str:
+    """Which radio personality reads: the one the person asked for, else the one for this hour of the day."""
     for key, words in ASKED:
         if asked and re.search(words, asked, re.IGNORECASE):
             return key
@@ -305,6 +310,9 @@ def personality_for(hour: int, asked: str = "") -> str:
 
 
 def _how_known(s: dict) -> str:
+    """How a story is known, in words: reported by which outlets (confirmed), from the source itself, or one outlet
+    so far.
+    """
     names = []
     for x in s["sources"]:
         name = SOURCE_BY_ID.get(x, (0, x))[1]
@@ -322,6 +330,7 @@ BOILERPLATE = re.compile(r"\b(supported by|sponsored|see more|subscribe|sign up|
 
 
 def _first_sentences(text: str, n: int = 2, limit: int = 320) -> str:
+    """A story's first sentences (two by default), boilerplate left out, cut at a word near the limit."""
     parts = [s for s in re.split(r"(?<=[.!?])\s+", text or "") if s and not BOILERPLATE.search(s)]
     out = " ".join(parts[:n]).strip()
     return out if len(out) <= limit else out[:limit].rsplit(" ", 1)[0] + "…"
@@ -345,10 +354,12 @@ def script(stories: list[dict], personality: str) -> str:
 # ------------------------------------------------------------------ the day's episode
 
 def _episodes() -> Path:
+    """Where each day's episode is kept."""
     return DATA / "episodes"
 
 
 def episode(day: Optional[date] = None) -> Optional[dict]:
+    """One day's episode (today by default), or None when there isn't one."""
     day = day or date.today()
     try:
         return json.loads((_episodes() / f"{day.isoformat()}.json").read_text(encoding="utf-8"))
@@ -411,12 +422,14 @@ def _tidy_tracks(music) -> None:
 # ------------------------------------------------------------------ the person: on, asked, flagged
 
 def is_on(context) -> bool:
+    """Whether this person has switched Good News Radio on (it's off until they do)."""
     from core import person_settings
 
     return bool(person_settings.get(context, SETTING, False))
 
 
 def _folder(context) -> Optional[Path]:
+    """The person's own folder (where their Fix-It Log or traces live), or None."""
     for name in ("failures", "traces"):
         found = getattr(getattr(context, name, None), "data_dir", None)
         if found is not None:
@@ -425,6 +438,7 @@ def _folder(context) -> Optional[Path]:
 
 
 def heard(context) -> list[dict]:
+    """What this person has heard: each day's stories, and any they called misleading."""
     folder = _folder(context)
     try:
         return json.loads((folder / "good_news_heard.json").read_text(encoding="utf-8")).get("heard", []) if folder else []
@@ -433,6 +447,7 @@ def heard(context) -> list[dict]:
 
 
 def _note_heard(context, entry: dict) -> None:
+    """Adds to what this person has heard (about the last 500 entries kept), atomically."""
     folder = _folder(context)
     if folder is None:
         return
@@ -442,6 +457,7 @@ def _note_heard(context, entry: dict) -> None:
 
 
 def flagged_sources(context, days: int = 90, at_least: int = 2) -> tuple:
+    """The outlets this person called misleading at least `at_least` times in the last `days` days."""
     since = (date.today() - timedelta(days=days)).isoformat()
     by: dict[str, int] = {}
     for h in heard(context):

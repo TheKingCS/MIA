@@ -100,7 +100,6 @@
   "core/geo_grid.py": 5,
   "core/glasses_feed.py": 3,
   "core/glasses_voice.py": 1,
-  "core/good_news.py": 14,
   "core/goods.py": 4,
   "core/gps_tracks.py": 8,
   "core/hash_identifier.py": 1,

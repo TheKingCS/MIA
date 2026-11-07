@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 228,965 lines; 1043 files describe themselves; 5,003 of 13,517 classes and functions are documented.
+1043 files, 228,981 lines; 1043 files describe themselves; 5,017 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 102,871 lines; 4,272 of 5,630 classes and functions documented
+367 files, 102,887 lines; 4,286 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -153,7 +153,7 @@
 - `core/glasses.py`: The glasses' app cards and their quick action menus (Zac, 2026-10-16; Muse's H-0041 Phase 2). The glasses boot to MIA's orb; one swipe away, the person flips through app cards; selecting one opens its quick action menu. Assembled here, in code, so `web/glasses.js` holds no logic (DEC-0013), from the
 - `core/glasses_feed.py`: The glasses' Heads-Up screen (Zac, 2026-10-18): blank until something happens, then a card ("+50 XP · Mission Complete", "Debt payment: Car loan"), then clear again. This is what's new for the person since the glasses last asked, wherever it happened (the phone, the PC, the glasses). *(3 undocumented)*
 - `core/glasses_voice.py`: Talking to MIA through the glasses (H-0041 Phase 3; Zac, 2026-10-19). The Display glasses pair to the phone as a Bluetooth headset, so MIA's phone app listens through the glasses' microphone (Android's own speech recognizer, on the phone), sends the words here, and speaks the answer back through the *(1 undocumented)*
-- `core/good_news.py`: Good News Radio (DEC-0096, build plan step 13; Zac, 2026-11-06: AI that reads credible outlets daily and gathers good news, healing, technology, medicine, renewable energy, societies improving, "heard through AI radio personalities matched to mood"; sources by Claude's recommendation, approved, and  *(14 undocumented)*
+- `core/good_news.py`: Good News Radio (DEC-0096, build plan step 13; Zac, 2026-11-06: AI that reads credible outlets daily and gathers good news, healing, technology, medicine, renewable energy, societies improving, "heard through AI radio personalities matched to mood"; sources by Claude's recommendation, approved, and 
 - `core/goods.py`: Homestead goods on hand (DEC-0036): what's made and not yet sold, batch by batch. No store of its own: a batch is a finished build (core/job_manager.py, with its recipe and `finished_at`), what it made is its products_produced, what sold is the Ledger's sales tagged with the batch (`job_id`), and wh *(4 undocumented)*
 - `core/goods_actions.py`: Homestead goods' actions (DEC-0036), on the action contract in core/actions.py: proposed in plain words, approved, run, undoable.
 - `core/goods_starters.py`: Starter recipes for homestead goods (DEC-0037): a cutting board, a planter, spice and herb blends, mixes in a jar, eggs, microgreens and plant starts, to copy into Workshop → Recipes and change to your own. Generic on purpose: no prices (yours to set), quantities a common starting point, allergens f
