@@ -20,10 +20,12 @@ from core.actions import ACTION_TYPES, ActionError, ActionType, _need
 
 
 def _store(context):
+    """The person's live-workout store, or ActionError when it isn't here."""
     return _need(context, "training")
 
 
 def _live(context):
+    """The workout in progress, or ActionError saying how to start one."""
     s = _store(context).live()
     if s is None:
         raise ActionError("There's no workout going. Say \"start my workout\".")
@@ -31,6 +33,7 @@ def _live(context):
 
 
 def _number(value, what: str):
+    """A number from the params (None when blank), 0 to 10,000; ActionError otherwise."""
     if value in (None, ""):
         return None
     try:
@@ -58,6 +61,7 @@ def _run(context, change) -> str:
 
 
 def _describe_start(context, params) -> str:
+    """The sentence the approval card shows for `training.start` (Propose); raises ActionError when it can't be done. A rest day, or a workout already going, is refused."""
     fit = _need(context, "fitness")
     todays = fit.today_training()
     if not todays:
@@ -68,6 +72,7 @@ def _describe_start(context, params) -> str:
 
 
 def _start(context, params) -> str:
+    """Does `training.start` once approved, and says what happened. Today's training becomes the live session, and it says the first exercise."""
     todays = _need(context, "fitness").today_training()
     if not todays:
         raise ActionError("Today's a rest day in your plan.")
@@ -81,6 +86,9 @@ def _start(context, params) -> str:
 
 
 def _finish(context, params) -> str:
+    """Does `training.finish` once approved, and says what happened. The session is written to the workout log (if anything was done), so XP and
+    records follow on their usual paths.
+    """
     store = _store(context)
     s = _live(context)
     done = sum(len(st.done) for st in s.steps)
@@ -97,6 +105,7 @@ def _finish(context, params) -> str:
 
 
 def _describe_set(context, params) -> str:
+    """The sentence the approval card shows for `training.set` (Propose); raises ActionError when it can't be done. It names the exercise and the reps or seconds."""
     name = (ts.view(_live(context), datetime.now()).get("now") or {}).get("name") or "this exercise"
     reps, seconds = _number(params.get("reps"), "reps"), _number(params.get("seconds"), "time")
     what = f"{int(reps)} reps" if reps is not None else f"{seconds:g} seconds" if seconds is not None else "a set"
@@ -104,6 +113,9 @@ def _describe_set(context, params) -> str:
 
 
 def _set(context, params) -> str:
+    """Does `training.set` once approved, and says what happened. The set is logged with how it was counted (said, cadence, told, tapped); a child is
+    never asked for weight.
+    """
     reps, seconds = _number(params.get("reps"), "reps"), _number(params.get("seconds"), "time")
     from core.child_accounts import is_child
 
@@ -114,12 +126,14 @@ def _set(context, params) -> str:
 
 
 def _correct(context, params) -> str:
+    """Does `training.correct` once approved, and says what happened. The last set's count is changed."""
     reps, seconds = _number(params.get("reps"), "reps"), _number(params.get("seconds"), "time")
     _run(context, lambda s, now: ts.correct(s, reps=int(reps) if reps is not None else None, seconds=seconds))
     return f"Changed to {int(reps)} reps." if reps is not None else f"Changed to {seconds:g} seconds."
 
 
 def _simple(change, what: str):
+    """The describe/execute pair for a session move that takes no input (skip rest, skip an exercise, pause, resume)."""
     return (lambda context, params: f"{what}"), (lambda context, params: _run(context, change))
 
 

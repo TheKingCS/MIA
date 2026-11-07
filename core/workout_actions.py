@@ -18,6 +18,7 @@ from core.record_actions import Field, Record, field_dict, get, parse, record_fo
 
 
 def _categories():
+    """The exercise categories, imported late so this module loads before the workout store."""
     from core.workout_manager import EXERCISE_CATEGORIES
 
     return tuple(EXERCISE_CATEGORIES)
@@ -43,6 +44,7 @@ _NOTES = Field("notes", "Notes", "textarea")
 
 
 def _exercise(context, exercise_id: str):
+    """The exercise the params name, or ActionError asking for one."""
     exercise = _need(context, "workout").get_exercise(str(exercise_id or ""))
     if exercise is None:
         raise ActionError("Pick an exercise.")
@@ -53,6 +55,9 @@ def _exercise(context, exercise_id: str):
 
 
 def _session(context, params) -> dict:
+    """A workout session from the form: the exercise, sets, reps and weight (one logged set per set), minutes, date
+    and notes.
+    """
     exercise = _exercise(context, params.get("exercise_id"))
     sets, reps, weight = parse(_SETS, params.get("sets")), parse(_REPS, params.get("reps")), parse(_WEIGHT, params.get("weight"))
     logged = [{"exercise_id": exercise.exercise_id, "set_number": n + 1, "reps": reps, "weight": weight}
@@ -63,6 +68,7 @@ def _session(context, params) -> dict:
 
 
 def _describe_log(context, params) -> str:
+    """The sentence the approval card shows for `workout.log` (Propose); raises ActionError when it can't be done."""
     s = _session(context, params)
     what = f"{s['exercise'].name}: {max(1, s['sets'])} × {s['reps']}" + (f" at {s['weight']:g}" if s["weight"] else "")
     extra = (f", {s['minutes']:g} min" if s["minutes"] else "") + (f" on {s['date']}" if s["date"] else "")
@@ -70,6 +76,7 @@ def _describe_log(context, params) -> str:
 
 
 def _log(context, params) -> str:
+    """Does `workout.log` once approved, and says what happened. The workout store grants its XP and records it."""
     s = _session(context, params)
     context.workout.add_session(template_id="", date_str=s["date"], duration_minutes=s["minutes"], notes=s["notes"],
                                 sets_logged=s["logged"])
@@ -77,6 +84,7 @@ def _log(context, params) -> str:
 
 
 def _session_record(context, params):
+    """The workout session the params name, or ActionError."""
     session = _need(context, "workout").get_session(str(params.get("session_id", "")))
     if session is None:
         raise ActionError("That session isn't there anymore.")
@@ -84,11 +92,13 @@ def _session_record(context, params):
 
 
 def _describe_session_delete(context, params) -> str:
+    """The sentence the approval card shows for `workout.delete` (Propose); raises ActionError when it can't be done."""
     session = _session_record(context, params)
     return f"Remove the workout on {session.date} ({len(session.sets_logged)} sets) from your history"
 
 
 def _session_delete(context, params) -> str:
+    """Does `workout.delete` once approved, and says what happened."""
     session = _session_record(context, params)
     context.workout.delete_session(session.session_id)
     return f"The workout on {session.date} is removed."
@@ -98,6 +108,7 @@ def _session_delete(context, params) -> str:
 
 
 def _kinds() -> list[ActionType]:
+    """Every workout action kind, all child-safe: the exercise record kinds, logging a session and removing one."""
     kinds = []
     for record in RECORDS.values():
         kinds += record_kinds(record, child_ok=True)
@@ -114,6 +125,7 @@ ACTION_TYPES.update(WORKOUT_ACTIONS)
 
 
 def form_spec() -> dict:
+    """The forms the Workout screen uses: an exercise's fields and logging a session."""
     forms = {key: record_form(r) for key, r in RECORDS.items()}
     forms["log"] = {"noun": "session", "id_param": None,
                     "fields": [field_dict(f) for f in (_EXERCISE, _REPS, _SETS, _WEIGHT, _MINUTES, _DATE, _NOTES)]}
