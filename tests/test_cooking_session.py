@@ -1,6 +1,6 @@
 """Cook mode (DEC-0113, core/cooking_session.py and core/cooking_actions.py): one recipe being cooked per person,
 step by step, with named timers that keep running across steps, what each step uses, and "I made this" logging the
-meal through the kitchen's own action."""
+meal through the kitchen's own action; and all of it by voice (core/assistant_cooking_actions.py)."""
 
 from datetime import datetime, timedelta
 from types import SimpleNamespace
@@ -95,3 +95,34 @@ def test_cooking_actions_move_the_session_and_made_logs_through_meal_cook(tmp_pa
     assert A["cooking.made"].execute(context, {}) == "Turkey Chili is in the meal log."
     assert calls == [{"recipe_id": "r1"}]
     assert ca.screen(context) is None
+
+
+def test_a_recipe_is_found_by_the_words_said():
+    from core.assistant_cooking_actions import find_recipe
+
+    recipes = [SimpleNamespace(name="Turkey Chili"), SimpleNamespace(name="Banana Bread"), SimpleNamespace(name="Rice")]
+    assert find_recipe(recipes, "the chili").name == "Turkey Chili"
+    assert find_recipe(recipes, "banana bread").name == "Banana Bread"
+    assert find_recipe(recipes, "my turkey chili recipe").name == "Turkey Chili"
+    assert find_recipe(recipes, "lasagna") is None and find_recipe(recipes, "") is None
+
+
+def test_cook_mode_works_by_voice_the_same_as_its_buttons(tmp_path, monkeypatch):
+    from core import assistant_cooking_actions as voice
+    from core.assistant_actions import AssistantActionRegistry
+
+    recipe = SimpleNamespace(recipe_id="r1", name="Turkey Chili", locked=False, instructions="\n".join(STEPS),
+                             ingredients=INGREDIENTS)
+    kitchen = SimpleNamespace(get_recipe=lambda rid: recipe if rid == "r1" else None, all_recipes=lambda: [recipe])
+    context = SimpleNamespace(kitchen=kitchen, cooking=cs.CookingStore(SimpleNamespace(), data_dir=tmp_path))
+    registry = AssistantActionRegistry()
+    voice.register_cooking_actions(registry)
+    tool = {name: registry._actions[name].handler for name in ("cook_start", "cook_step", "cook_timer", "cook_finish")}
+    assert tool["cook_start"](context, {"recipe": "the chili"}).startswith("Step 1 of 4")
+    assert tool["cook_step"](context, {"move": "next"}).startswith("Step 2 of 4")
+    assert tool["cook_step"](context, {"step": 4}).startswith("Step 4 of 4")
+    assert "last step" in tool["cook_step"](context, {"move": "next"})  # its own words, not an error
+    assert tool["cook_timer"](context, {"name": "Rice", "minutes": 18}) == "Rice timer: 18 minutes."
+    assert tool["cook_timer"](context, {"name": "Rice", "stop": "yes"}) == "Stopped the rice timer."
+    assert tool["cook_finish"](context, {"made": "no"}) == "Stopped cooking Turkey Chili. Nothing was logged."
+    assert "Nothing's cooking" in tool["cook_step"](context, {})

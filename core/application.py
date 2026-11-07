@@ -87,6 +87,7 @@ from core.assistant_energy_actions import register_energy_actions
 from core.assistant_path_actions import register_path_actions
 from core.assistant_browser_actions import register_browser_actions
 from core.browser import Browsers
+from core.assistant_cooking_actions import register_cooking_actions
 from core.assistant_goods_actions import register_goods_actions
 from core.assistant_dungeon_actions import register_checkin_actions, register_dungeon_actions, register_loop_actions
 from core.failure_actions import register_failure_actions
@@ -1560,6 +1561,7 @@ class MIAApplication:
         register_path_actions(self.context.assistant_actions)  # learning paths: guitar and more (DEC-0111, DEC-0112)
         register_browser_actions(self.context.assistant_actions)  # MIA's own browser, taught by showing (DEC-0117)
         register_goods_actions(self.context.assistant_actions)  # eggs, goods, freedom, deadlines by voice
+        register_cooking_actions(self.context.assistant_actions)  # cook mode by voice (DEC-0113, DEC-0125)
         register_dungeon_actions(self.context.assistant_actions)  # the Dungeon: shifts, loot, quests (DEC-0046)
         register_loop_actions(self.context.assistant_actions)  # the loop: when things happen (DEC-0047)
         register_checkin_actions(self.context.assistant_actions)  # the Sunday check-in (DEC-0047)

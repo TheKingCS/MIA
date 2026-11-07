@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1101 files, 249,537 lines; 1101 files describe themselves; 13,670 of 14,340 classes and functions are documented.
+1102 files, 249,714 lines; 1102 files describe themselves; 13,679 of 14,349 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-397 files, 115,843 lines; 6,142 of 6,231 classes and functions documented
+398 files, 115,989 lines; 6,149 of 6,238 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -25,6 +25,7 @@
 - `core/assistant_browser_actions.py`: MIA's browser by voice and chat (DEC-0117): open a page or search, read it, click, type, go back, close; learn a task the person shows her, do it again, list what she's learned. Every step goes through core/browser.py, which sorts it with core/browser_safety.py: a step that commits is held as the ac
 - `core/assistant_chat.py`: The pure, non-Qt logic for one Assistant chat turn — moved here from `modules/assistant/module.py` (2026-07-14 aesthetic pass part 4, docs/ROADMAP.md) once the sidebar chat in `gui/character_panel.py` needed the exact same request-building and tool-call-safety logic as the full-screen Assistant modu
 - `core/assistant_comm_actions.py`: Assistant tools for the communication gate (core/communication_gate.py, Cognitive Extension slice C): asking what MIA chose not to say, and changing how often she speaks up on her own.
+- `core/assistant_cooking_actions.py`: Cook mode by voice (DEC-0113 cook mode, DEC-0125: full use both ways). With flour on your hands: "start cooking the chili", "next step", "go back", "what step am I on", "go to step 4", "set a rice timer for 18 minutes", "stop the rice timer", "I made it", "stop cooking". Each tool runs the same acti
 - `core/assistant_domain_actions.py`: Assistant actions added by the 2026-09-27 conversational audit (docs/ASSISTANT_AUDIT.md), so what the owner *says* updates the right records: kitchen (recipes, meals, grocery list, pantry), debts and budget targets, asset details and notes (including greenhouse/garden plants, which are Maintenance a
 - `core/assistant_dungeon_actions.py`: The Dungeon by voice (DEC-0046): "How much loot this week?", "I worked 9 hours, we were unstocked", "I picked up an overtime shift Saturday", "Make it a quest". Each runs the same code as the screen (the action kinds in core/dungeon_actions.py, the numbers in core/web_dungeon.py), so the loot matche
 - `core/assistant_email_actions.py`: The Assistant writes emails (2026-10-01, accounts stage 3, core/email_drafts.py). `draft_email` only ever makes a draft: the person sends it by pressing Send (desktop or phone), copies it, or opens it in their mail app. There is deliberately no tool that sends.
@@ -676,7 +677,7 @@
 
 ## tests/: the test suite: what each part must do
 
-367 files, 66,679 lines; 5,285 of 5,866 classes and functions documented
+367 files, 66,710 lines; 5,287 of 5,868 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -743,7 +744,7 @@
 - `tests/test_conversation_manager.py`: Unit tests for core.conversation_manager. Isolates _DATA_DIR _CONVERSATIONS_FILE into a tmp_path scratch area, same monkeypatch pattern as test_mission_manager.py's isolated_paths. Also isolates config_manager's _CONFIG_FILE, since set_active_conversation_id() calls context.config.save() — the exact *(5 undocumented)*
 - `tests/test_conversation_modes.py`: Explicit mode switches (core/conversation_modes.py): a sentence corpus, not wording. *(3 undocumented)*
 - `tests/test_conversation_state.py`: What a conversation is about (DEC-0052 step 4, core/conversation_state.py): a short follow-up goes back to the last question plan, with both questions. *(2 undocumented)*
-- `tests/test_cooking_session.py`: Cook mode (DEC-0113, core/cooking_session.py and core/cooking_actions.py): one recipe being cooked per person, step by step, with named timers that keep running across steps, what each step uses, and "I made this" logging the meal through the kitchen's own action.
+- `tests/test_cooking_session.py`: Cook mode (DEC-0113, core/cooking_session.py and core/cooking_actions.py): one recipe being cooked per person, step by step, with named timers that keep running across steps, what each step uses, and "I made this" logging the meal through the kitchen's own action; and all of it by voice (core/assist
 - `tests/test_core_runtime.py`: Unit tests for core.core_runtime — headless MIA Core's build_core_context() and its curated Assistant action handlers (_action_*). These are independent copies of core/application.py's own staticmethods (see that module's docstring for why), so this mirrors tests/test_assistant_action_handlers.py's 
 - `tests/test_corrections.py`: Corrections in every area (build plan step 4, core/corrections.py): MIA's changes are watched for three days; the person undoing one, or editing or deleting something of the same kind (the same record when both name it), corrects her, once; the corrections.* loops count them by area. Kinds and ids o *(3 undocumented)*
 - `tests/test_council.py`: The council chat (DEC-0077, core/council.py) and usage (DEC-0079, core/dev_usage.py). *(3 undocumented)*
