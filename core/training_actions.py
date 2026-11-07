@@ -144,6 +144,7 @@ _KINDS = [
     ActionType("training.correct", "Correct", {"reps": "", "seconds": ""},
                lambda c, p: "Correct the last set's count", _correct, True),
     ActionType("training.skip_rest", "Skip rest", {}, *_simple(ts.skip_rest, "Skip the rest"), True),
+    ActionType("training.rest_more", "+30 s", {}, *_simple(ts.rest_more, "Thirty more seconds of rest"), True),
     ActionType("training.skip", "Skip exercise", {}, *_simple(ts.skip_exercise, "Skip this exercise"), True),
     ActionType("training.pause", "Pause", {}, *_simple(ts.pause, "Pause the workout"), True),
     ActionType("training.resume", "Resume", {}, *_simple(ts.resume, "Resume the workout"), True),

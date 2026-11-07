@@ -378,7 +378,8 @@
           el("span", { class: "wk-mono dim" }, [n.target, n.weight ? "weight " + n.weight : null].filter(Boolean).join(" · "))),
         el("div", { class: "wk-actions" },
           el("button", { type: "button", class: "btn-big", onclick: () => act({ kind: "training.skip_rest", params: {} }) }, "Skip Rest"),
-          el("p", { class: "dim" }, "A tone plays at zero. Say “skip rest” anytime.")));
+          el("button", { type: "button", class: "btn-big quiet", onclick: () => act({ kind: "training.rest_more", params: {} }, { quick: true }) }, "+30 s"),
+          el("p", { class: "dim" }, "A tone plays at zero. Say “skip rest” or “thirty more seconds” anytime.")));
     }
     const ex = s.steps.findIndex((x) => x.name === n.name);
     const shown = counting ? live.count : live.taps || 0;

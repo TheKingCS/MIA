@@ -1,7 +1,7 @@
 """The live workout session (DEC-0055, core/training_session.py): prescribed
 from the plan, performed set by set with how each count was made, rest by
-itself, pauses, corrections, counting aloud kept honest, and finishing as
-one ordinary workout log."""
+itself (and thirty more seconds of it, tapped or said), pauses, corrections,
+counting aloud kept honest, and finishing as one ordinary workout log."""
 
 from datetime import datetime, timedelta
 
@@ -210,3 +210,23 @@ def test_the_view_says_how_each_count_was_made_and_the_whole_rest():
     assert v["now"]["last_counted"] == "cadence"
     assert v["rest_total"] == s.steps[0].rest_seconds
     assert "verified" not in str(v)
+
+
+def test_thirty_more_seconds_of_rest_grow_the_whole_rest_too():
+    s = ts.start(DAY, T0)
+    ts.log_set(s, at(40), reps=15, counted="said")  # a 60 s rest, to at(100)
+    ts.rest_more(s, at(50))
+    assert ts.rest_left(s, at(50)) == 80 and ts.view(s, at(50))["rest_total"] == 90
+    ts.rest_more(s, at(140))  # a tap a moment after it ran out still counts, from now
+    assert ts.rest_left(s, at(140)) == 30 and ts.view(s, at(140))["rest_total"] == 120
+    ts.log_set(s, at(150), reps=15, counted="said")  # the next rest starts fresh
+    assert ts.view(s, at(150))["rest_total"] == 60
+    ts.skip_rest(s, at(151))
+    with pytest.raises(ValueError):
+        ts.rest_more(s, at(152))  # not resting
+
+
+def test_thirty_more_seconds_can_be_said_while_resting():
+    for said in ("thirty more seconds", "30 more seconds", "more rest", "I need more rest", "plus 30"):
+        assert ts.parse_training(said, ts.RESTING) == ("training.rest_more", {}), said
+    assert ts.parse_training("thirty more seconds", ts.ACTIVE) != ("training.rest_more", {})  # not resting

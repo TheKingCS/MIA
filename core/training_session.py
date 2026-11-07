@@ -78,8 +78,8 @@ class Step:
 @dataclass
 class Session:
     """One live workout: its title, when it started, its exercises (each prescribed, with what was done set by set),
-    which one it's on, its status (active, resting until a time, paused and how long in all, finished), and the
-    workout log it became.
+    which one it's on, its status (active, resting until a time, with any seconds added to that rest, paused and how
+    long in all, finished), and the workout log it became.
     """
     session_id: str
     title: str
@@ -88,6 +88,7 @@ class Session:
     index: int = 0
     status: str = ACTIVE
     rest_until: str = ""
+    rest_extra: int = 0  # seconds added to this rest ("+30 s"), so the ring's whole rest grows with it
     paused_at: str = ""
     paused_from: str = ""  # the status to go back to on resume
     paused_seconds: float = 0.0
@@ -150,8 +151,8 @@ def settle(s: Session, now: datetime) -> Session:
 
 def log_set(s: Session, now: datetime, reps: Optional[int] = None, seconds: Optional[float] = None,
             weight: Optional[float] = None, counted: str = "told") -> Session:
-    """A set done: recorded as performed, then the rest starts by itself
-    (none after the session's last set)."""
+    """A set done: recorded as performed, then the rest starts by itself, fresh (nothing added to it yet; none after
+    the session's last set)."""
     settle(s, now)
     if s.status in (FINISHED, COMPLETE):
         raise ValueError("That's the whole workout already. Say \"I'm done\" to wrap it up.")
@@ -171,7 +172,7 @@ def log_set(s: Session, now: datetime, reps: Optional[int] = None, seconds: Opti
         s.index = len(s.steps)
         s.status, s.rest_until = COMPLETE, ""
         return s
-    s.status, s.rest_until = RESTING, _iso(now + timedelta(seconds=step.rest_seconds))
+    s.status, s.rest_until, s.rest_extra = RESTING, _iso(now + timedelta(seconds=step.rest_seconds)), 0
     return s
 
 
@@ -180,6 +181,21 @@ def skip_rest(s: Session, now: datetime) -> Session:
     if s.status == RESTING:
         _record_rest(s, now)
         _advance(s)
+    return s
+
+
+MORE_REST = 30
+
+
+def rest_more(s: Session, now: datetime, seconds: int = MORE_REST) -> Session:
+    """Pure logic. Thirty more seconds of rest (the canvas's "+30 s", DEC-0113): the rest's end moves on by that much
+    (from now, if it had already run out: a tap a moment late still counts) and the whole rest grows with it.
+    ValueError when they aren't resting."""
+    if s.status != RESTING:
+        raise ValueError("You're not resting right now.")
+    until = _at(s.rest_until) or now
+    s.rest_until = _iso(max(until, now) + timedelta(seconds=seconds))
+    s.rest_extra = int(s.rest_extra or 0) + seconds
     return s
 
 
@@ -260,7 +276,8 @@ def target_text(step: Step) -> str:
 
 def view(s: Session, now: datetime) -> dict:
     """What every surface shows: plain values, the words ready. Each count comes with how it was made (`how`,
-    `last_counted`), the set's weight when one was logged, and while resting the whole rest (`rest_total`)."""
+    `last_counted`), the set's weight when one was logged, and while resting the whole rest (`rest_total`, with any
+    "+30 s" added)."""
     settle(s, now)
     step = current(s)
     if step is not None and step.complete:  # resting after an exercise's last set: what's coming is the next one
@@ -276,7 +293,7 @@ def view(s: Session, now: datetime) -> dict:
                 "how": [d.get("counted") or "told" for d in st.done]} for st in s.steps]}
     if s.status == RESTING and s.rest_until:  # the whole rest, so a ring can drain (the canvas's Rest)
         done_step = next((st for st in reversed(s.steps) if st.done), None)
-        out["rest_total"] = done_step.rest_seconds if done_step is not None else REST_SECONDS
+        out["rest_total"] = (done_step.rest_seconds if done_step is not None else REST_SECONDS) + int(s.rest_extra or 0)
     if step is not None:
         last = step.done[-1] if step.done else None
         out["now"] = {"name": step.name, "set": min(len(step.done) + 1, step.sets),  # the set being done, or next
@@ -359,6 +376,8 @@ _PAUSE = re.compile(r"^(?:pause|hold on|wait|hang on|take a break)(?: the workou
 _RESUME = re.compile(r"^(?:resume|continue|keep going|i'?m back|unpause|back to it)(?: the workout)?$")
 _NEXT = re.compile(r"^(?:next(?: set)?|skip (?:the )?rest|i'?m ready|ready|go|let'?s go)$")
 _SKIP = re.compile(r"^skip(?: this| that| the)?(?: exercise| one| move)?$")
+_MORE = re.compile(r"^(?:(?:give me |i need )?(?:thirty|30) more(?: seconds?| secs?)?|(?:i need |give me )?more rest|"
+                   r"(?:a )?(?:little|bit) more rest|plus (?:thirty|30)(?: seconds?)?|add (?:thirty|30)(?: seconds?)?)$")
 _FINISH = re.compile(r"^(?:i'?m done|i am done|(?:i'?m )?done for (?:today|the day|now)|finish(?:ed)?(?: my| the)?"
                      r"(?: workout| training| session)?|end(?: the)? workout|that'?s it(?: for today)?|"
                      r"workout (?:done|complete|finished|over)|stop(?: the)? workout)$")
@@ -372,7 +391,8 @@ def parse_training(text: str, status: Optional[str]) -> Optional[tuple[str, dict
     """Pure logic. What a short spoken line means for the workout, given
     the live session's status (None: no workout going): an action kind
     and its params, ("say", {}) to tell them where they are, ("ask", {})
-    to ask how many, or None (not about the workout)."""
+    to ask how many, or None (not about the workout). "Thirty more seconds"
+    while resting is `training.rest_more`."""
     said = re.sub(r"[.!?]+$", "", (text or "").lower().replace("’", "'").strip())
     said = _LEAD.sub("", said).strip(" ,")
     if not said or len(said.split()) > 9:
@@ -389,6 +409,8 @@ def parse_training(text: str, status: Optional[str]) -> Optional[tuple[str, dict
         return ("say", {})
     if _SKIP.match(said):
         return ("training.skip", {})
+    if _MORE.match(said) and status == RESTING:  # before the counts: "thirty more seconds" isn't 30 reps
+        return ("training.rest_more", {})
     if _NEXT.match(said):
         return ("training.skip_rest", {}) if status == RESTING else ("training.set", {"counted": "tapped"})
     if _ASK.match(said):
