@@ -56,10 +56,14 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
 - [~] Every other app: the shared frame now matches the canvas on every page (`web/ui.css`, "every app's frame"):
       status strips with the label above, a white value and an index bar; "needs you" amber instead of red fills
       (attention panels, overdue chips and rows; red stays for real errors); tabs as a rail lit from below. Checked
-      in demo mode on 60 pages (no new script errors; presence.html's old error is the page to retire). Still to do
-      per app, against its canvas artboard: the content layouts (Money's net-worth line and bill rows, Missions'
-      ready-to-complete focus card, Skills' capability card and next honest step, Freedom's How It Adds Up with
-      Fact/Estimate/Missing tags, Chickens' one-tap egg buttons, Security's camera grid, the rest as drawn).
+      in demo mode on 60 pages (no new script errors; presence.html's old error is the page to retire).
+      Done per app: Missions (ready-to-complete focus card, next objective, XP, source), Freedom (each figure tagged
+      Fact/Calculation/Missing by `core.freedom.figure_kind`), Skills (capability status and next honest step first).
+      Still to do per app, against its canvas artboard: Money's net-worth line (needs net-worth history in the
+      engine), Garage/Asset, Dungeon's run card, Compliance's groups, Insurance's quote compare, Real Estate cards,
+      Workshop's build card, Orders' stage rail, Inbox's "goes to", Calendar, Journal, People, Classroom, Guitar,
+      Vault, Operating, Play, Observations, the outdoors pages, Knowledge, Music, Files, Passwords, News, Look,
+      Settings, Profile, Fix-It, Diagnostics; Power, Toolbox, Lab and Field Kit need web pages first (WEB_PARITY).
 - [ ] Glasses: the shared orb on `web/glasses.html`.
 - Note: DEC-0119 (MIA for Zac alone) came after the canvas: drop household members from Party's leaderboard and
   Profile's household card when those screens are built.

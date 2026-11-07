@@ -5,6 +5,8 @@
  * locked one needs, the next honest step, each skill's pathways (Start),
  * challenge chains with their rarity, hidden achievements found, recent
  * achievements and prestige. Changes: pathway.start, character.prestige.
+ * 2026-11-07 (DEC-0113, the design canvas): the capability status (level,
+ * XP to the next) and the next honest step lead the page.
  */
 (function () {
   "use strict";
@@ -74,12 +76,22 @@
         el("div", {}, el("div", { class: "row-title" }, h.icon + " " + h.name), el("div", { class: "row-sub" }, el("span", { class: "rarity-tag" }, h.rarity_name), " " + h.description))))) : null);
   }
 
+  // The canvas's top of Skills (DEC-0113): where you stand overall, then the one next honest step.
+  function capability() {
+    const me = page.me, pct = me.xp_for_level ? Math.round((100 * me.xp_into_level) / me.xp_for_level) : 0;
+    return el("section", { class: "glass sk-cap", "aria-label": "Capability status" },
+      el("div", { class: "sk-cap-head" }, el("span", { class: "wk-label" }, "Capability Status"),
+        el("span", { class: "dim wk-mono" }, page.counts.demonstrated + " demonstrated · " + page.counts.touched + " of " + page.counts.skills + " touched")),
+      el("div", { class: "sk-cap-level" }, el("span", { class: "sk-cap-n" }, String(me.level)),
+        el("span", { class: "dim" }, "overall · " + (me.xp_for_level - me.xp_into_level).toLocaleString() + " XP to " + (me.level + 1))),
+      el("div", { class: "meter" }, el("div", { class: "meter-fill", style: "width:" + pct + "%" })),
+      page.focus ? el("div", { class: "sk-next" }, el("span", { class: "wk-label", style: "color: var(--accent)" }, "Next Honest Step"),
+        el("p", {}, page.focus.icon + " Put some real time toward ", el("strong", {}, page.focus.name), ": " + page.focus.to_next + " XP to its next level.")) : null);
+  }
+
   function sideColumn() {
     const me = page.me;
     return el("div", { class: "stack" },
-      section("Next honest step", null, page.focus
-        ? el("p", {}, page.focus.icon + " Put some real time toward ", el("strong", {}, page.focus.name), " next: " + page.focus.to_next + " XP to its next level.")
-        : el("p", { class: "dim" }, "Nothing to suggest right now.")),
       section("Prestige", null,
         el("p", {}, me.can_prestige ? "Level 100 maxed out! Prestige now for a " + me.next_prestige_color + " badge."
           : "Level " + me.level + "/100. Prestige opens once you max out level 100." + (me.prestige_tier ? " You're prestige " + me.prestige_tier + "." : "")),
@@ -109,7 +121,7 @@
         onclick: () => { category = x.name; history.replaceState(null, "", "#" + encodeURIComponent(x.name)); draw(); } },
       (x.interest ? "★ " : "") + x.name + (x.trend === "growing" ? " ↑" : x.trend === "declining" ? " ↓" : ""))));
     const skills = page.skills.filter((s) => s.category === category);
-    $("panel").replaceChildren(
+    $("panel").replaceChildren(capability(),
       el("div", { class: "skills-layout" },
         section(category || "Skills", trendNote(), el("div", { class: "skill-grid" }, skills.map(skillCard))),
         sideColumn()),

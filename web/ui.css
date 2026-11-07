@@ -431,3 +431,13 @@ body.cook-live .mia-orb-button, body.cook-live .bottom-bar { display: none; }
 .free-val { display: inline-flex; align-items: center; gap: 8px; }
 .free-val { flex-direction: column; align-items: flex-end; gap: 4px; flex: none; text-align: right; }
 .free-line > span:first-child { min-width: 0; flex: 1; }
+
+/* ------------------------------------------------------------ Skills (DEC-0113) */
+.sk-cap { padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; margin-bottom: var(--gap); }
+.sk-cap-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; font-size: var(--text-xs); }
+.sk-cap-level { display: flex; align-items: baseline; gap: 10px; }
+.sk-cap-n { font-family: var(--font-mono); font-size: var(--text-xl); font-weight: 600; }
+.sk-cap .meter, .meter { height: 6px; border-radius: var(--radius-pill); background: rgba(var(--rgb-line), 0.14); overflow: hidden; }
+.meter-fill { height: 100%; background: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
+.sk-next { margin-top: 6px; padding-top: 10px; border-top: 1px solid var(--line); }
+.sk-next p { margin: 4px 0 0; font-size: var(--text-sm); }
