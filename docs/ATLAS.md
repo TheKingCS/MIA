@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 228,020 lines; 1043 files describe themselves; 4,374 of 13,517 classes and functions are documented.
+1043 files, 228,049 lines; 1043 files describe themselves; 4,391 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 101,926 lines; 3,643 of 5,630 classes and functions documented
+367 files, 101,955 lines; 3,660 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -276,7 +276,7 @@
 - `core/real_estate_manager.py`: Property records for a real estate portfolio — values, mortgage balance/equity, and links to the existing systems that already own the rest of what a property needs tracked, rather than duplicating them: *(15 undocumented)*
 - `core/receipt_match.py`: A scanned receipt fills in a recipe's Bought It (Zac, 2026-10-17; the next step after crafting recipes, DEC-0030). The inbox already reads a receipt's lines (core/inbox_classify.receipt_items: description, amount, quantity, unit price) and keeps them on the expense it files into the Budget. Here eac *(1 undocumented)*
 - `core/receiver_indicators.py`: The Protocol boundary between `core/voice_loop.py` and the Receiver's physical feedback hardware (recording LED, e-paper status display, vibration motor — docs/HARDWARE.md's "Modular Backpack" section). *(5 undocumented)*
-- `core/record_actions.py`: The shared machinery behind the web's "add, edit, delete anything" (2026-10-06, DEC-0017). A screen's records are described once, as a `Record` with its `Field`s and the store methods that add, update and delete it; from that come its action kinds on the contract in core/actions.py (Propose → Approv *(17 undocumented)*
+- `core/record_actions.py`: The shared machinery behind the web's "add, edit, delete anything" (2026-10-06, DEC-0017). A screen's records are described once, as a `Record` with its `Field`s and the store methods that add, update and delete it; from that come its action kinds on the contract in core/actions.py (Propose → Approv
 - `core/record_import.py`: A file nobody planned for becomes a record set and a screen (ACAF step 4, DEC-0088/0089; `docs/ACAF_REVIEW.md` section 6: "an import with no store becomes a record set and a screen"). A spec, not code: a CSV's columns are read by code, each given a type from what's in it (a date, money, a number, a  *(4 undocumented)*
 - `core/record_sets.py`: A home for information MIA has no store for (DEC-0089; ACAF, `docs/ACAF_REVIEW.md` section 3.4). Every other store is made for one thing: bills, the flock, workouts. A *record set* is a typed list a person or MIA defines: its fields (text, number, money, date, choice, yes/no) and whose it is. "The s *(8 undocumented)*
 - `core/recreation.py`: Recreation in the health cluster (DEC-0098, build plan step 12; Zac, 2026-11-06: "Playing sports for recreation should somehow be tracked in an activity log that may connect with workouts or as part of the health apps cluster"). *(6 undocumented)*

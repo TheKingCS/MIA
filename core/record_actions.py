@@ -29,12 +29,16 @@ _BLANK = (None, "")
 # core/actions.py imports the modules built on this one, so its names are
 # looked up when an action runs, never at import (any import order works).
 def ActionError(message: str):  # noqa: N802  (stands in for the class)
+    """Makes core/actions.py's ActionError, looked up when called (core/actions.py imports the modules built on this
+    one, so importing it here at load would be circular).
+    """
     from core.actions import ActionError as error
 
     return error(message)
 
 
 def _need(context, store: str):
+    """core/actions.py's _need, looked up when called for the same reason: a store from the context, or ActionError."""
     from core.actions import _need as need
 
     return need(context, store)
@@ -42,6 +46,10 @@ def _need(context, store: str):
 
 @dataclass(frozen=True)
 class Field:
+    """One field of a record, as the form, the parser and the sentence see it: its parameter name, label, kind (text,
+    money, rate, int, amount, number, date, choice, recurrence, asset, pick...), whether it's required, its choices,
+    default, how a sentence names it, and whether to leave it out of a sentence at its default.
+    """
     name: str  # the parameter, and the record's attribute
     label: str
     # text | textarea | money | rate | int | amount (≥ 0) | number (any) |
@@ -57,11 +65,16 @@ class Field:
 
     @property
     def said(self) -> str:
+        """How a sentence names the field (its `say`, else the label in lower case)."""
         return self.say or self.label.lower()
 
 
 @dataclass(frozen=True)
 class Record:
+    """One kind of record a screen edits, described once: its key and noun, the id parameter, the store attribute and
+    the store's get/add/update/delete method names, its fields, what to call one in a sentence, and what to add after
+    "Delete the ...". Its add, edit and delete action kinds are made from this.
+    """
     key: str  # "bill"
     noun: str  # "bill"
     id_param: str  # "bill_id"
@@ -148,6 +161,7 @@ def show(f: Field, value, context=None) -> str:
 
 
 def title(record: Record, item) -> str:
+    """What a sentence calls a record: its first non-empty title attribute, else the noun."""
     for attr in record.title_attrs:
         value = getattr(item, attr, "")
         if value:
@@ -156,6 +170,7 @@ def title(record: Record, item) -> str:
 
 
 def get(context, record: Record, params):
+    """The record the params name, through the store's get method, or ActionError."""
     item = getattr(_need(context, record.store), record.get)(str(params.get(record.id_param, "")))
     if item is None:
         raise ActionError(f"That {record.noun} isn't there anymore.")
@@ -163,6 +178,9 @@ def get(context, record: Record, params):
 
 
 def values_of(record: Record, params, only_given: bool, context=None) -> dict:
+    """The record's field values parsed from the params (all fields, or only the ones given for an edit); an asset field
+    must name a maintenance asset that exists.
+    """
     values = {}
     for f in record.fields:
         if only_given and f.name not in params:
@@ -191,10 +209,12 @@ def changes(record: Record, item, values: dict) -> list[tuple[Field, Any, Any]]:
 
 
 def item_id(record: Record, item) -> str:
+    """A record's id."""
     return getattr(item, record.id_param)
 
 
 def _store_call(fn: Callable, *args, **kwargs):
+    """Calls a store method, turning the ValueError a store's own rule raises into an ActionError said plainly."""
     try:
         return fn(*args, **kwargs)
     except ValueError as problem:
@@ -205,6 +225,9 @@ def _store_call(fn: Callable, *args, **kwargs):
 
 
 def add_describe(record: Record):
+    """Builds the describe for adding a record: "Add the <noun> <name>: <details>", leaving out blanks, quiet
+    defaults and optional zeros.
+    """
     def describe(context, params) -> str:
         values = values_of(record, params, only_given=False, context=context)
         main = [f for f in record.fields if f.kind != "textarea" and values.get(f.name) not in _BLANK
@@ -218,6 +241,7 @@ def add_describe(record: Record):
 
 
 def add_execute(record: Record):
+    """Builds the execute for adding a record through the store's add method."""
     def execute(context, params) -> str:
         values = values_of(record, params, only_given=False, context=context)
         item = _store_call(getattr(_need(context, record.store), record.add), **values)
@@ -226,6 +250,7 @@ def add_execute(record: Record):
 
 
 def edit_describe(record: Record):
+    """Builds the describe for editing a record: each changed field as old → new ("Nothing to change" when none are)."""
     def describe(context, params) -> str:
         item = get(context, record, params)
         found = changes(record, item, values_of(record, params, only_given=True, context=context))
@@ -237,6 +262,7 @@ def edit_describe(record: Record):
 
 
 def edit_execute(record: Record):
+    """Builds the execute for editing a record: only the changed fields go to the store's update method."""
     def execute(context, params) -> str:
         item = get(context, record, params)
         values = {f.name: new for f, _old, new in
@@ -247,6 +273,7 @@ def edit_execute(record: Record):
 
 
 def delete_describe(record: Record):
+    """Builds the describe for deleting a record, with its amount when it has one, and the record's delete note."""
     def describe(context, params) -> str:
         item = get(context, record, params)
         amount = next((f for f in record.fields if f.kind == "money"), None)
@@ -256,6 +283,7 @@ def delete_describe(record: Record):
 
 
 def delete_execute(record: Record):
+    """Builds the execute for deleting a record (undo brings it back)."""
     def execute(context, params) -> str:
         item = get(context, record, params)
         _store_call(getattr(_need(context, record.store), record.delete), item_id(record, item))
@@ -288,5 +316,6 @@ def field_dict(f: Field) -> dict:
 
 
 def record_form(record: Record) -> dict:
+    """The form a screen shows for a record: its noun, id parameter and fields (field_dict)."""
     return {"noun": record.noun, "id_param": record.id_param, "fields": [field_dict(f) for f in record.fields]}
 
