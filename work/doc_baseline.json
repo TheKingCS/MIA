@@ -3,7 +3,6 @@
  "undocumented": {
   "core/budget_manager.py": 68,
   "core/plaid_manager.py": 21,
-  "gui/account_dialogs.py": 30,
   "gui/home_dashboard.py": 70,
   "tests/assistant_registry.py": 2,
   "tests/conftest.py": 4,

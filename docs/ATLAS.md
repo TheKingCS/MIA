@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1070 files, 239,039 lines; 1070 files describe themselves; 8,269 of 13,814 classes and functions are documented.
+1070 files, 239,069 lines; 1070 files describe themselves; 8,299 of 13,814 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -397,10 +397,10 @@
 
 ## gui/: the desktop's Qt shell and dialogs
 
-122 files, 21,651 lines; 983 of 1,083 classes and functions documented
+122 files, 21,681 lines; 1,013 of 1,083 classes and functions documented
 
 - `gui/__init__.py`: Presentation layer only. Everything in this package talks to the rest of the system through core.app_context.AppContext and modules.module_base. ModuleBase — never by importing module internals or reaching into core services directly beyond what AppContext exposes.
-- `gui/account_dialogs.py`: Accounts and households on the desktop (2026-10-01, docs/ROADMAP.md "People and ownership"; core/profile_manager.py, core/household_manager.py): *(30 undocumented)*
+- `gui/account_dialogs.py`: Accounts and households on the desktop (2026-10-01, docs/ROADMAP.md "People and ownership"; core/profile_manager.py, core/household_manager.py):
 - `gui/add_edit_alarm_dialog.py`: Small dialog for creating or editing a single alarm, used by modules/toolbox/tools/alarm_tool.py. Same shape as gui/add_edit_event_dialog.py (QDialog + the shared app-level theme + QDialogButtonBox, expose entered values via properties on accept).
 - `gui/add_edit_asset_dialog.py`: Small dialog for creating or editing a single maintenance asset (vehicle, mower, appliance, ...), used by modules/maintenance/module.py. Same shape as gui/add_edit_journal_entry_dialog.py (QDialog + shared app-level theme + QDialogButtonBox, validate-then-expose-via-properties on accept) — name/cate
 - `gui/add_edit_bill_dialog.py`: Small dialog for creating or editing a single recurring/one-time bill, used by modules/budget/module.py. Same shape as gui/add_edit_event_dialog.py (QDialog + shared app-level theme + QDialogButtonBox, validate-then-expose-via-properties on accept) — the Repeats combo is deliberately identical in sh

@@ -43,6 +43,7 @@ RECOVERY_WARNING = (
 
 
 def _password_field(placeholder: str) -> QLineEdit:
+    """A password box (hidden as typed) with its placeholder."""
     field = QLineEdit()
     field.setEchoMode(QLineEdit.EchoMode.Password)
     field.setPlaceholderText(placeholder)
@@ -50,6 +51,7 @@ def _password_field(placeholder: str) -> QLineEdit:
 
 
 def _error_label() -> QLabel:
+    """An empty label for saying what's wrong."""
     label = QLabel("")
     label.setStyleSheet("color: #e06666;")
     label.setWordWrap(True)
@@ -57,7 +59,9 @@ def _error_label() -> QLabel:
 
 
 class RecoveryCodeDialog(QDialog):
+    """A recovery code, shown once: it resets the password if it's forgotten, so it should be saved."""
     def __init__(self, code: str, parent=None) -> None:
+        """The code (selectable), the warning, Copy and I've saved it."""
         super().__init__(parent)
         self.setWindowTitle("Your recovery code")
         self.setMinimumWidth(380)
@@ -80,6 +84,7 @@ class RecoveryCodeDialog(QDialog):
 
 
 def show_recovery_code(code: Optional[str], parent=None) -> None:
+    """Shows a recovery code when there is one."""
     if code:
         RecoveryCodeDialog(code, parent).exec()
 
@@ -88,6 +93,7 @@ class RecoverPasswordDialog(QDialog):
     """Forgot your password: your email, your recovery code, a new password."""
 
     def __init__(self, context, identifier: str = "", parent=None) -> None:
+        """Forgot password: the email (or name), the recovery code, and the new password twice, with OK and Cancel."""
         super().__init__(parent)
         self.context = context
         self.setWindowTitle("Forgot password")
@@ -109,6 +115,7 @@ class RecoverPasswordDialog(QDialog):
         layout.addWidget(buttons)
 
     def _on_accept(self) -> None:
+        """Resets the password with the recovery code when the new ones match and the account and code do (saying which isn't right), then shows the new recovery code; the old one stops working."""
         if not self.new_edit.text() or self.new_edit.text() != self.confirm_edit.text():
             self.error_label.setText("The new passwords don't match.")
             return
@@ -126,6 +133,7 @@ class SignInDialog(QDialog):
     """Sign in with your email and password."""
 
     def __init__(self, context, parent=None) -> None:
+        """Sign in: the email and password (Enter signs in), Forgot password?, OK and Cancel."""
         super().__init__(parent)
         self.context = context
         self.profile = None
@@ -149,6 +157,7 @@ class SignInDialog(QDialog):
         layout.addWidget(buttons)
 
     def _on_accept(self) -> None:
+        """Signs in and keeps the profile; a profile with no password yet is pointed to the list, and a wrong pair is said (the password cleared)."""
         identifier = self.identifier_edit.text()
         found = self.context.profiles.find_for_sign_in(identifier)
         if found is not None and not found.has_password:
@@ -163,6 +172,7 @@ class SignInDialog(QDialog):
         self.accept()
 
     def _on_forgot(self) -> None:
+        """Opens password recovery with the email typed."""
         RecoverPasswordDialog(self.context, self.identifier_edit.text(), self).exec()
 
 
@@ -171,6 +181,7 @@ class HouseholdChoice(QWidget):
     or an existing one, approved by a member typing their password."""
 
     def __init__(self, context, parent=None) -> None:
+        """Which household a new account joins (or nobody: its own), and, for one chosen, a member there and their password to approve it."""
         super().__init__(parent)
         self.context = context
         layout = QVBoxLayout(self)
@@ -193,6 +204,7 @@ class HouseholdChoice(QWidget):
         self._on_household_changed()
 
     def _on_household_changed(self) -> None:
+        """Lists the chosen household's members to approve, and shows the approval fields only when one is chosen."""
         hid = self.household_combo.currentData()
         self.approver_combo.clear()
         if hid:
@@ -203,10 +215,12 @@ class HouseholdChoice(QWidget):
 
     @property
     def household_id(self) -> Optional[str]:
+        """The household chosen, or None for their own."""
         return self.household_combo.currentData()
 
     @property
     def approver_id(self) -> Optional[str]:
+        """The member chosen to approve."""
         return self.approver_combo.currentData()
 
     def approval_ok(self) -> bool:
@@ -217,13 +231,16 @@ class HouseholdChoice(QWidget):
         return bool(self.approver_id) and self.context.profiles.verify_password(self.approver_id, self.approver_password.text())
 
     def apply(self, profile_id: str) -> bool:
+        """Joins the chosen household with the member's approval (True when none was chosen); False when the password doesn't match."""
         if not self.household_id:
             return True
         return self.context.households.join(profile_id, self.household_id, self.approver_id, self.approver_password.text())
 
 
 class JoinHouseholdDialog(QDialog):
+    """Joining a household: the household's shared things become theirs too, while their own (conversations, memories, notes, workouts) stay theirs; a member there approves."""
     def __init__(self, context, profile, parent=None) -> None:
+        """The explanation and the household choice (not the one they're in), with OK and Cancel."""
         super().__init__(parent)
         self.context, self.profile = context, profile
         self.setWindowTitle("Join a household")
@@ -245,6 +262,7 @@ class JoinHouseholdDialog(QDialog):
         layout.addWidget(buttons)
 
     def _on_accept(self) -> None:
+        """Joins with the member's approval (a wrong password is said); none chosen just closes."""
         if not self.choice.household_id:
             self.reject()
             return
@@ -258,6 +276,7 @@ class AccountDialog(QDialog):
     """Your email, recovery code and household."""
 
     def __init__(self, context, profile, parent=None) -> None:
+        """Account & household: the email to sign in with, a new recovery code, the household (rename, join another, leave), the children they look after when there are any, and export or delete their account."""
         super().__init__(parent)
         self.context, self.profile = context, profile
         self.setWindowTitle("Account & household")
@@ -328,6 +347,7 @@ class AccountDialog(QDialog):
         self._show_household()
 
     def _show_household(self) -> None:
+        """Which household they're in and who they share it with; Leave only when they share it."""
         households = self.context.households
         hid = households.household_of(self.profile.profile_id)
         others = households.shares_with(self.profile.profile_id)
@@ -337,6 +357,7 @@ class AccountDialog(QDialog):
         self.leave_button.setEnabled(bool(others))
 
     def _confirm_password(self) -> bool:
+        """Asks for their password before something sensitive (True without one); a wrong one is said."""
         if not self.profile.has_password:
             return True
         from gui.password_dialog import prompt_for_password
@@ -350,6 +371,7 @@ class AccountDialog(QDialog):
         return True
 
     def _on_save_email(self) -> None:
+        """Saves the email to sign in with (a problem is said)."""
         try:
             self.context.profiles.set_email(self.profile.profile_id, self.email_edit.text())
         except AccountError as exc:
@@ -358,6 +380,7 @@ class AccountDialog(QDialog):
         self.message_label.setText("Saved. You can sign in with it.")
 
     def _on_new_recovery_code(self) -> None:
+        """Makes a new recovery code after their password (a password is needed first)."""
         if not self.profile.has_password:
             self.message_label.setText("Set a password first (Settings, Change Password); the code resets it.")
             return
@@ -365,6 +388,7 @@ class AccountDialog(QDialog):
             show_recovery_code(self.context.profiles.issue_recovery_code(self.profile.profile_id), self)
 
     def _on_export(self) -> None:
+        """Exports their data to a folder picked, with the household's shared things too when they say so (others in the household will be in it)."""
         from PySide6.QtWidgets import QFileDialog
 
         from core.account_data import export_account
@@ -381,6 +405,7 @@ class AccountDialog(QDialog):
         self.message_label.setText(f"Saved: {path}")
 
     def _on_delete(self) -> None:
+        """Deletes their account after asking (archived, or erased for good when ticked) and their password; shared things stay with the household, and the only account can't be deleted. Then back to the profile list."""
         from PySide6.QtWidgets import QCheckBox, QInputDialog
 
         from core.account_data import delete_account
@@ -410,6 +435,7 @@ class AccountDialog(QDialog):
         self.context.events.publish("profile.switch_requested")
 
     def _on_reset_child_password(self) -> None:
+        """Resets a child's password (or removes it), with the guardian's own password."""
         from PySide6.QtWidgets import QInputDialog
 
         from core.child_accounts import guardian_reset_password
@@ -430,6 +456,7 @@ class AccountDialog(QDialog):
             self.message_label.setText("That password doesn't match.")
 
     def _on_make_adult(self) -> None:
+        """Makes a child's account a regular one after asking (they'll see every app and tool)."""
         from core.child_accounts import make_adult
 
         child_id, child_name = self.child_combo.currentData(), self.child_combo.currentText()
@@ -440,6 +467,7 @@ class AccountDialog(QDialog):
             self.message_label.setText(f"{child_name} has a regular account now.")
 
     def _on_rename_household(self) -> None:
+        """Renames the household."""
         from PySide6.QtWidgets import QInputDialog
 
         households = self.context.households
@@ -449,11 +477,13 @@ class AccountDialog(QDialog):
             self._show_household()
 
     def _on_join(self) -> None:
+        """Joins another household from the dialog."""
         if JoinHouseholdDialog(self.context, self.profile, self).exec() == QDialog.DialogCode.Accepted:
             self.message_label.setText("Joined. Your screens now show the household's things.")
             self._show_household()
 
     def _on_leave(self) -> None:
+        """Leaves the household for one of their own after asking and their password (the shared things stay)."""
         confirm = QMessageBox.question(
             self, "Leave household",
             "Start a household of your own? The shared things (calendar, kitchen, budget...) stay with "
