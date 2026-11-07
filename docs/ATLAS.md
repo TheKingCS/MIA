@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1086 files, 245,134 lines; 1086 files describe themselves; 13,468 of 14,138 classes and functions are documented.
+1086 files, 245,138 lines; 1086 files describe themselves; 13,468 of 14,138 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-390 files, 113,601 lines; 6,021 of 6,110 classes and functions documented
+390 files, 113,604 lines; 6,021 of 6,110 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -154,7 +154,7 @@
 - `core/flock_actions.py`: Chickens' actions (DEC-0037, core/flock.py) on the action contract: proposed in plain words, approved, run, undoable.
 - `core/focus_presets.py`: What each person sees first (2026-10-01, accounts stage 2): MIA has dozens of apps, and a student, a homesteader and a small-business owner each need a different handful up front. A **focus** puts the most useful apps first and tucks the unlikely ones away. It never blocks anything: a tucked-away ap
 - `core/food_table.py`: MIA's built-in food table (DEC-0020): nutrition facts for about 7,800 everyday foods from the USDA's FoodData Central (public domain), per 100 g, in data/foods.tsv (tools/make_food_table.py builds it). Offline.
-- `core/freedom.py`: Freedom (DEC-0038; Life Runway, slice E of docs/COGNITIVE_EXTENSION_PROPOSAL.md): the way out of the job you're saving to leave, in numbers. The person's own plan, never a child's.
+- `core/freedom.py`: Freedom (DEC-0038; Life Runway, slice E of docs/COGNITIVE_EXTENSION_PROPOSAL.md): the way out of the job you're saving to leave, in numbers. The person's own plan, never a child's. Every figure says what it is (`figure_kind`: Fact, Calculation or Missing, DEC-0113).
 - `core/freedom_actions.py`: Freedom's actions (DEC-0038, core/freedom.py) on the action contract: proposed in plain words, approved, run.
 - `core/game_actions.py`: The game layer's changes (DEC-0028, docs/GAME_LAYER.md), on the action contract in core/actions.py.
 - `core/game_layer.py`: The game layer's screens (DEC-0028, docs/GAME_LAYER.md). Built in order:
@@ -669,7 +669,7 @@
 
 ## tests/: the test suite: what each part must do
 
-361 files, 65,772 lines; 5,212 of 5,793 classes and functions documented
+361 files, 65,773 lines; 5,212 of 5,793 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -791,7 +791,7 @@
 - `tests/test_flow_loops.py`: The flow loops Night School's teacher drafted (T-0047, core/loops.py): actions that broke or were turned down, email drafts thrown away or left open, unprompted messages dismissed or expired. Each reads records the person already keeps; an action's record carries its kind only, never what was in it. *(5 undocumented)*
 - `tests/test_focus_presets.py`: Each person's Apps screen (core/focus_presets.py) and MIA's setup questions (gui/onboarding_dialog.py), 2026-10-01. *(5 undocumented)*
 - `tests/test_food_table.py`: MIA's built-in food table (core/food_table.py, DEC-0020): matching an ingredient to a food, turning amounts into grams, and a recipe's nutrition per serving. Uses a small table in the real file's format (real USDA names and values for these foods). *(2 undocumented)*
-- `tests/test_freedom.py`: Freedom (DEC-0038): the fund that covers the gap between a month of living and what the homestead earns, plus the builds; the estimated day; progress by period; what a shift buys. Every number from the person's own records, or their own number, and it says which. *(1 undocumented)*
+- `tests/test_freedom.py`: Freedom (DEC-0038): the fund that covers the gap between a month of living and what the homestead earns, plus the builds; the estimated day; progress by period; what a shift buys. Every number from the person's own records, or their own number, and it says which (and what it is: Fact, Calculation or *(1 undocumented)*
 - `tests/test_gamification.py`: Unit tests for core.gamification.grant_xp() — the shared "credit XP credits + raise a real notification" helper every routine-completion hook (Workout/Kitchen/Maintenance/Budget) calls through. No Qt needed; fakes stand in for context.profiles/context.notifications/context.skills, same shape as test
 - `tests/test_garage_module.py`: Unit tests for modules.garage.module's pure functions, same style as tests/test_dashboard_module.py (no Qt event loop, no fixtures). *(5 undocumented)*
 - `tests/test_geo_grid.py`: Grid references and TAK (build plan step 14, DEC-0099): MGRS worked out in code (checked against pyproj and the mgrs package: 4,000 random points agreed to the metre, 2026-11-06; the reference outputs are pinned here), and MIA's waypoints as a TAK data package of Cursor on Target events and KML. *(2 undocumented)*

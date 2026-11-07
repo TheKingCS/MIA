@@ -5,6 +5,8 @@ core.freedom
 Freedom (DEC-0038; Life Runway, slice E of
 docs/COGNITIVE_EXTENSION_PROPOSAL.md): the way out of the job you're
 saving to leave, in numbers. The person's own plan, never a child's.
+Every figure says what it is (`figure_kind`: Fact, Calculation or
+Missing, DEC-0113).
 
 **The plan, in plain words.** A month of living needs some amount; the
 homestead earns some of it; the **gap** is the rest. Freedom is having
@@ -455,8 +457,9 @@ def _signed(x: float) -> str:
 
 
 def freedom_page(context, today: Optional[date] = None) -> dict:
-    """The Freedom screen: the plan, progress by period, the shift, the
-    builds, six months of history, and the person's own reasons."""
+    """The Freedom screen: the plan (each figure with where it came from and what it is, `kinds`:
+    Fact, Calculation or Missing, from figure_kind), progress by period, the shift, the builds, six
+    months of history, and the person's own reasons."""
     from core.child_accounts import is_child
 
     today = today or date.today()

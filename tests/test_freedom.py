@@ -1,7 +1,8 @@
 """Freedom (DEC-0038): the fund that covers the gap between a month of
 living and what the homestead earns, plus the builds; the estimated day;
 progress by period; what a shift buys. Every number from the person's own
-records, or their own number, and it says which."""
+records, or their own number, and it says which (and what it is: Fact,
+Calculation or Missing, DEC-0113)."""
 
 from datetime import date
 
