@@ -8,8 +8,9 @@ stocks the pantry and ticks the grocery list, an oil change is marked done
 on the truck at the receipt's mileage, a Lowe's receipt adds to the
 materials at the price paid; an emailed receipt files itself (unless it
 looks logged already, or that's turned off), and Undo, on screen or by
-voice, takes back exactly what it did; and the mailbox is read without
-marking anything read, taking only receipts.
+voice, takes back exactly what it did; HTML e-receipts are read line by
+line; and the mailbox is read without marking anything read, taking only
+receipts.
 """
 
 from __future__ import annotations
@@ -245,3 +246,37 @@ def test_the_everyday_mailbox_is_left_as_it_is():
     assert state == {"uidvalidity": "42", "last_uid": 9}
     again, state = fetch_receipts("imap.example.com", "me", "pw", connect=lambda h, p: box, state=state)
     assert again == [] and state["last_uid"] == 9
+
+
+HTML_RECEIPT = """<html><body><table width="100%"><tr><td>
+<div>Thanks for shopping at Kroger!</div><div>Order date: Nov 5, 2026</div>
+<table><tr><th>Item</th><th>Price</th></tr>
+<tr><td><div>GV WHL MLK GAL</div><div>Qty 2</div></td><td><span>$6.98</span></td></tr>
+<tr><td><div>LG EGGS 12CT</div></td><td>$2.99</td>
+<tr><td><p>BNNA</p></td><td>$1.29</td>
+</table><div>Subtotal $11.26</div><div>Total $11.26</div></td></tr></table></body></html>"""
+
+
+def test_an_html_e_receipt_reads_its_lines():
+    """An e-receipt's table rows become one line each (item and price), the layout around them keeps its own lines,
+    and rows left unclosed still end; "Qty 2" is how many, not part of the name."""
+    from core.document_text import html_to_text
+    from core.inbox_classify import receipt_items
+
+    text = html_to_text(HTML_RECEIPT)
+    assert "Thanks for shopping at Kroger!\nOrder date: Nov 5, 2026" in text
+    assert "GV WHL MLK GAL Qty 2 $6.98" in text and "BNNA $1.29" in text
+    lines, note = receipt_items(text)
+    assert [round(line.amount, 2) for line in lines] == [6.98, 2.99, 1.29] and "add up" in note
+    assert effects.readable_name("GV WHL MLK GAL Qty 2") == "Whole milk"
+    assert effects._qty({"description": "GV WHL MLK GAL Qty 2"}) == 2
+
+
+def test_an_html_e_receipt_by_email_stocks_the_pantry(ctx):
+    """Emailed as HTML only, it files itself: two gallons of milk on top of the one there."""
+    message = EmailMessage()
+    message["Subject"], message["From"] = "Your Kroger receipt", "receipts@kroger.com"
+    message.set_content(HTML_RECEIPT, subtype="html")
+    [item] = drop(ctx, "message.eml", message.as_bytes(), source="email")
+    assert item.auto and item.amount == 11.26
+    assert ctx.kitchen.get_pantry_item(ctx.milk.item_id).quantity == 3

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1082 files, 244,475 lines; 1082 files describe themselves; 13,429 of 14,099 classes and functions are documented.
+1082 files, 244,621 lines; 1082 files describe themselves; 13,434 of 14,104 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-388 files, 113,410 lines; 5,990 of 6,079 classes and functions documented
+388 files, 113,466 lines; 5,993 of 6,082 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -667,7 +667,7 @@
 
 ## tests/: the test suite: what each part must do
 
-360 files, 65,681 lines; 5,204 of 5,785 classes and functions documented
+360 files, 65,716 lines; 5,206 of 5,787 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1032,7 +1032,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-71 files, 12,239 lines
+71 files, 12,268 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
@@ -1108,7 +1108,7 @@
 
 ## android-phone/: the Android app that carries MIA's engine and the glasses' link
 
-15 files, 2,736 lines
+15 files, 2,762 lines
 
 - `android-phone/app/src/main/java/com/mia/phone/Engine.kt`: MIA's engine and server inside this app (mia_phone.py), started once per app process. Its own object, not MainActivity's, so the listening service (ListenService) can start MIA by itself when the glasses are tapped and the app isn't open: Android may have closed the screen, or the whole app, since M
 - `android-phone/app/src/main/java/com/mia/phone/Gallery.kt`: The memory vault's door to the camera roll (DEC-0030 E, core/memory_vault.py), for MIA's own screens as window.MIAAndroid. MIA's engine reads the photos itself once Android allows it; this only asks for that permission, and, when the person chooses to free space, hands the exact files to Android's o
