@@ -82,6 +82,9 @@ class MakerError(RuntimeError):
 
 
 def _ollama(prompt: str, schema: dict) -> str:
+    """Asks the local model with a JSON schema for its reply (temperature 0.2); MakerError, said plainly, when it
+    isn't answering.
+    """
     import urllib.request
 
     body = json.dumps({"model": MODEL, "prompt": prompt, "stream": False, "format": schema,
@@ -122,6 +125,10 @@ def spec_from(design: dict, blueprints: dict, need: str = "") -> tuple[dict, str
 
 
 def _spec_from(design: dict, blueprints: dict) -> tuple[dict, str]:
+    """A screen's spec from the model's design: from one of her record sources, or as a new record set with its
+    fields (names made safe). The model's own blocks are kept when they pass the checks; otherwise a blueprint
+    (log or tracker) is filled in. Returns the spec and the blueprint used.
+    """
     from core.creation_sources import SOURCES, fields_of
 
     source = str(design.get("source") or "").removeprefix("history:")
@@ -181,6 +188,9 @@ Sources it may read (and their fields):
 
 
 def _workflow_sources(context, child: bool) -> str:
+    """The sources a workflow can read, with their fields and types, for the model's prompt (fewer for a
+    child).
+    """
     from core.workflows import _sources
 
     return "\n".join(f"  - {name}: " + ", ".join(f"{f} ({d['type']})" for f, d in fields.items())
@@ -254,6 +264,7 @@ def _note(context, kind: str, outcome: str, problems: list) -> None:
 
 
 def maker_log(context, days: int = 30) -> list[dict]:
+    """The Make Something attempts of the last `days` days (maker_log.jsonl in the person's folder)."""
     from datetime import datetime, timedelta
 
     folder = getattr(getattr(context, "failures", None), "data_dir", None)

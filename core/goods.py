@@ -27,6 +27,9 @@ from typing import Optional
 
 @dataclass
 class Lot:
+    """One batch of homestead goods: the build and recipe it came from, its name, when it was made and when to sell by
+    (empty when it keeps), how many were made, sold and thrown out, and what one cost to make.
+    """
     job_id: str
     recipe_id: str
     name: str
@@ -39,10 +42,12 @@ class Lot:
 
     @property
     def left(self) -> float:
+        """How many are left to sell."""
         return round(max(0.0, self.produced - self.sold - self.tossed), 4)
 
 
 def _day(text: str) -> Optional[date]:
+    """A date from ISO text, or None."""
     try:
         return date.fromisoformat(str(text or "")[:10])
     except ValueError:
@@ -158,6 +163,7 @@ def market_summary(market, sales: list, lots_all: list[Lot]) -> dict:
 
 
 def market_tag(market_id: str) -> str:
+    """The tag a sale carries for the market day it happened at."""
     return f"market:{market_id}"
 
 

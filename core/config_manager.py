@@ -49,6 +49,9 @@ class ConfigManager:
     """
 
     def __init__(self) -> None:
+        """Loads the defaults merged with the person's config (config/config.json), and remembers where it lives so
+        undo can reload it.
+        """
         self._data: dict[str, Any] = {}
         # Where it lives, so "undo that" (core/undo_log.py) can find and
         # reload it: profiles (and their XP) are kept in this file.
@@ -87,6 +90,9 @@ class ConfigManager:
 
     @staticmethod
     def _read_json(path: Path, required: bool) -> dict[str, Any]:
+        """Reads a JSON config file: a missing optional one is empty; a malformed one is logged and, unless it's
+        required, set aside (quarantined, never lost) so the app still boots on defaults.
+        """
         try:
             with path.open("r", encoding="utf-8") as f:
                 return json.load(f)
@@ -165,8 +171,10 @@ class ConfigManager:
 
     @property
     def is_first_run(self) -> bool:
+        """Whether setup hasn't been finished yet."""
         return not self.get("system.setup_complete", False)
 
     def mark_setup_complete(self) -> None:
+        """Records that setup is finished, and saves."""
         self.set("system.setup_complete", True)
         self.save()

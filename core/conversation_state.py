@@ -43,6 +43,7 @@ _LEANS = re.compile(r"\b(it|that|this|those|these|them|they|there|the first one|
 
 @dataclass
 class State:
+    """What a conversation is in the middle of: the question plan it last used, the question, and when."""
     plan: str
     question: str
     at: float
@@ -52,17 +53,20 @@ _states: dict[str, State] = {}
 
 
 def _key(conversation) -> Optional[str]:
+    """The conversation's id, as the key its state is kept under (None without one)."""
     cid = getattr(conversation, "conversation_id", None)
     return str(cid) if cid else None
 
 
 def remember_plan(conversation, plan: str, question: str) -> None:
+    """Remembers the plan a conversation just used, so a follow-up ("what about next month?") can lean on it."""
     key = _key(conversation)
     if key:
         _states[key] = State(plan, question, time.monotonic())
 
 
 def forget(conversation) -> None:
+    """Forgets what a conversation was in the middle of."""
     _states.pop(_key(conversation) or "", None)
 
 

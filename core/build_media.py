@@ -22,6 +22,7 @@ TAGS = ("before", "during", "after")
 
 
 def _job(context, job_id: str):
+    """The workshop build with this id, or ValueError when it's gone."""
     jobs = getattr(context, "jobs", None)
     job = jobs.get_job(job_id) if jobs is not None else None
     if job is None:
@@ -30,6 +31,7 @@ def _job(context, job_id: str):
 
 
 def folder(context, job_id: str) -> Path:
+    """Where a build's photos and videos are kept (workshop_media/<job> beside the jobs)."""
     return Path(context.jobs.data_dir) / "workshop_media" / job_id
 
 
@@ -55,6 +57,7 @@ def media(context, job_id: str) -> list[dict]:
 
 
 def path_of(context, job_id: str, name: str) -> Path:
+    """The file a build's media name means, refused (ValueError) unless it's inside that build's folder."""
     _job(context, job_id)
     base = folder(context, job_id).resolve()
     real = (base / str(name or "")).resolve()
@@ -89,6 +92,7 @@ def save(context, job_id: str, filename: str, data: bytes, tag: str = "") -> str
 
 
 def delete(context, job_id: str, name: str) -> str:
+    """Deletes one of a build's photos or videos, tells the web to re-read, and returns its name."""
     path = path_of(context, job_id, name)
     if not path.is_file():
         raise ValueError("That isn't there anymore.")
