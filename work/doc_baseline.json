@@ -280,7 +280,6 @@
   "core/work_activity.py": 1,
   "core/work_agents.py": 5,
   "core/work_dashboard.py": 2,
-  "core/work_dungeon.py": 21,
   "core/work_loop.py": 1,
   "core/work_review.py": 4,
   "core/work_runner.py": 9,

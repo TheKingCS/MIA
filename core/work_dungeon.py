@@ -100,11 +100,16 @@ BOSS_XP = 15  # clearing a run with overtime in it
 
 
 def _now() -> str:
+    """Now, as an ISO timestamp to the second."""
     return datetime.now().isoformat(timespec="seconds")
 
 
 @dataclass
 class Dungeon:
+    """A job, as a dungeon: gross pay an hour, overtime (after so many hours a pay week, at what multiple), the day the
+    pay week starts, the share taken home if known (0: learned from the bank), the words its paycheck has in the bank,
+    a usual shift's paid hours and its unpaid break.
+    """
     dungeon_id: str
     name: str
     hourly: float = 0.0  # gross pay an hour
@@ -121,6 +126,9 @@ class Dungeon:
 
 @dataclass
 class Run:
+    """A shift, as a run: the day, the paid hours, cleared (worked) or planned, any hard-mode modifiers (AFFIXES or the
+    person's own words), whether they were called in for overtime (a boss), and a note.
+    """
     run_id: str
     dungeon_id: str
     date: str
@@ -133,6 +141,7 @@ class Run:
 
 
 def _day(text: str) -> Optional[date]:
+    """A date from text (its first ten characters), or None."""
     try:
         return date.fromisoformat(str(text or "")[:10])
     except ValueError:
@@ -201,6 +210,7 @@ def detect_affixes(text: str) -> list[str]:
 
 
 def affix_names(affixes: list) -> list[str]:
+    """A run's modifiers in words (a known AFFIX by its name, anything else as said)."""
     return [AFFIX_BY_ID[a].name if a in AFFIX_BY_ID else str(a) for a in affixes]
 
 
@@ -239,13 +249,20 @@ def take_home_share(dungeon: Dungeon, banked: float, earned: float) -> tuple[Opt
 
 
 class DungeonBook:
+    """The person's jobs and shifts (work_dungeon.json in their folder, written through atomic_write_text so undo can
+    restore it). Pay is always worked out from the runs, never stored.
+    """
     def __init__(self, context, data_dir: Optional[Path] = None) -> None:
+        """Points at the person's file (data/ by default) and loads it."""
         self.context = context
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._file = self.data_dir / _FILE
         self._load()
 
     def _load(self) -> None:
+        """Reads the dungeons and runs, keeping only fields they know; an unreadable file is logged, reported
+        (notify_data_corruption) and starts empty.
+        """
         self.dungeons: list[Dungeon] = []
         self.runs: list[Run] = []
         if not self._file.exists():
@@ -260,9 +277,11 @@ class DungeonBook:
             notify_data_corruption(self.context, _FILE)
 
     def reload(self) -> None:
+        """Reads the file again (after undo restored it)."""
         self._load()
 
     def _save(self) -> None:
+        """Writes dungeons and runs atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._file, json.dumps({"dungeons": [asdict(d) for d in self.dungeons],
                                                   "runs": [asdict(r) for r in self.runs]}, indent=2))
@@ -270,9 +289,11 @@ class DungeonBook:
     # ---------------------------------------------------------------- dungeons
 
     def get_dungeon(self, dungeon_id: str) -> Optional[Dungeon]:
+        """The dungeon with this id, or None."""
         return next((d for d in self.dungeons if d.dungeon_id == dungeon_id), None)
 
     def add_dungeon(self, name: str, **fields) -> Dungeon:
+        """Adds a job (a name is required) with its pay details, checked by _apply."""
         if not str(name or "").strip():
             raise ValueError("A dungeon needs a name (the job, the store...).")
         d = Dungeon(dungeon_id=uuid.uuid4().hex[:10], name=name.strip(), created_at=_now())
@@ -282,6 +303,7 @@ class DungeonBook:
         return d
 
     def update_dungeon(self, dungeon_id: str, **fields) -> Dungeon:
+        """Changes a job's pay details (ValueError when it's gone or a value doesn't make sense)."""
         d = self.get_dungeon(dungeon_id)
         if d is None:
             raise ValueError("That dungeon isn't there anymore.")
@@ -290,12 +312,16 @@ class DungeonBook:
         return d
 
     def delete_dungeon(self, dungeon_id: str) -> None:
+        """Deletes a job and all its runs."""
         self.dungeons = [d for d in self.dungeons if d.dungeon_id != dungeon_id]
         self.runs = [r for r in self.runs if r.dungeon_id != dungeon_id]
         self._save()
 
     @staticmethod
     def _apply(d: Dungeon, fields: dict) -> None:
+        """Sets a job's fields, checked: numbers never negative, overtime at least the regular rate, a break up to 240
+        minutes, take-home 0 to 100 percent, the pay week starting on a weekday.
+        """
         for name, value in fields.items():
             if name in ("dungeon_id", "created_at") or not hasattr(d, name):
                 raise ValueError(f"A dungeon has no '{name}'.")
@@ -314,13 +340,16 @@ class DungeonBook:
     # ---------------------------------------------------------------- runs
 
     def get_run(self, run_id: str) -> Optional[Run]:
+        """The run with this id, or None."""
         return next((r for r in self.runs if r.run_id == run_id), None)
 
     def planned_on(self, dungeon_id: str, on: str) -> Optional[Run]:
+        """The run planned at a job on a day, or None."""
         return next((r for r in self.runs if r.dungeon_id == dungeon_id and r.date == on and r.status == "planned"), None)
 
     def add_run(self, dungeon_id: str, on: str, hours: float, status: str = "cleared", affixes=None,
                 boss: bool = False, note: str = "") -> Run:
+        """Adds a run (cleared or planned, 0 to 24 hours); a cleared one is recorded in the history."""
         if self.get_dungeon(dungeon_id) is None:
             raise ValueError("That dungeon isn't there anymore.")
         if status not in ("cleared", "planned"):
@@ -356,12 +385,14 @@ class DungeonBook:
         return run
 
     def delete_run(self, run_id: str) -> None:
+        """Deletes a run (ValueError when it's gone)."""
         if self.get_run(run_id) is None:
             raise ValueError("That run isn't there anymore.")
         self.runs = [r for r in self.runs if r.run_id != run_id]
         self._save()
 
     def _record(self, run: Run) -> None:
+        """Records a cleared run in the life-event history (hours, and hard mode's modifiers)."""
         from core import life_events
 
         d = self.get_dungeon(run.dungeon_id)
@@ -372,4 +403,5 @@ class DungeonBook:
                            [f"dungeon:{run.dungeon_id}"], {"hours": run.hours, "affixes": list(run.affixes)})
 
     def runs_for(self, dungeon_id: str) -> list[Run]:
+        """A job's runs, oldest first."""
         return sorted((r for r in self.runs if r.dungeon_id == dungeon_id), key=lambda r: (r.date, r.created_at))

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 227,528 lines; 1043 files describe themselves; 4,062 of 13,517 classes and functions are documented.
+1043 files, 227,560 lines; 1043 files describe themselves; 4,083 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 101,434 lines; 3,331 of 5,630 classes and functions documented
+367 files, 101,466 lines; 3,352 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -365,7 +365,7 @@
 - `core/work_activity.py`: Who did what to the development work, and when (DEC-0068, step 2 of `docs/DEV_ECOSYSTEM_AUDIT.md`): `work/activity.jsonl`, one line per event, only ever added to. Every change `tools/work.py` makes to a task is recorded here, so the history is searchable and a task interrupted halfway can be picked  *(1 undocumented)*
 - `core/work_agents.py`: Who can do the development work, and what each may do (DEC-0068/0069, step 3 of `docs/DEV_ECOSYSTEM_AUDIT.md`). Roles live in `work/agents.json`: each is a provider (Claude Code, Ollama, Codex...), a model, a permission tier and the documents it reads first. Roles are configuration; providers are ad *(5 undocumented)*
 - `core/work_dashboard.py`: The development dashboard's data (DEC-0068/0070, step 5 of `docs/DEV_ECOSYSTEM_AUDIT.md`), served as `/api/dev` to `web/dev.html`: one view over the work and the contributors. Read-only: it shows the tasks, the agents and whether each is here, the review and approval queue, and the activity history, *(2 undocumented)*
-- `core/work_dungeon.py`: The Dungeon (DEC-0046, Zac 2026-10-27): work as a dungeon you visit and loot every day, stacking resources until you can advance to the next one. MIA is the Game Master: she turns the day's real trouble into the level you're clearing, honestly (the trouble stays real) and without making anyone a vil *(21 undocumented)*
+- `core/work_dungeon.py`: The Dungeon (DEC-0046, Zac 2026-10-27): work as a dungeon you visit and loot every day, stacking resources until you can advance to the next one. MIA is the Game Master: she turns the day's real trouble into the level you're clearing, honestly (the trouble stays real) and without making anyone a vil
 - `core/work_loop.py`: A task, worked by an agent, from claim to the approval queue (DEC-0068/0070, step 3 of `docs/DEV_ECOSYSTEM_AUDIT.md`). It's MIA's lab (`core/dev_lab.py`) with the task records around it, not a second engine: *(1 undocumented)*
 - `core/work_review.py`: Independent review, then Zac's approval (DEC-0069, step 4 of `docs/DEV_ECOSYSTEM_AUDIT.md`). After the loop (`core/work_loop.py`) brings a task to review: *(4 undocumented)*
 - `core/work_runner.py`: Missions, and the runner that works them (DEC-0076 and DEC-0079; Zac, 2026-11-03: "set the council on the mission to develop MIA and let them run at it autonomously" and "delegating tasks based on time available to use each model so that the dev team doesnt have to sit idle when one model is unavail *(9 undocumented)*
