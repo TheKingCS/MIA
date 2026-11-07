@@ -108,7 +108,6 @@
   "core/lab_actions.py": 9,
   "core/life_events.py": 9,
   "core/live.py": 3,
-  "core/loop_actions.py": 12,
   "core/loop_coverage.py": 8,
   "core/mail_send.py": 9,
   "core/main_thread.py": 2,

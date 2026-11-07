@@ -26,10 +26,15 @@ _CHORE_WORDS = ("chores", "chore", "housework", "routines", "household")
 
 
 def _book(context):
+    """The person's Loop, or ActionError when it isn't here."""
     return _need(context, "loop")
 
 
 def _find(context, params, create: bool = False):
+    """The rhythm the params mean: by id, by "work" or "chores" words, or by name. With create=True a rhythm that
+    doesn't exist yet comes back as what to make (name, kind, ref, icon): chores, or one of their own. ActionError
+    otherwise.
+    """
     from core.the_loop import ensure_rhythms
 
     book = _book(context)
@@ -65,6 +70,9 @@ def _find(context, params, create: bool = False):
 
 
 def _values(params) -> dict:
+    """What's being set, read from the params: days, start and end times, the reminder lead (0 to 240 minutes) and
+    whether to remind; ActionError when nothing is given or something can't be read.
+    """
     out = {}
     try:
         if params.get("days") not in (None, ""):
@@ -90,6 +98,7 @@ def _values(params) -> dict:
 
 
 def _set_describe(context, params) -> str:
+    """The sentence the approval card shows for `loop.set` (Propose); raises ActionError when it can't be done. It shows the days, the times with the hours they make, and the reminder."""
     r, new = _find(context, params, create=True)
     v = _values(params)
     name = r.name if r else new[0]
@@ -109,6 +118,9 @@ def _set_describe(context, params) -> str:
 
 
 def _set_execute(context, params) -> str:
+    """Does `loop.set` once approved, and says what happened. A new rhythm is made first; what's set is the person's own and learning never
+    overwrites it. Setting the work rhythm plans the week's runs again.
+    """
     r, new = _find(context, params, create=True)
     v = _values(params)
     book = _book(context)
@@ -124,12 +136,14 @@ def _set_execute(context, params) -> str:
 
 
 def _forget_describe(context, params) -> str:
+    """The sentence the approval card shows for `loop.forget` (Propose); raises ActionError when it can't be done."""
     r, _ = _find(context, params)
     what = "times" if str(params.get("what") or "times").lower().startswith("t") else "days"
     return f"Let MIA learn {r.name}'s {what} again from what you actually do"
 
 
 def _forget_execute(context, params) -> str:
+    """Does `loop.forget` once approved, and says what happened. The days or times go back to being learned from what they do."""
     r, _ = _find(context, params)
     what = "times" if str(params.get("what") or "times").lower().startswith("t") else "days"
     _book(context).forget(r.rhythm_id, what)
@@ -137,6 +151,7 @@ def _forget_execute(context, params) -> str:
 
 
 def _delete_describe(context, params) -> str:
+    """The sentence the approval card shows for `loop.delete` (Propose); raises ActionError when it can't be done. Only a rhythm of their own (work and chores come back by themselves)."""
     r, _ = _find(context, params)
     if r.kind != "custom":
         raise ActionError(f"{r.name} comes back by itself; turn its reminder off instead.")
@@ -144,12 +159,14 @@ def _delete_describe(context, params) -> str:
 
 
 def _delete_execute(context, params) -> str:
+    """Does `loop.delete` once approved, and says what happened."""
     r, _ = _find(context, params)
     _book(context).delete(r.rhythm_id)
     return "Removed."
 
 
 def _checkin_describe(context, params) -> str:
+    """The sentence the approval card shows for `loop.checkin_done` (Propose); raises ActionError when it can't be done. Once a week."""
     from datetime import date
 
     from core.weekly_checkin import DONE_XP
@@ -160,6 +177,9 @@ def _checkin_describe(context, params) -> str:
 
 
 def _checkin_execute(context, params) -> str:
+    """Does `loop.checkin_done` once approved, and says what happened. The week's check-in is marked read and its XP (with Organization)
+    granted.
+    """
     from datetime import date
 
     from core.gamification import SkillWeight, grant_xp
@@ -173,6 +193,9 @@ def _checkin_execute(context, params) -> str:
 
 
 def _register() -> None:
+    """Adds the Loop's action kinds to ACTION_TYPES (the check-in is child-safe). Runs once, when this module is
+    imported.
+    """
     names = {"rhythm_id": "the rhythm", "name": "work, chores, or a name"}
     for kind in (
         ActionType("loop.set", "Set", {**names, "days": "mon-fri, sun-thu, every day…", "start": "9:30 pm",

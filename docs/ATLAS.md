@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 229,292 lines; 1043 files describe themselves; 5,209 of 13,517 classes and functions are documented.
+1043 files, 229,315 lines; 1043 files describe themselves; 5,221 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 103,194 lines; 4,478 of 5,630 classes and functions documented
+367 files, 103,217 lines; 4,490 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -196,7 +196,7 @@
 - `core/llm_manager.py`: The Assistant's LLM backend core service — docs/ROADMAP.md milestone 5.1. Defines a small backend-agnostic interface (`LLMBackend`) with one concrete implementation, `OllamaBackend`, talking to a local Ollama server's HTTP API (https://github.com/ollama/ollama/blob/main/docs/api.md), and a second, `
 - `core/local_model.py`: MIA's model on the phone (2026-10-07, DEC-0019, docs/PHONE_MODEL_TEST.md): download a small open model once, run it with llama.cpp's server (`llama-server`, built into the phone app) on 127.0.0.1, point MIA's Talk at it, and measure whether it does MIA's job (core/model_bench.py).
 - `core/logger.py`: Centralized logging setup for MIA
-- `core/loop_actions.py`: The Loop's actions (DEC-0047, core/the_loop.py) on the action contract: what the person says about when things happen, in plain words, undoable. *(12 undocumented)*
+- `core/loop_actions.py`: The Loop's actions (DEC-0047, core/the_loop.py) on the action contract: what the person says about when things happen, in plain words, undoable.
 - `core/loop_catalog.py`: The loops as built (DEC-0094, DEC-0101): `docs/LOOPS.md` is the code's own list of every loop in `core/loops.py`, by area, with what it watches, its floor, what it does when it slips and the processes it covers. It's generated, never edited by hand, and `tests/test_loop_catalog.py` fails when it fal
 - `core/loop_coverage.py`: How MIA's improvement loops keep spreading to every process (DEC-0101; Zac, 2026-11-06: "She also needs a method for developing these loops into all processes that could benefit from a self improvement loop and continue to do so throughout her development"). *(8 undocumented)*
 - `core/loops.py`: MIA's improvement loops (DEC-0094; the map is `docs/IMPROVEMENT_LOOPS.md`; Zac, 2026-11-06: "almost every process has the potential for some kind of self assessment and improvement loop and we should identify those and build it").
