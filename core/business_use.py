@@ -74,6 +74,9 @@ DISCLAIMER = (
 
 @dataclass
 class UseEntry:
+    """One logged use of a tool or vehicle: the day, hours (or miles for a vehicle), business or personal, the business
+    and rental it was for, who it was for, and a note.
+    """
     entry_id: str
     asset_id: str
     date: str  # ISO date
@@ -87,17 +90,23 @@ class UseEntry:
     miles: float = 0.0  # vehicles: miles driven for this job (2026-09-28)
 
     def amount(self, unit: str) -> float:
+        """The entry's use in the asset's unit: miles or hours."""
         return self.miles if unit == MILES else self.hours
 
     @staticmethod
     def from_dict(data: dict) -> "UseEntry":
+        """An entry from its saved dict, keeping only the fields an entry knows."""
         fields = UseEntry.__dataclass_fields__
         return UseEntry(**{k: v for k, v in data.items() if k in fields})
 
 
 class BusinessUseManager:
+    """The household's log of business and personal use of equipment (business_use.json, written through
+    atomic_write_text): the record that backs up a business-use percentage. Records and arithmetic, not tax advice.
+    """
     def __init__(self, context, data_dir: Optional[Path] = None) -> None:
         # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        """Points at the household's file (data/ by default) and loads it."""
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._use_file = self.data_dir / "business_use.json" if data_dir is not None else _USE_FILE
         self.context = context
@@ -105,6 +114,7 @@ class BusinessUseManager:
         self._load()
 
     def _load(self) -> None:
+        """Reads the log; an unreadable file is logged, reported and starts empty."""
         if not self._use_file.exists():
             return
         try:
@@ -115,6 +125,7 @@ class BusinessUseManager:
             self._entries = []
 
     def _save(self) -> None:
+        """Writes the log atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._use_file, json.dumps([asdict(e) for e in self._entries], indent=2))
 
@@ -122,6 +133,7 @@ class BusinessUseManager:
         self, asset_id: str, hours: float = 0.0, purpose: str = BUSINESS, use_date: Optional[str] = None,
         entity_id: str = "", property_id: str = "", client: str = "", note: str = "", miles: float = 0.0,
     ) -> UseEntry:
+        """Logs a use (hours or miles must be positive; business or personal; today unless a day is given)."""
         if hours <= 0 and miles <= 0:
             raise ValueError("hours or miles must be positive")
         if purpose not in (BUSINESS, PERSONAL):
@@ -136,6 +148,7 @@ class BusinessUseManager:
         return entry
 
     def delete_entry(self, entry_id: str) -> bool:
+        """Deletes a log entry; False when it wasn't there."""
         before = len(self._entries)
         self._entries = [e for e in self._entries if e.entry_id != entry_id]
         if len(self._entries) != before:
@@ -144,12 +157,14 @@ class BusinessUseManager:
         return False
 
     def entries_for(self, asset_id: str, year: Optional[int] = None) -> list[UseEntry]:
+        """One asset's log entries (in one year, if given), by date."""
         return sorted(
             (e for e in self._entries if e.asset_id == asset_id and (year is None or e.date.startswith(f"{year}-"))),
             key=lambda e: e.date,
         )
 
     def assets_with_business_use(self) -> list[str]:
+        """The assets with any business use logged."""
         return sorted({e.asset_id for e in self._entries if e.purpose == BUSINESS})
 
 
@@ -182,6 +197,7 @@ def mileage_rate(context, year: int) -> Optional[float]:
 
 
 def set_mileage_rate(context, year: int, rate: float) -> None:
+    """Saves the per-mile rate the person entered for a year (business_use.mileage_rates)."""
     rates = dict(context.config.get("business_use.mileage_rates", {}) or {})
     rates[str(year)] = round(float(rate), 4)
     context.config.set("business_use.mileage_rates", rates)
@@ -204,6 +220,10 @@ def odometer_readings(context, asset) -> list[tuple[str, float]]:
 
 @dataclass
 class Worksheet:
+    """One asset's business-use worksheet for a year: business and personal use, total use and how it was measured
+    (hour meter, odometer, or what was logged), running costs by category, the cost basis and when it was placed in
+    service, use by business, the jobs, notes on anything uncertain, and the mileage rate for a vehicle.
+    """
     asset_id: str
     asset_name: str
     year: int
@@ -223,17 +243,20 @@ class Worksheet:
 
     @property
     def business_pct(self) -> Optional[float]:
+        """The business-use percentage (business over total, capped at 100), or None without a total."""
         if not self.total_hours:
             return None
         return round(min(100.0, 100 * self.business_hours / self.total_hours), 1)
 
     @property
     def business_running_costs(self) -> Optional[float]:
+        """The business share of the running costs, or None without a percentage."""
         pct = self.business_pct
         return round(self.running_costs * pct / 100, 2) if pct is not None else None
 
     @property
     def business_basis(self) -> Optional[float]:
+        """The business share of the cost basis, or None without a percentage or a basis."""
         pct = self.business_pct
         return round(self.cost_basis * pct / 100, 2) if pct is not None and self.cost_basis else None
 
