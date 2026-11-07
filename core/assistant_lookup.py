@@ -32,6 +32,7 @@ _MAX_LISTED = 8
 
 
 def _stem(word: str) -> str:
+    """Pure logic. A crude stem: groceries meets grocery, mowing meets mow."""
     if len(word) > 4 and word.endswith("ies"):
         return word[:-3] + "y"  # groceries -> grocery, batteries -> battery
     for suffix in ("ing", "ed", "es", "s"):
@@ -109,15 +110,18 @@ def resolve_by_name(
 
 
 def _a(kind: str) -> str:
+    """Pure logic. A kind with a or an."""
     return f"an {kind}" if kind[:1].lower() in "aeiou" else f"a {kind}"
 
 
 def _ambiguous(items: list, get_name: Callable, kind: str, wanted: str) -> str:
+    """The question when a name matches more than one record, naming up to eight."""
     names = ", ".join(sorted(get_name(i) for i in items)[:_MAX_LISTED])
     return f"More than one {kind} matches '{wanted}' ({names}). Which one did you mean?"
 
 
 def _available(items: list, get_name: Callable, kind: str) -> str:
+    """What records of a kind there are (up to eight, then how many more), or that there are none yet."""
     if not items:
         return f" You don't have any {kind}s yet."
     names = sorted(get_name(i) for i in items)

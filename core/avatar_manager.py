@@ -63,6 +63,7 @@ _CONFIG_KEY_DEVICE = "dashboard.avatar_camera_device"
 
 @dataclass(frozen=True)
 class CameraDeviceInfo:
+    """One camera the avatar could use: its device id and description."""
     device_id: str
     description: str
 
@@ -71,6 +72,7 @@ class AvatarManager:
     """Core-level Companion Avatar service (`AppContext.avatar`)."""
 
     def __init__(self, context: AppContext) -> None:
+        """Keeps the context; the chosen camera is read from the config each time."""
         self.context = context
 
     def list_devices(self) -> list[CameraDeviceInfo]:
@@ -95,9 +97,11 @@ class AvatarManager:
         ]
 
     def selected_device_id(self) -> Optional[str]:
+        """The camera chosen for the avatar, or None."""
         return self.context.config.get(_CONFIG_KEY_DEVICE, None)
 
     def set_selected_device_id(self, device_id: Optional[str]) -> None:
+        """Chooses the avatar's camera (None for none), saves it and tells the dashboard."""
         self.context.config.set(_CONFIG_KEY_DEVICE, device_id)
         self.context.config.save()
         self.context.events.publish("dashboard.avatar_device_changed")

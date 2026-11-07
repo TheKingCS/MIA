@@ -17,6 +17,9 @@ _ORDER = list(TEXT_SIZES)
 
 
 def _action_set_text_size(context, arguments: dict) -> str:
+    """Tool set_text_size: this person's text size one step bigger or smaller, or a size by name (normal,
+    larger, largest, huge); the screens are told.
+    """
     current, _contrast = look_for(context)
     wanted = str(arguments.get("size") or "").lower().strip()
     if wanted in ("bigger", "larger", "up", "more"):
@@ -37,6 +40,7 @@ def _action_set_text_size(context, arguments: dict) -> str:
 
 
 def _action_set_high_contrast(context, arguments: dict) -> str:
+    """Tool set_high_contrast: high contrast on or off for this person; the screens are told."""
     on = str(arguments.get("on", "true")).lower() not in ("false", "off", "no", "0")
     person_settings.put(context, "display.high_contrast", on)
     context.events.publish("display.changed")
@@ -44,11 +48,13 @@ def _action_set_high_contrast(context, arguments: dict) -> str:
 
 
 def _action_read_screen(context, arguments: dict) -> str:
+    """Tool read_screen: asks the open screen to be read aloud."""
     context.events.publish("accessibility.read_screen")
     return "Reading the screen."
 
 
 def register_accessibility_actions(registry: AssistantActionRegistry) -> None:
+    """Registers the accessibility tools: set_text_size, set_high_contrast and read_screen."""
     registry.register(AssistantAction(
         name="set_text_size", domain="accessibility",
         description="Make the text on screen bigger or smaller for the user (normal, larger, largest, huge).",

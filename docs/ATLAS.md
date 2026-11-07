@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1060 files, 234,211 lines; 1060 files describe themselves; 6,180 of 13,690 classes and functions are documented.
+1060 files, 234,239 lines; 1060 files describe themselves; 6,200 of 13,690 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-374 files, 107,128 lines; 5,399 of 5,753 classes and functions documented
+374 files, 107,156 lines; 5,419 of 5,753 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -20,7 +20,7 @@
 - `core/app_context.py`: Defines AppContext: a small bundle of shared services (config, logger factory, event bus) that gets handed to every module and every GUI component.
 - `core/app_intro.py`: What MIA says when she introduces an app (slice 5 of docs/GLASSES_FIRST_BOOT_PLAN.md), in two halves:
 - `core/application.py`: MIAApplication: the orchestrator that boots the system.
-- `core/assistant_accessibility_actions.py`: "Make the text bigger", "turn on high contrast", "read this screen to me" (core/accessibility.py, 2026-10-01). Each changes only the speaker's own look. *(4 undocumented)*
+- `core/assistant_accessibility_actions.py`: "Make the text bigger", "turn on high contrast", "read this screen to me" (core/accessibility.py, 2026-10-01). Each changes only the speaker's own look.
 - `core/assistant_actions.py`: The Assistant's tool-use/action-execution registry — docs/ROADMAP.md milestone 5.5. Lets the LLM actually DO things in MIA (open a module, add an alarm, a note, an inventory item), not just answer questions, via Ollama's structured tool-calling API (core/llm_manager.py's `chat_with_tools()`).
 - `core/assistant_chat.py`: The pure, non-Qt logic for one Assistant chat turn — moved here from `modules/assistant/module.py` (2026-07-14 aesthetic pass part 4, docs/ROADMAP.md) once the sidebar chat in `gui/character_panel.py` needed the exact same request-building and tool-call-safety logic as the full-screen Assistant modu
 - `core/assistant_comm_actions.py`: Assistant tools for the communication gate (core/communication_gate.py, Cognitive Extension slice C): asking what MIA chose not to say, and changing how often she speaks up on her own.
@@ -34,9 +34,9 @@
 - `core/assistant_inbox_actions.py`: Assistant tools for the document inbox (core/inbox_manager.py): what's waiting, "file it" (with MIA's proposal, or the owner's correction of which tool or build it's for), and "throw that one out". Filing by voice adds every maintenance step MIA found in a manual unless the owner says "without the t
 - `core/assistant_life_actions.py`: Assistant actions for the personal side of MIA (2026-09-27, following docs/ASSISTANT_AUDIT.md): workouts, people and pets, household routines, and Classroom learning. Same contract as core/assistant_domain_actions.py: handlers are pure functions of (context, arguments), find records from the user's 
 - `core/assistant_life_event_actions.py`: "What did I get done this week?", "what changed this month?", "what bills did I pay?" (core/life_events.py, 2026-10-05). Facts from the log, counted in code; the model only phrases them. *(3 undocumented)*
-- `core/assistant_link_actions.py`: "The land loan funds the rental", "the greenhouse depends on selling the lot", "what depends on selling the lot?", "what's connected to the truck?" (core/links.py, 2026-10-05). Names are matched to real records in code; a link is only saved between things that exist. Undoable. *(4 undocumented)*
-- `core/assistant_lookup.py`: How Assistant actions find the user's own records from the words they actually say. People say "the truck" and "did the oil", not "Pickup Truck" and "Oil change", and the model can only pass on their words. *(4 undocumented)*
-- `core/assistant_ownership_actions.py`: "Whose truck is it?" and "the mower is mine" (core/ownership.py, 2026-10-01): owner marks on maintenance items (vehicles, tools, appliances). *(4 undocumented)*
+- `core/assistant_link_actions.py`: "The land loan funds the rental", "the greenhouse depends on selling the lot", "what depends on selling the lot?", "what's connected to the truck?" (core/links.py, 2026-10-05). Names are matched to real records in code; a link is only saved between things that exist. Undoable.
+- `core/assistant_lookup.py`: How Assistant actions find the user's own records from the words they actually say. People say "the truck" and "did the oil", not "Pickup Truck" and "Oil change", and the model can only pass on their words.
+- `core/assistant_ownership_actions.py`: "Whose truck is it?" and "the mower is mine" (core/ownership.py, 2026-10-01): owner marks on maintenance items (vehicles, tools, appliances).
 - `core/assistant_self_actions.py`: MIA about herself (2026-10-21, the intelligence spec's first slice): "What AI model are you using?" answered from the runtime (core/model_registry.py), never from the model's guess about itself.
 - `core/assistant_starter_actions.py`: "What starter sets are there?", "set me up with the homestead starter set", "add the student starter but not the weekly plan" (core/starter_templates.py, 2026-10-01). Adding one is undoable. *(3 undocumented)*
 - `core/assistant_tagging_actions.py`: Assistant tools for sorting bank charges to businesses (core/business_tagging.py): "which charges need a business?" and "the Shell charge was for lawn care" / "the Walmart one was personal".
@@ -46,7 +46,7 @@
 - `core/assistant_undo_actions.py`: "Undo that" and "what did you just change?" (core/undo_log.py), plus "why did you tell me that?" and "stop telling me about ..." (core/message_reasons.py, core/communication_gate.py), and "is everything set up?" (core/system_check.py). 2026-10-01.
 - `core/assistant_why_actions.py`: Assistant tools for the owner's chain of reasons, slice B ("Remember Why") of docs/COGNITIVE_EXTENSION_PROPOSAL.md. The chain lives on Intents (core/intent_manager.py: `serves_intent_id`, `reason`); the evidence is computed by core/why_graph.py.
 - `core/atomic_write.py`: One shared helper for crash-safe file writes. Every core/*_manager.py persists its state as JSON via a direct `path.write_text(...)` call — which is NOT atomic: a crash, power loss, or disk-full condition mid write can leave that file truncated or corrupted, permanently losing everything in it. A re
-- `core/avatar_manager.py`: Companion-avatar camera source for the Home Dashboard's Companion Avatar widget (gui/home_dashboard.py, gui/widgets/avatar_camera_widget.py). Built for VMagicMirror (https://malaybaku.github.io/VMagicMirror/), a separately-running, Windows-only Unity/VRM avatar app the user has been running alongsid *(4 undocumented)*
+- `core/avatar_manager.py`: Companion-avatar camera source for the Home Dashboard's Companion Avatar widget (gui/home_dashboard.py, gui/widgets/avatar_camera_widget.py). Built for VMagicMirror (https://malaybaku.github.io/VMagicMirror/), a separately-running, Windows-only Unity/VRM avatar app the user has been running alongsid
 - `core/backup_manager.py`: Export/import MIA's config + data directory as a single backup file, per docs/ROADMAP.md milestone 2.7. Optionally passphrase-encrypted via core/secrets_manager.py. *(3 undocumented)*
 - `core/benchmarks.py`: The weekly benchmarks (build plan step 5, DEC-0094): Zac's 112-question Intelligence Benchmark on this PC's model and the person's real records, the golden conversation corpus on the glasses and the phone, and the routing audit. `tools/weekly_bench.py` runs them (Night School starts it once a week,  *(3 undocumented)*
 - `core/blueprints.py`: The blueprints MIA builds screens from (DEC-0090; `blueprints/README.md`): versioned JSON in the repo, with fields named by role (`$title`, `$date`, `$group`, `$number`, `$all`, `$details`). `fill()` turns one into blocks for a particular record set, leaving out what has no field to show. *(2 undocumented)*

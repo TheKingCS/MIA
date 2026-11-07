@@ -15,6 +15,7 @@ from core.ownership import owner_name, possessive, resolve_owner
 
 
 def _find_item(context, name: str):
+    """The vehicle, tool or appliance a name means, or why it can't tell."""
     maintenance = getattr(context, "maintenance", None)
     if maintenance is None:
         return None, "I don't have any vehicles, tools or appliances on this MIA."
@@ -22,6 +23,9 @@ def _find_item(context, name: str):
 
 
 def _action_set_item_owner(context, arguments: dict) -> str:
+    """Tool set_item_owner: whose an item is (mine, shared, or a household member's); its upkeep then
+    shows on that person's Today list.
+    """
     asset, error = _find_item(context, str(arguments.get("item") or ""))
     if error:
         return error
@@ -37,6 +41,7 @@ def _action_set_item_owner(context, arguments: dict) -> str:
 
 
 def _action_get_item_owner(context, arguments: dict) -> str:
+    """Tool get_item_owner: whose an item is, or that it's shared."""
     asset, error = _find_item(context, str(arguments.get("item") or ""))
     if error:
         return error
@@ -47,6 +52,7 @@ def _action_get_item_owner(context, arguments: dict) -> str:
 
 
 def register_ownership_actions(registry: AssistantActionRegistry) -> None:
+    """Registers the ownership tools: set_item_owner and get_item_owner."""
     registry.register(AssistantAction(
         name="set_item_owner", domain="ownership",
         description="Say whose a vehicle, tool or appliance is: the user's, another household member's, or shared.",

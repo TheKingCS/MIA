@@ -16,6 +16,9 @@ from core.person_settings import person_id
 
 
 def _action_link_things(context, arguments: dict) -> str:
+    """Tool link_things: remembers how two of the person's things relate (funds, depends on, part of...),
+    as a stated link.
+    """
     store = getattr(context, "links", None)
     if store is None:
         return "Links aren't available right now."
@@ -35,6 +38,9 @@ def _action_link_things(context, arguments: dict) -> str:
 
 
 def _action_unlink_things(context, arguments: dict) -> str:
+    """Tool unlink_things: forgets a stated link between two things (a derived one changes with the
+    records).
+    """
     store = getattr(context, "links", None)
     if store is None:
         return "Links aren't available right now."
@@ -52,6 +58,7 @@ def _action_unlink_things(context, arguments: dict) -> str:
 
 
 def _action_get_links(context, arguments: dict) -> str:
+    """Tool get_links: what's linked to a thing, and what's waiting on it down the chain."""
     ref, problem = links.find(context, str(arguments.get("thing") or ""))
     if ref is None:
         return problem
@@ -69,6 +76,7 @@ def _action_get_links(context, arguments: dict) -> str:
 
 
 def register_link_actions(registry: AssistantActionRegistry) -> None:
+    """Registers the link tools: link_things, unlink_things and get_links."""
     registry.register(AssistantAction(
         name="link_things", domain="links",
         description="Remember how two of the user's things relate: a loan FUNDS a property, a project DEPENDS_ON a "
