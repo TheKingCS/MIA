@@ -23,6 +23,7 @@ def _remote(params) -> str:
 
 
 def _camera(context, params):
+    """The camera the params name, or ActionError when it isn't set up anymore."""
     cam = _need(context, "security").get(str(params.get("camera_id") or ""))
     if cam is None:
         raise ActionError("That camera isn't set up anymore.")
@@ -30,6 +31,9 @@ def _camera(context, params):
 
 
 def _save(context, params) -> str:
+    """Does `security.save_picture` once approved, and says what happened. A camera on the home computer is named by its remote name; the camera's own
+    refusals come back as ActionError.
+    """
     from core.security_cams import CameraError
 
     rid = _remote(params)
@@ -42,6 +46,7 @@ def _save(context, params) -> str:
 
 
 def _picture(context, params) -> str:
+    """The saved picture's name, once the camera store confirms it's one of its pictures; ActionError otherwise."""
     from core.security_cams import CameraError
 
     name = str(params.get("name") or "")
@@ -53,11 +58,13 @@ def _picture(context, params) -> str:
 
 
 def _delete_picture(context, params) -> str:
+    """Does `security.picture_delete` once approved, and says what happened. It can't be brought back."""
     context.security.delete_picture(_picture(context, params))
     return "Picture deleted."
 
 
 def _describe_remove(context, params) -> str:
+    """The sentence the approval card shows for `camera.remove` (Propose); raises ActionError when it can't be done. It says the camera itself isn't touched, and when it's on the home computer."""
     rid = _remote(params)
     if rid:
         name = _need(context, "security").remote_names.get(rid, "this camera")
@@ -66,6 +73,7 @@ def _describe_remove(context, params) -> str:
 
 
 def _remove(context, params) -> str:
+    """Does `camera.remove` once approved, and says what happened. A camera on the home computer is removed there, through the home link."""
     rid = _remote(params)
     if rid:
         from core.home_link import HomeLinkError, home_call
@@ -79,6 +87,7 @@ def _remove(context, params) -> str:
 
 
 def _describe_save(context, params) -> str:
+    """The sentence the approval card shows for `security.save_picture` (Propose); raises ActionError when it can't be done. For a camera on the home computer, the picture is kept on this phone."""
     rid = _remote(params)
     if rid:
         return f"Save the picture {_need(context, 'security').remote_names.get(rid, 'the camera')} shows now (kept on this phone)"
@@ -86,6 +95,9 @@ def _describe_save(context, params) -> str:
 
 
 def _register() -> None:
+    """Puts the camera action kinds in ACTION_TYPES: camera.remove, security.save_picture and
+    security.picture_delete.
+    """
     for kind in (
         ActionType("camera.remove", "Remove", {"camera_id": "the camera"}, _describe_remove, _remove),
         ActionType("security.save_picture", "Save Picture", {"camera_id": "the camera"}, _describe_save, _save),

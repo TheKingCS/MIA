@@ -92,13 +92,19 @@ def coerce(field: dict, value) -> object:
 
 
 class RecordSets:
+    """Record sets (DEC-0089): lists a person makes for themselves, each with its own fields (record_sets.json, in
+    their own folder or the household's, written through atomic_write_text). Adding and removing a record is a life
+    event.
+    """
     def __init__(self, context=None, data_dir: Optional[Path] = None) -> None:
+        """Loads the record sets from a folder (data/ by default)."""
         self.context = context
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._file = self.data_dir / _FILE
         self._load()
 
     def _load(self) -> None:
+        """Reads the sets; a missing file gives none, and a damaged one is logged and starts empty."""
         try:
             self.sets: list[dict] = json.loads(self._file.read_text(encoding="utf-8")).get("sets", [])
         except FileNotFoundError:
@@ -108,16 +114,21 @@ class RecordSets:
             self.sets = []
 
     def _save(self) -> None:
+        """Writes the sets atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._file, json.dumps({"sets": self.sets}, indent=2, ensure_ascii=False) + "\n")
 
     def get(self, set_id: str) -> dict:
+        """The set with this id, or RecordError."""
         found = next((s for s in self.sets if s["id"] == set_id), None)
         if found is None:
             raise RecordError(f"No record set {set_id}.")
         return found
 
     def create(self, name: str, fields: list[dict], about: str = "", set_id: str = "") -> dict:
+        """A new set with checked fields (a label made from the name when none is given, choices kept for a choice
+        field), the next free R-number id unless one is given; RecordError for bad fields or a taken id.
+        """
         problems = check_fields(fields)
         if problems:
             raise RecordError(" ".join(problems))
@@ -135,6 +146,9 @@ class RecordSets:
         return made
 
     def add(self, set_id: str, values: dict) -> dict:
+        """Adds a record, each field's value coerced to its type; at least one must be filled in (RecordError). Recorded
+        as a life event naming its first value.
+        """
         found = self.get(set_id)
         kept = {}
         for field in found["fields"]:
@@ -152,6 +166,7 @@ class RecordSets:
         return record
 
     def remove(self, set_id: str, record_id: str) -> dict:
+        """Removes a record (RecordError when it isn't there), recorded as a life event."""
         found = self.get(set_id)
         record = next((r for r in found["records"] if r["id"] == record_id), None)
         if record is None:

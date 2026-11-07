@@ -95,6 +95,7 @@ class OperatingJournal:
     """One person's journal (context.operating_journal): the template's lines, and their weekly ratings."""
 
     def __init__(self, context=None, data_dir: Optional[Path] = None) -> None:
+        """Loads the journal from the person's own folder (operating_journal.json, or data/ by default)."""
         self.context = context
         self.data_dir = Path(data_dir) if data_dir is not None else Path(__file__).resolve().parent.parent / "data"
         self._file = self.data_dir / FILE_NAME
@@ -103,6 +104,7 @@ class OperatingJournal:
         self._load()
 
     def _load(self) -> None:
+        """Reads the lines and ratings; a missing or unreadable file gives none."""
         try:
             data = json.loads(self._file.read_text(encoding="utf-8"))
         except (OSError, ValueError):
@@ -111,11 +113,15 @@ class OperatingJournal:
         self.ratings = list(data.get("ratings", []))
 
     def _save(self) -> None:
+        """Writes the lines and the last 2,000 ratings atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._file, json.dumps({"lines": self.lines, "ratings": self.ratings[-2000:]}, indent=1,
                                                  ensure_ascii=False))
 
     def add(self, text: str, section: str = "") -> dict:
+        """Adds a line (up to 300 characters) to a section (rules when the section isn't one), with the habit read from its
+        words; ValueError for an empty line.
+        """
         text = " ".join(str(text or "").split())
         if not text:
             raise ValueError("Say how you want to operate.")
@@ -128,6 +134,7 @@ class OperatingJournal:
         return line
 
     def remove(self, line_id: str) -> None:
+        """Takes a line out (its past ratings stay)."""
         self.lines = [l for l in self.lines if l["id"] != line_id]
         self._save()
 
@@ -140,6 +147,9 @@ class OperatingJournal:
         return max(scored, key=lambda s: s[0])[1] if scored else None
 
     def rate(self, line_id: str, score: int, day: Optional[date] = None) -> dict:
+        """Rates a line 1 to 5 for the week a day falls in (Monday start), replacing an earlier rating that week;
+        ValueError outside 1 to 5.
+        """
         if not 1 <= int(score) <= 5:
             raise ValueError("Rate it from 1 to 5.")
         day = day or date.today()
@@ -206,11 +216,13 @@ def weekly_offer(context, today: Optional[date] = None) -> list:
 
 
 def _weeks(today: date, n: int = WEEKS) -> list[tuple[date, date]]:
+    """The last n weeks, Monday to Sunday, oldest first, ending with this one."""
     start = today - timedelta(days=today.weekday())
     return [(start - timedelta(weeks=i), start - timedelta(weeks=i) + timedelta(days=6)) for i in range(n)][::-1]
 
 
 def _months(today: date, n: int = WEEKS) -> list[tuple[date, date]]:
+    """The last n calendar months, first day to last, oldest first, ending with this one."""
     out, first = [], today.replace(day=1)
     for _ in range(n):
         last = (first + timedelta(days=32)).replace(day=1) - timedelta(days=1)
