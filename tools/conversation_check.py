@@ -143,6 +143,7 @@ def write(rows: list[dict], label: str, model: str) -> Path:
 
 
 def main() -> None:
+    """Asks the conversation corpus (all of it, or the cases or categories named) on each surface given, then writes the run under its label to pc-check/."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--label", default="run")
     parser.add_argument("--surface", nargs="*", default=["glasses", "phone"])

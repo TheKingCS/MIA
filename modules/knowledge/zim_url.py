@@ -29,6 +29,7 @@ ZIM_SCHEME = "zim"
 
 
 def entry_to_url(pack_id: str, entry_path: str) -> QUrl:
+    """Pure logic. A library entry as the zim: URL the reader loads (the pack as host, the entry as path); url_to_entry reads it back."""
     url = QUrl()
     url.setScheme(ZIM_SCHEME)
     url.setHost(pack_id)

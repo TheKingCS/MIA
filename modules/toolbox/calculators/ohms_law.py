@@ -48,12 +48,14 @@ def solve(solve_for: str, voltage: float | None, current: float | None, resistan
 
 
 class OhmsLawCalculator(CalculatorPlugin):
+    """Ohm's law (V = I x R): choose what to solve for, enter the other two, and it works out the third as you type."""
     calculator_id = "ohms_law"
     display_name = "Ohm's Law"
     category = "Electronics"
     description = "Solve for voltage, current, or resistance given the other two (V = I × R)."
 
     def build_widget(self) -> QWidget:
+        """The calculator's screen: what to solve for, a field each for voltage, current and resistance, and the result."""
         widget = QWidget()
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(24, 24, 24, 24)
@@ -111,6 +113,7 @@ class OhmsLawCalculator(CalculatorPlugin):
         return widget
 
     def _on_solve_target_changed(self, label: str) -> None:
+        """The field being solved for is cleared and locked; the other two open for typing."""
         target_key = self._key_by_label[label]
         target_field = self._field_by_key[target_key]
         for key, edit in self._field_by_key.items():
@@ -119,6 +122,7 @@ class OhmsLawCalculator(CalculatorPlugin):
         self._result_label.setText("Result: —")
 
     def _recompute(self) -> None:
+        """Solves from the two fields entered and shows the answer (4 significant figures, with its unit), or asks for valid numbers when they aren't."""
         solve_for = self._key_by_label[self._solve_combo.currentText()]
 
         try:

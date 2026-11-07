@@ -20,9 +20,11 @@ from core.trail_map_library import NotAPdfError, TrailMap, TrailMapLibrary
 
 
 class TrailMapFetchWorker(QThread):
+    """Downloads a park's trail map PDF off the UI thread and emits finished_fetch with the map, or None and why."""
     finished_fetch = Signal(object, str)  # (TrailMap or None, error message or "")
 
     def __init__(self, library: TrailMapLibrary, park_name: str, state: str, url: str, notes: str = "") -> None:
+        """Keeps the library, the park and its state, the URL and notes."""
         super().__init__()
         self._library = library
         self._park_name = park_name
@@ -31,6 +33,7 @@ class TrailMapFetchWorker(QThread):
         self._notes = notes
 
     def run(self) -> None:
+        """Adds the map from the URL to the library; a URL that isn't a PDF, or a download that fails, is said in the error instead."""
         try:
             trail_map: Optional[TrailMap] = self._library.add_from_url(
                 self._park_name, self._state, self._url, self._notes

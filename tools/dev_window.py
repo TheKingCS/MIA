@@ -281,6 +281,7 @@ def serve() -> tuple[ThreadingHTTPServer, str]:
 
 
 def main(argv=None) -> int:
+    """Starts the dev window's local server and shows it in its own window (QtWebEngine), or in the browser with --browser or when this PySide6 has no QtWebEngine. Returns the exit code."""
     parser = argparse.ArgumentParser(prog="tools.dev_window")
     parser.add_argument("--browser", action="store_true", help="open it in the browser instead of its own window")
     args = parser.parse_args(argv)

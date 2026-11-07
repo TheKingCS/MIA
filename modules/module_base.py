@@ -58,6 +58,7 @@ class ModuleBase(ABC):
     version: str = "0.1.0"
 
     def __init__(self, context: AppContext) -> None:
+        """Keeps the shared context and marks the module not loaded yet. Cheap on purpose: it runs for every module at every boot; real setup belongs in on_load()."""
         self.context = context
         self._loaded = False
 

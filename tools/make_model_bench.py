@@ -56,6 +56,7 @@ def build() -> dict:
 
 
 def main() -> int:
+    """Writes the model benchmark's cases to data/model_bench_cases.json."""
     out = ROOT / "data" / "model_bench_cases.json"
     out.write_text(json.dumps(build(), indent=1, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
     print(f"Wrote {out.relative_to(ROOT)}")

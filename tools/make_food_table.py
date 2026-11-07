@@ -97,6 +97,7 @@ def build(folder: Path) -> list[dict]:
 
 
 def main(folder: str, out: str) -> int:
+    """Builds the food table from the USDA download into a tab-separated file headed with its source and licence; returns 1 when it came out suspiciously small (1,000 foods or fewer)."""
     rows = build(Path(folder))
     with open(out, "w", newline="", encoding="utf-8") as f:
         f.write("# MIA's food table (DEC-0020): USDA FoodData Central SR Legacy, public domain (CC0).\n")

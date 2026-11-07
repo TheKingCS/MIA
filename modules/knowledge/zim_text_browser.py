@@ -46,16 +46,20 @@ from modules.knowledge.zim_url import entry_to_url, url_to_entry
 
 
 class ZimTextBrowser(QTextBrowser):
+    """A text browser that reads pages straight out of the offline library's ZIM packs: links and images inside an article load from the pack, never the internet."""
     def __init__(self, reference_library: ReferenceLibraryManager, parent=None) -> None:
+        """Keeps the library, never opens links in a system browser, and reads black on white like the articles expect."""
         super().__init__(parent)
         self._reference_library = reference_library
         self.setOpenExternalLinks(False)  # never shell out to a system browser for e.g. citation links
         self.setStyleSheet("background-color: white; color: black;")
 
     def open_entry(self, pack_id: str, entry_path: str) -> None:
+        """Opens one article from a pack."""
         self.setSource(entry_to_url(pack_id, entry_path))
 
     def loadResource(self, resource_type, url: QUrl):
+        """Loads a zim: URL's content from its pack: an image as a QImage, anything else as text; None when it isn't a zim: URL or the pack doesn't have it."""
         parsed = url_to_entry(url)
         if parsed is None:
             return None

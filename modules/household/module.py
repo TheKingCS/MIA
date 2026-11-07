@@ -97,18 +97,21 @@ def household_progress(missions: list[Optional[Mission]]) -> tuple[int, int]:
 
 
 class HouseholdModule(ModuleBase):
+    """The Household app (desktop): the household's recurring routines (laundry, dishes, chores) with today's progress and each routine's streak."""
     module_id = "household"
     display_name = "Household"
     description = "Daily and weekly household routines — laundry, dishes, chores."
     icon = "\U0001F9FA"  # basket
 
     def __init__(self, context) -> None:
+        """Nothing built yet: the page is made in get_widget()."""
         super().__init__(context)
         self._list_layout: Optional[QVBoxLayout] = None
         self._progress_bar: Optional[QProgressBar] = None
         self._progress_label: Optional[QLabel] = None
 
     def get_widget(self) -> QWidget:
+        """The page: a photo header, today's progress bar, and the list of routines."""
         page = QWidget()
         page.setStyleSheet("background-color: #070f0d;")
         outer = QVBoxLayout(page)
@@ -190,6 +193,7 @@ class HouseholdModule(ModuleBase):
         # modules/toolbox/tools/lite_captures_tool.py) and fixed across
         # this codebase's other actively-re-triggered refresh methods
         # the same day.
+        """Rebuilds the list (old rows hidden and detached first, so none ghost on screen): each active household routine with this period's mission made if needed and its streak, and today's progress; says how to add one when there are none."""
         while self._list_layout.count():
             item = self._list_layout.takeAt(0)
             widget = item.widget()

@@ -124,6 +124,7 @@ def main() -> None:
 
 
 def write(rows: list[dict], model: str, quiet: bool = False) -> None:
+    """Writes the run to pc-check/intelligence[-model].json and .md: a table per category (asked, answered by a plan, by code, by the model, flagged, median and longest seconds), then each answer. Quiet prints nothing."""
     from tests.intelligence_bench import CATEGORIES
 
     out = ROOT / "pc-check"

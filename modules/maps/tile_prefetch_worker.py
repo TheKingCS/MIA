@@ -22,6 +22,7 @@ from core.map_tile_cache import DEFAULT_PREFETCH_SOURCE, DEFAULT_PREFETCH_ZOOM_L
 
 
 class TilePrefetchWorker(QThread):
+    """Downloads a region's map tiles for offline use off the UI thread: progress(done, total) as it goes, then finished_prefetch with how many were new."""
     progress = Signal(int, int)  # done, total
     finished_prefetch = Signal(int)  # count of newly fetched tiles
 
@@ -35,6 +36,7 @@ class TilePrefetchWorker(QThread):
         zoom_levels: tuple[int, ...] = DEFAULT_PREFETCH_ZOOM_LEVELS,
         source: str = DEFAULT_PREFETCH_SOURCE,
     ) -> None:
+        """Keeps the tile cache, the region's corners, the zoom levels and the tile source."""
         super().__init__()
         self._tile_cache = tile_cache
         self._min_lat = min_lat
@@ -45,6 +47,7 @@ class TilePrefetchWorker(QThread):
         self._source = source
 
     def run(self) -> None:
+        """Caches every tile of the region at each zoom level that isn't cached yet, reporting progress, and emits the count fetched."""
         count = self._tile_cache.ensure_region_cached(
             self._source,
             self._min_lat,

@@ -56,6 +56,7 @@ def corpus(context) -> list[dict]:
 
 
 def main(argv: list[str]) -> int:
+    """The weekly benchmarks (all kinds, or those named): routing, intelligence and the corpus, each graded and kept in core.benchmarks for the trend. Returns the exit code."""
     from core import benchmarks
     from tools.bench_audit import audit
 

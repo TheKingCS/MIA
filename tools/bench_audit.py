@@ -58,6 +58,7 @@ def audit(embeddings: bool = False) -> list[dict]:
 
 
 def main() -> None:
+    """Prints the routing audit: each question's route, or with --summary the counts per category; --words matches plans by their words only, as on the phone."""
     logging.disable(logging.INFO)
     parser = argparse.ArgumentParser()
     parser.add_argument("--summary", action="store_true")

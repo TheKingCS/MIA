@@ -53,6 +53,7 @@ class ToolboxTool(ABC):
     icon: str = "\U0001F527"  # wrench
 
     def __init__(self, context: AppContext) -> None:
+        """Keeps the shared context (cheap: real setup belongs in the tool's widget)."""
         self.context = context
 
     @abstractmethod

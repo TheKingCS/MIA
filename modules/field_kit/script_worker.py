@@ -25,16 +25,19 @@ from core.script_runner import cleanup_script_file, start_script_process, termin
 
 
 class ScriptWorker(QThread):
+    """Runs a script off the UI thread (core.script_runner): each line of output as output_line, then finished_with_code with its exit code; stop() ends it and every process it started."""
     output_line = Signal(str)
     finished_with_code = Signal(int)
 
     def __init__(self, interpreter: str, content: str) -> None:
+        """Keeps the interpreter (python or bash) and the script's text."""
         super().__init__()
         self._interpreter = interpreter
         self._content = content
         self._process: Optional[object] = None
 
     def run(self) -> None:
+        """Starts the script, emits each line it prints, waits for it, always deletes its temporary file, then emits the exit code."""
         process, script_path = start_script_process(self._interpreter, self._content)
         self._process = process
         try:

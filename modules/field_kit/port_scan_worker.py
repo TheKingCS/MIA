@@ -21,13 +21,16 @@ from core.port_scanner import PortScanResult, scan_ports
 
 
 class PortScanWorker(QThread):
+    """Scans a host's ports off the UI thread (core.port_scanner) and emits result_ready with the PortScanResult."""
     result_ready = Signal(object)  # PortScanResult
 
     def __init__(self, host: str, ports: Optional[list[int]] = None) -> None:
+        """Keeps the host and the ports to try (None for the usual ones)."""
         super().__init__()
         self._host = host
         self._ports = ports
 
     def run(self) -> None:
+        """Scans and emits the result."""
         result: PortScanResult = scan_ports(self._host, ports=self._ports)
         self.result_ready.emit(result)
