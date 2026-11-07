@@ -51,6 +51,9 @@ RECURRENCE_TYPES = ["yearly", "monthly", "weekly", "biweekly"]
 
 @dataclass
 class CalendarEvent:
+    """A calendar event: its title, the day it falls on (the first, for a repeating one), a time (None: all day),
+    notes, and how it repeats (RECURRENCE_TYPES, or not).
+    """
     event_id: str
     title: str
     date: str  # ISO "YYYY-MM-DD" — the anchor date; see occurs_on() for recurrence
@@ -59,6 +62,7 @@ class CalendarEvent:
     recurrence: Optional[str] = None  # None, or one of RECURRENCE_TYPES
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in its JSON file."""
         return {
             "event_id": self.event_id,
             "title": self.title,
@@ -70,6 +74,7 @@ class CalendarEvent:
 
     @staticmethod
     def from_dict(data: dict) -> "CalendarEvent":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return CalendarEvent(
             event_id=data.get("event_id", uuid.uuid4().hex[:10]),
             title=data.get("title", ""),
@@ -128,8 +133,12 @@ def occurs_on(event: CalendarEvent, check_date: date) -> bool:
 
 
 class CalendarManager:
+    """The household's calendar (calendar_events.json, written through atomic_write_text so undo can restore it);
+    repeating events are worked out per day, never copied.
+    """
     def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
         # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        """Points at its file (the household's or person's folder, data/ by default) and loads it."""
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._events_file = self.data_dir / "calendar_events.json" if data_dir is not None else _EVENTS_FILE
         self.context = context
@@ -141,6 +150,7 @@ class CalendarManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads the events file; a damaged file is logged, reported (notify_data_corruption) and starts empty."""
         if not self._events_file.exists():
             self._events = []
             return
@@ -153,6 +163,7 @@ class CalendarManager:
             self._events = []
 
     def _save(self) -> None:
+        """Writes the events file atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._events_file,
             json.dumps([e.to_dict() for e in self._events], indent=2),
@@ -171,6 +182,7 @@ class CalendarManager:
         notes: str = "",
         recurrence: Optional[str] = None,
     ) -> CalendarEvent:
+        """Adds an event."""
         event = CalendarEvent(
             event_id=uuid.uuid4().hex[:10],
             title=title,
@@ -185,6 +197,7 @@ class CalendarManager:
         return event
 
     def update_event(self, event_id: str, **fields) -> CalendarEvent:
+        """Changes an event's fields (ValueError for an unknown event or field)."""
         event = self.get_event(event_id)
         if event is None:
             raise ValueError(f"No calendar event with id '{event_id}'.")
@@ -196,6 +209,7 @@ class CalendarManager:
         return event
 
     def delete_event(self, event_id: str) -> None:
+        """Deletes an event (all its repeats)."""
         self._events = [e for e in self._events if e.event_id != event_id]
         self._save()
 
@@ -204,12 +218,14 @@ class CalendarManager:
     # ------------------------------------------------------------------
 
     def get_event(self, event_id: str) -> Optional[CalendarEvent]:
+        """The event with this id, or None."""
         for event in self._events:
             if event.event_id == event_id:
                 return event
         return None
 
     def all_events(self) -> list[CalendarEvent]:
+        """Every event, in the order added."""
         return list(self._events)
 
     def events_for_date(self, date_str: str) -> list[CalendarEvent]:

@@ -43,6 +43,9 @@ _ALARMS_FILE = _DATA_DIR / "alarms.json"
 
 @dataclass
 class Alarm:
+    """An alarm: its label, time (HH:MM, 24-hour), the weekdays it repeats on (none: one time), whether it's on, and the
+    last day it rang.
+    """
     alarm_id: str
     label: str
     time: str  # "HH:MM", 24-hour
@@ -51,6 +54,7 @@ class Alarm:
     last_triggered: Optional[str] = None  # ISO "YYYY-MM-DD" of the last date this alarm fired
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in its JSON file."""
         return {
             "alarm_id": self.alarm_id,
             "label": self.label,
@@ -62,6 +66,7 @@ class Alarm:
 
     @staticmethod
     def from_dict(data: dict) -> "Alarm":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return Alarm(
             alarm_id=data.get("alarm_id", uuid.uuid4().hex[:10]),
             label=data.get("label", ""),
@@ -73,8 +78,10 @@ class Alarm:
 
 
 class AlarmManager:
+    """The alarms (alarms.json, written through atomic_write_text so undo can restore it); check_due rings them."""
     def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
         # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        """Points at its file (the household's or person's folder, data/ by default) and loads it."""
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._alarms_file = self.data_dir / "alarms.json" if data_dir is not None else _ALARMS_FILE
         self.context = context
@@ -86,6 +93,7 @@ class AlarmManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads alarms.json; a damaged file is logged, reported (notify_data_corruption) and starts empty."""
         if not self._alarms_file.exists():
             self._alarms = []
             return
@@ -98,6 +106,7 @@ class AlarmManager:
             self._alarms = []
 
     def _save(self) -> None:
+        """Writes alarms.json atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._alarms_file,
             json.dumps([a.to_dict() for a in self._alarms], indent=2),
@@ -109,6 +118,7 @@ class AlarmManager:
     # ------------------------------------------------------------------
 
     def add_alarm(self, label: str, time: str, days: Optional[list[int]] = None) -> Alarm:
+        """Adds an alarm (one time unless days are given)."""
         alarm = Alarm(
             alarm_id=uuid.uuid4().hex[:10],
             label=label,
@@ -121,6 +131,7 @@ class AlarmManager:
         return alarm
 
     def update_alarm(self, alarm_id: str, **fields) -> Alarm:
+        """Changes an alarm's fields (ValueError for an unknown alarm or field)."""
         alarm = self.get_alarm(alarm_id)
         if alarm is None:
             raise ValueError(f"No alarm with id '{alarm_id}'.")
@@ -132,6 +143,7 @@ class AlarmManager:
         return alarm
 
     def delete_alarm(self, alarm_id: str) -> None:
+        """Deletes an alarm."""
         self._alarms = [a for a in self._alarms if a.alarm_id != alarm_id]
         self._save()
 
@@ -140,12 +152,14 @@ class AlarmManager:
     # ------------------------------------------------------------------
 
     def get_alarm(self, alarm_id: str) -> Optional[Alarm]:
+        """The alarm with this id, or None."""
         for alarm in self._alarms:
             if alarm.alarm_id == alarm_id:
                 return alarm
         return None
 
     def all_alarms(self) -> list[Alarm]:
+        """Every alarm, in the order added."""
         return list(self._alarms)
 
     # ------------------------------------------------------------------

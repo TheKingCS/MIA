@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 228,842 lines; 1043 files describe themselves; 4,910 of 13,517 classes and functions are documented.
+1043 files, 228,888 lines; 1043 files describe themselves; 4,946 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 102,748 lines; 4,179 of 5,630 classes and functions documented
+367 files, 102,794 lines; 4,215 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -15,7 +15,7 @@
 - `core/achievements.py`: The deterministic "you unlocked something" narration layer — the "Achievements/Milestones" piece flagged as a real gap across both the "My Hero's Path" plan and the "connective infrastructure" architecture review that followed the whole-codebase audit (see docs/ROADMAP.md's dated entry).
 - `core/actions.py`: The action contract (2026-10-05, Phase 2 foundation, DEC-0013): how any surface (the web Home, the phone, the glasses, later MIA herself) changes something in a person's life. Always in five steps:
 - `core/activity_log_manager.py`: The Activity/Memory Log shared service — docs/ROADMAP.md milestone 9.1, the "Activity/Memory Log (system-wide event history via the event bus)" row of the shared core services table (used by the Memories section, "what did I do on Project X" queries, Diagnostics history). *(11 undocumented)*
-- `core/alarm_manager.py`: Backs the Alarm tool (modules/toolbox/tools/alarm_tool.py) — persisted to data/alarms.json, same durability pattern as core.calendar_manager.CalendarManager. *(12 undocumented)*
+- `core/alarm_manager.py`: Backs the Alarm tool (modules/toolbox/tools/alarm_tool.py) — persisted to data/alarms.json, same durability pattern as core.calendar_manager.CalendarManager.
 - `core/answer_ratings.py`: Zac's 👍 and 👎 on MIA's answers (DEC-0067's tuning, step 3): what she was asked, what she said, on which device, and how it landed. Personal: each person's own, in their folder (core/personal_data.py). *(6 undocumented)*
 - `core/app_context.py`: Defines AppContext: a small bundle of shared services (config, logger factory, event bus) that gets handed to every module and every GUI component.
 - `core/app_intro.py`: What MIA says when she introduces an app (slice 5 of docs/GLASSES_FIRST_BOOT_PLAN.md), in two halves: *(7 undocumented)*
@@ -63,7 +63,7 @@
 - `core/business_use.py`: Finance #3 (2026-09-28): the business-use share of personal equipment, starting with the owner's mower ("help me with write offs for my real estate businesses with things like the mower if I do a certain amount of contracted lawn care with it").
 - `core/calculator_engine.py`: CalculatorEngine: a pluggable formula registry with one shared browsing UI (modules/toolbox/module.py), per docs/ROADMAP.md's "Shared core services" table. The goal: every future calculator-shaped tool (unit converter, Ohm's Law, wire gauge, antenna calculator, fuel estimates, coordinate conversion, *(2 undocumented)*
 - `core/calendar_actions.py`: Your own calendar events (Zac, 2026-10-16), through the action contract (core/actions.py): `event.add` and `event.delete`. Everything else on the calendar (upkeep, bills, meals, training, birthdays) is read from its own store by core/calendar_view.py and changed where it lives. The calendar store wr *(6 undocumented)*
-- `core/calendar_manager.py`: Backs the Calendar tool (modules/toolbox/tools/calendar_tool.py) — a CRUD event store, persisted to data/calendar_events.json so events survive a restart, same durability guarantee core.notification_manager.NotificationManager gives notifications. *(12 undocumented)*
+- `core/calendar_manager.py`: Backs the Calendar tool (modules/toolbox/tools/calendar_tool.py) — a CRUD event store, persisted to data/calendar_events.json so events survive a restart, same durability guarantee core.notification_manager.NotificationManager gives notifications.
 - `core/calendar_view.py`: The Calendar (Zac, 2026-10-16): "I want the Calendar to be filled and I want to be able to access it both in the app and on the glasses." *(7 undocumented)*
 - `core/calibration.py`: Whether MIA's "how sure" means anything (build plan step 8, DEC-0094): every question-plan answer is marked sure, likely or unsure in code, from what its fact sheet holds (core/question_plans.sureness). Each one is noted here, in the person's own folder, by its plan, its level and a fingerprint of t *(5 undocumented)*
 - `core/capabilities.py`: What MIA can do, built from the code (DEC-0041; the intelligence spec's Phase 2B, docs/INTELLIGENCE_AUDIT.md). Never a hand-written brochure: *(3 undocumented)*
@@ -123,7 +123,7 @@
 - `core/estate_actions.py`: Every change the Real Estate screen makes (2026-10-06, DEC-0017/0018), as action kinds on the contract in core/actions.py: properties (add, edit, delete, with the concept's status, rent and location), recording rent received and an expense against a property (both land in Money, tagged to it), and " *(11 undocumented)*
 - `core/event_bus.py`: A minimal publish/subscribe event bus. *(2 undocumented)*
 - `core/event_catalog.py`: The event catalogue (build plan step 7, the module contract's first piece; Part 1's gap: "no catalogue of the events modules emit and consume"). Read from the code itself, never written by hand: every event a file publishes on the event bus (core/event_bus.py: `events.publish("x", ...)`, or core's ` *(2 undocumented)*
-- `core/expedition_manager.py`: Top-level container for an Expedition Mode outing — docs/ROADMAP.md milestone 12.1. A single Expedition (e.g. a long weekend spent in one area) can hold multiple core.trip_manager.Trip records — one per activity/leg (e.g. Saturday's hike-in, Sunday's fishing trip, both under one Expedition). Same pe *(12 undocumented)*
+- `core/expedition_manager.py`: Top-level container for an Expedition Mode outing — docs/ROADMAP.md milestone 12.1. A single Expedition (e.g. a long weekend spent in one area) can hold multiple core.trip_manager.Trip records — one per activity/leg (e.g. Saturday's hike-in, Sunday's fishing trip, both under one Expedition). Same pe
 - `core/expedition_media.py`: Photos, videos and files on an expedition (Zac, 2026-10-16: "after planning a trip you should be able to attach pictures and videos and files to it"). Uploads from the phone or the web go to the expedition's own folder, `<trip photo root>/expeditions/<expedition_id>/`; photos a trip already has (add *(7 undocumented)*
 - `core/expedition_sync.py`: Export/import Expedition Mode data as a single bundle file — docs ROADMAP.md milestone 15, built for the "Pi 5 docked to a Home desktop" workflow: `docs/HARDWARE.md`'s storage-split section already anticipated this exact need ("the same drive can be pulled and mounted on a desktop directly"). Reuses *(3 undocumented)*
 - `core/fact_owners.py`: One owner per fact (DEC-0052, docs/REASONING_PLAN.md section 2). A fact MIA knows about a person lives in exactly one store; every other screen, answer and finding reads it from that owner and never keeps a copy, so two places can't disagree. `tests/test_fact_owners.py` fails when a retired copy com *(1 undocumented)*

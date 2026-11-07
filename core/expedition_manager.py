@@ -39,6 +39,9 @@ _EXPEDITIONS_FILE = _DATA_DIR / "expeditions.json"
 
 @dataclass
 class Expedition:
+    """An expedition (a season, a big trip): its name, start and end dates, where (free text), and notes; its trips
+    hang off it.
+    """
     expedition_id: str
     name: str
     start_date: str = ""  # ISO date
@@ -49,6 +52,7 @@ class Expedition:
     updated_at: str = ""  # ISO datetime
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in its JSON file."""
         return {
             "expedition_id": self.expedition_id,
             "name": self.name,
@@ -62,6 +66,7 @@ class Expedition:
 
     @staticmethod
     def from_dict(data: dict) -> "Expedition":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return Expedition(
             expedition_id=data.get("expedition_id", uuid.uuid4().hex[:10]),
             name=data.get("name", ""),
@@ -75,8 +80,10 @@ class Expedition:
 
 
 class ExpeditionManager:
+    """The household's expeditions (expeditions.json, written through atomic_write_text so undo can restore it)."""
     def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
         # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        """Points at its file (the household's or person's folder, data/ by default) and loads it."""
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._expeditions_file = self.data_dir / "expeditions.json" if data_dir is not None else _EXPEDITIONS_FILE
         self.context = context
@@ -88,6 +95,7 @@ class ExpeditionManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads expeditions.json; a damaged file is logged, reported (notify_data_corruption) and starts empty."""
         if not self._expeditions_file.exists():
             self._expeditions = []
             return
@@ -110,6 +118,7 @@ class ExpeditionManager:
         self._load()
 
     def _save(self) -> None:
+        """Writes expeditions.json atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._expeditions_file,
             json.dumps([e.to_dict() for e in self._expeditions], indent=2),
@@ -128,6 +137,7 @@ class ExpeditionManager:
         location: str = "",
         notes: str = "",
     ) -> Expedition:
+        """Adds an expedition."""
         now = datetime.now().isoformat(timespec="seconds")
         expedition = Expedition(
             expedition_id=uuid.uuid4().hex[:10],
@@ -145,6 +155,9 @@ class ExpeditionManager:
         return expedition
 
     def update_expedition(self, expedition_id: str, **fields) -> Expedition:
+        """Changes an expedition's fields and stamps updated_at (ValueError for an unknown one or field, or
+        created_at).
+        """
         expedition = self.get_expedition(expedition_id)
         if expedition is None:
             raise ValueError(f"No expedition with id '{expedition_id}'.")
@@ -159,6 +172,7 @@ class ExpeditionManager:
         return expedition
 
     def delete_expedition(self, expedition_id: str) -> None:
+        """Deletes an expedition (its trips stay)."""
         self._expeditions = [e for e in self._expeditions if e.expedition_id != expedition_id]
         self._save()
 
@@ -167,10 +181,12 @@ class ExpeditionManager:
     # ------------------------------------------------------------------
 
     def get_expedition(self, expedition_id: str) -> Optional[Expedition]:
+        """The expedition with this id, or None."""
         for expedition in self._expeditions:
             if expedition.expedition_id == expedition_id:
                 return expedition
         return None
 
     def all_expeditions(self) -> list[Expedition]:
+        """Every expedition, by start date."""
         return sorted(self._expeditions, key=lambda e: e.start_date)
