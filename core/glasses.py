@@ -977,6 +977,7 @@ ASKS: dict[str, tuple[str, ...]] = {
     # Full use on the glasses too (DEC-0125, 2026-11-07): each answered by the app's own voice tool (a test checks
     # every ask reaches one), until a card of its own is drawn.
     "dungeon": ("How much loot did I make this week?",),
+    "security": ("Are the cameras working?",),
     "issues": ("What is in the Fix-It Log?",),
     "compliance": ("What deadlines are coming up?",),
     "flock": ("How many eggs did the hens lay today?", "How many eggs this week?"),

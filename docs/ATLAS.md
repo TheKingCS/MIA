@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1122 files, 252,038 lines; 1122 files describe themselves; 13,787 of 14,459 classes and functions are documented.
+1124 files, 252,182 lines; 1124 files describe themselves; 13,799 of 14,471 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-409 files, 117,508 lines; 6,224 of 6,313 classes and functions documented
+410 files, 117,595 lines; 6,228 of 6,317 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -23,6 +23,7 @@
 - `core/assistant_accessibility_actions.py`: "Make the text bigger", "turn on high contrast", "read this screen to me" (core/accessibility.py, 2026-10-01). Each changes only the speaker's own look.
 - `core/assistant_actions.py`: The Assistant's tool-use/action-execution registry — docs/ROADMAP.md milestone 5.5. Lets the LLM actually DO things in MIA (open a module, add an alarm, a note, an inventory item), not just answer questions, via Ollama's structured tool-calling API (core/llm_manager.py's `chat_with_tools()`).
 - `core/assistant_browser_actions.py`: MIA's browser by voice and chat (DEC-0117): open a page or search, read it, click, type, go back, close; learn a task the person shows her, do it again, list what she's learned. Every step goes through core/browser.py, which sorts it with core/browser_safety.py: a step that commits is held as the ac
+- `core/assistant_camera_actions.py`: The cameras by voice (DEC-0125, 2026-11-07): the Security screen (core/security_cams.py, DEC-0033) had no tool, so "are the cameras working?" reached the network utilities that share its area. Two tools, in their own area `cameras`:
 - `core/assistant_chat.py`: The pure, non-Qt logic for one Assistant chat turn — moved here from `modules/assistant/module.py` (2026-07-14 aesthetic pass part 4, docs/ROADMAP.md) once the sidebar chat in `gui/character_panel.py` needed the exact same request-building and tool-call-safety logic as the full-screen Assistant modu
 - `core/assistant_comm_actions.py`: Assistant tools for the communication gate (core/communication_gate.py, Cognitive Extension slice C): asking what MIA chose not to say, and changing how often she speaks up on her own.
 - `core/assistant_cooking_actions.py`: Cook mode by voice (DEC-0113 cook mode, DEC-0125: full use both ways). With flour on your hands: "start cooking the chili", "next step", "go back", "what step am I on", "go to step 4", "set a rice timer for 18 minutes", "stop the rice timer", "I made it", "stop cooking". Each tool runs the same acti
@@ -688,7 +689,7 @@
 
 ## tests/: the test suite: what each part must do
 
-372 files, 67,184 lines; 5,326 of 5,909 classes and functions documented
+373 files, 67,241 lines; 5,334 of 5,917 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -735,6 +736,7 @@
 - `tests/test_calculator_engine.py`: Unit tests for core.calculator_engine.CalculatorEngine. *(4 undocumented)*
 - `tests/test_calendar_manager.py`: Unit tests for core.calendar_manager. Isolates _DATA_DIR/_EVENTS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_backup_manager.py's isolated_paths) so these tests never touch the real data/calendar_events.json. *(3 undocumented)*
 - `tests/test_calendar_view.py`: The Calendar (Zac, 2026-10-16: "I want the Calendar to be filled and I want to be able to access it both in the app and on the glasses"): core/calendar_view.py fills it from everything with a date, sorted Past Due / Due Today / Due Soon; your own events are actions. *(3 undocumented)*
+- `tests/test_camera_voice.py`: The Security cameras by voice (DEC-0125, core/assistant_camera_actions.py): which cameras there are and whether each last worked, and saving a camera's picture through the screen's own Save Picture.
 - `tests/test_capabilities.py`: What MIA can do and how she's built (DEC-0041): the capability map from the code, "can you…?" answered from it (or "not that I can find", never a guess), and MIA's own docs searched with the file each answer came from. *(1 undocumented)*
 - `tests/test_capability_gaps.py`: Self-enablement (build plan step 9, core/capability_gaps.py): requests no tool matched become gaps with what they'd take, worked out in code; a repeated one is offered through the gate; "build it" opens a task that names the gap by id, never the person's words; "bring it back" shows a tucked-away ap *(1 undocumented)*
 - `tests/test_character_module.py`: Unit tests for modules.character.module's pure functions, same style as tests/test_household_module.py (no Qt event loop, no fixtures). *(1 undocumented)*

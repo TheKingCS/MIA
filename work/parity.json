@@ -1,10 +1,6 @@
 {
   "about": "Each gap core/parity.py finds (app:way), decided: todo (to build, with what it needs) or none (deliberately not, with why). DEC-0125. tests/test_parity.py fails on a gap missing here and on an entry whose gap is gone.",
   "gaps": {
-    "security:glasses": {
-      "status": "todo",
-      "why": "a glasses card: anything new on the network"
-    },
     "passwords:voice": {
       "status": "none",
       "why": "passwords, PINs and card numbers never by voice (Zac, 2026-11-07: \"keep passwords screen only\")"
