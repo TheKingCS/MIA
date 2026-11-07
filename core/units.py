@@ -15,6 +15,9 @@ cloves, "1 jar" against jars. Plurals match ("jar" = "jars"), a count
 with no unit matches any count one for one, and a dozen is 12 of
 whatever's counted. US measures (a cup is 236.6 ml).
 
+kitchen_amount() says an amount as a cook reads it ("1 ½ cups", "⅓ cup",
+"450 g"), for a recipe scaled to more or fewer servings.
+
 Pure logic: no I/O.
 """
 
@@ -127,6 +130,31 @@ def amount_text(quantity: float, unit: str) -> str:
     elif kind(u) == c and c != "dozen":  # a named count, said as "1 loaf", "3 loaves" however it was typed
         u = c if q == 1 else _plural(c)
     return f"{q_text} {u}"
+
+
+_FRACTIONS = ((0, ""), (1 / 8, "⅛"), (1 / 4, "¼"), (1 / 3, "⅓"), (1 / 2, "½"), (2 / 3, "⅔"), (3 / 4, "¾"), (1, ""))
+
+
+def kitchen_amount(quantity: float, unit: str) -> str:
+    """A cooking amount as a cook reads it: cups, spoons, pounds, ounces and counts to the nearest kitchen fraction
+    ("1 ½ cups", "⅓ cup", "2 ¾ lb", "3 eggs" stays "3"), grams and millilitres as whole numbers ("450 g"), and anything
+    over 20 as a whole number. Under ⅛ of a spoon or cup reads "a pinch" for spoons, else the decimal."""
+    q = float(quantity)
+    u = str(unit or "").strip()
+    c = canonical(u)
+    if c in ("g", "ml", "mg") or q >= 20:
+        return amount_text(round(q), u)
+    whole, part = int(q), q - int(q)
+    frac, glyph = min(_FRACTIONS, key=lambda f: abs(f[0] - part))
+    if frac == 1:
+        whole, glyph = whole + 1, ""
+    if whole == 0 and not glyph:
+        return "a pinch" if c in ("tsp", "tbsp") and q > 0 else amount_text(q, u)
+    number = (f"{whole} {glyph}" if whole and glyph else glyph or str(whole)).strip()
+    many = whole + frac if glyph else whole
+    text = amount_text(many if many > 1 else 1, u)  # the unit, said for this many (one for a fraction under one)
+    unit_part = text.split(" ", 1)[1] if " " in text else ""
+    return f"{number} {unit_part}".strip()
 
 
 def _plural(word: str) -> str:

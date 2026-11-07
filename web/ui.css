@@ -1201,3 +1201,8 @@ body.cook-live .mia-orb-button, body.cook-live .bottom-bar { display: none; }
   background: rgba(var(--rgb-panel), 0.9); border: 1px solid var(--line); font-family: var(--font-mono); font-size: 13px; line-height: 1.5;
   white-space: pre; color: var(--text); }
 .fk-script .row-buttons { margin: 0; }
+
+/* ---------------------------------------------------------------- the recipe's servings stepper (web/recipe.js) */
+.rc-step { display: inline-flex; align-items: center; gap: 6px; }
+.rc-step .btn { min-width: 36px; padding: 0 10px; font-family: var(--font-mono); }
+.rc-step-n { font-family: var(--font-mono); font-size: var(--text-sm); min-width: 88px; text-align: center; }

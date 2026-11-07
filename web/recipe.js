@@ -25,7 +25,9 @@
   const dayName = (iso) => iso === today() ? "Today"
     : new Date(iso + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
   const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
-  const amount = (i) => [i.quantity ? Number(i.quantity).toLocaleString() : "", i.unit].filter(Boolean).join(" ");
+  // The amount for the servings shown, as core worked it out (core/web_screens.scaled_amount: "1 ½ cups").
+  const amount = (i) => i.amount != null ? i.amount : [i.quantity ? Number(i.quantity).toLocaleString() : "", i.unit].filter(Boolean).join(" ");
+  let servings = null;  // the servings stepper (the canvas's recipe): null shows the recipe's own
 
   // ------------------------------------------------------------ the buttons
   async function schedule() {
@@ -70,7 +72,7 @@
       if (!file) return;
       try {
         await MIA.upload("/api/kitchen/recipe/" + encodeURIComponent(page.id) + "/photo", file);
-        page = await MIA.recipe(page.id); draw();
+        page = await MIA.recipe(page.id, servings); draw();
       } catch (e) { MIAShell.say ? MIAShell.say(e.message) : alert(e.message); }
     } });
     return el("div", { class: "recipe-photo-wrap" }, box, input,
@@ -143,9 +145,23 @@
       n.to_taste.length ? el("p", { class: "dim" }, "Counted as a dash (next to nothing): " + n.to_taste.join(", ") + ".") : null);
   }
 
+  // The servings stepper: − N + ; core scales every amount (MIA.recipe(id, servings)).
+  function stepper() {
+    const shown = page.shown_servings || page.servings || 1;
+    const go = async (n) => {
+      if (n < 1 || n > 100) return;
+      servings = n === page.servings ? null : n;
+      try { page = await MIA.recipe(page.id, servings); draw(); } catch (e) { say(e.message); }
+    };
+    return el("div", { class: "rc-step", role: "group", "aria-label": "Servings" },
+      el("button", { type: "button", class: "btn btn-ghost btn-small", "aria-label": "Fewer servings", onclick: () => go(shown - 1) }, "−"),
+      el("span", { class: "rc-step-n" }, shown + (shown === 1 ? " serving" : " servings")),
+      el("button", { type: "button", class: "btn btn-ghost btn-small", "aria-label": "More servings", onclick: () => go(shown + 1) }, "+"));
+  }
+
   function ingredientList() {
     const label = { have: ["✓ Have it", "chip-ok"], on_list: ["On the list", "chip"], to_buy: ["To buy", "chip-soon"] };
-    return section("Ingredients", btn("Edit", "btn-ghost", ingredients),
+    return section("Ingredients", el("div", { class: "row-buttons" }, stepper(), btn("Edit", "btn-ghost", ingredients)),
       page.ingredients.length ? el("div", { class: "rows" }, page.ingredients.map((i) =>
         el("div", { class: "row money-row ingredient-" + i.status },
           el("div", {}, el("div", { class: "row-title" }, i.name),
@@ -203,7 +219,7 @@
 
   MIAShell.start(async () => {
     try {
-      page = await MIA.recipe(id);
+      page = await MIA.recipe(id, servings);
     } catch (e) {
       $("panel").replaceChildren(el("p", { class: "empty" }, el("strong", {}, "That recipe isn't here."), "It may have been deleted. Go back to the Kitchen."));
       return;

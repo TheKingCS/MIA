@@ -4,7 +4,8 @@ core.web_screens
 
 Kitchen, Workout and Real Estate on the web (2026-10-06, DEC-0017/0018):
 everything the PC app's screens show, assembled here so `web/` holds no
-logic. Served as `/api/kitchen` (and one recipe, `/api/kitchen/recipe/{id}`),
+logic. Served as `/api/kitchen` (and one recipe, `/api/kitchen/recipe/{id}`,
+its amounts scaled to `?servings=` by scale_factor and scaled_amount),
 `/api/workout` and `/api/real-estate`;
 changes are the action kinds in core/kitchen_actions.py,
 core/workout_actions.py and core/estate_actions.py.
@@ -137,13 +138,39 @@ def recipe_steps(instructions: str) -> list[str]:
             if l.strip()]
 
 
-def recipe_page(context, recipe_id: str, today: Optional[date] = None) -> dict:
+def scale_factor(recipe_servings, servings) -> tuple[int, float]:
+    """Pure logic. The servings a recipe is shown for and the factor its amounts scale by: the asked-for servings
+    (1 to 100) over the recipe's own; the recipe's own and 1 when none is asked or it can't be read."""
+    own = max(1, int(recipe_servings or 1))
+    try:
+        want = int(servings) if servings not in (None, "") else own
+    except (TypeError, ValueError):
+        want = own
+    want = max(1, min(100, want))
+    return want, want / own
+
+
+def scaled_amount(quantity, unit: str, factor: float) -> str:
+    """Pure logic. An ingredient's amount for the servings shown, as a cook reads it (core/units.kitchen_amount:
+    "1 ½ cups"); "" when it has no number."""
+    from core.units import kitchen_amount
+
+    try:
+        q = float(quantity)
+    except (TypeError, ValueError):
+        return ""
+    return kitchen_amount(q * factor, unit) if q > 0 else ""
+
+
+def recipe_page(context, recipe_id: str, today: Optional[date] = None, servings=None) -> dict:
     """One recipe, opened from a meal card (Zac, 2026-10-14): what it is,
     its nutrition per serving, each ingredient with whether the house has
     it (in the pantry, already on the grocery list, or to buy), the steps,
     and when it's planned next. "Schedule meal" is meal.plan; "Add to
     grocery list" is grocery.from_recipe, adding exactly `to_buy`. Also the
-    recipe being cooked in cook mode (`cooking`, DEC-0113), if any."""
+    recipe being cooked in cook mode (`cooking`, DEC-0113), if any. With
+    `servings`, each ingredient's `amount` is scaled to that many (the
+    canvas's servings stepper, scale_factor); `shown_servings` says how many."""
     from core.fitness_manager import MEALS
     from core.kitchen_actions import RECORDS, form_spec
     from core.kitchen_manager import ingredient_key, recipe_missing_ingredients
@@ -156,6 +183,7 @@ def recipe_page(context, recipe_id: str, today: Optional[date] = None) -> dict:
     if recipe is None:
         return {"available": False}
     pid = person_id(context)
+    shown_servings, factor = scale_factor(recipe.servings, servings)
     missing = {ingredient_key(n) for n in recipe_missing_ingredients(recipe, kitchen.all_pantry_items())}
     listed = {ingredient_key(g.name) for g in kitchen.all_grocery_items()}
     from core.kitchen_blueprint import check
@@ -171,6 +199,7 @@ def recipe_page(context, recipe_id: str, today: Optional[date] = None) -> dict:
         have = have_of.get(name)
         ingredients.append({"name": name, "quantity": ingredient.get("quantity") or None,
                             "unit": ingredient.get("unit", ""), "status": status,
+                            "amount": scaled_amount(ingredient.get("quantity"), ingredient.get("unit", ""), factor),
                             "have": f"{have:g} {ingredient.get('unit', '')}".strip() if have is not None else None})
     facts = recipe_facts(recipe)
     unlocker = None
@@ -194,7 +223,8 @@ def recipe_page(context, recipe_id: str, today: Optional[date] = None) -> dict:
     eaten = fit.food_for_recipe(recipe.recipe_id) if fit is not None else []
     return {
         "available": True, "as_of": today.isoformat(), "id": recipe.recipe_id, "name": recipe.name,
-        "category": recipe.category, "servings": recipe.servings, "prep_minutes": recipe.prep_time_minutes or 0,
+        "category": recipe.category, "servings": recipe.servings, "shown_servings": shown_servings,
+        "prep_minutes": recipe.prep_time_minutes or 0,
         "cook_minutes": recipe.cook_time_minutes or 0, "source": recipe.source, "notes": recipe.notes,
         "steps": recipe_steps(recipe.instructions), "ingredients": ingredients, "cooking": _cooking(context),
         "to_buy": [i["name"] for i in ingredients if i["status"] == "to_buy"],
