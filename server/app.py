@@ -1114,6 +1114,14 @@ def create_app(context: AppContext) -> FastAPI:
         with app.state.turn_lock:
             return toolbox_page(view_for(context, profile_id))
 
+    @app.get("/api/lab")
+    def lab_screen(series: str = "", profile_id: str = Depends(require_profile_id)) -> dict:
+        """The Lab (core/web_lab.py): the Data Logger's series, and one in full with its readings and chart."""
+        from core.web_lab import lab_page
+
+        with app.state.turn_lock:
+            return lab_page(view_for(context, profile_id), series[:200])
+
     @app.get("/api/toolbox/calc")
     def toolbox_calc(request: Request, id: str, profile_id: str = Depends(require_profile_id)) -> dict:
         """One calculator worked out in core (core/web_toolbox.calc) from the query's values; nothing is kept."""

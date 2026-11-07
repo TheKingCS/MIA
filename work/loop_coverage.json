@@ -29,6 +29,10 @@
    "status": "none",
    "why": "once per device; the glasses first boot is watched through glasses.voice once it is done"
   },
+  "action:lab_reading": {
+   "status": "none",
+   "why": "readings entered by hand in the Lab (DEC-0125): measurements, not her choices; nothing of MIA's to improve"
+  },
   "action:profile": {
    "status": "none",
    "why": "their own settings: nothing MIA chose, so nothing of hers to correct"

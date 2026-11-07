@@ -45,10 +45,6 @@
       "status": "todo",
       "why": "a glasses ask: convert or calculate (by voice there)"
     },
-    "lab:phone": {
-      "status": "todo",
-      "why": "a web page: experiments and graphs; sensors stay on the PC"
-    },
     "field_kit:phone": {
       "status": "todo",
       "why": "a web page: devices and scripts; running them stays on the PC"

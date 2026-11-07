@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1113 files, 250,935 lines; 1113 files describe themselves; 13,732 of 14,404 classes and functions are documented.
+1118 files, 251,467 lines; 1118 files describe themselves; 13,757 of 14,430 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-405 files, 116,926 lines; 6,195 of 6,284 classes and functions documented
+408 files, 117,232 lines; 6,213 of 6,302 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -35,6 +35,7 @@
 - `core/assistant_homestead_actions.py`: Assistant tools for Finance #2, homestead builds and tools (core/homestead_costs.py): "I spent $240 on lumber for the greenhouse", "I bought a DeWalt drill for $199 for the greenhouse", "How much have I spent on the greenhouse?", "What has the mower cost me?", "Set the greenhouse budget to $5,000".
 - `core/assistant_humor_actions.py`: "Be funnier", "tone down the jokes", "no jokes for now" (Zac, 2026-11-07): the person sets how funny MIA is with them, in chat. One tool, set_humor, moving their own level (core/personality.py HUMOR_LEVELS: off, rare, sometimes, often, lots) up or down a step or to a level by name. Only the speaker'
 - `core/assistant_inbox_actions.py`: Assistant tools for the document inbox (core/inbox_manager.py): what's waiting, "file it" (with MIA's proposal, or the owner's correction of which tool or build it's for), and "throw that one out". Filing by voice adds every maintenance step MIA found in a manual unless the owner says "without the t
+- `core/assistant_lab_actions.py`: The Lab by voice, for what the web Lab added (DEC-0125: full use both ways). "Delete the last soil moisture reading" takes out the newest reading in that series with the same action kind the Lab's Delete button uses (core/lab_reading_actions.py), so "undo that" brings it back. Logging and listing re
 - `core/assistant_life_actions.py`: Assistant actions for the personal side of MIA (2026-09-27, following docs/ASSISTANT_AUDIT.md): workouts, people and pets, household routines, and Classroom learning. Same contract as core/assistant_domain_actions.py: handlers are pure functions of (context, arguments), find records from the user's 
 - `core/assistant_life_event_actions.py`: "What did I get done this week?", "what changed this month?", "what bills did I pay?" (core/life_events.py, 2026-10-05). Facts from the log, counted in code; the model only phrases them.
 - `core/assistant_link_actions.py`: "The land loan funds the rental", "the greenhouse depends on selling the lot", "what depends on selling the lot?", "what's connected to the truck?" (core/links.py, 2026-10-05). Names are matched to real records in code; a link is only saved between things that exist. Undoable.
@@ -204,6 +205,7 @@
 - `core/kitchen_blueprint.py`: Kitchen recipes as blueprints (DEC-0028 #9, the kitchen half; Zac, 2026-10-17), the same way Workshop recipes work (core/craft_recipes.py): the recipe is the blueprint, the pantry is the materials.
 - `core/kitchen_manager.py`: MIA's Kitchen Module — recipes, a pantry/inventory list, a grocery list, and a meal log, plus the logic that connects them: which recipes are makeable right now from what's in the pantry, and adding a recipe's missing ingredients to the grocery list in one action.
 - `core/lab_actions.py`: The development lab's changes as action kinds (DEC-0058, core/dev_lab.py): start a proposal (lab, write, check), approve one into the running MIA, reject one. Grown-ups only, never from the glasses; the long steps (the coder, the test suite) run in the background and say when they're done. "Approve"
+- `core/lab_reading_actions.py`: The Lab's changes on the web (DEC-0113 canvas Lab, DEC-0125: the Lab had no phone screen). `lab_reading.add` logs a reading to a series in the Data Logger (core/data_logger_manager.py), joining an existing series whatever its case and starting a new one with its first reading; `lab_reading.delete` t
 - `core/ledger_manager.py`: MIA Home's revenue/expense ledger — the fourth and final slice of the proposed `mia_home_schema.sql` (see `docs/VISION.md`'s "MIA Home's expanded scope" section, and `core/material_manager.py` `core/job_manager.py`/`core/product_manager.py`'s docstrings for slices 1-3), adapted to this project's per
 - `core/leveling.py`: Pure XP/Level math for the Missions gamification system — no Qt, no persistence, testable in isolation (see tests/test_leveling.py). `core/profile_manager.py` stores the one number that matters (`Profile.total_xp`, lifetime cumulative); everything else — what level that corresponds to, and how far i
 - `core/life_areas.py`: The rest of a life, at a glance: the life state's `areas` section (DEC-0108's interconnection audit, 2026-11-07). `core/context_assembler.py` has full sections for money, property, assets, the kitchen, workouts, projects, goals and missions; the other stores were missing from her picture of a life e
@@ -389,6 +391,7 @@
 - `core/web_grow.py`: The Greenhouse's growing side (DEC-0030 phase D, folded into the Greenhouse by Zac 2026-10-17): every **place** (each tank or bed is a Greenhouse asset; older places are names typed before that) with what's growing there, its latest readings against your ranges (only ever a warning), and what it has
 - `core/web_guide.py`: "Start Here" (Zac, 2026-11-07: "I don't see the browser on MIA or really understand how to use much of anything we have built"): what MIA does, in plain words, grouped by what a person wants to get done, each with the words to say to her (a "Try saying" button opens Talk with them typed in) and the 
 - `core/web_inbox.py`: The Inbox on the web and the phone (Zac, 2026-10-16: "Can you build the inbox for sending stuff to MIA?"). The document inbox itself is core/inbox_manager.py: a file sent in (from the phone's Share menu, the Upload button, a dropped file, or email) becomes an item with MIA's reading of it (a receipt
+- `core/web_lab.py`: The Lab's web screen (DEC-0113 canvas Lab, DEC-0125: the Lab had no phone screen). The Lab is the home of the Data Logger (core/data_logger_manager.py): readings kept in named series ("Soil moisture", "Tank pH", "Shop temp"), one value each with a unit, a note and when.
 - `core/web_money.py`: The Money screen's data (2026-10-06, DEC-0017): everything the PC app's Budget screen shows, assembled here so `web/` holds no logic. Served as `/api/money`; changes go through the action kinds in core/money_actions.py.
 - `core/web_more.py`: The Journal, Workshop, Expeditions, Music, Files and People screens on the web (Zac, 2026-10-16: on the phone they "are empty right now and just bring up a chat with MIA"). Each assembler reads its stores and returns what its screen shows; every change is an action in core/more_actions.py.
 - `core/web_power.py`: Power's web screen (DEC-0113 canvas, DEC-0125: Power had no phone screen). Two parts:
@@ -416,7 +419,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 2,851 lines; 34 of 34 classes and functions documented
+2 files, 2,859 lines; 34 of 34 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -684,7 +687,7 @@
 
 ## tests/: the test suite: what each part must do
 
-369 files, 66,912 lines; 5,300 of 5,883 classes and functions documented
+370 files, 67,019 lines; 5,307 of 5,891 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1028,6 +1031,7 @@
 - `tests/test_web_guide.py`: Start Here (core/web_guide.py) stays true: every "Try saying" phrase reaches one of MIA's tools (or is one of the few handled in code), every page it opens exists, and the sidebar's data carries the life areas and favorites the grouped sidebar draws.
 - `tests/test_web_home_voice.py`: Talking to MIA on the PC (DEC-0125): the desktop window lets her own page use the microphone for Talk's mic, and nothing else: no other site, no camera. Talk's mic and the shared recorder live in web/shell.js.
 - `tests/test_web_inbox.py`: The Inbox screen on the web and the phone (Zac, 2026-10-16: "build the inbox for sending stuff to MIA"): core/web_inbox.py shows what's waiting (reading the folder first, so the phone needs no timer), and core/inbox_actions.py files, dismisses and sends notes through Propose → Approve. *(3 undocumented)*
+- `tests/test_web_lab.py`: The Lab on the web (DEC-0125, the design canvas's Lab, DEC-0113: core/web_lab.py, core/lab_reading_actions.py and core/assistant_lab_actions.py): the Data Logger's series as chips, one in full with plain numbers and a chart placed by core, readings logged and deleted as actions, other apps' series r *(1 undocumented)*
 - `tests/test_web_money.py`: DEC-0017 (2026-10-06): Money on the web does everything the PC app's Budget screen does. The page's data (core/web_money.py) and every change as an action kind (core/money_actions.py): add, edit, delete bills, income sources, income, expenses and debts; pay a debt; set budgets. Each one proposed, ap *(5 undocumented)*
 - `tests/test_web_more.py`: The Journal, Workshop, Expeditions (with what has to happen before a trip), Music, Files and People screens (Zac, 2026-10-16: on the phone they "are empty right now and just bring up a chat with MIA"): core/web_more.py builds each page, core/more_actions.py makes every change through Propose → Appro
 - `tests/test_web_power.py`: Power on the web (DEC-0125, the design canvas's Power, DEC-0113: core/web_power.py and core/power_actions.py): energy sources with their latest reading per meter, a meter for a percent (amber when low), when it was logged, and every change as an action; the device's battery when it has one. *(1 undocumented)*
@@ -1058,7 +1062,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-76 files, 13,829 lines
+77 files, 13,940 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
@@ -1096,6 +1100,7 @@
 - `web/kept.js`: kept.js — Kept (claude, 2026-11-06, DEC-0054). Renders MIA.lifeNotes() (core/life_notes.py): the promises, decisions, ideas and goals set aside the person asked MIA to keep. Done and Forget go through actions (life_note.done / .forget), so undo takes them back. Formatting only; the look is muse's.
 - `web/kitchen.js`: kitchen.js — the Kitchen screen (claude, 2026-10-06, DEC-0017/0018). Renders MIA.kitchen() (core/web_screens.py): recipes (with what's missing and which mission unlocks a locked one), the pantry, the grocery list, the meal log and suggestions. Every button proposes a kitchen action (core/kitchen_act
 - `web/knowledge.js`: knowledge.js — the offline reference library (claude, 2026-11-06). Renders MIA.knowledge(q) (core/reference_library_manager.py): the installed packs, a search across all of them, and an article read as plain text (MIA.knowledgeArticle), and the plans shelf (MIA.knowledgePlans, core/plan_library.py):
+- `web/lab.js`: lab.js — The Lab (claude, 2026-11-07, DEC-0125; the design canvas's Lab, DEC-0113). Renders MIA.lab() (core/web_lab.py): the series as chips, the chosen one's chart (points placed by core, 0..1), its plain numbers and readings newest first, and Add a Reading. Other apps' series (Power, Garage) are l
 - `web/label.js`: label.js — printable labels for a homestead good (DEC-0036). Reads MIA.workshop()'s goods: ?recipe=<id> (today's date) or &job=<batch> (that batch's made date). Formatting only; the words are the person's own.
 - `web/look.js`: look.js — Look: show MIA something (claude, 2026-11-07, build plan step 15). A photo (the camera, or one you have) and a question ("what is this?", "read this label", "inspect this part"), answered on MIA's PC by her local vision model (core/sight.py, POST /api/sight). The photo isn't kept. She neve
 - `web/made.js`: made.js: every screen MIA makes (claude, 2026-11-04, DEC-0088 to DEC-0091). Draws a creation's blocks as core assembled them (core/creation_spec.py): stats, chart, table, list, cards, meter, timeline, form, note. Only MIA's own classes and tokens, no styling of its own, so whatever she makes looks l
