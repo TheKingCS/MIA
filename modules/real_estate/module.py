@@ -150,12 +150,14 @@ def format_expense_row(entry: ExpenseEntry) -> str:
 
 
 class RealEstateModule(ModuleBase):
+    """The Real Estate app (desktop): properties with value, equity and loan, rental income and expenses, NOI, cap rate and depreciation, filtered by business entity, and linked to their Maintenance asset."""
     module_id = "real_estate"
     display_name = "Real Estate"
     description = "Property values, equity, rental income, and linked maintenance."
     icon = "\U0001F3D8"  # houses
 
     def __init__(self, context) -> None:
+        """Nothing built yet and no property selected: the tabs are made in get_widget()."""
         super().__init__(context)
         self._top_tab_stack: Optional[QStackedWidget] = None
         self._top_tab_pages: dict[str, QWidget] = {}
@@ -266,6 +268,7 @@ class RealEstateModule(ModuleBase):
         return page
 
     def _select_top_tab(self, name: str) -> None:
+        """Shows a top tab (Properties, Maintenance or Missions), its button lit, and refreshes it."""
         for key, button in self._top_tab_buttons.items():
             button.setProperty("active", key == name)
             button.style().unpolish(button)
@@ -286,6 +289,7 @@ class RealEstateModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_properties_tab(self) -> QWidget:
+        """The Properties tab: the entity filter, glance tiles (properties, total equity, rental income this month) and the property cards on the left, the selected property's detail on the right."""
         page = QWidget()
         layout = QHBoxLayout(page)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -345,6 +349,7 @@ class RealEstateModule(ModuleBase):
         return page
 
     def _build_glance_tile(self, row_layout: QHBoxLayout, caption: str, icon: str) -> QLabel:
+        """A glance tile (an icon, a value and its caption) added to the row; returns its value label to fill in."""
         tile = QFrame()
         tile.setObjectName("NatureGlanceTile")
         tile_layout = QHBoxLayout(tile)
@@ -445,6 +450,7 @@ class RealEstateModule(ModuleBase):
         self._refresh_property_detail()
 
     def _build_property_card(self, prop: Property) -> QPushButton:
+        """A property's card (lit when selected): its name and a line with its value and equity; clicking selects it."""
         card = QPushButton()
         card.setObjectName("NatureAssetCard")
         card.setProperty("selected", prop.property_id == self._selected_property_id)
@@ -468,6 +474,7 @@ class RealEstateModule(ModuleBase):
         return card
 
     def _on_select_property(self, property_id: str) -> None:
+        """Selects a property and refreshes."""
         self._selected_property_id = property_id
         self._refresh_property_list()
 
@@ -478,6 +485,7 @@ class RealEstateModule(ModuleBase):
         # modules/toolbox/tools/lite_captures_tool.py) and fixed across
         # this codebase's other actively-re-triggered refresh methods
         # the same day.
+        """Rebuilds the selected property's detail (old widgets hidden and detached first): its name with Edit and Delete, then its sections; says to select one, or that it no longer exists."""
         while self._property_detail_layout.count():
             item = self._property_detail_layout.takeAt(0)
             widget = item.widget()
@@ -544,6 +552,7 @@ class RealEstateModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_real_estate_maintenance_tab(self) -> QWidget:
+        """The Maintenance tab: a scrolling area for each property's section."""
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setContentsMargins(0, 12, 0, 12)
@@ -568,6 +577,7 @@ class RealEstateModule(ModuleBase):
         # modules/toolbox/tools/lite_captures_tool.py) and fixed across
         # this codebase's other actively-re-triggered refresh methods
         # the same day.
+        """Lists each property by name on the Maintenance tab (old rows hidden and detached first), or that none are tracked yet."""
         while self._re_maintenance_layout.count():
             item = self._re_maintenance_layout.takeAt(0)
             widget = item.widget()
@@ -594,6 +604,7 @@ class RealEstateModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_real_estate_missions_tab(self) -> QWidget:
+        """The Missions tab: a scrolling area for each property's section."""
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setContentsMargins(0, 12, 0, 12)
@@ -618,6 +629,7 @@ class RealEstateModule(ModuleBase):
         # modules/toolbox/tools/lite_captures_tool.py) and fixed across
         # this codebase's other actively-re-triggered refresh methods
         # the same day.
+        """Lists each property by name on the Missions tab (old rows hidden and detached first), or that none are tracked yet."""
         while self._re_missions_layout.count():
             item = self._re_missions_layout.takeAt(0)
             widget = item.widget()
@@ -640,6 +652,7 @@ class RealEstateModule(ModuleBase):
             self._re_missions_layout.addWidget(self._build_missions_section(prop))
 
     def _on_add_property(self) -> None:
+        """Adds a property from the dialog (type, purchase, value, mortgage, entity, land value, in-service date, loan terms, notes)."""
         dialog = AddEditPropertyDialog(entities=self.context.budget.all_business_entities())
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -663,6 +676,7 @@ class RealEstateModule(ModuleBase):
         self._refresh_property_list()
 
     def _on_edit_property(self, property_id: str) -> None:
+        """Edits a property in the dialog."""
         prop = self.context.real_estate.get_property(property_id)
         dialog = AddEditPropertyDialog(property_=prop, entities=self.context.budget.all_business_entities())
         if dialog.exec() != QDialog.DialogCode.Accepted:
@@ -688,6 +702,7 @@ class RealEstateModule(ModuleBase):
         self._refresh_property_list()
 
     def _on_delete_property(self, property_id: str) -> None:
+        """Deletes a property after asking (its income, expenses and linked Maintenance asset are kept)."""
         prop = self.context.real_estate.get_property(property_id)
         confirm = QMessageBox.question(
             None,
@@ -742,6 +757,7 @@ class RealEstateModule(ModuleBase):
         self._on_select_property(record_id)
 
     def _build_maintenance_section(self, prop: Property) -> QWidget:
+        """The detail's Maintenance section: the linked asset's tasks with their state, and Unlink; or Link Maintenance Asset when none is linked."""
         section = QFrame()
         section.setObjectName("NatureAssetCard")
         layout = QVBoxLayout(section)
@@ -776,6 +792,7 @@ class RealEstateModule(ModuleBase):
         return section
 
     def _on_link_maintenance(self, property_id: str) -> None:
+        """Links a Maintenance asset of category Property, picked from a list; says to add one first when there are none."""
         candidates = [a for a in self.context.maintenance.all_assets() if a.category == "Property"]
         if not candidates:
             QMessageBox.information(
@@ -794,10 +811,12 @@ class RealEstateModule(ModuleBase):
         self._refresh_property_detail()
 
     def _on_unlink_maintenance(self, property_id: str) -> None:
+        """Unlinks the property's Maintenance asset."""
         self.context.real_estate.update_property(property_id, maintenance_asset_id="")
         self._refresh_property_detail()
 
     def _build_income_expense_section(self, prop: Property) -> QWidget:
+        """The detail's money section: rental income and expenses side by side, each with its Record button."""
         section = QFrame()
         section.setObjectName("NatureAssetCard")
         layout = QHBoxLayout(section)
@@ -837,6 +856,7 @@ class RealEstateModule(ModuleBase):
         return section
 
     def _on_record_income(self, property_id: str) -> None:
+        """Records rental income for the property from the dialog."""
         dialog = AddEditIncomeDialog()
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -847,6 +867,7 @@ class RealEstateModule(ModuleBase):
         self._refresh_property_detail()
 
     def _on_record_expense(self, property_id: str) -> None:
+        """Records an expense for the property from the dialog (amount, category, date)."""
         dialog = AddEditExpenseDialog()
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -857,6 +878,7 @@ class RealEstateModule(ModuleBase):
         self._refresh_property_detail()
 
     def _build_summary_section(self, prop: Property) -> QWidget:
+        """The detail's Summary: This Month, This Year and All Time, with NOI, cap rate, depreciation (annual and so far), and the loan's payment, balance and payoff date."""
         section = QFrame()
         section.setObjectName("NatureAssetCard")
         layout = QVBoxLayout(section)
@@ -904,18 +926,23 @@ class RealEstateModule(ModuleBase):
 
     @staticmethod
     def _month_start() -> str:
+        """Pure logic. The first day of this month, ISO."""
         return date.today().replace(day=1).isoformat()
 
     def _on_summary_this_month(self, property_id: str) -> None:
+        """The summary for this month."""
         self._refresh_summary(property_id, "This Month", self._month_start(), None)
 
     def _on_summary_this_year(self, property_id: str) -> None:
+        """The summary for this year."""
         self._refresh_summary(property_id, "This Year", date.today().replace(month=1, day=1).isoformat(), None)
 
     def _on_summary_all_time(self, property_id: str) -> None:
+        """The summary for all time."""
         self._refresh_summary(property_id, "All Time", None, None)
 
     def _refresh_summary(self, property_id: str, label: str, start_date: Optional[str], end_date: Optional[str]) -> None:
+        """Fills the summary for a range: NOI, cap rate (n/a without a current value), annual and accumulated depreciation (with a warning when the land value isn't set, which may overstate it), and with loan terms the monthly payment, estimated balance and payoff date."""
         self._detail_range_label.setText(label)
         noi = self.context.real_estate.net_operating_income(property_id, start_date, end_date)
         cap_rate = self.context.real_estate.cap_rate(property_id, start_date, end_date)

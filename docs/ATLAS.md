@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1069 files, 237,707 lines; 1069 files describe themselves; 7,106 of 13,808 classes and functions are documented.
+1069 files, 237,734 lines; 1069 files describe themselves; 7,133 of 13,808 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -524,7 +524,7 @@
 
 ## modules/: the desktop's apps, one folder each
 
-93 files, 22,466 lines; 701 of 1,030 classes and functions documented
+93 files, 22,493 lines; 728 of 1,030 classes and functions documented
 
 - `modules/__init__.py`: Every feature of MIA (Assistant, Files, Notes, Maps, etc.) lives here as an independent package. Each module package must:
 - `modules/assistant/__init__.py`: The assistant app's package: its screen and behaviour are in module.py (Assistant Chat UI — docs/ROADMAP.md milestones 5.2 (text chat), 5.3 (voice), 5.4 (device-help grounding), and 5.5 (tool use / action execution). A chat screen (). core/module_manager.py finds it by that file.
@@ -590,7 +590,7 @@
 - `modules/property/__init__.py`: The property app's package: its screen and behaviour are in module.py (Property — a read-only, at-a-glance place to check on the house itself and everything in it that isn't a vehicle or power equipment: HVAC filters, water heater,). core/module_manager.py finds it by that file.
 - `modules/property/module.py`: Property — a read-only, at-a-glance place to check on the house itself and everything in it that isn't a vehicle or power equipment: HVAC filters, water heater, appliances, roof/gutter inspections, tools. Garage's direct sibling — same "filtered aggregation view over core.maintenance_manager, no add
 - `modules/real_estate/__init__.py`: The real estate app's package: its screen and behaviour are in module.py (Real Estate: a property portfolio — values, equity, rental income, and linked Maintenance history per property). core/module_manager.py finds it by that file.
-- `modules/real_estate/module.py`: Real Estate: a property portfolio — values, equity, rental income, and linked Maintenance history per property. *(27 undocumented)*
+- `modules/real_estate/module.py`: Real Estate: a property portfolio — values, equity, rental income, and linked Maintenance history per property.
 - `modules/relationships/__init__.py`: The relationships app's package: its screen and behaviour are in module.py (Relationship Profiles and Pet Profiles — docs/VISION.md's own "structured extensions" of Memory Palace. All persistence lives in core/relationships_manager.py (). core/module_manager.py finds it by that file.
 - `modules/relationships/module.py`: Relationship Profiles and Pet Profiles — docs/VISION.md's own "structured extensions" of Memory Palace. All persistence lives in core/relationships_manager.py (self.context.relationships) — this module is the Qt-facing wrapper around it, same split as every other data-backed module here.
 - `modules/settings/__init__.py`: The settings app's package: its screen and behaviour are in module.py (Settings: Backup/Restore (docs/ROADMAP.md milestone 2.7) — export import config + the data directory (profiles, notifications, etc.), optionally passphrase-encr). core/module_manager.py finds it by that file.

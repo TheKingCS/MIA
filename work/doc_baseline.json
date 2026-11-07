@@ -124,7 +124,6 @@
   "modules/field_kit/module.py": 27,
   "modules/kitchen/module.py": 34,
   "modules/maintenance/module.py": 30,
-  "modules/real_estate/module.py": 27,
   "modules/settings/module.py": 37,
   "modules/workshop/module.py": 45,
   "tests/assistant_registry.py": 2,
