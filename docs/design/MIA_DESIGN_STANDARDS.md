@@ -229,6 +229,22 @@ data and the actions its buttons propose. They're **concepts** under DEC-0113: b
   and calories against the plan; Use Soon in amber with one suggestion. Data: `MIA.kitchen()`. Actions: `meal.log`,
   `grocery.add`, `meal.cook`.
 
+**Phone page, every other app (added the same day, one main screen each, same plate / tabs / sections pattern)**
+- Life, progress and the game: Missions, Skills, Character, Reward Shop, Party, Sunday Check-in, The Chronicle.
+- Life, days, people and learning: Calendar, Journal, Kept, People & Pets, Classroom, a learning path (Guitar),
+  Memory Vault, Operating Journal, Play, Observations.
+- Money and business: Money, The Dungeon, Freedom, Compliance, Insurance, Real Estate, Workshop, Orders & Quotes,
+  Inbox.
+- Home, homestead and equipment: Garage, one asset, Greenhouse, Chickens, Household, Security, Power.
+- Outdoors and field: Expeditions, Maps, Navigation, Memories, World Map.
+- Knowledge and tools: Knowledge, Music, Files, Passwords, Good News Radio, Look, Toolbox, The Lab, Field Kit.
+- System and account: Sign In, Profile, Settings, Fix-It Log, Diagnostics. Plus Kitchen's one-recipe page.
+- Each follows §9: the header plate, tabs only where the app has them today, a status strip or Focus card for what
+  needs you, rows with their action as a quiet button, honest labels (Missing, Estimate, how a count was made),
+  and a line saying what's private or never done (a password shown for seconds; a port scan only when started).
+  Power, Toolbox, The Lab and Field Kit have no web page yet: their screens are the proposed web versions of the
+  desktop apps (`docs/WEB_PARITY.md`).
+
 **Glasses page**
 - **Orb and Feed:** the orb, "MIA · Ready", one spoken-length line, a feed card ("+50 XP · Mission complete"), dots
   for the favorites' cards. Data: `core/glasses.py`.
