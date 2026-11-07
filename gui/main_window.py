@@ -72,9 +72,11 @@ def format_level_badge_text(level: int, prestige_tier: int = 0) -> str:
 
 
 class MainWindow(QMainWindow):
+    """MIA's desktop window: the header (her wordmark, the nav tabs, the level badge and the profile menu), Home, the Apps grid and each app's screen in one stack, the character panel beside them, and the window-wide shortcuts (Ctrl+K search, quick capture, kiosk exit). It reacts to MIA's events: apps opened by voice, notifications, email drafts, records changed."""
     switch_profile_requested = Signal()
 
     def __init__(self, context: AppContext, module_manager: ModuleManager) -> None:
+        """Sizes the window from the config, builds everything, sets up the shortcuts (Ctrl+K search, Ctrl+Shift+Space quick capture, Ctrl+Shift+R read the screen, kiosk exit), notifications and module events, and says MIA core online."""
         super().__init__()
         self.context = context
         self.module_manager = module_manager
@@ -117,6 +119,7 @@ class MainWindow(QMainWindow):
         read_shortcut.activated.connect(self._read_screen_aloud)
 
     def _on_read_screen_requested(self, **_kwargs) -> None:
+        """Reads the screen aloud when asked."""
         self._read_screen_aloud()
 
     def _read_screen_aloud(self) -> None:
@@ -128,11 +131,13 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage(self._read_aloud.toggle(self._stack.currentWidget()), 6000)
 
     def _open_quick_capture(self) -> None:
+        """Opens quick capture."""
         from gui.quick_capture_dialog import QuickCaptureDialog
 
         QuickCaptureDialog(self.context, parent=self).exec()
 
     def _open_search(self) -> None:
+        """Opens search; a result chosen is opened."""
         dialog = SearchDialog(self.context, parent=self)
         dialog.result_activated.connect(self._on_search_result_activated)
         dialog.exec()
@@ -205,9 +210,11 @@ class MainWindow(QMainWindow):
         self.context.events.subscribe("profile.xp_changed", self._on_profile_xp_changed)
 
     def _on_modules_changed(self, **kwargs) -> None:
+        """Rebuilds the Apps grid when modules are enabled, disabled or added."""
         self._rebuild_menu()
 
     def _on_email_draft_ready(self, draft_id: str = "", profile_id=None, on_phone: bool = False, **_kwargs) -> None:
+        """Shows a draft MIA just wrote for whoever is signed in here, without blocking the window; one asked for on a phone, or someone else's, stays on their phone."""
         if on_phone:
             return  # shown on the phone that asked for it
         active = self.context.profiles.get_active_profile() if self.context.profiles is not None else None
@@ -224,6 +231,7 @@ class MainWindow(QMainWindow):
         dialog.show()
 
     def _on_profile_renamed(self, profile_id: str, old_name: str, new_name: str) -> None:
+        """Updates the profile button's initial when the signed-in profile is renamed."""
         active_profile = self.context.profiles.get_active_profile() if self.context.profiles else None
         if active_profile is None or active_profile.profile_id != profile_id:
             return
@@ -231,24 +239,29 @@ class MainWindow(QMainWindow):
         self._profile_button.setToolTip(new_name or "Profile")
 
     def _on_profile_xp_changed(self, profile_id: str) -> None:
+        """Updates the level badge when the signed-in person's XP changes."""
         active_profile = self.context.profiles.get_active_profile() if self.context.profiles else None
         if active_profile is None or active_profile.profile_id != profile_id:
             return
         self._refresh_level_badge(active_profile.total_xp, active_profile.prestige_tier)
 
     def _refresh_level_badge(self, total_xp: int, prestige_tier: int = 0) -> None:
+        """The level badge: the level and prestige tier, coloured by tier."""
         level, _xp_into_level, _xp_needed = compute_prestige_level_progress(total_xp, prestige_tier)
         self._level_badge.setText(format_level_badge_text(level, prestige_tier))
         color = prestige_color_for_tier(prestige_tier) if prestige_tier > 0 else None
         self._level_badge.setStyleSheet(f"color: {color};" if color else "")
 
     def _on_assistant_open_module_requested(self, module_id: str, record_id: Optional[str] = None) -> None:
+        """Opens the app (and record) MIA was asked to open."""
         self.open_module(module_id, record_id=record_id)
 
     def _on_profile_switch_requested(self, **kwargs) -> None:
+        """Passes a request to switch profile up to the application."""
         self.switch_profile_requested.emit()
 
     def _on_files_browse_path_requested(self, path: str) -> None:
+        """Opens the Files app at a folder."""
         self.open_module("files")
         files_module = self.module_manager.get("files")
         if files_module is not None:
@@ -281,6 +294,7 @@ class MainWindow(QMainWindow):
         self._update_notification_badge()
 
     def _on_notification_created(self, notification, profile_id=None, **_kwargs) -> None:
+        """Updates the badge and shows a toast, unless the notification is for someone else (a phone user)."""
         self._update_notification_badge()
         active = self.context.profiles.get_active_profile() if self.context.profiles is not None else None
         if profile_id and active is not None and active.profile_id != profile_id:
@@ -289,9 +303,11 @@ class MainWindow(QMainWindow):
         toast.show_in_corner()
 
     def _on_notification_updated(self, **kwargs) -> None:
+        """Updates the badge."""
         self._update_notification_badge()
 
     def _update_notification_badge(self) -> None:
+        """Shows how many notifications are unread in the menu and as a dot on the profile button."""
         count = self.context.notifications.unread_count()
         self._notifications_menu_action.setText(f"\U0001F514 Notifications ({count})" if count else "\U0001F514 Notifications")
         # Dynamic property, not a second object name — lets QSS give the
@@ -306,11 +322,13 @@ class MainWindow(QMainWindow):
         self._profile_button.style().polish(self._profile_button)
 
     def _open_notification_center(self) -> None:
+        """Opens the notification center, then updates the badge."""
         dialog = NotificationCenterDialog(self.context, parent=self)
         dialog.exec()
         self._update_notification_badge()
 
     def _on_always_show_login_toggled(self, checked: bool) -> None:
+        """Saves whether the login screen always shows at start."""
         self.context.config.set("profile.always_show_login_screen", checked)
         self.context.config.save()
 
@@ -360,6 +378,7 @@ class MainWindow(QMainWindow):
         shortcut.activated.connect(lambda: EasterEggDialog(self).exec())
 
     def _on_kiosk_exit_requested(self) -> None:
+        """Ctrl+Shift+Q: asks, then closes MIA (as a service she restarts after a few seconds)."""
         reply = QMessageBox.question(
             self,
             "Exit MIA",
@@ -390,6 +409,7 @@ class MainWindow(QMainWindow):
     # ------------------------------------------------------------------
 
     def _build_ui(self) -> None:
+        """The window's body: the header, the stack (Home, the Apps grid, app screens) and, when it's switched on, the character panel, which the floating orb shows and hides."""
         central = QWidget()
         self.setCentralWidget(central)
         root_layout = QVBoxLayout(central)
@@ -495,11 +515,13 @@ class MainWindow(QMainWindow):
         self.context.config.save()
 
     def _toggle_character_panel(self) -> None:
+        """Shows or hides the character panel."""
         if self._character_panel is None:
             return
         self._character_panel.setVisible(not self._character_panel.isVisible())
 
     def _on_nav_tab_clicked(self, tab_id: str) -> None:
+        """A nav tab opens Home, the Apps grid, or its app."""
         if tab_id == "home":
             self.show_home()
         elif tab_id == "apps":
@@ -543,6 +565,7 @@ class MainWindow(QMainWindow):
         self._orb.update_position()
 
     def _build_header(self) -> QFrame:
+        """The header: the wordmark, the nav tabs, the level badge and the profile button with its menu."""
         header = QFrame()
         header.setObjectName("HeaderBar")
         header.setFixedHeight(68)
@@ -702,6 +725,7 @@ class MainWindow(QMainWindow):
         return line
 
     def _build_menu(self) -> QWidget:
+        """The Apps grid: a button per app this person's focus shows, three to a row."""
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.Shape.NoFrame)
@@ -783,6 +807,7 @@ class MainWindow(QMainWindow):
         self.context.events.publish("module.opened", module_id=module_id)
 
     def _on_records_changed(self, **_kwargs) -> None:
+        """When records change elsewhere (by voice, the phone), refreshes the app on screen now and marks the others to refresh when next opened."""
         self._stale_modules = set(self._module_widgets)
         current = self._stack.currentWidget()
         for module_id, widget in self._module_widgets.items():
@@ -790,6 +815,7 @@ class MainWindow(QMainWindow):
                 self._refresh_module(module_id)
 
     def _refresh_module(self, module_id: str) -> None:
+        """Refreshes one app's screen; one that fails is logged and noted as broken, never taking the window down."""
         self._stale_modules.discard(module_id)
         module = self.module_manager.get(module_id)
         if module is None:
@@ -801,6 +827,7 @@ class MainWindow(QMainWindow):
             self._note_broken(module_id, problem)
 
     def _note_broken(self, module_id: str, problem: Exception) -> None:
+        """Notes an app that broke (for the apps-that-broke loop); a failure to note it is only logged."""
         from core.failure_actions import page_error
 
         try:

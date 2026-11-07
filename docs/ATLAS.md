@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1070 files, 239,012 lines; 1070 files describe themselves; 8,242 of 13,814 classes and functions are documented.
+1070 files, 239,039 lines; 1070 files describe themselves; 8,269 of 13,814 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -397,7 +397,7 @@
 
 ## gui/: the desktop's Qt shell and dialogs
 
-122 files, 21,624 lines; 956 of 1,083 classes and functions documented
+122 files, 21,651 lines; 983 of 1,083 classes and functions documented
 
 - `gui/__init__.py`: Presentation layer only. Everything in this package talks to the rest of the system through core.app_context.AppContext and modules.module_base. ModuleBase — never by importing module internals or reaching into core services directly beyond what AppContext exposes.
 - `gui/account_dialogs.py`: Accounts and households on the desktop (2026-10-01, docs/ROADMAP.md "People and ownership"; core/profile_manager.py, core/household_manager.py): *(30 undocumented)*
@@ -460,7 +460,7 @@
 - `gui/log_meal_dialog.py`: Small dialog for logging that a recipe was made on a given date, used by modules/kitchen/module.py's Meal Log tab "Log a Meal" button. The Recipes detail page's own "Log that I made this today" quick action skips this dialog entirely and calls KitchenManager.log_meal() directly with today's date — a
 - `gui/log_reading_dialog.py`: Small dialog for manually logging one meter/sensor reading (odometer, engine hours, start count, battery voltage, ...) against a Runtime Mileage/Cycles/Condition/Sensor maintenance task — used by modules/maintenance/module.py's "Log Reading…" action. This is the honest v2 stand-in for real hardware 
 - `gui/log_set_dialog.py`: Small dialog for logging one completed set (reps + weight) during a live workout session, used by modules/workout/module.py's Log Session tab. Opened once per set — the session itself accumulates logged sets in memory (see core/workout_manager.py's own module docstring) and is only ever saved as a w
-- `gui/main_window.py`: The main MIA shell: header bar, a stacked view area, and a reserved character panel. The stacked area swaps between three kinds of screen: the post-login Home dashboard (`gui/home_dashboard.py`, the default landing view), the Apps grid (`_build_menu()` — every discovered module, moved out of being t *(27 undocumented)*
+- `gui/main_window.py`: The main MIA shell: header bar, a stacked view area, and a reserved character panel. The stacked area swaps between three kinds of screen: the post-login Home dashboard (`gui/home_dashboard.py`, the default landing view), the Apps grid (`_build_menu()` — every discovered module, moved out of being t
 - `gui/manage_business_entities_dialog.py`: A single self-contained dialog for managing core.budget_manager's BusinessEntity list (LLCs/sole props/etc.) — only ~3-5 entities are expected, so this is one QDialog rather than a new module/tab, same scale reasoning as gui/delete_confirm_dialog.py's own minimalism.
 - `gui/manage_mission_skills_dialog.py`: The Mission-side twin of gui.manage_project_skills_dialog — same "live action" shape (each "Add" click calls add_skill_reward() immediately and refreshes the list right there, no OK/Cancel/Accept step), reused for both upfront declaration and retroactive tagging since core.mission_manager.MissionMan
 - `gui/manage_project_skills_dialog.py`: The one small dialog "My Hero's Path" Phase 2 needs for tagging which skills a Project trains — reused for BOTH upfront declaration and retroactive tagging after the fact, since core.project_manager.ProjectManager.add_skill_weight() already handles both cases correctly on its own (see that method's 

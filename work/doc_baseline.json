@@ -5,7 +5,6 @@
   "core/plaid_manager.py": 21,
   "gui/account_dialogs.py": 30,
   "gui/home_dashboard.py": 70,
-  "gui/main_window.py": 27,
   "tests/assistant_registry.py": 2,
   "tests/conftest.py": 4,
   "tests/core_live_music_check.py": 3,
