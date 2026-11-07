@@ -55,6 +55,9 @@ WAYPOINT_CATEGORIES: tuple[str, ...] = (
 
 @dataclass
 class Waypoint:
+    """A saved place: its name, latitude and longitude, notes, category (WAYPOINT_CATEGORIES, or none) and when it was
+    saved.
+    """
     waypoint_id: str
     name: str
     latitude: float
@@ -64,6 +67,7 @@ class Waypoint:
     created_at: str = ""  # ISO datetime
 
     def to_dict(self) -> dict:
+        """The waypoint as saved in waypoints.json."""
         return {
             "waypoint_id": self.waypoint_id,
             "name": self.name,
@@ -76,6 +80,7 @@ class Waypoint:
 
     @staticmethod
     def from_dict(data: dict) -> "Waypoint":
+        """A waypoint from its saved dict; missing fields take their defaults."""
         return Waypoint(
             waypoint_id=data.get("waypoint_id", uuid.uuid4().hex[:10]),
             name=data.get("name", ""),
@@ -110,8 +115,12 @@ def initial_bearing_degrees(lat1: float, lon1: float, lat2: float, lon2: float) 
 
 
 class WaypointManager:
+    """The household's waypoints (waypoints.json, written through atomic_write_text so undo can restore it), with
+    distances and bearings worked out between them.
+    """
     def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
         # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        """Points at the household's file (data/ by default) and loads it."""
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._waypoints_file = self.data_dir / "waypoints.json" if data_dir is not None else _WAYPOINTS_FILE
         self.context = context
@@ -123,6 +132,7 @@ class WaypointManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads the waypoints; a damaged file is logged, reported and starts empty."""
         if not self._waypoints_file.exists():
             self._waypoints = []
             return
@@ -139,6 +149,7 @@ class WaypointManager:
         self._load()
 
     def _save(self) -> None:
+        """Writes every waypoint atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._waypoints_file,
             json.dumps([w.to_dict() for w in self._waypoints], indent=2),
@@ -152,6 +163,7 @@ class WaypointManager:
     def add_waypoint(
         self, name: str, latitude: float, longitude: float, notes: str = "", category: str = ""
     ) -> Waypoint:
+        """Saves a waypoint."""
         waypoint = Waypoint(
             waypoint_id=uuid.uuid4().hex[:10],
             name=name,
@@ -167,6 +179,7 @@ class WaypointManager:
         return waypoint
 
     def update_waypoint(self, waypoint_id: str, **fields) -> Waypoint:
+        """Changes a waypoint's fields (ValueError for an unknown one or field, or created_at)."""
         waypoint = self.get_waypoint(waypoint_id)
         if waypoint is None:
             raise ValueError(f"No waypoint with id '{waypoint_id}'.")
@@ -180,6 +193,7 @@ class WaypointManager:
         return waypoint
 
     def delete_waypoint(self, waypoint_id: str) -> None:
+        """Deletes a waypoint."""
         self._waypoints = [w for w in self._waypoints if w.waypoint_id != waypoint_id]
         self._save()
 
@@ -188,12 +202,14 @@ class WaypointManager:
     # ------------------------------------------------------------------
 
     def get_waypoint(self, waypoint_id: str) -> Optional[Waypoint]:
+        """The waypoint with this id, or None."""
         for waypoint in self._waypoints:
             if waypoint.waypoint_id == waypoint_id:
                 return waypoint
         return None
 
     def all_waypoints(self) -> list[Waypoint]:
+        """Every waypoint, by name."""
         return sorted(self._waypoints, key=lambda w: w.name.lower())
 
     def distance_and_bearing(self, from_id: str, to_id: str) -> Optional[tuple[float, float]]:

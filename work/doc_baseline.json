@@ -191,7 +191,6 @@
   "core/voice_catalog.py": 3,
   "core/voice_loop.py": 4,
   "core/volume_manager.py": 11,
-  "core/waypoint_manager.py": 12,
   "core/web_account.py": 8,
   "core/web_business.py": 2,
   "core/web_compliance.py": 3,
