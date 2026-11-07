@@ -613,7 +613,7 @@ first); `show <file>` prints each with its code; write the docstrings by reading
 does, how when that isn't plain; check any claim you aren't sure of), put them in a JSON
 `{"core/x.py": {"func": "...", "Cls.meth": "..."}}` and `apply` it (inserts them, lowers the ratchet,
 regenerates `docs/ATLAS.md`). Skip `core/budget_manager.py` and `core/plaid_manager.py` while Zac's Plaid work is
-uncommitted. 6,060 of 13,690 documented on 2026-11-07; apart from those two, every core/ file has 5 or fewer left.
+uncommitted. 6,284 of 13,690 documented on 2026-11-07; apart from those two, every core/ file has 3 or fewer left.
 
 **Her own models (DEC-0106, build plan step 19):** the model forge (`core/model_forge.py`, `python -m tools.model_forge router` / `list`) made her first model 2026-11-07, a tool router trained on her tools' own words and the person's record names: 80% first pick, 95% top five on requests it never saw (card in `data/models/router/`, not in use). Each model is assigned to an issue (a slipping loop) or a project and judged by it; the playbook of five kinds and `python -m tools.model_forge needs` say where one could help. The router now runs in the shadow on every traced turn (its top five in the trace, the `models.router_shadow` loop); once it has 20 turns with a tool called, read how it did before deciding anything. Next: build plan step 19 (d) onward. `self_docs` (get_mia_docs, the council) now answers from her code's docstrings and the Knowledge Vault too.
 
