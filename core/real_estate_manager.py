@@ -65,6 +65,10 @@ PROPERTY_STATUSES = ["Rented", "Vacant", "For Sale", "For Rent", "Owner Occupied
 
 @dataclass
 class Property:
+    """A property the household owns: its type and status, purchase date and price, a current value they update by hand,
+    the mortgage (balance, original loan, rate, term, start), land value and when it was placed in service (for
+    depreciation), the business entity that owns it, its maintenance asset, where it is, what it rents for, notes.
+    """
     property_id: str
     name: str  # "123 Main St", "Lake Cabin"
     property_type: str = "Rental"  # one of PROPERTY_TYPES
@@ -98,6 +102,7 @@ class Property:
     monthly_rent: float = 0.0  # what it rents for (expected), per month
 
     def to_dict(self) -> dict:
+        """The property as saved in properties.json."""
         return {
             "property_id": self.property_id, "name": self.name, "property_type": self.property_type,
             "purchase_date": self.purchase_date, "purchase_price": self.purchase_price,
@@ -113,6 +118,7 @@ class Property:
 
     @staticmethod
     def from_dict(data: dict) -> "Property":
+        """A property from its saved dict; missing fields take their defaults."""
         return Property(
             property_id=data.get("property_id", uuid.uuid4().hex[:10]),
             name=data.get("name", ""),
@@ -325,8 +331,13 @@ def _in_range(entry_date: str, start_date: Optional[str], end_date: Optional[str
 
 
 class RealEstateManager:
+    """The household's properties (properties.json, written through atomic_write_text). Rent and property costs live in
+    the Budget, tagged to the property, so they're never kept twice; every figure (NOI, cap rate...) is worked out
+    when asked.
+    """
     def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
         # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        """Points at the household's file (data/ by default) and loads it."""
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._properties_file = self.data_dir / "properties.json" if data_dir is not None else _PROPERTIES_FILE
         self.context = context
@@ -338,6 +349,7 @@ class RealEstateManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads the properties; a damaged file is logged, reported and starts empty."""
         if not self._properties_file.exists():
             self._properties = []
             return
@@ -350,6 +362,7 @@ class RealEstateManager:
             self._properties = []
 
     def _save(self) -> None:
+        """Writes every property atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._properties_file,
             json.dumps([p.to_dict() for p in self._properties], indent=2), encoding="utf-8",
@@ -379,6 +392,7 @@ class RealEstateManager:
         status: str = "",
         monthly_rent: float = 0.0,
     ) -> Property:
+        """Adds a property: an unknown type becomes Other, an unknown status none, and no money, rate or term below zero."""
         prop = Property(
             property_id=uuid.uuid4().hex[:10],
             name=name,
@@ -406,6 +420,7 @@ class RealEstateManager:
         return prop
 
     def update_property(self, property_id: str, **fields) -> Property:
+        """Changes a property's fields with add's limits (ValueError for an unknown property or field)."""
         prop = self.get_property(property_id)
         if prop is None:
             raise ValueError(f"No property with id '{property_id}'.")
@@ -442,12 +457,14 @@ class RealEstateManager:
         self._save()
 
     def get_property(self, property_id: str) -> Optional[Property]:
+        """The property with this id, or None."""
         for prop in self._properties:
             if prop.property_id == property_id:
                 return prop
         return None
 
     def all_properties(self) -> list[Property]:
+        """Every property, by name."""
         return sorted(self._properties, key=lambda p: p.name.lower())
 
     # ------------------------------------------------------------------
@@ -458,6 +475,9 @@ class RealEstateManager:
     def record_rental_income(
         self, property_id: str, amount: float, date_str: Optional[str] = None, description: str = "", notes: str = ""
     ) -> "IncomeEntry":
+        """Records rent received as Rental Income in the Budget, tagged to the property and its entity, and records it in
+        the history (in the budget's folder, so a private budget's history stays private).
+        """
         prop = self.get_property(property_id)
         if prop is None:
             raise ValueError(f"No property with id '{property_id}'.")
@@ -480,6 +500,9 @@ class RealEstateManager:
         description: str = "",
         notes: str = "",
     ) -> "ExpenseEntry":
+        """Records a cost for a property as a Budget expense tagged to it and its entity, and records it in the history
+        (in the budget's folder).
+        """
         prop = self.get_property(property_id)
         if prop is None:
             raise ValueError(f"No property with id '{property_id}'.")
@@ -495,12 +518,14 @@ class RealEstateManager:
         return entry
 
     def income_for_property(self, property_id: str, start_date: Optional[str] = None, end_date: Optional[str] = None) -> list["IncomeEntry"]:
+        """The rent and other income tagged to a property between two dates (both optional)."""
         return [
             i for i in self.context.budget.all_income()
             if i.property_id == property_id and _in_range(i.date, start_date, end_date)
         ]
 
     def expenses_for_property(self, property_id: str, start_date: Optional[str] = None, end_date: Optional[str] = None) -> list["ExpenseEntry"]:
+        """The expenses tagged to a property between two dates (both optional)."""
         return [
             e for e in self.context.budget.all_expenses()
             if e.property_id == property_id and _in_range(e.date, start_date, end_date)

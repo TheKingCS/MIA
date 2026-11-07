@@ -177,7 +177,6 @@
   "core/push_to_talk_trigger.py": 3,
   "core/quick_capture.py": 4,
   "core/quick_commands.py": 3,
-  "core/real_estate_manager.py": 15,
   "core/receipt_match.py": 1,
   "core/receiver_indicators.py": 5,
   "core/record_import.py": 4,

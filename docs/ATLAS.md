@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 228,558 lines; 1043 files describe themselves; 4,718 of 13,517 classes and functions are documented.
+1043 files, 228,583 lines; 1043 files describe themselves; 4,733 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 102,464 lines; 3,987 of 5,630 classes and functions documented
+367 files, 102,489 lines; 4,002 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -273,7 +273,7 @@
 - `core/quick_capture.py`: Quick capture (2026-10-01): one box, reachable from anywhere (the "+" in the header, or Ctrl+Shift+Space), for whatever is on your mind: "milk and eggs", "changed the truck's oil today", "dentist Tuesday at 2", "Pat's email is pat@example.com", "idea: a rain barrel by the shed". MIA files it where i *(4 undocumented)*
 - `core/quick_commands.py`: Things a person says that need no AI model (DEC-0020): "workout complete", "step one of today's workout complete", "finished my pull-ups", "today's lunch complete", "meal prep done", "this week's meal plans complete", "I weigh 182", "had 40 g of protein", "handstand 45 seconds", "undo that". MIA's o *(3 undocumented)*
 - `core/rarity.py`: Shared Borderlands-style five-tier rarity vocabulary, from the user's 2026-09-14 "Prestige, Rarity & Character Progression" design handoff (see the [[project_mia_prestige_rarity_vision]] memory) — Common through Legendary, the same white/green/blue/purple/orange scale `core.leveling.PRESTIGE_COLORS`
-- `core/real_estate_manager.py`: Property records for a real estate portfolio — values, mortgage balance/equity, and links to the existing systems that already own the rest of what a property needs tracked, rather than duplicating them: *(15 undocumented)*
+- `core/real_estate_manager.py`: Property records for a real estate portfolio — values, mortgage balance/equity, and links to the existing systems that already own the rest of what a property needs tracked, rather than duplicating them:
 - `core/receipt_match.py`: A scanned receipt fills in a recipe's Bought It (Zac, 2026-10-17; the next step after crafting recipes, DEC-0030). The inbox already reads a receipt's lines (core/inbox_classify.receipt_items: description, amount, quantity, unit price) and keeps them on the expense it files into the Budget. Here eac *(1 undocumented)*
 - `core/receiver_indicators.py`: The Protocol boundary between `core/voice_loop.py` and the Receiver's physical feedback hardware (recording LED, e-paper status display, vibration motor — docs/HARDWARE.md's "Modular Backpack" section). *(5 undocumented)*
 - `core/record_actions.py`: The shared machinery behind the web's "add, edit, delete anything" (2026-10-06, DEC-0017). A screen's records are described once, as a `Record` with its `Field`s and the store methods that add, update and delete it; from that come its action kinds on the contract in core/actions.py (Propose → Approv
