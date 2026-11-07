@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 228,200 lines; 1043 files describe themselves; 4,497 of 13,517 classes and functions are documented.
+1043 files, 228,226 lines; 1043 files describe themselves; 4,514 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 102,106 lines; 3,766 of 5,630 classes and functions documented
+367 files, 102,132 lines; 3,783 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -178,7 +178,7 @@
 - `core/insurance_actions.py`: The insurance check-up's changes (DEC-0034, core/insurance.py) on the action contract: policies and quotes are records (add, edit, delete, undoable); then drafting a quote request (MIA drafts, you press Send), "Switch To This" (a mission with the steps, no gap in coverage) and "I Switched" (the poli *(11 undocumented)*
 - `core/intent_manager.py`: Intent — the "why" layer in the connective-infrastructure pass that followed the "My Hero's Path" architecture review (see docs/ROADMAP.md's dated entry for the full reasoning). An Intent is a long-running, open-ended goal ("Homestead Independence," "Get really good at making things") that a core.pr *(13 undocumented)*
 - `core/inventory_manager.py`: Backs the Inventory tool (modules/toolbox/tools/inventory_tool.py) — milestone 3.5 in docs/ROADMAP.md. Same persisted-JSON pattern as core.calendar_manager.CalendarManager / core.alarm_manager.AlarmManager: data/inventory_items.json, a dataclass with to_dict/from_dict, a manager class wrapping load/
-- `core/job_manager.py`: MIA Home's fabrication jobs — the second slice of the proposed `mia_home_schema.sql` (see `docs/VISION.md`'s "MIA Home's expanded scope" section and `core/material_manager.py`'s docstring for the first slice), adapted to this project's persisted-JSON-manager convention. Same shape as every other man *(17 undocumented)*
+- `core/job_manager.py`: MIA Home's fabrication jobs — the second slice of the proposed `mia_home_schema.sql` (see `docs/VISION.md`'s "MIA Home's expanded scope" section and `core/material_manager.py`'s docstring for the first slice), adapted to this project's persisted-JSON-manager convention. Same shape as every other man
 - `core/journal_manager.py`: Backs the Notes module (modules/notes/module.py) — milestone 3.4 in docs/ROADMAP.md, which upgrades that module from a placeholder into the "Notes/Journal Engine" described in ROADMAP.md's shared core services table: dated, searchable, taggable entries. It's a core service (not module-local) specifi *(10 undocumented)*
 - `core/journal_reflection.py`: The opt-in weekly journal reflection (2026-09-28), the follow-up to Cognitive Extension slice C: once a week (Sunday evening by default), if the owner journaled that week, MIA says a reflection is ready. The details (what came up most, how the mood moved) are given only when the owner asks ("how was *(4 undocumented)*
 - `core/kitchen_actions.py`: Every change the Kitchen screen makes (2026-10-06, DEC-0017/0018), as action kinds on the contract in core/actions.py, from the shared table in core/record_actions.py: recipes (add, edit, delete, their ingredients written one per line), the pantry (add, edit, delete), the grocery list (add, check of

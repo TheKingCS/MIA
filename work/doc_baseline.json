@@ -127,7 +127,6 @@
   "core/inbox_manager.py": 15,
   "core/insurance_actions.py": 11,
   "core/intent_manager.py": 13,
-  "core/job_manager.py": 17,
   "core/journal_manager.py": 10,
   "core/journal_reflection.py": 4,
   "core/kitchen_blueprint.py": 2,

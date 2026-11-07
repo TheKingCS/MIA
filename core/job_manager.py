@@ -73,6 +73,9 @@ _LABOR_RATE_CONFIG_KEY = "workshop.labor_rate_per_hour"
 
 @dataclass
 class MaterialConsumptionEntry:
+    """Some of a material a job used: which, how much, and what one unit cost then (None for entries from
+    before that was recorded).
+    """
     material_id: str
     quantity_used: float
     # 2026-10-17 (crafting recipes): the material's cost when it was used,
@@ -81,6 +84,7 @@ class MaterialConsumptionEntry:
     unit_cost: Optional[float] = None
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in jobs.json. The unit cost only when known."""
         out = {"material_id": self.material_id, "quantity_used": self.quantity_used}
         if self.unit_cost is not None:
             out["unit_cost"] = self.unit_cost
@@ -88,6 +92,7 @@ class MaterialConsumptionEntry:
 
     @staticmethod
     def from_dict(data: dict) -> "MaterialConsumptionEntry":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return MaterialConsumptionEntry(
             material_id=data.get("material_id", ""),
             quantity_used=data.get("quantity_used", 0.0),
@@ -106,10 +111,12 @@ class ProductionEntry:
     quantity_produced: float
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in jobs.json."""
         return {"product_id": self.product_id, "quantity_produced": self.quantity_produced}
 
     @staticmethod
     def from_dict(data: dict) -> "ProductionEntry":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return ProductionEntry(
             product_id=data.get("product_id", ""),
             quantity_produced=data.get("quantity_produced", 0.0),
@@ -118,6 +125,10 @@ class ProductionEntry:
 
 @dataclass
 class Job:
+    """One build (a fabrication job): its status, the materials it used and products it made, labor hours, notes, and,
+    when made from a craft recipe, the recipe, how many, the steps ticked, when it finished, how many were tossed, and
+    the cost of each.
+    """
     job_id: str
     name: str
     description: str = ""
@@ -142,6 +153,7 @@ class Job:
     cost_each: float = 0.0
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in jobs.json."""
         return {
             "job_id": self.job_id,
             "name": self.name,
@@ -163,6 +175,7 @@ class Job:
 
     @staticmethod
     def from_dict(data: dict) -> "Job":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return Job(
             job_id=data.get("job_id", uuid.uuid4().hex[:10]),
             name=data.get("name", ""),
@@ -216,8 +229,12 @@ def job_total_cost(job: Job, materials_by_id: dict[str, Material], labor_rate_pe
 
 
 class JobManager:
+    """The workshop's builds (jobs.json in the household's folder, written through atomic_write_text so undo can
+    restore it). Using materials and making products goes through here, so stock moves with them.
+    """
     def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
         # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        """Points at the household's file (data/ by default) and loads it."""
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._jobs_file = self.data_dir / "jobs.json" if data_dir is not None else _JOBS_FILE
         self.context = context
@@ -229,6 +246,7 @@ class JobManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads the jobs; a damaged file is logged, reported (notify_data_corruption) and starts empty."""
         if not self._jobs_file.exists():
             self._jobs = []
             return
@@ -241,6 +259,7 @@ class JobManager:
             self._jobs = []
 
     def _save(self) -> None:
+        """Writes every job atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._jobs_file,
             json.dumps([j.to_dict() for j in self._jobs], indent=2),
@@ -259,6 +278,7 @@ class JobManager:
         labor_hours: float = 0.0,
         notes: str = "",
     ) -> Job:
+        """Adds a job (an unknown status becomes Planned; hours never negative)."""
         now = datetime.now().isoformat(timespec="seconds")
         job = Job(
             job_id=uuid.uuid4().hex[:10],
@@ -276,6 +296,9 @@ class JobManager:
         return job
 
     def update_job(self, job_id: str, **fields) -> Job:
+        """Changes a job's fields with add's limits and stamps updated_at (ValueError for an unknown job or field, or
+        the timestamps).
+        """
         job = self.get_job(job_id)
         if job is None:
             raise ValueError(f"No job with id '{job_id}'.")
@@ -294,6 +317,7 @@ class JobManager:
         return job
 
     def delete_job(self, job_id: str) -> None:
+        """Deletes a job."""
         self._jobs = [j for j in self._jobs if j.job_id != job_id]
         self._save()
 
@@ -359,12 +383,14 @@ class JobManager:
     # ------------------------------------------------------------------
 
     def get_job(self, job_id: str) -> Optional[Job]:
+        """The job with this id, or None."""
         for job in self._jobs:
             if job.job_id == job_id:
                 return job
         return None
 
     def all_jobs(self) -> list[Job]:
+        """Every job, newest first."""
         return sorted(self._jobs, key=lambda j: j.created_at, reverse=True)
 
     def search(self, query: str) -> list[Job]:
