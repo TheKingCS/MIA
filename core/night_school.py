@@ -34,7 +34,11 @@ of the window, or when her teacher is resting at a usage limit:
    passes, and the full suite has nothing new failing. Her teacher reads
    what she did and writes the one lesson in it, which she's given the next
    time she works that skill.
-6. **She proves herself on real work**: one shadow attempt at a ready task
+6. **She audits herself, weekly** (core/self_audit.py, DEC-0108): her
+   code for what could be clearer or leaner, her parts for where they
+   could connect better, and her best-practices series is rewritten
+   from what the team has learned. The top finding of each opens a task.
+6a. **She proves herself on real work**: one shadow attempt at a ready task
    (core/mia_coder.shadow), which is what the ledger counts.
 7. **She spreads her loops** (core/loop_coverage.py): her teacher drafts a
    loop for the next family of processes no loop watches yet, and it
@@ -68,7 +72,7 @@ PLAN = ROOT / "docs" / "BUILD_PLAN.md"
 WHO = "MIA (night school)"
 DEFAULTS = {"enabled": True, "start": "01:30", "hours": 4.0, "mode": "plan", "lessons": 3, "shadow": 1,
             "loop_families": 1, "teachers": ["claude-code", "codex"], "teacher_calls": 8, "benchmarks": True,
-            "curriculum": True}
+            "curriculum": True, "audit": True}
 MODES = ("plan", "self")
 LESSON_MINUTES = 45  # a lesson isn't started with less of the window left than this
 TEST_NAME = re.compile(r"^tests/test_night_[a-z0-9_]{3,60}\.py$")
@@ -646,6 +650,17 @@ def night(now: Optional[datetime] = None, *, ask: Optional[Callable[[str, str], 
         except Exception as problem:
             record["notes"].append(f"the benchmark loops couldn't run: {str(problem)[:120]}")
 
+    # 7b. The weekly self-audit (core/self_audit.py, DEC-0108): her code, her connections, her practices
+    from core import self_audit
+
+    if cfg.get("audit", True) and not STOP_FILE.exists() and self_audit.due():
+        try:
+            found = self_audit.weekly(tasks_dir=tasks_dir, log=log)
+            record["audit"] = {"code": found["code"]["findings"], "connections": found["connections"]["findings"],
+                               "connected": found["connections"]["share"], "tasks": found["tasks"]}
+        except Exception as problem:
+            record["notes"].append(f"the weekly self-audit didn't finish: {str(problem)[:120]}")
+
     # 8. The report
     record["teacher_calls"] = calls
     record["ended"] = clock().isoformat(timespec="seconds")
@@ -742,6 +757,10 @@ def describe(record: dict) -> str:
             lines.append(f"      Lesson: {l['note']}")
     for s in record.get("shadow", []):
         lines.append(f"  Real work, {s['task']}: {s['outcome']} ({s.get('summary', '')[:100]})")
+    if record.get("audit"):
+        a = record["audit"]
+        lines.append(f"  Self-audit: {a['code']} places to improve, {a['connections']} connections to make "
+                     f"({a['connected']:.0%} connected)" + (f"; opened {', '.join(a['tasks'])}" if a["tasks"] else ""))
     if record.get("benchmarks"):
         lines.append(f"  Benchmarks: {record['benchmarks'][-200:]}")
     for f in record.get("loops", []):

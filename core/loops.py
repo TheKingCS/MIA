@@ -161,6 +161,29 @@ def _curriculum(context) -> Optional[Reading]:
                                                             f"{tried} curriculum lessons tried")
 
 
+def _audit_code(_context) -> Optional[Reading]:
+    """Measure: how many places the weekly code audit found to improve (core/self_audit.py), by kind. None before
+    the first audit."""
+    from core import self_audit
+
+    last = self_audit.latest()
+    if not last:
+        return None
+    kinds = last["code"]["by_kind"]
+    return Reading(float(last["code"]["findings"]), 1, ", ".join(f"{k} {n}" for k, n in kinds.items()))
+
+
+def _connected(_context) -> Optional[Reading]:
+    """Measure: the share of the store connections that should exist that do (history, links, voice, life state,
+    web), from the weekly interconnection audit. None before the first."""
+    from core import self_audit
+
+    last = self_audit.latest()
+    if not last or last["connections"].get("share") is None:
+        return None
+    return Reading(last["connections"]["share"], 1, f"{last['connections']['findings']} connections to make")
+
+
 def _slow(context) -> Optional[Reading]:
     """Measure: the share of this week's turns that took over 25 seconds. None when there's nothing to judge from yet."""
     turns = _turns(context)
@@ -1019,6 +1042,10 @@ LOOPS: tuple[Loop, ...] = (
     Loop("gaps.repeated", "answers", "things she can't do yet, asked more than once (self-enablement)", "person",
          _gaps, acts="watch", covers=("flow:tools", "check:capability_gaps", "action:gap")),
     Loop("answers.slow", "answers", "share of answers over 25 seconds", "person", _slow, floor=0.10, min_n=20, covers=("flow:talk", "store:traces")),
+    Loop("dev.audit_code", "development", "places the weekly code audit found to improve", "device", _audit_code,
+         acts="watch", files=("core/self_audit.py",), covers=("dev:self_audit",)),
+    Loop("dev.connected", "development", "store connections made, of those that should exist (weekly audit)", "device",
+         _connected, better="higher", acts="watch", files=("core/self_audit.py",), covers=("dev:self_audit",)),
     Loop("night.curriculum", "development", "her curriculum's objectives mastered (computing, DEC-0107)", "device",
          _curriculum, better="higher", acts="watch", files=("core/curriculum.py", "core/night_school.py"),
          covers=("dev:night_school",)),

@@ -2,7 +2,7 @@
 
 *Generated from `core/loops.py` by `python -m core.loop_catalog`; never edit by hand (a test keeps it current). The design and the reasons: `docs/IMPROVEMENT_LOOPS.md`; what each process is watched by: `python -m tools.night_school coverage`.*
 
-84 loops in 8 areas.
+86 loops in 8 areas.
 
 ## Answers
 
@@ -66,8 +66,10 @@
 
 | Loop | Watches | Scope | Floor | When it slips | Covers |
 |---|---|---|---|---|---|
+| `dev.audit_code` | places the weekly code audit found to improve | device | trend | shown, never acted on | `dev:self_audit` |
 | `dev.chronicles` | Chronicles candidates waiting | device | trend | shown, never acted on | `dev:chronicles`, `check:chronicle`, `store:saga_moments` |
 | `dev.coder` | MIA's coder: shadow attempts passed | device | trend | shown, never acted on | `dev:shadow` |
+| `dev.connected` | store connections made, of those that should exist (weekly audit) | device | trend | shown, never acted on | `dev:self_audit` |
 | `dev.council_cost` | calls per council turn | device | trend | shown, never acted on | `dev:council` |
 | `dev.doc_drift` | files the docs name that don't exist | device | ≤ 0 | opens a task | `dev:code` |
 | `dev.docs` | MIA's classes and functions that are documented (DEC-0104) | device | trend | shown, never acted on, weekly | `dev:docs` |

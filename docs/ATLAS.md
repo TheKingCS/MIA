@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1048 files, 231,281 lines; 1048 files describe themselves; 5,770 of 13,573 classes and functions are documented.
+1052 files, 232,172 lines; 1052 files describe themselves; 5,804 of 13,607 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-369 files, 104,797 lines; 5,019 of 5,666 classes and functions documented
+371 files, 105,500 lines; 5,046 of 5,693 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -262,6 +262,7 @@
 - `core/play_actions.py`: Recreation (core/recreation.py, DEC-0098) through the action contract (core/actions.py): `play.log` (a game or sport played) and `play.delete`. The log writes through atomic_write_text, so "undo that" takes it back. Children play too: both are child-safe. *(5 undocumented)*
 - `core/port_scanner.py`: Pure-Python TCP connect-scan port scanner — docs/ROADMAP.md milestone 11.5, Field Kit's Security/Network Toolkit. Deliberately doesn't wrap `nmap`: `nmap` isn't installed in this dev sandbox and can't be added without sudo (the same "no sudo" wall as every other missing system package this project h *(1 undocumented)*
 - `core/power_manager.py`: Power monitoring — docs/ROADMAP.md milestone 7.2. Defines a small backend-agnostic interface (`PowerBackend`, same shape as core/llm_manager.py's `LLMBackend` and core/voice_manager.py's `STTBackend`/`TTSBackend`), with one concrete implementation, `PsutilBatteryBackend`, using psutil's cross-platfo *(6 undocumented)*
+- `core/practices.py`: MIA's best practices, a series that keeps growing (DEC-0108; Zac, 2026-11-07: "MIA should have some kind of understanding of best practices for AI building, development of any kind, honestly everything she does she should have an evolving best practices series of documentation").
 - `core/presence.py`: Presence (DEC-0044, docs/UX_SYSTEM_AUDIT.md): what matters now, across everything MIA keeps, in one ranked list, so nobody has to visit eight screens to find out. Each item says **why** it's there, what **kind** of thing it is (a deadline, a fact, a suggestion, progress), where it came from, where t
 - `core/private_journal.py`: The encrypted private journal — slice A ("Talk it out") of docs/COGNITIVE_EXTENSION_PROPOSAL.md. Conversations the user journals with MIA are saved here, one entry per journaling session, organized (title, mood, themes, summary) and kept encrypted at rest. Separate from core/journal_manager.py (the 
 - `core/product_manager.py`: MIA Home's finished-goods products — the third slice of the proposed `mia_home_schema.sql` (see `docs/VISION.md`'s "MIA Home's expanded scope" section, `core/material_manager.py`'s docstring for the first slice, and `core/job_manager.py`'s for the second), adapted to this project's persisted-JSON-ma
@@ -300,6 +301,7 @@
 - `core/secrets_manager.py`: Passphrase-based symmetric encryption for anything MIA needs to keep confidential at rest — introduced for encrypted Backup/Restore (core/backup_manager.py), but deliberately generic rather than backup-specific, so a future module with a real secret to protect (wifi credentials, radio configs, an AP *(1 undocumented)*
 - `core/security_actions.py`: Security's changes (DEC-0033, core/security_cams.py) on the action contract in core/actions.py: remove a camera (undoable), save the picture a camera shows now, delete a saved picture. Adding or changing a camera goes through `/api/security/camera` instead, so its password is never in an action's re
 - `core/security_cams.py`: Security (DEC-0033; Zac, 2026-10-18: "an app for Security or Smart Home where I can monitor camera feeds"): your cameras, watched from MIA, with no cloud in between. The smart-home half (lights, locks, thermostat) comes later through a local Home Assistant (docs/ROADMAP.md).
+- `core/self_audit.py`: MIA audits herself every week (DEC-0108; Zac, 2026-11-07: "a regular process of auditing her own code and files and searching for ways to improve or beef up whatever she is doing, make it more efficient, more well designed" and "a regular audit for seeing how any of her existing infrastructure can b
 - `core/self_docs.py`: MIA about her own design, from her own documents (DEC-0041; the intelligence spec's Phase 2C/3, docs/INTELLIGENCE_AUDIT.md): "how does the freedom estimate work?", "why can't the phone connect banks?", "what did we decide about eggs?", answered with the passage and the file it came from, never from 
 - `core/self_report.py`: MIA's weekly self-report (build plan step 6, DEC-0094): once a week, to the PC's owner, through the communication gate: what got better, what's slipping, what she's working on, and how Night School went. Assembled in code from her own records (the loops' history, Night School, the benchmarks, the ta *(2 undocumented)*
 - `core/show_off.py`: Show-off mode (DEC-0031): "MIA, show off for my friends" starts a short narrated tour of what MIA can do, on the person's **real** profile, in front of other people. So the tour is built here, in code, from a filtered copy of the person's data, and the screens it shows are its own cards, never the r
@@ -612,8 +614,9 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-29 files, 2,958 lines; 32 of 89 classes and functions documented
+30 files, 3,026 lines; 33 of 90 classes and functions documented
 
+- `tools/audit.py`: MIA's self-audit from the command line (DEC-0108; core/self_audit.py, core/practices.py).
 - `tools/bench_audit.py`: What MIA's routing does today with each Intelligence Benchmark question (tests/intelligence_bench.py, docs/INTELLIGENCE_BENCHMARK.md): a question plan (core/question_plans.py: lookups by code, one answer), answered by code (a direct lookup), offered which tools, or left to the model with no tools at *(3 undocumented)*
 - `tools/chronicle_issue.py`: The Chronicles' weekly issue (core/chronicle_issue.py, build plan step 17). *(1 undocumented)*
 - `tools/chronicle_panels.py`: Draws an issue's panels with the local image model (T-0036: SD-Turbo as ONNX on the GPU through DirectML). It runs in the image model's own environment, kept apart from MIA's (`C:\Users\zacrh\DevTools\imagegen\.venv`), so it imports nothing from MIA: *(1 undocumented)*
@@ -646,7 +649,7 @@
 
 ## tests/: the test suite: what each part must do
 
-348 files, 63,338 lines; 317 of 5,674 classes and functions documented
+349 files, 63,458 lines; 323 of 5,680 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -920,6 +923,7 @@
 - `tests/test_seasons.py`: Seasons of memory (build plan step 10, core/seasons.py): a month or a year against the one before, worked out in code from the person's history and memories, phrased by the model from the sheet; each closed month and year kept once in their folder; no money lines for a child. *(5 undocumented)*
 - `tests/test_secrets_manager.py`: Unit tests for core.secrets_manager.encrypt_bytes / decrypt_bytes. *(5 undocumented)*
 - `tests/test_security_cams.py`: Security (DEC-0033): cameras on the home network only, logins kept apart and never shown, frames from a picture address or an RTSP stream, saved pictures, grown-ups only. *(9 undocumented)*
+- `tests/test_self_audit.py`: MIA's weekly self-audit (core/self_audit.py) and her best-practices series (core/practices.py), DEC-0108: what the code audit finds, what the interconnection audit finds and leaves out by design, the weekly run's report and tasks, and the series written from the principles and the vault.
 - `tests/test_self_report.py`: MIA's weekly self-report and the standing mission (build plan step 6): what got better and what's slipping, from the loops' own history; Sundays, to the PC's owner only, through the gate; the "Keep MIA healthy" mission works the loops' tasks. *(4 undocumented)*
 - `tests/test_server_app.py`: Unit tests for server.app — exercised via FastAPI's TestClient, a real in-process HTTP client that needs no running server, no real network, and no HTTPS (see the Mobile Phase 1 plan's verification section for why this is a legitimate, complete way to verify this code from a sandbox with no real bro *(62 undocumented)*
 - `tests/test_show_off.py`: Show-off mode (DEC-0031): a tour of MIA on the real profile that never shows money, the journal, memories, health or other people. *(3 undocumented)*

@@ -198,6 +198,11 @@ first. Each is a step below.
     only, monitoring) of objectives in three levels, practised on her own code; one Night School lesson a night
     for the next one; `night.curriculum` watches the share mastered.
 
+21. ✅ **She audits herself weekly** (DEC-0108; `core/self_audit.py`, `core/practices.py`, `tools/audit.py`,
+    2026-11-07): the code audit, the interconnection audit (five connections per store) and the best-practices
+    series (`docs/practices/`), from Night School once a week; one task a week for each audit's top finding.
+    First run: 187 places, 49% connected. The big gaps it shows: life events (15 of 73 stores) and links (8).
+
 ### Phase E: The rest already queued
 
 18. ⬜ T-0042 (the Skills module reaching into Missions), T-0040 (JSON imports, diagnostics), T-0041 (blueprint

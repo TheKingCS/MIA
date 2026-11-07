@@ -1636,3 +1636,29 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Why: practising on herself makes her better twice, as a learner and in the code she learns on, and code grades
   her, so a lesson passed is a skill shown.
 - Related: DEC-0100 (Night School), DEC-0104, DEC-0105, DEC-0106
+
+### DEC-0108: MIA audits herself weekly, and keeps an evolving best-practices series
+- Status: APPROVED
+- Proposed by: zac, 2026-11-07 ("a regular process of auditing her own code and files and searching for ways to
+  improve or beef up whatever she is doing, make it more efficient, more well designed"; "a regular audit for
+  seeing how any of her existing infrastructure can be more effectively interconnected"; "an evolving best practices
+  series of documentation" for "everything she does") · Built by: claude, 2026-11-07
+- Decision: once a week, from Night School (`core/self_audit.py`, `python -m tools.audit`):
+  1. **The code audit** reads her own code (core, server, tools, modules, gui) for functions too long, with too many
+     parameters or nested too deep, the same body written in two places, errors swallowed silently, very big files
+     and TODOs.
+  2. **The interconnection audit** checks every personal and household store for five connections (it records life
+     events, can be linked, the Assistant can read it, it's in the life state, a web page shows it), following one
+     import into core, and lists events nobody hears or nobody sends. Connections a store goes without on purpose
+     are written down with why (`BY_DESIGN`).
+  3. **The best-practices series** (`docs/practices/`, `core/practices.py`): ten areas (building AI, development,
+     testing, security and privacy, design, documentation, interconnection, monitoring, operations, teamwork), each
+     with principles and every confirmed Knowledge Vault lesson about it, regenerated each week, so it grows as the
+     team learns.
+  The top finding of each audit that nobody has looked at opens a task (one each a week, `source: audit:...`) for the
+  usual paths. `dev.audit_code` and `dev.connected` watch the results.
+- Why: built from the code, so the same code gives the same findings and nothing is guessed; one task a week each
+  keeps it steady work, not a flood; a finding is a place to look, and the task says so.
+- First run, 2026-11-07: 187 places to look, 49% of store connections made (only 15 of 73 stores record life
+  events, 8 can be linked); tasks T-0052 (server/app.py's create_app) and T-0053 (the energy store).
+- Related: DEC-0094, DEC-0101, DEC-0104, DEC-0105, DEC-0107

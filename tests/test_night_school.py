@@ -104,7 +104,9 @@ def test_a_lesson_is_graded_by_code_and_practice_never_merges(tmp_path):
 
 @pytest.fixture
 def school(tmp_path, monkeypatch):
-    from core import dev_ledger, loop_coverage, loops, work_review
+    from core import dev_ledger, loop_coverage, loops, self_audit, work_review
+
+    monkeypatch.setattr(self_audit, "due", lambda *a, **k: False)  # a test night never audits the real code
 
     monkeypatch.setattr(ns, "STOP_FILE", tmp_path / "STOP")
     monkeypatch.setattr(ns, "PLAN", tmp_path / "BUILD_PLAN.md")
