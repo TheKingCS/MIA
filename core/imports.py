@@ -40,12 +40,16 @@ CALENDAR, CONTACTS, BANK = "calendar", "contacts", "bank"
 
 @dataclass
 class Summary:
+    """What an import did: what kind it was, how many were added, how many were already in MIA, and what couldn't be
+    read.
+    """
     kind: str
     added: int = 0
     skipped: int = 0  # already in MIA
     problems: list[str] = field(default_factory=list)
 
     def describe(self) -> str:
+        """The summary in words ("Imported 12 events; 3 were already in MIA.")."""
         noun = {CALENDAR: "event", CONTACTS: "person", BANK: "transaction"}[self.kind]
         plural = {CALENDAR: "events", CONTACTS: "people", BANK: "transactions"}[self.kind]
         text = f"Imported {self.added} {noun if self.added == 1 else plural}"
@@ -82,6 +86,7 @@ def _split(line: str) -> tuple[str, dict, str]:
 
 
 def _unescape(value: str) -> str:
+    """An iCalendar or vCard value with its escapes undone (\n, \, , \; and \\)."""
     return (value.replace("\\n", "\n").replace("\\N", "\n").replace("\\,", ",").replace("\\;", ";")
             .replace("\\\\", "\\")).strip()
 
@@ -91,6 +96,7 @@ def _unescape(value: str) -> str:
 
 @dataclass
 class ImportedEvent:
+    """A calendar event read from an .ics file: title, date, time (local; None for all day), notes and repeat."""
     title: str
     date: str  # ISO
     time: Optional[str] = None  # HH:MM, local
@@ -102,6 +108,9 @@ _FREQ = {"WEEKLY": "weekly", "MONTHLY": "monthly", "YEARLY": "yearly"}
 
 
 def _ics_when(value: str, params: dict) -> tuple[Optional[str], Optional[str]]:
+    """Pure logic. A date and time from an iCalendar value: an all-day date, or a moment (a UTC one shown in this
+    computer's own time); (None, None) when it can't be read.
+    """
     value = value.strip()
     try:
         if params.get("VALUE") == "DATE" or len(value) == 8:
@@ -154,6 +163,7 @@ def parse_ics(text: str) -> tuple[list[ImportedEvent], list[str]]:
 
 @dataclass
 class ImportedPerson:
+    """A contact read from a .vcf file: name, email, birthday (a birthday without a year goes in the notes), notes."""
     name: str
     email: str = ""
     birthday: str = ""  # ISO, or "" (a birthday without a year is kept as a note)
@@ -204,6 +214,9 @@ def parse_vcards(text: str) -> tuple[list[ImportedPerson], list[str]]:
 
 @dataclass
 class ImportedTransaction:
+    """A bank statement line: date, description, amount (money out positive), whether it's income, and the
+    category guessed from the description.
+    """
     date: str  # ISO
     description: str
     amount: float  # money out is positive here; see `is_income`
@@ -245,6 +258,9 @@ def guess_category(description: str) -> str:
 
 
 def _amount(text: str) -> Optional[float]:
+    """Pure logic. An amount from a bank statement: commas and currency signs ignored, parentheses mean negative;
+    None when there's no number.
+    """
     cleaned = (text or "").strip().replace(",", "")
     negative = cleaned.startswith("(") and cleaned.endswith(")")
     cleaned = re.sub(r"[^\d.\-]", "", cleaned)
@@ -258,6 +274,9 @@ def _amount(text: str) -> Optional[float]:
 
 
 def _bank_date(text: str, day_first: bool) -> Optional[str]:
+    """Pure logic. A date from a bank statement, trying ISO first, then day-first or month-first forms as the bank
+    uses, then dotted and dashed ones; None when none fits.
+    """
     text = (text or "").strip()[:10]
     formats = ["%Y-%m-%d", "%Y/%m/%d"] + (["%d/%m/%Y", "%d/%m/%y", "%m/%d/%Y", "%m/%d/%y"] if day_first
                                           else ["%m/%d/%Y", "%m/%d/%y", "%d/%m/%Y", "%d/%m/%y"])
@@ -271,6 +290,9 @@ def _bank_date(text: str, day_first: bool) -> Optional[str]:
 
 
 def _column(headers: list[str], names: tuple[str, ...]) -> Optional[int]:
+    """Pure logic. Which column a CSV's headers give for one of these names (an exact match first, then one that starts
+    with it), or None.
+    """
     lowered = [h.strip().lower() for h in headers]
     for name in names:
         if name in lowered:
@@ -332,6 +354,7 @@ def kind_of(path: Path, text: str) -> Optional[str]:
 
 
 def import_calendar(context, text: str) -> Summary:
+    """Imports an .ics file into the calendar, skipping events already there (same title and date)."""
     events, problems = parse_ics(text)
     summary = Summary(CALENDAR, problems=problems)
     existing = {(e.title.strip().lower(), e.date) for e in context.calendar.all_events()}
@@ -348,6 +371,9 @@ def import_calendar(context, text: str) -> Summary:
 
 
 def import_contacts(context, text: str) -> Summary:
+    """Imports a .vcf file into People & Pets; someone already there (by name) only gets the email or birthday they
+    were missing.
+    """
     people, problems = parse_vcards(text)
     summary = Summary(CONTACTS, problems=problems)
     relationships = context.relationships
@@ -368,6 +394,9 @@ def import_contacts(context, text: str) -> Summary:
 
 
 def import_bank(context, text: str, day_first: bool = False) -> Summary:
+    """Imports a bank statement CSV into the Budget as income and expenses, skipping lines already there (same date,
+    amount and description).
+    """
     transactions, problems = parse_bank_csv(text, day_first)
     summary = Summary(BANK, problems=problems)
     budget = context.budget
