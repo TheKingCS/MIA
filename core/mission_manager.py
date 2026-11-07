@@ -159,6 +159,10 @@ _AUTO_MISSION_TEMPLATES: tuple[tuple[str, tuple[tuple[str, str, float], ...]], .
 
 @dataclass
 class Objective:
+    """One goal inside a mission: what it is, how it's measured (a tally counted up, trip hours worked out live from
+    the trip, or a linked task done), the target, a tally's progress, and who it's for (None: shared, anyone on the
+    mission can work it; a profile id: that person's own part of a group quest).
+    """
     description: str  # e.g. "Catch 3 fish" or "Spend 2 hours fishing"
     metric_type: str  # one of METRIC_TYPES
     target: float
@@ -175,6 +179,7 @@ class Objective:
     assigned_profile_id: Optional[str] = None
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in missions.json."""
         return {
             "description": self.description,
             "metric_type": self.metric_type,
@@ -185,6 +190,7 @@ class Objective:
 
     @staticmethod
     def from_dict(data: dict) -> "Objective":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return Objective(
             description=data.get("description", ""),
             metric_type=data.get("metric_type", "tally"),
@@ -211,6 +217,11 @@ ABANDON_REASONS: tuple[str, ...] = ("too_hard", "not_interested", "no_time", "ot
 
 @dataclass
 class Mission:
+    """One mission: its objectives, status (active, completed, abandoned, and why), who assigned it (the person or MIA),
+    what it's tied to (a trip, a task, a project, a maintenance task or asset, a recurring routine's occurrence), how
+    it looks (icon, region label, summary, difficulty, type), what it rewards (XP, credits, skill XP, recipes it
+    unlocks, credited once only), whose it is, and for a group quest everyone on it.
+    """
     mission_id: str
     name: str
     trip_id: Optional[str] = None
@@ -329,6 +340,7 @@ class Mission:
     participant_profile_ids: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in missions.json."""
         return {
             "mission_id": self.mission_id,
             "name": self.name,
@@ -362,6 +374,7 @@ class Mission:
 
     @staticmethod
     def from_dict(data: dict) -> "Mission":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return Mission(
             mission_id=data.get("mission_id", uuid.uuid4().hex[:10]),
             name=data.get("name", ""),
@@ -397,7 +410,13 @@ class Mission:
 
 
 class MissionManager:
+    """The missions store (data/missions.json, written through atomic_write_text so undo can restore it). Completing
+    a mission is handled here, whichever screen or tool did it: the celebration, rewards (once), recipe unlocks, the
+    history and the mission.completed event. It also assigns missions on its own when someone has none, or a task has
+    sat untouched.
+    """
     def __init__(self, context: AppContext) -> None:
+        """Loads the missions; `path` tells undo which file to reload."""
         self.context = context
         # The file it reads, so undo (core/undo_log.py) knows to reload it.
         self.path = _MISSIONS_FILE
@@ -409,6 +428,7 @@ class MissionManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads missions.json; a damaged file is logged, reported (notify_data_corruption) and starts empty."""
         if not _MISSIONS_FILE.exists():
             self._missions = []
             return
@@ -421,6 +441,7 @@ class MissionManager:
             self._missions = []
 
     def _save(self) -> None:
+        """Writes every mission atomically."""
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
         atomic_write_text(_MISSIONS_FILE,
             json.dumps([m.to_dict() for m in self._missions], indent=2),
@@ -428,6 +449,7 @@ class MissionManager:
         )
 
     def _bump_updated_at(self, mission: Mission) -> None:
+        """Stamps a mission as changed now."""
         mission.updated_at = datetime.now().isoformat(timespec="seconds")
 
     # ------------------------------------------------------------------
@@ -458,6 +480,7 @@ class MissionManager:
         profile_id: Optional[str] = None,
         participant_profile_ids: Optional[list[str]] = None,
     ) -> Mission:
+        """Adds a mission with whatever it's tied to and rewards, and saves it."""
         now = datetime.now().isoformat(timespec="seconds")
         mission = Mission(
             mission_id=uuid.uuid4().hex[:10],
@@ -491,6 +514,12 @@ class MissionManager:
         return mission
 
     def update_mission(self, mission_id: str, **fields) -> Mission:
+        """Changes a mission's fields (what it's tied to and whether rewards were credited can't be set; ValueError for
+        an unknown mission or field). On the move to completed: it becomes the signed-in person's if it had no owner, is
+        celebrated, credits its rewards once, unlocks its recipes, is recorded in the history and publishes
+        mission.completed. On the move to abandoned: it gets an owner the same way and publishes mission.abandoned with
+        the reason.
+        """
         mission = self.get_mission(mission_id)
         if mission is None:
             raise ValueError(f"No mission with id '{mission_id}'.")
@@ -684,25 +713,31 @@ class MissionManager:
         return mission
 
     def delete_mission(self, mission_id: str) -> None:
+        """Deletes a mission."""
         self._missions = [m for m in self._missions if m.mission_id != mission_id]
         self._save()
 
     def get_mission(self, mission_id: str) -> Optional[Mission]:
+        """The mission with this id, or None."""
         for mission in self._missions:
             if mission.mission_id == mission_id:
                 return mission
         return None
 
     def all_missions(self) -> list[Mission]:
+        """Every mission, newest first."""
         return sorted(self._missions, key=lambda m: m.created_at, reverse=True)
 
     def missions_for_trip(self, trip_id: str) -> list[Mission]:
+        """The missions tied to a trip."""
         return [m for m in self._missions if m.trip_id == trip_id]
 
     def missions_for_maintenance_task(self, task_id: str) -> list[Mission]:
+        """The missions tied to a maintenance task."""
         return [m for m in self._missions if m.maintenance_task_id == task_id]
 
     def missions_for_maintenance_asset(self, asset_id: str) -> list[Mission]:
+        """The missions tied to a maintenance asset."""
         return [m for m in self._missions if m.maintenance_asset_id == asset_id]
 
     # ------------------------------------------------------------------
@@ -713,6 +748,7 @@ class MissionManager:
         self, mission_id: str, description: str, metric_type: str, target: float,
         assigned_profile_id: Optional[str] = None,
     ) -> Mission:
+        """Adds an objective to a mission (ValueError for an unknown mission or metric type)."""
         mission = self.get_mission(mission_id)
         if mission is None:
             raise ValueError(f"No mission with id '{mission_id}'.")
@@ -727,6 +763,7 @@ class MissionManager:
         return mission
 
     def delete_objective(self, mission_id: str, index: int) -> Mission:
+        """Removes a mission's objective by position (ValueError when it isn't there)."""
         mission = self.get_mission(mission_id)
         if mission is None:
             raise ValueError(f"No mission with id '{mission_id}'.")
@@ -738,6 +775,9 @@ class MissionManager:
         return mission
 
     def increment_tally(self, mission_id: str, index: int, delta: float = 1.0) -> Mission:
+        """Adds to a tally objective's count (ValueError when it isn't a tally), celebrating when that objective, and
+        then every objective, newly reaches its target.
+        """
         mission = self.get_mission(mission_id)
         if mission is None:
             raise ValueError(f"No mission with id '{mission_id}'.")
@@ -790,6 +830,7 @@ class MissionManager:
         )
 
     def _notify_objective_completed(self, mission: Mission, objective: Objective) -> None:
+        """The "Objective complete!" notification (a reply to what they just did, so direct)."""
         if self.context.notifications is None:
             return
         self.context.notifications.notify(
@@ -800,6 +841,7 @@ class MissionManager:
         )
 
     def _notify_all_objectives_completed(self, mission: Mission) -> None:
+        """The "All objectives complete!" notification, asking whether to mark the mission complete."""
         if self.context.notifications is None:
             return
         self.context.notifications.notify(
@@ -810,6 +852,7 @@ class MissionManager:
         )
 
     def _notify_mission_completed(self, mission: Mission) -> None:
+        """The "Mission complete!" notification."""
         if self.context.notifications is None:
             return
         self.context.notifications.notify(
@@ -820,6 +863,9 @@ class MissionManager:
         )
 
     def objective_progress(self, mission_id: str, index: int) -> Optional[float]:
+        """An objective's progress now: trip hours worked out live from the trip, 1 or 0 for a linked task done, else the
+        tally. None when the mission or objective isn't there.
+        """
         mission = self.get_mission(mission_id)
         if mission is None or not (0 <= index < len(mission.objectives)):
             return None
@@ -836,6 +882,7 @@ class MissionManager:
         return objective.progress
 
     def is_objective_complete(self, mission_id: str, index: int) -> bool:
+        """Whether an objective's progress has reached its target."""
         mission = self.get_mission(mission_id)
         if mission is None or not (0 <= index < len(mission.objectives)):
             return False
@@ -872,6 +919,7 @@ class MissionManager:
         return (completed, len(mission.objectives))
 
     def _trip_elapsed_hours(self, trip_id: str) -> Optional[float]:
+        """Hours between a trip's first and last logged split, or None with fewer than two."""
         trip = self.context.trips.get_trip(trip_id)
         if trip is None or len(trip.splits) < 2:
             return None
@@ -896,6 +944,9 @@ class MissionManager:
         return self._check_stale_task_rule()
 
     def _check_idle_rule(self) -> Optional[Mission]:
+        """Auto-assignment, rule one: when the person has no active mission and MIA hasn't assigned one in the last 3
+        days, it starts the next built-in mission they haven't had (cycling back when all have been used).
+        """
         if any(m.status == "active" for m in self._missions):
             return None
 
@@ -919,6 +970,9 @@ class MissionManager:
         return mission
 
     def _check_stale_task_rule(self) -> Optional[Mission]:
+        """Auto-assignment, rule two: the task left undone and untouched longest, if over 5 days and not already a
+        mission, becomes "Finally Finish: ..." with completing it as the objective.
+        """
         if self.context.tasks is None:
             return None
 
@@ -943,6 +997,9 @@ class MissionManager:
         return mission
 
     def _notify_mission_auto_assigned(self, mission: Mission) -> None:
+        """Tells the person MIA has a new mission for them, through the communication gate (her speaking up on
+        her own), or a plain notification when there's no gate.
+        """
         title = "\U0001F4DC MIA has a new mission for you"
         message = f"\"{mission.name}\" — accept the challenge, or abandon it if it's not for you right now."
         # MIA deciding to speak up on her own, so it goes through the

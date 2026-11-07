@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 226,669 lines; 1043 files describe themselves; 3,546 of 13,517 classes and functions are documented.
+1043 files, 226,726 lines; 1043 files describe themselves; 3,577 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 100,575 lines; 2,815 of 5,630 classes and functions documented
+367 files, 100,632 lines; 2,846 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -219,7 +219,7 @@
 - `core/mia_coder.py`: MIA's own coder, and her shadow attempts (DEC-0074, T-0027; `docs/DEVELOPMENTAL_INDEPENDENCE_REVIEW.md` sections 3.3 and 4.3). *(2 undocumented)*
 - `core/mission_actions.py`: Every change the Missions, Skills and Character screens make (2026-10-06, DEC-0017/0018), as action kinds on the contract in core/actions.py: missions (add, edit, delete, complete, give up on with a reason, reopen), their objectives (add, remove, count one more), the skill a mission teaches, startin *(28 undocumented)*
 - `core/mission_insights.py`: The Missions-domain scan for the observe -> understand -> insight -> recommend -> act -> result loop (core/insight_manager.py) — the second domain this loop covers, after core/maintenance_insights.py (see its own docstring for the full reasoning behind Insight/Recommendation; this file mirrors its s
-- `core/mission_manager.py`: Missions/Gamification — docs/ROADMAP.md milestone v0.18, the second of three new subsystems from the 2026-07-14 wearable-companion vision update (see docs/VISION.md). Turns a stated goal/hobby into a tracked Mission with one or more Objectives (e.g. a "Master Angler" mission for a fishing trip: one  *(31 undocumented)*
+- `core/mission_manager.py`: Missions/Gamification — docs/ROADMAP.md milestone v0.18, the second of three new subsystems from the 2026-07-14 wearable-companion vision update (see docs/VISION.md). Turns a stated goal/hobby into a tracked Mission with one or more Objectives (e.g. a "Master Angler" mission for a fishing trip: one 
 - `core/mission_patterns.py`: The first real "pattern inference" signal — core/pathway_manager.py's own docstring names this "Phase 6: MIA inferring a pattern from history," the one piece of the original "learns about itself" vision still missing after core/discovery_manager.py proved out generating from a snapshot of CURRENT st
 - `core/model_bench.py`: "Can the model on this device do MIA's job?" (2026-10-07, DEC-0019, docs/PHONE_MODEL_TEST.md). Replays MIA's golden set (tests live_model_check.py) against a model and reports two things: *(2 undocumented)*
 - `core/model_registry.py`: Which AI model MIA is running, asked of the runtime itself (2026-10-21, the intelligence spec's first slice: "What AI model are you using?" was answered with "I don't have that kind of technical information"). *(2 undocumented)*
