@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1069 files, 237,611 lines; 1069 files describe themselves; 7,010 of 13,808 classes and functions are documented.
+1069 files, 237,653 lines; 1069 files describe themselves; 7,052 of 13,808 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -524,7 +524,7 @@
 
 ## modules/: the desktop's apps, one folder each
 
-93 files, 22,370 lines; 605 of 1,030 classes and functions documented
+93 files, 22,412 lines; 647 of 1,030 classes and functions documented
 
 - `modules/__init__.py`: Every feature of MIA (Assistant, Files, Notes, Maps, etc.) lives here as an independent package. Each module package must:
 - `modules/assistant/__init__.py`: The assistant app's package: its screen and behaviour are in module.py (Assistant Chat UI — docs/ROADMAP.md milestones 5.2 (text chat), 5.3 (voice), 5.4 (device-help grounding), and 5.5 (tool use / action execution). A chat screen (). core/module_manager.py finds it by that file.
@@ -555,7 +555,7 @@
 - `modules/household/__init__.py`: The household app's package: its screen and behaviour are in module.py (Household — Garage/Property/Greenhouse's fourth sibling, but over core.recurring_mission_manager.RecurringMissionTemplate (filtered to category == "Household") ). core/module_manager.py finds it by that file.
 - `modules/household/module.py`: Household — Garage/Property/Greenhouse's fourth sibling, but over core.recurring_mission_manager.RecurringMissionTemplate (filtered to category == "Household") instead of core.maintenance_manager. MaintenanceAsset. Home for domestic routines that aren't asset maintenance — laundry, dishes, hygiene —
 - `modules/inbox/__init__.py`: The inbox app's package: its screen and behaviour are in module.py (Inbox: the document inbox's screen (2026-09-28). Receipts, manuals, warranties and other documents that were dropped in the inbox folder, sent from the phone, o). core/module_manager.py finds it by that file.
-- `modules/inbox/module.py`: Inbox: the document inbox's screen (2026-09-28). Receipts, manuals, warranties and other documents that were dropped in the inbox folder, sent from the phone, or emailed in, each with MIA's reading of it: what it is, which of your things it's for, the receipt's total/date store, the manual's mainten *(20 undocumented)*
+- `modules/inbox/module.py`: Inbox: the document inbox's screen (2026-09-28). Receipts, manuals, warranties and other documents that were dropped in the inbox folder, sent from the phone, or emailed in, each with MIA's reading of it: what it is, which of your things it's for, the receipt's total/date store, the manual's mainten
 - `modules/kitchen/__init__.py`: The kitchen app's package: its screen and behaviour are in module.py (Kitchen: recipes, a pantry/inventory list, a grocery list, a meal log, and suggestions — which recipes are makeable right now from what's in the pantry, and add). core/module_manager.py finds it by that file.
 - `modules/kitchen/module.py`: Kitchen: recipes, a pantry/inventory list, a grocery list, a meal log, and suggestions — which recipes are makeable right now from what's in the pantry, and adding a recipe's missing ingredients to the grocery list in one action. All persistence/reporting logic lives in core/kitchen_manager.py (self *(34 undocumented)*
 - `modules/knowledge/__init__.py`: The knowledge app's package: its screen and behaviour are in module.py (Knowledge: the Reference Library's UI (docs/ROADMAP.md milestone 4.2), replacing the earlier placeholder. A pack list (every .zim file core.reference_library_ma). core/module_manager.py finds it by that file.
@@ -567,7 +567,7 @@
 - `modules/maintenance/__init__.py`: The maintenance app's package: its screen and behaviour are in module.py (Maintenance: recurring upkeep tracking for anything the user owns that needs it — vehicles, power equipment (mower, e-bike), appliances, the property itself, an). core/module_manager.py finds it by that file.
 - `modules/maintenance/module.py`: Maintenance: recurring upkeep tracking for anything the user owns that needs it — vehicles, power equipment (mower, e-bike), appliances, the property itself, and tools. Two tabs (Assets, Tasks), same `QTabWidget` multi-feature-in-one-module shape as modules/workshop/module.py, since Assets and Tasks *(30 undocumented)*
 - `modules/maps/__init__.py`: The maps app's package: its screen and behaviour are in module.py (Maps — a schematic waypoint plot (the original zero-hardware slice), plus two real additions the user explicitly asked for next: a real pannable/zoomable basema). core/module_manager.py finds it by that file.
-- `modules/maps/module.py`: Maps — a schematic waypoint plot (the original zero-hardware slice), plus two real additions the user explicitly asked for next: a real pannable/zoomable basemap ("offline maps") and a catalog of official state park / trail map PDFs ("state park maps and trail maps"). Three tabs: *(22 undocumented)*
+- `modules/maps/module.py`: Maps — a schematic waypoint plot (the original zero-hardware slice), plus two real additions the user explicitly asked for next: a real pannable/zoomable basemap ("offline maps") and a catalog of official state park / trail map PDFs ("state park maps and trail maps"). Three tabs:
 - `modules/maps/tile_prefetch_worker.py`: Runs core.map_tile_cache.MapTileCache.ensure_region_cached() off the GUI thread — the explicit, user-initiated "download this region for offline use" action can fetch hundreds of tiles and take real time, so this is the same one-shot QThread-per-run pattern as modules/field_kit/script_worker.py's Sc
 - `modules/maps/trail_map_fetch_worker.py`: Runs core.trail_map_library.TrailMapLibrary.add_from_url() off the GUI thread — a real network download, same one-shot QThread-per-run pattern as modules/field_kit/script_worker.py's ScriptWorker. add_from_local_file() needs no worker (no network I/O, just a local file copy — fast enough for a direc
 - `modules/memories/__init__.py`: The memories app's package: its screen and behaviour are in module.py (Memories — docs/ROADMAP.md milestone v0.17, module #19 in that doc's "Top-level module sections" list. Displays one recap card per Expedition (docs/ROADMAP.md 1). core/module_manager.py finds it by that file.

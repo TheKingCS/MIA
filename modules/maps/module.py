@@ -127,12 +127,14 @@ def format_tile_count_estimate(min_lat: float, min_lon: float, max_lat: float, m
 
 
 class MapsModule(ModuleBase):
+    """The Maps app (desktop): waypoints drawn with distance and bearing between two and a trip's route; a real basemap that pans and zooms, downloadable for offline use; and official trail map PDFs."""
     module_id = "maps"
     display_name = "Maps"
     description = "Waypoints, a real offline basemap, and official trail maps."
     icon = "\U0001F5FA"  # world map
 
     def __init__(self, context) -> None:
+        """Nothing built yet, no waypoints picked, and no download running."""
         super().__init__(context)
         self._canvas: Optional[WaypointMapCanvas] = None
         self._route_combo: Optional[QComboBox] = None
@@ -151,6 +153,7 @@ class MapsModule(ModuleBase):
         self._trail_map_fetch_worker: Optional[TrailMapFetchWorker] = None
 
     def get_widget(self) -> QWidget:
+        """The page: Waypoints, Basemap and Trail Maps tabs."""
         widget = QWidget()
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(24, 24, 24, 24)
@@ -175,6 +178,7 @@ class MapsModule(ModuleBase):
         return widget
 
     def on_unload(self) -> None:
+        """Stops the basemap's tile loading when the app closes."""
         super().on_unload()
         if self._tile_view is not None:
             self._tile_view.stop()
@@ -184,6 +188,7 @@ class MapsModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_waypoints_tab(self) -> QWidget:
+        """The Waypoints tab: the map of waypoints, the distance and bearing line, the route overlay picker and Refresh."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
@@ -214,6 +219,7 @@ class MapsModule(ModuleBase):
         return tab
 
     def _refresh_waypoints_tab(self) -> None:
+        """Reloads the waypoints (nothing picked) and the routes to overlay: every trip with two or more waypoints."""
         self._from_id = None
         self._to_id = None
         self._update_lookup_label()
@@ -233,6 +239,7 @@ class MapsModule(ModuleBase):
         self._canvas.set_route([])
 
     def _on_waypoint_clicked(self, waypoint_id: str) -> None:
+        """A click picks "from", then "to"; clicking a picked one unpicks it, and a third click starts again from it."""
         if waypoint_id == self._from_id:
             self._from_id = None
         elif waypoint_id == self._to_id:
@@ -251,6 +258,7 @@ class MapsModule(ModuleBase):
         self._update_lookup_label()
 
     def _update_lookup_label(self) -> None:
+        """The distance and bearing from the first waypoint picked to the second, or asks for two."""
         if self._from_id is None or self._to_id is None:
             self._lookup_label.setText("Select two waypoints to see the distance and bearing between them.")
             return
@@ -268,6 +276,7 @@ class MapsModule(ModuleBase):
         self._lookup_label.setText(f"{from_name} → {to_name}:  {format_distance_bearing_line(distance_km, bearing_degrees)}")
 
     def _on_route_selected(self, index: int) -> None:
+        """Draws the chosen trip's route over the waypoints (none for no route)."""
         trip_id = self._route_combo.itemData(index)
         if trip_id is None or self.context.trips is None:
             self._canvas.set_route([])
@@ -280,6 +289,7 @@ class MapsModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_basemap_tab(self) -> QWidget:
+        """The Basemap tab: the source picker, the map, the download status, and Download for each state, the current view and a small worldwide overview."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
@@ -328,6 +338,7 @@ class MapsModule(ModuleBase):
         return tab
 
     def _on_source_changed(self, index: int) -> None:
+        """Shows the chosen basemap source."""
         source_key = self._source_combo.itemData(index)
         if source_key is not None:
             self._tile_view.set_source(source_key)
@@ -342,6 +353,7 @@ class MapsModule(ModuleBase):
         max_lon: float,
         zoom_levels: tuple[int, ...],
     ) -> None:
+        """Downloads a region's tiles for offline use after saying roughly how much it is and asking; one download at a time, its buttons off and its progress shown while it runs."""
         if self._prefetch_worker is not None:
             return  # a prefetch is already running
 
@@ -368,23 +380,27 @@ class MapsModule(ModuleBase):
         self._prefetch_worker.start()
 
     def _on_download_state_clicked(self, state_name: str) -> None:
+        """Centres on a state and downloads its tiles at the usual zoom levels."""
         min_lat, min_lon, max_lat, max_lon = _STATE_BOUNDING_BOXES[state_name]
         self._tile_view.set_center((min_lat + max_lat) / 2, (min_lon + max_lon) / 2, zoom=7)
         self._run_prefetch(state_name, DEFAULT_PREFETCH_SOURCE, min_lat, min_lon, max_lat, max_lon, DEFAULT_PREFETCH_ZOOM_LEVELS)
 
     def _on_download_current_view_clicked(self) -> None:
+        """Downloads what's on screen now, at closer zoom levels."""
         min_lat, min_lon, max_lat, max_lon = self._tile_view.visible_bounds()
         self._run_prefetch(
             "current view", DEFAULT_PREFETCH_SOURCE, min_lat, min_lon, max_lat, max_lon, _CURRENT_VIEW_PREFETCH_ZOOM_LEVELS
         )
 
     def _on_download_worldwide_clicked(self) -> None:
+        """Downloads the small low-zoom overview of the whole planet."""
         min_lat, min_lon, max_lat, max_lon = WORLDWIDE_BOUNDS
         self._run_prefetch(
             "worldwide overview", WORLDWIDE_OVERVIEW_SOURCE, min_lat, min_lon, max_lat, max_lon, WORLDWIDE_OVERVIEW_ZOOM_LEVELS
         )
 
     def _on_prefetch_finished(self, label: str, count: int) -> None:
+        """Says how many new tiles were cached and turns the buttons back on."""
         self._prefetch_status_label.setText(f"{label}: {count} new tiles cached for offline use.")
         for button in self._prefetch_buttons:
             button.setEnabled(True)
@@ -395,6 +411,7 @@ class MapsModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_trail_maps_tab(self) -> QWidget:
+        """The Trail Maps tab: the list (double-click to view), the status line, and Add, View and Delete."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
@@ -423,6 +440,7 @@ class MapsModule(ModuleBase):
         return tab
 
     def _refresh_trail_maps_tab(self) -> None:
+        """Lists every trail map with its park, state and notes."""
         self._trail_map_list.clear()
         for trail_map in self.context.trail_maps.all_trail_maps():
             item = QListWidgetItem(format_trail_map_row(trail_map.park_name, trail_map.state, trail_map.notes))
@@ -430,6 +448,7 @@ class MapsModule(ModuleBase):
             self._trail_map_list.addItem(item)
 
     def _on_add_trail_map(self) -> None:
+        """Adds a trail map from the dialog: a PDF on disk straight away (one that isn't a PDF is refused), or a URL downloaded in the background."""
         dialog = AddTrailMapDialog()
         if dialog.exec() != AddTrailMapDialog.DialogCode.Accepted:
             return
@@ -454,6 +473,7 @@ class MapsModule(ModuleBase):
         self._trail_map_fetch_worker.start()
 
     def _on_trail_map_fetch_finished(self, trail_map: Optional[TrailMap], error_message: str) -> None:
+        """Says whether the download worked (and why not), then lists the maps."""
         self._trail_map_fetch_worker = None
         if trail_map is None:
             self._trail_map_status_label.setText("")
@@ -463,6 +483,7 @@ class MapsModule(ModuleBase):
         self._refresh_trail_maps_tab()
 
     def _on_view_trail_map(self, item: Optional[QListWidgetItem]) -> None:
+        """Opens a trail map's PDF in the viewer; says so when its file is missing."""
         if item is None:
             return
         trail_map_id = item.data(1)
@@ -475,6 +496,7 @@ class MapsModule(ModuleBase):
         dialog.exec()
 
     def _on_delete_trail_map(self) -> None:
+        """Deletes the selected trail map after confirming."""
         item = self._trail_map_list.currentItem()
         if item is None:
             return

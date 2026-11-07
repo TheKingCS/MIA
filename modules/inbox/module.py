@@ -58,6 +58,7 @@ def format_inbox_row(item: InboxItem, asset_name: str = "") -> str:
 
 
 def _item_text(line: dict) -> str:
+    """Pure logic. A receipt line as text: what it is, its quantity when more than one, and its amount in the person's currency."""
     qty = line.get("quantity")
     return f"{line.get('description', '')}" + (f" ×{qty:g}" if qty and qty != 1 else "") + f"  {money(line.get('amount', 0), ',.2f')}"
 
@@ -88,18 +89,21 @@ def describe_item(item: InboxItem, asset_name: str = "", project_name: str = "")
 
 
 class InboxModule(ModuleBase):
+    """The Inbox app (desktop): receipts, manuals and documents dropped in the inbox folder, sent from the phone or emailed to MIA's mailbox; MIA reads each and suggests where it goes (an asset, a project, an expense, an upkeep schedule, details), and nothing is filed until the person says so."""
     module_id = "inbox"
     display_name = "Inbox"
     description = "Receipts, manuals and documents MIA files for you."
     icon = "\U0001F4E5"  # inbox tray
 
     def __init__(self, context) -> None:
+        """Nothing built yet: the page is made in get_widget()."""
         super().__init__(context)
         self._list: Optional[QListWidget] = None
 
     # ------------------------------------------------------------------
 
     def get_widget(self) -> QWidget:
+        """The page: Add Files, Check Now, Email Settings and Open Inbox Folder; the email status; the items list beside the selected item's summary and its filing form (asset, project, amount and category for money, the schedule and detail suggestions to tick) with Open, File It and Dismiss."""
         widget = QWidget()
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(24, 24, 24, 24)
@@ -179,6 +183,7 @@ class InboxModule(ModuleBase):
         return widget
 
     def _on_inbox_updated(self, **_kwargs) -> None:
+        """Refreshes when the inbox changes; once the screen's widgets are gone it stops listening."""
         try:
             self._refresh()
         except RuntimeError:  # the screen's widgets are gone
@@ -188,19 +193,23 @@ class InboxModule(ModuleBase):
 
     @property
     def _inbox(self):
+        """The inbox store."""
         return self.context.inbox
 
     def _asset_name(self, asset_id: str) -> str:
+        """An asset's name for an id, or "" for none or unknown."""
         maintenance = self.context.maintenance
         asset = maintenance.get_asset(asset_id) if maintenance and asset_id else None
         return asset.name if asset else ""
 
     def _project_name(self, project_id: str) -> str:
+        """A project's name for an id, or "" for none or unknown."""
         projects = self.context.projects
         project = projects.get_project(project_id) if projects and project_id else None
         return project.name if project else ""
 
     def _refresh(self) -> None:
+        """Lists every item, keeping the selection (else the first), then the email status and the selected item."""
         if self._list is None or self._inbox is None:
             return
         selected = self._selected_id()
@@ -217,6 +226,7 @@ class InboxModule(ModuleBase):
         self._show_selected()
 
     def _refresh_email_status(self) -> None:
+        """The email line: not set up (optional), set up but locked (and how to unlock), or which mailbox is checked every 10 minutes and how the last check went."""
         mail = self.context.inbox_mail
         if mail is None or not mail.settings.configured:
             text = "Email: not set up (optional)."
@@ -227,14 +237,17 @@ class InboxModule(ModuleBase):
         self._email_status.setText(text)
 
     def _selected_id(self) -> Optional[str]:
+        """The selected item's id, or None."""
         row = self._list.currentItem() if self._list else None
         return row.data(Qt.ItemDataRole.UserRole) if row is not None else None
 
     def _selected(self) -> Optional[InboxItem]:
+        """The selected item, or None."""
         item_id = self._selected_id()
         return self._inbox.get_item(item_id) if item_id else None
 
     def _show_selected(self) -> None:
+        """Shows the selected item: its summary, the asset and project pickers set to MIA's suggestion, amount and category only for a receipt or invoice, each suggested upkeep step ticked, and the detail suggestions; once it's filed or dismissed, the form is locked."""
         item = self._selected()
         self._asset_combo.clear()
         self._project_combo.clear()
@@ -297,6 +310,7 @@ class InboxModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _on_add_files(self) -> None:
+        """Takes in files picked from disk and reads them straight away."""
         paths, _ = QFileDialog.getOpenFileNames(None, "Add to Inbox", str(Path.home()),
                                                 "Documents (*.pdf *.txt *.eml *.jpg *.jpeg *.png *.heic);;All files (*)")
         for path in paths:
@@ -306,6 +320,7 @@ class InboxModule(ModuleBase):
             self._refresh()
 
     def _on_check_now(self) -> None:
+        """Reads anything new in the folder now, and starts an email check in the background (new mail shows within a minute)."""
         mail = self.context.inbox_mail
         checking = mail is not None and mail.check_now()  # background; new mail shows up within a minute
         self._inbox.scan(now=float("inf"))
@@ -314,15 +329,18 @@ class InboxModule(ModuleBase):
             self._email_status.setText("Checking email in the background… new messages will show up here within a minute.")
 
     def _on_open_folder(self) -> None:
+        """Opens the inbox folder (made if needed) in the file manager."""
         self._inbox.folder.mkdir(parents=True, exist_ok=True)
         QDesktopServices.openUrl(QUrl.fromLocalFile(str(self._inbox.folder)))
 
     def _on_open_file(self) -> None:
+        """Opens the selected item's latest file in its usual app."""
         item = self._selected()
         if item and item.files:
             QDesktopServices.openUrl(QUrl.fromLocalFile(str(self._inbox.item_folder(item.item_id) / item.files[-1])))
 
     def _on_file(self) -> None:
+        """Files the selected waiting item as the form says (the asset, project, amount, category, the ticked schedule steps and details) and says what was done; a problem is said and nothing changes."""
         item = self._selected()
         if item is None or item.status != PENDING:
             return
@@ -345,12 +363,14 @@ class InboxModule(ModuleBase):
         self._refresh()
 
     def _on_dismiss(self) -> None:
+        """Dismisses the selected waiting item without filing it."""
         item = self._selected()
         if item is not None and item.status == PENDING:
             self._inbox.dismiss(item.item_id)
             self._refresh()
 
     def _on_email_settings(self) -> None:
+        """Email for the inbox: when set up but locked, asks for the passphrase; otherwise asks for the IMAP server, address and password, and a passphrase (8+ characters) that encrypts the password in the vault, then saves."""
         mail = self.context.inbox_mail
         if mail is None:
             return
