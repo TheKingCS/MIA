@@ -74,6 +74,7 @@ def family_of(kind: str) -> str:
 
 
 def verb_of(kind: str) -> str:
+    """Pure logic. The verb in an action kind (bill.add gives add; an action_ prefix is ignored), or empty."""
     kind = str(kind or "")
     kind = kind[len("action_"):] if kind.startswith("action_") else kind
     return kind.split(".", 1)[1] if "." in kind else ""
@@ -101,6 +102,7 @@ def ids_in(params: Optional[dict]) -> list[str]:
 
 
 def _folder(context) -> Optional[Path]:
+    """The person's folder corrections are kept in (the failure log's, else the traces'), or None."""
     for name in ("failures", "traces"):
         found = getattr(getattr(context, name, None), "data_dir", None)
         if found is not None:
@@ -109,6 +111,9 @@ def _folder(context) -> Optional[Path]:
 
 
 def _lines(folder: Path) -> list[dict]:
+    """Every correction record (corrections.jsonl), one JSON line each; a bad line is skipped, a missing file gives
+    none.
+    """
     try:
         text = (folder / FILE_NAME).read_text(encoding="utf-8")
     except OSError:
@@ -123,6 +128,9 @@ def _lines(folder: Path) -> list[dict]:
 
 
 def _append(folder: Path, entry: dict) -> None:
+    """Adds one record, under a lock; past 4,000 lines the oldest are dropped down to 2,400. A file that can't be
+    written is logged, never raised.
+    """
     try:
         folder.mkdir(parents=True, exist_ok=True)
         with _lock:
@@ -137,6 +145,7 @@ def _append(folder: Path, entry: dict) -> None:
 
 
 def _now() -> datetime:
+    """The time now (its own function, so tests can set it)."""
     return datetime.now()
 
 
@@ -256,4 +265,5 @@ def summary(context, days: int = 30, now: Optional[datetime] = None) -> dict:
 
 
 def areas() -> Iterable[str]:
+    """Every area corrections are counted in."""
     return tuple(AREAS)

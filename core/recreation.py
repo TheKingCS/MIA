@@ -109,6 +109,7 @@ def parse(text: str) -> Optional[dict]:
 
 
 def skills_for(what: str) -> tuple[str, ...]:
+    """Pure logic. The skills a game or sport grows, from its name (athleticism when it isn't one she knows)."""
     for words, skills in SPORTS:
         if re.search(rf"\b({words})\b", (what or "").lower()):
             return skills
@@ -130,6 +131,7 @@ class RecreationLog:
     """One person's games and sports (context.recreation)."""
 
     def __init__(self, context=None, data_dir: Optional[Path] = None) -> None:
+        """Loads what was played from the person's folder (recreation.json, or data/)."""
         self.context = context
         self.data_dir = Path(data_dir) if data_dir is not None else Path(__file__).resolve().parent.parent / "data"
         self._file = self.data_dir / FILE_NAME
@@ -137,17 +139,22 @@ class RecreationLog:
         self._load()
 
     def _load(self) -> None:
+        """Reads what was played; a missing or unreadable file gives nothing."""
         try:
             self.entries = json.loads(self._file.read_text(encoding="utf-8")).get("played", [])
         except (OSError, ValueError):
             self.entries = []
 
     def _save(self) -> None:
+        """Writes what was played atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._file, json.dumps({"played": self.entries}, indent=1, ensure_ascii=False))
 
     def log(self, what: str, minutes: float = 0.0, effort=None, people: Optional[list] = None,
             day: Optional[str] = None) -> dict:
+        """Keeps one game or sport played: what, minutes, effort (its level, and whether they said one), who with, the
+        day, and its load (minutes times effort). It's a life event, and earns XP (5 to 25, by time) in the skills it grows.
+        """
         what = " ".join(str(what or "").split()).lower()
         if not what:
             raise ValueError("What did you play?")
@@ -171,6 +178,7 @@ class RecreationLog:
         return entry
 
     def delete(self, entry_id: str) -> None:
+        """Removes one entry."""
         self.entries = [e for e in self.entries if e["id"] != entry_id]
         self._save()
 

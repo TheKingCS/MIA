@@ -59,6 +59,7 @@ STATUSES = ("draft", "checked", "approved")
 
 
 def _issues_dir(root: Path) -> Path:
+    """Where the series' issues are kept."""
     return root / "issues"
 
 
@@ -100,6 +101,9 @@ def series_name(member: str, roster: dict) -> Optional[str]:
 # ------------------------------------------------------------------ the material
 
 def material(root: Optional[Path] = None, n: int = PER_ISSUE) -> list[dict]:
+    """The next events an issue can tell: approved, meant for the series, not told yet, oldest first, at most
+    PER_ISSUE (4).
+    """
     from core import saga
 
     root = root or saga.SAGA
@@ -127,6 +131,9 @@ STYLE = ("comic book panel, clean line art, digital painting, an inventor's priv
 
 
 def _ollama(prompt: str, schema: dict) -> str:
+    """Asks the local model (qwen2.5:14b) with a JSON schema for its reply, at temperature 0.6 for some variety in the
+    lines.
+    """
     import urllib.request
 
     body = json.dumps({"model": MODEL, "prompt": prompt, "stream": False, "format": schema,
@@ -160,6 +167,7 @@ _ROSTER: dict = {}
 
 
 def _roster_cache() -> dict:
+    """The series' characters from the Story Bible, read once."""
     if not _ROSTER:
         _ROSTER.update(cast())
     return _ROSTER
@@ -212,6 +220,7 @@ def draft(number: Optional[int] = None, root: Optional[Path] = None, ask: Option
 
 
 def _save(issue: dict, root: Path) -> None:
+    """Writes an issue atomically (I-0001.json)."""
     _issues_dir(root).mkdir(parents=True, exist_ok=True)
     atomic_write_text(_issues_dir(root) / f"{issue['id']}.json", json.dumps(issue, indent=1, ensure_ascii=False))
 
@@ -244,6 +253,7 @@ def check(issue: dict, events: dict, roster: dict) -> list[str]:
 # ------------------------------------------------------------------ Zac's yes
 
 def issues(root: Optional[Path] = None) -> list[dict]:
+    """Every issue, by number."""
     from core import saga
 
     folder = _issues_dir(root or saga.SAGA)

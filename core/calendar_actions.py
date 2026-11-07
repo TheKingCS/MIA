@@ -20,6 +20,9 @@ _REPEATS = ("weekly", "biweekly", "monthly", "yearly")
 
 
 def _event_fields(params) -> dict:
+    """An event's fields from the params, checked: a title, a real date, a time read as 14:30 or 2:30 pm (made
+    24-hour), a repeat from the allowed ones, and notes; ActionError for anything that won't do.
+    """
     title = str(params.get("title") or "").strip()
     if not title:
         raise ActionError("What's the event? Give it a name.")
@@ -47,6 +50,7 @@ def _event_fields(params) -> dict:
 
 
 def _describe_add(context, params) -> str:
+    """The sentence the approval card shows for `event.add` (Propose); raises ActionError when it can't be done. It names the day, the time and the repeat."""
     f = _event_fields(params)
     day = date.fromisoformat(f["date"])
     when = f"{day:%a}, {day:%b} {day.day}" + (f" at {f['time']}" if f["time"] else "")
@@ -54,12 +58,14 @@ def _describe_add(context, params) -> str:
 
 
 def _add(context, params) -> str:
+    """Does `event.add` once approved, and says what happened."""
     f = _event_fields(params)
     _need(context, "calendar").add_event(**f)
     return f"Added {f['title']} to the calendar."
 
 
 def _event(context, params):
+    """The calendar event the params name, or ActionError."""
     event = _need(context, "calendar").get_event(str(params.get("event_id") or ""))
     if event is None:
         raise ActionError("That event isn't on the calendar any more.")
@@ -67,11 +73,13 @@ def _event(context, params):
 
 
 def _describe_delete(context, params) -> str:
+    """The sentence the approval card shows for `event.delete` (Propose); raises ActionError when it can't be done. A repeating event says every repeat goes."""
     event = _event(context, params)
     return f"Remove \"{event.title}\" from the calendar" + (" (every repeat)" if event.recurrence else "")
 
 
 def _delete(context, params) -> str:
+    """Does `event.delete` once approved, and says what happened."""
     event = _event(context, params)
     context.calendar.delete_event(event.event_id)
     return f"Removed {event.title}."
