@@ -18,6 +18,9 @@ import sys
 
 
 def main(argv: list[str]) -> int:
+    """The command line: `run` describes every person's vault photos for up to --minutes, then (and for `status`) says
+    how many of each vault's photos are described.
+    """
     from core import vault_captions as vc
     from core.memory_vault import VaultShelf
 

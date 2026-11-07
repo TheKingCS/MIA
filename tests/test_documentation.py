@@ -32,3 +32,18 @@ def test_how_a_file_is_read(tmp_path):
              "bare.py": {"doc": False, "undocumented": []}}
     said = code_atlas.problems(found, kept)
     assert len(said) == 3 and "allowed 2" in said[0] and "allowed 0" in said[1] and "no description" in said[2]
+
+
+def test_putting_docstrings_in_place():
+    import pytest
+
+    from tools.docs import insert
+
+    text = ('def f(a,\n      b):\n    return a\n\n\nclass C:\n    def m(self):\n        x = 1\n        return x\n')
+    out = insert(text, {"f": "What f does.", "C.m": "What m does,\nand how."})
+    assert '      b):\n    """What f does."""\n    return a' in out
+    assert '    def m(self):\n        """What m does,\n        and how.\n        """\n        x = 1' in out
+    with pytest.raises(ValueError):
+        insert(out, {"f": "Again."})  # already documented
+    with pytest.raises(ValueError):
+        insert(text, {"nope": "x"})

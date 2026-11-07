@@ -17,6 +17,9 @@ from typing import Optional
 
 
 def _recap(r) -> dict:
+    """One expedition's recap (core/memory_manager.ExpeditionRecap) as the page shows it: dates, place, days, distance,
+    photos, distance and pace per activity, places by kind (most first), the first three journal highlights.
+    """
     e = r.expedition
     return {"id": e.expedition_id, "name": e.name, "where": e.location, "start": e.start_date, "end": e.end_date,
             "days": r.duration_days, "km": round(r.total_distance_km, 1), "photos": r.photo_count,
@@ -29,6 +32,7 @@ def _recap(r) -> dict:
 
 
 def screen(context, today: Optional[date] = None) -> dict:
+    """Every expedition's recap, newest first, and the ones that started on this day in an earlier year."""
     book = getattr(context, "memories", None)
     if book is None:
         return {"recaps": [], "on_this_day": []}

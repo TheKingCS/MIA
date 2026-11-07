@@ -15,6 +15,7 @@ from core.actions import ACTION_TYPES, ActionError, ActionType, _need
 
 
 def _where(params) -> tuple[float, float]:
+    """The latitude and longitude in the params as numbers; ActionError when they're missing or not on Earth."""
     try:
         lat, lon = float(params.get("lat")), float(params.get("lon"))
     except (TypeError, ValueError):
@@ -25,6 +26,7 @@ def _where(params) -> tuple[float, float]:
 
 
 def _name(params) -> str:
+    """The waypoint's name, spaces tidied, at most 80 characters; ActionError when it's empty."""
     name = " ".join(str(params.get("name") or "").split())
     if not name:
         raise ActionError("What's the waypoint called?")
@@ -32,11 +34,13 @@ def _name(params) -> str:
 
 
 def _describe_add(context, params) -> str:
+    """waypoint.add's sentence to approve: the name and where, to five decimal places."""
     lat, lon = _where(params)
     return f"Add the waypoint {_name(params)} at {lat:.5f}, {lon:.5f}"
 
 
 def _add(context, params) -> str:
+    """waypoint.add: a new waypoint in the household's list; a category not in WAYPOINT_CATEGORIES is left blank."""
     from core.waypoint_manager import WAYPOINT_CATEGORIES
 
     lat, lon = _where(params)
@@ -47,6 +51,7 @@ def _add(context, params) -> str:
 
 
 def _waypoint(context, params):
+    """The waypoint the params name; ActionError when it's gone."""
     found = _need(context, "waypoints").get_waypoint(str(params.get("waypoint_id") or ""))
     if found is None:
         raise ActionError("That waypoint isn't there any more.")
@@ -54,6 +59,7 @@ def _waypoint(context, params):
 
 
 def _delete(context, params) -> str:
+    """waypoint.delete: take the waypoint out of the household's list."""
     found = _waypoint(context, params)
     _need(context, "waypoints").delete_waypoint(found.waypoint_id)
     return f"Took {found.name} out."

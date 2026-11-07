@@ -81,6 +81,7 @@ _KEEP = re.compile(r"^\s*(?:(?:yes|yeah|yep|sure|ok(?:ay)?|please)[,.!\s]*)?keep
 
 
 def _clean(text: str) -> str:
+    """Pure logic. Text with its runs of spaces made single and stray commas, dots and spaces trimmed off the ends."""
     return " ".join(str(text or "").split()).strip(" ,.")
 
 
@@ -176,6 +177,7 @@ def reminders(context, today: Optional[date] = None) -> list:
 
 
 def offer_text(note: dict) -> str:
+    """Pure logic. MIA's question after her reply, naming what she'd keep: "(Want me to keep that as a promise to Sam? Say “keep it”.)"."""
     kind = note.get("kind", "")
     head = SAID.get(kind, "a note") + (f" to {note['who']}" if kind == "commitment" and note.get("who") else "")
     return f"(Want me to keep that as {head}? Say “keep it”.)"
@@ -185,6 +187,7 @@ class LifeNotes:
     """One person's commitments, decisions, ideas and goals set aside (context.life_notes)."""
 
     def __init__(self, context=None, data_dir: Optional[Path] = None) -> None:
+        """Load this person's notes from `life_notes.json` in their folder (`data_dir`), or `data/` when none is given."""
         self.context = context
         self.data_dir = Path(data_dir) if data_dir is not None else Path(__file__).resolve().parent.parent / "data"
         self._file = self.data_dir / FILE_NAME
@@ -193,6 +196,7 @@ class LifeNotes:
         self._load()
 
     def _load(self) -> None:
+        """Read the notes and the offer counts from disk; a missing or damaged file starts both empty."""
         try:
             data = json.loads(self._file.read_text(encoding="utf-8"))
             self.notes, self.offers = list(data.get("notes") or []), list(data.get("offers") or [])
@@ -200,12 +204,17 @@ class LifeNotes:
             self.notes, self.offers = [], []
 
     def _save(self) -> None:
+        """Write the notes and the latest `_MAX_OFFERS` offer counts through atomic_write_text (so undo can restore it)."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._file, json.dumps({"notes": self.notes, "offers": self.offers[-_MAX_OFFERS:]}, indent=1,
                                                  ensure_ascii=False))
 
     def add(self, kind: str, what: str, who: str = "", by: str = "", why: str = "",
             conversation_id: Optional[str] = None) -> dict:
+        """Keep a note of `kind` (one of KINDS), with who it's for, by when and why when said. The same open note is
+        kept once (returned again, not duplicated); a promise whose "by" names a day gets its `due` date for reminders().
+        Raises ValueError for an unknown kind or nothing to keep.
+        """
         if kind not in KINDS:
             raise ValueError(f"A note is one of {', '.join(KINDS)}.")
         what = _clean(what)
@@ -226,13 +235,18 @@ class LifeNotes:
         return note
 
     def offered(self, kind: str, kept: bool) -> None:
+        """Count one offer of `kind` and whether it was kept: the kind and the answer only, never the words
+        (for the notes.offers loop).
+        """
         self.offers.append({"at": datetime.now().isoformat(timespec="seconds"), "kind": kind, "kept": bool(kept)})
         self._save()
 
     def get(self, note_id: str) -> Optional[dict]:
+        """The note with this id, or None."""
         return next((n for n in self.notes if n["id"] == note_id), None)
 
     def mark_done(self, note_id: str) -> Optional[dict]:
+        """Mark a note done (a promise kept, an idea tried), with when; returns it, or None when there's no such note."""
         note = self.get(note_id)
         if note is not None:
             note["status"], note["done_at"] = DONE, datetime.now().isoformat(timespec="seconds")
@@ -240,6 +254,7 @@ class LifeNotes:
         return note
 
     def forget(self, note_id: str) -> bool:
+        """Remove a note for good; True when there was one to remove."""
         before = len(self.notes)
         self.notes = [n for n in self.notes if n["id"] != note_id]
         if len(self.notes) != before:
@@ -248,6 +263,7 @@ class LifeNotes:
         return False
 
     def of_kind(self, kind: Optional[str] = None, open_only: bool = False) -> list[dict]:
+        """The notes of one kind (or all when `kind` is None), only the open ones when `open_only`, oldest first."""
         return [n for n in self.notes if (kind is None or n["kind"] == kind) and (not open_only or n["status"] == OPEN)]
 
 
@@ -316,6 +332,9 @@ def reply(context, text: str) -> Optional[str]:
 
 
 def _private(conversation) -> bool:
+    """Pure logic. Whether this conversation is one MIA never takes notes from: off the record, the private journal,
+    a turn reading private data, or a personal mode (talk it out). None counts as private.
+    """
     from core.conversation_modes import PERSONAL_MODES
 
     return conversation is None or bool(getattr(conversation, "off_record", False) or getattr(conversation, "journal",

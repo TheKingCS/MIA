@@ -57,6 +57,7 @@ def _small(path: Path) -> bytes:
 
 
 def _clean(said: str) -> str:
+    """Pure logic. The model's answer made one line: spaces collapsed, wrapping quotes dropped, at most 240 characters."""
     line = " ".join(str(said or "").split()).strip(" \"'")
     return line[:240]
 
@@ -95,6 +96,9 @@ def caption_shelf(shelf, ask: Optional[Callable[[str, str, bytes], str]] = None,
 
 
 def _stems(text: str) -> list[str]:
+    """Pure logic. The words of a search that matter: lowercased, longer than two letters, not in _STOP, a plural's "s"
+    dropped ("dogs" finds "dog").
+    """
     words = [w for w in re.findall(r"[a-z]+", (text or "").lower()) if len(w) > 2 and w not in _STOP]
     return [w[:-1] if w.endswith("s") and len(w) > 3 else w for w in words]
 
@@ -130,6 +134,9 @@ def due(now: Optional[datetime] = None) -> bool:
 
 
 def launch() -> None:
+    """Start tonight's captions in a process of its own (`python -m tools.vault_captions run`) and mark the day as
+    started, so the daily check doesn't start it twice. Never from a test run: it runs the vision model.
+    """
     import os
     import subprocess
 
@@ -148,6 +155,9 @@ def launch() -> None:
 # ------------------------------------------------------------------ asked for
 
 def _action_find_photos(context, arguments: dict) -> str:
+    """The find_photos tool: search the signed-in person's own vault captions for what they asked; says when
+    nothing has been described yet, or nothing matched, else lists the photos by date with their captions.
+    """
     from core.memory_vault import shelf_for
     from core.person_settings import person_id
 
@@ -167,6 +177,9 @@ def _action_find_photos(context, arguments: dict) -> str:
 
 
 def register_vault_caption_actions(registry) -> None:
+    """Register the find_photos tool with the Assistant (core/core_runtime.py calls this); its domain
+    is "vault", which a child's account never gets.
+    """
     from core.assistant_actions import AssistantAction
 
     registry.register(AssistantAction(

@@ -83,6 +83,7 @@ def maps(folder: Optional[Path] = None) -> list[dict]:
 
 
 def path_of(name: str, folder: Optional[Path] = None) -> Optional[Path]:
+    """The file of a vector area kept on this PC, by its name; None for a name that isn't valid (never a path) or isn't there."""
     if not valid_name(name):
         return None
     folder = folder or MAPS_DIR
@@ -92,6 +93,7 @@ def path_of(name: str, folder: Optional[Path] = None) -> Optional[Path]:
 
 def _get(url: str) -> bytes:
     # A plain Python User-Agent is refused (403); the same name the topo tiles use (core/map_tile_cache.py)
+    """Fetch a URL's body with MIA's User-Agent (Protomaps' build list refuses Python's default one with a 403)."""
     request = urllib.request.Request(url, headers={"User-Agent": "MIA-Home/0.2"})
     with urllib.request.urlopen(request, timeout=30) as answer:
         return answer.read()
@@ -131,6 +133,9 @@ MAX_AREA_DEG = 2.0  # a box this many degrees a side at most (about 200 km): a c
 
 
 def _box(params) -> tuple[float, float, float, float]:
+    """The area from a Maps page action's params, as (west, south, east, north). Raises ActionError when it's
+    missing, off the map, or bigger than MAX_AREA_DEG a side (a county from a tap, not a country).
+    """
     from core.actions import ActionError
 
     try:
@@ -147,6 +152,9 @@ def _box(params) -> tuple[float, float, float, float]:
 
 
 def _area_name(params) -> str:
+    """The area's name from the params, made a valid file name (lowercase, spaces and symbols become -);
+    raises ActionError when nothing usable is left.
+    """
     from core.actions import ActionError
 
     name = re.sub(r"[^a-z0-9_-]+", "-", str(params.get("name") or "").strip().lower()).strip("-")[:40]
@@ -156,11 +164,15 @@ def _area_name(params) -> str:
 
 
 def _describe_cut(context, params) -> str:
+    """map.area_keep's sentence to approve: the name and the area's rough size in km."""
     w, s, e, n = _box(params)
     return f"Keep the map of this area offline as \"{_area_name(params)}\" (about {(e - w) * 85:.0f} × {(n - s) * 111:.0f} km)"
 
 
 def _cut(context, params) -> str:
+    """map.area_keep: start the cut in a background thread (it takes seconds to a minute), bump the live version when
+    it's done so the Maps page reads again, and tell the person in a notification whether it worked.
+    """
     import threading
 
     from core import live
@@ -185,6 +197,7 @@ def _cut(context, params) -> str:
 
 
 def _describe_remove(context, params) -> str:
+    """map.area_remove's sentence to approve; raises ActionError when there's no such area."""
     from core.actions import ActionError
 
     name = str(params.get("name") or "")
@@ -194,6 +207,7 @@ def _describe_remove(context, params) -> str:
 
 
 def _remove(context, params) -> str:
+    """map.area_remove: delete the area's file and bump the live version so the page reads again."""
     from core import live
 
     found = path_of(str(params.get("name") or ""))
@@ -204,6 +218,9 @@ def _remove(context, params) -> str:
 
 
 def _register() -> None:
+    """Add map.area_keep and map.area_remove to the action contract (called by core/actions.py at import; this module
+    imports core.actions only here, so the command-line tool can use the rest without it). Neither is a child's: they download.
+    """
     from core.actions import ACTION_TYPES, ActionType
 
     ACTION_TYPES.update({a.kind: a for a in (

@@ -17,6 +17,9 @@ import sys
 
 
 def main(argv: list[str]) -> int:
+    """The command line: `list` the areas kept, or `cut <name>` with --bbox or --around-waypoints (and --maxzoom).
+    Returns 0 when it worked, 1 with the reason printed when it didn't.
+    """
     from core import offline_maps as om
 
     if hasattr(sys.stdout, "reconfigure"):

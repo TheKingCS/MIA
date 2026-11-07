@@ -16,6 +16,7 @@ from core.actions import ACTION_TYPES, ActionError, ActionType, _need
 
 
 def _name(params, what: str) -> str:
+    """The name in the params, its spaces tidied; raises ActionError naming what's missing ("What's the course called?")."""
     name = " ".join(str(params.get("name") or "").split())
     if not name:
         raise ActionError(f"What's the {what} called?")
@@ -23,6 +24,7 @@ def _name(params, what: str) -> str:
 
 
 def _subject(context, params):
+    """The subject the params name, from this person's Classroom; ActionError when it isn't there."""
     found = _need(context, "classroom").get_subject(str(params.get("subject_id") or ""))
     if found is None:
         raise ActionError("That subject isn't in your Classroom.")
@@ -30,6 +32,7 @@ def _subject(context, params):
 
 
 def _course(context, params):
+    """The course the params name; ActionError when it isn't there."""
     found = _need(context, "classroom").get_course(str(params.get("course_id") or ""))
     if found is None:
         raise ActionError("That course isn't in your Classroom.")
@@ -37,6 +40,7 @@ def _course(context, params):
 
 
 def _lesson(context, params):
+    """The lesson the params name; ActionError when it isn't there."""
     found = _need(context, "classroom").get_lesson(str(params.get("lesson_id") or ""))
     if found is None:
         raise ActionError("That lesson isn't in your Classroom.")
@@ -44,23 +48,29 @@ def _lesson(context, params):
 
 
 def _subject_add(context, params) -> str:
+    """subject.add: a new subject, with an optional category."""
     made = _need(context, "classroom").add_subject(_name(params, "subject"), str(params.get("category") or ""))
     return f"Added the subject {made.name}."
 
 
 def _course_add(context, params) -> str:
+    """course.add: a new course in a subject."""
     subject = _subject(context, params)
     made = _need(context, "classroom").add_course(subject.subject_id, _name(params, "course"))
     return f"Added {made.name} to {subject.name}."
 
 
 def _lesson_add(context, params) -> str:
+    """lesson.add: a new lesson in a course."""
     course = _course(context, params)
     made = _need(context, "classroom").add_lesson(course.course_id, _name(params, "lesson"))
     return f"Added the lesson {made.name} to {course.name}."
 
 
 def _lesson_done(context, params) -> str:
+    """lesson.done: tick a lesson done ("done": yes) or not done (no). Going to done credits its skill XP once,
+    in ClassroomManager.update_lesson, exactly as the desktop does.
+    """
     lesson = _lesson(context, params)
     done = str(params.get("done", "yes")).lower() not in ("no", "false", "0")
     _need(context, "classroom").update_lesson(lesson.lesson_id, completed=done)
@@ -68,6 +78,9 @@ def _lesson_done(context, params) -> str:
 
 
 def _delete(kind: str, finder, remover):
+    """Make the execute function for subject.delete, course.delete or lesson.delete: find the record with `finder`
+    and remove it with the manager's `remover` method (deleting a subject or course takes what's under it too).
+    """
     def run(context, params) -> str:
         found = finder(context, params)
         getattr(_need(context, "classroom"), remover)(getattr(found, f"{kind}_id"))

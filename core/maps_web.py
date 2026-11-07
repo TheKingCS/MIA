@@ -50,6 +50,9 @@ def tile(context, source: str, z: int, x: int, y: int) -> Optional[Path]:
 
 
 def screen(context) -> dict:
+    """The Maps page's data: the waypoints (as pins), where to centre (their middle, or the US's), the zoom to open at,
+    the zoom limits per tile source, and the vector areas kept on this PC.
+    """
     book = getattr(context, "waypoints", None)
     points = book.all_waypoints() if book is not None else []
     shown = [{"id": w.waypoint_id, "name": w.name, "category": w.category, "lat": w.latitude, "lon": w.longitude}

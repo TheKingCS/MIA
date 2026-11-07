@@ -26,6 +26,10 @@ SOURCES = {"maintenance": "Upkeep", "missions": "Missions", "patterns": "Pattern
 
 
 def screen(context, today: Optional[date] = None) -> dict:
+    """What MIA noticed for this person: the findings across apps (title, claim, why, next step), and the open insights
+    grouped by where they came from, each with its first pending recommendation. A findings rule that fails hides
+    none of the rest.
+    """
     from core.findings import findings
 
     found = []

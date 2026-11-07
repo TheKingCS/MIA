@@ -22,6 +22,9 @@ ACTS = {"task": "opens a task", "offer": "offers it to them", "watch": "shown, n
 
 
 def render(loops=None) -> str:
+    """docs/LOOPS.md's text: every loop by area, with what it watches, its scope, its floor (or trend) and the fewest
+    readings it judges from, what it does when it slips, and what it covers.
+    """
     if loops is None:
         from core.loops import LOOPS as loops
     by_area: dict[str, list] = {}

@@ -20,6 +20,9 @@ CATEGORIES = ("Household",)
 
 
 def screen(context, today: Optional[date] = None) -> dict:
+    """Every active Household routine with its current occurrence (made if it's missing, as the desktop and the daily
+    check do), whether it's done, its progress toward its target, its streak; and how many of them are done today.
+    """
     today = today or date.today()
     book = getattr(context, "recurring_missions", None)
     rows = []

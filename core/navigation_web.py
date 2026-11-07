@@ -20,6 +20,7 @@ COMPASS = ("N", "NE", "E", "SE", "S", "SW", "W", "NW")
 
 
 def _grid(lat: float, lon: float) -> str:
+    """A place's MGRS grid reference (core/geo_grid.py), or "" beyond MGRS's bands (near the poles)."""
     from core.geo_grid import to_mgrs
 
     try:
@@ -44,6 +45,10 @@ def sky(lat: float, lon: float, day: date) -> dict:
 
 
 def screen(context, from_id: str = "", to_id: str = "", day: Optional[date] = None) -> dict:
+    """Navigation's page data: the waypoints by name with their grids; the route (km, miles, bearing, compass
+    point) from `from_id` to `to_id` when both are given and differ; the sky (sunrise, sunset, moon) at `from_id`, else
+    at the first waypoint, on `day`.
+    """
     day = day or date.today()
     book = getattr(context, "waypoints", None)
     points = sorted(book.all_waypoints(), key=lambda w: w.name.lower()) if book is not None else []
