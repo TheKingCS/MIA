@@ -30,12 +30,14 @@ log = get_logger(__name__)
 
 
 def _forms() -> dict:
+    """The More apps' forms, from more_actions."""
     from core.more_actions import forms
 
     return forms()
 
 
 def _when(iso: str) -> str:
+    """The date part of an ISO timestamp."""
     return (iso or "")[:10]
 
 
@@ -49,6 +51,10 @@ def preview(body: str, limit: int = 140) -> str:
 
 
 def journal_page(context, today: Optional[date] = None) -> dict:
+    """The data the Journal screen shows, assembled here (the web only draws it); {"available": False} when there's no journal. Entries newest first (with a preview, tags, conditions and
+    the trip they belong to), tags by how often they're used, counts, whether the private journal is set up and how
+    many entries it holds (never their words), and the entry form.
+    """
     today = today or date.today()
     journal = getattr(context, "journal", None)
     if journal is None:
@@ -81,6 +87,10 @@ def journal_page(context, today: Optional[date] = None) -> dict:
 
 
 def workshop_page(context, today: Optional[date] = None) -> dict:
+    """The data the Workshop screen shows, assembled here (the web only draws it); {"available": False} when none of its stores is here. Parts, materials (low ones first), products and
+    their listings, jobs (not recipe builds) with their costs, the shop's money and totals, counts, the picks and
+    forms, and the recipes, builds, receipts and goods from web_craft.
+    """
     from core.region import money
 
     today = today or date.today()
@@ -161,6 +171,10 @@ def workshop_page(context, today: Optional[date] = None) -> dict:
 
 
 def expeditions_page(context, today: Optional[date] = None) -> dict:
+    """The data the Expeditions screen shows, assembled here (the web only draws it); {"available": False} when expeditions or trips aren't here. Each expedition with when it is
+    (now, upcoming, past), days away, its media and its trips (gear packed, distance, photos, journal notes);
+    current ones first, then past ones newest first; counts and forms.
+    """
     today = today or date.today()
     expeditions, trips = getattr(context, "expeditions", None), getattr(context, "trips", None)
     if expeditions is None or trips is None:
@@ -227,6 +241,9 @@ def duration_text(seconds) -> str:
 
 
 def music_page(context) -> dict:
+    """The data the Music screen shows, assembled here (the web only draws it); {"available": False} when there's no music library. Tracks by artist, album and track number (uploaded or
+    not), playlists (only tracks still there), artists with counts, and the library folder and how long it all is.
+    """
     music = getattr(context, "music", None)
     if music is None:
         return {"available": False}
@@ -269,6 +286,9 @@ def track_path(context, track_id: str):
 
 
 def files_page(context, folder: str = "") -> dict:
+    """The My Files screen for a folder (the top folder when that one won't do); {"available": False} without a
+    files area.
+    """
     from core.my_files import MyFiles
 
     try:
@@ -303,6 +323,9 @@ def next_birthday(raw: str, today: date):
 
 
 def people_page(context, today: Optional[date] = None) -> dict:
+    """The data the People screen shows, assembled here (the web only draws it); {"available": False} when there's no relationships store. People and pets with their details, days since last
+    contact, and next birthday; birthdays in the next 60 days, soonest first; counts and forms.
+    """
     from core.more_actions import forms
 
     today = today or date.today()

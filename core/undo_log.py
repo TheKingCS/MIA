@@ -39,6 +39,9 @@ _local = threading.local()
 
 @dataclass
 class Change:
+    """One undoable change: what MIA did, whose it was, when, each file's bytes before it (None for a file it made),
+    the life events it recorded, and who made it (the person, or MIA herself).
+    """
     label: str  # what MIA did, e.g. "add_expense"
     profile_id: Optional[str]
     at: str = field(default_factory=lambda: datetime.now().isoformat(timespec="seconds"))
@@ -81,27 +84,35 @@ def before_write(path: Path) -> None:
 
 
 class UndoLog:
+    """The undoable changes, the last KEEP (20) per person, newest last; kept in memory and safe across threads."""
     def __init__(self) -> None:
+        """Starts with no changes."""
         self._changes: dict[Optional[str], deque] = {}
         self._lock = threading.Lock()
 
     def add(self, change: Change) -> None:
+        """Keeps a change for its person (one that touched no file is dropped)."""
         if not change.files:
             return
         with self._lock:
             self._changes.setdefault(change.profile_id, deque(maxlen=KEEP)).append(change)
 
     def recent(self, profile_id: Optional[str]) -> list[Change]:
+        """A person's changes, newest first."""
         with self._lock:
             return list(reversed(self._changes.get(profile_id, ())))
 
     def pop(self, profile_id: Optional[str]) -> Optional[Change]:
+        """Takes a person's newest change off the log, or None."""
         with self._lock:
             changes = self._changes.get(profile_id)
             return changes.pop() if changes else None
 
 
 def _restore(change: Change) -> list[Path]:
+    """Puts each file back as it was before a change (a file the change made is deleted), through a temporary file
+    so a restore is never half-written; returns the files touched.
+    """
     for path, old in change.files.items():
         if old is None:
             path.unlink(missing_ok=True)
@@ -114,6 +125,7 @@ def _restore(change: Change) -> list[Path]:
 
 
 def _store_files(store) -> set[Path]:
+    """The file paths a store holds as attributes, which is how undo finds the stores to reload after restoring their files."""
     try:
         return {v for v in vars(store).values() if isinstance(v, Path)}
     except TypeError:

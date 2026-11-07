@@ -59,6 +59,9 @@ class TaskError(ValueError):
 
 @dataclass
 class Task:
+    """One task file (work/tasks/T-0001.md): its title, status, owner, role, the tasks it depends on, the files it may
+    touch, its branch, the decisions behind it, where it came from, when it was made and changed, and its body.
+    """
     id: str
     title: str
     status: str = "open"
@@ -74,6 +77,7 @@ class Task:
     body: str = ""
 
     def to_text(self) -> str:
+        """The task file: a front matter block of its fields (lists comma-separated), then the body."""
         lines = ["---"]
         for name in FIELDS:
             value = getattr(self, name)
@@ -105,6 +109,7 @@ def parse(text: str) -> Task:
 
 
 def load(folder: Path = TASKS_DIR) -> dict[str, Task]:
+    """Every task in the folder (T-*.md) by id; TaskError when a file holds a different id than its name."""
     tasks = {}
     for path in sorted(Path(folder).glob("T-*.md")):
         task = parse(path.read_text(encoding="utf-8"))
@@ -115,6 +120,7 @@ def load(folder: Path = TASKS_DIR) -> dict[str, Task]:
 
 
 def save(task: Task, folder: Path = TASKS_DIR, today: Optional[date] = None) -> Path:
+    """Writes a task file (LF line endings), stamping when it was changed; returns its path."""
     folder = Path(folder)
     folder.mkdir(parents=True, exist_ok=True)
     task.updated = (today or date.today()).isoformat()
@@ -124,6 +130,7 @@ def save(task: Task, folder: Path = TASKS_DIR, today: Optional[date] = None) -> 
 
 
 def next_id(tasks: dict[str, Task]) -> str:
+    """The next free T-number."""
     numbers = [int(ID.fullmatch(t).group(1)) for t in tasks]
     return f"T-{max(numbers, default=0) + 1:04d}"
 
@@ -146,6 +153,9 @@ def overlaps(mine: Iterable[str], theirs: Iterable[str]) -> list[str]:
 
 
 def new(tasks: dict[str, Task], title: str, today: Optional[date] = None, **values) -> Task:
+    """A new task with the next T-number, made and changed today; TaskError when it depends on a task that isn't
+    there. Not saved yet.
+    """
     for d in values.get("depends", []) or []:
         if d not in tasks:
             raise TaskError(f"{d} isn't a task.")
@@ -175,6 +185,7 @@ def claim(tasks: dict[str, Task], task_id: str, who: str, files: Optional[list[s
 
 
 def note(task: Task, who: str, text: str, today: Optional[date] = None) -> Task:
+    """Adds a dated line to a task's body saying who noted what."""
     stamp = (today or date.today()).isoformat()
     task.body = task.body.rstrip() + f"\n\n- {stamp} {who}: {text.strip()}"
     return task
@@ -207,6 +218,7 @@ def move(tasks: dict[str, Task], task_id: str, status: str, who: str, why: str, 
 
 
 def _get(tasks: dict[str, Task], task_id: str) -> Task:
+    """The task with this id (any case), or TaskError."""
     task = tasks.get(task_id.upper())
     if task is None:
         raise TaskError(f"No task {task_id}.")

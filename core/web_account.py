@@ -29,6 +29,10 @@ WEEKDAYS = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", 
 
 @dataclass(frozen=True)
 class Setting:
+    """One setting on the Settings screen: its person_settings key, group, label, kind (number, toggle, choice,
+    text), default, help, range, options, whether a child may change it, and whether it's changed on its app's own
+    screen instead.
+    """
     key: str  # a core.person_settings key
     group: str
     label: str
@@ -43,6 +47,7 @@ class Setting:
 
 
 def _currency_options() -> tuple:
+    """The currency choices: the country's own, then each currency by code and sign."""
     from core.region import CURRENCIES
 
     return (("", "My country's"),) + tuple((code, f"{code} {sign.strip()}") for code, sign in CURRENCIES.items())
@@ -88,6 +93,7 @@ SETTINGS_BY_KEY = {s.key: s for s in SETTINGS}
 
 
 def options_for(setting: Setting) -> tuple:
+    """A setting's choices (the currency list for region.currency)."""
     return _currency_options() if setting.key == "region.currency" else setting.options
 
 
@@ -118,6 +124,7 @@ def clean_setting(key: str, value: Any) -> Any:
 
 
 def describe_value(setting: Setting, value: Any) -> str:
+    """A setting's value said plainly: on or off, a choice's label, nobody for empty text, else the value."""
     if setting.kind == "toggle":
         return "on" if value else "off"
     if setting.kind == "choice":
@@ -128,6 +135,9 @@ def describe_value(setting: Setting, value: Any) -> str:
 
 
 def current_value(context, setting: Setting) -> Any:
+    """A setting's value for this person (whether their budget is private comes from personal_data), or its
+    default.
+    """
     from core import person_settings
 
     if setting.key == "budget.private":
@@ -139,6 +149,7 @@ def current_value(context, setting: Setting) -> Any:
 
 
 def _me(context):
+    """The signed-in person's profile, or None."""
     from core.person_settings import person_id
 
     profiles = getattr(context, "profiles", None)
@@ -208,6 +219,9 @@ def settings_page(context) -> dict:
 
 
 def _home_link(context) -> dict:
+    """The phone's home-link status with the two-way sync's status; when it fails it's logged and shown as not
+    linked.
+    """
     from core.home_link import status
 
     try:
@@ -220,6 +234,7 @@ def _home_link(context) -> dict:
 
 
 def find_interest(context, name: str) -> Optional[str]:
+    """The skill category a name means (ignoring case), or None."""
     skills = getattr(context, "skills", None)
     known = skills.categories() if skills is not None else []
     return next((k for k in known if k.lower() == str(name).strip().lower()), None)
