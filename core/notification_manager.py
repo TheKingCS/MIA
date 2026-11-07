@@ -44,6 +44,9 @@ VALID_LEVELS = ("info", "warning", "critical")
 
 @dataclass
 class Notification:
+    """One notification: title, message, level (info, warning...), where it came from, when, and whether it's been
+    read.
+    """
     notification_id: str
     title: str
     message: str
@@ -53,6 +56,7 @@ class Notification:
     read: bool = False
 
     def to_dict(self) -> dict:
+        """The notification as saved in notifications.json."""
         return {
             "notification_id": self.notification_id,
             "title": self.title,
@@ -65,6 +69,7 @@ class Notification:
 
     @staticmethod
     def from_dict(data: dict) -> "Notification":
+        """A notification from its saved dict; missing fields take their defaults."""
         return Notification(
             notification_id=data.get("notification_id", uuid.uuid4().hex[:10]),
             title=data.get("title", ""),
@@ -77,8 +82,12 @@ class Notification:
 
 
 class NotificationManager:
+    """The person's notifications (notifications.json in their folder, written through atomic_write_text). Raising one
+    shows a toast and is kept; every change publishes notification.updated so screens refresh.
+    """
     def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
         # Whose data: a person's own folder (core/personal_data.py), or data/ by default.
+        """Points at the person's file (data/ by default) and loads it."""
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._notifications_file = self.data_dir / "notifications.json" if data_dir is not None else _NOTIFICATIONS_FILE
         self.context = context
@@ -90,6 +99,9 @@ class NotificationManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads the notifications; a damaged file starts empty and says so with a notification of its own (it can't use
+        notify_data_corruption: the context doesn't have this manager yet).
+        """
         if not self._notifications_file.exists():
             self._notifications = []
             return
@@ -113,6 +125,7 @@ class NotificationManager:
             )
 
     def _save(self) -> None:
+        """Writes every notification atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._notifications_file,
             json.dumps([n.to_dict() for n in self._notifications], indent=2),
@@ -170,12 +183,15 @@ class NotificationManager:
     # ------------------------------------------------------------------
 
     def list_all(self) -> list[Notification]:
+        """Every notification."""
         return list(self._notifications)
 
     def list_unread(self) -> list[Notification]:
+        """The notifications not read yet."""
         return [n for n in self._notifications if not n.read]
 
     def unread_count(self) -> int:
+        """How many haven't been read."""
         return len(self.list_unread())
 
     # ------------------------------------------------------------------
@@ -183,12 +199,16 @@ class NotificationManager:
     # ------------------------------------------------------------------
 
     def mark_all_read(self) -> None:
+        """Marks every notification read."""
         for n in self._notifications:
             n.read = True
         self._save()
         self.context.events.publish("notification.updated")
 
     def dismiss(self, notification_id: str) -> None:
+        """Dismisses one notification on purpose, publishing notification.dismissed so the communication gate learns
+        from it.
+        """
         self._notifications = [n for n in self._notifications if n.notification_id != notification_id]
         self._save()
         # The owner closed this one on purpose (not "clear all"): the
@@ -197,6 +217,7 @@ class NotificationManager:
         self.context.events.publish("notification.updated")
 
     def clear_all(self) -> None:
+        """Clears every notification (not counted as dismissing each one)."""
         self._notifications = []
         self._save()
         self.context.events.publish("notification.updated")

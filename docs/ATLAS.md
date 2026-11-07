@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 228,754 lines; 1043 files describe themselves; 4,844 of 13,517 classes and functions are documented.
+1043 files, 228,775 lines; 1043 files describe themselves; 4,857 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 102,660 lines; 4,113 of 5,630 classes and functions documented
+367 files, 102,681 lines; 4,126 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -231,7 +231,7 @@
 - `core/my_files.py`: Files on the web (Zac, 2026-10-16: the Files app was empty on the phone). Each person has their own MIA files folder, `my_files/` inside their own data folder (core/personal_data.py), the same folder as their journal: upload from the phone, open, make folders, rename, delete. It is never the compute *(10 undocumented)*
 - `core/navigation_web.py`: Navigation's web screen (web/navigation.html): the waypoints with their grid references (core/geo_grid.py, MGRS), the distance and bearing from one to another, and the sun and moon at one of them on a day. The same reading as the desktop's Navigation module (modules/navigation), assembled here so th
 - `core/night_school.py`: Night School (DEC-0100; Zac, 2026-11-06: "MIAs night school module where she spends time every night with Claude learning how to build herself into the best version of herself, doing tests, building her skills and proving her capabilities. I want that happening asap."). The full design is `docs/NIGH *(6 undocumented)*
-- `core/notification_manager.py`: A system-wide notification service any module can raise an alert through — low battery, backup complete, a medication reminder, a weather warning, etc. — without needing to know anything about how notifications are displayed. *(13 undocumented)*
+- `core/notification_manager.py`: A system-wide notification service any module can raise an alert through — low battery, backup complete, a medication reminder, a weather warning, etc. — without needing to know anything about how notifications are displayed.
 - `core/nutrition.py`: A recipe's nutrition facts per serving (DEC-0020): what the person typed into the recipe wins, nutrient by nutrient; the rest is worked out from its ingredients with MIA's built-in food table (core/food_table.py). Each answer says where it came from, so a screen can show "from your recipe" or "worke
 - `core/obligation_actions.py`: Obligations' actions (DEC-0040, core/obligations.py) on the action contract: proposed in plain words, approved, run, undoable. Grown-ups only (money and legal matters). *(13 undocumented)*
 - `core/obligations.py`: Tax and compliance obligations (DEC-0040; the Business OS spec's first increment, docs/BUSINESS_OS_AUDIT.md): every filing, payment, permit, licence, registration, inspection and renewal the household has to keep, in one list with one calendar.
