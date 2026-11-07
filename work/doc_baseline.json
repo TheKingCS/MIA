@@ -101,7 +101,6 @@
   "core/homestead_costs.py": 9,
   "core/homestead_manager.py": 10,
   "core/inbox_actions.py": 10,
-  "core/inbox_classify.py": 12,
   "core/insurance_actions.py": 11,
   "core/journal_manager.py": 10,
   "core/journal_reflection.py": 4,

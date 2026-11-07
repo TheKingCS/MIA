@@ -56,6 +56,7 @@ _MONTHS = {m: i for i, m in enumerate(
 
 
 def _norm(text: str) -> str:
+    """Text lowercased with curly apostrophes made straight, for matching."""
     return text.lower().replace("’", "'")
 
 
@@ -73,6 +74,7 @@ def document_type(text: str, filename: str = "", subject: str = "") -> str:
 
 
 def _contains_phrase(haystack: str, phrase: str) -> bool:
+    """Pure logic. Whether a phrase appears as whole words (not inside a longer word)."""
     phrase = _norm(phrase).strip()
     return bool(phrase) and re.search(rf"(?<![a-z0-9]){re.escape(phrase)}(?![a-z0-9])", haystack) is not None
 
@@ -129,11 +131,13 @@ def _parse_date(text: str) -> Optional[str]:
 
 
 def _money_value(match: re.Match) -> float:
+    """An amount from a matched dollars-and-cents pattern (commas ignored)."""
     return float(match.group(1).replace(",", "") + "." + match.group(2))
 
 
 @dataclass
 class ReceiptFields:
+    """What a receipt says: its total, date and store, and what the total was read from (shown to the person)."""
     amount: Optional[float] = None
     date: Optional[str] = None
     vendor: str = ""
@@ -197,6 +201,9 @@ _WORD_DAYS = {"annually": 365, "yearly": 365, "every year": 365, "monthly": 30, 
 
 @dataclass
 class ScheduleItem:
+    """A maintenance step proposed from a manual: the task and how often (days, hours or miles), with the manual's own
+    sentence.
+    """
     task: str
     interval_days: Optional[int] = None
     interval_hours: Optional[float] = None
@@ -204,6 +211,7 @@ class ScheduleItem:
     source: str = ""  # the manual's own sentence
 
     def describe(self) -> str:
+        """The step in words ("Change the oil, every 50 hours")."""
         if self.interval_hours:
             return f"{self.task}, every {self.interval_hours:g} hours"
         if self.interval_miles:
@@ -278,12 +286,14 @@ DETAIL_LABELS = {
 
 
 def _line_of(text: str, match: re.Match) -> str:
+    """The whole line a match is on, tidied and cut to 120 characters (shown as where it was read)."""
     start = text.rfind("\n", 0, match.start()) + 1
     end = text.find("\n", match.end())
     return " ".join(text[start:end if end != -1 else None].split())[:120]
 
 
 def _count(word: str) -> int:
+    """A count from a digit or a number word ("three")."""
     return int(word) if word.isdigit() else _NUMBER_WORDS[word.lower()]
 
 
@@ -320,6 +330,9 @@ def document_details(text: str, doc_type: str, receipt: Optional[ReceiptFields] 
 
 
 def _add_months(start: str, months: int) -> Optional[str]:
+    """Pure logic. A date some months later, kept on the same day or the last day of a shorter month; None for a bad
+    date.
+    """
     try:
         day = date.fromisoformat(start)
     except ValueError:
@@ -336,6 +349,9 @@ def _add_months(start: str, months: int) -> Optional[str]:
 
 @dataclass
 class DetailProposal:
+    """One detail a document gives about the thing it's for (model, serial, maker, a purchase, the warranty end), with
+    what the item has now and whether it's ticked by default; filing offers it as an update.
+    """
     field: str  # "model", "serial_number", "manufacturer", "purchase", "warranty_until"
     value: object  # str, or (price, date) for "purchase"
     text: str  # what the Inbox shows: 'Serial number: 1GX…'
@@ -399,12 +415,14 @@ _SUBTOTAL = re.compile(r"\bsub\s?total\b.*?(\d{1,3}(?:,\d{3})*\.\d{2})", re.IGNO
 
 @dataclass
 class LineItem:
+    """One line of a receipt: description, amount, and quantity and unit price when shown."""
     description: str
     amount: float
     quantity: Optional[float] = None
     unit_price: Optional[float] = None
 
     def describe(self) -> str:
+        """The line in words, with its quantity and amount."""
         qty = f" ×{self.quantity:g}" if self.quantity and self.quantity != 1 else ""
         return f"{self.description}{qty} {money(self.amount, ',.2f')}"
 
