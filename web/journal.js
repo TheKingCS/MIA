@@ -12,8 +12,6 @@
   let page = null, query = "", tag = "";
 
   const btn = (label, cls, onclick) => el("button", { type: "button", class: "btn " + cls, onclick }, label);
-  const section = (title, actions, ...body) =>
-    el("section", { class: "glass money-section" }, el("div", { class: "sect" }, el("h2", {}, title), actions), ...body);
   const day = (iso) => iso ? new Date(iso + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" }) : "";
 
   async function write() {
