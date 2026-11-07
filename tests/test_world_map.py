@@ -1,7 +1,8 @@
 """
 The world map with fog of war (DEC-0028): finished trips, arrivals,
 photos with GPS and "I'm Here" clear tiles; waypoints nobody has reached
-stay in the fog; new ground earns achievements and XP.
+stay in the fog; new ground earns achievements and XP, and the closest
+one not earned is shown next.
 """
 
 import struct
@@ -103,3 +104,13 @@ def test_im_here_clears_new_ground_once(world):
         world.actions.propose(world, "map.checkin", {"lat": "nope", "lon": 1})
     x, y = tile_of(40.0, -105.0)
     assert f"{x},{y}" in world.world_map.first_seen
+
+
+def test_the_next_achievement_is_the_closest_one_not_earned():
+    from core.world_map import next_rank
+
+    rows = [{"name": "First steps", "earned": True, "need": 1, "have": 1},
+            {"name": "Wanderer", "earned": False, "need": 50, "have": 38},
+            {"name": "Two regions", "earned": False, "need": 2, "have": 1}]
+    assert (next_rank(rows)["name"], next_rank(rows)["pct"]) == ("Wanderer", 76)
+    assert next_rank(rows[:1]) is None

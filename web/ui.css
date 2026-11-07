@@ -867,3 +867,19 @@ body.cook-live .mia-orb-button, body.cook-live .bottom-bar { display: none; }
 .nv-tile { display: grid; gap: 4px; padding: 12px 14px; }
 .nv-tile strong { font-family: var(--font-mono); font-weight: 600; }
 .nv-tile .dim { font-size: 12px; }
+
+/* ---------------------------------------------------------------- World Map (DEC-0113) */
+.wm-head { display: grid; gap: 4px; margin-bottom: var(--gap); }
+.wm-head h2 { margin: 0; font-size: var(--text-2xl); text-transform: none; }
+.wm-head p { margin: 0; }
+.wm-label { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+.wm-map { padding: 8px; }
+.wm-next { display: grid; gap: 8px; padding: 12px 14px; margin: var(--gap) 0; }
+.wm-next .wm-label { color: var(--text-dim); }
+.wm-next-top { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: var(--text-sm); }
+.wm-progress { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+.wm-pct { font-family: var(--font-mono); font-size: 12px; color: var(--win); }
+.wm-here { display: grid; gap: 6px; justify-items: center; margin-bottom: var(--gap); }
+.wm-here p { margin: 0; font-size: var(--text-sm); text-align: center; }
+@media (min-width: 861px) { .wm-here { justify-items: start; } .wm-here .btn-big { width: auto; min-width: 240px; } }
+.wm-here a { color: var(--accent); }

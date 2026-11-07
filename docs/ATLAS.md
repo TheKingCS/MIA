@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1089 files, 246,796 lines; 1089 files describe themselves; 13,542 of 14,212 classes and functions are documented.
+1089 files, 246,829 lines; 1089 files describe themselves; 13,544 of 14,214 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-391 files, 114,464 lines; 6,066 of 6,155 classes and functions documented
+391 files, 114,477 lines; 6,067 of 6,156 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -670,7 +670,7 @@
 
 ## tests/: the test suite: what each part must do
 
-363 files, 66,117 lines; 5,241 of 5,822 classes and functions documented
+363 files, 66,128 lines; 5,242 of 5,823 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1032,13 +1032,13 @@
 - `tests/test_workout_module.py`: Unit tests for modules.workout.module's pure formatters — no Qt event loop needed, same shape as tests/test_kitchen_module.py. format_elapsed()'s own tests mirror tests/test_stopwatch_format.py's exact shape (a deliberately-duplicated, independently-owned copy — see module docstring for why). *(2 undocumented)*
 - `tests/test_workshop_machine.py`: Unit tests for core.workshop_machine — same shape as tests/test_calculator_engine.py, since WorkshopMachineRegistry is deliberately modeled on CalculatorEngine's registry pattern (see that module's docstring for why). LaserEngraverMachine's own tests confirm it behaves as a real, honest stub — repor
 - `tests/test_workshop_module.py`: Unit tests for modules.workshop.module's pure formatting logic — no Qt event loop needed. Same shape as tests/test_notes_module.py's format_entry_row test. format_component_row() covers Components (the original tab); format_material_row()/format_job_row() format_product_row()/format_revenue_row()/fo *(3 undocumented)*
-- `tests/test_world_map.py`: The world map with fog of war (DEC-0028): finished trips, arrivals, photos with GPS and "I'm Here" clear tiles; waypoints nobody has reached stay in the fog; new ground earns achievements and XP. *(3 undocumented)*
+- `tests/test_world_map.py`: The world map with fog of war (DEC-0028): finished trips, arrivals, photos with GPS and "I'm Here" clear tiles; waypoints nobody has reached stay in the fog; new ground earns achievements and XP, and the closest one not earned is shown next. *(3 undocumented)*
 - `tests/test_your_data_and_undo.py`: Accounts stage 5 (2026-10-01): export and delete your account (core/account_data.py), "undo that" (core/undo_log.py), "why did you tell me that?" / "stop telling me about ..." (core/message_reasons.py), and the setup checker (core/system_check.py). *(3 undocumented)*
 - `tests/test_zim_url.py`: Unit tests for modules.knowledge.zim_url's pure QUrl <-> (pack_id, entry_path) conversion. QUrl needs no QApplication/event loop to construct or parse, so — unlike modules.knowledge.zim_text_browser's QTextBrowser subclass — this is safe to cover with plain pytest rather than deferring to tests/run_
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-72 files, 13,046 lines
+72 files, 13,055 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game

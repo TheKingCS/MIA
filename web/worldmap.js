@@ -111,19 +111,28 @@
       el("div", { class: "cell ok" }, el("span", { class: "n" }, s.tiles), el("span", { class: "t" }, "Tiles Cleared")),
       el("div", { class: "cell ok" }, el("span", { class: "n" }, s.km2.toLocaleString()), el("span", { class: "t" }, "km² Explored")),
       el("div", { class: "cell soon" }, el("span", { class: "n" }, s.regions), el("span", { class: "t" }, "Regions")));
-    const here = page.can_check_in ? el("div", { class: "row-buttons" }, el("button", { type: "button", class: "btn btn-amber", onclick: hereNow }, "I'm Here"),
-      el("a", { class: "btn btn-ghost", href: "places.html" }, "My Places")) : null;
-    const parts = [];
+    // The design canvas (DEC-0113): how much is cleared as the headline, the map, a short legend, the next achievement
+    // with its progress (core/world_map.next_rank), and one big I'm Here that reads the location only when pressed.
+    const parts = [el("section", { class: "wm-head" },
+      el("h2", {}, s.km2.toLocaleString() + " km² cleared"), el("p", { class: "dim" }, "The fog lifts where you've been."))];
     if (!page.tiles.length && !page.pins.length) {
-      parts.push(el("section", { class: "glass money-section" }, el("div", { class: "sect" }, el("h2", {}, "All Fog So Far"), here),
-        el("p", { class: "empty" }, "Finish a trip, tap “arrived” at a waypoint, add a photo taken outdoors, or press I'm Here, and the map starts to clear.")));
+      parts.push(el("p", { class: "empty" }, "Finish a trip, tap “arrived” at a waypoint, add a photo taken outdoors, or press I'm Here, and the map starts to clear."));
     } else {
       const canvas = el("canvas", { class: "world-canvas", role: "img",
         "aria-label": "Map: " + s.tiles + " tiles cleared, " + s.places + " places, " + s.photos + " photos, " + s.to_discover + " still to discover" });
-      parts.push(el("section", { class: "glass money-section world-map" }, el("div", { class: "sect" }, el("h2", {}, "Your Map"), here), canvas,
-        el("p", { class: "dim world-legend" }, "🚩 reached · 📍 checked in · 📷 photo · ? still in the fog")));
+      parts.push(el("section", { class: "glass world-map wm-map" }, canvas),
+        el("p", { class: "dim world-legend" }, "🚩 reached · 📍 checked in · 📷 photo · ? waypoint not reached yet"));
       requestAnimationFrame(() => drawMap(canvas));
     }
+    const nr = page.next_rank;
+    if (nr) parts.push(el("section", { class: "glass wm-next", "aria-label": "Next achievement" },
+      el("div", { class: "wm-next-top" }, el("span", { class: "wm-label" }, "Next Achievement"),
+        el("span", {}, nr.icon + " " + nr.name + " · " + nr.what)),
+      el("div", { class: "wm-progress" }, el("div", { class: "meter" }, el("div", { class: "meter-fill", style: "width:" + nr.pct + "%" })),
+        el("span", { class: "wm-pct" }, nr.pct + "%"))));
+    if (page.can_check_in) parts.push(el("div", { class: "wm-here" },
+      el("button", { type: "button", class: "btn btn-big btn-green", onclick: hereNow }, "I'm Here"),
+      el("p", { class: "dim" }, "Reads your location only when you press it. ", el("a", { href: "places.html" }, "My Places"))));
     parts.push(el("section", { class: "glass money-section" }, el("div", { class: "sect" }, el("h2", {}, "Achievements")),
       el("div", { class: "world-ranks" }, page.ranks.map((r) => el("div", { class: "world-rank" + (r.earned ? " earned" : "") },
         el("span", { class: "world-rank-icon", "aria-hidden": "true" }, r.icon),

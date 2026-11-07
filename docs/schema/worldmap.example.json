@@ -294,5 +294,14 @@
       "tiles": 20
     }
   ],
-  "can_check_in": true
+  "can_check_in": true,
+  "next_rank": {
+    "name": "Pathfinder",
+    "icon": "🗺️",
+    "earned": false,
+    "need": 50,
+    "have": 36,
+    "what": "Clear 50 map tiles",
+    "pct": 72
+  }
 }
