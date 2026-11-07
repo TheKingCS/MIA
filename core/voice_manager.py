@@ -167,6 +167,7 @@ class VoiceUnavailableError(RuntimeError):
 
 
 class STTBackend(Protocol):
+    """What a speech-to-text engine provides: whether it's available, and transcribe(wav) -> text."""
     available: bool
 
     def transcribe(self, wav_path: Path) -> str:
@@ -175,6 +176,7 @@ class STTBackend(Protocol):
 
 
 class TTSBackend(Protocol):
+    """What a text-to-speech engine provides: whether it's available, and synthesize(text, wav path)."""
     available: bool
 
     def synthesize(self, text: str, output_path: Path) -> None:
@@ -194,11 +196,15 @@ class VoskBackend:
     """
 
     def __init__(self, model_path: Path) -> None:
+        """Vosk speech-to-text from a model folder; the model loads on first use, not here."""
         self._model_path = model_path
         self._model = None
         self._load_failed = False
 
     def _ensure_loaded(self) -> None:
+        """Loads the Vosk model once (its own logging silenced); a failure is logged and remembered, so it isn't
+        retried every call.
+        """
         if self._model is not None or self._load_failed:
             return
         try:
@@ -212,10 +218,12 @@ class VoskBackend:
 
     @property
     def available(self) -> bool:
+        """Whether the Vosk model loaded."""
         self._ensure_loaded()
         return self._model is not None
 
     def transcribe(self, wav_path: Path) -> str:
+        """The words in a WAV file, read through Vosk in pieces; VoiceUnavailableError when there's no model or it fails."""
         self._ensure_loaded()
         if self._model is None:
             raise VoiceUnavailableError("Vosk STT model is not loaded.")
@@ -243,11 +251,13 @@ class PiperBackend:
     """TTSBackend implementation using Piper. Lazy-loaded — see VoskBackend's docstring for why."""
 
     def __init__(self, model_path: Path) -> None:
+        """Piper text-to-speech from a voice model (.onnx with its .onnx.json); loaded on first use."""
         self._model_path = model_path
         self._voice = None
         self._load_failed = False
 
     def _ensure_loaded(self) -> None:
+        """Loads the Piper voice once; a failure is logged and remembered."""
         if self._voice is not None or self._load_failed:
             return
         try:
@@ -261,10 +271,12 @@ class PiperBackend:
 
     @property
     def available(self) -> bool:
+        """Whether the Piper voice loaded."""
         self._ensure_loaded()
         return self._voice is not None
 
     def synthesize(self, text: str, output_path: Path) -> None:
+        """Writes the spoken text as a WAV file; VoiceUnavailableError when there's no voice or it fails."""
         self._ensure_loaded()
         if self._voice is None:
             raise VoiceUnavailableError("Piper TTS voice is not loaded.")
@@ -303,12 +315,16 @@ class KokoroBackend:
     _loaded: dict[str, object] = {}  # models folder -> kokoro_onnx.Kokoro
 
     def __init__(self, option: VoiceOption, models_dir: Optional[Path] = None, speed: float = 1.0) -> None:
+        """Kokoro text-to-speech for one catalog voice, at a speed; the model is shared and loaded on first use."""
         self._option = option
         self._models_dir = models_dir or _kokoro_dir()
         self._speed = speed
         self._load_failed = False
 
     def _model(self):
+        """The Kokoro model for this folder, loaded once and shared between voices; None (logged, remembered) when it
+        can't load.
+        """
         key = str(self._models_dir)
         if key in self._loaded or self._load_failed:
             return self._loaded.get(key)
@@ -324,9 +340,11 @@ class KokoroBackend:
 
     @property
     def available(self) -> bool:
+        """Whether the Kokoro model loaded."""
         return self._model() is not None
 
     def synthesize(self, text: str, output_path: Path) -> None:
+        """Writes the spoken text as a 16-bit mono WAV in this voice; VoiceUnavailableError when it can't."""
         model = self._model()
         if model is None:
             raise VoiceUnavailableError("Kokoro is not loaded.")
@@ -354,6 +372,10 @@ class VoiceManager:
     """
 
     def __init__(self, context: AppContext) -> None:
+        """Sets up voice from the config: Vosk for listening, and for speaking an explicit voice.tts_model_path (Piper)
+        if one is set, else the chosen catalog voice (Kokoro or Piper). Nothing loads here; Piper is kept as Kokoro's
+        fallback, made only if Kokoro fails.
+        """
         self.context = context
         stt_model_path = Path(context.config.get("voice.stt_model_path", "") or _DEFAULT_STT_MODEL_PATH)
         self._sample_rate = int(context.config.get("voice.sample_rate", _DEFAULT_SAMPLE_RATE))
@@ -380,9 +402,11 @@ class VoiceManager:
     # ------------------------------------------------------------------
 
     def is_stt_available(self) -> bool:
+        """Whether MIA can listen (the speech-to-text model loaded)."""
         return self._stt.available
 
     def is_tts_available(self) -> bool:
+        """Whether MIA can speak: the chosen voice, or Piper standing in for a Kokoro voice."""
         if self._tts.available:
             return True
         fallback = self._piper_fallback() if self._engine == "kokoro" else None
@@ -390,11 +414,13 @@ class VoiceManager:
 
     @staticmethod
     def _model_path_for_voice(voice_id: str) -> Path:
+        """The Piper model file for a voice id (in voice_models/)."""
         option = VOICE_CATALOG.get(voice_id)
         filename = option.voice_id if option is not None else voice_id
         return _VOICE_MODELS_DIR / f"{filename}.onnx"
 
     def _backend_for(self, voice_id: str) -> tuple[TTSBackend, str]:
+        """The engine for a voice id: Kokoro for a Kokoro catalog voice (at voice.kokoro_speed), else Piper."""
         option = find_voice(voice_id)
         if option is not None and option.engine == "kokoro":
             speed = float(self.context.config.get("voice.kokoro_speed", 1.0) or 1.0)
@@ -412,6 +438,7 @@ class VoiceManager:
 
     @property
     def current_voice_id(self) -> str:
+        """The voice MIA speaks in now."""
         return self._voice_id
 
     def list_available_voices(self) -> list[VoiceOption]:
@@ -443,6 +470,7 @@ class VoiceManager:
         return True
 
     def transcribe(self, wav_path: Path) -> Optional[str]:
+        """The words in a WAV file, or None (logged) when listening isn't available."""
         try:
             return self._stt.transcribe(Path(wav_path))
         except VoiceUnavailableError as exc:
@@ -450,6 +478,10 @@ class VoiceManager:
             return None
 
     def synthesize(self, text: str, output_path: Path) -> Optional[Path]:
+        """Speaks text into a WAV file (tidied for speech first) and returns its path, or None when no voice can. A Kokoro
+        failure falls back to Piper; Piper's speech gets the AI voice effect (voice.ai_voice_effect), and a failure there
+        keeps the plain audio.
+        """
         output_path = Path(output_path)
         spoken = prepare_text_for_speech(text)
         engine = self._engine
@@ -505,6 +537,7 @@ class VoiceManager:
         return True
 
     def _on_audio_block(self, indata, frames, time_info, status) -> None:
+        """Keeps each block of microphone audio while recording."""
         self._recording_frames.append(indata.copy())
 
     def stop_recording(self) -> Optional[Path]:

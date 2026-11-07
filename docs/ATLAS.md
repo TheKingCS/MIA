@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 227,316 lines; 1043 files describe themselves; 3,929 of 13,517 classes and functions are documented.
+1043 files, 227,349 lines; 1043 files describe themselves; 3,952 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 101,222 lines; 3,198 of 5,630 classes and functions documented
+367 files, 101,255 lines; 3,221 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -338,7 +338,7 @@
 - `core/voice_catalog.py`: The curated set of selectable Piper TTS voices — 2026-07-15, at the user's explicit request: "I want to be able to pick through different voices for MIA" Piper's full voice library (`rhasspy/piper-voices` on Hugging Face) has dozens of entries; this is a small, hand-picked subset spanning a real spr *(3 undocumented)*
 - `core/voice_effects.py`: Post-processing DSP effects applied to Piper's raw synthesized audio — 2026-07-15, at the user's explicit request for MIA to "sound like a futuristic awesome AI companion device," not a plain human voice. Deliberately pure `numpy` (already a dependency for `core/voice_manager.py`'s recording/playbac
 - `core/voice_loop.py`: The headless Core runtime's actual voice loop: push-to-talk -> transcribe > Assistant -> speak — docs/VISION.md's 2026-07-15 "Core drops its GUI entirely" sharpening, the piece it explicitly flagged as "not built yet, and genuinely substantial when it is." *(4 undocumented)*
-- `core/voice_manager.py`: The Voice interface's STT/TTS core service — docs/ROADMAP.md milestone 5.3. Defines backend-agnostic `STTBackend`/`TTSBackend` interfaces (same shape as `core/llm_manager.py`'s `LLMBackend`), with one concrete implementation each: *(23 undocumented)*
+- `core/voice_manager.py`: The Voice interface's STT/TTS core service — docs/ROADMAP.md milestone 5.3. Defines backend-agnostic `STTBackend`/`TTSBackend` interfaces (same shape as `core/llm_manager.py`'s `LLMBackend`), with one concrete implementation each:
 - `core/volume_manager.py`: System volume control for the Home Dashboard's volume widget (gui/home_dashboard.py). Same backend-agnostic shape as core/power_manager.py (`PowerBackend`/`PsutilBatteryBackend`) and core/llm_manager.py's `LLMBackend`: one `VolumeBackend` Protocol, one concrete implementation, `AmixerVolumeBackend`, *(11 undocumented)*
 - `core/warranty_watch.py`: A heads-up before a warranty runs out (2026-09-28). Machines got a "Warranty until" date (MaintenanceAsset.warranty_until), typed in or filled from a filed warranty/manual (core/inbox_classify.py). About a month before, and again a week before, MIA mentions it through the communication gate, so anyt
 - `core/waypoint_actions.py`: Waypoints (core/waypoint_manager.py) through the action contract (core/actions.py), for the web's Maps and Navigation pages: `waypoint.add` (a name and where: from a tap on the map, or typed) and `waypoint.delete`. The store writes through atomic_write_text, so "undo that" takes either back. Maps ar
