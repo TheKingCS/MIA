@@ -3,7 +3,6 @@
  "undocumented": {
   "core/accessibility.py": 1,
   "core/account_actions.py": 9,
-  "core/activity_log_manager.py": 11,
   "core/answer_ratings.py": 6,
   "core/app_intro.py": 7,
   "core/assistant_accessibility_actions.py": 4,
@@ -158,7 +157,6 @@
   "core/safety_escalation.py": 2,
   "core/safety_floor.py": 1,
   "core/schema_check.py": 1,
-  "core/script_library_manager.py": 12,
   "core/script_runner.py": 2,
   "core/search_manager.py": 2,
   "core/seasons.py": 6,
@@ -186,7 +184,6 @@
   "core/update_manager.py": 2,
   "core/voice_catalog.py": 3,
   "core/voice_loop.py": 4,
-  "core/volume_manager.py": 11,
   "core/web_account.py": 8,
   "core/web_business.py": 2,
   "core/web_compliance.py": 3,

@@ -59,11 +59,13 @@ class VolumeUnavailableError(RuntimeError):
 
 @dataclass
 class VolumeStatus:
+    """The system volume: its percent and whether it's muted."""
     percent: int
     muted: bool
 
 
 class VolumeBackend(Protocol):
+    """What a volume control provides: read, set the volume, toggle mute."""
     def read(self) -> VolumeStatus:
         """Return the current volume status, or raise VolumeUnavailableError."""
         ...
@@ -95,6 +97,7 @@ class AmixerVolumeBackend:
     """VolumeBackend implementation shelling out to ALSA's `amixer` CLI."""
 
     def read(self) -> VolumeStatus:
+        """The volume read from amixer's Master control; VolumeUnavailableError when its output can't be read."""
         output = self._run("get")
         status = parse_amixer_output(output)
         if status is None:
@@ -102,12 +105,15 @@ class AmixerVolumeBackend:
         return status
 
     def set_volume(self, percent: int) -> None:
+        """Sets the Master volume through amixer."""
         self._run("set", f"{percent}%")
 
     def toggle_mute(self) -> None:
+        """Toggles Master's mute through amixer."""
         self._run("set", "toggle")
 
     def _run(self, *args: str) -> str:
+        """Runs amixer on the Master control with a timeout; VolumeUnavailableError when it isn't there or fails."""
         try:
             result = subprocess.run(
                 ["amixer", *args, _MIXER_CONTROL],
@@ -134,10 +140,12 @@ class VolumeManager:
     """
 
     def __init__(self, context: AppContext) -> None:
+        """The device's volume control (amixer on the Pi); nothing is checked until used."""
         self.context = context
         self._backend: VolumeBackend = AmixerVolumeBackend()
 
     def is_available(self) -> bool:
+        """Whether the volume can be read here."""
         try:
             self._backend.read()
         except VolumeUnavailableError:
@@ -145,6 +153,7 @@ class VolumeManager:
         return True
 
     def read(self) -> Optional[VolumeStatus]:
+        """The volume now, or None when it can't be read."""
         try:
             return self._backend.read()
         except VolumeUnavailableError as exc:
@@ -152,6 +161,7 @@ class VolumeManager:
             return None
 
     def set_volume(self, percent: int) -> bool:
+        """Sets the volume (0 to 100); False when it can't."""
         percent = max(0, min(100, percent))
         try:
             self._backend.set_volume(percent)
@@ -161,6 +171,7 @@ class VolumeManager:
         return True
 
     def toggle_mute(self) -> bool:
+        """Toggles mute; False when it can't."""
         try:
             self._backend.toggle_mute()
         except VolumeUnavailableError as exc:

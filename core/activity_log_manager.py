@@ -54,12 +54,14 @@ _MAX_ENTRIES = 5000
 
 @dataclass
 class ActivityLogEntry:
+    """One line of the activity log: what kind of event, a summary in words, and when."""
     entry_id: str
     event_type: str
     summary: str
     timestamp: str  # ISO datetime
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in its JSON file."""
         return {
             "entry_id": self.entry_id,
             "event_type": self.event_type,
@@ -69,6 +71,7 @@ class ActivityLogEntry:
 
     @staticmethod
     def from_dict(data: dict) -> "ActivityLogEntry":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return ActivityLogEntry(
             entry_id=data.get("entry_id", uuid.uuid4().hex[:10]),
             event_type=data.get("event_type", ""),
@@ -78,7 +81,11 @@ class ActivityLogEntry:
 
 
 class ActivityLogManager:
+    """What's been done lately, for "what have I been doing" (activity_log.json, the last 5,000 entries): apps
+    opened, notifications raised, profiles switched, written by listening to those events.
+    """
     def __init__(self, context: AppContext) -> None:
+        """Loads the log and listens for module.opened, notification.created and profile.switched."""
         self.context = context
         self._entries: list[ActivityLogEntry] = []
         self._module_lister: Optional[Callable[[], list]] = None
@@ -104,6 +111,7 @@ class ActivityLogManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads the log; a damaged file is logged, reported and starts empty."""
         if not _ACTIVITY_LOG_FILE.exists():
             self._entries = []
             return
@@ -124,6 +132,7 @@ class ActivityLogManager:
         # of a synthetic stress test (see this rewrite cost hit directly
         # in tests/test_activity_log_manager.py's capping test before it
         # was rescoped to a small cap).
+        """Writes the log atomically."""
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
         atomic_write_text(_ACTIVITY_LOG_FILE,
             json.dumps([e.to_dict() for e in self._entries], indent=2),
@@ -135,6 +144,7 @@ class ActivityLogManager:
     # ------------------------------------------------------------------
 
     def _log(self, event_type: str, summary: str) -> ActivityLogEntry:
+        """Adds an entry (dropping the oldest past 5,000) and saves."""
         entry = ActivityLogEntry(
             entry_id=uuid.uuid4().hex[:10],
             event_type=event_type,
@@ -152,13 +162,16 @@ class ActivityLogManager:
     # ------------------------------------------------------------------
 
     def _on_module_opened(self, module_id: str) -> None:
+        """On module.opened: logs it with the app's name."""
         display_name = self._display_name_for(module_id)
         self._log("module.opened", f"Opened the {display_name} module.")
 
     def _on_notification_created(self, notification, **_kwargs) -> None:
+        """On notification.created: logs its title and message."""
         self._log("notification.created", f'Notification: "{notification.title}" — {notification.message}')
 
     def _on_profile_switched(self, profile_id: str) -> None:
+        """On profile.switched: logs it with the person's name."""
         name = profile_id
         if self.context.profiles is not None:
             match = next((p for p in self.context.profiles.list_profiles() if p.profile_id == profile_id), None)

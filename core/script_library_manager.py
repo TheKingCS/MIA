@@ -42,6 +42,9 @@ INTERPRETERS = ("shell", "python")
 
 @dataclass
 class Script:
+    """A saved script: its name, interpreter (shell, Python...), category and content. Kept to read and copy; MIA never
+    runs it by herself.
+    """
     script_id: str
     name: str
     interpreter: str = "shell"
@@ -51,6 +54,7 @@ class Script:
     updated_at: str = ""  # ISO datetime
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in its JSON file."""
         return {
             "script_id": self.script_id,
             "name": self.name,
@@ -63,6 +67,7 @@ class Script:
 
     @staticmethod
     def from_dict(data: dict) -> "Script":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return Script(
             script_id=data.get("script_id", uuid.uuid4().hex[:10]),
             name=data.get("name", ""),
@@ -75,8 +80,10 @@ class Script:
 
 
 class ScriptLibraryManager:
+    """The script library (scripts.json, written through atomic_write_text so undo can restore it)."""
     def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
         # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        """Points at its file (data/ by default) and loads it."""
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._scripts_file = self.data_dir / "scripts.json" if data_dir is not None else _SCRIPTS_FILE
         self.context = context
@@ -88,6 +95,7 @@ class ScriptLibraryManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads the scripts; a damaged file is logged, reported and starts empty."""
         if not self._scripts_file.exists():
             self._scripts = []
             return
@@ -100,6 +108,7 @@ class ScriptLibraryManager:
             self._scripts = []
 
     def _save(self) -> None:
+        """Writes every script atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._scripts_file,
             json.dumps([s.to_dict() for s in self._scripts], indent=2),
@@ -111,6 +120,7 @@ class ScriptLibraryManager:
     # ------------------------------------------------------------------
 
     def add_script(self, name: str, interpreter: str = "shell", content: str = "", category: str = "") -> Script:
+        """Saves a script (an unknown interpreter becomes shell)."""
         now = datetime.now().isoformat(timespec="seconds")
         script = Script(
             script_id=uuid.uuid4().hex[:10],
@@ -127,6 +137,7 @@ class ScriptLibraryManager:
         return script
 
     def update_script(self, script_id: str, **fields) -> Script:
+        """Changes a script's fields and stamps updated_at (ValueError for an unknown one or field, or created_at)."""
         script = self.get_script(script_id)
         if script is None:
             raise ValueError(f"No script with id '{script_id}'.")
@@ -141,6 +152,7 @@ class ScriptLibraryManager:
         return script
 
     def delete_script(self, script_id: str) -> None:
+        """Deletes a script."""
         self._scripts = [s for s in self._scripts if s.script_id != script_id]
         self._save()
 
@@ -149,6 +161,7 @@ class ScriptLibraryManager:
     # ------------------------------------------------------------------
 
     def get_script(self, script_id: str) -> Optional[Script]:
+        """The script with this id, or None."""
         for script in self._scripts:
             if script.script_id == script_id:
                 return script
@@ -170,4 +183,5 @@ class ScriptLibraryManager:
         return sorted(matches, key=lambda s: (s.category.lower(), s.name.lower()))
 
     def categories(self) -> list[str]:
+        """The categories in use, sorted."""
         return sorted({s.category for s in self._scripts if s.category})

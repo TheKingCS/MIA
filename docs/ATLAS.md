@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 229,315 lines; 1043 files describe themselves; 5,221 of 13,517 classes and functions are documented.
+1043 files, 229,353 lines; 1043 files describe themselves; 5,255 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 103,217 lines; 4,490 of 5,630 classes and functions documented
+367 files, 103,255 lines; 4,524 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -14,7 +14,7 @@
 - `core/account_data.py`: Your data is yours to take or remove (2026-10-01, accounts stage 5).
 - `core/achievements.py`: The deterministic "you unlocked something" narration layer — the "Achievements/Milestones" piece flagged as a real gap across both the "My Hero's Path" plan and the "connective infrastructure" architecture review that followed the whole-codebase audit (see docs/ROADMAP.md's dated entry).
 - `core/actions.py`: The action contract (2026-10-05, Phase 2 foundation, DEC-0013): how any surface (the web Home, the phone, the glasses, later MIA herself) changes something in a person's life. Always in five steps:
-- `core/activity_log_manager.py`: The Activity/Memory Log shared service — docs/ROADMAP.md milestone 9.1, the "Activity/Memory Log (system-wide event history via the event bus)" row of the shared core services table (used by the Memories section, "what did I do on Project X" queries, Diagnostics history). *(11 undocumented)*
+- `core/activity_log_manager.py`: The Activity/Memory Log shared service — docs/ROADMAP.md milestone 9.1, the "Activity/Memory Log (system-wide event history via the event bus)" row of the shared core services table (used by the Memories section, "what did I do on Project X" queries, Diagnostics history).
 - `core/alarm_manager.py`: Backs the Alarm tool (modules/toolbox/tools/alarm_tool.py) — persisted to data/alarms.json, same durability pattern as core.calendar_manager.CalendarManager.
 - `core/answer_ratings.py`: Zac's 👍 and 👎 on MIA's answers (DEC-0067's tuning, step 3): what she was asked, what she said, on which device, and how it landed. Personal: each person's own, in their folder (core/personal_data.py). *(6 undocumented)*
 - `core/app_context.py`: Defines AppContext: a small bundle of shared services (config, logger factory, event bus) that gets handed to every module and every GUI component.
@@ -291,7 +291,7 @@
 - `core/safety_floor.py`: The safety floor from docs/COGNITIVE_EXTENSION_PROPOSAL.md (slice A): a deterministic check on every message, before any mode and before the model sees it. On clear signs that the user may be in danger (thoughts of suicide, self-harm, someone threatening them) MIA answers with fixed, human-written t *(1 undocumented)*
 - `core/saga.py`: The Chronicle Archive for *MIA: The Chronicles* (DEC-0084; Zac and ChatGPT, H-0081: "a dedicated structure that continuously gathers and organizes information that could become part of future comic issues"; `docs/COUNCIL_AND_CHRONICLES_REVIEW.md` section 7). Not `core/chronicle.py`: that's each pers
 - `core/schema_check.py`: A small JSON Schema checker (2026-10-05, Engine Phase 1), standard library only, for the parts of draft 2020-12 MIA's published schemas use (docs/schema/): type, enum, required, properties, additionalProperties, items, pattern and local $ref. Other surfaces can validate the same schema with any full *(1 undocumented)*
-- `core/script_library_manager.py`: Backs Field Kit's "Useful Scripts" tab (docs/ROADMAP.md milestone 11.4) — a categorized library of user-authored shell/Python scripts. Same persisted-JSON pattern as core.journal_manager.JournalManager: data/scripts.json, a dataclass with to_dict/from_dict, a manager class wrapping load/save/CRUD/se *(12 undocumented)*
+- `core/script_library_manager.py`: Backs Field Kit's "Useful Scripts" tab (docs/ROADMAP.md milestone 11.4) — a categorized library of user-authored shell/Python scripts. Same persisted-JSON pattern as core.journal_manager.JournalManager: data/scripts.json, a dataclass with to_dict/from_dict, a manager class wrapping load/save/CRUD/se
 - `core/script_runner.py`: Executes a Field Kit script (docs/ROADMAP.md milestone 11.4) — writes its content to a fresh temp file and starts it running as a real subprocess. No sandboxing: these are the user's own trusted scripts on their own offline device, same "single-user offline tool" stance this project already takes fo *(2 undocumented)*
 - `core/search_manager.py`: A system-wide search service — the "don't make me know where to look for each thing" feature. Any module or core service can register a search provider; SearchManager just fans a query out to all of them and collects the results. *(2 undocumented)*
 - `core/seasons.py`: Seasons of memory (build plan step 10, DEC-0094; the gap: "long-term memory is lists, not understanding"). What changed this month and this year, worked out in code from the person's history (core/life_events.py) and their memories (core/user_memory_manager.py), against the period before: *(6 undocumented)*
@@ -339,7 +339,7 @@
 - `core/voice_effects.py`: Post-processing DSP effects applied to Piper's raw synthesized audio — 2026-07-15, at the user's explicit request for MIA to "sound like a futuristic awesome AI companion device," not a plain human voice. Deliberately pure `numpy` (already a dependency for `core/voice_manager.py`'s recording/playbac
 - `core/voice_loop.py`: The headless Core runtime's actual voice loop: push-to-talk -> transcribe > Assistant -> speak — docs/VISION.md's 2026-07-15 "Core drops its GUI entirely" sharpening, the piece it explicitly flagged as "not built yet, and genuinely substantial when it is." *(4 undocumented)*
 - `core/voice_manager.py`: The Voice interface's STT/TTS core service — docs/ROADMAP.md milestone 5.3. Defines backend-agnostic `STTBackend`/`TTSBackend` interfaces (same shape as `core/llm_manager.py`'s `LLMBackend`), with one concrete implementation each:
-- `core/volume_manager.py`: System volume control for the Home Dashboard's volume widget (gui/home_dashboard.py). Same backend-agnostic shape as core/power_manager.py (`PowerBackend`/`PsutilBatteryBackend`) and core/llm_manager.py's `LLMBackend`: one `VolumeBackend` Protocol, one concrete implementation, `AmixerVolumeBackend`, *(11 undocumented)*
+- `core/volume_manager.py`: System volume control for the Home Dashboard's volume widget (gui/home_dashboard.py). Same backend-agnostic shape as core/power_manager.py (`PowerBackend`/`PsutilBatteryBackend`) and core/llm_manager.py's `LLMBackend`: one `VolumeBackend` Protocol, one concrete implementation, `AmixerVolumeBackend`,
 - `core/warranty_watch.py`: A heads-up before a warranty runs out (2026-09-28). Machines got a "Warranty until" date (MaintenanceAsset.warranty_until), typed in or filled from a filed warranty/manual (core/inbox_classify.py). About a month before, and again a week before, MIA mentions it through the communication gate, so anyt
 - `core/waypoint_actions.py`: Waypoints (core/waypoint_manager.py) through the action contract (core/actions.py), for the web's Maps and Navigation pages: `waypoint.add` (a name and where: from a tap on the map, or typed) and `waypoint.delete`. The store writes through atomic_write_text, so "undo that" takes either back. Maps ar
 - `core/waypoint_manager.py`: Backs the Navigation module's waypoint list (modules/navigation/module.py) — docs/ROADMAP.md milestone 10.1. Same persisted-JSON pattern as core/inventory_manager.py: data/waypoints.json, a dataclass with to_dict/from_dict, a manager class wrapping load/save.
