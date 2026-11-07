@@ -48,7 +48,14 @@ def households_dir() -> Path:
 
 
 class HouseholdManager:
+    """Households: who shares the household things (calendar, kitchen, budget, upkeep...). Kept in the config
+    (households.<id>, and each profile's household_id). Everyone starts in a household of their own; joining another
+    needs a current member's approval.
+    """
     def __init__(self, context) -> None:
+        """Puts the profiles already on the device into one household (once), and gives every new profile a household of
+        its own.
+        """
         self.context = context
         self._migrate_existing_profiles()
         context.events.subscribe("profile.created", self._on_profile_created)
@@ -57,9 +64,11 @@ class HouseholdManager:
 
     @property
     def _config(self):
+        """The config (households live there)."""
         return self.context.config
 
     def _all(self) -> dict:
+        """Every household (id -> name, when made, whether it's the device's first)."""
         return dict(self._config.get("households", {}) or {})
 
     def _migrate_existing_profiles(self) -> None:
@@ -77,6 +86,7 @@ class HouseholdManager:
         log.info("Put the %d existing profile(s) into one household (%s).", len(profiles), hid)
 
     def _new_household(self, name: str) -> str:
+        """Makes a household (the device's first if there isn't one yet) and returns its id."""
         households = self._all()
         hid = uuid.uuid4().hex[:8]
         households[hid] = {"name": name, "created_at": datetime.now().isoformat(timespec="seconds"),
@@ -86,6 +96,7 @@ class HouseholdManager:
         return hid
 
     def _set_household(self, profile_id: str, hid: str) -> None:
+        """Puts a profile in a household."""
         raw = self._config.get(f"profiles.{profile_id}")
         if raw is None:
             return
@@ -95,6 +106,7 @@ class HouseholdManager:
         self._config.save()
 
     def _on_profile_created(self, profile_id: str = "", name: str = "", **_kwargs) -> None:
+        """On profile.created: the new profile gets its household (its own, made now)."""
         self.household_of(profile_id)
 
     def _drop_if_empty(self, hid: str) -> None:
@@ -123,9 +135,11 @@ class HouseholdManager:
         return hid
 
     def name(self, hid: str) -> str:
+        """A household's name ("Household" when unknown)."""
         return self._all().get(hid, {}).get("name", "Household")
 
     def rename(self, hid: str, name: str) -> bool:
+        """Renames a household; False for an unknown one or an empty name."""
         households = self._all()
         if hid not in households or not name.strip():
             return False
@@ -135,9 +149,11 @@ class HouseholdManager:
         return True
 
     def members(self, hid: str) -> list:
+        """The profiles in a household."""
         return [p for p in self.context.profiles.list_profiles() if p.household_id == hid]
 
     def is_first(self, hid: str) -> bool:
+        """Whether a household is the device's first (the one whose things live in data/)."""
         return bool(self._all().get(hid, {}).get("first"))
 
     def folder(self, hid: str) -> Optional[Path]:
@@ -148,6 +164,7 @@ class HouseholdManager:
         return households_dir() / hid
 
     def list_households(self) -> list[tuple[str, str]]:
+        """Every household as (id, name)."""
         return [(hid, data.get("name", "Household")) for hid, data in self._all().items()]
 
     def shares_with(self, profile_id: str) -> list:

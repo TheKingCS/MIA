@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 229,100 lines; 1043 files describe themselves; 5,082 of 13,517 classes and functions are documented.
+1043 files, 229,117 lines; 1043 files describe themselves; 5,094 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 103,002 lines; 4,351 of 5,630 classes and functions documented
+367 files, 103,019 lines; 4,363 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -165,7 +165,7 @@
 - `core/home_link.py`: Supercharged online (DEC-0022, level 2): when the phone can reach MIA on the home computer (same Wi-Fi, or anywhere through Tailscale), Talk uses the computer's bigger model; when it can't, mid-conversation or not, the phone's own model answers. MIA always says which one did (`level`). *(11 undocumented)*
 - `core/homestead_costs.py`: Finance #2 (2026-09-28): what the owner's homestead builds and tools actually cost. The owner asked for MIA to "help me manage my homestead I am building and the costs associated with my tools, and builds." *(9 undocumented)*
 - `core/homestead_manager.py`: Watched-folder ingestion for MIA Home's summarized-state snapshots from sibling automation projects — the first (and so far only) source is MIA Homestead's greenhouse/aquaponics system (`~/Projects/mia-homestead`, a separate repo), which exports via its own `viewer/export_home_snapshot.py`. See that *(10 undocumented)*
-- `core/household_manager.py`: Households (2026-10-01, docs/ROADMAP.md "People and ownership"): MIA is built for anyone, so nothing is shared between people unless they choose it. Every new account starts in a household of its own. Two people share the household things (calendar, kitchen, budget, maintenance, builds, inventory, t *(12 undocumented)*
+- `core/household_manager.py`: Households (2026-10-01, docs/ROADMAP.md "People and ownership"): MIA is built for anyone, so nothing is shared between people unless they choose it. Every new account starts in a household of its own. Two people share the household things (calendar, kitchen, budget, maintenance, builds, inventory, t
 - `core/household_routines.py`: The Household's web screen (web/household.html): the household's routines (recurring-mission templates in the "Household" category: laundry, dishes, hygiene), each with its current occurrence (today's, or this week's for a weekly one), how far along it is and its streak, and the total for the day. L
 - `core/imports.py`: Bring your life with you (2026-10-01): a new person shouldn't start from an empty MIA. Three common exports from other apps:
 - `core/inbox_actions.py`: The Inbox screen's changes (Zac, 2026-10-16), on the action contract in core/actions.py: *(10 undocumented)*
