@@ -63,12 +63,14 @@ def format_lesson_row(lesson: Lesson) -> str:
 
 
 class ClassroomModule(ModuleBase):
+    """The Classroom app (desktop): subjects, their courses, and each course's lessons (with the skills a lesson trains), one page per level with a way back; and Textbooks, where a course can be made from a book."""
     module_id = "classroom"
     display_name = "Classroom"
     description = "Your own subjects, courses, and lessons."
     icon = "\U0001F393"  # graduation cap
 
     def __init__(self, context) -> None:
+        """Nothing built yet and nothing open: the pages are made as they're shown."""
         super().__init__(context)
         self._stack: Optional[QStackedWidget] = None
         self._subjects_page: Optional[QWidget] = None
@@ -89,6 +91,7 @@ class ClassroomModule(ModuleBase):
         self._refresh_subject_list()
 
     def get_widget(self) -> QWidget:
+        """The page stack, starting on the subjects."""
         self._stack = QStackedWidget()
         self._subjects_page = self._build_subjects_page()
         self._stack.addWidget(self._subjects_page)
@@ -100,6 +103,7 @@ class ClassroomModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_subjects_page(self) -> QWidget:
+        """The subjects page: the list (double-click opens) with Add, Edit, Open and Delete, and Textbooks when they're available."""
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setContentsMargins(24, 24, 24, 24)
@@ -146,6 +150,7 @@ class ClassroomModule(ModuleBase):
         return page
 
     def _on_open_textbooks(self) -> None:
+        """Opens the Textbooks panel (built the first time), refreshed."""
         from gui.textbooks_panel import TextbooksPanel
 
         if getattr(self, "_textbooks_page", None) is None:
@@ -155,10 +160,12 @@ class ClassroomModule(ModuleBase):
         self._stack.setCurrentWidget(self._textbooks_page)
 
     def _back_from_textbooks(self) -> None:
+        """Back to the subjects, refreshed (a course may have been made from a book)."""
         self._refresh_subject_list()  # a course may have been made
         self._stack.setCurrentWidget(self._subjects_page)
 
     def _refresh_subject_list(self) -> None:
+        """Lists every subject with its lessons done of total, or how to add the first."""
         self._subject_list.clear()
         subjects = self.context.classroom.all_subjects()
         for subject in subjects:
@@ -170,9 +177,11 @@ class ClassroomModule(ModuleBase):
             add_empty_state_item(self._subject_list, "No subjects yet — click Add Subject to get started.")
 
     def _selected_subject_id(self) -> Optional[str]:
+        """The selected subject's id, or None."""
         return selected_item_data(self._subject_list)
 
     def _on_add_subject(self) -> None:
+        """Adds a subject from the dialog (name, category, description)."""
         dialog = AddEditSubjectDialog(self.context)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -182,6 +191,7 @@ class ClassroomModule(ModuleBase):
         self._refresh_subject_list()
 
     def _on_edit_subject(self) -> None:
+        """Edits the selected subject in the dialog (asks for a selection first)."""
         subject_id = self._selected_subject_id()
         if subject_id is None:
             QMessageBox.information(None, "No Subject Selected", "Select a subject to edit.")
@@ -197,6 +207,7 @@ class ClassroomModule(ModuleBase):
         self._refresh_subject_list()
 
     def _on_delete_subject(self) -> None:
+        """Deletes the selected subject after asking, with all its courses and lessons."""
         subject_id = self._selected_subject_id()
         if subject_id is None:
             QMessageBox.information(None, "No Subject Selected", "Select a subject to delete.")
@@ -214,6 +225,7 @@ class ClassroomModule(ModuleBase):
         self._refresh_subject_list()
 
     def _on_open_subject(self) -> None:
+        """Opens the selected subject's courses (asks for a selection first)."""
         subject_id = self._selected_subject_id()
         if subject_id is None:
             QMessageBox.information(None, "No Subject Selected", "Select a subject to open.")
@@ -225,6 +237,7 @@ class ClassroomModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _show_courses_page(self, subject_id: str) -> None:
+        """Shows a subject's courses page, built fresh."""
         if self._courses_page is not None:
             self._stack.removeWidget(self._courses_page)
             self._courses_page = None
@@ -234,6 +247,7 @@ class ClassroomModule(ModuleBase):
         self._stack.setCurrentWidget(self._courses_page)
 
     def _build_courses_page(self) -> QWidget:
+        """The courses page: back to the subjects, the subject's name, its courses (double-click opens) with Add, Edit, Open and Delete."""
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setContentsMargins(24, 24, 24, 24)
@@ -275,6 +289,7 @@ class ClassroomModule(ModuleBase):
         return page
 
     def _refresh_course_list(self) -> None:
+        """Lists the subject's courses with their lessons done of total, or how to add the first."""
         self._course_list.clear()
         courses = self.context.classroom.courses_for_subject(self._current_subject_id)
         for course in courses:
@@ -286,9 +301,11 @@ class ClassroomModule(ModuleBase):
             add_empty_state_item(self._course_list, "No courses yet — click Add Course to get started.")
 
     def _selected_course_id(self) -> Optional[str]:
+        """The selected course's id, or None."""
         return selected_item_data(self._course_list)
 
     def _on_add_course(self) -> None:
+        """Adds a course to the open subject from the dialog."""
         dialog = AddEditCourseDialog(self.context)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -298,6 +315,7 @@ class ClassroomModule(ModuleBase):
         self._refresh_course_list()
 
     def _on_edit_course(self) -> None:
+        """Edits the selected course in the dialog (asks for a selection first)."""
         course_id = self._selected_course_id()
         if course_id is None:
             QMessageBox.information(None, "No Course Selected", "Select a course to edit.")
@@ -312,6 +330,7 @@ class ClassroomModule(ModuleBase):
         self._refresh_course_list()
 
     def _on_delete_course(self) -> None:
+        """Deletes the selected course after asking, with all its lessons."""
         course_id = self._selected_course_id()
         if course_id is None:
             QMessageBox.information(None, "No Course Selected", "Select a course to delete.")
@@ -328,6 +347,7 @@ class ClassroomModule(ModuleBase):
         self._refresh_course_list()
 
     def _on_open_course(self) -> None:
+        """Opens the selected course's lessons (asks for a selection first)."""
         course_id = self._selected_course_id()
         if course_id is None:
             QMessageBox.information(None, "No Course Selected", "Select a course to open.")
@@ -335,6 +355,7 @@ class ClassroomModule(ModuleBase):
         self._show_lessons_page(course_id)
 
     def _show_subjects_page(self) -> None:
+        """Back to the subjects: the courses and lessons pages removed, nothing open, the list refreshed."""
         self._stack.setCurrentWidget(self._subjects_page)
         if self._courses_page is not None:
             self._stack.removeWidget(self._courses_page)
@@ -351,6 +372,7 @@ class ClassroomModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _show_lessons_page(self, course_id: str) -> None:
+        """Shows a course's lessons page, built fresh."""
         if self._lessons_page is not None:
             self._stack.removeWidget(self._lessons_page)
             self._lessons_page = None
@@ -360,6 +382,7 @@ class ClassroomModule(ModuleBase):
         self._stack.setCurrentWidget(self._lessons_page)
 
     def _build_lessons_page(self) -> QWidget:
+        """The lessons page: back to the courses, the course's name, its lessons with Add, Edit, Mark Complete/Incomplete and Delete."""
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setContentsMargins(24, 24, 24, 24)
@@ -400,6 +423,7 @@ class ClassroomModule(ModuleBase):
         return page
 
     def _refresh_lesson_list(self) -> None:
+        """Lists the course's lessons, or how to add the first."""
         self._lesson_list.clear()
         lessons = self.context.classroom.lessons_for_course(self._current_course_id)
         for lesson in lessons:
@@ -410,9 +434,11 @@ class ClassroomModule(ModuleBase):
             add_empty_state_item(self._lesson_list, "No lessons yet — click Add Lesson to get started.")
 
     def _selected_lesson_id(self) -> Optional[str]:
+        """The selected lesson's id, or None."""
         return selected_item_data(self._lesson_list)
 
     def _on_add_lesson(self) -> None:
+        """Adds a lesson to the open course from the dialog (name, notes, the skills it trains)."""
         dialog = AddEditLessonDialog(self.context)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -423,6 +449,7 @@ class ClassroomModule(ModuleBase):
         self._refresh_lesson_list()
 
     def _on_edit_lesson(self) -> None:
+        """Edits the selected lesson in the dialog (asks for a selection first)."""
         lesson_id = self._selected_lesson_id()
         if lesson_id is None:
             QMessageBox.information(None, "No Lesson Selected", "Select a lesson to edit.")
@@ -438,6 +465,7 @@ class ClassroomModule(ModuleBase):
         self._refresh_lesson_list()
 
     def _on_toggle_lesson_complete(self) -> None:
+        """Marks the selected lesson complete, or not complete again."""
         lesson_id = self._selected_lesson_id()
         if lesson_id is None:
             QMessageBox.information(None, "No Lesson Selected", "Select a lesson to mark complete/incomplete.")
@@ -447,6 +475,7 @@ class ClassroomModule(ModuleBase):
         self._refresh_lesson_list()
 
     def _on_delete_lesson(self) -> None:
+        """Deletes the selected lesson after asking."""
         lesson_id = self._selected_lesson_id()
         if lesson_id is None:
             QMessageBox.information(None, "No Lesson Selected", "Select a lesson to delete.")
@@ -463,6 +492,7 @@ class ClassroomModule(ModuleBase):
         self._refresh_lesson_list()
 
     def _show_courses_page_from_lessons(self) -> None:
+        """Back to the courses: the lessons page removed, the list refreshed."""
         self._stack.setCurrentWidget(self._courses_page)
         if self._lessons_page is not None:
             self._stack.removeWidget(self._lessons_page)

@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1069 files, 237,817 lines; 1069 files describe themselves; 7,216 of 13,808 classes and functions are documented.
+1069 files, 237,847 lines; 1069 files describe themselves; 7,246 of 13,808 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -524,7 +524,7 @@
 
 ## modules/: the desktop's apps, one folder each
 
-93 files, 22,576 lines; 811 of 1,030 classes and functions documented
+93 files, 22,606 lines; 841 of 1,030 classes and functions documented
 
 - `modules/__init__.py`: Every feature of MIA (Assistant, Files, Notes, Maps, etc.) lives here as an independent package. Each module package must:
 - `modules/assistant/__init__.py`: The assistant app's package: its screen and behaviour are in module.py (Assistant Chat UI — docs/ROADMAP.md milestones 5.2 (text chat), 5.3 (voice), 5.4 (device-help grounding), and 5.5 (tool use / action execution). A chat screen (). core/module_manager.py finds it by that file.
@@ -534,7 +534,7 @@
 - `modules/character/__init__.py`: The character app's package: its screen and behaviour are in module.py (Character — the last remaining slice of the user's 2026-09-14 "Prestige, Rarity & Character Progression System" design handoff (see the `project_mia_prestige_ra). core/module_manager.py finds it by that file.
 - `modules/character/module.py`: Character — the last remaining slice of the user's 2026-09-14 "Prestige, Rarity & Character Progression System" design handoff (see the `project_mia_prestige_rarity_vision` memory): "a Character page [that] should become one of the primary M.I.A. interfaces... a visual archive of the user's actual l
 - `modules/classroom/__init__.py`: The classroom app's package: its screen and behaviour are in module.py (Classroom — v1 (2026-09-11): the user's own self-education content model, Subjects -> Courses -> Lessons, three-level drill-down navigation (same "list page + a). core/module_manager.py finds it by that file.
-- `modules/classroom/module.py`: Classroom — v1 (2026-09-11): the user's own self-education content model, Subjects -> Courses -> Lessons, three-level drill-down navigation (same "list page + a QStackedWidget page per level, '<- Back' to go up" shape as modules/real_estate/module.py). Deliberately just the content lesson structure  *(30 undocumented)*
+- `modules/classroom/module.py`: Classroom — v1 (2026-09-11): the user's own self-education content model, Subjects -> Courses -> Lessons, three-level drill-down navigation (same "list page + a QStackedWidget page per level, '<- Back' to go up" shape as modules/real_estate/module.py). Deliberately just the content lesson structure 
 - `modules/dashboard/__init__.py`: The dashboard app's package: its screen and behaviour are in module.py (Dashboard — docs/ROADMAP.md milestone v0.19, the last of the three new subsystems from the 2026-07-14 wearable-companion vision update. A read-only, at-a-glance). core/module_manager.py finds it by that file.
 - `modules/dashboard/module.py`: Dashboard — docs/ROADMAP.md milestone v0.19, the last of the three new subsystems from the 2026-07-14 wearable-companion vision update. A read-only, at-a-glance summary: recent activity, active Missions and their objective progress, recent Memories (Expedition recaps), upcoming Calendar events, and 
 - `modules/diagnostics/__init__.py`: The diagnostics app's package: its screen and behaviour are in module.py (Diagnostics: system health and the in-app log viewer). core/module_manager.py finds it by that file.

@@ -119,7 +119,6 @@
   "gui/widgets/volume_quick_control.py": 5,
   "gui/widgets/waypoint_map_canvas.py": 10,
   "modules/budget/module.py": 73,
-  "modules/classroom/module.py": 30,
   "modules/kitchen/module.py": 34,
   "modules/settings/module.py": 37,
   "modules/workshop/module.py": 45,
