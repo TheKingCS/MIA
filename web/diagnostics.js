@@ -10,18 +10,32 @@
   const { el } = MIAShell;
   const $ = (id) => document.getElementById(id);
 
+  // The design canvas (DEC-0113): Passed / Look At / Unread as tiles, then one row per check-up with its dot (green
+  // all passed, amber something to look at, grey something it couldn't read) and the line that matters, then Run Again.
+  function row(c) {
+    const state = c.failed.length ? "look" : c.unknown.length ? "unread" : "ok";
+    const note = c.failed.length ? c.failed.join(" ") : c.unknown.length ? "Couldn't read: " + c.unknown.join(", ")
+      : c.passed + (c.passed === 1 ? " check passed" : " checks passed");
+    return el("div", { class: "dx-row" }, el("span", { class: "dx-dot " + state, "aria-hidden": "true" }),
+      el("div", { class: "dx-text" }, el("span", {}, c.title), el("span", { class: "dx-note" }, note),
+        c.failed.length && c.unknown.length ? el("span", { class: "dx-note" }, "Couldn't read: " + c.unknown.join(", ")) : null),
+      el("span", { class: "sr-only" }, state === "ok" ? "passed" : state === "look" ? "to look at" : "couldn't read all of it"));
+  }
   function paint(data) {
-    const bad = data.checks.filter((c) => !c.ok).length;
-    $("diag-sub").textContent = data.error ? "Couldn't look." : bad ? bad + " to look at." : "All good.";
-    $("panel").replaceChildren(
-      el("section", { class: "glass money-section" },
-        el("p", {}, data.error || "MIA reads what Windows already reports (drives, memory, the network, the firewall, the AI model) " +
-          "and checks it. Nothing is probed or changed. You can also ask her: \"check my PC\", \"check the network\".")),
-      ...data.checks.map((c) => el("section", { class: "glass money-section" },
-        el("h2", {}, (c.ok ? "✓ " : "! ") + c.title),
-        el("p", { class: "dim" }, c.passed + (c.passed === 1 ? " check passed" : " checks passed")),
-        c.failed.length ? el("ul", {}, c.failed.map((f) => el("li", {}, f))) : null,
-        c.unknown.length ? el("p", { class: "dim" }, "Couldn't read: " + c.unknown.join(", ") + " (not a pass, not a failure).") : null)));
+    const sum = (f) => data.checks.reduce((n, c) => n + f(c), 0);
+    const passed = sum((c) => c.passed), look = sum((c) => c.failed.length), unread = sum((c) => c.unknown.length);
+    $("diag-sub").textContent = data.error ? "Couldn't look." : look ? look + " to look at." : "All good.";
+    const tile = (cls, label, n) => el("div", { class: "glass dx-tile " + cls }, el("span", { class: "dx-dot " + cls, "aria-hidden": "true" }),
+      el("div", {}, el("div", { class: "dx-label" }, label), el("div", { class: "dx-n" }, String(n))));
+    $("panel").replaceChildren(...[
+      data.error ? el("p", { class: "empty" }, data.error) : null,
+      el("div", { class: "dx-tiles" }, tile("ok", "Passed", passed), tile("look", "Look At", look), tile("unread", "Unread", unread)),
+      el("section", { class: "glass dx-list", "aria-labelledby": "dx-checks" }, el("h2", { id: "dx-checks", class: "dx-label" }, "Check-Ups"),
+        ...data.checks.map(row)),
+      el("p", { class: "dim dx-foot" }, "Looks only. Nothing is probed or changed. Anything it couldn't read is never counted as a pass. "
+        + "You can also ask her: \"check my PC\", \"check the network\"."),
+      el("button", { type: "button", class: "btn btn-ghost", onclick: async () => paint(await MIA.diagnostics()) }, "Run Again"),
+    ].filter(Boolean));
   }
 
   MIAShell.start(async () => { paint(await MIA.diagnostics()); });
