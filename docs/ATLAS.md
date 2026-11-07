@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1058 files, 233,614 lines; 1058 files describe themselves; 5,901 of 13,683 classes and functions are documented.
+1058 files, 233,645 lines; 1058 files describe themselves; 5,922 of 13,683 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-373 files, 106,578 lines; 5,123 of 5,749 classes and functions documented
+373 files, 106,609 lines; 5,144 of 5,749 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -79,7 +79,7 @@
 - `core/communication_gate.py`: "Know when to speak", slice C of docs/COGNITIVE_EXTENSION_PROPOSAL.md: the one path every proactive (unprompted) message from MIA goes through, so a context-aware assistant never turns into a nag.
 - `core/component_manager.py`: Backs the Component DB (modules/workshop/module.py) — docs/ROADMAP.md milestone 8.3. Same persisted-JSON pattern as core/inventory_manager.py: data/components.json, a dataclass with to_dict/from_dict, a manager class wrapping load/save.
 - `core/config_manager.py`: Handles reading, writing, and defaulting MIA's configuration. *(4 undocumented)*
-- `core/connectivity.py`: What MIA can do with and without the internet, and whether she has it right now — so if the connection drops she keeps acting sensibly instead of promising things she can't deliver. *(7 undocumented)*
+- `core/connectivity.py`: What MIA can do with and without the internet, and whether she has it right now — so if the connection drops she keeps acting sensibly instead of promising things she can't deliver.
 - `core/context_assembler.py`: The "Life State" layer — a real service answering "what's going on in this person's life right now," synthesized live from every domain manager already in AppContext. This exact shape was discussed and agreed on 2026-09-11 (see mia_system_vision's own dated entry: a context_assembler.py query layer 
 - `core/conversation_manager.py`: Persistent Assistant conversations — 2026-07-14 aesthetic pass part 5 (docs/ROADMAP.md), at the user's explicit request for a ChatGPT-like experience: named conversation threads you can review, continue, or delete, rather than the stateless one-message-at-a-time exchanges the Assistant used before t
 - `core/conversation_modes.py`: How MIA should talk right now — slice A ("Talk it out") of docs/COGNITIVE_EXTENSION_PROPOSAL.md. Pure logic: the mode vocabulary, the explicit phrases that switch modes, and the one short tone line each mode adds to the system prompt. *(5 undocumented)*
@@ -100,7 +100,7 @@
 - `core/curriculum.py`: What MIA studies to become good at everything a computer can be made to do (Zac, 2026-11-07: "I want her very well trained on how to do all things computer related, software engineering, design, apps, web pages, deploying, cyber security, pen testing, monitoring etc and creating documentation for us
 - `core/daily_occasions.py`: Pure decision logic for `core/application.py`'s daily-occasion-check timer — 2026-07-14 aesthetic pass part 5, at the user's explicit request: "know and celebrate the user's birthday, remind them of anniversaries, check in with them and see how they are doing." Split out as pure functions (no Qt, no
 - `core/dashboard_telemetry.py`: Pure telemetry math for the redesigned Home dashboard's gauges (2026-07-18 design handoff, CCH.zip's Dashboard console) — no Qt, no psutil calls of its own, testable in isolation (see tests/test_dashboard_telemetry.py). `gui/home_dashboard.py` owns the actual `core.system_health.read_system_health()
-- `core/dashboard_widgets.py`: The Home dashboard's widget registry — 2026-07-15, "framework first" per the widget/dashboard-customization conversation (`docs/VISION.md`'s companion-philosophy update names weather/trading-bot/music/current project widgets; this is the generic mechanism underneath all of them, built before any spe *(7 undocumented)*
+- `core/dashboard_widgets.py`: The Home dashboard's widget registry — 2026-07-15, "framework first" per the widget/dashboard-customization conversation (`docs/VISION.md`'s companion-philosophy update names weather/trading-bot/music/current project widgets; this is the generic mechanism underneath all of them, built before any spe
 - `core/data_logger_manager.py`: The Data Logger + Charts shared service — docs/ROADMAP.md milestone 8.1, the "Data Logger + Charts" row of the shared core services table (used by Multimeter logging, soil moisture, power usage, Lab experiments/calibration, sensor testing, vehicle diagnostics).
 - `core/data_recovery.py`: One shared helper for the visible half of data-corruption recovery. Every core/*_manager.py's own `_load()` already falls back to an empty state on a malformed JSON file (correct — the app must never fail to boot or fail to open a screen over one bad file) and logs the failure. But a log line nobody
 - `core/debt_math.py`: Pure logic (DEC-0052, the "debts" question plan): when each debt is paid off at the current payments, the interest it costs, and what an extra amount a month changes. MIA never asks the model to do this arithmetic. *(3 undocumented)*
@@ -125,7 +125,7 @@
 - `core/event_bus.py`: A minimal publish/subscribe event bus. *(2 undocumented)*
 - `core/event_catalog.py`: The event catalogue (build plan step 7, the module contract's first piece; Part 1's gap: "no catalogue of the events modules emit and consume"). Read from the code itself, never written by hand: every event a file publishes on the event bus (core/event_bus.py: `events.publish("x", ...)`, or core's ` *(2 undocumented)*
 - `core/expedition_manager.py`: Top-level container for an Expedition Mode outing — docs/ROADMAP.md milestone 12.1. A single Expedition (e.g. a long weekend spent in one area) can hold multiple core.trip_manager.Trip records — one per activity/leg (e.g. Saturday's hike-in, Sunday's fishing trip, both under one Expedition). Same pe
-- `core/expedition_media.py`: Photos, videos and files on an expedition (Zac, 2026-10-16: "after planning a trip you should be able to attach pictures and videos and files to it"). Uploads from the phone or the web go to the expedition's own folder, `<trip photo root>/expeditions/<expedition_id>/`; photos a trip already has (add *(7 undocumented)*
+- `core/expedition_media.py`: Photos, videos and files on an expedition (Zac, 2026-10-16: "after planning a trip you should be able to attach pictures and videos and files to it"). Uploads from the phone or the web go to the expedition's own folder, `<trip photo root>/expeditions/<expedition_id>/`; photos a trip already has (add
 - `core/expedition_sync.py`: Export/import Expedition Mode data as a single bundle file — docs ROADMAP.md milestone 15, built for the "Pi 5 docked to a Home desktop" workflow: `docs/HARDWARE.md`'s storage-split section already anticipated this exact need ("the same drive can be pulled and mounted on a desktop directly"). Reuses *(3 undocumented)*
 - `core/fact_owners.py`: One owner per fact (DEC-0052, docs/REASONING_PLAN.md section 2). A fact MIA knows about a person lives in exactly one store; every other screen, answer and finding reads it from that owner and never keeps a copy, so two places can't disagree. `tests/test_fact_owners.py` fails when a retired copy com *(1 undocumented)*
 - `core/failure_actions.py`: The Fix-It Log's actions (DEC-0049, core/failure_log.py) on the action contract, and its screen (served as /api/failures).

@@ -51,6 +51,9 @@ _default_connect: Callable[..., object] = socket.create_connection
 
 @dataclass(frozen=True)
 class OnlineCapability:
+    """One thing that needs the internet: its short label for the system prompt, what needs the connection,
+    and what still works without it.
+    """
     name: str  # short label used in the system prompt
     what: str  # what needs the internet
     offline_fallback: str  # what still works without it
@@ -141,12 +144,16 @@ def parse_probe_host(entry: str) -> Optional[tuple[str, int]]:
 
 
 class ConnectivityMonitor:
+    """Whether this MIA is online, by trying to connect to a few probe hosts (no data sent): reading it never blocks,
+    it's rechecked in the background when due, a reading too old counts as unknown, and it's safe across threads.
+    """
     def __init__(
         self,
         context: AppContext,
         connect: Optional[Callable[..., object]] = None,
         clock: Callable[[], float] = time.monotonic,
     ) -> None:
+        """Starts unknown; the connect function and the clock can be passed in for tests."""
         self.context = context
         # Looked up at call time so tests can swap _default_connect module-wide.
         self._connect = connect or (lambda *args, **kwargs: _default_connect(*args, **kwargs))
@@ -158,9 +165,11 @@ class ConnectivityMonitor:
 
     @property
     def enabled(self) -> bool:
+        """Whether checking is on (network.connectivity_check)."""
         return bool(self.context.config.get("network.connectivity_check", True))
 
     def _probe_hosts(self) -> list[tuple[str, int]]:
+        """The hosts and ports to try, from network.probe_hosts (bad entries left out)."""
         entries = self.context.config.get("network.probe_hosts", _DEFAULT_PROBE_HOSTS) or []
         return [parsed for parsed in (parse_probe_host(e) for e in entries) if parsed is not None]
 
@@ -188,6 +197,7 @@ class ConnectivityMonitor:
         return result
 
     def _run_check(self) -> None:
+        """One background check, clearing the in-flight flag however it ends."""
         try:
             self.check_now()
         finally:
@@ -222,6 +232,9 @@ class ConnectivityMonitor:
 
 
 def _action_get_connectivity_status(context: AppContext, arguments: dict) -> str:
+    """Tool get_connectivity_status: what needs the internet and what works now; asked directly with
+    no reading yet, it checks once (a brief wait).
+    """
     monitor = context.connectivity
     if monitor is None:
         return describe_capabilities(UNKNOWN)

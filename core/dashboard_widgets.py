@@ -33,17 +33,23 @@ log = get_logger(__name__)
 
 @dataclass(frozen=True)
 class WidgetDescriptor:
+    """One dashboard widget: its id, display name and icon."""
     widget_id: str
     display_name: str
     icon: str
 
 
 class DashboardWidgetRegistry:
+    """The home dashboard's widgets: registered by the app, turned on or off and ordered by the person
+    (dashboard.disabled_widgets, dashboard.widget_order in the config), the same way modules are.
+    """
     def __init__(self, context: AppContext) -> None:
+        """Starts with no widgets."""
         self.context = context
         self._widgets: dict[str, WidgetDescriptor] = {}
 
     def register(self, descriptor: WidgetDescriptor) -> None:
+        """Adds a widget."""
         self._widgets[descriptor.widget_id] = descriptor
         log.info("Registered dashboard widget: %s", descriptor.widget_id)
 
@@ -57,12 +63,14 @@ class DashboardWidgetRegistry:
     # ------------------------------------------------------------------
 
     def is_enabled(self, widget_id: str) -> bool:
+        """Whether a registered widget is on (an unknown one is off)."""
         if widget_id not in self._widgets:
             return False
         disabled_ids = self.context.config.get("dashboard.disabled_widgets", [])
         return widget_id not in disabled_ids
 
     def set_enabled(self, widget_id: str, enabled: bool) -> None:
+        """Turns a widget on or off, saves the config and tells the dashboard."""
         disabled_ids = list(self.context.config.get("dashboard.disabled_widgets", []))
         if enabled:
             if widget_id in disabled_ids:
@@ -81,6 +89,7 @@ class DashboardWidgetRegistry:
     # ------------------------------------------------------------------
 
     def set_order(self, widget_ids: list[str]) -> None:
+        """Saves the widgets' order and tells the dashboard."""
         self.context.config.set("dashboard.widget_order", widget_ids)
         self.context.config.save()
         self.context.events.publish("dashboard.widgets_changed")

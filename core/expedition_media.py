@@ -24,12 +24,14 @@ MAX_BYTES = 200 * 1024 * 1024
 
 
 def _changed() -> None:
+    """Tells the web to re-read (core/live.py)."""
     from core.live import bump
 
     bump()
 
 
 def _trips(context):
+    """The trips store, or ValueError when expeditions aren't set up."""
     trips = getattr(context, "trips", None)
     if trips is None:
         raise ValueError("Expeditions aren't set up on this MIA.")
@@ -37,6 +39,7 @@ def _trips(context):
 
 
 def _expedition(context, expedition_id: str):
+    """The expedition, or ValueError when it's gone."""
     expeditions = getattr(context, "expeditions", None)
     found = expeditions.get_expedition(expedition_id) if expeditions is not None else None
     if found is None:
@@ -45,10 +48,12 @@ def _expedition(context, expedition_id: str):
 
 
 def folder(context, expedition_id: str) -> Path:
+    """Where an expedition's own photos and videos are kept (beside the trips' photos)."""
     return _trips(context).photo_root / "expeditions" / expedition_id
 
 
 def _inside(path: Path, root: Path) -> Path:
+    """The real path, refused (ValueError) unless it's inside the root: no way out of the expedition's folder."""
     real, base = path.resolve(), root.resolve()
     if base not in real.parents:
         raise ValueError("That isn't part of this expedition.")
@@ -80,6 +85,9 @@ def media(context, expedition_id: str) -> list[dict]:
 
 
 def path_of(context, expedition_id: str, ref: str) -> Path:
+    """The file a media ref names: e/<name> for the expedition's own, t/<trip>/<name> for a photo of one of its trips;
+    ValueError for anything else or outside the folder.
+    """
     _expedition(context, expedition_id)
     ref = str(ref or "")
     if ref.startswith("e/"):
@@ -116,6 +124,7 @@ def save(context, expedition_id: str, filename: str, data: bytes) -> str:
 
 
 def delete(context, expedition_id: str, ref: str) -> str:
+    """Deletes one photo or video (a trip's through the trip, so it forgets it too); returns its name."""
     path = path_of(context, expedition_id, ref)
     if not path.is_file():
         raise ValueError("That isn't there anymore.")
