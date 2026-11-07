@@ -70,6 +70,9 @@ ENERGY_SOURCE_TYPES = ["Solar", "Generator", "Propane", "Battery Bank", "Other"]
 
 @dataclass
 class EnergySource:
+    """A power or utility source the person tracks by hand (solar, a generator, propane...): its name, type
+    (ENERGY_SOURCE_TYPES) and notes.
+    """
     source_id: str
     name: str  # "Rooftop Solar Array", "Backup Generator" — arbitrary, user-defined
     source_type: str = "Other"  # one of ENERGY_SOURCE_TYPES
@@ -77,6 +80,7 @@ class EnergySource:
     created_at: str = ""
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in its JSON file."""
         return {
             "source_id": self.source_id, "name": self.name, "source_type": self.source_type,
             "notes": self.notes, "created_at": self.created_at,
@@ -84,6 +88,7 @@ class EnergySource:
 
     @staticmethod
     def from_dict(data: dict) -> "EnergySource":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return EnergySource(
             source_id=data.get("source_id", uuid.uuid4().hex[:10]),
             name=data.get("name", ""),
@@ -94,8 +99,12 @@ class EnergySource:
 
 
 class EnergyManager:
+    """The household's energy sources (energy_sources.json, written through atomic_write_text); their readings live in
+    the Data Logger, one series per source and meter, so a sensor later is just another writer.
+    """
     def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
         # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        """Points at its file (data/ by default) and loads it."""
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._energy_sources_file = self.data_dir / "energy_sources.json" if data_dir is not None else _ENERGY_SOURCES_FILE
         self.context = context
@@ -107,6 +116,7 @@ class EnergyManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads the sources; a damaged file is logged, reported and starts empty."""
         if not self._energy_sources_file.exists():
             self._sources = []
             return
@@ -119,6 +129,7 @@ class EnergyManager:
             self._sources = []
 
     def _save(self) -> None:
+        """Writes the sources atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._energy_sources_file,
             json.dumps([s.to_dict() for s in self._sources], indent=2), encoding="utf-8",
@@ -129,6 +140,7 @@ class EnergyManager:
     # ------------------------------------------------------------------
 
     def add_energy_source(self, name: str, source_type: str = "Other", notes: str = "") -> EnergySource:
+        """Adds a source (an unknown type becomes Other)."""
         source = EnergySource(
             source_id=uuid.uuid4().hex[:10],
             name=name,
@@ -142,6 +154,7 @@ class EnergyManager:
         return source
 
     def update_energy_source(self, source_id: str, **fields) -> EnergySource:
+        """Changes a source's fields (an unknown type becomes Other; ValueError for an unknown source or field)."""
         source = self.get_energy_source(source_id)
         if source is None:
             raise ValueError(f"No energy source with id '{source_id}'.")
@@ -161,12 +174,14 @@ class EnergyManager:
         self._save()
 
     def get_energy_source(self, source_id: str) -> Optional[EnergySource]:
+        """The source with this id, or None."""
         for source in self._sources:
             if source.source_id == source_id:
                 return source
         return None
 
     def all_energy_sources(self) -> list[EnergySource]:
+        """Every source, by name."""
         return sorted(self._sources, key=lambda s: s.name.lower())
 
     # ------------------------------------------------------------------
@@ -176,9 +191,11 @@ class EnergyManager:
 
     @staticmethod
     def _energy_source_series_id(source_id: str, meter_name: str) -> str:
+        """The Data Logger series for one of a source's meters."""
         return f"energy_source_{source_id}_{meter_name}"
 
     def log_energy_reading(self, source_id: str, meter_name: str, value: float, unit: str = "", note: str = "") -> Reading:
+        """Logs a reading on one of a source's meters ("kWh produced", "tank %")."""
         if self.get_energy_source(source_id) is None:
             raise ValueError(f"No energy source with id '{source_id}'.")
         return self.context.data_logger.add_reading(
@@ -197,4 +214,5 @@ class EnergyManager:
         )
 
     def energy_source_readings(self, source_id: str, meter_name: str) -> list[Reading]:
+        """The readings on one of a source's meters."""
         return self.context.data_logger.readings_for(self._energy_source_series_id(source_id, meter_name))

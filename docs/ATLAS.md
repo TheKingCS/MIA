@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 228,888 lines; 1043 files describe themselves; 4,946 of 13,517 classes and functions are documented.
+1043 files, 228,923 lines; 1043 files describe themselves; 4,973 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 102,794 lines; 4,215 of 5,630 classes and functions documented
+367 files, 102,829 lines; 4,242 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -118,7 +118,7 @@
 - `core/document_text.py`: Text out of the documents the owner gives MIA: shared by the textbook tutor (core/textbook_manager.py) and the document inbox (core/inbox_manager.py). 2026-09-28. *(12 undocumented)*
 - `core/dungeon_actions.py`: The Dungeon's actions (DEC-0046, core/work_dungeon.py) on the action contract: proposed in plain words with the loot they bring, approved, run, undoable.
 - `core/email_drafts.py`: Email drafts (2026-10-01, accounts stage 3): the Assistant can write an email for you, and you choose what happens to it: **Send** (only when you press Send, from your own address, core/mail_send.py), **Copy** it, or open it in your mail app** (a mailto: link). MIA never sends anything by herself; n
-- `core/energy_manager.py`: Manual energy/utility source tracking — 2026-09-09, the last of four "Field Manual" brainstorm items the user picked this session. Original seed: "Solar, generator, propane are currently just Maintenance usage logs by convention — could be a real Power/Energy expansion once real monitoring hardware  *(14 undocumented)*
+- `core/energy_manager.py`: Manual energy/utility source tracking — 2026-09-09, the last of four "Field Manual" brainstorm items the user picked this session. Original seed: "Solar, generator, propane are currently just Maintenance usage logs by convention — could be a real Power/Energy expansion once real monitoring hardware 
 - `core/equipment_actions.py`: Every change the Garage, Property, Greenhouse and Maintenance screens can make (2026-10-06, DEC-0017), as action kinds on the contract in core/actions.py, from one table (core/record_actions.py): assets (add, edit, delete), maintenance tasks (add, edit, delete), and logging a reading, on a task's me *(12 undocumented)*
 - `core/estate_actions.py`: Every change the Real Estate screen makes (2026-10-06, DEC-0017/0018), as action kinds on the contract in core/actions.py: properties (add, edit, delete, with the concept's status, rent and location), recording rent received and an expense against a property (both land in Money, tagged to it), and " *(11 undocumented)*
 - `core/event_bus.py`: A minimal publish/subscribe event bus. *(2 undocumented)*
@@ -176,7 +176,7 @@
 - `core/inspection.py`: Universal Inspection, phases 1 and 2 (DEC-0056, docs/INSPECTION_AND_SELF_PLAN.md): MIA investigates a subject with every relevant *authorized* method she has, keeps each finding as evidence (what, where it came from, when, how sure), correlates findings from different methods, says what she couldn't
 - `core/insurance.py`: The insurance check-up (Zac, 2026-10-18 idea, picked 2026-10-19: `docs/future/IDEAS.md` #1, DEC-0034): keep your policies in one place, see what they cost and what's worth a look, and shop them with quotes you collect, compared fairly.
 - `core/insurance_actions.py`: The insurance check-up's changes (DEC-0034, core/insurance.py) on the action contract: policies and quotes are records (add, edit, delete, undoable); then drafting a quote request (MIA drafts, you press Send), "Switch To This" (a mission with the steps, no gap in coverage) and "I Switched" (the poli *(11 undocumented)*
-- `core/intent_manager.py`: Intent — the "why" layer in the connective-infrastructure pass that followed the "My Hero's Path" architecture review (see docs/ROADMAP.md's dated entry for the full reasoning). An Intent is a long-running, open-ended goal ("Homestead Independence," "Get really good at making things") that a core.pr *(13 undocumented)*
+- `core/intent_manager.py`: Intent — the "why" layer in the connective-infrastructure pass that followed the "My Hero's Path" architecture review (see docs/ROADMAP.md's dated entry for the full reasoning). An Intent is a long-running, open-ended goal ("Homestead Independence," "Get really good at making things") that a core.pr
 - `core/inventory_manager.py`: Backs the Inventory tool (modules/toolbox/tools/inventory_tool.py) — milestone 3.5 in docs/ROADMAP.md. Same persisted-JSON pattern as core.calendar_manager.CalendarManager / core.alarm_manager.AlarmManager: data/inventory_items.json, a dataclass with to_dict/from_dict, a manager class wrapping load/
 - `core/job_manager.py`: MIA Home's fabrication jobs — the second slice of the proposed `mia_home_schema.sql` (see `docs/VISION.md`'s "MIA Home's expanded scope" section and `core/material_manager.py`'s docstring for the first slice), adapted to this project's persisted-JSON-manager convention. Same shape as every other man
 - `core/journal_manager.py`: Backs the Notes module (modules/notes/module.py) — milestone 3.4 in docs/ROADMAP.md, which upgrades that module from a placeholder into the "Notes/Journal Engine" described in ROADMAP.md's shared core services table: dated, searchable, taggable entries. It's a core service (not module-local) specifi *(10 undocumented)*

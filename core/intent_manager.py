@@ -50,6 +50,9 @@ INTENT_STATUSES = ("Active", "Paused", "Achieved", "Archived")
 
 @dataclass
 class Intent:
+    """A long-running goal, the "why" projects serve ("Homestead independence"): its description, status, whether
+    it's the primary one, the bigger goal it serves (so reasons form a chain), and why, in the person's own words.
+    """
     intent_id: str
     name: str
     description: str = ""
@@ -66,6 +69,7 @@ class Intent:
     reason: str = ""
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in its JSON file."""
         return {
             "intent_id": self.intent_id,
             "name": self.name,
@@ -80,6 +84,7 @@ class Intent:
 
     @staticmethod
     def from_dict(data: dict) -> "Intent":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return Intent(
             intent_id=data.get("intent_id", uuid.uuid4().hex[:10]),
             name=data.get("name", ""),
@@ -94,9 +99,11 @@ class Intent:
 
 
 class IntentManager:
+    """The person's goals (intents.json, written through atomic_write_text so undo can restore it)."""
     def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
         # Whose data: a person's own folder (core/personal_data.py), or the
         # shared data/ folder by default.
+        """Points at its file (data/ by default) and loads it."""
         self.data_dir = Path(data_dir) if data_dir is not None else _INTENTS_FILE.parent
         self._intents_file = self.data_dir / _INTENTS_FILE.name if data_dir is not None else _INTENTS_FILE
         self.context = context
@@ -108,6 +115,7 @@ class IntentManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads the goals; a damaged file is logged, reported and starts empty."""
         if not self._intents_file.exists():
             self._intents = []
             return
@@ -120,6 +128,7 @@ class IntentManager:
             self._intents = []
 
     def _save(self) -> None:
+        """Writes the goals atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._intents_file,
             json.dumps([i.to_dict() for i in self._intents], indent=2),
@@ -137,6 +146,7 @@ class IntentManager:
         status: str = "Active",
         primary: bool = False,
     ) -> Intent:
+        """Adds a goal (made primary through set_primary, so only one is ever primary)."""
         now = datetime.now().isoformat(timespec="seconds")
         intent = Intent(
             intent_id=uuid.uuid4().hex[:10],
@@ -155,6 +165,9 @@ class IntentManager:
         return intent
 
     def update_intent(self, intent_id: str, **fields) -> Intent:
+        """Changes a goal's fields and stamps updated_at; primary goes through set_primary (ValueError otherwise, and for an
+        unknown goal or field).
+        """
         intent = self.get_intent(intent_id)
         if intent is None:
             raise ValueError(f"No intent with id '{intent_id}'.")
@@ -184,6 +197,7 @@ class IntentManager:
         return intent
 
     def delete_intent(self, intent_id: str) -> None:
+        """Deletes a goal; anything that served it now serves nothing, rather than pointing at a goal that's gone."""
         self._intents = [i for i in self._intents if i.intent_id != intent_id]
         # Anything that served the deleted goal now serves nothing,
         # rather than pointing at an id that no longer exists.
@@ -221,15 +235,18 @@ class IntentManager:
     # ------------------------------------------------------------------
 
     def get_intent(self, intent_id: str) -> Optional[Intent]:
+        """The goal with this id, or None."""
         for intent in self._intents:
             if intent.intent_id == intent_id:
                 return intent
         return None
 
     def all_intents(self) -> list[Intent]:
+        """Every goal."""
         return list(self._intents)
 
     def primary_intent(self) -> Optional[Intent]:
+        """The primary goal, or None."""
         for intent in self._intents:
             if intent.primary:
                 return intent
