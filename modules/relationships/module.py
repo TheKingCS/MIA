@@ -69,12 +69,14 @@ def format_pet_row(pet: Pet, today: date) -> str:
 
 
 class RelationshipsModule(ModuleBase):
+    """The People & Pets app (desktop): the people in someone's life (relationship, birthday, favourite things, gift ideas, email) and their pets (species, birthday, medical notes), in two tabs."""
     module_id = "relationships"
     display_name = "People & Pets"
     description = "Relationship profiles and pet profiles."
     icon = "\U0001F465"  # people silhouette
 
     def __init__(self, context) -> None:
+        """Nothing built yet: the tabs are made in get_widget()."""
         super().__init__(context)
         self._person_list: Optional[QListWidget] = None
         self._pet_list: Optional[QListWidget] = None
@@ -85,6 +87,7 @@ class RelationshipsModule(ModuleBase):
         self._refresh_pet_list()
 
     def get_widget(self) -> QWidget:
+        """The page: People and Pets tabs."""
         widget = QWidget()
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(24, 24, 24, 24)
@@ -107,6 +110,7 @@ class RelationshipsModule(ModuleBase):
         return widget
 
     def _on_tab_changed(self, index: int) -> None:
+        """Refreshes both lists when the tab changes, so an edit made elsewhere shows."""
         self._refresh_person_list()
         self._refresh_pet_list()
 
@@ -115,6 +119,7 @@ class RelationshipsModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_people_tab(self) -> QWidget:
+        """The People tab: the list with Add, Edit and Delete."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
@@ -139,6 +144,7 @@ class RelationshipsModule(ModuleBase):
         return tab
 
     def _refresh_person_list(self) -> None:
+        """Lists every person (with how soon their birthday is)."""
         if self._person_list is None:
             return
         self._person_list.clear()
@@ -151,9 +157,11 @@ class RelationshipsModule(ModuleBase):
             add_empty_state_item(self._person_list, "No people tracked yet — click Add Person to get started.")
 
     def _selected_person_id(self) -> Optional[str]:
+        """The selected person's id, or None."""
         return selected_item_data(self._person_list)
 
     def _on_add_person(self) -> None:
+        """Adds a person from the dialog and refreshes."""
         dialog = AddEditPersonDialog()
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -165,6 +173,7 @@ class RelationshipsModule(ModuleBase):
         self._refresh_person_list()
 
     def _on_edit_person(self) -> None:
+        """Edits the selected person in the dialog (asks for a selection first)."""
         person_id = self._selected_person_id()
         if person_id is None:
             QMessageBox.information(None, "No Person Selected", "Select a person to edit.")
@@ -182,6 +191,7 @@ class RelationshipsModule(ModuleBase):
         self._refresh_person_list()
 
     def _on_delete_person(self) -> None:
+        """Deletes the selected person (recorded as a screen edit, so a person fixing MIA's work counts) and refreshes."""
         person_id = self._selected_person_id()
         if person_id is None:
             QMessageBox.information(None, "No Person Selected", "Select a person to delete.")
@@ -195,6 +205,7 @@ class RelationshipsModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_pets_tab(self) -> QWidget:
+        """The Pets tab: the list with Add, Edit and Delete."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
@@ -219,6 +230,7 @@ class RelationshipsModule(ModuleBase):
         return tab
 
     def _refresh_pet_list(self) -> None:
+        """Lists every pet (with how soon its birthday is)."""
         if self._pet_list is None:
             return
         self._pet_list.clear()
@@ -231,9 +243,11 @@ class RelationshipsModule(ModuleBase):
             add_empty_state_item(self._pet_list, "No pets tracked yet — click Add Pet to get started.")
 
     def _selected_pet_id(self) -> Optional[str]:
+        """The selected pet's id, or None."""
         return selected_item_data(self._pet_list)
 
     def _on_add_pet(self) -> None:
+        """Adds a pet from the dialog and refreshes."""
         dialog = AddEditPetDialog()
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -245,6 +259,7 @@ class RelationshipsModule(ModuleBase):
         self._refresh_pet_list()
 
     def _on_edit_pet(self) -> None:
+        """Edits the selected pet in the dialog (asks for a selection first)."""
         pet_id = self._selected_pet_id()
         if pet_id is None:
             QMessageBox.information(None, "No Pet Selected", "Select a pet to edit.")
@@ -261,6 +276,7 @@ class RelationshipsModule(ModuleBase):
         self._refresh_pet_list()
 
     def _on_delete_pet(self) -> None:
+        """Deletes the selected pet and refreshes."""
         pet_id = self._selected_pet_id()
         if pet_id is None:
             QMessageBox.information(None, "No Pet Selected", "Select a pet to delete.")

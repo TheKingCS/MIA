@@ -140,12 +140,14 @@ def format_group_progress_line(completed: int, total: int) -> str:
 
 
 class MissionsModule(ModuleBase):
+    """The Missions app (desktop): goals with objectives, general or tied to a trip; the active and completed list beside the selected mission's detail, with the person's level at the foot."""
     module_id = "missions"
     display_name = "Missions"
     description = "Gamified goals and objectives, tied to a trip or general."
     icon = "\U0001F3C6"  # trophy
 
     def __init__(self, context) -> None:
+        """Nothing built yet and no mission selected: the panels are made in get_widget()."""
         super().__init__(context)
         self._detail_container: Optional[QWidget] = None
         self._detail_layout: Optional[QVBoxLayout] = None
@@ -226,6 +228,7 @@ class MissionsModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_detail_panel(self) -> QWidget:
+        """The detail panel: a scroll area holding the selected mission."""
         scroll = QScrollArea()
         scroll.setObjectName("MissionDetailPanel")
         scroll.setWidgetResizable(True)
@@ -247,6 +250,7 @@ class MissionsModule(ModuleBase):
         return scroll
 
     def _build_list_panel(self) -> QWidget:
+        """The list panel: active and completed missions with their counts, Add Mission, and the level footer."""
         container = QWidget()
         container.setObjectName("DashboardCard")
         layout = QVBoxLayout(container)
@@ -301,6 +305,7 @@ class MissionsModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _refresh(self) -> None:
+        """Keeps a selection (the first active mission, else the first, when the selected one is gone), then rebuilds the list, the detail and the footer."""
         missions = self.context.missions.all_missions()
         if self._selected_mission_id is None or not any(
             m.mission_id == self._selected_mission_id for m in missions
@@ -317,6 +322,7 @@ class MissionsModule(ModuleBase):
         self._refresh_level_footer()
 
     def _refresh_list(self, missions: list[Mission]) -> None:
+        """Rebuilds the active and completed rows (old rows hidden and detached first), the selected one lit."""
         for layout in (self._list_active_layout, self._list_completed_layout):
             while layout.count():
                 item = layout.takeAt(0)
@@ -345,6 +351,7 @@ class MissionsModule(ModuleBase):
         self._list_completed_layout.addStretch()
 
     def _refresh_detail(self) -> None:
+        """Rebuilds the selected mission's detail (old widgets hidden and detached first): its type, summary, rewards, skills, participants and each objective with its progress, plus Edit, Delete and Add Objective; says how to start when there are none."""
         while self._detail_layout.count():
             item = self._detail_layout.takeAt(0)
             child = item.widget()
@@ -540,6 +547,7 @@ class MissionsModule(ModuleBase):
         self._detail_layout.addWidget(manage_skills_button)
 
     def _on_manage_skills(self, mission_id: str) -> None:
+        """Opens a mission's skills (which its XP trains), then refreshes the detail."""
         mission = self.context.missions.get_mission(mission_id)
         if mission is None:
             return
@@ -548,6 +556,7 @@ class MissionsModule(ModuleBase):
         self._refresh_detail()
 
     def _refresh_level_footer(self) -> None:
+        """The signed-in person's level, XP into it and needed, coloured by prestige tier."""
         active_profile = self.context.profiles.get_active_profile() if self.context.profiles is not None else None
         total_xp = active_profile.total_xp if active_profile is not None else 0
         prestige_tier = active_profile.prestige_tier if active_profile is not None else 0
@@ -557,6 +566,7 @@ class MissionsModule(ModuleBase):
         self._level_footer_label.setStyleSheet(f"color: {color};" if color else "")
 
     def _on_mission_selected(self, mission_id: str) -> None:
+        """Selects a mission and refreshes."""
         self._selected_mission_id = mission_id
         self._refresh()
 
@@ -565,6 +575,7 @@ class MissionsModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _on_add_mission(self) -> None:
+        """Adds a mission from the dialog and selects it."""
         dialog = AddEditMissionDialog(self.context)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -586,6 +597,7 @@ class MissionsModule(ModuleBase):
         self._refresh()
 
     def _on_edit_mission(self, mission_id: str) -> None:
+        """Edits a mission in the dialog and refreshes."""
         mission = self.context.missions.get_mission(mission_id)
         if mission is None:
             return
@@ -609,6 +621,7 @@ class MissionsModule(ModuleBase):
         self._refresh()
 
     def _on_delete_mission(self, mission_id: str) -> None:
+        """Deletes a mission after confirming."""
         mission = self.context.missions.get_mission(mission_id)
         if mission is None:
             return
@@ -626,6 +639,7 @@ class MissionsModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _on_add_objective(self) -> None:
+        """Adds an objective to the selected mission from the dialog (who it's for, when the mission has participants)."""
         if self._selected_mission_id is None:
             QMessageBox.information(None, "No Mission Selected", "Select a mission to add an objective to.")
             return
@@ -652,6 +666,7 @@ class MissionsModule(ModuleBase):
         self._refresh()
 
     def _on_increment_objective(self, index: int) -> None:
+        """Adds one to a tally objective; a timed one (trip time, counted automatically) is said instead."""
         if self._selected_mission_id is None:
             return
         mission = self.context.missions.get_mission(self._selected_mission_id)
@@ -668,6 +683,7 @@ class MissionsModule(ModuleBase):
         self._refresh()
 
     def _on_delete_objective(self, index: int) -> None:
+        """Deletes one of the selected mission's objectives after confirming."""
         if self._selected_mission_id is None:
             return
         mission = self.context.missions.get_mission(self._selected_mission_id)

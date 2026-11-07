@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1069 files, 237,524 lines; 1069 files describe themselves; 6,923 of 13,808 classes and functions are documented.
+1069 files, 237,572 lines; 1069 files describe themselves; 6,971 of 13,808 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -524,7 +524,7 @@
 
 ## modules/: the desktop's apps, one folder each
 
-93 files, 22,283 lines; 518 of 1,030 classes and functions documented
+93 files, 22,331 lines; 566 of 1,030 classes and functions documented
 
 - `modules/__init__.py`: Every feature of MIA (Assistant, Files, Notes, Maps, etc.) lives here as an independent package. Each module package must:
 - `modules/assistant/__init__.py`: The assistant app's package: its screen and behaviour are in module.py (Assistant Chat UI — docs/ROADMAP.md milestones 5.2 (text chat), 5.3 (voice), 5.4 (device-help grounding), and 5.5 (tool use / action execution). A chat screen (). core/module_manager.py finds it by that file.
@@ -573,7 +573,7 @@
 - `modules/memories/__init__.py`: The memories app's package: its screen and behaviour are in module.py (Memories — docs/ROADMAP.md milestone v0.17, module #19 in that doc's "Top-level module sections" list. Displays one recap card per Expedition (docs/ROADMAP.md 1). core/module_manager.py finds it by that file.
 - `modules/memories/module.py`: Memories — docs/ROADMAP.md milestone v0.17, module #19 in that doc's "Top-level module sections" list. Displays one recap card per Expedition (docs/ROADMAP.md 12.1), most-recent-first: duration, per-activity-type distance/pace, waypoint categories visited, a photo thumbnail strip, and a per-Trip row
 - `modules/missions/__init__.py`: The missions app's package: its screen and behaviour are in module.py (Mission Log — docs/ROADMAP.md milestone v0.18, module #20. Rebuilt 2026-07-18 against a design handoff (CCH.zip's Missions.dc.html) as a two-panel "Mission Log"). core/module_manager.py finds it by that file.
-- `modules/missions/module.py`: Mission Log — docs/ROADMAP.md milestone v0.18, module #20. Rebuilt 2026-07-18 against a design handoff (CCH.zip's Missions.dc.html) as a two-panel "Mission Log": a detail panel (icon/title/region, summary, an objectives checklist, difficulty/level tags, a rewards footer) on the left, and a mission l *(16 undocumented)*
+- `modules/missions/module.py`: Mission Log — docs/ROADMAP.md milestone v0.18, module #20. Rebuilt 2026-07-18 against a design handoff (CCH.zip's Missions.dc.html) as a two-panel "Mission Log": a detail panel (icon/title/region, summary, an objectives checklist, difficulty/level tags, a rewards footer) on the left, and a mission l
 - `modules/module_base.py`: Defines ModuleBase, the contract every MIA module must implement.
 - `modules/module_browser/__init__.py`: The module browser app's package: its screen and behaviour are in module.py (Backs the "Modules" button on the main menu). core/module_manager.py finds it by that file.
 - `modules/module_browser/module.py`: Backs the "Modules" button on the main menu. *(20 undocumented)*
@@ -592,7 +592,7 @@
 - `modules/real_estate/__init__.py`: The real estate app's package: its screen and behaviour are in module.py (Real Estate: a property portfolio — values, equity, rental income, and linked Maintenance history per property). core/module_manager.py finds it by that file.
 - `modules/real_estate/module.py`: Real Estate: a property portfolio — values, equity, rental income, and linked Maintenance history per property. *(27 undocumented)*
 - `modules/relationships/__init__.py`: The relationships app's package: its screen and behaviour are in module.py (Relationship Profiles and Pet Profiles — docs/VISION.md's own "structured extensions" of Memory Palace. All persistence lives in core/relationships_manager.py (). core/module_manager.py finds it by that file.
-- `modules/relationships/module.py`: Relationship Profiles and Pet Profiles — docs/VISION.md's own "structured extensions" of Memory Palace. All persistence lives in core/relationships_manager.py (self.context.relationships) — this module is the Qt-facing wrapper around it, same split as every other data-backed module here. *(16 undocumented)*
+- `modules/relationships/module.py`: Relationship Profiles and Pet Profiles — docs/VISION.md's own "structured extensions" of Memory Palace. All persistence lives in core/relationships_manager.py (self.context.relationships) — this module is the Qt-facing wrapper around it, same split as every other data-backed module here.
 - `modules/settings/__init__.py`: The settings app's package: its screen and behaviour are in module.py (Settings: Backup/Restore (docs/ROADMAP.md milestone 2.7) — export import config + the data directory (profiles, notifications, etc.), optionally passphrase-encr). core/module_manager.py finds it by that file.
 - `modules/settings/module.py`: Settings: Backup/Restore (docs/ROADMAP.md milestone 2.7) — export import config + the data directory (profiles, notifications, etc.), optionally passphrase-encrypted via core/secrets_manager.py — Update Manager (milestone 2.8) — apply an offline update package onto the running installation, see docs *(37 undocumented)*
 - `modules/skills/__init__.py`: The skills app's package: its screen and behaviour are in module.py (Skills — "My Hero's Path" (2026-09-11), the screen for the skill-tree layer core/skill_manager.py adds underneath the existing profile-wide Level/Missions syste). core/module_manager.py finds it by that file.
@@ -611,7 +611,7 @@
 - `modules/toolbox/tools/inventory_tool.py`: Inventory — a ToolboxTool (modules/toolbox/tool_base.py), milestone 3.5 in docs/ROADMAP.md, completing the v0.3 Toolbox breakdown. A filterable list of items (name/quantity/category/location) with Add/Edit/Delete plus quick +1/-1 buttons for the common case of adjusting a count without opening the f
 - `modules/toolbox/tools/lite_captures_tool.py`: Field Captures — a ToolboxTool for reviewing MIA Lite's pending CaptureProposals (core/lite_capture_manager.py). Read-only transcript + Accept/Reject per pending capture, no editing — matches Discovery's own "MIA proposes, you confirm, no edit step" discipline exactly. A list, not a single-proposal 
 - `modules/toolbox/tools/pathway_tool.py`: Pathways — a ToolboxTool (modules/toolbox/tool_base.py) for core.pathway_manager's Mission Pathways. Single-panel, flat list of every defined Pathway (no per-skill grouping this pass — a small enough seed set that it isn't needed yet), each row showing its name, the skill it trains, and the active p
-- `modules/toolbox/tools/project_tool.py`: Project Manager — a ToolboxTool (modules/toolbox/tool_base.py), the v1.0+-bucket "Project Manager" slice from docs/ROADMAP.md, buildable with zero real hardware. Two-level CRUD, same shape as modules/expeditions/module.py: Projects (core.project_manager.Project) at the top, and the selected Project' *(16 undocumented)*
+- `modules/toolbox/tools/project_tool.py`: Project Manager — a ToolboxTool (modules/toolbox/tool_base.py), the v1.0+-bucket "Project Manager" slice from docs/ROADMAP.md, buildable with zero real hardware. Two-level CRUD, same shape as modules/expeditions/module.py: Projects (core.project_manager.Project) at the top, and the selected Project'
 - `modules/toolbox/tools/stopwatch_tool.py`: Stopwatch — a ToolboxTool (modules/toolbox/tool_base.py), part of milestone 3.3 in docs/ROADMAP.md (paired with alarm_tool.py). Purely ephemeral, in-memory state — unlike Calendar/Alarm, a stopwatch reading has no reason to survive an app restart, so there's no core/ manager or data/ file here.
 - `modules/web_home/__init__.py`: The web home app's package: its screen and behaviour are in module.py ("Home (preview)" (2026-10-05, Phase 2, DEC-0012/DEC-0013): MIA's new web front end (`web/`, Muse's) shown inside the desktop window, so the first vertical slice). core/module_manager.py finds it by that file.
 - `modules/web_home/module.py`: "Home (preview)" (2026-10-05, Phase 2, DEC-0012/DEC-0013): MIA's new web front end (`web/`, Muse's) shown inside the desktop window, so the first vertical slice (engine → /api/state → web Home → an action → live update) runs on the real devices (the owner's new computer first, DEC-0015) before anyth

@@ -55,17 +55,20 @@ def format_task_row(task: Task) -> str:
 
 
 class ProjectTool(ToolboxTool):
+    """The Project Manager in the Toolbox: projects (with the skills each trains) and their tasks; add, edit, tick off and delete."""
     tool_id = "projects"
     display_name = "Project Manager"
     description = "Track projects and their tasks."
     icon = "🗂️"  # card index dividers
 
     def __init__(self, context) -> None:
+        """Nothing built yet: the lists are made in build_widget()."""
         super().__init__(context)
         self._project_list: Optional[QListWidget] = None
         self._task_list: Optional[QListWidget] = None
 
     def build_widget(self) -> QWidget:
+        """The screen: the projects list with Add, Edit, Skills and Delete, and the selected project's tasks with Add, Edit, Done/Undone and Delete."""
         widget = QWidget()
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(24, 24, 24, 24)
@@ -130,6 +133,7 @@ class ProjectTool(ToolboxTool):
     # ------------------------------------------------------------------
 
     def _refresh_project_list(self) -> None:
+        """Lists every project, keeping the one selected, then its tasks."""
         previously_selected = self._selected_project_id()
 
         self._project_list.clear()
@@ -147,6 +151,7 @@ class ProjectTool(ToolboxTool):
         self._refresh_task_list()
 
     def _refresh_task_list(self) -> None:
+        """Lists the selected project's tasks (none when nothing is selected)."""
         self._task_list.clear()
         project_id = self._selected_project_id()
         if project_id is None:
@@ -157,6 +162,7 @@ class ProjectTool(ToolboxTool):
             self._task_list.addItem(item)
 
     def _on_project_selected(self) -> None:
+        """Shows the newly selected project's tasks."""
         self._refresh_task_list()
 
     # ------------------------------------------------------------------
@@ -164,12 +170,14 @@ class ProjectTool(ToolboxTool):
     # ------------------------------------------------------------------
 
     def _selected_project_id(self) -> Optional[str]:
+        """The selected project's id, or None."""
         item = self._project_list.currentItem()
         if item is None:
             return None
         return item.data(Qt.ItemDataRole.UserRole)
 
     def _selected_task_id(self) -> Optional[str]:
+        """The selected task's id, or None."""
         item = self._task_list.currentItem()
         if item is None:
             return None
@@ -180,6 +188,7 @@ class ProjectTool(ToolboxTool):
     # ------------------------------------------------------------------
 
     def _on_add_project(self) -> None:
+        """Adds a project from the dialog and selects it."""
         dialog = AddEditProjectDialog(self.context)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -196,6 +205,7 @@ class ProjectTool(ToolboxTool):
         self._refresh_project_list()
 
     def _on_edit_project(self) -> None:
+        """Edits the selected project in the dialog (asks for a selection first)."""
         project_id = self._selected_project_id()
         if project_id is None:
             QMessageBox.information(None, "No Project Selected", "Select a project to edit.")
@@ -218,6 +228,7 @@ class ProjectTool(ToolboxTool):
         self._refresh_project_list()
 
     def _on_delete_project(self) -> None:
+        """Deletes the selected project after confirming; when it has tasks, first says they stay (only ungrouped)."""
         project_id = self._selected_project_id()
         if project_id is None:
             QMessageBox.information(None, "No Project Selected", "Select a project to delete.")
@@ -246,6 +257,7 @@ class ProjectTool(ToolboxTool):
         self._refresh_project_list()
 
     def _on_manage_skills(self) -> None:
+        """Opens the selected project's skills: which skills its work trains, and by how much."""
         project_id = self._selected_project_id()
         if project_id is None:
             QMessageBox.information(None, "No Project Selected", "Select a project to manage skills for.")
@@ -261,6 +273,7 @@ class ProjectTool(ToolboxTool):
     # ------------------------------------------------------------------
 
     def _on_add_task(self) -> None:
+        """Adds a task to the selected project from the dialog (asks for a project first)."""
         project_id = self._selected_project_id()
         if project_id is None:
             QMessageBox.information(None, "No Project Selected", "Select a project to add a task to.")
@@ -285,6 +298,7 @@ class ProjectTool(ToolboxTool):
         self._refresh_task_list()
 
     def _on_edit_task(self) -> None:
+        """Edits the selected task in the dialog (asks for a selection first)."""
         task_id = self._selected_task_id()
         if task_id is None:
             QMessageBox.information(None, "No Task Selected", "Select a task to edit.")
@@ -305,6 +319,7 @@ class ProjectTool(ToolboxTool):
         self._refresh_task_list()
 
     def _on_toggle_task(self) -> None:
+        """Marks the selected task done, or not done again."""
         task_id = self._selected_task_id()
         if task_id is None:
             QMessageBox.information(None, "No Task Selected", "Select a task to toggle.")
@@ -314,6 +329,7 @@ class ProjectTool(ToolboxTool):
         self._refresh_task_list()
 
     def _on_delete_task(self) -> None:
+        """Deletes the selected task after confirming (asks for a selection first)."""
         task_id = self._selected_task_id()
         if task_id is None:
             QMessageBox.information(None, "No Task Selected", "Select a task to delete.")
