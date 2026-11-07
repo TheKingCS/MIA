@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 229,243 lines; 1043 files describe themselves; 5,174 of 13,517 classes and functions are documented.
+1043 files, 229,257 lines; 1043 files describe themselves; 5,185 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 103,145 lines; 4,443 of 5,630 classes and functions documented
+367 files, 103,159 lines; 4,454 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -96,7 +96,7 @@
 - `core/creation_maker.py`: MIA making a screen for something nobody built one for (DEC-0088/0091; ACAF's first maker, `docs/ACAF_REVIEW.md` section 3.5). From a need in plain words ("I want to keep track of the seeds I save"): *(4 undocumented)*
 - `core/creation_sources.py`: What MIA's screens may show besides their own record sets (ACAF step 2, DEC-0088; `docs/ACAF_REVIEW.md` section 3.3). A catalogue, not free queries: each source is a kind of history MIA already keeps (core/life_events.py), read through `events_for()`, so it follows the same rules every screen does:  *(5 undocumented)*
 - `core/creation_spec.py`: What a screen MIA makes may say, and what it shows (DEC-0088/0091; ACAF, `docs/ACAF_REVIEW.md` sections 3.2 to 4). A screen is a specification: a title, the record set it shows (core/record_sets.py) and a list of blocks** from a fixed catalogue. It holds no HTML, script or free formula: values are a *(5 undocumented)*
-- `core/creations.py`: What MIA has made for a person, and every version of it (DEC-0091; ACAF, `docs/ACAF_REVIEW.md` section 5). A personal store (PERSONAL_STORES): a person's creations are theirs, even when the records they show are the household's. *(11 undocumented)*
+- `core/creations.py`: What MIA has made for a person, and every version of it (DEC-0091; ACAF, `docs/ACAF_REVIEW.md` section 5). A personal store (PERSONAL_STORES): a person's creations are theirs, even when the records they show are the household's.
 - `core/daily_occasions.py`: Pure decision logic for `core/application.py`'s daily-occasion-check timer — 2026-07-14 aesthetic pass part 5, at the user's explicit request: "know and celebrate the user's birthday, remind them of anniversaries, check in with them and see how they are doing." Split out as pure functions (no Qt, no
 - `core/dashboard_telemetry.py`: Pure telemetry math for the redesigned Home dashboard's gauges (2026-07-18 design handoff, CCH.zip's Dashboard console) — no Qt, no psutil calls of its own, testable in isolation (see tests/test_dashboard_telemetry.py). `gui/home_dashboard.py` owns the actual `core.system_health.read_system_health()
 - `core/dashboard_widgets.py`: The Home dashboard's widget registry — 2026-07-15, "framework first" per the widget/dashboard-customization conversation (`docs/VISION.md`'s companion-philosophy update names weather/trading-bot/music/current project widgets; this is the generic mechanism underneath all of them, built before any spe *(7 undocumented)*

@@ -44,13 +44,19 @@ class CreationError(ValueError):
 
 
 class Creations:
+    """What MIA has made for a person, every version kept (creations.json in their folder, written through
+    atomic_write_text): drafts, published (in their sidebar) and retired. Publishing goes through an approved action;
+    nothing is overwritten silently.
+    """
     def __init__(self, context=None, data_dir: Optional[Path] = None) -> None:
+        """Points at the person's file (data/ by default) and loads it."""
         self.context = context
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._file = self.data_dir / _FILE
         self._load()
 
     def _load(self) -> None:
+        """Reads the creations; an unreadable file is logged and starts empty."""
         try:
             self.items: list[dict] = json.loads(self._file.read_text(encoding="utf-8")).get("creations", [])
         except FileNotFoundError:
@@ -60,16 +66,19 @@ class Creations:
             self.items = []
 
     def _save(self) -> None:
+        """Writes every creation atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._file, json.dumps({"creations": self.items}, indent=2, ensure_ascii=False) + "\n")
 
     def get(self, creation_id: str) -> dict:
+        """The creation with this id, or CreationError."""
         found = next((c for c in self.items if c["id"] == creation_id), None)
         if found is None:
             raise CreationError(f"No creation {creation_id}.")
         return found
 
     def published(self) -> list[dict]:
+        """The creations in the person's sidebar now."""
         return [c for c in self.items if c["status"] == PUBLISHED]
 
     def draft(self, spec: dict, checks: list[str], made_by: str = "mia", why: str = "", blueprint: str = "",
@@ -97,6 +106,7 @@ class Creations:
         return found
 
     def latest(self, creation_id: str) -> dict:
+        """A creation's newest version (spec and check results)."""
         return self.get(creation_id)["versions"][-1]
 
     def shown(self, creation_id: str) -> dict:
@@ -107,6 +117,7 @@ class Creations:
         return found["versions"][-1]
 
     def mark_published(self, creation_id: str, version: int, set_id: str) -> dict:
+        """Records a version as published (with the record set it shows), its title taken from that version."""
         found = self.get(creation_id)
         found.update(status=PUBLISHED, version=version, set_id=set_id or found["set_id"],
                      title=found["versions"][version - 1]["spec"].get("title", found["title"]))
@@ -115,6 +126,7 @@ class Creations:
         return found
 
     def roll_back(self, creation_id: str) -> dict:
+        """Goes back to the version published before (CreationError when there isn't one)."""
         found = self.get(creation_id)
         history = found["published_versions"]
         if len(history) < 2:
@@ -155,6 +167,7 @@ class Creations:
         self._save()
 
     def take_rows(self, creation_id: str) -> list[dict]:
+        """Takes (and clears) the rows an imported file brought, to add to its records as it's published."""
         found = self.get(creation_id)
         rows = found.pop("pending_rows", None) or []
         self._save()
@@ -167,6 +180,7 @@ class Creations:
         self._save()
 
     def retire(self, creation_id: str) -> dict:
+        """Takes a creation out of the sidebar; it's kept."""
         found = self.get(creation_id)
         found["status"] = RETIRED
         self._save()
