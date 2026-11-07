@@ -233,9 +233,14 @@
     })() : call("GET", "/api/memories"),
     observations: () => demo ? Promise.resolve({
       findings: [{ title: "A bill before payday", claim: "Rent is due Friday; your pay comes Monday, and the account is $120 short.",
-        why: "Paid late, it costs a fee.", next: "Move it to Monday, or move $120 over.", app: "money", sure: "DERIVED" }],
+        why: "Paid late, it costs a fee.", next: "Move it to Monday, or move $120 over.", app: "budget", sure: "DERIVED",
+        kind: "Needs You", tone: "attention", used: "Money", open: { label: "Open in Money", href: "money.html" } },
+        { title: "A heavy work week", claim: "Long shifts this week; two workouts were cut short.", why: "both short sessions followed 12-hour runs",
+          next: "Move a training day to your day off.", app: "workout", sure: "DERIVED", kind: "Noticed", tone: "accent",
+          used: "Workout · The Dungeon", open: { label: "Open in Workout", href: "workout.html" } }],
       insights: [{ source: "Upkeep", items: [{ title: "Oil change is overdue", message: "The mower's oil change was due 12 days ago.",
-        next: "Mark it done, or reschedule it.", since: "2026-11-01" }] }] })
+        next: "Mark it done, or reschedule it.", since: "2026-11-01", kind: "Noticed", tone: "accent", used: "Maintenance",
+        open: { label: "Open in Maintenance", href: "maintenance.html" } }] }] })
       : call("GET", "/api/observations"),
     navigation: (start = "", end = "") => demo ? Promise.resolve({ day: "2026-11-06", waypoints: [
       { id: "w1", name: "Spring", category: "Water", lat: 40.01, lon: -105.0, grid: "13T DE 91476 30318" },

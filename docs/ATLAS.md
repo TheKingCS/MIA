@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1089 files, 246,609 lines; 1089 files describe themselves; 13,537 of 14,207 classes and functions are documented.
+1089 files, 246,672 lines; 1089 files describe themselves; 13,540 of 14,210 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-391 files, 114,404 lines; 6,063 of 6,152 classes and functions documented
+391 files, 114,438 lines; 6,065 of 6,154 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -670,7 +670,7 @@
 
 ## tests/: the test suite: what each part must do
 
-363 files, 66,087 lines; 5,239 of 5,820 classes and functions documented
+363 files, 66,103 lines; 5,240 of 5,821 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -890,7 +890,7 @@
 - `tests/test_notification_manager.py`: Unit tests for core.notification_manager — previously untested (a real, pre-existing gap, not something this file tries to backfill in full). Added now specifically to cover notify()'s new "notifications.enabled" gate (2026-07-15 "ForMIA" design handoff's Quick Bus widget) — the first real, non-cosm *(3 undocumented)*
 - `tests/test_obligations.py`: Tax and compliance obligations (DEC-0040): deadlines moved off weekends and holidays, an extension to file never moving the money's date, reminders once each, unverified never shown as confirmed, repeats, and the one next step each Compliance row offers (DEC-0113). *(2 undocumented)*
 - `tests/test_observations_module.py`: Unit tests for modules.observations.module's pure functions, same style as tests/test_memories_module.py (no Qt event loop, no fixtures). *(1 undocumented)*
-- `tests/test_observations_web.py`: Observations' web screen (core/observations_web.py): findings across apps, and the open insights by source. *(2 undocumented)*
+- `tests/test_observations_web.py`: Observations' web screen (core/observations_web.py): findings across apps, and the open insights by source, each with its card (kind, the apps it used, where to settle it: DEC-0113). *(2 undocumented)*
 - `tests/test_ocr.py`: Reading photos and scans (core/ocr.py) and how the inbox and the textbook tutor use it. Most tests use a stand-in engine so they run anywhere; the ones marked `needs_tesseract` run the real program when it's installed.
 - `tests/test_offline_maps.py`: Vector offline maps (core/offline_maps.py): names, the box around waypoints, a map file's header, the cut. *(3 undocumented)*
 - `tests/test_ohms_law.py`: Unit tests for modules.toolbox.calculators.ohms_law.solve(). *(3 undocumented)*
@@ -1038,7 +1038,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-72 files, 12,949 lines
+72 files, 12,962 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
