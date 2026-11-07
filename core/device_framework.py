@@ -104,6 +104,9 @@ _VID_ONLY_BOARDS: dict[int, str] = {
 
 
 def identify_serial_board(vid: Optional[int], pid: Optional[int]) -> Optional[str]:
+    """Pure logic. Which board a USB serial device is from its vendor and product ids (an exact pair first, then
+    the vendor alone), or None.
+    """
     if vid is None:
         return None
     if pid is not None and (vid, pid) in _VID_PID_BOARDS:
@@ -113,6 +116,9 @@ def identify_serial_board(vid: Optional[int], pid: Optional[int]) -> Optional[st
 
 @dataclass
 class BlockDevice:
+    """A storage device lsblk reports: its name, size, mount point, file system, model, transport (usb...) and whether
+    it's removable.
+    """
     name: str
     size: str
     mountpoint: Optional[str]
@@ -133,12 +139,16 @@ class BlockDevice:
 
     @property
     def display_name(self) -> str:
+        """How it's shown: its model (or name) and size."""
         label = self.model.strip() if self.model else self.name
         return f"{label} ({self.size})"
 
 
 @dataclass
 class SerialDevice:
+    """A serial port: its device path, description, and USB vendor and product ids (none for a built-in or virtual
+    port).
+    """
     device: str
     description: str
     vid: Optional[int]
@@ -162,10 +172,12 @@ class SerialDevice:
 
     @property
     def identified_as(self) -> Optional[str]:
+        """The board it is, when its ids are known (Arduino, ESP32...), or None."""
         return identify_serial_board(self.vid, self.pid)
 
     @property
     def display_name(self) -> str:
+        """How it's shown: the board it is (or its description) and its port."""
         identified = self.identified_as
         label = identified if identified else self.description
         return f"{label} ({self.device})"
@@ -364,15 +376,21 @@ def eject_storage_device(disk_name: str) -> tuple[bool, str]:
 
 
 class DeviceFramework:
+    """What's plugged into this computer: external USB storage (lsblk) and USB serial boards (pyserial), detection
+    only; it notices devices coming and going so screens can say so.
+    """
     def __init__(self, context: "AppContext") -> None:
+        """Remembers nothing yet; refresh() keeps track of what was there last time."""
         self.context = context
         self._known_storage: dict[str, BlockDevice] = {}
         self._known_serial: dict[str, SerialDevice] = {}
 
     def list_block_devices(self) -> list[BlockDevice]:
+        """The external storage devices plugged in now ([] when lsblk isn't there)."""
         return list_block_devices()
 
     def list_serial_devices(self) -> list[SerialDevice]:
+        """The USB serial devices plugged in now ([] when they can't be listed)."""
         return list_serial_devices()
 
     def refresh(self) -> tuple[list[BlockDevice], list[SerialDevice]]:

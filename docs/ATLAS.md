@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 229,622 lines; 1043 files describe themselves; 5,426 of 13,517 classes and functions are documented.
+1043 files, 229,655 lines; 1043 files describe themselves; 5,446 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 103,524 lines; 4,695 of 5,630 classes and functions documented
+367 files, 103,557 lines; 4,715 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -110,11 +110,11 @@
 - `core/dev_map.py`: MIA's architecture and her branches of growth, derived from the code and the history (DEC-0078, T-0029; `docs/DEVELOPMENTAL_INDEPENDENCE_REVIEW.md` section 6.2). Never hand-drawn: read from the repository with Python's own `ast`, so nothing is run. *(2 undocumented)*
 - `core/dev_store.py`: Where the development history lives on this PC (DEC-0077, Zac 2026-11-04: "a way to not take up a ton of memory while maintaining MIAs ability to access the fullness of her memory and development"; `docs/DEVELOPMENTAL_INDEPENDENCE_REVIEW.md` section 6.5).
 - `core/dev_usage.py`: What each development model was used for, and when it ran out (DEC-0079, Zac 2026-11-03: "understanding usage and delegating tasks based on time available to use each model so that the dev team doesnt have to sit idle when one model is unavailable"; review section 6.4). *(2 undocumented)*
-- `core/device_framework.py`: Connected Device Framework — docs/ROADMAP.md milestone 11.1, the first piece of Field Kit. Detects and identifies devices physically attached to this Pi: USB storage (drives, SD cards, other Pis in USB mass-storage mode) via `lsblk`, and serial/MCU boards (Arduino, ESP32, etc.) via `pyserial`'s port *(10 undocumented)*
+- `core/device_framework.py`: Connected Device Framework — docs/ROADMAP.md milestone 11.1, the first piece of Field Kit. Detects and identifies devices physically attached to this Pi: USB storage (drives, SD cards, other Pis in USB mass-storage mode) via `lsblk`, and serial/MCU boards (Arduino, ESP32, etc.) via `pyserial`'s port
 - `core/device_help_manager.py`: Retrieval-grounded "what does this do / how do I use this device" answers — docs/ROADMAP.md milestone 5.4. This is explicitly **stage 1 ("Read & explain")** of the Self-Modification / Dev Mode staged plan in docs/ROADMAP.md: read-only retrieval over `docs/user_help/*.md` and module metadata, never a *(5 undocumented)*
 - `core/device_profile.py`: MIA runs as one codebase across two editions — docs/ROADMAP.md milestone 13.1: **Core** (the Pi 5 + AI HAT+ 2, resource-constrained, a field data-gathering tool) and **Home** (a desktop workstation, more storage/resources), distinguished only by `config.system.device_profile`. *(3 undocumented)*
 - `core/diagnostics.py`: Diagnostic procedures (ACAF step 4, T-0040; `docs/ACAF_REVIEW.md` section 6): a check-up written as a spec, not code, over what inspection's PASSIVE methods already read (core/inspection.py: the OS, CPU and memory, the drives, the network, the firewall, the AI runtime, MIA's own health). Nothing her
-- `core/discovery_manager.py`: Discovery — the AI-generated counterpart to Mission Pathways (core/pathway_manager.py, hand-authored) and the first real piece of the "Personal Capability & Progression Engine" the user described after Pathways shipped. Deliberately the smallest possible closed loop, not the full vision (cross-tree  *(10 undocumented)*
+- `core/discovery_manager.py`: Discovery — the AI-generated counterpart to Mission Pathways (core/pathway_manager.py, hand-authored) and the first real piece of the "Personal Capability & Progression Engine" the user described after Pathways shipped. Deliberately the smallest possible closed loop, not the full vision (cross-tree 
 - `core/document_text.py`: Text out of the documents the owner gives MIA: shared by the textbook tutor (core/textbook_manager.py) and the document inbox (core/inbox_manager.py). 2026-09-28.
 - `core/dungeon_actions.py`: The Dungeon's actions (DEC-0046, core/work_dungeon.py) on the action contract: proposed in plain words with the loot they bring, approved, run, undoable.
 - `core/email_drafts.py`: Email drafts (2026-10-01, accounts stage 3): the Assistant can write an email for you, and you choose what happens to it: **Send** (only when you press Send, from your own address, core/mail_send.py), **Copy** it, or open it in your mail app** (a mailto: link). MIA never sends anything by herself; n

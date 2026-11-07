@@ -103,6 +103,10 @@ _PROPOSAL_TAGS = ("Mission", "Summary", "Difficulty", "Skills", "Rationale")
 
 @dataclass
 class MissionProposal:
+    """A mission MIA suggests (generated, then checked in code): its name, summary, difficulty, rewards (XP from the
+    skills it grows and credits from its difficulty, never picked by the model), why it's useful, its status, and the
+    mission it became when accepted.
+    """
     proposal_id: str
     profile_id: str
     status: str = "pending"  # "pending" | "accepted" | "rejected"
@@ -122,6 +126,7 @@ class MissionProposal:
     mission_id: str = ""  # set once accepted — the resulting real Mission's id
 
     def to_dict(self) -> dict:
+        """The proposal as saved in mission_proposals.json."""
         return {
             "proposal_id": self.proposal_id,
             "profile_id": self.profile_id,
@@ -141,6 +146,7 @@ class MissionProposal:
 
     @staticmethod
     def from_dict(data: dict) -> "MissionProposal":
+        """A proposal from its saved dict; missing fields take their defaults."""
         return MissionProposal(
             proposal_id=data.get("proposal_id", uuid.uuid4().hex[:10]),
             profile_id=data.get("profile_id", ""),
@@ -223,7 +229,11 @@ def _parse_skill_rewards(raw_value: str, skill_manager) -> list[SkillWeight]:
 
 
 class DiscoveryManager:
+    """Discovery: one MIA-made mission suggestion at a time for a person, validated in code before it's shown, and a
+    real mission only when they accept it (mission_proposals.json, written through atomic_write_text).
+    """
     def __init__(self, context: AppContext) -> None:
+        """Loads the proposals."""
         self.context = context
         self._proposals: list[MissionProposal] = []
         self._load()
@@ -233,6 +243,7 @@ class DiscoveryManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads the proposals; a damaged file is logged, reported and starts empty."""
         if not _PROPOSALS_FILE.exists():
             self._proposals = []
             return
@@ -245,6 +256,7 @@ class DiscoveryManager:
             self._proposals = []
 
     def _save(self) -> None:
+        """Writes the proposals atomically."""
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
         atomic_write_text(_PROPOSALS_FILE,
             json.dumps({"proposals": [p.to_dict() for p in self._proposals]}, indent=2),
@@ -256,18 +268,21 @@ class DiscoveryManager:
     # ------------------------------------------------------------------
 
     def pending_proposal_for(self, profile_id: str) -> Optional[MissionProposal]:
+        """A person's proposal waiting for an answer, or None."""
         for proposal in self._proposals:
             if proposal.profile_id == profile_id and proposal.status == "pending":
                 return proposal
         return None
 
     def get_proposal(self, proposal_id: str) -> Optional[MissionProposal]:
+        """The proposal with this id, or None."""
         for proposal in self._proposals:
             if proposal.proposal_id == proposal_id:
                 return proposal
         return None
 
     def proposals_for_profile(self, profile_id: str) -> list[MissionProposal]:
+        """Every proposal made for a person."""
         return [p for p in self._proposals if p.profile_id == profile_id]
 
     # ------------------------------------------------------------------
