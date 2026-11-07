@@ -43,6 +43,9 @@ PORT = 8790
 
 @dataclass(frozen=True)
 class LocalModel:
+    """A model the phone can download and run: its id, name, what it's good for, its file, where it's downloaded from,
+    and about how big it is.
+    """
     model_id: str
     name: str
     about: str
@@ -153,6 +156,9 @@ class LocalModels:
     """`context.local_models` on the phone."""
 
     def __init__(self, context, binary: Optional[str], data_dir: Optional[Path] = None) -> None:
+        """The phone's models: the llama-server binary the phone app ships, the port, the models folder
+        (data/models/), and the state of the download, the server and a test run (each runs on its own thread).
+        """
         self.context = context
         self.binary = binary
         self.port = PORT
@@ -169,18 +175,25 @@ class LocalModels:
     # ------------------------------------------------------------------ what's here
 
     def path(self, model: LocalModel) -> Path:
+        """Where a model's file is kept."""
         return self.folder / model.file
 
     def available(self) -> bool:
+        """Whether this MIA has a model server to run (the phone app's binary exists)."""
         return bool(self.binary) and Path(self.binary).exists()
 
     def results(self, model_id: str) -> Optional[dict]:
+        """A model's saved test results, or None."""
         try:
             return json.loads((self.folder / f"test_{model_id}.json").read_text(encoding="utf-8"))
         except (OSError, ValueError):
             return None
 
     def status(self) -> dict:
+        """Everything the screen shows: each model (downloaded, partly downloaded, its results, the memory it needs),
+        the download, the server and any test run in progress, free memory, the fast cores, why Android last closed MIA,
+        and a note.
+        """
         with self._lock:
             download, server, run = dict(self._download), dict(self._server), dict(self._run)
         models = []
@@ -203,6 +216,9 @@ class LocalModels:
     # ------------------------------------------------------------------ download
 
     def download(self, model_id: str) -> None:
+        """Starts downloading a model in the background (one at a time; ValueError for an unknown model or one already
+        going).
+        """
         model = MODELS_BY_ID.get(model_id)
         if model is None:
             raise ValueError("MIA doesn't know that model.")
@@ -214,6 +230,10 @@ class LocalModels:
         threading.Thread(target=self._fetch, args=(model,), name="mia-model-download", daemon=True).start()
 
     def _fetch(self, model: LocalModel) -> None:
+        """The download: resumes a partial file where it stopped (a Range request; starting over if the server won't),
+        verifies TLS with certifi's certificates, reports progress, and only moves the file into place when it's whole.
+        A failure is said in words, asking to tap Download again.
+        """
         import ssl
 
         try:
@@ -255,6 +275,9 @@ class LocalModels:
                 self._download["finished"] = True
 
     def delete(self, model_id: str) -> None:
+        """Deletes a model's file, its partial download and its test results (stopping the server if it's running that
+        model).
+        """
         model = MODELS_BY_ID.get(model_id)
         if model is None:
             raise ValueError("MIA doesn't know that model.")
@@ -266,6 +289,9 @@ class LocalModels:
     # ------------------------------------------------------------------ the server
 
     def start(self, model_id: str) -> None:
+        """Starts the model server with a downloaded model, in the background, remembered (phone.model_id) so it starts
+        again with MIA.
+        """
         model = MODELS_BY_ID.get(model_id)
         if model is None or not self.path(model).exists():
             raise ValueError("Download that model first.")
@@ -278,6 +304,9 @@ class LocalModels:
         threading.Thread(target=self._launch, args=(model,), name="mia-model-server", daemon=True).start()
 
     def _launch(self, model: LocalModel) -> None:
+        """The server's start: llama-server on the fast cores (up to 4 threads), logging to server.log; waits up to five
+        minutes for it to answer, then points Talk at it. If it exits or takes too long, the state says why.
+        """
         from core.llm_manager import OpenAIBackend
 
         started = time.monotonic()
@@ -330,6 +359,9 @@ class LocalModels:
             config.save()
 
     def _loading_marker(self) -> Path:
+        """A file present only while a model loads: if it's still there at start-up, loading is what closed MIA, so
+        resume() doesn't try again by itself.
+        """
         return self.folder / "loading"
 
     def resume(self) -> None:
@@ -351,6 +383,7 @@ class LocalModels:
             self.start(model.model_id)
 
     def stop(self, forget: bool = True) -> None:
+        """Stops the model server (terminate, then kill after 10 seconds); forget=False keeps it remembered."""
         if forget:
             self._remember(None)
         process, self._process = self._process, None
@@ -366,6 +399,9 @@ class LocalModels:
     # ------------------------------------------------------------------ the test
 
     def run_test(self, count: int) -> None:
+        """Runs MIA's model test (core/model_bench.py) against the running model in the background, reporting progress
+        (one test at a time; ValueError when no model is running).
+        """
         from core import model_bench
         from core.llm_manager import OpenAIBackend
 
@@ -400,4 +436,5 @@ class LocalModels:
         threading.Thread(target=go, name="mia-model-test", daemon=True).start()
 
     def cancel_test(self) -> None:
+        """Asks the running test to stop after the case it's on."""
         self._stop_run = True
