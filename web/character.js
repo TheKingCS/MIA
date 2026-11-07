@@ -18,7 +18,7 @@
 
   function draw() {
     const me = page.me;
-    $("hero-name").textContent = me.name || "Character";
+    $("hero-name").textContent = "Character";  // the name is on the portrait card below (the canvas)
     $("hero-tagline").textContent = "Level " + me.level + (me.prestige_tier ? " · Prestige " + me.prestige_tier : "") +
       (page.member_since ? " · since " + day(page.member_since) : "");
     $("strip").replaceChildren(
@@ -48,28 +48,51 @@
       : el("p", { class: "empty" }, el("strong", {}, "Nothing unlocked yet."), "Go do something real: log workouts, finish missions, cook.");
     const tally = page.rarity.length ? el("div", { class: "chip-row" }, page.rarity.map((r) =>
       el("span", { class: "chip rarity " + RARITY[r.rarity] }, el("span", { class: "rarity-tag" }, r.rarity_name), " ×" + r.count))) : null;
-    $("panel").replaceChildren(
-      el("div", { class: "glass character-portrait" + (me.prestige_color ? " prestige-" + me.prestige_color : "") },
-        el("span", { class: "character-avatar", "aria-hidden": "true" }, "🧙"),
-        el("div", {}, el("strong", {}, "Level " + me.level), el("small", { class: "dim" }, "Character art is coming later."))),
+    // The design canvas (DEC-0113): the portrait, level, prestige and the XP meter first; then Stats (the six
+    // attributes, each with its meter), the collection by rarity, top skills; the rest below.
+    const ROMAN = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
+    const pct = me.xp_for_level ? Math.round(100 * me.xp_into_level / me.xp_for_level) : 0;
+    const unlocked = page.rarity.reduce((t, r) => t + r.count, 0);
+    $("strip").hidden = true;
+    $("panel").replaceChildren(...[
+      el("section", { class: "glass ch-hero" + (me.prestige_color ? " prestige-" + me.prestige_color : "") },
+        el("div", { class: "ch-portrait", role: "img", "aria-label": "Character art placeholder" }),
+        el("h2", {}, me.name || "You"),
+        el("div", { class: "ch-level" }, el("span", { class: "pw-label" }, "Level"), el("strong", {}, String(me.level)),
+          me.prestige_tier ? el("span", { class: "pw-label" }, "Prestige") : null, me.prestige_tier ? el("span", { class: "ch-prestige" }, ROMAN[me.prestige_tier] || String(me.prestige_tier)) : null),
+        el("div", { class: "ch-xp" }, el("div", { class: "meter", role: "meter", "aria-valuenow": String(pct), "aria-valuemin": "0", "aria-valuemax": "100",
+          "aria-label": me.xp_into_level + " of " + me.xp_for_level + " XP to level " + (me.level + 1) }, el("div", { class: "meter-fill", style: "width:" + pct + "%" })),
+          el("span", {}, me.total_xp.toLocaleString() + " lifetime XP")),
+        el("a", { class: "ch-credits", href: "shop.html" }, me.credits.toLocaleString() + " credits · Reward Shop ›")),
+      (page.attributes || []).length ? el("section", { class: "glass ch-panel", "aria-label": "Stats" }, el("p", { class: "pw-label" }, "Stats"),
+        el("div", { class: "ch-stats" }, ...page.attributes.map((a) => el("div", { class: "ch-stat", title: a.from.length ? a.from.join(" · ") : a.about },
+          el("span", { class: "dim" }, a.name), el("strong", {}, String(a.value)),
+          el("div", { class: "meter" }, el("div", { class: "meter-fill", style: "width:" + Math.round(100 * a.value / a.max) + "%" })))))) : null,
+      el("section", { class: "glass ch-panel", "aria-label": "Collection" }, el("p", { class: "pw-label" }, "Collection · " + unlocked + " Unlocked"),
+        el("div", { class: "ch-rarity" }, ...page.rarity.map((r) => el("div", { class: "ch-r " + RARITY[r.rarity] },
+          el("strong", {}, String(r.count)), el("span", {}, r.rarity_name))))),
+      el("section", { class: "glass ch-panel", "aria-label": "Top skills" }, el("div", { class: "ch-head" }, el("p", { class: "pw-label" }, "Top Skills"),
+        el("a", { href: "skills.html" }, "All skills ›")),
+        ...(page.top_skills && page.top_skills.length ? page.top_skills.map((s) => el("div", { class: "ch-row" }, el("span", {}, s.name), el("span", { class: "ch-lv" }, "Lv " + s.level)))
+          : [el("p", { class: "dim" }, "No skill XP yet.")])),
+      section("Buffs", (page.buffs || []).length ? MIAShell.buffChips(page.buffs)
+        : el("p", { class: "dim" }, "No buffs right now. Work out, cook, write, catch up with someone: good days earn them.")),
       page.chronicle ? sectionWith("The Chronicle", el("a", { class: "btn btn-ghost", href: "chronicle.html" }, "Read It"),
         el("div", { class: "chron-teaser" }, el("span", { class: "chron-title" }, page.chronicle.title + " · " + page.chronicle.dates +
           (page.chronicle.so_far ? " · so far" : "")), el("h3", {}, page.chronicle.name),
-          ...page.chronicle.story.map((line) => el("p", { class: "dim" }, line)))) : "",
-      section("Buffs", (page.buffs || []).length ? MIAShell.buffChips(page.buffs)
-        : el("p", { class: "dim" }, "No buffs right now. Work out, cook, write, catch up with someone: good days earn them.")),
-      attrs ? section("Attributes", el("p", { class: "dim" }, "Blue is training (your skills), which never goes down. Green is what you've done in the last 30 days. Gold is a buff."), attrs) : "",
+          ...page.chronicle.story.map((line) => el("p", { class: "dim" }, line)))) : null,
+      attrs ? el("details", { class: "glass money-section ch-more" }, el("summary", {}, el("h2", {}, "How your stats are made")),
+        el("p", { class: "dim" }, "Blue is training (your skills), which never goes down. Green is what you've done in the last 30 days. Gold is a buff."), attrs) : null,
       section("Lifetime stats", stats),
-      el("div", { class: "two-up" },
-        sectionWith("Top skills", el("a", { class: "btn btn-ghost", href: "skills.html" }, "All skills"), page.top_skills && page.top_skills.length
-          ? el("div", { class: "rows" }, page.top_skills.map((s) => el("div", { class: "row" }, el("div", { class: "row-title" }, s.icon + " " + s.name), el("span", { class: "chip" }, "Lv " + s.level))))
-          : el("p", { class: "dim" }, "No skill XP yet.")),
-        sectionWith("Latest missions", el("a", { class: "btn btn-ghost", href: "missions.html" }, "Missions"), page.latest_missions && page.latest_missions.length
-          ? el("div", { class: "rows" }, page.latest_missions.map((m) => el("div", { class: "row" }, el("div", { class: "row-title" }, m.icon + " " + m.name), el("span", { class: "dim" }, day(m.when)))))
-          : el("p", { class: "dim" }, "No missions completed yet."))),
-      section("Collection", tally, collection),
+      sectionWith("Latest missions", el("a", { class: "btn btn-ghost", href: "missions.html" }, "Missions"), page.latest_missions && page.latest_missions.length
+        ? el("div", { class: "rows" }, page.latest_missions.map((m) => el("div", { class: "row" }, el("div", { class: "row-title" }, m.icon + " " + m.name), el("span", { class: "dim" }, day(m.when)))))
+        : el("p", { class: "dim" }, "No missions completed yet.")),
+      section("Everything unlocked", tally, collection),
       page.emblems.length ? section("Prestige emblems", el("div", { class: "chip-row" }, page.emblems.map((e) =>
-        el("span", { class: "chip prestige-" + e.color }, "🏆 " + e.name)))) : "");
+        el("span", { class: "chip prestige-" + e.color }, "🏆 " + e.name)))) : null,
+    ].filter(Boolean));
+    const portrait = document.querySelector(".ch-portrait");
+    if (portrait && window.MIAIcons) MIAIcons.badge(portrait, "character");
   }
 
   MIAShell.start(async () => {

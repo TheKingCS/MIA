@@ -1315,3 +1315,38 @@ body.mod-maps .hero { display: none; }
 .gh-stages span { flex: 1; height: 4px; border-radius: 999px; background: rgba(var(--rgb-line), 0.18); }
 .gh-stages span.on { background: var(--atmo); }
 .gh-stage { font-size: var(--text-sm); color: var(--atmo); }
+
+/* ---------------------------------------------------------------- Character (DEC-0113 canvas; web/character.js) */
+.ch-hero { display: grid; justify-items: center; gap: 8px; padding: 22px 16px 16px; margin-bottom: var(--gap);
+  background-image: linear-gradient(rgba(var(--rgb-accent), 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(var(--rgb-accent), 0.05) 1px, transparent 1px);
+  background-size: 16px 16px; }
+.ch-portrait { width: 108px; height: 108px; border-radius: 50%; display: grid; place-items: center; border: 1px dashed rgba(var(--rgb-accent), 0.5);
+  background: radial-gradient(circle, rgba(var(--rgb-accent), 0.1), transparent 70%); color: var(--accent); }
+.ch-portrait svg { width: 54px; height: 54px; }
+.ch-hero h2 { margin: 0; font-size: var(--text-xl); font-weight: 600; }
+.ch-level { display: flex; gap: 12px; align-items: baseline; }
+.ch-level .pw-label { margin: 0; }
+.ch-level strong { font-family: var(--font-mono); font-size: 28px; }
+.ch-prestige { font-family: var(--font-mono); font-size: 20px; }
+.ch-xp { width: min(260px, 100%); display: grid; gap: 4px; text-align: center; font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); }
+.ch-credits { font-size: var(--text-sm); }
+.ch-panel { display: grid; gap: 10px; padding: 14px; margin-bottom: var(--gap); }
+.ch-panel .pw-label { margin: 0; }
+.ch-head { display: flex; justify-content: space-between; align-items: baseline; }
+.ch-head a { font-size: var(--text-sm); }
+.ch-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.ch-stat { display: grid; gap: 4px; }
+.ch-stat .dim { font-size: 13px; }
+.ch-stat strong { font-family: var(--font-mono); font-size: 22px; font-weight: 500; }
+.ch-rarity { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.ch-r { display: grid; justify-items: center; gap: 2px; padding: 8px 0; border-radius: var(--radius-sm); border: 1px solid currentColor; }
+.ch-r strong { font-family: var(--font-mono); font-size: 18px; font-weight: 500; }
+.ch-r span { font-size: 10px; color: var(--text-dim); }
+.ch-r.r-common { color: var(--rarity-common); } .ch-r.r-uncommon { color: var(--rarity-uncommon); } .ch-r.r-rare { color: var(--rarity-rare); }
+.ch-r.r-epic { color: var(--rarity-epic); } .ch-r.r-legendary { color: var(--rarity-legendary); }
+.ch-row { display: flex; justify-content: space-between; align-items: center; min-height: 40px; border-top: 1px solid var(--line); font-size: var(--text-sm); }
+.ch-lv { font-family: var(--font-mono); color: var(--text-dim); }
+.ch-more summary { cursor: pointer; list-style: none; }
+.ch-more summary::-webkit-details-marker { display: none; }
+.ch-more summary h2 { display: inline; }
+@media (min-width: 900px) { .ch-stats { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
