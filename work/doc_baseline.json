@@ -68,7 +68,6 @@
   "core/debt_math.py": 3,
   "core/dev_checks.py": 5,
   "core/dev_knowledge.py": 6,
-  "core/dev_lab.py": 12,
   "core/dev_ledger.py": 1,
   "core/dev_map.py": 2,
   "core/dev_usage.py": 2,

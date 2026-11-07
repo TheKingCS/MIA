@@ -78,6 +78,10 @@ DRAFTED, WRITTEN, READY, NOT_READY, MERGED, REVERTED, REJECTED = (
 
 @dataclass
 class Proposal:
+    """One improvement MIA proposed: its title, the problem, the evidence and the plan; its status; its lab branch and
+    the commit it started from; the files it changed and any protected ones it touched (refused); the test results
+    against the starting commit; what the coder said; the commit it was merged as; a note.
+    """
     proposal_id: str
     title: str
     problem: str
@@ -97,10 +101,14 @@ class Proposal:
 
 
 def _now() -> str:
+    """Now, as an ISO timestamp to the second."""
     return datetime.now().isoformat(timespec="seconds")
 
 
 def _git(*args: str, cwd: Optional[Path] = None, author: Optional[tuple] = None, check: bool = True) -> str:
+    """Runs git (in the running copy unless told otherwise, with an author when committing) and returns its output;
+    RuntimeError with git's words when it fails and check is on.
+    """
     cwd = cwd or ROOT
     who = ["-c", f"user.name={author[0]}", "-c", f"user.email={author[1]}"] if author else []
     out = subprocess.run(["git", *who, *args], cwd=str(cwd), capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=300,
@@ -160,6 +168,7 @@ Rules:
 
 
 def _load() -> list[Proposal]:
+    """Every proposal from data/lab/proposals.json ([] when there's none or it can't be read)."""
     try:
         raw = json.loads(_STORE.read_text(encoding="utf-8")) if _STORE.exists() else []
     except (OSError, ValueError):
@@ -168,15 +177,18 @@ def _load() -> list[Proposal]:
 
 
 def _save(proposals: list[Proposal]) -> None:
+    """Writes every proposal."""
     _STORE.parent.mkdir(parents=True, exist_ok=True)
     _STORE.write_text(json.dumps([asdict(p) for p in proposals], indent=1), encoding="utf-8")
 
 
 def all_proposals() -> list[Proposal]:
+    """Every proposal."""
     return _load()
 
 
 def get(proposal_id: str) -> Proposal:
+    """The proposal with this id, or ValueError."""
     found = next((p for p in _load() if p.proposal_id == proposal_id), None)
     if found is None:
         raise ValueError("That proposal isn't there.")
@@ -184,6 +196,7 @@ def get(proposal_id: str) -> Proposal:
 
 
 def _put(p: Proposal) -> Proposal:
+    """Saves one proposal (replacing its earlier self), stamping updated_at."""
     proposals = [x for x in _load() if x.proposal_id != p.proposal_id] + [p]
     p.updated_at = _now()
     _save(sorted(proposals, key=lambda x: x.created_at))
@@ -191,6 +204,7 @@ def _put(p: Proposal) -> Proposal:
 
 
 def folder(p: Proposal) -> Path:
+    """The proposal's lab folder (its own git worktree beside MIA: ../MIA-lab/<id>)."""
     return LAB_ROOT / p.proposal_id
 
 
@@ -210,6 +224,7 @@ def create(title: str, problem: str, evidence: str = "", plan: str = "") -> Prop
 
 
 def _python() -> str:
+    """The virtual environment's Python (Windows or Linux layout), for running the suite in the lab."""
     found = ROOT / ".venv" / "Scripts" / "python.exe"
     if not found.exists():
         found = ROOT / ".venv" / "bin" / "python"
@@ -254,6 +269,7 @@ def write(proposal_id: str, coder: Optional[Callable] = None, again: str = "") -
 
 
 def _suite_once(cwd: Path) -> dict:
+    """Runs the whole test suite once in a folder (offscreen Qt, no cache, with a timeout) and reads its result."""
     out = subprocess.run([_python(), "-m", "pytest", "-q", "-p", "no:cacheprovider"], cwd=str(cwd),
                          capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=SUITE_TIMEOUT,
                          env={**__import__("os").environ, "QT_QPA_PLATFORM": "offscreen"},
@@ -350,6 +366,9 @@ def retry(proposal_id: str) -> Proposal:
 
 
 def reject(proposal_id: str, why: str = "") -> Proposal:
+    """Rejects a proposal: removes its worktree and branch (cleanup failures only logged). One already merged can't be
+    rejected; it's taken back with a revert.
+    """
     p = get(proposal_id)
     if p.status in (MERGED,):
         raise ValueError("It's already in; undo it with a revert instead.")

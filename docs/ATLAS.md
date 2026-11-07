@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 229,136 lines; 1043 files describe themselves; 5,106 of 13,517 classes and functions are documented.
+1043 files, 229,155 lines; 1043 files describe themselves; 5,118 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 103,038 lines; 4,375 of 5,630 classes and functions documented
+367 files, 103,057 lines; 4,387 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -105,7 +105,7 @@
 - `core/debt_math.py`: Pure logic (DEC-0052, the "debts" question plan): when each debt is paid off at the current payments, the interest it costs, and what an extra amount a month changes. MIA never asks the model to do this arithmetic. *(3 undocumented)*
 - `core/dev_checks.py`: The development checks that need a real run (build plan step 2, DEC-0094): the measures behind the loops `dev.suite`, `dev.suite_time`, `dev.reverts`, `dev.vulnerable` and `dev.outdated` in core/loops.py. *(5 undocumented)*
 - `core/dev_knowledge.py`: The Development Knowledge Vault (DEC-0073; `docs/DEVELOPMENTAL_INDEPENDENCE_REVIEW.md` section 4.1): what the team learned building MIA, kept so MIA and every agent can use it, and so MIA can one day do the work without them. *(6 undocumented)*
-- `core/dev_lab.py`: MIA's development lab (DEC-0058; the ROADMAP's self-modification stages 2 and 3; docs/INSPECTION_AND_SELF_PLAN.md section 6). MIA proposes an improvement; the change is written and tested in an isolated copy; it reaches the running MIA only when Zac approves. *(12 undocumented)*
+- `core/dev_lab.py`: MIA's development lab (DEC-0058; the ROADMAP's self-modification stages 2 and 3; docs/INSPECTION_AND_SELF_PLAN.md section 6). MIA proposes an improvement; the change is written and tested in an isolated copy; it reaches the running MIA only when Zac approves.
 - `core/dev_ledger.py`: What MIA (and every member of the council) can be trusted with, measured (DEC-0075, T-0028; `docs/DEVELOPMENTAL_INDEPENDENCE_REVIEW.md` section 5). *(1 undocumented)*
 - `core/dev_map.py`: MIA's architecture and her branches of growth, derived from the code and the history (DEC-0078, T-0029; `docs/DEVELOPMENTAL_INDEPENDENCE_REVIEW.md` section 6.2). Never hand-drawn: read from the repository with Python's own `ast`, so nothing is run. *(2 undocumented)*
 - `core/dev_store.py`: Where the development history lives on this PC (DEC-0077, Zac 2026-11-04: "a way to not take up a ton of memory while maintaining MIAs ability to access the fullness of her memory and development"; `docs/DEVELOPMENTAL_INDEPENDENCE_REVIEW.md` section 6.5).
