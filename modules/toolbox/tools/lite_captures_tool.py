@@ -50,16 +50,19 @@ def format_capture_card_text(proposal: CaptureProposal) -> str:
 
 
 class LiteCapturesTool(ToolboxTool):
+    """Field Captures in the Toolbox: voice notes captured on a field device, reviewed here before they become Journal entries (accept or reject each)."""
     tool_id = "lite_captures"
     display_name = "Field Captures"
     description = "Review voice notes captured in the field before they become real Journal entries."
     icon = "\U0001F399"  # microphone
 
     def __init__(self, context) -> None:
+        """Nothing built yet: the list is made in build_widget()."""
         super().__init__(context)
         self._list_layout: Optional[QVBoxLayout] = None
 
     def build_widget(self) -> QWidget:
+        """The screen: a title, a hint, and the list of captures waiting for review."""
         widget = QWidget()
         outer = QVBoxLayout(widget)
         outer.setContentsMargins(24, 24, 24, 24)
@@ -94,6 +97,7 @@ class LiteCapturesTool(ToolboxTool):
         # gui/user_memory_dialog.py's own _refresh(), both fixed the
         # same way). Caught here by an actual screenshot showing old
         # and new card text superimposed, not assumed safe.
+        """Empties the list, hiding and detaching each card before it's deleted so none ghost on screen."""
         while self._list_layout.count():
             item = self._list_layout.takeAt(0)
             child = item.widget()
@@ -103,6 +107,7 @@ class LiteCapturesTool(ToolboxTool):
                 child.deleteLater()
 
     def _refresh(self) -> None:
+        """Shows a card per capture waiting for review; says when there are none, or when captures aren't available."""
         self._clear()
         if self.context.lite_captures is None:
             self._list_layout.addWidget(QLabel("Field Captures isn't available."))
@@ -119,6 +124,7 @@ class LiteCapturesTool(ToolboxTool):
             self._list_layout.addWidget(self._build_card(proposal))
 
     def _build_card(self, proposal: CaptureProposal) -> QFrame:
+        """One capture's card: what was said and when, with Accept and Reject."""
         card = QFrame()
         card.setObjectName("DashboardCard")
         layout = QVBoxLayout(card)
@@ -142,6 +148,7 @@ class LiteCapturesTool(ToolboxTool):
         return card
 
     def _on_accept(self, proposal_id: str) -> None:
+        """Accepts a capture (it becomes a Journal entry); publishes capture.accepted only when it was still waiting, so nothing reacts twice."""
         proposal = self.context.lite_captures.get_proposal(proposal_id)
         was_pending = proposal is not None and proposal.status == "pending"
         self.context.lite_captures.accept_proposal(proposal_id)
@@ -150,5 +157,6 @@ class LiteCapturesTool(ToolboxTool):
         self._refresh()
 
     def _on_reject(self, proposal_id: str) -> None:
+        """Rejects a capture and refreshes the list."""
         self.context.lite_captures.reject_proposal(proposal_id)
         self._refresh()

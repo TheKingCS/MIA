@@ -47,23 +47,27 @@ def web_home_url(base: str, token: str, scale: float = 1.0, high_contrast: bool 
 
 
 class WebHomeModule(ModuleBase):
+    """Home on the desktop: MIA's web front end (web/) shown in the built-in browser, signed in as whoever is signed in here, in their text size and contrast."""
     module_id = "web_home"
     display_name = "Home (preview)"
     description = "MIA herself: her presence, today's one thing, and a chat with her."
     icon = "\U0001F52E"  # crystal ball: MIA's presence
 
     def __init__(self, context) -> None:
+        """Nothing shown yet: the browser view (or the message when there's none) is made in get_widget()."""
         super().__init__(context)
         self._view = None
         self._message: Optional[QLabel] = None
         self._url = ""
 
     def on_load(self) -> None:
+        """Reloads the page when someone else signs in or the display settings change."""
         super().on_load()
         self.context.events.subscribe("profile.switched", lambda **_: self.reload())
         self.context.events.subscribe("display.changed", lambda **_: self.reload())
 
     def _address(self) -> Optional[str]:
+        """The page's address: the local server (started if needed) with a session for the signed-in person and their text scale and contrast; None when there's no server, no one signed in, or no session."""
         from core import accessibility
         from core.person_settings import person_id
 
@@ -79,6 +83,7 @@ class WebHomeModule(ModuleBase):
         return web_home_url(server.local_url, token, scale, contrast)
 
     def reload(self) -> None:
+        """Loads the page again for the current person (or updates the message saying why it can't); nothing before the page was first opened."""
         if self._view is None and self._message is None:
             return  # not opened yet
         self._url = self._address() or ""
@@ -88,11 +93,13 @@ class WebHomeModule(ModuleBase):
             self._message.setText(self._explain())
 
     def _explain(self) -> str:
+        """Why Home can't show: the local server's last problem, or that someone needs to sign in."""
         server = getattr(self.context, "phone_server", None)
         problem = getattr(server, "last_error", "") if server is not None else "MIA's local server isn't available."
         return problem or "Sign in to see your Home."
 
     def get_widget(self) -> QWidget:
+        """The page: the web front end in QtWebEngine, or, without QtWebEngine or an address, a message saying why with a way to open it in the system browser."""
         widget = QWidget()
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(0, 0, 0, 0)

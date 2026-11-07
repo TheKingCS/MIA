@@ -51,12 +51,14 @@ from modules.toolbox.tools.stopwatch_tool import StopwatchTool
 
 
 class ToolboxModule(ModuleBase):
+    """The Toolbox app (desktop): calculators and quick tools (calendar, alarm, stopwatch...), listed on one page, each opening in place with a way back."""
     module_id = "toolbox"
     display_name = "Toolbox"
     description = "Calculators, unit conversion, and other quick tools."
     icon = "\U0001F9F0"  # toolbox
 
     def __init__(self, context) -> None:
+        """Makes each tool (cheap: their screens are built on first open) and remembers no pages yet."""
         super().__init__(context)
         self._stack: QStackedWidget | None = None
         self._list_page: QWidget | None = None
@@ -74,6 +76,7 @@ class ToolboxModule(ModuleBase):
         ]
 
     def get_widget(self) -> QWidget:
+        """The page stack, starting on the list."""
         self._stack = QStackedWidget()
         self._list_page = self._build_list_page()
         self._stack.addWidget(self._list_page)
@@ -81,6 +84,7 @@ class ToolboxModule(ModuleBase):
         return self._stack
 
     def _build_list_page(self) -> QWidget:
+        """The list page: a row for every tool, then every calculator by category."""
         page = QWidget()
         outer = QVBoxLayout(page)
         outer.setContentsMargins(24, 24, 24, 24)
@@ -136,6 +140,7 @@ class ToolboxModule(ModuleBase):
         return page
 
     def _build_item_row(self, display_name: str, description: str, on_open: Callable[[], None]) -> QFrame:
+        """One tool's or calculator's row: its name and description, and an Open button."""
         row = QFrame()
         row.setObjectName("CharacterPanel")  # reuse the dashed-panel style
         layout = QHBoxLayout(row)
@@ -158,6 +163,7 @@ class ToolboxModule(ModuleBase):
         return row
 
     def _open_item(self, kind: str, item_id: str, build_widget: Callable[[], QWidget]) -> None:
+        """Opens a tool or calculator: its page (with a Back button) is built the first time and kept after."""
         if self._stack is None:
             return
 
@@ -181,5 +187,6 @@ class ToolboxModule(ModuleBase):
         self._stack.setCurrentWidget(self._item_pages[key])
 
     def _show_list_page(self) -> None:
+        """Goes back to the list."""
         if self._stack is not None and self._list_page is not None:
             self._stack.setCurrentWidget(self._list_page)

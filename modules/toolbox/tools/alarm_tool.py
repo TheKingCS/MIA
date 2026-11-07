@@ -49,16 +49,19 @@ def format_alarm_row(alarm: Alarm) -> str:
 
 
 class AlarmTool(ToolboxTool):
+    """Alarms in the Toolbox: add, edit and delete alarms at a time with optional repeat days, ticked on or off in the list."""
     tool_id = "alarm"
     display_name = "Alarm"
     description = "Set alarms for a specific time, with optional repeat days."
     icon = "⏰"  # alarm clock
 
     def __init__(self, context) -> None:
+        """Nothing built yet: the list is made in build_widget()."""
         super().__init__(context)
         self._list: Optional[QListWidget] = None
 
     def build_widget(self) -> QWidget:
+        """The screen: a hint, the alarms list, and Add, Edit and Delete."""
         widget = QWidget()
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(24, 24, 24, 24)
@@ -95,6 +98,7 @@ class AlarmTool(ToolboxTool):
     # ------------------------------------------------------------------
 
     def _refresh_list(self) -> None:
+        """Lists every alarm with its tick (signals held while rebuilding, so the ticks don't count as changes)."""
         self._list.blockSignals(True)  # rebuilding shouldn't re-trigger _on_item_changed
         self._list.clear()
         for alarm in self.context.alarms.all_alarms():
@@ -106,6 +110,7 @@ class AlarmTool(ToolboxTool):
         self._list.blockSignals(False)
 
     def _selected_alarm_id(self) -> Optional[str]:
+        """The selected alarm's id, or None."""
         item = self._list.currentItem()
         if item is None:
             return None
@@ -116,11 +121,13 @@ class AlarmTool(ToolboxTool):
     # ------------------------------------------------------------------
 
     def _on_item_changed(self, item: QListWidgetItem) -> None:
+        """A tick turns its alarm on, an untick off."""
         alarm_id = item.data(Qt.ItemDataRole.UserRole)
         enabled = item.checkState() == Qt.CheckState.Checked
         self.context.alarms.update_alarm(alarm_id, enabled=enabled)
 
     def _on_add(self) -> None:
+        """Adds an alarm from the dialog and refreshes the list."""
         dialog = AddEditAlarmDialog()
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -133,6 +140,7 @@ class AlarmTool(ToolboxTool):
         self._refresh_list()
 
     def _on_edit(self) -> None:
+        """Edits the selected alarm in the dialog (asks for a selection first)."""
         alarm_id = self._selected_alarm_id()
         if alarm_id is None:
             QMessageBox.information(None, "No Alarm Selected", "Select an alarm to edit.")
@@ -156,6 +164,7 @@ class AlarmTool(ToolboxTool):
         self._refresh_list()
 
     def _on_delete(self) -> None:
+        """Deletes the selected alarm after asking (asks for a selection first)."""
         alarm_id = self._selected_alarm_id()
         if alarm_id is None:
             QMessageBox.information(None, "No Alarm Selected", "Select an alarm to delete.")

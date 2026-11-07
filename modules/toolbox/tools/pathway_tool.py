@@ -57,16 +57,19 @@ def format_pathway_row(pathway: Pathway, progress: Optional[PathwayProgress]) ->
 
 
 class PathwayTool(ToolboxTool):
+    """Pathways in the Toolbox: guided sequences of missions that build a skill, with the person's progress on each, and Start."""
     tool_id = "pathways"
     display_name = "Pathways"
     description = "Guided mission sequences that build out a skill."
     icon = "\U0001F5FA️"  # world map
 
     def __init__(self, context) -> None:
+        """Nothing built yet: the list is made in build_widget()."""
         super().__init__(context)
         self._pathway_list: Optional[QListWidget] = None
 
     def build_widget(self) -> QWidget:
+        """The screen: the pathways list and a Start button."""
         widget = QWidget()
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(24, 24, 24, 24)
@@ -93,12 +96,14 @@ class PathwayTool(ToolboxTool):
     # ------------------------------------------------------------------
 
     def _active_profile_id(self) -> Optional[str]:
+        """Who is signed in, or None."""
         if self.context.profiles is None:
             return None
         active = self.context.profiles.get_active_profile()
         return active.profile_id if active else None
 
     def _refresh_pathway_list(self) -> None:
+        """Lists every pathway with the signed-in person's progress, keeping the one selected."""
         previously_selected = self._selected_pathway_id()
         self._pathway_list.clear()
         if self.context.pathways is None:
@@ -119,6 +124,7 @@ class PathwayTool(ToolboxTool):
                     break
 
     def _selected_pathway_id(self) -> Optional[str]:
+        """The selected pathway's id, or None."""
         item = self._pathway_list.currentItem()
         if item is None:
             return None
@@ -129,6 +135,7 @@ class PathwayTool(ToolboxTool):
     # ------------------------------------------------------------------
 
     def _on_start_pathway(self) -> None:
+        """Starts the selected pathway for the signed-in person (its first mission) and says so; asks for a selection or a sign-in first."""
         pathway_id = self._selected_pathway_id()
         if pathway_id is None:
             QMessageBox.information(None, "No Pathway Selected", "Select a pathway to start.")

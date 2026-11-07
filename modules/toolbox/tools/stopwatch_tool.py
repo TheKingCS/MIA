@@ -64,12 +64,14 @@ def format_elapsed(total_ms: int) -> str:
 
 
 class StopwatchTool(ToolboxTool):
+    """A stopwatch in the Toolbox: start, stop, lap and reset, timed by the monotonic clock so a busy screen never loses time."""
     tool_id = "stopwatch"
     display_name = "Stopwatch"
     description = "Start, stop, lap, and reset a simple stopwatch."
     icon = "⏱"  # stopwatch
 
     def __init__(self, context) -> None:
+        """Starts at zero, stopped, with no laps, and the timer that redraws the readout."""
         super().__init__(context)
         self._elapsed_ms = 0
         self._running = False
@@ -87,6 +89,7 @@ class StopwatchTool(ToolboxTool):
         self._laps_list: Optional[QListWidget] = None
 
     def build_widget(self) -> QWidget:
+        """The screen: the large readout, Start/Stop, Lap and Reset, and the laps."""
         widget = QWidget()
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(24, 24, 24, 24)
@@ -127,11 +130,13 @@ class StopwatchTool(ToolboxTool):
     # ------------------------------------------------------------------
 
     def _current_elapsed_ms(self) -> int:
+        """Milliseconds on the watch: what was banked, plus the running stretch when it's going."""
         if self._running:
             return self._elapsed_ms + int((time.monotonic() - self._start_monotonic) * 1000)
         return self._elapsed_ms
 
     def _update_display(self) -> None:
+        """Redraws the readout."""
         self._readout.setText(format_elapsed(self._current_elapsed_ms()))
 
     # ------------------------------------------------------------------
@@ -139,6 +144,7 @@ class StopwatchTool(ToolboxTool):
     # ------------------------------------------------------------------
 
     def _on_start_stop(self) -> None:
+        """Stops (banking the time; Reset on, Lap off) or starts (Lap on, Reset off)."""
         if self._running:
             self._elapsed_ms = self._current_elapsed_ms()
             self._running = False
@@ -156,16 +162,19 @@ class StopwatchTool(ToolboxTool):
             self._reset_button.setEnabled(False)
 
     def _on_lap(self) -> None:
+        """Keeps the time now as a lap."""
         self._laps.append(self._current_elapsed_ms())
         self._refresh_laps()
 
     def _on_reset(self) -> None:
+        """Back to zero with no laps."""
         self._elapsed_ms = 0
         self._laps = []
         self._update_display()
         self._refresh_laps()
 
     def _refresh_laps(self) -> None:
+        """Lists the laps newest first, each with its time and its gap since the one before."""
         self._laps_list.clear()
         for idx in range(len(self._laps) - 1, -1, -1):
             lap_ms = self._laps[idx]

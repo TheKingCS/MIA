@@ -54,18 +54,21 @@ _MARKED_DATE_COLOR = "#4fd1c5"
 
 
 class CalendarTool(ToolboxTool):
+    """The calendar in the Toolbox: a month with days that have events in bold, and the selected day's agenda to add, edit and delete."""
     tool_id = "calendar"
     display_name = "Calendar"
     description = "Add and browse dated events."
     icon = "\U0001F4C5"  # calendar
 
     def __init__(self, context) -> None:
+        """Nothing built yet: the calendar and agenda are made in build_widget()."""
         super().__init__(context)
         self._calendar: Optional[QCalendarWidget] = None
         self._agenda_label: Optional[QLabel] = None
         self._agenda_list: Optional[QListWidget] = None
 
     def build_widget(self) -> QWidget:
+        """The screen: the month calendar beside the day's agenda with Add, Edit and Delete."""
         widget = QWidget()
         layout = QHBoxLayout(widget)
         layout.setContentsMargins(24, 24, 24, 24)
@@ -113,6 +116,7 @@ class CalendarTool(ToolboxTool):
     # ------------------------------------------------------------------
 
     def _refresh_markers(self) -> None:
+        """Marks in bold every day of the month shown that has an event (clearing the old marks first)."""
         self._calendar.setDateTextFormat(QDate(), QTextCharFormat())
 
         marked_format = QTextCharFormat()
@@ -126,6 +130,7 @@ class CalendarTool(ToolboxTool):
             self._calendar.setDateTextFormat(QDate.fromString(date_str, _ISO_DATE_FORMAT), marked_format)
 
     def _refresh_agenda(self) -> None:
+        """Lists the selected day's events, or "No events." """
         selected = self._calendar.selectedDate()
         date_str = selected.toString(_ISO_DATE_FORMAT)
         self._agenda_label.setText(f"Events on {selected.toString('MMMM d, yyyy')}")
@@ -146,6 +151,7 @@ class CalendarTool(ToolboxTool):
             self._agenda_list.addItem(item)
 
     def _selected_event_id(self) -> Optional[str]:
+        """The selected event's id, or None."""
         item = self._agenda_list.currentItem()
         if item is None:
             return None
@@ -156,6 +162,7 @@ class CalendarTool(ToolboxTool):
     # ------------------------------------------------------------------
 
     def _on_add(self) -> None:
+        """Adds an event from the dialog (the selected day to start), then refreshes the marks and the agenda."""
         default_date = self._calendar.selectedDate().toString(_ISO_DATE_FORMAT)
         dialog = AddEditEventDialog(default_date=default_date)
         if dialog.exec() != QDialog.DialogCode.Accepted:
@@ -173,6 +180,7 @@ class CalendarTool(ToolboxTool):
         self._refresh_agenda()
 
     def _on_edit(self) -> None:
+        """Edits the selected event in the dialog (asks for a selection first)."""
         event_id = self._selected_event_id()
         if event_id is None:
             QMessageBox.information(None, "No Event Selected", "Select an event to edit.")
@@ -196,6 +204,7 @@ class CalendarTool(ToolboxTool):
         self._refresh_agenda()
 
     def _on_delete(self) -> None:
+        """Deletes the selected event after asking (asks for a selection first)."""
         event_id = self._selected_event_id()
         if event_id is None:
             QMessageBox.information(None, "No Event Selected", "Select an event to delete.")

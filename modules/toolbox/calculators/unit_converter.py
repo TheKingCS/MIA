@@ -31,6 +31,7 @@ from core.calculator_engine import CalculatorPlugin
 
 
 def _linear(factor: float):
+    """Pure logic. A unit that's a fixed multiple of its category's base: (to base, from base)."""
     return (lambda v: v * factor, lambda v: v / factor)
 
 
@@ -153,10 +154,12 @@ _MPG_TO_KM_PER_L = 1.609344 / 3.785411784  # 1 mile / 1 US gallon, in km / L
 
 
 def _l_per_100km_to_base(l_per_100km: float) -> float:
+    """Pure logic. Litres per 100 km as km per litre (fuel economy's base)."""
     return 100.0 / l_per_100km
 
 
 def _base_to_l_per_100km(km_per_l: float) -> float:
+    """Pure logic. Km per litre as litres per 100 km."""
     return 100.0 / km_per_l
 
 
@@ -210,6 +213,7 @@ def resolve_unit_key(units: dict, text: str) -> Optional[str]:
 
 
 class UnitConverterCalculator(CalculatorPlugin):
+    """The unit converter: a category (length, temperature, fuel economy...), from and to units, and the answer as you type."""
     calculator_id = "unit_converter"
     display_name = "Unit Converter"
     category = "General"
@@ -220,6 +224,7 @@ class UnitConverterCalculator(CalculatorPlugin):
     )
 
     def build_widget(self) -> QWidget:
+        """The screen: category, value, from and to units, and the result."""
         widget = QWidget()
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(24, 24, 24, 24)
@@ -262,6 +267,7 @@ class UnitConverterCalculator(CalculatorPlugin):
         return widget
 
     def _on_category_changed(self, category: str) -> None:
+        """Fills both unit lists with the category's units (two different ones picked to start), without converting halfway, then converts."""
         units = list(UNIT_CATEGORIES[category].keys())
         self._from_combo.blockSignals(True)
         self._to_combo.blockSignals(True)
@@ -276,6 +282,7 @@ class UnitConverterCalculator(CalculatorPlugin):
         self._recompute()
 
     def _recompute(self) -> None:
+        """Converts the value through the category's base unit and shows it, or asks for a number."""
         from_unit = self._from_combo.currentText()
         to_unit = self._to_combo.currentText()
         if not from_unit or not to_unit:

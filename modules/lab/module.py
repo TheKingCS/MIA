@@ -57,12 +57,14 @@ def format_reading_row(reading: Reading) -> str:
 
 
 class LabModule(ModuleBase):
+    """The Lab app (desktop): readings kept in named series (sensors, experiments, calibration), listed and charted."""
     module_id = "lab"
     display_name = "The Lab"
     description = "Sensor testing, experiments, calibration, and graphs."
     icon = "\U0001F9EA"  # test tube
 
     def __init__(self, context) -> None:
+        """Nothing built yet: the page is made in get_widget()."""
         super().__init__(context)
         self._series_combo: Optional[QComboBox] = None
         self._value_edit: Optional[QLineEdit] = None
@@ -73,6 +75,7 @@ class LabModule(ModuleBase):
         self._current_readings: list[Reading] = []
 
     def get_widget(self) -> QWidget:
+        """The page: the series picker, a reading's value, unit and note with Add, the readings list with Delete, and the chart."""
         widget = QWidget()
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(24, 24, 24, 24)
@@ -134,6 +137,7 @@ class LabModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _on_add_reading(self) -> None:
+        """Adds the reading typed to the series picked (both checked: a series name and a number), then shows the series."""
         series_id = self._series_combo.currentText().strip()
         if not series_id:
             QMessageBox.information(None, "No Series", "Pick or type a series name first.")
@@ -164,6 +168,7 @@ class LabModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _on_delete_reading(self) -> None:
+        """Deletes the reading selected and shows the series again."""
         row = self._readings_list.currentRow()
         if row < 0 or row >= len(self._current_readings):
             QMessageBox.information(None, "No Reading Selected", "Select a reading to delete.")
@@ -177,6 +182,7 @@ class LabModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _refresh_series(self, series_id: str) -> None:
+        """Shows a series: its readings listed, and charted."""
         series_id = series_id.strip()
         self._current_readings = self.context.data_logger.readings_for(series_id) if series_id else []
 
@@ -187,6 +193,7 @@ class LabModule(ModuleBase):
         self._update_chart()
 
     def _update_chart(self) -> None:
+        """Charts the series' readings in order as a line."""
         chart = QChart()
         chart.legend().hide()
 
