@@ -55,16 +55,19 @@ PRIVATE = re.compile(r"^\s*(?:(?:hey\s+)?mia[,:]?\s+)?(?:keep (?:that|this|it) p
 
 
 def _now() -> str:
+    """Now, in UTC, as an ISO timestamp."""
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
 # --------------------------------------------------------------- development events (the repo)
 
 def _events_dir(root: Path) -> Path:
+    """Where development events are kept (work/saga/events/)."""
     return Path(root) / "events"
 
 
 def events(root: Path = SAGA) -> list[dict]:
+    """Every development event (one E-NNNN.json each), in order; an unreadable one is logged and skipped."""
     out = []
     folder = _events_dir(root)
     for path in sorted(folder.glob("E-*.json")) if folder.exists() else []:
@@ -76,6 +79,7 @@ def events(root: Path = SAGA) -> list[dict]:
 
 
 def _decided(root: Path) -> dict:
+    """The candidates Zac has accepted or dropped (decided.json), so none comes back; {} when there's none."""
     try:
         return json.loads((Path(root) / "decided.json").read_text(encoding="utf-8"))
     except (OSError, ValueError):
@@ -83,17 +87,20 @@ def _decided(root: Path) -> dict:
 
 
 def _write_decided(root: Path, data: dict) -> None:
+    """Saves what's been decided, atomically."""
     Path(root).mkdir(parents=True, exist_ok=True)
     atomic_write_text(Path(root) / "decided.json", json.dumps(data, indent=2, sort_keys=True) + "\n")
 
 
 def _save(event: dict, root: Path) -> None:
+    """Saves one event to its own file, atomically."""
     folder = _events_dir(root)
     folder.mkdir(parents=True, exist_ok=True)
     atomic_write_text(folder / f"{event['id']}.json", json.dumps(event, indent=2, ensure_ascii=False) + "\n")
 
 
 def _next_id(root: Path) -> str:
+    """The next free event id (E-0001, E-0002...)."""
     taken = [int(e["id"][2:]) for e in events(root) if str(e.get("id", "")).startswith("E-")]
     return f"E-{(max(taken) + 1) if taken else 1:04d}"
 
@@ -117,6 +124,9 @@ def _decisions(path: Path) -> list[dict]:
 
 def _candidate(ref: str, at: str, title: str, summary: str, category: str, significance: int, sources: list[str],
                involved: list[str], subsystem: list[str] = ()) -> dict:
+    """A candidate event found by a rule: what it points at, when, its title and summary, its category, how significant,
+    its sources and who was involved; always real, built and verified (it came from the records).
+    """
     return {"ref": ref, "at": at, "title": title, "summary": summary, "category": category,
             "significance": significance, "sources": sources, "involved": sorted(set(involved) - {""}),
             "subsystem": list(subsystem), "timeline": "real", "status": "built", "evidence": "verified"}
@@ -216,6 +226,7 @@ def drop(ref: str, root: Path = SAGA) -> None:
 
 
 def mark(event_id: str, privacy: str, root: Path = SAGA) -> dict:
+    """Marks a development event for the series or private (ValueError for an unknown event or privacy)."""
     found = next((e for e in events(root) if e["id"] == event_id), None)
     if found is None:
         raise ValueError(f"No event {event_id}.")
@@ -250,6 +261,9 @@ class SagaMoments:
     """A person's Creator-and-MIA moments: theirs, in their folder, never the repo."""
 
     def __init__(self, context=None, data_dir: Optional[Path] = None) -> None:
+        """Creator and MIA moments for the Chronicles (personal, DEC-0002): saga_moments.json in data/, kept on this
+        device.
+        """
         self.context = context
         self.data_dir = Path(data_dir) if data_dir is not None else ROOT / "data"
         self._file = self.data_dir / _FILE
@@ -257,6 +271,7 @@ class SagaMoments:
         self._load()
 
     def _load(self) -> None:
+        """Reads the moments; an unreadable file is logged and starts a new list."""
         try:
             self.moments = json.loads(self._file.read_text(encoding="utf-8")).get("moments", [])
         except FileNotFoundError:
@@ -266,10 +281,12 @@ class SagaMoments:
             self.moments = []
 
     def _save(self) -> None:
+        """Writes the moments atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._file, json.dumps({"moments": self.moments}, indent=2, ensure_ascii=False) + "\n")
 
     def add(self, summary: str, said: str = "", replied: str = "") -> dict:
+        """Keeps a moment (what happened, what was said and replied, each trimmed), private and proposed until Zac decides."""
         moment = {"id": f"M-{len(self.moments) + 1:04d}", "at": _now(), "summary": " ".join(summary.split())[:600],
                   "said": said[:600], "replied": replied[:600], "category": "moment", "timeline": "real",
                   "privacy": "private", "approved": "proposed"}
@@ -278,6 +295,7 @@ class SagaMoments:
         return moment
 
     def mark(self, moment_id: str, privacy: str) -> dict:
+        """Marks a moment's privacy; only "series" counts as approved for the comic."""
         if privacy not in PRIVACY:
             raise ValueError(f"Privacy is one of {', '.join(PRIVACY)}.")
         found = next((m for m in self.moments if m["id"] == moment_id), None)
@@ -289,6 +307,7 @@ class SagaMoments:
         return found
 
     def recent(self, count: int = 50) -> list[dict]:
+        """The latest moments."""
         return self.moments[-count:]
 
 

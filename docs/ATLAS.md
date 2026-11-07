@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 228,923 lines; 1043 files describe themselves; 4,973 of 13,517 classes and functions are documented.
+1043 files, 228,942 lines; 1043 files describe themselves; 4,988 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 102,829 lines; 4,242 of 5,630 classes and functions documented
+367 files, 102,848 lines; 4,257 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -289,7 +289,7 @@
 - `core/rewards_manager.py`: Rewards — real lifetime stats (mower hours, workout hours, missions completed, ...) unlocking real cosmetic/emblem rewards at thresholds, the "Call of Duty headshots/kills/bloodthirstys" motivational-stats system the user asked for (2026-09-14), alongside a character customization vision (a hat unlo *(10 undocumented)*
 - `core/safety_escalation.py`: When a child's message triggers the safety floor (Q-0002, approved by the owner 2026-10-05, H-0011): the child gets the immediate safety reply (core/safety_floor.py) and is told plainly that a parent who looks after their account will be told; each guardian (core/child_accounts.py) gets a notificati *(2 undocumented)*
 - `core/safety_floor.py`: The safety floor from docs/COGNITIVE_EXTENSION_PROPOSAL.md (slice A): a deterministic check on every message, before any mode and before the model sees it. On clear signs that the user may be in danger (thoughts of suicide, self-harm, someone threatening them) MIA answers with fixed, human-written t *(1 undocumented)*
-- `core/saga.py`: The Chronicle Archive for *MIA: The Chronicles* (DEC-0084; Zac and ChatGPT, H-0081: "a dedicated structure that continuously gathers and organizes information that could become part of future comic issues"; `docs/COUNCIL_AND_CHRONICLES_REVIEW.md` section 7). Not `core/chronicle.py`: that's each pers *(15 undocumented)*
+- `core/saga.py`: The Chronicle Archive for *MIA: The Chronicles* (DEC-0084; Zac and ChatGPT, H-0081: "a dedicated structure that continuously gathers and organizes information that could become part of future comic issues"; `docs/COUNCIL_AND_CHRONICLES_REVIEW.md` section 7). Not `core/chronicle.py`: that's each pers
 - `core/schema_check.py`: A small JSON Schema checker (2026-10-05, Engine Phase 1), standard library only, for the parts of draft 2020-12 MIA's published schemas use (docs/schema/): type, enum, required, properties, additionalProperties, items, pattern and local $ref. Other surfaces can validate the same schema with any full *(1 undocumented)*
 - `core/script_library_manager.py`: Backs Field Kit's "Useful Scripts" tab (docs/ROADMAP.md milestone 11.4) — a categorized library of user-authored shell/Python scripts. Same persisted-JSON pattern as core.journal_manager.JournalManager: data/scripts.json, a dataclass with to_dict/from_dict, a manager class wrapping load/save/CRUD/se *(12 undocumented)*
 - `core/script_runner.py`: Executes a Field Kit script (docs/ROADMAP.md milestone 11.4) — writes its content to a fresh temp file and starts it running as a real subprocess. No sandboxing: these are the user's own trusted scripts on their own offline device, same "single-user offline tool" stance this project already takes fo *(2 undocumented)*

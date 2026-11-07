@@ -174,7 +174,6 @@
   "core/rewards_manager.py": 10,
   "core/safety_escalation.py": 2,
   "core/safety_floor.py": 1,
-  "core/saga.py": 15,
   "core/schema_check.py": 1,
   "core/script_library_manager.py": 12,
   "core/script_runner.py": 2,
