@@ -9,6 +9,11 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 ## Zac
 
 ### Try it
+- [ ] **Your email for receipts (DEC-0120):** in Gmail, make an app password (Google Account, Security, 2-Step
+      Verification, App passwords; don't paste it into a chat). Then MIA, Inbox, Email Settings: imap.gmail.com, your
+      address, the app password, your journal passphrase, and **Yes** to "everyday mailbox". She looks back 30 days
+      for receipts and orders and leaves your mail untouched. Open the Inbox: each receipt shows what it means
+      (pantry, oil change, materials) ticked; file it and it happens. Tell Claude which stores' receipts read badly.
 - [ ] **MIA's browser (DEC-0117, `docs/BROWSER.md`):** restart MIA, then say "open the county website" (or any
       site): her own Edge window opens. Try "read the page", "click ...", and something that commits (she should
       ask first, and a "yes" after she names the button presses it). Then teach her one real task: open where it
@@ -28,9 +33,7 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       Claude Design for round one (the frame plus six screens).
 
 ### Decisions
-- [ ] **Child-account code (DEC-0119):** MIA is for you alone now. Remove `core/child_accounts.py` and the
-      per-person/household plumbing, or leave it dormant (Claude: leave it; it costs nothing and removing it touches
-      many files)?
+- [x] **Child-account code (DEC-0119):** leave it (Zac, 2026-11-07); it only reaches MIA's prompts for a child.
 - [ ] **The Highest Self (H-0089 → H-0090, DEC-0114 PROPOSED):** read H-0090 (one page) and decide its four questions (the foundation, faith for everyone's MIA, three new modes, keep the tuned prompt); and rate MIA's twelve new answers in `pc-check/conversation-highest-self-tune2.md` (faith, meaning, vulnerability, grand plans, dependency, free will, flattery): your ratings decide the next tuning.
 - [ ] **Experience Maturity (H-0087 → H-0088, DEC-0113 PROPOSED):** read H-0088 (one page) and Muse's reply H-0091 (agrees on all four, with a condition each; orb unification first) and decide: the direction
       and sequence; per-app atmosphere (Claude: yes); dark only (Claude: yes); the image pipeline (library + ChatGPT

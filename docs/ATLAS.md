@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1080 files, 243,393 lines; 1080 files describe themselves; 13,381 of 14,051 classes and functions are documented.
+1082 files, 244,118 lines; 1082 files describe themselves; 13,416 of 14,086 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-387 files, 112,591 lines; 5,958 of 6,047 classes and functions documented
+388 files, 113,112 lines; 5,979 of 6,068 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -183,7 +183,7 @@
 - `core/imports.py`: Bring your life with you (2026-10-01): a new person shouldn't start from an empty MIA. Three common exports from other apps:
 - `core/inbox_actions.py`: The Inbox screen's changes (Zac, 2026-10-16), on the action contract in core/actions.py:
 - `core/inbox_classify.py`: Pure logic behind the document inbox (core/inbox_manager.py, 2026-09-28): given a document's text, what is it, whose is it, and what does it say that MIA can file.
-- `core/inbox_mail.py`: Optional email intake for the document inbox (core/inbox_manager.py, 2026-09-28). The owner picks a mailbox (a dedicated address is best, e.g. a new Gmail account used only for sending MIA receipts and manuals). MIA checks it over IMAP, the standard mail-reading protocol (Python's own imaplib, no ne
+- `core/inbox_mail.py`: Optional email intake for the document inbox (core/inbox_manager.py, 2026-09-28). Two kinds of mailbox: Dedicated** (a new address used only for sending MIA receipts and manuals): every new message is saved into the inbox folder as a .eml file and marked read. Everyday** (the person's own mailbox, 2
 - `core/inbox_manager.py`: The document inbox (2026-09-28): "an email inbox that I can send receipts and owners manuals and all kinds of business documents to and it be able to classify it and determine where to put it, like storing the manual and user guide and maintenance schedule for the mower and automatically assigning i
 - `core/insight_manager.py`: Insight + Recommendation — the first real piece of the observe → understand → insight → recommend → act → result → learn loop from the "connective infrastructure" architecture-review discussion (see docs/ROADMAP.md's dated entry), piloted in the Maintenance domain only (core/maintenance_insights.py)
 - `core/inspection.py`: Universal Inspection, phases 1 and 2 (DEC-0056, docs/INSPECTION_AND_SELF_PLAN.md): MIA investigates a subject with every relevant *authorized* method she has, keeps each finding as evidence (what, where it came from, when, how sure), correlates findings from different methods, says what she couldn't
@@ -292,6 +292,7 @@
 - `core/quick_commands.py`: Things a person says that need no AI model (DEC-0020): "workout complete", "step one of today's workout complete", "finished my pull-ups", "today's lunch complete", "meal prep done", "this week's meal plans complete", "I weigh 182", "had 40 g of protein", "handstand 45 seconds", "undo that". MIA's o
 - `core/rarity.py`: Shared Borderlands-style five-tier rarity vocabulary, from the user's 2026-09-14 "Prestige, Rarity & Character Progression" design handoff (see the [[project_mia_prestige_rarity_vision]] memory) — Common through Legendary, the same white/green/blue/purple/orange scale `core.leveling.PRESTIGE_COLORS`
 - `core/real_estate_manager.py`: Property records for a real estate portfolio — values, mortgage balance/equity, and links to the existing systems that already own the rest of what a property needs tracked, rather than duplicating them:
+- `core/receipt_effects.py`: What a receipt means beyond its total (Zac, 2026-11-07: "she should be able to see my receipt and know I got my oil changed or bought groceries and stock my pantry with what's on the receipt, and same for Lowe's receipts and materials"). When the inbox reads a receipt (core/inbox_manager.py), `propo
 - `core/receipt_match.py`: A scanned receipt fills in a recipe's Bought It (Zac, 2026-10-17; the next step after crafting recipes, DEC-0030). The inbox already reads a receipt's lines (core/inbox_classify.receipt_items: description, amount, quantity, unit price) and keeps them on the expense it files into the Budget. Here eac
 - `core/receiver_indicators.py`: The Protocol boundary between `core/voice_loop.py` and the Receiver's physical feedback hardware (recording LED, e-paper status display, vibration motor — docs/HARDWARE.md's "Modular Backpack" section).
 - `core/record_actions.py`: The shared machinery behind the web's "add, edit, delete anything" (2026-10-06, DEC-0017). A screen's records are described once, as a `Record` with its `Field`s and the store methods that add, update and delete it; from that come its action kinds on the contract in core/actions.py (Propose → Approv
@@ -532,7 +533,7 @@
 
 ## modules/: the desktop's apps, one folder each
 
-93 files, 22,795 lines; 1,030 of 1,030 classes and functions documented
+93 files, 22,800 lines; 1,030 of 1,030 classes and functions documented
 
 - `modules/__init__.py`: Every feature of MIA (Assistant, Files, Notes, Maps, etc.) lives here as an independent package. Each module package must:
 - `modules/assistant/__init__.py`: The assistant app's package: its screen and behaviour are in module.py (Assistant Chat UI — docs/ROADMAP.md milestones 5.2 (text chat), 5.3 (voice), 5.4 (device-help grounding), and 5.5 (tool use / action execution). A chat screen (). core/module_manager.py finds it by that file.
@@ -666,7 +667,7 @@
 
 ## tests/: the test suite: what each part must do
 
-359 files, 65,434 lines; 5,188 of 5,769 classes and functions documented
+360 files, 65,627 lines; 5,202 of 5,783 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -929,6 +930,7 @@
 - `tests/test_rarity.py`: Unit tests for core.rarity's pure functions.
 - `tests/test_real_estate_manager.py`: Unit tests for core.real_estate_manager. Isolates _DATA_DIR _PROPERTIES_FILE (and core.budget_manager's own data files, since rental income/expenses are real Budget entries this manager filters) into a tmp_path scratch area, same monkeypatch pattern as test_budget_manager.py's isolated_paths. *(5 undocumented)*
 - `tests/test_real_estate_module.py`: Unit tests for modules.real_estate.module's pure formatters — no Qt event loop needed, same shape as tests/test_property_module.py.
+- `tests/test_receipt_effects.py`: Receipts that do things (core/receipt_effects.py) and the everyday mailbox they come from (core/inbox_mail.fetch_receipts): a grocery receipt stocks the pantry and ticks the grocery list, an oil change is marked done on the truck at the receipt's mileage, a Lowe's receipt adds to the materials at th
 - `tests/test_receipt_match.py`: A scanned receipt fills in a recipe's Bought It: store-receipt names matched to recipe materials, each line used once, nothing guessed, and the money never counted twice (it's already in the Budget). *(1 undocumented)*
 - `tests/test_recreation.py`: Recreation in the health cluster (DEC-0098, core/recreation.py): games and sports logged by voice or on a screen, counted as training load (minutes × effort), skill XP by the sport, a life event for the history, the seasons, the Operating Journal and the Chronicle; never mistaking a song for a game. *(3 undocumented)*
 - `tests/test_recurring_mission_manager.py`: Unit tests for core.recurring_mission_manager. Isolates _DATA_DIR/_MISSIONS_FILE/_TEMPLATES_FILE plus core.calendar_manager's own file constants (ensure_current_missions() creates a real CalendarEvent) into a tmp_path scratch area, same monkeypatch pattern as tests/test_pathway_manager.py. *(3 undocumented)*
@@ -1030,7 +1032,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-71 files, 12,228 lines
+71 files, 12,234 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game

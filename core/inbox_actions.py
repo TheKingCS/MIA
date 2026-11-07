@@ -54,7 +54,9 @@ def _fields(raw):
 
 def _choices(context, params) -> dict:
     """What filing an item does, from the params: the asset it's for (which must exist), the project, the amount (a
-    number over 0), the category, the schedule rows to add and the detail fields. A receipt or invoice needs a total.
+    number over 0), the category, the schedule rows to add, the detail fields, and which of a receipt's effects to do
+    (stock the pantry, mark a service done, add materials; not given: the ticked ones). A receipt or invoice needs a
+    total.
     """
     item = _item(context, params)
     out: dict = {}
@@ -75,6 +77,8 @@ def _choices(context, params) -> dict:
     if params.get("category"):
         out["category"] = str(params["category"])
     out["schedule_indexes"] = _indexes(params.get("schedule"))
+    if "effects" in params:  # what the receipt says happened: which of its effects to do (none given: the ticked)
+        out["effect_indexes"] = _indexes(params.get("effects"))
     out["detail_fields"] = _fields(params.get("details"))
     if item.doc_type in ("receipt", "invoice") and not (out.get("amount") or item.amount):
         raise ActionError("What's the total? Add the amount, then file it.")
@@ -83,7 +87,8 @@ def _choices(context, params) -> dict:
 
 def _describe_file(context, params) -> str:
     """The sentence the approval card shows for `inbox.file` (Propose); raises ActionError when it can't be done. It lists what filing will do: log the amount in Money, put it on an asset's
-    page, add maintenance tasks, or just keep it filed.
+    page, add maintenance tasks, what the receipt says happened (up to six, then how many more), or just keep it
+    filed.
     """
     from core.region import money
 
@@ -100,6 +105,11 @@ def _describe_file(context, params) -> str:
     if c["schedule_indexes"]:
         n = len(c["schedule_indexes"])
         bits.append(f"add {n} maintenance task{'s' if n != 1 else ''}")
+    chosen = c.get("effect_indexes")
+    effects = [e for i, e in enumerate(item.effects) if (e.get("on") if chosen is None else i in chosen)]
+    if effects:
+        bits.append("; ".join(e["label"][:1].lower() + e["label"][1:] for e in effects[:6])
+                    + (f"; and {len(effects) - 6} more" if len(effects) > 6 else ""))
     return f"File {item.label}: " + (", ".join(bits) if bits else "keep it with your filed documents")
 
 
@@ -162,6 +172,7 @@ for _a in (
     ActionType("inbox.file", "File It", {"item_id": "the inbox item", "asset_id": "optional: what it's for",
                                          "project_id": "optional: the build", "amount": "optional: the total",
                                          "category": "optional", "schedule": "optional: which steps, e.g. 0,2",
+                                         "effects": "optional: which of the receipt's effects, e.g. 0,2 (none: the ticked)",
                                          "details": "optional: which details to fill in"}, _describe_file, _file),
     ActionType("inbox.dismiss", "Dismiss", {"item_id": "the inbox item"}, _describe_dismiss, _dismiss),
     ActionType("inbox.note", "Send", {"text": "what to send", "title": "optional"}, _describe_note, _send_note),

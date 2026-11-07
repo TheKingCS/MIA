@@ -370,7 +370,7 @@ class InboxModule(ModuleBase):
             self._refresh()
 
     def _on_email_settings(self) -> None:
-        """Email for the inbox: when set up but locked, asks for the passphrase; otherwise asks for the IMAP server, address and password, and a passphrase (8+ characters) that encrypts the password in the vault, then saves."""
+        """Email for the inbox: when set up but locked, asks for the passphrase; otherwise asks for the IMAP server, address and password, a passphrase (8+ characters) that encrypts the password in the vault, and whether it's the person's everyday mailbox (receipts only, left unread), then saves."""
         mail = self.context.inbox_mail
         if mail is None:
             return
@@ -403,6 +403,11 @@ class InboxModule(ModuleBase):
         except (SecretsError, OSError) as exc:
             QMessageBox.warning(None, "Email Settings", str(exc))
             return
-        mail.settings.save(host, username)
+        everyday = QMessageBox.question(
+            None, "Email Settings",
+            "Is this your everyday mailbox?\n\nYes: MIA only takes receipts, orders and service confirmations, and "
+            "leaves your mail exactly as it is (nothing marked read).\nNo: it's a mailbox just for MIA, and she takes "
+            "every message.") == QMessageBox.StandardButton.Yes
+        mail.settings.save(host, username, everyday=everyday)
         QMessageBox.information(None, "Email Settings", "Saved. MIA will check this mailbox every 10 minutes while unlocked.")
         self._refresh_email_status()

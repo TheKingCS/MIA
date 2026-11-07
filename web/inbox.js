@@ -92,6 +92,7 @@
     });
     const steps = ticks(item.schedule, "index", () => true);
     const details = ticks(item.details, "field", (d) => d.on);
+    const effects = ticks(item.effects || [], "index", (e) => e.on);
     dialog.append(el("form", { method: "dialog", onsubmit: (ev) => {
       ev.preventDefault();
       const params = { item_id: item.id, asset_id: asset.value };
@@ -99,6 +100,7 @@
       if (money) { params.amount = amount.value; if (category.value) params.category = category.value; }
       params.schedule = steps.map((l) => l.querySelector("input")).filter((b) => b.checked).map((b) => Number(b.value));
       if (details.length) params.details = details.map((l) => l.querySelector("input")).filter((b) => b.checked).map((b) => b.value);
+      if (effects.length) params.effects = effects.map((l) => l.querySelector("input")).filter((b) => b.checked).map((b) => Number(b.value));
       close();
       act({ kind: "inbox.file", params });
     } },
@@ -109,6 +111,8 @@
       money ? row("Category", category) : null,
       steps.length ? el("h4", {}, "Maintenance steps to add") : null, ...steps,
       details.length ? el("h4", {}, "Fill in on its page") : null, ...details,
+      effects.length ? el("h4", {}, "What this receipt means (" + item.receipt_kind + ")") : null, ...effects,
+      ...(item.effect_notes || []).map((n) => el("p", { class: "dim" }, n)),
       el("div", { class: "confirm-actions" }, el("button", { type: "submit", class: "btn btn-green" }, "File It"), btn("Cancel", "btn-ghost", close))));
     dialog.oncancel = (ev) => { ev.preventDefault(); close(); };
     document.body.append(dialog);
@@ -135,6 +139,8 @@
       facts.length ? el("dl", { class: "inbox-facts" }, facts.map(([k, v]) => [el("dt", {}, k), el("dd", {}, v)]).flat()) : null,
       item.schedule.length ? el("p", { class: "dim" }, "Maintenance in it: " + item.schedule.map((s) => s.text).join("; ")) : null,
       item.details.length ? el("p", { class: "dim" }, "Details for its page: " + item.details.map((d) => d.text).join("; ")) : null,
+      (item.effects || []).length ? el("p", { class: "dim" }, item.receipt_kind[0].toUpperCase() + item.receipt_kind.slice(1) + ": "
+        + item.effects.slice(0, 4).map((e) => e.text).join("; ") + (item.effects.length > 4 ? "; and " + (item.effects.length - 4) + " more" : "")) : null,
       !facts.length && item.excerpt ? el("p", { class: "inbox-excerpt" }, item.excerpt) : null,
       el("div", { class: "chip-row" }, item.files.map((f) => el("button", { type: "button", class: "chip chip-button", onclick: () => view(item, f) }, "📎 " + f.name))),
       buttons(btn("File It", "btn-green", () => fileIt(item)),

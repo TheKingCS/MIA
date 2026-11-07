@@ -442,9 +442,12 @@ Three ways in (use any):
   **Inbox → Add Files…**.
 - **From your phone:** in the phone web app, **Send a file** (a PDF,
   a photo, a text file). Needs Part 8.
-- **By email (optional):** make a separate email address just for MIA
-  (a new Gmail account is easiest), then:
-  1. In that Gmail account: **Google Account → Security → 2-Step
+- **By email (optional):** either your **everyday mailbox** (MIA reads
+  only receipts, orders and service confirmations from it and leaves
+  your mail exactly as it is, nothing marked read; answer **Yes** when
+  Email Settings asks if it's your everyday mailbox), or a separate
+  address just for MIA (a new Gmail account), then:
+  1. In the Gmail account: **Google Account → Security → 2-Step
      Verification** (turn it on), then **App passwords** → create one
      named "MIA". Google shows a 16-letter password once. **Don't
      paste it into a chat with Claude.**

@@ -78,7 +78,8 @@ class InboxItem:
     """One document that came into the inbox (from the folder, the phone or email): its files, the email's subject,
     sender and date, and MIA's reading of it, all only proposed until the person files it: what kind of document,
     whether it could be read, the item or project it's for, a receipt's amount, date, vendor, category and lines, a
-    manual's maintenance schedule, details about the thing it's for, and whether OCR is still reading it.
+    manual's maintenance schedule, details about the thing it's for, whether OCR is still reading it, and for a
+    receipt what it says happened (groceries, a car service, building supplies) with the effects offered.
     """
     item_id: str
     received_at: str
@@ -109,6 +110,10 @@ class InboxItem:
     # A receipt's lines (core/inbox_classify.receipt_items) and how far
     # to trust them; saved on the expense when filed.
     items: list[dict] = field(default_factory=list)
+    # What the receipt says happened (core/receipt_effects.py): groceries, a car service or building supplies, and
+    # the effects offered (stock the pantry, mark the oil change done, add materials), done only when filed.
+    receipt_kind: str = ""
+    effects: list[dict] = field(default_factory=list)
     items_note: str = ""
 
     @staticmethod
@@ -311,10 +316,12 @@ class InboxManager:
         # Start clean: an item is classified again once its OCR finishes.
         """MIA's reading of a document's text (starting clean, so it can run again once OCR finishes): its kind, the
         asset or project it's about, for a receipt or invoice the amount, date (the email's when none), vendor, category
-        and lines, details about the thing it's for, and for a manual or warranty its maintenance schedule.
+        and lines and what it says happened (core/receipt_effects.py), details about the thing it's for, and for a
+        manual or warranty its maintenance schedule.
         """
         item.amount, item.amount_basis, item.doc_date, item.vendor, item.category = None, "", "", "", ""
         item.schedule, item.details, item.items, item.items_note = [], {}, [], ""
+        item.receipt_kind, item.effects = "", []
         item.excerpt = " ".join(text.split())[:400]
         haystack = f"{item.subject}\n{filename}\n{text}"
         item.doc_type = document_type(text, filename, item.subject)
@@ -334,6 +341,9 @@ class InboxManager:
             fields.date = item.doc_date
             lines, item.items_note = receipt_items(text)
             item.items = [asdict(line) for line in lines]
+            from core.receipt_effects import propose
+
+            item.receipt_kind, item.effects = propose(self.context, item, haystack)
         item.details = document_details(text, item.doc_type, fields)
         if item.doc_type in (MANUAL, WARRANTY) or (item.doc_type == "other" and asset is not None):
             item.schedule = [asdict(s) for s in maintenance_schedule(text)]
@@ -354,13 +364,16 @@ class InboxManager:
     def file_item(
         self, item_id: str, asset_id: Optional[str] = None, project_id: Optional[str] = None,
         amount: Optional[float] = None, category: Optional[str] = None, schedule_indexes: Optional[list[int]] = None,
-        detail_fields: Optional[list[str]] = None,
+        detail_fields: Optional[list[str]] = None, effect_indexes: Optional[list[int]] = None,
     ) -> str:
         """File a pending item with MIA's proposal, or the owner's
         corrections. `detail_fields`: which detail updates to apply
         ("model", "serial_number", "manufacturer", "purchase",
         "warranty_until"); None applies the ones ticked by default (the
-        item's empty fields). Returns what was done, in one sentence."""
+        item's empty fields). `effect_indexes`: which of a receipt's
+        effects to do (core/receipt_effects.py: stock the pantry, mark a
+        service done, add materials); None does the ticked ones. Returns
+        what was done, in one sentence."""
         item = self.get_item(item_id)
         if item is None or item.status != PENDING:
             raise ValueError("That item isn't waiting in the inbox.")
@@ -395,6 +408,10 @@ class InboxManager:
                 project = self.context.projects.get_project(project_id)
                 if project:
                     done[-1] += f" on {project.name}"
+            if item.effects:
+                from core.receipt_effects import apply
+
+                done += apply(self.context, item.effects, effect_indexes)
 
         if asset is not None:
             attached = 0
