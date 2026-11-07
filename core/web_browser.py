@@ -14,10 +14,15 @@ reachable by talking to her.
   run went.
 - `shot_path()`: a waiting step's screenshot, only from her own shots
   folder, so a request can't name any other file.
+- `live_view()`: a picture of what her browser shows now, taken on asking.
+
+The page also drives her browser (2026-11-07): open, back, close, learn a
+task and keep it, through the `browser.open`, `browser.back`,
+`browser.close`, `browser.learn` and `browser.learn_done` actions.
 
 Nothing here changes anything: running or forgetting a task is the
 `browser.run_task` / `browser.forget_task` actions
-(core/assistant_browser_actions.py).
+(core/assistant_browser_actions.py), as are the page's controls above.
 """
 
 from __future__ import annotations
@@ -100,3 +105,17 @@ def shot_path(context, pending_id: str) -> Optional[Path]:
     if not path.is_relative_to(folder) or not path.is_file():
         return None
     return path
+
+
+def live_view(context) -> Optional[Path]:
+    """A picture of what her browser shows right now (taken on asking, into her own shots folder), so the page shows
+    it on any device; None when it's closed or the picture can't be taken."""
+    session = _session(context)
+    if session is None or session.driver is None:
+        return None
+    try:
+        with session.lock:
+            return Path(session.driver.screenshot(session.profile_dir.parent / "browser_shots" / "now.png"))
+    except Exception:
+        log.exception("Browser screen: the live picture failed")
+        return None

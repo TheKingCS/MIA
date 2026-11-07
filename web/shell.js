@@ -192,12 +192,39 @@
     return (window.MIAIcons && MIAIcons.svg(id)) || fallback || "";
   }
 
+  // The sidebar grouped (Zac, 2026-11-07: a flat list of 46 apps hid what's new): Start Here, the favorites, then
+  // each life area as a heading that opens and closes (the one with this page open; what you open is remembered).
+  function groupedApps(shell, cls, here) {
+    const link = (a) => el("a", { class: cls, href: a.page, "aria-current": a.id === here ? "page" : null },
+      el("span", { class: "ico", "aria-hidden": "true" }, icon(a.id, a.icon)), el("span", { class: "label" }, a.name));
+    const out = [el("a", { class: cls + " side-start", href: "start.html", "aria-current": here === "start" ? "page" : null },
+      el("span", { class: "ico", "aria-hidden": "true" }, "?"), el("span", { class: "label" }, "Start Here"))];
+    const home = shell.apps.find((a) => a.id === "web_home");
+    if (home) out.push(link(home));
+    const favorites = (shell.favorites || []).map((id) => shell.apps.find((a) => a.id === id)).filter(Boolean);
+    if (favorites.length) out.push(el("p", { class: "side-heading" }, "Favorites"), ...favorites.map(link));
+    for (const group of shell.groups || []) {
+      const apps = shell.apps.filter((a) => a.group === group && a.id !== "web_home");
+      if (!apps.length) continue;
+      const key = "mia.side." + group;
+      let open = apps.some((a) => a.id === here);
+      try { open = open || localStorage.getItem(key) === "1"; } catch (e) { /* no storage */ }
+      const box = el("details", { class: "side-group", open: open || null },
+        el("summary", {}, group + " (" + apps.length + ")"), ...apps.map(link));
+      box.addEventListener("toggle", () => { try { localStorage.setItem(key, box.open ? "1" : "0"); } catch (e) { /* fine */ } });
+      out.push(box);
+    }
+    return out;
+  }
+
   function appLinks(shell, cls) {
     const here = document.body.dataset.app || "web_home";
     const made = new URLSearchParams(location.search).get("id");
+    const apps = shell.groups ? groupedApps(shell, cls, here)
+      : shell.apps.map((a) => el("a", { class: cls, href: a.page, "aria-current": a.id === here ? "page" : null },
+        el("span", { class: "ico", "aria-hidden": "true" }, icon(a.id, a.icon)), el("span", { class: "label" }, a.name)));
     // What MIA made for this person (core/creations.py, DEC-0091) follows the apps, drawn the same way.
-    return shell.apps.map((a) => el("a", { class: cls, href: a.page, "aria-current": a.id === here ? "page" : null },
-      el("span", { class: "ico", "aria-hidden": "true" }, icon(a.id, a.icon)), el("span", { class: "label" }, a.name)))
+    return apps
       .concat((shell.made || []).map((m) => el("a", { class: cls, href: m.page,
         "aria-current": here === "made" && made === m.id ? "page" : null },
         el("span", { class: "ico", "aria-hidden": "true" }, icon(m.icon, "✦")), el("span", { class: "label" }, m.name))))

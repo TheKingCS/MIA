@@ -287,8 +287,9 @@ def greeting(hour: int, name: Optional[str]) -> str:
 
 
 def shell(context, today: Optional[date] = None) -> dict:
-    """The shared frame's data (/api/shell): the person and their level, the date, the apps they can open on the web,
-    the ones still on the PC only, the screens MIA made, the owner's pages, sound, and places.
+    """The shared frame's data (/api/shell): the person and their level, the date, the apps they can open on the web
+    (each with its life area, for the grouped sidebar), the areas in order and their favorites, the ones still on the
+    PC only, the screens MIA made, the owner's pages, sound, and places.
     """
     from core.child_accounts import is_child
 
@@ -300,8 +301,11 @@ def shell(context, today: Optional[date] = None) -> dict:
         "person": {"profile_id": pid, "name": getattr(profile, "name", None), "child": child,
                    **_level(profile)},
         "date": date_text(today),
-        "apps": [{"id": a.module_id, "name": a.name, "icon": a.icon, "tagline": a.tagline, "page": a.page}
-                 for a in apps if a.page],
+        "apps": [{"id": a.module_id, "name": a.name, "icon": a.icon, "tagline": a.tagline, "page": a.page,
+                  "group": a.group} for a in apps if a.page],
+        # The sidebar's order (2026-11-07): Start Here and the favorites, then each life area under its heading.
+        "groups": list(GROUPS),
+        "favorites": _favorites(context),
         "on_pc_only": [a.name for a in apps if not a.page],
         "made": _made(context),
         "owner": _owner_pages(context, pid),
@@ -309,6 +313,17 @@ def shell(context, today: Optional[date] = None) -> dict:
         "sound": _sound(context),
         "places": _places(context),
     }
+
+
+def _favorites(context) -> list:
+    """This person's starred apps, for the top of the sidebar ([] when settings can't be read)."""
+    try:
+        from core.focus_presets import favorite_apps
+
+        return favorite_apps(context)
+    except Exception:
+        log.debug("Favorites unavailable", exc_info=True)
+        return []
 
 
 def _owner_pages(context, pid) -> list:

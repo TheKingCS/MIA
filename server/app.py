@@ -891,6 +891,25 @@ def create_app(context: AppContext) -> FastAPI:
         with app.state.turn_lock:
             return screen(view_for(context, profile_id))
 
+    # Start Here (core/web_guide.py): what MIA does and how, and what's new. The same for everyone; read only.
+    @app.get("/api/guide")
+    def guide_page(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.web_guide import guide
+
+        return guide()
+
+    @app.get("/api/browser/view")
+    def browser_view(profile_id: str = Depends(require_profile_id)):
+        from fastapi.responses import FileResponse
+
+        from core.web_browser import live_view
+
+        with app.state.turn_lock:
+            path = live_view(view_for(context, profile_id))
+        if path is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "MIA's browser isn't open.")
+        return FileResponse(path, media_type="image/png", headers={"Cache-Control": "no-store"})
+
     @app.get("/api/browser/shot")
     def browser_shot(id: str, profile_id: str = Depends(require_profile_id)):
         from fastapi.responses import FileResponse

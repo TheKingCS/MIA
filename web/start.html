@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Start Here — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
+</head>
+<body data-app="start" data-icon="mia" class="mod-start">
+  <!--
+    Start Here: what MIA does and how to use it, grouped by what you want to get done, each with what to say to her
+    and where to look, and what's new (core/web_guide.py, MIA.guide()). Formatting only; the look is muse's
+    (claude, 2026-11-07).
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <header class="hero">
+        <h1>Start Here</h1>
+        <p class="tagline">What MIA does, and how to use it.</p>
+      </header>
+      <div id="panel"></div>
+    </main>
+  </div>
+  <script src="mia.js?v=17"></script>
+  <script src="icons.js"></script>
+  <script src="sound.js"></script>
+  <script src="places-watch.js"></script>
+  <script src="shell.js"></script>
+  <script src="start.js"></script>
+</body>
+</html>

@@ -399,6 +399,11 @@
       return data;
     })(),
     inbox: () => read("/api/inbox", "inbox"),
+    // Start Here (core/web_guide.py): what she does and how, and what's new.
+    guide: () => demo ? Promise.resolve({ topics: [{ id: "talk", title: "Talk to her", icon: "mia",
+      how: "The glowing orb at the bottom right of every page opens Talk.", say: ["What can you do?", "What's on today?"],
+      page: "index.html" }], new: [{ when: "2026-11-07", what: "This Start Here page.", page: "start.html" }] })
+      : call("GET", "/api/guide"),
     // The inbox's mailbox (core/inbox_mail.py): set up, unlock, check now. Each answers with its status.
     inboxEmailSetup: (fields) => demo ? demoOnly() : call("POST", "/api/inbox/email", fields),
     inboxEmailUnlock: (passphrase) => demo ? demoOnly() : call("POST", "/api/inbox/email/unlock", { passphrase }),

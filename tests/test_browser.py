@@ -6,8 +6,9 @@ MIA's browser (DEC-0117) against a pretend browser: what the safety rules
 let her do alone, a commit waiting for the person (approved on screen or
 with a yes, refused when the page changed), secrets never typed, a task
 taught by showing and replayed, learned after two clean runs, the
-Browser screen (core/web_browser.py) with its run and forget actions, and
-only the person's own words typed or searched for on her own (DEC-0122).
+Browser screen (core/web_browser.py) with its run and forget actions and
+its own controls (open, back, close, teach, the live picture), and only
+the person's own words typed or searched for on her own (DEC-0122).
 """
 
 from __future__ import annotations
@@ -294,3 +295,29 @@ def test_she_types_only_what_the_person_said(world):
     assert browser.authorized("anything at all", routine={"id": "r", "next": 2})
     pre_turn(world, Conversation(conversation_id="c1"), "please search for garden hose")
     assert browser.authorized("garden hose") and not browser.authorized("garden hose and my address")
+
+
+def test_the_browser_page_drives_her_browser(world):
+    """From the page: a search the person typed opens at once (their own words), the live picture is taken, Back and
+    Close work, and a task is taught from the page and kept."""
+    from core.web_browser import live_view, screen
+
+    def do(kind, **params):
+        """Proposes and approves one of the page's actions; returns what happened."""
+        proposal = world.actions.propose(world, kind, params)
+        return world.actions.approve(world, proposal.proposal_id)
+
+    assert live_view(world) is None  # closed: no picture
+    assert do("browser.open", target=SHOP).status == "executed" and screen(world)["open"]["title"] == "Your cart"
+    assert live_view(world).is_file()
+    done = do("browser.open", target="garden hose sprayer")
+    assert done.status == "executed" and "needs your OK" not in done.result  # typed on the page: their words
+    do("browser.back")
+    assert screen(world)["open"]["url"] == SHOP
+    assert "watching" in do("browser.learn", name="Order more widgets").result.lower()
+    assert screen(world)["learning"] == "Order more widgets"
+    edge(world).recorder({"kind": "click", "role": "button", "name": "Place order", "title": "Your cart"})
+    assert "Learned" in do("browser.learn_done").result
+    assert [t["name"] for t in screen(world)["tasks"]] == ["Order more widgets"]
+    do("browser.close")
+    assert screen(world)["open"] is None

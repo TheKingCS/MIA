@@ -50,6 +50,52 @@
         btn("Forget", "btn-ghost btn-small", () => act({ kind: "browser.forget_task", params: { task_id: task.id } }))));
   }
 
+  // Driving her browser from here (2026-11-07): an address bar, a live picture, Back / Close, and teaching.
+  async function run(action) {
+    await act(action, { quick: true });
+    draw();
+  }
+
+  async function picture(holder) {
+    try {
+      const blob = await MIA.download("/api/browser/view?t=" + Date.now());
+      holder.replaceChildren(el("img", { src: URL.createObjectURL(blob), alt: "What MIA's browser shows now", class: "browser-shot" }));
+    } catch (e) { holder.replaceChildren(el("p", { class: "dim" }, "Her window is open on the PC; the picture couldn't be taken.")); }
+  }
+
+  function controls(data) {
+    const address = el("input", { type: "text", class: "input", placeholder: "A website (county.gov) or what to search for",
+      autocomplete: "off", "aria-label": "Website or search" });
+    const bar = el("form", { class: "form-row", onsubmit: (e) => {
+      e.preventDefault();
+      if (address.value.trim()) run({ kind: "browser.open", params: { target: address.value.trim() } });
+    } }, address, el("button", { type: "submit", class: "btn btn-green" }, "Open"));
+    if (!data.open) {
+      return section("Her Browser", bar,
+        el("p", { class: "dim" }, "Closed. Open a website or search above: her own Edge window opens on the PC, and you'll see it here."));
+    }
+    const view = el("div", {}, el("p", { class: "dim" }, "Loading a picture of her window…"));
+    picture(view);
+    const name = el("input", { type: "text", class: "input", placeholder: "Name a task to teach her from here", autocomplete: "off" });
+    const teach = data.learning
+      ? el("div", { class: "row-buttons" },
+        el("p", {}, "Watching you do \"" + data.learning + "\" in her window on the PC."),
+        btn("Done, keep it", "btn-green", () => run({ kind: "browser.learn_done", params: {} })))
+      : el("form", { class: "form-row", onsubmit: (e) => {
+        e.preventDefault();
+        if (name.value.trim()) run({ kind: "browser.learn", params: { name: name.value.trim() } });
+      } }, name, el("button", { type: "submit", class: "btn btn-ghost" }, "Learn a task"));
+    return section("Her Browser", bar,
+      el("p", { class: "row-title" }, data.open.title || data.open.url), el("p", { class: "dim" }, data.open.url),
+      view,
+      el("div", { class: "row-buttons" },
+        btn("Back", "btn-ghost btn-small", () => run({ kind: "browser.back", params: {} })),
+        btn("Refresh picture", "btn-ghost btn-small", () => draw()),
+        btn("Ask MIA about this page", "btn-ghost btn-small", () => MIAShell.talk(true, "Read the page and tell me what's on it")),
+        btn("Close", "btn-ghost btn-small", () => run({ kind: "browser.close", params: {} }))),
+      teach);
+  }
+
   async function draw() {
     const data = await MIA.browser();
     if (!data.available) {
@@ -58,6 +104,7 @@
     }
     $("browser-sub").textContent = data.open ? "On " + (data.open.title || data.open.url) : "Closed";
     $("panel").replaceChildren(...[
+      controls(data),
       data.waiting.length ? section("Waiting For Your OK", ...data.waiting.map(waitingCard)) : null,
       data.learning ? section("Learning", el("p", {}, "Watching you do \"" + data.learning + "\" in her window. Say \"done\" when you've finished.")) : null,
       section("Tasks You Taught Her",

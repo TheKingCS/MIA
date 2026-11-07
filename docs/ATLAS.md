@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1084 files, 245,356 lines; 1084 files describe themselves; 13,464 of 14,134 classes and functions are documented.
+1087 files, 245,782 lines; 1087 files describe themselves; 13,478 of 14,148 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-389 files, 113,782 lines; 6,013 of 6,102 classes and functions documented
+390 files, 113,991 lines; 6,023 of 6,112 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -374,6 +374,7 @@
 - `core/web_fitness.py`: What the fitness screens show (DEC-0020, H-0026), assembled in core so the screens (Muse's) only draw it: today (training and its steps, skill practice, food and nutrition against the targets, planned meals, the day's fitness missions), the weight line, the week's meal plan with its prep and shoppin
 - `core/web_flock.py`: The Chickens screen (DEC-0037): each flock's numbers (eggs today and this week, the lay rate, loose eggs, feed cost per dozen), the last two weeks of eggs, the log, and the egg cartons on hand. Put together here from core/flock.py and homestead goods (core/goods.py), so the web only formats. Served 
 - `core/web_grow.py`: The Greenhouse's growing side (DEC-0030 phase D, folded into the Greenhouse by Zac 2026-10-17): every **place** (each tank or bed is a Greenhouse asset; older places are names typed before that) with what's growing there, its latest readings against your ranges (only ever a warning), and what it has
+- `core/web_guide.py`: "Start Here" (Zac, 2026-11-07: "I don't see the browser on MIA or really understand how to use much of anything we have built"): what MIA does, in plain words, grouped by what a person wants to get done, each with the words to say to her (a "Try saying" button opens Talk with them typed in) and the 
 - `core/web_inbox.py`: The Inbox on the web and the phone (Zac, 2026-10-16: "Can you build the inbox for sending stuff to MIA?"). The document inbox itself is core/inbox_manager.py: a file sent in (from the phone's Share menu, the Upload button, a dropped file, or email) becomes an item with MIA's reading of it (a receipt
 - `core/web_money.py`: The Money screen's data (2026-10-06, DEC-0017): everything the PC app's Budget screen shows, assembled here so `web/` holds no logic. Served as `/api/money`; changes go through the action kinds in core/money_actions.py.
 - `core/web_more.py`: The Journal, Workshop, Expeditions, Music and Files screens on the web (Zac, 2026-10-16: on the phone they "are empty right now and just bring up a chat with MIA"). Each assembler reads its stores and returns what its screen shows; every change is an action in core/more_actions.py.
@@ -400,7 +401,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 2,748 lines; 33 of 33 classes and functions documented
+2 files, 2,767 lines; 33 of 33 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -668,7 +669,7 @@
 
 ## tests/: the test suite: what each part must do
 
-360 files, 65,827 lines; 5,210 of 5,791 classes and functions documented
+361 files, 65,906 lines; 5,214 of 5,795 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1004,6 +1005,7 @@
 - `tests/test_web_equipment.py`: DEC-0017 (2026-10-06): Garage, Property, Greenhouse and Maintenance on the web, and one page per asset (Zac's mower concept): the data (core/web_equipment.py) and every change as an action kind (core/equipment_actions.py, maintenance.done with a meter value). *(5 undocumented)*
 - `tests/test_web_fitness.py`: The fitness screens' data (core/web_fitness.py, DEC-0020): today, the weight line, missions and "is it working?" in one plain sentence, the meal-plan week, and the endpoints. Placeholder values. *(3 undocumented)*
 - `tests/test_web_fresh.py`: The web screens are never served from a stale browser copy (Zac, 2026-10-16: after a phone update the old Dashboard kept showing).
+- `tests/test_web_guide.py`: Start Here (core/web_guide.py) stays true: every "Try saying" phrase reaches one of MIA's tools (or is one of the few handled in code), every page it opens exists, and the sidebar's data carries the life areas and favorites the grouped sidebar draws.
 - `tests/test_web_inbox.py`: The Inbox screen on the web and the phone (Zac, 2026-10-16: "build the inbox for sending stuff to MIA"): core/web_inbox.py shows what's waiting (reading the folder first, so the phone needs no timer), and core/inbox_actions.py files, dismisses and sends notes through Propose → Approve. *(3 undocumented)*
 - `tests/test_web_money.py`: DEC-0017 (2026-10-06): Money on the web does everything the PC app's Budget screen does. The page's data (core/web_money.py) and every change as an action kind (core/money_actions.py): add, edit, delete bills, income sources, income, expenses and debts; pay a debt; set budgets. Each one proposed, ap *(5 undocumented)*
 - `tests/test_web_more.py`: The Journal, Workshop, Expeditions, Music and Files screens (Zac, 2026-10-16: on the phone they "are empty right now and just bring up a chat with MIA"): core/web_more.py builds each page, core/more_actions.py makes every change through Propose → Approve, and core/my_files.py keeps the Files screen 
@@ -1033,7 +1035,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-72 files, 12,415 lines
+73 files, 12,534 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
@@ -1101,6 +1103,7 @@
 - `web/showoff.js`: showoff.js — show-off mode (claude, 2026-10-17, DEC-0031). Renders MIA.showoff() (core/show_off.py) as a narrated tour, one card at a time: Back / Next / Stop, arrow keys, and MIA reading each card aloud when Voice is on (the browser's own speech; nothing leaves the device). The data was filtered in
 - `web/skills.js`: skills.js — the Skills screen (claude, 2026-10-06, DEC-0017/0018, H-0013). Renders MIA.skills() (core/web_progress.py): the skill tree by category (your interests first), each skill's level, XP and capability, what a locked one needs, the next honest step, each skill's pathways (Start), challenge ch
 - `web/sound.js`: sound.js — MIA's sounds (claude, 2026-10-17, DEC-0028 #11). Short tones made in the browser (Web Audio: no sound files to download, works offline): a chime for an objective, a quest-complete arpeggio for a mission, a fanfare for a level. MIA's voice line (from the engine's reward.say, core/actions.v
+- `web/start.js`: start.js — Start Here (claude, 2026-11-07). Renders MIA.guide() (core/web_guide.py): what she does, grouped by what you want to get done; each with how it works, "Try saying" buttons that open Talk with the words typed in (press Enter to send), and the page to open; then what's new. Formatting only;
 - `web/sync.js`: sync.js — User Sync on the phone (claude, 2026-11-02). Renders MIA.userSync() (core/user_sync.py): the question, a box to type the answer, the chips to approve, and the phone's permissions, asked through window.MIAPhonePermissions (Permissions.kt) and reported back. The steps and words are all the e
 - `web/vault.js`: vault.js — Memory Vault (claude, 2026-10-18, DEC-0030 phase E). Renders MIA.vault() (core/memory_vault.py) in tabs: Photos (one month at a time, by day, with what happened that day and the trip it was on; each tile says whether it's safe on the home computer), Free Up Space (photos the PC holds, exa
 - `web/welcome.js`: welcome.js — Home (DEC-0018, claude). Renders MIA.dashboard() and the frame's shell data; ticking a focus item runs its action (confirm, undo).
