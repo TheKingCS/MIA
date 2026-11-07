@@ -52,6 +52,9 @@ KINDS = {
 
 def _item(day: date, kind: str, title: str, detail: str = "", time: str = "", due: bool = False,
           action: Optional[dict] = None, **extra) -> dict:
+    """One thing on the calendar: its date and time, title, detail, kind (with its label and the app it belongs to),
+    whether it's something due, its suggested action, and any extra fields.
+    """
     label, app = KINDS[kind]
     out = {"date": day.isoformat(), "time": time or "", "title": title, "detail": detail, "kind": kind,
            "kind_label": label, "app": app, "due": due}
@@ -62,11 +65,13 @@ def _item(day: date, kind: str, title: str, detail: str = "", time: str = "", du
 
 
 def _days(start: date, end: date):
+    """Every day from start to end, both included."""
     for i in range((end - start).days + 1):
         yield start + timedelta(days=i)
 
 
 def _events(context, start: date, end: date) -> list[dict]:
+    """Calendar events on each day of the span, repeats included (occurs_on)."""
     from core.calendar_manager import occurs_on
 
     store = getattr(context, "calendar", None)
@@ -82,6 +87,7 @@ def _events(context, start: date, end: date) -> list[dict]:
 
 
 def _upkeep(context, start: date, end: date, today: date) -> list[dict]:
+    """Maintenance tasks due in the span, and every overdue one, each with its Done action."""
     from core.web_equipment import equipment_page
 
     if getattr(context, "maintenance", None) is None:
@@ -97,6 +103,9 @@ def _upkeep(context, start: date, end: date, today: date) -> list[dict]:
 
 
 def _money(context, start: date, end: date, today: date) -> list[dict]:
+    """Bills due and pay expected in the span, and past-due ones, with Mark Paid or Mark Received; never for a
+    child.
+    """
     from core.budget_manager import (days_until_bill_due, days_until_income_due, next_bill_due_date,
                                      next_income_due_date)
     from core.child_accounts import is_child
@@ -128,6 +137,7 @@ def _money(context, start: date, end: date, today: date) -> list[dict]:
 
 
 def _fitness(context, start: date, end: date, today: date) -> list[dict]:
+    """From today on: the planned meals, meal-prep sessions and training days of the fitness plan."""
     from core.fitness_manager import WEEKDAYS
 
     fit = getattr(context, "fitness", None)
@@ -195,6 +205,7 @@ def _chores(context, start: date, end: date, today: date) -> list[dict]:
 
 
 def _birthdays(context, start: date, end: date) -> list[dict]:
+    """People's and pets' birthdays in the span (a Feb 29 birthday has no day in other years)."""
     store = getattr(context, "relationships", None)
     if store is None:
         return []

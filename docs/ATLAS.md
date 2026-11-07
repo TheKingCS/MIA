@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1058 files, 233,582 lines; 1058 files describe themselves; 5,880 of 13,683 classes and functions are documented.
+1058 files, 233,614 lines; 1058 files describe themselves; 5,901 of 13,683 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-373 files, 106,546 lines; 5,102 of 5,749 classes and functions documented
+373 files, 106,578 lines; 5,123 of 5,749 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -51,7 +51,7 @@
 - `core/blueprints.py`: The blueprints MIA builds screens from (DEC-0090; `blueprints/README.md`): versioned JSON in the repo, with fields named by role (`$title`, `$date`, `$group`, `$number`, `$all`, `$details`). `fill()` turns one into blocks for a particular record set, leaving out what has no field to show. *(2 undocumented)*
 - `core/boot_sound.py`: Synthesizes the boot sequence's "growing pulsing energy" sound effect — a rising-pitch power-up sweep with a pulsing amplitude envelope, capped off with a bright high "ping" (the user's own description: "like a woooooooom ping") — timed to feel like it belongs alongside gui/presence_widget.py's brea
 - `core/boot_sound_worker.py`: Plays the boot sound off the GUI thread — same reasoning as core/tts_worker.py: `VoiceManager.play()`'s `sd.wait()` blocks for the whole sound's duration, which would otherwise freeze core/application.py's own `QTimer`-chained boot steps for that long. *(2 undocumented)*
-- `core/boss_battles.py`: Boss battles (DEC-0028, the game layer's third piece): big goals with an HP bar. *(7 undocumented)*
+- `core/boss_battles.py`: Boss battles (DEC-0028, the game layer's third piece): big goals with an HP bar.
 - `core/budget_manager.py`: MIA Home's household bookkeeping — bills, income, and expenses. Named `budget_manager`, deliberately neither `finance_manager` nor `ledger_manager` — both already exist as different concepts. `core/finance_manager.py` is a read-only watched-folder importer for externally-generated Kraken trading-age *(68 undocumented)*
 - `core/budget_nudges.py`: Pure decision logic for a proactive daily budget nudge — 2026-09-08, at the user's explicit request following up on the "Field Manual" brainstorm: "are we meeting our income needs or exceeding our planned expenses, are we paying things on time, and covering what's due next and when next expected pay
 - `core/buffs.py`: Buffs (DEC-0028, the game layer's fifth piece): good effects you've earned by what you really did. **Never debuffs** (DEC-0014): nothing here is ever taken away as a penalty; a buff simply runs out, and earning it again brings it back.
@@ -64,13 +64,13 @@
 - `core/calculator_engine.py`: CalculatorEngine: a pluggable formula registry with one shared browsing UI (modules/toolbox/module.py), per docs/ROADMAP.md's "Shared core services" table. The goal: every future calculator-shaped tool (unit converter, Ohm's Law, wire gauge, antenna calculator, fuel estimates, coordinate conversion, *(2 undocumented)*
 - `core/calendar_actions.py`: Your own calendar events (Zac, 2026-10-16), through the action contract (core/actions.py): `event.add` and `event.delete`. Everything else on the calendar (upkeep, bills, meals, training, birthdays) is read from its own store by core/calendar_view.py and changed where it lives. The calendar store wr *(6 undocumented)*
 - `core/calendar_manager.py`: Backs the Calendar tool (modules/toolbox/tools/calendar_tool.py) — a CRUD event store, persisted to data/calendar_events.json so events survive a restart, same durability guarantee core.notification_manager.NotificationManager gives notifications.
-- `core/calendar_view.py`: The Calendar (Zac, 2026-10-16): "I want the Calendar to be filled and I want to be able to access it both in the app and on the glasses." *(7 undocumented)*
+- `core/calendar_view.py`: The Calendar (Zac, 2026-10-16): "I want the Calendar to be filled and I want to be able to access it both in the app and on the glasses."
 - `core/calibration.py`: Whether MIA's "how sure" means anything (build plan step 8, DEC-0094): every question-plan answer is marked sure, likely or unsure in code, from what its fact sheet holds (core/question_plans.sureness). Each one is noted here, in the person's own folder, by its plan, its level and a fingerprint of t *(5 undocumented)*
 - `core/capabilities.py`: What MIA can do, built from the code (DEC-0041; the intelligence spec's Phase 2B, docs/INTELLIGENCE_AUDIT.md). Never a hand-written brochure: *(3 undocumented)*
 - `core/capability_gaps.py`: Self-enablement (build plan step 9, DEC-0094): "I can't do that" stops being a dead end. Every request no tool matched is already in the person's Fix-It Log (`no_tool`, core/failure_log.py). Here they become **capability gaps**:
 - `core/character_stats.py`: Real character stats (DEC-0028, the game layer's fourth piece): six RPG attributes, each 1 to 20, made from what the person has really done. Every point says where it came from. *(3 undocumented)*
 - `core/chat_worker.py`: Runs a single `AppContext.llm.chat_with_tools()` call off the GUI thread — docs/ROADMAP.md milestones 5.2/5.5. A blocking HTTP call to Ollama (core/llm_manager.py) on the GUI thread would freeze the whole app for the duration of every reply. This is the first module to need the scoped worker-thread  *(2 undocumented)*
-- `core/child_accounts.py`: Child accounts (2026-10-01): a young person in a household gets their own MIA, set up and looked after by a parent (their guardian). *(7 undocumented)*
+- `core/child_accounts.py`: Child accounts (2026-10-01): a young person in a household gets their own MIA, set up and looked after by a parent (their guardian).
 - `core/chronicle.py`: The Chronicle (DEC-0028, the game layer's eighth idea): the story of your week, and of your year, told from what really happened. *(5 undocumented)*
 - `core/chronicle_issue.py`: MIA: The Chronicles*, the weekly issue (build plan step 17, DEC-0085 and DEC-0086; the Story Bible is `docs/chronicles/`, the archive `core/saga.py`). *(6 undocumented)*
 - `core/classroom_actions.py`: The Classroom (core/classroom_manager.py, the person's own study) through the action contract (core/actions.py), for its web screen: a subject, a course and a lesson added, a lesson marked done (its skill XP credited once, as on the desktop) or not done, and any of them taken out. The stores write t

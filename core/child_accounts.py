@@ -52,6 +52,7 @@ ASK_A_PARENT = "That one's for grown-ups. Ask a parent if you need it."
 
 
 def _record(context, profile_id: Optional[str]) -> dict:
+    """A profile's record in the config (profiles.<id>), or empty."""
     config = getattr(context, "config", None)
     if config is None or not profile_id:
         return {}
@@ -59,14 +60,17 @@ def _record(context, profile_id: Optional[str]) -> dict:
 
 
 def is_child(context, profile_id: Optional[str] = None) -> bool:
+    """Whether a profile (the signed-in person by default) is a child account."""
     return bool(_record(context, profile_id or person_id(context)).get("child"))
 
 
 def guardians_of(context, profile_id: str) -> list[str]:
+    """The profiles that are a child's guardians."""
     return list(_record(context, profile_id).get("guardians", []))
 
 
 def children_of(context, guardian_id: str) -> list:
+    """The child accounts a guardian looks after."""
     profiles = getattr(context, "profiles", None)
     listed = profiles.list_profiles() if profiles is not None else []
     return [p for p in listed if guardian_id in guardians_of(context, p.profile_id)]
@@ -85,6 +89,9 @@ def age(birthday: Optional[str], today: Optional[date] = None) -> Optional[int]:
 
 
 def make_child(context, profile_id: str, guardian_ids: list[str]) -> bool:
+    """Makes a profile a child account with its guardians, saves the config and tells the screens; False
+    without a profile or a guardian.
+    """
     record = dict(_record(context, profile_id))
     if not record or not guardian_ids:
         return False
@@ -121,10 +128,14 @@ def guardian_reset_password(context, child_id: str, guardian_id: str, guardian_p
 
 
 def app_allowed(context, module_id: str) -> bool:
+    """Whether this person may open an app: always for a grown-up, only CHILD_APPS for a child."""
     return not is_child(context) or module_id in CHILD_APPS
 
 
 def tool_allowed(context, domain: str) -> bool:
+    """Whether a tool's domain may be offered: always for a grown-up (or with no context), never a
+    CHILD_BLOCKED_DOMAINS one for a child.
+    """
     return context is None or not is_child(context) or domain not in CHILD_BLOCKED_DOMAINS
 
 

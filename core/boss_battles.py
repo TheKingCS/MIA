@@ -62,7 +62,12 @@ def months_to_defeat(balance: float, apr_percent: float, payment: float) -> Opti
 
 
 class BossBook:
+    """A person's boss fights (boss_battles.json in their folder, written through atomic_write_text): each debt's
+    highest balance seen (its max HP), the missions made into bosses, and when each boss fell. Turning a mission into
+    a boss, or back, is a life event.
+    """
     def __init__(self, context, data_dir: Optional[Path] = None) -> None:
+        """Loads the book from the person's folder (or data/)."""
         self.context = context
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._file = self.data_dir / _FILE
@@ -72,6 +77,7 @@ class BossBook:
         self._load()
 
     def _load(self) -> None:
+        """Reads the book; a damaged file is logged, reported and starts empty."""
         self.peaks, self.missions, self.defeated = {}, [], {}
         if not self._file.exists():
             return
@@ -85,9 +91,11 @@ class BossBook:
             notify_data_corruption(self.context, _FILE)
 
     def reload(self) -> None:
+        """Reads the book again (after an undo restores it)."""
         self._load()
 
     def _save(self) -> None:
+        """Writes the book atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._file, json.dumps({"peaks": self.peaks, "missions": self.missions,
                                                   "defeated": self.defeated}, indent=2))
@@ -109,12 +117,14 @@ class BossBook:
 
     @life_events.on_change("boss_added", "a boss fight", "mission")
     def add_mission(self, mission_id: str) -> None:
+        """Makes a mission a boss fight (once)."""
         if mission_id not in self.missions:
             self.missions.append(mission_id)
             self._save()
 
     @life_events.on_change("boss_removed", "a boss fight", "mission")
     def remove_mission(self, mission_id: str) -> None:
+        """Turns a mission's boss fight back into a plain mission."""
         if mission_id in self.missions:
             self.missions.remove(mission_id)
             self._save()
