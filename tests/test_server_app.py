@@ -538,6 +538,19 @@ def test_settings_page_and_changing_a_setting(client, context):
     assert _do(client, auth, "setting.set", {"key": "journal.weekly_reflection", "value": True}).json()["status"] == "executed"
 
 
+def test_how_funny_mia_is_changes_on_the_settings_screen_like_by_voice(client, context):
+    """The Settings choice moves the same setting "be funnier" does (DEC-0125), and only to one of the five levels."""
+    from core.personality import humor_level
+
+    auth = _signed_in(client, context)
+    page = client.get("/api/settings", headers=auth).json()
+    humor = next(s for g in page["groups"] for s in g["settings"] if s["key"] == "assistant.humor_level")
+    assert humor["kind"] == "choice" and humor["value"] == "sometimes" and len(humor["options"]) == 5
+    assert _do(client, auth, "setting.set", {"key": "assistant.humor_level", "value": "lots"}).json()["status"] == "executed"
+    assert humor_level(context) == "lots"
+    assert _do(client, auth, "setting.set", {"key": "assistant.humor_level", "value": "constant"}).status_code == 409
+
+
 def test_changing_the_password_needs_the_current_one(client, context):
     auth = _signed_in(client, context)
     wrong = client.post("/api/account/password", headers=auth, json={"current": "nope", "new": "longenough"})

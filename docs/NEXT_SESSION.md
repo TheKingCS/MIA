@@ -658,8 +658,9 @@ every step below in order, from a blank machine, with Windows notes.
 
 *History since 2026-11-03: open work is in `work/tasks/`.*
 
-**First: humor on the Settings screen** (it's voice-only), from `docs/design/CORE_SCREENS_REVIEW.md`, which also
-lists what Claude Design's screens show that MIA doesn't do. (Talking on the PC is back: Talk's mic, 2026-11-07.)
+**Next: `docs/DEVELOPMENT_PLAN.md` stage 1** (phone pages for Power, Toolbox, The Lab, Field Kit; "Say: ..." on each
+screen; the design review back to Claude Design: `docs/design/CORE_SCREENS_REVIEW.md`). Done 2026-11-07: Talk's mic
+(the PC can be talked to again) and humor on the Settings screen.
 
 **Parity (DEC-0125): close the gaps in `docs/PARITY.md`.** Voice is done but Look (a voice "look at this" that
 takes the photo itself) and Passwords (screen-only by Zac's decision). Next the phone pages (Power, Toolbox, The
