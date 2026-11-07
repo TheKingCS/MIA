@@ -37,6 +37,9 @@ they were written. Isolating it here, globally, is the fix this
 project already learned to reach for instead of patching every
 individual fixture one at a time.
 
+And Qt draws off-screen (2026-11-07): a test that makes a window or
+dialog would otherwise flash it onto the PC's real desktop.
+
 This module-level code (not a fixture) runs when pytest loads this
 conftest.py, which always happens before any test module is imported —
 early enough to win the race against core.module_manager and friends
@@ -45,8 +48,14 @@ calling get_logger() at their own module level.
 
 from __future__ import annotations
 
+import os
 import tempfile
 from pathlib import Path
+
+# Qt draws off-screen (2026-11-07): without this, every test that makes a MIA window or dialog flashed it onto the
+# PC's real desktop, hundreds of times a run, and Zac couldn't use his PC while the suite ran. Set before anything
+# imports PySide6. Night School's own runs already did this (core/dev_lab.py).
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 # The log first (2026-10-21): any core module calls get_logger() when it's
 # imported, which opens the log file then. Redirected after the other
