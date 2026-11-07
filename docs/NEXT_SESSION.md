@@ -623,7 +623,7 @@ uncommitted. 6,284 of 13,690 documented on 2026-11-07; apart from those two, eve
 
 **Her curriculum (DEC-0107, `docs/CURRICULUM.md`):** ten computing tracks, one Night School lesson a night for the next objective (`python -m tools.night_school curriculum`). Nothing run yet: the first real night with it is the next one. Grow it in `core/curriculum.py` when her teacher's lessons point at a gap.
 
-**Guitar (DEC-0111):** Zac is learning guitar with MIA (`core/guitar.py`, `web/guitar.html`). When he's tried it, read his heard-check attempts (in his folder's `guitar.json`): if real chords fail that should pass, adjust `CHORD_TONE`/`STRAY` in `core/guitar_ear.py` from those numbers (they were set on synthesized strings).
+**Learning paths (DEC-0112):** any desire runs through `core/paths.py` (guitar is its first program; anything else is drafted and started on the person's say-so). Don't build a parallel learn-a-skill feature: add a `Program`. **Guitar (DEC-0111):** when Zac has tried it, read his heard-check attempts (his folder's `paths.json`, path `guitar`): if real chords fail that should pass, adjust `CHORD_TONE`/`STRAY` in `core/guitar_ear.py` from those numbers (they were set on synthesized strings).
 
 **Every commit, ongoing (DEC-0110): docs change with the code.** Run `.venv\Scripts\python -m tools.docs stale` before committing: it lists every definition whose code changed while its docstring didn't (changed parameters first). Read each and fix the words that no longer hold; lab reviewers get the same list.
 

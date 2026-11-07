@@ -212,18 +212,24 @@ def _doc_freshness(_context) -> Optional[Reading]:
         "; " + ", ".join(f"{f['file']}:{f['name']}" for f in found[:4]) if found else ""))
 
 
-def _guitar_practice(context) -> Optional[Reading]:
-    """Measure: this week's guitar practice days against the plan's (core/guitar.py, DEC-0111). None before they've
-    started."""
-    coach = getattr(context, "guitar", None)
-    if coach is None or not coach.is_started:
+def _path_practice(context) -> Optional[Reading]:
+    """Measure: across the learning paths started, this week's practice days against the plans' (core/paths.py,
+    DEC-0112), each path weighed the same. None before any is started."""
+    book = getattr(context, "paths", None)
+    if book is None or not book.started():
         return None
-    from core.guitar import stats
+    from core import paths
 
-    s = stats(coach)
-    want = s["plan"]["days_a_week"]
-    return Reading(round(s["week_days"] / want, 2), 1, f"{s['week_days']} of {want} days, {s['week_minutes']:g} min; "
-                                                      f"stage {s['stage']}, {s['checks_passed']} checks passed")
+    rows = []
+    for path_id in book.started():
+        program = paths.program_of(context, path_id)
+        if program is not None:
+            s = paths.stats(book, program)
+            rows.append((program.name, s["week_days"], s["plan"]["days_a_week"]))
+    if not rows:
+        return None
+    share = sum(min(1.0, d / w) for _n, d, w in rows) / len(rows)
+    return Reading(round(share, 2), len(rows), "; ".join(f"{n} {d} of {w} days" for n, d, w in rows))
 
 
 def _slow(context) -> Optional[Reading]:
@@ -1096,8 +1102,8 @@ LOOPS: tuple[Loop, ...] = (
     Loop("night.curriculum", "development", "her curriculum's objectives mastered (computing, DEC-0107)", "device",
          _curriculum, better="higher", acts="watch", files=("core/curriculum.py", "core/night_school.py"),
          covers=("dev:night_school",)),
-    Loop("guitar.practice", "life", "guitar practice days this week, of the plan's (DEC-0111)", "person",
-         _guitar_practice, better="higher", acts="watch", files=("core/guitar.py",), covers=("store:guitar",)),
+    Loop("paths.practice", "life", "practice days this week on each learning path, of the plan's (DEC-0112)",
+         "person", _path_practice, better="higher", acts="watch", files=("core/paths.py",), covers=("store:paths",)),
     Loop("models.router_shadow", "models", "her own router's top five holding the tool she called (in the shadow)",
          "person", _router_shadow, better="higher", acts="watch", min_n=20,
          files=("core/model_forge.py", "core/turn_trace.py"), covers=("flow:tools",)),

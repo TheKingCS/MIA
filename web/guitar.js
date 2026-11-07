@@ -1,5 +1,6 @@
 /*
- * guitar.js — Guitar (claude, 2026-11-07, DEC-0111).
+ * guitar.js — a learning path (claude, 2026-11-07, DEC-0111, DEC-0112): guitar
+ * by default, any path with ?path=<id>.
  * Renders MIA.guitar() (core/guitar.py): the stage, this week against the
  * plan, the streak, the bests, what to work on next, and each open check.
  * A check MIA hears gets a Record button: a few seconds from the microphone,
@@ -13,6 +14,7 @@
   const { el } = MIAShell;
   const $ = (id) => document.getElementById(id);
   const SECONDS = 3;
+  const PATH = new URLSearchParams(location.search).get("path") || "guitar";  // any learning path (DEC-0112)
 
   // Float samples to a 16-bit mono WAV file.
   function wav(samples, rate) {
@@ -54,7 +56,7 @@
     const go = async (string) => {
       said.textContent = "Listening for " + SECONDS + " seconds…";
       try {
-        const got = await MIA.guitarListen(check.id, await record(), string);
+        const got = await MIA.guitarListen(check.id, await record(), string, PATH);
         said.textContent = got.said;
         if (got.passed) setTimeout(load, 1500);
       } catch (e) {
@@ -76,6 +78,7 @@
 
   function paint(data) {
     const s = data.stats;
+    document.querySelector(".hero h1").textContent = data.name || "Learning";
     if (!s.started) {
       $("guitar-sub").textContent = "Not started yet.";
       $("panel").replaceChildren(el("section", { class: "glass money-section" }, el("p", {}, data.next)));
@@ -93,7 +96,7 @@
         el("div", { class: "sync-rows" }, data.open.map((c) => c.how.startsWith("heard") ? heardRow(c) : plainRow(c)))));
   }
 
-  async function load() { paint(await MIA.guitar()); }
+  async function load() { paint(await MIA.guitar(PATH)); }
 
   MIAShell.start(load);
 })();

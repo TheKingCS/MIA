@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1066 files, 236,091 lines; 1066 files describe themselves; 6,356 of 13,761 classes and functions are documented.
+1069 files, 236,646 lines; 1069 files describe themselves; 6,384 of 13,789 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-377 files, 108,525 lines; 5,561 of 5,811 classes and functions documented
+379 files, 108,962 lines; 5,585 of 5,835 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -37,6 +37,7 @@
 - `core/assistant_link_actions.py`: "The land loan funds the rental", "the greenhouse depends on selling the lot", "what depends on selling the lot?", "what's connected to the truck?" (core/links.py, 2026-10-05). Names are matched to real records in code; a link is only saved between things that exist. Undoable.
 - `core/assistant_lookup.py`: How Assistant actions find the user's own records from the words they actually say. People say "the truck" and "did the oil", not "Pickup Truck" and "Oil change", and the model can only pass on their words.
 - `core/assistant_ownership_actions.py`: "Whose truck is it?" and "the mower is mine" (core/ownership.py, 2026-10-01): owner marks on maintenance items (vehicles, tools, appliances).
+- `core/assistant_path_actions.py`: Learning paths by voice (DEC-0112; core/paths.py): any desire, the same loop. "I want to learn guitar" starts the guitar program; "I want to learn to weld", with no program for it, has MIA draft one (grounded in her specialists' notes) and describe it, and "start it" starts it. Then lessons, practic
 - `core/assistant_self_actions.py`: MIA about herself (2026-10-21, the intelligence spec's first slice): "What AI model are you using?" answered from the runtime (core/model_registry.py), never from the model's guess about itself.
 - `core/assistant_starter_actions.py`: "What starter sets are there?", "set me up with the homestead starter set", "add the student starter but not the weekly plan" (core/starter_templates.py, 2026-10-01). Adding one is undoable. *(3 undocumented)*
 - `core/assistant_tagging_actions.py`: Assistant tools for sorting bank charges to businesses (core/business_tagging.py): "which charges need a business?" and "the Shell charge was for lawn care" / "the Walmart one was personal".
@@ -163,7 +164,7 @@
 - `core/gps_tracks.py`: Tracks (build plan step 14, DEC-0099): a walk, a ride or a drive as points with times, from a GPX file (what phones, watches and GPS units export). Worked out in code (`stats()`): distance (haversine, between successive points), climb and descent (changes under `CLIMB_NOISE` metres ignored, as GPS e
 - `core/grow_actions.py`: The grow lab's actions (DEC-0030 phase D, core/grow_lab.py) on the action contract: proposed in plain words, approved, run, undoable.
 - `core/grow_lab.py`: The grow lab (DEC-0030 phase D): running a greenhouse, aquaponics tanks and growing beds like a scientist. Record what's planted, measure the water, compare what works, learn from the results.
-- `core/guitar.py`: MIA teaches guitar (DEC-0111; Zac, 2026-11-07: "I want to learn guitar and would like for MIA to be able to help teach me as well as track my progress and assign missions like homework ... being able to verify and test a user's skills just like it would do for itself"). She learns the way she makes 
+- `core/guitar.py`: Guitar, the first program on MIA's learning paths (DEC-0111, DEC-0112; Zac, 2026-11-07: "I want to learn guitar and would like for MIA to be able to help teach me as well as track my progress and assign missions like homework ... being able to verify and test a user's skills just like it would do fo
 - `core/guitar_ear.py`: How MIA hears a guitar (DEC-0111): a recording, worked out in code, so a skill check can be passed by playing it, not only by saying so. The same rule she keeps for herself: a skill counts when it's shown.
 - `core/hash_identifier.py`: Identifies the plausible algorithm(s) for a hash string, by prefix (for self-describing formats like bcrypt/crypt) or length+charset (for bare hex digests) — docs/ROADMAP.md milestone 11.5, Field Kit's Security/Network Toolkit. This is pattern-matching, not verification: there is no way to truly det *(1 undocumented)*
 - `core/heavy_jobs.py`: Heavy jobs on the home computer (DEC-0022; Zac, 2026-10-18): when this device can't do a job well itself and it's linked to MIA on the home computer (core/home_link.py), the computer does it: *(3 undocumented)*
@@ -254,6 +255,7 @@
 - `core/passing_mentions.py`: "Propose, you confirm" (2026-09-28): when the owner mentions in passing something MIA keeps a record of, she answers as usual and then offers to record it, and does so only on a yes:
 - `core/password_strength.py`: Password strength estimation — docs/ROADMAP.md milestone 11.5, Field Kit's Security/Network Toolkit. A simple Shannon-entropy-over-character pool-size estimate plus a handful of pattern warnings, not a full zxcvbn-style dictionary/pattern-cracking-time model — "don't over-engineer" for a field tool' *(2 undocumented)*
 - `core/password_vault.py`: Passwords (Zac, 2026-10-20, DEC-0035): every login a person has, kept in a vault only their own master password opens.
+- `core/paths.py`: Learning paths: how MIA turns a desire into a skill (DEC-0112; Zac, 2026-11-07, after the guitar path: "That whole principle ... should be a principle she uses repeatedly when understanding a desire or interest, planning steps for implementing or improvement, tracking progress, monitoring statistics
 - `core/pathway_manager.py`: Mission Pathways — the user-driven counterpart to the "Discovery" concept from the connective-infrastructure architecture review (deferred, Phase 6: MIA inferring a pattern from history). Here the user picks a skill and MIA hands them a structured, pre-authored sequence of real Missions that build i
 - `core/person_settings.py`: Settings that belong to a person, not the device (2026-10-01, accounts): how many messages MIA may send you a day, the weekly journal reflection, whether she asks what kind of support you want (and what you usually pick), your trusted contact for the safety floor, and which apps you see first (core/
 - `core/personal_data.py`: Each person's own MIA (2026-10-01, "People and ownership" in docs/ROADMAP.md): MIA is built for any person or household, so what's personal belongs to the person, not the device.
@@ -388,7 +390,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 2,608 lines; 5 of 31 classes and functions documented
+2 files, 2,621 lines; 5 of 31 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that *(26 undocumented)*
@@ -656,7 +658,7 @@
 
 ## tests/: the test suite: what each part must do
 
-355 files, 64,125 lines; 358 of 5,715 classes and functions documented
+356 files, 64,220 lines; 362 of 5,719 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -789,7 +791,7 @@
 - `tests/test_gps_tracks.py`: Tracks (build plan step 14, core/gps_tracks.py): a GPX walk read in code: distance, climb past GPS jitter, moving time, start and end grids; kept in the person's folder; a line in the TAK package. *(3 undocumented)*
 - `tests/test_greenhouse_module.py`: Unit tests for modules.greenhouse.module's pure functions, same style as tests/test_garage_module.py/tests/test_property_module.py (no Qt event loop, no fixtures). *(25 undocumented)*
 - `tests/test_grow_lab.py`: The grow lab (DEC-0030 phase D): batches, harvests and losses, readings against the person's own ranges (only ever a warning), experiments that compare batches, all undoable. *(7 undocumented)*
-- `tests/test_guitar.py`: MIA teaches guitar (core/guitar.py, core/guitar_ear.py, DEC-0111): her ear hears notes and chords right (and wrong ones as wrong), the program is sound (every shape makes its chord's notes), and the coaching runs end to end: start, practise, checks counted, said and heard, stages that open when thei
+- `tests/test_guitar.py`: Guitar, the first program on MIA's learning paths (core/guitar.py, core/guitar_ear.py, DEC-0111): her ear hears notes and chords right (and wrong ones as wrong), the program is sound (every shape makes its chord's notes), and the path runs end to end by voice: start, practise, checks counted, said a
 - `tests/test_hash_identifier.py`: Unit tests for core.hash_identifier — pure pattern-matching logic, no external dependency, real hashes used as test fixtures (not mocks). *(13 undocumented)*
 - `tests/test_heavy_jobs.py`: Heavy jobs on the home computer (core/heavy_jobs.py): a device without Tesseract, a speech model or a voice sends the job to the linked PC; the PC unreachable means the old answer, and it isn't asked again for a while. *(6 undocumented)*
 - `tests/test_history_and_links.py`: The interconnection work from the first self-audit (DEC-0108, 2026-11-07): `life_events.on_change` puts a store's changes in her history, and the new link kinds let the rest of a life's records be linked, with the refs the history carries.
@@ -884,6 +886,7 @@
 - `tests/test_passing_mentions.py`: "Propose, you confirm" (core/passing_mentions.py): offers to record what the owner mentions in passing, made after MIA's reply and carried out only on a yes; wired through core/talk_it_out.py for every chat surface. *(13 undocumented)*
 - `tests/test_password_strength.py`: Unit tests for core.password_strength — pure computation, no dependency, no mocks needed. *(8 undocumented)*
 - `tests/test_password_vault.py`: Passwords (core/password_vault.py, DEC-0035): a vault only the master password (or the recovery code) opens; nothing readable on disk; it locks itself; guessing gets slower; a browser export comes in; the phone and the PC sync it still encrypted, only when they hold the same vault; and a password ne *(11 undocumented)*
+- `tests/test_paths.py`: MIA's learning paths (core/paths.py, DEC-0112): the same loop for any desire. A program for an interest with none is drafted (grounded, checked in code, kept as a draft until started); several paths run side by side, each with its own homework mission that completes from the log; statistics; and a d
 - `tests/test_pathway_manager.py`: Unit tests for core.pathway_manager. Isolates _DATA_DIR/_PATHWAYS_FILE _PROGRESS_FILE plus core.mission_manager's own file constants (Pathway tests need a real MissionManager — start_pathway() creates real Missions) into a tmp_path scratch area, same monkeypatch pattern as every other manager test f *(28 undocumented)*
 - `tests/test_pathway_tool.py`: Unit tests for modules.toolbox.tools.pathway_tool's pure functions, same style as tests/test_intent_tool.py (no Qt event loop, no fixtures). *(8 undocumented)*
 - `tests/test_pc_tools.py`: The home-PC kit (DEC-0022): the readiness check says what's missing, and the model comparison recommends the most accurate model, the faster of two that are about as accurate. *(2 undocumented)*
@@ -1016,7 +1019,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-71 files, 12,170 lines
+71 files, 12,180 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
@@ -1041,7 +1044,7 @@
 - `web/freedom.js`: freedom.js — the Freedom screen (claude, 2026-10-21, DEC-0038). Renders MIA.freedom() (core/freedom.py): the estimated day and how far along the fund is, progress today / this week / this month, what a shift buys, how the fund adds up (each number with where it came from), what moves the day, the bu
 - `web/glasses.js`: MIA on Display glasses (DEC-0016; Muse's composition H-0041/H-0043; Zac's layout, 2026-10-16; pins DEC-0024).
 - `web/grow.js`: grow.js — the Grow Lab (claude, 2026-10-17, DEC-0030 phase D). Renders MIA.grow() (core/web_grow.py), as tabs of the Greenhouse (Zac, 2026-10-17: "Isn't Grow Lab essentially what the Greenhouse app is"): equipment.js shows them beside the greenhouse's equipment through window.MIAGrow. Tabs: Growing 
-- `web/guitar.js`: guitar.js — Guitar (claude, 2026-11-07, DEC-0111). Renders MIA.guitar() (core/guitar.py): the stage, this week against the plan, the streak, the bests, what to work on next, and each open check. A check MIA hears gets a Record button: a few seconds from the microphone, made into a 16-bit mono WAV he
+- `web/guitar.js`: guitar.js — a learning path (claude, 2026-11-07, DEC-0111, DEC-0112): guitar by default, any path with ?path=<id>. Renders MIA.guitar() (core/guitar.py): the stage, this week against the plan, the streak, the bests, what to work on next, and each open check. A check MIA hears gets a Record button: a
 - `web/home.js`: home.js — MIA's Home (muse, 2026-10-05).
 - `web/household.js`: household.js — the household's routines (claude, 2026-11-06). Renders MIA.household() (core/household_routines.py): each routine's current occurrence (today's, or this week's), how far along it is, its streak, and the day's total. "Did it" is routine.log, so undo takes it back. Formatting only; the 
 - `web/icons.js`: icons.js — MIA's interface icons (claude, 2026-10-15, DEC-0023). One line-icon set for the frame (navigation, the bottom bar, header badges, app tiles): 24-unit grid, 1.6 stroke, round joins, drawn in currentColor so the theme colors them. Content keeps its own icons (a mission's or a skill's emoji 

@@ -946,32 +946,45 @@ def create_app(context: AppContext) -> FastAPI:
         except SightError as problem:
             raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(problem)) from problem
 
-    @app.get("/api/guitar")
-    def guitar_state(profile_id: str = Depends(require_profile_id)) -> dict:
-        """Guitar (core/guitar.py, DEC-0111): this person's stage, stats, what's next and their open checks, for the
-        page that records them; this week's homework is made or brought up to date first."""
-        from core import guitar
+    @app.get("/api/paths")
+    def learning_paths(profile_id: str = Depends(require_profile_id)) -> dict:
+        """Learning paths (core/paths.py, DEC-0112): each path this person has started, with its stats, what's next and
+        its open checks (how each is verified), and their drafts; this week's homework is made or brought up to date
+        first."""
+        from core import paths
 
         view = view_for(context, profile_id)
-        coach = getattr(view, "guitar", None)
-        if coach is None:
-            raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Guitar lessons aren't on this MIA.")
-        guitar.ensure_homework(view)
-        return {"stats": guitar.stats(coach), "next": guitar.next_step(coach),
-                "open": [{"id": c.id, "what": c.what, "how": c.how, "chord": c.chord}
-                         for c in guitar.open_checks(coach)]}
+        book = getattr(view, "paths", None)
+        if book is None:
+            raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Learning paths aren't on this MIA.")
+        paths.ensure_homework(view)
+        out = []
+        for path_id in book.started():
+            program = paths.program_of(view, path_id)
+            if program is not None:
+                out.append({"id": program.id, "name": program.name, "icon": program.icon,
+                            "stats": paths.stats(book, program), "next": paths.next_step(book, program),
+                            "open": [{"id": c.id, "what": c.what, "how": c.how, "about": c.about}
+                                     for c in paths.open_checks(book, program)]})
+        return {"paths": out, "drafts": [{"id": d["id"], "name": d["name"]} for d in book.drafts.values()
+                                         if d["id"] not in book.paths]}
 
-    @app.post("/api/guitar/listen")
-    async def guitar_listen(request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
-        """A guitar check heard (core/guitar.py, DEC-0111): a short WAV recording, the check in the x-check header
-        and, for tuning, the string (6 is the low E) in x-string. Worked out on this PC; the recording isn't kept."""
-        from core import guitar
+    @app.post("/api/paths/{path_id}/verify")
+    async def learning_verify(path_id: str, request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
+        """A check its program verifies (core/paths.py, DEC-0112): for guitar, a short WAV recording, the check in the
+        x-check header and, for tuning, the string (6 is the low E) in x-string. Worked out on this PC; nothing sent
+        is kept."""
+        from core import paths
 
+        view = view_for(context, profile_id)
+        program = paths.program_of(view, path_id)
+        if program is None or getattr(view, "paths", None) is None or view.paths.path(path_id) is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "That path isn't started.")
         data = await request.body()
         string = request.headers.get("x-string")
         try:
-            return guitar.listen(view_for(context, profile_id), unquote(request.headers.get("x-check", "")), data,
-                                 int(string) if string and string.isdigit() else None)
+            return paths.verify(view, program, unquote(request.headers.get("x-check", "")),
+                                {"wav": data, "string": int(string) if string and string.isdigit() else None})
         except ValueError as problem:
             raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(problem)) from problem
 

@@ -2,68 +2,32 @@
 core.guitar
 =============
 
-MIA teaches guitar (DEC-0111; Zac, 2026-11-07: "I want to learn guitar and would
-like for MIA to be able to help teach me as well as track my progress and assign
-missions like homework ... being able to verify and test a user's skills just like
-it would do for itself"). She learns the way she makes the person learn: a
-curriculum in stages, practice that's logged, homework as missions, and skill
-checks that have to be passed, not claimed.
+Guitar, the first program on MIA's learning paths (DEC-0111, DEC-0112; Zac, 2026-11-07: "I want to learn guitar and
+would like for MIA to be able to help teach me as well as track my progress and assign missions like homework ...
+being able to verify and test a user's skills just like it would do for itself").
 
-**The program** (`STAGES`): five stages, from holding the guitar to lead basics.
-Each has lessons (what to do, step by step, why, and the mistakes to watch for;
-chord shapes in `CHORDS`) and **skill checks** (`Check`): each one measurable,
-with what passes. A check is passed one of three ways, and the record says
-which:
-- **heard**: MIA listens to a recording (core/guitar_ear.py) and the right notes
-  rang (a chord), or the string is in tune;
-- **counted**: a number the person measured against the clock or a metronome
-  (one-minute chord changes, a tempo held for a minute), at or over the mark;
-- **said**: the person says they did it, for what can't be measured yet; it
-  counts, and says it was said.
-A stage is done when all its checks are passed; the next opens.
+The method (understand the desire, plan the steps, teach, log practice, homework missions, statistics, verify,
+next stage) is core/paths.py's, the same for every path. This file is guitar's content and its ear:
 
-**The coach** (`GuitarCoach`, each person's own store, `guitar.json`): their
-goal in their own words, how much they mean to practise (minutes a day, days
-a week), every practice session (minutes, what they worked on, a tempo), every
-check attempt (passed or not, the value, how it was verified), and the stage
-they're on. Practice and passed checks are life events; a passed check and a
-finished stage earn XP in the Music skill (core/gamification.py).
+- **The program** (`STAGES`, registered as `PROGRAM`): five stages, from holding the guitar to lead basics, each
+  with lessons (steps, why, what to watch for) and skill checks. Chord shapes (`CHORDS`) are verified in a test to
+  make exactly their chord's notes, and each lesson about chords is taught with its shapes (`_extra()`).
+- **Its verifiers**, the checks MIA hears from a WAV recording (core/guitar_ear.py): `heard_chord` (every note of
+  the chord rang, nothing stray did) and `heard_tuning` (one string at a time; passed when all six are in tune on
+  the same day). The rest are counted (one-minute changes, a tempo held) or said.
 
-**Homework** (`ensure_homework()`): each week a mission, assigned by MIA, from
-the plan and the current stage: practise on N days, M minutes in all, and one
-objective for each check still open. Its progress comes from the log, and it
-completes itself when everything's done, the way her fitness missions do
-(core/fitness_missions.py).
-
-**Stats** (`stats()`): this week's days and minutes against the plan, the
-streak, total hours, checks passed, the bests (chord changes a minute, tempo),
-and the stage. `next_step()` says what to work on now and why.
-
-MIA has missions, skills and checks of her own; this is the same machinery
-turned toward a person (Zac: "she is essentially using herself the same way
-the user is").
+Its XP goes to the Music skill.
 """
 
 from __future__ import annotations
 
-import json
-import uuid
-from dataclasses import dataclass, field
-from datetime import date, datetime, timedelta
-from pathlib import Path
-from typing import Optional
+from dataclasses import dataclass
+from datetime import date
 
-from core import life_events
-from core.atomic_write import atomic_write_text
-from core.logger import get_logger
+from core.paths import Check, Lesson, Program, Stage, register
 
-log = get_logger(__name__)
-
-FILE_NAME = "guitar.json"
 SKILL = "music"  # her skill tree's Music skill (data/skill_definitions.json)
-PREFIX = "guitar:"  # the occurrence key of the homework missions
-CHECK_XP = 25
-STAGE_XP = 100
+MAX_RECORDING = 8 * 1024 * 1024  # bytes: a few seconds of WAV is plenty
 
 
 # ------------------------------------------------------------------ the program
@@ -90,40 +54,6 @@ CHORDS: dict[str, Chord] = {c.name: c for c in (
     Chord("F", "133211", "134211", ("F", "A", "C")),
     Chord("Bm", "x24432", "x13421", ("B", "D", "F#")),
 )}
-
-
-@dataclass(frozen=True)
-class Lesson:
-    """One lesson: its id and title, the steps to do in order, why it matters, the mistakes to watch for, and the
-    chords it teaches."""
-    id: str
-    title: str
-    steps: tuple[str, ...]
-    why: str
-    watch: tuple[str, ...] = ()
-    chords: tuple[str, ...] = ()
-
-
-@dataclass(frozen=True)
-class Check:
-    """One skill check: its id, what to do, how it's verified (heard_chord, heard_tuning, counted, said), the chord
-    it's about, the mark that passes (for counted ones) and its unit."""
-    id: str
-    what: str
-    how: str
-    chord: str = ""
-    passes_at: float = 0.0
-    unit: str = ""
-
-
-@dataclass(frozen=True)
-class Stage:
-    """One stage of the program: its number, name, what it builds, its lessons and the checks that finish it."""
-    number: int
-    name: str
-    builds: str
-    lessons: tuple[Lesson, ...]
-    checks: tuple[Check, ...]
 
 
 STAGES: tuple[Stage, ...] = (
@@ -160,8 +90,8 @@ STAGES: tuple[Stage, ...] = (
             ("Speeding up or stopping when a change is hard: slow the change, never the beat.",), ()),
     ), (
         Check("tuned", "Tune all six strings; let MIA hear each one", "heard_tuning"),
-        Check("em_clean", "Play E minor so every note rings", "heard_chord", chord="Em"),
-        Check("am_clean", "Play A minor so every note rings", "heard_chord", chord="Am"),
+        Check("em_clean", "Play E minor so every note rings", "heard_chord", about="Em"),
+        Check("am_clean", "Play A minor so every note rings", "heard_chord", about="Am"),
         Check("changes_em_am", "One-minute changes: E minor to A minor and back, as many as you can in a minute",
               "counted", passes_at=20, unit="changes a minute"),
         Check("strum_60", "Strum down on every beat at 60 bpm for one minute without stopping", "said"),
@@ -193,9 +123,9 @@ STAGES: tuple[Stage, ...] = (
             "This one pattern fits most pop and folk songs, and keeping the hand moving is what keeps time.",
             ("Stopping the hand on the missed strum: it's what throws the rhythm off.",)),
     ), (
-        Check("c_clean", "Play C so every note rings", "heard_chord", chord="C"),
-        Check("g_clean", "Play G so every note rings", "heard_chord", chord="G"),
-        Check("d_clean", "Play D so every note rings", "heard_chord", chord="D"),
+        Check("c_clean", "Play C so every note rings", "heard_chord", about="C"),
+        Check("g_clean", "Play G so every note rings", "heard_chord", about="G"),
+        Check("d_clean", "Play D so every note rings", "heard_chord", about="D"),
         Check("changes_g_c", "One-minute changes: G to C and back", "counted", passes_at=30, unit="changes a minute"),
         Check("changes_d_a", "One-minute changes: D to A and back", "counted", passes_at=30, unit="changes a minute"),
         Check("pattern_70", "The strumming pattern on one chord at 70 bpm for one minute", "counted", passes_at=70,
@@ -238,7 +168,7 @@ STAGES: tuple[Stage, ...] = (
             "Barre chords let you play any chord anywhere: one shape, every key.",
             ("Pressing with the soft middle of the first finger: the strings under its creases go dead.",), ("F",)),
     ), (
-        Check("f_clean", "Play the F barre chord so every note rings", "heard_chord", chord="F"),
+        Check("f_clean", "Play the F barre chord so every note rings", "heard_chord", about="F"),
         Check("changes_c_f", "One-minute changes: C to F and back", "counted", passes_at=20, unit="changes a minute"),
     )),
     Stage(5, "Lead basics", "the minor pentatonic scale, picking and bends", (
@@ -282,319 +212,66 @@ def shape_text(chord: Chord) -> str:
     return f"{chord.name} ({', '.join(chord.notes)}): " + ", ".join(parts)
 
 
-def teach(lesson: Lesson) -> str:
-    """Pure logic. A lesson as MIA says it: the title, each step, the chord shapes, why, and what to watch for."""
-    text = f"{lesson.title}. " + " ".join(f"{i}. {s}" for i, s in enumerate(lesson.steps, 1))
-    if lesson.chords:
-        text += " Shapes: " + "; ".join(shape_text(CHORDS[c]) for c in lesson.chords if c in CHORDS) + "."
-    text += f" Why: {lesson.why}"
-    if lesson.watch:
-        text += " Watch for: " + " ".join(lesson.watch)
-    return text
+def _extra(lesson: Lesson) -> str:
+    """The chord shapes a lesson teaches, said string by string."""
+    shapes = [shape_text(CHORDS[c]) for c in lesson.about if c in CHORDS]
+    return ("Shapes: " + "; ".join(shapes) + ".") if shapes else ""
 
 
-# ------------------------------------------------------------------ the coach (each person's own)
-
-class GuitarCoach:
-    """A person's guitar learning (guitar.json in their own folder, written through atomic_write_text): their goal,
-    their practice plan, every practice session and check attempt, and the stage they're on."""
-
-    def __init__(self, context=None, data_dir: Optional[Path] = None) -> None:
-        """Loads it from the person's folder (or data/)."""
-        self.context = context
-        self.data_dir = Path(data_dir) if data_dir is not None else Path(__file__).resolve().parent.parent / "data"
-        self._file = self.data_dir / FILE_NAME
-        self._load()
-
-    def _load(self) -> None:
-        """Reads it; missing or unreadable is a fresh start (not started)."""
-        try:
-            data = json.loads(self._file.read_text(encoding="utf-8"))
-        except (OSError, ValueError):
-            data = {}
-        self.goal: str = str(data.get("goal") or "")
-        self.started: str = str(data.get("started") or "")
-        self.plan: dict = dict(data.get("plan") or {"minutes_a_day": 15, "days_a_week": 5})
-        self.sessions: list[dict] = list(data.get("sessions") or [])
-        self.attempts: list[dict] = list(data.get("attempts") or [])
-        self.stage: int = int(data.get("stage") or 1)
-
-    def _save(self) -> None:
-        """Writes it atomically."""
-        self.data_dir.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(self._file, json.dumps({"goal": self.goal, "started": self.started, "plan": self.plan,
-                                                  "sessions": self.sessions[-3000:], "attempts": self.attempts[-3000:],
-                                                  "stage": self.stage}, indent=1, ensure_ascii=False))
-
-    @property
-    def is_started(self) -> bool:
-        """Whether they've started learning."""
-        return bool(self.started)
-
-    def start(self, goal: str = "", minutes_a_day: int = 15, days_a_week: int = 5, today: Optional[date] = None) -> None:
-        """Starts (or restarts the plan of) learning: their goal in their own words and how much they mean to
-        practise (5 to 120 minutes, 1 to 7 days); a life event the first time."""
-        first = not self.started
-        self.goal = " ".join(str(goal or self.goal).split())[:300]
-        self.plan = {"minutes_a_day": max(5, min(120, int(minutes_a_day or 15))),
-                     "days_a_week": max(1, min(7, int(days_a_week or 5)))}
-        if first:
-            self.started = (today or date.today()).isoformat()
-        self._save()
-        if first:
-            life_events.record(self, "guitar_started", "Started learning guitar" + (f": {self.goal}" if self.goal else ""),
-                               [], {"plan": self.plan})
-
-    def log_practice(self, minutes: float, worked_on: str = "", bpm: Optional[float] = None,
-                     day: Optional[str] = None) -> dict:
-        """Keeps one practice session (minutes over 0, what they worked on, a tempo if they used one); a life event.
-        ValueError for no time."""
-        minutes = float(minutes or 0)
-        if minutes <= 0:
-            raise ValueError("How long did you practise?")
-        entry = {"id": uuid.uuid4().hex[:8], "date": day or date.today().isoformat(), "minutes": round(minutes, 1),
-                 "worked_on": " ".join(str(worked_on or "").split())[:200],
-                 "bpm": round(float(bpm), 1) if bpm not in (None, "") else None}
-        self.sessions.append(entry)
-        self._save()
-        life_events.record(self, "guitar_practice", f"Practised guitar {minutes:g} min"
-                           + (f": {entry['worked_on']}" if entry["worked_on"] else ""), [],
-                           {"minutes": entry["minutes"], "bpm": entry["bpm"]})
-        return entry
-
-    def passed(self, check_id: str) -> bool:
-        """Whether a check has been passed."""
-        return any(a["check"] == check_id and a["passed"] for a in self.attempts)
-
-    def attempt(self, check_id: str, passed: bool, value: Optional[float] = None, how: str = "said",
-                detail: str = "", day: Optional[str] = None) -> dict:
-        """Keeps one attempt at a check: passed or not, its value, how it was verified (heard, counted, said) and what
-        was heard. A first pass is a life event and earns XP; the stage moves on when all its checks are passed
-        (another life event, more XP). ValueError for a check that isn't in the program."""
-        if check_id not in CHECKS:
-            raise ValueError("There's no such check.")
-        first_pass = passed and not self.passed(check_id)
-        entry = {"id": uuid.uuid4().hex[:8], "check": check_id, "date": day or date.today().isoformat(),
-                 "passed": bool(passed), "value": value, "how": how, "detail": str(detail or "")[:300]}
-        self.attempts.append(entry)
-        stage, check = CHECKS[check_id]
-        moved = False
-        if first_pass and stage.number == self.stage and all(self.passed(c.id) for c in stage.checks) \
-                and self.stage < len(STAGES):
-            self.stage += 1
-            moved = True
-        self._save()
-        if first_pass:
-            life_events.record(self, "guitar_check_passed", f"Passed a guitar check ({how}): {check.what}",
-                               [], {"check": check_id, "value": value, "how": how})
-            self._xp(CHECK_XP, "🎸 Check passed", check.what)
-        if moved:
-            done = STAGES[self.stage - 2]
-            life_events.record(self, "guitar_stage_done", f"Finished guitar stage {done.number}: {done.name}", [],
-                               {"stage": done.number})
-            self._xp(STAGE_XP, f"🎸 Stage {done.number} done", f"{done.name}. Next: {STAGES[self.stage - 1].name}.")
-        entry["stage_done"] = moved
-        return entry
-
-    def _xp(self, xp: int, title: str, message: str) -> None:
-        """XP in the Music skill for the person (nothing without profiles, as in tests)."""
-        if self.context is None or getattr(self.context, "profiles", None) is None:
-            return
-        from core.gamification import SkillWeight, grant_xp
-
-        try:
-            grant_xp(self.context, xp, title, message, skill_weights=[SkillWeight(SKILL, xp)])
-        except Exception:
-            log.exception("Guitar: XP couldn't be granted")
-
-    def best(self, check_id: str) -> Optional[float]:
-        """The best value counted for a check (most changes, fastest tempo), or None."""
-        values = [a["value"] for a in self.attempts if a["check"] == check_id and a["value"] is not None]
-        return max(values) if values else None
-
-
-# ------------------------------------------------------------------ what's next, and how it's going
-
-def current_stage(coach: GuitarCoach) -> Stage:
-    """The stage they're on."""
-    return STAGES[max(1, min(coach.stage, len(STAGES))) - 1]
-
-
-def open_checks(coach: GuitarCoach) -> list[Check]:
-    """The current stage's checks not passed yet, in order."""
-    return [c for c in current_stage(coach).checks if not coach.passed(c.id)]
-
-
-def next_step(coach: GuitarCoach) -> str:
-    """Pure logic. What to work on now, and why: start, the first open check and the lesson behind it, or that the
-    program is done."""
-    if not coach.is_started:
-        return "Say \"I want to learn guitar\" and how much time you have, and I'll set up your plan."
-    stage = current_stage(coach)
-    left = open_checks(coach)
-    if not left:
-        return "You've passed every check in the program. Pick songs you love and keep playing; I'll keep the log."
-    check = left[0]
-    lesson = next((l for l in stage.lessons if check.chord and check.chord in l.chords), stage.lessons[0])
-    how = {"heard_chord": "play it to me and I'll listen", "heard_tuning": "play each string to me",
-           "counted": f"time yourself and tell me the number (passes at {check.passes_at:g} {check.unit})",
-           "said": "tell me when you've done it"}[check.how]
-    return (f"Stage {stage.number}, {stage.name}: next is \"{check.what}\" ({how}). The lesson for it: "
-            f"{lesson.title}. {len(left)} check{'s' if len(left) != 1 else ''} left in this stage.")
-
-
-def _week(today: date) -> tuple[str, str]:
-    """Pure logic. This week, Monday to Sunday, as ISO dates."""
-    monday = today - timedelta(days=today.weekday())
-    return monday.isoformat(), (monday + timedelta(days=6)).isoformat()
-
-
-def stats(coach: GuitarCoach, today: Optional[date] = None) -> dict:
-    """How it's going: this week's practice days and minutes against the plan, the streak of days practised (today
-    or yesterday counts as current), total hours, sessions, checks passed (of all), the stage, and the bests."""
-    today = today or date.today()
-    first, last = _week(today)
-    week = [s for s in coach.sessions if first <= s["date"] <= last]
-    days = sorted({s["date"] for s in coach.sessions}, reverse=True)
-    streak, cursor = 0, today
-    if days and days[0] < (today - timedelta(days=1)).isoformat():
-        cursor = None
-    elif days and days[0] != today.isoformat():
-        cursor = today - timedelta(days=1)
-    while cursor is not None and cursor.isoformat() in days:
-        streak += 1
-        cursor -= timedelta(days=1)
-    bests = {c.id: coach.best(c.id) for s in STAGES for c in s.checks if c.how == "counted" and coach.best(c.id)}
-    return {"started": coach.started, "goal": coach.goal, "plan": coach.plan, "stage": current_stage(coach).number,
-            "stage_name": current_stage(coach).name, "week_days": len({s["date"] for s in week}),
-            "week_minutes": round(sum(s["minutes"] for s in week), 1), "streak": streak,
-            "hours": round(sum(s["minutes"] for s in coach.sessions) / 60, 1), "sessions": len(coach.sessions),
-            "checks_passed": sum(1 for c in CHECKS if coach.passed(c)), "checks": len(CHECKS), "bests": bests}
-
-
-def describe_stats(coach: GuitarCoach, today: Optional[date] = None) -> str:
-    """Pure logic. How it's going, said plainly."""
-    if not coach.is_started:
-        return next_step(coach)
-    s = stats(coach, today)
-    text = (f"Stage {s['stage']} of {len(STAGES)} ({s['stage_name']}). This week: {s['week_days']} of "
-            f"{s['plan']['days_a_week']} days, {s['week_minutes']:g} minutes. Streak: {s['streak']} "
-            f"day{'s' if s['streak'] != 1 else ''}. {s['hours']:g} hours in all; {s['checks_passed']} of "
-            f"{s['checks']} checks passed.")
-    if s["bests"]:
-        text += " Bests: " + "; ".join(f"{CHECKS[k][1].what.split(':')[0]} {v:g} {CHECKS[k][1].unit}"
-                                       for k, v in s["bests"].items()) + "."
-    return text + " " + next_step(coach)
-
-
-# ------------------------------------------------------------------ homework (missions)
-
-def _homework_spec(coach: GuitarCoach, today: date) -> dict:
-    """This week's homework: its occurrence key, name and objectives (practice days, minutes, each open check)."""
-    first, _last = _week(today)
-    stage = current_stage(coach)
-    plan = coach.plan
-    objectives = [(f"Practise on {plan['days_a_week']} days", float(plan["days_a_week"])),
-                  (f"Practise {plan['minutes_a_day'] * plan['days_a_week']} minutes in all",
-                   float(plan["minutes_a_day"] * plan["days_a_week"]))]
-    objectives += [(f"Pass: {c.what}", 1.0) for c in open_checks(coach)[:3]]
-    return {"key": f"{PREFIX}week:{first}", "name": f"Guitar homework: {stage.name}",
-            "summary": f"This week's practice for stage {stage.number} ({stage.builds}).", "objectives": objectives}
-
-
-def _progress(coach: GuitarCoach, spec: dict, today: date) -> list[float]:
-    """Each homework objective's progress from the log: days and minutes this week, and 1 for a check passed."""
-    first, last = _week(today)
-    week = [s for s in coach.sessions if first <= s["date"] <= last]
-    out = []
-    for text, _target in spec["objectives"]:
-        if text.startswith("Practise on"):
-            out.append(float(len({s["date"] for s in week})))
-        elif text.startswith("Practise"):
-            out.append(float(sum(s["minutes"] for s in week)))
-        else:
-            check = next((c for c in CHECKS.values() if f"Pass: {c[1].what}" == text), None)
-            out.append(1.0 if check is not None and coach.passed(check[1].id) else 0.0)
-    return out
-
-
-def ensure_homework(context, today: Optional[date] = None):
-    """This week's homework mission for the signed-in person, made once (by MIA) when they've started, its progress
-    brought up to date from the log, completed when all of it's done. Returns the mission, or None."""
-    from core.gamification import SkillWeight
-    from core.person_settings import person_id
-
-    coach, missions = getattr(context, "guitar", None), getattr(context, "missions", None)
-    if coach is None or missions is None or not coach.is_started:
-        return None
-    today = today or date.today()
-    pid = person_id(context)
-    spec = _homework_spec(coach, today)
-    mission = next((m for m in missions.all_missions() if m.occurrence_key == spec["key"] and m.profile_id == pid), None)
-    if mission is None:
-        mission = missions.add_mission(name=spec["name"], icon="🎸", summary=spec["summary"], assigned_by="mia",
-                                       mission_type="WEEKLY MISSION", reward_xp=40,
-                                       skill_rewards=[SkillWeight(SKILL, 40)], recurring_kind="weekly",
-                                       occurrence_key=spec["key"], profile_id=pid)
-        for text, target in spec["objectives"]:
-            missions.add_objective(mission.mission_id, text, "tally", target)
-        mission = missions.get_mission(mission.mission_id)
-    if mission.status == "active":
-        texts = [o.description for o in mission.objectives]
-        values = _progress(coach, {"objectives": [(t, 0) for t in texts]}, today)
-        missions.set_objective_progress(mission.mission_id, values)
-        if mission.objectives and all(missions.is_objective_complete(mission.mission_id, i)
-                                      for i in range(len(mission.objectives))):
-            missions.update_mission(mission.mission_id, status="completed")
-    return missions.get_mission(mission.mission_id)
-
-
-# ------------------------------------------------------------------ listening (a check passed by playing it)
-
-MAX_RECORDING = 8 * 1024 * 1024  # bytes: a few seconds of WAV is plenty
-
-
-def listen(context, check_id: str, wav: bytes, string: Optional[int] = None) -> dict:
-    """A check heard from a recording (core/guitar_ear.py): a chord check passes when every note of the chord rang
-    and nothing stray did; the tuning check takes one string at a time (6 is the low E) and passes when all six
-    have been heard in tune on the same day. The attempt is kept either way. Returns what was heard and said;
-    ValueError for a check that isn't heard, a missing string number, or a recording that can't be heard."""
+def _wav(payload) -> tuple[list, int]:
+    """The recording a verifier was sent (WAV bytes) as samples and a rate; ValueError when it's missing, too big
+    or can't be read."""
     import io
 
     from core import guitar_ear as ear
 
-    coach = getattr(context, "guitar", None)
-    if coach is None:
-        raise ValueError("Guitar lessons aren't on this MIA.")
-    if check_id not in CHECKS:
-        raise ValueError("There's no such check.")
-    _stage, check = CHECKS[check_id]
-    if not check.how.startswith("heard"):
-        raise ValueError("That check is counted or said, not heard: tell me how it went.")
-    if not wav or len(wav) > MAX_RECORDING:
+    if not payload or len(payload) > MAX_RECORDING:
         raise ValueError("Send a short WAV recording (a few seconds).")
-    if check.how == "heard_tuning" and string not in (1, 2, 3, 4, 5, 6):
-        raise ValueError("Which string? 6 is the low E, 1 the high E.")
     try:
-        samples, rate = ear.read_wav(io.BytesIO(wav))
-        if check.how == "heard_chord":
-            chord = CHORDS[check.chord]
-            heard = ear.hear_chord(ear.chroma(samples, rate), chord.notes)
-            done = coach.attempt(check_id, heard["passed"], how="heard",
+        return ear.read_wav(io.BytesIO(payload))
+    except ear.EarError as problem:
+        raise ValueError(str(problem)) from None
+
+
+def _heard_chord(context, program: Program, check: Check, payload) -> dict:
+    """Verifier heard_chord: the recording's notes against the chord's; passed when every chord tone rang and
+    nothing stray did. The attempt is kept either way."""
+    from core import guitar_ear as ear
+
+    samples, rate = _wav(payload.get("wav") if isinstance(payload, dict) else payload)
+    chord = CHORDS[check.about]
+    try:
+        heard = ear.hear_chord(ear.chroma(samples, rate), chord.notes)
+    except ear.EarError as problem:
+        raise ValueError(str(problem)) from None
+    done = context.paths.attempt(program, check.id, heard["passed"], how="heard",
                                  detail=f"rang {heard['rang']}, missing {heard['missing']}, stray {heard['stray']}")
-            return {"check": check_id, "passed": heard["passed"], "heard": heard,
-                    "said": ear.describe_chord(chord.name, heard), "stage_done": done["stage_done"]}
+    return {"check": check.id, "passed": heard["passed"], "heard": heard, "said": ear.describe_chord(chord.name, heard),
+            "stage_done": done["stage_done"]}
+
+
+def _heard_tuning(context, program: Program, check: Check, payload) -> dict:
+    """Verifier heard_tuning: one open string's pitch against standard tuning (payload {"wav", "string"}, 6 the low
+    E); passed when all six have been heard in tune on the same day. The attempt is kept either way."""
+    from core import guitar_ear as ear
+
+    string = payload.get("string") if isinstance(payload, dict) else None
+    if string not in (1, 2, 3, 4, 5, 6):
+        raise ValueError("Which string? 6 is the low E, 1 the high E.")
+    samples, rate = _wav(payload.get("wav"))
+    try:
         result = ear.tuning(ear.pitch(samples, rate), string)
     except ear.EarError as problem:
         raise ValueError(str(problem)) from None
+    book = context.paths
     today = date.today().isoformat()
-    tuned = {int(a["detail"].split(":")[1]) for a in coach.attempts
-             if a["check"] == check_id and a["date"] == today and str(a["detail"]).startswith("string:")
+    tuned = {int(a["detail"].split(":")[1]) for a in book.path(program.id)["attempts"]
+             if a["check"] == check.id and a["date"] == today and str(a["detail"]).startswith("string:")
              and a["value"] is not None and abs(a["value"]) <= 10}
     if result["in_tune"]:
         tuned.add(string)
     all_six = tuned == {1, 2, 3, 4, 5, 6}
-    done = coach.attempt(check_id, all_six, value=result["cents"], how="heard", detail=f"string:{string}")
+    done = book.attempt(program, check.id, all_six, value=result["cents"], how="heard", detail=f"string:{string}")
     if result["in_tune"]:
         said = f"String {string} is in tune ({result['target']})."
     else:
@@ -602,195 +279,10 @@ def listen(context, check_id: str, wav: bytes, string: Optional[int] = None) -> 
         said = (f"String {string} should be {result['target']}; I hear {result['heard']}, "
                 f"{abs(result['cents']):g} cents {'sharp' if result['cents'] > 0 else 'flat'}: {fix}.")
     said += " All six are in tune." if all_six else f" In tune so far today: {len(tuned)} of 6."
-    return {"check": check_id, "passed": all_six, "tuning": result, "said": said, "stage_done": done["stage_done"]}
+    return {"check": check.id, "passed": all_six, "tuning": result, "said": said, "stage_done": done["stage_done"]}
 
 
-# ------------------------------------------------------------------ by voice
-
-def _coach(context) -> Optional[GuitarCoach]:
-    """The person's guitar coach, or None on a MIA without it."""
-    return getattr(context, "guitar", None)
-
-
-def _find_check(words: str, coach: GuitarCoach) -> Optional[Check]:
-    """The check the words mean: by id, by the chords named ("G to C"), else the first open one."""
-    text = (words or "").lower().replace("e minor", "em").replace("a minor", "am")
-    if text in CHECKS:
-        return CHECKS[text][1]
-    padded = f" {text.replace(',', ' ')} "
-    named = [c.lower() for c in CHORDS if f" {c.lower()} " in padded]
-    if named:
-        for _stage, check in CHECKS.values():
-            what = check.what.lower().replace("e minor", "em").replace("a minor", "am")
-            if check.how == "counted" and all(f" {n} " in f" {what} " for n in named):
-                return check
-    if "pentatonic" in text or "scale" in text:
-        return CHECKS["pentatonic_80"][1]
-    if "song" in text:
-        return CHECKS["song_through"][1]
-    left = open_checks(coach)
-    return left[0] if left else None
-
-
-def _action_start(context, arguments: dict) -> str:
-    """Tool start_guitar: starts learning (their goal in their words, minutes a day, days a week), and the first
-    homework."""
-    coach = _coach(context)
-    if coach is None:
-        return "Guitar lessons aren't on this MIA."
-    coach.start(str(arguments.get("goal") or ""), int(arguments.get("minutes_a_day") or 15),
-                int(arguments.get("days_a_week") or 5))
-    ensure_homework(context)
-    plan = coach.plan
-    return (f"You're set: {plan['minutes_a_day']} minutes a day, {plan['days_a_week']} days a week. Your homework "
-            "for this week is in Missions. " + next_step(coach) + " Want the first lesson now?")
-
-
-def _action_lesson(context, arguments: dict) -> str:
-    """Tool guitar_lesson: teaches a lesson (the one named, a chord's shape, or the next one for where they are)."""
-    coach = _coach(context)
-    if coach is None:
-        return "Guitar lessons aren't on this MIA."
-    words = str(arguments.get("topic") or "").strip().lower()
-    short = words.replace(" chord", "").replace(" minor", "m").replace(" major", "").strip()
-    chord = next((c for name, c in CHORDS.items() if short == name.lower()), None) if words else None
-    if chord is not None:
-        lesson = next((l for _s, l in LESSONS.values() if chord.name in l.chords), None)
-        return shape_text(chord) + "." + (f" It's in the lesson \"{lesson.title}\"." if lesson else "")
-    lesson = next((l for _s, l in LESSONS.values() if words and words in l.title.lower()), None)
-    if lesson is None:
-        stage = current_stage(coach)
-        left = open_checks(coach)
-        lesson = next((l for l in stage.lessons if left and left[0].chord and left[0].chord in l.chords),
-                      stage.lessons[0])
-    return teach(lesson)
-
-
-def _action_practice(context, arguments: dict) -> str:
-    """Tool log_guitar_practice: keeps a practice session, and says how the week's homework stands."""
-    coach = _coach(context)
-    if coach is None:
-        return "Guitar lessons aren't on this MIA."
-    if not coach.is_started:
-        return next_step(coach)
-    try:
-        coach.log_practice(arguments.get("minutes") or 0, str(arguments.get("worked_on") or ""), arguments.get("bpm"))
-    except (TypeError, ValueError) as problem:
-        return str(problem)
-    mission = ensure_homework(context)
-    s = stats(coach)
-    text = f"Logged. This week: {s['week_days']} of {s['plan']['days_a_week']} days, {s['week_minutes']:g} minutes."
-    if mission is not None and mission.status == "completed":
-        text += " That finishes this week's homework."
-    return text
-
-
-def _action_check(context, arguments: dict) -> str:
-    """Tool guitar_check: a counted or said check ("I did 24 changes G to C"): passed when the number reaches the
-    mark (or when said); a heard one asks for a recording."""
-    coach = _coach(context)
-    if coach is None:
-        return "Guitar lessons aren't on this MIA."
-    if not coach.is_started:
-        return next_step(coach)
-    check = _find_check(str(arguments.get("check") or ""), coach)
-    if check is None:
-        return "Which check? " + next_step(coach)
-    if check.how.startswith("heard"):
-        return (f"\"{check.what}\" is one I listen to: open the Guitar page (web/guitar.html, on the phone or the web) "
-                "and play it, and I'll tell you what I hear.")
-    value = arguments.get("value")
-    if check.how == "counted":
-        try:
-            value = float(value)
-        except (TypeError, ValueError):
-            return f"What number did you get? It passes at {check.passes_at:g} {check.unit}."
-        passed = value >= check.passes_at
-    else:
-        value, passed = None, True
-    done = coach.attempt(check.id, passed, value=value, how="counted" if check.how == "counted" else "said")
-    ensure_homework(context)
-    if not passed:
-        return (f"{value:g} {check.unit}: not there yet (it passes at {check.passes_at:g}). Your best is "
-                f"{coach.best(check.id):g}. Slow the change down and keep your fingers close; try again tomorrow.")
-    text = f"Passed: {check.what}." + (f" {value:g} {check.unit}." if value is not None else "")
-    if done["stage_done"]:
-        text += f" That finishes the stage. Next: stage {coach.stage}, {current_stage(coach).name}."
-    return text + " " + next_step(coach)
-
-
-def _action_progress(context, arguments: dict) -> str:
-    """Tool get_guitar_progress: how it's going (the week against the plan, streak, hours, checks, bests) and what's
-    next."""
-    coach = _coach(context)
-    if coach is None:
-        return "Guitar lessons aren't on this MIA."
-    ensure_homework(context)
-    return describe_stats(coach)
-
-
-def register_guitar_actions(registry) -> None:
-    """Registers the guitar tools: start_guitar, guitar_lesson, log_guitar_practice, guitar_check and
-    get_guitar_progress."""
-    from core.assistant_actions import AssistantAction
-
-    s = {"type": "string"}
-    registry.register(AssistantAction(
-        name="start_guitar", domain="guitar",
-        description="Start learning guitar: their goal in their own words and how much they can practise; MIA makes "
-                    "the plan and the first homework.",
-        parameters={"type": "object", "properties": {
-            "goal": {**s, "description": "Why they want to play, in their words."},
-            "minutes_a_day": {"type": "integer", "description": "Minutes a day, only if they said."},
-            "days_a_week": {"type": "integer", "description": "Days a week, only if they said."}}, "required": []},
-        handler=_action_start,
-        trigger_phrases=("learn guitar", "learn the guitar", "learn to play guitar", "teach me guitar",
-                         "start guitar lessons"),
-        subjects=("guitar",),
-    ))
-    registry.register(AssistantAction(
-        name="guitar_lesson", domain="guitar",
-        description="Teach a guitar lesson or a chord shape: the one named, or the next one for where they are.",
-        parameters={"type": "object", "properties": {
-            "topic": {**s, "description": "A chord (G, E minor) or lesson, only if they named one."}}, "required": []},
-        handler=_action_lesson,
-        trigger_phrases=("guitar lesson", "how do i play the", "show me the chord", "next guitar lesson",
-                         "chord shape", "how do you play a", "teach me the chord"),
-        subjects=("guitar", "chord"),
-    ))
-    registry.register(AssistantAction(
-        name="log_guitar_practice", domain="guitar",
-        description="Log a guitar practice session: minutes, what they worked on, a tempo if they used one.",
-        parameters={"type": "object", "properties": {
-            "minutes": {"type": "number", "description": "How long."},
-            "worked_on": {**s, "description": "What they practised."},
-            "bpm": {"type": "number", "description": "The metronome tempo, only if they said."}},
-            "required": ["minutes"]},
-        handler=_action_practice,
-        trigger_phrases=("practiced guitar", "practised guitar", "played guitar for", "guitar practice",
-                         "minutes of guitar", "practiced my chords", "practised my chords"),
-        subjects=("guitar",),
-    ))
-    registry.register(AssistantAction(
-        name="guitar_check", domain="guitar",
-        description="Record a guitar skill check they measured or did: one-minute chord changes, a tempo held, a song "
-                    "played through.",
-        parameters={"type": "object", "properties": {
-            "check": {**s, "description": "Which check, e.g. 'G to C changes'."},
-            "value": {"type": "number", "description": "The number they got (changes a minute, bpm)."}},
-            "required": []},
-        handler=_action_check,
-        trigger_phrases=("changes in a minute", "chord changes", "one minute changes", "one-minute changes",
-                         "guitar check", "played the whole song"),
-        subjects=("guitar", "changes"),
-    ))
-    registry.register(AssistantAction(
-        name="get_guitar_progress", domain="guitar",
-        description="How their guitar learning is going: the week against the plan, streak, hours, checks passed, "
-                    "bests, and what to work on next.",
-        parameters={"type": "object", "properties": {}, "required": []},
-        handler=_action_progress,
-        trigger_phrases=("guitar progress", "how's my guitar", "how is my guitar", "my guitar stats",
-                         "guitar homework", "how am i doing on guitar"),
-        subjects=("guitar",),
-    ))
+PROGRAM = register(Program(
+    "guitar", "Guitar", SKILL, "🎸", "From holding a guitar to chords, rhythm, songs, barre chords and lead basics.",
+    ("guitar", "chord", "strum", "fret"), STAGES,
+    verifiers={"heard_chord": _heard_chord, "heard_tuning": _heard_tuning}, extra=_extra, plan=(15, 5)))

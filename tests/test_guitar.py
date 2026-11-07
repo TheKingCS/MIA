@@ -2,31 +2,30 @@
 tests.test_guitar
 ===================
 
-MIA teaches guitar (core/guitar.py, core/guitar_ear.py, DEC-0111): her ear
-hears notes and chords right (and wrong ones as wrong), the program is sound
-(every shape makes its chord's notes), and the coaching runs end to end:
-start, practise, checks counted, said and heard, stages that open when their
-checks pass, and weekly homework that completes itself from the log, with XP
-in the Music skill.
+Guitar, the first program on MIA's learning paths (core/guitar.py,
+core/guitar_ear.py, DEC-0111): her ear hears notes and chords right (and
+wrong ones as wrong), the program is sound (every shape makes its chord's
+notes), and the path runs end to end by voice: start, practise, checks
+counted, said and heard, the next stage opening, XP in Music.
 """
 
 from __future__ import annotations
 
 import io
 import wave
-from datetime import date, timedelta
 
 import pytest
 
 from core import guitar as g
 from core import guitar_ear as ear
+from core import paths
+from core.assistant_path_actions import _action_check, _action_lesson, _action_practice, _action_progress, _action_start
 
 RATE = 22050
-TODAY = date(2026, 11, 7)  # a Saturday
 
 
 def _wav(samples, rate: int = RATE) -> bytes:
-    """Samples as 16-bit mono WAV bytes, as the phone sends them."""
+    """Samples as 16-bit mono WAV bytes, as the page sends them."""
     import numpy as np
 
     out = io.BytesIO()
@@ -39,8 +38,7 @@ def _wav(samples, rate: int = RATE) -> bytes:
 
 
 def _strum(chord: g.Chord, frets: str = "") -> list[float]:
-    """What a chord's shape sounds like (or the frets given instead, for a string fretted wrong): each played
-    string's note."""
+    """What a chord's shape sounds like (or the frets given instead, for a string fretted wrong)."""
     open_strings = [ear.freq_of(n, o) for n, o in ear.STANDARD_TUNING]
     return ear.synth([f * 2 ** (int(fret) / 12) for f, fret in zip(open_strings, frets or chord.frets) if fret != "x"],
                      RATE)
@@ -79,96 +77,60 @@ def test_every_shape_makes_its_chord_and_she_hears_each_one():
     assert ear.hear_chord(ear.chroma(_strum(g.CHORDS["Am"], "002210"), RATE), g.CHORDS["Am"].notes)["passed"]
 
 
-def test_the_program_is_whole():
-    """Five stages, numbered in order; every lesson has steps and a why; every chord a lesson teaches or a check
-    hears is a known shape; every counted check has a mark and a unit; check and lesson ids are unique."""
-    assert [s.number for s in g.STAGES] == [1, 2, 3, 4, 5]
-    every_check = [c for s in g.STAGES for c in s.checks]
-    assert len(every_check) == len(g.CHECKS) and len({l.id for s in g.STAGES for l in s.lessons}) == len(g.LESSONS)
+def test_the_guitar_program_is_whole():
+    """Registered, five stages in order, a sound shape (core/paths.problems finds nothing), every chord a lesson or
+    a heard check names is a known shape, and a chord lesson is taught with its shapes."""
+    assert paths.PROGRAMS["guitar"] is g.PROGRAM and g.PROGRAM.skill == "music"
+    assert [s.number for s in g.STAGES] == [1, 2, 3, 4, 5] and paths.problems(g.PROGRAM) == []
     for s in g.STAGES:
-        assert s.lessons and s.checks
         for lesson in s.lessons:
-            assert lesson.steps and lesson.why and set(lesson.chords) <= set(g.CHORDS)
-    for c in every_check:
-        assert c.how in ("heard_chord", "heard_tuning", "counted", "said")
-        assert (c.chord in g.CHORDS) == (c.how == "heard_chord")
-        assert bool(c.passes_at > 0 and c.unit) == (c.how == "counted")
+            assert set(lesson.about) <= set(g.CHORDS)
+        for c in s.checks:
+            assert (c.about in g.CHORDS) == (c.how == "heard_chord")
     assert "low E fret 3 (finger 2)" in g.shape_text(g.CHORDS["G"])
-    assert g.teach(g.LESSONS["em_am"][1]).startswith("Your first chords") and "Watch for:" in g.teach(
-        g.LESSONS["em_am"][1])
+    taught = paths.teach(g.PROGRAM, g.LESSONS["em_am"][1])
+    assert taught.startswith("Your first chords") and "Shapes: Em (E, G, B)" in taught and "Watch for:" in taught
 
 
 @pytest.fixture
 def world(tmp_path, monkeypatch):
-    """The shared engine world (profiles, missions, skills) with a guitar coach in the person's folder."""
+    """The shared engine world (profiles, missions, skills) with learning paths in the person's folder."""
     from tests.engine_world import build_world
 
     context = build_world(tmp_path, monkeypatch)
-    context.guitar = g.GuitarCoach(context, data_dir=tmp_path / "me")
+    context.paths = paths.PathBook(context, data_dir=tmp_path / "me")
     return context
 
 
-def test_learning_runs_from_start_to_the_next_stage(world):
-    """Start with a goal and a plan; practise; a counted check under the mark fails and over it passes; a said one
-    passes; heard ones pass from recordings; when the stage's checks are all passed, stage 2 opens, with XP in
-    Music."""
-    coach = world.guitar
-    assert "learn guitar" in g.next_step(coach)
-    said = g._action_start(world, {"goal": "play songs around the fire", "minutes_a_day": 20, "days_a_week": 4})
-    assert "20 minutes a day, 4 days a week" in said and coach.goal == "play songs around the fire"
-    assert g._action_practice(world, {"minutes": 0}) == "How long did you practise?"
-    assert g._action_practice(world, {"minutes": 25, "worked_on": "Em and Am"}).startswith("Logged. This week: 1 of 4")
-    low = g._action_check(world, {"check": "E minor to A minor changes", "value": 12})
+def test_learning_guitar_runs_from_start_to_the_next_stage(world):
+    """Start by voice with a goal and a plan; practise; a counted check under the mark fails and over it passes; a
+    said one passes; heard ones pass from recordings (a wrong chord doesn't); when the stage's checks all pass,
+    stage 2 opens, with XP in Music."""
+    said = _action_start(world, {"interest": "guitar", "goal": "songs around the fire", "minutes_a_day": 20,
+                                 "days_a_week": 4})
+    assert "You're set for Guitar: 20 minutes a day, 4 days a week" in said
+    book, program = world.paths, g.PROGRAM
+    assert book.path("guitar")["goal"] == "songs around the fire"
+    assert _action_practice(world, {"minutes": 0}) == "How long did you practise?"
+    assert _action_practice(world, {"minutes": 25, "worked_on": "Em and Am"}).startswith("Logged. Guitar this week: 1")
+    assert _action_lesson(world, {}).startswith("Holding it and tuning it.")  # tuning is the first open check
+    assert _action_lesson(world, {"topic": "the G chord"}).startswith("G (G, B, D): low E fret 3")
+    low = _action_check(world, {"check": "E minor to A minor changes", "value": 12})
     assert "not there yet" in low and "passes at 20" in low
-    assert g._action_check(world, {"check": "Em to Am changes", "value": 22}).startswith("Passed")
-    assert g._action_check(world, {"check": "strum_60"}).startswith("Passed")
-    assert "I listen to" in g._action_check(world, {"check": "em_clean"})
-    for chord in ("em_clean", "am_clean"):
-        heard = g.listen(world, chord, _wav(_strum(g.CHORDS[g.CHECKS[chord][1].chord])))
+    assert _action_check(world, {"check": "Em to Am changes", "value": 22}).startswith("Passed")
+    assert _action_check(world, {"check": "strum down 60 bpm"}).startswith("Passed")
+    assert "I check myself" in _action_check(world, {"check": "play e minor so every note rings"})
+    for check in ("em_clean", "am_clean"):
+        heard = paths.verify(world, program, check, {"wav": _wav(_strum(g.CHORDS[program.check(check)[1].about]))})
         assert heard["passed"] and "clean" in heard["said"]
-    bad = g.listen(world, "em_clean", _wav(_strum(g.CHORDS["Am"])))
-    assert not bad["passed"]
+    assert not paths.verify(world, program, "em_clean", {"wav": _wav(_strum(g.CHORDS["Am"]))})["passed"]
     for string, (note, octave) in zip(range(6, 0, -1), ear.STANDARD_TUNING):
-        result = g.listen(world, "tuned", _wav(ear.synth([ear.freq_of(note, octave)])), string)
-    assert result["passed"] and result["stage_done"] and coach.stage == 2
-    assert world.skills.get_progress(world.me.profile_id, g.SKILL).total_xp > 0
+        result = paths.verify(world, program, "tuned", {"wav": _wav(ear.synth([ear.freq_of(note, octave)])),
+                                                        "string": string})
+    assert result["passed"] and result["stage_done"] and book.path("guitar")["stage"] == 2
+    assert world.skills.get_progress(world.me.profile_id, "music").total_xp > 0
     with pytest.raises(ValueError):
-        g.listen(world, "tuned", _wav(ear.synth([110.0])))  # which string?
+        paths.verify(world, program, "tuned", {"wav": _wav(ear.synth([110.0]))})  # which string?
     with pytest.raises(ValueError):
-        g.listen(world, "strum_60", _wav(ear.synth([110.0])))  # said, not heard
-    assert "Stage 2 of 5" in g._action_progress(world, {})
-
-
-def test_homework_is_a_weekly_mission_that_completes_from_the_log(world):
-    """The week's homework has practice days, minutes and the open checks; practice moves it; it completes itself
-    when everything's done; next week brings a new one."""
-    coach = world.guitar
-    coach.start("songs", minutes_a_day=10, days_a_week=2, today=TODAY)
-    mission = g.ensure_homework(world, TODAY)
-    texts = [o.description for o in mission.objectives]
-    assert texts[:2] == ["Practise on 2 days", "Practise 20 minutes in all"] and len(texts) == 5
-    assert mission.assigned_by == "mia" and mission.occurrence_key == "guitar:week:2026-11-02"
-    monday = TODAY - timedelta(days=TODAY.weekday())
-    coach.log_practice(10, day=monday.isoformat())
-    coach.log_practice(12, day=TODAY.isoformat())
-    for check in ("tuned", "em_clean", "am_clean"):
-        coach.attempt(check, True, how="heard")
-    done = g.ensure_homework(world, TODAY)
-    assert done.status == "completed"
-    nxt = g.ensure_homework(world, TODAY + timedelta(days=7))
-    assert nxt.mission_id != done.mission_id and nxt.status == "active"
-
-
-def test_stats_say_how_its_going(world):
-    """This week against the plan, the streak (today or yesterday keeps it), hours, and the bests."""
-    coach = world.guitar
-    coach.start("x", minutes_a_day=15, days_a_week=5, today=TODAY)
-    for back in (0, 1, 2):
-        coach.log_practice(30, day=(TODAY - timedelta(days=back)).isoformat())
-    coach.attempt("changes_em_am", False, value=14, how="counted")
-    coach.attempt("changes_em_am", True, value=21, how="counted")
-    s = g.stats(coach, TODAY)
-    assert s["week_days"] == 3 and s["week_minutes"] == 90 and s["streak"] == 3 and s["hours"] == 1.5
-    assert s["bests"] == {"changes_em_am": 21} and s["checks_passed"] == 1
-    assert g.stats(coach, TODAY + timedelta(days=3))["streak"] == 0  # a gap breaks it
-    assert "Bests:" in g.describe_stats(coach, TODAY)
+        paths.verify(world, program, "strum_60", {"wav": b""})  # said, not heard
+    assert "Guitar: stage 2 of 5" in _action_progress(world, {})

@@ -1730,3 +1730,29 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   thresholds were set on synthesized strings and may need adjusting from real recordings; the counted checks
   trust the person's count.
 - Related: DEC-0020 (fitness plan, the same mission machinery), DEC-0107, DEC-0109
+
+### DEC-0112: Learning paths: the same loop for every desire
+- Status: APPROVED
+- Proposed by: zac, 2026-11-07 ("That whole principle for the guitar path we just discussed and built should be a
+  principle she uses repeatedly when understanding a desire or interest, planning steps for implementing or
+  improvement, tracking progress, monitoring statistics, completing missions as progress is made and being able to
+  verify and test") · Built by: claude, 2026-11-07
+- Decision: `core/paths.py` is the engine, and guitar (DEC-0111) is its first program. The loop: **understand the
+  desire** (the goal in their words, the time they have) → **plan the steps** (a program of stages, lessons and
+  skill checks) → **teach** the next lesson → **practise and log** → **homework as a weekly mission per path**
+  whose progress comes from the log → **statistics** (the week against the plan, streak, hours, checks, bests) →
+  **verify by evidence** (a program's verifier in code, like guitar's ear; counted against a mark; or said, and the
+  record says which) → **the next stage** when every check of this one passes; XP in the program's skill. Programs
+  are built in (registered in code, like `core/guitar.py`) or **drafted** for a new interest by her local model,
+  grounded in her specialists' notes and checked in code (`problems()`), kept as the person's draft until they say
+  "start it", and always said to be drafted. Each person's paths are their own store (`paths`). By voice:
+  start_learning, learning_lesson, log_practice, learning_check, learning_progress; `GET /api/paths`,
+  `POST /api/paths/<id>/verify`, the page `web/guitar.html?path=<id>`; `paths.practice` watches the weeks; the
+  life state's areas count them. Guitar's own store and tools from DEC-0111 became this engine the same day.
+  The principle is written into her best practices ("Learning and growth") and CLAUDE.md.
+- MIA herself: her computing curriculum (DEC-0107) already runs this loop through Night School (objectives, lessons
+  graded by tests, stages by level). Moving it onto this engine, so one code path serves both, is the next step.
+- Why: one way of growing, proven on guitar, used for everything: a person and MIA learn the same way.
+- Honest limits: a drafted program is only as good as the local model and the specialists' notes behind it; that's
+  why it's a proposal, checked in shape by code, never in truth.
+- Related: DEC-0094, DEC-0107, DEC-0109, DEC-0111

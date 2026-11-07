@@ -659,21 +659,23 @@ def test_the_pcs_check_up_is_its_owners(client, context, monkeypatch):
     assert client.get("/api/diagnostics", headers=owner).json()["checks"][0]["id"] == "pc_ready"
 
 
-def test_guitar_hears_a_chord_and_says_what_to_work_on(client, context, tmp_path):
-    """GET /api/guitar gives the stage, stats and open checks; POST /api/guitar/listen hears a recording against a
-    check; a stranger is refused and a bad recording says why."""
+def test_learning_paths_list_and_a_guitar_check_is_heard(client, context, tmp_path):
+    """GET /api/paths gives each path started with its stats and open checks; POST /api/paths/guitar/verify hears a
+    recording against a check; a path not started is 404, a bad recording 422, a stranger 401."""
     import io
     import wave
 
     import numpy as np
 
-    from core import guitar, guitar_ear
+    from core import guitar, guitar_ear, paths
 
-    context.guitar = guitar.GuitarCoach(context, data_dir=tmp_path / "guitar")
-    context.guitar.start("songs")
+    from core.personal_data import view_for
+
     owner = {"Authorization": f"Bearer {_login(client, context)}"}
-    state = client.get("/api/guitar", headers=owner).json()
-    assert state["stats"]["stage"] == 1 and state["open"][0]["id"] == "tuned"
+    assert client.post("/api/paths/guitar/verify", content=b"x", headers=owner).status_code == 404
+    view_for(context, _profile_id(context)).paths.start(guitar.PROGRAM, "songs")  # the person's own store
+    state = client.get("/api/paths", headers=owner).json()
+    assert state["paths"][0]["id"] == "guitar" and state["paths"][0]["open"][0]["id"] == "tuned"
     shape = guitar.CHORDS["Em"]
     opens = [guitar_ear.freq_of(n, o) for n, o in guitar_ear.STANDARD_TUNING]
     sound = guitar_ear.synth([f * 2 ** (int(x) / 12) for f, x in zip(opens, shape.frets) if x != "x"])
@@ -683,7 +685,10 @@ def test_guitar_hears_a_chord_and_says_what_to_work_on(client, context, tmp_path
         w.setsampwidth(2)
         w.setframerate(22050)
         w.writeframes((np.asarray(sound) * 32767).astype("<i2").tobytes())
-    heard = client.post("/api/guitar/listen", content=out.getvalue(), headers={**owner, "x-check": "em_clean"}).json()
+    heard = client.post("/api/paths/guitar/verify", content=out.getvalue(),
+                        headers={**owner, "x-check": "em_clean"}).json()
     assert heard["passed"] and heard["said"].startswith("That's a clean Em")
-    assert client.post("/api/guitar/listen", content=b"noise", headers={**owner, "x-check": "em_clean"}).status_code == 422
-    assert client.post("/api/guitar/listen", content=out.getvalue(), headers={"x-check": "em_clean"}).status_code == 401
+    assert client.post("/api/paths/guitar/verify", content=b"noise",
+                       headers={**owner, "x-check": "em_clean"}).status_code == 422
+    assert client.post("/api/paths/guitar/verify", content=out.getvalue(),
+                       headers={"x-check": "em_clean"}).status_code == 401

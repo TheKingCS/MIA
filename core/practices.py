@@ -76,6 +76,23 @@ AREAS: tuple[Area, ...] = (
     ), paths=("core/model_forge.py", "core/llm", "core/local_model.py", "core/self_docs.py", "core/assistant_chat.py",
               "core/mia_coder.py", "core/benchmarks.py", "core/sight.py"),
        words=("model", "router", "llm", "prompt", "training", "held-out", "benchmark", "fine-tun")),
+    Area("growth", "Learning and growth", (
+        "Every desire is worked the same way (DEC-0112): understand it, plan the steps, teach, practise and log, "
+        "homework as missions, statistics, verify by evidence, then the next stage. For a person and for MIA herself.",
+        "Understand the desire first: the goal in their own words, and how much time they really have.",
+        "Plan in stages small enough to finish, each ending in checks that prove it; a stage opens when the last "
+        "one's checks pass.",
+        "A skill counts when it's shown, not claimed: verify in code where possible (heard, measured), counted "
+        "against a mark next, said only for what can't be measured yet, and the record says which.",
+        "Progress comes from the log: missions take their numbers from what was done, never from a box ticked.",
+        "Teach the next step for where they are, with why and the mistakes to watch for; never a wall of everything.",
+        "Statistics say the truth gently: the week against the plan, the streak, the bests; a missed week is shown, "
+        "never scolded.",
+        "A plan she drafts is a proposal: grounded in what her specialists know, checked in code, started only when "
+        "the person says so, and always said to be drafted.",
+    ), paths=("core/paths.py", "core/guitar.py", "core/guitar_ear.py", "core/curriculum.py", "core/night_school.py",
+              "core/assistant_path_actions.py"),
+       words=("learn", "teach", "practice", "practise", "skill check", "path", "curriculum", "homework")),
     Area("development", "Software development", (
         "Read before writing: what the code takes, returns and does at its edges.",
         "The smallest change that does the job, matching the code around it: its naming, comment density and idiom.",

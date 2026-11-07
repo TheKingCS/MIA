@@ -218,6 +218,12 @@ def _operating(store, today):
     return {"lines": len(store.lines)}, None
 
 
+def _paths(store, today):
+    """Learning paths started, and the checks passed across them."""
+    passed = sum(1 for p in store.paths.values() for a in p.get("attempts", []) if a.get("passed"))
+    return {"paths": len(store.paths), "checks_passed": passed}, None
+
+
 def _record_sets(store, today):
     """Record sets, and the records in them."""
     return {"sets": len(store.sets), "records": sum(len(s.get("records") or []) for s in store.sets)}, None
@@ -252,6 +258,7 @@ AREAS: tuple[Area, ...] = (
     Area("rewards", "reward_shop", "core/reward_shop.py", _rewards),
     Area("loop", "loop", "core/the_loop.py", _loop),
     Area("operating_journal", "operating_journal", "core/operating_journal.py", _operating),
+    Area("learning", "paths", "core/paths.py", _paths),
     Area("record_sets", "record_sets", "core/record_sets.py", _record_sets),
     Area("my_record_sets", "my_record_sets", "core/record_sets.py", _record_sets),
 )

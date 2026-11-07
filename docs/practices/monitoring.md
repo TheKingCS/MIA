@@ -12,6 +12,7 @@
 
 ## Learned building her
 
+- **One loop for every desire: learning paths** (K-0058): core/paths.py.
 - **The router runs in the shadow on every turn** (K-0049): core/turn_trace.py now notes, on each traced turn, the top five tools MIA's own router would have offered (shadow_picks in core/model_forge.py), beside the tools she actually called.
 - **Give each model an issue to serve, and judge it by that issue** (K-0047): every model the forge makes names what it serves on its card (loop:answers.no_tool, project:..., mission:..., gap:...).
 - **A small held-out set can't tell a small change from noise** (K-0048): giving the router the person's record names raised it on the choosing half (86% to 87% first pick, 97% to 99% top five) and left it level on the scoring half (81% to 80%, 97% to 95%).

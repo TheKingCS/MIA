@@ -216,6 +216,12 @@ first. Each is a step below.
     complete from the log, stats, XP in Music, a music specialist. Next: tune the ear on real recordings; a
     metronome on the page; the glasses (play, and she listens); more instruments on the same shape.
 
+24. ✅ **Learning paths for every desire** (DEC-0112; `core/paths.py`, `core/assistant_path_actions.py`,
+    2026-11-07): guitar became the first program on one engine; any interest gets a drafted program (grounded
+    in the specialists, checked in code, started on the person's say-so). Next: move her own curriculum
+    (DEC-0107) onto it; verifiers from her records (a workout logged, a recipe made); programs for the
+    specialists' areas.
+
 ### Phase E: The rest already queued
 
 18. ⬜ T-0042 (the Skills module reaching into Missions), T-0040 (JSON imports, diagnostics), T-0041 (blueprint

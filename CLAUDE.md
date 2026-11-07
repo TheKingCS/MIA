@@ -214,6 +214,12 @@ children.
   (`dev_knowledge.add(kind, title, body, refs, concerns, by="claude",
   status="confirmed")`, each citing its commit, task or decision).
   `for_task()` hands them to whoever next works those files.
+- **Learning paths** (DEC-0112, `core/paths.py`) — every desire is worked
+  the same way: understand it, plan stages, teach, log practice, weekly
+  homework missions from the log, stats, verify by evidence (a verifier,
+  counted, or said), next stage. A new skill area is a `Program`
+  registered in code (like `core/guitar.py`), or drafted for the person
+  and started only on their say-so. Use it, don't build a parallel one.
 - **Notes from conversation** (DEC-0054, `core/life_notes.py`) — a
   promise, decision, idea or goal set aside is offered after her reply
   and kept only on "keep it"; never in a private or personal turn.

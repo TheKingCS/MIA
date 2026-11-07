@@ -80,6 +80,9 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       hears (tuning, clean chords), open the Guitar page (`/web/guitar.html`) on the phone or the PC and press
       Record. If she says a chord you played cleanly isn't clean, tell Claude: her ear was tuned on synthetic
       strings and real ones may need adjusting.
+- [ ] **Anything else you want to learn (DEC-0112):** "I want to learn to weld" (or bake bread, or speak Spanish):
+      she drafts a plan from what her specialists know, describes it, and starts it only when you say "start it".
+      Each path gets its own homework in Missions; "how am I doing on welding?" for its stats.
 - [ ] **Try the new web pages** (after the restart, in the sidebar): Kept, Classroom, Household, Navigation, Maps,
       Observations, Memories, Knowledge (copy Kiwix `.zim` packs into `reference_library\` first: her specialists also cite them
       when they study, DEC-0109), and
