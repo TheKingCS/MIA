@@ -83,8 +83,11 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       `core/operating_journal.line_score`), Play (six weeks of play minutes as bars, the latest games with
       `core/recreation.effort_word`, a big Log a Game), Observations (a card each: Needs You or Noticed, the
       apps it drew on, Open in <app>, from `core/observations_web.card`), Expeditions (the next one as one card:
-      heads-up from `core/web_more._trip_heads_up`, packing to tick, Start Trip; the rest as rows).
-      Still to do per app, against its canvas artboard: the other outdoors pages (Maps, Navigation, World Map), Knowledge, Music, Files, Passwords, News, Look,
+      heads-up from `core/web_more._trip_heads_up`, packing to tick, Start Trip; the rest as rows),
+      Maps (the route card under the map: from the first
+      waypoint to the one picked, distance, bearing, sunrise and sunset; no climb until MIA has elevation; the
+      canvas's full-screen map with floating controls is still to do).
+      Still to do per app, against its canvas artboard: Navigation, World Map, Knowledge, Music, Files, Passwords, News, Look,
       Settings, Profile, Fix-It, Diagnostics; Power, Toolbox, Lab and Field Kit need web pages first (WEB_PARITY).
 - [ ] Glasses: the shared orb on `web/glasses.html`.
 - Note: DEC-0119 (MIA for Zac alone) came after the canvas: drop household members from Party's leaderboard and

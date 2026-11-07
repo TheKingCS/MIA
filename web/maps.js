@@ -93,8 +93,42 @@
           })),
         view,
         el("p", { class: "dim" }, "Tiles are kept on the PC once seen, so they work with no signal later. Tap the map to add a waypoint there, "
-          + "or tell MIA: \"add a waypoint called Spring at 18S UJ 23478 06483\".")));
+          + "or tell MIA: \"add a waypoint called Spring at 18S UJ 23478 06483\".")), routeCard());
     draw(view);
+  }
+
+  // The design canvas's route card (DEC-0113): from the first waypoint to the one picked, the distance and bearing
+  // (core/navigation_web.py works them out) and the sunset there. No climb: MIA has no elevation for it yet.
+  let routeTo = "";
+  function routeCard() {
+    const box = el("section", { class: "glass mp-route", "aria-label": "Route" });
+    const wps = data.waypoints || [];
+    if (wps.length < 2) {
+      box.append(el("p", { class: "dim" }, "Add two waypoints to see the distance and bearing between them."));
+      return box;
+    }
+    const from = wps[0];
+    if (!routeTo || !wps.some((w) => w.id === routeTo)) routeTo = wps[1].id;
+    const pick = el("select", { "aria-label": "Route to", onchange: (e) => { routeTo = e.target.value; fill(); } },
+      wps.slice(1).map((w) => el("option", { value: w.id, selected: w.id === routeTo ? true : null }, w.name)));
+    const figs = el("div", { class: "prop-trio" });
+    const head = el("div", { class: "mp-route-top" }, el("span", { class: "mp-label" }, "From " + from.name + " to"), pick,
+      el("span", { class: "mp-label mp-bearing" }, ""));
+    async function fill() {
+      try {
+        const nav = await MIA.navigation(from.id, routeTo);
+        const r = nav.route, sky = nav.sky;
+        head.querySelector(".mp-bearing").textContent = r ? "Bearing " + String(Math.round(r.bearing)).padStart(3, "0") + "° " + r.toward : "";
+        figs.replaceChildren(
+          el("div", { class: "prop-trio-cell" }, el("span", { class: "prop-trio-t" }, "Distance"),
+            el("strong", {}, r ? r.miles + " mi" : "—"), r ? el("small", { class: "dim" }, r.km + " km") : null),
+          el("div", { class: "prop-trio-cell" }, el("span", { class: "prop-trio-t" }, "Sunrise"), el("strong", {}, sky ? sky.sunrise : "—")),
+          el("div", { class: "prop-trio-cell" }, el("span", { class: "prop-trio-t" }, "Sunset"), el("strong", {}, sky ? sky.sunset : "—")));
+      } catch (e) { figs.replaceChildren(el("p", { class: "dim" }, e.message)); }
+    }
+    fill();
+    box.append(head, figs, el("a", { class: "obs-open", href: "navigation.html" }, "More in Navigation →"));
+    return box;
   }
 
   const button = (label, onclick, on) => el("button", { type: "button", class: "btn " + (on ? "btn-amber" : "btn-ghost") + " btn-small", onclick }, label);
@@ -126,7 +160,7 @@
       el("div", { class: "row-buttons" }, ...modes(area.name),
         button("Take it off", () => MIAShell.act({ kind: "map.area_remove", params: { name: area.name } }))), view,
       el("p", { class: "dim" }, area.name + ": " + area.size_mb + " MB on this PC, from OpenStreetMap, works with no signal. "
-        + "Tap the map to add a waypoint there.")));
+        + "Tap the map to add a waypoint there.")), routeCard());
     if (!window.maplibregl || !window.pmtiles || !window.basemaps) { view.textContent = "The map's code didn't load."; return; }
     if (!protocol) {
       protocol = new pmtiles.Protocol();
