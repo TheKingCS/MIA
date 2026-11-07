@@ -85,7 +85,12 @@
     $("panel").replaceChildren(
       el("section", { class: "glass money-section" },
         el("div", { class: "row-buttons" }, ...modes("topo"), button("+", () => setZoom(view, zoom + 1)), button("−", () => setZoom(view, zoom - 1)),
-          data.waypoints.length ? button("Waypoints", () => { zoom = data.zoom; [cx, cy] = toTile(data.center.lat, data.center.lon, zoom); draw(view); }) : null),
+          data.waypoints.length ? button("Waypoints", () => { zoom = data.zoom; [cx, cy] = toTile(data.center.lat, data.center.lon, zoom); draw(view); }) : null,
+          button("Keep this area offline", () => {  // the box the map shows now, cut as a vector area on the PC
+            const half = [view.clientWidth / 2 / SIZE, view.clientHeight / 2 / SIZE];
+            const [north, west] = toDeg(cx - half[0], cy - half[1], zoom), [south, east] = toDeg(cx + half[0], cy + half[1], zoom);
+            keep({ west, south, east, north });
+          })),
         view,
         el("p", { class: "dim" }, "Tiles are kept on the PC once seen, so they work with no signal later. Tap the map to add a waypoint there, "
           + "or tell MIA: \"add a waypoint called Spring at 18S UJ 23478 06483\".")));
@@ -97,6 +102,12 @@
   async function addAt(lat, lon) {  // a tap on either map: a waypoint there, named first
     const values = await MIAShell.form("A waypoint here", [{ name: "name", label: "Name", type: "text", required: true }]);
     if (values) MIAShell.act({ kind: "waypoint.add", params: { name: values.name, lat: lat.toFixed(6), lon: lon.toFixed(6) } });
+  }
+
+  async function keep(box) {
+    const values = await MIAShell.form("Keep this area offline", [{ name: "name", label: "Call it", type: "text", required: true }]);
+    if (values) MIAShell.act({ kind: "map.area_keep", params: { name: values.name, west: box.west.toFixed(5), south: box.south.toFixed(5),
+      east: box.east.toFixed(5), north: box.north.toFixed(5) } });
   }
 
   // The map kinds to switch between: the topo tiles, and each vector area kept on this PC.
@@ -112,7 +123,8 @@
   function paintVector(area) {
     const view = el("div", { class: "map-view map-vector", role: "img", "aria-label": "Map of " + area.name });
     $("panel").replaceChildren(el("section", { class: "glass money-section" },
-      el("div", { class: "row-buttons" }, ...modes(area.name)), view,
+      el("div", { class: "row-buttons" }, ...modes(area.name),
+        button("Take it off", () => MIAShell.act({ kind: "map.area_remove", params: { name: area.name } }))), view,
       el("p", { class: "dim" }, area.name + ": " + area.size_mb + " MB on this PC, from OpenStreetMap, works with no signal. "
         + "Tap the map to add a waypoint there.")));
     if (!window.maplibregl || !window.pmtiles || !window.basemaps) { view.textContent = "The map's code didn't load."; return; }
@@ -132,15 +144,19 @@
     });
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }));
     map.on("click", (e) => addAt(e.lngLat.lat, e.lngLat.lng));
-    vec = { map, markers: [] };
+    vec = { map, markers: [], name: area.name };
     pins();
   }
 
   MIAShell.start(async () => {
     const first = data === null;
     data = await MIA.maps();
-    if (!first) {  // a change elsewhere: new pins, same view
-      if (vec) pins(); else draw(document.querySelector(".map-view"));
+    if (!first) {  // a change elsewhere: new pins, same view; a kept or removed area: the switch changes
+      const shown = vec && data.vector.find((a) => a.name === vec.name);
+      if (vec && !shown) { if (data.vector.length) paintVector(data.vector[0]); else paint(); return; }
+      if (vec) { pins(); $("panel").querySelector(".row-buttons").replaceChildren(...modes(vec.name),
+        button("Take it off", () => MIAShell.act({ kind: "map.area_remove", params: { name: vec.name } }))); }
+      else paint();
       return;
     }
     zoom = data.zoom;

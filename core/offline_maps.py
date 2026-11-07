@@ -71,8 +71,9 @@ def header(path: Path) -> Optional[dict]:
             "center_zoom": center_zoom}
 
 
-def maps(folder: Path = MAPS_DIR) -> list[dict]:
+def maps(folder: Optional[Path] = None) -> list[dict]:
     """The areas kept on this PC: [{name, size_mb, bounds, center, max_zoom}]."""
+    folder = folder or MAPS_DIR
     out = []
     for path in sorted(folder.glob("*.pmtiles")) if folder.exists() else []:
         found = header(path)
@@ -81,21 +82,29 @@ def maps(folder: Path = MAPS_DIR) -> list[dict]:
     return out
 
 
-def path_of(name: str, folder: Path = MAPS_DIR) -> Optional[Path]:
+def path_of(name: str, folder: Optional[Path] = None) -> Optional[Path]:
     if not valid_name(name):
         return None
+    folder = folder or MAPS_DIR
     path = folder / f"{name}.pmtiles"
     return path if path.exists() else None
 
 
-def latest_build(get: Callable[[str], bytes] = lambda url: urllib.request.urlopen(url, timeout=30).read()) -> str:
+def _get(url: str) -> bytes:
+    # A plain Python User-Agent is refused (403); the same name the topo tiles use (core/map_tile_cache.py)
+    request = urllib.request.Request(url, headers={"User-Agent": "MIA-Home/0.2"})
+    with urllib.request.urlopen(request, timeout=30) as answer:
+        return answer.read()
+
+
+def latest_build(get: Callable[[str], bytes] = _get) -> str:
     """The newest Protomaps world build's URL."""
     builds = json.loads(get(BUILDS))
     return BUILD_URL.format(key=sorted(b["key"] for b in builds if b["key"].endswith(".pmtiles"))[-1])
 
 
 def extract(name: str, box: tuple[float, float, float, float], max_zoom: int = MAX_ZOOM, source: str = "",
-            run: Callable = subprocess.run, folder: Path = MAPS_DIR) -> Path:
+            run: Callable = subprocess.run, folder: Optional[Path] = None) -> Path:
     """Cut the box out of the world build into data/maps/<name>.pmtiles. Raises ValueError with why it can't."""
     if not valid_name(name):
         raise ValueError("A map's name is lowercase letters, digits, - and _.")
@@ -104,6 +113,7 @@ def extract(name: str, box: tuple[float, float, float, float], max_zoom: int = M
         raise ValueError("That box isn't on the map.")
     if not TOOL.exists():
         raise ValueError(f"The pmtiles tool isn't at {TOOL}.")
+    folder = folder or MAPS_DIR
     folder.mkdir(parents=True, exist_ok=True)
     out = folder / f"{name}.pmtiles"
     done = run([str(TOOL), "extract", source or latest_build(), str(out), f"--bbox={w},{s},{e},{n}",
@@ -113,3 +123,91 @@ def extract(name: str, box: tuple[float, float, float, float], max_zoom: int = M
     if done.returncode != 0 or header(out) is None:
         raise ValueError(f"The cut didn't finish: {(done.stderr or done.stdout or '')[-300:]}")
     return out
+
+
+# ------------------------------------------------------------------ from the Maps page (the action contract)
+
+MAX_AREA_DEG = 2.0  # a box this many degrees a side at most (about 200 km): a county, not a country, from a tap
+
+
+def _box(params) -> tuple[float, float, float, float]:
+    from core.actions import ActionError
+
+    try:
+        box = tuple(float(params.get(k)) for k in ("west", "south", "east", "north"))
+    except (TypeError, ValueError):
+        raise ActionError("Which area? Its west, south, east and north edges.") from None
+    w, s, e, n = box
+    if not (-180 <= w < e <= 180 and -85 <= s < n <= 85):
+        raise ActionError("That area isn't on the map.")
+    if e - w > MAX_AREA_DEG or n - s > MAX_AREA_DEG:
+        raise ActionError("That's a big area: zoom in to a county or smaller, or cut it at the PC with "
+                          "`python -m tools.offline_map`.")
+    return box
+
+
+def _area_name(params) -> str:
+    from core.actions import ActionError
+
+    name = re.sub(r"[^a-z0-9_-]+", "-", str(params.get("name") or "").strip().lower()).strip("-")[:40]
+    if not valid_name(name):
+        raise ActionError("What should the area be called?")
+    return name
+
+
+def _describe_cut(context, params) -> str:
+    w, s, e, n = _box(params)
+    return f"Keep the map of this area offline as \"{_area_name(params)}\" (about {(e - w) * 85:.0f} × {(n - s) * 111:.0f} km)"
+
+
+def _cut(context, params) -> str:
+    import threading
+
+    from core import live
+
+    name, box = _area_name(params), _box(params)
+
+    def run():
+        notifications = getattr(context, "notifications", None)
+        try:
+            path = extract(name, box)
+            said = f"The map of {name} is on this PC ({path.stat().st_size / 1e6:.1f} MB): it works with no signal."
+        except Exception as problem:
+            said = f"The map of {name} couldn't be cut: {str(problem)[:200]}"
+        live.bump()  # the Maps page reads again
+        if notifications is not None:
+            try:
+                notifications.notify("🗺 Offline map", said, source="maps")
+            except Exception:
+                pass
+    threading.Thread(target=run, name="mia-map-cut", daemon=True).start()
+    return f"Cutting {name}: it'll be on the map in a minute (you'll get a note)."
+
+
+def _describe_remove(context, params) -> str:
+    from core.actions import ActionError
+
+    name = str(params.get("name") or "")
+    if path_of(name) is None:
+        raise ActionError("That map area isn't on this PC.")
+    return f"Take the offline map {name} off this PC"
+
+
+def _remove(context, params) -> str:
+    from core import live
+
+    found = path_of(str(params.get("name") or ""))
+    if found is not None:
+        found.unlink()
+        live.bump()
+    return "Taken off."
+
+
+def _register() -> None:
+    from core.actions import ACTION_TYPES, ActionType
+
+    ACTION_TYPES.update({a.kind: a for a in (
+        ActionType("map.area_keep", "Keep offline", {"name": "what to call it", "west": "degrees", "south": "degrees",
+                                                      "east": "degrees", "north": "degrees"}, _describe_cut, _cut),
+        ActionType("map.area_remove", "Take it off", {"name": "the area"}, _describe_remove, _remove),
+    )})

@@ -59,3 +59,32 @@ def test_the_cut(tmp_path, monkeypatch):
 def test_the_newest_build():
     builds = b'[{"key": "20261105.pmtiles"}, {"key": "20261106.pmtiles"}, {"key": "notes.txt"}]'
     assert om.latest_build(get=lambda url: builds) == "https://build.protomaps.com/20261106.pmtiles"
+
+
+def test_keeping_an_area_from_the_maps_page(tmp_path, monkeypatch):
+    import threading
+
+    from core.actions import ACTION_TYPES, ActionError
+
+    monkeypatch.setattr(om, "MAPS_DIR", tmp_path)
+    cut, told = [], []
+    monkeypatch.setattr(om, "extract", lambda name, box, *a, **k: cut.append((name, box)) or _fake_pmtiles(tmp_path / f"{name}.pmtiles"))
+    ctx = SimpleNamespace(notifications=SimpleNamespace(notify=lambda title, message, **k: told.append(message)))
+    keep = ACTION_TYPES["map.area_keep"]
+    params = {"name": "Elk Creek!", "west": "-105.05", "south": "39.97", "east": "-104.95", "north": "40.04"}
+    assert keep.describe(ctx, params).startswith('Keep the map of this area offline as "elk-creek"')
+    assert keep.execute(ctx, params).startswith("Cutting elk-creek")
+    for t in threading.enumerate():
+        if t.name == "mia-map-cut":
+            t.join(5)
+    assert cut == [("elk-creek", (-105.05, 39.97, -104.95, 40.04))] and "is on this PC" in told[0]
+    with pytest.raises(ActionError):
+        keep.describe(ctx, {**params, "east": "-90"})  # too big from a tap: a county, not a country
+    with pytest.raises(ActionError):
+        keep.describe(ctx, {**params, "name": "!!!"})
+    remove = ACTION_TYPES["map.area_remove"]
+    assert remove.describe(ctx, {"name": "elk-creek"}) == "Take the offline map elk-creek off this PC"
+    remove.execute(ctx, {"name": "elk-creek"})
+    assert om.maps() == []
+    with pytest.raises(ActionError):
+        remove.describe(ctx, {"name": "elk-creek"})
