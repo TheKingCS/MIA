@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 227,766 lines; 1043 files describe themselves; 4,202 of 13,517 classes and functions are documented.
+1043 files, 227,789 lines; 1043 files describe themselves; 4,220 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 101,672 lines; 3,471 of 5,630 classes and functions documented
+367 files, 101,695 lines; 3,489 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -172,7 +172,7 @@
 - `core/inbox_classify.py`: Pure logic behind the document inbox (core/inbox_manager.py, 2026-09-28): given a document's text, what is it, whose is it, and what does it say that MIA can file. *(12 undocumented)*
 - `core/inbox_mail.py`: Optional email intake for the document inbox (core/inbox_manager.py, 2026-09-28). The owner picks a mailbox (a dedicated address is best, e.g. a new Gmail account used only for sending MIA receipts and manuals). MIA checks it over IMAP, the standard mail-reading protocol (Python's own imaplib, no ne *(15 undocumented)*
 - `core/inbox_manager.py`: The document inbox (2026-09-28): "an email inbox that I can send receipts and owners manuals and all kinds of business documents to and it be able to classify it and determine where to put it, like storing the manual and user guide and maintenance schedule for the mower and automatically assigning i *(15 undocumented)*
-- `core/insight_manager.py`: Insight + Recommendation — the first real piece of the observe → understand → insight → recommend → act → result → learn loop from the "connective infrastructure" architecture-review discussion (see docs/ROADMAP.md's dated entry), piloted in the Maintenance domain only (core/maintenance_insights.py) *(19 undocumented)*
+- `core/insight_manager.py`: Insight + Recommendation — the first real piece of the observe → understand → insight → recommend → act → result → learn loop from the "connective infrastructure" architecture-review discussion (see docs/ROADMAP.md's dated entry), piloted in the Maintenance domain only (core/maintenance_insights.py) *(1 undocumented)*
 - `core/inspection.py`: Universal Inspection, phases 1 and 2 (DEC-0056, docs/INSPECTION_AND_SELF_PLAN.md): MIA investigates a subject with every relevant *authorized* method she has, keeps each finding as evidence (what, where it came from, when, how sure), correlates findings from different methods, says what she couldn't
 - `core/insurance.py`: The insurance check-up (Zac, 2026-10-18 idea, picked 2026-10-19: `docs/future/IDEAS.md` #1, DEC-0034): keep your policies in one place, see what they cost and what's worth a look, and shop them with quotes you collect, compared fairly.
 - `core/insurance_actions.py`: The insurance check-up's changes (DEC-0034, core/insurance.py) on the action contract: policies and quotes are records (add, edit, delete, undoable); then drafting a quote request (MIA drafts, you press Send), "Switch To This" (a mission with the steps, no gap in coverage) and "I Switched" (the poli *(11 undocumented)*

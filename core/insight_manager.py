@@ -70,6 +70,9 @@ RECOMMENDATION_STATUSES = ("pending", "resolved")
 
 @dataclass
 class Insight:
+    """Something MIA noticed and keeps (unlike a passing notification): which domain and record it's about, what kind
+    (overdue, due soon...), a title and message, open or resolved, and when.
+    """
     insight_id: str
     source_type: str  # e.g. "maintenance" -- which domain this came from
     source_id: str  # e.g. a task_id -- the specific record this is about
@@ -81,6 +84,7 @@ class Insight:
     resolved_at: str = ""  # ISO datetime, blank until resolved
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in its JSON file."""
         return {
             "insight_id": self.insight_id,
             "source_type": self.source_type,
@@ -95,6 +99,7 @@ class Insight:
 
     @staticmethod
     def from_dict(data: dict) -> "Insight":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return Insight(
             insight_id=data.get("insight_id", uuid.uuid4().hex[:10]),
             source_type=data.get("source_type", ""),
@@ -110,6 +115,7 @@ class Insight:
 
 @dataclass
 class Recommendation:
+    """A suggested next step for an insight ("Mark 'Oil change' complete, or reschedule it"), with its own status."""
     recommendation_id: str
     insight_id: str  # the Insight this recommendation responds to
     message: str  # the suggested next step, e.g. "Mark 'Oil change' complete, or reschedule it."
@@ -118,6 +124,7 @@ class Recommendation:
     resolved_at: str = ""  # ISO datetime, blank until resolved
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in its JSON file."""
         return {
             "recommendation_id": self.recommendation_id,
             "insight_id": self.insight_id,
@@ -129,6 +136,7 @@ class Recommendation:
 
     @staticmethod
     def from_dict(data: dict) -> "Recommendation":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return Recommendation(
             recommendation_id=data.get("recommendation_id", uuid.uuid4().hex[:10]),
             insight_id=data.get("insight_id", ""),
@@ -140,8 +148,13 @@ class Recommendation:
 
 
 class InsightManager:
+    """The household's insights and recommendations (insights.json and recommendations.json, written through
+    atomic_write_text). An insight is only made when no open one exists for the same record and kind, which is what
+    keeps MIA from repeating herself while a condition stays true; it's resolved once the condition stops holding.
+    """
     def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
         # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        """Points at the household's files (data/ by default) and loads them."""
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._insights_file = self.data_dir / "insights.json" if data_dir is not None else _INSIGHTS_FILE
         self._recommendations_file = self.data_dir / "recommendations.json" if data_dir is not None else _RECOMMENDATIONS_FILE
@@ -155,6 +168,7 @@ class InsightManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads both files; a damaged one is logged, reported (notify_data_corruption) and starts empty."""
         if self._insights_file.exists():
             try:
                 raw = json.loads(self._insights_file.read_text(encoding="utf-8"))
@@ -173,12 +187,14 @@ class InsightManager:
                 self._recommendations = []
 
     def _save_insights(self) -> None:
+        """Writes the insights atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._insights_file,
             json.dumps([i.to_dict() for i in self._insights], indent=2), encoding="utf-8"
         )
 
     def _save_recommendations(self) -> None:
+        """Writes the recommendations atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._recommendations_file,
             json.dumps([r.to_dict() for r in self._recommendations], indent=2), encoding="utf-8"
@@ -214,6 +230,7 @@ class InsightManager:
         return insight
 
     def open_insight_for(self, source_type: str, source_id: str, kind: str) -> Optional[Insight]:
+        """The open insight for a record and kind, or None (what decides whether a new one is made)."""
         for insight in self._insights:
             if (
                 insight.source_type == source_type
@@ -225,6 +242,7 @@ class InsightManager:
         return None
 
     def open_insights_for_source(self, source_type: str, source_id: str) -> list[Insight]:
+        """Every open insight about one record."""
         return [
             i for i in self._insights
             if i.source_type == source_type and i.source_id == source_id and i.status == "open"
@@ -249,15 +267,18 @@ class InsightManager:
         return insight
 
     def get_insight(self, insight_id: str) -> Optional[Insight]:
+        """The insight with this id, or None."""
         for insight in self._insights:
             if insight.insight_id == insight_id:
                 return insight
         return None
 
     def all_insights(self) -> list[Insight]:
+        """Every insight, open and resolved."""
         return list(self._insights)
 
     def open_insights(self) -> list[Insight]:
+        """The insights still open."""
         return [i for i in self._insights if i.status == "open"]
 
     # ------------------------------------------------------------------
@@ -265,6 +286,7 @@ class InsightManager:
     # ------------------------------------------------------------------
 
     def add_recommendation(self, insight_id: str, message: str) -> Recommendation:
+        """Adds a pending recommendation to an insight."""
         recommendation = Recommendation(
             recommendation_id=uuid.uuid4().hex[:10],
             insight_id=insight_id,
@@ -277,6 +299,7 @@ class InsightManager:
         return recommendation
 
     def recommendations_for_insight(self, insight_id: str) -> list[Recommendation]:
+        """An insight's recommendations."""
         return [r for r in self._recommendations if r.insight_id == insight_id]
 
     def all_recommendations(self) -> list[Recommendation]:
