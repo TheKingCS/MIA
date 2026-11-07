@@ -47,6 +47,8 @@
     }
     kids.push(el("span", { class: "map-attrib" }, zoom <= data.osm_max_zoom ? "© OpenStreetMap contributors" : "USGS The National Map"));
     view.replaceChildren(...kids);
+    const sub = document.querySelector(".mp-head .mp-label");
+    if (sub) sub.textContent = (zoom <= data.osm_max_zoom ? "Offline · OpenStreetMap" : "Offline · USGS Topo") + " · Zoom " + zoom;
     $("maps-sub").textContent = "Zoom " + zoom + " · " + data.waypoints.length + (data.waypoints.length === 1 ? " waypoint" : " waypoints");
   }
 
@@ -83,17 +85,16 @@
     });
     vec = null;
     $("panel").replaceChildren(
-      el("section", { class: "glass money-section" },
-        el("div", { class: "row-buttons" }, ...modes("topo"), button("+", () => setZoom(view, zoom + 1)), button("−", () => setZoom(view, zoom - 1)),
-          data.waypoints.length ? button("Waypoints", () => { zoom = data.zoom; [cx, cy] = toTile(data.center.lat, data.center.lon, zoom); draw(view); }) : null,
-          button("Keep this area offline", () => {  // the box the map shows now, cut as a vector area on the PC
+      stage(view, "Topo", zoom <= data.osm_max_zoom ? "Offline · OpenStreetMap" : "Offline · USGS Topo", modes("topo"),
+        [fab("+", "Zoom in", () => setZoom(view, zoom + 1)), fab("−", "Zoom out", () => setZoom(view, zoom - 1)),
+          data.waypoints.length ? fab("⌖", "Show the waypoints", () => { zoom = data.zoom; [cx, cy] = toTile(data.center.lat, data.center.lon, zoom); draw(view); }) : null,
+          fab("⤓", "Keep this area offline", () => {  // the box the map shows now, cut as a vector area on the PC
             const half = [view.clientWidth / 2 / SIZE, view.clientHeight / 2 / SIZE];
             const [north, west] = toDeg(cx - half[0], cy - half[1], zoom), [south, east] = toDeg(cx + half[0], cy + half[1], zoom);
             keep({ west, south, east, north });
-          })),
-        view,
-        el("p", { class: "dim" }, "Tiles are kept on the PC once seen, so they work with no signal later. Tap the map to add a waypoint there, "
-          + "or tell MIA: \"add a waypoint called Spring at 18S UJ 23478 06483\".")), routeCard());
+          })]),
+      el("p", { class: "dim mp-note" }, "Tiles are kept on the PC once seen, so they work with no signal later. Tap the map to add a waypoint there, "
+        + "or tell MIA: \"add a waypoint called Spring at 18S UJ 23478 06483\". ⤓ keeps the area you see as an offline map."));
     draw(view);
   }
 
@@ -102,6 +103,7 @@
   let routeTo = "";
   function routeCard() {
     const box = el("section", { class: "glass mp-route", "aria-label": "Route" });
+    if (!data.waypoints || data.waypoints.length < 2) box.classList.add("mp-route-empty");
     const wps = data.waypoints || [];
     if (wps.length < 2) {
       box.append(el("p", { class: "dim" }, "Add two waypoints to see the distance and bearing between them."));
@@ -131,6 +133,18 @@
     return box;
   }
 
+  // The canvas's full-screen map (DEC-0113): the map fills the page; its name and kind float at the top, the
+  // controls on the right, and the route card along the bottom.
+  const fab = (label, aria, onclick) => el("button", { type: "button", class: "mp-fab", "aria-label": aria, title: aria, onclick }, label);
+  function stage(view, name, sub, modeButtons, fabs) {
+    return el("section", { class: "mp-stage" }, view,
+      el("header", { class: "glass mp-head" },
+        el("div", { class: "mp-head-t" }, el("h1", {}, name), el("span", { class: "mp-label" }, sub)),
+        el("div", { class: "row-buttons mp-modes" }, ...modeButtons)),
+      el("div", { class: "mp-fabs" }, ...fabs.filter(Boolean)),
+      routeCard());
+  }
+
   const button = (label, onclick, on) => el("button", { type: "button", class: "btn " + (on ? "btn-amber" : "btn-ghost") + " btn-small", onclick }, label);
 
   async function addAt(lat, lon) {  // a tap on either map: a waypoint there, named first
@@ -156,11 +170,12 @@
 
   function paintVector(area) {
     const view = el("div", { class: "map-view map-vector", role: "img", "aria-label": "Map of " + area.name });
-    $("panel").replaceChildren(el("section", { class: "glass money-section" },
-      el("div", { class: "row-buttons" }, ...modes(area.name),
-        button("Take it off", () => MIAShell.act({ kind: "map.area_remove", params: { name: area.name } }))), view,
-      el("p", { class: "dim" }, area.name + ": " + area.size_mb + " MB on this PC, from OpenStreetMap, works with no signal. "
-        + "Tap the map to add a waypoint there.")), routeCard());
+    $("panel").replaceChildren(
+      stage(view, area.name, "Offline · " + area.size_mb + " MB · Saved", modes(area.name),
+        [fab("+", "Zoom in", () => vec && vec.map.zoomIn()), fab("−", "Zoom out", () => vec && vec.map.zoomOut()),
+          fab("✕", "Take this area off the PC", () => MIAShell.act({ kind: "map.area_remove", params: { name: area.name } }))]),
+      el("p", { class: "dim mp-note" }, area.name + ": " + area.size_mb + " MB on this PC, from OpenStreetMap, works with no signal. "
+        + "Tap the map to add a waypoint there."));
     if (!window.maplibregl || !window.pmtiles || !window.basemaps) { view.textContent = "The map's code didn't load."; return; }
     if (!protocol) {
       protocol = new pmtiles.Protocol();
@@ -176,7 +191,6 @@
         glyphs: VENDOR + "fonts/{fontstack}/{range}.pbf", sprite: VENDOR + "sprites/dark",
         layers: basemaps.layers("protomaps", basemaps.namedFlavor("dark"), { lang: "en" }) },
     });
-    map.addControl(new maplibregl.NavigationControl({ showCompass: false }));
     map.on("click", (e) => addAt(e.lngLat.lat, e.lngLat.lng));
     vec = { map, markers: [], name: area.name };
     pins();
@@ -188,8 +202,7 @@
     if (!first) {  // a change elsewhere: new pins, same view; a kept or removed area: the switch changes
       const shown = vec && data.vector.find((a) => a.name === vec.name);
       if (vec && !shown) { if (data.vector.length) paintVector(data.vector[0]); else paint(); return; }
-      if (vec) { pins(); $("panel").querySelector(".row-buttons").replaceChildren(...modes(vec.name),
-        button("Take it off", () => MIAShell.act({ kind: "map.area_remove", params: { name: vec.name } }))); }
+      if (vec) { pins(); $("panel").querySelector(".mp-modes").replaceChildren(...modes(vec.name)); }
       else paint();
       return;
     }

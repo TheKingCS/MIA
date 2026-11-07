@@ -279,12 +279,24 @@
   // The live workout's hero: the exercise, set and weight, one big number (rest left, the last set's count, or the
   // goal: never a guess) and what it is, and what's next. All from core.
   function trainingHero(h) {
+    if (h.kind === "cook") return cookHero(h);
     const box = el("div", "t-hero" + (h.resting ? " resting" : ""));
     box.append(el("p", "t-name", esc(h.name)), el("p", "t-set", esc(h.set)));
     const big = el("p", "t-big");
     big.append(el("span", "n", esc(h.big)));
     if (h.of) big.append(el("span", "of", esc(h.of)));
     box.append(big, el("p", "t-foot", "<span>" + esc(h.how) + "</span><span>" + esc(h.next) + "</span>"));
+    return box;
+  }
+  // Cook mode's hero (core/glasses.cooking_hero): the recipe, step N of M, the step large, and each timer's time left.
+  function cookHero(h) {
+    const box = el("div", "t-hero cook");
+    box.append(el("p", "t-set", esc(h.name) + " · " + esc(h.set)), el("p", "c-step", esc(h.step)));
+    if (h.timers.length) {
+      const row = el("p", "c-timers");
+      h.timers.forEach((t) => row.append(el("span", t.done ? "done" : "", esc(t.name) + " " + esc(t.left))));
+      box.append(row);
+    }
     return box;
   }
 

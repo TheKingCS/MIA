@@ -3,7 +3,7 @@ DEC-0017/0018 (2026-10-06): Kitchen, Workout and Real Estate on the web.
 The pages (core/web_screens.py) and every change as an action kind
 (core/kitchen_actions.py, core/workout_actions.py, core/estate_actions.py),
 each proposed, approved, recorded and undoable; a recipe's amounts scaled to
-the servings asked for.
+the servings asked for; workouts and volume week by week.
 """
 
 from datetime import date, timedelta
@@ -102,6 +102,22 @@ def test_a_recipe_scales_to_the_servings_asked_for_in_kitchen_fractions(world):
     assert recipe_page(world, recipe.recipe_id, TODAY)["ingredients"][0]["amount"] == "1 cup"
     assert scale_factor(4, "lots") == (4, 1.0) and scale_factor(4, 0) == (1, 0.25) and scale_factor(2, 999)[0] == 100
     assert (kitchen_amount(0.333, "cup"), kitchen_amount(2.75, "lb"), kitchen_amount(0.02, "tsp")) == ("⅓ cup", "2 ¾ lb", "a pinch")
+
+
+def test_workouts_and_volume_are_counted_week_by_week():
+    from types import SimpleNamespace as N
+
+    from core.web_screens import weekly_training
+
+    sessions = [N(date="2026-11-03", duration_minutes=40, sets_logged=[{"reps": 8, "weight": 135}, {"reps": 8, "weight": 135}]),
+                N(date="2026-11-05", duration_minutes=30, sets_logged=[{"reps": 10, "weight": None}]),
+                N(date="2026-10-28", duration_minutes=45, sets_logged=[{"reps": 5, "weight": "225"}]),
+                N(date="2026-09-01", duration_minutes=60, sets_logged=[])]
+    weeks = weekly_training(sessions, date(2026, 11, 7), weeks=3)
+    assert [w["week"] for w in weeks] == ["2026-10-19", "2026-10-26", "2026-11-02"]
+    assert [(w["workouts"], w["sets"], w["volume"]) for w in weeks] == [(0, 0, 0), (1, 1, 1125), (2, 3, 2160)]
+    assert [w["volume_pct"] for w in weeks] == [0, 52, 100] and weeks[-1]["label"] == "Nov 2"
+    assert all(w["workouts_pct"] == 0 for w in weekly_training([], date(2026, 11, 7)))
 
 
 def test_kitchen_is_for_children_too_but_not_deleting_recipes(world):

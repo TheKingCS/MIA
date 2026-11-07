@@ -495,3 +495,7 @@ body.hud-on #stage::before { display: none; }  /* truly clear: black is see-thro
 .t-hero .t-big .of { font-size: 34px; color: var(--ink-dim); }
 .t-hero.resting .t-big .n { color: var(--accent); }
 .t-hero .t-foot { margin: 0; display: flex; justify-content: space-between; gap: 12px; font-size: 20px; color: var(--ink-dim); }
+.t-hero.cook .c-step { margin: 4px 0 0; font-size: 30px; line-height: 1.3; color: var(--ink);
+  display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.t-hero.cook .c-timers { margin: 6px 0 0; display: flex; gap: 18px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 22px; color: var(--accent); }
+.t-hero.cook .c-timers .done { color: var(--attention); }

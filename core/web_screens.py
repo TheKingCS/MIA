@@ -6,7 +6,8 @@ Kitchen, Workout and Real Estate on the web (2026-10-06, DEC-0017/0018):
 everything the PC app's screens show, assembled here so `web/` holds no
 logic. Served as `/api/kitchen` (and one recipe, `/api/kitchen/recipe/{id}`,
 its amounts scaled to `?servings=` by scale_factor and scaled_amount),
-`/api/workout` and `/api/real-estate`;
+`/api/workout` (with `weeks`, workouts and volume a week: weekly_training)
+and `/api/real-estate`;
 changes are the action kinds in core/kitchen_actions.py,
 core/workout_actions.py and core/estate_actions.py.
 
@@ -265,6 +266,34 @@ def _ingredients_text(recipe) -> str:
 # ------------------------------------------------------------------ Workout
 
 
+def weekly_training(sessions, today: date, weeks: int = 8) -> list[dict]:
+    """Pure logic (given sessions). The canvas's Workout progress: each of the last `weeks` weeks (Monday first, oldest
+    first) with its workouts, minutes, sets and volume (reps × weight, for sets with both), and each figure's share of
+    the busiest week (0 to 100) for its bar."""
+    this_monday = today - timedelta(days=today.weekday())
+    rows = []
+    for i in range(weeks - 1, -1, -1):
+        start = this_monday - timedelta(days=7 * i)
+        end = (start + timedelta(days=6)).isoformat()
+        in_week = [s for s in sessions if start.isoformat() <= (s.date or "") <= end]
+        volume = 0.0
+        sets = 0
+        for s in in_week:
+            for st in s.sets_logged:
+                sets += 1
+                try:
+                    volume += float(st.get("reps") or 0) * float(st.get("weight") or 0)
+                except (TypeError, ValueError):
+                    pass
+        rows.append({"week": start.isoformat(), "label": f"{start.strftime('%b')} {start.day}", "workouts": len(in_week),
+                     "minutes": _r(sum(s.duration_minutes or 0 for s in in_week)), "sets": sets, "volume": round(volume)})
+    for key in ("workouts", "volume"):
+        top = max((r[key] for r in rows), default=0)
+        for r in rows:
+            r[key + "_pct"] = round(r[key] / top * 100) if top else 0
+    return rows
+
+
 def _streak_days(sessions, today: date) -> int:
     """Pure logic (given sessions). Days in a row, ending today or yesterday, with a workout."""
     days = {s.date for s in sessions if s.date}
@@ -278,8 +307,8 @@ def _streak_days(sessions, today: date) -> int:
 
 def workout_page(context, today: Optional[date] = None) -> dict:
     """The data the Workout screen shows, assembled here (the web only draws it): exercises with their records and progress, sessions newest first (each
-    summarised by exercise, reps and sets), this week's count and minutes, the streak, today's daily missions, and
-    the forms.
+    summarised by exercise, reps and sets), this week's count and minutes, the streak, the last eight weeks' workouts
+    and volume (`weeks`, for Progress's bars), today's daily missions, and the forms.
     """
     from core.workout_actions import RECORDS, form_spec
 
@@ -318,6 +347,7 @@ def workout_page(context, today: Optional[date] = None) -> dict:
     this_week = [s for s in sessions if (s.date or "") >= week_start]
     page["stats"] = {"this_week": len(this_week), "minutes_this_week": _r(sum(s.duration_minutes for s in this_week)),
                      "streak": _streak_days(sessions, today), "total": len(sessions)}
+    page["weeks"] = weekly_training(sessions, today)  # Progress: workouts and volume a week (the canvas, DEC-0113)
 
     page["daily_missions"] = []
     missions, recurring = getattr(context, "missions", None), getattr(context, "recurring_missions", None)

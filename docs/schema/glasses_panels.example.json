@@ -1808,5 +1808,75 @@
         }
       }
     ]
+  },
+  "kitchen/cooking": {
+    "title": "Cooking: Turkey chili",
+    "more": 0,
+    "empty": "",
+    "live": true,
+    "hero": {
+      "kind": "cook",
+      "name": "Turkey chili",
+      "set": "Step 3 of 4",
+      "step": "Simmer 45 minutes, stirring now and then.",
+      "timers": [
+        {
+          "name": "Rice",
+          "left": "17:42",
+          "done": false
+        }
+      ]
+    },
+    "lines": [
+      {
+        "text": "Next step",
+        "detail": "Portion into six containers.",
+        "tone": "",
+        "action": {
+          "kind": "cooking.next",
+          "label": "Next Step",
+          "params": {},
+          "quick": true
+        }
+      },
+      {
+        "text": "Simmer timer",
+        "detail": "45 min",
+        "tone": "",
+        "action": {
+          "kind": "cooking.timer",
+          "label": "Start",
+          "params": {
+            "name": "Simmer",
+            "minutes": 45
+          },
+          "quick": true
+        }
+      },
+      {
+        "text": "Stop rice timer",
+        "detail": "17:42 left",
+        "tone": "",
+        "action": {
+          "kind": "cooking.timer_cancel",
+          "label": "Stop",
+          "params": {
+            "name": "Rice"
+          },
+          "quick": true
+        }
+      },
+      {
+        "text": "Back a step",
+        "detail": "Add beans, tomatoes and chili powder.",
+        "tone": "",
+        "action": {
+          "kind": "cooking.back",
+          "label": "Back",
+          "params": {},
+          "quick": true
+        }
+      }
+    ]
   }
 }

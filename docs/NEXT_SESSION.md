@@ -71,15 +71,16 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
 - [x] Workout: Today leads with one big Start; a live session takes the whole screen as Active (count large, how
       it was counted), Rest (draining ring) and Done (planned → done); tuck it away and a bar brings it back. Engine:
       `training_session.view()` gained each count's `how`, `last_counted`, `weight`, `rest_total`. "+30 s" on rest is done
-      (`training.rest_more`: the button, "thirty more seconds" by voice, the glasses' panel). Left for Workout:
-      Progress charts (volume, frequency) per the canvas.
+      (`training.rest_more`: the button, "thirty more seconds" by voice, the glasses' panel). Progress has Week by Week
+      bars (workouts and volume a week, `core/web_screens.weekly_training`).
 - [x] Kitchen: Today leads with the next meal's Start Cooking; the recipe page has Start Cooking; cook mode
       (`web/cook.js`) takes the screen: one step large, what it uses, the step's own timer offered, named timers that
       keep running, Back / Next Step / I Made This. Engine: `core/cooking_session.py` (a personal store, `cooking`),
       `core/cooking_actions.py` (`cooking.start/next/back/go_to/timer/timer_cancel/made/stop`; made = `meal.cook`),
       `cooking` on the Kitchen and recipe reads. Cook mode by voice is done (`core/assistant_cooking_actions.py`:
       cook_start / cook_step / cook_timer / cook_finish, DEC-0125). Servings scaling is done (a − N + stepper; core scales
-      each amount to kitchen fractions: `web_screens.scale_factor`, `units.kitchen_amount`). Left: the glasses' cooking panel.
+      each amount to kitchen fractions: `web_screens.scale_factor`, `units.kitchen_amount`). The glasses have a Cooking Now panel (`core/glasses._kitchen_cooking`: the step
+      large, timers, Next / Back / the step's timer / Stop timer in one press, I Made This with a confirm).
 - [~] Every other app: the shared frame now matches the canvas on every page (`web/ui.css`, "every app's frame"):
       status strips with the label above, a white value and an index bar; "needs you" amber instead of red fills
       (attention panels, overdue chips and rows; red stays for real errors); tabs as a rail lit from below. Checked
@@ -107,8 +108,9 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       apps it drew on, Open in <app>, from `core/observations_web.card`), Expeditions (the next one as one card:
       heads-up from `core/web_more._trip_heads_up`, packing to tick, Start Trip; the rest as rows),
       Maps (the route card under the map: from the first
-      waypoint to the one picked, distance, bearing, sunrise and sunset; no climb until MIA has elevation; the
-      canvas's full-screen map with floating controls is still to do).
+      waypoint to the one picked, distance, bearing, sunrise and sunset; no climb until MIA has elevation). The map now fills the page as on the canvas: its name and kind float at the
+      top, zoom / waypoints / keep-offline as buttons on the right, the route card along the bottom (vector areas: zoom
+      and take-off buttons).
       Navigation (a compass with the needle on the bearing, waypoints with their grid, sun and moon tiles).
       World Map (km² cleared as the headline, the next achievement from `core/world_map.next_rank`, a big I'm Here).
       Knowledge (Search / Packs / Plans Shelf tabs; result cards with a snippet from

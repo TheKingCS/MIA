@@ -281,5 +281,87 @@
     "streak": 2,
     "total": 7
   },
-  "daily_missions": []
+  "daily_missions": [],
+  "weeks": [
+    {
+      "week": "2026-09-14",
+      "label": "Sep 14",
+      "workouts": 0,
+      "minutes": 0.0,
+      "sets": 0,
+      "volume": 0,
+      "workouts_pct": 0,
+      "volume_pct": 0
+    },
+    {
+      "week": "2026-09-21",
+      "label": "Sep 21",
+      "workouts": 2,
+      "minutes": 70.0,
+      "sets": 22,
+      "volume": 8400,
+      "workouts_pct": 67,
+      "volume_pct": 59
+    },
+    {
+      "week": "2026-09-28",
+      "label": "Sep 28",
+      "workouts": 3,
+      "minutes": 120.0,
+      "sets": 34,
+      "volume": 12650,
+      "workouts_pct": 100,
+      "volume_pct": 89
+    },
+    {
+      "week": "2026-10-05",
+      "label": "Oct 5",
+      "workouts": 1,
+      "minutes": 40.0,
+      "sets": 12,
+      "volume": 4800,
+      "workouts_pct": 33,
+      "volume_pct": 34
+    },
+    {
+      "week": "2026-10-12",
+      "label": "Oct 12",
+      "workouts": 3,
+      "minutes": 135.0,
+      "sets": 36,
+      "volume": 13900,
+      "workouts_pct": 100,
+      "volume_pct": 98
+    },
+    {
+      "week": "2026-10-19",
+      "label": "Oct 19",
+      "workouts": 2,
+      "minutes": 80.0,
+      "sets": 24,
+      "volume": 9300,
+      "workouts_pct": 67,
+      "volume_pct": 65
+    },
+    {
+      "week": "2026-10-26",
+      "label": "Oct 26",
+      "workouts": 3,
+      "minutes": 125.0,
+      "sets": 35,
+      "volume": 14200,
+      "workouts_pct": 100,
+      "volume_pct": 100
+    },
+    {
+      "week": "2026-11-02",
+      "label": "Nov 2",
+      "workouts": 2,
+      "minutes": 85.0,
+      "sets": 23,
+      "volume": 9800,
+      "workouts_pct": 67,
+      "volume_pct": 69
+    }
+  ]
 }

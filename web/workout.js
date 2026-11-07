@@ -510,8 +510,30 @@
           title: day(d.date) + ": " + (d.protein_g == null ? "nothing logged" : Math.round(d.protein_g) + " g") }))));
   }
 
+  // Week by week (the canvas's Workout progress, DEC-0113): workouts and volume a week as bars, sized by core
+  // (core/web_screens.weekly_training), this week lit in the workout's own color.
+  function weekBars(key, label, fmt) {
+    const weeks = page.weeks || [];
+    return el("div", { class: "wk-chart" }, el("p", { class: "pl-label" }, label),
+      el("div", { class: "pl-bars", role: "img", "aria-label": label + " per week: " + weeks.map((w) => w[key]).join(", ") },
+        weeks.map((w, i) => el("div", { class: "pl-bar" + (i === weeks.length - 1 ? " now" : ""), title: w.label + ": " + fmt(w[key]) },
+          el("span", { class: "wk-bar-n" }, w[key] ? fmt(w[key]) : ""),
+          el("div", { class: "pl-fill", style: "height:" + w[key + "_pct"] + "%" }),
+          el("span", { class: "pl-wk" }, w.label)))));
+  }
+  function weeksSection() {
+    const weeks = page.weeks || [];
+    if (!weeks.some((w) => w.workouts)) return null;
+    const now = weeks[weeks.length - 1];
+    return section("Week by week", null,
+      el("p", { class: "dim" }, "This week: " + now.workouts + (now.workouts === 1 ? " workout" : " workouts") + ", " + now.sets + " sets, " +
+        Math.round(now.minutes) + " min."),
+      el("div", { class: "wk-charts" }, weekBars("workouts", "Workouts", (n) => String(n)),
+        weekBars("volume", "Volume (reps × weight)", (n) => n >= 10000 ? Math.round(n / 1000) + "k" : n.toLocaleString())));
+  }
+
   function progressView() {
-    if (!fit) return [section("Progress", null, el("p", { class: "dim" }, "Plans aren't set up on this MIA."))];
+    if (!fit) return [weeksSection(), section("Progress", null, el("p", { class: "dim" }, "Plans aren't set up on this MIA."))].filter(Boolean);
     const pr = fit.progress, t = fit.plan.targets;
     const numbers = [
       pr.planned_workouts ? ["Workouts", pr.workouts + " of " + pr.planned_workouts] : ["Workouts", String(pr.workouts)],
@@ -520,6 +542,7 @@
       ["Protein a day", g(pr.average_protein_g, " g") + (t.protein_g ? " / " + t.protein_g + " g" : "")]].filter(Boolean);
     const open = (fit.milestones || []).filter((m) => !m.done_on), reached = (fit.milestones || []).filter((m) => m.done_on);
     return [
+      weeksSection(),
       section("Is it working?", buttons(planLink()),
         el("p", { class: "progress-sentence" }, pr.sentence),
         el("p", { class: "dim derived-note" }, "Worked out from your logs" + (pr.since ? " since " + day(pr.since) : "") + "."),
