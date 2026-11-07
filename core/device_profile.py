@@ -31,12 +31,15 @@ HOME = "home"
 
 
 def get_device_profile(context: AppContext) -> str:
+    """Which edition this MIA is (core or home), from config system.device_profile; core when unset."""
     return context.config.get("system.device_profile", CORE)
 
 
 def is_core_profile(context: AppContext) -> bool:
+    """Whether this is the Core edition (the Pi field tool)."""
     return get_device_profile(context) == CORE
 
 
 def is_home_profile(context: AppContext) -> bool:
+    """Whether this is the Home edition (the desktop workstation)."""
     return get_device_profile(context) == HOME

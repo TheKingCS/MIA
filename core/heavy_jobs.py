@@ -36,16 +36,19 @@ _down_until: dict[int, float] = {}
 
 
 def can_use_home(context) -> bool:
+    """Whether heavy work can go to the home computer now: it's linked, and it hasn't failed in the last QUIET_AFTER_FAILURE seconds."""
     from core.home_link import linked
 
     return linked(context) and time.monotonic() >= _down_until.get(id(context), 0.0)
 
 
 def _failed(context) -> None:
+    """Notes that the home computer just failed, so it isn't asked again for QUIET_AFTER_FAILURE seconds."""
     _down_until[id(context)] = time.monotonic() + QUIET_AFTER_FAILURE
 
 
 def _call(context, path: str, **kwargs):
+    """Calls the home computer (core.home_link) when it can be used; HomeLinkError when it can't or the call fails (and a failure quiets it for a while)."""
     from core.home_link import HomeLinkError, home_call
 
     if not can_use_home(context):

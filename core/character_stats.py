@@ -62,6 +62,7 @@ def score(training: float, recent: float) -> int:
 
 
 def _skill_levels(context, profile_id) -> dict[str, int]:
+    """The person's level in each skill they have XP in ({} with no skills store or no person)."""
     skills = getattr(context, "skills", None)
     if skills is None or not profile_id:
         return {}
@@ -71,6 +72,7 @@ def _skill_levels(context, profile_id) -> dict[str, int]:
 
 
 def _count(fn) -> float:
+    """A number from a source that may fail: its value, or 0 when it raises (logged at debug), so one broken store never takes the stats down."""
     try:
         return float(fn())
     except Exception:
@@ -111,6 +113,7 @@ def _recent(context, today: date) -> dict[str, list[tuple[str, float, float]]]:
 
 def character_stats(context, profile_id: Optional[str], today: Optional[date] = None,
                     active: Optional[list[dict]] = None) -> list[dict]:
+    """The person's character stats (1 to 20 each, from STATS): skill levels trained for that stat, what they did in the last 30 days, and active buffs' bonuses, capped at 20; each says where it came from, what to watch and which buffs lift it."""
     from core.buffs import bonuses, buffs
 
     today = today or date.today()

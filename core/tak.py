@@ -33,6 +33,7 @@ STALE = timedelta(days=365)
 
 
 def _when(t: datetime) -> str:
+    """Pure logic. A time in CoT's format: UTC, milliseconds, a Z."""
     return t.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
 
 
@@ -64,10 +65,12 @@ def kml(waypoints, title: str = "MIA's places", tracks=()) -> str:
 
 
 def _coordinates(points: list) -> str:
+    """Pure logic. Track points as KML coordinates: lon,lat,0 separated by spaces."""
     return " ".join("%.6f,%.6f,0" % (p["lon"], p["lat"]) for p in points)
 
 
 def _track_line(track: dict) -> str:
+    """A track said in one line (core.gps_tracks.describe), for its CoT remarks."""
     from core.gps_tracks import describe
 
     return describe(track)

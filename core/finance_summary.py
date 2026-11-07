@@ -40,10 +40,12 @@ UPCOMING_DAYS = 14
 
 
 def _r(value: float) -> float:
+    """Pure logic. A number rounded to cents."""
     return round(float(value), 2)
 
 
 def _net_worth(context) -> dict:
+    """Net worth from what MIA knows: each linked account's latest total value and the equity in tracked properties; the total is None when there's nothing to add up, never a made-up zero."""
     contributions: list[dict] = []
     finance = getattr(context, "finance", None)
     if finance is not None:
@@ -64,6 +66,7 @@ def _net_worth(context) -> dict:
 
 
 def build_finance_summary(context, today: Optional[date] = None) -> dict:
+    """The money picture for a day: this month's income, expenses and net, bills due and income expected (soonest first), budget targets (most spent first), debts, net worth, and builds and tools with money in them. Says available: False without a budget."""
     today = today or date.today()
     budget = getattr(context, "budget", None)
     summary: dict = {"generated_at": datetime.now().isoformat(timespec="seconds"), "as_of": today.isoformat(),

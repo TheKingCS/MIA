@@ -55,10 +55,12 @@ FINDING = ("things I noticed across your apps", "two of your apps together showe
 
 
 def _reason(topic: str, default: tuple[str, str]) -> tuple[str, str]:
+    """Pure logic. A topic's (name, reason): its own from REASONS, the shared one for any finding_ topic, else the default given."""
     return REASONS.get(topic) or (FINDING if topic.startswith("finding_") else default)
 
 
 def name_of(topic: str) -> str:
+    """Pure logic. A message topic's name for people (its underscores as spaces when it has none of its own)."""
     return _reason(topic, (topic.replace("_", " "), ""))[0]
 
 
@@ -72,6 +74,7 @@ def explain(entry: dict) -> str:
 
 
 def _stem(word: str) -> str:
+    """Pure logic. A word without its plural ("batteries" to "battery", "bills" to "bill"), so a question matches a topic either way."""
     if word.endswith("ies") and len(word) > 4:
         return word[:-3] + "y"
     return word[:-1] if word.endswith("s") and len(word) > 3 else word

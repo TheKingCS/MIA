@@ -40,6 +40,7 @@ RUN_MINUTES = 90  # the whole weekly run, at most
 
 
 def _store() -> DevStore:
+    """The benchmark runs' append-only store (data/dev/benchmarks)."""
     return DevStore(DEV_DATA / "benchmarks")
 
 
@@ -72,6 +73,7 @@ ROUTING_RANK = {"plan": 0, "code": 0, "tools": 1, "model only": 2}
 
 
 def grade_route(row: dict) -> dict:
+    """Pure logic. A routing row graded by how it was answered alone (its ROUTING_RANK; 2 when unknown), with no flags, time or surface: the shape every graded row has."""
     return {"id": str(row.get("id", "")), "route": row.get("route", ""), "rank": ROUTING_RANK.get(row.get("route"), 2),
             "flags": [], "seconds": 0.0, "surface": ""}
 
@@ -99,6 +101,7 @@ def falls(before: list[dict], now: list[dict]) -> list[dict]:
 # ------------------------------------------------------------------ the record
 
 def keep(kind: str, rows: list[dict], model: str = "", store: Optional[DevStore] = None) -> dict:
+    """Keeps one benchmark run (its kind, the model, the graded rows) and returns the record."""
     record = {"kind": kind, "model": model, "rows": rows}
     (store or _store()).append(record)
     return record

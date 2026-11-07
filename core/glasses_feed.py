@@ -125,17 +125,20 @@ def orb(profile_id: Optional[str], now: Optional[datetime] = None) -> dict:
 
 
 def _voice_cards(profile_id: Optional[str], start: datetime, now: datetime) -> list[tuple[datetime, dict]]:
+    """The cards said through the glasses for this person in the window (after start, up to now), and only those under VOICE_KEEP (5 minutes) old."""
     with _voice_lock:
         return [(at, card) for at, pid, card in _voice
                 if pid == profile_id and start < at <= now and now - at <= VOICE_KEEP]
 
 
 def _short(text: str) -> str:
+    """Pure logic. Text on one line, cut to MAX_TEXT with an ellipsis so it fits the glasses."""
     text = " ".join(str(text or "").split())
     return text if len(text) <= MAX_TEXT else text[:MAX_TEXT - 1].rstrip() + "…"
 
 
 def _at(iso: str) -> Optional[datetime]:
+    """Pure logic. An ISO time (seconds and anything after ignored) as a datetime, or None when it doesn't read."""
     try:
         return datetime.fromisoformat(str(iso)[:19])
     except ValueError:

@@ -53,6 +53,7 @@ def resolve_recipients(context, to: str) -> tuple[list[str], list[str]]:
 
 
 def _action_draft_email(context, arguments: dict) -> str:
+    """Tool draft_email: writes a draft (never sends) to the people named, resolved to addresses where MIA knows them; says who's missing an address and how to add it. On a phone turn the draft shows on the phone."""
     drafts = getattr(context, "email_drafts", None)
     if drafts is None:
         return "I can't keep drafts until someone is signed in."
@@ -79,6 +80,7 @@ def _action_draft_email(context, arguments: dict) -> str:
 
 
 def register_email_actions(registry: AssistantActionRegistry) -> None:
+    """Registers draft_email (domain email): MIA only drafts; a person presses Send."""
     registry.register(AssistantAction(
         name="draft_email", domain="email",
         description=(

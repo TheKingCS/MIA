@@ -43,6 +43,7 @@ class ModuleManager:
     """
 
     def __init__(self, context: AppContext) -> None:
+        """Starts with no modules and no packages discovered (the set lets rescan() skip folders already loaded instead of flagging them as duplicates)."""
         self.context = context
         self._modules: dict[str, ModuleBase] = {}
         # Package (folder) names already successfully loaded — lets
@@ -119,6 +120,7 @@ class ModuleManager:
         return None
 
     def get(self, module_id: str) -> ModuleBase | None:
+        """The module with this id, or None."""
         return self._modules.get(module_id)
 
     def resolve(self, requested: str) -> ModuleBase | None:
@@ -156,6 +158,7 @@ class ModuleManager:
     # ------------------------------------------------------------------
 
     def is_enabled(self, module_id: str) -> bool:
+        """Whether a module is enabled: it isn't in config modules.disabled."""
         disabled_ids = self.context.config.get("modules.disabled", [])
         return module_id not in disabled_ids
 

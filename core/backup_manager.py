@@ -135,6 +135,7 @@ class BackupError(Exception):
 
 @dataclass
 class BackupResult:
+    """How a backup went: whether it passed, the errors if not, and the file it was written to."""
     passed: bool
     errors: list[str] = field(default_factory=list)
     destination: Optional[Path] = None
@@ -142,6 +143,7 @@ class BackupResult:
 
 @dataclass
 class RestoreResult:
+    """How a restore went: whether it passed, and the errors if not."""
     passed: bool
     errors: list[str] = field(default_factory=list)
 
@@ -189,6 +191,7 @@ def create_backup(destination_path: Path, passphrase: Optional[str] = None, conf
 
 
 def _build_zip_bytes(config=None) -> bytes:
+    """The whole backup as zip bytes, in memory: a manifest (app, manifest version, when), config.json, everything under data/ (as data/...), and each external content folder the config names (as content/<name>/...)."""
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
         manifest = {

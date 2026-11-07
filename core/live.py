@@ -26,6 +26,7 @@ _changed_at = 0.0
 
 
 def bump() -> int:
+    """Marks that something changed (every atomic write calls it): the version goes up by one and the time is noted. Returns the new version."""
     global _version, _changed_at
     with _lock:
         _version += 1
@@ -34,10 +35,12 @@ def bump() -> int:
 
 
 def version() -> int:
+    """The current change version: pages re-read when it moves."""
     with _lock:
         return _version
 
 
 def changed_at() -> float:
+    """When the last change happened (seconds since the epoch)."""
     with _lock:
         return _changed_at

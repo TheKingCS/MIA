@@ -18,16 +18,19 @@ from typing import Optional
 
 
 def _money(x) -> str:
+    """An amount in the person's currency (core.region.money)."""
     from core.region import money
 
     return money(x)
 
 
 def _text(d: Optional[date]) -> str:
+    """Pure logic. A date as ISO text, or "" for none."""
     return d.isoformat() if d else ""
 
 
 def compliance_page(context, today: Optional[date] = None) -> dict:
+    """The Compliance screen's data: a card per obligation (licences, filings, taxes) with where it stands, its due, filing and payment dates (and whether a weekend or holiday moved them), fees, documents, next step, its source and when it was verified, and its form values; overdue first. Not available without the store or for a child."""
     from core.child_accounts import is_child
     from core.obligation_actions import OBLIGATION
     from core.obligations import STATUSES, effective_dates, starter_list, state

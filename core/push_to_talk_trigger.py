@@ -41,6 +41,7 @@ class PushToTalkTrigger(QObject):
     released = Signal()
 
     def __init__(self, context: AppContext, parent: Optional[QObject] = None) -> None:
+        """Wires a physical push-to-talk button when config voice.push_to_talk_gpio_pin names a pin and gpiozero is installed: press and release emit pressed and released. Without either (the dev default), or if the pin won't open, only the on-screen button works."""
         super().__init__(parent)
         self._button = None
 
@@ -65,9 +66,11 @@ class PushToTalkTrigger(QObject):
 
     @property
     def has_gpio_button(self) -> bool:
+        """Whether a physical button is wired."""
         return self._button is not None
 
     def close(self) -> None:
+        """Releases the GPIO button, if one was wired."""
         if self._button is not None:
             self._button.close()
             self._button = None

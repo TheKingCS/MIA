@@ -16,6 +16,7 @@ from core.actions import ACTION_TYPES, ActionError, ActionType
 
 
 def _places(context) -> list:
+    """Every waypoint to share; ActionError when there are none."""
     store = getattr(context, "waypoints", None)
     places = store.all_waypoints() if store is not None else []
     if not places:
@@ -24,12 +25,14 @@ def _places(context) -> list:
 
 
 def _describe(context, params) -> str:
+    """What sharing will do, said before it's approved: how many places, shown on TAK apps on this network, once, never beyond it."""
     places = _places(context)
     return (f"Show your {len(places)} place{'s' if len(places) != 1 else ''} on TAK apps on this network, once "
             "(never beyond it)")
 
 
 def _share(context, params) -> str:
+    """Sends every waypoint as a CoT event to TAK apps on the local network (core.tak); ActionError when the network refuses it. Says how many were sent."""
     from core import tak
 
     places = _places(context)

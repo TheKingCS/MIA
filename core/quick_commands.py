@@ -46,11 +46,13 @@ SKILL_WORDS = ("handstand", "l-sit", "l sit", "crow", "plank", "muscle-up", "mus
 
 
 def _clean(text: str) -> str:
+    """Pure logic. A command's words lowercased, curly apostrophes made straight, and punctuation turned to spaces, keeping a decimal point inside a number (182.4)."""
     text = text.lower().replace("’", "'").strip()
     return re.sub(r"(?<!\d)[.,](?!\d)|[.,](?=\s|$)|[!?;]+", " ", text).strip()  # keeps 182.4
 
 
 def _number(word: str) -> int:
+    """Pure logic. A count said as digits or a word ("seven") as an int; KeyError for a word that isn't a number."""
     return int(word) if word.isdigit() else NUMBER_WORDS[word]
 
 
@@ -145,6 +147,7 @@ def _workout(context, text: str) -> Optional[str]:
 
 
 def _played(context, text: str) -> Optional[str]:
+    """"I played tennis for an hour with Sam": logs it as play (play.log, proposed and approved by the person in one step) and says it can be undone; None when it isn't one or there's nowhere to log it, the action's own words when it's refused."""
     from core.actions import ActionError
     from core.recreation import parse
 

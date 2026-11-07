@@ -25,6 +25,7 @@ MAX_MONTHS = 600  # 50 years: past this, "not at these payments"
 
 @dataclass
 class DebtResult:
+    """One debt's payoff: its name and balance, months until paid (None when these payments never pay it), the year-month it's paid off, and the interest paid until then."""
     name: str
     balance: float
     months: Optional[int]  # None: not paid off at these payments
@@ -34,6 +35,7 @@ class DebtResult:
 
 @dataclass
 class Payoff:
+    """A whole payoff plan: each debt's result in payoff order, months until debt-free (or None), that year-month, total interest, and what goes to debts each month (minimums plus extra)."""
     debts: list  # DebtResult, in payoff order
     months: Optional[int]  # until every debt is paid, or None
     debt_free: Optional[str]
@@ -42,6 +44,7 @@ class Payoff:
 
 
 def _add_months(day: date, months: int) -> str:
+    """Pure logic. The year-month ("2027-08") a number of months after a day."""
     total = day.year * 12 + day.month - 1 + months
     return f"{total // 12:04d}-{total % 12 + 1:02d}"
 

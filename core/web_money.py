@@ -56,15 +56,18 @@ def month_starts(today: date, count: int) -> list[date]:
 
 
 def _values(record, item) -> dict:
+    """Pure logic. A record's form values, the fields its form has, from the item."""
     data = asdict(item)
     return {f.name: data.get(f.name) for f in record.fields}
 
 
 def _r(value) -> float:
+    """Pure logic. A number (None as 0) rounded to cents."""
     return round(float(value or 0), 2)
 
 
 def money_page(context, today: Optional[date] = None, strategy: str = "hybrid") -> dict:
+    """The Money screen's data: the same finances summary Life State serves, this month's spending by category (largest first), bills, income, debts ranked by the chosen payoff strategy, and the rest of the budget's records, each with its form values and its one-tap action (Mark paid...). Not available without a budget."""
     from core.budget_manager import (DEBT_PAYOFF_STRATEGIES, days_until_bill_due, days_until_income_due,
                                      days_until_promo_expires, next_bill_due_date, next_income_due_date, rank_debts)
     from core.context_assembler import _finances

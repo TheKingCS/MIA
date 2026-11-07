@@ -15,6 +15,7 @@ from core.starter_templates import STARTERS
 
 
 def _action_list_starter_sets(context, arguments: dict) -> str:
+    """Tool list_starter_sets: what's in the set named, or every set with its one-line description."""
     wanted = starter_templates.find(str(arguments.get("name") or ""))
     if wanted is not None:
         return starter_templates.describe(wanted)
@@ -24,6 +25,7 @@ def _action_list_starter_sets(context, arguments: dict) -> str:
 
 
 def _action_add_starter_set(context, arguments: dict) -> str:
+    """Tool add_starter_set: adds the named set's parts, leaving out any whose label or id matches a word in leave_out ("well, generator"); nothing is added twice, and it can be undone."""
     starter = starter_templates.find(str(arguments.get("name") or ""))
     if starter is None:
         return "Which starter set? " + ", ".join(s.name for s in STARTERS.values()) + "."
@@ -36,6 +38,7 @@ def _action_add_starter_set(context, arguments: dict) -> str:
 
 
 def register_starter_actions(registry: AssistantActionRegistry) -> None:
+    """Registers list_starter_sets and add_starter_set (domain starters)."""
     registry.register(AssistantAction(
         name="list_starter_sets", domain="starters",
         description="List the starter sets (ready-made chores, routines, upkeep schedules and workouts for a kind "

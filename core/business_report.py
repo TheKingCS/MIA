@@ -46,6 +46,7 @@ _US_1099_NEC_THRESHOLD = 600.0
 
 
 def _money(amount: float) -> str:
+    """Pure logic. An amount with cents and thousands separators, in the person's currency (core.region.money)."""
     return f"{money(amount, ',.2f')}"
 
 
@@ -81,6 +82,7 @@ def _category_table(title: str, totals: dict[str, float], empty_message: str) ->
 
 
 def _portfolio_table(properties: list[dict]) -> str:
+    """Pure logic. The report's real-estate section as HTML: a row per property (type, value, mortgage, equity, NOI, cap rate, annual depreciation) and a totals row; widths are set on each header cell because Qt's HTML renderer ignores <col> widths."""
     html = ["<h2>Real Estate Portfolio</h2>"]
     if not properties:
         html.append("<p>No properties tracked.</p>")
@@ -154,6 +156,7 @@ def _portfolio_table(properties: list[dict]) -> str:
 
 
 def _budget_targets_table(budget_targets: list, actual_by_category: dict[str, float]) -> str:
+    """Pure logic. The report's budget section as HTML: each target's planned amount against what was actually spent in that category this month."""
     html = ["<h2>Budget Targets vs. Actual (This Month)</h2>"]
     if not budget_targets:
         html.append("<p>No budget targets set.</p>")

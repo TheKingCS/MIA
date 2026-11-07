@@ -25,6 +25,7 @@ _KINDS = {
 
 
 def _period(text: str) -> str:
+    """Pure logic. The period a request names (today, month or year, found anywhere in the words); week otherwise."""
     text = (text or "").lower()
     for period in ("today", "month", "year"):
         if period in text:
@@ -33,6 +34,7 @@ def _period(text: str) -> str:
 
 
 def _action_get_life_events(context, arguments: dict) -> str:
+    """Tool get_life_events: what happened over the period, from the history, narrowed to one kind (bills, workouts, meals...) when the request names one of _KINDS' words."""
     period = _period(str(arguments.get("period") or ""))
     kind = str(arguments.get("kind") or "").lower().strip()
     types = None
@@ -45,6 +47,7 @@ def _action_get_life_events(context, arguments: dict) -> str:
 
 
 def register_life_event_actions(registry: AssistantActionRegistry) -> None:
+    """Registers get_life_events, the tool for "what did I get done / what changed / what did I pay"."""
     registry.register(AssistantAction(
         name="get_life_events", domain="life_events",
         description="What happened in the user's life over a period, from MIA's history: bills paid, missions "

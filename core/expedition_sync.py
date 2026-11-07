@@ -82,6 +82,7 @@ _DATA_FILES: tuple[tuple[str, str], ...] = (
 
 @dataclass
 class ExportResult:
+    """How an expedition export went: whether it passed, the errors if not, and the bundle written."""
     passed: bool
     errors: list[str] = field(default_factory=list)
     destination: Optional[Path] = None
@@ -89,6 +90,7 @@ class ExportResult:
 
 @dataclass
 class ImportResult:
+    """How an expedition import went: whether it passed, the errors if not, and how many new records each data file (and new trip photos) merged in."""
     passed: bool
     errors: list[str] = field(default_factory=list)
     # filename (e.g. "trips.json") -> number of new records merged in;
@@ -144,6 +146,7 @@ def export_expedition_data(destination_path: Path) -> ExportResult:
 
 
 def _build_zip_bytes() -> bytes:
+    """The expedition bundle as zip bytes, in memory: a manifest (app, bundle kind, version, when), each expedition data file that exists (as data/...), and the trip photos (as trip_photos/...)."""
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
         manifest = {

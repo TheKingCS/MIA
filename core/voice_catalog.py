@@ -33,6 +33,7 @@ _HF_BASE = "https://huggingface.co/rhasspy/piper-voices/resolve/main"
 
 @dataclass(frozen=True)
 class VoiceOption:
+    """One voice MIA can speak with: its id (the model file's stem, or kokoro:<name>), the name people see, where Piper's files live on Hugging Face, and its engine (piper or kokoro)."""
     voice_id: str  # matches the .onnx / .onnx.json filename stem in voice_models/ ("kokoro:<name>" for Kokoro)
     display_name: str
     hf_path: str = ""  # path segment under _HF_BASE, no file extension (Piper only)
@@ -50,10 +51,12 @@ class VoiceOption:
 
     @property
     def onnx_url(self) -> str:
+        """Where the Piper voice's model downloads from."""
         return f"{_HF_BASE}/{self.hf_path}.onnx"
 
     @property
     def onnx_json_url(self) -> str:
+        """Where the Piper voice's settings file downloads from."""
         return f"{_HF_BASE}/{self.hf_path}.onnx.json"
 
 

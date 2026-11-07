@@ -25,6 +25,7 @@ _written: dict[str, float] = {}
 
 
 def seen(profile_id: str, path: Optional[Path] = None, now: Optional[float] = None) -> None:
+    """Notes that a person's phone was just heard from (UTC, to the second), at most once every EVERY seconds per person so requests don't each write a file; a failed write is ignored, never breaking the request."""
     now = now if now is not None else time.time()
     if now - _written.get(profile_id, 0) < EVERY:
         return
@@ -40,6 +41,7 @@ def seen(profile_id: str, path: Optional[Path] = None, now: Optional[float] = No
 
 
 def last(path: Optional[Path] = None) -> dict[str, str]:
+    """When each person's phone was last heard from ({profile id: ISO time}); {} when nothing is recorded or the file doesn't read."""
     try:
         return json.loads((path or FILE).read_text(encoding="utf-8"))
     except (OSError, ValueError):
@@ -47,6 +49,7 @@ def last(path: Optional[Path] = None) -> dict[str, str]:
 
 
 def hours_since(profile_id: str, path: Optional[Path] = None, now: Optional[datetime] = None) -> Optional[float]:
+    """Hours (to one decimal) since a person's phone was last heard from, or None when it never has been."""
     when = last(path).get(profile_id)
     if not when:
         return None
