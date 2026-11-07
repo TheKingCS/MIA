@@ -8,6 +8,7 @@ Night School from the command line (DEC-0100, core/night_school.py).
     python -m tools.night_school run        a night now (MIA's daily check starts one at 01:30 by itself)
     python -m tools.night_school plan       what she'd study tonight and why, without running anything
     python -m tools.night_school coverage   which processes have a loop, and which don't yet (DEC-0101)
+    python -m tools.night_school curriculum where she stands in each area of computing (DEC-0107)
 """
 
 from __future__ import annotations
@@ -37,6 +38,15 @@ def main(argv: list[str]) -> int:
         print("What she'd choose:")
         for a in areas[:8]:
             print(f"  {a['area']}: {a['why']}")
+        return 0
+    if command == "curriculum":
+        from core import curriculum
+
+        rows = curriculum.progress(l for n in night_school.nights() for l in n.get("lessons", []))
+        for s in curriculum.standing(rows):
+            print(f"{s['name']}: {s['mastered']} of {s['of']} mastered (level: {s['level']})")
+        nxt = curriculum.next_objective(rows)
+        print(f"Next: {nxt.id}, she can {nxt.can}." if nxt else "Every objective is mastered.")
         return 0
     if command == "coverage":
         r = loop_coverage.report()

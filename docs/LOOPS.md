@@ -2,7 +2,7 @@
 
 *Generated from `core/loops.py` by `python -m core.loop_catalog`; never edit by hand (a test keeps it current). The design and the reasons: `docs/IMPROVEMENT_LOOPS.md`; what each process is watched by: `python -m tools.night_school coverage`.*
 
-83 loops in 8 areas.
+84 loops in 8 areas.
 
 ## Answers
 
@@ -84,6 +84,7 @@
 | `dev.suite_time` | seconds the full suite takes | device | trend | shown, never acted on, weekly, heavy | `dev:suite` |
 | `dev.vulnerable` | installed packages with a known vulnerability | device | ≤ 0 | opens a task, weekly, heavy | `dev:dependencies` |
 | `night.choice` | nights her own pick of what to study matched her teacher's | device | trend (from 5) | shown, never acted on | `dev:night_school` |
+| `night.curriculum` | her curriculum's objectives mastered (computing, DEC-0107) | device | trend | shown, never acted on | `dev:night_school` |
 | `night.lessons` | Night School lessons passed this week | device | trend (from 3) | shown, never acted on | `dev:night_school`, `check:night_school` |
 | `phone.vulnerable` | packages the phone app bundles with a known vulnerability | device | ≤ 0 | opens a task, weekly, heavy | `dev:dependencies`, `flow:phone` |
 

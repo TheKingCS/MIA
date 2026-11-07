@@ -1616,3 +1616,23 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   can be made today; the other four kinds are in the playbook, not built.
 - Related: DEC-0073 (the vault), DEC-0100 (Night School), DEC-0104, DEC-0105,
   `docs/DEVELOPMENTAL_INDEPENDENCE_REVIEW.md` (fine-tuning, later)
+
+### DEC-0107: MIA's curriculum in computing, one Night School lesson a night
+- Status: APPROVED
+- Proposed by: zac, 2026-11-07 ("I want her very well trained on how to do all things computer related, software
+  engineering, design, apps, web pages, deploying, cyber security, pen testing, monitoring etc and creating
+  documentation for use") · Built by: claude, 2026-11-07
+- Decision: a curriculum (`core/curriculum.py`, guide `docs/CURRICULUM.md`) of ten tracks: software engineering,
+  testing and debugging, documentation, design, web pages, apps, deploying, cyber security, penetration testing on
+  herself only, and monitoring; each with objectives in three levels (foundation, working, expert), every one
+  practised on her own code and graded by a test that fails before and passes after. Every night one of her
+  Night School lessons is for her next objective: the track she's furthest behind in, the least tried on a tie.
+  Two passed lessons master an objective. `night.curriculum` watches the share mastered;
+  `python -m tools.night_school curriculum` shows it. Off with `"curriculum": false` in `work/night_school.json`.
+- Security and pen testing: on herself only, by rule given to her teacher with every such lesson: her own code in
+  the lab and her own server in-process (TestClient), never a network address, anyone else's system or a real
+  credential; no tool that attacks other systems. A weakness found becomes a test and a fix through the lab, which
+  Zac approves.
+- Why: practising on herself makes her better twice, as a learner and in the code she learns on, and code grades
+  her, so a lesson passed is a skill shown.
+- Related: DEC-0100 (Night School), DEC-0104, DEC-0105, DEC-0106

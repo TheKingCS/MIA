@@ -193,6 +193,11 @@ first. Each is a step below.
     forge opportunity when one exists; (f) fine-tuning on the PC's GPU once the corpus is big enough.
     🧑 *Zac approves any model going into use.*
 
+20. ✅ **Her curriculum in computing** (DEC-0107; `core/curriculum.py`, `docs/CURRICULUM.md`, 2026-11-07): ten
+    tracks (engineering, testing, documentation, design, web, apps, deploying, security, pen testing on herself
+    only, monitoring) of objectives in three levels, practised on her own code; one Night School lesson a night
+    for the next one; `night.curriculum` watches the share mastered.
+
 ### Phase E: The rest already queued
 
 18. ⬜ T-0042 (the Skills module reaching into Missions), T-0040 (JSON imports, diagnostics), T-0041 (blueprint

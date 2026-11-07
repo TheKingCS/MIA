@@ -24,7 +24,11 @@ of the window, or when her teacher is resting at a usage limit:
 4. **Her teacher** (Claude Code, read-only: it reads her code and never
    changes it; Codex if Claude is resting) sets the night's exercises for
    that focus: each one small, for files she may change, **with a test that
-   fails now and passes when it's done**.
+   fails now and passes when it's done**. One of them is always for her
+   **curriculum** (core/curriculum.py, DEC-0107): the next objective in the
+   area of computing she's furthest behind in (engineering, testing,
+   documentation, design, web, apps, deploying, security, pen testing on
+   herself only, monitoring), practised on her own code.
 5. **She does them** (core/mia_coder.py, her local model, in the lab). Code
    grades her, not the teacher: the exercise's test first fails, then
    passes, and the full suite has nothing new failing. Her teacher reads
@@ -63,7 +67,8 @@ STOP_FILE = ROOT / "work" / "STOP"
 PLAN = ROOT / "docs" / "BUILD_PLAN.md"
 WHO = "MIA (night school)"
 DEFAULTS = {"enabled": True, "start": "01:30", "hours": 4.0, "mode": "plan", "lessons": 3, "shadow": 1,
-            "loop_families": 1, "teachers": ["claude-code", "codex"], "teacher_calls": 8, "benchmarks": True}
+            "loop_families": 1, "teachers": ["claude-code", "codex"], "teacher_calls": 8, "benchmarks": True,
+            "curriculum": True}
 MODES = ("plan", "self")
 LESSON_MINUTES = 45  # a lesson isn't started with less of the window left than this
 TEST_NAME = re.compile(r"^tests/test_night_[a-z0-9_]{3,60}\.py$")
@@ -258,7 +263,8 @@ Reply with only a JSON object:
      "task": "what to do, written for her: precise, small, one sitting",
      "test_name": "tests/test_night_<short_name>.py",
      "test_code": "a complete pytest file that FAILS on the code as it is now and PASSES once the task is done",
-     "real": true if this is real progress on the focus that's worth keeping, false if it's practice}}]}}
+     "real": true if this is real progress on the focus that's worth keeping, false if it's practice,
+     "objective": "the curriculum objective's id, on the curriculum exercise only"}}]}}
 
 Make each exercise teach something the focus needs. Start where she is: if she's failing, smaller."""
 
@@ -519,6 +525,16 @@ def night(now: Optional[datetime] = None, *, ask: Optional[Callable[[str, str], 
     else:
         record["focus"] = f"her own pick: {areas[0]['area']}" if areas else "general practice"
 
+    # 3a. Her curriculum (core/curriculum.py): one lesson a night for her next objective
+    objective = None
+    if cfg.get("curriculum", True):
+        from core import curriculum
+
+        objective = curriculum.next_objective(curriculum.progress(
+            l for n in nights(store=store) for l in n.get("lessons", [])))
+        if objective is not None:
+            record["objective"] = objective.id
+
     # 4. The teacher sets the night
     calls = 0
     teacher = _teacher(list(cfg["teachers"]), calls, int(cfg["teacher_calls"]))
@@ -527,6 +543,11 @@ def night(now: Optional[datetime] = None, *, ask: Optional[Callable[[str, str], 
     if teacher and not STOP_FILE.exists():
         try:
             focus_text = record["focus"] + (f"\n\n{step['text']}" if step and cfg["mode"] == "plan" else "")
+            if objective is not None:
+                from core.curriculum import lesson_brief
+
+                focus_text += (f"\n\nOne exercise tonight is for her curriculum instead of the focus; give it "
+                               f"\"objective\": \"{objective.id}\". {lesson_brief(objective)}")
             said = _json_in(ask(teacher, SYLLABUS_PROMPT.format(
                 protected=", ".join(PROTECTED), focus=focus_text,
                 assessment="\n".join(f"{i + 1}. {a['area']}: {a['why']}" for i, a in enumerate(areas[:6])) or "(nothing yet)",
@@ -560,6 +581,8 @@ def night(now: Optional[datetime] = None, *, ask: Optional[Callable[[str, str], 
         done = lesson(ex, lab=lab, coder_ask=coder_ask, suite=run_suite, one_test=one_test,
                       notes=notes_for(ex.get("skill") or "engine changes", store))
         her_change = done.pop("_diff", "")
+        if objective is not None and ex.get("objective") == objective.id:
+            done["objective"] = objective.id  # what core/curriculum.progress() counts
         if done["outcome"] in ("pass", "fail") and done.get("proposal"):
             grader = _teacher(list(cfg["teachers"]), calls, int(cfg["teacher_calls"]))
             if grader:
@@ -700,6 +723,8 @@ def summary() -> dict:
 def describe(record: dict) -> str:
     """A night in a few lines, for the terminal and the dev window."""
     lines = [f"Night of {record.get('at', '')[:10]}: {record.get('focus', '')}"]
+    if record.get("objective"):
+        lines.append(f"  Curriculum: {record['objective']}")
     if record.get("her_pick"):
         agreed = record.get("pick_agreed")
         lines.append(f"  She chose: {record['her_pick']['area']} ({record['her_pick']['why']})"

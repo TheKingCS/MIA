@@ -147,6 +147,20 @@ def _router_shadow(context) -> Optional[Reading]:
                                                     f"of {found['turns']} turns")
 
 
+def _curriculum(context) -> Optional[Reading]:
+    """Measure: the share of her curriculum's objectives mastered (DEC-0107), from Night School's records. None before
+    any curriculum lesson."""
+    from core import curriculum, night_school
+
+    rows = curriculum.progress(l for n in night_school.nights() for l in n.get("lessons", []))
+    tried = sum(r["tried"] for r in rows.values())
+    if not tried:
+        return None
+    mastered = sum(1 for r in rows.values() if r["mastered"])
+    return Reading(round(mastered / len(rows), 3), tried, f"{mastered} of {len(rows)} objectives mastered, "
+                                                            f"{tried} curriculum lessons tried")
+
+
 def _slow(context) -> Optional[Reading]:
     """Measure: the share of this week's turns that took over 25 seconds. None when there's nothing to judge from yet."""
     turns = _turns(context)
@@ -1005,6 +1019,9 @@ LOOPS: tuple[Loop, ...] = (
     Loop("gaps.repeated", "answers", "things she can't do yet, asked more than once (self-enablement)", "person",
          _gaps, acts="watch", covers=("flow:tools", "check:capability_gaps", "action:gap")),
     Loop("answers.slow", "answers", "share of answers over 25 seconds", "person", _slow, floor=0.10, min_n=20, covers=("flow:talk", "store:traces")),
+    Loop("night.curriculum", "development", "her curriculum's objectives mastered (computing, DEC-0107)", "device",
+         _curriculum, better="higher", acts="watch", files=("core/curriculum.py", "core/night_school.py"),
+         covers=("dev:night_school",)),
     Loop("models.router_shadow", "models", "her own router's top five holding the tool she called (in the shadow)",
          "person", _router_shadow, better="higher", acts="watch", min_n=20,
          files=("core/model_forge.py", "core/turn_trace.py"), covers=("flow:tools",)),

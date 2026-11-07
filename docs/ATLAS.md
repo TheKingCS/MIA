@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1046 files, 230,875 lines; 1046 files describe themselves; 5,756 of 13,559 classes and functions are documented.
+1048 files, 231,265 lines; 1048 files describe themselves; 5,769 of 13,572 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-368 files, 104,512 lines; 5,011 of 5,658 classes and functions documented
+369 files, 104,792 lines; 5,019 of 5,666 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -97,6 +97,7 @@
 - `core/creation_sources.py`: What MIA's screens may show besides their own record sets (ACAF step 2, DEC-0088; `docs/ACAF_REVIEW.md` section 3.3). A catalogue, not free queries: each source is a kind of history MIA already keeps (core/life_events.py), read through `events_for()`, so it follows the same rules every screen does:  *(5 undocumented)*
 - `core/creation_spec.py`: What a screen MIA makes may say, and what it shows (DEC-0088/0091; ACAF, `docs/ACAF_REVIEW.md` sections 3.2 to 4). A screen is a specification: a title, the record set it shows (core/record_sets.py) and a list of blocks** from a fixed catalogue. It holds no HTML, script or free formula: values are a *(5 undocumented)*
 - `core/creations.py`: What MIA has made for a person, and every version of it (DEC-0091; ACAF, `docs/ACAF_REVIEW.md` section 5). A personal store (PERSONAL_STORES): a person's creations are theirs, even when the records they show are the household's.
+- `core/curriculum.py`: What MIA studies to become good at everything a computer can be made to do (Zac, 2026-11-07: "I want her very well trained on how to do all things computer related, software engineering, design, apps, web pages, deploying, cyber security, pen testing, monitoring etc and creating documentation for us
 - `core/daily_occasions.py`: Pure decision logic for `core/application.py`'s daily-occasion-check timer — 2026-07-14 aesthetic pass part 5, at the user's explicit request: "know and celebrate the user's birthday, remind them of anniversaries, check in with them and see how they are doing." Split out as pure functions (no Qt, no
 - `core/dashboard_telemetry.py`: Pure telemetry math for the redesigned Home dashboard's gauges (2026-07-18 design handoff, CCH.zip's Dashboard console) — no Qt, no psutil calls of its own, testable in isolation (see tests/test_dashboard_telemetry.py). `gui/home_dashboard.py` owns the actual `core.system_health.read_system_health()
 - `core/dashboard_widgets.py`: The Home dashboard's widget registry — 2026-07-15, "framework first" per the widget/dashboard-customization conversation (`docs/VISION.md`'s companion-philosophy update names weather/trading-bot/music/current project widgets; this is the generic mechanism underneath all of them, built before any spe *(7 undocumented)*
@@ -611,7 +612,7 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-29 files, 2,948 lines; 32 of 89 classes and functions documented
+29 files, 2,958 lines; 32 of 89 classes and functions documented
 
 - `tools/bench_audit.py`: What MIA's routing does today with each Intelligence Benchmark question (tests/intelligence_bench.py, docs/INTELLIGENCE_BENCHMARK.md): a question plan (core/question_plans.py: lookups by code, one answer), answered by code (a direct lookup), offered which tools, or left to the model with no tools at *(3 undocumented)*
 - `tools/chronicle_issue.py`: The Chronicles' weekly issue (core/chronicle_issue.py, build plan step 17). *(1 undocumented)*
@@ -645,7 +646,7 @@
 
 ## tests/: the test suite: what each part must do
 
-347 files, 63,227 lines; 311 of 5,668 classes and functions documented
+348 files, 63,327 lines; 316 of 5,673 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -719,6 +720,7 @@
 - `tests/test_crafting.py`: Crafting recipes (DEC-0030 phase B): the smallest real end-to-end workflow. A recipe → what's short → a shopping list → receive what you bought → build it → photos → sell it → the build's real profit. Inventory has to add up, nothing doubles on retry, and every step can be undone. *(6 undocumented)*
 - `tests/test_creations.py`: ACAF's first working demonstration (DEC-0088 to DEC-0091): from one sentence about information MIA has no screen for, she makes a record set and a screen, checked, previewed, published on approval, used, undone and rolled back, all through her own design system and the action contract. *(15 undocumented)*
 - `tests/test_cross_domain.py`: Cross-domain reasoning (build plan step 8): questions that span apps gather several plans onto one sheet; "can I afford it and still hit my freedom date" is worked out by the freedom plan twice; every plan answer says how sure it can be, from the sheet, and answers.calibration checks that "sure" is  *(10 undocumented)*
+- `tests/test_curriculum.py`: MIA's curriculum (core/curriculum.py, DEC-0107): the tracks are whole and point at real files, mastery is counted from the nights' lessons, the next objective takes the tracks in turn, security lessons carry their rules, and a night of school sets one lesson for it.
 - `tests/test_daily_occasions.py`: Unit tests for core.daily_occasions' pure decision logic — no Qt, no real clock, no manager instances needed. *(19 undocumented)*
 - `tests/test_dashboard_module.py`: Unit tests for modules.dashboard.module's pure functions, same style as tests/test_expeditions_module.py (no Qt event loop, no fixtures). *(11 undocumented)*
 - `tests/test_dashboard_telemetry.py`: The dashboard's system numbers (core/dashboard_telemetry.py): uptime as "3h 42m" and network speed in Mb/s from two byte-counter readings. *(8 undocumented)*
