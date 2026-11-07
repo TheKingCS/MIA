@@ -768,3 +768,23 @@ body.cook-live .mia-orb-button, body.cook-live .bottom-bar { display: none; }
 .op-meter { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; }
 .op-score { font-family: var(--font-mono); font-size: 12px; white-space: nowrap; }
 .op-line .row-buttons { margin-top: 2px; }
+
+/* ---------------------------------------------------------------- Play (DEC-0113)
+   Six weeks of play minutes as bars (this week lit), the latest games, one big Log a Game. */
+.pl-panel { display: grid; gap: 10px; padding: 14px; margin-bottom: var(--gap); }
+.pl-label { margin: 0; font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-dim); }
+.pl-bars { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 10px; height: 120px; align-items: end; }
+.pl-bar { display: grid; grid-template-rows: 1fr auto; gap: 4px; height: 100%; }
+.pl-fill { align-self: end; border-radius: 3px 3px 0 0; background: rgba(var(--rgb-accent), 0.35); min-height: 2px; }
+.pl-bar.now .pl-fill { background: var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
+.pl-wk { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-dim); text-align: center; }
+.pl-week { margin: 0; font-size: var(--text-sm); color: var(--text-dim); }
+.pl-games { display: grid; }
+.pl-game { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 12px; align-items: center; padding: 8px 0;
+  border-top: 1px solid var(--line); }
+.pl-game:first-child { border-top: 0; }
+.pl-what { font-weight: 600; overflow-wrap: anywhere; }
+.pl-when { font-size: var(--text-sm); color: var(--text-dim); }
+.pl-min { font-family: var(--font-mono); font-size: 12px; }
+@media (min-width: 861px) { .pl-log { width: auto; min-width: 260px; } }

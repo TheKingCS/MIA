@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1089 files, 246,573 lines; 1089 files describe themselves; 13,535 of 14,205 classes and functions are documented.
+1089 files, 246,609 lines; 1089 files describe themselves; 13,537 of 14,207 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-391 files, 114,393 lines; 6,062 of 6,151 classes and functions documented
+391 files, 114,404 lines; 6,063 of 6,152 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -670,7 +670,7 @@
 
 ## tests/: the test suite: what each part must do
 
-363 files, 66,081 lines; 5,238 of 5,819 classes and functions documented
+363 files, 66,087 lines; 5,239 of 5,820 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -938,7 +938,7 @@
 - `tests/test_real_estate_module.py`: Unit tests for modules.real_estate.module's pure formatters — no Qt event loop needed, same shape as tests/test_property_module.py.
 - `tests/test_receipt_effects.py`: Receipts that do things (core/receipt_effects.py) and the everyday mailbox they come from (core/inbox_mail.fetch_receipts): a grocery receipt stocks the pantry and ticks the grocery list, an oil change is marked done on the truck at the receipt's mileage, a Lowe's receipt adds to the materials at th
 - `tests/test_receipt_match.py`: A scanned receipt fills in a recipe's Bought It: store-receipt names matched to recipe materials, each line used once, nothing guessed, and the money never counted twice (it's already in the Budget). *(1 undocumented)*
-- `tests/test_recreation.py`: Recreation in the health cluster (DEC-0098, core/recreation.py): games and sports logged by voice or on a screen, counted as training load (minutes × effort), skill XP by the sport, a life event for the history, the seasons, the Operating Journal and the Chronicle; never mistaking a song for a game. *(3 undocumented)*
+- `tests/test_recreation.py`: Recreation in the health cluster (DEC-0098, core/recreation.py): games and sports logged by voice or on a screen, counted as training load (minutes × effort), skill XP by the sport, a life event for the history, the seasons, the Operating Journal and the Chronicle; never mistaking a song for a game; *(3 undocumented)*
 - `tests/test_recurring_mission_manager.py`: Unit tests for core.recurring_mission_manager. Isolates _DATA_DIR/_MISSIONS_FILE/_TEMPLATES_FILE plus core.calendar_manager's own file constants (ensure_current_missions() creates a real CalendarEvent) into a tmp_path scratch area, same monkeypatch pattern as tests/test_pathway_manager.py. *(3 undocumented)*
 - `tests/test_reference_library_manager.py`: Unit tests for core.reference_library_manager. Isolates the library root into a tmp_path scratch area (same monkeypatch pattern as test_journal_manager.py's isolated_paths), and builds tiny real .zim fixtures on the fly with libzim.writer rather than bundling a binary fixture in the repo or dependin
 - `tests/test_region.py`: Country-aware crisis lines and money (core/region.py), 2026-10-01. *(2 undocumented)*
@@ -1038,7 +1038,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-72 files, 12,930 lines
+72 files, 12,949 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
@@ -1095,7 +1095,7 @@
 - `web/places-watch.js`: places-watch.js — location quests (claude, 2026-10-17, DEC-0028 #13). When the person switched them on (Settings → Location quests), MIA.shell() lists their places; while MIA is open this watches the device's position and compares it here, on the device. Nothing about where you are is sent anywhere.
 - `web/places.js`: places.js — My Places (claude, 2026-10-17, DEC-0028 #13). Renders MIA.places() (core/places.py): each place, what arriving there does, Add Place (where you are now, or typed in), Remove, and the switch that lets this device notice when you arrive (Settings → Location quests). Formatting only; the wa
 - `web/plan.js`: plan.js — My plan (claude, 2026-10-14, DEC-0020, Muse's H-0028): one screen, reached from both Kitchen and Workout. Goals, the training week (which days, and what each training day is), skills to practice, meals and preferences, milestones. Renders MIA.fitness() (plan, plan_text); every save is a fi
-- `web/play.js`: play.js — games and sports (claude, 2026-11-07, DEC-0098). Renders MIA.play() (core/recreation.py): the latest games and the training load by week. Logging and taking one out go through actions (play.log, play.delete). Formatting only; the look is muse's.
+- `web/play.js`: play.js — games and sports (claude, 2026-11-07, DEC-0098). Renders MIA.play() (core/recreation.py): the training load by week as bars and the latest games, as the design canvas has them (DEC-0113). Logging and taking one out go through actions (play.log, play.delete). Formatting only; the look is mu
 - `web/profile.js`: profile.js — the Profile screen (claude, 2026-10-07; Zac: the gear's Profile). Renders MIA.profile() (core/web_account.py): your level, name, email, country, what MIA helps with, household, password and recovery code. Name, email, country and interests are one action (profile.edit), so they're confi
 - `web/real-estate.js`: real-estate.js — the Real Estate screen (claude, 2026-10-06, DEC-0017/0018). Renders MIA.realEstate() (core/web_screens.py): each property with its status, where it is, rent, what's owed, equity and cash flow, its upkeep (its own Maintenance asset, opened on asset.html) and related missions. Since Z
 - `web/recipe.js`: recipe.js — one recipe, opened from a meal or recipe card (claude, 2026-10-14, Zac's idea; 2026-11-07, DEC-0113: Start Cooking opens cook mode, web/cook.js). Renders MIA.recipe(id) (core/web_screens. recipe_page): nutrition per serving, each ingredient with whether the house has it, the steps (tick 

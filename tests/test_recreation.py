@@ -1,6 +1,6 @@
 """Recreation in the health cluster (DEC-0098, core/recreation.py): games and sports logged by voice or on a screen,
 counted as training load (minutes × effort), skill XP by the sport, a life event for the history, the seasons, the
-Operating Journal and the Chronicle; never mistaking a song for a game."""
+Operating Journal and the Chronicle; never mistaking a song for a game; each effort in a word for the screen."""
 
 from datetime import date, timedelta
 from types import SimpleNamespace
@@ -78,3 +78,9 @@ def test_it_counts_in_the_chronicle_and_the_journal():
 
     assert TYPE_THREAD["played"] == "play"
     assert habit_from("Play pickleball twice a week")["type"] == "played"
+
+
+def test_an_effort_reads_as_a_word():
+    from core.recreation import effort_word
+
+    assert [effort_word(e) for e in (2, 3, 5, 6, 7, 10, None)] == ["Easy", "Easy", "Moderate", "Moderate", "Hard", "Hard", "Moderate"]
