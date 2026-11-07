@@ -164,7 +164,6 @@
   "core/loop_coverage.py": 8,
   "core/mail_send.py": 9,
   "core/main_thread.py": 2,
-  "core/maintenance_manager.py": 32,
   "core/map_share_actions.py": 3,
   "core/map_tile_cache.py": 5,
   "core/material_manager.py": 18,

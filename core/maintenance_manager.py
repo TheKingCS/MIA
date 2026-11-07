@@ -115,6 +115,10 @@ DEFAULT_METER_UNITS = {
 
 @dataclass
 class MaintenanceAsset:
+    """Something the household looks after: a vehicle, a tool, an appliance, the property, a plant. Its make, model,
+    serial, purchase date and price (0 when unknown), warranty end, documents filed under it, notes, and whose it is
+    (None: the household's, counting toward everyone's stats; a profile id: only theirs, like one person's car).
+    """
     asset_id: str
     name: str  # "2019 Ford F-150", "Lawn Mower", "Trek E-Bike"
     category: str = "Other"
@@ -142,6 +146,7 @@ class MaintenanceAsset:
     warranty_until: str = ""
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in maintenance.json."""
         return {
             "asset_id": self.asset_id,
             "name": self.name,
@@ -160,6 +165,7 @@ class MaintenanceAsset:
 
     @staticmethod
     def from_dict(data: dict) -> "MaintenanceAsset":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return MaintenanceAsset(
             asset_id=data.get("asset_id", uuid.uuid4().hex[:10]),
             name=data.get("name", ""),
@@ -179,6 +185,12 @@ class MaintenanceAsset:
 
 @dataclass
 class MaintenanceTask:
+    """One thing to do for an asset, due in one of three ways: by the calendar (every interval_days, or once), by a
+    meter (so many miles, hours or cycles since it was last done, read from logged readings), or by a sensor reading
+    crossing a threshold. It also carries a priority, whether to put it on the calendar by itself when due, the
+    reading rewards count from (so a truck's existing miles aren't new achievement), and whether it's the asset's one
+    lifetime-usage meter.
+    """
     task_id: str
     asset_id: str
     title: str  # "Oil change", "Mow lawn", "Replace HVAC filter"
@@ -234,6 +246,7 @@ class MaintenanceTask:
     tracks_lifetime_usage: bool = False
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in maintenance.json."""
         return {
             "task_id": self.task_id,
             "asset_id": self.asset_id,
@@ -257,6 +270,7 @@ class MaintenanceTask:
 
     @staticmethod
     def from_dict(data: dict) -> "MaintenanceTask":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return MaintenanceTask(
             task_id=data.get("task_id", uuid.uuid4().hex[:10]),
             asset_id=data.get("asset_id", ""),
@@ -285,10 +299,12 @@ class MaintenanceTask:
 
     @property
     def is_meter_task(self) -> bool:
+        """Whether it's due by a meter (runtime, mileage, cycles, condition)."""
         return self.trigger_type in METER_TRIGGER_TYPES
 
     @property
     def is_sensor_task(self) -> bool:
+        """Whether it's due by a sensor reading crossing a threshold."""
         return self.trigger_type in THRESHOLD_TRIGGER_TYPES
 
 
@@ -320,6 +336,7 @@ def days_until_due(task: MaintenanceTask, today: date) -> Optional[int]:
 
 
 def is_overdue(task: MaintenanceTask, today: date) -> bool:
+    """Pure logic. Whether a calendar task's due date has passed."""
     remaining = days_until_due(task, today)
     return remaining is not None and remaining < 0
 
@@ -332,6 +349,7 @@ def is_overdue(task: MaintenanceTask, today: date) -> bool:
 # ----------------------------------------------------------------------
 
 def _latest_reading_value(readings: list[Reading]) -> Optional[float]:
+    """The newest reading's value, or None when there are none."""
     if not readings:
         return None
     return sorted(readings, key=lambda r: r.timestamp)[-1].value
@@ -350,6 +368,9 @@ def meter_used_since_last(task: MaintenanceTask, readings: list[Reading]) -> Opt
 
 
 def is_meter_task_due(task: MaintenanceTask, readings: list[Reading]) -> bool:
+    """Pure logic. Whether a meter task's use since it was last done has reached its interval (False with no interval,
+    no readings or no baseline yet).
+    """
     if task.meter_interval is None:
         return False
     used = meter_used_since_last(task, readings)
@@ -359,6 +380,7 @@ def is_meter_task_due(task: MaintenanceTask, readings: list[Reading]) -> bool:
 
 
 def is_sensor_task_due(task: MaintenanceTask, readings: list[Reading]) -> bool:
+    """Pure logic. Whether the latest sensor reading has crossed the threshold (above or below)."""
     if task.threshold_value is None:
         return False
     latest = _latest_reading_value(readings)
@@ -494,8 +516,15 @@ def next_occurrence_date(task: MaintenanceTask, readings: list[Reading], today: 
 
 
 class MaintenanceManager:
+    """The household's maintenance store: assets and their tasks in maintenance.json (in the household's folder,
+    data/ by default), written through atomic_write_text so undo can restore it. Readings live in the Data Logger,
+    in a series per task or per asset meter; documents in maintenance_documents/<asset_id>/.
+    """
     def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
         # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        """Points at the household's file and loads it, and makes the documents folder (only logging when storage isn't
+        there, never crashing the app over it).
+        """
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._maintenance_file = self.data_dir / "maintenance.json" if data_dir is not None else _MAINTENANCE_FILE
         self.context = context
@@ -516,6 +545,7 @@ class MaintenanceManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads assets and tasks; a damaged file is logged, reported (notify_data_corruption) and starts empty."""
         if not self._maintenance_file.exists():
             self._assets, self._tasks = [], []
             return
@@ -529,9 +559,11 @@ class MaintenanceManager:
             self._assets, self._tasks = [], []
 
     def reload(self) -> None:
+        """Reads the file again (after undo restored it, or another writer changed it)."""
         self._load()
 
     def _save(self) -> None:
+        """Writes assets and tasks atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._maintenance_file,
             json.dumps(
@@ -561,6 +593,7 @@ class MaintenanceManager:
         purchase_price: float = 0.0,
         warranty_until: str = "",
     ) -> MaintenanceAsset:
+        """Adds an asset with whatever details are known."""
         asset = MaintenanceAsset(
             asset_id=uuid.uuid4().hex[:10],
             name=name,
@@ -581,6 +614,7 @@ class MaintenanceManager:
         return asset
 
     def update_asset(self, asset_id: str, **fields) -> MaintenanceAsset:
+        """Changes an asset's fields (ValueError for an unknown asset or field)."""
         asset = self.get_asset(asset_id)
         if asset is None:
             raise ValueError(f"No maintenance asset with id '{asset_id}'.")
@@ -607,12 +641,14 @@ class MaintenanceManager:
             log.warning("Could not remove document folder for deleted asset '%s'.", asset_id)
 
     def get_asset(self, asset_id: str) -> Optional[MaintenanceAsset]:
+        """The asset with this id, or None."""
         for asset in self._assets:
             if asset.asset_id == asset_id:
                 return asset
         return None
 
     def all_assets(self) -> list[MaintenanceAsset]:
+        """Every asset, by name."""
         return sorted(self._assets, key=lambda a: a.name.lower())
 
     # ------------------------------------------------------------------
@@ -682,6 +718,7 @@ class MaintenanceManager:
         reward_baseline_value: Optional[float] = None,
         tracks_lifetime_usage: bool = False,
     ) -> MaintenanceTask:
+        """Adds a task for an asset, due by calendar, meter or sensor."""
         task = MaintenanceTask(
             task_id=uuid.uuid4().hex[:10],
             asset_id=asset_id,
@@ -706,6 +743,7 @@ class MaintenanceManager:
         return task
 
     def update_task(self, task_id: str, **fields) -> MaintenanceTask:
+        """Changes a task's fields (ValueError for an unknown task or field)."""
         task = self.get_task(task_id)
         if task is None:
             raise ValueError(f"No maintenance task with id '{task_id}'.")
@@ -717,19 +755,23 @@ class MaintenanceManager:
         return task
 
     def delete_task(self, task_id: str) -> None:
+        """Deletes a task."""
         self._tasks = [t for t in self._tasks if t.task_id != task_id]
         self._save()
 
     def get_task(self, task_id: str) -> Optional[MaintenanceTask]:
+        """The task with this id, or None."""
         for task in self._tasks:
             if task.task_id == task_id:
                 return task
         return None
 
     def all_tasks(self) -> list[MaintenanceTask]:
+        """Every task, in the order added."""
         return list(self._tasks)
 
     def tasks_for_asset(self, asset_id: str) -> list[MaintenanceTask]:
+        """One asset's tasks."""
         return [t for t in self._tasks if t.asset_id == asset_id]
 
     def mark_complete(
@@ -783,6 +825,9 @@ class MaintenanceManager:
     # ------------------------------------------------------------------
 
     def log_reading(self, task_id: str, value: float, unit: str = "", note: str = "") -> Reading:
+        """Logs a meter or sensor reading for a task into its Data Logger series, credited to whoever is signed in, and
+        publishes activity.logged (what rewards count from). ValueError for an unknown task.
+        """
         task = self.get_task(task_id)
         if task is None:
             raise ValueError(f"No maintenance task with id '{task_id}'.")
@@ -804,6 +849,7 @@ class MaintenanceManager:
         return reading
 
     def readings_for_task(self, task_id: str) -> list[Reading]:
+        """A task's readings ([] when the task is gone)."""
         task = self.get_task(task_id)
         if task is None:
             return []
@@ -821,9 +867,11 @@ class MaintenanceManager:
 
     @staticmethod
     def _asset_series_id(asset_id: str, meter_name: str) -> str:
+        """The Data Logger series for one of an asset's own meters ("Engine Hours")."""
         return f"maintenance_asset_{asset_id}_{meter_name}"
 
     def log_asset_reading(self, asset_id: str, meter_name: str, value: float, unit: str = "", note: str = "") -> Reading:
+        """Logs a reading on one of an asset's own meters, not tied to a task."""
         if self.get_asset(asset_id) is None:
             raise ValueError(f"No maintenance asset with id '{asset_id}'.")
         active_profile = self.context.profiles.get_active_profile() if self.context.profiles is not None else None
@@ -843,6 +891,7 @@ class MaintenanceManager:
         )
 
     def asset_readings(self, asset_id: str, meter_name: str) -> list[Reading]:
+        """The readings on one of an asset's own meters."""
         return self.context.data_logger.readings_for(self._asset_series_id(asset_id, meter_name))
 
     # ------------------------------------------------------------------

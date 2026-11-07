@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 226,580 lines; 1043 files describe themselves; 3,483 of 13,517 classes and functions are documented.
+1043 files, 226,629 lines; 1043 files describe themselves; 3,515 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 100,486 lines; 2,752 of 5,630 classes and functions documented
+367 files, 100,535 lines; 2,784 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -203,7 +203,7 @@
 - `core/mail_send.py`: Sending an email draft from your own address (2026-10-01, accounts stage 3, core/email_drafts.py). Optional: without it, Copy and "open in my mail app" always work. *(9 undocumented)*
 - `core/main_thread.py`: Publishing events safely from background threads (2026-09-28). *(2 undocumented)*
 - `core/maintenance_insights.py`: The Maintenance-domain scan for "connective infrastructure" phase 3 (Insight + Recommendation) — see core/insight_manager.py's own docstring for why these are real, new persisted entities. Pure decision logic, no Qt, no manager instance of its own, wired into core/application.py's existing daily-che
-- `core/maintenance_manager.py`: Backs the Maintenance module (modules/maintenance/module.py) — recurring upkeep tracking for anything the user owns that needs it: vehicles, power equipment (mower, e-bike), appliances, the property itself, and tools. Same persisted-JSON pattern as core.journal_manager.JournalManager core.calendar_m *(32 undocumented)*
+- `core/maintenance_manager.py`: Backs the Maintenance module (modules/maintenance/module.py) — recurring upkeep tracking for anything the user owns that needs it: vehicles, power equipment (mower, e-bike), appliances, the property itself, and tools. Same persisted-JSON pattern as core.journal_manager.JournalManager core.calendar_m
 - `core/map_share_actions.py`: Showing MIA's places on TAK apps on the local network (build plan step 14, DEC-0099; `docs/MAPS_AND_COMMS.md`), through the action contract (core/actions.py): `map.tak_share` sends each waypoint once as a Cursor on Target event over UDP multicast with a one-hop limit, so it never leaves the network  *(3 undocumented)*
 - `core/map_tile_cache.py`: Disk-backed cache for real basemap tiles — the actual "offline maps" imagery gui/widgets/tile_map_view.py renders, unlike gui/widgets/waypoint_map_canvas.py's schematic waypoint plot (which has no basemap imagery at all, by design — see that module's docstring). *(5 undocumented)*
 - `core/map_tile_math.py`: Pure Web Mercator "slippy map" tile-numbering math — the same addressing scheme every standard XYZ/ArcGIS tile provider uses (OSM, USGS National Map, etc.), documented publicly as the OSM wiki's "Slippy map tilenames" formulas. Kept separate from core/map_tile_cache.py (which adds real network I/O/d
