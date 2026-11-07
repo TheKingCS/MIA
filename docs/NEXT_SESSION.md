@@ -77,9 +77,9 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       Calendar (one page: Due Today, Past Due, Due Soon as short lines, the month beside them on PC), Journal (Write Entry first, the privacy line, one column of entries with
       date and tags above the title), People (Birthdays first: a card each with gift ideas, then the one person
       `core/web_more.catch_up` says to catch up with), Classroom (the course to continue from
-      `core/classroom_manager.continue_course`, lessons to tick with their XP, subjects as rows that open).
-      Still to do per app, against its canvas artboard: Guitar,
-      Vault, Operating, Play, Observations, the outdoors pages, Knowledge, Music, Files, Passwords, News, Look,
+      `core/classroom_manager.continue_course`, lessons to tick with their XP, subjects as rows that open), Guitar and any learning path (`core/paths.path_card`: stage rail, the week, Work On Next
+      with homework, every check of the stage with who verifies it).
+      Still to do per app, against its canvas artboard: Vault, Operating, Play, Observations, the outdoors pages, Knowledge, Music, Files, Passwords, News, Look,
       Settings, Profile, Fix-It, Diagnostics; Power, Toolbox, Lab and Field Kit need web pages first (WEB_PARITY).
 - [ ] Glasses: the shared orb on `web/glasses.html`.
 - Note: DEC-0119 (MIA for Zac alone) came after the canvas: drop household members from Party's leaderboard and
