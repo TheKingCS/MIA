@@ -46,6 +46,7 @@ READABLE_SUFFIXES = PDF_SUFFIXES | TEXT_SUFFIXES | HTML_SUFFIXES | EMAIL_SUFFIXE
 
 @dataclass
 class Attachment:
+    """A file attached to an email: its name, its bytes and its content type."""
     filename: str
     data: bytes
     content_type: str = ""
@@ -53,6 +54,10 @@ class Attachment:
 
 @dataclass
 class ExtractedDocument:
+    """What was read from a document: its pages' text, its title (PDF title, email subject or first heading), for an
+    email the sender, date and attachments, whether anything could be read (and why not), and whether OCR could read
+    it (a photo or scanned PDF).
+    """
     pages: list[str] = field(default_factory=list)  # page text, in order
     title: str = ""  # PDF title / email subject / first heading, if any
     sender: str = ""  # email only
@@ -64,31 +69,40 @@ class ExtractedDocument:
 
     @property
     def text(self) -> str:
+        """All the pages' text, a blank line between pages."""
         return "\n\n".join(self.pages)
 
 
 class _TextFromHtml(HTMLParser):
+    """An HTML parser that keeps the visible text: scripts and styles left out, a line break at each block
+    (paragraph, line break, div, list item, row, heading).
+    """
     def __init__(self) -> None:
+        """Starts with no text collected."""
         super().__init__()
         self.parts: list[str] = []
         self._skip = 0
 
     def handle_starttag(self, tag, attrs):
+        """Entering a script or style: stop collecting; a block tag: start a new line."""
         if tag in ("script", "style"):
             self._skip += 1
         elif tag in ("p", "br", "div", "li", "tr", "h1", "h2", "h3", "h4"):
             self.parts.append("\n")
 
     def handle_endtag(self, tag):
+        """Leaving a script or style: collect again."""
         if tag in ("script", "style") and self._skip:
             self._skip -= 1
 
     def handle_data(self, data):
+        """Keeps text that isn't inside a script or style."""
         if not self._skip:
             self.parts.append(data)
 
 
 def html_to_text(html: str) -> str:
+    """Pure logic. HTML as plain text: tags out, spaces collapsed, at most one blank line between blocks."""
     parser = _TextFromHtml()
     parser.feed(html)
     text = "".join(parser.parts)
@@ -96,6 +110,7 @@ def html_to_text(html: str) -> str:
 
 
 def _decode(data: bytes) -> str:
+    """Bytes as text: UTF-8, else Windows-1252, else Latin-1 (never fails)."""
     for encoding in ("utf-8", "cp1252", "latin-1"):
         try:
             return data.decode(encoding)
@@ -119,6 +134,9 @@ def pdf_pages(path: Path) -> tuple[list[str], str]:
 
 
 def parse_email(data: bytes) -> ExtractedDocument:
+    """Pure logic. An .eml file's subject, sender, date, its text body as pages (the HTML body when there's no plain
+    one), and every attachment's bytes, so they can be stored and read too.
+    """
     message = email.message_from_bytes(data, policy=email.policy.default)
     body_parts: list[str] = []
     attachments: list[Attachment] = []
@@ -174,6 +192,7 @@ def extract(path: Path) -> ExtractedDocument:
 
 
 def first_heading(text: str) -> Optional[str]:
+    """The first line of 3 to 120 characters (Markdown # stripped), as a title, or None."""
     for line in text.splitlines():
         line = line.strip().lstrip("#").strip()
         if 3 <= len(line) <= 120:

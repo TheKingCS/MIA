@@ -76,7 +76,6 @@
   "core/device_help_manager.py": 5,
   "core/device_profile.py": 3,
   "core/discovery_manager.py": 10,
-  "core/document_text.py": 12,
   "core/equipment_actions.py": 12,
   "core/estate_actions.py": 11,
   "core/event_bus.py": 2,
