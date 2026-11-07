@@ -307,7 +307,15 @@
       played: [{ id: "g1", what: "Pickup basketball", minutes: 60, effort: 7, effort_word: "Hard", with: [], date: "2026-11-05", load: 420 },
         { id: "g2", what: "Disc golf, 18 holes", minutes: 40, effort: 3, effort_word: "Easy", with: [], date: "2026-11-01", load: 120 }] })
       : call("GET", "/api/play"),
-    news: () => demo ? Promise.resolve({ on: false, day: null, stories: [], personalities: [] }) : call("GET", "/api/news"),
+    news: () => demo ? Promise.resolve({ on: true, day: "2026-11-07", now: "morning", scripts: { morning: "Good morning. Three good things today…" }, tracks: {},
+      personalities: [{ key: "morning", name: "Morning" }],
+      stories: [{ title: "A river cleanup removed 12 tons of trash in a weekend.", topic: "Environment", known: "confirmed", tag: "Confirmed by two outlets", tone: "ok",
+        caveats: ["Numbers are the organizers' count."], links: ["https://example.org/a", "https://example.org/b"], outlets: ["Example News", "Example Daily"] },
+        { title: "A seed library opens its third rural branch.", topic: "Community", known: "from the source", tag: "From the source itself", tone: "",
+          caveats: ["Announced by the library; not yet reported elsewhere."], links: ["https://example.org/c"], outlets: ["The library"] },
+        { title: "Monarch counts up along the eastern route.", topic: "Nature", known: "one outlet", tag: "One outlet", tone: "attention",
+          caveats: ["Early estimate; the full survey comes in spring."], links: ["https://example.org/d"], outlets: ["Example Weekly"] }] })
+      : call("GET", "/api/news"),
     // Guitar (core/guitar.py, DEC-0111): the stage, stats and open checks; a check heard from a WAV recording.
     guitar: (pathId) => demo ? Promise.resolve({ id: "guitar", name: "Guitar", stats: { started: "2026-11-02", stage: 1, stage_name: "First sounds",
         plan: { minutes_a_day: 15, days_a_week: 5 }, week_days: 3, week_minutes: 55, streak: 2, hours: 1.2,

@@ -967,3 +967,15 @@ body.cook-live .mia-orb-button, body.cook-live .bottom-bar { display: none; }
 .pw-search { box-sizing: border-box; flex: 1 1 100%; min-height: 44px; padding: 0 12px; border-radius: var(--radius-sm);
   border: 1px solid var(--line-strong); background: rgba(var(--rgb-panel), 0.9); color: var(--text); font: inherit; }
 .pw-search::placeholder { color: var(--text-dim); }
+
+/* ---------------------------------------------------------------- Good News Radio (DEC-0113) */
+.nw-head { display: grid; gap: 4px; margin-bottom: var(--gap); }
+.nw-head h2 { margin: 0; font-size: var(--text-2xl); text-transform: none; }
+.nw-label { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+.nw-stories { display: grid; gap: 10px; margin-bottom: var(--gap); }
+.nw-story { display: grid; gap: 6px; padding: 12px 14px; justify-items: start; }
+.nw-title { margin: 0; font-weight: 600; }
+.nw-caveat { margin: 0; font-size: var(--text-sm); color: var(--text-dim); }
+.nw-sources summary { cursor: pointer; font-size: var(--text-sm); color: var(--accent); }
+.nw-sources ul { margin: 6px 0 0; padding-left: 18px; font-size: var(--text-sm); }
+.nw-sources a { color: var(--accent); }

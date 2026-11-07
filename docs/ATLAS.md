@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1089 files, 246,899 lines; 1089 files describe themselves; 13,544 of 14,214 classes and functions are documented.
+1089 files, 246,931 lines; 1089 files describe themselves; 13,545 of 14,215 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-391 files, 114,485 lines; 6,067 of 6,156 classes and functions documented
+391 files, 114,493 lines; 6,067 of 6,156 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -670,7 +670,7 @@
 
 ## tests/: the test suite: what each part must do
 
-363 files, 66,129 lines; 5,242 of 5,823 classes and functions documented
+363 files, 66,136 lines; 5,243 of 5,824 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -800,7 +800,7 @@
 - `tests/test_glasses_feed.py`: The glasses' Heads-Up screen (Zac, 2026-10-18): new notifications and wins since the cursor, each once; the same moment shown once; money never to a child. *(2 undocumented)*
 - `tests/test_glasses_screens.py`: The numbers on an app's glasses screen, a vehicle's own page, and "I Made This".
 - `tests/test_glasses_voice.py`: Talking to MIA through the glasses (core/glasses_voice.py): "open Kitchen" switches the glasses to that app, anything else is a Talk turn, and the glasses hear about it through their feed. A phone linked to the home computer sends the words there first. *(1 undocumented)*
-- `tests/test_good_news.py`: Good News Radio (DEC-0096, core/good_news.py): good news judged in code, each story saying how it's known (confirmed by two outlets, from the source itself, or one outlet), its caveats kept, four personalities, on only when switched on, and stories called misleading counted by source. *(1 undocumented)*
+- `tests/test_good_news.py`: Good News Radio (DEC-0096, core/good_news.py): good news judged in code, each story saying how it's known (confirmed by two outlets, from the source itself, or one outlet, each with its tag), its caveats kept, four personalities, on only when switched on, and stories called misleading counted by sou *(1 undocumented)*
 - `tests/test_goods_voice.py`: Saying it to MIA (core/assistant_goods_actions.py): eggs, goods on hand, a sale, deadlines and freedom, through the same code as their screens.
 - `tests/test_gps_tracks.py`: Tracks (build plan step 14, core/gps_tracks.py): a GPX walk read in code: distance, climb past GPS jitter, moving time, start and end grids; kept in the person's folder; a line in the TAK package. *(1 undocumented)*
 - `tests/test_greenhouse_module.py`: Unit tests for modules.greenhouse.module's pure functions, same style as tests/test_garage_module.py/tests/test_property_module.py (no Qt event loop, no fixtures). *(4 undocumented)*
@@ -1038,7 +1038,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-72 files, 13,116 lines
+72 files, 13,133 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game

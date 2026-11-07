@@ -325,6 +325,13 @@ def _how_known(s: dict) -> str:
     return f"That's from {names[0]}, one outlet so far."
 
 
+# How a story is known, as the design canvas tags it (DEC-0113): green when two outlets confirm it, plain when it's
+# the source's own word, amber when only one outlet has it so far.
+KNOWN_TAGS = {"confirmed": {"tag": "Confirmed by two outlets", "tone": "ok"},
+              "from the source": {"tag": "From the source itself", "tone": ""},
+              "one outlet": {"tag": "One outlet", "tone": "attention"}}
+
+
 BOILERPLATE = re.compile(r"\b(supported by|sponsored|see more|subscribe|sign up|newsletter|column|welcome back|"
                          r"read more|click here|the post .* appeared first)\b", re.IGNORECASE)
 
@@ -540,8 +547,8 @@ def launch() -> None:
 
 
 def screen(context, now: Optional[datetime] = None) -> dict:
-    """Good News Radio's web screen (web/news.html): today's stories with how each is known and its links, the
-    scripts by personality, and whether it's on."""
+    """Good News Radio's web screen (web/news.html): today's stories with how each is known (and its tag, KNOWN_TAGS)
+    and its links, the scripts by personality, and whether it's on."""
     now = now or datetime.now()
     record = episode(now.date()) or episode(now.date() - timedelta(days=1))
     personalities = [{"key": k, "name": p["name"]} for k, p in PERSONALITIES.items()]
@@ -549,7 +556,8 @@ def screen(context, now: Optional[datetime] = None) -> dict:
         return {"on": is_on(context), "day": None, "stories": [], "personalities": personalities,
                 "now": personality_for(now.hour)}
     stories = [{"title": s["title"], "topic": s["topic"], "known": s["known"], "caveats": s["caveats"],
-                "links": s["links"], "outlets": sorted({SOURCE_BY_ID.get(x, (0, x))[1] for x in s["sources"]})}
+                "links": s["links"], "outlets": sorted({SOURCE_BY_ID.get(x, (0, x))[1] for x in s["sources"]}),
+                **KNOWN_TAGS.get(s["known"], {"tag": s["known"], "tone": ""})}
                for s in record["stories"]]
     return {"on": is_on(context), "day": record["day"], "stories": stories, "scripts": record["scripts"],
             "tracks": record.get("tracks", {}), "personalities": personalities, "now": personality_for(now.hour)}

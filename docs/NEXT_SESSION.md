@@ -94,7 +94,8 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       Music (song rows you tap to play, the one playing in cyan; a Now Playing bar held at the bottom).
       Files (the path, Upload, one list with line icons and a meta line, ⋯ for Rename and Delete).
       Passwords (one line per login; Show opens one card at the top with a countdown, Copy and Hide; ⋯ for the rest).
-      Still to do per app, against its canvas artboard: News, Look,
+      News ("Three stories today", a card per story tagged by how it's known: `core/good_news.KNOWN_TAGS`).
+      Still to do per app, against its canvas artboard: Look,
       Settings, Profile, Fix-It, Diagnostics; Power, Toolbox, Lab and Field Kit need web pages first (WEB_PARITY).
 - [ ] Glasses: the shared orb on `web/glasses.html`.
 - Note: DEC-0119 (MIA for Zac alone) came after the canvas: drop household members from Party's leaderboard and

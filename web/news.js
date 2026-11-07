@@ -11,12 +11,17 @@
   const $ = (id) => document.getElementById(id);
   let showing = null;
 
+  // The design canvas (DEC-0113): a card per story: how it's known as a tag (green confirmed, plain from the source,
+  // amber one outlet: core/good_news.KNOWN_TAGS), the story, its caveats, and its sources.
   function story(s) {
-    return el("div", { class: "sync-row council-msg" }, el("div", {},
-      el("p", { class: "council-text" }, s.title),
-      el("p", { class: "dim" }, s.topic + " · " + s.known + " · " + s.outlets.join(", ") + (s.caveats.length ? " · " + s.caveats.join("; ") : "")),
-      el("p", {}, ...s.links.map((href, i) => el("a", { href, target: "_blank", rel: "noopener noreferrer" }, i ? " · source " + (i + 1) : "Read it")))));
+    return el("article", { class: "glass nw-story" },
+      el("span", { class: "kind " + (s.tone || "") }, s.tag || s.known),
+      el("p", { class: "nw-title" }, s.title),
+      el("p", { class: "nw-caveat" }, [s.outlets.join(", "), ...s.caveats].filter(Boolean).join(" · ")),
+      el("details", { class: "nw-sources" }, el("summary", {}, "Sources (" + s.links.length + ")"),
+        el("ul", {}, s.links.map((href, i) => el("li", {}, el("a", { href, target: "_blank", rel: "noopener noreferrer" }, s.outlets[i] || href))))));
   }
+  const WORDS = ["No", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"];
 
   function paint(data) {
     if (!data.on) {
@@ -36,8 +41,12 @@
       type: "button", class: "btn btn-small " + (p.key === showing ? "btn-amber" : "btn-ghost"),
       onclick: () => { showing = p.key; paint(data); } }, p.name)));
     const track = data.tracks && data.tracks[showing];
+    const n = data.stories.length;
     $("panel").replaceChildren(
-      el("section", { class: "glass money-section" }, el("h2", {}, "The stories"), el("div", { class: "sync-rows" }, data.stories.map(story))),
+      el("section", { class: "nw-head" }, el("span", { class: "nw-label" }, new Date(data.day + "T00:00:00")
+        .toLocaleDateString(undefined, { weekday: "short", day: "2-digit", month: "short" })),
+        el("h2", {}, (WORDS[n] || String(n)) + (n === 1 ? " story today" : " stories today"))),
+      el("div", { class: "nw-stories" }, data.stories.map(story)),
       el("section", { class: "glass money-section" }, el("h2", {}, "On the air"), tabs,
         track ? el("p", { class: "dim" }, "In your music: \"" + track + "\".") : null,
         el("p", { class: "council-text" }, (data.scripts || {})[showing] || "")));
