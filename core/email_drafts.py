@@ -40,6 +40,9 @@ _ADDRESS = re.compile(r"[^@\s<>,;]+@[^@\s<>,;]+\.[^@\s<>,;]+")
 
 @dataclass
 class EmailDraft:
+    """One email MIA wrote for the person: to, cc, subject, body, when, and its status (a draft, sent when they pressed
+    Send, or discarded).
+    """
     draft_id: str
     to: list[str]
     subject: str
@@ -51,6 +54,7 @@ class EmailDraft:
 
     @staticmethod
     def from_dict(data: dict) -> "EmailDraft":
+        """A draft from its saved dict; missing fields take their defaults."""
         return EmailDraft(
             draft_id=data["draft_id"], to=list(data.get("to", [])), subject=data.get("subject", ""),
             body=data.get("body", ""), created_at=data.get("created_at", ""), status=data.get("status", DRAFT),
@@ -82,8 +86,12 @@ def as_dict(draft: EmailDraft) -> dict:
 
 
 class EmailDrafts:
+    """The person's email drafts (email_drafts.json in their folder, the newest _KEEP kept, written through
+    atomic_write_text). MIA only drafts; nothing here sends.
+    """
     def __init__(self, context, data_dir: Optional[Path] = None) -> None:
         # Whose data: a person's own folder (core/personal_data.py), or data/ by default.
+        """Points at the person's file (data/ by default) and loads it; an unreadable file is logged and starts empty."""
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._drafts_file = self.data_dir / "email_drafts.json" if data_dir is not None else _DRAFTS_FILE
         self.context = context
@@ -95,11 +103,13 @@ class EmailDrafts:
                 log.exception("email_drafts.json unreadable, starting empty.")
 
     def _save(self) -> None:
+        """Writes the drafts atomically, keeping only the newest _KEEP."""
         self._drafts = self._drafts[-_KEEP:]
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._drafts_file, json.dumps([asdict(d) for d in self._drafts], indent=2))
 
     def create(self, to: list[str], subject: str, body: str, cc: Optional[list[str]] = None) -> EmailDraft:
+        """Saves a new draft."""
         draft = EmailDraft(draft_id=uuid.uuid4().hex[:10], to=list(to), subject=subject.strip(), body=body.strip(),
                            created_at=datetime.now().isoformat(timespec="seconds"), cc=list(cc or []))
         self._drafts.append(draft)
@@ -107,10 +117,12 @@ class EmailDrafts:
         return draft
 
     def get(self, draft_id: str) -> Optional[EmailDraft]:
+        """The draft with this id, or None."""
         return next((d for d in self._drafts if d.draft_id == draft_id), None)
 
     def update(self, draft_id: str, to: Optional[list[str]] = None, subject: Optional[str] = None,
                body: Optional[str] = None) -> Optional[EmailDraft]:
+        """Changes a draft's recipients, subject or body; None when it's gone or no longer a draft."""
         draft = self.get(draft_id)
         if draft is None or draft.status != DRAFT:
             return None
@@ -124,6 +136,7 @@ class EmailDrafts:
         return draft
 
     def mark(self, draft_id: str, status: str) -> None:
+        """Sets a draft's status (stamping when it was sent)."""
         draft = self.get(draft_id)
         if draft is not None:
             draft.status = status
@@ -136,10 +149,13 @@ class EmailDrafts:
         return list(self._drafts)
 
     def open_drafts(self) -> list[EmailDraft]:
+        """The drafts not yet sent or discarded, newest first."""
         return [d for d in reversed(self._drafts) if d.status == DRAFT]
 
     def latest(self) -> Optional[EmailDraft]:
+        """The newest draft, or None."""
         return self._drafts[-1] if self._drafts else None
 
     def count(self) -> int:
+        """How many drafts are kept."""
         return len(self._drafts)
