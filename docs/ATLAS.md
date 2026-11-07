@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 226,365 lines; 1043 files describe themselves; 3,351 of 13,517 classes and functions are documented.
+1043 files, 226,425 lines; 1043 files describe themselves; 3,385 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 100,271 lines; 2,620 of 5,630 classes and functions documented
+367 files, 100,331 lines; 2,654 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -333,7 +333,7 @@
 - `core/update_manager.py`: Apply an offline update package (a zip of new/changed project files) onto the running MIA installation, per docs/ROADMAP.md milestone 2.8. "No internet required" — the package is just a local file (from a USB drive, or anywhere else); this module never makes a network call. *(2 undocumented)*
 - `core/usage_tracker.py`: Per-module usage tracking — "has the user ever actually opened X through the app" — the real gap docs/VISION.md's modular tutorial system names as still unbuilt: "proactively suggest a walkthrough for never-used features... needs a real per-feature usage-tracking subsystem that doesn't exist yet." *(15 undocumented)*
 - `core/user_memory_manager.py`: Persistent facts MIA has learned about the user over the course of conversations — 2026-07-14 aesthetic pass part 5 (docs/ROADMAP.md), at the user's explicit request: "an ability to review and delete... see the AI's stored memories about the user and keep or delete them." Same persisted-JSON pattern *(16 undocumented)*
-- `core/user_sync.py`: User Sync: where MIA gets to know a person (slices 3 and 4 of docs/GLASSES_FIRST_BOOT_PLAN.md). The questions are written here, by topic, not chosen by the model: it's the highest-stakes conversation she has. *(34 undocumented)*
+- `core/user_sync.py`: User Sync: where MIA gets to know a person (slices 3 and 4 of docs/GLASSES_FIRST_BOOT_PLAN.md). The questions are written here, by topic, not chosen by the model: it's the highest-stakes conversation she has.
 - `core/vault_captions.py`: Finding a photo again (the memory vault's next step, DEC-0030 phase E): each photo the computer keeps for the phone (core/memory_vault.py's VaultShelf) gets one plain sentence saying what's in it, written on this PC by the local vision model (core/sight.py's model), from a small copy of the photo. T
 - `core/voice_catalog.py`: The curated set of selectable Piper TTS voices — 2026-07-15, at the user's explicit request: "I want to be able to pick through different voices for MIA" Piper's full voice library (`rhasspy/piper-voices` on Hugging Face) has dozens of entries; this is a small, hand-picked subset spanning a real spr *(3 undocumented)*
 - `core/voice_effects.py`: Post-processing DSP effects applied to Piper's raw synthesized audio — 2026-07-15, at the user's explicit request for MIA to "sound like a futuristic awesome AI companion device," not a plain human voice. Deliberately pure `numpy` (already a dependency for `core/voice_manager.py`'s recording/playbac

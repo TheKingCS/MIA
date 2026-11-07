@@ -279,7 +279,6 @@
   "core/update_manager.py": 2,
   "core/usage_tracker.py": 15,
   "core/user_memory_manager.py": 16,
-  "core/user_sync.py": 34,
   "core/voice_catalog.py": 3,
   "core/voice_loop.py": 4,
   "core/voice_manager.py": 23,

@@ -84,10 +84,12 @@ STOPWORDS = {"a", "an", "and", "the", "with", "of", "or", "on", "in", "my", "som
 
 
 def _remember(label: str, text: str) -> dict:
+    """A memory chip: approving it keeps the text as something MIA remembers (memory.add)."""
     return _chip("Memory", label, "memory.add", text=text)
 
 
 def _mission(name: str, summary: str = "") -> dict:
+    """A mission chip: approving it starts a mission (mission.add) with this name and summary."""
     return _chip("Missions", name, "mission.add", name=name, summary=summary)
 
 
@@ -98,10 +100,12 @@ def _fact(value, heard: str) -> str:
 
 
 def _facts(value, heard: str) -> list[str]:
+    """The model's list of strings, kept only where each is something the person said."""
     return [v for v in (_fact(s, heard) for s in _strings(value)) if v]
 
 
 def _day_said(day: str, heard: str) -> bool:
+    """Whether the person named this weekday ("tuesday", "tues", "tue")."""
     return bool(re.search(rf"\b{day[:3]}[a-z]*day|\b{day[:3]}\b", heard.lower()))
 
 
@@ -125,11 +129,13 @@ def _time(value, heard: str) -> str:
 
 
 def _next_day(day: str) -> str:
+    """The next date (today included) that falls on this weekday, for a weekly event's first date."""
     today = date.today()
     return (today + timedelta((WEEKDAYS.index(day) - today.weekday()) % 7)).isoformat()
 
 
 def _next_month_day(day: int) -> str:
+    """The next date with this day of the month (this month if it hasn't passed, else next)."""
     today = date.today()
     year, month = today.year, today.month
     if day < today.day:
@@ -138,12 +144,14 @@ def _next_month_day(day: int) -> str:
 
 
 def _month_day(value) -> int:
+    """A day of the month from what the model gave, only 1 to 28 (29 to 31 aren't in every month: the person sets those)."""
     match = re.search(r"\d{1,2}", str(value or ""))
     day = int(match.group()) if match else 0
     return day if 1 <= day <= 28 else 0  # 29-31 aren't in every month: the person can set those
 
 
 def _money_said(value, heard: str) -> float:
+    """An amount the model gave, kept only when that number appears in what the person said; else 0."""
     try:
         amount = float(str(value or "").replace(",", "").strip(" $"))
     except ValueError:
@@ -164,6 +172,11 @@ def _birthday(value, heard: str) -> tuple[str, str]:
 
 
 def _extract_routines(context, answers: list[dict]) -> Optional[list[dict]]:
+    """The Routines topic's extraction: asks the model for wake and bed times, weekly things and what makes a good morning in a fixed JSON shape, then keeps only what the person really
+    said (_fact, _said) as chips: times as memories, a weekly thing with a day they named as a weekly calendar event (a
+    memory for a child: the calendar is the household's). None when the model isn't there or gives nothing usable (the answer then
+    becomes a memory chip instead).
+    """
     got = _ask_model(context, ROUTINES_PROMPT, answers)
     if got is None:
         return None
@@ -204,6 +217,10 @@ What they said:
 
 
 def _extract_work(context, answers: list[dict]) -> Optional[list[dict]]:
+    """The Work topic's extraction: asks the model for the job or school, the hours and what's coming up in a fixed JSON shape, then keeps only what the person really
+    said (_fact, _said) as chips: job and hours as memories, each upcoming thing as a mission (never one they already have). None when the model isn't there or gives nothing usable (the answer then
+    becomes a memory chip instead).
+    """
     got = _ask_model(context, WORK_PROMPT, answers)
     if got is None:
         return None
@@ -236,6 +253,11 @@ What they said:
 
 
 def _extract_workouts(context, answers: list[dict]) -> Optional[list[dict]]:
+    """The Workouts topic's extraction: asks the model for the split, the days, the activities and the goal in a fixed JSON shape, then keeps only what the person really
+    said (_fact, _said) as chips: a training plan change (a rotation only when they have none, never over their own plan),
+    activities as memories, the goal as a mission. None when the model isn't there or gives nothing usable (the answer then
+    becomes a memory chip instead).
+    """
     got = _ask_model(context, WORKOUTS_PROMPT, answers)
     if got is None:
         return None
@@ -277,6 +299,10 @@ What they said:
 
 
 def _extract_hobbies(context, answers: list[dict]) -> Optional[list[dict]]:
+    """The Hobbies topic's extraction: asks the model for hobbies and what they're learning in a fixed JSON shape, then keeps only what the person really
+    said (_fact, _said) as chips: hobbies as memories, each thing they're learning as a "Get better at" mission. None when the model isn't there or gives nothing usable (the answer then
+    becomes a memory chip instead).
+    """
     got = _ask_model(context, HOBBIES_PROMPT, answers)
     if got is None:
         return None
@@ -302,6 +328,11 @@ What they said:
 
 
 def _extract_people(context, answers: list[dict]) -> Optional[list[dict]]:
+    """The People topic's extraction: asks the model for the people in their life, who each is and their birthday in a fixed JSON shape, then keeps only what the person really
+    said (_fact, _said) as chips: each new person as a People record (a birthday kept only as said, else in the notes);
+    people already kept are left alone (an empty list, not None, when all were known). None when the model isn't there or gives nothing usable (the answer then
+    becomes a memory chip instead).
+    """
     got = _ask_model(context, PEOPLE_PROMPT, answers)
     if got is None:
         return None
@@ -344,6 +375,11 @@ What they said:
 
 
 def _extract_money(context, answers: list[dict]) -> Optional[list[dict]]:
+    """The Money topic's extraction: asks the model for what they're saving for, their bills and what they want to spend less on in a fixed JSON shape, then keeps only what the person really
+    said (_fact, _said) as chips: savings as missions, a bill as a Budget bill only when both its amount and its day were
+    said (else a memory), the rest as memories. None when the model isn't there or gives nothing usable (the answer then
+    becomes a memory chip instead).
+    """
     got = _ask_model(context, MONEY_PROMPT, answers)
     if got is None:
         return None
@@ -494,6 +530,9 @@ TOPICS = {
 
 
 def _ask_model(context, prompt: str, answers: list[dict]) -> Optional[dict]:
+    """Gives the model a topic's prompt and the questions and answers, and reads the JSON in its reply; None when
+    there's no model, it fails (logged) or the reply has no JSON.
+    """
     llm = getattr(context, "llm", None)
     if llm is None:
         return None
@@ -520,12 +559,14 @@ def _json_in(reply: str) -> Optional[dict]:
 
 
 def _strings(value) -> list[str]:
+    """The non-empty strings in a list the model returned, tidied (spaces collapsed, edge punctuation off)."""
     if not isinstance(value, list):
         return []
     return [" ".join(v.split()).strip(" .,") for v in value if isinstance(v, str) and v.strip(" .,")]
 
 
 def _words(text: str) -> set[str]:
+    """The meaningful words in text (lowercase, no stopwords, a trailing s dropped), for matching what someone said."""
     found = re.findall(r"[a-z']+", text.lower().replace("’", "'"))
     return {w.rstrip("s") for w in found if w not in STOPWORDS}
 
@@ -541,15 +582,18 @@ def _said(fact: str, heard: str) -> bool:
 
 
 def _chip(app: str, label: str, kind: str, **params) -> dict:
+    """A chip: the app it goes to, the line shown, and the action kind and params it runs when approved."""
     return {"app": app, "text": label, "kind": kind, "params": params}
 
 
 def _recipe_names(context) -> set[str]:
+    """The household's recipe names, lowercase."""
     kitchen = getattr(context, "kitchen", None)
     return {r.name.lower() for r in kitchen.all_recipes()} if kitchen is not None else set()
 
 
 def _mission_names(context) -> set[str]:
+    """The person's mission names, so a chip never repeats a mission they already have."""
     missions = getattr(context, "missions", None)
     return {m.name for m in missions.all_missions()} if missions is not None else set()
 
@@ -558,23 +602,28 @@ def _mission_names(context) -> set[str]:
 
 
 def _progress(context) -> dict:
+    """This person's User Sync progress (person_settings), or a fresh one."""
     saved = person_settings.get(context, KEY) or {}
     return saved if isinstance(saved, dict) else {}
 
 
 def _save(context, progress: dict) -> None:
+    """Saves this person's User Sync progress."""
     person_settings.put(context, KEY, progress)
 
 
 def _topics(context) -> list[str]:
+    """The topics to ask this person, in order (the adult ones left out for a child)."""
     return [t for t, topic in TOPICS.items() if not (topic.get("adult") and is_child(context))]
 
 
 def _topic_now(context, progress: dict) -> Optional[str]:
+    """The first topic not yet done or skipped, or None when all are."""
     return next((t for t in _topics(context) if (progress.get("topics") or {}).get(t, {}).get("status") not in ("done", "skipped")), None)
 
 
 def _own(progress: dict, topic: str) -> dict:
+    """A topic's own progress (status, how many questions asked, the answers, the chips), made when it starts."""
     return progress.setdefault("topics", {}).setdefault(topic, {"status": "asking", "asked": 0, "answers": [], "chips": []})
 
 
@@ -616,10 +665,12 @@ def _rows(progress: dict) -> list[dict]:
 
 
 def _result(context, say: str) -> dict:
+    """The current state plus what she says next, as the endpoint returns it."""
     return {**state(context), "say": say}
 
 
 def _next_line(context, lead: str = "") -> str:
+    """What she says next: the lead, then the next question, or that everything's done for now."""
     now = state(context)
     if now["done"]:
         return " ".join(x for x in (lead, "That's everything for now. You can tell me more any time.") if x)
@@ -648,6 +699,9 @@ def _after_answer(context, progress: dict, topic: str) -> str:
 
 
 def _finish_topic(context, progress: dict, topic: str, status: str, lead: str = "") -> str:
+    """Closes a topic (done or skipped) and forgets their answers and chips (their words aren't kept past this);
+    marks User Sync finished when it was the last, else the pause between topics.
+    """
     now = _own(progress, topic)
     now.update(status=status, answers=[], chips=[])  # their words aren't kept past this
     if _topic_now(context, progress) is None:
@@ -675,16 +729,19 @@ def start(context) -> dict:
 
 
 def _opening(now: dict) -> str:
+    """How a step opens: the phone question as is, or "Let's talk about ..." and the topic's first question."""
     return now["question"] if now["step"] == "phone" else f"Let's talk about {now['title'].lower()}. {now['question']}"
 
 
 def _phone_done(context, progress: dict) -> dict:
+    """The phone's permissions step is over: move to the first topic."""
     progress["phone_done"] = True
     _save(context, progress)
     return _result(context, _opening(state(context)))
 
 
 def _keep_going(context, progress: dict) -> dict:
+    """The person chose to keep going: leave the pause between topics and open the next."""
     progress.pop("between", None)
     _save(context, progress)
     return _result(context, _opening(state(context)))
@@ -705,6 +762,7 @@ def report(context, granted: dict) -> dict:
 
 
 def _pause(context, progress: dict) -> dict:
+    """The person chose to finish later: pause, so it picks up where it left off."""
     progress["paused"] = True
     _save(context, progress)
     return _result(context, "Of course. We'll pick this up whenever you like.")
@@ -736,6 +794,7 @@ def _approve(context, progress: dict, topic: str) -> dict:
 
 
 def _drop(context, progress: dict, topic: str, index: int) -> dict:
+    """Drops one chip before approving ("not the tacos"); the topic finishes when none are left."""
     chips = _own(progress, topic)["chips"]
     if not 0 <= index < len(chips):
         return _result(context, "Which one should I drop?")
@@ -747,6 +806,7 @@ def _drop(context, progress: dict, topic: str, index: int) -> dict:
 
 
 def _chip_named(chips: list[dict], words: str) -> int:
+    """Which chip the words mean ("the tacos"), by shared words: its index when exactly one matches, else -1."""
     wanted = _words(re.sub(r"^(the|that|this|one)\b", "", words.strip()))
     if not wanted:
         return -1
