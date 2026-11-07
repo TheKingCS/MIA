@@ -19,6 +19,8 @@ stops showing up under any Expedition, but isn't deleted itself.
 
 from __future__ import annotations
 
+from core import life_events
+
 import json
 import uuid
 from dataclasses import dataclass
@@ -129,6 +131,7 @@ class ExpeditionManager:
     # Writing
     # ------------------------------------------------------------------
 
+    @life_events.on_change("expedition_added", "an expedition", "expedition")
     def add_expedition(
         self,
         name: str,
@@ -154,6 +157,7 @@ class ExpeditionManager:
         log.info("Expedition added: '%s'", name)
         return expedition
 
+    @life_events.on_change("expedition_updated", "an expedition", "expedition")
     def update_expedition(self, expedition_id: str, **fields) -> Expedition:
         """Changes an expedition's fields and stamps updated_at (ValueError for an unknown one or field, or
         created_at).
@@ -171,6 +175,7 @@ class ExpeditionManager:
         self._save()
         return expedition
 
+    @life_events.on_change("expedition_removed", "an expedition", "expedition")
     def delete_expedition(self, expedition_id: str) -> None:
         """Deletes an expedition (its trips stay)."""
         self._expeditions = [e for e in self._expeditions if e.expedition_id != expedition_id]

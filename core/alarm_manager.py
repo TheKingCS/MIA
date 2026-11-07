@@ -23,6 +23,8 @@ tests/test_alarm_manager.py.
 
 from __future__ import annotations
 
+from core import life_events
+
 import json
 import uuid
 from dataclasses import dataclass, field
@@ -117,6 +119,7 @@ class AlarmManager:
     # Writing
     # ------------------------------------------------------------------
 
+    @life_events.on_change("alarm_added", "an alarm", "alarm")
     def add_alarm(self, label: str, time: str, days: Optional[list[int]] = None) -> Alarm:
         """Adds an alarm (one time unless days are given)."""
         alarm = Alarm(
@@ -142,6 +145,7 @@ class AlarmManager:
         self._save()
         return alarm
 
+    @life_events.on_change("alarm_removed", "an alarm", "alarm")
     def delete_alarm(self, alarm_id: str) -> None:
         """Deletes an alarm."""
         self._alarms = [a for a in self._alarms if a.alarm_id != alarm_id]

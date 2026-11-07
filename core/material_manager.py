@@ -40,6 +40,8 @@ database underneath it.
 
 from __future__ import annotations
 
+from core import life_events
+
 import json
 import uuid
 from dataclasses import dataclass
@@ -239,6 +241,7 @@ class MaterialManager:
     # Writing
     # ------------------------------------------------------------------
 
+    @life_events.on_change("material_added", "a material", "material")
     def add_material(
         self,
         name: str,
@@ -296,6 +299,7 @@ class MaterialManager:
         self._save()
         return material
 
+    @life_events.on_change("material_updated", "a material", "material")
     def update_material(self, material_id: str, **fields) -> Material:
         """Changes its fields and stamps updated_at (ValueError for an unknown one or field, or updated_at itself)."""
         material = self.get_material(material_id)
@@ -317,6 +321,7 @@ class MaterialManager:
         self._save()
         return material
 
+    @life_events.on_change("material_removed", "a material", "material")
     def delete_material(self, material_id: str) -> None:
         """Deletes it."""
         self._materials = [m for m in self._materials if m.material_id != material_id]

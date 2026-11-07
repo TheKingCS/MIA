@@ -218,7 +218,8 @@ children.
 - **Engine read model** (2026-10-05, `docs/ENGINE_PHASE1_PLAN.md`) —
   stores are the current state; `core/life_events.py` is the history
   beside them (a store calls `life_events.record(self, ...)` after a
-  meaningful change; never rewrite it); `core/links.py` holds how things
+  meaningful change, or decorates the method with
+  `@life_events.on_change(type, noun, ref)`; never rewrite it); `core/links.py` holds how things
   relate (by `kind:id` ref, stated or derived, never a copy of a record);
   `assemble_life_state_v2()` in `core/context_assembler.py` is the
   derived picture, served as `/api/state` and

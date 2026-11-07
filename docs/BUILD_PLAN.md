@@ -202,6 +202,8 @@ first. Each is a step below.
     2026-11-07): the code audit, the interconnection audit (five connections per store) and the best-practices
     series (`docs/practices/`), from Night School once a week; one task a week for each audit's top finding.
     First run: 187 places, 49% connected. The big gaps it shows: life events (15 of 73 stores) and links (8).
+    Then (2026-11-07): `life_events.on_change` on 109 store methods (history 15 to 51 stores) and 20 new link
+    kinds (links 8 to 28): 67% connected. Next gap: the life state (21 of 73 stores).
 
 ### Phase E: The rest already queued
 

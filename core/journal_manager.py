@@ -31,6 +31,8 @@ free text.
 
 from __future__ import annotations
 
+from core import life_events
+
 import json
 import uuid
 from dataclasses import dataclass, field
@@ -138,6 +140,7 @@ class JournalManager:
     # Writing
     # ------------------------------------------------------------------
 
+    @life_events.on_change("journal_entry_added", "a journal entry", "journal_entry")
     def add_entry(
         self,
         title: str,
@@ -163,6 +166,7 @@ class JournalManager:
         log.info("Journal entry added: '%s'", title)
         return entry
 
+    @life_events.on_change("journal_entry_updated", "a journal entry", "journal_entry")
     def update_entry(self, entry_id: str, **fields) -> JournalEntry:
         """
         `entry_id` itself can never appear in **fields — it's already
@@ -184,6 +188,7 @@ class JournalManager:
         self._save()
         return entry
 
+    @life_events.on_change("journal_entry_removed", "a journal entry", "journal_entry")
     def delete_entry(self, entry_id: str) -> None:
         """Deletes a note."""
         self._entries = [e for e in self._entries if e.entry_id != entry_id]

@@ -36,6 +36,8 @@ write through atomic_write_text, so removing one can be undone.
 
 from __future__ import annotations
 
+from core import life_events
+
 import ipaddress
 import json
 import re
@@ -244,6 +246,7 @@ class SecurityBook:
         """The camera with this id, or None."""
         return next((c for c in self.cameras if c.camera_id == camera_id), None)
 
+    @life_events.on_change("camera_updated", "a camera", "camera")
     def save_camera(self, camera_id: Optional[str], name: str, location: str, brand: str, host: str, path: str,
                     user: str, password: Optional[str]) -> Camera:
         """Add or change a camera (with its login). Checks it first."""
@@ -268,6 +271,7 @@ class SecurityBook:
         self._frames.pop(cam.camera_id, None)
         return cam
 
+    @life_events.on_change("camera_removed", "a camera", "camera")
     def remove(self, camera_id: str) -> None:
         """Removes a camera."""
         self.cameras = [c for c in self.cameras if c.camera_id != camera_id]

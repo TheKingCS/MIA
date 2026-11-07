@@ -52,6 +52,8 @@ separate UI scope, not attempted here.
 
 from __future__ import annotations
 
+from core import life_events
+
 import json
 import re
 import uuid
@@ -381,6 +383,7 @@ class UserMemoryManager:
         """Newest first — matches the conversation list's own ordering convention."""
         return sorted(self._memories, key=lambda m: m.created_at, reverse=True)
 
+    @life_events.on_change("memory_added", "a memory", "memory", named=False)
     def add_memory(
         self, text: str, category: str = "Other", source_conversation_id: Optional[str] = None,
     ) -> Optional[UserMemory]:
@@ -408,6 +411,7 @@ class UserMemoryManager:
         """The memory with this id, or None."""
         return next((m for m in self._memories if m.memory_id == memory_id), None)
 
+    @life_events.on_change("memory_updated", "a memory", "memory", named=False)
     def update_memory(self, memory_id: str, text: str) -> UserMemory:
         """Corrects a memory's text (noted as a correction when it changes); ValueError when it's gone or empty."""
         memory = self.get_memory(memory_id)
@@ -421,6 +425,7 @@ class UserMemoryManager:
         self._save()
         return memory
 
+    @life_events.on_change("memory_removed", "a memory", "memory", named=False)
     def delete_memory(self, memory_id: str) -> None:
         """Forgets a memory (noted as a correction)."""
         memory = self.get_memory(memory_id)

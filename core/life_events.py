@@ -29,6 +29,12 @@ stores use), `payload` (numbers and dates), `source` and `profile_id`
 `assistant` (MIA, asked by the person), `phone`, `import`, `inferred`
 (MIA did it on her own, e.g. auto-tagging).
 
+**One line for a store** (`on_change()`, 2026-11-07, DEC-0108): a store
+method decorated with `@life_events.on_change("event_added", "an event",
+"calendar_event")` records an entry after every call that succeeds, named
+from what it returned (its name, title or label) and referenced by its id,
+so a store joins her history without hand-written calls in each method.
+
 Appended with a plain file append (one JSON line, under a lock), never
 rewritten, so "undo that" (core/undo_log.py) leaves the history intact
 and adds an `undone` entry instead. Status: REAL.
@@ -36,6 +42,7 @@ and adds an `undone` entry instead. Status: REAL.
 
 from __future__ import annotations
 
+import functools
 import json
 import sys
 import threading
@@ -214,6 +221,52 @@ def record(where, type: str, summary: str, refs: Iterable[str] = (), payload: Op
     undo_log.note_event(event.event_id)
     live.bump()
     return event
+
+
+_VERBS = (("_added", "Added"), ("_created", "Added"), ("_updated", "Changed"), ("_removed", "Removed"),
+          ("_deleted", "Removed"), ("_finished", "Finished"), ("_done", "Done:"), ("_logged", "Logged"),
+          ("_filed", "Filed"), ("_started", "Started"))
+
+
+def _about(result, args) -> tuple[str, str]:
+    """Pure logic. What a store method changed: its id and its name, from what it returned (a record, a dict) or,
+    when it returned nothing, the id it was given."""
+    def pick(thing, names):
+        for n in names:
+            value = thing.get(n) if isinstance(thing, dict) else getattr(thing, n, None)
+            if isinstance(value, (str, int)) and str(value).strip():
+                return str(value).strip()
+        return ""
+
+    if result is not None and not isinstance(result, (bool, str, int, float, list, tuple)):
+        attrs = result if isinstance(result, dict) else vars(result) if hasattr(result, "__dict__") else {}
+        ids = ["id"] + [k for k in attrs if k.endswith("_id")]
+        return pick(result, ids), pick(result, ("name", "title", "label", "what", "text"))[:80]
+    given = next((a for a in args if isinstance(a, str)), "")
+    return given, ""
+
+
+def on_change(type: str, noun: str, ref: str = "", named: bool = True):
+    """Decorates a store method so each call that succeeds records a life event of `type` ("event_added"): "Added
+    an event: Dentist", with a `ref:id` reference when `ref` is given. `named=False` leaves the name out of the
+    line, for what's personal (a memory's words). Recording never gets in the way: the method's result is returned
+    whatever happens, and a method that raises records nothing."""
+    verb = next((v for suffix, v in _VERBS if type.endswith(suffix)), "Changed")
+
+    def wrap(method):
+        @functools.wraps(method)
+        def inner(self, *args, **kwargs):
+            result = method(self, *args, **kwargs)
+            try:
+                rid, name = _about(result, args)
+                summary = f"{verb} {noun}" + (f": {name}" if named and name else "")
+                record(self, type, summary, refs=[f"{ref}:{rid}"] if ref and rid else [],
+                       payload={"id": rid} if rid else None)
+            except Exception:
+                log.exception("Couldn't note the life event '%s'.", type)
+            return result
+        return inner
+    return wrap
 
 
 # ------------------------------------------------------------------ reading

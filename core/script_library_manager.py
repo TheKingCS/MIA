@@ -20,6 +20,8 @@ installation (see CLAUDE.md's "known intentional simplifications").
 
 from __future__ import annotations
 
+from core import life_events
+
 import json
 import uuid
 from dataclasses import dataclass
@@ -119,6 +121,7 @@ class ScriptLibraryManager:
     # Writing
     # ------------------------------------------------------------------
 
+    @life_events.on_change("script_added", "a script", "script")
     def add_script(self, name: str, interpreter: str = "shell", content: str = "", category: str = "") -> Script:
         """Saves a script (an unknown interpreter becomes shell)."""
         now = datetime.now().isoformat(timespec="seconds")
@@ -136,6 +139,7 @@ class ScriptLibraryManager:
         log.info("Script added: '%s' (%s)", name, script.interpreter)
         return script
 
+    @life_events.on_change("script_updated", "a script", "script")
     def update_script(self, script_id: str, **fields) -> Script:
         """Changes a script's fields and stamps updated_at (ValueError for an unknown one or field, or created_at)."""
         script = self.get_script(script_id)
@@ -151,6 +155,7 @@ class ScriptLibraryManager:
         self._save()
         return script
 
+    @life_events.on_change("script_removed", "a script", "script")
     def delete_script(self, script_id: str) -> None:
         """Deletes a script."""
         self._scripts = [s for s in self._scripts if s.script_id != script_id]

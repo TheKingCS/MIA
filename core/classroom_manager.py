@@ -30,6 +30,8 @@ this codebase.
 
 from __future__ import annotations
 
+from core import life_events
+
 import json
 import uuid
 from dataclasses import dataclass, field
@@ -237,6 +239,7 @@ class ClassroomManager:
     # Subjects
     # ------------------------------------------------------------------
 
+    @life_events.on_change("subject_added", "a subject", "subject")
     def add_subject(self, name: str, category: str = "", description: str = "") -> Subject:
         """Adds a subject."""
         now = datetime.now().isoformat(timespec="seconds")
@@ -263,6 +266,7 @@ class ClassroomManager:
         self._save_subjects()
         return subject
 
+    @life_events.on_change("subject_removed", "a subject", "subject")
     def delete_subject(self, subject_id: str) -> None:
         """Cascades: removes every Course under this Subject, and every
         Lesson under each of those Courses — see module docstring for
@@ -290,6 +294,7 @@ class ClassroomManager:
     # Courses
     # ------------------------------------------------------------------
 
+    @life_events.on_change("course_added", "a course", "course")
     def add_course(self, subject_id: str, name: str, description: str = "") -> Course:
         """Adds a course to a subject."""
         now = datetime.now().isoformat(timespec="seconds")
@@ -301,6 +306,7 @@ class ClassroomManager:
         self._save_courses()
         return course
 
+    @life_events.on_change("course_updated", "a course", "course")
     def update_course(self, course_id: str, **fields) -> Course:
         """Changes a course's fields and stamps updated_at (it can't move to another subject; ValueError otherwise)."""
         course = self.get_course(course_id)
@@ -316,6 +322,7 @@ class ClassroomManager:
         self._save_courses()
         return course
 
+    @life_events.on_change("course_removed", "a course", "course")
     def delete_course(self, course_id: str) -> None:
         """Cascades: removes every Lesson under this Course."""
         self._lessons = [l for l in self._lessons if l.course_id != course_id]
@@ -341,6 +348,7 @@ class ClassroomManager:
     # Lessons
     # ------------------------------------------------------------------
 
+    @life_events.on_change("lesson_added", "a lesson", "lesson")
     def add_lesson(
         self, course_id: str, name: str, notes: str = "", skill_rewards: Optional[list[SkillWeight]] = None,
     ) -> Lesson:
@@ -389,6 +397,7 @@ class ClassroomManager:
         self._save_lessons()
         return lesson
 
+    @life_events.on_change("lesson_removed", "a lesson", "lesson")
     def delete_lesson(self, lesson_id: str) -> None:
         """Deletes a lesson."""
         self._lessons = [l for l in self._lessons if l.lesson_id != lesson_id]

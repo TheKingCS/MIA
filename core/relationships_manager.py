@@ -28,6 +28,8 @@ Suggestions first shipped this session.
 
 from __future__ import annotations
 
+from core import life_events
+
 import json
 import uuid
 from dataclasses import dataclass
@@ -201,6 +203,7 @@ class RelationshipsManager:
     # Person CRUD
     # ------------------------------------------------------------------
 
+    @life_events.on_change("person_added", "a person", "person")
     def add_person(
         self, name: str, relationship: str = "", birthday: str = "",
         favorite_things: str = "", gift_ideas: str = "", notes: str = "", email: str = "",
@@ -222,6 +225,7 @@ class RelationshipsManager:
         log.info("Person added: '%s'", person.name)
         return person
 
+    @life_events.on_change("person_updated", "a person", "person")
     def update_person(self, person_id: str, **fields) -> Person:
         """Changes a person's fields (ValueError for an unknown person or field)."""
         person = self.get_person(person_id)
@@ -234,6 +238,7 @@ class RelationshipsManager:
         self._save_people()
         return person
 
+    @life_events.on_change("person_removed", "a person", "person")
     def delete_person(self, person_id: str) -> None:
         """Deletes a person."""
         self._people = [p for p in self._people if p.person_id != person_id]
@@ -254,6 +259,7 @@ class RelationshipsManager:
     # Pet CRUD
     # ------------------------------------------------------------------
 
+    @life_events.on_change("pet_added", "a pet", "pet")
     def add_pet(
         self, name: str, species: str = "", birthday: str = "", medical_notes: str = "", notes: str = "",
     ) -> Pet:
@@ -272,6 +278,7 @@ class RelationshipsManager:
         log.info("Pet added: '%s'", pet.name)
         return pet
 
+    @life_events.on_change("pet_updated", "a pet", "pet")
     def update_pet(self, pet_id: str, **fields) -> Pet:
         """Changes a pet's fields (ValueError for an unknown pet or field)."""
         pet = self.get_pet(pet_id)
@@ -284,6 +291,7 @@ class RelationshipsManager:
         self._save_pets()
         return pet
 
+    @life_events.on_change("pet_removed", "a pet", "pet")
     def delete_pet(self, pet_id: str) -> None:
         """Deletes a pet."""
         self._pets = [p for p in self._pets if p.pet_id != pet_id]

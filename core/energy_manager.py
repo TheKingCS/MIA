@@ -47,6 +47,8 @@ either, matching the mirrored asset methods exactly.
 
 from __future__ import annotations
 
+from core import life_events
+
 import json
 import uuid
 from dataclasses import dataclass
@@ -139,6 +141,7 @@ class EnergyManager:
     # Energy source CRUD
     # ------------------------------------------------------------------
 
+    @life_events.on_change("energy_source_added", "an energy source", "energy_source")
     def add_energy_source(self, name: str, source_type: str = "Other", notes: str = "") -> EnergySource:
         """Adds a source (an unknown type becomes Other)."""
         source = EnergySource(
@@ -153,6 +156,7 @@ class EnergyManager:
         log.info("Energy source added: '%s' (%s)", source.name, source.source_type)
         return source
 
+    @life_events.on_change("energy_source_updated", "an energy source", "energy_source")
     def update_energy_source(self, source_id: str, **fields) -> EnergySource:
         """Changes a source's fields (an unknown type becomes Other; ValueError for an unknown source or field)."""
         source = self.get_energy_source(source_id)
@@ -167,6 +171,7 @@ class EnergyManager:
         self._save()
         return source
 
+    @life_events.on_change("energy_source_removed", "an energy source", "energy_source")
     def delete_energy_source(self, source_id: str) -> None:
         """Deletes the EnergySource record only — see module docstring
         for why its logged readings are deliberately left in place."""
@@ -194,6 +199,7 @@ class EnergyManager:
         """The Data Logger series for one of a source's meters."""
         return f"energy_source_{source_id}_{meter_name}"
 
+    @life_events.on_change("energy_reading_logged", "an energy reading", "energy_source")
     def log_energy_reading(self, source_id: str, meter_name: str, value: float, unit: str = "", note: str = "") -> Reading:
         """Logs a reading on one of a source's meters ("kWh produced", "tank %")."""
         if self.get_energy_source(source_id) is None:

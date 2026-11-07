@@ -41,6 +41,8 @@ functions.
 
 from __future__ import annotations
 
+from core import life_events
+
 import json
 import uuid
 from dataclasses import dataclass
@@ -218,6 +220,7 @@ class LedgerManager:
     # Revenue
     # ------------------------------------------------------------------
 
+    @life_events.on_change("shop_revenue_added", "shop revenue", "shop_revenue")
     def add_revenue(
         self,
         amount: float,
@@ -245,6 +248,7 @@ class LedgerManager:
         log.info("Revenue recorded: $%.2f (%s)", entry.amount, entry.description or "no description")
         return entry
 
+    @life_events.on_change("sale_logged", "a sale", "shop_revenue")
     def record_sale(
         self,
         product_id: str,
@@ -293,6 +297,7 @@ class LedgerManager:
         self._save_revenue()
         return entry
 
+    @life_events.on_change("shop_revenue_removed", "shop revenue", "shop_revenue")
     def delete_revenue(self, entry_id: str) -> None:
         """Deletes a revenue entry."""
         self._revenue = [r for r in self._revenue if r.entry_id != entry_id]
@@ -313,6 +318,7 @@ class LedgerManager:
     # Expenses
     # ------------------------------------------------------------------
 
+    @life_events.on_change("shop_expense_added", "a shop expense", "shop_expense")
     def add_expense(
         self,
         amount: float,
@@ -356,6 +362,7 @@ class LedgerManager:
         self._save_expenses()
         return entry
 
+    @life_events.on_change("shop_expense_removed", "a shop expense", "shop_expense")
     def delete_expense(self, entry_id: str) -> None:
         """Deletes an expense."""
         self._expenses = [e for e in self._expenses if e.entry_id != entry_id]

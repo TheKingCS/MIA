@@ -16,6 +16,8 @@ generic inventory item doesn't.
 
 from __future__ import annotations
 
+from core import life_events
+
 import json
 import uuid
 from dataclasses import dataclass
@@ -202,6 +204,7 @@ class ComponentManager:
     # Writing
     # ------------------------------------------------------------------
 
+    @life_events.on_change("component_added", "a part", "component")
     def add_component(
         self,
         name: str,
@@ -255,6 +258,7 @@ class ComponentManager:
         self._save()
         return component
 
+    @life_events.on_change("component_updated", "a part", "component")
     def update_component(self, component_id: str, **fields) -> Component:
         """Changes its fields and stamps updated_at (ValueError for an unknown one or field, or updated_at itself)."""
         component = self.get_component(component_id)
@@ -272,6 +276,7 @@ class ComponentManager:
         self._save()
         return component
 
+    @life_events.on_change("component_removed", "a part", "component")
     def delete_component(self, component_id: str) -> None:
         """Deletes it."""
         self._components = [c for c in self._components if c.component_id != component_id]

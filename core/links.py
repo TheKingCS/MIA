@@ -117,17 +117,40 @@ KINDS: dict[str, Kind] = {k.kind: k for k in (
     Kind("pet", "pet", "relationships", "all_pets", "pet_id"),
     Kind("recipe", "recipe", "kitchen", "all_recipes", "recipe_id"),
     Kind("profile", "account", "profiles", "list_profiles", "profile_id"),
+    # 2026-11-07 (DEC-0108's interconnection audit): the rest of the records a life is made of, so they can depend
+    # on, serve, block or belong to each other. The kind names match the refs their stores' life events carry.
+    Kind("calendar_event", "event", "calendar", "all_events", "event_id", "title"),
+    Kind("inventory_item", "item", "inventory", "all_items", "item_id"),
+    Kind("component", "part", "components", "all_components", "component_id"),
+    Kind("material", "material", "materials", "all_materials", "material_id"),
+    Kind("product", "product", "products", "all_products", "product_id"),
+    Kind("job", "job", "jobs", "all_jobs", "job_id"),
+    Kind("craft_recipe", "workshop recipe", "craft_recipes", "all_recipes", "recipe_id"),
+    Kind("waypoint", "waypoint", "waypoints", "all_waypoints", "waypoint_id"),
+    Kind("trip", "trip", "trips", "all_trips", "trip_id"),
+    Kind("expedition", "expedition", "expeditions", "all_expeditions", "expedition_id"),
+    Kind("textbook", "book", "textbooks", "all_books", "book_id", "title"),
+    Kind("energy_source", "energy source", "energy", "all_energy_sources", "source_id"),
+    Kind("journal_entry", "journal entry", "journal", "all_entries", "entry_id", "title"),
+    Kind("reward", "reward", "reward_shop", "all_rewards", "reward_id"),
+    Kind("script", "script", "scripts", "all_scripts", "script_id"),
+    Kind("place", "place", "places", "places", "place_id"),
+    Kind("obligation", "obligation", "obligations", "obligations", "obligation_id", "title"),
+    Kind("policy", "insurance policy", "insurance", "policies", "policy_id", "insurer"),
+    Kind("customer", "customer", "business", "customers", "customer_id"),
+    Kind("flock", "flock", "flock", "flocks", "flock_id"),
 )}
 
 
 def _records(context, kind: Kind) -> list:
-    """Every record of a kind, from its store; [] (logged) when the store is missing or fails."""
+    """Every record of a kind, from its store (a method that lists them, or a list the store keeps); [] (logged)
+    when the store is missing or fails."""
     store = getattr(context, kind.store, None)
     lister: Optional[Callable] = getattr(store, kind.lister, None)
     if lister is None:
         return []
     try:
-        return list(lister())
+        return list(lister() if callable(lister) else lister)
     except Exception:
         log.exception("Couldn't list %s for links.", kind.kind)
         return []

@@ -33,6 +33,8 @@ with anything else MIA has to say (core/communication_gate.py).
 
 from __future__ import annotations
 
+from core import life_events
+
 import json
 import re
 import shutil
@@ -348,6 +350,7 @@ class InboxManager:
         asset = maintenance.get_asset(asset_id) if maintenance and asset_id else None
         return detail_proposals(item.details, asset)
 
+    @life_events.on_change("document_filed", "a document", "inbox_item")
     def file_item(
         self, item_id: str, asset_id: Optional[str] = None, project_id: Optional[str] = None,
         amount: Optional[float] = None, category: Optional[str] = None, schedule_indexes: Optional[list[int]] = None,

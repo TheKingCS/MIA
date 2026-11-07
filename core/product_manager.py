@@ -32,6 +32,8 @@ one-piece-at-a-time discipline as every other MIA Home addition.
 
 from __future__ import annotations
 
+from core import life_events
+
 import json
 import uuid
 from dataclasses import dataclass, field
@@ -265,6 +267,7 @@ class ProductManager:
     # Writing — products
     # ------------------------------------------------------------------
 
+    @life_events.on_change("product_added", "a product", "product")
     def add_product(
         self,
         name: str,
@@ -293,6 +296,7 @@ class ProductManager:
         log.info("Product added: '%s' (qty %s)", name, product.quantity_in_stock)
         return product
 
+    @life_events.on_change("product_updated", "a product", "product")
     def update_product(self, product_id: str, **fields) -> Product:
         """Changes a product's fields, keeping stock and price at 0 or more (ValueError for an unknown product or field,
         or the timestamps).
@@ -314,6 +318,7 @@ class ProductManager:
         self._save()
         return product
 
+    @life_events.on_change("product_removed", "a product", "product")
     def delete_product(self, product_id: str) -> None:
         """Deletes a product."""
         self._products = [p for p in self._products if p.product_id != product_id]
@@ -355,6 +360,7 @@ class ProductManager:
     # Writing — listings
     # ------------------------------------------------------------------
 
+    @life_events.on_change("listing_added", "a listing", "product")
     def add_listing(
         self, product_id: str, platform: str, price: float = 0.0, status: str = "Active", url: str = ""
     ) -> Product:

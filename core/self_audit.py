@@ -239,7 +239,7 @@ def store_connections(root: Path = ROOT, assistant: Optional[str] = None) -> lis
             except (TypeError, OSError):
                 source = ""
             out.append({"store": name, "scope": scope, "class": cls.__name__,
-                        "history": "life_events.record" in source,
+                        "history": "life_events.record" in source or "life_events.on_change" in source,
                         "links": name in linkable,
                         "assistant": _reaches(assistant, name, modules),
                         "life_state": _reaches(state, name, modules),
@@ -273,6 +273,10 @@ BY_DESIGN: dict[str, tuple[tuple[str, ...], str]] = {
     "notifications": (("history", "links", "life_state"), "the messages themselves"),
     "online_reminders": (("history", "links", "life_state", "web"), "held only until the internet is back"),
     "saga_moments": (("history", "links", "life_state", "assistant"), "kept for the Chronicles, which tell them"),
+    "data_logger": (("history",), "sensor readings: too many, and too small, to be a life's history"),
+    "freedom_log": (("history",), "a daily balance snapshot; the fund's real changes are the budget's history"),
+    "insights": (("history",), "what MIA noticed, kept by the gate's log, not the person's history"),
+    "training": (("history",), "the live workout; the workout it becomes is recorded by the workout log"),
 }
 
 

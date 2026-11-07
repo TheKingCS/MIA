@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1052 files, 232,172 lines; 1052 files describe themselves; 5,804 of 13,607 classes and functions are documented.
+1053 files, 232,537 lines; 1053 files describe themselves; 5,816 of 13,619 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-371 files, 105,500 lines; 5,046 of 5,693 classes and functions documented
+371 files, 105,757 lines; 5,048 of 5,695 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -649,7 +649,7 @@
 
 ## tests/: the test suite: what each part must do
 
-349 files, 63,458 lines; 323 of 5,680 classes and functions documented
+350 files, 63,566 lines; 333 of 5,690 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -782,6 +782,7 @@
 - `tests/test_grow_lab.py`: The grow lab (DEC-0030 phase D): batches, harvests and losses, readings against the person's own ranges (only ever a warning), experiments that compare batches, all undoable. *(7 undocumented)*
 - `tests/test_hash_identifier.py`: Unit tests for core.hash_identifier — pure pattern-matching logic, no external dependency, real hashes used as test fixtures (not mocks). *(13 undocumented)*
 - `tests/test_heavy_jobs.py`: Heavy jobs on the home computer (core/heavy_jobs.py): a device without Tesseract, a speech model or a voice sends the job to the linked PC; the PC unreachable means the old answer, and it isn't asked again for a while. *(6 undocumented)*
+- `tests/test_history_and_links.py`: The interconnection work from the first self-audit (DEC-0108, 2026-11-07): `life_events.on_change` puts a store's changes in her history, and the new link kinds let the rest of a life's records be linked, with the refs the history carries.
 - `tests/test_home_dashboard.py`: Unit tests for gui.home_dashboard's pure formatting helpers. The reactive widget/QTimer behavior itself is verified with a headless offscreen-QPA smoke test (this project's convention for Qt widget behavior), not pytest — see gui/character_panel.py's own test file for the same split. *(74 undocumented)*
 - `tests/test_home_link.py`: Supercharged online (DEC-0022 level 2, core/home_link.py): a phone links to MIA on the home computer with the person's own sign-in, Talk uses the computer's model, and the phone's own model answers whenever the computer can't (and MIA says which one did). *(12 undocumented)*
 - `tests/test_homestead_costs.py`: Finance #2, homestead builds and tools: expense tags, build budgets, tool cost of ownership (core/homestead_costs.py), the Assistant tools (core/assistant_homestead_actions.py), the maintenance-cost hook, and the Budget tab's formatting. *(16 undocumented)*

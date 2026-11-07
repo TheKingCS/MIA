@@ -19,6 +19,8 @@ atomic_write_text, so adding, removing and arriving can be undone.
 
 from __future__ import annotations
 
+from core import life_events
+
 import json
 import uuid
 from dataclasses import asdict, dataclass
@@ -103,6 +105,7 @@ class Places:
         """The place with this id, or None."""
         return next((p for p in self.places if p.place_id == place_id), None)
 
+    @life_events.on_change("place_added", "a place", "place")
     def add(self, name: str, lat: float, lon: float, radius_m: int = DEFAULT_RADIUS_M, on_arrive: str = "Just Remind Me",
             note: str = "") -> Place:
         """Adds a place (its position kept to six decimals, about 10 cm)."""
@@ -111,6 +114,7 @@ class Places:
         self._save()
         return place
 
+    @life_events.on_change("place_updated", "a place", "place")
     def update(self, place_id: str, **fields) -> Place:
         """Changes a place's known fields (ValueError when it's gone)."""
         place = self.get(place_id)
@@ -122,6 +126,7 @@ class Places:
         self._save()
         return place
 
+    @life_events.on_change("place_removed", "a place", "place")
     def delete(self, place_id: str) -> None:
         """Deletes a place."""
         self.places = [p for p in self.places if p.place_id != place_id]

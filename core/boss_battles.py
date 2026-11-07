@@ -20,6 +20,8 @@ be undone. Money is never shown to a child (core/child_accounts.py).
 
 from __future__ import annotations
 
+from core import life_events
+
 import json
 import math
 from datetime import date
@@ -105,11 +107,13 @@ class BossBook:
         if changed:
             self._save()
 
+    @life_events.on_change("boss_added", "a boss fight", "mission")
     def add_mission(self, mission_id: str) -> None:
         if mission_id not in self.missions:
             self.missions.append(mission_id)
             self._save()
 
+    @life_events.on_change("boss_removed", "a boss fight", "mission")
     def remove_mission(self, mission_id: str) -> None:
         if mission_id in self.missions:
             self.missions.remove(mission_id)

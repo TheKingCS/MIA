@@ -41,6 +41,8 @@ through atomic_write_text so every change can be undone.
 
 from __future__ import annotations
 
+from core import life_events
+
 import json
 import re
 import uuid
@@ -203,6 +205,7 @@ class CraftRecipeBook:
         """The recipe with this id, or None."""
         return next((r for r in self._recipes if r.recipe_id == recipe_id), None)
 
+    @life_events.on_change("craft_recipe_added", "a workshop recipe", "craft_recipe")
     def add_recipe(self, name: str, **fields) -> CraftRecipe:
         """Adds a recipe (a name is required) with its fields, checked by _apply."""
         if not str(name or "").strip():
@@ -214,6 +217,7 @@ class CraftRecipeBook:
         self._save()
         return recipe
 
+    @life_events.on_change("craft_recipe_updated", "a workshop recipe", "craft_recipe")
     def update_recipe(self, recipe_id: str, **fields) -> CraftRecipe:
         """Changes a recipe's fields (checked) and stamps updated_at; ValueError when it's gone."""
         recipe = self.get_recipe(recipe_id)
@@ -224,6 +228,7 @@ class CraftRecipeBook:
         self._save()
         return recipe
 
+    @life_events.on_change("craft_recipe_removed", "a workshop recipe", "craft_recipe")
     def delete_recipe(self, recipe_id: str) -> None:
         """Deletes a recipe (its builds stay)."""
         self._recipes = [r for r in self._recipes if r.recipe_id != recipe_id]

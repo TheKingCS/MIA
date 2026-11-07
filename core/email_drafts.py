@@ -15,6 +15,8 @@ person just asked for.
 
 from __future__ import annotations
 
+from core import life_events
+
 import json
 import re
 import uuid
@@ -108,6 +110,7 @@ class EmailDrafts:
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._drafts_file, json.dumps([asdict(d) for d in self._drafts], indent=2))
 
+    @life_events.on_change("draft_created", "an email draft", "email_draft", named=False)
     def create(self, to: list[str], subject: str, body: str, cc: Optional[list[str]] = None) -> EmailDraft:
         """Saves a new draft."""
         draft = EmailDraft(draft_id=uuid.uuid4().hex[:10], to=list(to), subject=subject.strip(), body=body.strip(),

@@ -31,6 +31,8 @@ Personal: in the person's own folder (`operating_journal.json`).
 
 from __future__ import annotations
 
+from core import life_events
+
 import json
 import re
 import uuid
@@ -118,6 +120,7 @@ class OperatingJournal:
         atomic_write_text(self._file, json.dumps({"lines": self.lines, "ratings": self.ratings[-2000:]}, indent=1,
                                                  ensure_ascii=False))
 
+    @life_events.on_change("operating_line_added", "a line to the Operating Journal", "operating_line")
     def add(self, text: str, section: str = "") -> dict:
         """Adds a line (up to 300 characters) to a section (rules when the section isn't one), with the habit read from its
         words; ValueError for an empty line.
@@ -133,6 +136,7 @@ class OperatingJournal:
         self._save()
         return line
 
+    @life_events.on_change("operating_line_removed", "a line from the Operating Journal", "operating_line")
     def remove(self, line_id: str) -> None:
         """Takes a line out (its past ratings stay)."""
         self.lines = [l for l in self.lines if l["id"] != line_id]

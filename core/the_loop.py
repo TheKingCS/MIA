@@ -36,6 +36,8 @@ so every change can be undone.
 
 from __future__ import annotations
 
+from core import life_events
+
 import json
 import math
 import re
@@ -292,6 +294,7 @@ class LoopBook:
         """The rhythm of a kind pointing at a ref (a dungeon's work rhythm, the Household chores...), or None."""
         return next((r for r in self.rhythms if r.kind == kind and r.ref == ref), None)
 
+    @life_events.on_change("rhythm_added", "a rhythm", "rhythm")
     def add(self, name: str, kind: str = "custom", ref: str = "", icon: str = "🔁", **fields) -> Rhythm:
         """Adds a rhythm (a name and a known kind are required) with whatever fields are given."""
         if not str(name or "").strip():
@@ -305,6 +308,7 @@ class LoopBook:
         self._save()
         return r
 
+    @life_events.on_change("rhythm_updated", "a rhythm", "rhythm")
     def set(self, rhythm_id: str, **fields) -> Rhythm:
         """The person's own values: what they set is marked theirs."""
         r = self.get(rhythm_id)
@@ -334,6 +338,7 @@ class LoopBook:
         self._save()
         return r
 
+    @life_events.on_change("rhythm_removed", "a rhythm", "rhythm")
     def delete(self, rhythm_id: str) -> None:
         """Deletes a rhythm."""
         self.rhythms = [r for r in self.rhythms if r.rhythm_id != rhythm_id]

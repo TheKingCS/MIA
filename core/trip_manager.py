@@ -30,6 +30,8 @@ manager methods don't exist yet.
 
 from __future__ import annotations
 
+from core import life_events
+
 import json
 import shutil
 import uuid
@@ -252,6 +254,7 @@ class TripManager:
     # Writing
     # ------------------------------------------------------------------
 
+    @life_events.on_change("trip_added", "a trip", "trip")
     def add_trip(
         self,
         expedition_id: str,
@@ -294,6 +297,7 @@ class TripManager:
         self._save()
         return trip
 
+    @life_events.on_change("trip_removed", "a trip", "trip")
     def delete_trip(self, trip_id: str) -> None:
         """Deletes a trip."""
         self._trips = [t for t in self._trips if t.trip_id != trip_id]
@@ -427,6 +431,7 @@ class TripManager:
     # Photos
     # ------------------------------------------------------------------
 
+    @life_events.on_change("trip_photo_added", "a trip photo", "trip", named=False)
     def add_photo(self, trip_id: str, source_path: Path) -> str:
         """
         Copies an existing image file into trip_photos/<trip_id>/ and
@@ -482,6 +487,7 @@ class TripManager:
     # Logged checkpoints (actual speed/distance, not planned)
     # ------------------------------------------------------------------
 
+    @life_events.on_change("split_logged", "a split", "trip")
     def record_split(self, trip_id: str, waypoint_id: str, timestamp: Optional[datetime] = None) -> Trip:
         """
         Logs "arrived at this waypoint now" — the field-buildable stand-in

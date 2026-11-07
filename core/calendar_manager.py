@@ -28,6 +28,8 @@ originally entered.
 
 from __future__ import annotations
 
+from core import life_events
+
 import json
 import uuid
 from calendar import monthrange
@@ -174,6 +176,7 @@ class CalendarManager:
     # Writing
     # ------------------------------------------------------------------
 
+    @life_events.on_change("event_added", "an event", "calendar_event")
     def add_event(
         self,
         title: str,
@@ -196,6 +199,7 @@ class CalendarManager:
         log.info("Calendar event added: '%s' on %s", title, date)
         return event
 
+    @life_events.on_change("event_updated", "an event", "calendar_event")
     def update_event(self, event_id: str, **fields) -> CalendarEvent:
         """Changes an event's fields (ValueError for an unknown event or field)."""
         event = self.get_event(event_id)
@@ -208,6 +212,7 @@ class CalendarManager:
         self._save()
         return event
 
+    @life_events.on_change("event_removed", "an event", "calendar_event")
     def delete_event(self, event_id: str) -> None:
         """Deletes an event (all its repeats)."""
         self._events = [e for e in self._events if e.event_id != event_id]

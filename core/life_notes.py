@@ -32,6 +32,8 @@ things people don't want kept.
 
 from __future__ import annotations
 
+from core import life_events
+
 import json
 import re
 import uuid
@@ -209,6 +211,7 @@ class LifeNotes:
         atomic_write_text(self._file, json.dumps({"notes": self.notes, "offers": self.offers[-_MAX_OFFERS:]}, indent=1,
                                                  ensure_ascii=False))
 
+    @life_events.on_change("note_added", "a note", "note")
     def add(self, kind: str, what: str, who: str = "", by: str = "", why: str = "",
             conversation_id: Optional[str] = None) -> dict:
         """Keep a note of `kind` (one of KINDS), with who it's for, by when and why when said. The same open note is
@@ -245,6 +248,7 @@ class LifeNotes:
         """The note with this id, or None."""
         return next((n for n in self.notes if n["id"] == note_id), None)
 
+    @life_events.on_change("note_finished", "a note", "note")
     def mark_done(self, note_id: str) -> Optional[dict]:
         """Mark a note done (a promise kept, an idea tried), with when; returns it, or None when there's no such note."""
         note = self.get(note_id)

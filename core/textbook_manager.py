@@ -34,6 +34,8 @@ with a plain message rather than added empty.
 
 from __future__ import annotations
 
+from core import life_events
+
 import json
 import math
 import re
@@ -280,6 +282,7 @@ class TextbookManager:
         """The book with this id, or None."""
         return next((b for b in self._books if b.book_id == book_id), None)
 
+    @life_events.on_change("book_added", "a book", "textbook")
     def add_book(self, source: Path, title: str = "") -> Textbook:
         """Copy, read and index a book. Raises ValueError with a plain
         message for an unsupported or unreadable file. A scanned PDF is
@@ -348,6 +351,7 @@ class TextbookManager:
         ocr = getattr(self.context, "ocr", None)
         return ocr.progress(self._ocr_key(book_id)) if ocr is not None else None
 
+    @life_events.on_change("book_finished", "a book", "textbook")
     def finish_reading(self) -> bool:
         """Index scanned books whose OCR has finished (GUI thread; called
         by the app's regular check). After a restart, a book still being
@@ -382,6 +386,7 @@ class TextbookManager:
         lines = text.splitlines()
         return ["\n".join(lines[i:i + lines_per_page]) for i in range(0, max(len(lines), 1), lines_per_page)]
 
+    @life_events.on_change("book_removed", "a book", "textbook")
     def remove_book(self, book_id: str) -> bool:
         """Removes a book: cancels any OCR still reading it and deletes its file, index and OCR output. False when it
         wasn't there.

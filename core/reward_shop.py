@@ -17,6 +17,8 @@ once bought) or for again and again.
 
 from __future__ import annotations
 
+from core import life_events
+
 import json
 import uuid
 from dataclasses import asdict, dataclass, field
@@ -129,6 +131,7 @@ class RewardShop:
         """The reward with this id, or None."""
         return next((r for r in self._rewards if r.reward_id == reward_id), None)
 
+    @life_events.on_change("reward_added", "a reward", "reward")
     def add_reward(self, name: str, cost, icon: str = "🎁", note: str = "", repeatable=True, buy=None) -> ShopReward:
         """Adds a reward: a name, a whole cost of at least 1 credit, and once or again and again (`buy` is the form's
         wording for it).
@@ -147,6 +150,7 @@ class RewardShop:
         self._save()
         return reward
 
+    @life_events.on_change("reward_updated", "a reward", "reward")
     def update_reward(self, reward_id: str, **fields) -> ShopReward:
         """Changes a reward's name, icon, note, cost (at least 1) or how often it can be bought; ValueError when it's gone."""
         reward = self.get_reward(reward_id)
@@ -164,6 +168,7 @@ class RewardShop:
         self._save()
         return reward
 
+    @life_events.on_change("reward_removed", "a reward", "reward")
     def delete_reward(self, reward_id: str) -> None:
         """Deletes a reward (past purchases of it stay)."""
         self._rewards = [r for r in self._rewards if r.reward_id != reward_id]

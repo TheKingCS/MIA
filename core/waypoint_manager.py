@@ -18,6 +18,8 @@ exactly what a compass-and-map user needs.
 
 from __future__ import annotations
 
+from core import life_events
+
 import json
 import math
 import uuid
@@ -160,6 +162,7 @@ class WaypointManager:
     # Writing
     # ------------------------------------------------------------------
 
+    @life_events.on_change("waypoint_added", "a waypoint", "waypoint")
     def add_waypoint(
         self, name: str, latitude: float, longitude: float, notes: str = "", category: str = ""
     ) -> Waypoint:
@@ -178,6 +181,7 @@ class WaypointManager:
         log.info("Waypoint added: '%s' (%s, %s)", name, latitude, longitude)
         return waypoint
 
+    @life_events.on_change("waypoint_updated", "a waypoint", "waypoint")
     def update_waypoint(self, waypoint_id: str, **fields) -> Waypoint:
         """Changes a waypoint's fields (ValueError for an unknown one or field, or created_at)."""
         waypoint = self.get_waypoint(waypoint_id)
@@ -192,6 +196,7 @@ class WaypointManager:
         self._save()
         return waypoint
 
+    @life_events.on_change("waypoint_removed", "a waypoint", "waypoint")
     def delete_waypoint(self, waypoint_id: str) -> None:
         """Deletes a waypoint."""
         self._waypoints = [w for w in self._waypoints if w.waypoint_id != waypoint_id]

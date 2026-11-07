@@ -26,6 +26,8 @@ atomic_write_text so every change can be undone.
 
 from __future__ import annotations
 
+from core import life_events
+
 import json
 import math
 import uuid
@@ -203,6 +205,7 @@ class BusinessBook:
         """The customer with this id, or None."""
         return self._get(self.customers, "customer_id", customer_id)
 
+    @life_events.on_change("customer_added", "a customer", "customer")
     def add_customer(self, name: str, **fields) -> Customer:
         """Adds a customer (a name is required)."""
         if not str(name or "").strip():
@@ -222,6 +225,7 @@ class BusinessBook:
         self._save()
         return c
 
+    @life_events.on_change("customer_removed", "a customer", "customer")
     def delete_customer(self, customer_id: str) -> None:
         """Deletes a customer."""
         self.customers = [c for c in self.customers if c.customer_id != customer_id]
@@ -234,6 +238,7 @@ class BusinessBook:
         """The quote with this id, or None."""
         return self._get(self.quotes, "quote_id", quote_id)
 
+    @life_events.on_change("quote_added", "a quote", "quote")
     def add_quote(self, title: str, **fields) -> Quote:
         """Adds a quote (a title is required)."""
         if not str(title or "").strip():
@@ -255,6 +260,7 @@ class BusinessBook:
         self._save()
         return q
 
+    @life_events.on_change("quote_removed", "a quote", "quote")
     def delete_quote(self, quote_id: str) -> None:
         """Deletes a quote."""
         self.quotes = [q for q in self.quotes if q.quote_id != quote_id]
@@ -265,6 +271,7 @@ class BusinessBook:
         """The order with this id, or None."""
         return self._get(self.orders, "order_id", order_id)
 
+    @life_events.on_change("order_added", "an order", "order")
     def add_order(self, title: str, **fields) -> Order:
         """Adds an order (a title is required), with the quote it came from; its builds and payments are added later."""
         if not str(title or "").strip():
@@ -291,6 +298,7 @@ class BusinessBook:
         self._save()
         return o
 
+    @life_events.on_change("order_removed", "an order", "order")
     def delete_order(self, order_id: str) -> None:
         """Deletes an order."""
         self.orders = [o for o in self.orders if o.order_id != order_id]
@@ -314,6 +322,7 @@ class BusinessBook:
         """The market day under way, if one is."""
         return next((m for m in reversed(self.markets) if m.status == "open"), None)
 
+    @life_events.on_change("market_started", "a market day", "market")
     def start_market(self, place: str, date: str, brought: dict, notes: str = "") -> MarketDay:
         """Opens a market day with what's being taken (only one open at a time; ValueError otherwise)."""
         if self.open_market() is not None:

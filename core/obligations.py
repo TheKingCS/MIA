@@ -34,6 +34,8 @@ be undone. Pure functions below have no I/O.
 
 from __future__ import annotations
 
+from core import life_events
+
 import json
 import uuid
 from dataclasses import asdict, dataclass, field
@@ -372,6 +374,7 @@ class ObligationBook:
         """The obligation with this id, or None."""
         return next((o for o in self.obligations if o.obligation_id == obligation_id), None)
 
+    @life_events.on_change("obligation_added", "an obligation", "obligation")
     def add(self, title: str, **fields) -> Obligation:
         """Adds an obligation (a title is required) with its fields, checked by _apply."""
         if not str(title or "").strip():
@@ -382,6 +385,7 @@ class ObligationBook:
         self._save()
         return o
 
+    @life_events.on_change("obligation_updated", "an obligation", "obligation")
     def update(self, obligation_id: str, **fields) -> Obligation:
         """Changes an obligation's fields (checked), stamping when it was closed, or clearing that when it's reopened."""
         o = self.get(obligation_id)
@@ -395,6 +399,7 @@ class ObligationBook:
         self._save()
         return o
 
+    @life_events.on_change("obligation_removed", "an obligation", "obligation")
     def delete(self, obligation_id: str) -> None:
         """Deletes an obligation."""
         self.obligations = [o for o in self.obligations if o.obligation_id != obligation_id]

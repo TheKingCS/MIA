@@ -28,6 +28,8 @@ to None) — nothing in this codebase forces every Project to have one.
 
 from __future__ import annotations
 
+from core import life_events
+
 import json
 import uuid
 from dataclasses import dataclass
@@ -139,6 +141,7 @@ class IntentManager:
     # Writing
     # ------------------------------------------------------------------
 
+    @life_events.on_change("goal_added", "a goal", "intent")
     def add_intent(
         self,
         name: str,
@@ -164,6 +167,7 @@ class IntentManager:
             self.set_primary(intent.intent_id)
         return intent
 
+    @life_events.on_change("goal_updated", "a goal", "intent")
     def update_intent(self, intent_id: str, **fields) -> Intent:
         """Changes a goal's fields and stamps updated_at; primary goes through set_primary (ValueError otherwise, and for an
         unknown goal or field).
@@ -183,6 +187,7 @@ class IntentManager:
         self._save()
         return intent
 
+    @life_events.on_change("primary_goal_updated", "the main goal", "intent")
     def set_primary(self, intent_id: str) -> Intent:
         """Marks `intent_id` as the primary (current-focus) Intent and
         unmarks every other one — same "exactly one active thing" shape
@@ -196,6 +201,7 @@ class IntentManager:
         self._save()
         return intent
 
+    @life_events.on_change("goal_removed", "a goal", "intent")
     def delete_intent(self, intent_id: str) -> None:
         """Deletes a goal; anything that served it now serves nothing, rather than pointing at a goal that's gone."""
         self._intents = [i for i in self._intents if i.intent_id != intent_id]

@@ -14,4 +14,5 @@
 
 ## Learned building her
 
+- **One decorator puts a store in her history** (K-0052): the first self-audit found only 15 of 73 stores recorded life events.
 - **How the self-audit reads her code, and where it can be wrong** (K-0051): core/self_audit.py's two weekly audits.

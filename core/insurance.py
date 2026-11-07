@@ -37,6 +37,8 @@ before (`renewal_notes`). Never on a child's account (not in CHILD_APPS).
 
 from __future__ import annotations
 
+from core import life_events
+
 import json
 import re
 import uuid
@@ -197,6 +199,7 @@ class InsuranceBook:
         """The policy with this id, or None."""
         return next((p for p in self.policies if p.policy_id == policy_id), None)
 
+    @life_events.on_change("policy_added", "a policy", "policy")
     def add_policy(self, kind: str, insurer: str, premium: float = 0.0, every: str = "6 Months", **values) -> Policy:
         """Adds a policy (kind, payment period and premium checked; named "<kind> insurance" when no name is given)."""
         _check(kind, every, premium)
@@ -210,6 +213,7 @@ class InsuranceBook:
         self._save()
         return policy
 
+    @life_events.on_change("policy_updated", "a policy", "policy")
     def update_policy(self, policy_id: str, **values) -> Policy:
         """Changes a policy's fields (re-checked) and stamps updated_at; ValueError when it's gone."""
         policy = self.get_policy(policy_id)
@@ -223,6 +227,7 @@ class InsuranceBook:
         self._save()
         return policy
 
+    @life_events.on_change("policy_removed", "a policy", "policy")
     def delete_policy(self, policy_id: str) -> None:
         """Deletes a policy and its quotes."""
         if self.get_policy(policy_id) is None:
@@ -240,6 +245,7 @@ class InsuranceBook:
         """A policy's quotes."""
         return [q for q in self.quotes if q.policy_id == policy_id]
 
+    @life_events.on_change("insurance_quote_added", "an insurance quote", "insurance_quote")
     def add_quote(self, policy_id: str, insurer: str, premium: float = 0.0, every: str = "6 Months", **values) -> Quote:
         """Adds a quote to a policy (checked like a policy; named "<insurer> quote" when no name is given)."""
         policy = self.get_policy(policy_id)

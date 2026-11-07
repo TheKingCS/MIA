@@ -41,6 +41,8 @@ worksheet says it's missing instead of guessing.
 
 from __future__ import annotations
 
+from core import life_events
+
 import html
 import json
 import uuid
@@ -129,6 +131,7 @@ class BusinessUseManager:
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._use_file, json.dumps([asdict(e) for e in self._entries], indent=2))
 
+    @life_events.on_change("business_use_logged", "business use", "business_use")
     def log_use(
         self, asset_id: str, hours: float = 0.0, purpose: str = BUSINESS, use_date: Optional[str] = None,
         entity_id: str = "", property_id: str = "", client: str = "", note: str = "", miles: float = 0.0,
@@ -147,6 +150,7 @@ class BusinessUseManager:
         self._save()
         return entry
 
+    @life_events.on_change("business_use_removed", "business use", "business_use")
     def delete_entry(self, entry_id: str) -> bool:
         """Deletes a log entry; False when it wasn't there."""
         before = len(self._entries)

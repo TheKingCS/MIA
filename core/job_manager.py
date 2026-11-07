@@ -48,6 +48,8 @@ piece at a time" discipline as every other MIA Home addition.
 
 from __future__ import annotations
 
+from core import life_events
+
 import json
 import uuid
 from dataclasses import dataclass, field
@@ -270,6 +272,7 @@ class JobManager:
     # Writing
     # ------------------------------------------------------------------
 
+    @life_events.on_change("job_added", "a job", "job")
     def add_job(
         self,
         name: str,
@@ -295,6 +298,7 @@ class JobManager:
         log.info("Job added: '%s' (status %s)", name, job.status)
         return job
 
+    @life_events.on_change("job_updated", "a job", "job")
     def update_job(self, job_id: str, **fields) -> Job:
         """Changes a job's fields with add's limits and stamps updated_at (ValueError for an unknown job or field, or
         the timestamps).
@@ -316,6 +320,7 @@ class JobManager:
         self._save()
         return job
 
+    @life_events.on_change("job_removed", "a job", "job")
     def delete_job(self, job_id: str) -> None:
         """Deletes a job."""
         self._jobs = [j for j in self._jobs if j.job_id != job_id]

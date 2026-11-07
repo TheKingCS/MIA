@@ -22,6 +22,8 @@ modules use a given service.
 
 from __future__ import annotations
 
+from core import life_events
+
 import json
 import uuid
 from dataclasses import dataclass
@@ -208,6 +210,7 @@ class InventoryManager:
     # Writing
     # ------------------------------------------------------------------
 
+    @life_events.on_change("item_added", "an item", "inventory_item")
     def add_item(
         self,
         name: str,
@@ -232,6 +235,7 @@ class InventoryManager:
         log.info("Inventory item added: '%s' (qty %d)", name, item.quantity)
         return item
 
+    @life_events.on_change("item_updated", "an item", "inventory_item")
     def update_item(self, item_id: str, **fields) -> InventoryItem:
         """Changes its fields and stamps updated_at (ValueError for an unknown one or field, or updated_at itself)."""
         item = self.get_item(item_id)
@@ -275,6 +279,7 @@ class InventoryManager:
         self._save()
         return item
 
+    @life_events.on_change("item_removed", "an item", "inventory_item")
     def delete_item(self, item_id: str) -> None:
         """Deletes it."""
         self._items = [i for i in self._items if i.item_id != item_id]

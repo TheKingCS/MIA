@@ -16,6 +16,8 @@ Where a person went is theirs: tracks live in their own folder
 
 from __future__ import annotations
 
+from core import life_events
+
 import json
 import re
 import uuid
@@ -155,6 +157,7 @@ class GpsTracks:
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._file, json.dumps({"tracks": self.tracks}, ensure_ascii=False))
 
+    @life_events.on_change("track_added", "a track", "track")
     def add_gpx(self, text: str, name: str = "") -> dict:
         """Keeps a track from a GPX file: its points, worked-out stats, a name (the one given, the file's, or A track),
         and when it was added.
@@ -166,6 +169,7 @@ class GpsTracks:
         self._save()
         return track
 
+    @life_events.on_change("track_removed", "a track", "track")
     def delete(self, track_id: str) -> None:
         """Removes a track."""
         self.tracks = [t for t in self.tracks if t["id"] != track_id]
