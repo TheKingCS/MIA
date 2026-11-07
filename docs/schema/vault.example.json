@@ -48,12 +48,14 @@
     {
       "month": "2026-10",
       "label": "October 2026",
-      "count": 5
+      "count": 5,
+      "safe": 4
     },
     {
       "month": "2026-08",
       "label": "August 2026",
-      "count": 4
+      "count": 4,
+      "safe": 4
     }
   ],
   "month": "2026-10",

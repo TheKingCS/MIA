@@ -740,3 +740,19 @@ body.cook-live .mia-orb-button, body.cook-live .bottom-bar { display: none; }
 .gp-check p.dim { margin: 0; font-size: var(--text-sm); }
 .gp-actions { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
 @media (max-width: 520px) { .gp-check-head { flex-direction: column; gap: 2px; } .gp-state { white-space: normal; } }
+
+/* ---------------------------------------------------------------- Memory Vault (DEC-0113)
+   The month and how much of it is safe at home; each photo's dot (green safe, amber only on the phone). */
+.vault-month { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.vault-month select { background: rgba(var(--rgb-panel), 0.9); color: var(--text); border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm); padding: 0 10px; font: inherit; font-weight: 600; }
+.vault-safe { font-family: var(--font-mono); font-size: 12px; color: var(--attention); }
+.vault-safe.all { color: var(--ok); }
+.vault-dot { width: 9px; height: 9px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.5); align-self: center; }
+.vault-dot.ok { background: var(--ok); }
+.vault-dot.wait { background: var(--attention); }
+.vault-marks { left: auto; right: 6px; bottom: 6px; align-items: center; }
+.vault-day-head h2 { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--text-dim); }
+.vault-what { font-size: var(--text-sm); color: var(--text-dim); }
+.vault-legend { margin: 12px 0 0; }

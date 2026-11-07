@@ -238,6 +238,7 @@ def test_the_screen(phone, tmp_path):
     page = vault_page(phone, today=date(2026, 10, 18))
     assert page["available"] and page["summary"]["photos"] == 3 and page["summary"]["waiting"] == 3
     assert page["month"] == "2026-10" and [m["month"] for m in page["months"]] == ["2026-10", "2026-09"]
+    assert (page["months"][0]["count"], page["months"][0]["safe"]) == (2, 0)  # none on the home computer yet
     day = page["days"][0]
     assert day["day"] == "2026-10-03" and len(day["items"]) == 2
     assert sum(1 for i in day["items"] if i["best"]) == 1 and all(i["burst"] for i in day["items"])
