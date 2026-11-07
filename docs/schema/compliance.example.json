@@ -54,6 +54,10 @@
           "rule": "",
           "reminders": "90 60 30 14 7 0",
           "notes": ""
+        },
+        "next": {
+          "label": "Where It Stands",
+          "opens": "status"
         }
       },
       {
@@ -105,6 +109,10 @@
           "rule": "",
           "reminders": "90 60 30 14 7 0",
           "notes": ""
+        },
+        "next": {
+          "label": "Where It Stands",
+          "opens": "status"
         }
       }
     ],
@@ -158,6 +166,17 @@
           "rule": "",
           "reminders": "90 60 30 14 7 0",
           "notes": ""
+        },
+        "next": {
+          "label": "Mark Done",
+          "action": {
+            "kind": "obligation.status",
+            "label": "Mark Done",
+            "params": {
+              "obligation_id": "6064221dad",
+              "status": "done"
+            }
+          }
         }
       }
     ],
@@ -211,6 +230,17 @@
           "rule": "",
           "reminders": "90 60 30 14 7 0",
           "notes": ""
+        },
+        "next": {
+          "label": "Mark Done",
+          "action": {
+            "kind": "obligation.status",
+            "label": "Mark Done",
+            "params": {
+              "obligation_id": "e259d00ac8",
+              "status": "done"
+            }
+          }
         }
       }
     ],
@@ -264,6 +294,10 @@
           "rule": "",
           "reminders": "90 60 30 14 7 0",
           "notes": ""
+        },
+        "next": {
+          "label": "Verify",
+          "opens": "verify"
         }
       },
       {
@@ -315,6 +349,10 @@
           "rule": "",
           "reminders": "90 60 30 14 7 0",
           "notes": ""
+        },
+        "next": {
+          "label": "Verify",
+          "opens": "verify"
         }
       }
     ],
