@@ -15,6 +15,9 @@ from core.communication_gate import ACT, DEFER, DROP
 
 
 def _action_get_held_back_messages(context: AppContext, arguments: dict) -> str:
+    """Tool get_held_back_messages: how often she spoke up today against the daily limit, what's still
+    waiting to be said, what she let go and why, and the kinds of message she's taking a break from.
+    """
     gate = getattr(context, "communication", None)
     if gate is None:
         return "I don't keep a log of my messages on this device."
@@ -39,6 +42,9 @@ def _action_get_held_back_messages(context: AppContext, arguments: dict) -> str:
 
 
 def _describe_breaks(gate) -> str:
+    """The kinds of message on a break (dismissed several times in a row) and until when, with how to bring
+    one back; empty when there are none.
+    """
     paused = gate.paused()
     if not paused:
         return ""
@@ -47,6 +53,9 @@ def _describe_breaks(gate) -> str:
 
 
 def _action_resume_message_topic(context: AppContext, arguments: dict) -> str:
+    """Tool resume_message_topic: brings back the kinds of message on a break that the words name (the
+    only one when there's one and nothing was named); asks which otherwise.
+    """
     gate = getattr(context, "communication", None)
     if gate is None:
         return "I can't change that on this device."
@@ -66,6 +75,9 @@ def _action_resume_message_topic(context: AppContext, arguments: dict) -> str:
 
 
 def _action_set_message_limit(context: AppContext, arguments: dict) -> str:
+    """Tool set_message_limit: how many times a day she may speak up on her own, to a number or one
+    more or fewer; urgent things, alarms and answers never count.
+    """
     gate = getattr(context, "communication", None)
     if gate is None:
         return "I can't change that on this device."
@@ -91,6 +103,9 @@ def _action_set_message_limit(context: AppContext, arguments: dict) -> str:
 
 
 def register_communication_actions(registry: AssistantActionRegistry) -> None:
+    """Registers the gate's tools: resume_message_topic, get_held_back_messages and
+    set_message_limit.
+    """
     registry.register(AssistantAction(
         name="resume_message_topic", domain="communication",
         description="Bring back a kind of message MIA stopped sending because the user kept dismissing it.",

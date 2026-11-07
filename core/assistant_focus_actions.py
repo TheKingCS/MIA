@@ -16,6 +16,7 @@ from core.assistant_actions import AssistantAction, AssistantActionRegistry
 
 
 def _find_app(context, name: str):
+    """The app a name means (its id or name exactly, else the one whose name contains it), or None."""
     manager = getattr(context, "module_manager", None)
     wanted = (name or "").strip().lower().removeprefix("the ").removesuffix(" app").strip()
     if manager is None or not wanted:
@@ -29,6 +30,9 @@ def _find_app(context, name: str):
 
 
 def _action_set_app_focus(context, arguments: dict) -> str:
+    """Tool set_app_focus: sets which apps come first (Personal, Home and Family, Homestead, Business,
+    Student); nothing is locked.
+    """
     focus: Optional[focus_presets.Focus] = focus_presets.find_focus(str(arguments.get("focus") or ""))
     if focus is None:
         names = ", ".join(f.name for f in focus_presets.FOCUSES.values())
@@ -39,6 +43,9 @@ def _action_set_app_focus(context, arguments: dict) -> str:
 
 
 def _action_set_app_visibility(context, arguments: dict) -> str:
+    """Tool set_app_visibility: shows or tucks away one app on this person's Apps screen (an always-
+    visible one can't be hidden).
+    """
     module = _find_app(context, str(arguments.get("app") or ""))
     if module is None:
         return "Which app? Tell me its name as it shows on the Apps screen."
@@ -51,6 +58,7 @@ def _action_set_app_visibility(context, arguments: dict) -> str:
 
 
 def _action_get_app_focus(context, arguments: dict) -> str:
+    """Tool get_app_focus: the Apps screen's focus, what's tucked away, and the other focuses."""
     focus_id, _featured, hidden = focus_presets.current(context)
     focus = focus_presets.FOCUSES.get(focus_id or "")
     text = f"Your Apps screen is set for {focus.name}." if focus else "Your Apps screen shows everything, in the usual order."
@@ -63,6 +71,7 @@ def _action_get_app_focus(context, arguments: dict) -> str:
 
 
 def register_focus_actions(registry: AssistantActionRegistry) -> None:
+    """Registers the app-focus tools: set_app_focus, set_app_visibility and get_app_focus."""
     registry.register(AssistantAction(
         name="set_app_focus", domain="apps",
         description=("Set which apps come first for the user: a focus of Personal, Home & Family, Homestead, "

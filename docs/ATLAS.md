@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1060 files, 234,008 lines; 1060 files describe themselves; 6,060 of 13,690 classes and functions are documented.
+1060 files, 234,052 lines; 1060 files describe themselves; 6,080 of 13,690 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-374 files, 106,925 lines; 5,279 of 5,753 classes and functions documented
+374 files, 106,969 lines; 5,299 of 5,753 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -23,12 +23,12 @@
 - `core/assistant_accessibility_actions.py`: "Make the text bigger", "turn on high contrast", "read this screen to me" (core/accessibility.py, 2026-10-01). Each changes only the speaker's own look. *(4 undocumented)*
 - `core/assistant_actions.py`: The Assistant's tool-use/action-execution registry — docs/ROADMAP.md milestone 5.5. Lets the LLM actually DO things in MIA (open a module, add an alarm, a note, an inventory item), not just answer questions, via Ollama's structured tool-calling API (core/llm_manager.py's `chat_with_tools()`).
 - `core/assistant_chat.py`: The pure, non-Qt logic for one Assistant chat turn — moved here from `modules/assistant/module.py` (2026-07-14 aesthetic pass part 4, docs/ROADMAP.md) once the sidebar chat in `gui/character_panel.py` needed the exact same request-building and tool-call-safety logic as the full-screen Assistant modu
-- `core/assistant_comm_actions.py`: Assistant tools for the communication gate (core/communication_gate.py, Cognitive Extension slice C): asking what MIA chose not to say, and changing how often she speaks up on her own. *(5 undocumented)*
+- `core/assistant_comm_actions.py`: Assistant tools for the communication gate (core/communication_gate.py, Cognitive Extension slice C): asking what MIA chose not to say, and changing how often she speaks up on her own.
 - `core/assistant_domain_actions.py`: Assistant actions added by the 2026-09-27 conversational audit (docs/ASSISTANT_AUDIT.md), so what the owner *says* updates the right records: kitchen (recipes, meals, grocery list, pantry), debts and budget targets, asset details and notes (including greenhouse/garden plants, which are Maintenance a
 - `core/assistant_dungeon_actions.py`: The Dungeon by voice (DEC-0046): "How much loot this week?", "I worked 9 hours, we were unstocked", "I picked up an overtime shift Saturday", "Make it a quest". Each runs the same code as the screen (the action kinds in core/dungeon_actions.py, the numbers in core/web_dungeon.py), so the loot matche
 - `core/assistant_email_actions.py`: The Assistant writes emails (2026-10-01, accounts stage 3, core/email_drafts.py). `draft_email` only ever makes a draft: the person sends it by pressing Send (desktop or phone), copies it, or opens it in their mail app. There is deliberately no tool that sends. *(2 undocumented)*
 - `core/assistant_energy_actions.py`: Energy by voice (T-0053, from the weekly interconnection audit, DEC-0108): "how's the solar doing?", "what did the generator read last?". The energy store (core/energy_manager.py: solar, a generator, propane, tracked by hand) had no Assistant tool, so nothing about it could be asked out loud.
-- `core/assistant_focus_actions.py`: Assistant tools for each person's Apps screen (core/focus_presets.py, 2026-10-01): "switch me to student mode", "hide the Lab", "show me the Greenhouse again", "what's my focus?". Changes are the speaker's own. *(5 undocumented)*
+- `core/assistant_focus_actions.py`: Assistant tools for each person's Apps screen (core/focus_presets.py, 2026-10-01): "switch me to student mode", "hide the Lab", "show me the Greenhouse again", "what's my focus?". Changes are the speaker's own.
 - `core/assistant_goods_actions.py`: Saying it to MIA (2026-10-21): the homestead's newest screens by voice. "How many eggs this week?", "I collected 9 eggs", "What goods do I have on hand?", "Sold 3 loaves of banana bread", "How close am I to freedom?", "What's due for taxes?". Each one runs the same code its screen does (the action k
 - `core/assistant_homestead_actions.py`: Assistant tools for Finance #2, homestead builds and tools (core/homestead_costs.py): "I spent $240 on lumber for the greenhouse", "I bought a DeWalt drill for $199 for the greenhouse", "How much have I spent on the greenhouse?", "What has the mower cost me?", "Set the greenhouse budget to $5,000".
 - `core/assistant_inbox_actions.py`: Assistant tools for the document inbox (core/inbox_manager.py): what's waiting, "file it" (with MIA's proposal, or the owner's correction of which tool or build it's for), and "throw that one out". Filing by voice adds every maintenance step MIA found in a manual unless the owner says "without the t
@@ -39,8 +39,8 @@
 - `core/assistant_ownership_actions.py`: "Whose truck is it?" and "the mower is mine" (core/ownership.py, 2026-10-01): owner marks on maintenance items (vehicles, tools, appliances). *(4 undocumented)*
 - `core/assistant_self_actions.py`: MIA about herself (2026-10-21, the intelligence spec's first slice): "What AI model are you using?" answered from the runtime (core/model_registry.py), never from the model's guess about itself.
 - `core/assistant_starter_actions.py`: "What starter sets are there?", "set me up with the homestead starter set", "add the student starter but not the weekly plan" (core/starter_templates.py, 2026-10-01). Adding one is undoable. *(3 undocumented)*
-- `core/assistant_tagging_actions.py`: Assistant tools for sorting bank charges to businesses (core/business_tagging.py): "which charges need a business?" and "the Shell charge was for lawn care" / "the Walmart one was personal". *(5 undocumented)*
-- `core/assistant_textbook_actions.py`: Assistant tools for the textbook tutor (core/textbook_manager.py): what books MIA has, a quick "where does the book talk about X" lookup, and making a Classroom course from a book. Studying and quizzing themselves are conversation modes (core/textbook_study.py: "let's study the wiring book", "quiz m *(5 undocumented)*
+- `core/assistant_tagging_actions.py`: Assistant tools for sorting bank charges to businesses (core/business_tagging.py): "which charges need a business?" and "the Shell charge was for lawn care" / "the Walmart one was personal".
+- `core/assistant_textbook_actions.py`: Assistant tools for the textbook tutor (core/textbook_manager.py): what books MIA has, a quick "where does the book talk about X" lookup, and making a Classroom course from a book. Studying and quizzing themselves are conversation modes (core/textbook_study.py: "let's study the wiring book", "quiz m
 - `core/assistant_today_actions.py`: "What's on today?" (core/today.py, 2026-10-01): everything that needs the person today, across every app, in one answer. *(2 undocumented)*
 - `core/assistant_turn.py`: One Assistant turn — user text in, the things MIA should say back out — shared by every voice surface: the headless Core loop (`core/voice_loop.py`) and the phone voice endpoint (`server/app.py`). Pulled out of `VoiceLoopController._handle_turn()` unchanged in behavior, so both surfaces answer, act, *(5 undocumented)*
 - `core/assistant_undo_actions.py`: "Undo that" and "what did you just change?" (core/undo_log.py), plus "why did you tell me that?" and "stop telling me about ..." (core/message_reasons.py, core/communication_gate.py), and "is everything set up?" (core/system_check.py). 2026-10-01.

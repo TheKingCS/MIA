@@ -20,10 +20,14 @@ _S = {"type": "string"}
 
 
 def _names(context) -> dict:
+    """Each business entity's name, by id."""
     return {e.entity_id: e.name for e in context.budget.all_business_entities()}
 
 
 def _action_list_untagged(context: AppContext, arguments: dict) -> str:
+    """Tool list_untagged_charges: the bank charges still needing a business, the first five with MIA's
+    guess, and how to tell her.
+    """
     if getattr(context, "budget", None) is None or not context.budget.all_business_entities():
         return "You haven't set up any businesses yet (Budget → Summary → Manage Entities)."
     pending = pending_review(context)
@@ -42,6 +46,9 @@ def _action_list_untagged(context: AppContext, arguments: dict) -> str:
 
 
 def _find_business(context, words: str):
+    """The business the words name (by its name or a significant word of it), PERSONAL for personal, home or
+    mine, or None.
+    """
     lowered = words.lower().strip()
     if re.search(r"\b(personal|mine|household|home)\b", lowered):
         return PERSONAL
@@ -54,6 +61,9 @@ def _find_business(context, words: str):
 
 
 def _action_tag_charge(context: AppContext, arguments: dict) -> str:
+    """Tool tag_charge: tags the newest unsorted charge from the store named to the business (or personal),
+    and she remembers it for that store.
+    """
     if getattr(context, "budget", None) is None or not context.budget.all_business_entities():
         return "You haven't set up any businesses yet (Budget → Summary → Manage Entities)."
     store = merchant_key(str(arguments.get("charge") or ""))
@@ -74,6 +84,7 @@ def _action_tag_charge(context: AppContext, arguments: dict) -> str:
 
 
 def register_tagging_actions(registry: AssistantActionRegistry) -> None:
+    """Registers the business-tag tools: list_untagged_charges and tag_charge."""
     registry.register(AssistantAction(
         name="list_untagged_charges", domain="business_tags",
         description="List bank charges that haven't been sorted to one of the user's businesses (or personal) yet.",

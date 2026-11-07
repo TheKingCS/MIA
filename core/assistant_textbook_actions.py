@@ -18,10 +18,14 @@ _S = {"type": "string"}
 
 
 def _library(context: AppContext):
+    """The textbook store, or None."""
     return getattr(context, "textbooks", None)
 
 
 def _action_list_textbooks(context: AppContext, arguments: dict) -> str:
+    """Tool list_textbooks: each textbook with its pages and chapters (or that its scan is still being
+    read).
+    """
     library = _library(context)
     books = library.all_books() if library is not None else []
     if not books:
@@ -33,6 +37,9 @@ def _action_list_textbooks(context: AppContext, arguments: dict) -> str:
 
 
 def _action_search_textbook(context: AppContext, arguments: dict) -> str:
+    """Tool search_textbook: where the textbooks (or the one named) talk about something, the best passage
+    with its book and page, and the next place it comes up.
+    """
     library = _library(context)
     if library is None or not library.all_books():
         return "You don't have any textbooks yet. Add one in Classroom under Textbooks."
@@ -60,6 +67,7 @@ def _action_search_textbook(context: AppContext, arguments: dict) -> str:
 
 
 def _action_make_textbook_course(context: AppContext, arguments: dict) -> str:
+    """Tool make_textbook_course: a Classroom course from a textbook, one lesson per chapter (once)."""
     library = _library(context)
     if library is None or not library.all_books():
         return "You don't have any textbooks yet."
@@ -78,6 +86,7 @@ def _action_make_textbook_course(context: AppContext, arguments: dict) -> str:
 
 
 def register_textbook_actions(registry: AssistantActionRegistry) -> None:
+    """Registers the textbook tools: list_textbooks, search_textbook and make_textbook_course."""
     registry.register(AssistantAction(
         name="list_textbooks", domain="textbooks",
         description="List the textbooks the user has added to MIA.",
