@@ -31,6 +31,9 @@ from core.record_actions import Field, Record, field_dict, get, parse, record_fo
 
 
 def _lists():
+    """The choice lists the record forms need (job statuses, shop expense categories, trip activity types), imported
+    late so this module loads before those stores.
+    """
     from core.job_manager import JOB_STATUSES
     from core.ledger_manager import EXPENSE_CATEGORIES
     from core.trip_manager import ACTIVITY_TYPES
@@ -152,6 +155,9 @@ def forms() -> dict:
 
 
 def _number(params, name: str, label: str, allow_negative: bool = True) -> float:
+    """A number from the form (commas allowed), or ActionError naming the field; with allow_negative=False it must be
+    more than 0.
+    """
     try:
         value = float(str(params.get(name, "")).replace(",", "").strip())
     except ValueError:
@@ -162,6 +168,7 @@ def _number(params, name: str, label: str, allow_negative: bool = True) -> float
 
 
 def _call(fn, *args, **kwargs):
+    """Calls a store method, turning the ValueError it raises for bad input into an ActionError the person sees."""
     try:
         return fn(*args, **kwargs)
     except ValueError as problem:
@@ -169,6 +176,7 @@ def _call(fn, *args, **kwargs):
 
 
 def _qty(value: float) -> str:
+    """A quantity without a trailing .0 (3, 2.5)."""
     return f"{value:g}"
 
 
@@ -193,6 +201,9 @@ def tags_of(raw) -> list[str]:
 
 
 def _journal_values(params, only_given: bool) -> dict:
+    """The journal entry's fields read from the form (tags split from "garden, ideas"); with only_given, just the fields
+    the form sent, for an edit.
+    """
     values = {}
     for f in JOURNAL_FIELDS:
         if only_given and f.name not in params:
@@ -202,6 +213,7 @@ def _journal_values(params, only_given: bool) -> dict:
 
 
 def _entry(context, params):
+    """The journal entry the form names, or ActionError when it's gone."""
     entry = _need(context, "journal").get_entry(str(params.get("entry_id") or ""))
     if entry is None:
         raise ActionError("That entry isn't there anymore.")
@@ -209,17 +221,20 @@ def _entry(context, params):
 
 
 def _journal_add_describe(context, params) -> str:
+    """The sentence the approval card shows for adding a journal entry (Propose); raises ActionError when it can't be done."""
     v = _journal_values(params, False)
     return f"Add the journal entry \"{v['title']}\"" + (f" (tagged {', '.join(v['tags'])})" if v["tags"] else "")
 
 
 def _journal_add(context, params) -> str:
+    """Does adding the journal entry once it's approved, and says what happened."""
     v = _journal_values(params, False)
     _need(context, "journal").add_entry(**v)
     return f"Saved \"{v['title']}\" in your journal."
 
 
 def _journal_changes(context, params):
+    """The entry and the fields an edit would actually change, as (field, old, new)."""
     entry = _entry(context, params)
     found = [(k, getattr(entry, k), new) for k, new in _journal_values(params, True).items()
              if (getattr(entry, k) or "") != (new or "")]
@@ -227,6 +242,7 @@ def _journal_changes(context, params):
 
 
 def _journal_edit_describe(context, params) -> str:
+    """The sentence the approval card shows for editing an entry: which parts change ("Nothing to change" when none do) (Propose); raises ActionError when it can't be done."""
     entry, found = _journal_changes(context, params)
     if not found:
         raise ActionError("Nothing to change.")
@@ -235,16 +251,19 @@ def _journal_edit_describe(context, params) -> str:
 
 
 def _journal_edit(context, params) -> str:
+    """Does the edit, writing only the changed fields once it's approved, and says what happened."""
     entry, found = _journal_changes(context, params)
     context.journal.update_entry(entry.entry_id, **{k: new for k, _o, new in found})
     return f"\"{entry.title}\" is updated."
 
 
 def _journal_delete_describe(context, params) -> str:
+    """The sentence the approval card shows for deleting an entry (Propose); raises ActionError when it can't be done."""
     return f"Delete the journal entry \"{_entry(context, params).title}\". Undo brings it back."
 
 
 def _journal_delete(context, params) -> str:
+    """Does deleting the entry (undo brings it back) once it's approved, and says what happened."""
     entry = _entry(context, params)
     context.journal.delete_entry(entry.entry_id)
     return f"Deleted \"{entry.title}\"."
@@ -254,6 +273,10 @@ def _journal_delete(context, params) -> str:
 
 
 def _adjuster(key: str, store: str, getter: str, adjust: str, attr: str, unit_attr: str = "", whole: bool = False):
+    """Builds the describe/execute pair for an `X.adjust` kind (component, material, product): add or take a delta from
+    the item's count, showing the before and after. whole=True insists on whole numbers (parts); a zero change is
+    refused. One builder so the three adjust kinds behave the same.
+    """
     def item(context, params):
         found = getattr(_need(context, store), getter)(str(params.get(f"{key}_id") or ""))
         if found is None:
@@ -286,6 +309,7 @@ def _adjuster(key: str, store: str, getter: str, adjust: str, attr: str, unit_at
 
 
 def _job(context, params):
+    """The job the form names, or ActionError when it's gone."""
     job = _need(context, "jobs").get_job(str(params.get("job_id") or ""))
     if job is None:
         raise ActionError("That job isn't there anymore.")
@@ -293,6 +317,7 @@ def _job(context, params):
 
 
 def _job_use_describe(context, params) -> str:
+    """The sentence the approval card shows for `job.use`: the material a job used and the shelf count before and after (Propose); raises ActionError when it can't be done."""
     job = _job(context, params)
     material = _need(context, "materials").get_material(str(params.get("material_id") or ""))
     if material is None:
@@ -303,6 +328,7 @@ def _job_use_describe(context, params) -> str:
 
 
 def _job_use(context, params) -> str:
+    """Does `job.use`, taking the material off the shelf once it's approved, and says what happened."""
     job = _job(context, params)
     qty = _number(params, "quantity", "How much", allow_negative=False)
     _call(context.jobs.consume_material, job.job_id, str(params.get("material_id")), qty)
@@ -310,6 +336,7 @@ def _job_use(context, params) -> str:
 
 
 def _job_make_describe(context, params) -> str:
+    """The sentence the approval card shows for `job.make`: what a job made and the stock before and after (Propose); raises ActionError when it can't be done."""
     job = _job(context, params)
     product = _need(context, "products").get_product(str(params.get("product_id") or ""))
     if product is None:
@@ -319,6 +346,7 @@ def _job_make_describe(context, params) -> str:
 
 
 def _job_make(context, params) -> str:
+    """Does `job.make`, adding the product to stock once it's approved, and says what happened."""
     job = _job(context, params)
     qty = _number(params, "quantity", "How many", allow_negative=False)
     _call(context.jobs.produce_product, job.job_id, str(params.get("product_id")), qty)
@@ -329,6 +357,7 @@ def _job_make(context, params) -> str:
 
 
 def _money_record_describe(record: Record):
+    """Builds the describe for adding a shop money record (sale or cost): its amount and what it was for."""
     def describe(context, params) -> str:
         values = {f.name: parse(f, params.get(f.name)) for f in record.fields}
         what = values.get("description") or values.get("category") or record.noun
@@ -337,6 +366,7 @@ def _money_record_describe(record: Record):
 
 
 def _money_record_add(record: Record, method: str):
+    """Builds the execute for adding a shop money record through the ledger method named."""
     def execute(context, params) -> str:
         values = {f.name: parse(f, params.get(f.name)) for f in record.fields}
         _call(getattr(_need(context, "ledger"), method), **values)
@@ -345,6 +375,7 @@ def _money_record_add(record: Record, method: str):
 
 
 def _sell_describe(context, params) -> str:
+    """The sentence the approval card shows for `product.sell`: how many, the total paid and the stock before and after (Propose); raises ActionError when it can't be done."""
     product = get(context, RECORDS["product"], params)
     qty = _number(params, "quantity", "How many", allow_negative=False)
     amount = parse(Field("amount", "Total paid", "money", True), params.get("amount"))
@@ -352,6 +383,7 @@ def _sell_describe(context, params) -> str:
 
 
 def _sell(context, params) -> str:
+    """Does `product.sell`: records the sale in the ledger, which takes it out of stock once it's approved, and says what happened."""
     product = get(context, RECORDS["product"], params)
     qty = _number(params, "quantity", "How many", allow_negative=False)
     amount = parse(Field("amount", "Total paid", "money", True), params.get("amount"))
@@ -362,6 +394,7 @@ def _sell(context, params) -> str:
 
 
 def _ledger_delete(record: Record, getter: str, method: str):
+    """Builds the describe/execute pair for deleting a sale or a shop cost from the ledger."""
     def item(context, params):
         found = getattr(_need(context, "ledger"), getter)(str(params.get("entry_id") or ""))
         if found is None:
@@ -384,6 +417,7 @@ def _ledger_delete(record: Record, getter: str, method: str):
 
 
 def _expedition_of(context, params):
+    """The expedition a new trip belongs to, or ActionError asking for one."""
     expedition = _need(context, "expeditions").get_expedition(str(params.get("expedition_id") or ""))
     if expedition is None:
         raise ActionError("Pick the expedition this trip belongs to.")
@@ -391,10 +425,12 @@ def _expedition_of(context, params):
 
 
 def _trip_values(params, only_given: bool) -> dict:
+    """The trip's fields read from the form (only the ones sent, with only_given)."""
     return {f.name: parse(f, params.get(f.name)) for f in TRIP.fields if not only_given or f.name in params}
 
 
 def _trip_add_describe(context, params) -> str:
+    """The sentence the approval card shows for `trip.add`: the trip, its expedition, activity and start (Propose); raises ActionError when it can't be done."""
     expedition = _expedition_of(context, params)
     v = _trip_values(params, False)
     bits = [v["activity_type"].lower() if v["activity_type"] else "", f"from {show(TRIP.fields[2], v['start_date'])}" if v["start_date"] else ""]
@@ -402,6 +438,7 @@ def _trip_add_describe(context, params) -> str:
 
 
 def _trip_add(context, params) -> str:
+    """Does `trip.add` once it's approved, and says what happened."""
     expedition = _expedition_of(context, params)
     v = _trip_values(params, False)
     _call(_need(context, "trips").add_trip, expedition.expedition_id, **v)
@@ -409,10 +446,12 @@ def _trip_add(context, params) -> str:
 
 
 def _trip(context, params):
+    """The trip the form names (record_actions.get raises when it's gone)."""
     return get(context, TRIP, params)
 
 
 def _trip_status_describe(context, params) -> str:
+    """The sentence the approval card shows for `trip.status`: Start, Finish or move back to planned (the same status is refused) (Propose); raises ActionError when it can't be done."""
     trip = _trip(context, params)
     new = str(params.get("status") or "")
     if new not in TRIP_STATUSES:
@@ -424,6 +463,7 @@ def _trip_status_describe(context, params) -> str:
 
 
 def _trip_status(context, params) -> str:
+    """Does `trip.status` once it's approved, and says what happened."""
     trip = _trip(context, params)
     new = str(params.get("status"))
     context.trips.update_trip(trip.trip_id, status=new)
@@ -431,6 +471,7 @@ def _trip_status(context, params) -> str:
 
 
 def _gear_index(trip, params) -> int:
+    """Which packing-list item the form means, by its index, or ActionError when it's not on the list."""
     try:
         index = int(params.get("index"))
     except (TypeError, ValueError):
@@ -441,6 +482,7 @@ def _gear_index(trip, params) -> int:
 
 
 def _gear_add_describe(context, params) -> str:
+    """The sentence the approval card shows for `gear.add` (Propose); raises ActionError when it can't be done."""
     trip = _trip(context, params)
     label = str(params.get("label") or "").strip()
     if not label:
@@ -449,6 +491,7 @@ def _gear_add_describe(context, params) -> str:
 
 
 def _gear_add(context, params) -> str:
+    """Does `gear.add`, putting the item on the trip's packing list once it's approved, and says what happened."""
     trip = _trip(context, params)
     label = str(params.get("label") or "").strip()
     context.trips.add_gear_item(trip.trip_id, label)
@@ -456,12 +499,14 @@ def _gear_add(context, params) -> str:
 
 
 def _gear_toggle_describe(context, params) -> str:
+    """The sentence the approval card shows for `gear.toggle`: Pack or Unpack the item (Propose); raises ActionError when it can't be done."""
     trip = _trip(context, params)
     item = trip.gear[_gear_index(trip, params)]
     return f"{'Unpack' if item.packed else 'Pack'} {item.label}"
 
 
 def _gear_toggle(context, params) -> str:
+    """Does `gear.toggle` once it's approved, and says what happened."""
     trip = _trip(context, params)
     index = _gear_index(trip, params)
     after = context.trips.toggle_gear_packed(trip.trip_id, index)
@@ -470,11 +515,13 @@ def _gear_toggle(context, params) -> str:
 
 
 def _gear_remove_describe(context, params) -> str:
+    """The sentence the approval card shows for `gear.remove` (Propose); raises ActionError when it can't be done."""
     trip = _trip(context, params)
     return f"Take {trip.gear[_gear_index(trip, params)].label} off the list"
 
 
 def _gear_remove(context, params) -> str:
+    """Does `gear.remove` once it's approved, and says what happened."""
     trip = _trip(context, params)
     index = _gear_index(trip, params)
     label = trip.gear[index].label
@@ -486,6 +533,7 @@ def _gear_remove(context, params) -> str:
 
 
 def _playlist(context, params):
+    """The playlist the form names, or ActionError when it's gone."""
     playlist = _need(context, "music").get_playlist(str(params.get("playlist_id") or ""))
     if playlist is None:
         raise ActionError("That playlist isn't there anymore.")
@@ -493,6 +541,7 @@ def _playlist(context, params):
 
 
 def _track(context, params):
+    """The song the form names, or ActionError when it's no longer in the library."""
     track = _need(context, "music").get_track(str(params.get("track_id") or ""))
     if track is None:
         raise ActionError("That song isn't in the library anymore.")
@@ -500,6 +549,7 @@ def _track(context, params):
 
 
 def _name(params) -> str:
+    """The name the form gives, or ActionError asking for one."""
     name = str(params.get("name") or "").strip()
     if not name:
         raise ActionError("Give it a name.")
@@ -507,24 +557,28 @@ def _name(params) -> str:
 
 
 def _playlist_add(context, params) -> str:
+    """Does `playlist.add`, making the playlist once it's approved, and says what happened."""
     name = _name(params)
     _need(context, "music").create_playlist(name)
     return f"Made the playlist {name}."
 
 
 def _playlist_rename(context, params) -> str:
+    """Does `playlist.rename` once it's approved, and says what happened."""
     playlist, name = _playlist(context, params), _name(params)
     context.music.rename_playlist(playlist.playlist_id, name)
     return f"Renamed to {name}."
 
 
 def _playlist_delete(context, params) -> str:
+    """Does `playlist.delete` (the songs stay in the library) once it's approved, and says what happened."""
     playlist = _playlist(context, params)
     context.music.delete_playlist(playlist.playlist_id)
     return f"Deleted the playlist {playlist.name}. The songs stay in your library."
 
 
 def _playlist_add_track_describe(context, params) -> str:
+    """The sentence the approval card shows for `playlist.add_track` (a song already on it is refused) (Propose); raises ActionError when it can't be done."""
     playlist, track = _playlist(context, params), _track(context, params)
     if track.track_id in playlist.track_ids:
         raise ActionError(f"{track.title} is already on {playlist.name}.")
@@ -532,6 +586,7 @@ def _playlist_add_track_describe(context, params) -> str:
 
 
 def _playlist_add_track(context, params) -> str:
+    """Does `playlist.add_track`, checking again first once it's approved, and says what happened."""
     _playlist_add_track_describe(context, params)
     playlist, track = _playlist(context, params), _track(context, params)
     context.music.add_track_to_playlist(playlist.playlist_id, track.track_id)
@@ -539,12 +594,16 @@ def _playlist_add_track(context, params) -> str:
 
 
 def _playlist_remove_track(context, params) -> str:
+    """Does `playlist.remove_track` once it's approved, and says what happened."""
     playlist, track = _playlist(context, params), _track(context, params)
     context.music.remove_track_from_playlist(playlist.playlist_id, track.track_id)
     return f"Took {track.title} off {playlist.name}."
 
 
 def _scan(context, params) -> str:
+    """Does `music.scan`: rescans the music folder and counts new, updated and gone songs (or says the folder is
+    missing) once it's approved, and says what happened.
+    """
     result = _need(context, "music").scan_library()
     if result.root_missing:
         return f"MIA couldn't find the music folder ({context.music.root_path}). Set it in Settings."
@@ -555,18 +614,21 @@ def _scan(context, params) -> str:
 
 
 def _myfiles(context):
+    """The person's My Files area (core/my_files.py), which keeps every path inside it."""
     from core.my_files import MyFiles
 
     return MyFiles.for_context(context)
 
 
 def _folder_describe(context, params) -> str:
+    """The sentence the approval card shows for `myfile.folder` (Propose); raises ActionError when it can't be done."""
     name = _name(params)
     where = str(params.get("path") or "")
     return f"Make the folder {name}" + (f" in {where}" if where else "")
 
 
 def _folder(context, params) -> str:
+    """Does `myfile.folder`, making the folder (a path outside My Files is refused) once it's approved, and says what happened."""
     try:
         made = _myfiles(context).make_folder(str(params.get("path") or ""), _name(params))
     except ValueError as problem:
@@ -575,10 +637,12 @@ def _folder(context, params) -> str:
 
 
 def _rename_describe(context, params) -> str:
+    """The sentence the approval card shows for `myfile.rename` (Propose); raises ActionError when it can't be done."""
     return f"Rename {str(params.get('path') or '')} to {_name(params)}"
 
 
 def _rename(context, params) -> str:
+    """Does `myfile.rename` once it's approved, and says what happened."""
     try:
         _myfiles(context).rename(str(params.get("path") or ""), _name(params))
     except ValueError as problem:
@@ -587,6 +651,7 @@ def _rename(context, params) -> str:
 
 
 def _delete_describe(context, params) -> str:
+    """The sentence the approval card shows for `myfile.delete`, saying whether it's a whole folder, and that it can't be undone (Propose); raises ActionError when it can't be done."""
     path = str(params.get("path") or "")
     try:
         kind = "folder and everything in it" if _myfiles(context).is_folder(path) else "file"
@@ -596,6 +661,7 @@ def _delete_describe(context, params) -> str:
 
 
 def _delete(context, params) -> str:
+    """Does `myfile.delete` once it's approved, and says what happened."""
     try:
         _myfiles(context).delete(str(params.get("path") or ""))
     except ValueError as problem:
@@ -607,6 +673,7 @@ def _delete(context, params) -> str:
 
 
 def _media_describe(context, params) -> str:
+    """The sentence the approval card shows for deleting a photo or file from an expedition (it can't be undone) (Propose); raises ActionError when it can't be done."""
     from core.expedition_media import path_of
 
     try:
@@ -617,6 +684,7 @@ def _media_describe(context, params) -> str:
 
 
 def _media_delete(context, params) -> str:
+    """Does deleting the expedition's photo or file (core/expedition_media.py) once it's approved, and says what happened."""
     from core.expedition_media import delete
 
     try:
@@ -626,6 +694,7 @@ def _media_delete(context, params) -> str:
 
 
 def _song_describe(context, params) -> str:
+    """The sentence the approval card shows for deleting a song; only songs uploaded to MIA, never ones from the person's own music folder (Propose); raises ActionError when it can't be done."""
     track = _track(context, params)
     if not context.music.uploaded(track):
         raise ActionError(f"{track.title} is from your music folder; MIA only deletes songs you uploaded to her.")
@@ -633,6 +702,7 @@ def _song_describe(context, params) -> str:
 
 
 def _song_delete(context, params) -> str:
+    """Does deleting the uploaded song's file and its library entry, checking again first once it's approved, and says what happened."""
     from pathlib import Path
 
     _song_describe(context, params)
@@ -646,11 +716,13 @@ def _song_delete(context, params) -> str:
 
 
 def _caught_describe(context, params) -> str:
+    """The sentence the approval card shows for "caught up with" a person (Propose); raises ActionError when it can't be done."""
     person = get(context, RECORDS["person"], params)
     return f"Caught up with {person.name} today"
 
 
 def _caught(context, params) -> str:
+    """Does "caught up": sets the person's last contact to today and records it in the life-event history once it's approved, and says what happened."""
     from datetime import date as _date
 
     from core import life_events
@@ -663,6 +735,7 @@ def _caught(context, params) -> str:
 
 
 def _memory(context, params):
+    """The memory MIA keeps that the form names, or ActionError when it's gone."""
     store = getattr(context, "user_memories", None)
     memory = store.get_memory(str(params.get("memory_id") or "")) if store is not None else None
     if memory is None:
@@ -671,6 +744,7 @@ def _memory(context, params):
 
 
 def _memory_fix_describe(context, params) -> str:
+    """The sentence the approval card shows for correcting a memory to the new text (Propose); raises ActionError when it can't be done."""
     text = str(params.get("text") or "").strip()
     if not text:
         raise ActionError("Say what MIA should remember instead.")
@@ -678,12 +752,14 @@ def _memory_fix_describe(context, params) -> str:
 
 
 def _memory_fix(context, params) -> str:
+    """Does the correction once it's approved, and says what happened."""
     memory = _memory(context, params)
     context.user_memories.update_memory(memory.memory_id, str(params["text"]))
     return "Fixed. I'll remember it that way."
 
 
 def _memory_add_describe(context, params) -> str:
+    """The sentence the approval card shows for a new memory (Propose); raises ActionError when it can't be done."""
     text = str(params.get("text") or "").strip()
     if not text:
         raise ActionError("Say what MIA should remember.")
@@ -691,21 +767,28 @@ def _memory_add_describe(context, params) -> str:
 
 
 def _memory_add(context, params) -> str:
+    """Does adding the memory (one MIA already has is said so, not repeated) once it's approved, and says what happened."""
     made = _need(context, "user_memories").add_memory(str(params["text"]), str(params.get("category") or "Other"))
     return "I'll remember that." if made is not None else "I already remember that."
 
 
 def _memory_forget(context, params) -> str:
+    """Does forgetting the memory once it's approved, and says what happened."""
     memory = _memory(context, params)
     context.user_memories.delete_memory(memory.memory_id)
     return "Forgotten."
 
 
 def _say(text: str):
+    """A describe that always says the same text."""
     return lambda context, params: text
 
 
 def _register() -> None:
+    """Adds every action kind this module defines to ACTION_TYPES: the record kinds from the shared table
+    (core/record_actions.py), the three adjust kinds, and the hand-written ones above. Runs once, when
+    this module is imported (core/actions.py imports it).
+    """
     kinds = []
     for record in RECORDS.values():
         kinds += record_kinds(record)
