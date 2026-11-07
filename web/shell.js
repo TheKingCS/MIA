@@ -6,7 +6,9 @@
  *   - the sidebar: the person's own apps from the engine (MIA.shell(): child-safe,
  *     tucked-away apps hidden), the current page highlighted, level and XP at the
  *     bottom, and how many apps are still only in the PC app;
- *   - MIA, everywhere: the orb button opens a Talk panel (MIA.talk);
+ *   - MIA, everywhere: the orb button opens a Talk panel (MIA.talk), typed or
+ *     spoken: its mic records here and sends MIA.voice, and her answer is said
+ *     back (DEC-0125: full use by voice on every device, the PC included);
  *   - MIAShell.act(action): the one way a screen changes anything —
  *     propose → the engine's sentence in a confirm → approve → undo toast;
  *   - where you were: the scroll, an open Talk and its half-typed message,
@@ -310,10 +312,115 @@
   }
 
   // ---------------------------------------------------------------- MIA, everywhere
+  // Speaking to her (DEC-0125): the browser records, and it's turned into the mono 16 kHz 16-bit WAV her voice
+  // path expects (/api/voice/turn). Shared by Talk and the Assistant page.
+  function wav(samples, rate) {
+    const buffer = new ArrayBuffer(44 + samples.length * 2);
+    const v = new DataView(buffer);
+    const str = (o, s) => [...s].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+    str(0, "RIFF"); v.setUint32(4, 36 + samples.length * 2, true); str(8, "WAVE"); str(12, "fmt ");
+    v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, rate, true);
+    v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); str(36, "data");
+    v.setUint32(40, samples.length * 2, true);
+    samples.forEach((x, i) => v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, x)) * 0x7fff, true));
+    return new Blob([buffer], { type: "audio/wav" });
+  }
+  async function toWav(blob) {
+    const ctx = new AudioContext();
+    const audio = await ctx.decodeAudioData(await blob.arrayBuffer());
+    ctx.close();
+    const rate = 16000;
+    const offline = new OfflineAudioContext(1, Math.ceil(audio.duration * rate), rate);
+    const source = offline.createBufferSource();
+    source.buffer = audio;
+    source.connect(offline.destination);
+    source.start();
+    return wav((await offline.startRendering()).getChannelData(0), rate);
+  }
+
+  /** A recorder: start() asks for the microphone and records; stop() resolves to the WAV. Throws a sentence when
+   * this browser can't record or the microphone isn't allowed. */
+  function voiceRecorder() {
+    let recorder = null, stream = null, chunks = [];
+    return {
+      get recording() { return !!recorder && recorder.state === "recording"; },
+      async start() {
+        if (!navigator.mediaDevices || !window.MediaRecorder) {
+          throw new Error("This browser can't record here. Voice works in MIA's phone app and on the PC.");
+        }
+        try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+        catch (e) {
+          throw new Error(window.isSecureContext ? "MIA needs permission to use the microphone."
+            : "The browser only allows the microphone on a secure address. Voice works in MIA's phone app and on the PC.");
+        }
+        chunks = [];
+        recorder = new MediaRecorder(stream);
+        recorder.ondataavailable = (e) => chunks.push(e.data);
+        recorder.start();
+      },
+      stop() {
+        return new Promise((resolve, reject) => {
+          if (!recorder) { reject(new Error("Not recording.")); return; }
+          recorder.onstop = async () => {
+            stream.getTracks().forEach((t) => t.stop());
+            recorder = null;
+            try { resolve(await toWav(new Blob(chunks))); } catch (e) { reject(e); }
+          };
+          recorder.stop();
+        });
+      },
+    };
+  }
+
+  /** Her spoken reply, when her computer has a voice. */
+  function playReply(turn) {
+    if (turn && turn.audio_wav_base64) new Audio("data:audio/wav;base64," + turn.audio_wav_base64).play().catch(() => {});
+  }
+
   function mountTalk() {
     if ($("#mia-orb")) return;
     const log = el("div", { class: "talk-log", id: "talk-log", "aria-live": "polite" });
     const input = el("input", { id: "talk-input", placeholder: "Talk to MIA…", autocomplete: "off", "aria-label": "Message MIA" });
+    // One turn, typed or spoken: her reply in the log, what she used, which brain answered, and 👍/👎.
+    async function answer(asked, run) {
+      const thinking = el("p", { class: "bubble mia thinking" }, "…");
+      log.append(thinking);
+      log.scrollTop = log.scrollHeight;
+      try {
+        const turn = await run();
+        if (turn.transcript) thinking.before(el("p", { class: "bubble me" }, turn.transcript));  // what she heard
+        thinking.textContent = turn.reply_text || "Done.";
+        playReply(turn);
+        if (turn.open) setTimeout(() => { location.href = turn.open; }, 900);  // e.g. show-off mode's tour
+        const used = usedList(turn.used);
+        if (used) thinking.after(used);
+        // Which brain answered (DEC-0022): the home computer's model or this device's.
+        if (turn.level) thinking.append(el("small", { class: "talk-level", title: "Answered by the model on " + turn.level.toLowerCase() }, turn.level));
+        thinking.append(notRight(asked || turn.transcript || "", turn.reply_text));
+        refresh();
+      } catch (err) {
+        thinking.textContent = err.message;
+      }
+      thinking.classList.remove("thinking");
+      log.scrollTop = log.scrollHeight;
+    }
+    // The mic: tap to talk, tap again when done (DEC-0125).
+    const recorder = voiceRecorder();
+    const mic = el("button", { type: "button", class: "btn btn-ghost chat-mic talk-mic", "aria-label": "Speak to MIA",
+      title: "Speak to MIA (tap again when you're done)", onclick: async () => {
+        if (recorder.recording) {
+          mic.classList.remove("listening");
+          mic.setAttribute("aria-label", "Speak to MIA");
+          let audio;
+          try { audio = await recorder.stop(); } catch (e) { say(e.message); return; }
+          await answer("", () => MIA.voice(audio));
+          return;
+        }
+        try { await recorder.start(); } catch (e) { say(e.message); return; }
+        mic.classList.add("listening");
+        mic.setAttribute("aria-label", "Done speaking");
+      } });
+    mic.append(icon("mic", "🎙"));
     const panel = el("aside", { class: "talk-panel glass glow", id: "talk-panel", hidden: true, "aria-label": "Talk to MIA" },
       el("div", { class: "talk-head" }, el("span", { class: "mia-line" }, el("span", { class: "mia-dot" }), "MIA"),
         el("span", { class: "row-buttons" },
@@ -328,25 +435,8 @@
         if (!text) return;
         input.value = "";
         log.append(el("p", { class: "bubble me" }, text));
-        const thinking = el("p", { class: "bubble mia thinking" }, "…");
-        log.append(thinking);
-        log.scrollTop = log.scrollHeight;
-        try {
-          const turn = await MIA.talk(text);
-          thinking.textContent = turn.reply_text || "Done.";
-          if (turn.open) setTimeout(() => { location.href = turn.open; }, 900);  // e.g. show-off mode's tour
-          const used = usedList(turn.used);
-          if (used) thinking.after(used);
-          // Which brain answered (DEC-0022): the home computer's model or this device's.
-          if (turn.level) thinking.append(el("small", { class: "talk-level", title: "Answered by the model on " + turn.level.toLowerCase() }, turn.level));
-          thinking.append(notRight(text, turn.reply_text));
-          refresh();
-        } catch (err) {
-          thinking.textContent = err.message;
-        }
-        thinking.classList.remove("thinking");
-        log.scrollTop = log.scrollHeight;
-      } }, input, el("button", { class: "btn btn-amber", type: "submit" }, "Send")));
+        await answer(text, () => MIA.talk(text));
+      } }, input, mic, el("button", { class: "btn btn-amber", type: "submit" }, "Send")));
     const orb = el("button", { type: "button", id: "mia-orb", class: "mia-orb-button", "aria-label": "Talk to MIA",
       onclick: () => toggleTalk() }, el("span", { class: "mia-orb-core", "aria-hidden": "true" }));
     document.body.append(panel, orb);
@@ -610,7 +700,7 @@
   }
 
   window.MIAShell = { start, act, say, el, refresh, frame, form, levelCard, conditionBar, buffChips, showDraft, confirm: confirmBox, talk: toggleTalk,
-    notRight };
+    notRight, voiceRecorder, playReply };
 
   // <script src="shell.js" data-frame="garage">: frame an existing page as soon
   // as someone is signed in (now, or when its own sign-in form succeeds).

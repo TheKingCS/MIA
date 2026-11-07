@@ -8,7 +8,16 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 
 ## Zac
 
+### When you're ready
+- [ ] **Fill MIA with your life (Zac, 2026-11-07, "later"):** a guided session at your PC, app by app, so she's
+      as helpful as she can be. Claude asks before reading any folder; everything goes in through MIA's own actions
+      (undoable, kept in your profile, never committed). Best first: Plaid for Money, then Garage, Calendar,
+      Workout, Kitchen, Chickens, Freedom, People. Say "let's fill in MIA" to start.
+
 ### Try it
+- [ ] **Talk to MIA on the PC (2026-11-07):** restart MIA, open Talk (the orb, bottom right), press the mic, say
+      something, press it again. The first time, nothing should ask about the microphone (MIA's own page is allowed);
+      Windows may ask once. Tell Claude if she didn't hear you.
 - [ ] **The desktop opens on the web (DEC-0124):** close both copies of MIA that are running and start it once. It
       should open straight onto MIA's web screens, full size. Ctrl+Shift+C (or the header's "Main screen") switches to
       the classic screens and back; Power, Toolbox, The Lab and Field Kit open from the Apps page ("Open on this PC").
