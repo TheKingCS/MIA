@@ -56,13 +56,15 @@ def _guard(fn):
 
 @_guard
 def _action_browse(context, arguments: dict) -> str:
-    """Tool browse: opens an address or searches for words; says what the page is and how it begins."""
+    """Tool browse: opens an address or searches for words; says what the page is and how it begins. A search or an
+    address carrying words the person didn't say waits for their OK instead."""
     target = str(arguments.get("target") or arguments.get("url") or arguments.get("query") or "").strip()
     if not target:
         return "What should I open or search for?"
-    browser = _browser(context)
-    browser.open(target)
-    return browser.glance() + "\nSay \"read the page\" for all of it and what I can press."
+    result = _browser(context).go(target)  # a search or query she composed herself waits for the person's OK
+    if not result["done"]:
+        return result["said"]
+    return result["said"] + "\nSay \"read the page\" for all of it and what I can press."
 
 
 @_guard

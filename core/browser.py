@@ -33,7 +33,10 @@ the page as she goes and stopping at every commit.
   must stay on the thread that made them), and every call is handed to it.
   Tests use a fake driver.
 - `Browser`: one person's browser session: the page now, pending commits,
-  teaching.
+  teaching, and what the person said lately (`hear`): the only words she
+  types, chooses or searches for on her own (`authorized`, DEC-0122);
+  anything else waits for their OK with the text shown (`go` for opening
+  and searching, `do` for steps).
 - `Browsers` (`context.browsers`): one session per person, each with its
   own profile folder in their own data (so their site sign-ins are theirs).
 """
@@ -60,6 +63,8 @@ log = get_logger(__name__)
 SEARCH_URL = "https://duckduckgo.com/?q="  # a search when she's given words instead of an address
 MAX_CONTROLS = 150
 PENDING_MINUTES = 30  # a commit not approved by then is let go
+HEARD_MINUTES = 30  # the person's words she may type or search for on her own, from this long back
+HEARD_KEEP = 12  # and at most this many of their messages
 _URLISH = re.compile(r"^(https?://|www\.)|^[a-z0-9-]+(\.[a-z0-9-]+)+(:\d+)?(/|$)", re.I)
 
 
@@ -114,14 +119,18 @@ class Pending:
     routine: Optional[dict] = None  # {"id": routine id, "next": step index to carry on from}
 
     def summary(self) -> str:
-        """The sentence the person approves, made in code: what she'll do, on which site, and why it waits."""
+        """The sentence the person approves, made in code: what she'll do (the exact words she'd type or choose, the
+        address she'd open), on which site, and why it waits."""
         site = urlparse(self.page_url).netloc or self.page_title or "this page"
         if self.kind == "signin":
             return f"Sign in on {site} yourself in MIA's browser, then approve so she carries on"
+        if self.kind == "open":
+            return f"Open {self.text[:200]} in MIA's browser ({self.why})"
         name = (self.control.name if self.control else "") or "the control"
+        shown = self.text if len(self.text) <= 160 else self.text[:157] + "..."
         what = {"click": f"press \"{name}\"", "press": f"press Enter in \"{name}\"",
-                "select": f"choose \"{self.text}\" in \"{name}\"",
-                "type": f"type into \"{name}\""}.get(self.kind, f"{self.kind} \"{name}\"")
+                "select": f"choose \"{shown}\" in \"{name}\"",
+                "type": f"type \"{shown}\" into \"{name}\""}.get(self.kind, f"{self.kind} \"{name}\"")
         return f"On {site}, {what} ({self.why})"
 
 
@@ -425,7 +434,7 @@ class Browser:
     Made lazily: no Edge opens until she's asked to browse."""
 
     def __init__(self, context, profile_dir: Path, driver_factory: Optional[Callable[[Path], Driver]] = None) -> None:
-        """Keeps where her profile lives and how to make the driver; nothing opens yet."""
+        """Keeps where her profile lives and how to make the driver; nothing opens yet, and nothing has been heard."""
         self.context = context
         self.profile_dir = Path(profile_dir)
         self._factory = driver_factory or (lambda folder: EdgeDriver(folder))
@@ -434,6 +443,29 @@ class Browser:
         self.pending: dict[str, Pending] = {}
         self.teaching: Optional[dict] = None
         self.lock = threading.RLock()
+        # What the person said lately (Zac, 2026-11-07, review): the only words she may type or search for on her
+        # own. Anything else (words she composed, things she knows about them) waits for their OK, shown in full.
+        self.heard: list[tuple[float, str]] = []
+
+    # -------------------------------------------------------------- whose words
+
+    def hear(self, words: str) -> None:
+        """Keeps what the person just said to MIA (their message, each turn), for HEARD_MINUTES."""
+        words = " ".join((words or "").split())
+        if words:
+            self.heard = [h for h in self.heard if h[0] > time.time() - HEARD_MINUTES * 60][-(HEARD_KEEP - 1):]
+            self.heard.append((time.time(), words))
+
+    def authorized(self, text: str, routine: Optional[dict] = None) -> bool:
+        """Whether she may put these words into a page on her own: they're empty, or part of a task the person taught
+        her by doing it (its words are theirs), or every word of them is in what the person said in the last
+        HEARD_MINUTES."""
+        words = _words_of(text)
+        if not words or routine is not None:
+            return True
+        cutoff = time.time() - HEARD_MINUTES * 60
+        said = set().union(*[_words_of(h[1]) for h in self.heard if h[0] > cutoff] or [set()])
+        return words <= said
 
     # -------------------------------------------------------------- reading
 
@@ -448,8 +480,22 @@ class Browser:
         self.page = self._driver().snapshot()
         return self.page
 
+    def go(self, target: str, routine: Optional[dict] = None) -> dict:
+        """Opens an address, or searches for words, the way `do` does a step: at once when it carries nothing but
+        the person's own words (a plain address, or a search or query they said), else held for their OK with the
+        address shown. Returns {done, said, pending}."""
+        with self.lock:
+            url = address_for(target)
+            carries = urlparse(url).query if looks_like_address(target) else target
+            if not self.authorized(carries, routine):
+                pending = self._hold("open", None, url, Verdict(COMMIT, "those words didn't come from you"), routine)
+                return {"done": False, "pending": pending,
+                        "said": f"That needs your OK: {pending.summary()}. Say yes, or approve it on screen."}
+            self.open(url)
+            return {"done": True, "pending": None, "said": self.glance()}
+
     def open(self, target: str) -> Page:
-        """Opens an address, or searches for words; returns the page."""
+        """Opens an address, or searches for words; returns the page (no check: `go` is the one that asks)."""
         with self.lock:
             url = address_for(target)
             self._driver().open(url)
@@ -486,7 +532,8 @@ class Browser:
     def do(self, kind: str, which=None, text: str = "", routine: Optional[dict] = None) -> dict:
         """One step: click, type, select or press on a control (by number or name), or back. Sorted by
         classify(): done now when it's safe, refused when it's a secret, and waiting for the person (a Pending,
-        proposed for approval) when it commits. Returns {done, said, pending}."""
+        proposed for approval) when it commits, or when it would type or choose words the person didn't say
+        (DEC-0122). Returns {done, said, pending}."""
         with self.lock:
             if kind == "back":
                 self._driver().back()
@@ -500,6 +547,8 @@ class Browser:
             if control is None:
                 return {"done": False, "said": f"I can't find \"{which}\" on this page.", "pending": None}
             verdict = classify(kind, control)
+            if verdict.level == ACT and kind in ("type", "select") and not self.authorized(text, routine):
+                verdict = Verdict(COMMIT, "those words didn't come from you")
             if verdict.level == NEVER:
                 return {"done": False, "pending": None,
                         "said": f"I won't type into \"{control.name}\": {verdict.why}. You can do it in my window."}
@@ -562,12 +611,14 @@ class Browser:
 
     def perform_pending(self, pending_id: str) -> str:
         """The person approved a waiting step: it's done now (a sign-in just carries on), the routine it belongs to
-        continues. Returns what happened."""
+        continues; a held address is opened. Returns what happened."""
         with self.lock:
             pending = self.pending.pop(pending_id, None)
             if pending is None:
                 raise BrowserError("That step isn't waiting any more.")
-            if pending.kind != "signin":
+            if pending.kind == "open":
+                self.open(pending.text)
+            elif pending.kind != "signin":
                 page = self.refresh()
                 if page.url != pending.page_url:
                     raise BrowserError("The page changed since I asked, so I didn't press anything.")
@@ -672,3 +723,9 @@ def browser_for(context) -> Optional[Browser]:
     """The person's browser session, or None where MIA has no browser."""
     hub = getattr(context, "browsers", None)
     return hub.for_person(context) if hub is not None else None
+
+
+def _words_of(text: str) -> set:
+    """Pure logic. A text's words for comparing whose they are: lowercase letters and digits, anything else a
+    break."""
+    return set(re.findall(r"[a-z0-9]+", (text or "").lower()))

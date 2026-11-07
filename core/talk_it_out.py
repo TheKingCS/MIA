@@ -113,9 +113,18 @@ def pre_turn(context: AppContext, conversation: Conversation, prompt: str) -> Pr
     """Call BEFORE adding the user's message to the conversation, so the
     message itself is stored with the privacy its own words asked for. A
     plain yes is handled here first, in code: to the offer MIA just made,
-    or to the browser step she just asked about (DEC-0117)."""
+    or to the browser step she just asked about (DEC-0117). Her browser
+    hears the message first (not a private journal turn): the only words
+    it may type or search for on its own (DEC-0122)."""
     result = PreTurn()
     conversation.private_turn = _looks_like_journal_read(prompt)
+    # Her browser may type or search for only what the person said (DEC-0117, tightened 2026-11-07).
+    hub = getattr(context, "browsers", None)
+    if hub is not None and not conversation.private_turn:
+        try:
+            hub.for_person(context).hear(prompt)
+        except Exception:
+            log.exception("The browser couldn't hear this turn")
 
     # "Propose, you confirm": a yes to the offer MIA just made records it;
     # anything else lets the offer go.

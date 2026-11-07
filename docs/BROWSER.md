@@ -62,14 +62,24 @@ page tells her to press Buy, the commit check still holds.
 `browser_close`, `learn_browser_task`, `do_browser_task`,
 `list_browser_tasks` (`core/assistant_browser_actions.py`).
 
+## Only your words go out (DEC-0122)
+
+A page could try to talk the model into typing something MIA knows about
+you into a field or a search (a request that sends it to that site before
+any commit button). So she types, chooses or searches on her own only
+words that came from you: every word must be in what you said to her in
+the last 30 minutes (`Browser.hear`, fed each turn by
+`core/talk_it_out.pre_turn`, never a private journal turn), or be part of a
+task you taught her by doing it. Anything else (words she composed,
+something from her memory, a search you didn't word) waits for your OK
+with the exact text shown: "type "..." into "Search"", or "Open
+https://...". A plain address with no query passes; one carrying data
+after a `?` follows the same rule.
+
 ## Known limits
 
-- Typing in an ordinary field and searching are "act". So a page could, in
-  principle, talk the model into typing something she knows into a search
-  box (a GET request that sends it to that site). The local model, the
-  untrusted framing and the visible window make this unlikely, but it isn't
-  impossible. Tightening it (for example, typing only what the person said
-  this turn) is a choice for Zac.
+- The rule checks words, not meaning: "Feb 3" said and "02/03" typed is a
+  new word, so it asks. Better to ask than to guess.
 - She can open local-network addresses (a router's page, for example). She
   can't press anything that commits there without you.
 - A replay finds controls by label and role. A site that renames its

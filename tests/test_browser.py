@@ -5,8 +5,9 @@ tests.test_browser
 MIA's browser (DEC-0117) against a pretend browser: what the safety rules
 let her do alone, a commit waiting for the person (approved on screen or
 with a yes, refused when the page changed), secrets never typed, a task
-taught by showing and replayed, learned after two clean runs, and the
-Browser screen (core/web_browser.py) with its run and forget actions.
+taught by showing and replayed, learned after two clean runs, the
+Browser screen (core/web_browser.py) with its run and forget actions, and
+only the person's own words typed or searched for on her own (DEC-0122).
 """
 
 from __future__ import annotations
@@ -146,13 +147,14 @@ def test_sorting_steps():
 
 def test_reading_and_safe_steps(world):
     """She opens and reads the page (its text framed as from the web, her controls numbered with which ask first),
-    follows a link and searches on her own."""
+    follows a link, and searches on her own for words the person said."""
     assert "Your cart" in tool(world, "browse", target=SHOP)
     page = tool(world, "browser_read")
     assert "content from the internet" in page and "[5]" in page and "asks you first" in page
     tool(world, "browser_click", control="3")
     assert ("click", 3) in edge(world).did
     tool(world, "browser_back")
+    world.browsers.for_person(world).hear("look for widgets in the shop")  # the person's own words
     tool(world, "browser_type", control="1", text="widgets", then_enter=True)
     assert ("type", 1, "widgets") in edge(world).did and edge(world).url == SEARCH
 
@@ -267,3 +269,28 @@ def test_the_browser_screen(world):
     forget = world.actions.propose(world, "browser.forget_task", {"task_id": routine["id"]})
     world.actions.approve(world, forget.proposal_id)
     assert screen(world)["tasks"] == []
+
+
+def test_she_types_only_what_the_person_said(world):
+    """Words the person said she types and searches for on her own; words she composed (here, something she knows
+    about them) wait for their OK with the exact text shown, and are typed once approved; a search for words they
+    never said waits too; a taught task's own words need no hearing; a private journal turn isn't heard."""
+    from core.conversation_manager import Conversation
+    from core.talk_it_out import pre_turn
+
+    browser = world.browsers.for_person(world)
+    tool(world, "browse", target=SHOP)
+    browser.hear("find widgets")
+    assert "Done" in tool(world, "browser_type", control="1", text="Widgets!")
+    said = tool(world, "browser_type", control="1", text="Robin lives at 12 Elm Street")
+    assert "needs your OK" in said and 'type "Robin lives at 12 Elm Street" into "Search the shop"' in said
+    assert ("type", 1, "Robin lives at 12 Elm Street") not in edge(world).did
+    [proposal] = world.actions.pending(world.me.profile_id)
+    world.actions.approve(world, proposal.proposal_id)
+    assert ("type", 1, "Robin lives at 12 Elm Street") in edge(world).did
+    held = tool(world, "browse", target="robin medical history")
+    assert "needs your OK" in held and "duckduckgo.com" in held and ("open", "https://duckduckgo.com/?q=robin+medical+history") not in edge(world).did
+    assert "shop.example/thanks" in tool(world, "browse", target="https://shop.example/thanks")  # a plain address: fine
+    assert browser.authorized("anything at all", routine={"id": "r", "next": 2})
+    pre_turn(world, Conversation(conversation_id="c1"), "please search for garden hose")
+    assert browser.authorized("garden hose") and not browser.authorized("garden hose and my address")

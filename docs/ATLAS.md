@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1084 files, 244,930 lines; 1084 files describe themselves; 13,445 of 14,115 classes and functions are documented.
+1084 files, 245,025 lines; 1084 files describe themselves; 13,450 of 14,120 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-389 files, 113,633 lines; 6,003 of 6,092 classes and functions documented
+389 files, 113,701 lines; 6,007 of 6,096 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -668,7 +668,7 @@
 
 ## tests/: the test suite: what each part must do
 
-360 files, 65,754 lines; 5,207 of 5,788 classes and functions documented
+360 files, 65,781 lines; 5,208 of 5,789 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -703,7 +703,7 @@
 - `tests/test_benchmarks.py`: The weekly benchmarks (build plan step 5, core/benchmarks.py): graded by code against the run before, kept as grades only (never an answer), read by the answers.* loops. *(2 undocumented)*
 - `tests/test_boot_sound.py`: Unit tests for core.boot_sound — pure synthesis logic, no audio hardware/I/O involved (see that module's docstring for why real playback can't be verified in this dev sandbox). write_boot_sound_wav() is exercised via a real tmp_path file write/read round trip, same reasoning test_script_runner.py gi *(1 undocumented)*
 - `tests/test_boss_battles.py`: Boss battles (DEC-0028): every debt is a boss (max HP is the highest balance seen, payments are hits, interest heals it), and any mission can be made into one (its objectives are its HP). *(3 undocumented)*
-- `tests/test_browser.py`: MIA's browser (DEC-0117) against a pretend browser: what the safety rules let her do alone, a commit waiting for the person (approved on screen or with a yes, refused when the page changed), secrets never typed, a task taught by showing and replayed, learned after two clean runs, and the Browser scr
+- `tests/test_browser.py`: MIA's browser (DEC-0117) against a pretend browser: what the safety rules let her do alone, a commit waiting for the person (approved on screen or with a yes, refused when the page changed), secrets never typed, a task taught by showing and replayed, learned after two clean runs, the Browser screen 
 - `tests/test_budget_manager.py`: Unit tests for core.budget_manager. Isolates _DATA_DIR/_*_FILE into a tmp_path scratch area, same monkeypatch pattern as test_calendar_manager.py's isolated_paths, so these tests never touch real data/*.json. *(5 undocumented)*
 - `tests/test_budget_module.py`: Unit tests for modules.budget.module's pure row formatters — no Qt event loop needed, same shape as tests/test_maintenance_module.py. *(3 undocumented)*
 - `tests/test_budget_nudges.py`: Unit tests for core.budget_nudges — no Qt, no manager instances, same shape as tests/test_daily_occasions.py. *(2 undocumented)*

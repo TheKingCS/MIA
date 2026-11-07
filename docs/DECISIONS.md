@@ -1886,3 +1886,28 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   leaving later changes alone, and the receipt waits again. An undone automatic filing counts as correcting her
   (core/corrections.py). Amends DEC-0120's "nothing happens until filed" for emailed receipts.
 - Related: DEC-0120, DEC-0012 (actions), DEC-0094 (loops)
+
+### DEC-0122: MIA's browser types and searches only the person's own words
+- Status: APPROVED
+- Decided by: zac, 2026-11-07 (his review of DEC-0117: "ordinary text fields can potentially send information to a
+  website before a commit gate is reached. I'd tighten this so MIA only types information you've authorized for that
+  task")
+- Decision: on her own, MIA's browser types, chooses or searches only words the person said to her in the last 30
+  minutes (`core/browser.Browser.hear`, fed every turn, never a private journal turn) or words from a task they taught
+  her by doing it. Anything else, a search they didn't word, or an address carrying such words after a `?`, waits as
+  a `browser.commit` with the exact text shown. Closes the known limit in docs/BROWSER.md.
+- Related: DEC-0117
+
+### DEC-0123: One way to teach MIA anything: taught procedures
+- Status: PROPOSED
+- Proposed by: claude, 2026-11-07, from Zac's review ("Browser routines are now teachable, but they're not yet the
+  same thing as a universal skill system that can teach MIA workflows across desktop apps, phone features, and
+  other tools")
+- Proposal (`docs/PROCEDURES_PROPOSAL.md`): one engine for taught procedures: a trigger (asked, scheduled, or an
+  event), steps of any kind she can already do (her tools, action kinds, her browser, questions, steps only the
+  person can do; later phone features and desktop apps), each through the gate that already governs it, practised
+  with the person watching until two clean runs, then learned and allowed to run unattended. Taught by doing it
+  with her ("watch me"), by telling her, or by her offering after seeing a repeat. Browser routines and workflows
+  fold into it. Phases: engine and chat teaching; triggers; phone steps; desktop apps (its own decision); glasses.
+- Open: the direction, the name (Skills and Routines are taken), phase 1 first, which desktop apps matter.
+- Related: DEC-0092 (workflows), DEC-0112 (learning paths), DEC-0117, DEC-0121, DEC-0122
