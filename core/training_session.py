@@ -71,11 +71,16 @@ class Step:
 
     @property
     def complete(self) -> bool:
+        """Whether an exercise is finished: skipped, or all its sets done."""
         return self.skipped or len(self.done) >= max(1, self.sets)
 
 
 @dataclass
 class Session:
+    """One live workout: its title, when it started, its exercises (each prescribed, with what was done set by set),
+    which one it's on, its status (active, resting until a time, paused and how long in all, finished), and the
+    workout log it became.
+    """
     session_id: str
     title: str
     started_at: str
@@ -91,10 +96,12 @@ class Session:
 
 
 def _iso(now: datetime) -> str:
+    """A time as ISO text to the second."""
     return now.isoformat(timespec="seconds")
 
 
 def _at(text: str) -> Optional[datetime]:
+    """A datetime from ISO text, or None."""
     try:
         return datetime.fromisoformat(text) if text else None
     except ValueError:
@@ -120,6 +127,7 @@ def start(training: dict, now: datetime) -> Session:
 
 
 def current(s: Session) -> Optional[Step]:
+    """The exercise the session is on, or None once past the last."""
     return s.steps[s.index] if 0 <= s.index < len(s.steps) else None
 
 
@@ -168,6 +176,7 @@ def log_set(s: Session, now: datetime, reps: Optional[int] = None, seconds: Opti
 
 
 def skip_rest(s: Session, now: datetime) -> Session:
+    """Ends the rest now (recording how long they really rested) and moves on."""
     if s.status == RESTING:
         _record_rest(s, now)
         _advance(s)
@@ -184,6 +193,7 @@ def _record_rest(s: Session, now: datetime) -> None:
 
 
 def skip_exercise(s: Session, now: datetime) -> Session:
+    """Skips the exercise it's on (sets already done stay done) and moves to the next."""
     settle(s, now)
     step = current(s)
     if step is not None:
@@ -193,12 +203,16 @@ def skip_exercise(s: Session, now: datetime) -> Session:
 
 
 def pause(s: Session, now: datetime) -> Session:
+    """Pauses an active or resting session, remembering which it was."""
     if s.status in (ACTIVE, RESTING):
         s.paused_from, s.paused_at, s.status = s.status, _iso(now), PAUSED
     return s
 
 
 def resume(s: Session, now: datetime) -> Session:
+    """Resumes a paused session: the time away is added to the paused total, and a rest in progress waits by that
+    much too.
+    """
     began = _at(s.paused_at)
     if s.status == PAUSED and began is not None:
         gap = (now - began).total_seconds()
@@ -230,6 +244,7 @@ def elapsed(s: Session, now: datetime) -> float:
 
 
 def rest_left(s: Session, now: datetime) -> Optional[int]:
+    """Whole seconds of rest left (rounded up, so the countdown starts at the full rest), or None when not resting."""
     until = _at(s.rest_until)
     if s.status != RESTING or until is None:
         return None
@@ -237,6 +252,7 @@ def rest_left(s: Session, now: datetime) -> Optional[int]:
 
 
 def target_text(step: Step) -> str:
+    """An exercise's target in words: a hold's seconds, the reps, or "your best"."""
     if step.hold_seconds:
         return f"{step.hold_seconds} seconds"
     return f"{step.reps} reps" if step.reps else "your best"
@@ -393,12 +409,16 @@ class TrainingStore:
     """The person's one current session (a personal store)."""
 
     def __init__(self, context, data_dir: Optional[Path] = None) -> None:
+        """Points at the person's session file (data/ by default) and loads it."""
         self.context = context
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._file = self.data_dir / _FILE
         self._load()
 
     def _load(self) -> None:
+        """Reads the session in progress, keeping only fields it knows; an unreadable file is logged and means no
+        session.
+        """
         self.session: Optional[Session] = None
         try:
             raw = json.loads(self._file.read_text(encoding="utf-8")) if self._file.exists() else None
@@ -411,9 +431,11 @@ class TrainingStore:
                                       "steps": steps})
 
     def reload(self) -> None:
+        """Reads the file again (after undo restored it, or another surface changed it)."""
         self._load()
 
     def save(self) -> None:
+        """Writes the session atomically (every surface reads the same one)."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._file, json.dumps(asdict(self.session) if self.session else None, indent=1),
                           encoding="utf-8")
@@ -423,6 +445,7 @@ class TrainingStore:
         return self.session if self.session is not None and self.session.status != FINISHED else None
 
     def begin(self, training: dict, now: Optional[datetime] = None) -> Session:
+        """Starts today's training as a live session (ValueError when one is already going)."""
         if self.live() is not None:
             raise ValueError("A workout is already going. Say \"I'm done\" to finish it first.")
         self.session = start(training, now or datetime.now())
@@ -452,6 +475,9 @@ class TrainingStore:
         return s.workout_session_id or None
 
     def _sets_logged(self, s: Session) -> list[dict]:
+        """The sets done, in the workout log's shape: each with its exercise (found or made by name), reps or seconds,
+        weight, target, how it was counted, and how long they rested.
+        """
         workout = getattr(self.context, "workout", None)
         out = []
         for st in s.steps:
