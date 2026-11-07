@@ -35,7 +35,7 @@ they're built on.*
 2. ✅ **Sharing on the local network** (`map.tak_share`, 2026-11-07, built as below): CoT over UDP multicast (SA's usual address, 239.2.3.1:6969 (verify)), so a
    TAK app on the same Wi-Fi sees MIA's places live. A person's own places only, by an action they approve, and
    off again by one word.
-3. **Vector offline maps** (PMTiles) for the property and trails, beside the USGS topo tiles.
+3. **Vector offline maps** (PMTiles) for the property and trails, beside the USGS topo tiles. **Built 2026-11-06**: `python -m tools.offline_map cut <name> --around-waypoints <km>` (or `--bbox`) cuts an area of OpenStreetMap from the Protomaps daily build into `data/maps/`; the web's Maps page draws it with MapLibre from `web/vendor/`, with place names and road shields, offline. Next: cutting an area from the page, the phone carrying a copy for when it's away from the PC.
 4. **Meshtastic** (needs hardware, see section 4): MIA on the PC talks to a radio over USB through the
    `meshtastic` Python package (verify its current API): messages in and out, members' positions on the map, a
    "where is everyone?" answer, and MIA's alerts reaching a radio when the phones have no signal.

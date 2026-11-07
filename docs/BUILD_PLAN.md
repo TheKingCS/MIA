@@ -156,8 +156,8 @@ first. Each is a step below.
     voice, and MIA's places as a TAK data package of Cursor on Target events and KML (`core/tak.py`,
     `python -m tools.tak_export`) for ATAK-CIV; tracks from GPX (`core/gps_tracks.py`, `python -m tools.tracks add`;
     distance, climb, moving time, grids; lines in the TAK package; "how far was my last hike?"). Next: CoT on the
-    local network by approval (built 2026-11-07: `map.tak_share`, one hop, never a child's), vector
-    offline maps (PMTiles), Meshtastic mesh radios (needs hardware), the shared picture of people by consent and
+    local network by approval (built 2026-11-07: `map.tak_share`, one hop, never a child's), vector offline maps (built 2026-11-06: OpenStreetMap areas cut into `data/maps/`, drawn by MapLibre on the web, labels included),
+    Meshtastic mesh radios (needs hardware), the shared picture of people by consent and
     sensors.
 15. 🔨 **Sight** (`core/sight.py`, 2026-11-06): a photo and a question, answered on this PC by a local vision model
     (Qwen2.5-VL 7B in Ollama, `sight.model`): what is this, read this label (Tesseract first, its words exact),
