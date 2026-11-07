@@ -308,9 +308,22 @@ def workout_page(context, today: Optional[date] = None) -> dict:
 # ------------------------------------------------------------------ Real Estate
 
 
+def property_badge(status: str, rent: float, income_month: float) -> dict:
+    """Pure logic. The word on a property's card and its tone (the design canvas's Real Estate, DEC-0113): a rented
+    property with its rent set and no rent recorded yet this month says "Rent Due" (amber: it needs you);
+    otherwise its status, green when it's rented or lived in, amber when it's waiting on something (for rent, for
+    sale, being renovated, vacant), plain for the rest. A vacancy is never shown as an error."""
+    if status == "Rented" and rent and income_month <= 0:
+        return {"text": "Rent Due", "tone": "attention"}
+    tone = ("ok" if status in ("Rented", "Owner Occupied") else
+            "attention" if status in ("Vacant", "For Rent", "For Sale", "Under Renovation") else "")
+    return {"text": status or "", "tone": tone}
+
+
 def estate_page(context, today: Optional[date] = None) -> dict:
     """The data the Real Estate screen shows, assembled here (the web only draws it): each property with its value, loan and payment, this month's income and
-    expenses and the year's net operating income (with a budget), its upkeep tasks, and the missions linked to it.
+    expenses and the year's net operating income (with a budget), its upkeep tasks, the missions linked to it, and
+    the word on its card (`property_badge`: Rent Due, Rented...).
     """
     from core import links as links_module
     from core.estate_actions import RECORDS, form_spec
@@ -358,6 +371,7 @@ def estate_page(context, today: Optional[date] = None) -> dict:
             "income_month": _r(income_month), "expenses_month": _r(expenses_month), "noi_year": _r(noi_year),
             "asset_id": asset.asset_id if asset is not None else None, "tasks": tasks, "missions": related,
             "notes": p.notes, "values": _values(RECORDS["property"], p),
+            "badge": property_badge(p.status, p.monthly_rent, income_month),
         })
     page["properties"] = properties
     page["totals"] = {"count": len(properties), "equity": _r(sum(p["equity"] for p in properties)),

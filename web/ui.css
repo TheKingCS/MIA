@@ -547,3 +547,19 @@ body.cook-live .mia-orb-button, body.cook-live .bottom-bar { display: none; }
 .ins-request { margin-top: 8px; }
 .ins-you-send { margin: 6px 0 0; font-size: var(--text-sm); text-align: center; }
 @media (min-width: 861px) { .ins-request { width: auto; min-width: 280px; } .ins-you-send { text-align: left; } }
+
+/* ---------------------------------------------------------------- Real Estate: the property card (DEC-0113)
+   Name and where, its word (Rent Due amber, Rented green), then Rent / Cash Flow / Equity in one row. */
+.prop-name { display: grid; gap: 2px; min-width: 0; }
+.prop-name h3 { margin: 0; }
+.prop-name .dim { font-size: var(--text-sm); }
+.property-card .kind { flex: none; }
+.prop-trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding: 10px 0;
+  border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.prop-trio-cell { display: grid; gap: 4px; min-width: 0; }
+.prop-trio-t { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); }
+.prop-trio-cell strong { font-family: var(--font-mono); font-size: var(--text-md, 15px); font-weight: 600; overflow-wrap: anywhere; }
+.prop-trio-cell.good strong { color: var(--ok); }
+.prop-more { margin: 0; font-size: var(--text-sm); }
+.property-card .attention-line { color: var(--attention); font-size: var(--text-sm); }
+.prop-trio-cell strong small { font-size: 11px; font-weight: 400; color: var(--text-dim); }
