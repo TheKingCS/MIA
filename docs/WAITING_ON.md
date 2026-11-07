@@ -26,7 +26,9 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 - [ ] **The Chronicles:** 124 candidate events wait for your yes or no (the dev window's Chronicles panel); the
       weekly issue can only tell approved ones. And how the Creator looks in the comic (DEC-0087: "waiting for
       Zac" in `docs/chronicles/characters/creator.md`). Then approve each issue: `python -m tools.chronicle_issue
-      show I-0001`, `... approve I-0001`.
+      show I-0001`, `... approve I-0001`. The panels are drawn by SDXL-Turbo now (samples in
+      `C:\Users\zacrh\DevTools\imagegen\out\sdxl_*.png`): to give the series one look, save the picture you like as
+      `C:\Users\zacrh\DevTools\imagegen\series_reference.png`.
 
 ### At the PC
 - [ ] **Cut your area's vector map** (built 2026-11-06 with your OK): `.venv\Scripts\python -m tools.offline_map
@@ -37,7 +39,8 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       from then. (On 2026-11-07 Claude started one by hand at 08:55, while you slept.)
 - [ ] **Restart MIA** so she loads `cryptography` 50.0.2 (47 had three HIGH advisories, T-0048) and everything
       built 2026-11-06: Night School's second try, promises and notes (Kept), photo search, the new web pages
-      (Diagnostics, Knowledge, Classroom, Household, Navigation, Observations, Memories) and the new loops.
+      (Diagnostics, Knowledge, Classroom, Household, Navigation, Observations, Memories, Maps with vector
+      areas and tap-to-add waypoints), near-duplicate photos offered like bursts, and the new loops.
 - [ ] **Start the standing mission** when you want the council working the loops' tasks:
       `python -m tools.work mission start M-0001`.
 - [ ] **Sign the reviewers in:** `codex login` (the second reviewer), `gh auth login`, Copilot's `/login`.
@@ -55,6 +58,11 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       the phone; name the first places to map (the property's corners, the well, trailheads).
 
 ### Using MIA (whenever)
+- [ ] **Try the new web pages** (after the restart, in the sidebar): Kept, Classroom, Household, Navigation, Maps,
+      Observations, Memories, Knowledge (copy Kiwix `.zim` packs into `reference_library\` first), and
+      Diagnostics (yours only). Each is working but plain: Muse does the look. Tell Claude what's wrong or missing.
+- [ ] **Maps:** once your area is cut (above), open Maps, tap where something is (the well, a gate, a trailhead)
+      and name it; it's a waypoint everywhere (Navigation, the glasses, the TAK export).
 - [ ] **Promises and decisions** (DEC-0054, built 2026-11-06): tell her "I promised Sam I'd fix his gate by
       Saturday" and say "keep it" when she offers; she mentions it the day before. "What did I promise?", the Kept
       page in the sidebar, "I kept my promise to Sam".
