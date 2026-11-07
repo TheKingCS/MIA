@@ -1,6 +1,7 @@
 """Tax and compliance obligations (DEC-0040): deadlines moved off weekends
 and holidays, an extension to file never moving the money's date,
-reminders once each, unverified never shown as confirmed, repeats."""
+reminders once each, unverified never shown as confirmed, repeats, and
+the one next step each Compliance row offers (DEC-0113)."""
 
 from datetime import date
 

@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1088 files, 246,052 lines; 1088 files describe themselves; 13,513 of 14,183 classes and functions are documented.
+1088 files, 246,053 lines; 1088 files describe themselves; 13,513 of 14,183 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -670,7 +670,7 @@
 
 ## tests/: the test suite: what each part must do
 
-362 files, 65,956 lines; 5,228 of 5,809 classes and functions documented
+362 files, 65,957 lines; 5,228 of 5,809 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -887,7 +887,7 @@
 - `tests/test_night_school.py`: Night School (DEC-0100, core/night_school.py): she chooses what to study, her teacher sets exercises with a test that fails first, code grades her, the teacher's lesson comes back the next time, practice never merges, and her picks are scored against her teacher's before she's trusted to choose.
 - `tests/test_notes_module.py`: Unit test for modules.notes.module.format_entry_row — pure formatting logic, no Qt event loop needed (importing the module only defines widget classes; nothing here instantiates one).
 - `tests/test_notification_manager.py`: Unit tests for core.notification_manager — previously untested (a real, pre-existing gap, not something this file tries to backfill in full). Added now specifically to cover notify()'s new "notifications.enabled" gate (2026-07-15 "ForMIA" design handoff's Quick Bus widget) — the first real, non-cosm *(3 undocumented)*
-- `tests/test_obligations.py`: Tax and compliance obligations (DEC-0040): deadlines moved off weekends and holidays, an extension to file never moving the money's date, reminders once each, unverified never shown as confirmed, repeats. *(2 undocumented)*
+- `tests/test_obligations.py`: Tax and compliance obligations (DEC-0040): deadlines moved off weekends and holidays, an extension to file never moving the money's date, reminders once each, unverified never shown as confirmed, repeats, and the one next step each Compliance row offers (DEC-0113). *(2 undocumented)*
 - `tests/test_observations_module.py`: Unit tests for modules.observations.module's pure functions, same style as tests/test_memories_module.py (no Qt event loop, no fixtures). *(1 undocumented)*
 - `tests/test_observations_web.py`: Observations' web screen (core/observations_web.py): findings across apps, and the open insights by source. *(2 undocumented)*
 - `tests/test_ocr.py`: Reading photos and scans (core/ocr.py) and how the inbox and the textbook tutor use it. Most tests use a stand-in engine so they run anywhere; the ones marked `needs_tesseract` run the real program when it's installed.
