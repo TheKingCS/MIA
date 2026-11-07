@@ -71,8 +71,8 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
 - [x] Workout: Today leads with one big Start; a live session takes the whole screen as Active (count large, how
       it was counted), Rest (draining ring) and Done (planned → done); tuck it away and a bar brings it back. Engine:
       `training_session.view()` gained each count's `how`, `last_counted`, `weight`, `rest_total`. "+30 s" on rest is done
-      (`training.rest_more`: the button, "thirty more seconds" by voice, the glasses' panel). Left for Workout:
-      Progress charts (volume, frequency) per the canvas.
+      (`training.rest_more`: the button, "thirty more seconds" by voice, the glasses' panel). Progress has Week by Week
+      bars (workouts and volume a week, `core/web_screens.weekly_training`).
 - [x] Kitchen: Today leads with the next meal's Start Cooking; the recipe page has Start Cooking; cook mode
       (`web/cook.js`) takes the screen: one step large, what it uses, the step's own timer offered, named timers that
       keep running, Back / Next Step / I Made This. Engine: `core/cooking_session.py` (a personal store, `cooking`),

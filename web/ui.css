@@ -1206,3 +1206,13 @@ body.cook-live .mia-orb-button, body.cook-live .bottom-bar { display: none; }
 .rc-step { display: inline-flex; align-items: center; gap: 6px; }
 .rc-step .btn { min-width: 36px; padding: 0 10px; font-family: var(--font-mono); }
 .rc-step-n { font-family: var(--font-mono); font-size: var(--text-sm); min-width: 88px; text-align: center; }
+
+/* ---------------------------------------------------------------- Workout: week by week (web/workout.js weeksSection) */
+.wk-charts { display: grid; gap: var(--gap); grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.wk-chart { display: grid; gap: 8px; }
+.wk-chart .pl-label { margin: 0; }
+.wk-chart .pl-bar { grid-template-rows: auto 1fr auto; }
+.wk-bar-n { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-dim); text-align: center; min-height: 14px; }
+.mod-workout .wk-chart .pl-fill { background: rgba(var(--rgb-atmo), 0.35); }
+.mod-workout .wk-chart .pl-bar.now .pl-fill { background: var(--atmo); box-shadow: 0 0 10px rgba(var(--rgb-atmo), 0.5); }
+.mod-workout .wk-chart .pl-bar.now .wk-bar-n { color: var(--text); }
