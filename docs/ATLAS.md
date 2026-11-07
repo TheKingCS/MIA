@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 225,603 lines; 1043 files describe themselves; 2,772 of 13,517 classes and functions are documented.
+1043 files, 225,778 lines; 1043 files describe themselves; 2,918 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 99,509 lines; 2,041 of 5,630 classes and functions documented
+367 files, 99,684 lines; 2,187 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -19,7 +19,7 @@
 - `core/answer_ratings.py`: Zac's 👍 and 👎 on MIA's answers (DEC-0067's tuning, step 3): what she was asked, what she said, on which device, and how it landed. Personal: each person's own, in their folder (core/personal_data.py). *(6 undocumented)*
 - `core/app_context.py`: Defines AppContext: a small bundle of shared services (config, logger factory, event bus) that gets handed to every module and every GUI component.
 - `core/app_intro.py`: What MIA says when she introduces an app (slice 5 of docs/GLASSES_FIRST_BOOT_PLAN.md), in two halves: *(7 undocumented)*
-- `core/application.py`: MIAApplication: the orchestrator that boots the system. *(146 undocumented)*
+- `core/application.py`: MIAApplication: the orchestrator that boots the system.
 - `core/assistant_accessibility_actions.py`: "Make the text bigger", "turn on high contrast", "read this screen to me" (core/accessibility.py, 2026-10-01). Each changes only the speaker's own look. *(4 undocumented)*
 - `core/assistant_actions.py`: The Assistant's tool-use/action-execution registry — docs/ROADMAP.md milestone 5.5. Lets the LLM actually DO things in MIA (open a module, add an alarm, a note, an inventory item), not just answer questions, via Ollama's structured tool-calling API (core/llm_manager.py's `chat_with_tools()`). *(9 undocumented)*
 - `core/assistant_chat.py`: The pure, non-Qt logic for one Assistant chat turn — moved here from `modules/assistant/module.py` (2026-07-14 aesthetic pass part 4, docs/ROADMAP.md) once the sidebar chat in `gui/character_panel.py` needed the exact same request-building and tool-call-safety logic as the full-screen Assistant modu

@@ -8,7 +8,6 @@
   "core/alarm_manager.py": 12,
   "core/answer_ratings.py": 6,
   "core/app_intro.py": 7,
-  "core/application.py": 146,
   "core/assistant_accessibility_actions.py": 4,
   "core/assistant_actions.py": 9,
   "core/assistant_comm_actions.py": 5,

@@ -234,14 +234,17 @@ class MainThreadInvoker(QObject):
     _run = Signal(object)
 
     def __init__(self) -> None:
+        """Connects the signal with a queued connection, so whatever is emitted runs later on this object's thread."""
         super().__init__()
         self._run.connect(self._execute, Qt.ConnectionType.QueuedConnection)
 
     def call(self, fn) -> None:
+        """Hands fn to the GUI thread; safe from any thread."""
         self._run.emit(fn)
 
     @staticmethod
     def _execute(fn) -> None:
+        """Runs a handed-over function on the GUI thread, logging (never raising) its failure."""
         try:
             fn()
         except Exception:
@@ -273,6 +276,12 @@ class MIAApplication:
     """Owns the Qt application object and the startup sequence."""
 
     def __init__(self) -> None:
+        """Builds the whole app before anything is shown: the Qt application and fonts, config, the event bus and AppContext, the
+        theme, profiles and households, then every core service onto the context (each store, the model, voice, the
+        communication gate, budget, maps...), the module manager and search, the registries (search providers,
+        calculators, the Assistant's tools, dashboard widgets) and the timers that run the periodic checks. Only
+        construction happens here; run() shows the splash and boots.
+        """
         _console_or_nothing()
         self.qt_app = QApplication(sys.argv)
         self.qt_app.setApplicationName("MIA")
@@ -587,15 +596,19 @@ class MIAApplication:
         self._check_mission_auto_assignment()
 
     def _check_alarms(self) -> None:
+        """Every 20 seconds: rings any alarm that's due now."""
         self.context.alarms.check_due(datetime.now())
 
     def _check_power(self) -> None:
+        """Periodic: warns about a low battery (a direct notification, like alarms)."""
         self.context.power.check_low_battery()
 
     def _check_mission_auto_assignment(self) -> None:
+        """Periodic: lets the mission manager assign the missions it's due to assign."""
         self.context.missions.check_for_auto_assignment()
 
     def _check_finance_snapshots(self) -> None:
+        """Periodic: imports new financial snapshot files and says so for each."""
         newly_imported = self.context.finance.scan_for_new_snapshots()
         for snapshot in newly_imported:
             self.context.notifications.notify(
@@ -604,6 +617,7 @@ class MIAApplication:
             )
 
     def _check_homestead_snapshots(self) -> None:
+        """Periodic: imports new homestead snapshot files and says so for each."""
         newly_imported = self.context.homestead.scan_for_new_snapshots()
         for snapshot in newly_imported:
             self.context.notifications.notify(
@@ -612,6 +626,9 @@ class MIAApplication:
             )
 
     def _check_inbox(self) -> None:
+        """Periodic: finishes textbook reading in the background, then scans the inbox folder and offers one message
+        describing what arrived (fingerprinted by the items, so it's never repeated).
+        """
         if self.context.textbooks is not None and self.context.textbooks.finish_reading():
             self.context.events.publish("textbooks.updated")
         if self.context.inbox is None:
@@ -631,6 +648,10 @@ class MIAApplication:
             self.context.notifications.notify(candidate.title, candidate.message)
 
     def _check_online(self) -> None:
+        """Periodic: watches the connection. On a change it delivers the reminders people asked for "when I'm back
+        online" directly (they asked for them), and offers one message about the change (timely going offline, ambient
+        coming back), once per kind per day.
+        """
         monitor = self.context.connectivity
         if monitor is None:
             return
@@ -651,10 +672,12 @@ class MIAApplication:
             self.context.communication.offer(candidate)
 
     def _check_inbox_mail(self) -> None:
+        """Periodic: checks the mail account for new inbox mail, when one is set up."""
         if self.context.inbox_mail is not None:
             self.context.inbox_mail.check_now()
 
     def _check_lite_captures(self) -> None:
+        """Periodic: picks up field captures from MIA Lite and says each is ready to review."""
         new_proposals = self.context.lite_captures.scan_for_new_captures()
         for proposal in new_proposals:
             self.context.notifications.notify(
@@ -840,6 +863,7 @@ class MIAApplication:
         ))
 
     def _check_birthday(self, now: datetime, today_iso: str) -> None:
+        """The daily birthday check: once a day, if it's the signed-in person's birthday, offers a happy-birthday message."""
         config = self.context.config
         if should_run_once_daily(config.get("system.last_birthday_celebrated_date"), today_iso):
             active_profile = self.context.profiles.get_active_profile() if self.context.profiles else None
@@ -856,6 +880,7 @@ class MIAApplication:
                 config.save()
 
     def _check_calendar_digest(self, now: datetime, today_iso: str) -> None:
+        """The daily calendar digest: once a day (should_run_once_daily on the system.last_calendar_digest_date key), lists today's calendar events in one message when there are any. Offered through the communication gate, never notified directly."""
         config = self.context.config
         if should_run_once_daily(config.get("system.last_calendar_digest_date"), today_iso):
             events_today = (
@@ -877,6 +902,9 @@ class MIAApplication:
             config.save()
 
     def _check_checkin(self, now: datetime, today_iso: str) -> None:
+        """The daily check-in: once a day, when nobody has talked to MIA yet and it's late enough (should_send_checkin),
+        offers a gentle "how's everything going?".
+        """
         config = self.context.config
         if should_run_once_daily(config.get("system.last_checkin_date"), today_iso):
             has_activity_today = self.context.conversations is not None and any(
@@ -1051,6 +1079,7 @@ class MIAApplication:
         config.save()
 
     def _check_budget_nudge(self, now: datetime, today_iso: str) -> None:
+        """The daily budget nudge: once a day (should_run_once_daily on the system.last_budget_nudge_date key), puts overdue and due-soon bills, expected income and categories over this month's targets into one message (build_nudge_message). Offered through the communication gate, never notified directly."""
         config = self.context.config
         if should_run_once_daily(config.get("system.last_budget_nudge_date"), today_iso) and self.context.budget is not None:
             bills = self.context.budget.all_bills()
@@ -1072,6 +1101,7 @@ class MIAApplication:
             config.save()
 
     def _check_smart_suggestion(self, now: datetime, today_iso: str) -> None:
+        """The daily smart suggestion: once a day (should_run_once_daily on the system.last_smart_suggestion_date key), batches suggestions from the last workout, the pantry and the people kept in Relationships into one message. Offered through the communication gate, never notified directly."""
         config = self.context.config
         if should_run_once_daily(config.get("system.last_smart_suggestion_date"), today_iso):
             last_session_date = self.context.workout.last_session_date() if self.context.workout is not None else None
@@ -1094,6 +1124,7 @@ class MIAApplication:
         # real observe->insight->recommend scan, piloted in Maintenance.
         # Same should_run_once_daily()-gated, batched-into-one-message
         # shape as the Smart Suggestions check above.
+        """The daily maintenance insight: once a day (should_run_once_daily on the system.last_maintenance_insight_date key), scans Maintenance for new insights (observe, insight, recommend) and batches them into one message. Offered through the communication gate, never notified directly."""
         config = self.context.config
         if should_run_once_daily(config.get("system.last_maintenance_insight_date"), today_iso):
             new_insights = scan_maintenance_insights(self.context, now.date())
@@ -1114,6 +1145,7 @@ class MIAApplication:
         # observe->insight->recommend loop covers, same gated/batched
         # shape as the Maintenance check above (see
         # core/mission_insights.py's own docstring).
+        """The daily mission insight: once a day (should_run_once_daily on the system.last_mission_insight_date key), scans for missions gone stale and batches them into one message. Offered through the communication gate, never notified directly."""
         config = self.context.config
         if should_run_once_daily(config.get("system.last_mission_insight_date"), today_iso):
             new_mission_insights = scan_mission_insights(self.context, now.date())
@@ -1136,6 +1168,7 @@ class MIAApplication:
         # docstring named this "Phase 6"). Same gated/batched shape as
         # the two checks above — see core/mission_patterns.py's own
         # docstring.
+        """The daily pattern insight: once a day (should_run_once_daily on the system.last_pattern_insight_date key), looks for patterns in mission history (core/mission_patterns.py) and batches the new ones into one message. Offered through the communication gate, never notified directly."""
         config = self.context.config
         if should_run_once_daily(config.get("system.last_pattern_insight_date"), today_iso):
             new_pattern_insights = scan_pattern_insights(self.context, now.date())
@@ -1158,6 +1191,7 @@ class MIAApplication:
         # batched shape as the check above; a different `kind` under
         # the same "patterns" source_type, tracked fully independently
         # per profile.
+        """The daily skill pattern insight: once a day (should_run_once_daily on the system.last_skill_pattern_insight_date key), looks for patterns in skill practice (core/skill_patterns.py) and batches the new ones into one message. Offered through the communication gate, never notified directly."""
         config = self.context.config
         if should_run_once_daily(config.get("system.last_skill_pattern_insight_date"), today_iso):
             new_skill_pattern_insights = scan_skill_pattern_insights(self.context, now.date())
@@ -1179,6 +1213,7 @@ class MIAApplication:
         # batched shape as the check above; a different `kind` under
         # the same "patterns" source_type, tracked fully independently
         # per profile — see core/skill_patterns.py's own docstring.
+        """The daily skill decline insight: once a day (should_run_once_daily on the system.last_skill_decline_insight_date key), notices skills slipping (core/skill_patterns.py) and batches them into one message. Offered through the communication gate, never notified directly."""
         config = self.context.config
         if should_run_once_daily(config.get("system.last_skill_decline_insight_date"), today_iso):
             new_skill_decline_insights = scan_skill_decline_insights(self.context, now.date())
@@ -1200,6 +1235,7 @@ class MIAApplication:
         # batched shape as the check above; a different `kind` under
         # the same "patterns" source_type, tracked fully independently
         # per profile — see core/skill_patterns.py's own docstring.
+        """The daily skill momentum insight: once a day (should_run_once_daily on the system.last_skill_momentum_insight_date key), notices skills gaining momentum (core/skill_patterns.py) and batches them into one message. Offered through the communication gate, never notified directly."""
         config = self.context.config
         if should_run_once_daily(config.get("system.last_skill_momentum_insight_date"), today_iso):
             new_skill_momentum_insights = scan_skill_momentum_insights(self.context, now.date())
@@ -1221,6 +1257,10 @@ class MIAApplication:
         # itself is idempotent too (checks occurrence_key first), so
         # this gate is a cheap once-a-day skip, not the only thing
         # preventing duplicates.
+        """The daily recurring-missions check: once a day, makes sure every active template has its current mission
+        (ensure_current_missions is idempotent, so the gate is only a cheap skip), plus the fitness plan's missions for
+        whoever is signed in. Once ever, it also removes the old calendar copies of chores (DEC-0052).
+        """
         config = self.context.config
         if should_run_once_daily(config.get("system.last_recurring_mission_check_date"), today_iso):
             if self.context.recurring_missions is not None:
@@ -1245,6 +1285,9 @@ class MIAApplication:
         # from modules/skills/module.py's own refresh, so a threshold
         # crossed while the app is open unlocks right away rather than
         # waiting up to a day.
+        """The daily rewards check: once a day, unlocks any reward and hidden achievement the signed-in person has earned
+        (both scans are idempotent; Skills also runs them on refresh so an unlock is immediate).
+        """
         config = self.context.config
         if should_run_once_daily(config.get("system.last_rewards_check_date"), today_iso):
             if self.context.rewards is not None and self.context.profiles is not None:
@@ -1270,6 +1313,10 @@ class MIAApplication:
         # usage_tracker.mark_suggested() means the same module is never
         # nudged twice — see core/usage_tracker.py's own docstring for
         # why this can't become a recurring nag.
+        """The daily walkthrough suggestion: at most one a day, it suggests trying one enabled module the person has never
+        opened (never the Modules screen), and marks it suggested so the same one is never nudged twice
+        (core/usage_tracker.py).
+        """
         config = self.context.config
         if should_run_once_daily(config.get("system.last_walkthrough_suggestion_date"), today_iso):
             if self.context.usage_tracker is not None and self.module_manager is not None:
@@ -3681,6 +3728,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_open_module(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `open_module`: opens a module by id or name. It publishes assistant.open_module_requested instead of touching MainWindow, because the reply can arrive on any thread and Qt widgets belong to the GUI thread. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         requested = str(arguments.get("module_id", "")).strip()
         module = context.module_manager.resolve(requested) if context.module_manager is not None else None
         if module is None:
@@ -3695,6 +3743,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_add_alarm(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `add_alarm`: sets an alarm at HH:MM with a label ("Alarm" when none). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         label = str(arguments.get("label", "") or "Alarm").strip() or "Alarm"
         time_str = str(arguments.get("time", "")).strip()
         if not time_str:
@@ -3704,6 +3753,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_list_alarms(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `list_alarms`: every alarm with its time, marking disabled ones. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         alarms = context.alarms.all_alarms()
         if not alarms:
             return "You have no alarms set."
@@ -3712,6 +3762,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_delete_alarm(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `delete_alarm`: deletes the alarm whose label matches (case-insensitive). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         label = str(arguments.get("label", "")).strip().lower()
         match = next((a for a in context.alarms.all_alarms() if a.label.lower() == label), None)
         if match is None:
@@ -3721,6 +3772,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_add_note(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `add_note`: adds a journal note with a title and body. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         title = str(arguments.get("title", "")).strip()
         if not title:
             return "I need a title to add a note."
@@ -3743,6 +3795,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_delete_note(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `delete_note`: deletes the journal note whose title matches. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         title = str(arguments.get("title", "")).strip().lower()
         match = next((e for e in context.journal.all_entries() if e.title.lower() == title), None)
         if match is None:
@@ -3752,6 +3805,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_add_inventory_item(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `add_inventory_item`: adds an item with a quantity (0 when the number can't be read). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         name = str(arguments.get("name", "")).strip()
         if not name:
             return "I need an item name to add to inventory."
@@ -3764,6 +3818,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_list_inventory(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `list_inventory`: the inventory, or the items matching a query. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         query = str(arguments.get("query", "") or "").strip()
         items = context.inventory.search(query) if query else context.inventory.all_items()
         if not items:
@@ -3773,6 +3828,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_delete_inventory_item(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `delete_inventory_item`: removes the inventory item whose name matches. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         name = str(arguments.get("name", "")).strip().lower()
         match = next((i for i in context.inventory.all_items() if i.name.lower() == name), None)
         if match is None:
@@ -3782,6 +3838,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_adjust_inventory_quantity(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `adjust_inventory_quantity`: changes an item's quantity by a whole-number delta (negative to use some). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         name = str(arguments.get("name", "")).strip().lower()
         try:
             delta = int(arguments.get("delta", 0) or 0)
@@ -3795,6 +3852,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_list_waypoints(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `list_waypoints`: the saved waypoints (filtered by a query over name and notes), each with its coordinates and MGRS grid (none at the poles). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         query = str(arguments.get("query", "") or "").lower().strip()
         waypoints = context.waypoints.all_waypoints()
         if query:
@@ -3813,6 +3871,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_waypoint_distance(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `waypoint_distance`: the distance in km and bearing between two named waypoints. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         from_name = str(arguments.get("from_name", "")).strip().lower()
         to_name = str(arguments.get("to_name", "")).strip().lower()
         waypoints = {w.name.lower(): w for w in context.waypoints.all_waypoints()}
@@ -3830,6 +3889,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_list_trail_maps(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `list_trail_maps`: the cataloged trail-map PDFs, filtered by park or state. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         query = str(arguments.get("query", "") or "").lower().strip()
         trail_maps = context.trail_maps.all_trail_maps()
         if query:
@@ -3841,6 +3901,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_add_trail_map_from_url(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `add_trail_map_from_url`: downloads a trail-map PDF into the catalog; a file that isn't really a PDF is refused, a failed download is explained. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         park_name = str(arguments.get("park_name", "")).strip()
         state = str(arguments.get("state", "")).strip()
         url = str(arguments.get("url", "")).strip()
@@ -3857,6 +3918,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_delete_trail_map(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `delete_trail_map`: deletes the trail map for the named park. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         park_name = str(arguments.get("park_name", "")).strip().lower()
         match = next((t for t in context.trail_maps.all_trail_maps() if t.park_name.lower() == park_name), None)
         if match is None:
@@ -3866,6 +3928,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_convert_units(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `convert_units`: converts a value between units, trying each category of the toolbox's unit converter until both units are recognized in the same one. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         from modules.toolbox.calculators.unit_converter import UNIT_CATEGORIES, convert, resolve_unit_key
 
         from_text = str(arguments.get("from_unit", "")).strip()
@@ -3887,6 +3950,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_calculate_ohms_law(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `calculate_ohms_law`: solves voltage, current or resistance from the other two with the toolbox's Ohm's law solver. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         from modules.toolbox.calculators.ohms_law import solve
 
         solve_for = str(arguments.get("solve_for", "")).strip().lower()
@@ -3914,6 +3978,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_delete_waypoint(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `delete_waypoint`: deletes the waypoint whose name matches. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         name = str(arguments.get("name", "")).strip().lower()
         match = next((w for w in context.waypoints.all_waypoints() if w.name.lower() == name), None)
         if match is None:
@@ -3923,6 +3988,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_get_sun_moon_info(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `get_sun_moon_info`: today's sunrise, sunset and moon phase at a named waypoint (the Navigation module's summary). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         from datetime import date as _date
 
         from modules.navigation.module import format_sun_moon_summary
@@ -3936,6 +4002,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_get_system_health(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `get_system_health`: the PC's CPU, memory, disk and temperature, read and put in words. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         return format_system_health(read_system_health())
 
     @staticmethod
@@ -4035,6 +4102,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_add_waypoint(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `add_waypoint`: saves a waypoint from latitude/longitude or an MGRS grid reference (parsed in code, DEC-0099); an unknown category becomes uncategorized, like the UI's blank option. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         name = str(arguments.get("name", "")).strip()
         if not name:
             return "I need a name to save a waypoint."
@@ -4058,6 +4126,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_add_expedition(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `add_expedition`: starts an expedition with a start date and location. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         name = str(arguments.get("name", "")).strip()
         if not name:
             return "I need a name to start an expedition."
@@ -4068,6 +4137,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_list_expeditions(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `list_expeditions`: every expedition with its date and location. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         expeditions = context.expeditions.all_expeditions()
         if not expeditions:
             return "You have no expeditions yet."
@@ -4080,6 +4150,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_recall_expedition(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `recall_expedition`: the memory recap of a named expedition (or the latest): duration, trips per activity with distance and speed, waypoint kinds visited, the latest log and photo count. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         name = str(arguments.get("name", "") or "").strip().lower()
         if name:
             expedition = next(
@@ -4121,6 +4192,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_add_trip(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `add_trip`: adds a trip under a named expedition (an unknown activity type is dropped). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         expedition_name = str(arguments.get("expedition_name", "")).strip().lower()
         name = str(arguments.get("name", "")).strip()
         if not name:
@@ -4141,6 +4213,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_list_trips(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `list_trips`: the trips, all or one expedition's, with activity and status. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         expedition_name = str(arguments.get("expedition_name", "") or "").strip().lower()
         if expedition_name:
             expedition = next(
@@ -4162,6 +4235,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_add_gear_item(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `add_gear_item`: adds an item to a trip's gear checklist. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         trip_name = str(arguments.get("trip_name", "")).strip().lower()
         label = str(arguments.get("label", "")).strip()
         if not label:
@@ -4174,6 +4248,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_add_trip_log_entry(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `add_trip_log_entry`: adds a journal entry tied to a trip, with conditions. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         trip_name = str(arguments.get("trip_name", "")).strip().lower()
         title = str(arguments.get("title", "")).strip()
         if not title:
@@ -4188,6 +4263,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_delete_expedition(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `delete_expedition`: deletes the expedition whose name matches. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         name = str(arguments.get("name", "")).strip().lower()
         match = next((e for e in context.expeditions.all_expeditions() if e.name.lower() == name), None)
         if match is None:
@@ -4197,6 +4273,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_delete_trip(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `delete_trip`: deletes the trip whose name matches. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         name = str(arguments.get("name", "")).strip().lower()
         match = next((t for t in context.trips.all_trips() if t.name.lower() == name), None)
         if match is None:
@@ -4206,6 +4283,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_toggle_gear_packed(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `toggle_gear_packed`: flips a trip's gear item between packed and not packed. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         trip_name = str(arguments.get("trip_name", "")).strip().lower()
         label = str(arguments.get("label", "")).strip().lower()
         trip = next((t for t in context.trips.all_trips() if t.name.lower() == trip_name), None)
@@ -4221,6 +4299,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_get_trip_summary(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `get_trip_summary`: a trip's logged distance, average speed and planned route distance, whichever exist. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         name = str(arguments.get("name", "")).strip().lower()
         trip = next((t for t in context.trips.all_trips() if t.name.lower() == name), None)
         if trip is None:
@@ -4241,12 +4320,14 @@ class MIAApplication:
 
     @staticmethod
     def _action_get_device_profile(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `get_device_profile`: which edition this device runs (Core field edition or Home desktop). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         profile = get_device_profile(context)
         label = "Core (Pi 5 + AI HAT+ 2 field edition)" if profile == CORE else "Home (desktop workstation edition)"
         return f"This device is running the {label}."
 
     @staticmethod
     def _action_set_birthday(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `set_birthday`: saves the signed-in person's birthday (YYYY-MM-DD). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         birthday = str(arguments.get("birthday", "")).strip()
         try:
             datetime.fromisoformat(birthday)
@@ -4260,6 +4341,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_set_theme(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `set_theme`: switches the theme and publishes theme.changed so it applies live. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         theme_id = str(arguments.get("theme_id", "")).strip().lower()
         if theme_id not in THEMES:
             valid = ", ".join(THEMES.keys())
@@ -4271,6 +4353,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_add_calendar_event(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `add_calendar_event`: adds a calendar event with a date, optional time, notes and recurrence (an unknown recurrence is dropped). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         title = str(arguments.get("title", "")).strip()
         date_str = str(arguments.get("date", "") or "").strip()
         if not title:
@@ -4289,6 +4372,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_list_calendar_events(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `list_calendar_events`: every calendar event with its date, time and recurrence. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         events = context.calendar.all_events()
         if not events:
             return "You have no calendar events."
@@ -4300,6 +4384,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_delete_calendar_event(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `delete_calendar_event`: deletes the calendar event whose title matches. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         title = str(arguments.get("title", "")).strip().lower()
         match = next((e for e in context.calendar.all_events() if e.title.lower() == title), None)
         if match is None:
@@ -4309,6 +4394,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_get_power_status(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `get_power_status`: battery percent, plugged in or not, and minutes left when known. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         status = context.power.read()
         if status is None:
             return "No battery or power status is available on this device."
@@ -4320,6 +4406,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_add_component(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `add_component`: adds an electronics component (category, value, package, quantity, location). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         name = str(arguments.get("name", "")).strip()
         if not name:
             return "I need a name to add a component."
@@ -4338,6 +4425,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_list_components(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `list_components`: the components, or those matching a query. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         query = str(arguments.get("query", "") or "").strip()
         components = context.components.search(query) if query else context.components.all_components()
         if not components:
@@ -4347,6 +4435,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_delete_component(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `delete_component`: deletes the component whose name matches. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         name = str(arguments.get("name", "")).strip().lower()
         match = next((c for c in context.components.all_components() if c.name.lower() == name), None)
         if match is None:
@@ -4356,6 +4445,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_add_material(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `add_material`: adds a workshop material with its unit and quantity on hand. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         name = str(arguments.get("name", "")).strip()
         if not name:
             return "I need a name to add a material."
@@ -4369,6 +4459,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_list_materials(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `list_materials`: the materials and how much of each is on hand. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         query = str(arguments.get("query", "") or "").strip()
         materials = context.materials.search(query) if query else context.materials.all_materials()
         if not materials:
@@ -4378,6 +4469,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_add_product(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `add_product`: adds a product with stock and base price. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         name = str(arguments.get("name", "")).strip()
         if not name:
             return "I need a name to add a product."
@@ -4394,6 +4486,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_list_products(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `list_products`: the products and their stock. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         query = str(arguments.get("query", "") or "").strip()
         products = context.products.search(query) if query else context.products.all_products()
         if not products:
@@ -4403,6 +4496,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_add_job(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `add_job`: starts a production job. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         name = str(arguments.get("name", "")).strip()
         if not name:
             return "I need a name to start a job."
@@ -4412,6 +4506,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_list_jobs(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `list_jobs`: every job with its status. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         jobs = context.jobs.all_jobs()
         if not jobs:
             return "You have no jobs yet."
@@ -4419,6 +4514,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_consume_material(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `consume_material`: records a quantity of a material used on a job (stock goes down). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         job_name = str(arguments.get("job_name", "")).strip().lower()
         material_name = str(arguments.get("material_name", "")).strip().lower()
         job = next((j for j in context.jobs.all_jobs() if j.name.lower() == job_name), None)
@@ -4436,6 +4532,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_produce_product(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `produce_product`: records a quantity of a product a job made (stock goes up). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         job_name = str(arguments.get("job_name", "")).strip().lower()
         product_name = str(arguments.get("product_name", "")).strip().lower()
         job = next((j for j in context.jobs.all_jobs() if j.name.lower() == job_name), None)
@@ -4453,6 +4550,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_record_sale(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `record_sale`: records a product sale in the ledger (quantity and amount). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         product_name = str(arguments.get("product_name", "")).strip().lower()
         product = next((p for p in context.products.all_products() if p.name.lower() == product_name), None)
         if product is None:
@@ -4467,6 +4565,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_get_ledger_summary(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `get_ledger_summary`: the ledger's total revenue, expenses and net profit, in the person's currency. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         revenue = context.ledger.total_revenue()
         expenses = context.ledger.total_expenses()
         profit = context.ledger.net_profit()
@@ -4474,6 +4573,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_list_connected_devices(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `list_connected_devices`: the drives and serial devices plugged in now. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         block_devices = context.devices.list_block_devices()
         serial_devices = context.devices.list_serial_devices()
         if not block_devices and not serial_devices:
@@ -4484,6 +4584,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_list_scripts(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `list_scripts`: the saved scripts, or those matching a query. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         query = str(arguments.get("query", "") or "").strip()
         scripts = context.scripts.search(query) if query else context.scripts.all_scripts()
         if not scripts:
@@ -4493,6 +4594,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_list_profiles(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `list_profiles`: the profiles on this device, marking the active one. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         profiles = context.profiles.list_profiles()
         if not profiles:
             return "No profiles are set up on this device."
@@ -4506,6 +4608,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_identify_hash(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `identify_hash`: the hash formats a value could be (identify_hash's candidates). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         value = str(arguments.get("value", "")).strip()
         if not value:
             return "I need a hash value to identify."
@@ -4516,6 +4619,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_check_password_strength(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `check_password_strength`: a password's rating and entropy in bits, with its warnings (assessed locally). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         password = str(arguments.get("password", ""))
         if not password:
             return "I need a password to check."
@@ -4526,6 +4630,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_calculate_subnet(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `calculate_subnet`: network, broadcast, netmask, address and usable-host counts and the usable range for a CIDR. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         cidr = str(arguments.get("cidr", "")).strip()
         if not cidr:
             return "I need a CIDR, e.g. '192.168.1.0/24', to calculate a subnet."
@@ -4546,6 +4651,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_scan_ports(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `scan_ports`: scans common ports on a host, but only one on the person's own network (DEC-0056). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         host = str(arguments.get("host", "")).strip()
         if not host:
             return "I need a host or IP to scan."
@@ -4571,6 +4677,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_add_project(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `add_project`: starts a project with a status and due date. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         name = str(arguments.get("name", "")).strip()
         if not name:
             return "I need a name to start a project."
@@ -4583,6 +4690,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_list_projects(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `list_projects`: every project with its status and due date. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         projects = context.projects.all_projects()
         if not projects:
             return "You have no projects yet."
@@ -4594,6 +4702,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_add_task(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `add_task`: adds a task under a named project. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         project_name = str(arguments.get("project_name", "")).strip().lower()
         title = str(arguments.get("title", "")).strip()
         if not title:
@@ -4609,6 +4718,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_list_tasks(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `list_tasks`: the tasks, all or one project's, with done marks. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         project_name = str(arguments.get("project_name", "") or "").strip().lower()
         if project_name:
             project = next(
@@ -4631,6 +4741,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_delete_project(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `delete_project`: deletes the project whose name matches. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         name = str(arguments.get("name", "")).strip().lower()
         match = next((p for p in context.projects.all_projects() if p.name.lower() == name), None)
         if match is None:
@@ -4640,6 +4751,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_delete_task(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `delete_task`: deletes the task whose title matches. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         title = str(arguments.get("title", "")).strip().lower()
         match = next((t for t in context.tasks.all_tasks() if t.title.lower() == title), None)
         if match is None:
@@ -4649,6 +4761,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_mark_task_done(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `mark_task_done`: marks a task done (or not done). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         title = str(arguments.get("title", "")).strip().lower()
         match = next((t for t in context.tasks.all_tasks() if t.title.lower() == title), None)
         if match is None:
@@ -4660,6 +4773,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_add_mission(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `add_mission`: starts a mission, optionally linked to a trip. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         name = str(arguments.get("name", "")).strip()
         if not name:
             return "I need a name to start a mission."
@@ -4676,6 +4790,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_list_missions(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `list_missions`: every mission with each objective's progress and check mark. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         missions = context.missions.all_missions()
         if not missions:
             return "You have no missions yet."
@@ -4690,6 +4805,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_add_objective(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `add_objective`: adds an objective to a mission (metric type, numeric target). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         mission_name = str(arguments.get("mission_name", "")).strip().lower()
         description = str(arguments.get("description", "")).strip()
         if not description:
@@ -4709,6 +4825,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_log_mission_progress(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `log_mission_progress`: adds to a mission's tally objective (the only one, or the one named) and says how close it is. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         mission_name = str(arguments.get("mission_name", "")).strip().lower()
         mission = next((m for m in context.missions.all_missions() if m.name.lower() == mission_name), None)
         if mission is None:
@@ -4734,6 +4851,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_delete_mission(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `delete_mission`: deletes the mission whose name matches. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         name = str(arguments.get("name", "")).strip().lower()
         match = next((m for m in context.missions.all_missions() if m.name.lower() == name), None)
         if match is None:
@@ -4743,6 +4861,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_complete_mission(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `complete_mission`: marks a mission completed. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         name = str(arguments.get("name", "")).strip().lower()
         match = next((m for m in context.missions.all_missions() if m.name.lower() == name), None)
         if match is None:
@@ -4802,6 +4921,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_add_maintenance_asset(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `add_maintenance_asset`: adds a vehicle or piece of equipment to Maintenance. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         name = str(arguments.get("name", "")).strip()
         if not name:
             return "I need a name to add a maintenance asset."
@@ -4816,6 +4936,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_list_maintenance_assets(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `list_maintenance_assets`: everything tracked in Maintenance. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         assets = context.maintenance.all_assets()
         if not assets:
             return "You have no vehicles or equipment tracked in Maintenance yet."
@@ -4824,6 +4945,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_delete_maintenance_asset(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `delete_maintenance_asset`: deletes a tracked item from Maintenance. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         name = str(arguments.get("name", "")).strip().lower()
         match = next((a for a in context.maintenance.all_assets() if a.name.lower() == name), None)
         if match is None:
@@ -4833,6 +4955,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_add_maintenance_task(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `add_maintenance_task`: adds a task for a tracked item, repeating every N days or one-time. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         asset_name = str(arguments.get("asset_name", "")).strip()
         asset, error = resolve_by_name(context.maintenance.all_assets(), asset_name, lambda a: a.name, "tracked item")
         if error:
@@ -4849,6 +4972,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_list_maintenance_tasks(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `list_maintenance_tasks`: maintenance tasks with when they're due and the latest reading; a query naming a kind of thing ("vehicle") matches everything of that kind, not only names. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         query = str(arguments.get("query", "") or "").strip().lower()
         # A query that names a kind of thing matches everything of that kind (2026-10-30, live: "vehicle"
         # found nothing because the truck has its own name, and MIA said nothing was overdue).
@@ -4910,6 +5034,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_complete_maintenance_task(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `complete_maintenance_task`: marks a task done (with a meter reading), and a stated cost becomes an expense tagged to the item so it counts in its cost of ownership. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         title = str(arguments.get("title", "") or "").strip()
         asset_name = str(arguments.get("asset_name", "") or "").strip()
         if not title and not asset_name:
@@ -4938,6 +5063,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_log_maintenance_reading(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `log_maintenance_reading`: logs a reading against a task, or against an item's meter ("120 hours on the mower": its one meter task in that unit, else its own meter). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         title = str(arguments.get("title", "") or "").strip()
         asset_name = str(arguments.get("asset_name", "") or "").strip()
         value = arguments.get("value")
@@ -4977,6 +5103,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_delete_maintenance_task(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `delete_maintenance_task`: deletes a maintenance task, found by title and item. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         title = str(arguments.get("title", "")).strip()
         if not title:
             return "I need a task title to delete."
@@ -5004,6 +5131,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_log_lab_reading(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `log_lab_reading`: logs a numeric reading to a Data Logger series. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         series = str(arguments.get("series", "")).strip()
         if not series:
             return "I need a series name to log a reading under."
@@ -5023,6 +5151,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_list_lab_series(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `list_lab_series`: the Data Logger's series. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         series = context.data_logger.list_series()
         if not series:
             return "You have no Data Logger series yet."
@@ -5030,6 +5159,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_list_lab_readings(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `list_lab_readings`: the readings in a Data Logger series. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         series = str(arguments.get("series", "")).strip()
         if not series:
             return "I need a series name to list readings for."
@@ -5058,6 +5188,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_add_bill(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `add_bill`: adds a bill with an amount, due date, category and recurrence. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         name = str(arguments.get("name", "")).strip()
         if not name:
             return "I need a name to add a bill."
@@ -5077,6 +5208,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_list_bills(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `list_bills`: every bill with amount, category and whether it's paid, overdue, due today or due in N days. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         bills = context.budget.all_bills()
         if not bills:
             return "You have no bills tracked."
@@ -5097,6 +5229,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_mark_bill_paid(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `mark_bill_paid`: marks a bill paid, recording the payment (the amount given, or the bill's). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         name = str(arguments.get("name", "")).strip()
         if not name:
             return "I need a bill name to mark paid."
@@ -5110,6 +5243,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_add_income(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `add_income`: records income with a category and date. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         amount = arguments.get("amount")
         if amount is None:
             return "I need an amount to record income."
@@ -5121,6 +5255,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_add_expense(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `add_expense`: records an expense with a category and date. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         amount = arguments.get("amount")
         if amount is None:
             return "I need an amount to record an expense."
@@ -5132,6 +5267,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_get_budget_summary(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `get_budget_summary`: income, expenses and net for a date range, plus the tax-relevant totals. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         start_date = str(arguments.get("start_date", "") or "").strip() or None
         end_date = str(arguments.get("end_date", "") or "").strip() or None
         income = context.budget.total_income(start_date, end_date)
@@ -5154,6 +5290,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_add_income_source(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `add_income_source`: adds an expected income source (amount, next date, recurrence). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         name = str(arguments.get("name", "")).strip()
         if not name:
             return "I need a name to add an income source."
@@ -5173,6 +5310,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_mark_income_received(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `mark_income_received`: marks an income source received, recording it. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         name = str(arguments.get("name", "")).strip()
         if not name:
             return "I need an income source name to mark received."
@@ -5186,6 +5324,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_get_financial_checkin(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `get_financial_checkin`: this month's budget check-in: overdue and due-soon bills, expected income, categories over budget. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         today = date.today()
         bills = context.budget.all_bills()
         income_sources = context.budget.all_income_sources()
@@ -5211,6 +5350,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_add_property(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `add_property`: adds a property with type, value and mortgage balance. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         name = str(arguments.get("name", "")).strip()
         if not name:
             return "I need a name to add a property."
@@ -5227,6 +5367,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_list_properties(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `list_properties`: the properties tracked. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         properties = context.real_estate.all_properties()
         if not properties:
             return "You have no properties tracked."
@@ -5235,6 +5376,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_record_rental_income(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `record_rental_income`: records rent received for a property. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         property_name = str(arguments.get("property_name", "")).strip()
         if not property_name:
             return "I need a property name to record rental income."
@@ -5250,6 +5392,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_get_property_summary(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `get_property_summary`: a property's net operating income and cap rate. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         property_name = str(arguments.get("property_name", "")).strip()
         if not property_name:
             return "I need a property name."
@@ -5266,6 +5409,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_play_track(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `play_track`: plays the first song matching a title or artist. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         track_name = str(arguments.get("track_name", "")).strip()
         if not track_name:
             return "I need a song or artist name to play."
@@ -5279,6 +5423,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_play_playlist(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `play_playlist`: plays a playlist by name (an empty one says so). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         playlist_name = str(arguments.get("playlist_name", "")).strip()
         if not playlist_name:
             return "I need a playlist name to play."
@@ -5293,21 +5438,25 @@ class MIAApplication:
 
     @staticmethod
     def _action_pause_music(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `pause_music`: pauses the music. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         context.music.pause()
         return "Paused."
 
     @staticmethod
     def _action_resume_music(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `resume_music`: resumes the music. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         context.music.resume()
         return "Resumed."
 
     @staticmethod
     def _action_stop_music(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `stop_music`: stops the music. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         context.music.stop()
         return "Stopped."
 
     @staticmethod
     def _action_next_track(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `next_track`: skips to the next track in the queue. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         if not context.music.next_track():
             return "There's no next track in the queue."
         now_playing = context.music.now_playing()
@@ -5315,6 +5464,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_previous_track(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `previous_track`: goes back a track. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         if not context.music.previous_track():
             return "There's no previous track in the queue."
         now_playing = context.music.now_playing()
@@ -5322,6 +5472,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_set_music_volume(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `set_music_volume`: sets the music volume percent. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         percent = arguments.get("percent")
         if percent is None:
             return "I need a volume percent."
@@ -5331,6 +5482,7 @@ class MIAApplication:
 
     @staticmethod
     def _action_get_now_playing(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `get_now_playing`: what's playing (or paused): title and artist. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         now_playing = context.music.now_playing()
         if now_playing is None:
             return "Nothing is currently playing."
@@ -5339,6 +5491,9 @@ class MIAApplication:
         return f"{state}: '{now_playing.title}'{artist_part}."
 
     def _search_modules(self, query: str) -> list[SearchResult]:
+        """The Ctrl+K search provider for modules: every module whose name, description or id contains the query, each
+        opening it (action_type open_module).
+        """
         query_lower = query.lower()
         results = []
         for module in self.module_manager.all():
@@ -5354,6 +5509,7 @@ class MIAApplication:
         return results
 
     def _search_profiles(self, query: str) -> list[SearchResult]:
+        """The Ctrl+K search provider for profiles: every profile whose name contains the query, each switching to it."""
         query_lower = query.lower()
         results = []
         for profile in self.context.profiles.list_profiles():
@@ -5426,18 +5582,22 @@ class MIAApplication:
             self.context.phone_server.start()
 
     def _boot_step_core_systems(self) -> str:
+        """Splash step: the core services were built in __init__, so this only reports them online."""
         return "CORE SYSTEMS... ONLINE"
 
     def _boot_step_module_array(self) -> str:
+        """Splash step: discovers the modules and reports how many are online."""
         self.module_manager.discover()
         modules = self.module_manager.all()
         return f"MODULE ARRAY... {len(modules)} MODULES ONLINE"
 
     def _boot_step_assistant_core(self) -> str:
+        """Splash step: checks whether the local model (Ollama) answers and reports online or offline."""
         available = self.context.llm.is_available() if self.context.llm is not None else False
         return "ASSISTANT CORE... ONLINE" if available else "ASSISTANT CORE... OFFLINE (OLLAMA NOT DETECTED)"
 
     def _boot_step_voice_interface(self) -> str:
+        """Splash step: reports voice as online (speech out and in both work), partial, or unavailable."""
         if self.context.voice is None:
             return "VOICE INTERFACE... UNAVAILABLE"
         tts_ok = self.context.voice.is_tts_available()
@@ -5449,15 +5609,20 @@ class MIAApplication:
         return "VOICE INTERFACE... UNAVAILABLE"
 
     def _boot_step_power_systems(self) -> str:
+        """Splash step: reads the battery and reports its percent, or that there's no battery."""
         status = self.context.power.read() if self.context.power is not None else None
         if status is None:
             return "POWER SYSTEMS... NO BATTERY DETECTED"
         return f"POWER SYSTEMS... NOMINAL ({status.percent:.0f}%)"
 
     def _boot_step_personality_matrix(self) -> str:
+        """Splash step: the last line, all systems nominal."""
         return "PERSONALITY MATRIX... LOADED — ALL SYSTEMS NOMINAL"
 
     def _run_boot_steps(self, steps: list, index: int) -> None:
+        """Runs the splash's boot steps one at a time, 1.4 s apart (time for the presence orb to breathe), showing each
+        step's line; a step that fails is logged and skipped. After the last it calls _finish_boot().
+        """
         if index >= len(steps):
             self._finish_boot()
             return
@@ -5478,6 +5643,10 @@ class MIAApplication:
         QTimer.singleShot(1400, lambda: self._run_boot_steps(steps, index + 1))
 
     def _finish_boot(self) -> None:
+        """Decides the first screen after the splash: the setup wizard on a first run (or when setup was marked done but no
+        profile exists), the lock screen when the one profile has a password, the main window when there's one profile,
+        and the profile selector when there are several. Every screen goes through _display() (kiosk fullscreen).
+        """
         if self.config.is_first_run:
             log.info("First run detected — launching setup wizard.")
             self.setup_wizard = SetupWizard(self.context)
@@ -5543,14 +5712,17 @@ class MIAApplication:
         self._show_main_window()
 
     def _on_setup_finished(self) -> None:
+        """The wizard finished: show the main window."""
         self._show_main_window()
 
     def _on_profile_selected(self) -> None:
+        """Someone was chosen on the profile selector: close it and show the main window."""
         if self.profile_select is not None:
             self.profile_select.close()
         self._show_main_window()
 
     def _on_lock_screen_unlocked(self) -> None:
+        """The lock screen was unlocked: close it and show the main window."""
         if self.lock_screen is not None:
             self.lock_screen.close()
         self._show_main_window()
@@ -5574,6 +5746,9 @@ class MIAApplication:
         self._display(self.profile_select)
 
     def _show_main_window(self) -> None:
+        """Closes the splash and shows the main window (through _display(), so kiosk fullscreen holds), wiring its Switch
+        User button.
+        """
         if self.splash is not None:
             self.splash.close()
         self.main_window = MainWindow(self.context, self.module_manager)
