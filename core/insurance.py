@@ -102,6 +102,10 @@ COVERAGE_NAMES = {
 
 @dataclass
 class Policy:
+    """One insurance policy: its kind and insurer, premium and how often it's paid (with last term's, to see a change),
+    renewal date, deductible, coverage written one per line, what it covers (an asset), policy number, agent's email,
+    a note, and the quote chosen to switch to.
+    """
     policy_id: str
     kind: str
     insurer: str
@@ -123,6 +127,9 @@ class Policy:
 
 @dataclass
 class Quote:
+    """A quote collected for a policy: the insurer, premium and how often, deductible, coverage one per line, when it
+    came, and a note.
+    """
     quote_id: str
     policy_id: str
     insurer: str
@@ -137,6 +144,7 @@ class Quote:
 
 
 def _clean(cls, data: dict) -> dict:
+    """Only the fields a dataclass knows, from a saved dict (so a newer file loads)."""
     names = {f.name for f in fields(cls)}
     return {k: v for k, v in data.items() if k in names}
 
@@ -145,6 +153,7 @@ class InsuranceBook:
     """The household's policies and the quotes collected for them."""
 
     def __init__(self, context=None, data_dir: Optional[Path] = None) -> None:
+        """Points at the household's insurance.json (data/ by default) and loads it."""
         self.context = context
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._file = self.data_dir / FILE_NAME
@@ -154,6 +163,9 @@ class InsuranceBook:
         self._load()
 
     def _load(self) -> None:
+        """Reads policies, quotes and the renewal heads-ups already given; an unreadable file is logged and starts with
+        no policies.
+        """
         self.policies, self.quotes, self.noted = [], [], []
         if not self._file.exists():
             return
@@ -166,6 +178,7 @@ class InsuranceBook:
             log.exception("Couldn't read %s; starting with no policies.", FILE_NAME)
 
     def _save(self) -> None:
+        """Writes everything atomically (the last 100 heads-ups only)."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._file, json.dumps({"version": 1, "policies": [asdict(p) for p in self.policies],
                                                   "quotes": [asdict(q) for q in self.quotes],
@@ -181,9 +194,11 @@ class InsuranceBook:
 
     # -- policies
     def get_policy(self, policy_id: str) -> Optional[Policy]:
+        """The policy with this id, or None."""
         return next((p for p in self.policies if p.policy_id == policy_id), None)
 
     def add_policy(self, kind: str, insurer: str, premium: float = 0.0, every: str = "6 Months", **values) -> Policy:
+        """Adds a policy (kind, payment period and premium checked; named "<kind> insurance" when no name is given)."""
         _check(kind, every, premium)
         now = datetime.now().isoformat(timespec="seconds")
         policy = Policy(policy_id=uuid.uuid4().hex[:10], kind=kind, insurer=insurer.strip(), premium=float(premium or 0),
@@ -196,6 +211,7 @@ class InsuranceBook:
         return policy
 
     def update_policy(self, policy_id: str, **values) -> Policy:
+        """Changes a policy's fields (re-checked) and stamps updated_at; ValueError when it's gone."""
         policy = self.get_policy(policy_id)
         if policy is None:
             raise ValueError("That policy isn't there anymore.")
@@ -208,6 +224,7 @@ class InsuranceBook:
         return policy
 
     def delete_policy(self, policy_id: str) -> None:
+        """Deletes a policy and its quotes."""
         if self.get_policy(policy_id) is None:
             raise ValueError("That policy isn't there anymore.")
         self.policies = [p for p in self.policies if p.policy_id != policy_id]
@@ -216,12 +233,15 @@ class InsuranceBook:
 
     # -- quotes
     def get_quote(self, quote_id: str) -> Optional[Quote]:
+        """The quote with this id, or None."""
         return next((q for q in self.quotes if q.quote_id == quote_id), None)
 
     def quotes_for(self, policy_id: str) -> list[Quote]:
+        """A policy's quotes."""
         return [q for q in self.quotes if q.policy_id == policy_id]
 
     def add_quote(self, policy_id: str, insurer: str, premium: float = 0.0, every: str = "6 Months", **values) -> Quote:
+        """Adds a quote to a policy (checked like a policy; named "<insurer> quote" when no name is given)."""
         policy = self.get_policy(policy_id)
         if policy is None:
             raise ValueError("Pick the policy this quote is for.")
@@ -237,6 +257,7 @@ class InsuranceBook:
         return quote
 
     def update_quote(self, quote_id: str, **values) -> Quote:
+        """Changes a quote's fields; ValueError when it's gone."""
         quote = self.get_quote(quote_id)
         if quote is None:
             raise ValueError("That quote isn't there anymore.")
@@ -247,6 +268,7 @@ class InsuranceBook:
         return quote
 
     def delete_quote(self, quote_id: str) -> None:
+        """Deletes a quote, and un-chooses it on its policy if it was the one to switch to."""
         if self.get_quote(quote_id) is None:
             raise ValueError("That quote isn't there anymore.")
         self.quotes = [q for q in self.quotes if q.quote_id != quote_id]
@@ -278,6 +300,7 @@ class InsuranceBook:
 
 
 def _check(kind: str, every: str, premium) -> None:
+    """A policy's kind must be one of KINDS, its payment period one of PER_YEAR, its premium not negative (ValueError)."""
     if kind not in KINDS:
         raise ValueError("Pick what kind of insurance it is.")
     if every not in PER_YEAR:
@@ -304,6 +327,9 @@ def _amounts(text: str) -> list[float]:
 
 
 def coverage_key(name: str) -> str:
+    """A coverage line's name reduced to a key for matching across insurers (lowercase, punctuation out, known
+    synonyms mapped through COVERAGE_NAMES).
+    """
     plain = re.sub(r"\s+", " ", re.sub(r"[^a-z/ -]", " ", name.lower())).strip(" -")
     return COVERAGE_NAMES.get(plain, plain)
 
@@ -374,6 +400,7 @@ def compare(policy: Policy, quotes: list[Quote]) -> dict:
 
 
 def _money(value: float) -> str:
+    """An amount in the person's currency (core/region.py), with a plain dollar format only if that fails."""
     from core.region import money
 
     try:
@@ -383,6 +410,7 @@ def _money(value: float) -> str:
 
 
 def _vehicle_year(context, asset_id: str) -> Optional[int]:
+    """A covered vehicle's model year: a year in its name or model, else its purchase year; None when unknown."""
     maintenance = getattr(context, "maintenance", None)
     asset = maintenance.get_asset(asset_id) if maintenance is not None and asset_id else None
     if asset is None:
@@ -451,6 +479,7 @@ def renewal_notes(context, today: Optional[date] = None) -> list[tuple[str, str,
 
 
 def _day(iso: str) -> str:
+    """A date as "October 18"."""
     d = date.fromisoformat(iso)
     return f"{d:%B} {d.day}"
 
@@ -545,6 +574,10 @@ def quote_request(context, policy: Policy) -> tuple[list[str], str, str]:
 
 
 def insurance_page(context, today: Optional[date] = None) -> dict:
+    """The Insurance page's data: each policy (by kind) with its yearly cost, what it covers, its coverage lines, the
+    checks worth a look, its quotes compared, and the agent's checklist; a summary (policies, total a year, renewing
+    in 60 days, what the best quotes could save); the forms, kinds, periods and assets to choose from.
+    """
     book = getattr(context, "insurance", None)
     if book is None:
         return {"available": False}
