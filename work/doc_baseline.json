@@ -165,7 +165,6 @@
   "core/password_strength.py": 2,
   "core/person_settings.py": 4,
   "core/phone_link.py": 3,
-  "core/phone_server.py": 15,
   "core/places.py": 12,
   "core/plaid_manager.py": 21,
   "core/plain_words.py": 2,

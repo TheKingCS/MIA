@@ -48,6 +48,9 @@ _START_WAIT_SECONDS = 5.0
 
 @dataclass
 class TailscaleInfo:
+    """What Tailscale says about this computer: installed, signed in and connected, its phone address, whether
+    `tailscale serve` forwards to MIA, and the problem in words if any.
+    """
     installed: bool = False
     running: bool = False  # signed in and connected
     address: str = ""  # https://mia-home.tail1234.ts.net
@@ -72,10 +75,14 @@ def serve_forwards_to(text: str, port: int) -> bool:
 
 
 def serve_command(port: int) -> str:
+    """The exact command that makes Tailscale forward to MIA's port."""
     return f"sudo tailscale serve --bg http://127.0.0.1:{port}"
 
 
 def tailscale_info(port: int, run: Callable = subprocess.run, which: Callable = shutil.which) -> TailscaleInfo:
+    """Asks Tailscale (status, then serve status, each with a 5-second timeout) whether it's installed, connected,
+    what this computer's address is and whether it forwards to MIA; any problem said in words with what to run.
+    """
     exe = which("tailscale")
     if exe is None:
         return TailscaleInfo(problem="Tailscale isn't installed on this computer (docs/SETUP_GUIDE.md, Part 8).")
@@ -100,6 +107,9 @@ def tailscale_info(port: int, run: Callable = subprocess.run, which: Callable = 
 
 @dataclass
 class PhoneServerStatus:
+    """The phone server's status for Settings: switched on, running, its address and port, any error, how many
+    profiles have a password (the phone login needs one), and which phones used it last (newest first).
+    """
     enabled: bool
     running: bool
     host: str
@@ -110,6 +120,7 @@ class PhoneServerStatus:
 
 
 def port_free(host: str, port: int) -> bool:
+    """Whether a port can be bound now (on Linux, a port just released is free, as uvicorn sees it)."""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
         if os.name == "posix":
             # Like uvicorn itself: a port just released by switching off
@@ -123,7 +134,11 @@ def port_free(host: str, port: int) -> bool:
 
 
 class PhoneServer:
+    """Owns the phone and web API server (server/app.py), run in this process on a thread and listening on loopback
+    only: switched on and off from Settings live, with a plain-language status.
+    """
     def __init__(self, context) -> None:
+        """Nothing runs yet: start() makes the server."""
         self.context = context
         self._server = None  # uvicorn.Server
         self._thread: Optional[threading.Thread] = None
@@ -135,22 +150,27 @@ class PhoneServer:
 
     @property
     def config(self):
+        """The config (server.* settings live there)."""
         return self.context.config
 
     @property
     def enabled(self) -> bool:
+        """Whether phone access is switched on (server.enabled)."""
         return bool(self.config.get("server.enabled", False))
 
     @property
     def host(self) -> str:
+        """The address it listens on (127.0.0.1 by default)."""
         return str(self.config.get("server.host", "127.0.0.1") or "127.0.0.1")
 
     @property
     def port(self) -> int:
+        """The port it listens on."""
         return int(self.config.get("server.port", DEFAULT_PORT) or DEFAULT_PORT)
 
     @property
     def running(self) -> bool:
+        """Whether the server's thread is alive."""
         return self._thread is not None and self._thread.is_alive()
 
     def set_enabled(self, enabled: bool) -> bool:
@@ -243,9 +263,11 @@ class PhoneServer:
 
     @property
     def local_url(self) -> str:
+        """The address the desktop's own web view uses."""
         return f"http://127.0.0.1:{self.port}"
 
     def stop(self) -> None:
+        """Asks the server to exit and waits for its thread (up to 5 seconds)."""
         if self._server is not None:
             self._server.should_exit = True
         if self._thread is not None:
@@ -254,6 +276,7 @@ class PhoneServer:
         log.info("Phone server stopped.")
 
     def status(self) -> PhoneServerStatus:
+        """The status for Settings, including which phones have used it (the desktop's own web view left out)."""
         profiles = getattr(self.context, "profiles", None)
         with_password = sum(1 for p in profiles.list_profiles() if p.has_password) if profiles else 0
         phones: list[tuple[str, float]] = []
