@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1069 files, 238,036 lines; 1069 files describe themselves; 7,435 of 13,808 classes and functions are documented.
+1070 files, 238,211 lines; 1070 files describe themselves; 7,441 of 13,814 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-379 files, 109,367 lines; 5,761 of 5,850 classes and functions documented
+379 files, 109,473 lines; 5,764 of 5,853 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -397,7 +397,7 @@
 
 ## gui/: the desktop's Qt shell and dialogs
 
-122 files, 20,806 lines; 155 of 1,083 classes and functions documented
+122 files, 20,823 lines; 155 of 1,083 classes and functions documented
 
 - `gui/__init__.py`: Presentation layer only. Everything in this package talks to the rest of the system through core.app_context.AppContext and modules.module_base. ModuleBase — never by importing module internals or reaching into core services directly beyond what AppContext exposes.
 - `gui/account_dialogs.py`: Accounts and households on the desktop (2026-10-01, docs/ROADMAP.md "People and ownership"; core/profile_manager.py, core/household_manager.py): *(30 undocumented)*
@@ -622,7 +622,7 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-31 files, 3,178 lines; 91 of 91 classes and functions documented
+31 files, 3,180 lines; 91 of 91 classes and functions documented
 
 - `tools/audit.py`: MIA's self-audit from the command line (DEC-0108; core/self_audit.py, core/practices.py).
 - `tools/bench_audit.py`: What MIA's routing does today with each Intelligence Benchmark question (tests/intelligence_bench.py, docs/INTELLIGENCE_BENCHMARK.md): a question plan (core/question_plans.py: lookups by code, one answer), answered by code (a direct lookup), offered which tools, or left to the model with no tools at
@@ -658,7 +658,7 @@
 
 ## tests/: the test suite: what each part must do
 
-356 files, 64,325 lines; 367 of 5,723 classes and functions documented
+357 files, 64,375 lines; 370 of 5,726 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -891,6 +891,7 @@
 - `tests/test_pathway_tool.py`: Unit tests for modules.toolbox.tools.pathway_tool's pure functions, same style as tests/test_intent_tool.py (no Qt event loop, no fixtures). *(8 undocumented)*
 - `tests/test_pc_tools.py`: The home-PC kit (DEC-0022): the readiness check says what's missing, and the model comparison recommends the most accurate model, the faster of two that are about as accurate. *(2 undocumented)*
 - `tests/test_personal_data.py`: Each person's own MIA (core/personal_data.py): conversations, memories, journal, notes, reasons and MIA's message log belong to the person, not the device; the formerly shared files move to the owner once. *(9 undocumented)*
+- `tests/test_personality_values.py`: MIA's Highest Self (docs/design/MIA_HIGHEST_SELF.md, DEC-0114) in code: her foundational values change only by a decision, never by accident (section 10); the faith-and-meaning line joins the prompt only when a message turns there; and the integrity rules catch what she must never say (dependency, d
 - `tests/test_phone_history.py`: Phone conversations in the desktop's History, open screens refreshing after changes made elsewhere (core/main_thread.py, ModuleBase.refresh, MainWindow), and per-turn timings for the phone. *(18 undocumented)*
 - `tests/test_phone_ready.py`: DEC-0019 (2026-10-07): MIA's engine runs on the phone. The phone has no Qt, no desktop voice, no Plaid, no psutil, no offline library and no Web Push sender, so the engine and server must start, serve every screen and take an action without any of them. This builds both in a fresh process with those *(1 undocumented)*
 - `tests/test_phone_server.py`: Phone access from Settings (core/phone_server.py): starting and stopping the real server live, the Tailscale checks, and the status checklist. *(12 undocumented)*

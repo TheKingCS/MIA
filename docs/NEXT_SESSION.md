@@ -623,6 +623,8 @@ uncommitted. 6,863 of 13,808 documented on 2026-11-07: every core/, server/ and 
 
 **Her curriculum (DEC-0107, `docs/CURRICULUM.md`):** ten computing tracks, one Night School lesson a night for the next objective (`python -m tools.night_school curriculum`). Nothing run yet: the first real night with it is the next one. Grow it in `core/curriculum.py` when her teacher's lessons point at a gap.
 
+**The Highest Self (H-0089 → H-0090, DEC-0114 PROPOSED):** the doctrine is `docs/design/MIA_HIGHEST_SELF.md`; its core is in `core/personality.py` (two CHARACTER clauses, a tone example, the faith-and-meaning line, the integrity rules, the values pinned by `tests/test_personality_values.py`). Measured on the corpus (`pc-check/conversation-highest-self-*`): routing fixed, doubt and grand plans better, "is God real" still deflected, dependency uneven, answers six words longer. Next, after Zac's ratings and decision: the three modes (Intellectual, Counselor, Creative), then tune on his ratings.
+
 **Experience Maturity (H-0087 → H-0088, DEC-0113 PROPOSED):** Stage 1 is done (the audit, the identity draft, the design system, the collaboration workflow and library, the Workout and Kitchen briefs). Nothing in `web/` changes until Zac decides DEC-0113 and round one of concepts is in `docs/design/visual_library/`. Then: the contrast test, one orb component, named surfaces and controls (with aliases), Workout. Kitchen's cooking session (engine) can start earlier.
 
 **Learning paths (DEC-0112):** any desire runs through `core/paths.py` (guitar is its first program; anything else is drafted and started on the person's say-so). Don't build a parallel learn-a-skill feature: add a `Program`. MIA's own curriculum is ten Programs on her own PathBook (`core/curriculum.mia_book()`, `data/dev/mia_paths`); `python -m tools.night_school curriculum` shows it. **Guitar (DEC-0111):** when Zac has tried it, read his heard-check attempts (his folder's `paths.json`, path `guitar`): if real chords fail that should pass, adjust `CHORD_TONE`/`STRAY` in `core/guitar_ear.py` from those numbers (they were set on synthesized strings).
@@ -880,7 +882,6 @@ it, and went with Claude's recommendations. The plan, in order:
 
 ## 4. Known loose ends
 
-- **Literal "$" in the desktop (found 2026-11-07, documenting modules/):** 17 files in `gui/` and `modules/` label money fields "Amount ($):", "Price ($):" and so on (the Budget's mileage prompt also names the IRS), against the rule to format money with `core.region` (`currency_symbol_for(context)`). The web screens are right; only the Qt dialogs. A small sweep: `grep -rn '(\$' gui modules`.
 - **On Zac's PC (2026-10-20):** `pytest` used to save into the real
   `config\config.json`: one run left 49 test profiles (Alex, Faith) and
   made a Faith the active one. Fixed in `tests/conftest.py` (a temp

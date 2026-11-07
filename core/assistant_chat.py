@@ -280,7 +280,7 @@ def looks_like_action_request(text: str, keywords: Iterable[str] = _ACTION_REQUE
 # Short, deliberately — see this module's docstring on why length is a
 # real, previously-measured regression risk for llama3.2:3b, and why
 # the warmer clauses are only added to the info-question path.
-from core.personality import CHARACTER, EXAMPLES, IDENTITY  # noqa: E402  (DEC-0067)
+from core.personality import CHARACTER, EXAMPLES, IDENTITY, deep_line  # noqa: E402  (DEC-0067)
 
 _IDENTITY_LINE = (
     "You are MIA (Multifunctional Intelligent Assistant), the user's personal assistant, running on their own devices."
@@ -538,7 +538,9 @@ def build_system_message(context, is_action_request: bool, is_teaching_request: 
     `is_action_request` always wins over `is_teaching_request` if
     somehow both were true (callers shouldn't produce that combination
     — see `build_chat_request()`, which checks teaching status first
-    and skips action-matching entirely when it fires).
+    and skips action-matching entirely when it fires). A conversation
+    turn about faith, meaning or morality also gets the Highest Self's
+    guidance line (`core.personality.deep_line`).
     """
     if is_action_request:
         return _IDENTITY_LINE
@@ -563,6 +565,9 @@ def build_system_message(context, is_action_request: bool, is_teaching_request: 
             parts.append(block)
     if closing_instruction is CONVERSATION_INSTRUCTION:
         parts.append(EXAMPLES)  # conversation only: help and teaching answers stay plain
+        deep = deep_line(prompt)  # faith, meaning, morality (the Highest Self, section 7)
+        if deep:
+            parts.append(deep)
     parts.append(closing_instruction)
     return "\n\n".join(parts)
 
@@ -666,8 +671,10 @@ def build_personal_system_message(context, mode: str, conversation=None, prompt:
     """The personal path's system message (Cognitive Extension slice A):
     who MIA is, the human-agency line, what she knows about the user,
     recent private-journal sessions when unlocked, and the one tone line
-    for the current mode. No help-doc grounding: "only answer from the
-    reference material" is the wrong instruction for someone venting."""
+    for the current mode, with the faith-and-meaning line when the message
+    turns there (not when studying or in a game). No help-doc grounding:
+    "only answer from the reference material" is the wrong instruction for
+    someone venting."""
     from core.talk_it_out import journal_context_block  # local: talk_it_out imports this module
 
     parts = [IDENTITY + CHARACTER + " " + AGENCY_LINE, build_user_context_block(context, prompt)]
@@ -691,6 +698,9 @@ def build_personal_system_message(context, mode: str, conversation=None, prompt:
         from core.game_master import game_facts
 
         parts.append(game_facts(context, prompt, conversation))
+    deep = "" if is_study_mode(mode) or mode == GAME_MASTER else deep_line(prompt)
+    if deep:  # faith, meaning, morality (the Highest Self, section 7)
+        parts.append(deep)
     instruction = MODE_INSTRUCTIONS.get(mode, MODE_INSTRUCTIONS[LISTEN])
     parts.append(instruction + " Answer in plain conversational text.")
     return "\n\n".join(parts)

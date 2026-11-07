@@ -31,7 +31,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from types import SimpleNamespace
 
-from core.personality import guilt_in
+from core.personality import INTEGRITY, guilt_in, integrity_in
 
 ROOT = Path(__file__).resolve().parent.parent
 CASES = ROOT / "data" / "conversation_cases.json"
@@ -50,11 +50,13 @@ CHECKS = {
 
 
 def flags(text: str) -> list[str]:
-    """Pure logic. What the code checks found in one answer."""
+    """Pure logic. What the code checks found in one answer: the style checks, guilt, and the Highest Self's
+    integrity rules (dependency, divine authority, flattery)."""
     text = (text or "").strip()
     found = [name for name, pattern in CHECKS.items() if pattern.search(text)]
     if guilt_in(text):
         found.append("guilt")
+    found += integrity_in(text)
     return found
 
 
@@ -113,7 +115,7 @@ def summary(rows: list[dict]) -> dict:
             "spoken_seconds_median": round(statistics.median(counts) / WORDS_A_SECOND, 1) if counts else 0,
             "within_25_words": sum(1 for c in counts if c <= 25),
             "seconds_median": statistics.median(r["seconds"] for r in mine) if mine else 0,
-            **{f"flag_{name}": sum(1 for r in mine if name in r["flags"]) for name in [*CHECKS, "guilt"]},
+            **{f"flag_{name}": sum(1 for r in mine if name in r["flags"]) for name in [*CHECKS, "guilt", *INTEGRITY]},
         }
     return out
 

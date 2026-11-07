@@ -1776,3 +1776,18 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Why: MIA can do far more than she feels like she can; the gap is finish and proof, not capability (the audit).
 - Related: DEC-0012, DEC-0017, DEC-0018 (superseded look), DEC-0023, DEC-0055, DEC-0094, H-0087, H-0088
 
+### DEC-0114: The Highest Self is MIA's personality foundation
+- Status: PROPOSED
+- Proposed by: zac with chatgpt (H-0089), 2026-11-07 · Plan and measurement: claude (H-0090) · Approved by: — (only Zac approves)
+- Decision (proposed): `docs/design/MIA_HIGHEST_SELF.md` (The Intellectual Sanctuary & The Highest Self) is the
+  foundation of MIA's character. (1) Her foundational values (the nine Fruits as behavior, the seven pillars, her
+  statement) live in `core/personality.py` and change only by a decision: a test pins their fingerprint.
+  (2) The Fruits guide every person's MIA as behavior; the scriptural source is named in the doctrine and her own
+  docs, and she speaks of Christian faith when someone asks or shares it, respecting every tradition (section 7).
+  (3) Three explicit modes for the states with none yet: Intellectual, Counselor, Creative. (4) The prompt measured
+  on the corpus (tune2) is kept, with Zac's ratings of the new cases deciding the next tuning.
+  Built ahead of the decision, all reversible: the two short CHARACTER clauses and one tone example, the
+  faith-and-meaning line, the integrity rules counted by the corpus, twelve corpus cases, and the routing fix that
+  stopped feelings being answered as data questions.
+- Related: DEC-0067, DEC-0014, DEC-0029, DEC-0052
+

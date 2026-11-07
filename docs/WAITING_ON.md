@@ -9,6 +9,7 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 ## Zac
 
 ### Decisions
+- [ ] **The Highest Self (H-0089 → H-0090, DEC-0114 PROPOSED):** read H-0090 (one page) and decide its four questions (the foundation, faith for everyone's MIA, three new modes, keep the tuned prompt); and rate MIA's twelve new answers in `pc-check/conversation-highest-self-tune2.md` (faith, meaning, vulnerability, grand plans, dependency, free will, flattery): your ratings decide the next tuning.
 - [ ] **Experience Maturity (H-0087 → H-0088, DEC-0113 PROPOSED):** read H-0088 (one page) and decide: the direction
       and sequence; per-app atmosphere (Claude: yes); dark only (Claude: yes); the image pipeline (library + ChatGPT
       by hand now, API later); run round one of concepts first. The handoff was numbered H-0084 (taken): filed as H-0087.

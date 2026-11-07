@@ -902,6 +902,11 @@ NOT_A_PLAN = (
     "How are you?", "Thanks!", "Tell me a joke.", "Good morning", "What do you think about that?",
     "What's the weather tomorrow?", "Who won the game last night?", "What's your name?", "I'm tired today.",
     "I had a rough day at work.", "That's cool.", "Okay, sounds good.",
+    # Feelings, faith and big leaps are a conversation, not a data question (the Highest Self, H-0089): measured
+    # 2026-11-07, "struggling with my faith" went to the patterns plan and "quit my job to stream" to freedom.
+    "I've been doubting what I believe.", "I feel guilty about something.", "Is there a God?",
+    "What's the meaning of it all?", "I feel like I'm not good enough.", "Am I a good person?",
+    "I'm thinking of quitting to chase my dream. Thoughts?", "Nobody understands me like you do.",
 )
 # A message starting like this asks MIA to change something: never a plan.
 CHANGE_VERBS = frozenset((
