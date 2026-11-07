@@ -72,20 +72,26 @@ class JournalLockedError(Exception):
 
 @dataclass
 class JournalExchange:
+    """One turn of a journaling conversation: who spoke (the person or MIA), what was said, and when."""
     role: str  # "user" | "assistant"
     content: str
     timestamp: str = ""
 
     def to_dict(self) -> dict:
+        """The turn as a plain dict (encrypted with the rest of the entry)."""
         return {"role": self.role, "content": self.content, "timestamp": self.timestamp}
 
     @staticmethod
     def from_dict(data: dict) -> "JournalExchange":
+        """A turn from its dict."""
         return JournalExchange(data.get("role", "user"), data.get("content", ""), data.get("timestamp", ""))
 
 
 @dataclass
 class PrivateJournalEntry:
+    """One journaling session, as it is only once decrypted: title, summary, mood (the person's own words, never a
+    score), themes, the conversation itself, and the conversation it came from.
+    """
     entry_id: str
     title: str = "Journal session"
     summary: str = ""
@@ -98,9 +104,11 @@ class PrivateJournalEntry:
 
     @property
     def user_text(self) -> str:
+        """Everything the person said in the session, one turn per line."""
         return "\n".join(e.content for e in self.exchanges if e.role == "user")
 
     def to_dict(self) -> dict:
+        """The entry as a plain dict, which is what gets encrypted."""
         return {
             "entry_id": self.entry_id,
             "title": self.title,
@@ -115,6 +123,7 @@ class PrivateJournalEntry:
 
     @staticmethod
     def from_dict(data: dict) -> "PrivateJournalEntry":
+        """An entry from its decrypted dict; missing fields take their defaults."""
         return PrivateJournalEntry(
             entry_id=data.get("entry_id", uuid.uuid4().hex[:10]),
             title=data.get("title", "Journal session"),
@@ -129,17 +138,26 @@ class PrivateJournalEntry:
 
 
 def _b64(data: bytes) -> str:
+    """Bytes as base64 text, for the JSON file."""
     return base64.b64encode(data).decode("ascii")
 
 
 def _unb64(text: str) -> bytes:
+    """Base64 text back to bytes."""
     return base64.b64decode(text.encode("ascii"))
 
 
 class PrivateJournalManager:
+    """The person's encrypted journal: MIA can always write an entry (each gets its own Fernet key, wrapped with the
+    journal's RSA public key) and nobody can read one until the person unlocks the private key with their
+    passphrase. Only ids and timestamps are readable on disk; the unlocked key lives in memory only.
+    """
     def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
         # Whose data: a person's own folder (core/personal_data.py), or the
         # shared data/ folder by default.
+        """Points at the person's two files (the keys and the entries) and loads the public key and the sealed entries;
+        nothing is decrypted here.
+        """
         self.data_dir = Path(data_dir) if data_dir is not None else _KEYS_FILE.parent
         self._keys_file = self.data_dir / _KEYS_FILE.name if data_dir is not None else _KEYS_FILE
         self._entries_file = self.data_dir / _ENTRIES_FILE.name if data_dir is not None else _ENTRIES_FILE
@@ -154,6 +172,9 @@ class PrivateJournalManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads the public key (without it, nothing can be written: logged and reported) and the sealed entries (an
+        unreadable file is logged, reported and starts empty).
+        """
         if self._keys_file.exists():
             try:
                 keys = json.loads(self._keys_file.read_text(encoding="utf-8"))
@@ -171,6 +192,7 @@ class PrivateJournalManager:
                 self._records = []
 
     def _save_records(self) -> None:
+        """Writes the sealed entries atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._entries_file, json.dumps({"version": 1, "entries": self._records}, indent=2))
 
@@ -179,9 +201,11 @@ class PrivateJournalManager:
     # ------------------------------------------------------------------
 
     def is_set_up(self) -> bool:
+        """Whether the journal has its keys (it can be written to)."""
         return self._public_key is not None
 
     def is_unlocked(self) -> bool:
+        """Whether the private key is open in memory (entries can be read)."""
         return self._private_key is not None
 
     def setup(self, passphrase: str) -> None:
@@ -208,6 +232,7 @@ class PrivateJournalManager:
         log.info("Private journal set up.")
 
     def verify_passphrase(self, passphrase: str) -> bool:
+        """Whether a passphrase opens the private key, without unlocking."""
         try:
             self._decrypt_private_key(passphrase)
         except SecretsError:
@@ -220,9 +245,13 @@ class PrivateJournalManager:
         log.info("Private journal unlocked (%d entries).", len(self._records))
 
     def lock(self) -> None:
+        """Forgets the private key: entries can be written but not read again until unlocked."""
         self._private_key = None
 
     def _decrypt_private_key(self, passphrase: str):
+        """The private key opened with the passphrase (core/secrets_manager.decrypt_bytes); SecretsError when the
+        journal isn't set up, the key file can't be read, or the passphrase is wrong.
+        """
         if not self._keys_file.exists():
             raise SecretsError("The private journal hasn't been set up yet.")
         try:
@@ -266,6 +295,9 @@ class PrivateJournalManager:
         return entry
 
     def _decrypt_record(self, record: dict) -> Optional[PrivateJournalEntry]:
+        """One sealed entry opened: its key unwrapped with the private key (RSA-OAEP), then the entry decrypted
+        (Fernet). An entry that can't be opened is logged by id and skipped.
+        """
         try:
             entry_key = self._private_key.decrypt(_unb64(record["key"]), _OAEP)
             plaintext = Fernet(entry_key).decrypt(_unb64(record["data"]))
@@ -282,9 +314,11 @@ class PrivateJournalManager:
         return sorted(entries, key=lambda e: e.created_at, reverse=True)
 
     def get_entry(self, entry_id: str) -> Optional[PrivateJournalEntry]:
+        """One entry by id, decrypted, or None; JournalLockedError while locked."""
         return next((e for e in self.all_entries() if e.entry_id == entry_id), None)
 
     def delete_entry(self, entry_id: str) -> bool:
+        """Deletes a sealed entry by id (no passphrase needed); False when it wasn't there."""
         before = len(self._records)
         self._records = [r for r in self._records if r.get("entry_id") != entry_id]
         if len(self._records) == before:

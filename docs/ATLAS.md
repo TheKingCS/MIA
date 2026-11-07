@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 227,494 lines; 1043 files describe themselves; 4,041 of 13,517 classes and functions are documented.
+1043 files, 227,528 lines; 1043 files describe themselves; 4,062 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 101,400 lines; 3,310 of 5,630 classes and functions documented
+367 files, 101,434 lines; 3,331 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -261,7 +261,7 @@
 - `core/port_scanner.py`: Pure-Python TCP connect-scan port scanner — docs/ROADMAP.md milestone 11.5, Field Kit's Security/Network Toolkit. Deliberately doesn't wrap `nmap`: `nmap` isn't installed in this dev sandbox and can't be added without sudo (the same "no sudo" wall as every other missing system package this project h *(1 undocumented)*
 - `core/power_manager.py`: Power monitoring — docs/ROADMAP.md milestone 7.2. Defines a small backend-agnostic interface (`PowerBackend`, same shape as core/llm_manager.py's `LLMBackend` and core/voice_manager.py's `STTBackend`/`TTSBackend`), with one concrete implementation, `PsutilBatteryBackend`, using psutil's cross-platfo *(6 undocumented)*
 - `core/presence.py`: Presence (DEC-0044, docs/UX_SYSTEM_AUDIT.md): what matters now, across everything MIA keeps, in one ranked list, so nobody has to visit eight screens to find out. Each item says **why** it's there, what **kind** of thing it is (a deadline, a fact, a suggestion, progress), where it came from, where t *(10 undocumented)*
-- `core/private_journal.py`: The encrypted private journal — slice A ("Talk it out") of docs/COGNITIVE_EXTENSION_PROPOSAL.md. Conversations the user journals with MIA are saved here, one entry per journaling session, organized (title, mood, themes, summary) and kept encrypted at rest. Separate from core/journal_manager.py (the  *(21 undocumented)*
+- `core/private_journal.py`: The encrypted private journal — slice A ("Talk it out") of docs/COGNITIVE_EXTENSION_PROPOSAL.md. Conversations the user journals with MIA are saved here, one entry per journaling session, organized (title, mood, themes, summary) and kept encrypted at rest. Separate from core/journal_manager.py (the 
 - `core/product_manager.py`: MIA Home's finished-goods products — the third slice of the proposed `mia_home_schema.sql` (see `docs/VISION.md`'s "MIA Home's expanded scope" section, `core/material_manager.py`'s docstring for the first slice, and `core/job_manager.py`'s for the second), adapted to this project's persisted-JSON-ma
 - `core/profile_manager.py`: Manages MIA user profiles — distinct from ConfigManager, which holds app-wide settings (theme, kiosk mode, etc.) that apply regardless of who's using the device. A "profile" is a person: their display name, when they were created, an optional password, and (going forward) the namespace their persona *(11 undocumented)*
 - `core/project_manager.py`: Project Manager — the v1.0+-bucket "Project Manager" tool listed in docs/ROADMAP.md's Toolbox section, buildable with zero real hardware (same rationale as Activity Log/Navigation/Field Kit/Expedition Mode before it). Top-level container for a Project; each Project can hold multiple core.task_manage *(13 undocumented)*
