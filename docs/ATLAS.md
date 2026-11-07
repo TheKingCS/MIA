@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 228,809 lines; 1043 files describe themselves; 4,883 of 13,517 classes and functions are documented.
+1043 files, 228,842 lines; 1043 files describe themselves; 4,910 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 102,715 lines; 4,152 of 5,630 classes and functions documented
+367 files, 102,748 lines; 4,179 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -264,7 +264,7 @@
 - `core/private_journal.py`: The encrypted private journal — slice A ("Talk it out") of docs/COGNITIVE_EXTENSION_PROPOSAL.md. Conversations the user journals with MIA are saved here, one entry per journaling session, organized (title, mood, themes, summary) and kept encrypted at rest. Separate from core/journal_manager.py (the 
 - `core/product_manager.py`: MIA Home's finished-goods products — the third slice of the proposed `mia_home_schema.sql` (see `docs/VISION.md`'s "MIA Home's expanded scope" section, `core/material_manager.py`'s docstring for the first slice, and `core/job_manager.py`'s for the second), adapted to this project's persisted-JSON-ma
 - `core/profile_manager.py`: Manages MIA user profiles — distinct from ConfigManager, which holds app-wide settings (theme, kiosk mode, etc.) that apply regardless of who's using the device. A "profile" is a person: their display name, when they were created, an optional password, and (going forward) the namespace their persona *(11 undocumented)*
-- `core/project_manager.py`: Project Manager — the v1.0+-bucket "Project Manager" tool listed in docs/ROADMAP.md's Toolbox section, buildable with zero real hardware (same rationale as Activity Log/Navigation/Field Kit/Expedition Mode before it). Top-level container for a Project; each Project can hold multiple core.task_manage *(13 undocumented)*
+- `core/project_manager.py`: Project Manager — the v1.0+-bucket "Project Manager" tool listed in docs/ROADMAP.md's Toolbox section, buildable with zero real hardware (same rationale as Activity Log/Navigation/Field Kit/Expedition Mode before it). Top-level container for a Project; each Project can hold multiple core.task_manage
 - `core/push_subscription_manager.py`: Persists the Web Push subscriptions a profile's browser/PWA has registered — the endpoint URL + keys `PushManager.subscribe()` returns, per the standard Web Push API. One profile can have more than one subscription (a phone and a laptop, say), so this is a list keyed by profile_id, not a single fiel *(10 undocumented)*
 - `core/push_to_talk_source.py`: The headless counterpart to `core/push_to_talk_trigger.py` — that module is a `QObject` (needs Qt signals to marshal a GPIO interrupt back onto the GUI thread), which `core/voice_loop.py` deliberately avoids so a Core deployment never needs PySide6/Qt installed at all (see `core/core_runtime.py`'s d *(6 undocumented)*
 - `core/push_to_talk_trigger.py`: Unifies the two ways a push-to-talk press can originate — a real GPIO button interrupt in kiosk deployment, or the on-screen "Hold to Talk" button in dev (docs/ROADMAP.md milestone 5.3, docs/HARDWARE.md's Voice interface section) — behind one `pressed`/`released` signal pair, so modules/assistant/mo *(3 undocumented)*
@@ -315,7 +315,7 @@
 - `core/system_health.py`: Point-in-time system health readings (CPU/RAM/disk/network/temperature) via `psutil` — originally lived in modules/diagnostics/module.py (v0.7 milestone 7.1) as that module's "own exclusive concern", deliberately not promoted to core/ at the time since nothing else needed it. Moved here when milesto *(1 undocumented)*
 - `core/tak.py`: MIA's places in the open, civilian standards a TAK app speaks (build plan step 14, DEC-0099): Cursor on Target events and KML, packed as a TAK data package (a zip with a `MANIFEST/manifest.xml`) that ATAK-CIV, iTAK and WinTAK import, so the person's waypoints show on their TAK map with MIA's names,  *(3 undocumented)*
 - `core/talk_it_out.py`: Slice A of docs/COGNITIVE_EXTENSION_PROPOSAL.md, "Talk it out": the glue every chat surface (Home's chat bar, the character panel, the Assistant module, the phone, the headless voice loop) calls around one turn, so they all behave the same way. *(13 undocumented)*
-- `core/task_manager.py`: A single Task under a core.project_manager.Project — one concrete to-do item, checked off when done. Same persisted-JSON pattern as core/trip_manager.py, minus that module's photo/journal/gear extensions, which don't apply to a plain task list. *(14 undocumented)*
+- `core/task_manager.py`: A single Task under a core.project_manager.Project — one concrete to-do item, checked off when done. Same persisted-JSON pattern as core/trip_manager.py, minus that module's photo/journal/gear extensions, which don't apply to a plain task list.
 - `core/textbook_manager.py`: The textbook tutor's library (2026-09-28): "a feature where MIA gets textbooks that can be added to her that she can reference to help educate the user on subjects of their choice... understand it and assist a user in understanding it."
 - `core/textbook_study.py`: The study and quiz conversation modes of the textbook tutor (2026-09-28): which book and chapter a conversation is on, and the passages MIA answers from each turn. The library itself is core/textbook_manager.py; the tone lines are in core/conversation_modes.py (STUDY, QUIZ). *(1 undocumented)*
 - `core/the_loop.py`: The Loop (DEC-0047, step 1; Zac 2026-10-27): the normal week, run as the same grind every week, and MIA learning *when* it happens so she knows when to start each part and remind you.

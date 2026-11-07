@@ -43,6 +43,9 @@ PROJECT_STATUSES = ("Planning", "Active", "On Hold", "Complete")
 
 @dataclass
 class Project:
+    """A project: its status, due date, description, the reason it serves (an intent), the skills it trains (credited
+    once, when it's first completed) and a budget.
+    """
     project_id: str
     name: str
     status: str = "Planning"
@@ -83,6 +86,7 @@ class Project:
     budget: float = 0.0
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in its JSON file."""
         return {
             "project_id": self.project_id,
             "name": self.name,
@@ -99,6 +103,7 @@ class Project:
 
     @staticmethod
     def from_dict(data: dict) -> "Project":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return Project(
             project_id=data.get("project_id", uuid.uuid4().hex[:10]),
             name=data.get("name", ""),
@@ -117,8 +122,10 @@ class Project:
 
 
 class ProjectManager:
+    """The household's projects (projects.json, written through atomic_write_text so undo can restore it)."""
     def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
         # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        """Points at the household's file (data/ by default) and loads it."""
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._projects_file = self.data_dir / "projects.json" if data_dir is not None else _PROJECTS_FILE
         self.context = context
@@ -130,6 +137,7 @@ class ProjectManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads the projects; a damaged file is logged, reported and starts empty."""
         if not self._projects_file.exists():
             self._projects = []
             return
@@ -142,6 +150,7 @@ class ProjectManager:
             self._projects = []
 
     def _save(self) -> None:
+        """Writes every project atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._projects_file,
             json.dumps([p.to_dict() for p in self._projects], indent=2),
@@ -161,6 +170,7 @@ class ProjectManager:
         intent_id: Optional[str] = None,
         skill_weights: Optional[list[SkillWeight]] = None,
     ) -> Project:
+        """Adds a project (Planning unless a status is given)."""
         now = datetime.now().isoformat(timespec="seconds")
         project = Project(
             project_id=uuid.uuid4().hex[:10],
@@ -179,6 +189,9 @@ class ProjectManager:
         return project
 
     def update_project(self, project_id: str, **fields) -> Project:
+        """Changes a project's fields and stamps updated_at; the first time it's completed its skill XP is granted, once
+        (even if it's reopened and completed again). The credited flag can't be set directly.
+        """
         project = self.get_project(project_id)
         if project is None:
             raise ValueError(f"No project with id '{project_id}'.")
@@ -224,6 +237,7 @@ class ProjectManager:
         return project
 
     def _credit_project_skill_weights(self, project: Project) -> None:
+        """Grants a completed project's skill XP (no flat XP: that stays with missions)."""
         if not project.skill_weights:
             return
         grant_xp(
@@ -260,6 +274,7 @@ class ProjectManager:
         return project
 
     def delete_project(self, project_id: str) -> None:
+        """Deletes a project."""
         self._projects = [p for p in self._projects if p.project_id != project_id]
         self._save()
 
@@ -268,10 +283,12 @@ class ProjectManager:
     # ------------------------------------------------------------------
 
     def get_project(self, project_id: str) -> Optional[Project]:
+        """The project with this id, or None."""
         for project in self._projects:
             if project.project_id == project_id:
                 return project
         return None
 
     def all_projects(self) -> list[Project]:
+        """Every project."""
         return sorted(self._projects, key=lambda p: (p.due_date == "", p.due_date))

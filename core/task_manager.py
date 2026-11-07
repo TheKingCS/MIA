@@ -31,6 +31,7 @@ _TASKS_FILE = _DATA_DIR / "tasks.json"
 
 @dataclass
 class Task:
+    """One task under a project: its title, whether it's done, due date and notes."""
     task_id: str
     project_id: str
     title: str
@@ -41,6 +42,7 @@ class Task:
     updated_at: str = ""  # ISO datetime
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in its JSON file."""
         return {
             "task_id": self.task_id,
             "project_id": self.project_id,
@@ -54,6 +56,7 @@ class Task:
 
     @staticmethod
     def from_dict(data: dict) -> "Task":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return Task(
             task_id=data.get("task_id", uuid.uuid4().hex[:10]),
             project_id=data.get("project_id", ""),
@@ -67,8 +70,10 @@ class Task:
 
 
 class TaskManager:
+    """The household's tasks (tasks.json, written through atomic_write_text so undo can restore it)."""
     def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
         # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        """Points at the household's file (data/ by default) and loads it."""
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._tasks_file = self.data_dir / "tasks.json" if data_dir is not None else _TASKS_FILE
         self.context = context
@@ -80,6 +85,7 @@ class TaskManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads the tasks; a damaged file is logged, reported and starts empty."""
         if not self._tasks_file.exists():
             self._tasks = []
             return
@@ -92,6 +98,7 @@ class TaskManager:
             self._tasks = []
 
     def _save(self) -> None:
+        """Writes every task atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._tasks_file,
             json.dumps([t.to_dict() for t in self._tasks], indent=2),
@@ -109,6 +116,7 @@ class TaskManager:
         due_date: str = "",
         notes: str = "",
     ) -> Task:
+        """Adds a task to a project."""
         now = datetime.now().isoformat(timespec="seconds")
         task = Task(
             task_id=uuid.uuid4().hex[:10],
@@ -125,6 +133,9 @@ class TaskManager:
         return task
 
     def update_task(self, task_id: str, **fields) -> Task:
+        """Changes a task's fields and stamps updated_at (ValueError for an unknown task or field, or created_at); a task
+        newly done is recorded in the history.
+        """
         task = self.get_task(task_id)
         if task is None:
             raise ValueError(f"No task with id '{task_id}'.")
@@ -143,12 +154,14 @@ class TaskManager:
         return task
 
     def toggle_done(self, task_id: str) -> Task:
+        """Flips a task between done and not done."""
         task = self.get_task(task_id)
         if task is None:
             raise ValueError(f"No task with id '{task_id}'.")
         return self.update_task(task_id, done=not task.done)
 
     def delete_task(self, task_id: str) -> None:
+        """Deletes a task."""
         self._tasks = [t for t in self._tasks if t.task_id != task_id]
         self._save()
 
@@ -157,13 +170,16 @@ class TaskManager:
     # ------------------------------------------------------------------
 
     def get_task(self, task_id: str) -> Optional[Task]:
+        """The task with this id, or None."""
         for task in self._tasks:
             if task.task_id == task_id:
                 return task
         return None
 
     def tasks_for_project(self, project_id: str) -> list[Task]:
+        """One project's tasks."""
         return [t for t in self._tasks if t.project_id == project_id]
 
     def all_tasks(self) -> list[Task]:
+        """Every task."""
         return list(self._tasks)
