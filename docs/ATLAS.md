@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 227,924 lines; 1043 files describe themselves; 4,307 of 13,517 classes and functions are documented.
+1043 files, 227,958 lines; 1043 files describe themselves; 4,328 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 101,830 lines; 3,576 of 5,630 classes and functions documented
+367 files, 101,864 lines; 3,597 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -158,7 +158,7 @@
 - `core/goods_actions.py`: Homestead goods' actions (DEC-0036), on the action contract in core/actions.py: proposed in plain words, approved, run, undoable.
 - `core/goods_starters.py`: Starter recipes for homestead goods (DEC-0037): a cutting board, a planter, spice and herb blends, mixes in a jar, eggs, microgreens and plant starts, to copy into Workshop → Recipes and change to your own. Generic on purpose: no prices (yours to set), quantities a common starting point, allergens f
 - `core/gps_tracks.py`: Tracks (build plan step 14, DEC-0099): a walk, a ride or a drive as points with times, from a GPX file (what phones, watches and GPS units export). Worked out in code (`stats()`): distance (haversine, between successive points), climb and descent (changes under `CLIMB_NOISE` metres ignored, as GPS e *(8 undocumented)*
-- `core/grow_actions.py`: The grow lab's actions (DEC-0030 phase D, core/grow_lab.py) on the action contract: proposed in plain words, approved, run, undoable. *(21 undocumented)*
+- `core/grow_actions.py`: The grow lab's actions (DEC-0030 phase D, core/grow_lab.py) on the action contract: proposed in plain words, approved, run, undoable.
 - `core/grow_lab.py`: The grow lab (DEC-0030 phase D): running a greenhouse, aquaponics tanks and growing beds like a scientist. Record what's planted, measure the water, compare what works, learn from the results.
 - `core/hash_identifier.py`: Identifies the plausible algorithm(s) for a hash string, by prefix (for self-describing formats like bcrypt/crypt) or length+charset (for bare hex digests) — docs/ROADMAP.md milestone 11.5, Field Kit's Security/Network Toolkit. This is pattern-matching, not verification: there is no way to truly det *(1 undocumented)*
 - `core/heavy_jobs.py`: Heavy jobs on the home computer (DEC-0022; Zac, 2026-10-18): when this device can't do a job well itself and it's linked to MIA on the home computer (core/home_link.py), the computer does it: *(3 undocumented)*

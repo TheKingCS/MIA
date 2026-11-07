@@ -38,10 +38,14 @@ EXPERIMENT = Record("experiment", "experiment", "experiment_id", "get_experiment
 
 
 def _lab(context):
+    """The household's grow lab, or ActionError when it isn't here."""
     return _need(context, "grow_lab")
 
 
 def _num(params, name, label, required=True, allow_negative=False):
+    """A number from the params: required unless said otherwise (None when blank), not negative unless allowed;
+    ActionError naming the field otherwise.
+    """
     raw = params.get(name)
     if raw in (None, ""):
         if required:
@@ -57,6 +61,7 @@ def _num(params, name, label, required=True, allow_negative=False):
 
 
 def _batch(context, params):
+    """The batch the params name, or ActionError."""
     b = _lab(context).get_batch(str(params.get("batch_id") or ""))
     if b is None:
         raise ActionError("That batch isn't there anymore.")
@@ -64,6 +69,7 @@ def _batch(context, params):
 
 
 def _yes(value) -> bool:
+    """Whether a param says yes."""
     return str(value).lower() in ("1", "true", "yes", "on")
 
 
@@ -97,6 +103,9 @@ def _into(context, params, b, amount: float, unit: str):
 
 
 def _harvest_describe(context, params) -> str:
+    """The sentence the approval card shows for `batch.harvest` (Propose); raises ActionError when it can't be done. It says where the harvest goes into stock (a good, or Materials)
+    and at what cost each, when it does.
+    """
     b = _batch(context, params)
     amount = _num(params, "amount", "How much")
     if not amount:
@@ -117,6 +126,9 @@ def _harvest_describe(context, params) -> str:
 
 
 def _harvest(context, params) -> str:
+    """Does `batch.harvest` once approved, and says what happened. Into goods it's a batch of stock (add_to_stock); into Materials it's more of
+    a material (new, or averaged in). The batch's cost goes onto stock only the first time.
+    """
     b = _batch(context, params)
     amount = _num(params, "amount", "How much")
     unit = str(params.get("unit") or "").strip()
@@ -150,12 +162,14 @@ def _harvest(context, params) -> str:
 
 
 def _money(x: float) -> str:
+    """An amount in the person's currency."""
     from core.region import money
 
     return money(x)
 
 
 def _lost_describe(context, params) -> str:
+    """The sentence the approval card shows for `batch.lost` (Propose); raises ActionError when it can't be done."""
     b = _batch(context, params)
     n = int(_num(params, "how_many", "How many", required=False) or 0)
     if not n and not _yes(params.get("all")):
@@ -166,6 +180,7 @@ def _lost_describe(context, params) -> str:
 
 
 def _lost(context, params) -> str:
+    """Does `batch.lost` once approved, and says what happened. "All" counts every plant not already lost."""
     b = _batch(context, params)
     n = int(_num(params, "how_many", "How many", required=False) or 0)
     if _yes(params.get("all")):
@@ -175,6 +190,7 @@ def _lost(context, params) -> str:
 
 
 def _measure(params):
+    """The measure the params name (one of MEASURES), or ActionError."""
     from core.grow_lab import MEASURES
 
     measure = str(params.get("measure") or "")
@@ -198,10 +214,14 @@ def _system(context, params) -> str:
 
 
 def _where(context, place: str) -> str:
+    """A place's name in words (its asset's name, or as typed)."""
     return _lab(context).place_name(place)
 
 
 def _reading_describe(context, params) -> str:
+    """The sentence the approval card shows for `grow.reading` (Propose); raises ActionError when it can't be done. It warns when the reading is outside the person's range (MIA only
+    ever warns).
+    """
     from core.grow_lab import MEASURES, check_range
 
     system, measure = _system(context, params), _measure(params)
@@ -214,6 +234,9 @@ def _reading_describe(context, params) -> str:
 
 
 def _reading(context, params) -> str:
+    """Does `grow.reading` once approved, and says what happened. The reading goes into the Data Logger (a place typed for the first time is
+    added).
+    """
     from core.grow_lab import MEASURES, series_id
 
     system, measure = _system(context, params), _measure(params)
@@ -226,6 +249,7 @@ def _reading(context, params) -> str:
 
 
 def _range_describe(context, params) -> str:
+    """The sentence the approval card shows for `grow.range` (Propose); raises ActionError when it can't be done. At least one end is needed, low below high."""
     from core.grow_lab import MEASURES
 
     system, measure = _system(context, params), _measure(params)
@@ -240,6 +264,7 @@ def _range_describe(context, params) -> str:
 
 
 def _range(context, params) -> str:
+    """Does `grow.range` once approved, and says what happened."""
     system, measure = _system(context, params), _measure(params)
     _lab(context).set_range(system, measure, _num(params, "low", "Low end", False, True),
                             _num(params, "high", "High end", False, True))
@@ -247,6 +272,7 @@ def _range(context, params) -> str:
 
 
 def _experiment(context, params):
+    """The experiment the params name, or ActionError."""
     e = _lab(context).get_experiment(str(params.get("experiment_id") or ""))
     if e is None:
         raise ActionError("That experiment isn't there anymore.")
@@ -254,12 +280,14 @@ def _experiment(context, params):
 
 
 def _include_describe(context, params) -> str:
+    """The sentence the approval card shows for `experiment.include` (Propose); raises ActionError when it can't be done. Add the batch, or take it out if it's in."""
     e, b = _experiment(context, params), _batch(context, params)
     return f"{'Take' if b.batch_id in e.batch_ids else 'Add'} {b.crop}{' (' + b.variety + ')' if b.variety else ''} " \
         f"{'out of' if b.batch_id in e.batch_ids else 'to'} the experiment"
 
 
 def _include(context, params) -> str:
+    """Does `experiment.include` once approved, and says what happened."""
     e, b = _experiment(context, params), _batch(context, params)
     ids = [i for i in e.batch_ids if i != b.batch_id] if b.batch_id in e.batch_ids else e.batch_ids + [b.batch_id]
     _lab(context).update_experiment(e.experiment_id, batch_ids=ids)
@@ -267,6 +295,7 @@ def _include(context, params) -> str:
 
 
 def _conclude_describe(context, params) -> str:
+    """The sentence the approval card shows for `experiment.conclude` (Propose); raises ActionError when it can't be done. A conclusion is required."""
     e = _experiment(context, params)
     if not str(params.get("conclusion") or "").strip():
         raise ActionError("Write what you found.")
@@ -274,12 +303,17 @@ def _conclude_describe(context, params) -> str:
 
 
 def _conclude(context, params) -> str:
+    """Does `experiment.conclude` once approved, and says what happened."""
     e = _experiment(context, params)
     _lab(context).update_experiment(e.experiment_id, conclusion=str(params["conclusion"]).strip(), status="Concluded")
     return "Concluded. That's knowledge for next season."
 
 
 def _register() -> None:
+    """Adds the batch and experiment record kinds and the harvest, loss, reading, range, place and experiment kinds
+    to ACTION_TYPES; harvests, losses and readings are child-safe (a child can help in the garden, never with money).
+    Runs once, when this module is imported.
+    """
     kinds = list(record_kinds(BATCH)) + list(record_kinds(EXPERIMENT)) + [
         ActionType("batch.harvest", "Harvest", {"batch_id": "the batch", "amount": "how much", "unit": "lb, heads…",
                                                 "note": "notes", "done": "the last of it", "into": "goods or materials (optional)",
