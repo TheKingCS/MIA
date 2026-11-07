@@ -52,7 +52,7 @@ from core.app_context import AppContext
 from core.assistant_actions import AssistantAction
 from core.calendar_manager import RECURRENCE_TYPES as CALENDAR_RECURRENCE_TYPES, CalendarManager
 from core.component_manager import ComponentManager
-from core.boot_sound import write_boot_sound_wav
+from core.boot_sound import write_boot_sound_wav  # noqa: F401  (kept: the original sound, also a choice)
 from core.boot_sound_worker import BootSoundWorker
 from core.job_manager import JobManager
 from core.material_manager import MaterialManager
@@ -72,6 +72,8 @@ from core.assistant_email_actions import register_email_actions
 from core.assistant_focus_actions import register_focus_actions
 from core.assistant_accessibility_actions import register_accessibility_actions
 from core.assistant_humor_actions import register_humor_actions
+from core.assistant_progress_actions import register_progress_actions
+from core.assistant_records_actions import register_records_actions
 from core.assistant_plan_actions import register_plan_actions
 from core.plan_library import PlanLibrary
 from core.assistant_starter_actions import register_starter_actions
@@ -1535,6 +1537,9 @@ class MIAApplication:
         `core/core_runtime.py`'s headless Core entry point curate its
         own smaller Assistant action set (see that module) without
         having to duplicate this class or its Qt/gui-heavy imports.
+        Every app's voice tools are registered here (DEC-0125:
+        core/parity.py measures what this registers), including the
+        photo search the headless Core had alone until 2026-11-07.
         """
         self.context.assistant_actions.register(connectivity_action())
         self.context.assistant_actions.register(remind_when_online_action())
@@ -1561,6 +1566,11 @@ class MIAApplication:
         register_failure_actions(self.context.assistant_actions)  # the Fix-It Log (DEC-0049)
         register_ownership_actions(self.context.assistant_actions)
         register_humor_actions(self.context.assistant_actions)  # how funny she is, asked for in chat
+        register_progress_actions(self.context.assistant_actions)  # Character, Skills, Reward Shop (DEC-0125)
+        register_records_actions(self.context.assistant_actions)  # Insurance, Kept, Operating, Play, Files (DEC-0125)
+        from core.vault_captions import register_vault_caption_actions
+
+        register_vault_caption_actions(self.context.assistant_actions)  # "find my photos of the creek", on the PC too
         register_plan_actions(self.context.assistant_actions)  # plans, blueprints and material lists
         register_accessibility_actions(self.context.assistant_actions)
         register_starter_actions(self.context.assistant_actions)
@@ -5585,11 +5595,16 @@ class MIAApplication:
         "growing pulsing energy" sound (core/boot_sound.py) is
         regenerated fresh each boot rather than cached — numpy
         synthesis of a few seconds of audio is cheap enough that
-        caching would be premature."""
-        if self.context.voice is None:
+        caching would be premature. Which sound (or none) is the device's
+        `sound.startup`, chosen in Settings (core/startup_sounds.py)."""
+        from core.boot_sound import write_startup_wav
+        from core.startup_sounds import OFF, startup_choice
+
+        chosen = startup_choice(self.config)  # Settings' "Startup sound" (2026-11-07), or off
+        if self.context.voice is None or chosen == OFF:
             return
         output_path = Path(tempfile.gettempdir()) / "mia_boot_sound.wav"
-        write_boot_sound_wav(output_path)
+        write_startup_wav(chosen, output_path)
         self._boot_sound_worker = BootSoundWorker(self.context.voice, output_path)
         self._boot_sound_worker.start()
 

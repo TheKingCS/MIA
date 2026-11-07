@@ -114,10 +114,11 @@ _CATEGORY_WORDS = (
 
 
 def readable_name(description: str) -> str:
-    """Pure logic. A receipt line's description as a person would write it: codes, sizes and store brands dropped,
-    abbreviations spelled out ("GV WHL MLK GAL 0078742" -> "Whole milk")."""
+    """Pure logic. A receipt line's description as a person would write it: codes, sizes, store brands and an online
+    receipt's "Qty 2" dropped, abbreviations spelled out ("GV WHL MLK GAL 0078742" -> "Whole milk")."""
     words = []
-    for raw in re.findall(r"[A-Za-z0-9'&.]+", description or ""):
+    description = _QTY_WORDS.sub(" ", description or "")  # "Qty 2" is how many, not what
+    for raw in re.findall(r"[A-Za-z0-9'&.]+", description):
         word = raw.lower().strip(".")
         if re.fullmatch(r"\d{4,}", word) or word in _BRANDS:
             continue
@@ -177,11 +178,17 @@ def _effect(kind: str, label: str, on: bool = True, **params) -> dict:
 
 
 def _qty(line: dict) -> float:
-    """A receipt line's quantity (1 when it doesn't say)."""
+    """A receipt line's quantity: the receipt's own count, else "Qty 2" in its words (online receipts), else 1."""
     try:
-        return float(line.get("quantity") or 1)
+        if line.get("quantity"):
+            return float(line["quantity"])
     except (TypeError, ValueError):
-        return 1.0
+        pass
+    said = _QTY_WORDS.search(line.get("description", "") or "")
+    return float(said.group(1)) if said else 1.0
+
+
+_QTY_WORDS = re.compile(r"\b(?:qty|quantity)\s*:?\s*(\d+(?:\.\d+)?)\b", re.I)
 
 
 def _plain(value: float) -> str:

@@ -299,21 +299,21 @@ def due(today: Optional[date] = None, root: Optional[Path] = None) -> bool:
 
 
 def launch() -> None:
-    """This week's issue, drafted and drawn in a process of its own (the models take a few minutes)."""
+    """This week's issue, drafted and drawn in a process of its own (the models take a few minutes), with a console
+    that's never shown (core.dev_lab.quiet_job_flags), so nothing it runs flashes a window."""
     import os
     import subprocess
     import sys
 
     if os.environ.get("PYTEST_CURRENT_TEST"):
         return  # never from a test run
-    from core.dev_lab import _python
+    from core.dev_lab import _python, quiet_job_flags
 
     PANELS.mkdir(parents=True, exist_ok=True)
     with open(PANELS / "last_draft.log", "w", encoding="utf-8") as out:
         subprocess.Popen([_python(), "-m", "tools.chronicle_issue", "draft"], cwd=str(ROOT), stdout=out,
                          stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
-                         creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0)
-                         | getattr(subprocess, "DETACHED_PROCESS", 0) if sys.platform == "win32" else 0)
+                         creationflags=quiet_job_flags())
 
 
 def panel_prompts(issue: dict) -> list[dict]:

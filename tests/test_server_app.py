@@ -7,7 +7,9 @@ in-process HTTP client that needs no running server, no real network,
 and no HTTPS (see the Mobile Phase 1 plan's verification section for
 why this is a legitimate, complete way to verify this code from a
 sandbox with no real browser/phone). pywebpush.webpush is mocked in
-the push-test cases, same as tests/test_web_push.py.
+the push-test cases, same as tests/test_web_push.py. Also the inbox's
+email endpoints (they answer plainly without a mailbox, and need a
+signed-in person), and a startup sound to hear before choosing it.
 
 Builds a real AppContext via core.core_runtime.build_core_context(),
 same fixture pattern as tests/test_core_runtime.py — proving
@@ -713,3 +715,26 @@ def test_learning_paths_list_and_a_guitar_check_is_heard(client, context, tmp_pa
                        headers={**owner, "x-check": "em_clean"}).status_code == 422
     assert client.post("/api/paths/guitar/verify", content=out.getvalue(),
                        headers={"x-check": "em_clean"}).status_code == 401
+
+
+def test_the_inbox_email_endpoints(client, context):
+    """The web Inbox's email endpoints answer: without a mailbox here they say so plainly (400), never a crash, and
+    they need a signed-in person."""
+    token = client.post("/api/login", json={"profile_id": _profile_id(context), "password": "hunter2"}).json()["token"]
+    auth = {"Authorization": f"Bearer {token}"}
+    assert client.post("/api/inbox/email/check").status_code == 401
+    res = client.post("/api/inbox/email", headers=auth, json={"address": "me@example.com", "password": "p",
+                                                               "passphrase": "a long passphrase"})
+    assert res.status_code == 400 and "Email isn't available" in res.json()["detail"]
+    assert client.post("/api/inbox/email/unlock", headers=auth, json={"passphrase": "x"}).status_code == 400
+
+
+def test_a_startup_sound_to_hear_before_choosing(client, context):
+    """Settings' Play button gets a real WAV for a startup sound, 404 for one that isn't there, and needs a
+    signed-in person."""
+    token = client.post("/api/login", json={"profile_id": _profile_id(context), "password": "hunter2"}).json()["token"]
+    auth = {"Authorization": f"Bearer {token}"}
+    assert client.get("/api/sounds/startup/warm_chord").status_code == 401
+    res = client.get("/api/sounds/startup/warm_chord", headers=auth)
+    assert res.status_code == 200 and res.headers["content-type"] == "audio/wav" and res.content[:4] == b"RIFF"
+    assert client.get("/api/sounds/startup/nope", headers=auth).status_code == 404

@@ -5,7 +5,11 @@ tests.test_browser
 MIA's browser (DEC-0117) against a pretend browser: what the safety rules
 let her do alone, a commit waiting for the person (approved on screen or
 with a yes, refused when the page changed), secrets never typed, a task
-taught by showing and replayed, and learned after two clean runs.
+taught by showing and replayed, learned after two clean runs, the
+Browser screen (core/web_browser.py) with its run and forget actions and
+its own controls (open, back, close, teach, the live picture), the live
+view the person works her browser from, and only the person's own words
+typed or searched for on her own (DEC-0122).
 """
 
 from __future__ import annotations
@@ -92,6 +96,20 @@ class FakeEdge(Driver):
         """Keeps the recorder (the test plays the person through it)."""
         self.recorder = callback
 
+    def frame(self):
+        """A stand-in JPEG of the page."""
+        return b"JPEG-frame"
+
+    def viewport(self):
+        """The page's size inside MIA."""
+        return (1280, 800)
+
+    def person(self, kind, x=0, y=0, text="", key="", dy=0):
+        """The person's own input from the live view, remembered; a click at the Place order button's spot orders."""
+        self.did.append(("person", kind, x, y, text, key, dy))
+        if kind == "click" and (x, y) == (640, 400):
+            self.url = DONE
+
     def close(self):
         """Nothing to close."""
 
@@ -145,13 +163,14 @@ def test_sorting_steps():
 
 def test_reading_and_safe_steps(world):
     """She opens and reads the page (its text framed as from the web, her controls numbered with which ask first),
-    follows a link and searches on her own."""
+    follows a link, and searches on her own for words the person said."""
     assert "Your cart" in tool(world, "browse", target=SHOP)
     page = tool(world, "browser_read")
     assert "content from the internet" in page and "[5]" in page and "asks you first" in page
     tool(world, "browser_click", control="3")
     assert ("click", 3) in edge(world).did
     tool(world, "browser_back")
+    world.browsers.for_person(world).hear("look for widgets in the shop")  # the person's own words
     tool(world, "browser_type", control="1", text="widgets", then_enter=True)
     assert ("type", 1, "widgets") in edge(world).did and edge(world).url == SEARCH
 
@@ -239,3 +258,106 @@ def test_never_offered_to_a_child():
     """The browser's tools are a grown-up's."""
     assert "browser" in CHILD_BLOCKED_DOMAINS
     assert browser_routines.LEARNED_AFTER == 2
+
+
+def test_the_browser_screen(world):
+    """The screen shows the page she's on, a held step with its screenshot (gone once cancelled), and a taught task
+    with its steps and how practised it is; Do it and Forget run through the action contract; a screenshot is served
+    only from her own shots folder."""
+    from core.web_browser import screen, shot_path
+
+    tool(world, "browse", target=SHOP)
+    tool(world, "browser_click", name="Place order")
+    data = screen(world)
+    assert data["available"] and data["open"]["title"] == "Your cart"
+    [step] = data["waiting"]
+    assert "Place order" in step["summary"] and step["shot"] and shot_path(world, step["id"]).is_file()
+    assert shot_path(world, "nope") is None
+    world.actions.reject(world, step["proposal_id"])
+    assert screen(world)["waiting"] == []
+    routine = world.browser_routines.add("Check the cart", SHOP, [{"kind": "open", "url": SHOP}])
+    [task] = screen(world)["tasks"]
+    assert task["name"] == "Check the cart" and task["state"] == "practising" and task["last"] is None
+    run = world.actions.propose(world, "browser.run_task", {"task_id": routine["id"]})
+    assert "stops for your OK" in run.summary
+    assert "Finished" in world.actions.approve(world, run.proposal_id).result
+    assert screen(world)["tasks"][0]["last"]["clean"]
+    forget = world.actions.propose(world, "browser.forget_task", {"task_id": routine["id"]})
+    world.actions.approve(world, forget.proposal_id)
+    assert screen(world)["tasks"] == []
+
+
+def test_she_types_only_what_the_person_said(world):
+    """Words the person said she types and searches for on her own; words she composed (here, something she knows
+    about them) wait for their OK with the exact text shown, and are typed once approved; a search for words they
+    never said waits too; a taught task's own words need no hearing; a private journal turn isn't heard."""
+    from core.conversation_manager import Conversation
+    from core.talk_it_out import pre_turn
+
+    browser = world.browsers.for_person(world)
+    tool(world, "browse", target=SHOP)
+    browser.hear("find widgets")
+    assert "Done" in tool(world, "browser_type", control="1", text="Widgets!")
+    said = tool(world, "browser_type", control="1", text="Robin lives at 12 Elm Street")
+    assert "needs your OK" in said and 'type "Robin lives at 12 Elm Street" into "Search the shop"' in said
+    assert ("type", 1, "Robin lives at 12 Elm Street") not in edge(world).did
+    [proposal] = world.actions.pending(world.me.profile_id)
+    world.actions.approve(world, proposal.proposal_id)
+    assert ("type", 1, "Robin lives at 12 Elm Street") in edge(world).did
+    held = tool(world, "browse", target="robin medical history")
+    assert "needs your OK" in held and "duckduckgo.com" in held and ("open", "https://duckduckgo.com/?q=robin+medical+history") not in edge(world).did
+    assert "shop.example/thanks" in tool(world, "browse", target="https://shop.example/thanks")  # a plain address: fine
+    assert browser.authorized("anything at all", routine={"id": "r", "next": 2})
+    pre_turn(world, Conversation(conversation_id="c1"), "please search for garden hose")
+    assert browser.authorized("garden hose") and not browser.authorized("garden hose and my address")
+
+
+def test_the_browser_page_drives_her_browser(world):
+    """From the page: a search the person typed opens at once (their own words), the live picture is taken, Back and
+    Close work, and a task is taught from the page and kept."""
+    from core.web_browser import live_view, screen
+
+    def do(kind, **params):
+        """Proposes and approves one of the page's actions; returns what happened."""
+        proposal = world.actions.propose(world, kind, params)
+        return world.actions.approve(world, proposal.proposal_id)
+
+    assert live_view(world) is None  # closed: no picture
+    assert do("browser.open", target=SHOP).status == "executed" and screen(world)["open"]["title"] == "Your cart"
+    assert live_view(world).is_file()
+    done = do("browser.open", target="garden hose sprayer")
+    assert done.status == "executed" and "needs your OK" not in done.result  # typed on the page: their words
+    do("browser.back")
+    assert screen(world)["open"]["url"] == SHOP
+    assert "watching" in do("browser.learn", name="Order more widgets").result.lower()
+    assert screen(world)["learning"] == "Order more widgets"
+    edge(world).recorder({"kind": "click", "role": "button", "name": "Place order", "title": "Your cart"})
+    assert "Learned" in do("browser.learn_done").result
+    assert [t["name"] for t in screen(world)["tasks"]] == ["Order more widgets"]
+    do("browser.close")
+    assert screen(world)["open"] is None
+
+
+def test_working_her_browser_from_the_live_view(world):
+    """The page shows her browser live (frames and its size), and the person works it from the picture: a click lands
+    at the spot made, typing, keys and scrolling reach the page; no gate applies to their own hands, what they type
+    isn't heard as her words, and anything else is refused."""
+    from core.browser import BrowserError
+    from core.web_browser import live_frame, person_input, screen
+
+    assert live_frame(world) is None
+    with pytest.raises(BrowserError):
+        person_input(world, "click", 10, 10)
+    tool(world, "browse", target=SHOP)
+    assert live_frame(world).startswith(b"JPEG") and screen(world)["size"] == {"width": 1280, "height": 800}
+    assert person_input(world, "type", text="hunter2")["title"] == "Your cart"
+    assert not world.browsers.for_person(world).authorized("hunter2")
+    assert person_input(world, "click", 640, 400)["title"] == "Thank you"  # their own click: no OK needed
+    person_input(world, "key", key="Enter")
+    person_input(world, "scroll", 100, 100, dy=300)
+    kinds = [d[1] for d in edge(world).did if d[0] == "person"]
+    assert kinds == ["type", "click", "key", "scroll"]
+    with pytest.raises(BrowserError):
+        person_input(world, "key", key="F12")
+    with pytest.raises(BrowserError):
+        person_input(world, "drag", 1, 1)

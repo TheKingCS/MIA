@@ -46,6 +46,13 @@
     try { sessionStorage.setItem("mia.token", fromHash); } catch (e) { /* private mode */ }
     history.replaceState(null, "", location.pathname + location.search);
   }
+  // Shown inside MIA's desktop window (it passes ?desktop=1 once; kept for the pages after): apps that live only in
+  // the PC app open there (a /desktop-open/<id> link the window catches, modules/web_home).
+  let desktop = params.get("desktop") === "1";
+  try {
+    if (desktop) sessionStorage.setItem("mia.desktop", "1");
+    else desktop = sessionStorage.getItem("mia.desktop") === "1";
+  } catch (e) { /* no storage: only the first page knows */ }
   // The person's look, passed by the desktop (text size, high contrast).
   if (params.get("scale")) document.documentElement.style.setProperty("--scale", params.get("scale"));
   if (params.get("contrast") === "high") document.documentElement.dataset.contrast = "high";
@@ -197,6 +204,7 @@
 
   window.MIA = {
     demo,
+    desktop,  // inside MIA's desktop window: PC-only apps open there
     signIn,
     signOut,
     setupStatus,
@@ -271,6 +279,18 @@
     knowledgeArticle: (pack, path) => demo ? Promise.resolve({ title: "Hypothermia",
       text: "Hypothermia is defined as a body core temperature below 35.0 °C. Symptoms depend on the temperature..." })
       : call("GET", "/api/knowledge/article?pack=" + encodeURIComponent(pack) + "&path=" + encodeURIComponent(path)),
+    // MIA's own browser (core/web_browser.py): what it's on, steps waiting with their screenshots (MIA.download
+    // "/api/browser/shot?id="), and the tasks she was taught.
+    browser: () => demo ? Promise.resolve({ available: true, open: { title: "County Tax Office", url: "https://tax.example.gov/pay" },
+      learning: null,
+      waiting: [{ id: "p1", proposal_id: "", summary: "On tax.example.gov, press \"Pay now\" (\"Pay now\" changes something)",
+        why: "\"Pay now\" changes something", site: "tax.example.gov", shot: false }],
+      tasks: [{ id: "t1", name: "Pay the property tax", start: "https://tax.example.gov", state: "practising",
+        summary: "Pay the property tax: 6 steps, practising, last run finished", steps: ["open https://tax.example.gov", "sign in yourself", "press \"Pay now\""],
+        last: { at: "2026-11-07T10:00:00", clean: true, note: "" } }] })
+      : call("GET", "/api/browser"),
+    // The person working her browser from the live view (frames: MIA.download("/api/browser/frame")).
+    browserInput: (body) => demo ? demoOnly() : call("POST", "/api/browser/input", body),
     // The Library's plans shelf (core/plan_library.py): the plans, one plan, and a plan's file (MIA.download).
     knowledgePlans: (q = "") => demo ? Promise.resolve({ available: true, folder: "reference_library/plans",
       sources: [{ name: "University of Tennessee Extension plan file", what: "300+ farm building plans", url: "https://trace.tennessee.edu/utk_agexfarmbld/" }],
@@ -410,6 +430,15 @@
       return data;
     })(),
     inbox: () => read("/api/inbox", "inbox"),
+    // Start Here (core/web_guide.py): what she does and how, and what's new.
+    guide: () => demo ? Promise.resolve({ topics: [{ id: "talk", title: "Talk to her", icon: "mia",
+      how: "The glowing orb at the bottom right of every page opens Talk.", say: ["What can you do?", "What's on today?"],
+      page: "index.html" }], new: [{ when: "2026-11-07", what: "This Start Here page.", page: "start.html" }] })
+      : call("GET", "/api/guide"),
+    // The inbox's mailbox (core/inbox_mail.py): set up, unlock, check now. Each answers with its status.
+    inboxEmailSetup: (fields) => demo ? demoOnly() : call("POST", "/api/inbox/email", fields),
+    inboxEmailUnlock: (passphrase) => demo ? demoOnly() : call("POST", "/api/inbox/email/unlock", { passphrase }),
+    inboxEmailCheck: () => demo ? demoOnly() : call("POST", "/api/inbox/email/check"),
     shop: () => read("/api/shop", "shop"),
     journal: () => read("/api/journal", "journal"),
     people: () => read("/api/people", "people"),

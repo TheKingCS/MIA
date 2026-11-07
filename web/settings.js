@@ -27,6 +27,7 @@
     if (s.kind === "choice") {
       const pick = el("select", { id, onchange: () => change(s.key, pick.value) },
         s.options.map((o) => el("option", { value: o.value, selected: String(o.value) === String(s.value) ? true : null }, o.label)));
+      if (s.key === "sound.startup") return el("span", { class: "row-buttons" }, pick, startupPlay(pick));
       return pick;
     }
     if (s.kind === "number") {
@@ -48,6 +49,20 @@
     el("div", { class: "st-control" }, control(s)));
   const group = (title, ...rows) => el("section", { class: "st-group", "aria-label": title },
     el("h2", { class: "st-label" }, title), el("div", { class: "glass st-card" }, ...rows.filter(Boolean)));
+
+  // Hear a startup sound before choosing it (core/boot_sound.py, 2026-11-07): plays the one picked in the list.
+  let startupAudio = null;
+  function startupPlay(pick) {
+    return el("button", { type: "button", class: "btn btn-ghost btn-small", onclick: async () => {
+      if (pick.value === "off") { MIAShell.say("Off: MIA starts quietly."); return; }
+      try {
+        if (startupAudio) startupAudio.pause();
+        const blob = await MIA.download("/api/sounds/startup/" + encodeURIComponent(pick.value));
+        startupAudio = new Audio(URL.createObjectURL(blob));
+        await startupAudio.play();
+      } catch (e) { MIAShell.say("Couldn't play it here: " + e.message); }
+    } }, "▶ Play");
+  }
 
   // Hear each tune without earning a win first (Muse, H-0057).
   function soundCheck() {

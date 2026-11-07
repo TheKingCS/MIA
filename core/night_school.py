@@ -749,16 +749,16 @@ def maybe_start(now: Optional[datetime] = None) -> bool:
 
 
 def launch() -> None:
-    """A night in a process of its own (MIA's check at night, or Zac's "Start a night now")."""
-    from core.dev_lab import _python
+    """A night in a process of its own (MIA's check at night, or Zac's "Start a night now"), with a console that's
+    never shown (core.dev_lab.quiet_job_flags), so the tests and git it runs never flash windows."""
+    from core.dev_lab import _python, quiet_job_flags
 
     log = DEV_DATA / "night_school" / "last_night.log"
     log.parent.mkdir(parents=True, exist_ok=True)
     with open(log, "w", encoding="utf-8") as out:
         subprocess.Popen([_python(), "-m", "tools.night_school", "run"], cwd=str(ROOT), stdout=out,
                          stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
-                         creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0)
-                         | getattr(subprocess, "DETACHED_PROCESS", 0) if sys.platform == "win32" else 0)
+                         creationflags=quiet_job_flags())
 
 
 def summary() -> dict:

@@ -27,6 +27,8 @@ reaches the running MIA only when Zac approves.
   history kept). MIA restarts to load it.
 
 Proposals are kept on this device (`data/lab/proposals.json`).
+`quiet_job_flags()` is how MIA starts her background jobs on Windows so
+nothing they run ever flashes a window on the desktop.
 """
 
 from __future__ import annotations
@@ -35,6 +37,7 @@ import json
 import re
 import shutil
 import subprocess
+import sys
 import uuid
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
@@ -229,6 +232,16 @@ def _python() -> str:
     if not found.exists():
         found = ROOT / ".venv" / "bin" / "python"
     return str(found).replace("\\", "/")
+
+
+def quiet_job_flags() -> int:
+    """How a background job MIA starts (Night School, Good News Radio, the Chronicle) is created on Windows: with a
+    console of its own that is never shown (CREATE_NO_WINDOW), in its own process group so it outlives MIA. Not
+    DETACHED_PROCESS (2026-11-07): that leaves the job with no console at all, and every git, pytest or PowerShell it
+    runs then opens a window of its own on the desktop, one after another. 0 elsewhere."""
+    if sys.platform != "win32":
+        return 0
+    return getattr(subprocess, "CREATE_NO_WINDOW", 0) | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
 
 
 def run_claude(task: str, cwd: Path, python: str) -> str:

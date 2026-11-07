@@ -275,6 +275,17 @@ other people in the house.
   theme: one cyan accent, graphite layers, never a hard-coded color
   (use a token or `rgba(var(--rgb-accent), a)`); the frame's icons come
   from `web/icons.js`. The concept's layouts stay.
+  DEC-0124 (2026-11-07): the desktop window opens on the web front end,
+  edge to edge (`gui/main_window.py` web mode, `gui.web_first`); the Qt
+  screens are the classic view (Ctrl+Shift+C, "Main screen" back), and a
+  web page opens a PC-only app there with a `/desktop-open/<id>` link.
+- **Full use both ways, on every device** (DEC-0125, 2026-11-07) — every
+  feature works by voice and without it, on the PC, the phone and the
+  glasses; devices change how it's shown, not what it can do. A new
+  action gets both a tool and a screen control. `core/parity.py` measures
+  it per app; each gap is decided in `work/parity.json` (todo or none,
+  with why) and `tests/test_parity.py` fails on an undecided one. Run
+  `python -m core.parity` after a change (regenerates `docs/PARITY.md`).
 - **Search** (`core/search_manager.py`) — providers register a callback;
   `MainWindow._on_search_result_activated` dispatches by `action_type`
   (`"open_module"`, `"switch_profile"`, ...) — new action types need a

@@ -7,6 +7,26 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 *Last updated: 2026-11-07 (afternoon)*
 
+**New 2026-11-07 (latest): Start Here, a grouped sidebar, the live browser, and the audit.** Start Here
+(web/start.html, core/web_guide.py: a test keeps its phrases routed to tools); the sidebar grouped by life area;
+her browser lives inside MIA (hidden Edge, live frames on the Browser page, the person clicks and types on the picture,
+teaching records it; `browser.own_window` for the old window). The audit (Claude Doc
+https://claude.ai/artifact/56xyaTxEQThT1vrYh484Ay) proposes seven areas, eight hubs and four screen tiers, waiting on
+Zac; its step 1 (the areas in the sidebar, Today with a Waiting for you queue) is next once approved. Real use so far
+is light (33 messages, most apps never opened): the organization is the priority.
+
+**New 2026-11-07 (late night): the desktop opens on the web (DEC-0124); only Zac's words go out of the browser
+(DEC-0122); taught procedures proposed (DEC-0123).** The window's web mode (`gui/main_window.py` set_web_mode,
+`gui.web_first`): web front end edge to edge, classic Qt screens by Ctrl+Shift+C or for PC-only apps (the web Apps
+page's "Open on this PC", a `/desktop-open/<id>` link the web view catches). Checked off-screen with the real
+modules; not yet seen on Zac's screen. Phone app 145 installed on his phone by adb (built locally with
+GITHUB_RUN_NUMBER=145, one above CI's 144).
+
+**New 2026-11-07 (night): the Browser page and HTML e-receipts.** `web/browser.html` (core/web_browser.py): what her
+browser is on, held steps with screenshots (Go ahead / Cancel on the step's own proposal), taught tasks with Do it /
+Forget (`browser.run_task`, `browser.forget_task`). Emailed HTML receipts now keep each item on its own line
+(core/document_text.py), so their pantry and materials effects work.
+
 **New 2026-11-07 (night): the phone keeps your place.** The app is "MIA" with no title bar (theme NoActionBar); it
 reopens the last page (MainActivity.remember / lastPlace, SharedPreferences, never the token), and every page keeps
 its scroll, an open Talk and its draft for 12 hours (web/shell.js keepPlace / backToPlace, localStorage). Checked in
@@ -706,6 +726,16 @@ every step below in order, from a blank machine, with Windows notes.
 ## 2. Build queue (Claude), in order
 
 *History since 2026-11-03: open work is in `work/tasks/`.*
+
+**First: talk to MIA on the PC again (DEC-0125).** Web mode (DEC-0124) hides the character panel, where
+hold-to-talk lives, and the web Talk has no mic, so the PC can't be talked to. Then humor on the Settings screen
+(it's voice-only). Both from `docs/design/CORE_SCREENS_REVIEW.md`, which also lists what Claude Design's screens
+show that MIA doesn't do.
+
+**Parity (DEC-0125): close the gaps in `docs/PARITY.md`.** Voice is done but Look (a voice "look at this" that
+takes the photo itself) and Passwords (screen-only by Zac's decision). Next the phone pages (Power, Toolbox, The
+Lab, Field Kit), then glasses cards and asks. Each closed gap: delete its line in `work/parity.json` and run
+`python -m core.parity`. New tools go in both `core/application.py` and `core/core_runtime.py` (K-0069).
 
 **Every session, ongoing (DEC-0104): document what you touch, and work the backlog.**
 `.venv\Scripts\python -m tools.docs next 15` lists the files with the most undocumented definitions (engine

@@ -778,6 +778,20 @@
           "favorite": false
         },
         {
+          "id": "browser",
+          "name": "Browser",
+          "icon": "🌐",
+          "tagline": "She browses. You approve.",
+          "description": "MIA's own web browser: what she's on, the steps waiting for your OK with their screenshots, and the tasks you taught her by showing (DEC-0117).",
+          "page": "browser.html",
+          "on_web": true,
+          "shown": true,
+          "can_hide": true,
+          "ask": "Open the county website.",
+          "tools": [],
+          "favorite": false
+        },
+        {
           "id": "diagnostics",
           "name": "Diagnostics",
           "icon": "🩺",

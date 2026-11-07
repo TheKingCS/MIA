@@ -1791,3 +1791,16 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
 .council-text { white-space: pre-wrap; margin: 4px 0 0; }
 .council-msg { align-items: flex-start; }
 .council-msg.mine .council-text { opacity: 0.85; }
+
+/* MIA's browser (web/browser.js): a waiting step's screenshot fits its card. */
+.browser-shot { display: block; width: 100%; height: auto; margin: 8px 0; border-radius: var(--radius); border: 1px solid var(--line); }
+
+/* The grouped sidebar (web/shell.js groupedApps, 2026-11-07): area headings that open and close, and Start Here. */
+.side .side-heading { margin: 14px 12px 4px; font-size: var(--text-xs, 0.75rem); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); }
+.side .side-group { margin-top: 6px; }
+.side .side-group > summary { cursor: pointer; padding: 8px 12px; font-size: var(--text-xs, 0.75rem); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); border-radius: var(--radius-sm); list-style-position: inside; }
+.side .side-group > summary:hover { color: var(--text); background: rgba(var(--rgb-accent), 0.05); }
+.side .side-group[open] > summary { color: var(--accent-soft); }
+.side a.side-start .ico { font-weight: 700; color: var(--accent); }
+.guide-say .btn { white-space: normal; text-align: left; text-transform: none; }
+.browser-live { cursor: crosshair; user-select: none; }

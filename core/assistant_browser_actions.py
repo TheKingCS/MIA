@@ -56,13 +56,15 @@ def _guard(fn):
 
 @_guard
 def _action_browse(context, arguments: dict) -> str:
-    """Tool browse: opens an address or searches for words; says what the page is and how it begins."""
+    """Tool browse: opens an address or searches for words; says what the page is and how it begins. A search or an
+    address carrying words the person didn't say waits for their OK instead."""
     target = str(arguments.get("target") or arguments.get("url") or arguments.get("query") or "").strip()
     if not target:
         return "What should I open or search for?"
-    browser = _browser(context)
-    browser.open(target)
-    return browser.glance() + "\nSay \"read the page\" for all of it and what I can press."
+    result = _browser(context).go(target)  # a search or query she composed herself waits for the person's OK
+    if not result["done"]:
+        return result["said"]
+    return result["said"] + "\nSay \"read the page\" for all of it and what I can press."
 
 
 @_guard
@@ -176,6 +178,130 @@ def _do_commit(context, params) -> str:
 
 ACTION_TYPES["browser.commit"] = ActionType(
     "browser.commit", "Go ahead", {"pending_id": "the browser step waiting for approval"}, _describe_commit, _do_commit)
+
+
+# ------------------------------------------------------------------ the Browser screen's own changes (core/web_browser.py)
+
+def _task(context, params) -> dict:
+    """The taught task the params name; ActionError when it's gone."""
+    store = _routines(context)
+    routine = store.routines.get(str(params.get("task_id") or "")) if store is not None else None
+    if routine is None:
+        raise ActionError("That browser task isn't there any more.")
+    return routine
+
+
+def _describe_run(context, params) -> str:
+    """The sentence approved for running a taught task: which, and that commits still wait."""
+    return f"Do \"{_task(context, params)['name']}\" in MIA's browser (she stops for your OK at each sign-in and commit)"
+
+
+def _run_task(context, params) -> str:
+    """Runs a taught task from the screen, as do_browser_task does by voice."""
+    from core.browser_routines import run
+
+    routine = _task(context, params)
+    browser = _browser(context)
+    if browser is None:
+        raise ActionError("MIA's browser isn't on this device.")
+    try:
+        return run(context, browser, _routines(context), routine)
+    except BrowserError as problem:
+        raise ActionError(f"The browser couldn't do that: {problem}") from problem
+
+
+def _describe_forget(context, params) -> str:
+    """The sentence approved for forgetting a taught task."""
+    return f"Forget the browser task \"{_task(context, params)['name']}\""
+
+
+def _forget_task(context, params) -> str:
+    """Forgets a taught task (show her again to relearn it)."""
+    routine = _task(context, params)
+    _routines(context).delete(routine["id"])
+    return f"Forgot \"{routine['name']}\"."
+
+
+for _kind, _label, _describe, _execute in (("browser.run_task", "Do it", _describe_run, _run_task),
+                                           ("browser.forget_task", "Forget", _describe_forget, _forget_task)):
+    ACTION_TYPES[_kind] = ActionType(_kind, _label, {"task_id": "the taught browser task"}, _describe, _execute)
+
+
+# ------------------------------------------------------------------ driving her browser from the Browser page (2026-11-07)
+# Zac: the page "loads basically nothing but descriptions". These let the page itself open a site, go back, close,
+# and teach a task. What the person types on the page is their own words (DEC-0122), so it's heard first.
+
+def _session(context):
+    """The person's browser session; ActionError where MIA has none."""
+    browser = _browser(context)
+    if browser is None:
+        raise ActionError("MIA's browser isn't on this device.")
+    return browser
+
+
+def _target(params) -> str:
+    """The address or search the page asked for; ActionError when empty."""
+    target = " ".join(str(params.get("target") or "").split())[:500]
+    if not target:
+        raise ActionError("Type a website or what to search for.")
+    return target
+
+
+def _open_from_page(context, params) -> str:
+    """Opens what the person typed on the page (heard as theirs, so a search they worded goes straight through)."""
+    browser = _session(context)
+    target = _target(params)
+    browser.hear(target)
+    try:
+        return browser.go(target)["said"]
+    except BrowserError as problem:
+        raise ActionError(f"The browser couldn't do that: {problem}") from problem
+
+
+def _back_from_page(context, params) -> str:
+    """Goes back a page in her browser."""
+    try:
+        return _session(context).do("back")["said"]
+    except BrowserError as problem:
+        raise ActionError(str(problem)) from problem
+
+
+def _close_from_page(context, params) -> str:
+    """Closes her browser."""
+    return _session(context).close()
+
+
+def _learn_from_page(context, params) -> str:
+    """Starts watching the person do a task in her window, from the page it's on."""
+    from core.browser_routines import start_teaching
+
+    name = " ".join(str(params.get("name") or "").split())[:80]
+    if not name:
+        raise ActionError("What should the task be called?")
+    return start_teaching(_session(context), name)
+
+
+def _learned_from_page(context, params) -> str:
+    """Stops watching and keeps the task."""
+    from core.browser_routines import finish_teaching
+
+    store = _routines(context)
+    if store is None:
+        raise ActionError("Browser tasks can't be kept here.")
+    return finish_teaching(_session(context), store)
+
+
+for _kind, _label, _params, _describe, _execute in (
+    ("browser.open", "Open", {"target": "a website or what to search for"},
+     lambda c, p: f"Open {_target(p)} in MIA's browser", _open_from_page),
+    ("browser.back", "Back", {}, lambda c, p: "Go back a page in MIA's browser", _back_from_page),
+    ("browser.close", "Close", {}, lambda c, p: "Close MIA's browser", _close_from_page),
+    ("browser.learn", "Learn", {"name": "what the task is called"},
+     lambda c, p: f"Watch you do \"{str(p.get('name') or '').strip()}\" in MIA's browser and learn it", _learn_from_page),
+    ("browser.learn_done", "Keep it", {}, lambda c, p: "Stop watching and keep the task you just showed MIA",
+     _learned_from_page),
+):
+    ACTION_TYPES[_kind] = ActionType(_kind, _label, _params, _describe, _execute)
 
 
 def register_browser_actions(registry: AssistantActionRegistry) -> None:

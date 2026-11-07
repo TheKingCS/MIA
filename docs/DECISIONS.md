@@ -1894,3 +1894,54 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   leaving later changes alone, and the receipt waits again. An undone automatic filing counts as correcting her
   (core/corrections.py). Amends DEC-0120's "nothing happens until filed" for emailed receipts.
 - Related: DEC-0120, DEC-0012 (actions), DEC-0094 (loops)
+
+### DEC-0122: MIA's browser types and searches only the person's own words
+- Status: APPROVED
+- Decided by: zac, 2026-11-07 (his review of DEC-0117: "ordinary text fields can potentially send information to a
+  website before a commit gate is reached. I'd tighten this so MIA only types information you've authorized for that
+  task")
+- Decision: on her own, MIA's browser types, chooses or searches only words the person said to her in the last 30
+  minutes (`core/browser.Browser.hear`, fed every turn, never a private journal turn) or words from a task they taught
+  her by doing it. Anything else, a search they didn't word, or an address carrying such words after a `?`, waits as
+  a `browser.commit` with the exact text shown. Closes the known limit in docs/BROWSER.md.
+- Related: DEC-0117
+
+### DEC-0123: One way to teach MIA anything: taught procedures
+- Status: PROPOSED
+- Proposed by: claude, 2026-11-07, from Zac's review ("Browser routines are now teachable, but they're not yet the
+  same thing as a universal skill system that can teach MIA workflows across desktop apps, phone features, and
+  other tools")
+- Proposal (`docs/PROCEDURES_PROPOSAL.md`): one engine for taught procedures: a trigger (asked, scheduled, or an
+  event), steps of any kind she can already do (her tools, action kinds, her browser, questions, steps only the
+  person can do; later phone features and desktop apps), each through the gate that already governs it, practised
+  with the person watching until two clean runs, then learned and allowed to run unattended. Taught by doing it
+  with her ("watch me"), by telling her, or by her offering after seeing a repeat. Browser routines and workflows
+  fold into it. Phases: engine and chat teaching; triggers; phone steps; desktop apps (its own decision); glasses.
+- Open: the direction, the name (Skills and Routines are taken), phase 1 first, which desktop apps matter.
+- Related: DEC-0092 (workflows), DEC-0112 (learning paths), DEC-0117, DEC-0121, DEC-0122
+
+### DEC-0124: The desktop opens on the web front end
+- Status: APPROVED
+- Decided by: zac, 2026-11-07 ("the only way I am able to view most of MIA is through the Home Preview app. I think a
+  lot of her isn't really presented and usable in this state")
+- Decision: MIA's desktop window opens on the web front end edge to edge (web mode: no classic header or character
+  panel; the web's own sidebar, Talk and screens). The window itself stays, for what it does beyond the page
+  (notifications, the email draft dialog's Send, apps opened by voice, kiosk mode, switching person). The Qt screens
+  are the classic view: Ctrl+Shift+C, or opening an app that lives only on the PC (Power, Toolbox, The Lab, Field
+  Kit), which the web Apps page now offers as "Open on this PC" inside the desktop. "Main screen" or Ctrl+Shift+C
+  goes back. `gui.web_first` false keeps the old start. Carries DEC-0017 to the desktop.
+- Related: DEC-0012, DEC-0013, DEC-0017, DEC-0023
+
+### DEC-0125: Full use both ways, on every device
+- Status: APPROVED
+- Decided by: zac, 2026-11-07 ("MIA should be absolutely 100% voice capable but I also want 100% capable for use on
+  the phone too. I want full use when I feel like talking and full use when i don't on all devices glasses, phone,
+  pc, etc. We will just have to adjust how we present it for each devices specs")
+- Decision: every feature can be used fully by voice and fully without it, on the PC, the phone and the glasses (and
+  voice-only). Every action has twins: a tool she can use when asked, and a control on a screen. A device changes
+  how a feature is presented (the glasses get a card and an ask, the phone a page sized for a thumb), never whether
+  it can be used. `core/parity.py` measures it app by app (voice, PC, phone, glasses); every gap is decided in
+  `work/parity.json`, to build or deliberately not, and a test fails on one nobody decided about, so parity only
+  grows. `docs/PARITY.md` is the table. The one exception (Zac, 2026-11-07: "yes keep passwords screen only"):
+  passwords, PINs and card numbers are never spoken, heard or shown on the glasses; they stay on a screen.
+- Related: DEC-0017, DEC-0062, DEC-0124

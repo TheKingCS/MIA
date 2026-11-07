@@ -25,6 +25,17 @@ context.profiles.verify_password() and returns an opaque bearer token
 app's own state — no JWT library, no persistence (a server restart
 logs everyone out, acceptable for a personal device's first pass).
 
+**Secrets from the web** (2026-11-07): the inbox's email setup and unlock
+(`/api/inbox/email*`) take a password and passphrase in their own request
+models (`MailSetupRequest`, `MailUnlockRequest`), handed straight to
+core/inbox_mail.py's encrypted vault: never an action (whose parameters
+are kept), never logged.
+
+**MIA's browser, live** (2026-11-07): `/api/browser/frame` (a picture of
+her browser now) and `/api/browser/input` (the person's click, typing, key
+or scroll, `BrowserInputRequest`) skip the turn lock so the live view stays
+smooth while she thinks; her browser has its own lock.
+
 **Phone voice (2026-09-27)**: `/api/voice/*` lets the phone page hold a
 spoken conversation with the full desktop MIA. The phone records and
 encodes a 16 kHz mono WAV itself (no ffmpeg needed here), this server
@@ -134,6 +145,32 @@ class PageErrorRequest(BaseModel):
 class PageOpenedRequest(BaseModel):
     """A web page saying it was opened, for which apps are used."""
     page: str = Field(default="", max_length=120)
+
+
+class MailSetupRequest(BaseModel):
+    """Setting up the inbox's mailbox from the web: the server, address, app password, the passphrase that encrypts it,
+    and whether it's the person's everyday mailbox. Never logged or kept beyond the encrypted vault."""
+    host: str = Field(default="imap.gmail.com", max_length=200)
+    address: str = Field(default="", max_length=200)
+    password: str = Field(default="", max_length=400)
+    passphrase: str = Field(default="", max_length=400)
+    everyday: bool = True
+
+
+class BrowserInputRequest(BaseModel):
+    """The person working MIA's browser from the live view: a click at x, y (the page's own pixels), typing, a key,
+    or a scroll."""
+    kind: str = Field(default="click", max_length=10)
+    x: float = 0
+    y: float = 0
+    text: str = Field(default="", max_length=2000)
+    key: str = Field(default="", max_length=20)
+    dy: float = 0
+
+
+class MailUnlockRequest(BaseModel):
+    """Unlocking the stored mailbox password for this run of MIA."""
+    passphrase: str = Field(default="", max_length=400)
 
 
 class VoiceTextRequest(BaseModel):
@@ -860,6 +897,92 @@ def create_app(context: AppContext) -> FastAPI:
                      for p in library.list_packs()]
             hits = library.search_titles(q.strip()[:200]) if q.strip() else []
         return {"available": True, "packs": packs, "hits": hits, "root": str(library.root_path)}
+
+    # MIA's browser (core/web_browser.py, DEC-0117): what it's on, the steps waiting for the person, the taught tasks,
+    # and a waiting step's screenshot (only from her own shots folder).
+    @app.get("/api/browser")
+    def browser_screen(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.web_browser import screen
+
+        with app.state.turn_lock:
+            return screen(view_for(context, profile_id))
+
+    # A startup sound to hear before choosing it in Settings (core/boot_sound.py, made on asking).
+    @app.get("/api/sounds/startup/{sound_id}")
+    def startup_sound(sound_id: str, profile_id: str = Depends(require_profile_id)):
+        import io
+        import wave
+
+        from fastapi.responses import Response
+
+        try:
+            from core.boot_sound import startup_samples
+
+            samples, rate = startup_samples(sound_id)
+        except (KeyError, ImportError):
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "There's no such startup sound here.") from None
+        buffer = io.BytesIO()
+        with wave.open(buffer, "wb") as out:
+            out.setnchannels(1)
+            out.setsampwidth(2)
+            out.setframerate(rate)
+            out.writeframes(samples.tobytes())
+        return Response(buffer.getvalue(), media_type="audio/wav", headers={"Cache-Control": "no-store"})
+
+    # Start Here (core/web_guide.py): what MIA does and how, and what's new. The same for everyone; read only.
+    @app.get("/api/guide")
+    def guide_page(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.web_guide import guide
+
+        return guide()
+
+    # The live view: frames and the person's own input skip the turn lock, so it stays smooth while MIA thinks (her
+    # browser has its own lock).
+    @app.get("/api/browser/frame")
+    def browser_frame(profile_id: str = Depends(require_profile_id)):
+        from fastapi.responses import Response
+
+        from core.web_browser import live_frame
+
+        data = live_frame(view_for(context, profile_id))
+        if data is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "MIA's browser isn't open.")
+        return Response(data, media_type="image/jpeg", headers={"Cache-Control": "no-store"})
+
+    @app.post("/api/browser/input")
+    def browser_input(body: BrowserInputRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.browser import BrowserError
+        from core.web_browser import person_input
+
+        try:
+            return person_input(view_for(context, profile_id), body.kind, body.x, body.y, body.text, body.key,
+                                body.dy)
+        except BrowserError as problem:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
+
+    @app.get("/api/browser/view")
+    def browser_view(profile_id: str = Depends(require_profile_id)):
+        from fastapi.responses import FileResponse
+
+        from core.web_browser import live_view
+
+        with app.state.turn_lock:
+            path = live_view(view_for(context, profile_id))
+        if path is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "MIA's browser isn't open.")
+        return FileResponse(path, media_type="image/png", headers={"Cache-Control": "no-store"})
+
+    @app.get("/api/browser/shot")
+    def browser_shot(id: str, profile_id: str = Depends(require_profile_id)):
+        from fastapi.responses import FileResponse
+
+        from core.web_browser import shot_path
+
+        with app.state.turn_lock:
+            path = shot_path(view_for(context, profile_id), id)
+        if path is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "That screenshot isn't there.")
+        return FileResponse(path, media_type="image/png")
 
     # The Library's plans shelf (core/plan_library.py): plans, one plan, and a plan's own file from the plans folder.
     @app.get("/api/knowledge/plans")
@@ -1615,6 +1738,35 @@ def create_app(context: AppContext) -> FastAPI:
         from core.web_inbox import inbox_page
 
         return _screen(profile_id, "inbox", inbox_page)
+
+    # The inbox's mailbox from the web (core/inbox_mail.py, DEC-0124): set up, unlock, check. Their own endpoints,
+    # not actions: a password and passphrase go only into the encrypted vault, never into a proposal or a log.
+    def _mail(profile_id: str, do):
+        from core.inbox_mail import MailSetupError
+
+        try:
+            return _screen(profile_id, "inbox", do)
+        except MailSetupError as problem:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
+
+    @app.post("/api/inbox/email")
+    def web_inbox_email_setup(body: MailSetupRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.inbox_mail import configure
+
+        return _mail(profile_id, lambda view: configure(view, body.host, body.address, body.password,
+                                                         body.passphrase, body.everyday))
+
+    @app.post("/api/inbox/email/unlock")
+    def web_inbox_email_unlock(body: MailUnlockRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.inbox_mail import unlock
+
+        return _mail(profile_id, lambda view: unlock(view, body.passphrase))
+
+    @app.post("/api/inbox/email/check")
+    def web_inbox_email_check(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.inbox_mail import check
+
+        return _mail(profile_id, check)
 
     @app.get("/api/inbox/item/{item_id}/file")
     def web_inbox_file(item_id: str, name: str, profile_id: str = Depends(require_profile_id)):

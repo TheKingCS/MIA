@@ -9,13 +9,17 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 ## Zac
 
 ### Try it
+- [ ] **The desktop opens on the web (DEC-0124):** close both copies of MIA that are running and start it once. It
+      should open straight onto MIA's web screens, full size. Ctrl+Shift+C (or the header's "Main screen") switches to
+      the classic screens and back; Power, Toolbox, The Lab and Field Kit open from the Apps page ("Open on this PC").
+      Tell Claude anything that looks wrong or missing.
 - [ ] **The phone app, no test header, keeps your place (2026-11-07):** install the new build (GitHub's Android build
       from this push, or `app-debug.apk` built on the PC: `adb install -r android-phone/app/build/outputs/apk/debug/app-debug.apk`).
       It's called "MIA" now, with no title bar; lock the phone on any page with Talk open and come back: same page,
       same scroll, Talk still open with what you'd typed.
 - [ ] **Your email for receipts (DEC-0120):** in Gmail, make an app password (Google Account, Security, 2-Step
-      Verification, App passwords; don't paste it into a chat). Then MIA, Inbox, Email Settings: imap.gmail.com, your
-      address, the app password, your journal passphrase, and **Yes** to "everyday mailbox". She looks back 30 days
+      Verification, App passwords; don't paste it into a chat). Then MIA's Inbox page, Email section: imap.gmail.com,
+      your address, the app password, your journal passphrase, "everyday mailbox" ticked, Save. She looks back 30 days
       for receipts and orders and leaves your mail untouched. Emailed receipts file themselves (DEC-0121): the
       Inbox's "Filed By MIA From Your Email" list shows each with Undo, or say "undo the Kroger receipt". Tell Claude
       which stores' receipts read badly.
@@ -23,7 +27,8 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       site): her own Edge window opens. Try "read the page", "click ...", and something that commits (she should
       ask first, and a "yes" after she names the button presses it). Then teach her one real task: open where it
       starts, "learn this: <name>", do it in her window, "done", and "do <name>" twice. Tell Claude what she got
-      wrong. One choice for you in the doc's Known limits: whether typing in ordinary fields should be limited to
+      wrong (the new Browser page in the sidebar shows what's waiting, with its screenshot, and your taught tasks).
+      One choice for you in the doc's Known limits: whether typing in ordinary fields should be limited to
       words you said that turn.
 
 - [ ] **Plans in the Library (DEC-0118):** after the restart, ask "what do I need to build a 10 by 12 shed?" or
@@ -38,6 +43,13 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       Claude Design for round one (the frame plus six screens).
 
 ### Decisions
+- [ ] **The audit and organization (a Claude Doc, "MIA: Audit and Organization of Everything Built":
+      https://claude.ai/artifact/56xyaTxEQThT1vrYh484Ay):** seven areas, eight hubs, four screen tiers, the ways to
+      use each feature, six flows. Four decisions at its end: the areas, the merges (above all the game layer into one
+      Progress hub), missed missions, and building step 1 now.
+- [ ] **Taught procedures (DEC-0123 PROPOSED, `docs/PROCEDURES_PROPOSAL.md`):** your "universal skill system" idea as
+      one engine (browser routines and workflows folded in). Four questions at its end: the direction, the name,
+      phase 1 first, and which desktop apps you'd want her to learn.
 - [x] **Child-account code (DEC-0119):** leave it (Zac, 2026-11-07); it only reaches MIA's prompts for a child.
 - [ ] **The Highest Self (H-0089 → H-0090, DEC-0114 PROPOSED):** read H-0090 (one page) and decide its four questions (the foundation, faith for everyone's MIA, three new modes, keep the tuned prompt); and rate MIA's twelve new answers in `pc-check/conversation-highest-self-tune2.md` (faith, meaning, vulnerability, grand plans, dependency, free will, flattery): your ratings decide the next tuning.
 - [x] **Experience Maturity (DEC-0113):** approved by Zac 2026-11-07, amended: the design canvas is the reference, no concept round.

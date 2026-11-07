@@ -580,7 +580,7 @@ def test_filed_items_travel_with_the_expense_and_answer_what_did_i_buy(ctx):
 
 
 def test_what_she_read_and_the_person_corrected_is_noted(ctx):
-    """Step 4's inbox.reading: field names only, never the values."""
+    """Step 4's inbox.reading: field names only, never the values (whatever the clock says)."""
     from types import SimpleNamespace
 
     from core import loops
@@ -589,7 +589,8 @@ def test_what_she_read_and_the_person_corrected_is_noted(ctx):
     [item] = drop(ctx, "receipt.txt", RECEIPT_TEXT)
     ctx.inbox.file_item(item.item_id, amount=38.0, category="Tools")  # she read 36.23 and Building Materials
     [first] = ctx.inbox.readings()
-    assert first["corrected"] == ["amount", "category"] and "38" not in str(first)
+    # Never the values themselves (the timestamp aside: at 09:38 it holds "38" too).
+    assert first["corrected"] == ["amount", "category"] and "38" not in str({k: v for k, v in first.items() if k != "at"})
     assert reading_corrections(SimpleNamespace(amount=None, category="", asset_id=""), 12.0, None, None) == ["amount missed"]
     assert reading_corrections(SimpleNamespace(amount=12.0, category="Food", asset_id="a1"), None, None, None) == []
     reading = {l.id: l for l in loops.LOOPS}["inbox.reading"].measure(ctx)

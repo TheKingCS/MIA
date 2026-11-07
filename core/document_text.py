@@ -11,7 +11,9 @@ Formats:
   dependency via PySide6; confirmed to work with no display, so the
   headless Pi path can use it too). No new PDF library.
 - **Plain text / Markdown**, as one page.
-- **HTML**, tags stripped, as one page.
+- **HTML**, tags stripped, as one page; a table row with text in two or
+  more cells (an emailed receipt's item and price) stays one line
+  (2026-11-07), so the receipt reader can find its lines.
 - **Email (.eml)**, through the standard library's email parser:
   subject, sender, date, the text body as a page, and every attachment
   returned as raw bytes so the caller can store and read it too.
@@ -75,36 +77,83 @@ class ExtractedDocument:
 
 class _TextFromHtml(HTMLParser):
     """An HTML parser that keeps the visible text: scripts and styles left out, a line break at each block
-    (paragraph, line break, div, list item, row, heading).
+    (paragraph, line break, div, list item, heading). A table row whose cells hold text in two or more of them (an
+    emailed receipt's "Whole milk | $3.49") becomes one line, its cells a gap apart, as the receipt reader needs;
+    a row with one such cell (an email's layout table around everything) keeps that cell's own lines. Rows a message
+    leaves unclosed are closed by the next row, or the end of their table.
     """
     def __init__(self) -> None:
-        """Starts with no text collected."""
+        """Starts with no text collected and no table open."""
         super().__init__()
         self.parts: list[str] = []
         self._skip = 0
+        self._tables = 0  # how deep in tables the text is now
+        self._rows: list[dict] = []  # open rows, innermost last: {"table": its table's depth, "cells": [[text]]}
+
+    def _target(self) -> list:
+        """Where text goes now: the innermost open row's last cell, else the page."""
+        if self._rows:
+            row = self._rows[-1]
+            if not row["cells"]:
+                row["cells"].append([])
+            return row["cells"][-1]
+        return self.parts
+
+    def _close_rows(self, depth: int) -> None:
+        """Closes the open rows of tables at this depth or deeper, each into the text around it."""
+        while self._rows and self._rows[-1]["table"] >= depth:
+            row = self._rows.pop()
+            cells = [" ".join("".join(cell).split()) for cell in row["cells"]]
+            filled = [c for c in cells if c]
+            if len(filled) >= 2:
+                text = "   ".join(filled)
+            else:
+                text = next(("".join(cell) for cell in row["cells"] if "".join(cell).strip()), "")
+            self._target().append("\n" + text + "\n")
 
     def handle_starttag(self, tag, attrs):
-        """Entering a script or style: stop collecting; a block tag: start a new line."""
+        """Entering a script or style: stop collecting; a table, row or cell: start one (a new row closes the last
+        row of its own table); another block tag: a new line."""
         if tag in ("script", "style"):
             self._skip += 1
-        elif tag in ("p", "br", "div", "li", "tr", "h1", "h2", "h3", "h4"):
-            self.parts.append("\n")
+        elif tag == "table":
+            self._tables += 1
+        elif tag == "tr":
+            self._close_rows(self._tables)
+            self._rows.append({"table": self._tables, "cells": []})
+        elif tag in ("td", "th"):
+            if self._rows and self._rows[-1]["table"] == self._tables:
+                self._rows[-1]["cells"].append([])
+        elif tag in ("p", "br", "div", "li", "h1", "h2", "h3", "h4"):
+            self._target().append("\n")
 
     def handle_endtag(self, tag):
-        """Leaving a script or style: collect again."""
+        """Leaving a script or style: collect again; a row: it's closed; a table: its open rows are, and it ends."""
         if tag in ("script", "style") and self._skip:
             self._skip -= 1
+        elif tag == "tr":
+            self._close_rows(self._tables)
+        elif tag == "table" and self._tables:
+            self._close_rows(self._tables)
+            self._tables -= 1
 
     def handle_data(self, data):
-        """Keeps text that isn't inside a script or style."""
+        """Keeps text that isn't inside a script or style, in the cell it's in (or on the page)."""
         if not self._skip:
-            self.parts.append(data)
+            self._target().append(data)
+
+    def close(self) -> None:
+        """Finishes reading, closing any rows a message left open."""
+        super().close()
+        self._close_rows(0)
 
 
 def html_to_text(html: str) -> str:
-    """Pure logic. HTML as plain text: tags out, spaces collapsed, at most one blank line between blocks."""
+    """Pure logic. HTML as plain text: tags out, a table row of several cells on one line, spaces collapsed, at most
+    one blank line between blocks."""
     parser = _TextFromHtml()
     parser.feed(html)
+    parser.close()
     text = "".join(parser.parts)
     return re.sub(r"\n\s*\n+", "\n\n", re.sub(r"[ \t]+", " ", text)).strip()
 

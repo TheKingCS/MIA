@@ -247,11 +247,12 @@ def test_desktop_sessions_are_not_phones(world):
 
 
 def test_web_home_address():
-    """Home's address carries the session token, and the text size and contrast when set."""
+    """Home's address says it's in the desktop window and carries the session token, and the text size and contrast
+    when set."""
     from modules.web_home.module import web_home_url
 
-    assert web_home_url("http://127.0.0.1:8765", "abc") == "http://127.0.0.1:8765/web/#token=abc"
-    assert web_home_url("http://h", "t", 1.25, True) == "http://h/web/?scale=1.25&contrast=high#token=t"
+    assert web_home_url("http://127.0.0.1:8765", "abc") == "http://127.0.0.1:8765/web/?desktop=1#token=abc"
+    assert web_home_url("http://h", "t", 1.25, True) == "http://h/web/?desktop=1&scale=1.25&contrast=high#token=t"
 
 
 def test_the_pi_check_verdict():

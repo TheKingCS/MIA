@@ -119,6 +119,54 @@
     dialog.showModal();
   }
 
+  // ------------------------------------------------------------ email (core/inbox_mail.py, 2026-11-07)
+  let changingEmail = false;
+  async function emailDo(call, done) {
+    try { await call(); say(done); } catch (e) { say(e.message); return; }
+    changingEmail = false;
+    page = await MIA.inbox();
+    draw();
+  }
+
+  function emailSection(mail) {
+    if (!mail || !mail.available) return null;
+    if (!mail.configured || changingEmail) {
+      const field = (label, attrs) => el("label", { class: "form-row" }, el("span", {}, label), el("input", Object.assign({ class: "input" }, attrs)));
+      const host = field("Mail server", { value: mail.host || "imap.gmail.com", autocomplete: "off" });
+      const address = field("Email address", { type: "email", value: mail.address || "", autocomplete: "username" });
+      const password = field("App password", { type: "password", autocomplete: "off" });
+      const passphrase = field("Passphrase (8+ characters; your journal one unlocks both)", { type: "password", autocomplete: "off" });
+      const everyday = el("input", { type: "checkbox" });
+      everyday.checked = mail.configured ? mail.everyday : true;
+      const value = (row) => row.querySelector("input").value;
+      return section("Email", null,
+        el("p", { class: "dim" }, "Your everyday mailbox: MIA reads only receipts, orders and service confirmations, "
+          + "and leaves your mail as it is (nothing marked read). For Gmail, make an app password first: Google Account, "
+          + "Security, 2-Step Verification, App passwords."),
+        el("form", { class: "stack-form", onsubmit: (e) => {
+          e.preventDefault();
+          emailDo(() => MIA.inboxEmailSetup({ host: value(host), address: value(address), password: value(password),
+            passphrase: value(passphrase), everyday: everyday.checked }), "Email is set up. Checking it now.");
+        } }, host, address, password, passphrase,
+          el("label", { class: "tick-row" }, everyday, el("span", {}, "This is my everyday mailbox (receipts and orders only)")),
+          buttons(el("button", { type: "submit", class: "btn btn-green" }, "Save"),
+            mail.configured ? btn("Cancel", "btn-ghost", () => { changingEmail = false; draw(); }) : null)));
+    }
+    if (!mail.unlocked) {
+      const passphrase = el("input", { type: "password", class: "input", placeholder: "Passphrase", autocomplete: "off" });
+      return section("Email", null,
+        el("p", {}, "Set up for " + mail.address + ", but locked since MIA started. Unlock it to check for receipts."),
+        el("form", { class: "form-row", onsubmit: (e) => { e.preventDefault(); emailDo(() => MIA.inboxEmailUnlock(passphrase.value), "Unlocked. Checking now."); } },
+          passphrase, el("button", { type: "submit", class: "btn btn-green" }, "Unlock")),
+        buttons(btn("Change settings", "btn-ghost btn-small", () => { changingEmail = true; draw(); })));
+    }
+    return section("Email", null,
+      el("p", {}, "Checking " + mail.address + " every 10 minutes" + (mail.everyday ? " for receipts and orders (nothing marked read)." : ".")),
+      mail.last ? el("p", { class: "dim" }, mail.last) : null,
+      buttons(btn("Check now", "btn-ghost btn-small", () => emailDo(() => MIA.inboxEmailCheck(), "Checking.")),
+        btn("Change settings", "btn-ghost btn-small", () => { changingEmail = true; draw(); })));
+  }
+
   // ------------------------------------------------------------ cards
   function card(item) {
     const facts = [
@@ -167,6 +215,7 @@
         el("div", { class: "rows" }, page.auto.map((a) => el("div", { class: "row money-row" },
           el("div", {}, el("div", { class: "row-title" }, a.label), el("div", { class: "row-sub" }, a.did + " · " + day(a.received))),
           btn("Undo", "btn-ghost btn-small", () => act({ kind: "inbox.unfile", params: { item_id: a.id } })))))) : null,
+      emailSection(page.email),
       section("Waiting", null, page.pending.length ? el("div", { class: "inbox-list" }, page.pending.map(card))
         : el("p", { class: "empty" }, "Nothing waiting. Send MIA a receipt or a manual.")),
       page.done.length ? section("Filed And Dismissed", btn(showDone ? "Hide" : "Show", "btn-ghost btn-small", () => { showDone = !showDone; draw(); }),

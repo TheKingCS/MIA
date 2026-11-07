@@ -120,7 +120,7 @@ def _scope_name(asset) -> str:
 
 
 def inbox_page(context) -> dict:
-    """The Inbox screen's data: it takes in anything sent since the last look (a failed scan is logged, not raised), then the items waiting, what MIA filed from email on her own in the last 30 days (each with Undo), the last 25 handled, and what each can be filed to (maintenance, projects, expense categories). Not available without an inbox."""
+    """The Inbox screen's data: it takes in anything sent since the last look (a failed scan is logged, not raised), then the items waiting, what MIA filed from email on her own in the last 30 days (each with Undo), the mailbox's status (never its password), the last 25 handled, and what each can be filed to (maintenance, projects, expense categories). Not available without an inbox."""
     inbox = getattr(context, "inbox", None)
     if inbox is None:
         return {"available": False}
@@ -142,6 +142,7 @@ def inbox_page(context) -> dict:
         "auto": [{"id": i.item_id, "label": i.label, "did": i.filed_note.replace("Filed by MIA: ", "").rstrip("."),
                   "received": i.received_at} for i in inbox.auto_filed()],
         "auto_on": getattr(context, "config", None) is None or context.config.get("inbox.auto_file", True) is not False,
+        "email": _email_status(context),  # the mailbox: set up, unlocked, how the last check went (never a password)
         "counts": {"waiting": len(pending), "reading": sum(1 for p in pending if p["reading"]),
                    "filed": sum(1 for i in items if i.status == "filed")},
         "picks": {
@@ -163,3 +164,14 @@ def item_file(context, item_id: str, name: str) -> Optional[Path]:
         return None
     path = inbox.item_folder(item.item_id) / name
     return path if path.is_file() else None
+
+
+def _email_status(context) -> dict:
+    """The inbox's mailbox for the screen (core/inbox_mail.status); unavailable when there's none."""
+    from core.inbox_mail import status
+
+    try:
+        return status(context)
+    except Exception:
+        log.exception("Inbox: email status failed")
+        return {"available": False}

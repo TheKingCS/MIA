@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1089 files, 246,986 lines; 1089 files describe themselves; 13,545 of 14,215 classes and functions are documented.
+1100 files, 249,424 lines; 1100 files describe themselves; 13,665 of 14,335 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-391 files, 114,493 lines; 6,067 of 6,156 classes and functions documented
+397 files, 115,843 lines; 6,142 of 6,231 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -41,6 +41,8 @@
 - `core/assistant_ownership_actions.py`: "Whose truck is it?" and "the mower is mine" (core/ownership.py, 2026-10-01): owner marks on maintenance items (vehicles, tools, appliances).
 - `core/assistant_path_actions.py`: Learning paths by voice (DEC-0112; core/paths.py): any desire, the same loop. "I want to learn guitar" starts the guitar program; "I want to learn to weld", with no program for it, has MIA draft one (grounded in her specialists' notes) and describe it, and "start it" starts it. Then lessons, practic
 - `core/assistant_plan_actions.py`: The Library's plans by voice (core/plan_library.py): "do we have plans for a chicken coop?", "what do I need for a 10 by 12 shed?", "make me a cut list for a 4 by 8 raised bed", "what do I still need to buy for the fence?", "where can I get free barn plans?", "start the shed as a project". The numbe
+- `core/assistant_progress_actions.py`: Her game layer by voice (DEC-0125, full use both ways): the Character, Skills and Reward Shop screens had nothing to say when asked. Four tools, each phrased from the same data its screen draws (core/web_progress.py, core/game_layer.py), so voice and screen never disagree:
+- `core/assistant_records_actions.py`: Asking about what she keeps (DEC-0125, full use both ways): Insurance, Kept, the Operating Journal, Play and Files could be changed by voice or only seen on a screen, never asked about. Five read-only tools, each phrased from its screen's own data so voice and screen agree:
 - `core/assistant_self_actions.py`: MIA about herself (2026-10-21, the intelligence spec's first slice): "What AI model are you using?" answered from the runtime (core/model_registry.py), never from the model's guess about itself.
 - `core/assistant_starter_actions.py`: "What starter sets are there?", "set me up with the homestead starter set", "add the student starter but not the weekly plan" (core/starter_templates.py, 2026-10-01). Adding one is undoable.
 - `core/assistant_tagging_actions.py`: Assistant tools for sorting bank charges to businesses (core/business_tagging.py): "which charges need a business?" and "the Shell charge was for lawn care" / "the Walmart one was personal".
@@ -54,7 +56,7 @@
 - `core/backup_manager.py`: Export/import MIA's config + data directory as a single backup file, per docs/ROADMAP.md milestone 2.7. Optionally passphrase-encrypted via core/secrets_manager.py.
 - `core/benchmarks.py`: The weekly benchmarks (build plan step 5, DEC-0094): Zac's 112-question Intelligence Benchmark on this PC's model and the person's real records, the golden conversation corpus on the glasses and the phone, and the routing audit. `tools/weekly_bench.py` runs them (Night School starts it once a week, 
 - `core/blueprints.py`: The blueprints MIA builds screens from (DEC-0090; `blueprints/README.md`): versioned JSON in the repo, with fields named by role (`$title`, `$date`, `$group`, `$number`, `$all`, `$details`). `fill()` turns one into blocks for a particular record set, leaving out what has no field to show.
-- `core/boot_sound.py`: Synthesizes the boot sequence's "growing pulsing energy" sound effect — a rising-pitch power-up sweep with a pulsing amplitude envelope, capped off with a bright high "ping" (the user's own description: "like a woooooooom ping") — timed to feel like it belongs alongside gui/presence_widget.py's brea
+- `core/boot_sound.py`: Six to choose from** (2026-11-07, Zac: "an odd ping... sample some sounds and I will pick"): `startup_samples()` makes each of core/startup_sounds.py's choices (a warm chord, rising chimes, a reactor power-up, a soft swell, a ready tone, and the original below); Settings plays and picks one (`sound.
 - `core/boot_sound_worker.py`: Plays the boot sound off the GUI thread — same reasoning as core/tts_worker.py: `VoiceManager.play()`'s `sd.wait()` blocks for the whole sound's duration, which would otherwise freeze core/application.py's own `QTimer`-chained boot steps for that long.
 - `core/boss_battles.py`: Boss battles (DEC-0028, the game layer's third piece): big goals with an HP bar.
 - `core/browser.py`: MIA's own web browser (DEC-0117, Zac 2026-11-07): Microsoft Edge, driven by Playwright, in a profile that is MIA's alone, never the person's own browser, logins, cookies or saved passwords. The window is visible on the computer, so what she does can be watched.
@@ -261,6 +263,7 @@
 - `core/operating_actions.py`: The Operating Journal (core/operating_journal.py, DEC-0097) through the action contract (core/actions.py): `operating.add` (a line of how they mean to operate), `operating.remove`, and `operating.rate` (a self-rated line, 1 to 5, for this week). The journal writes through atomic_write_text, so "undo
 - `core/operating_journal.py`: The Operating Journal (DEC-0097, build plan step 11; Zac, 2026-11-06: "a template that is essentially a journal entry for how I want to operate, and how I do operate so that MIA can learn my goals as well as my actual routine").
 - `core/ownership.py`: Whose is it? (2026-10-01) In a shared household some things belong to one person: the truck is Zac's, the sewing machine is Faith's, the tractor is everyone's. A maintenance item (vehicle, tool, appliance) can name its owner (`MaintenanceAsset.owner_profile_id`; None means shared by the household).
+- `core/parity.py`: Full use both ways, on every device (DEC-0125, Zac 2026-11-07: "MIA should be absolutely 100% voice capable but I also want 100% capable for use on the phone too. Full use when I feel like talking and full use when I don't on all devices"). This measures it, app by app:
 - `core/party.py`: Party and guild (DEC-0028, the game layer's tenth idea; Zac, 2026-10-17): the household plays together.
 - `core/passing_mentions.py`: "Propose, you confirm" (2026-09-28): when the owner mentions in passing something MIA keeps a record of, she answers as usual and then offers to record it, and does so only on a yes:
 - `core/password_strength.py`: Password strength estimation — docs/ROADMAP.md milestone 11.5, Field Kit's Security/Network Toolkit. A simple Shannon-entropy-over-character pool-size estimate plus a handful of pattern warnings, not a full zxcvbn-style dictionary/pattern-cracking-time model — "don't over-engineer" for a field tool'
@@ -332,6 +335,7 @@
 - `core/specialists.py`: MIA's specialists (DEC-0109; Zac, 2026-11-07: "she should be able to specialize agents for each area of skill she is developing, like one that is catered towards construction knowledge, one towards radio technologies, one towards military strategy, one towards homesteading skills, one towards resear
 - `core/starter_templates.py`: Starter sets (2026-10-01): a new MIA is empty, and an empty app is hard to start with. A starter set fills in the usual things for a kind of life, so there's something to check off on day one:
 - `core/startup_briefing.py`: Pure logic for the "Good evening, Zac. Welcome back." launch greeting — docs/VISION.md's 2026-07-15 companion-philosophy update, "Startup Dashboard Briefing."
+- `core/startup_sounds.py`: The startup sounds' names and which one is chosen (Zac, 2026-11-07: "sample some sounds and I will pick a good start up sound, and make it a togglable setting"). Kept apart from core/boot_sound.py, which makes the sounds with numpy, so Settings can list them anywhere MIA runs (the phone too).
 - `core/subnet_calculator.py`: Subnet/CIDR calculator — docs/ROADMAP.md milestone 11.5, Field Kit's Security/Network Toolkit. A thin wrapper around stdlib `ipaddress` (handles both IPv4 and IPv6 correctly) rather than hand-rolling bitmask math — "don't reinvent the wheel", same reasoning behind this project's other integration de
 - `core/support_choice.py`: "When it's ambiguous, MIA asks instead of guessing" (2026-09-28), the part of slice B that was deferred (docs/COGNITIVE_EXTENSION_PROPOSAL.md, sections 8 and 9).
 - `core/sync.py`: Two-way sync between the phone and the home computer (DEC-0022, the step after the link; Zac, 2026-10-18). A change on either one shows up on the other: missions, the kitchen, money, the journal, quests, everything that lives in MIA's data files, and the XP and credits you earned.
@@ -368,6 +372,7 @@
 - `core/waypoint_actions.py`: Waypoints (core/waypoint_manager.py) through the action contract (core/actions.py), for the web's Maps and Navigation pages: `waypoint.add` (a name and where: from a tap on the map, or typed) and `waypoint.delete`. The store writes through atomic_write_text, so "undo that" takes either back. Maps ar
 - `core/waypoint_manager.py`: Backs the Navigation module's waypoint list (modules/navigation/module.py) — docs/ROADMAP.md milestone 10.1. Same persisted-JSON pattern as core/inventory_manager.py: data/waypoints.json, a dataclass with to_dict/from_dict, a manager class wrapping load/save.
 - `core/web_account.py`: The web's Profile and Settings screens (2026-10-07, Zac: the gear's Profile and Settings). Profile is who you are: name, email, country, what MIA helps with, household, password and recovery code. Settings is how MIA behaves for you: the person's own settings from the PC app's Settings (core/person_
+- `core/web_browser.py`: The Browser screen's data (DEC-0117, 2026-11-07): MIA's own browser as the person sees it on the web, so held steps and taught tasks aren't only reachable by talking to her.
 - `core/web_business.py`: The Orders & Quotes screen (DEC-0030 phase C): orders (what's owed, the build's progress, and where each is on the stage rail with the step that moves it on: `order_stage`, DEC-0113), quotes (with what the price is made of), customers, and the portfolio of finished builds. Put together here from cor
 - `core/web_compliance.py`: The Compliance screen (DEC-0040): every obligation, sorted the way deadlines are read: **Overdue**, **Next 30 days**, **Later**, **To check** (unverified, or undated), and **Done**. Each says when it's really due (moved off a weekend or holiday, an extension to file kept apart from the money's date)
 - `core/web_craft.py`: The Workshop's Recipes and Builds tabs (DEC-0030 phase B): put together here from core/craft_recipes.py, Materials, Jobs, Products and the Ledger, so the web only formats. Part of `workshop_page()`. The Goods tab (DEC-0036: homestead goods on hand, batch by batch, the market day and labels) is `good
@@ -376,6 +381,7 @@
 - `core/web_fitness.py`: What the fitness screens show (DEC-0020, H-0026), assembled in core so the screens (Muse's) only draw it: today (training and its steps, skill practice, food and nutrition against the targets, planned meals, the day's fitness missions), the weight line, the week's meal plan with its prep and shoppin
 - `core/web_flock.py`: The Chickens screen (DEC-0037): each flock's numbers (eggs today and this week, the lay rate, loose eggs, feed cost per dozen), the last two weeks of eggs, the log, and the egg cartons on hand. Put together here from core/flock.py and homestead goods (core/goods.py), so the web only formats. Served 
 - `core/web_grow.py`: The Greenhouse's growing side (DEC-0030 phase D, folded into the Greenhouse by Zac 2026-10-17): every **place** (each tank or bed is a Greenhouse asset; older places are names typed before that) with what's growing there, its latest readings against your ranges (only ever a warning), and what it has
+- `core/web_guide.py`: "Start Here" (Zac, 2026-11-07: "I don't see the browser on MIA or really understand how to use much of anything we have built"): what MIA does, in plain words, grouped by what a person wants to get done, each with the words to say to her (a "Try saying" button opens Talk with them typed in) and the 
 - `core/web_inbox.py`: The Inbox on the web and the phone (Zac, 2026-10-16: "Can you build the inbox for sending stuff to MIA?"). The document inbox itself is core/inbox_manager.py: a file sent in (from the phone's Share menu, the Upload button, a dropped file, or email) becomes an item with MIA's reading of it (a receipt
 - `core/web_money.py`: The Money screen's data (2026-10-06, DEC-0017): everything the PC app's Budget screen shows, assembled here so `web/` holds no logic. Served as `/api/money`; changes go through the action kinds in core/money_actions.py.
 - `core/web_more.py`: The Journal, Workshop, Expeditions, Music, Files and People screens on the web (Zac, 2026-10-16: on the phone they "are empty right now and just bring up a chat with MIA"). Each assembler reads its stores and returns what its screen shows; every change is an action in core/more_actions.py.
@@ -402,14 +408,14 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 2,675 lines; 31 of 31 classes and functions documented
+2 files, 2,827 lines; 34 of 34 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
 
 ## gui/: the desktop's Qt shell and dialogs
 
-122 files, 21,751 lines; 1,083 of 1,083 classes and functions documented
+122 files, 21,806 lines; 1,085 of 1,085 classes and functions documented
 
 - `gui/__init__.py`: Presentation layer only. Everything in this package talks to the rest of the system through core.app_context.AppContext and modules.module_base. ModuleBase — never by importing module internals or reaching into core services directly beyond what AppContext exposes.
 - `gui/account_dialogs.py`: Accounts and households on the desktop (2026-10-01, docs/ROADMAP.md "People and ownership"; core/profile_manager.py, core/household_manager.py):
@@ -536,7 +542,7 @@
 
 ## modules/: the desktop's apps, one folder each
 
-93 files, 22,800 lines; 1,030 of 1,030 classes and functions documented
+93 files, 22,835 lines; 1,032 of 1,032 classes and functions documented
 
 - `modules/__init__.py`: Every feature of MIA (Assistant, Files, Notes, Maps, etc.) lives here as an independent package. Each module package must:
 - `modules/assistant/__init__.py`: The assistant app's package: its screen and behaviour are in module.py (Assistant Chat UI — docs/ROADMAP.md milestones 5.2 (text chat), 5.3 (voice), 5.4 (device-help grounding), and 5.5 (tool use / action execution). A chat screen (). core/module_manager.py finds it by that file.
@@ -670,7 +676,7 @@
 
 ## tests/: the test suite: what each part must do
 
-363 files, 66,136 lines; 5,243 of 5,824 classes and functions documented
+366 files, 66,640 lines; 5,281 of 5,862 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -703,9 +709,9 @@
 - `tests/test_avatar_manager.py`: Unit tests for core.avatar_manager. list_devices()/is_available() are tested against a monkeypatched QMediaDevices.videoInputs() (same "mock the OS-level query, test our own mapping/decision logic" reasoning as test_power_manager.py mocking psutil and test_volume_manager.py mocking subprocess.run) —
 - `tests/test_backup_manager.py`: Unit tests for core.backup_manager. Isolates _CONFIG_FILE/_DATA_DIR into a tmp_path scratch area (same monkeypatch pattern as test_config_manager.py) so these tests never touch the real config/config.json or data/ directory. *(4 undocumented)*
 - `tests/test_benchmarks.py`: The weekly benchmarks (build plan step 5, core/benchmarks.py): graded by code against the run before, kept as grades only (never an answer), read by the answers.* loops. *(2 undocumented)*
-- `tests/test_boot_sound.py`: Unit tests for core.boot_sound — pure synthesis logic, no audio hardware/I/O involved (see that module's docstring for why real playback can't be verified in this dev sandbox). write_boot_sound_wav() is exercised via a real tmp_path file write/read round trip, same reasoning test_script_runner.py gi *(1 undocumented)*
+- `tests/test_boot_sound.py`: Unit tests for core.boot_sound — pure synthesis logic, no audio hardware/I/O involved; also the six startup sounds to choose from and the Settings choice that picks one (or Off) (see that module's docstring for why real playback can't be verified in this dev sandbox). write_boot_sound_wav() is exerc *(1 undocumented)*
 - `tests/test_boss_battles.py`: Boss battles (DEC-0028): every debt is a boss (max HP is the highest balance seen, payments are hits, interest heals it), and any mission can be made into one (its objectives are its HP). *(3 undocumented)*
-- `tests/test_browser.py`: MIA's browser (DEC-0117) against a pretend browser: what the safety rules let her do alone, a commit waiting for the person (approved on screen or with a yes, refused when the page changed), secrets never typed, a task taught by showing and replayed, and learned after two clean runs.
+- `tests/test_browser.py`: MIA's browser (DEC-0117) against a pretend browser: what the safety rules let her do alone, a commit waiting for the person (approved on screen or with a yes, refused when the page changed), secrets never typed, a task taught by showing and replayed, learned after two clean runs, the Browser screen 
 - `tests/test_budget_manager.py`: Unit tests for core.budget_manager. Isolates _DATA_DIR/_*_FILE into a tmp_path scratch area, same monkeypatch pattern as test_calendar_manager.py's isolated_paths, so these tests never touch real data/*.json. *(5 undocumented)*
 - `tests/test_budget_module.py`: Unit tests for modules.budget.module's pure row formatters — no Qt event loop needed, same shape as tests/test_maintenance_module.py. *(3 undocumented)*
 - `tests/test_budget_nudges.py`: Unit tests for core.budget_nudges — no Qt, no manager instances, same shape as tests/test_daily_occasions.py. *(2 undocumented)*
@@ -898,6 +904,7 @@
 - `tests/test_online_watch.py`: Offline awareness follow-ups (core/online_watch.py): noticing a settled change of connection, telling the owner through the communication gate, and "remind me when I'm back online". *(1 undocumented)*
 - `tests/test_operating_journal.py`: The Operating Journal (DEC-0097, core/operating_journal.py): lines in the person's words, each read by code for what the records can check; self-rated otherwise; how they did as plain numbers by week (and each line's meter), never a judgment; talked to with "add to my operating journal" and "rate .. *(3 undocumented)*
 - `tests/test_ownership.py`: Whose is it (core/ownership.py), 2026-10-01: owner marks on vehicles, tools and appliances; Today shows your things and shared ones. *(2 undocumented)*
+- `tests/test_parity.py`: Full use both ways on every device (DEC-0125, core/parity.py): every app can be used by voice, on the PC, on the phone and on the glasses, or the gap is decided in work/parity.json; parity can only grow, and docs/PARITY.md is current.
 - `tests/test_party.py`: Party and guild (DEC-0028): household raids share their jobs out and their reward; the leaderboard only shows people who joined, counting wins. *(3 undocumented)*
 - `tests/test_passing_mentions.py`: "Propose, you confirm" (core/passing_mentions.py): offers to record what the owner mentions in passing, made after MIA's reply and carried out only on a yes; wired through core/talk_it_out.py for every chat surface. *(2 undocumented)*
 - `tests/test_password_strength.py`: Unit tests for core.password_strength — pure computation, no dependency, no mocks needed.
@@ -1000,6 +1007,7 @@
 - `tests/test_vault_captions.py`: Finding a photo again (core/vault_captions.py): the photos this PC keeps for the phone, each described in one sentence by the local vision model (never who anyone is), kept beside the photo, and searched by what's in them. *(1 undocumented)*
 - `tests/test_voice_effects.py`: Unit tests for core.voice_effects' pure-numpy DSP functions. These test shape/dtype/range invariants (no clipping, no silent volume change, correct dtype) — not perceived audio quality, which no automated test can judge; see that module's docstring. *(1 undocumented)*
 - `tests/test_voice_manager.py`: Unit tests for core.voice_manager's VoiceManager delegation and graceful-degradation logic. Uses fake STT/TTS backends (same shape as test_llm_manager.py's mocked urlopen) rather than loading the real Vosk/Piper models, so this suite stays fast and independent of voice_models/ being present. The rea
+- `tests/test_voice_parity_tools.py`: The tools that made Character, Skills, the Reward Shop, Insurance, Kept, the Operating Journal, Play and Files usable by voice (DEC-0125): each answers from its screen's own data, and buying a reward goes through the shop's own action.
 - `tests/test_volume_manager.py`: Unit tests for core.volume_manager. parse_amixer_output() is tested directly against captured-shape amixer text (pure, deterministic — no real amixer binary involved, same reasoning as test_power_manager.py mocking psutil). AmixerVolumeBackend/VolumeManager are tested against monkeypatched subproces *(3 undocumented)*
 - `tests/test_volume_quick_control.py`: Unit tests for gui.widgets.volume_quick_control's pure format_volume_line() — moved here 2026-09-11 from tests/test_home_dashboard.py, alongside removing gui/home_dashboard.py's own dead copy of this function (and the entire dashboard-grid Volume widget it only ever served) — see that module's 2026-
 - `tests/test_warranty_watch.py`: A heads-up before a warranty ends (core/warranty_watch.py). *(3 undocumented)*
@@ -1009,6 +1017,7 @@
 - `tests/test_web_equipment.py`: DEC-0017 (2026-10-06): Garage, Property, Greenhouse and Maintenance on the web, and one page per asset (Zac's mower concept): the data (core/web_equipment.py) and every change as an action kind (core/equipment_actions.py, maintenance.done with a meter value); and the design canvas's Garage card and  *(5 undocumented)*
 - `tests/test_web_fitness.py`: The fitness screens' data (core/web_fitness.py, DEC-0020): today, the weight line, missions and "is it working?" in one plain sentence, the meal-plan week, and the endpoints. Placeholder values. *(3 undocumented)*
 - `tests/test_web_fresh.py`: The web screens are never served from a stale browser copy (Zac, 2026-10-16: after a phone update the old Dashboard kept showing).
+- `tests/test_web_guide.py`: Start Here (core/web_guide.py) stays true: every "Try saying" phrase reaches one of MIA's tools (or is one of the few handled in code), every page it opens exists, and the sidebar's data carries the life areas and favorites the grouped sidebar draws.
 - `tests/test_web_inbox.py`: The Inbox screen on the web and the phone (Zac, 2026-10-16: "build the inbox for sending stuff to MIA"): core/web_inbox.py shows what's waiting (reading the folder first, so the phone needs no timer), and core/inbox_actions.py files, dismisses and sends notes through Propose → Approve. *(3 undocumented)*
 - `tests/test_web_money.py`: DEC-0017 (2026-10-06): Money on the web does everything the PC app's Budget screen does. The page's data (core/web_money.py) and every change as an action kind (core/money_actions.py): add, edit, delete bills, income sources, income, expenses and debts; pay a debt; set budgets. Each one proposed, ap *(5 undocumented)*
 - `tests/test_web_more.py`: The Journal, Workshop, Expeditions (with what has to happen before a trip), Music, Files and People screens (Zac, 2026-10-16: on the phone they "are empty right now and just bring up a chat with MIA"): core/web_more.py builds each page, core/more_actions.py makes every change through Propose → Appro
@@ -1038,13 +1047,14 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-72 files, 13,188 lines
+74 files, 13,530 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
 - `web/arcade/progress.js`: Lens Arcade — universal progression. One XP/level/achievement profile shared across every game. Games include this file, then call: ArcadeProgress.award('snake', 'newbest', 50) The module persists to localStorage, handles the daily streak, unlocks achievements, and shows gold toast notifications by 
 - `web/asset.js`: asset.js — one asset's page (claude, 2026-10-06, DEC-0017). Renders MIA.asset(id). Done, readings, tasks, the asset itself and its documents all change through equipment actions (confirm, undo); files go through MIA.upload / MIA.download.
 - `web/assistant.js`: assistant.js — MIA Assistant (DEC-0018, claude; the canvas's Talk, DEC-0113: her orb and state in the header, What I used under each answer). Typed turns go through MIA.talk; spoken ones are recorded here, turned into the mono 16-bit WAV MIA's voice path expects, and sent with MIA.voice. Her spoken 
+- `web/browser.js`: browser.js — MIA's own browser (claude, 2026-11-07, DEC-0117). Renders MIA.browser() (core/web_browser.py): the page she's on, each step waiting for your OK (its screenshot, Go ahead / Cancel on the step's own proposal), the task she's learning, and the tasks you taught her (how practised, the last 
 - `web/business.js`: business.js — Orders & Quotes (claude, 2026-10-17, DEC-0030 phase C). Renders MIA.business() (core/web_business.py) in tabs: Orders (what's owed, Payment, Start Build, Ready / Delivered), Quotes (what the price is made of, Sent / Accepted / Declined), Customers, and the Portfolio of finished builds 
 - `web/calendar.js`: calendar.js — the Calendar screen (claude, 2026-10-16). Renders MIA.calendar(month) (core/calendar_view.py) as the design canvas's one page (DEC-0113): Past Due and Due Today with their actions, Due Soon as short lines, and the month with its dots beside them. Each item says what it is and offers it
 - `web/character.js`: character.js — the Character screen (claude, 2026-10-06, DEC-0017/0018, H-0013). Renders MIA.character() (core/web_progress.py): the person's level and prestige, lifetime stats, everything they've unlocked (highest rarity first) and the tally by rarity, prestige emblems, top skills and latest missio
@@ -1106,6 +1116,7 @@
 - `web/showoff.js`: showoff.js — show-off mode (claude, 2026-10-17, DEC-0031). Renders MIA.showoff() (core/show_off.py) as a narrated tour, one card at a time: Back / Next / Stop, arrow keys, and MIA reading each card aloud when Voice is on (the browser's own speech; nothing leaves the device). The data was filtered in
 - `web/skills.js`: skills.js — the Skills screen (claude, 2026-10-06, DEC-0017/0018, H-0013). Renders MIA.skills() (core/web_progress.py): the skill tree by category (your interests first), each skill's level, XP and capability, what a locked one needs, the next honest step, each skill's pathways (Start), challenge ch
 - `web/sound.js`: sound.js — MIA's sounds (claude, 2026-10-17, DEC-0028 #11). Short tones made in the browser (Web Audio: no sound files to download, works offline): a chime for an objective, a quest-complete arpeggio for a mission, a fanfare for a level. MIA's voice line (from the engine's reward.say, core/actions.v
+- `web/start.js`: start.js — Start Here (claude, 2026-11-07). Renders MIA.guide() (core/web_guide.py): what she does, grouped by what you want to get done; each with how it works, "Try saying" buttons that open Talk with the words typed in (press Enter to send), and the page to open; then what's new. Formatting only;
 - `web/sync.js`: sync.js — User Sync on the phone (claude, 2026-11-02). Renders MIA.userSync() (core/user_sync.py): the question, a box to type the answer, the chips to approve, and the phone's permissions, asked through window.MIAPhonePermissions (Permissions.kt) and reported back. The steps and words are all the e
 - `web/vault.js`: vault.js — Memory Vault (claude, 2026-10-18, DEC-0030 phase E). Renders MIA.vault() (core/memory_vault.py) in tabs: Photos (one month at a time, by day, with what happened that day and the trip it was on; each tile says whether it's safe on the home computer), Free Up Space (photos the PC holds, exa
 - `web/welcome.js`: welcome.js — Home (DEC-0018, claude; the canvas's Home, DEC-0113). Renders MIA.dashboard() and the frame's shell data: the date and greeting, the status strip, MIA's one finding, the focus rows (each with its kind; ticking runs the item's action: confirm, undo), what's upcoming, the level; and on a 

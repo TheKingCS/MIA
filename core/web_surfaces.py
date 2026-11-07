@@ -103,7 +103,7 @@ APPS: tuple[App, ...] = (
         "Gamified goals and objectives, tied to a trip or general.", LIFE, ("missions",),
         "Add a mission to build a chicken coop."),
     App("skills", "Skills", "⚔", "Do the thing. Earn the level. Unlock the next thing.", "skills.html",
-        "My Hero's Path — skill tree and character progression.", LIFE, (), "Which skills am I growing?"),
+        "My Hero's Path — skill tree and character progression.", LIFE, ("skills",), "Which skills am I growing?"),
     App("budget", "Money", "💰", "Know where it goes.", "money.html",
         "Household bills, income, expenses, and tax-relevant totals.", MONEY,
         ("budget", "debts", "homestead_costs", "business_use", "business_tags"), "Which debt should I pay first?"),
@@ -120,7 +120,7 @@ APPS: tuple[App, ...] = (
         "Quotes from your recipes, customers, orders and payments, and a portfolio of what you've built (DEC-0030).",
         MONEY, ("ledger",), "What do customers still owe me?"),
     App("insurance", "Insurance", "☂️", "Covered, for less.", "insurance.html",
-        "Your policies in one place, what's worth a look, and quotes compared fairly (DEC-0034).", MONEY, (),
+        "Your policies in one place, what's worth a look, and quotes compared fairly (DEC-0034).", MONEY, ("insurance",),
         "When does my car insurance renew?"),
     App("security", "Security", "🛡️", "Your cameras, at home.", "security.html",
         "Your home cameras, watched live from MIA over your own network, no cloud (DEC-0033).", HOME, ("security",),
@@ -128,9 +128,9 @@ APPS: tuple[App, ...] = (
     App("power", "Power", "🔋", "Energy, tracked.", None,
         "Battery status and manual energy/utility tracking.", HOME, ("power",), "How's the battery?"),
     App("character", "Character", "👤", "Your story so far.", "character.html",
-        "A living record of what you've actually done.", LIFE, (), "What have I done this week?"),
+        "A living record of what you've actually done.", LIFE, ("character",), "What have I done this week?"),
     App("reward_shop", "Reward Shop", "🎁", "Spend what you earn.", "shop.html",
-        "Real rewards you set, bought with the credits you earn (DEC-0028).", LIFE, (), "What can I buy with my credits?"),
+        "Real rewards you set, bought with the credits you earn (DEC-0028).", LIFE, ("reward_shop",), "What can I buy with my credits?"),
     App("observations", "Observations", "🔍", "What MIA noticed.", "observations.html",
         "What MIA has noticed across your maintenance and missions.", LIFE, (), "What have you noticed lately?"),
     App("relationships", "People & Pets", "👥", "The ones who matter.", "people.html",
@@ -150,7 +150,7 @@ APPS: tuple[App, ...] = (
         "Your phone's photos and videos, kept safe on your home computer, so the phone can let them go (DEC-0030).",
         LIFE, ("vault",), "Are my photos backed up?"),
     App("memories", "Memories", "📸", "Remember the trip.", "memories.html",
-        "Trip recaps, stats, and photos from your Expeditions.", OUTDOORS, (), "Show me my last trip."),
+        "Trip recaps, stats, and photos from your Expeditions.", OUTDOORS, ("expeditions",), "Show me my last trip."),
     App("maps", "Maps", "🗺", "Know the ground.", "maps.html",
         "Waypoints, a real offline basemap, and official trail maps.", OUTDOORS, ("maps",),
         "Which trail maps do I have?"),
@@ -169,17 +169,18 @@ APPS: tuple[App, ...] = (
     App("passwords", "Passwords", "🔐", "Every login, locked.", "passwords.html",
         "Your logins in a vault only your master password opens; MIA's assistant never sees them (DEC-0035).", KNOW,
         (), ""),
-    App("files", "Files", "🗂", "Your files.", "files.html", "Browse and manage local files and data.", KNOW, ()),
+    App("files", "Files", "🗂", "Your files.", "files.html", "Browse and manage local files and data.", KNOW, ("files",),
+        "Find my resume."),
     App("music", "Music", "🎵", "Your music.", "music.html", "Local audio library, playlists, and playback.", KNOW,
         ("music",), "Play something relaxing."),
     App("operating_journal", "Operating Journal", "🧭", "How you mean to live, and how you do.", "operating.html",
         "Your values, priorities, ideal day and week and rules, each checked against your records or rated by you "
-        "(DEC-0097).", LIFE, (), "Am I living how I said I want to?"),
+        "(DEC-0097).", LIFE, ("operating_journal",), "Am I living how I said I want to?"),
     App("life_notes", "Kept", "📌", "What you said you'd do.", "kept.html",
         "The promises, decisions, ideas and goals set aside you asked MIA to keep, from what you said (DEC-0054).",
-        LIFE, (), "What did I promise?"),
+        LIFE, ("life_notes",), "What did I promise?"),
     App("play", "Play", "🏓", "Games and sports, counted.", "play.html",
-        "Games and sports you play: who with, how long, how hard, and your training load (DEC-0098).", LIFE, (),
+        "Games and sports you play: who with, how long, how hard, and your training load (DEC-0098).", LIFE, ("play",),
         "Played pickleball for an hour, it was hard."),
     App("good_news", "Good News Radio", "📻", "What went right today.", "news.html",
         "Good news from credible sources, each story saying how it's known, read by four radio personalities "
@@ -188,7 +189,10 @@ APPS: tuple[App, ...] = (
         "A photo and a question (what is this, read this label, inspect this part), answered on your PC; never who "
         "a person is (build plan step 15).", KNOW, (), "What is this?"),
     App("assistant", "MIA Assistant", "🗨", "Always here. Always with you.", "assistant.html",
-        "Conversational assistant and local AI.", KNOW, ("communication", "undo", "system", "browser"), "Undo that."),
+        "Conversational assistant and local AI.", KNOW, ("communication", "undo", "system"), "Undo that."),
+    App("browser", "Browser", "🌐", "She browses. You approve.", "browser.html",
+        "MIA's own web browser: what she's on, the steps waiting for your OK with their screenshots, and the tasks you "
+        "taught her by showing (DEC-0117).", KNOW, ("browser",), "Open the county website."),
     App("diagnostics", "Diagnostics", "🩺", "How MIA is doing.", None,
         "System health, logs, and hardware status.", KNOW, (), "How is the computer doing?"),
     App("module_browser", "Apps", "🧩", "Everything MIA can do.", "apps.html",
@@ -200,7 +204,7 @@ APPS: tuple[App, ...] = (
 APPS_BY_ID = {a.module_id: a for a in APPS}
 # Apps that exist only as web screens (no PySide6 module of their own).
 WEB_ONLY = frozenset({"calendar", "reward_shop", "business", "security", "vault", "insurance", "passwords", "flock", "freedom", "compliance", "dungeon", "issues",
-                      "operating_journal", "play", "good_news", "sight", "life_notes"})
+                      "operating_journal", "play", "good_news", "sight", "life_notes", "browser"})
 # Apps folded into others (Zac, 2026-10-16): Garage holds vehicles, equipment
 # and tools; Real Estate holds buildings and appliances; the Calendar shows all
 # upkeep. Shown nowhere; the desktop keeps their modules loaded only because
@@ -286,7 +290,8 @@ def greeting(hour: int, name: Optional[str]) -> str:
 
 def shell(context, today: Optional[date] = None) -> dict:
     """The shared frame's data (/api/shell): the person and their level, the date, the apps they can open on the web
-    (each with its life area), their favorites and the life areas in order, the ones still on the PC only, the screens MIA made, the owner's pages, sound, and places.
+    (each with its life area, for the grouped sidebar), the areas in order and their favorites, the ones still on the
+    PC only, the screens MIA made, the owner's pages, sound, and places.
     """
     from core.child_accounts import is_child
 
@@ -299,11 +304,10 @@ def shell(context, today: Optional[date] = None) -> dict:
                    **_level(profile)},
         "date": date_text(today),
         "apps": [{"id": a.module_id, "name": a.name, "icon": a.icon, "tagline": a.tagline, "page": a.page,
-                  "group": a.group}
-                 for a in apps if a.page],
-        # The sidebar's Pinned list (DEC-0113 canvas): the person's favorites, in the order they starred them.
-        "favorites": _favorites(context),
+                  "group": a.group} for a in apps if a.page],
+        # The sidebar's order (2026-11-07): Start Here and the favorites, then each life area under its heading.
         "groups": list(GROUPS),
+        "favorites": _favorites(context),
         "on_pc_only": [a.name for a in apps if not a.page],
         "made": _made(context),
         "owner": _owner_pages(context, pid),
@@ -314,13 +318,13 @@ def shell(context, today: Optional[date] = None) -> dict:
 
 
 def _favorites(context) -> list:
-    """The person's starred apps (core/focus_presets.py), for the sidebar's Pinned list; [] if that can't be read."""
+    """This person's starred apps, for the top of the sidebar ([] when settings can't be read)."""
     try:
         from core.focus_presets import favorite_apps
 
         return favorite_apps(context)
     except Exception:
-        log.debug("Shell: favorites unavailable", exc_info=True)
+        log.debug("Favorites unavailable", exc_info=True)
         return []
 
 
