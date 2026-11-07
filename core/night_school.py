@@ -34,6 +34,10 @@ of the window, or when her teacher is resting at a usage limit:
    passes, and the full suite has nothing new failing. Her teacher reads
    what she did and writes the one lesson in it, which she's given the next
    time she works that skill.
+5a. **Study hall** (core/specialists.py, DEC-0109): one of her specialists
+   (construction, homesteading, radio, strategy, making, outdoors,
+   research, testing, engineering), the one that studied longest ago,
+   gets new sourced notes from her teacher for its open questions.
 6. **She audits herself, weekly** (core/self_audit.py, DEC-0108): her
    code for what could be clearer or leaner, her parts for where they
    could connect better, and her best-practices series is rewritten
@@ -72,7 +76,7 @@ PLAN = ROOT / "docs" / "BUILD_PLAN.md"
 WHO = "MIA (night school)"
 DEFAULTS = {"enabled": True, "start": "01:30", "hours": 4.0, "mode": "plan", "lessons": 3, "shadow": 1,
             "loop_families": 1, "teachers": ["claude-code", "codex"], "teacher_calls": 8, "benchmarks": True,
-            "curriculum": True, "audit": True}
+            "curriculum": True, "audit": True, "specialists": True}
 MODES = ("plan", "self")
 LESSON_MINUTES = 45  # a lesson isn't started with less of the window left than this
 TEST_NAME = re.compile(r"^tests/test_night_[a-z0-9_]{3,60}\.py$")
@@ -650,6 +654,17 @@ def night(now: Optional[datetime] = None, *, ask: Optional[Callable[[str, str], 
         except Exception as problem:
             record["notes"].append(f"the benchmark loops couldn't run: {str(problem)[:120]}")
 
+    # 7a2. Study hall (core/specialists.py, DEC-0109): one of her specialists studies, in turn
+    teacher_now = _teacher(list(cfg["teachers"]), calls, int(cfg["teacher_calls"]))
+    if cfg.get("specialists", True) and teacher_now and not STOP_FILE.exists() and left() > 20:
+        from core import specialists
+
+        try:
+            record["specialist"] = specialists.study(lambda prompt: ask(teacher_now, prompt))
+        except Exception as problem:
+            record["notes"].append(f"study hall didn't finish: {str(problem)[:120]}")
+        calls += 1
+
     # 7b. The weekly self-audit (core/self_audit.py, DEC-0108): her code, her connections, her practices
     from core import self_audit
 
@@ -757,6 +772,11 @@ def describe(record: dict) -> str:
             lines.append(f"      Lesson: {l['note']}")
     for s in record.get("shadow", []):
         lines.append(f"  Real work, {s['task']}: {s['outcome']} ({s.get('summary', '')[:100]})")
+    if record.get("specialist"):
+        s = record["specialist"]
+        lines.append(f"  Study hall: the {s['specialist']} specialist kept {len(s['kept'])} notes"
+                     + (f" ({'; '.join(s['kept'])})" if s["kept"] else "")
+                     + (f", {len(s['refused'])} refused" if s["refused"] else ""))
     if record.get("audit"):
         a = record["audit"]
         lines.append(f"  Self-audit: {a['code']} places to improve, {a['connections']} connections to make "

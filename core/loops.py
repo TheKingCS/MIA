@@ -184,6 +184,17 @@ def _connected(_context) -> Optional[Reading]:
     return Reading(last["connections"]["share"], 1, f"{last['connections']['findings']} connections to make")
 
 
+def _specialist_notes(_context) -> Optional[Reading]:
+    """Measure: the share of her specialists' live notes a person has confirmed (DEC-0109). None before any note."""
+    from core import specialists
+
+    notes = [n for s in specialists.SPECIALISTS for n in specialists.book(s.id)["notes"] if n["status"] != "withdrawn"]
+    if not notes:
+        return None
+    confirmed = sum(1 for n in notes if n["status"] == "confirmed")
+    return Reading(round(confirmed / len(notes), 3), len(notes), f"{confirmed} of {len(notes)} notes confirmed")
+
+
 def _slow(context) -> Optional[Reading]:
     """Measure: the share of this week's turns that took over 25 seconds. None when there's nothing to judge from yet."""
     turns = _turns(context)
@@ -1046,6 +1057,9 @@ LOOPS: tuple[Loop, ...] = (
          acts="watch", files=("core/self_audit.py",), covers=("dev:self_audit",)),
     Loop("dev.connected", "development", "store connections made, of those that should exist (weekly audit)", "device",
          _connected, better="higher", acts="watch", files=("core/self_audit.py",), covers=("dev:self_audit",)),
+    Loop("specialists.confirmed", "development", "her specialists' notes a person has confirmed", "device",
+         _specialist_notes, better="higher", acts="watch", files=("core/specialists.py",),
+         covers=("dev:specialists",)),
     Loop("night.curriculum", "development", "her curriculum's objectives mastered (computing, DEC-0107)", "device",
          _curriculum, better="higher", acts="watch", files=("core/curriculum.py", "core/night_school.py"),
          covers=("dev:night_school",)),

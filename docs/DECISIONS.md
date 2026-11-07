@@ -1662,3 +1662,28 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - First run, 2026-11-07: 187 places to look, 49% of store connections made (only 15 of 73 stores record life
   events, 8 can be linked); tasks T-0052 (server/app.py's create_app) and T-0053 (the energy store).
 - Related: DEC-0094, DEC-0101, DEC-0104, DEC-0105, DEC-0107
+
+### DEC-0109: Specialists: workers that develop and maintain each area of what MIA knows
+- Status: APPROVED
+- Proposed by: zac, 2026-11-07 ("she should be able to specialize agents for each area of skill she is developing,
+  like one that is catered towards construction knowledge, one towards radio technologies, one towards military
+  strategy, one towards homesteading skills, one towards research, one towards testing and auditing, etc. She could
+  essentially specialize workers for developing and maintaining her knowledge and skills") · Built by: claude,
+  2026-11-07
+- Decision: `core/specialists.py` holds nine specialists to start: construction, homesteading, radio and
+  communications, strategy and preparedness, making and fabrication, outdoors and fieldcraft, research, testing and
+  auditing, and software and AI engineering. Each has a charter (what it covers, the skill-tree areas and curriculum
+  tracks it develops, the loops it watches), limits, and the questions it starts from; a test checks every name in
+  a charter is real. Each keeps a workbook (`work/specialists/<id>.json`, pages in `docs/specialists/`) of notes,
+  every one with its sources: a model's note stays **derived** until a person confirms it, and a wrong one is
+  withdrawn. Night School's study hall has one specialist a night (the one that studied longest ago) get new notes
+  for its open questions from her teacher. MIA answers from them by voice (`ask_specialist`), always saying the
+  sources and whether a person has confirmed the note; a question no note answers goes on the right specialist's
+  list. `python -m tools.specialists` lists, shows, asks, studies, confirms and withdraws. `specialists.confirmed`
+  watches the share confirmed.
+- Limits written into the charters: strategy is history, principles, planning, logistics and protecting a
+  household, never how to hurt people, make weapons or target anyone; radio transmits only within licence and band
+  plan; construction names what needs a licence or a permit; testing attacks only MIA herself; every note says
+  where it's from and where the answer depends on local law.
+- First study, 2026-11-07: the radio specialist's first three notes (licences, Meshtastic range, a 2 m dipole).
+- Related: DEC-0100 (Night School), DEC-0105, DEC-0107, DEC-0108

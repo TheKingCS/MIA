@@ -12,4 +12,4 @@
 
 ## Learned building her
 
-- Nothing in the vault for this area yet.
+- **Why specialists keep sourced notes that a person confirms** (K-0053): core/specialists.py gives each area of what MIA knows a worker with a charter, limits and a workbook of notes.

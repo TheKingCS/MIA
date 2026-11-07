@@ -107,6 +107,9 @@ def school(tmp_path, monkeypatch):
     from core import dev_ledger, loop_coverage, loops, self_audit, work_review
 
     monkeypatch.setattr(self_audit, "due", lambda *a, **k: False)  # a test night never audits the real code
+    from core import specialists
+
+    monkeypatch.setattr(specialists, "study", lambda ask, *a, **k: {"specialist": "radio", "kept": [], "refused": []})
 
     monkeypatch.setattr(ns, "STOP_FILE", tmp_path / "STOP")
     monkeypatch.setattr(ns, "PLAN", tmp_path / "BUILD_PLAN.md")
@@ -147,7 +150,8 @@ def test_a_night_of_school(school):
     outcomes = [l["outcome"] for l in night["lessons"]]
     assert outcomes == ["invalid", "pass"]  # the protected one was refused before she began
     assert night["lessons"][1]["note"] == "Name the edge case in the test before the fix."
-    assert night["pick_agreed"] is True and night["teacher_calls"] == 2
+    assert night["pick_agreed"] is True and night["teacher_calls"] == 3  # the syllabus, a grade, study hall
+    assert night["specialist"]["specialist"] == "radio" and "Study hall: the radio specialist" in ns.describe(night)
     assert ns.report_card(school.store) == {"engine changes": {"lessons": 1, "passed": 1, "rate": 1.0, "bound": 0.27}}
     assert ns.notes_for("engine changes", school.store) == ["Name the edge case in the test before the fix."]
     assert "night" in school.log.read_text(encoding="utf-8")

@@ -205,6 +205,11 @@ first. Each is a step below.
     Then (2026-11-07): `life_events.on_change` on 109 store methods (history 15 to 51 stores) and 20 new link
     kinds (links 8 to 28): 67% connected. Next gap: the life state (21 of 73 stores).
 
+22. ✅ **Her specialists** (DEC-0109; `core/specialists.py`, `tools/specialists.py`, `docs/specialists/`,
+    2026-11-07): nine knowledge workers with charters and limits, sourced workbooks, study hall in Night School,
+    `ask_specialist` by voice. Next: specialists suggest curriculum objectives and model-forge work in their
+    areas; a specialist reads her reference library (Kiwix) for sources; the council can call one in.
+
 ### Phase E: The rest already queued
 
 18. ⬜ T-0042 (the Skills module reaching into Missions), T-0040 (JSON imports, diagnostics), T-0041 (blueprint

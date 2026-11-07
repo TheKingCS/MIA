@@ -49,6 +49,10 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 - [ ] **Approve or reject** what's waiting: Night School keeps real exercises she passes in `python -m tools.lab
       list` (`python -m tools.lab approve <id>`). One is there now: the night of 2026-11-06's
       phone_link lesson, `20261106-e2a5be` (a bad record no longer breaks the phone link).
+- [ ] **Her specialists' notes (DEC-0109):** read and confirm (or withdraw) what they write, so MIA can say a person checked it.
+      `.venv\Scripts\python -m tools.specialists show radio` lists the notes with their ids; then `... confirm radio <id>`
+      or `... withdraw radio <id> "why"`. The radio specialist has three now. Want another specialist (finance, health,
+      cooking...)? Say so.
 - [ ] **Her own models (DEC-0106):** nothing to do now. When you're curious: `.venv\Scripts\python -m tools.model_forge
       list` shows each model she has made and how it scored; `... router` retrains the tool router (about half a
       minute). A model only goes into use with your yes, and Claude will ask when one has earned it.

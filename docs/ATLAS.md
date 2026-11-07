@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1053 files, 232,537 lines; 1053 files describe themselves; 5,816 of 13,619 classes and functions are documented.
+1056 files, 233,185 lines; 1056 files describe themselves; 5,841 of 13,644 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-371 files, 105,757 lines; 5,048 of 5,695 classes and functions documented
+372 files, 106,225 lines; 5,068 of 5,715 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -310,6 +310,7 @@
 - `core/skill_manager.py`: "My Hero's Path" — a skill-tree layer underneath core/gamification.py's existing XP system, added 2026-09-11 at the user's own explicit request to turn real activity across MIA's modules into RPG-style character progression, NOT a replacement for the profile-wide Level/Missions system already built 
 - `core/skill_patterns.py`: Pattern Insight slices 2, 3, and 4 — scoped directly with the user, not assumed (see core/mission_patterns.py's own docstring for slice 1, repeated Mission abandonment, and mia_system_vision's "Phase 6" framing this whole thread continues). Same observe -> insight -> recommend loop; all three slices
 - `core/smart_suggestions.py`: Pure decision logic for a proactive "Smart Suggestions" daily check — docs/VISION.md's principle 3 ("Proactive, not just reactive") names three concrete examples: "recovery after intense workouts, a grocery trip when supplies run low, a birthday gift reminder before the date."
+- `core/specialists.py`: MIA's specialists (DEC-0109; Zac, 2026-11-07: "she should be able to specialize agents for each area of skill she is developing, like one that is catered towards construction knowledge, one towards radio technologies, one towards military strategy, one towards homesteading skills, one towards resear
 - `core/starter_templates.py`: Starter sets (2026-10-01): a new MIA is empty, and an empty app is hard to start with. A starter set fills in the usual things for a kind of life, so there's something to check off on day one: *(7 undocumented)*
 - `core/startup_briefing.py`: Pure logic for the "Good evening, Zac. Welcome back." launch greeting — docs/VISION.md's 2026-07-15 companion-philosophy update, "Startup Dashboard Briefing." *(1 undocumented)*
 - `core/subnet_calculator.py`: Subnet/CIDR calculator — docs/ROADMAP.md milestone 11.5, Field Kit's Security/Network Toolkit. A thin wrapper around stdlib `ipaddress` (handles both IPv4 and IPv6 correctly) rather than hand-rolling bitmask math — "don't reinvent the wheel", same reasoning behind this project's other integration de *(1 undocumented)*
@@ -614,7 +615,7 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-30 files, 3,026 lines; 33 of 90 classes and functions documented
+31 files, 3,100 lines; 34 of 91 classes and functions documented
 
 - `tools/audit.py`: MIA's self-audit from the command line (DEC-0108; core/self_audit.py, core/practices.py).
 - `tools/bench_audit.py`: What MIA's routing does today with each Intelligence Benchmark question (tests/intelligence_bench.py, docs/INTELLIGENCE_BENCHMARK.md): a question plan (core/question_plans.py: lookups by code, one answer), answered by code (a direct lookup), offered which tools, or left to the model with no tools at *(3 undocumented)*
@@ -639,6 +640,7 @@
 - `tools/pc_check.py`: Is this computer ready to be MIA's home base? (DEC-0022, DEC-0033.) Everything the phone, the glasses and the cameras need from it, each with what to do if it isn't there yet: *(4 undocumented)*
 - `tools/pc_model_check.py`: Which model should MIA's home computer run? (DEC-0022.) Runs each model through MIA's golden set (core/model_bench.py) with Ollama on this computer, on its graphics card, exactly as Talk calls it, and writes what it found to `pc-check/models.md` (paste that file's contents to Claude, or just say "do *(2 undocumented)*
 - `tools/publish_glasses.py`: Copies MIA's glasses interface to the public page (DEC-0062). *(2 undocumented)*
+- `tools/specialists.py`: MIA's specialists from the command line (DEC-0109; core/specialists.py).
 - `tools/tak_export.py`: MIA's waypoints as a TAK data package (core/tak.py, DEC-0099): open it in ATAK-CIV, iTAK or WinTAK (Import, then the file) and the places show on the TAK map with their names, notes and MGRS grid references. Nothing is sent: it's a file you carry to the TAK app. *(1 undocumented)*
 - `tools/tracks.py`: Tracks from GPX files (core/gps_tracks.py, DEC-0099), into the signed-in person's own folder. *(1 undocumented)*
 - `tools/user_sync_check.py`: A User Sync topic doesn't ship until it passes this (docs/GLASSES_FIRST_BOOT_PLAN.md): the sample answers in `data/user_sync_cases.json`, each with the chips they must produce, run through the real extraction with the real model on this computer's Ollama. Nothing else may come out: an extra chip is  *(5 undocumented)*
@@ -649,7 +651,7 @@
 
 ## tests/: the test suite: what each part must do
 
-350 files, 63,566 lines; 333 of 5,690 classes and functions documented
+351 files, 63,672 lines; 337 of 5,694 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -936,6 +938,7 @@
 - `tests/test_smart_suggestions.py`: Unit tests for core.smart_suggestions — no Qt, no manager instances, same shape as tests/test_budget_nudges.py. *(28 undocumented)*
 - `tests/test_sound.py`: Sound (DEC-0028 #11): the engine says which win it was and MIA's line for it; the person's settings say whether to play and speak. *(3 undocumented)*
 - `tests/test_source_hygiene.py`: No control characters in the source (2026-11-06): a `\b` in a regex that became a real backspace on its way through a shell still compiles, and then silently never matches. *(1 undocumented)*
+- `tests/test_specialists.py`: MIA's specialists (core/specialists.py, DEC-0109): their charters name real skills, tracks and loops; a workbook keeps only sourced notes; a person confirms or withdraws; study hall takes them in turn; and the answer always says where a note came from and whether it's confirmed.
 - `tests/test_starter_templates.py`: Starter sets (core/starter_templates.py), 2026-10-01: the usual chores, routines, upkeep schedules and a workout for a kind of life, added in one undoable step, never twice. *(12 undocumented)*
 - `tests/test_startup_briefing.py`: Unit tests for core.startup_briefing's pure functions — see gui/home_dashboard.py for how these feed the launch-greeting banner. *(13 undocumented)*
 - `tests/test_state_export.py`: The state export (Engine Phase 1 step 4, 2026-10-05): Life State v2 as JSON from `python -m tools.export_state` and `/api/state`, matching the published schema docs/schema/life_state.schema.json. *(7 undocumented)*

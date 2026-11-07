@@ -10,5 +10,5 @@
 - [Documentation](documentation.md): 6 principles, 7 lessons learned
 - [Interconnection](interconnection.md): 7 principles, 2 lessons learned
 - [Monitoring](monitoring.md): 5 principles, 3 lessons learned
-- [Deploying and running](operations.md): 5 principles, 0 lessons learned
+- [Deploying and running](operations.md): 5 principles, 1 lesson learned
 - [Working as a team](teamwork.md): 5 principles, 1 lesson learned
