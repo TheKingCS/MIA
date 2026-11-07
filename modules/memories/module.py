@@ -127,7 +127,7 @@ class MemoriesModule(ModuleBase):
         # modules/toolbox/tools/lite_captures_tool.py) and fixed across
         # this codebase's other actively-re-triggered refresh methods
         # the same day.
-        """Rebuilds the list: what happened on this day in earlier years, then every recap; says how to make one when there are none."""
+        """Rebuilds the list: On This Day, then All Expeditions; says to start one in Expeditions when there are none."""
         while self._list_layout.count():
             item = self._list_layout.takeAt(0)
             widget = item.widget()
@@ -158,7 +158,7 @@ class MemoriesModule(ModuleBase):
             self._list_layout.addWidget(self._build_recap_card(recap))
 
     def _build_recap_card(self, recap: ExpeditionRecap) -> QFrame:
-        """One expedition's card: its name and dates, the stats, a few photos from its trips, and a View Route Map button per trip."""
+        """One expedition's card: its header, stats per activity, categories, the latest log, its trips' photos as thumbnails, and each trip with a View Route Map button."""
         card = QFrame()
         card.setObjectName("CharacterPanel")  # reuse the dashed-panel style
         layout = QVBoxLayout(card)

@@ -75,7 +75,7 @@ class LabModule(ModuleBase):
         self._current_readings: list[Reading] = []
 
     def get_widget(self) -> QWidget:
-        """The page: the series picker, a reading's value, unit and note with Add, the readings list with Delete, and the chart."""
+        """The page: the series picker (the series kept so far), a reading's value, unit and note with Add Reading, the readings list with Delete Selected Reading, and the chart."""
         widget = QWidget()
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(24, 24, 24, 24)

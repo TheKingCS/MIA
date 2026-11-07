@@ -171,7 +171,7 @@ class CharacterModule(ModuleBase):
         # modules/toolbox/tools/lite_captures_tool.py) and fixed across
         # this codebase's other actively-re-triggered refresh methods
         # the same day.
-        """Rebuilds the page for the signed-in person (old sections hidden and detached first): checks for new unlocks and hidden achievements, then the portrait, stats, collection, rarity and prestige; says why when there's no one signed in or no rewards."""
+        """Rebuilds the page for the signed-in person (old sections hidden and detached first): checks for new unlocks and hidden achievements, then the portrait, stats, collection, rarity and prestige; says why when no one is signed in or rewards aren't available."""
         while self._body_layout.count():
             item = self._body_layout.takeAt(0)
             widget = item.widget()

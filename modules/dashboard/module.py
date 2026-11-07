@@ -106,7 +106,7 @@ class DashboardModule(ModuleBase):
         self._list_layout: Optional[QVBoxLayout] = None
 
     def get_widget(self) -> QWidget:
-        """The page: a title, a refresh button and the scrolling list of sections."""
+        """The page: a title and description, and the scrolling list of sections."""
         page = QWidget()
         outer = QVBoxLayout(page)
         outer.setContentsMargins(24, 24, 24, 24)

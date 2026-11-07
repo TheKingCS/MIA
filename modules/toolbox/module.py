@@ -84,7 +84,7 @@ class ToolboxModule(ModuleBase):
         return self._stack
 
     def _build_list_page(self) -> QWidget:
-        """The list page: a row for every tool, then every calculator by category."""
+        """The list page: a row for every tool, then every calculator by category (says so when there are none)."""
         page = QWidget()
         outer = QVBoxLayout(page)
         outer.setContentsMargins(24, 24, 24, 24)
