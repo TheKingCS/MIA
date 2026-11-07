@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1069 files, 237,918 lines; 1069 files describe themselves; 7,317 of 13,808 classes and functions are documented.
+1069 files, 237,963 lines; 1069 files describe themselves; 7,362 of 13,808 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -524,7 +524,7 @@
 
 ## modules/: the desktop's apps, one folder each
 
-93 files, 22,677 lines; 912 of 1,030 classes and functions documented
+93 files, 22,722 lines; 957 of 1,030 classes and functions documented
 
 - `modules/__init__.py`: Every feature of MIA (Assistant, Files, Notes, Maps, etc.) lives here as an independent package. Each module package must:
 - `modules/assistant/__init__.py`: The assistant app's package: its screen and behaviour are in module.py (Assistant Chat UI — docs/ROADMAP.md milestones 5.2 (text chat), 5.3 (voice), 5.4 (device-help grounding), and 5.5 (tool use / action execution). A chat screen (). core/module_manager.py finds it by that file.
@@ -618,7 +618,7 @@
 - `modules/workout/__init__.py`: The workout app's package: its screen and behaviour are in module.py (Workout: an exercise library, a live guided session (real elapsed time from a real stopwatch, not a guess), a session history, and per-exercise progress (person). core/module_manager.py finds it by that file.
 - `modules/workout/module.py`: Workout: an exercise library, a live guided session (real elapsed time from a real stopwatch, not a guess), a session history, and per-exercise progress (personal records + a weight-over-time chart). All persistence/reporting logic lives in core/workout_manager.py (self.context.workout) — this modul
 - `modules/workshop/__init__.py`: The workshop app's package: its screen and behaviour are in module.py (Workshop & Electronics — docs/ROADMAP.md milestone 8.3 (Component DB) plus MIA Home's production pipeline (2026-07-16, see docs/VISION.md's "MIA Home's expanded). core/module_manager.py finds it by that file.
-- `modules/workshop/module.py`: Workshop & Electronics — docs/ROADMAP.md milestone 8.3 (Component DB) plus MIA Home's production pipeline (2026-07-16, see docs/VISION.md's "MIA Home's expanded scope" section): Materials/Jobs/Products/Ledger. Five tabs in one module (docs/MODULE_SPEC.md allows exactly one `ModuleBase` subclass per  *(45 undocumented)*
+- `modules/workshop/module.py`: Workshop & Electronics — docs/ROADMAP.md milestone 8.3 (Component DB) plus MIA Home's production pipeline (2026-07-16, see docs/VISION.md's "MIA Home's expanded scope" section): Materials/Jobs/Products/Ledger. Five tabs in one module (docs/MODULE_SPEC.md allows exactly one `ModuleBase` subclass per 
 
 ## tools/: command-line tools for the PC and the development platform
 

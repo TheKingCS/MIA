@@ -183,12 +183,14 @@ def format_expense_row(entry: ExpenseEntry) -> str:
 
 
 class WorkshopModule(ModuleBase):
+    """The Workshop & Electronics app (desktop): electronic components and materials on hand (who added them, how often used), jobs that use materials and make products (with their cost), products with their listings, and the shop's ledger of revenue and expenses."""
     module_id = "workshop"
     display_name = "Workshop & Electronics"
     description = "Recipes and builds, materials, homestead goods in batches, market days, labels, and the shop's sales."
     icon = "\U0001F529"  # nut and bolt
 
     def __init__(self, context) -> None:
+        """Nothing built yet: the tabs are made in get_widget()."""
         super().__init__(context)
         self._component_list: Optional[QListWidget] = None
         self._component_filter_edit: Optional[QLineEdit] = None
@@ -214,6 +216,7 @@ class WorkshopModule(ModuleBase):
         self._refresh_ledger()
 
     def get_widget(self) -> QWidget:
+        """The page: Components, Materials, Jobs, Products and Ledger tabs."""
         widget = QWidget()
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(24, 24, 24, 24)
@@ -242,6 +245,7 @@ class WorkshopModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_components_tab(self) -> QWidget:
+        """The Components tab: the filter (name, category, value, package, location), the list, the selected one's details, and Add, Edit, Delete and the quantity buttons."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
@@ -296,6 +300,7 @@ class WorkshopModule(ModuleBase):
         return tab
 
     def _refresh_components_list(self, select_component_id: Optional[str] = None) -> None:
+        """Lists the components matching the filter (all when it's empty), selecting the one given, then its details."""
         query = self._component_filter_edit.text().strip()
         components = (
             self.context.components.search(query) if query else self.context.components.all_components()
@@ -311,16 +316,19 @@ class WorkshopModule(ModuleBase):
         self._update_component_detail_label()
 
     def _selected_component_id(self) -> Optional[str]:
+        """The selected component's id, or None."""
         item = self._component_list.currentItem()
         return item.data(Qt.ItemDataRole.UserRole) if item is not None else None
 
     def _profile_name(self, profile_id: Optional[str]) -> Optional[str]:
+        """A person's name for a profile id, or None when there's none or they aren't known."""
         if profile_id is None or self.context.profiles is None:
             return None
         match = next((p for p in self.context.profiles.list_profiles() if p.profile_id == profile_id), None)
         return match.name if match is not None else None
 
     def _update_component_detail_label(self) -> None:
+        """The selected component's details: who added it, how often it's been used, and when and by whom last."""
         component_id = self._selected_component_id()
         if component_id is None:
             self._component_detail_label.setText("")
@@ -342,6 +350,7 @@ class WorkshopModule(ModuleBase):
         )
 
     def _on_adjust_component(self, delta: int) -> None:
+        """Changes the selected component's quantity by the amount (asks for a selection first)."""
         component_id = self._selected_component_id()
         if component_id is None:
             QMessageBox.information(None, "No Component Selected", "Select a component to adjust.")
@@ -350,6 +359,7 @@ class WorkshopModule(ModuleBase):
         self._refresh_components_list(select_component_id=component_id)
 
     def _on_add_component(self) -> None:
+        """Adds a component from the dialog and selects it."""
         dialog = AddEditComponentDialog()
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -361,6 +371,7 @@ class WorkshopModule(ModuleBase):
         self._refresh_components_list(select_component_id=added.component_id)
 
     def _on_edit_component(self) -> None:
+        """Edits the selected component in the dialog (asks for a selection first)."""
         component_id = self._selected_component_id()
         if component_id is None:
             QMessageBox.information(None, "No Component Selected", "Select a component to edit.")
@@ -377,6 +388,7 @@ class WorkshopModule(ModuleBase):
         self._refresh_components_list(select_component_id=component_id)
 
     def _on_delete_component(self) -> None:
+        """Deletes the selected component after asking."""
         component_id = self._selected_component_id()
         if component_id is None:
             QMessageBox.information(None, "No Component Selected", "Select a component to delete.")
@@ -396,6 +408,7 @@ class WorkshopModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_materials_tab(self) -> QWidget:
+        """The Materials tab: the filter (name, supplier, location), the list, the selected one's details, and Add, Edit and Delete."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
@@ -436,6 +449,7 @@ class WorkshopModule(ModuleBase):
         return tab
 
     def _refresh_materials_list(self, select_material_id: Optional[str] = None) -> None:
+        """Lists the materials matching the filter, selecting the one given, then its details."""
         query = self._material_filter_edit.text().strip()
         materials = self.context.materials.search(query) if query else self.context.materials.all_materials()
 
@@ -449,10 +463,12 @@ class WorkshopModule(ModuleBase):
         self._update_material_detail_label()
 
     def _selected_material_id(self) -> Optional[str]:
+        """The selected material's id, or None."""
         item = self._material_list.currentItem()
         return item.data(Qt.ItemDataRole.UserRole) if item is not None else None
 
     def _update_material_detail_label(self) -> None:
+        """The selected material's details: who added it, how often it's been used, and when and by whom last."""
         material_id = self._selected_material_id()
         if material_id is None:
             self._material_detail_label.setText("")
@@ -474,6 +490,7 @@ class WorkshopModule(ModuleBase):
         )
 
     def _on_add_material(self) -> None:
+        """Adds a material from the dialog and selects it."""
         dialog = AddEditMaterialDialog()
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -485,6 +502,7 @@ class WorkshopModule(ModuleBase):
         self._refresh_materials_list(select_material_id=added.material_id)
 
     def _on_edit_material(self) -> None:
+        """Edits the selected material in the dialog (asks for a selection first)."""
         material_id = self._selected_material_id()
         if material_id is None:
             QMessageBox.information(None, "No Material Selected", "Select a material to edit.")
@@ -501,6 +519,7 @@ class WorkshopModule(ModuleBase):
         self._refresh_materials_list(select_material_id=material_id)
 
     def _on_delete_material(self) -> None:
+        """Deletes the selected material after asking."""
         material_id = self._selected_material_id()
         if material_id is None:
             QMessageBox.information(None, "No Material Selected", "Select a material to delete.")
@@ -520,6 +539,7 @@ class WorkshopModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_jobs_tab(self) -> QWidget:
+        """The Jobs tab: the filter, the jobs, and Add, Edit, Delete, Consume Material and Produce Product."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
@@ -561,6 +581,7 @@ class WorkshopModule(ModuleBase):
         return tab
 
     def _refresh_jobs_list(self) -> None:
+        """Lists the jobs matching the filter, each with its cost so far when it has one."""
         query = self._job_filter_edit.text().strip()
         jobs = self.context.jobs.search(query) if query else self.context.jobs.all_jobs()
 
@@ -575,10 +596,12 @@ class WorkshopModule(ModuleBase):
             self._job_list.addItem(item)
 
     def _selected_job_id(self) -> Optional[str]:
+        """The selected job's id, or None."""
         item = self._job_list.currentItem()
         return item.data(Qt.ItemDataRole.UserRole) if item is not None else None
 
     def _on_add_job(self) -> None:
+        """Adds a job from the dialog."""
         dialog = AddEditJobDialog()
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -589,6 +612,7 @@ class WorkshopModule(ModuleBase):
         self._refresh_jobs_list()
 
     def _on_edit_job(self) -> None:
+        """Edits the selected job in the dialog (asks for a selection first)."""
         job_id = self._selected_job_id()
         if job_id is None:
             QMessageBox.information(None, "No Job Selected", "Select a job to edit.")
@@ -604,6 +628,7 @@ class WorkshopModule(ModuleBase):
         self._refresh_jobs_list()
 
     def _on_delete_job(self) -> None:
+        """Deletes the selected job after asking."""
         job_id = self._selected_job_id()
         if job_id is None:
             QMessageBox.information(None, "No Job Selected", "Select a job to delete.")
@@ -619,6 +644,7 @@ class WorkshopModule(ModuleBase):
         self._refresh_jobs_list()
 
     def _on_consume_material(self) -> None:
+        """Uses a material on the selected job (which and how much, from what's on hand), then refreshes the jobs and materials."""
         job_id = self._selected_job_id()
         if job_id is None:
             QMessageBox.information(None, "No Job Selected", "Select a job first.")
@@ -638,6 +664,7 @@ class WorkshopModule(ModuleBase):
         self._refresh_materials_list()
 
     def _on_produce_product(self) -> None:
+        """Records the selected job making a product (which and how many), then refreshes the jobs and products."""
         job_id = self._selected_job_id()
         if job_id is None:
             QMessageBox.information(None, "No Job Selected", "Select a job first.")
@@ -661,6 +688,7 @@ class WorkshopModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_products_tab(self) -> QWidget:
+        """The Products tab: the filter, the list, the selected one's details, and Add, Edit, Delete, Add Listing and Remove Listing."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
@@ -712,6 +740,7 @@ class WorkshopModule(ModuleBase):
         return tab
 
     def _refresh_products_list(self, select_product_id: Optional[str] = None) -> None:
+        """Lists the products matching the filter, selecting the one given, then its details."""
         query = self._product_filter_edit.text().strip()
         products = self.context.products.search(query) if query else self.context.products.all_products()
 
@@ -725,10 +754,12 @@ class WorkshopModule(ModuleBase):
         self._update_product_detail_label()
 
     def _selected_product_id(self) -> Optional[str]:
+        """The selected product's id, or None."""
         item = self._product_list.currentItem()
         return item.data(Qt.ItemDataRole.UserRole) if item is not None else None
 
     def _update_product_detail_label(self) -> None:
+        """The selected product's details: who added it, how often it's sold, and when and by whom last."""
         product_id = self._selected_product_id()
         if product_id is None:
             self._product_detail_label.setText("")
@@ -750,6 +781,7 @@ class WorkshopModule(ModuleBase):
         )
 
     def _on_add_product(self) -> None:
+        """Adds a product from the dialog and selects it."""
         dialog = AddEditProductDialog()
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -761,6 +793,7 @@ class WorkshopModule(ModuleBase):
         self._refresh_products_list(select_product_id=added.product_id)
 
     def _on_edit_product(self) -> None:
+        """Edits the selected product in the dialog (asks for a selection first)."""
         product_id = self._selected_product_id()
         if product_id is None:
             QMessageBox.information(None, "No Product Selected", "Select a product to edit.")
@@ -777,6 +810,7 @@ class WorkshopModule(ModuleBase):
         self._refresh_products_list(select_product_id=product_id)
 
     def _on_delete_product(self) -> None:
+        """Deletes the selected product after asking."""
         product_id = self._selected_product_id()
         if product_id is None:
             QMessageBox.information(None, "No Product Selected", "Select a product to delete.")
@@ -792,6 +826,7 @@ class WorkshopModule(ModuleBase):
         self._refresh_products_list()
 
     def _on_add_listing(self) -> None:
+        """Adds a listing (where it's for sale) to the selected product from the dialog."""
         product_id = self._selected_product_id()
         if product_id is None:
             QMessageBox.information(None, "No Product Selected", "Select a product first.")
@@ -806,6 +841,7 @@ class WorkshopModule(ModuleBase):
         self._refresh_products_list()
 
     def _on_remove_listing(self) -> None:
+        """Removes the selected product's most recent listing after asking (says so when it has none)."""
         product_id = self._selected_product_id()
         if product_id is None:
             QMessageBox.information(None, "No Product Selected", "Select a product first.")
@@ -829,6 +865,7 @@ class WorkshopModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_ledger_tab(self) -> QWidget:
+        """The Ledger tab: net profit, the revenue with Add, Record Sale and Delete, and the expenses with Add and Delete."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
@@ -874,6 +911,7 @@ class WorkshopModule(ModuleBase):
         return tab
 
     def _refresh_ledger(self) -> None:
+        """Shows net profit with total revenue and expenses, then lists every revenue and expense entry."""
         self._net_profit_label.setText(
             f"Net Profit: {money(self.context.ledger.net_profit(), '.2f')}  "
             f"(Revenue {money(self.context.ledger.total_revenue(), '.2f')}  —  "
@@ -893,14 +931,17 @@ class WorkshopModule(ModuleBase):
             self._expense_list.addItem(item)
 
     def _selected_revenue_id(self) -> Optional[str]:
+        """The selected revenue entry's id, or None."""
         item = self._revenue_list.currentItem()
         return item.data(Qt.ItemDataRole.UserRole) if item is not None else None
 
     def _selected_expense_id(self) -> Optional[str]:
+        """The selected expense entry's id, or None."""
         item = self._expense_list.currentItem()
         return item.data(Qt.ItemDataRole.UserRole) if item is not None else None
 
     def _on_add_revenue(self) -> None:
+        """Adds a revenue entry from the dialog."""
         dialog = AddRevenueDialog()
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -910,6 +951,7 @@ class WorkshopModule(ModuleBase):
         self._refresh_ledger()
 
     def _on_record_sale(self) -> None:
+        """Records a sale of a product (how many and for how much): revenue in the ledger and the stock taken down."""
         products = self.context.products.all_products()
         if not products:
             QMessageBox.information(None, "No Products", "Add a product first.")
@@ -928,6 +970,7 @@ class WorkshopModule(ModuleBase):
         self._refresh_products_list()
 
     def _on_delete_revenue(self) -> None:
+        """Deletes the selected revenue entry (asks for a selection first)."""
         entry_id = self._selected_revenue_id()
         if entry_id is None:
             QMessageBox.information(None, "No Entry Selected", "Select a revenue entry to delete.")
@@ -936,6 +979,7 @@ class WorkshopModule(ModuleBase):
         self._refresh_ledger()
 
     def _on_add_expense(self) -> None:
+        """Adds an expense entry from the dialog."""
         dialog = AddExpenseDialog()
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -946,6 +990,7 @@ class WorkshopModule(ModuleBase):
         self._refresh_ledger()
 
     def _on_delete_expense(self) -> None:
+        """Deletes the selected expense entry (asks for a selection first)."""
         entry_id = self._selected_expense_id()
         if entry_id is None:
             QMessageBox.information(None, "No Entry Selected", "Select an expense entry to delete.")
