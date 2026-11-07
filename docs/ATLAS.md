@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 228,107 lines; 1043 files describe themselves; 4,427 of 13,517 classes and functions are documented.
+1043 files, 228,138 lines; 1043 files describe themselves; 4,445 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 102,013 lines; 3,696 of 5,630 classes and functions documented
+367 files, 102,044 lines; 3,714 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -360,7 +360,7 @@
 - `core/web_screens.py`: Kitchen, Workout and Real Estate on the web (2026-10-06, DEC-0017/0018): everything the PC app's screens show, assembled here so `web/` holds no logic. Served as `/api/kitchen` (and one recipe, `/api/kitchen/recipe/{id}`), `/api/workout` and `/api/real-estate`; changes are the action kinds in core/k *(6 undocumented)*
 - `core/web_surfaces.py`: What the web front end's shell and Home show (2026-10-06, DEC-0017: the web becomes all of MIA, function first, in the concept's look). Assembled here, in code, so `web/` holds no logic (DEC-0013): which apps a person sees, their level and XP, the greeting, Today's Focus, the upcoming list and the a *(6 undocumented)*
 - `core/weekly_checkin.py`: The Sunday check-in (DEC-0047 rule 5; Zac, 2026-10-27): Sunday morning, a recap of the week just past and the layout of the week ahead. *(6 undocumented)*
-- `core/welcome.py`: What comes after User Sync (slice 5 of docs/GLASSES_FIRST_BOOT_PLAN.md): the first mission, the tour of Home, the app menu with its optional tours, and the moment MIA hands over. *(18 undocumented)*
+- `core/welcome.py`: What comes after User Sync (slice 5 of docs/GLASSES_FIRST_BOOT_PLAN.md): the first mission, the tour of Home, the app menu with its optional tours, and the moment MIA hands over.
 - `core/why_graph.py`: "Remember Why", slice B of docs/COGNITIVE_EXTENSION_PROPOSAL.md: the owner's reasons as a chain, with live evidence from their own records, assembled in code so the model can only phrase it, never invent it. *(9 undocumented)*
 - `core/work_activity.py`: Who did what to the development work, and when (DEC-0068, step 2 of `docs/DEV_ECOSYSTEM_AUDIT.md`): `work/activity.jsonl`, one line per event, only ever added to. Every change `tools/work.py` makes to a task is recorded here, so the history is searchable and a task interrupted halfway can be picked  *(1 undocumented)*
 - `core/work_agents.py`: Who can do the development work, and what each may do (DEC-0068/0069, step 3 of `docs/DEV_ECOSYSTEM_AUDIT.md`). Roles live in `work/agents.json`: each is a provider (Claude Code, Ollama, Codex...), a model, a permission tier and the documents it reads first. Roles are configuration; providers are ad *(5 undocumented)*

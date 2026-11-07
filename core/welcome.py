@@ -83,21 +83,27 @@ RESUME = re.compile(r"(let'?s )?(start|continue|keep going with)( the)? tours?|k
 
 
 def _progress(context) -> dict:
+    """This person's welcome progress (person_settings), or a fresh one."""
     saved = person_settings.get(context, KEY) or {}
     return saved if isinstance(saved, dict) else {}
 
 
 def _save(context, progress: dict) -> None:
+    """Saves this person's welcome progress."""
     person_settings.put(context, KEY, progress)
 
 
 def _mission(context, progress: dict):
+    """The "Know your system" mission once it's been added, or None."""
     missions = getattr(context, "missions", None)
     found = progress.get("mission_id")
     return missions.get_mission(found) if missions is not None and found else None
 
 
 def _act(context, kind: str, **params):
+    """Proposes an action as MIA and approves it at once (the person chose "let's go"), so the mission is made through
+    the action contract like any other.
+    """
     actions = context.actions
     return actions.approve(context, actions.propose(context, kind, params, proposed_by="mia").proposal_id)
 
@@ -118,6 +124,7 @@ def _tick(context, progress: dict, index: int) -> None:
 
 
 def _record(context, what: str) -> None:
+    """Records a finished tour in the person's life-event history."""
     life_events.record(getattr(context, "personal_life_events", None) or getattr(context, "life_events", None),
                        "tour_done", what, payload={}, profile_id=person_settings.person_id(context))
 
@@ -126,12 +133,14 @@ def _record(context, what: str) -> None:
 
 
 def _tour_apps(context) -> list:
+    """The apps on this person's glasses that have a tour, with their short names."""
     from core.glasses import SHORT_NAMES, _visible_apps
 
     return [(a.module_id, SHORT_NAMES.get(a.module_id, a.name)) for a in _visible_apps(context) if a.module_id in APP_TOURS]
 
 
 def _app_rows(context, progress: dict) -> list[dict]:
+    """The app menu's rows: each app with a tour, its status (ready, paused at a step, or done) and its intro."""
     tours = progress.get("tours") or {}
     rows = []
     for module_id, name in _tour_apps(context):
@@ -142,6 +151,9 @@ def _app_rows(context, progress: dict) -> list[dict]:
 
 
 def _mission_card(context, progress: dict) -> dict:
+    """The first mission's card: its objectives and which are done, and the percent done (meeting MIA counts as done
+    before the mission is even added).
+    """
     mission = _mission(context, progress)
     done = [False] * len(OBJECTIVES)
     if mission is not None:
@@ -153,12 +165,16 @@ def _mission_card(context, progress: dict) -> dict:
 
 
 def _home_tiles(context) -> list[str]:
+    """The first four Home tiles' names, for the Home tour to light up."""
     from core.glasses import glasses_apps
 
     return [a["name"] for a in glasses_apps(context)["apps"][:4]]
 
 
 def _tour(context, progress: dict) -> Optional[dict]:
+    """The tour step being shown, or None: on Home, the step and which tile is lit; in an app's tour, the step and
+    which of its menu items is lit (the tour names real items from core/glasses.py PANELS).
+    """
     if progress.get("stage") == "home":
         at = progress.get("home_step", 0)
         lit, text = HOME_TOUR[at]
@@ -177,6 +193,10 @@ def _tour(context, progress: dict) -> Optional[dict]:
 
 
 def state(context) -> dict:
+    """What the glasses show now: nothing until the introduction and User Sync are done; then the stage (mission,
+    home, tour, apps, explore, done), whether it's paused, the mission card, the tour step, the app rows, and ideas
+    once it's complete.
+    """
     progress = _progress(context)
     out = {"stage": "none", "paused": False, "left": False, "ready": False, "mission": None, "tour": None, "apps": [], "ideas": []}
     if progress.get("finished_at"):
@@ -196,6 +216,7 @@ def state(context) -> dict:
 
 
 def _result(context, say: str = "") -> dict:
+    """The state plus what MIA says, as the endpoint returns it."""
     return {**state(context), "say": say}
 
 
@@ -203,6 +224,7 @@ def _result(context, say: str = "") -> dict:
 
 
 def _begin(context, progress: dict) -> dict:
+    """"Let's go": adds the first mission and its objectives (once), ticks meeting MIA, and starts the Home tour."""
     if getattr(context, "actions", None) is None or getattr(context, "missions", None) is None:
         return _result(context, "I can't set that up here.")
     name = next((m for m in context.missions.all_missions() if m.name == MISSION), None)
@@ -218,6 +240,7 @@ def _begin(context, progress: dict) -> dict:
 
 
 def _to_apps(context, progress: dict, ticked: bool) -> dict:
+    """Moves to the app menu, ticking the Home objective and recording it when the tour was finished, not skipped."""
     progress["stage"] = "apps"
     if ticked:
         _tick(context, progress, HOME)
@@ -227,6 +250,9 @@ def _to_apps(context, progress: dict, ticked: bool) -> dict:
 
 
 def _next(context, progress: dict) -> dict:
+    """The next tour step; at the end of Home it moves to the apps, at the end of an app's tour it marks the tour done,
+    ticks exploring and records it.
+    """
     if progress.get("stage") == "home":
         at = progress.get("home_step", 0) + 1
         if at >= len(HOME_TOUR):
@@ -250,6 +276,7 @@ def _next(context, progress: dict) -> dict:
 
 
 def _skip(context, progress: dict) -> dict:
+    """Skips out of a tour to the app menu; an app tour keeps its step, so it picks up there."""
     if progress.get("stage") == "home":
         return _to_apps(context, progress, False)
     progress["stage"] = "apps"  # its step stays: a paused tour picks up there
@@ -259,6 +286,7 @@ def _skip(context, progress: dict) -> dict:
 
 
 def _start_tour(context, progress: dict, app: str) -> dict:
+    """Starts (or resumes) an app's tour at its step."""
     if app not in dict(_tour_apps(context)):
         return _result(context)
     own = progress.setdefault("tours", {}).setdefault(app, {})
@@ -275,6 +303,9 @@ def _open(context, progress: dict, app: str) -> dict:
 
 
 def choose(context, choice: str, app: str = "") -> dict:
+    """What the person chose (begin, next, skip, tour, open, later, resume, finish), acted on only when it fits the
+    stage; returns the new state and what MIA says.
+    """
     progress = _progress(context)
     now = state(context)
     if now["stage"] in ("none", "done"):

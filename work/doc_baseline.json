@@ -258,7 +258,6 @@
   "core/web_screens.py": 6,
   "core/web_surfaces.py": 6,
   "core/weekly_checkin.py": 6,
-  "core/welcome.py": 18,
   "core/why_graph.py": 9,
   "core/work_activity.py": 1,
   "core/work_agents.py": 5,
