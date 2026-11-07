@@ -112,12 +112,14 @@ class LLMUnavailableError(RuntimeError):
 
 @dataclass
 class ToolCall:
+    """One tool the model asked to run: its name and arguments."""
     name: str
     arguments: dict
 
 
 @dataclass
 class ChatReply:
+    """What a chat turn returned: the model's text and any tools it asked for."""
     content: str
     tool_calls: list[ToolCall] = field(default_factory=list)
 
@@ -145,6 +147,10 @@ class OllamaBackend:
                  num_ctx: int = 0, think: Optional[bool] = None) -> None:
         # Windows tries localhost's IPv6 address first, and Ollama isn't there:
         # 2 seconds lost on every call, enough to read as "the computer's down".
+        """A local Ollama server: its address (localhost turned into 127.0.0.1, since Windows tries IPv6 first and
+        loses two seconds), the model, how long to keep it loaded (a number of seconds, or a duration like "30m"),
+        temperature, context size (0: the server's) and whether a thinking model thinks.
+        """
         self._base_url = base_url.rstrip("/").replace("://localhost", "://127.0.0.1")
         self._model = model
         self._temperature = temperature
@@ -168,12 +174,14 @@ class OllamaBackend:
         return {} if self._think is None else {"think": bool(self._think)}
 
     def _options(self) -> dict:
+        """The request's model options: temperature, and the context size when one is set."""
         options: dict = {"temperature": self._temperature}
         if self._num_ctx > 0:
             options["num_ctx"] = self._num_ctx
         return options
 
     def generate(self, prompt: str, timeout: float) -> str:
+        """One completion from a prompt (/api/generate, not streamed). LLMUnavailableError when the server can't be reached, answers with an error, or sends back something unreadable."""
         payload = json.dumps({
             "model": self._model,
             "prompt": prompt,
@@ -204,6 +212,7 @@ class OllamaBackend:
             raise LLMUnavailableError(f"Ollama response missing 'response' field: {body}") from exc
 
     def chat(self, messages: list[dict], tools: list[dict], timeout: float) -> ChatReply:
+        """One chat turn with tools (/api/chat, not streamed): the reply's text and tool calls. LLMUnavailableError when the server can't be reached, answers with an error, or sends back something unreadable."""
         payload_dict = {
             "model": self._model,
             "messages": messages,
@@ -244,6 +253,7 @@ class OllamaBackend:
         return ChatReply(content=message.get("content", ""), tool_calls=tool_calls)
 
     def is_available(self, timeout: float) -> bool:
+        """Whether the Ollama server answers (/api/tags)."""
         request = urllib.request.Request(f"{self._base_url}/api/tags", method="GET")
         try:
             with urllib.request.urlopen(request, timeout=timeout):
@@ -261,12 +271,16 @@ class OpenAIBackend:
     milliseconds for reading the prompt and for writing the answer)."""
 
     def __init__(self, base_url: str, model: str, temperature: float = _DEFAULT_TEMPERATURE) -> None:
+        """An OpenAI-style model server (llama.cpp's, on the phone): its address, model and temperature; it keeps the
+        last reply's timings.
+        """
         self._base_url = base_url.rstrip("/")
         self._model = model
         self._temperature = temperature
         self.last_timings: dict = {}
 
     def _post(self, path: str, payload: dict, timeout: float) -> dict:
+        """POSTs JSON to the server and returns its reply, keeping its timings. LLMUnavailableError when the server can't be reached, answers with an error, or sends back something unreadable."""
         request = urllib.request.Request(
             f"{self._base_url}{path}",
             data=json.dumps(payload).encode("utf-8"),
@@ -289,9 +303,13 @@ class OpenAIBackend:
         return body
 
     def generate(self, prompt: str, timeout: float) -> str:
+        """One completion, as a one-message chat."""
         return self.chat([{"role": "user", "content": prompt}], [], timeout).content
 
     def chat(self, messages: list[dict], tools: list[dict], timeout: float) -> ChatReply:
+        """One chat turn with tools (/v1/chat/completions): the reply's text and tool calls (arguments sent as a JSON
+        string are parsed; unreadable ones become empty). LLMUnavailableError when the server can't be reached, answers with an error, or sends back something unreadable.
+        """
         payload = {"model": self._model, "messages": messages, "temperature": self._temperature, "stream": False}
         if tools:
             payload["tools"] = tools
@@ -313,6 +331,7 @@ class OpenAIBackend:
         return ChatReply(content=message.get("content") or "", tool_calls=tool_calls)
 
     def is_available(self, timeout: float) -> bool:
+        """Whether the server answers (/health)."""
         try:
             with urllib.request.urlopen(f"{self._base_url}/health", timeout=timeout):
                 return True
@@ -342,6 +361,9 @@ class LLMManager:
     """
 
     def __init__(self, context: AppContext) -> None:
+        """The Assistant's model: the configured backend and timeout, plus, when the phone is linked, the home
+        computer's model, tried first (DEC-0022); `level` says which answered last.
+        """
         self.context = context
         self._timeout = float(context.config.get("llm.timeout_seconds", _DEFAULT_TIMEOUT_SECONDS))
         self._backend: LLMBackend = make_backend(context.config)
@@ -366,6 +388,7 @@ class LLMManager:
         self.home_reach = Reach(backend) if backend is not None else None
 
     def _local_level(self) -> str:
+        """Which local model this is: the phone's (linked to a home computer, or llama.cpp) or this computer's."""
         from core.home_link import PHONE, THIS_COMPUTER
 
         return PHONE if self.home is not None or isinstance(self._backend, OpenAIBackend) else THIS_COMPUTER
@@ -390,6 +413,7 @@ class LLMManager:
 
     @property
     def backend(self) -> "LLMBackend":
+        """The local backend in use."""
         return self._backend
 
     def is_available(self) -> bool:

@@ -133,7 +133,6 @@
   "core/links.py": 14,
   "core/lite_capture_manager.py": 13,
   "core/live.py": 3,
-  "core/llm_manager.py": 15,
   "core/local_model.py": 15,
   "core/loop_actions.py": 12,
   "core/loop_coverage.py": 8,
