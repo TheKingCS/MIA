@@ -62,11 +62,16 @@ BATCH_STATUSES = ("Growing", "Harvested", "Lost")
 
 
 def _now() -> str:
+    """Now, as an ISO timestamp to the second."""
     return datetime.now().isoformat(timespec="seconds")
 
 
 @dataclass
 class Batch:
+    """A crop planted somewhere (a Greenhouse asset, or a place named before places were assets): variety, method,
+    when, how many, what it cost (and how much of that is already on stock it went into), its harvests, how many were
+    lost and why, and its status.
+    """
     batch_id: str
     crop: str
     variety: str = ""
@@ -89,6 +94,9 @@ class Batch:
 
 @dataclass
 class Experiment:
+    """A question the person is testing ("Which lettuce does best in Tank A?"), the batches that answer it side by
+    side, and the conclusion they write.
+    """
     experiment_id: str
     question: str
     batch_ids: list[str] = field(default_factory=list)
@@ -147,13 +155,21 @@ def batch_figures(b: Batch, today: date) -> dict:
 
 
 class GrowLab:
+    """The household's grow lab (grow_lab.json, written through atomic_write_text so undo can restore it): batches,
+    experiments, named places, and the safe range the person set for each place's measures. Readings themselves live
+    in the Data Logger; MIA only warns when one is out of range, never controls equipment.
+    """
     def __init__(self, context, data_dir: Optional[Path] = None) -> None:
+        """Points at the household's file (data/ by default) and loads it."""
         self.context = context
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._file = self.data_dir / _FILE
         self._load()
 
     def _load(self) -> None:
+        """Reads everything, keeping only fields each record knows; an unreadable file is logged, reported and starts
+        empty.
+        """
         self.batches: list[Batch] = []
         self.experiments: list[Experiment] = []
         self.systems: list[str] = []
@@ -172,15 +188,18 @@ class GrowLab:
             notify_data_corruption(self.context, _FILE)
 
     def reload(self) -> None:
+        """Reads the file again (after undo restored it)."""
         self._load()
 
     def _save(self) -> None:
+        """Writes everything atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._file, json.dumps({
             "batches": [asdict(b) for b in self.batches], "experiments": [asdict(e) for e in self.experiments],
             "systems": self.systems, "ranges": self.ranges}, indent=2))
 
     def _record(self, type_: str, summary: str, refs: list[str]) -> None:
+        """Records a grow-lab event in the life-event history."""
         from core import life_events
 
         life_events.record(self, type_, summary, refs)
@@ -188,6 +207,7 @@ class GrowLab:
     # ---------------------------------------------------------------- systems and ranges
 
     def add_system(self, name: str) -> str:
+        """Names a place (a tank, a bed, a room), once (case-insensitive)."""
         name = " ".join(str(name or "").split())
         if not name:
             raise ValueError("Name the tank, bed or room.")
@@ -197,10 +217,12 @@ class GrowLab:
         return name
 
     def remove_system(self, name: str) -> None:
+        """Removes a named place."""
         self.systems = [s for s in self.systems if s.lower() != name.lower()]
         self._save()
 
     def set_range(self, system: str, measure: str, low: Optional[float], high: Optional[float]) -> None:
+        """Sets the person's safe range for a measure at a place (low and high, either may be open; low below high)."""
         if measure not in MEASURES:
             raise ValueError("Unknown measure.")
         if low is not None and high is not None and low > high:
@@ -219,9 +241,11 @@ class GrowLab:
     # ---------------------------------------------------------------- batches
 
     def get_batch(self, batch_id: str) -> Optional[Batch]:
+        """The batch with this id, or None."""
         return next((b for b in self.batches if b.batch_id == batch_id), None)
 
     def add_batch(self, crop: str, **fields) -> Batch:
+        """Plants a batch (a crop is required; today unless a date is given) and records it in the history."""
         if not str(crop or "").strip():
             raise ValueError("What's planted?")
         b = Batch(batch_id=uuid.uuid4().hex[:10], crop=crop.strip(), planted=date.today().isoformat(), created_at=_now())
@@ -237,6 +261,7 @@ class GrowLab:
         return b
 
     def update_batch(self, batch_id: str, **fields) -> Batch:
+        """Changes a batch's fields (checked by _apply)."""
         b = self.get_batch(batch_id)
         if b is None:
             raise ValueError("That batch isn't there anymore.")
@@ -246,6 +271,7 @@ class GrowLab:
         return b
 
     def asset(self, place: str):
+        """The Greenhouse asset a place id names, or None."""
         maintenance = getattr(self.context, "maintenance", None)
         return maintenance.get_asset(place) if maintenance is not None and place else None
 
@@ -265,6 +291,7 @@ class GrowLab:
             self.add_system(b.system)
 
     def delete_batch(self, batch_id: str) -> None:
+        """Deletes a batch, and takes it out of any experiment."""
         self.batches = [b for b in self.batches if b.batch_id != batch_id]
         for e in self.experiments:
             e.batch_ids = [i for i in e.batch_ids if i != batch_id]
@@ -272,6 +299,9 @@ class GrowLab:
 
     @staticmethod
     def _apply(b: Batch, fields: dict) -> None:
+        """Sets a batch's fields, checked: counts whole and not negative, cost not negative, a known status; harvests are
+        only added through harvest().
+        """
         for name, value in fields.items():
             if name in ("batch_id", "harvests", "created_at") or not hasattr(b, name):
                 raise ValueError(f"A batch has no '{name}'.")
@@ -285,6 +315,7 @@ class GrowLab:
 
     def harvest(self, batch_id: str, amount: float, unit: str = "", note: str = "", done: bool = False,
                 on: Optional[str] = None) -> Batch:
+        """Records a harvest from a batch (marking it harvested when done) and records it in the history."""
         b = self.get_batch(batch_id)
         if b is None:
             raise ValueError("That batch isn't there anymore.")
@@ -299,6 +330,7 @@ class GrowLab:
         return b
 
     def lose(self, batch_id: str, how_many: int, why: str = "", all_of_it: bool = False) -> Batch:
+        """Records plants lost and why (never more than were planted); all_of_it marks the batch lost."""
         b = self.get_batch(batch_id)
         if b is None:
             raise ValueError("That batch isn't there anymore.")
@@ -312,9 +344,11 @@ class GrowLab:
     # ---------------------------------------------------------------- experiments
 
     def get_experiment(self, experiment_id: str) -> Optional[Experiment]:
+        """The experiment with this id, or None."""
         return next((e for e in self.experiments if e.experiment_id == experiment_id), None)
 
     def add_experiment(self, question: str, **fields) -> Experiment:
+        """Starts an experiment (a question is required)."""
         if not str(question or "").strip():
             raise ValueError("What's the question?")
         e = Experiment(experiment_id=uuid.uuid4().hex[:10], question=question.strip(), created_at=_now())
@@ -324,6 +358,7 @@ class GrowLab:
         return e
 
     def update_experiment(self, experiment_id: str, **fields) -> Experiment:
+        """Changes an experiment's fields."""
         e = self.get_experiment(experiment_id)
         if e is None:
             raise ValueError("That experiment isn't there anymore.")
@@ -332,10 +367,12 @@ class GrowLab:
         return e
 
     def delete_experiment(self, experiment_id: str) -> None:
+        """Deletes an experiment (its batches stay)."""
         self.experiments = [e for e in self.experiments if e.experiment_id != experiment_id]
         self._save()
 
     def _apply_experiment(self, e: Experiment, fields: dict) -> None:
+        """Sets an experiment's fields; its batches (a list or comma-separated ids) keep only ones that exist."""
         for name, value in fields.items():
             if name == "batch_ids":
                 value = [i for i in (value if isinstance(value, list) else str(value or "").split(","))

@@ -118,7 +118,6 @@
   "core/goods.py": 4,
   "core/gps_tracks.py": 8,
   "core/grow_actions.py": 21,
-  "core/grow_lab.py": 25,
   "core/hash_identifier.py": 1,
   "core/heavy_jobs.py": 3,
   "core/home_link.py": 11,
