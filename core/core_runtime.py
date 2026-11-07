@@ -684,6 +684,9 @@ def _register_core_assistant_actions(context: AppContext) -> None:
 # ----------------------------------------------------------------------
 
 def _action_add_alarm(context: AppContext, arguments: dict) -> str:
+    """Core's voice tool `add_alarm`: sets an alarm at HH:MM with a label. The same behavior as core/application.py's handler, kept here so headless Core never
+    imports the Qt app. Returns the reply in words (an unknown name says so, nothing changes).
+    """
     label = str(arguments.get("label", "") or "Alarm").strip() or "Alarm"
     time_str = str(arguments.get("time", "")).strip()
     if not time_str:
@@ -693,6 +696,9 @@ def _action_add_alarm(context: AppContext, arguments: dict) -> str:
 
 
 def _action_list_alarms(context: AppContext, arguments: dict) -> str:
+    """Core's voice tool `list_alarms`: every alarm with its time, marking disabled ones. The same behavior as core/application.py's handler, kept here so headless Core never
+    imports the Qt app. Returns the reply in words (an unknown name says so, nothing changes).
+    """
     alarms = context.alarms.all_alarms()
     if not alarms:
         return "You have no alarms set."
@@ -701,6 +707,9 @@ def _action_list_alarms(context: AppContext, arguments: dict) -> str:
 
 
 def _action_delete_alarm(context: AppContext, arguments: dict) -> str:
+    """Core's voice tool `delete_alarm`: deletes the alarm whose label matches. The same behavior as core/application.py's handler, kept here so headless Core never
+    imports the Qt app. Returns the reply in words (an unknown name says so, nothing changes).
+    """
     label = str(arguments.get("label", "")).strip().lower()
     match = next((a for a in context.alarms.all_alarms() if a.label.lower() == label), None)
     if match is None:
@@ -710,6 +719,9 @@ def _action_delete_alarm(context: AppContext, arguments: dict) -> str:
 
 
 def _action_add_note(context: AppContext, arguments: dict) -> str:
+    """Core's voice tool `add_note`: adds a journal note with a title and body. The same behavior as core/application.py's handler, kept here so headless Core never
+    imports the Qt app. Returns the reply in words (an unknown name says so, nothing changes).
+    """
     title = str(arguments.get("title", "")).strip()
     if not title:
         return "I need a title to add a note."
@@ -719,6 +731,9 @@ def _action_add_note(context: AppContext, arguments: dict) -> str:
 
 
 def _action_list_notes(context: AppContext, arguments: dict) -> str:
+    """Core's voice tool `list_notes`: the notes, or those matching a query, with their text. The same behavior as core/application.py's handler, kept here so headless Core never
+    imports the Qt app. Returns the reply in words (an unknown name says so, nothing changes).
+    """
     query = str(arguments.get("query", "") or "").strip()
     entries = context.journal.search(query) if query else context.journal.all_entries()
     if not entries:
@@ -728,6 +743,9 @@ def _action_list_notes(context: AppContext, arguments: dict) -> str:
 
 
 def _action_delete_note(context: AppContext, arguments: dict) -> str:
+    """Core's voice tool `delete_note`: deletes the note whose title matches. The same behavior as core/application.py's handler, kept here so headless Core never
+    imports the Qt app. Returns the reply in words (an unknown name says so, nothing changes).
+    """
     title = str(arguments.get("title", "")).strip().lower()
     match = next((e for e in context.journal.all_entries() if e.title.lower() == title), None)
     if match is None:
@@ -737,6 +755,9 @@ def _action_delete_note(context: AppContext, arguments: dict) -> str:
 
 
 def _action_add_inventory_item(context: AppContext, arguments: dict) -> str:
+    """Core's voice tool `add_inventory_item`: adds an inventory item with a quantity. The same behavior as core/application.py's handler, kept here so headless Core never
+    imports the Qt app. Returns the reply in words (an unknown name says so, nothing changes).
+    """
     name = str(arguments.get("name", "")).strip()
     if not name:
         return "I need an item name to add to inventory."
@@ -749,6 +770,9 @@ def _action_add_inventory_item(context: AppContext, arguments: dict) -> str:
 
 
 def _action_list_inventory(context: AppContext, arguments: dict) -> str:
+    """Core's voice tool `list_inventory`: the inventory, or the items matching a query. The same behavior as core/application.py's handler, kept here so headless Core never
+    imports the Qt app. Returns the reply in words (an unknown name says so, nothing changes).
+    """
     query = str(arguments.get("query", "") or "").strip()
     items = context.inventory.search(query) if query else context.inventory.all_items()
     if not items:
@@ -758,6 +782,9 @@ def _action_list_inventory(context: AppContext, arguments: dict) -> str:
 
 
 def _action_delete_inventory_item(context: AppContext, arguments: dict) -> str:
+    """Core's voice tool `delete_inventory_item`: removes the inventory item whose name matches. The same behavior as core/application.py's handler, kept here so headless Core never
+    imports the Qt app. Returns the reply in words (an unknown name says so, nothing changes).
+    """
     name = str(arguments.get("name", "")).strip().lower()
     match = next((i for i in context.inventory.all_items() if i.name.lower() == name), None)
     if match is None:
@@ -767,6 +794,9 @@ def _action_delete_inventory_item(context: AppContext, arguments: dict) -> str:
 
 
 def _action_adjust_inventory_quantity(context: AppContext, arguments: dict) -> str:
+    """Core's voice tool `adjust_inventory_quantity`: changes an item's quantity by a whole-number delta. The same behavior as core/application.py's handler, kept here so headless Core never
+    imports the Qt app. Returns the reply in words (an unknown name says so, nothing changes).
+    """
     name = str(arguments.get("name", "")).strip().lower()
     try:
         delta = int(arguments.get("delta", 0) or 0)
@@ -780,6 +810,9 @@ def _action_adjust_inventory_quantity(context: AppContext, arguments: dict) -> s
 
 
 def _action_add_calendar_event(context: AppContext, arguments: dict) -> str:
+    """Core's voice tool `add_calendar_event`: adds a calendar event with a date, optional time and notes. The same behavior as core/application.py's handler, kept here so headless Core never
+    imports the Qt app. Returns the reply in words (an unknown name says so, nothing changes).
+    """
     title = str(arguments.get("title", "")).strip()
     date_str = str(arguments.get("date", "") or "").strip()
     if not title:
@@ -794,6 +827,9 @@ def _action_add_calendar_event(context: AppContext, arguments: dict) -> str:
 
 
 def _action_list_calendar_events(context: AppContext, arguments: dict) -> str:
+    """Core's voice tool `list_calendar_events`: every calendar event with its date and time. The same behavior as core/application.py's handler, kept here so headless Core never
+    imports the Qt app. Returns the reply in words (an unknown name says so, nothing changes).
+    """
     events = context.calendar.all_events()
     if not events:
         return "You have no calendar events."
@@ -802,6 +838,9 @@ def _action_list_calendar_events(context: AppContext, arguments: dict) -> str:
 
 
 def _action_delete_calendar_event(context: AppContext, arguments: dict) -> str:
+    """Core's voice tool `delete_calendar_event`: deletes the calendar event whose title matches. The same behavior as core/application.py's handler, kept here so headless Core never
+    imports the Qt app. Returns the reply in words (an unknown name says so, nothing changes).
+    """
     title = str(arguments.get("title", "")).strip().lower()
     match = next((e for e in context.calendar.all_events() if e.title.lower() == title), None)
     if match is None:
@@ -811,6 +850,9 @@ def _action_delete_calendar_event(context: AppContext, arguments: dict) -> str:
 
 
 def _action_add_waypoint(context: AppContext, arguments: dict) -> str:
+    """Core's voice tool `add_waypoint`: saves a waypoint from latitude and longitude (an unknown category becomes uncategorized). The same behavior as core/application.py's handler, kept here so headless Core never
+    imports the Qt app. Returns the reply in words (an unknown name says so, nothing changes).
+    """
     name = str(arguments.get("name", "")).strip()
     if not name:
         return "I need a name to save a waypoint."
@@ -827,6 +869,9 @@ def _action_add_waypoint(context: AppContext, arguments: dict) -> str:
 
 
 def _action_list_waypoints(context: AppContext, arguments: dict) -> str:
+    """Core's voice tool `list_waypoints`: the saved waypoints, filtered by a query, with coordinates. The same behavior as core/application.py's handler, kept here so headless Core never
+    imports the Qt app. Returns the reply in words (an unknown name says so, nothing changes).
+    """
     query = str(arguments.get("query", "") or "").lower().strip()
     waypoints = context.waypoints.all_waypoints()
     if query:
@@ -838,6 +883,9 @@ def _action_list_waypoints(context: AppContext, arguments: dict) -> str:
 
 
 def _action_waypoint_distance(context: AppContext, arguments: dict) -> str:
+    """Core's voice tool `waypoint_distance`: the distance in km and bearing between two named waypoints. The same behavior as core/application.py's handler, kept here so headless Core never
+    imports the Qt app. Returns the reply in words (an unknown name says so, nothing changes).
+    """
     from_name = str(arguments.get("from_name", "")).strip().lower()
     to_name = str(arguments.get("to_name", "")).strip().lower()
     waypoints = {w.name.lower(): w for w in context.waypoints.all_waypoints()}
@@ -855,6 +903,9 @@ def _action_waypoint_distance(context: AppContext, arguments: dict) -> str:
 
 
 def _action_add_mission(context: AppContext, arguments: dict) -> str:
+    """Core's voice tool `add_mission`: starts a mission, optionally linked to a trip. The same behavior as core/application.py's handler, kept here so headless Core never
+    imports the Qt app. Returns the reply in words (an unknown name says so, nothing changes).
+    """
     name = str(arguments.get("name", "")).strip()
     if not name:
         return "I need a name to start a mission."
@@ -872,6 +923,9 @@ def _action_add_mission(context: AppContext, arguments: dict) -> str:
 
 
 def _action_list_missions(context: AppContext, arguments: dict) -> str:
+    """Core's voice tool `list_missions`: every mission with each objective's progress. The same behavior as core/application.py's handler, kept here so headless Core never
+    imports the Qt app. Returns the reply in words (an unknown name says so, nothing changes).
+    """
     missions = context.missions.all_missions()
     if not missions:
         return "You have no missions yet."
@@ -886,6 +940,9 @@ def _action_list_missions(context: AppContext, arguments: dict) -> str:
 
 
 def _action_add_objective(context: AppContext, arguments: dict) -> str:
+    """Core's voice tool `add_objective`: adds an objective to a mission (an unknown metric type becomes a tally). The same behavior as core/application.py's handler, kept here so headless Core never
+    imports the Qt app. Returns the reply in words (an unknown name says so, nothing changes).
+    """
     mission_name = str(arguments.get("mission_name", "")).strip().lower()
     description = str(arguments.get("description", "")).strip()
     if not description:
@@ -905,6 +962,9 @@ def _action_add_objective(context: AppContext, arguments: dict) -> str:
 
 
 def _action_log_mission_progress(context: AppContext, arguments: dict) -> str:
+    """Core's voice tool `log_mission_progress`: adds to a mission's tally objective (the only one, or the one named). The same behavior as core/application.py's handler, kept here so headless Core never
+    imports the Qt app. Returns the reply in words (an unknown name says so, nothing changes).
+    """
     mission_name = str(arguments.get("mission_name", "")).strip().lower()
     mission = next((m for m in context.missions.all_missions() if m.name.lower() == mission_name), None)
     if mission is None:
@@ -930,6 +990,9 @@ def _action_log_mission_progress(context: AppContext, arguments: dict) -> str:
 
 
 def _action_delete_mission(context: AppContext, arguments: dict) -> str:
+    """Core's voice tool `delete_mission`: deletes the mission whose name matches. The same behavior as core/application.py's handler, kept here so headless Core never
+    imports the Qt app. Returns the reply in words (an unknown name says so, nothing changes).
+    """
     name = str(arguments.get("name", "")).strip().lower()
     match = next((m for m in context.missions.all_missions() if m.name.lower() == name), None)
     if match is None:
@@ -939,6 +1002,9 @@ def _action_delete_mission(context: AppContext, arguments: dict) -> str:
 
 
 def _action_complete_mission(context: AppContext, arguments: dict) -> str:
+    """Core's voice tool `complete_mission`: marks a mission completed (the store credits its rewards). The same behavior as core/application.py's handler, kept here so headless Core never
+    imports the Qt app. Returns the reply in words (an unknown name says so, nothing changes).
+    """
     name = str(arguments.get("name", "")).strip().lower()
     match = next((m for m in context.missions.all_missions() if m.name.lower() == name), None)
     if match is None:
@@ -948,6 +1014,9 @@ def _action_complete_mission(context: AppContext, arguments: dict) -> str:
 
 
 def _action_get_power_status(context: AppContext, arguments: dict) -> str:
+    """Core's voice tool `get_power_status`: battery percent, plugged in or not, and minutes left when known. The same behavior as core/application.py's handler, kept here so headless Core never
+    imports the Qt app. Returns the reply in words (an unknown name says so, nothing changes).
+    """
     status = context.power.read()
     if status is None:
         return "No battery or power status is available on this device."
@@ -959,6 +1028,9 @@ def _action_get_power_status(context: AppContext, arguments: dict) -> str:
 
 
 def _action_get_system_health(context: AppContext, arguments: dict) -> str:
+    """Core's voice tool `get_system_health`: CPU, memory, disk and temperature (on a phone, why it isn't available). The same behavior as core/application.py's handler, kept here so headless Core never
+    imports the Qt app. Returns the reply in words (an unknown name says so, nothing changes).
+    """
     try:
         return format_system_health(read_system_health())
     except RuntimeError as unavailable:  # a phone (DEC-0019)
@@ -966,6 +1038,9 @@ def _action_get_system_health(context: AppContext, arguments: dict) -> str:
 
 
 def _action_recall_recent_activity(context: AppContext, arguments: dict) -> str:
+    """Core's voice tool `recall_recent_activity`: what was recently done (the activity log), all or matching a keyword, newest first. The same behavior as core/application.py's handler, kept here so headless Core never
+    imports the Qt app. Returns the reply in words (an unknown name says so, nothing changes).
+    """
     keyword = str(arguments.get("keyword", "") or "").strip()
     try:
         limit = int(arguments.get("limit", 20) or 20)

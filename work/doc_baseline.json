@@ -62,7 +62,6 @@
   "core/conversation_manager.py": 20,
   "core/conversation_modes.py": 5,
   "core/conversation_state.py": 4,
-  "core/core_runtime.py": 25,
   "core/corrections.py": 6,
   "core/council.py": 5,
   "core/council_floor.py": 2,
