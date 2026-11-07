@@ -18,6 +18,9 @@ from core.record_actions import Field, Record, field_dict, get, parse, record_fo
 
 
 def _lists():
+    """The property type and status choices and the expense categories, imported late so this module loads before the
+    stores.
+    """
     from core.budget_manager import EXPENSE_CATEGORIES
     from core.real_estate_manager import PROPERTY_STATUSES, PROPERTY_TYPES
 
@@ -53,15 +56,18 @@ _CATEGORY = Field("category", "Category", "choice", options=_EXPENSES, default="
 
 
 def _property(context, params):
+    """The property the params name."""
     return get(context, RECORDS["property"], params)
 
 
 def _rent_amount(prop, params):
+    """The rent amount from the params, or the property's monthly rent when blank."""
     raw = params.get("amount")
     return parse(_AMOUNT, raw if raw not in (None, "") else (prop.monthly_rent or None))
 
 
 def _describe_rent(context, params) -> str:
+    """The sentence the approval card shows for `property.rent` (Propose); raises ActionError when it can't be done."""
     from core.region import money
 
     prop = _property(context, params)
@@ -70,6 +76,7 @@ def _describe_rent(context, params) -> str:
 
 
 def _rent(context, params) -> str:
+    """Does `property.rent` once approved, and says what happened. It lands in Money as rental income tagged to the property."""
     from core.region import money
 
     prop = _property(context, params)
@@ -81,6 +88,7 @@ def _rent(context, params) -> str:
 
 
 def _describe_expense(context, params) -> str:
+    """The sentence the approval card shows for `property.expense` (Propose); raises ActionError when it can't be done."""
     from core.region import money
 
     prop = _property(context, params)
@@ -90,6 +98,7 @@ def _describe_expense(context, params) -> str:
 
 
 def _expense(context, params) -> str:
+    """Does `property.expense` once approved, and says what happened. It lands in Money as an expense tagged to the property."""
     prop = _property(context, params)
     _need(context, "budget")
     context.real_estate.record_property_expense(prop.property_id, parse(_AMOUNT, params.get("amount")),
@@ -99,6 +108,7 @@ def _expense(context, params) -> str:
 
 
 def _describe_upkeep(context, params) -> str:
+    """The sentence the approval card shows for `property.track_upkeep` (Propose); raises ActionError when it can't be done. A property already tracked is refused."""
     prop = _property(context, params)
     maintenance = _need(context, "maintenance")
     if prop.maintenance_asset_id and maintenance.get_asset(prop.maintenance_asset_id) is not None:
@@ -107,6 +117,9 @@ def _describe_upkeep(context, params) -> str:
 
 
 def _upkeep(context, params) -> str:
+    """Does `property.track_upkeep` once approved, and says what happened. The property gets its own Maintenance asset, so its tasks live in
+    one place.
+    """
     prop = _property(context, params)
     asset = context.maintenance.add_asset(prop.name, "Property", notes="Its property in Real Estate.")
     context.real_estate.update_property(prop.property_id, maintenance_asset_id=asset.asset_id)
@@ -114,6 +127,7 @@ def _upkeep(context, params) -> str:
 
 
 def _kinds() -> list[ActionType]:
+    """Every Real Estate action kind: the property record kinds and the rent, expense and upkeep kinds."""
     kinds = record_kinds(RECORDS["property"])
     kinds += [
         ActionType("property.rent", "Record rent", {"property_id": "", "amount": "default: its monthly rent", "date": "",
@@ -130,6 +144,7 @@ ACTION_TYPES.update(ESTATE_ACTIONS)
 
 
 def form_spec() -> dict:
+    """The forms the Real Estate screen uses: a property's fields, rent, and an expense."""
     forms = {"property": record_form(RECORDS["property"])}
     forms["rent"] = {"noun": "rent", "id_param": "property_id", "fields": [field_dict(f) for f in (_AMOUNT, _DATE, _WHAT)]}
     forms["expense"] = {"noun": "expense", "id_param": "property_id",

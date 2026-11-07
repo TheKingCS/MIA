@@ -49,12 +49,14 @@ QUOTE = Record("insurance_quote", "quote", "quote_id", "get_quote", "add_quote",
 
 
 def forms() -> dict:
+    """The forms the Insurance screen uses: a policy's fields and a quote's."""
     from core.record_actions import record_form
 
     return {"policy": record_form(POLICY), "quote": record_form(QUOTE)}
 
 
 def _policy(context, params):
+    """The policy the params name, or ActionError."""
     policy = _need(context, "insurance").get_policy(str(params.get("policy_id") or ""))
     if policy is None:
         raise ActionError("That policy isn't there anymore.")
@@ -62,6 +64,7 @@ def _policy(context, params):
 
 
 def _quote(context, params):
+    """The quote the params name and its policy, or ActionError."""
     book = _need(context, "insurance")
     quote = book.get_quote(str(params.get("quote_id") or ""))
     if quote is None:
@@ -70,6 +73,7 @@ def _quote(context, params):
 
 
 def _money(value) -> str:
+    """An amount in the person's currency."""
     from core.region import money
 
     return money(value)
@@ -78,6 +82,7 @@ def _money(value) -> str:
 # -- the quote request (MIA drafts; you press Send)
 
 def _describe_request(context, params) -> str:
+    """The sentence the approval card shows for `insurance.request` (Propose); raises ActionError when it can't be done. MIA drafts; the person presses Send."""
     policy = _policy(context, params)
     if getattr(context, "email_drafts", None) is None:
         raise ActionError("Email drafts aren't available here.")
@@ -86,6 +91,9 @@ def _describe_request(context, params) -> str:
 
 
 def _request(context, params) -> str:
+    """Does `insurance.request` once approved, and says what happened. The quote-request email (with the current coverage) is drafted, never
+    sent.
+    """
     to, subject, body = quote_request(context, _policy(context, params))
     context.email_drafts.create(to, subject, body)
     return "Drafted. Check it, then Send, Copy or open it in your mail app. Ask a few insurers."
@@ -99,6 +107,7 @@ STEPS = ("Get the new policy's start date and documents", "Make sure the new one
 
 
 def _describe_choose(context, params) -> str:
+    """The sentence the approval card shows for `insurance.choose` (Propose); raises ActionError when it can't be done. It says what the quote saves a year and anything it covers less."""
     quote, policy = _quote(context, params)
     cmp = next(q for q in compare(policy, [quote])["quotes"])
     saves = f", saving {_money(cmp['saves'])} a year" if cmp["saves"] > 0 else ""
@@ -107,6 +116,9 @@ def _describe_choose(context, params) -> str:
 
 
 def _choose(context, params) -> str:
+    """Does `insurance.choose` once approved, and says what happened. A mission with the switching steps is made (start the new one before cancelling
+    the old, so there's no gap) and the quote is marked chosen.
+    """
     quote, policy = _quote(context, params)
     missions = getattr(context, "missions", None)
     if missions is not None:
@@ -120,6 +132,7 @@ def _choose(context, params) -> str:
 
 
 def _describe_switched(context, params) -> str:
+    """The sentence the approval card shows for `insurance.switched` (Propose); raises ActionError when it can't be done. It says what it costs now and saves a year."""
     quote, policy = _quote(context, params)
     saved = annual(policy.premium, policy.every) - annual(quote.premium, quote.every)
     said = f" ({_money(saved)} a year less)" if saved > 0 else ""
@@ -128,6 +141,9 @@ def _describe_switched(context, params) -> str:
 
 
 def _switched(context, params) -> str:
+    """Does `insurance.switched` once approved, and says what happened. The policy becomes the quote, its quotes are cleared, and what it saves
+    is recorded in the history.
+    """
     from core import life_events
 
     quote, policy = _quote(context, params)
@@ -143,6 +159,9 @@ def _switched(context, params) -> str:
 
 
 def _register() -> None:
+    """Adds the policy and quote record kinds and the request, choose and switched kinds to ACTION_TYPES. Runs once,
+    when this module is imported.
+    """
     kinds = record_kinds(POLICY) + record_kinds(QUOTE) + [
         ActionType("insurance.request", "Draft A Quote Request", {"policy_id": "the policy"}, _describe_request, _request),
         ActionType("insurance.choose", "Switch To This", {"quote_id": "the quote"}, _describe_choose, _choose),
