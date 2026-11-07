@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 227,193 lines; 1043 files describe themselves; 3,852 of 13,517 classes and functions are documented.
+1043 files, 227,236 lines; 1043 files describe themselves; 3,879 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 101,099 lines; 3,121 of 5,630 classes and functions documented
+367 files, 101,142 lines; 3,148 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -90,7 +90,7 @@
 - `core/council_floor.py`: Who has the floor in the council, and how little it costs (DEC-0080/0081; Zac, 2026-11-04: "the AI need to be able to communicate to each other but in some smart restricted manor as to not needlessly have them eat up the usage. They wont be much of a council if they cant communicate"; `docs/COUNCIL_ *(2 undocumented)*
 - `core/council_session.py`: Council Mode through the glasses (DEC-0081/0082, T-0035; H-0081 1.4; `docs/COUNCIL_AND_CHRONICLES_REVIEW.md` section 4.2). A session is a thread of the council chat (core/council.py) in a mode, the way User Sync is: while it's open, what Zac says through the glasses means something to the council. *(2 undocumented)*
 - `core/council_voices.py`: A voice for every council member (DEC-0082; `docs/COUNCIL_AND_CHRONICLES_REVIEW.md` section 5). Each member in `work/agents.json` has a Kokoro voice (DEC-0051, offline, Apache-2.0); the ones there are placeholders until Zac picks each by ear in the dev window, which plays a sample and saves his choi *(1 undocumented)*
-- `core/craft_actions.py`: The crafting recipes' actions (DEC-0030 phase B, core/craft_recipes.py), on the action contract in core/actions.py: every one is proposed in plain words, approved, run, and can be undone. *(27 undocumented)*
+- `core/craft_actions.py`: The crafting recipes' actions (DEC-0030 phase B, core/craft_recipes.py), on the action contract in core/actions.py: every one is proposed in plain words, approved, run, and can be undone.
 - `core/craft_recipes.py`: Crafting recipes (DEC-0030 phase B; DEC-0028 idea 9): a repeatable physical project (a bench, a planter box, a refinished dresser) saved as a recipe, like crafting in an RPG. Nothing is hardcoded: every recipe is the person's own. *(17 undocumented)*
 - `core/creation_actions.py`: MIA's creations as changes a person approves (DEC-0091; core/actions.py's Propose → Approve → Execute → Record → Undo): *(15 undocumented)*
 - `core/creation_maker.py`: MIA making a screen for something nobody built one for (DEC-0088/0091; ACAF's first maker, `docs/ACAF_REVIEW.md` section 3.5). From a need in plain words ("I want to keep track of the seeds I save"): *(4 undocumented)*

@@ -48,12 +48,14 @@ CRAFT_RECIPE = Record(
 
 
 def _money(x: float) -> str:
+    """An amount in the person's currency."""
     from core.region import money
 
     return money(x)
 
 
 def _recipe(context, params):
+    """The craft recipe the params name, or ActionError."""
     recipe = _need(context, "craft_recipes").get_recipe(str(params.get("recipe_id") or ""))
     if recipe is None:
         raise ActionError("That recipe isn't there anymore.")
@@ -61,6 +63,7 @@ def _recipe(context, params):
 
 
 def _times(params) -> int:
+    """How many to build at once, a whole number from 1 to 100 (1 when blank)."""
     try:
         times = int(float(params.get("times") or 1))
     except (TypeError, ValueError):
@@ -71,6 +74,7 @@ def _times(params) -> int:
 
 
 def _num(params, name: str, label: str) -> float:
+    """A number from the params (0 when blank); ActionError when it isn't a number or is negative."""
     raw = params.get(name)
     if raw in (None, ""):
         return 0.0
@@ -84,6 +88,7 @@ def _num(params, name: str, label: str) -> float:
 
 
 def _qty(x: float) -> str:
+    """A quantity without a trailing .0."""
     return f"{x:g}"
 
 
@@ -111,6 +116,9 @@ def _from_budget(params) -> bool:
 
 
 def _receive_describe(context, params) -> str:
+    """The sentence the approval card shows for `craft.receive` (Propose); raises ActionError when it can't be done. It lists what came in and, unless it came from a receipt already in
+    the Budget (never counted twice), the workshop expense it records.
+    """
     recipe = _recipe(context, params)
     bought = _bought(context, params)
     total = sum(p for _l, _q, p in bought)
@@ -124,6 +132,10 @@ def _receive_describe(context, params) -> str:
 
 
 def _receive(context, params) -> str:
+    """Does `craft.receive` once approved, and says what happened. Each line goes into Materials: a new material, or more of one already there
+    (its unit cost averaged with what was paid). The total becomes one workshop expense unless the receipt is already
+    in the Budget.
+    """
     from core.craft_recipes import average_cost, key
 
     recipe = _recipe(context, params)
@@ -152,6 +164,7 @@ def _receive(context, params) -> str:
 
 
 def _start_describe(context, params) -> str:
+    """The sentence the approval card shows for `craft.start` (Propose); raises ActionError when it can't be done. It warns how many things they're still short of."""
     from core.craft_recipes import check
 
     recipe = _recipe(context, params)
@@ -169,10 +182,12 @@ def _start_describe(context, params) -> str:
 
 
 def _is_batch(recipe) -> bool:
+    """Whether a recipe makes a batch of goods (it has a unit, or makes more than one) rather than one build."""
     return bool(getattr(recipe, "makes_unit", "")) or float(getattr(recipe, "makes", 1) or 1) != 1
 
 
 def _start(context, params) -> str:
+    """Does `craft.start` once approved, and says what happened. A build is a Job, in progress, tied to the recipe and how many."""
     recipe = _recipe(context, params)
     times = _times(params)
     jobs = _need(context, "jobs")
@@ -185,6 +200,7 @@ def _start(context, params) -> str:
 
 
 def _build(context, params):
+    """The build (job) the params name, or ActionError."""
     job = _need(context, "jobs").get_job(str(params.get("job_id") or ""))
     if job is None:
         raise ActionError("That build isn't there anymore.")
@@ -192,6 +208,7 @@ def _build(context, params):
 
 
 def _build_recipe(context, job):
+    """The recipe a build was started from, or ActionError when it's gone."""
     recipe = getattr(context, "craft_recipes", None)
     found = recipe.get_recipe(job.recipe_id) if recipe is not None and job.recipe_id else None
     if found is None:
@@ -200,6 +217,7 @@ def _build_recipe(context, job):
 
 
 def _step_index(context, params) -> tuple:
+    """The build, step index and step text the params name, checked against the recipe's steps."""
     job = _build(context, params)
     steps = _build_recipe(context, job).step_list
     try:
@@ -212,11 +230,13 @@ def _step_index(context, params) -> tuple:
 
 
 def _step_describe(context, params) -> str:
+    """The sentence the approval card shows for `craft.step` (Propose); raises ActionError when it can't be done. Done, or untick."""
     job, i, step = _step_index(context, params)
     return f"{'Untick' if i in job.steps_done else 'Done'}: {step}"
 
 
 def _step(context, params) -> str:
+    """Does `craft.step` once approved, and says what happened."""
     job, i, step = _step_index(context, params)
     done = [s for s in job.steps_done if s != i] if i in job.steps_done else sorted(job.steps_done + [i])
     context.jobs.update_job(job.job_id, steps_done=done)
@@ -224,6 +244,9 @@ def _step(context, params) -> str:
 
 
 def _finishing(context, params) -> tuple:
+    """What finishing a build takes: the build (not already finished), its recipe, the hours, the materials it uses
+    (scaled to how many) and any it can't count (not in stock, or in a unit that won't convert).
+    """
     from core.craft_recipes import uses as recipe_uses
 
     job = _build(context, params)
@@ -237,6 +260,9 @@ def _finishing(context, params) -> tuple:
 
 
 def _finish_describe(context, params) -> str:
+    """The sentence the approval card shows for `craft.finish` (Propose); raises ActionError when it can't be done. It reads out each material from what to what (and any shortfall), the
+    hours, and what it makes.
+    """
     from core.craft_recipes import makes_text
     from core.units import amount_text
 
@@ -257,6 +283,10 @@ def _finish_describe(context, params) -> str:
 
 
 def _finish(context, params) -> str:
+    """Does `craft.finish` once approved, and says what happened. Materials are used up, the product made (created and tied to the recipe the first
+    time), the build marked complete with its hours, and a build_finished life event recorded; a batch also grants
+    XP.
+    """
     from datetime import datetime
 
     from core import life_events
@@ -285,6 +315,9 @@ def _finish(context, params) -> str:
 
 
 def _sale(context, params) -> tuple:
+    """What selling from a build takes: the build (finished, so it has a product), the amount and how many (1 when
+    blank).
+    """
     job = _build(context, params)
     amount = _num(params, "amount", "What it sold for")
     if amount <= 0:
@@ -297,17 +330,20 @@ def _sale(context, params) -> tuple:
 
 
 def _sell_describe(context, params) -> str:
+    """The sentence the approval card shows for `craft.sell` (Propose); raises ActionError when it can't be done."""
     job, amount, _p, quantity = _sale(context, params)
     return f"Sold {_qty(quantity)} from {job.name} for {_money(amount)}"
 
 
 def _sell(context, params) -> str:
+    """Does `craft.sell` once approved, and says what happened. The sale goes in the ledger, linked to the build."""
     job, amount, product_id, quantity = _sale(context, params)
     _need(context, "ledger").record_sale(product_id, quantity, amount, description=f"Sold {job.name}", job_id=job.job_id)
     return f"Sale recorded: {_money(amount)}."
 
 
 def _cost(context, params) -> tuple:
+    """Another cost on a build: the amount, what it was, and a ledger expense category (Materials by default)."""
     from core.ledger_manager import EXPENSE_CATEGORIES
 
     job = _build(context, params)
@@ -321,17 +357,20 @@ def _cost(context, params) -> tuple:
 
 
 def _cost_describe(context, params) -> str:
+    """The sentence the approval card shows for `craft.cost` (Propose); raises ActionError when it can't be done."""
     job, amount, what, _c = _cost(context, params)
     return f"Add a cost to {job.name}: {what}, {_money(amount)}"
 
 
 def _cost_add(context, params) -> str:
+    """Does `craft.cost` once approved, and says what happened. It's a ledger expense tied to the build, so the build's profit counts it."""
     job, amount, what, category = _cost(context, params)
     _need(context, "ledger").add_expense(amount, category, what, job_id=job.job_id)
     return f"Added {_money(amount)} to {job.name}."
 
 
 def _photo_describe(context, params) -> str:
+    """The sentence the approval card shows for `craft.photo_delete` (Propose); raises ActionError when it can't be done."""
     from core.build_media import path_of
 
     job = _build(context, params)
@@ -339,6 +378,7 @@ def _photo_describe(context, params) -> str:
 
 
 def _photo_delete(context, params) -> str:
+    """Does `craft.photo_delete` once approved, and says what happened. (core/build_media.py)."""
     from core.build_media import delete
 
     job = _build(context, params)
@@ -358,6 +398,9 @@ def receive_form(rows: list[dict]) -> list[dict]:
 
 
 def _register() -> None:
+    """Adds the craft recipe record kinds and every build action kind to ACTION_TYPES. Runs once, when this module is
+    imported.
+    """
     kinds = list(record_kinds(CRAFT_RECIPE)) + [
         ActionType("craft.receive", "Bought It", {"recipe_id": "the recipe", "q_<line>": "how many", "c_<line>": "what you paid",
                                                    "receipt": "the receipt it came from (optional)"},
