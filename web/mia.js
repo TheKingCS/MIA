@@ -324,6 +324,12 @@
       : call("GET", "/api/operating-journal"),
     // Power (core/web_power.py, DEC-0125): the battery and the energy sources tracked by hand.
     power: () => read("/api/power", "power"),
+    // The Toolbox (core/web_toolbox.py, DEC-0125): calculators, alarms, tools; a calculator is worked out in core.
+    // The demo can't calculate, so it answers with the example's own result.
+    toolbox: () => read("/api/toolbox", "toolbox"),
+    toolboxCalc: (id, values) => demo
+      ? read("", "toolbox").then((t) => Object.assign({ demo: true }, (t.demo_answers || {})[id] || { error: "The demo can't calculate." }))
+      : call("GET", "/api/toolbox/calc?" + new URLSearchParams(Object.assign({ id }, values)).toString()),
     play: () => demo ? Promise.resolve({ efforts: { easy: 3, moderate: 5, hard: 7 }, lines: [],
       weeks: [60, 90, 45, 120, 75, 100].map((m, i) => ({ week: ["2026-09-28", "2026-10-05", "2026-10-12", "2026-10-19", "2026-10-26", "2026-11-02"][i], played: 2, play_minutes: m, play_load: m * 5, workouts: 2, workout_minutes: 90 })),
       played: [{ id: "g1", what: "Pickup basketball", minutes: 60, effort: 7, effort_word: "Hard", with: [], date: "2026-11-05", load: 420 },

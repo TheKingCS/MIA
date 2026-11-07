@@ -64,7 +64,7 @@ Screens: `docs/design_handoff/screens/<name>.png` (placeholder data).
 | Inbox | Documents to file, email intake | `(none)` | ✅ `/api/inbox` + `inbox.file`, `inbox.dismiss`, `inbox.note`; `/api/inbox/upload` | ✅ send a photo, file or note; the phone's Share menu (phone app); waiting items with MIA's reading, File It (what it's for, total, category, maintenance steps, details), Dismiss, history (email setup stays on the PC) | |
 | Calendar | Events and alarms | `(inside Dashboard/Home)` | |  | |
 | Knowledge | Offline reference library | `knowledge` | ✅ `/api/knowledge`, `/api/knowledge/article` | ✅ the packs, search across every pack, an article read as plain text (2026-11-06) (not yet: installing or deleting a pack, pictures in articles) | |
-| Toolbox | Calculators and conversions | `toolbox` | |  | |
+| Toolbox | Calculators and conversions | `toolbox` | ✅ `/api/toolbox`, `/api/toolbox/calc` (core/web_toolbox.py, math in core/toolbox_calcs.py and core/unit_conversion.py) + alarm.add/switch/delete | ✅ Ohm's law from any two, the unit converter (13 kinds), board feet, concrete volume, worked out in core as you type; alarms (set, on/off, delete); a stopwatch on the page; calendar and inventory linked (2026-11-07) (not yet: inventory on the web, the Qt Toolbox's other tools) | |
 | The Lab | Sensor experiments | `lab` | |  | |
 | Field Kit: Devices | Connected devices | `field_kit__01_devices` | |  | |
 | Field Kit: Scripts | Scripts | `field_kit__02_scripts` | |  | |

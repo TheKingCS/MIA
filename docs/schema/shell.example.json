@@ -283,6 +283,14 @@
       "group": "Knowledge, tools & system"
     },
     {
+      "id": "toolbox",
+      "name": "Toolbox",
+      "icon": "🧰",
+      "tagline": "Quick tools.",
+      "page": "toolbox.html",
+      "group": "Knowledge, tools & system"
+    },
+    {
       "id": "passwords",
       "name": "Passwords",
       "icon": "🔐",
@@ -372,7 +380,6 @@
     }
   ],
   "on_pc_only": [
-    "Toolbox",
     "The Lab",
     "Field Kit",
     "Diagnostics",

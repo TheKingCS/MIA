@@ -2,14 +2,14 @@
 tests.test_unit_converter
 ============================
 
-Unit tests for modules.toolbox.calculators.unit_converter.convert().
+Unit tests for the unit converter's convert() (core/unit_conversion.py; modules.toolbox.calculators.unit_converter re-exports it).
 """
 
 from __future__ import annotations
 
 import pytest
 
-from modules.toolbox.calculators.unit_converter import convert
+from core.unit_conversion import convert  # the tables moved to core (the Qt calculator re-exports them)
 
 
 def test_meters_to_feet():

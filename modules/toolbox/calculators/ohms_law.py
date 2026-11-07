@@ -6,8 +6,9 @@ Ohm's Law — the second CalculatorPlugin (core/calculator_engine.py),
 proving the "solve for any one of several related values" shape of
 calculator (as opposed to unit_converter.py's "convert A to B" shape).
 
-solve() is a free function (not a method), unit-testable without a Qt
-event loop — see tests/test_ohms_law.py. OhmsLawCalculator.build_widget()
+solve() lives in core/toolbox_calcs.py (pure, no Qt, shared with the
+web Toolbox and the calculate_ohms_law voice tool) and is re-exported
+here — see tests/test_ohms_law.py. OhmsLawCalculator.build_widget()
 is the Qt-facing wrapper around it.
 """
 
@@ -24,6 +25,7 @@ from PySide6.QtWidgets import (
 )
 
 from core.calculator_engine import CalculatorPlugin
+from core.toolbox_calcs import solve  # noqa: F401  (re-exported: the math lives in core)
 
 _SOLVE_LABELS = {
     "voltage": "Voltage (V)",
@@ -31,20 +33,6 @@ _SOLVE_LABELS = {
     "resistance": "Resistance (Ω)",
 }
 _SOLVE_UNITS = {"voltage": "V", "current": "A", "resistance": "Ω"}
-
-
-def solve(solve_for: str, voltage: float | None, current: float | None, resistance: float | None) -> float:
-    """
-    Solve V = I × R for whichever of the three `solve_for` names —
-    the other two arguments must be provided (non-None).
-    """
-    if solve_for == "voltage":
-        return current * resistance
-    if solve_for == "current":
-        return voltage / resistance
-    if solve_for == "resistance":
-        return voltage / current
-    raise ValueError(f"Unknown solve_for: {solve_for!r}")
 
 
 class OhmsLawCalculator(CalculatorPlugin):

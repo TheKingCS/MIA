@@ -1,0 +1,415 @@
+{
+  "available": true,
+  "calculators": [
+    {
+      "id": "ohms_law",
+      "name": "Ohm's Law",
+      "category": "Electronics",
+      "about": "Any two of voltage, current and resistance give the third, and the power.",
+      "fields": [
+        {
+          "name": "volts",
+          "label": "Volts (V)",
+          "type": "number",
+          "required": false,
+          "options": [],
+          "default": 12
+        },
+        {
+          "name": "ohms",
+          "label": "Ohms (Ω)",
+          "type": "number",
+          "required": false,
+          "options": [],
+          "default": 220
+        },
+        {
+          "name": "amps",
+          "label": "Amps (A)",
+          "type": "number",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ],
+      "example": {
+        "volts": 12,
+        "ohms": 220
+      }
+    },
+    {
+      "id": "unit_converter",
+      "name": "Unit Converter",
+      "category": "General",
+      "about": "Length, area, volume, weight, temperature, speed, pressure, energy, power, time, data, angle and fuel economy.",
+      "fields": [
+        {
+          "name": "category",
+          "label": "Kind",
+          "type": "choice",
+          "required": false,
+          "options": [
+            "Length",
+            "Area",
+            "Volume",
+            "Weight",
+            "Temperature",
+            "Speed",
+            "Pressure",
+            "Energy",
+            "Power",
+            "Time",
+            "Data Storage",
+            "Angle",
+            "Fuel Economy"
+          ],
+          "default": "Length"
+        },
+        {
+          "name": "value",
+          "label": "Amount",
+          "type": "number",
+          "required": false,
+          "options": [],
+          "default": 1
+        },
+        {
+          "name": "from_unit",
+          "label": "From",
+          "type": "choice",
+          "required": false,
+          "options": [],
+          "default": "Feet (ft)"
+        },
+        {
+          "name": "to_unit",
+          "label": "To",
+          "type": "choice",
+          "required": false,
+          "options": [],
+          "default": "Meters (m)"
+        }
+      ],
+      "units": {
+        "Length": [
+          "Meters (m)",
+          "Feet (ft)",
+          "Yards (yd)",
+          "Inches (in)",
+          "Kilometers (km)",
+          "Miles (mi)"
+        ],
+        "Area": [
+          "Square Meters (m²)",
+          "Square Feet (ft²)",
+          "Square Yards (yd²)",
+          "Acres",
+          "Hectares",
+          "Square Kilometers (km²)",
+          "Square Miles (mi²)"
+        ],
+        "Volume": [
+          "Liters (L)",
+          "Milliliters (mL)",
+          "US Gallons (gal)",
+          "US Quarts (qt)",
+          "US Pints (pt)",
+          "US Cups (cup)",
+          "US Fluid Ounces (fl oz)",
+          "US Tablespoons (tbsp)",
+          "US Teaspoons (tsp)"
+        ],
+        "Weight": [
+          "Kilograms (kg)",
+          "Pounds (lb)",
+          "Grams (g)",
+          "Ounces (oz)"
+        ],
+        "Temperature": [
+          "Celsius (°C)",
+          "Fahrenheit (°F)",
+          "Kelvin (K)"
+        ],
+        "Speed": [
+          "Meters/Second (m/s)",
+          "Kilometers/Hour (km/h)",
+          "Miles/Hour (mph)",
+          "Feet/Second (ft/s)",
+          "Knots (kn)"
+        ],
+        "Pressure": [
+          "Pascals (Pa)",
+          "Kilopascals (kPa)",
+          "Bar",
+          "PSI",
+          "Atmospheres (atm)",
+          "mmHg"
+        ],
+        "Energy": [
+          "Joules (J)",
+          "Kilojoules (kJ)",
+          "Calories (cal)",
+          "Kilocalories (kcal)",
+          "Watt-hours (Wh)",
+          "Kilowatt-hours (kWh)",
+          "BTU"
+        ],
+        "Power": [
+          "Watts (W)",
+          "Kilowatts (kW)",
+          "Horsepower (hp)",
+          "BTU/Hour"
+        ],
+        "Time": [
+          "Seconds (s)",
+          "Minutes (min)",
+          "Hours (hr)",
+          "Days",
+          "Weeks"
+        ],
+        "Data Storage": [
+          "Bytes (B)",
+          "Kilobytes (KB)",
+          "Megabytes (MB)",
+          "Gigabytes (GB)",
+          "Terabytes (TB)"
+        ],
+        "Angle": [
+          "Degrees (°)",
+          "Radians (rad)",
+          "Gradians (grad)"
+        ],
+        "Fuel Economy": [
+          "Kilometers/Liter (km/L)",
+          "Miles/Gallon (mpg)",
+          "Liters/100km (L/100km)"
+        ]
+      },
+      "example": {
+        "category": "Volume",
+        "value": 5,
+        "from_unit": "US Gallons (gal)",
+        "to_unit": "Liters (L)"
+      }
+    },
+    {
+      "id": "board_feet",
+      "name": "Board Feet",
+      "category": "Woodworking",
+      "about": "Nominal thickness × width in inches × length in feet ÷ 12, times how many.",
+      "fields": [
+        {
+          "name": "thickness_in",
+          "label": "Thickness (in)",
+          "type": "number",
+          "required": false,
+          "options": [],
+          "default": 2
+        },
+        {
+          "name": "width_in",
+          "label": "Width (in)",
+          "type": "number",
+          "required": false,
+          "options": [],
+          "default": 4
+        },
+        {
+          "name": "length_ft",
+          "label": "Length (ft)",
+          "type": "number",
+          "required": false,
+          "options": [],
+          "default": 8
+        },
+        {
+          "name": "count",
+          "label": "How many",
+          "type": "number",
+          "required": false,
+          "options": [],
+          "default": 1
+        }
+      ],
+      "example": {
+        "thickness_in": 2,
+        "width_in": 6,
+        "length_ft": 8,
+        "count": 10
+      }
+    },
+    {
+      "id": "concrete",
+      "name": "Concrete Volume",
+      "category": "Building",
+      "about": "A slab or pad in cubic yards with 10% extra, and the bags of premix.",
+      "fields": [
+        {
+          "name": "length_ft",
+          "label": "Length (ft)",
+          "type": "number",
+          "required": false,
+          "options": [],
+          "default": 10
+        },
+        {
+          "name": "width_ft",
+          "label": "Width (ft)",
+          "type": "number",
+          "required": false,
+          "options": [],
+          "default": 10
+        },
+        {
+          "name": "thickness_in",
+          "label": "Thickness (in)",
+          "type": "number",
+          "required": false,
+          "options": [],
+          "default": 4
+        }
+      ],
+      "example": {
+        "length_ft": 10,
+        "width_ft": 10,
+        "thickness_in": 4
+      }
+    }
+  ],
+  "alarms": [
+    {
+      "id": "a1",
+      "label": "Wake up",
+      "time": "06:30",
+      "repeat": "Weekdays",
+      "on": true
+    },
+    {
+      "id": "a2",
+      "label": "Feed the hens",
+      "time": "17:00",
+      "repeat": "Every day",
+      "on": false
+    }
+  ],
+  "alarms_on": 1,
+  "can_alarm": true,
+  "forms": {
+    "alarm": {
+      "fields": [
+        {
+          "name": "label",
+          "label": "What it's for",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": "Alarm"
+        },
+        {
+          "name": "time",
+          "label": "Time (7:30, 6:15 pm...)",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "repeat",
+          "label": "Repeat",
+          "type": "choice",
+          "required": false,
+          "options": [
+            "Once",
+            "Every day",
+            "Weekdays",
+            "Weekends"
+          ],
+          "default": "Once"
+        }
+      ]
+    }
+  },
+  "tools": [
+    {
+      "id": "stopwatch",
+      "name": "Stopwatch",
+      "note": "Start, lap and reset, right here.",
+      "where": "here"
+    },
+    {
+      "id": "calendar",
+      "name": "Calendar",
+      "note": "Everything with a date.",
+      "where": "calendar.html"
+    },
+    {
+      "id": "inventory",
+      "name": "Inventory",
+      "note": "34 items. On the PC, or ask MIA.",
+      "where": "pc",
+      "ask": "What's in my inventory?"
+    }
+  ],
+  "demo_answers": {
+    "ohms_law": {
+      "answer": "Current: 54.5 mA",
+      "solved": "amps",
+      "lines": [
+        [
+          "Voltage",
+          "12 V"
+        ],
+        [
+          "Current",
+          "54.5 mA"
+        ],
+        [
+          "Resistance",
+          "220 Ω"
+        ],
+        [
+          "Power",
+          "655 mW"
+        ]
+      ],
+      "note": ""
+    },
+    "unit_converter": {
+      "answer": "5 gal = 18.9271 L",
+      "lines": [],
+      "note": ""
+    },
+    "board_feet": {
+      "answer": "80 board feet (8 each)",
+      "lines": [
+        [
+          "Each",
+          "8 bd ft"
+        ],
+        [
+          "Total",
+          "80 bd ft"
+        ]
+      ],
+      "note": "Priced by the board foot? Multiply the total by the price."
+    },
+    "concrete": {
+      "answer": "1.36 cu yd",
+      "lines": [
+        [
+          "Cubic feet",
+          "36.67"
+        ],
+        [
+          "80 lb bags",
+          "62"
+        ],
+        [
+          "60 lb bags",
+          "82"
+        ]
+      ],
+      "note": "Includes 10% extra. Over about a cubic yard, ready-mix delivery is usually easier than bags."
+    }
+  }
+}

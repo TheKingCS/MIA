@@ -1,6 +1,10 @@
 {
  "about": "core/loop_coverage.py (DEC-0101): every process MIA has, with a loop or a reason. status: todo (needs a loop), proposed (a task drafts it), none (why: no loop needed).",
  "processes": {
+  "action:alarm": {
+   "status": "none",
+   "why": "alarms set, switched and deleted by hand (Toolbox, DEC-0125): her own clock times, nothing of MIA's to improve"
+  },
   "action:app": {
    "status": "none",
    "why": "which apps show and which are favourites is their own choice; MIA judges nothing in it"
