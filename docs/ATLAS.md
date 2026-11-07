@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1069 files, 237,847 lines; 1069 files describe themselves; 7,246 of 13,808 classes and functions are documented.
+1069 files, 237,881 lines; 1069 files describe themselves; 7,280 of 13,808 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -524,7 +524,7 @@
 
 ## modules/: the desktop's apps, one folder each
 
-93 files, 22,606 lines; 841 of 1,030 classes and functions documented
+93 files, 22,640 lines; 875 of 1,030 classes and functions documented
 
 - `modules/__init__.py`: Every feature of MIA (Assistant, Files, Notes, Maps, etc.) lives here as an independent package. Each module package must:
 - `modules/assistant/__init__.py`: The assistant app's package: its screen and behaviour are in module.py (Assistant Chat UI — docs/ROADMAP.md milestones 5.2 (text chat), 5.3 (voice), 5.4 (device-help grounding), and 5.5 (tool use / action execution). A chat screen (). core/module_manager.py finds it by that file.
@@ -557,7 +557,7 @@
 - `modules/inbox/__init__.py`: The inbox app's package: its screen and behaviour are in module.py (Inbox: the document inbox's screen (2026-09-28). Receipts, manuals, warranties and other documents that were dropped in the inbox folder, sent from the phone, o). core/module_manager.py finds it by that file.
 - `modules/inbox/module.py`: Inbox: the document inbox's screen (2026-09-28). Receipts, manuals, warranties and other documents that were dropped in the inbox folder, sent from the phone, or emailed in, each with MIA's reading of it: what it is, which of your things it's for, the receipt's total/date store, the manual's mainten
 - `modules/kitchen/__init__.py`: The kitchen app's package: its screen and behaviour are in module.py (Kitchen: recipes, a pantry/inventory list, a grocery list, a meal log, and suggestions — which recipes are makeable right now from what's in the pantry, and add). core/module_manager.py finds it by that file.
-- `modules/kitchen/module.py`: Kitchen: recipes, a pantry/inventory list, a grocery list, a meal log, and suggestions — which recipes are makeable right now from what's in the pantry, and adding a recipe's missing ingredients to the grocery list in one action. All persistence/reporting logic lives in core/kitchen_manager.py (self *(34 undocumented)*
+- `modules/kitchen/module.py`: Kitchen: recipes, a pantry/inventory list, a grocery list, a meal log, and suggestions — which recipes are makeable right now from what's in the pantry, and adding a recipe's missing ingredients to the grocery list in one action. All persistence/reporting logic lives in core/kitchen_manager.py (self
 - `modules/knowledge/__init__.py`: The knowledge app's package: its screen and behaviour are in module.py (Knowledge: the Reference Library's UI (docs/ROADMAP.md milestone 4.2), replacing the earlier placeholder. A pack list (every .zim file core.reference_library_ma). core/module_manager.py finds it by that file.
 - `modules/knowledge/module.py`: Knowledge: the Reference Library's UI (docs/ROADMAP.md milestone 4.2), replacing the earlier placeholder. A pack list (every .zim file core.reference_library_manager.ReferenceLibraryManager discovers) and, per pack, a reader screen: an in-pack search box plus a modules.knowledge.zim_text_browser.Zim
 - `modules/knowledge/zim_text_browser.py`: ZimTextBrowser: a QTextBrowser that resolves "zim://<pack_id>/<entry_path>" URLs against core.reference_library_manager.ReferenceLibraryManager instead of the filesystem/network QTextBrowser normally expects.
