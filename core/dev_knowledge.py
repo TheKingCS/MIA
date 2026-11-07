@@ -55,10 +55,14 @@ class KnowledgeError(ValueError):
 
 
 def _slug(title: str) -> str:
+    """A title as a short file-name slug (letters, digits and dashes, at most 48), or entry."""
     return re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")[:48] or "entry"
 
 
 def _parse(text: str) -> Optional[dict]:
+    """An entry file as a dict: its front matter (concerns and from as lists) and its body; None without front
+    matter.
+    """
     m = re.match(r"^---\n(.*?)\n---\n?(.*)$", text.replace("\r\n", "\n"), re.S)
     if not m:
         return None
@@ -73,6 +77,7 @@ def _parse(text: str) -> Optional[dict]:
 
 
 def entries(folder: Path = KNOWLEDGE) -> list[dict]:
+    """Every entry in the vault (K-*.md), oldest first, each with the file it's in."""
     out = []
     for path in sorted(Path(folder).glob("K-*.md")) if Path(folder).exists() else []:
         found = _parse(path.read_text(encoding="utf-8"))
@@ -112,6 +117,7 @@ def add(kind: str, title: str, body: str, refs: list[str], concerns: list[str] =
 
 
 def _mark(entry_id: str, status: str, folder: Path) -> None:
+    """Sets an entry's status line (superseded, confirmed) in place."""
     for path in Path(folder).glob(f"{entry_id}-*.md"):
         text = path.read_text(encoding="utf-8")
         atomic_write_text(path, re.sub(r"^status: \w+$", f"status: {status}", text, count=1, flags=re.M))
@@ -209,6 +215,10 @@ The record:
 
 
 def _record(task, events: list[dict]) -> tuple[str, list[str]]:
+    """A finished task's record for the retrospective, and the sources it may cite: the task, its files and body,
+    then every step of its history (cut to fit), with the reviews, resolutions, commits and lab proposals named in
+    it as refs.
+    """
     refs = [f"task:{task.id}"] + [f"dec:{d}" for d in getattr(task, "decisions", [])]
     lines = [f"Task {task.id}: {task.title}", f"Files: {', '.join(task.files)}", (task.body or "")[:2500], "", "History:"]
     for e in events:
@@ -226,6 +236,7 @@ def _record(task, events: list[dict]) -> tuple[str, list[str]]:
 
 
 def _ollama(prompt: str, schema: dict) -> str:
+    """Asks the local model (qwen2.5:14b, through Ollama) with a JSON schema for its reply; returns what it said."""
     import urllib.request
 
     body = json.dumps({"model": MODEL, "prompt": prompt, "stream": False, "format": schema,

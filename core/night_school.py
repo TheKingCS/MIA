@@ -88,6 +88,9 @@ CHOOSE_BOUND = 0.6
 # ------------------------------------------------------------------ settings and records
 
 def settings(path: Path = SETTINGS) -> dict:
+    """Night School's settings (work/night_school.json) over the defaults: unknown keys are ignored, and a mode
+    that isn't plan or self becomes plan.
+    """
     try:
         found = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
@@ -99,10 +102,12 @@ def settings(path: Path = SETTINGS) -> dict:
 
 
 def _store() -> DevStore:
+    """Where the nights are kept (data/dev/night_school)."""
     return DevStore(DEV_DATA / "night_school")
 
 
 def nights(days: Optional[int] = None, store: Optional[DevStore] = None) -> list[dict]:
+    """The kept nights (the latest 400), or only those of the last `days` days."""
     rows = (store or _store()).tail(400)
     if days is None:
         return rows
@@ -214,6 +219,7 @@ def _json_in(text: str) -> dict:
 
 
 def _paths(files) -> list[str]:
+    """An exercise's file paths in one form: forward slashes, no leading ./."""
     out = []
     for f in files or []:
         f = str(f).replace("\\", "/")
@@ -331,6 +337,7 @@ def _teacher(order: list[str], used: int, budget: int) -> Optional[str]:
 
 
 def _default_ask(provider: str, prompt: str) -> str:
+    """Asks a teacher (a provider by name) a prompt, through the review machinery; returns its reply."""
     from core.work_review import ask_provider
 
     return ask_provider(provider, prompt, purpose="night school")
@@ -692,6 +699,7 @@ def night(now: Optional[datetime] = None, *, ask: Optional[Callable[[str, str], 
 # ------------------------------------------------------------------ starting it at night
 
 def _marker(day: str) -> Path:
+    """The file that says a night was started on a day, so it starts only once."""
     return DEV_DATA / "night_school" / f"started-{day}"
 
 

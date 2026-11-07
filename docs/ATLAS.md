@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1060 files, 233,850 lines; 1060 files describe themselves; 5,968 of 13,690 classes and functions are documented.
+1060 files, 233,869 lines; 1060 files describe themselves; 5,980 of 13,690 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-374 files, 106,767 lines; 5,187 of 5,753 classes and functions documented
+374 files, 106,786 lines; 5,199 of 5,753 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -106,7 +106,7 @@
 - `core/data_recovery.py`: One shared helper for the visible half of data-corruption recovery. Every core/*_manager.py's own `_load()` already falls back to an empty state on a malformed JSON file (correct — the app must never fail to boot or fail to open a screen over one bad file) and logs the failure. But a log line nobody
 - `core/debt_math.py`: Pure logic (DEC-0052, the "debts" question plan): when each debt is paid off at the current payments, the interest it costs, and what an extra amount a month changes. MIA never asks the model to do this arithmetic. *(3 undocumented)*
 - `core/dev_checks.py`: The development checks that need a real run (build plan step 2, DEC-0094): the measures behind the loops `dev.suite`, `dev.suite_time`, `dev.reverts`, `dev.vulnerable` and `dev.outdated` in core/loops.py. *(5 undocumented)*
-- `core/dev_knowledge.py`: The Development Knowledge Vault (DEC-0073; `docs/DEVELOPMENTAL_INDEPENDENCE_REVIEW.md` section 4.1): what the team learned building MIA, kept so MIA and every agent can use it, and so MIA can one day do the work without them. *(6 undocumented)*
+- `core/dev_knowledge.py`: The Development Knowledge Vault (DEC-0073; `docs/DEVELOPMENTAL_INDEPENDENCE_REVIEW.md` section 4.1): what the team learned building MIA, kept so MIA and every agent can use it, and so MIA can one day do the work without them.
 - `core/dev_lab.py`: MIA's development lab (DEC-0058; the ROADMAP's self-modification stages 2 and 3; docs/INSPECTION_AND_SELF_PLAN.md section 6). MIA proposes an improvement; the change is written and tested in an isolated copy; it reaches the running MIA only when Zac approves.
 - `core/dev_ledger.py`: What MIA (and every member of the council) can be trusted with, measured (DEC-0075, T-0028; `docs/DEVELOPMENTAL_INDEPENDENCE_REVIEW.md` section 5). *(1 undocumented)*
 - `core/dev_map.py`: MIA's architecture and her branches of growth, derived from the code and the history (DEC-0078, T-0029; `docs/DEVELOPMENTAL_INDEPENDENCE_REVIEW.md` section 6.2). Never hand-drawn: read from the repository with Python's own `ast`, so nothing is run. *(2 undocumented)*
@@ -234,7 +234,7 @@
 - `core/music_manager.py`: Local audio library + playlists + real playback for the Music module (modules/music/module.py) — 2026-09-09. Replaces the pure-placeholder Music stub, closing the last remaining "pure stub module" in this project.
 - `core/my_files.py`: Files on the web (Zac, 2026-10-16: the Files app was empty on the phone). Each person has their own MIA files folder, `my_files/` inside their own data folder (core/personal_data.py), the same folder as their journal: upload from the phone, open, make folders, rename, delete. It is never the compute
 - `core/navigation_web.py`: Navigation's web screen (web/navigation.html): the waypoints with their grid references (core/geo_grid.py, MGRS), the distance and bearing from one to another, and the sun and moon at one of them on a day. The same reading as the desktop's Navigation module (modules/navigation), assembled here so th
-- `core/night_school.py`: Night School (DEC-0100; Zac, 2026-11-06: "MIAs night school module where she spends time every night with Claude learning how to build herself into the best version of herself, doing tests, building her skills and proving her capabilities. I want that happening asap."). The full design is `docs/NIGH *(6 undocumented)*
+- `core/night_school.py`: Night School (DEC-0100; Zac, 2026-11-06: "MIAs night school module where she spends time every night with Claude learning how to build herself into the best version of herself, doing tests, building her skills and proving her capabilities. I want that happening asap."). The full design is `docs/NIGH
 - `core/notification_manager.py`: A system-wide notification service any module can raise an alert through — low battery, backup complete, a medication reminder, a weather warning, etc. — without needing to know anything about how notifications are displayed.
 - `core/nutrition.py`: A recipe's nutrition facts per serving (DEC-0020): what the person typed into the recipe wins, nutrient by nutrient; the rest is worked out from its ingredients with MIA's built-in food table (core/food_table.py). Each answer says where it came from, so a screen can show "from your recipe" or "worke
 - `core/obligation_actions.py`: Obligations' actions (DEC-0040, core/obligations.py) on the action contract: proposed in plain words, approved, run, undoable. Grown-ups only (money and legal matters).
