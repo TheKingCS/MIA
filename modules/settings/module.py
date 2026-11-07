@@ -81,12 +81,14 @@ _VOICE_PREVIEW_TEXT = "Hi, I'm MIA This is what I sound like."
 
 
 class SettingsModule(ModuleBase):
+    """The Settings app (desktop): the account (switch user, rename, password, email), display (text size, contrast, theme), focus and setup questions, starter sets and imports, phone access, how MIA reaches out (breaks, daily limit, support style, reflection), region and currency, the trusted contact, voice and volume, backup and restore, and update packages. A child sees a smaller version."""
     module_id = "settings"
     display_name = "Settings"
     description = "Configure MIA — theme, user info, module options."
     icon = "⚙"  # gear
 
     def __init__(self, context) -> None:
+        """Nothing built yet and no voice preview playing."""
         super().__init__(context)
         self._status_label: QLabel | None = None
         self._tts_worker: Optional[TTSWorker] = None
@@ -127,11 +129,13 @@ class SettingsModule(ModuleBase):
         return widget
 
     def _on_starter_clicked(self) -> None:
+        """Opens the starter sets (ready-made chores, routines and upkeep for a kind of life)."""
         from gui.starter_dialog import StarterDialog
 
         StarterDialog(self.context).exec()
 
     def get_widget(self) -> QWidget:
+        """The page, every section in order; a child account gets its own smaller page instead."""
         from core.child_accounts import is_child
 
         if self.context.profiles is not None and is_child(self.context):
@@ -505,6 +509,7 @@ class SettingsModule(ModuleBase):
         self.context.events.publish("profile.switch_requested")
 
     def _on_rename_profile_clicked(self) -> None:
+        """Renames the signed-in profile from the dialog."""
         profile = self.context.profiles.get_active_profile() if self.context.profiles else None
         if profile is None:
             QMessageBox.information(None, "No Active Profile", "There's no active profile to rename.")
@@ -518,14 +523,17 @@ class SettingsModule(ModuleBase):
         self._account_desc_label.setText(f"Signed in as {dialog.entered_name}.")
 
     def _on_text_size_changed(self) -> None:
+        """Saves this person's text size and tells every screen the display changed."""
         person_settings.put(self.context, "display.text_size", self._text_size_combo.currentData())
         self.context.events.publish("display.changed")
 
     def _on_contrast_toggled(self, checked: bool) -> None:
+        """Saves this person's high-contrast choice and tells every screen."""
         person_settings.put(self.context, "display.high_contrast", bool(checked))
         self.context.events.publish("display.changed")
 
     def _on_focus_changed(self) -> None:
+        """Applies a focus preset (which apps show in this person's sidebar), or none."""
         focus_id = self._focus_combo.currentData()
         if focus_id:
             focus_presets.apply_focus(self.context, focus_id)
@@ -533,6 +541,7 @@ class SettingsModule(ModuleBase):
             focus_presets.apply(self.context, focus_presets.Recommendation("", [], []))
 
     def _on_setup_questions_clicked(self) -> None:
+        """Asks the setup questions again, then shows the focus they led to."""
         from gui.onboarding_dialog import OnboardingDialog, module_names
 
         profile = self.context.profiles.get_active_profile() if self.context.profiles else None
@@ -545,6 +554,7 @@ class SettingsModule(ModuleBase):
         self._focus_combo.blockSignals(False)
 
     def _on_import_clicked(self) -> None:
+        """Imports a calendar (.ics), contacts (.vcf) or bank statement (.csv) picked from disk and says what came in (a bank's categories are guesses to check); it can be undone."""
         from core import imports
 
         path, _ = QFileDialog.getOpenFileName(
@@ -563,17 +573,20 @@ class SettingsModule(ModuleBase):
         QMessageBox.information(None, "Import", f"{summary.describe()}{extra} Say \"undo that\" to take it back.")
 
     def _on_check_setup_clicked(self) -> None:
+        """Opens the setup check (what's installed and working on this computer)."""
         from gui.setup_check_dialog import SetupCheckDialog
 
         SetupCheckDialog(self.context).exec()
 
     def _on_sending_email_clicked(self) -> None:
+        """Sets up how this person's drafts can be sent (MIA never sends on her own)."""
         from gui.email_draft_dialog import SendingSetupDialog
 
         profile = self.context.profiles.get_active_profile() if self.context.profiles else None
         SendingSetupDialog(self.context, profile.profile_id if profile else None).exec()
 
     def _on_account_clicked(self) -> None:
+        """Opens the signed-in person's account (email, household)."""
         from gui.account_dialogs import AccountDialog
 
         profile = self.context.profiles.get_active_profile() if self.context.profiles else None
@@ -630,6 +643,7 @@ class SettingsModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _on_theme_changed(self) -> None:
+        """Saves the theme and tells the window to restyle."""
         theme_id = self._theme_combo.currentData()
         if theme_id is None:
             return
@@ -642,6 +656,7 @@ class SettingsModule(ModuleBase):
         self._set_status(f"Theme changed to {THEME_DISPLAY_NAMES[theme_id]}.")
 
     def _on_device_profile_changed(self) -> None:
+        """Saves which edition this computer is (Core or Home)."""
         profile_id = self._profile_combo.currentData()
         if profile_id is None:
             return
@@ -654,6 +669,7 @@ class SettingsModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_phone_section(self, outer: QVBoxLayout) -> None:
+        """The phone section: Let my phone reach MIA, its status, Check Again and Copy Tailscale Command."""
         phone_section = QLabel("Phone Access")
         phone_section.setObjectName("SettingsSectionHeader")
         outer.addWidget(phone_section)
@@ -687,6 +703,7 @@ class SettingsModule(ModuleBase):
         self._refresh_phone_status()
 
     def _on_phone_toggled(self, checked: bool) -> None:
+        """Turns phone access on or off, then shows where it stands."""
         server = self.context.phone_server
         if server is None:
             return
@@ -696,6 +713,7 @@ class SettingsModule(ModuleBase):
         self._refresh_phone_status()
 
     def _refresh_phone_status(self) -> None:
+        """Shows phone access as checks: whether MIA is listening (and on which port), whether a profile has a password for phone sign-in, Tailscale's state and the phone address, and when the phone last connected; the copy button only when Tailscale runs but isn't serving MIA yet."""
         server = self.context.phone_server
         if server is None:
             self._phone_status_label.setText("Phone access isn't available in this mode.")
@@ -707,6 +725,7 @@ class SettingsModule(ModuleBase):
         self._copy_serve_button.setVisible(bool(tailscale and tailscale.running and not tailscale.serving_mia))
 
     def _on_copy_serve_command(self) -> None:
+        """Copies the Tailscale command that serves MIA to the phone, and says to paste it then check again."""
         server = self.context.phone_server
         port = server.port if server is not None else DEFAULT_PORT
         QApplication.clipboard().setText(serve_command(port))
@@ -715,6 +734,7 @@ class SettingsModule(ModuleBase):
         )
 
     def _refresh_breaks(self) -> None:
+        """Shows which kinds of message MIA is taking a break from (because they kept being dismissed) and until when, with Resume."""
         gate = self.context.communication
         paused = gate.paused() if gate is not None else []
         if paused:
@@ -726,6 +746,7 @@ class SettingsModule(ModuleBase):
         self._resume_breaks_button.setVisible(bool(paused))
 
     def _on_resume_breaks(self) -> None:
+        """Ends every break, so those messages can come again."""
         gate = self.context.communication
         if gate is not None:
             for p in gate.paused():
@@ -733,26 +754,33 @@ class SettingsModule(ModuleBase):
         self._refresh_breaks()
 
     def _on_ask_support_toggled(self, checked: bool) -> None:
+        """Saves whether MIA asks what kind of support this person wants."""
         person_settings.put(self.context, "assistant.ask_support_kind", bool(checked))
 
     def _on_reflection_toggled(self, checked: bool) -> None:
+        """Saves whether this person gets the weekly reflection."""
         person_settings.put(self.context, "journal.weekly_reflection", bool(checked))
 
     def _on_daily_budget_changed(self, value: int) -> None:
+        """Saves how many unprompted messages a day this person wants at most."""
         person_settings.put(self.context, "communication.daily_budget", int(value))
 
     def _on_country_changed(self) -> None:
+        """Saves this person's country (crisis numbers, dates, money) and applies it."""
         person_settings.put(self.context, "region.country", self._country_combo.currentData())
         region_module.use_for(self.context)
 
     def _on_currency_changed(self) -> None:
+        """Saves this person's currency (none: the country's) and applies it."""
         person_settings.put(self.context, "region.currency", self._currency_combo.currentData() or None)
         region_module.use_for(self.context)
 
     def _on_trusted_contact_changed(self) -> None:
+        """Saves this person's trusted contact for a crisis."""
         person_settings.put(self.context, "assistant.safety.trusted_contact", self._trusted_contact_edit.text().strip())
 
     def _on_voice_changed(self) -> None:
+        """Switches MIA's voice (says so when its model file is missing) and plays a sample."""
         voice_id = self._voice_combo.currentData()
         if voice_id is None or self.context.voice is None:
             return
@@ -764,6 +792,7 @@ class SettingsModule(ModuleBase):
         self._speak_preview()
 
     def _on_ai_voice_effect_toggled(self, checked: bool) -> None:
+        """Turns the AI voice effect on or off and plays a sample."""
         self.context.config.set("voice.ai_voice_effect", checked)
         self.context.config.save()
         self._set_status("AI Voice Effect " + ("on." if checked else "off."))
@@ -773,9 +802,11 @@ class SettingsModule(ModuleBase):
         # Just updates the live "N%" label while dragging — the actual
         # save + spoken preview only happens on release (see below), so
         # dragging the slider doesn't re-synthesize/replay on every tick.
+        """Shows the volume while the slider moves."""
         self._volume_value_label.setText(f"{value}%")
 
     def _on_volume_slider_released(self) -> None:
+        """Saves the volume where the slider was let go and plays a sample."""
         volume = self._volume_slider.value() / 100.0
         self.context.config.set("voice.playback_volume", volume)
         self.context.config.save()
@@ -783,6 +814,7 @@ class SettingsModule(ModuleBase):
         self._speak_preview()
 
     def _speak_preview(self) -> None:
+        """Plays a short sample in the current voice, in the background (one at a time)."""
         if self.context.voice is None or self._tts_worker is not None:
             return
         output_path = Path(tempfile.gettempdir()) / "mia_voice_preview.wav"
@@ -791,11 +823,13 @@ class SettingsModule(ModuleBase):
         self._tts_worker.start()
 
     def _on_tts_finished(self) -> None:
+        """The sample is done: the worker let go."""
         if self._tts_worker is not None:
             self._tts_worker.deleteLater()
             self._tts_worker = None
 
     def _on_backup_clicked(self) -> None:
+        """Makes a backup where the person chooses: encrypted (.miabackup) with a passphrase, else a .zip; says where, or why not."""
         dialog = BackupPassphraseDialog(None)
         if dialog.exec() != BackupPassphraseDialog.DialogCode.Accepted:
             return
@@ -825,6 +859,7 @@ class SettingsModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _on_restore_clicked(self) -> None:
+        """Restores a backup picked from disk (asking for its passphrase when encrypted) after warning that it overwrites the current config and data and can't be undone; MIA needs a restart after."""
         source, _ = QFileDialog.getOpenFileName(
             None, "Select Backup File", "", "MIA Backup (*.zip *.miabackup);;All Files (*)"
         )
@@ -864,6 +899,7 @@ class SettingsModule(ModuleBase):
             self._set_status("Restore failed — see error dialog.")
 
     def _set_status(self, text: str) -> None:
+        """Shows a line in the status bar."""
         if self._status_label is not None:
             self._status_label.setText(text)
 
@@ -872,6 +908,7 @@ class SettingsModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _on_apply_update_clicked(self) -> None:
+        """Applies an update package after showing what it says it is and warning that it overwrites MIA's own files unreviewed; says how many files changed and whether a rollback commit was made; MIA needs a restart after."""
         source, _ = QFileDialog.getOpenFileName(
             None, "Select Update Package", "", "MIA Update Package (*.zip);;All Files (*)"
         )

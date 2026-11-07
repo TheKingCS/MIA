@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1069 files, 237,881 lines; 1069 files describe themselves; 7,280 of 13,808 classes and functions are documented.
+1069 files, 237,918 lines; 1069 files describe themselves; 7,317 of 13,808 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -524,7 +524,7 @@
 
 ## modules/: the desktop's apps, one folder each
 
-93 files, 22,640 lines; 875 of 1,030 classes and functions documented
+93 files, 22,677 lines; 912 of 1,030 classes and functions documented
 
 - `modules/__init__.py`: Every feature of MIA (Assistant, Files, Notes, Maps, etc.) lives here as an independent package. Each module package must:
 - `modules/assistant/__init__.py`: The assistant app's package: its screen and behaviour are in module.py (Assistant Chat UI — docs/ROADMAP.md milestones 5.2 (text chat), 5.3 (voice), 5.4 (device-help grounding), and 5.5 (tool use / action execution). A chat screen (). core/module_manager.py finds it by that file.
@@ -594,7 +594,7 @@
 - `modules/relationships/__init__.py`: The relationships app's package: its screen and behaviour are in module.py (Relationship Profiles and Pet Profiles — docs/VISION.md's own "structured extensions" of Memory Palace. All persistence lives in core/relationships_manager.py (). core/module_manager.py finds it by that file.
 - `modules/relationships/module.py`: Relationship Profiles and Pet Profiles — docs/VISION.md's own "structured extensions" of Memory Palace. All persistence lives in core/relationships_manager.py (self.context.relationships) — this module is the Qt-facing wrapper around it, same split as every other data-backed module here.
 - `modules/settings/__init__.py`: The settings app's package: its screen and behaviour are in module.py (Settings: Backup/Restore (docs/ROADMAP.md milestone 2.7) — export import config + the data directory (profiles, notifications, etc.), optionally passphrase-encr). core/module_manager.py finds it by that file.
-- `modules/settings/module.py`: Settings: Backup/Restore (docs/ROADMAP.md milestone 2.7) — export import config + the data directory (profiles, notifications, etc.), optionally passphrase-encrypted via core/secrets_manager.py — Update Manager (milestone 2.8) — apply an offline update package onto the running installation, see docs *(37 undocumented)*
+- `modules/settings/module.py`: Settings: Backup/Restore (docs/ROADMAP.md milestone 2.7) — export import config + the data directory (profiles, notifications, etc.), optionally passphrase-encrypted via core/secrets_manager.py — Update Manager (milestone 2.8) — apply an offline update package onto the running installation, see docs
 - `modules/skills/__init__.py`: The skills app's package: its screen and behaviour are in module.py (Skills — "My Hero's Path" (2026-09-11), the screen for the skill-tree layer core/skill_manager.py adds underneath the existing profile-wide Level/Missions syste). core/module_manager.py finds it by that file.
 - `modules/skills/module.py`: Skills — "My Hero's Path" (2026-09-11), the screen for the skill-tree layer core/skill_manager.py adds underneath the existing profile-wide Level/Missions system. A categorized grid of skill cards (icon, name, level, XP progress bar), locked skills shown dimmed with a lock badge and their prerequisi
 - `modules/toolbox/__init__.py`: The toolbox app's package: its screen and behaviour are in module.py (Toolbox: the shared home for every calculator registered with core.calculator_engine.CalculatorEngine (self.context.calculators), per docs/ROADMAP.md's Calculat). core/module_manager.py finds it by that file.
