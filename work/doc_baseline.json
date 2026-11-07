@@ -100,7 +100,6 @@
   "core/gps_tracks.py": 8,
   "core/hash_identifier.py": 1,
   "core/heavy_jobs.py": 3,
-  "core/home_link.py": 11,
   "core/homestead_costs.py": 9,
   "core/homestead_manager.py": 10,
   "core/inbox_actions.py": 10,

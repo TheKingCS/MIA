@@ -47,6 +47,7 @@ class HomeLinkError(RuntimeError):
     (409: it changed there since), 0 when it couldn't be reached."""
 
     def __init__(self, message: str, code: int = 0) -> None:
+        """A problem linking to the home computer, said in words, with the HTTP code when there was one."""
         super().__init__(message)
         self.code = code
 
@@ -65,6 +66,9 @@ def clean_url(raw: str) -> str:
 
 
 def _request(url: str, payload: Optional[dict], timeout: float, token: str = "") -> dict:
+    """One JSON request to MIA on the home computer (POST with a body, GET without), with the device key when there
+    is one; the reply's JSON.
+    """
     headers = {"Content-Type": "application/json"}
     if token:
         headers["Authorization"] = f"Bearer {token}"
@@ -78,11 +82,15 @@ class HomeBackend:
     """The home computer's model, through MIA on the computer."""
 
     def __init__(self, url: str, token: str) -> None:
+        """MIA on the home computer as a model backend: its address and this phone's device key."""
         self.url = url.rstrip("/")
         self.token = token
         self.model = ""
 
     def chat(self, messages: list[dict], tools: list[dict], timeout: float):
+        """One chat turn sent to the home computer's model (/api/model/chat); LLMUnavailableError when it says no or
+        can't be reached, so the phone's own model answers instead.
+        """
         from core.llm_manager import ChatReply, LLMUnavailableError, ToolCall
 
         try:
@@ -97,9 +105,11 @@ class HomeBackend:
                                      for c in body.get("tool_calls") or []])
 
     def generate(self, prompt: str, timeout: float) -> str:
+        """One completion, as a one-message chat."""
         return self.chat([{"role": "user", "content": prompt}], [], timeout).content
 
     def is_available(self, timeout: float) -> bool:
+        """Whether the home computer's model answers (/api/model/info), noting its name."""
         try:
             info = _request(f"{self.url}/api/model/info", None, timeout, self.token)
         except (urllib.error.URLError, OSError, ValueError):
@@ -113,12 +123,14 @@ class Reach:
     RECHECK_SECONDS, so a phone away from home doesn't wait on it every turn."""
 
     def __init__(self, backend: HomeBackend, clock=time.monotonic) -> None:
+        """Whether the home computer can be reached, checked at most every RECHECK_SECONDS so a turn never waits on it."""
         self.backend = backend
         self._clock = clock
         self._up: Optional[bool] = None
         self._checked = 0.0
 
     def up(self) -> bool:
+        """Whether the home computer was reachable at the last check (checking again when that's old)."""
         now = self._clock()
         if self._up is None or now - self._checked > RECHECK_SECONDS:
             self._up = self.backend.is_available(REACH_TIMEOUT)
@@ -126,6 +138,7 @@ class Reach:
         return bool(self._up)
 
     def down(self) -> None:
+        """Marks it unreachable now (a turn just failed), so the next turns go straight to the phone's model."""
         self._up, self._checked = False, self._clock()
 
 
@@ -154,6 +167,9 @@ def connect(context, url: str, who: str, password: str) -> dict:
 
 
 def disconnect(context) -> None:
+    """Unlinks: asks the computer to forget this phone's key (logged if it can't be reached), then forgets the link
+    here.
+    """
     config = context.config
     url, token = config.get("home_pc.url", ""), config.get("home_pc.token", "")
     if url and token:
@@ -220,6 +236,9 @@ def home_call(context, path: str, payload: Optional[dict] = None, timeout: float
 
 
 def status(context) -> dict:
+    """The link's status for Settings: linked, the computer's address, who signed in, reachable now, its model, and
+    which model answered last.
+    """
     llm = getattr(context, "llm", None)
     home = getattr(llm, "home", None)
     return {"linked": home is not None or linked(context), "url": context.config.get("home_pc.url", ""),
