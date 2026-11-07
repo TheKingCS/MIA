@@ -59,7 +59,7 @@ from modules.module_base import ModuleBase
 
 
 class ModuleBrowserModule(ModuleBase):
-    """The Modules screen (desktop, never disabled): every module with Mine/Tucked and Enable/Disable, Rescan, adding a module from a folder or a .zip (validated first), and a tab drawing MIA's architecture."""
+    """The Modules screen (desktop, never disabled): every module with Show on/Hide from my Apps and Enable/Disable, Rescan, adding a module from a folder or a .zip (validated first), and a tab drawing MIA's architecture."""
     module_id = "module_browser"
     display_name = "Modules"
     description = "View, enable/disable, install, and rescan modules."
@@ -339,7 +339,7 @@ class ModuleBrowserModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _populate_rows(self) -> None:
-        """Rebuilds the module rows (old ones hidden and detached first)."""
+        """Rebuilds the module rows (old ones hidden and detached first); before the window hands over the modules, just this one."""
         if self._list_layout is None:
             return
         # hide()+setParent(None) before deleteLater() — deleteLater()
@@ -361,7 +361,7 @@ class ModuleBrowserModule(ModuleBase):
             self._list_layout.addWidget(self._build_row(module))
 
     def _build_row(self, module: ModuleBase) -> QFrame:
-        """One module's row: icon, name, description, its folder, and Mine/Tucked and Enable/Disable (the Modules screen itself can't be disabled)."""
+        """One module's row: icon, name, version and whether it's disabled, its id and description; Show on/Hide from my Apps (only for this person, not for apps always shown); and Enable/Disable (the Modules screen itself can't be disabled)."""
         is_enabled = True if self.module_manager is None else self.module_manager.is_enabled(module.module_id)
         is_locked = module.module_id == "module_browser"
 
@@ -409,7 +409,7 @@ class ModuleBrowserModule(ModuleBase):
         return row
 
     def _on_mine_clicked(self, module_id: str, currently_tucked: bool) -> None:
-        """Shows or tucks away an app in the person's own sidebar (their focus preset)."""
+        """Shows an app on, or hides it from, this person's own Apps (their focus preset); it still opens from here, search and the Assistant."""
         focus_presets.set_app_visible(self.context, module_id, currently_tucked)
         self._populate_rows()
 
