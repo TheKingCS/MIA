@@ -144,6 +144,7 @@ def issue_key(kind: str, tool: str = "", page: str = "", error: str = "") -> str
 
 
 def _stamp(text: str) -> Optional[datetime]:
+    """A timestamp from ISO text, in UTC (a stamp without a zone is taken as UTC); None when it can't be read."""
     try:
         when = datetime.fromisoformat(str(text or ""))
     except ValueError:
@@ -152,7 +153,12 @@ def _stamp(text: str) -> Optional[datetime]:
 
 
 class FailureLog:
+    """The person's Fix-It Log: every stumble as one line in failures.jsonl (append-only, so the phone's and the PC's
+    merge line by line), plus failure_state.json (each issue's status, and the phrases they taught her), written
+    through atomic_write_text so a taught phrase can be undone.
+    """
     def __init__(self, context, data_dir: Optional[Path] = None) -> None:
+        """Points at the person's two files (data/ by default) and loads the state."""
         self.context = context
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._file = self.data_dir / _FILE
@@ -162,6 +168,7 @@ class FailureLog:
     # ---------------------------------------------------------------- state: issue status, learned phrases
 
     def _load(self) -> None:
+        """Reads each issue's status and the taught phrases; an unreadable file is logged and starts empty."""
         self.status: dict[str, dict] = {}
         self.phrases: list[dict] = []
         if not self._state_file.exists():
@@ -174,19 +181,25 @@ class FailureLog:
             log.exception("failure_state.json unreadable — starting empty.")
 
     def reload(self) -> None:
+        """Reads the state again (after undo restored it)."""
         self._load()
 
     def _save(self) -> None:
+        """Writes the state atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._state_file, json.dumps({"status": self.status, "phrases": self.phrases}, indent=2))
 
     def set_status(self, key: str, status: str) -> None:
+        """Marks an issue open, fixed or ignored (ValueError for anything else)."""
         if status not in ("open", "fixed", "ignored"):
             raise ValueError("An issue is open, fixed or ignored.")
         self.status[key] = {"status": status, "at": datetime.now().isoformat(timespec="seconds")}
         self._save()
 
     def learn(self, said: str, tool: str, meaning: str = "") -> dict:
+        """Remembers that when the person says something (lowercased, tidied, at least 3 characters) they mean a tool,
+        replacing an earlier meaning for the same words.
+        """
         said = " ".join(str(said or "").lower().split()).strip(" .!?\"“”'")
         if len(said) < 3:
             raise ValueError("What do you say?")
@@ -198,18 +211,24 @@ class FailureLog:
         return phrase
 
     def forget(self, phrase_id: str) -> None:
+        """Forgets a taught phrase (ValueError when it's gone)."""
         if not any(p["phrase_id"] == phrase_id for p in self.phrases):
             raise ValueError("That isn't remembered anymore.")
         self.phrases = [p for p in self.phrases if p["phrase_id"] != phrase_id]
         self._save()
 
     def phrases_in(self, prompt: str) -> list[dict]:
+        """The taught phrases whose words appear in what was just said, so routing can attach their tools."""
         low = " " + _words(prompt) + " "
         return [p for p in self.phrases if f" {_words(p['said'])} " in low]
 
     # ---------------------------------------------------------------- the log
 
     def record(self, kind: str, **fields) -> Optional[dict]:
+        """Writes one stumble: its kind (one of KINDS), what was said and replied (redacted), the tool, mode, error, page,
+        model, surface, tools and seconds, and the issue it belongs to. Returns None (logged) when it can't be written;
+        a fixed issue that happens again is opened again.
+        """
         if kind not in KINDS:
             raise ValueError(f"Unknown kind '{kind}'.")
         event = {"event_id": uuid.uuid4().hex[:12], "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -241,11 +260,13 @@ class FailureLog:
         return event
 
     def _trim(self) -> None:
+        """Keeps the log from growing without end: past _MAX_LINES, only the newest three fifths are kept."""
         lines = self._file.read_text(encoding="utf-8").splitlines()
         if len(lines) > _MAX_LINES:
             self._file.write_text("\n".join(lines[-(_MAX_LINES * 3 // 5):]) + "\n", encoding="utf-8")
 
     def events(self, days: Optional[int] = None) -> list[dict]:
+        """Every stumble, or those in the last `days` days."""
         if not self._file.exists():
             return []
         since = datetime.now(timezone.utc) - timedelta(days=days) if days else None
@@ -303,14 +324,17 @@ def title_for(key: str, items: list[dict]) -> str:
 
 
 def _log(context) -> Optional[FailureLog]:
+    """The context's Fix-It Log, or None."""
     return getattr(context, "failures", None)
 
 
 def _private(conversation) -> bool:
+    """Whether a conversation's turn is private (off the record, journal, or a private turn): those are never logged."""
     return conversation is not None and bool(conversation.off_record or conversation.journal or conversation.private_turn)
 
 
 def _last(conversation, role: str, skip: int = 0):
+    """The latest message by a role in a conversation (skip=1 for the one before), or None."""
     seen = 0
     for m in reversed(conversation.messages or []):
         if m.role == role:
@@ -321,6 +345,7 @@ def _last(conversation, role: str, skip: int = 0):
 
 
 def _age(message) -> Optional[float]:
+    """How many seconds ago a message was sent, or None."""
     at = _stamp(getattr(message, "timestamp", ""))
     return (datetime.now(timezone.utc) - at).total_seconds() if at is not None else None
 
@@ -384,6 +409,9 @@ def observe_prompt(context, conversation, prompt: str) -> Optional[str]:
 
 
 def _teach(context, book: FailureLog, said: str, meaning: str) -> str:
+    """"When I say X I mean Y": finds the tool that does Y and remembers X for it, or, when no tool does Y yet, logs it
+    as a problem instead. Returns what MIA says back.
+    """
     registry = getattr(context, "assistant_actions", None)
     matched = registry.matching_actions(meaning, context) if registry is not None else []
     named = [a for a in matched if a.domain != "system"] or matched
