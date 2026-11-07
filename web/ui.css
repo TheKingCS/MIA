@@ -1216,3 +1216,28 @@ body.cook-live .mia-orb-button, body.cook-live .bottom-bar { display: none; }
 .mod-workout .wk-chart .pl-fill { background: rgba(var(--rgb-atmo), 0.35); }
 .mod-workout .wk-chart .pl-bar.now .pl-fill { background: var(--atmo); box-shadow: 0 0 10px rgba(var(--rgb-atmo), 0.5); }
 .mod-workout .wk-chart .pl-bar.now .wk-bar-n { color: var(--text); }
+
+/* ---------------------------------------------------------------- Maps, full screen (DEC-0113 canvas; web/maps.js stage) */
+body.mod-maps .hero { display: none; }
+.mp-stage { position: relative; height: calc(100dvh - 2 * var(--gap) - 40px); min-height: 460px; border-radius: 8px; overflow: hidden;
+  border: 1px solid var(--line); }
+.mp-stage .map-view { position: absolute; inset: 0; height: auto; min-height: 0; border-radius: 0; }
+.mp-head { position: absolute; left: 12px; right: 76px; top: 12px; z-index: 2; display: flex; align-items: center; gap: 12px;
+  flex-wrap: wrap; padding: 10px 12px; background: rgba(var(--rgb-panel), 0.92); }
+.mp-head-t { display: grid; min-width: 0; }
+.mp-head h1 { margin: 0; font-size: var(--text-lg); font-weight: 600; }
+.mp-modes { margin: 0 0 0 auto; flex-wrap: wrap; }
+.mp-fabs { position: absolute; right: 12px; top: 12px; z-index: 2; display: grid; gap: 8px; }
+.mp-fab { width: 48px; height: 48px; display: grid; place-items: center; border-radius: var(--radius-sm); cursor: pointer;
+  font: 600 20px var(--font-mono); color: var(--text); background: rgba(var(--rgb-panel), 0.92); border: 1px solid var(--line-strong); }
+.mp-fab:hover { border-color: rgba(var(--rgb-accent), 0.6); color: var(--accent); }
+.mp-stage .mp-route { position: absolute; left: 12px; right: 12px; bottom: 16px; z-index: 2; margin: 0; background: rgba(var(--rgb-panel), 0.92); }
+.mp-stage .mp-route-empty { right: auto; }
+.mp-stage .mp-route { bottom: 26px; }
+.mp-note { margin-top: 10px; font-size: var(--text-sm); }
+@media (max-width: 720px) {
+  .mp-stage { height: calc(100dvh - 120px); }
+  .mod-maps .layout-main { padding-bottom: 96px; }
+  .mp-head { right: 70px; }
+  .mp-modes { margin: 0; }
+}

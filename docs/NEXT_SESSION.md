@@ -107,8 +107,9 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       apps it drew on, Open in <app>, from `core/observations_web.card`), Expeditions (the next one as one card:
       heads-up from `core/web_more._trip_heads_up`, packing to tick, Start Trip; the rest as rows),
       Maps (the route card under the map: from the first
-      waypoint to the one picked, distance, bearing, sunrise and sunset; no climb until MIA has elevation; the
-      canvas's full-screen map with floating controls is still to do).
+      waypoint to the one picked, distance, bearing, sunrise and sunset; no climb until MIA has elevation). The map now fills the page as on the canvas: its name and kind float at the
+      top, zoom / waypoints / keep-offline as buttons on the right, the route card along the bottom (vector areas: zoom
+      and take-off buttons).
       Navigation (a compass with the needle on the bearing, waypoints with their grid, sun and moon tiles).
       World Map (km² cleared as the headline, the next achievement from `core/world_map.next_rank`, a big I'm Here).
       Knowledge (Search / Packs / Plans Shelf tabs; result cards with a snippet from
