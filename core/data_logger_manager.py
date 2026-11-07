@@ -44,6 +44,7 @@ _READINGS_FILE = _DATA_DIR / "data_logger_readings.json"
 
 @dataclass
 class Reading:
+    """One reading in a series (a meter, a sensor, a tank's pH): its value, unit, note, when, and who logged it."""
     reading_id: str
     series_id: str
     value: float
@@ -63,6 +64,7 @@ class Reading:
     profile_id: Optional[str] = None
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in its JSON file."""
         return {
             "reading_id": self.reading_id,
             "series_id": self.series_id,
@@ -75,6 +77,7 @@ class Reading:
 
     @staticmethod
     def from_dict(data: dict) -> "Reading":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return Reading(
             reading_id=data.get("reading_id", uuid.uuid4().hex[:10]),
             series_id=data.get("series_id", ""),
@@ -87,8 +90,13 @@ class Reading:
 
 
 class DataLoggerManager:
+    """The Data Logger: every reading, in named series (data_logger_readings.json, written through atomic_write_text
+    so undo can restore it). Maintenance, energy and the grow lab all keep their readings here, so a sensor later is
+    just another writer.
+    """
     def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
         # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        """Points at its file (the household's folder, data/ by default) and loads it."""
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._readings_file = self.data_dir / "data_logger_readings.json" if data_dir is not None else _READINGS_FILE
         self.context = context
@@ -100,6 +108,7 @@ class DataLoggerManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads the readings; a damaged file is logged, reported and starts empty."""
         if not self._readings_file.exists():
             self._readings = []
             return
@@ -112,6 +121,7 @@ class DataLoggerManager:
             self._readings = []
 
     def _save(self) -> None:
+        """Writes every reading atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._readings_file,
             json.dumps([r.to_dict() for r in self._readings], indent=2),
@@ -131,6 +141,7 @@ class DataLoggerManager:
         timestamp: Optional[str] = None,
         profile_id: Optional[str] = None,
     ) -> Reading:
+        """Adds a reading to a series (now unless a time is given), credited to whoever logged it."""
         reading = Reading(
             reading_id=uuid.uuid4().hex[:10],
             series_id=series_id,
@@ -146,6 +157,7 @@ class DataLoggerManager:
         return reading
 
     def delete_reading(self, reading_id: str) -> None:
+        """Deletes a reading."""
         self._readings = [r for r in self._readings if r.reading_id != reading_id]
         self._save()
 

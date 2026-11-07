@@ -41,6 +41,7 @@ _SUBSCRIPTIONS_FILE = _DATA_DIR / "push_subscriptions.json"
 
 @dataclass
 class PushSubscription:
+    """One phone or browser's Web Push subscription: whose it is, its endpoint, its keys, and when it subscribed."""
     profile_id: str
     endpoint: str
     p256dh_key: str
@@ -48,6 +49,7 @@ class PushSubscription:
     created_at: str = ""
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in its JSON file."""
         return {
             "profile_id": self.profile_id,
             "endpoint": self.endpoint,
@@ -58,6 +60,7 @@ class PushSubscription:
 
     @staticmethod
     def from_dict(data: dict) -> "PushSubscription":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return PushSubscription(
             profile_id=data.get("profile_id", ""),
             endpoint=data.get("endpoint", ""),
@@ -75,7 +78,11 @@ class PushSubscription:
 
 
 class PushSubscriptionManager:
+    """The devices that get push notifications, each tied to one person, so a notification only reaches that
+    person's phones (push_subscriptions.json, written through atomic_write_text).
+    """
     def __init__(self, context: AppContext) -> None:
+        """Loads the subscriptions."""
         self.context = context
         self._subscriptions: list[PushSubscription] = []
         self._load()
@@ -85,6 +92,7 @@ class PushSubscriptionManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads the subscriptions; a damaged file is logged, reported and starts empty."""
         if not _SUBSCRIPTIONS_FILE.exists():
             self._subscriptions = []
             return
@@ -97,6 +105,7 @@ class PushSubscriptionManager:
             self._subscriptions = []
 
     def _save(self) -> None:
+        """Writes the subscriptions atomically."""
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
         atomic_write_text(_SUBSCRIPTIONS_FILE,
             json.dumps([s.to_dict() for s in self._subscriptions], indent=2),
@@ -126,11 +135,14 @@ class PushSubscriptionManager:
         return subscription
 
     def remove_subscription(self, endpoint: str) -> None:
+        """Forgets a device (by endpoint), e.g. when its push service says it's gone."""
         self._subscriptions = [s for s in self._subscriptions if s.endpoint != endpoint]
         self._save()
 
     def subscriptions_for_profile(self, profile_id: str) -> list[PushSubscription]:
+        """One person's devices."""
         return [s for s in self._subscriptions if s.profile_id == profile_id]
 
     def all_subscriptions(self) -> list[PushSubscription]:
+        """Every device."""
         return list(self._subscriptions)

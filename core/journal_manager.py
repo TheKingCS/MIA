@@ -51,6 +51,9 @@ _ENTRIES_FILE = _DATA_DIR / "journal_entries.json"
 
 @dataclass
 class JournalEntry:
+    """One note in the journal (the Notes app; plain, not the encrypted private journal): title, body, tags, the trip
+    it's a log entry for, the conditions, and when.
+    """
     entry_id: str
     title: str
     body: str = ""
@@ -61,6 +64,7 @@ class JournalEntry:
     updated_at: str = ""  # ISO datetime
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in its JSON file."""
         return {
             "entry_id": self.entry_id,
             "title": self.title,
@@ -74,6 +78,7 @@ class JournalEntry:
 
     @staticmethod
     def from_dict(data: dict) -> "JournalEntry":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return JournalEntry(
             entry_id=data.get("entry_id", uuid.uuid4().hex[:10]),
             title=data.get("title", ""),
@@ -87,9 +92,13 @@ class JournalEntry:
 
 
 class JournalManager:
+    """The person's notes (journal_entries.json in their folder, written through atomic_write_text so undo can
+    restore it).
+    """
     def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
         # Whose data: a person's own folder (core/personal_data.py), or the
         # shared data/ folder by default.
+        """Points at the person's file (data/ by default) and loads it."""
         self.data_dir = Path(data_dir) if data_dir is not None else _ENTRIES_FILE.parent
         self._entries_file = self.data_dir / _ENTRIES_FILE.name if data_dir is not None else _ENTRIES_FILE
         self.context = context
@@ -101,6 +110,7 @@ class JournalManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads the notes; a damaged file is logged, reported and starts empty."""
         if not self._entries_file.exists():
             self._entries = []
             return
@@ -117,6 +127,7 @@ class JournalManager:
         self._load()
 
     def _save(self) -> None:
+        """Writes every note atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._entries_file,
             json.dumps([e.to_dict() for e in self._entries], indent=2),
@@ -135,6 +146,7 @@ class JournalManager:
         trip_id: Optional[str] = None,
         conditions: str = "",
     ) -> JournalEntry:
+        """Adds a note (with tags, and the trip and conditions when it's a trip log)."""
         now = datetime.now().isoformat(timespec="seconds")
         entry = JournalEntry(
             entry_id=uuid.uuid4().hex[:10],
@@ -173,6 +185,7 @@ class JournalManager:
         return entry
 
     def delete_entry(self, entry_id: str) -> None:
+        """Deletes a note."""
         self._entries = [e for e in self._entries if e.entry_id != entry_id]
         self._save()
 
@@ -181,6 +194,7 @@ class JournalManager:
     # ------------------------------------------------------------------
 
     def get_entry(self, entry_id: str) -> Optional[JournalEntry]:
+        """The note with this id, or None."""
         for entry in self._entries:
             if entry.entry_id == entry_id:
                 return entry
