@@ -9,6 +9,10 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 ## Zac
 
 ### Try it
+- [ ] **The desktop opens on the web (DEC-0124):** close both copies of MIA that are running and start it once. It
+      should open straight onto MIA's web screens, full size. Ctrl+Shift+C (or the header's "Main screen") switches to
+      the classic screens and back; Power, Toolbox, The Lab and Field Kit open from the Apps page ("Open on this PC").
+      Tell Claude anything that looks wrong or missing.
 - [ ] **The phone app, no test header, keeps your place (2026-11-07):** install the new build (GitHub's Android build
       from this push, or `app-debug.apk` built on the PC: `adb install -r android-phone/app/build/outputs/apk/debug/app-debug.apk`).
       It's called "MIA" now, with no title bar; lock the phone on any page with Talk open and come back: same page,

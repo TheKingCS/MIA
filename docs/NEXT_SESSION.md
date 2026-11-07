@@ -7,6 +7,13 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 *Last updated: 2026-11-07 (afternoon)*
 
+**New 2026-11-07 (late night): the desktop opens on the web (DEC-0124); only Zac's words go out of the browser
+(DEC-0122); taught procedures proposed (DEC-0123).** The window's web mode (`gui/main_window.py` set_web_mode,
+`gui.web_first`): web front end edge to edge, classic Qt screens by Ctrl+Shift+C or for PC-only apps (the web Apps
+page's "Open on this PC", a `/desktop-open/<id>` link the web view catches). Checked off-screen with the real
+modules; not yet seen on Zac's screen. Phone app 145 installed on his phone by adb (built locally with
+GITHUB_RUN_NUMBER=145, one above CI's 144).
+
 **New 2026-11-07 (night): the Browser page and HTML e-receipts.** `web/browser.html` (core/web_browser.py): what her
 browser is on, held steps with screenshots (Go ahead / Cancel on the step's own proposal), taught tasks with Do it /
 Forget (`browser.run_task`, `browser.forget_task`). Emailed HTML receipts now keep each item on its own line

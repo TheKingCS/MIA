@@ -46,6 +46,13 @@
     try { sessionStorage.setItem("mia.token", fromHash); } catch (e) { /* private mode */ }
     history.replaceState(null, "", location.pathname + location.search);
   }
+  // Shown inside MIA's desktop window (it passes ?desktop=1 once; kept for the pages after): apps that live only in
+  // the PC app open there (a /desktop-open/<id> link the window catches, modules/web_home).
+  let desktop = params.get("desktop") === "1";
+  try {
+    if (desktop) sessionStorage.setItem("mia.desktop", "1");
+    else desktop = sessionStorage.getItem("mia.desktop") === "1";
+  } catch (e) { /* no storage: only the first page knows */ }
   // The person's look, passed by the desktop (text size, high contrast).
   if (params.get("scale")) document.documentElement.style.setProperty("--scale", params.get("scale"));
   if (params.get("contrast") === "high") document.documentElement.dataset.contrast = "high";
@@ -197,6 +204,7 @@
 
   window.MIA = {
     demo,
+    desktop,  // inside MIA's desktop window: PC-only apps open there
     signIn,
     signOut,
     setupStatus,

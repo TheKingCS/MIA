@@ -275,6 +275,10 @@ other people in the house.
   theme: one cyan accent, graphite layers, never a hard-coded color
   (use a token or `rgba(var(--rgb-accent), a)`); the frame's icons come
   from `web/icons.js`. The concept's layouts stay.
+  DEC-0124 (2026-11-07): the desktop window opens on the web front end,
+  edge to edge (`gui/main_window.py` web mode, `gui.web_first`); the Qt
+  screens are the classic view (Ctrl+Shift+C, "Main screen" back), and a
+  web page opens a PC-only app there with a `/desktop-open/<id>` link.
 - **Search** (`core/search_manager.py`) — providers register a callback;
   `MainWindow._on_search_result_activated` dispatches by `action_type`
   (`"open_module"`, `"switch_profile"`, ...) — new action types need a

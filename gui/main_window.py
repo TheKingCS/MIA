@@ -15,6 +15,12 @@ environment, not a single-purpose app window — hence separate "Home"
 and "Apps" destinations rather than a single flat menu, and a
 persistent side panel reserved for the character rather than a modal
 dialog.
+
+**Web mode** (DEC-0124, 2026-11-07, `set_web_mode`): the window opens on
+MIA's web front end (the web_home module) edge to edge, the header and
+character panel hidden, because the web is where MIA now lives. All of the
+above is the classic view: Ctrl+Shift+C, the header's "Main screen" to go
+back, and any app that lives only here opens in it.
 """
 
 from __future__ import annotations
@@ -76,7 +82,7 @@ class MainWindow(QMainWindow):
     switch_profile_requested = Signal()
 
     def __init__(self, context: AppContext, module_manager: ModuleManager) -> None:
-        """Sizes the window from the config, builds everything, sets up the shortcuts (Ctrl+K search, Ctrl+Shift+Space quick capture, Ctrl+Shift+R read the screen, kiosk exit), notifications and module events, and says MIA core online."""
+        """Sizes the window from the config, builds everything, sets up the shortcuts (Ctrl+K search, Ctrl+Shift+Space quick capture, Ctrl+Shift+R read the screen, Ctrl+Shift+C classic view, kiosk exit), notifications and module events, opens in web mode (gui.web_first), and says MIA core online."""
         super().__init__()
         self.context = context
         self.module_manager = module_manager
@@ -106,7 +112,43 @@ class MainWindow(QMainWindow):
         self._setup_search_shortcut()
         self._setup_notifications()
         self._setup_module_events()
+        self._setup_web_mode()
         self.statusBar().showMessage("MIA core online.")
+
+    # ------------------------------------------------------------------
+    # Web mode (Zac, 2026-11-07: "the only way I am able to view most of MIA is through the Home Preview app")
+    # ------------------------------------------------------------------
+
+    def _setup_web_mode(self) -> None:
+        """The window opens on MIA's web front end, full size, without the classic header and character panel
+        (gui.web_first, on by default): the web is MIA on the desktop (DEC-0017), with its own sidebar and Talk.
+        Ctrl+Shift+C switches to the classic screens and back; an app that lives only here opens in its classic
+        screen, with the header shown so "Main screen" leads back."""
+        self._web_mode = False
+        shortcut = QShortcut(QKeySequence("Ctrl+Shift+C"), self)
+        shortcut.activated.connect(lambda: self.set_web_mode(not self._web_mode))
+        if self.context.config.get("gui.web_first", True) and self.module_manager.get("web_home") is not None:
+            self.set_web_mode(True)
+
+    def set_web_mode(self, on: bool) -> None:
+        """Shows the web front end edge to edge (on), or the classic screens with their header and panel (off)."""
+        self._web_mode = on
+        self._header.setVisible(not on)
+        if self._character_panel is not None:
+            self._character_panel.setVisible(not on)
+        orb = getattr(self, "_orb", None)
+        if orb is not None:
+            orb.setVisible(not on)
+        margin = 0 if on else 20
+        self._body_layout.setContentsMargins(margin, margin, margin, margin)
+        if on:
+            self.open_module("web_home")
+            self.statusBar().hide()
+        else:
+            self.statusBar().show()
+            if self._stack.currentWidget() is self._module_widgets.get("web_home"):
+                self._navigate_to(self._home_widget)
+            self.statusBar().showMessage("Classic screens. Ctrl+Shift+C or Main screen goes back to MIA.", 8000)
 
     def _setup_search_shortcut(self) -> None:
         """Ctrl+K opens search from anywhere in the app — matches the
@@ -409,17 +451,19 @@ class MainWindow(QMainWindow):
     # ------------------------------------------------------------------
 
     def _build_ui(self) -> None:
-        """The window's body: the header, the stack (Home, the Apps grid, app screens) and, when it's switched on, the character panel, which the floating orb shows and hides."""
+        """The window's body: the header, the stack (Home, the Apps grid, app screens, the web front end) and, when it's switched on, the character panel, which the floating orb shows and hides; the header and body layout are kept for web mode."""
         central = QWidget()
         self.setCentralWidget(central)
         root_layout = QVBoxLayout(central)
         root_layout.setContentsMargins(0, 0, 0, 0)
         root_layout.setSpacing(0)
 
-        root_layout.addWidget(self._build_header())
+        self._header = self._build_header()
+        root_layout.addWidget(self._header)
 
         body = QWidget()
         body_layout = QHBoxLayout(body)
+        self._body_layout = body_layout
         body_layout.setContentsMargins(20, 20, 20, 20)
         body_layout.setSpacing(20)
 
@@ -565,7 +609,7 @@ class MainWindow(QMainWindow):
         self._orb.update_position()
 
     def _build_header(self) -> QFrame:
-        """The header: the wordmark, the nav tabs, the level badge and the profile button with its menu."""
+        """The header: the wordmark, the nav tabs, "Main screen" (back to web mode), the level badge and the profile button with its menu."""
         header = QFrame()
         header.setObjectName("HeaderBar")
         header.setFixedHeight(68)
@@ -706,6 +750,13 @@ class MainWindow(QMainWindow):
         else:
             self._level_badge.hide()
 
+        # Back to MIA's main screen, the web front end (shown only in the classic view, where this header is).
+        main_screen = QPushButton("Main screen")
+        main_screen.setObjectName("HeaderButton")
+        main_screen.setToolTip("Back to MIA's main screen (Ctrl+Shift+C)")
+        main_screen.clicked.connect(lambda: self.set_web_mode(True))
+
+        layout.addWidget(main_screen)
         layout.addWidget(self._search_bar)
         layout.addWidget(self._capture_button)
         layout.addWidget(self._level_badge)
@@ -769,11 +820,15 @@ class MainWindow(QMainWindow):
         with X pre-selected" mechanism (real Missions tagged to a real
         asset, opened from Real Estate/Garage/Greenhouse), not a
         one-off special case. Most modules just ignore it
-        (ModuleBase.focus_record()'s own default no-op)."""
+        (ModuleBase.focus_record()'s own default no-op). Any app but the
+        web front end leaves web mode, so its classic screen has the
+        header to come back by."""
         module = self.module_manager.get(module_id)
         if module is None:
             log.warning("Attempted to open unknown module_id '%s'", module_id)
             return
+        if module_id != "web_home" and getattr(self, "_web_mode", False):
+            self.set_web_mode(False)  # an app only here: its classic screen, with the header to come back
         from core.child_accounts import ASK_A_PARENT, app_allowed
 
         if not app_allowed(self.context, module_id):  # a child account (core/child_accounts.py)

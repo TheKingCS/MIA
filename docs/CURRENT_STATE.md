@@ -4,6 +4,8 @@
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
 session. Last updated: 2026-11-07 (DEC-0104 to 0109: documentation, models, curriculum, self-audit, specialists), by claude.*
 
+**2026-11-07 (late night): MIA on the desktop is the web.** The desktop window now opens on MIA's web screens, edge to edge, instead of the older Qt screens with the web tucked into "Home (preview)"; the classic screens are a shortcut away, and the PC-only tools open from the Apps page. Her browser now types and searches only Zac's own words (DEC-0122), and one engine for teaching her anything is proposed (DEC-0123).
+
 **2026-11-07 (night): the phone keeps your place.** The phone app is just "MIA" now, with no test header, and it opens where you left it: the same page, scrolled where you were, with Talk still open and what you'd typed.
 
 **2026-11-07 (night): receipts that do things (DEC-0120).** MIA can read Zac's own mailbox for receipts and orders without touching it, and a receipt now means something: groceries stock the pantry and tick the grocery list, an oil change is marked done on the truck at its mileage, a Lowe's run adds to the workshop's materials at the price paid. Emailed receipts file themselves (DEC-0121); each filing remembers exactly what it changed, so Undo, on the Inbox screen or by voice, takes back just that, even days later.

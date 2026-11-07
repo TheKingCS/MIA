@@ -18,13 +18,16 @@
     onclick: (e) => { e.preventDefault(); e.stopPropagation(); act({ kind: "app.favorite", params: { module_id: app.id, favorite: !app.favorite } }); },
   }, app.favorite ? "★" : "☆");
 
+  // An app only in the PC app: inside the desktop window it opens there; elsewhere, MIA is asked.
+  const pcHref = (app) => (MIA.desktop ? "/desktop-open/" + encodeURIComponent(app.id) : askHref(app));
+
   function tile(app) {
-    return el("a", { class: "app-tile", href: app.on_web ? app.page : askHref(app), "data-id": app.id,
+    return el("a", { class: "app-tile", href: app.on_web ? app.page : pcHref(app), "data-id": app.id,
       style: "--tile-rgb:" + (app.on_web ? "var(--rgb-accent)" : "var(--rgb-line)") },  // one accent (DEC-0023); PC-only apps dimmer
     star(app),
     el("span", { class: "tile-icon", "aria-hidden": "true" }, (window.MIAIcons && MIAIcons.svg(app.id)) || app.icon),
     el("span", { class: "tile-name" }, app.name),
-    el("span", { class: "tile-tag" }, app.on_web ? app.tagline : "Ask MIA"));
+    el("span", { class: "tile-tag" }, app.on_web ? app.tagline : (MIA.desktop ? "Open on this PC" : "Ask MIA")));
   }
 
   function card(app) {
@@ -35,7 +38,7 @@
       : null;
     const open = app.on_web
       ? el("a", { class: "btn btn-green", href: app.page }, "Open")
-      : el("a", { class: "btn btn-amber", href: askHref(app) }, "Ask MIA");
+      : el("a", { class: "btn btn-amber", href: pcHref(app) }, MIA.desktop ? "Open on this PC" : "Ask MIA");
     const toggle = app.can_hide
       ? el("button", {
         type: "button", class: "btn btn-ghost",

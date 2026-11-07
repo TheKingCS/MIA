@@ -1911,3 +1911,15 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   fold into it. Phases: engine and chat teaching; triggers; phone steps; desktop apps (its own decision); glasses.
 - Open: the direction, the name (Skills and Routines are taken), phase 1 first, which desktop apps matter.
 - Related: DEC-0092 (workflows), DEC-0112 (learning paths), DEC-0117, DEC-0121, DEC-0122
+
+### DEC-0124: The desktop opens on the web front end
+- Status: APPROVED
+- Decided by: zac, 2026-11-07 ("the only way I am able to view most of MIA is through the Home Preview app. I think a
+  lot of her isn't really presented and usable in this state")
+- Decision: MIA's desktop window opens on the web front end edge to edge (web mode: no classic header or character
+  panel; the web's own sidebar, Talk and screens). The window itself stays, for what it does beyond the page
+  (notifications, the email draft dialog's Send, apps opened by voice, kiosk mode, switching person). The Qt screens
+  are the classic view: Ctrl+Shift+C, or opening an app that lives only on the PC (Power, Toolbox, The Lab, Field
+  Kit), which the web Apps page now offers as "Open on this PC" inside the desktop. "Main screen" or Ctrl+Shift+C
+  goes back. `gui.web_first` false keeps the old start. Carries DEC-0017 to the desktop.
+- Related: DEC-0012, DEC-0013, DEC-0017, DEC-0023

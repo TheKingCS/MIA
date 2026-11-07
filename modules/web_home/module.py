@@ -16,8 +16,12 @@ their text size and contrast. When someone else signs in, it reloads as
 them. If this computer's PySide6 has no QtWebEngine, it offers to open
 the page in the normal browser instead.
 
-A preview next to the current Home, not a replacement: the Qt Home stays
-until the web one is proven on the real devices (DEC-0013, DEC-0015).
+Since 2026-11-07 (Zac: "the only way I am able to view most of MIA is
+through the Home Preview app") the desktop window opens on this, full size
+(gui/main_window.py's web mode): the web front end is MIA on the desktop,
+and the Qt screens are the classic view (Ctrl+Shift+C). A page asking for
+an app that lives only in the PC app (a `/desktop-open/<id>` link, the
+Apps page's "Open on this PC") is caught here and opened in the window.
 """
 
 from __future__ import annotations
@@ -36,9 +40,10 @@ log = get_logger(__name__)
 
 
 def web_home_url(base: str, token: str, scale: float = 1.0, high_contrast: bool = False) -> str:
-    """Pure logic. The page address: look settings in the query, the
-    sign-in token in the fragment (never sent to the server or logged)."""
-    query = {}
+    """Pure logic. The page address: that it's in the desktop window and the
+    look settings in the query, the sign-in token in the fragment (never sent
+    to the server or logged)."""
+    query = {"desktop": "1"}
     if scale and scale != 1.0:
         query["scale"] = f"{scale:g}"
     if high_contrast:
@@ -47,9 +52,9 @@ def web_home_url(base: str, token: str, scale: float = 1.0, high_contrast: bool 
 
 
 class WebHomeModule(ModuleBase):
-    """Home on the desktop: MIA's web front end (web/) shown in the built-in browser, signed in as whoever is signed in here, in their text size and contrast."""
+    """Home on the desktop: MIA's web front end (web/) shown in the built-in browser, signed in as whoever is signed in here, in their text size and contrast; since DEC-0124 the window opens on it, and its PC-only app links open in the window."""
     module_id = "web_home"
-    display_name = "Home (preview)"
+    display_name = "Home"
     description = "MIA herself: her presence, today's one thing, and a chat with her."
     icon = "\U0001F52E"  # crystal ball: MIA's presence
 
@@ -82,6 +87,10 @@ class WebHomeModule(ModuleBase):
         scale = accessibility.TEXT_SIZES.get(size, ("", 1.0))[1]
         return web_home_url(server.local_url, token, scale, contrast)
 
+    def _open_on_pc(self, module_id: str) -> None:
+        """A page asked for an app that lives only in the PC app: the window opens it (its classic screen)."""
+        self.context.events.publish("assistant.open_module_requested", module_id=module_id)
+
     def reload(self) -> None:
         """Loads the page again for the current person (or updates the message saying why it can't); nothing before the page was first opened."""
         if self._view is None and self._message is None:
@@ -99,7 +108,7 @@ class WebHomeModule(ModuleBase):
         return problem or "Sign in to see your Home."
 
     def get_widget(self) -> QWidget:
-        """The page: the web front end in QtWebEngine, or, without QtWebEngine or an address, a message saying why with a way to open it in the system browser."""
+        """The page: the web front end in QtWebEngine (its page catching /desktop-open/ links), or, without QtWebEngine or an address, a message saying why with a way to open it in the system browser."""
         widget = QWidget()
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -111,6 +120,9 @@ class WebHomeModule(ModuleBase):
             log.warning("QtWebEngine isn't available; Home (preview) offers the normal browser.")
         if QWebEngineView is not None and self._url:
             self._view = QWebEngineView(widget)
+            page = _desktop_page(self._view, self._open_on_pc)
+            if page is not None:
+                self._view.setPage(page)
             self._view.setUrl(QUrl(self._url))
             layout.addWidget(self._view)
             return widget
@@ -126,3 +138,26 @@ class WebHomeModule(ModuleBase):
             layout.addWidget(button)
         layout.addStretch(1)
         return widget
+
+
+def _desktop_page(view, open_on_pc):
+    """The web view's page, catching `/desktop-open/<module id>` links (an app only in the PC app) and handing the
+    id to open_on_pc instead of navigating; None without QtWebEngine."""
+    try:
+        from PySide6.QtWebEngineCore import QWebEnginePage
+    except ImportError:
+        return None
+
+    class DesktopPage(QWebEnginePage):
+        """A page that hands "open this PC-only app" links to the desktop window."""
+
+        def acceptNavigationRequest(self, url, nav_type, is_main_frame):  # noqa: N802 (Qt's name)
+            """Navigates as usual, except a /desktop-open/ link, which opens the app it names in the window."""
+            if url.path().startswith("/desktop-open/"):
+                module_id = url.path().rsplit("/", 1)[-1]
+                if module_id:
+                    open_on_pc(module_id)
+                return False
+            return super().acceptNavigationRequest(url, nav_type, is_main_frame)
+
+    return DesktopPage(view)
