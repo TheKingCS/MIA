@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 228,583 lines; 1043 files describe themselves; 4,733 of 13,517 classes and functions are documented.
+1043 files, 228,603 lines; 1043 files describe themselves; 4,748 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 102,489 lines; 4,002 of 5,630 classes and functions documented
+367 files, 102,509 lines; 4,017 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -322,7 +322,7 @@
 - `core/tile_fetch_worker.py`: Fetches individual missing basemap tiles off the GUI thread for gui/widgets/tile_map_view.py's live pan/zoom — same "network I/O never blocks a paint/input handler" reasoning as modules/field_kit/port_scan_worker.py's PortScanWorker, but shaped as a long-lived queue-processing thread rather than a o *(4 undocumented)*
 - `core/today.py`: "Today" (2026-10-01): one list of what needs you today, from every app, so nobody has to open eight screens to find out. Shown at the top of Home (gui/home_dashboard.py), on the phone (`/api/today`), and by the Assistant ("what's on today?").
 - `core/tool_loop.py`: The tool loop (DEC-0052 step 2b; docs/REASONING_PLAN.md section 3b; docs/TOOL_CALLING_RESEARCH.md R4). Before: a turn was one round; the model picked lookups, MIA said each result as it was, and nothing was combined or followed up. Now, when the model asks only to *look things up*: *(4 undocumented)*
-- `core/trail_map_library.py`: A catalog of official state park / trail map PDFs — the "state park maps and trail maps" half of the Maps module's offline-maps upgrade, alongside core.map_tile_cache's real basemap tiles. *(15 undocumented)*
+- `core/trail_map_library.py`: A catalog of official state park / trail map PDFs — the "state park maps and trail maps" half of the Maps module's offline-maps upgrade, alongside core.map_tile_cache's real basemap tiles.
 - `core/training_actions.py`: The live workout session's changes (DEC-0055, core/training_session.py) as action kinds on the contract in core/actions.py, so the Workout screen, the glasses and voice all move the one session the same way: start today's training, a set done (with how it was counted), skip the rest, skip an exercis *(10 undocumented)*
 - `core/training_session.py`: The live workout session (DEC-0055, docs/ACTIVE_TRAINING_PLAN.md): one per person, shared by every surface (the PC, the phone, the glasses, voice), moving set by set through today's training. *(17 undocumented)*
 - `core/trip_manager.py`: Backs the Expeditions module (modules/expeditions/module.py) — docs/ROADMAP.md milestone 12.1, Expedition Mode. A Trip is one outing — a hike, paddle, ride, fishing trip, etc. (see `ACTIVITY_TYPES`) — always belonging to a core.expedition_manager.Expedition via the required `expedition_id`. It ties 

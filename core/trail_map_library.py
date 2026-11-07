@@ -69,6 +69,9 @@ class NotAPdfError(ValueError):
 
 @dataclass
 class TrailMap:
+    """One official park or trail map PDF in the catalog: the park and state, its file (in the trail-map folder), where
+    it was downloaded from ("" for a local file), notes, and when it was added.
+    """
     trail_map_id: str
     park_name: str
     state: str
@@ -78,6 +81,7 @@ class TrailMap:
     added_at: str = ""  # ISO datetime
 
     def to_dict(self) -> dict:
+        """The entry as saved in trail_maps.json."""
         return {
             "trail_map_id": self.trail_map_id,
             "park_name": self.park_name,
@@ -90,6 +94,7 @@ class TrailMap:
 
     @staticmethod
     def from_dict(data: dict) -> "TrailMap":
+        """An entry from its saved dict."""
         return TrailMap(
             trail_map_id=data.get("trail_map_id", uuid.uuid4().hex[:10]),
             park_name=data.get("park_name", ""),
@@ -102,7 +107,12 @@ class TrailMap:
 
 
 class TrailMapLibrary:
+    """The trail-map catalog: trail_maps.json (written through atomic_write_text) and the PDFs themselves, kept in
+    their own folder outside data/ (maps.trail_map_root_path). Nothing is pre-loaded: the person adds the maps they
+    want.
+    """
     def __init__(self, context: AppContext) -> None:
+        """Loads the catalog and makes the maps folder (only logging when storage isn't there)."""
         self.context = context
         self._root_path = self._resolve_root_path()
         self._trail_maps: list[TrailMap] = []
@@ -117,6 +127,7 @@ class TrailMapLibrary:
             log.warning("Could not create/access trail map folder: %s", self._root_path)
 
     def _resolve_root_path(self) -> Path:
+        """Where the PDFs live: maps.trail_map_root_path when configured, else the default folder."""
         configured = self.context.config.get("maps.trail_map_root_path", "")
         if configured:
             return Path(configured).expanduser()
@@ -124,6 +135,7 @@ class TrailMapLibrary:
 
     @property
     def root_path(self) -> Path:
+        """The folder the PDFs live in."""
         return self._root_path
 
     # ------------------------------------------------------------------
@@ -131,6 +143,7 @@ class TrailMapLibrary:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads the catalog; a damaged file is logged, reported and starts empty."""
         if not _TRAIL_MAPS_FILE.exists():
             self._trail_maps = []
             return
@@ -143,6 +156,7 @@ class TrailMapLibrary:
             self._trail_maps = []
 
     def _save(self) -> None:
+        """Writes the catalog atomically."""
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
         atomic_write_text(_TRAIL_MAPS_FILE,
             json.dumps([t.to_dict() for t in self._trail_maps], indent=2),
@@ -190,6 +204,7 @@ class TrailMapLibrary:
     def _catalog(
         self, trail_map_id: str, park_name: str, state: str, filename: str, source_url: str, notes: str
     ) -> TrailMap:
+        """Adds a map whose file is already in the folder to the catalog, and saves."""
         trail_map = TrailMap(
             trail_map_id=trail_map_id,
             park_name=park_name,
@@ -209,18 +224,22 @@ class TrailMapLibrary:
     # ------------------------------------------------------------------
 
     def get_trail_map(self, trail_map_id: str) -> Optional[TrailMap]:
+        """The map with this id, or None."""
         for trail_map in self._trail_maps:
             if trail_map.trail_map_id == trail_map_id:
                 return trail_map
         return None
 
     def all_trail_maps(self) -> list[TrailMap]:
+        """Every map, by state then park."""
         return sorted(self._trail_maps, key=lambda t: (t.state.lower(), t.park_name.lower()))
 
     def trail_maps_for_state(self, state: str) -> list[TrailMap]:
+        """The maps for one state (case-insensitive)."""
         return [t for t in self.all_trail_maps() if t.state.lower() == state.lower()]
 
     def file_path(self, trail_map_id: str) -> Optional[Path]:
+        """A map's PDF, or None when the entry or its file is gone."""
         trail_map = self.get_trail_map(trail_map_id)
         if trail_map is None:
             return None
@@ -228,6 +247,7 @@ class TrailMapLibrary:
         return path if path.exists() else None
 
     def delete_trail_map(self, trail_map_id: str) -> None:
+        """Deletes a map's PDF and its catalog entry."""
         trail_map = self.get_trail_map(trail_map_id)
         if trail_map is None:
             return
