@@ -48,17 +48,20 @@ def format_proposal_card_text(proposal: MissionProposal) -> str:
 
 
 class DiscoveryTool(ToolboxTool):
+    """Discovery in the Toolbox: MIA proposes a new mission from what the person has actually done (the local model drafts it, code checks it), to accept or reject."""
     tool_id = "discovery"
     display_name = "Discovery"
     description = "MIA proposes a new mission based on what you've actually done."
     icon = "\U0001F9ED"  # compass
 
     def __init__(self, context) -> None:
+        """Nothing built yet, and no draft running."""
         super().__init__(context)
         self._content_layout: Optional[QVBoxLayout] = None
         self._worker: Optional[GenerateWorker] = None
 
     def build_widget(self) -> QWidget:
+        """The screen: a title and the content area."""
         widget = QWidget()
         outer = QVBoxLayout(widget)
         outer.setContentsMargins(24, 24, 24, 24)
@@ -83,6 +86,7 @@ class DiscoveryTool(ToolboxTool):
     # ------------------------------------------------------------------
 
     def _active_profile_id(self) -> Optional[str]:
+        """Who is signed in, or None."""
         if self.context.profiles is None:
             return None
         active = self.context.profiles.get_active_profile()
@@ -96,6 +100,7 @@ class DiscoveryTool(ToolboxTool):
         # while building modules/toolbox/tools/lite_captures_tool.py
         # (same pattern, caught there by an actual screenshot showing
         # overlapping text) and fixed here too, not just there.
+        """Empties the content area, hiding and detaching each widget before it's deleted (this screen refreshes several times, so it would ghost)."""
         while self._content_layout.count():
             item = self._content_layout.takeAt(0)
             child = item.widget()
@@ -105,6 +110,7 @@ class DiscoveryTool(ToolboxTool):
                 child.deleteLater()
 
     def _refresh(self) -> None:
+        """Shows the pending proposal to accept or reject, or the Propose button; says why when Discovery isn't available or no one is signed in."""
         self._clear_content()
         if self.context.discovery is None:
             self._content_layout.addWidget(QLabel("Discovery isn't available."))
@@ -122,6 +128,7 @@ class DiscoveryTool(ToolboxTool):
             self._render_propose_button()
 
     def _render_propose_button(self) -> None:
+        """What Propose does, and the button."""
         info = QLabel("Ask MIA to propose a new mission based on your real skills and progress so far.")
         info.setWordWrap(True)
         self._content_layout.addWidget(info)
@@ -131,6 +138,7 @@ class DiscoveryTool(ToolboxTool):
         self._content_layout.addWidget(propose_button)
 
     def _render_pending_proposal(self, proposal: MissionProposal) -> None:
+        """The proposal's card with Accept and Reject."""
         card = QLabel(format_proposal_card_text(proposal))
         card.setWordWrap(True)
         card.setObjectName("CharacterPanel")
@@ -149,6 +157,7 @@ class DiscoveryTool(ToolboxTool):
     # ------------------------------------------------------------------
 
     def _on_propose_clicked(self) -> None:
+        """Asks the local model for a proposal off the UI thread, showing that it's thinking; says so when the model isn't reachable."""
         if self.context.llm is None:
             QMessageBox.information(None, "Assistant Unavailable", "MIA's local assistant isn't reachable right now.")
             return
@@ -165,6 +174,7 @@ class DiscoveryTool(ToolboxTool):
         self._worker.start()
 
     def _on_generation_result(self, profile_id: str, raw_text) -> None:
+        """Checks the model's draft: a valid one is kept and shown; one that doesn't hold says to try again."""
         proposal = self.context.discovery.parse_and_validate_proposal(profile_id, raw_text)
         if proposal is None:
             self._clear_content()
@@ -182,6 +192,7 @@ class DiscoveryTool(ToolboxTool):
         self._refresh()
 
     def _on_accept_clicked(self, proposal_id: str) -> None:
+        """Accepts the proposal (it becomes a mission) and says so."""
         profile_id = self._active_profile_id()
         if profile_id is None:
             return
@@ -191,6 +202,7 @@ class DiscoveryTool(ToolboxTool):
         self._refresh()
 
     def _on_reject_clicked(self, proposal_id: str) -> None:
+        """Rejects the proposal and refreshes."""
         profile_id = self._active_profile_id()
         if profile_id is None:
             return

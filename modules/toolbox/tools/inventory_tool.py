@@ -66,18 +66,21 @@ def format_item_detail_line(
 
 
 class InventoryTool(ToolboxTool):
+    """Inventory in the Toolbox: items with quantities, categories, locations and owners; filter, add, edit, delete, and +1/-1."""
     tool_id = "inventory"
     display_name = "Inventory"
     description = "Track items, quantities, categories, and locations."
     icon = "📦"  # package
 
     def __init__(self, context) -> None:
+        """Nothing built yet: the screen is made in build_widget()."""
         super().__init__(context)
         self._list: Optional[QListWidget] = None
         self._filter_edit: Optional[QLineEdit] = None
         self._detail_label: Optional[QLabel] = None
 
     def build_widget(self) -> QWidget:
+        """The screen: the filter, the items list, the selected item's details, and Add, Edit, Delete and the quantity buttons."""
         widget = QWidget()
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(24, 24, 24, 24)
@@ -139,6 +142,7 @@ class InventoryTool(ToolboxTool):
     # ------------------------------------------------------------------
 
     def _refresh_list(self, select_item_id: Optional[str] = None) -> None:
+        """Lists the items matching the filter (all when it's empty), selecting the one given."""
         query = self._filter_edit.text().strip()
         items = self.context.inventory.search(query) if query else self.context.inventory.all_items()
 
@@ -152,18 +156,21 @@ class InventoryTool(ToolboxTool):
         self._update_detail_label()
 
     def _selected_item_id(self) -> Optional[str]:
+        """The selected item's id, or None."""
         item = self._list.currentItem()
         if item is None:
             return None
         return item.data(Qt.ItemDataRole.UserRole)
 
     def _profile_name(self, profile_id: Optional[str]) -> Optional[str]:
+        """The name of the person an item belongs to, or None when it's shared or they aren't known."""
         if profile_id is None or self.context.profiles is None:
             return None
         match = next((p for p in self.context.profiles.list_profiles() if p.profile_id == profile_id), None)
         return match.name if match is not None else None
 
     def _update_detail_label(self) -> None:
+        """Shows the selected item's details (quantity, category, location, owner, notes), or nothing."""
         item_id = self._selected_item_id()
         if item_id is None:
             self._detail_label.setText("")
@@ -189,6 +196,7 @@ class InventoryTool(ToolboxTool):
     # ------------------------------------------------------------------
 
     def _on_add(self) -> None:
+        """Adds an item from the dialog and selects it."""
         dialog = AddEditInventoryItemDialog()
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -203,6 +211,7 @@ class InventoryTool(ToolboxTool):
         self._refresh_list(select_item_id=added.item_id)
 
     def _on_edit(self) -> None:
+        """Edits the selected item in the dialog (asks for a selection first)."""
         item_id = self._selected_item_id()
         if item_id is None:
             QMessageBox.information(None, "No Item Selected", "Select an item to edit.")
@@ -224,6 +233,7 @@ class InventoryTool(ToolboxTool):
         self._refresh_list(select_item_id=item_id)
 
     def _on_delete(self) -> None:
+        """Deletes the selected item after asking (asks for a selection first)."""
         item_id = self._selected_item_id()
         if item_id is None:
             QMessageBox.information(None, "No Item Selected", "Select an item to delete.")
@@ -244,6 +254,7 @@ class InventoryTool(ToolboxTool):
         self._refresh_list()
 
     def _on_adjust(self, delta: int) -> None:
+        """Changes the selected item's quantity by the amount (asks for a selection first)."""
         item_id = self._selected_item_id()
         if item_id is None:
             QMessageBox.information(None, "No Item Selected", "Select an item to adjust.")

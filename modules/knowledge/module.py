@@ -96,12 +96,14 @@ _SEARCH_DEBOUNCE_MS = 300
 
 
 class KnowledgeModule(ModuleBase):
+    """The Knowledge app (desktop): the offline reference library of ZIM packs (Wikipedia, manuals...): install, open and read, search inside a pack or from Ctrl+K, and delete."""
     module_id = "knowledge"
     display_name = "Knowledge"
     description = "Offline reference material and personal knowledge base."
     icon = "\U0001F4DA"  # books
 
     def __init__(self, context) -> None:
+        """Nothing built yet, and no pack pages: each is built when first opened."""
         super().__init__(context)
         self._stack: Optional[QStackedWidget] = None
         self._list_page: Optional[QWidget] = None
@@ -109,10 +111,12 @@ class KnowledgeModule(ModuleBase):
         self._pack_pages: dict[str, QWidget] = {}
 
     def on_load(self) -> None:
+        """Registers the library's search provider (Ctrl+K)."""
         super().on_load()
         self.context.search.register_provider("knowledge", self._search)
 
     def _search(self, query: str) -> list[SearchResult]:
+        """Ctrl+K results: a few matching articles from every pack, each opening at that article."""
         results = []
         for pack in self.context.reference_library.list_packs():
             hits = self.context.reference_library.search(pack.pack_id, query, limit=_SEARCH_HITS_PER_PACK)
@@ -129,6 +133,7 @@ class KnowledgeModule(ModuleBase):
         return results[:_SEARCH_RESULTS_TOTAL]
 
     def get_widget(self) -> QWidget:
+        """The page stack, starting on the list of packs."""
         self._stack = QStackedWidget()
         self._list_page = self._build_list_page()
         self._stack.addWidget(self._list_page)
@@ -140,6 +145,7 @@ class KnowledgeModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_list_page(self) -> QWidget:
+        """The list page: a title, Install Pack, and the installed packs."""
         page = QWidget()
         outer = QVBoxLayout(page)
         outer.setContentsMargins(24, 24, 24, 24)
@@ -185,6 +191,7 @@ class KnowledgeModule(ModuleBase):
         # modules/toolbox/tools/lite_captures_tool.py) and fixed across
         # this codebase's other actively-re-triggered refresh methods
         # the same day.
+        """Rebuilds the packs list (old rows hidden and detached first); says how to install one when there are none."""
         layout = self._pack_list_layout
         while layout.count():
             item = layout.takeAt(0)
@@ -209,6 +216,7 @@ class KnowledgeModule(ModuleBase):
             layout.addWidget(self._build_pack_row(pack))
 
     def _on_install_pack_clicked(self) -> None:
+        """Installs a .zim file picked from disk and says how it went."""
         file_path, _ = QFileDialog.getOpenFileName(None, "Select Content Pack", "", "ZIM files (*.zim)")
         if not file_path:
             return
@@ -224,6 +232,7 @@ class KnowledgeModule(ModuleBase):
         self._populate_pack_rows()
 
     def _build_pack_row(self, pack: ReferencePack) -> QFrame:
+        """One pack's row: its title, articles, size and language, with Open and Delete."""
         row = QFrame()
         row.setObjectName("CharacterPanel")  # reuse the dashed-panel style
         layout = QHBoxLayout(row)
@@ -255,6 +264,7 @@ class KnowledgeModule(ModuleBase):
         return row
 
     def _on_delete_pack_clicked(self, pack: ReferencePack) -> None:
+        """Deletes a pack after asking, and drops its cached reader page too (it was built against the deleted pack)."""
         dialog = DeleteConfirmDialog(pack.title, is_directory=False)
         if dialog.exec() != DeleteConfirmDialog.DialogCode.Accepted:
             return
@@ -276,6 +286,7 @@ class KnowledgeModule(ModuleBase):
         self._populate_pack_rows()
 
     def _show_list_page(self) -> None:
+        """Goes back to the list of packs."""
         if self._stack is not None and self._list_page is not None:
             self._stack.setCurrentWidget(self._list_page)
 
@@ -284,6 +295,7 @@ class KnowledgeModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _open_pack(self, pack: ReferencePack) -> None:
+        """Opens a pack's reader, built the first time and kept after."""
         if self._stack is None:
             return
 
@@ -294,6 +306,7 @@ class KnowledgeModule(ModuleBase):
         self._stack.setCurrentWidget(self._pack_pages[pack.pack_id])
 
     def _build_pack_page(self, pack: ReferencePack) -> QWidget:
+        """A pack's reader: back to the library, history back and forward, a search box (searched a moment after typing stops) with its results, and the article itself."""
         page = QWidget()
         outer = QVBoxLayout(page)
         outer.setContentsMargins(0, 0, 0, 0)

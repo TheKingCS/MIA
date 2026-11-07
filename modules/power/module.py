@@ -85,12 +85,14 @@ def format_energy_reading_row(reading: Reading) -> str:
 
 
 class PowerModule(ModuleBase):
+    """The Power app (desktop): the battery's status, refreshed on a timer, and energy sources (solar, generator, utility...) with their meters and readings logged by hand."""
     module_id = "power"
     display_name = "Power"
     description = "Battery status and manual energy/utility tracking."
     icon = "\U0001F50B"  # battery
 
     def __init__(self, context) -> None:
+        """Nothing built yet: the tabs and the battery timer are made in get_widget()."""
         super().__init__(context)
         self._status_label: Optional[QLabel] = None
         self._timer: Optional[QTimer] = None
@@ -100,6 +102,7 @@ class PowerModule(ModuleBase):
         self._readings_list: Optional[QListWidget] = None
 
     def get_widget(self) -> QWidget:
+        """The page: Battery and Energy Sources tabs, the battery refreshed every few seconds."""
         widget = QWidget()
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(24, 24, 24, 24)
@@ -125,6 +128,7 @@ class PowerModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_battery_tab(self) -> QWidget:
+        """The battery tab: the status readout."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
@@ -142,6 +146,7 @@ class PowerModule(ModuleBase):
         return tab
 
     def _refresh_battery(self) -> None:
+        """Shows the battery's charge and whether it's plugged in (or that there's no battery)."""
         if self._status_label is None:
             return
         status = self.context.power.read() if self.context.power is not None else None
@@ -152,6 +157,7 @@ class PowerModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_energy_sources_tab(self) -> QWidget:
+        """The energy sources tab: the sources list with Add, Edit, Delete and Log Reading, and the selected source's meter picker and readings."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
@@ -191,6 +197,7 @@ class PowerModule(ModuleBase):
         return tab
 
     def _refresh_energy_source_list(self) -> None:
+        """Lists every energy source, then its meters."""
         self._source_list.clear()
         for source in self.context.energy.all_energy_sources():
             item = QListWidgetItem(format_energy_source_row(source))
@@ -199,12 +206,14 @@ class PowerModule(ModuleBase):
         self._refresh_meter_combo()
 
     def _selected_energy_source_id(self) -> Optional[str]:
+        """The selected source's id, or None."""
         item = self._source_list.currentItem()
         if item is None:
             return None
         return item.data(Qt.ItemDataRole.UserRole)
 
     def _refresh_meter_combo(self) -> None:
+        """Fills the meter picker with the selected source's meters (signals held), then its readings."""
         source_id = self._selected_energy_source_id()
         self._meter_combo.blockSignals(True)
         self._meter_combo.clear()
@@ -214,6 +223,7 @@ class PowerModule(ModuleBase):
         self._refresh_readings_list()
 
     def _refresh_readings_list(self) -> None:
+        """Lists the readings of the selected source's chosen meter."""
         self._readings_list.clear()
         source_id = self._selected_energy_source_id()
         meter_name = self._meter_combo.currentText()
@@ -223,6 +233,7 @@ class PowerModule(ModuleBase):
             self._readings_list.addItem(QListWidgetItem(format_energy_reading_row(reading)))
 
     def _on_add_energy_source(self) -> None:
+        """Adds a source from the dialog and refreshes."""
         dialog = AddEditEnergySourceDialog()
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -235,6 +246,7 @@ class PowerModule(ModuleBase):
         self._refresh_energy_source_list()
 
     def _on_edit_energy_source(self) -> None:
+        """Edits the selected source in the dialog (asks for a selection first)."""
         source_id = self._selected_energy_source_id()
         if source_id is None:
             QMessageBox.information(None, "No Source Selected", "Select an energy source to edit.")
@@ -254,6 +266,7 @@ class PowerModule(ModuleBase):
         self._refresh_energy_source_list()
 
     def _on_delete_energy_source(self) -> None:
+        """Deletes the selected source after asking (asks for a selection first)."""
         source_id = self._selected_energy_source_id()
         if source_id is None:
             QMessageBox.information(None, "No Source Selected", "Select an energy source to delete.")
@@ -274,6 +287,7 @@ class PowerModule(ModuleBase):
         self._refresh_energy_source_list()
 
     def _on_log_energy_reading(self) -> None:
+        """Logs a meter reading for the selected source (its known meters offered) and refreshes."""
         source_id = self._selected_energy_source_id()
         if source_id is None:
             QMessageBox.information(None, "No Source Selected", "Select an energy source to log a reading for.")
