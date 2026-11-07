@@ -7,13 +7,23 @@ you, and once two runs in a row go cleanly she calls it learned.
 
 ## What she uses
 
+**Inside MIA** (2026-11-07): her Edge runs with no window of its own, at a
+fixed 1280 x 800 page, and the Browser page shows it live (a picture about
+once a second, `/api/browser/frame`). You work it from the picture: a click
+lands on the same spot in the page, the box under it types, the key buttons
+press Enter, Tab and the rest, the mouse wheel scrolls (`/api/browser/input`,
+`Browser.person`). These are your own hands, so no gate applies, and what
+you type there is never counted as words she may type later. Teaching
+records them exactly as it records a window. `browser.own_window: true`
+brings back a separate Edge window on the PC.
+
 - **Her own Edge profile.** Playwright drives Microsoft Edge in a profile
   kept in the person's own folder (`data/profiles/<id>/browser/profile`).
   It has none of your own Edge sign-ins, history or saved passwords. When a
   site needs you signed in, you sign in yourself in her window; that site
   then stays signed in for her, and only in her profile.
-- The window is visible (not hidden), so you can always see what she's
-  doing and take over.
+- You can always see what she's doing and take over: in the live view on
+  the Browser page (or her own window, with `browser.own_window`).
 - Only web addresses (http and https). A file, `javascript:`, `data:` or
   `edge://` address is refused, never sent to a search.
 

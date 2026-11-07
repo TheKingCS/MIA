@@ -43,6 +43,10 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       Claude Design for round one (the frame plus six screens).
 
 ### Decisions
+- [ ] **The audit and organization (a Claude Doc, "MIA: Audit and Organization of Everything Built":
+      https://claude.ai/artifact/56xyaTxEQThT1vrYh484Ay):** seven areas, eight hubs, four screen tiers, the ways to
+      use each feature, six flows. Four decisions at its end: the areas, the merges (above all the game layer into one
+      Progress hub), missed missions, and building step 1 now.
 - [ ] **Taught procedures (DEC-0123 PROPOSED, `docs/PROCEDURES_PROPOSAL.md`):** your "universal skill system" idea as
       one engine (browser routines and workflows folded in). Four questions at its end: the direction, the name,
       phase 1 first, and which desktop apps you'd want her to learn.

@@ -31,6 +31,11 @@ models (`MailSetupRequest`, `MailUnlockRequest`), handed straight to
 core/inbox_mail.py's encrypted vault: never an action (whose parameters
 are kept), never logged.
 
+**MIA's browser, live** (2026-11-07): `/api/browser/frame` (a picture of
+her browser now) and `/api/browser/input` (the person's click, typing, key
+or scroll, `BrowserInputRequest`) skip the turn lock so the live view stays
+smooth while she thinks; her browser has its own lock.
+
 **Phone voice (2026-09-27)**: `/api/voice/*` lets the phone page hold a
 spoken conversation with the full desktop MIA. The phone records and
 encodes a 16 kHz mono WAV itself (no ffmpeg needed here), this server
@@ -150,6 +155,17 @@ class MailSetupRequest(BaseModel):
     password: str = Field(default="", max_length=400)
     passphrase: str = Field(default="", max_length=400)
     everyday: bool = True
+
+
+class BrowserInputRequest(BaseModel):
+    """The person working MIA's browser from the live view: a click at x, y (the page's own pixels), typing, a key,
+    or a scroll."""
+    kind: str = Field(default="click", max_length=10)
+    x: float = 0
+    y: float = 0
+    text: str = Field(default="", max_length=2000)
+    key: str = Field(default="", max_length=20)
+    dy: float = 0
 
 
 class MailUnlockRequest(BaseModel):
@@ -897,6 +913,30 @@ def create_app(context: AppContext) -> FastAPI:
         from core.web_guide import guide
 
         return guide()
+
+    # The live view: frames and the person's own input skip the turn lock, so it stays smooth while MIA thinks (her
+    # browser has its own lock).
+    @app.get("/api/browser/frame")
+    def browser_frame(profile_id: str = Depends(require_profile_id)):
+        from fastapi.responses import Response
+
+        from core.web_browser import live_frame
+
+        data = live_frame(view_for(context, profile_id))
+        if data is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "MIA's browser isn't open.")
+        return Response(data, media_type="image/jpeg", headers={"Cache-Control": "no-store"})
+
+    @app.post("/api/browser/input")
+    def browser_input(body: BrowserInputRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.browser import BrowserError
+        from core.web_browser import person_input
+
+        try:
+            return person_input(view_for(context, profile_id), body.kind, body.x, body.y, body.text, body.key,
+                                body.dy)
+        except BrowserError as problem:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
 
     @app.get("/api/browser/view")
     def browser_view(profile_id: str = Depends(require_profile_id)):

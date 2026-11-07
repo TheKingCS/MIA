@@ -7,8 +7,9 @@ let her do alone, a commit waiting for the person (approved on screen or
 with a yes, refused when the page changed), secrets never typed, a task
 taught by showing and replayed, learned after two clean runs, the
 Browser screen (core/web_browser.py) with its run and forget actions and
-its own controls (open, back, close, teach, the live picture), and only
-the person's own words typed or searched for on her own (DEC-0122).
+its own controls (open, back, close, teach, the live picture), the live
+view the person works her browser from, and only the person's own words
+typed or searched for on her own (DEC-0122).
 """
 
 from __future__ import annotations
@@ -94,6 +95,20 @@ class FakeEdge(Driver):
     def on_record(self, callback):
         """Keeps the recorder (the test plays the person through it)."""
         self.recorder = callback
+
+    def frame(self):
+        """A stand-in JPEG of the page."""
+        return b"JPEG-frame"
+
+    def viewport(self):
+        """The page's size inside MIA."""
+        return (1280, 800)
+
+    def person(self, kind, x=0, y=0, text="", key="", dy=0):
+        """The person's own input from the live view, remembered; a click at the Place order button's spot orders."""
+        self.did.append(("person", kind, x, y, text, key, dy))
+        if kind == "click" and (x, y) == (640, 400):
+            self.url = DONE
 
     def close(self):
         """Nothing to close."""
@@ -321,3 +336,28 @@ def test_the_browser_page_drives_her_browser(world):
     assert [t["name"] for t in screen(world)["tasks"]] == ["Order more widgets"]
     do("browser.close")
     assert screen(world)["open"] is None
+
+
+def test_working_her_browser_from_the_live_view(world):
+    """The page shows her browser live (frames and its size), and the person works it from the picture: a click lands
+    at the spot made, typing, keys and scrolling reach the page; no gate applies to their own hands, what they type
+    isn't heard as her words, and anything else is refused."""
+    from core.browser import BrowserError
+    from core.web_browser import live_frame, person_input, screen
+
+    assert live_frame(world) is None
+    with pytest.raises(BrowserError):
+        person_input(world, "click", 10, 10)
+    tool(world, "browse", target=SHOP)
+    assert live_frame(world).startswith(b"JPEG") and screen(world)["size"] == {"width": 1280, "height": 800}
+    assert person_input(world, "type", text="hunter2")["title"] == "Your cart"
+    assert not world.browsers.for_person(world).authorized("hunter2")
+    assert person_input(world, "click", 640, 400)["title"] == "Thank you"  # their own click: no OK needed
+    person_input(world, "key", key="Enter")
+    person_input(world, "scroll", 100, 100, dy=300)
+    kinds = [d[1] for d in edge(world).did if d[0] == "person"]
+    assert kinds == ["type", "click", "key", "scroll"]
+    with pytest.raises(BrowserError):
+        person_input(world, "key", key="F12")
+    with pytest.raises(BrowserError):
+        person_input(world, "drag", 1, 1)

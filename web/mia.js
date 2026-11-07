@@ -281,6 +281,8 @@
         summary: "Pay the property tax: 6 steps, practising, last run finished", steps: ["open https://tax.example.gov", "sign in yourself", "press \"Pay now\""],
         last: { at: "2026-11-07T10:00:00", clean: true, note: "" } }] })
       : call("GET", "/api/browser"),
+    // The person working her browser from the live view (frames: MIA.download("/api/browser/frame")).
+    browserInput: (body) => demo ? demoOnly() : call("POST", "/api/browser/input", body),
     // The Library's plans shelf (core/plan_library.py): the plans, one plan, and a plan's file (MIA.download).
     knowledgePlans: (q = "") => demo ? Promise.resolve({ available: true, folder: "reference_library/plans",
       sources: [{ name: "University of Tennessee Extension plan file", what: "300+ farm building plans", url: "https://trace.tennessee.edu/utk_agexfarmbld/" }],

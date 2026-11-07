@@ -1803,3 +1803,4 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
 .side .side-group[open] > summary { color: var(--accent-soft); }
 .side a.side-start .ico { font-weight: 700; color: var(--accent); }
 .guide-say .btn { white-space: normal; text-align: left; text-transform: none; }
+.browser-live { cursor: crosshair; user-select: none; }

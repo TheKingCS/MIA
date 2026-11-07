@@ -56,11 +56,66 @@
     draw();
   }
 
-  async function picture(holder) {
+  // The live view (2026-11-07): her browser lives inside MIA; a frame about once a second while it's open, and the
+  // person works it from the picture. Clicks land where they're made; typing, keys and scrolling go to the page.
+  let live = null;  // {img, size, title, url}: the picture on the page now
+  let frameTimer = null, frames = 0, lastState = "";
+
+  async function nextFrame() {
+    frameTimer = null;
+    if (!live || !document.body.contains(live.img)) return;
+    if (!document.hidden) {
+      try {
+        const blob = await MIA.download("/api/browser/frame?t=" + Date.now());
+        const old = live.img.src;
+        live.img.src = URL.createObjectURL(blob);
+        if (old && old.startsWith("blob:")) URL.revokeObjectURL(old);
+      } catch (e) { /* closed or busy: try again */ }
+      if (++frames % 5 === 0) {  // every few seconds: something waiting for an OK, or the page she's on, changed?
+        try {
+          const data = await MIA.browser();
+          const state = JSON.stringify([data.open && data.open.url, data.learning, data.waiting.length, data.tasks.length]);
+          if (state !== lastState) { lastState = state; draw(); return; }
+        } catch (e) { /* keep showing */ }
+      }
+    }
+    frameTimer = setTimeout(nextFrame, 800);
+  }
+
+  async function send(body) {
     try {
-      const blob = await MIA.download("/api/browser/view?t=" + Date.now());
-      holder.replaceChildren(el("img", { src: URL.createObjectURL(blob), alt: "What MIA's browser shows now", class: "browser-shot" }));
-    } catch (e) { holder.replaceChildren(el("p", { class: "dim" }, "Her window is open on the PC; the picture couldn't be taken.")); }
+      const where = await MIA.browserInput(body);
+      if (live) { live.title.textContent = where.title || where.url; live.url.textContent = where.url; }
+    } catch (e) { MIAShell.say(e.message); }
+    if (frameTimer) { clearTimeout(frameTimer); }
+    nextFrame();
+  }
+
+  function liveView(data) {
+    const img = el("img", { class: "browser-shot browser-live", alt: "MIA's browser, live. Click to click there.",
+      title: "Click here to click on the page; scroll to scroll it" });
+    const size = data.size || { width: 1280, height: 800 };
+    const spot = (e) => {
+      const box = img.getBoundingClientRect();
+      return { x: Math.round((e.clientX - box.left) / box.width * size.width),
+        y: Math.round((e.clientY - box.top) / box.height * size.height) };
+    };
+    img.addEventListener("click", (e) => send(Object.assign({ kind: "click" }, spot(e))));
+    img.addEventListener("wheel", (e) => { e.preventDefault(); send(Object.assign({ kind: "scroll", dy: e.deltaY }, spot(e))); }, { passive: false });
+    const typed = el("input", { type: "text", class: "input", placeholder: "Type into the page (click a box in the picture first)", autocomplete: "off" });
+    const typing = el("form", { class: "form-row", onsubmit: (e) => {
+      e.preventDefault();
+      if (typed.value) { send({ kind: "type", text: typed.value }); typed.value = ""; }
+    } }, typed, el("button", { type: "submit", class: "btn btn-ghost" }, "Type"));
+    const keys = el("div", { class: "row-buttons" }, ["Enter", "Tab", "Backspace", "Escape", "PageDown", "PageUp"].map((k) =>
+      btn(k === "PageDown" ? "Page down" : k === "PageUp" ? "Page up" : k, "btn-ghost btn-small", () => send({ kind: "key", key: k }))));
+    const title = el("p", { class: "row-title" }, data.open.title || data.open.url);
+    const url = el("p", { class: "dim" }, data.open.url);
+    live = { img, size, title, url };
+    lastState = JSON.stringify([data.open && data.open.url, data.learning, data.waiting.length, data.tasks.length]);
+    if (frameTimer) clearTimeout(frameTimer);
+    nextFrame();
+    return [title, url, img, typing, keys];
   }
 
   function controls(data) {
@@ -72,25 +127,22 @@
     } }, address, el("button", { type: "submit", class: "btn btn-green" }, "Open"));
     if (!data.open) {
       return section("Her Browser", bar,
-        el("p", { class: "dim" }, "Closed. Open a website or search above: her own Edge window opens on the PC, and you'll see it here."));
+        el("p", { class: "dim" }, "Closed. Open a website or search above and it shows here, live: click on it to "
+          + "click, scroll to scroll, type in the box under it. She works in the same view."));
     }
-    const view = el("div", {}, el("p", { class: "dim" }, "Loading a picture of her window…"));
-    picture(view);
     const name = el("input", { type: "text", class: "input", placeholder: "Name a task to teach her from here", autocomplete: "off" });
     const teach = data.learning
       ? el("div", { class: "row-buttons" },
-        el("p", {}, "Watching you do \"" + data.learning + "\" in her window on the PC."),
+        el("p", {}, "Watching you do \"" + data.learning + "\": do it in the picture above, then keep it."),
         btn("Done, keep it", "btn-green", () => run({ kind: "browser.learn_done", params: {} })))
       : el("form", { class: "form-row", onsubmit: (e) => {
         e.preventDefault();
         if (name.value.trim()) run({ kind: "browser.learn", params: { name: name.value.trim() } });
       } }, name, el("button", { type: "submit", class: "btn btn-ghost" }, "Learn a task"));
     return section("Her Browser", bar,
-      el("p", { class: "row-title" }, data.open.title || data.open.url), el("p", { class: "dim" }, data.open.url),
-      view,
+      ...liveView(data),
       el("div", { class: "row-buttons" },
         btn("Back", "btn-ghost btn-small", () => run({ kind: "browser.back", params: {} })),
-        btn("Refresh picture", "btn-ghost btn-small", () => draw()),
         btn("Ask MIA about this page", "btn-ghost btn-small", () => MIAShell.talk(true, "Read the page and tell me what's on it")),
         btn("Close", "btn-ghost btn-small", () => run({ kind: "browser.close", params: {} }))),
       teach);
@@ -106,7 +158,6 @@
     $("panel").replaceChildren(...[
       controls(data),
       data.waiting.length ? section("Waiting For Your OK", ...data.waiting.map(waitingCard)) : null,
-      data.learning ? section("Learning", el("p", {}, "Watching you do \"" + data.learning + "\" in her window. Say \"done\" when you've finished.")) : null,
       section("Tasks You Taught Her",
         data.tasks.length ? el("div", { class: "rows" }, data.tasks.map(taskRow))
           : el("p", { class: "empty" }, "None yet. Ask MIA to open where a task starts, say \"learn this\", and do it in her window.")),

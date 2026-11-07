@@ -15,6 +15,10 @@ reachable by talking to her.
 - `shot_path()`: a waiting step's screenshot, only from her own shots
   folder, so a request can't name any other file.
 - `live_view()`: a picture of what her browser shows now, taken on asking.
+- `live_frame()` and `person_input()` (2026-11-07): her browser lives inside
+  MIA, so the page shows it live (about once a second) and the person
+  works it from there: a click on the picture lands on the page, typing,
+  keys and scrolling; teaching records it as if done in a window.
 
 The page also drives her browser (2026-11-07): open, back, close, learn a
 task and keep it, through the `browser.open`, `browser.back`,
@@ -58,8 +62,8 @@ def _still_waiting(context) -> set:
 
 
 def screen(context) -> dict:
-    """The Browser screen: the open page, the steps waiting for the person, the task being learned, and the taught
-    tasks. Not available where MIA has no browser."""
+    """The Browser screen: the open page and its size (to place clicks on the live view), the steps waiting for the
+    person, the task being learned, and the taught tasks. Not available where MIA has no browser."""
     from core.browser_routines import describe, state_of, step_words
 
     session = _session(context)
@@ -85,8 +89,10 @@ def screen(context) -> dict:
                       "last": ({"at": last.get("at", ""), "clean": last.get("clean", False),
                                 "note": last.get("note", "")} if last else None)})
     page = session.page
+    width, height = session.viewport()
     return {
         "available": True,
+        "size": {"width": width, "height": height},  # the page's own pixels, to place a click on the live view
         "open": {"title": page.title, "url": page.url} if session.driver is not None and page.url else None,
         "learning": (session.teaching or {}).get("name"),
         "waiting": waiting,
@@ -119,3 +125,30 @@ def live_view(context) -> Optional[Path]:
     except Exception:
         log.exception("Browser screen: the live picture failed")
         return None
+
+
+# ------------------------------------------------------------------ the live view (2026-11-07)
+
+
+def live_frame(context) -> Optional[bytes]:
+    """What her browser shows now as a JPEG, for the live view (about once a second); None when it's closed."""
+    session = _session(context)
+    if session is None:
+        return None
+    try:
+        return session.frame()
+    except Exception:
+        log.exception("Browser screen: the live frame failed")
+        return None
+
+
+def person_input(context, kind: str, x: float = 0, y: float = 0, text: str = "", key: str = "", dy: float = 0) -> dict:
+    """The person's click, typing, key or scroll on the live view, done in her browser (core/browser.Browser.person);
+    returns where the page is now. BrowserError says why it couldn't."""
+    from core.browser import BrowserError
+
+    session = _session(context)
+    if session is None:
+        raise BrowserError("MIA's browser isn't on this device.")
+    session.person(kind, x, y, text, key, dy)
+    return {"title": session.page.title, "url": session.page.url}

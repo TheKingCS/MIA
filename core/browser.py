@@ -28,7 +28,8 @@ the page as she goes and stopping at every commit.
 
 **The pieces:**
 - `Driver`: what any browser engine gives her (open, snapshot, click,
-  type, select, press, back, screenshot, recording). `EdgeDriver` is the
+  type, select, press, back, screenshot, recording, and for the live view
+  inside MIA a frame, the page size and the person's own input). `EdgeDriver` is the
   real one: Playwright owns the browser on one worker thread (its objects
   must stay on the thread that made them), and every call is handed to it.
   Tests use a fake driver.
@@ -36,7 +37,10 @@ the page as she goes and stopping at every commit.
   teaching, and what the person said lately (`hear`): the only words she
   types, chooses or searches for on her own (`authorized`, DEC-0122);
   anything else waits for their OK with the text shown (`go` for opening
-  and searching, `do` for steps).
+  and searching, `do` for steps). It lives inside MIA (2026-11-07): no
+  window of its own, shown live on the Browser page (`frame`), worked by
+  the person from there (`person`); `browser.own_window` brings the
+  separate Edge window back.
 - `Browsers` (`context.browsers`): one session per person, each with its
   own profile folder in their own data (so their site sign-ins are theirs).
 """
@@ -63,6 +67,8 @@ log = get_logger(__name__)
 SEARCH_URL = "https://duckduckgo.com/?q="  # a search when she's given words instead of an address
 MAX_CONTROLS = 150
 PENDING_MINUTES = 30  # a commit not approved by then is let go
+VIEW_W, VIEW_H = 1280, 800  # the page's size when her browser lives inside MIA (no window of its own)
+PERSON_KEYS = ("Enter", "Tab", "Backspace", "Escape", "ArrowDown", "ArrowUp", "PageDown", "PageUp")
 HEARD_MINUTES = 30  # the person's words she may type or search for on her own, from this long back
 HEARD_KEEP = 12  # and at most this many of their messages
 _URLISH = re.compile(r"^(https?://|www\.)|^[a-z0-9-]+(\.[a-z0-9-]+)+(:\d+)?(/|$)", re.I)
@@ -174,6 +180,18 @@ class Driver:
         """Starts (with a callback) or stops (None) reporting what the person does in the window."""
         raise NotImplementedError
 
+    def frame(self) -> bytes:
+        """What the page shows now, as a small JPEG (the live view inside MIA)."""
+        raise NotImplementedError
+
+    def viewport(self) -> tuple[int, int]:
+        """The page's width and height in its own pixels (to place a click made on the live view)."""
+        raise NotImplementedError
+
+    def person(self, kind: str, x: float = 0, y: float = 0, text: str = "", key: str = "", dy: float = 0) -> None:
+        """The person operating the page through the live view: a click at x, y; typing text; a key; a scroll."""
+        raise NotImplementedError
+
     def close(self) -> None:
         """Closes the browser."""
         raise NotImplementedError
@@ -266,7 +284,8 @@ class _Worker(threading.Thread):
         self.ready.result(timeout=60)
 
     def run(self) -> None:
-        """Opens Edge in MIA's profile, then runs each job handed to it until told to stop."""
+        """Opens Edge in MIA's profile (hidden at a fixed page size inside MIA, or in a window of its own), then runs
+        each job handed to it until told to stop."""
         try:
             from playwright.sync_api import sync_playwright
         except ImportError as problem:
@@ -276,9 +295,9 @@ class _Worker(threading.Thread):
         try:
             with sync_playwright() as p:
                 self.profile_dir.mkdir(parents=True, exist_ok=True)
+                size = {"no_viewport": True} if not self.headless else {"viewport": {"width": VIEW_W, "height": VIEW_H}}
                 self.context = p.chromium.launch_persistent_context(
-                    str(self.profile_dir), channel="msedge", headless=self.headless, no_viewport=True,
-                    accept_downloads=False)
+                    str(self.profile_dir), channel="msedge", headless=self.headless, accept_downloads=False, **size)
                 self.context.expose_binding("miaRecord", lambda _source, raw: self._recorded(raw))
                 self.context.add_init_script(_RECORD_JS)
                 self.page = self.context.pages[0] if self.context.pages else self.context.new_page()
@@ -397,6 +416,40 @@ class EdgeDriver(Driver):
         """Starts or stops passing on what the person does in the window."""
         self.worker.recorder = callback
 
+    def frame(self) -> bytes:
+        """The page now as a JPEG, fast enough to show about once a second."""
+        return self.worker.call(lambda w: self._page(w).screenshot(type="jpeg", quality=70), timeout=15)
+
+    def viewport(self) -> tuple[int, int]:
+        """The page's size: the fixed one inside MIA, else the window's."""
+        def size(w):
+            page = self._page(w)
+            if page.viewport_size:
+                return page.viewport_size["width"], page.viewport_size["height"]
+            return tuple(page.evaluate("[window.innerWidth, window.innerHeight]"))
+        return self.worker.call(size, timeout=15)
+
+    def person(self, kind: str, x: float = 0, y: float = 0, text: str = "", key: str = "", dy: float = 0) -> None:
+        """The person's own click, typing, key or scroll, as real input to the page (so teaching records it as if
+        they'd done it in a window)."""
+        def go(w):
+            page = self._page(w)
+            if kind == "click":
+                page.mouse.click(float(x), float(y))
+                self._settle(page)
+            elif kind == "type":
+                page.keyboard.type(text, delay=15)
+            elif kind == "key":
+                page.keyboard.press(key)
+                if key == "Enter":
+                    self._settle(page)
+            elif kind == "scroll":
+                page.mouse.move(float(x) or 1, float(y) or 1)
+                page.mouse.wheel(0, float(dy))
+            else:
+                raise BrowserError(f"I don't know \"{kind}\".")
+        self.worker.call(go)
+
     def close(self) -> None:
         """Closes Edge."""
         self.worker.stop()
@@ -434,10 +487,14 @@ class Browser:
     Made lazily: no Edge opens until she's asked to browse."""
 
     def __init__(self, context, profile_dir: Path, driver_factory: Optional[Callable[[Path], Driver]] = None) -> None:
-        """Keeps where her profile lives and how to make the driver; nothing opens yet, and nothing has been heard."""
+        """Keeps where her profile lives and how to make the driver (inside MIA, unless browser.own_window); nothing
+        opens yet, and nothing has been heard."""
         self.context = context
         self.profile_dir = Path(profile_dir)
-        self._factory = driver_factory or (lambda folder: EdgeDriver(folder))
+        # Inside MIA (2026-11-07, Zac: "open the browser inside a window in her program"): no window of its own, shown
+        # live on the Browser page; browser.own_window brings back the separate Edge window.
+        own = bool(getattr(context, "config", None) and context.config.get("browser.own_window", False))
+        self._factory = driver_factory or (lambda folder: EdgeDriver(folder, headless=not own))
         self.driver: Optional[Driver] = None
         self.page = Page()
         self.pending: dict[str, Pending] = {}
@@ -632,6 +689,34 @@ class Browser:
 
                 said += "\n" + carry_on(self.context, self, pending.routine)
             return said
+
+    # -------------------------------------------------------------- the live view inside MIA (2026-11-07)
+
+    def frame(self) -> Optional[bytes]:
+        """What her browser shows now, as a JPEG for the Browser page's live view; None when it's closed."""
+        if self.driver is None:
+            return None
+        with self.lock:
+            return self.driver.frame()
+
+    def viewport(self) -> tuple[int, int]:
+        """The page's size in its own pixels, so a click on the live view lands in the same place."""
+        if self.driver is None:
+            return (VIEW_W, VIEW_H)
+        with self.lock:
+            return self.driver.viewport()
+
+    def person(self, kind: str, x: float = 0, y: float = 0, text: str = "", key: str = "", dy: float = 0) -> None:
+        """The person operating her browser from the live view: a click, typing, one of PERSON_KEYS, or a scroll. It's
+        their own hands, so no gate applies, and teaching records it as if done in a window. What they type isn't
+        heard as words MIA may type later (it may be a password). BrowserError when it's closed or not one of these."""
+        if self.driver is None:
+            raise BrowserError("MIA's browser is closed. Open a website first.")
+        if kind not in ("click", "type", "key", "scroll") or (kind == "key" and key not in PERSON_KEYS):
+            raise BrowserError("That isn't something the live view can do.")
+        with self.lock:
+            self.driver.person(kind, x, y, (text or "")[:2000], key, dy)
+            self.refresh()
 
     def describe_pending(self, pending_id: str) -> str:
         """The sentence for a waiting step's approval; BrowserError when it isn't waiting."""

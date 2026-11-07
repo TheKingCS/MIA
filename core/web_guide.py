@@ -40,11 +40,11 @@ TOPICS = (
              "Cut list: 4 legs at 30 in 2x4; 1 top 24 by 48 in plywood", "Where can I get free plans?"],
      "page": "knowledge.html"},
     {"id": "browser", "title": "Her own web browser", "icon": "knowledge",
-     "how": "She opens websites in her own Edge window on the PC (none of your logins). On the Browser page, type "
-            "a website or a search and press Open; you'll see a picture of her window. She reads and searches by "
-            "herself, but anything that submits, buys, signs in or sends waits for your OK, and she only types words "
-            "you said. Teach her a task by doing it once: open where it starts, name it under \"Learn a task\", do "
-            "it in her window on the PC, then \"Done, keep it\".",
+     "how": "Her browser lives inside MIA: on the Browser page, type a website or a search and press Open, and you "
+            "watch it live. Click on the picture to click there, scroll it, and type in the box under it; she works "
+            "in the same view, so you see each step she takes. She reads and searches by herself, but anything that "
+            "submits, buys, signs in or sends waits for your OK, and she only types words you said. To teach her a "
+            "task, open where it starts, name it under \"Learn a task\", do it in the picture, then \"Done, keep it\".",
      "say": ["Open the county website", "Read the page", "Learn this: pay the water bill", "Do pay the water bill"],
      "page": "browser.html"},
     {"id": "home", "title": "House, garage and homestead", "icon": "garage",
