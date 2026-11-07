@@ -170,12 +170,14 @@ _VOICE_INPUT_DISABLED_STATUS = "Voice input is turned off (Quick Bus, Home dashb
 
 
 class AssistantModule(ModuleBase):
+    """The Assistant app (desktop): conversations with MIA by typing or holding to talk, her replies spoken, the conversation list beside the chat, and Memories. A turn runs the same steps as on the web and phone: the safety floor and fixed replies first, then answers from code, then a question plan or the model with tools."""
     module_id = "assistant"
     display_name = "Assistant"
     description = "Conversational assistant and local AI."
     icon = "\U0001F5E8"  # speech balloon
 
     def __init__(self, context) -> None:
+        """Nothing built yet, no conversation loaded, no worker running and not recording."""
         super().__init__(context)
         self._log: Optional[QPlainTextEdit] = None
         self._input: Optional[QLineEdit] = None
@@ -192,6 +194,7 @@ class AssistantModule(ModuleBase):
         self._conversation: Optional[Conversation] = None
 
     def get_widget(self) -> QWidget:
+        """The page: the conversation sidebar and the chat pane; wires the push-to-talk button (a physical one too, where there is one), follows conversation changes, and loads the active conversation."""
         widget = QWidget()
         outer = QHBoxLayout(widget)
         outer.setContentsMargins(24, 24, 24, 24)
@@ -221,6 +224,7 @@ class AssistantModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_conversation_sidebar(self) -> QWidget:
+        """The sidebar: New Conversation, the conversations, and Memories."""
         container = QFrame()
         container.setFixedWidth(220)
         layout = QVBoxLayout(container)
@@ -250,6 +254,7 @@ class AssistantModule(ModuleBase):
         return container
 
     def _build_chat_pane(self) -> QWidget:
+        """The chat pane: the log, the status line, the input with Send, Hold to Talk, and Stop (her speaking)."""
         container = QWidget()
         layout = QVBoxLayout(container)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -302,6 +307,7 @@ class AssistantModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _refresh_availability(self) -> None:
+        """Says when the local model isn't available."""
         if self.context.llm is not None and self.context.llm.is_available():
             self._status_label.setText("")
         else:
@@ -312,16 +318,19 @@ class AssistantModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _load_active_conversation(self) -> None:
+        """Loads the active conversation (made if there's none) and shows it."""
         self._conversation = self.context.conversations.get_or_create_active_conversation()
         self._render_conversation_log()
 
     def _render_conversation_log(self) -> None:
+        """Shows the conversation's messages, You and Assistant."""
         self._log.clear()
         for message in self._conversation.messages:
             speaker = "You" if message.role == "user" else self.display_name
             self._log.appendPlainText(format_chat_line(speaker, message.content))
 
     def _refresh_conversation_list(self) -> None:
+        """Rebuilds the conversation cards (old ones hidden and detached first), the active one selected."""
         while self._conversation_list_layout.count():
             item = self._conversation_list_layout.takeAt(0)
             widget = item.widget()
@@ -348,14 +357,17 @@ class AssistantModule(ModuleBase):
         # set_active_conversation_id() publishes that event synchronously
         # on the same call stack. No-op if already the active one, same
         # as before, to avoid an unnecessary republish.
+        """Makes a conversation the active one (the change comes back as an event and loads it)."""
         if self._conversation is not None and conversation_id == self._conversation.conversation_id:
             return
         self.context.conversations.set_active_conversation_id(conversation_id)
 
     def _on_new_conversation(self) -> None:
+        """Starts a new active conversation."""
         self.context.conversations.start_new_active_conversation()
 
     def _on_delete_conversation(self, conversation_id: str) -> None:
+        """Deletes a conversation after confirming."""
         conversation = self.context.conversations.get_conversation(conversation_id)
         if conversation is None:
             return
@@ -370,6 +382,7 @@ class AssistantModule(ModuleBase):
         self.context.conversations.delete_conversation(conversation_id)
 
     def _on_open_memories(self) -> None:
+        """Opens the memories MIA keeps about the person."""
         dialog = UserMemoryDialog(self.context, parent=self._log.window())
         dialog.exec()
 
@@ -403,6 +416,7 @@ class AssistantModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _on_send(self) -> None:
+        """Sends what's typed, one turn at a time: the safety floor and its fixed reply first (even with no model), any notice, an answer from code when there is one; otherwise a question plan or the model with tools, run off the UI thread."""
         prompt = self._input.text().strip()
         if not prompt or self._worker is not None:
             return
@@ -441,6 +455,7 @@ class AssistantModule(ModuleBase):
         self._worker.start()
 
     def _on_reply(self, reply: Optional[ChatReply]) -> None:
+        """Handles the model's reply: a question plan's answer is finished in code (never a number MIA didn't look up); tool calls are run (a destructive one bundled with others is skipped and said) and each result said; plain words are kept, spoken, may offer to note something, title the conversation (never a private one) and add memories."""
         plan, self._plan = getattr(self, "_plan", None), None
         if plan is not None:  # never a number MIA didn't look up (core/question_plans.finish)
             reply = ChatReply(content=plan_finish(reply.content if reply is not None else "", *plan), tool_calls=[])
@@ -482,12 +497,14 @@ class AssistantModule(ModuleBase):
         self._extract_memories(user_message)
 
     def _on_worker_finished(self) -> None:
+        """The turn is over: input back on, the worker let go."""
         self._set_busy(False)
         if self._worker is not None:
             self._worker.deleteLater()
             self._worker = None
 
     def _set_busy(self, busy: bool) -> None:
+        """Turns the input, Send and Talk off while she thinks (and says Thinking…), back on after."""
         self._input.setEnabled(not busy)
         self._send_button.setEnabled(not busy)
         self._talk_button.setEnabled(not busy)
@@ -500,6 +517,7 @@ class AssistantModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _maybe_generate_title(self, user_message: str, assistant_message: str) -> None:
+        """Asks the model for a title for a conversation still under the default one, in the background (one at a time)."""
         if self._conversation.title != DEFAULT_TITLE or self._title_worker is not None:
             return
         prompt = build_title_generation_prompt(user_message, assistant_message)
@@ -510,11 +528,13 @@ class AssistantModule(ModuleBase):
         self._title_worker.start()
 
     def _on_title_generated(self, conversation_id: str, raw_title: Optional[str]) -> None:
+        """Sets the generated title, once cleaned and found usable."""
         title = clean_generated_title(raw_title)
         if title is not None:
             self.context.conversations.set_title(conversation_id, title)
 
     def _on_title_worker_finished(self) -> None:
+        """Lets the title worker go."""
         if self._title_worker is not None:
             self._title_worker.deleteLater()
             self._title_worker = None
@@ -522,6 +542,7 @@ class AssistantModule(ModuleBase):
     def _extract_memories(self, user_message: str) -> None:
         # Memory extraction, or organizing a journal session, or nothing
         # off the record — core/talk_it_out.py decides.
+        """After a turn, works out in the background what's worth remembering from what the person said (core follow-up planning), one at a time."""
         if self._memory_worker is not None:
             return
         conversation = self._conversation
@@ -534,6 +555,7 @@ class AssistantModule(ModuleBase):
         self._memory_worker.start()
 
     def _on_memory_worker_finished(self) -> None:
+        """Lets the memory worker go."""
         if self._memory_worker is not None:
             self._memory_worker.deleteLater()
             self._memory_worker = None
@@ -543,6 +565,7 @@ class AssistantModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _on_talk_pressed(self) -> None:
+        """Starts recording while Talk is held (says why when voice input is off or the microphone isn't available)."""
         if self.context.voice is None or self._worker is not None or self._recording:
             return
         if not self.context.config.get("voice.push_to_talk_enabled", True):
@@ -556,6 +579,7 @@ class AssistantModule(ModuleBase):
         self._status_label.setText("Listening…")
 
     def _on_talk_released(self) -> None:
+        """Stops recording, transcribes it, and sends the words as a message (says why when it can't)."""
         if self.context.voice is None or not self._recording:
             return
         self._recording = False
@@ -597,6 +621,7 @@ class AssistantModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _speak(self, text: str) -> None:
+        """Says a reply aloud in the background (one at a time), with Stop on while she speaks."""
         if self.context.voice is None or self._tts_worker is not None:
             return
         output_path = Path(tempfile.gettempdir()) / "mia_assistant_reply.wav"
@@ -606,6 +631,7 @@ class AssistantModule(ModuleBase):
         self._stop_speaking_button.setEnabled(True)
 
     def _on_tts_finished(self) -> None:
+        """She's done speaking: the worker let go, Stop off."""
         if self._tts_worker is not None:
             self._tts_worker.deleteLater()
             self._tts_worker = None
