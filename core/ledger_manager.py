@@ -64,6 +64,9 @@ EXPENSE_CATEGORIES = ("Materials", "Tools", "Shipping", "Fees", "Overhead", "Oth
 
 @dataclass
 class RevenueEntry:
+    """Money that came into the workshop: the amount, what for, the day it happened (not when it was entered), and
+    optionally the product sold (with how many) and the build (job) it came from.
+    """
     entry_id: str
     amount: float
     description: str = ""
@@ -75,6 +78,7 @@ class RevenueEntry:
     created_at: str = ""  # ISO datetime — when this entry was recorded
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in its JSON file."""
         return {
             "entry_id": self.entry_id,
             "amount": self.amount,
@@ -89,6 +93,7 @@ class RevenueEntry:
 
     @staticmethod
     def from_dict(data: dict) -> "RevenueEntry":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return RevenueEntry(
             entry_id=data.get("entry_id", uuid.uuid4().hex[:10]),
             amount=data.get("amount", 0.0),
@@ -104,6 +109,9 @@ class RevenueEntry:
 
 @dataclass
 class ExpenseEntry:
+    """Money the workshop spent: the amount, category (EXPENSE_CATEGORIES), what for, the day, and optionally the build
+    (job) it was for.
+    """
     entry_id: str
     amount: float
     category: str = "Other"  # one of EXPENSE_CATEGORIES
@@ -114,6 +122,7 @@ class ExpenseEntry:
     created_at: str = ""  # ISO datetime
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in its JSON file."""
         return {
             "entry_id": self.entry_id,
             "amount": self.amount,
@@ -127,6 +136,7 @@ class ExpenseEntry:
 
     @staticmethod
     def from_dict(data: dict) -> "ExpenseEntry":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return ExpenseEntry(
             entry_id=data.get("entry_id", uuid.uuid4().hex[:10]),
             amount=data.get("amount", 0.0),
@@ -140,6 +150,7 @@ class ExpenseEntry:
 
 
 def _today_iso() -> str:
+    """Today's date, YYYY-MM-DD."""
     return datetime.now().date().isoformat()
 
 
@@ -155,8 +166,13 @@ def _in_range(entry_date: str, start_date: Optional[str], end_date: Optional[str
 
 
 class LedgerManager:
+    """The workshop's own books (not the household budget): revenue.json and expenses.json in the household's folder
+    (data/ by default), written through atomic_write_text so undo can restore them. Net profit is always worked out,
+    never stored.
+    """
     def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
         # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        """Points at the household's files and loads them."""
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._revenue_file = self.data_dir / "revenue.json" if data_dir is not None else _REVENUE_FILE
         self._expenses_file = self.data_dir / "expenses.json" if data_dir is not None else _EXPENSES_FILE
@@ -170,10 +186,14 @@ class LedgerManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads both files (undo calls this to reload)."""
         self._revenue = self._load_file(self._revenue_file, RevenueEntry.from_dict)
         self._expenses = self._load_file(self._expenses_file, ExpenseEntry.from_dict)
 
     def _load_file(self, path: Path, from_dict) -> list:
+        """One file's entries; missing is empty, a damaged file is logged, reported (notify_data_corruption) and starts
+        empty.
+        """
         if not path.exists():
             return []
         try:
@@ -185,10 +205,12 @@ class LedgerManager:
             return []
 
     def _save_revenue(self) -> None:
+        """Saves the revenue atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._revenue_file, json.dumps([r.to_dict() for r in self._revenue], indent=2), encoding="utf-8")
 
     def _save_expenses(self) -> None:
+        """Saves the expenses atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._expenses_file, json.dumps([e.to_dict() for e in self._expenses], indent=2), encoding="utf-8")
 
@@ -206,6 +228,7 @@ class LedgerManager:
         quantity_sold: float = 0.0,
         notes: str = "",
     ) -> RevenueEntry:
+        """Records money in (today unless a date is given; amounts and quantities never negative)."""
         entry = RevenueEntry(
             entry_id=uuid.uuid4().hex[:10],
             amount=max(0.0, amount),
@@ -251,6 +274,9 @@ class LedgerManager:
         return entry
 
     def update_revenue(self, entry_id: str, **fields) -> RevenueEntry:
+        """Changes a revenue entry's fields, keeping amounts and quantities at 0 or more (ValueError for an unknown
+        entry or field, or created_at).
+        """
         entry = self.get_revenue(entry_id)
         if entry is None:
             raise ValueError(f"No revenue entry with id '{entry_id}'.")
@@ -268,16 +294,19 @@ class LedgerManager:
         return entry
 
     def delete_revenue(self, entry_id: str) -> None:
+        """Deletes a revenue entry."""
         self._revenue = [r for r in self._revenue if r.entry_id != entry_id]
         self._save_revenue()
 
     def get_revenue(self, entry_id: str) -> Optional[RevenueEntry]:
+        """The revenue entry with this id, or None."""
         for entry in self._revenue:
             if entry.entry_id == entry_id:
                 return entry
         return None
 
     def all_revenue(self) -> list[RevenueEntry]:
+        """Every revenue entry, newest first."""
         return sorted(self._revenue, key=lambda r: r.date, reverse=True)
 
     # ------------------------------------------------------------------
@@ -293,6 +322,7 @@ class LedgerManager:
         job_id: str = "",
         notes: str = "",
     ) -> ExpenseEntry:
+        """Records money out (today unless a date is given; an unknown category becomes Other)."""
         entry = ExpenseEntry(
             entry_id=uuid.uuid4().hex[:10],
             amount=max(0.0, amount),
@@ -309,6 +339,7 @@ class LedgerManager:
         return entry
 
     def update_expense(self, entry_id: str, **fields) -> ExpenseEntry:
+        """Changes an expense's fields, with add's limits (ValueError for an unknown entry or field, or created_at)."""
         entry = self.get_expense(entry_id)
         if entry is None:
             raise ValueError(f"No expense entry with id '{entry_id}'.")
@@ -326,16 +357,19 @@ class LedgerManager:
         return entry
 
     def delete_expense(self, entry_id: str) -> None:
+        """Deletes an expense."""
         self._expenses = [e for e in self._expenses if e.entry_id != entry_id]
         self._save_expenses()
 
     def get_expense(self, entry_id: str) -> Optional[ExpenseEntry]:
+        """The expense with this id, or None."""
         for entry in self._expenses:
             if entry.entry_id == entry_id:
                 return entry
         return None
 
     def all_expenses(self) -> list[ExpenseEntry]:
+        """Every expense, newest first."""
         return sorted(self._expenses, key=lambda e: e.date, reverse=True)
 
     # ------------------------------------------------------------------
@@ -343,10 +377,13 @@ class LedgerManager:
     # ------------------------------------------------------------------
 
     def total_revenue(self, start_date: Optional[str] = None, end_date: Optional[str] = None) -> float:
+        """Revenue between two dates (both optional)."""
         return sum(r.amount for r in self._revenue if _in_range(r.date, start_date, end_date))
 
     def total_expenses(self, start_date: Optional[str] = None, end_date: Optional[str] = None) -> float:
+        """Expenses between two dates (both optional)."""
         return sum(e.amount for e in self._expenses if _in_range(e.date, start_date, end_date))
 
     def net_profit(self, start_date: Optional[str] = None, end_date: Optional[str] = None) -> float:
+        """Revenue less expenses between two dates (both optional)."""
         return self.total_revenue(start_date, end_date) - self.total_expenses(start_date, end_date)

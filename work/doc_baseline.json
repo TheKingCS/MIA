@@ -149,7 +149,6 @@
   "core/kitchen_actions.py": 27,
   "core/kitchen_blueprint.py": 2,
   "core/lab_actions.py": 9,
-  "core/ledger_manager.py": 26,
   "core/life_events.py": 9,
   "core/links.py": 14,
   "core/lite_capture_manager.py": 13,

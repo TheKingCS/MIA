@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 227,121 lines; 1043 files describe themselves; 3,799 of 13,517 classes and functions are documented.
+1043 files, 227,158 lines; 1043 files describe themselves; 3,825 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 101,027 lines; 3,068 of 5,630 classes and functions documented
+367 files, 101,064 lines; 3,094 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -185,7 +185,7 @@
 - `core/kitchen_blueprint.py`: Kitchen recipes as blueprints (DEC-0028 #9, the kitchen half; Zac, 2026-10-17), the same way Workshop recipes work (core/craft_recipes.py): the recipe is the blueprint, the pantry is the materials. *(2 undocumented)*
 - `core/kitchen_manager.py`: MIA's Kitchen Module — recipes, a pantry/inventory list, a grocery list, and a meal log, plus the logic that connects them: which recipes are makeable right now from what's in the pantry, and adding a recipe's missing ingredients to the grocery list in one action.
 - `core/lab_actions.py`: The development lab's changes as action kinds (DEC-0058, core/dev_lab.py): start a proposal (lab, write, check), approve one into the running MIA, reject one. Grown-ups only, never from the glasses; the long steps (the coder, the test suite) run in the background and say when they're done. "Approve" *(9 undocumented)*
-- `core/ledger_manager.py`: MIA Home's revenue/expense ledger — the fourth and final slice of the proposed `mia_home_schema.sql` (see `docs/VISION.md`'s "MIA Home's expanded scope" section, and `core/material_manager.py` `core/job_manager.py`/`core/product_manager.py`'s docstrings for slices 1-3), adapted to this project's per *(26 undocumented)*
+- `core/ledger_manager.py`: MIA Home's revenue/expense ledger — the fourth and final slice of the proposed `mia_home_schema.sql` (see `docs/VISION.md`'s "MIA Home's expanded scope" section, and `core/material_manager.py` `core/job_manager.py`/`core/product_manager.py`'s docstrings for slices 1-3), adapted to this project's per
 - `core/leveling.py`: Pure XP/Level math for the Missions gamification system — no Qt, no persistence, testable in isolation (see tests/test_leveling.py). `core/profile_manager.py` stores the one number that matters (`Profile.total_xp`, lifetime cumulative); everything else — what level that corresponds to, and how far i
 - `core/life_events.py`: Life events (2026-10-05, Engine Phase 1, docs/ENGINE_PHASE1_PLAN.md): an append-only history of the meaningful things that happen in a person's life: a bill paid, a mission completed (and the skill evidence it earned), a workout or meal logged, maintenance done, rent received, an import, a starter s *(9 undocumented)*
 - `core/life_note_actions.py`: What someone said they'd do, decided, want to try and set aside (core/life_notes.py, DEC-0054) through the action contract (core/actions.py): `life_note.done` (a promise kept, an idea tried) and `life_note.forget`. The notes write through atomic_write_text, so "undo that" takes either back. Said out
