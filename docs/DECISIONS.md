@@ -1759,3 +1759,20 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Honest limits: a drafted program is only as good as the local model and the specialists' notes behind it; that's
   why it's a proposal, checked in shape by code, never in truth.
 - Related: DEC-0094, DEC-0107, DEC-0109, DEC-0111
+
+### DEC-0113: Experience Maturity, Phase 1: identity, design system, flagship Workout and Kitchen
+- Status: PROPOSED
+- Proposed by: zac with chatgpt (H-0087), 2026-11-07 · Plan: claude (H-0088) · Approved by: — (only Zac approves)
+- Decision (proposed): MIA's emphasis moves from capability to finished experience. Sequence: (1) investigation
+  (done: `docs/EXPERIENCE_MATURITY_AUDIT.md`); (2) visual identity (`docs/design/MIA_VISUAL_IDENTITY.md`, concept
+  rounds with ChatGPT through the repository library, `docs/design/VISUAL_COLLABORATION.md`) and the design system
+  (`docs/design/MIA_DESIGN_SYSTEM.md`); (3) the shared shell (one orb component, named surfaces and controls, Home,
+  navigation); (4) Workout (`docs/design/applications/workout.md`); (5) Kitchen (`kitchen.md`); (6) the rest, by the
+  18-part template. The maturity standard (1 Exists, 2 Functional, 3 Integrated, 4 Polished, 5 Trusted) is used and
+  measured from real use. Open choices in H-0088: per-app atmosphere as a secondary layer (`--mod-*` given their
+  own values), dark only with high contrast, the image pipeline (library and ChatGPT by hand now, the PC's local
+  model for variations, the OpenAI Images API only later, with a key, a cap and approval), and round one before any
+  visual change.
+- Why: MIA can do far more than she feels like she can; the gap is finish and proof, not capability (the audit).
+- Related: DEC-0012, DEC-0017, DEC-0018 (superseded look), DEC-0023, DEC-0055, DEC-0094, H-0087, H-0088
+

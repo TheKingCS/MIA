@@ -9,6 +9,11 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 ## Zac
 
 ### Decisions
+- [ ] **Experience Maturity (H-0087 → H-0088, DEC-0113 PROPOSED):** read H-0088 (one page) and decide: the direction
+      and sequence; per-app atmosphere (Claude: yes); dark only (Claude: yes); the image pipeline (library + ChatGPT
+      by hand now, API later); run round one of concepts first. The handoff was numbered H-0084 (taken): filed as H-0087.
+      Then ask ChatGPT for round one with the prompts in `docs/design/MIA_VISUAL_IDENTITY.md` §5 and save the keepers
+      to `docs/design/visual_library/` (GitHub: Add file → Upload files), prompt in `MANIFEST.md`.
 - [ ] **The phone's old security packages (T-0051)**: keep them with the exposure written down, build newer ones,
       or move the phone's encryption to Android Keystore over time (Claude: keep now, Keystore over time). Details
       under Claude below.
@@ -110,6 +115,9 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 
 ## Muse
 
+- [ ] **Experience Maturity (H-0088):** read the audit, the identity draft and the design-system spec; after round one,
+      shortlist the concepts with Claude, set the values for the design system's proposals and the orb's seven
+      states, then turn `docs/design/applications/workout.md` (a brief) into Workout's spec.
 - [ ] **Handoff numbers:** H-0080 and H-0081 were each used twice (`H-0080_chatgpt-...`, `H-0081_chatgpt-...`). The
       next free number is **H-0087** (H-0086 is Muse's savings-hound reply).
 - [ ] **Screens waiting on your look**: working screens are built on the shared frame (2026-11-07), formatting
@@ -120,6 +128,9 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 
 ## ChatGPT (Chat)
 
+- [ ] **Round one of MIA's visual concepts (H-0088):** the five prompts in `docs/design/MIA_VISUAL_IDENTITY.md` §5,
+      across the three directions (Workshop OS, Ambient presence, Heads-up instruments); after Zac approves DEC-0113.
+      Then review Workout's built screens against its spec (with Codex).
 - [ ] **Vision checks** muse asked for: the education ladder (H-0080: which measures matter, which are vanity), and
       the savings hound (where's the noise line for deal findings).
 
