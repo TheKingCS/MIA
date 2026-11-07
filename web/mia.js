@@ -266,7 +266,7 @@
       : call("GET", "/api/classroom"),
     knowledge: (q = "") => demo ? Promise.resolve({ available: true, root: "reference_library", packs: [
       { id: "wikipedia_en_medicine", title: "Wikipedia: Medicine", description: "Medical articles, offline", articles: 52000 }],
-      hits: q ? [{ pack_id: "wikipedia_en_medicine", pack_title: "Wikipedia: Medicine", path: "A/Hypothermia", title: "Hypothermia" }] : [] })
+      hits: q ? [{ pack_id: "wikipedia_en_medicine", pack_title: "Wikipedia: Medicine", path: "A/Hypothermia", title: "Hypothermia", snippet: "Hypothermia is a body core temperature below 35.0 °C. Shivering and confusion come first…" }] : [] })
       : call("GET", "/api/knowledge?q=" + encodeURIComponent(q)),
     knowledgeArticle: (pack, path) => demo ? Promise.resolve({ title: "Hypothermia",
       text: "Hypothermia is defined as a body core temperature below 35.0 °C. Symptoms depend on the temperature..." })

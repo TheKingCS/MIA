@@ -89,7 +89,9 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       canvas's full-screen map with floating controls is still to do).
       Navigation (a compass with the needle on the bearing, waypoints with their grid, sun and moon tiles).
       World Map (km² cleared as the headline, the next achievement from `core/world_map.next_rank`, a big I'm Here).
-      Still to do per app, against its canvas artboard: Knowledge, Music, Files, Passwords, News, Look,
+      Knowledge (Search / Packs / Plans Shelf tabs; result cards with a snippet from
+      `ReferenceLibraryManager.search_titles`; its test needs libzim, so run it on the PC).
+      Still to do per app, against its canvas artboard: Music, Files, Passwords, News, Look,
       Settings, Profile, Fix-It, Diagnostics; Power, Toolbox, Lab and Field Kit need web pages first (WEB_PARITY).
 - [ ] Glasses: the shared orb on `web/glasses.html`.
 - Note: DEC-0119 (MIA for Zac alone) came after the canvas: drop household members from Party's leaderboard and
