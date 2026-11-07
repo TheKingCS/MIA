@@ -59,12 +59,14 @@ from modules.module_base import ModuleBase
 
 
 class FilesModule(ModuleBase):
+    """The Files app (desktop): browse this computer's folders (home to start), filter by name, preview a file, and make, rename or delete files and folders."""
     module_id = "files"
     display_name = "Files"
     description = "Browse and manage local files and data."
     icon = "\U0001F5C2"  # card index dividers
 
     def __init__(self, context) -> None:
+        """Nothing built yet; it starts at the home folder."""
         super().__init__(context)
         self._model: QFileSystemModel | None = None
         self._view: QTreeView | None = None
@@ -73,6 +75,7 @@ class FilesModule(ModuleBase):
         self._current_path: Path = Path.home()
 
     def get_widget(self) -> QWidget:
+        """The page: Up, Home and the path box, the name filter, the folder tree, New Folder, Rename and Delete, and the status line."""
         widget = QWidget()
         outer = QVBoxLayout(widget)
         outer.setContentsMargins(24, 24, 24, 24)
@@ -166,6 +169,7 @@ class FilesModule(ModuleBase):
         self._navigate_to(path)
 
     def _navigate_to(self, path: Path) -> None:
+        """Opens a folder (says so when it isn't one) and clears the filter."""
         if not path.is_dir():
             self._set_status(f"Not a folder: {path}")
             return
@@ -178,12 +182,15 @@ class FilesModule(ModuleBase):
         self._set_status("")
 
     def _on_up_clicked(self) -> None:
+        """Goes to the folder above."""
         self._navigate_to(self._current_path.parent)
 
     def _on_home_clicked(self) -> None:
+        """Goes to the home folder."""
         self._navigate_to(Path.home())
 
     def _on_path_entered(self) -> None:
+        """Goes to the folder typed (~ understood); one that doesn't exist is said and the box goes back to where you are."""
         candidate = Path(self._path_edit.text()).expanduser()
         if candidate.is_dir():
             self._navigate_to(candidate)
@@ -192,10 +199,12 @@ class FilesModule(ModuleBase):
             self._path_edit.setText(str(self._current_path))
 
     def _on_search_changed(self, text: str) -> None:
+        """Shows only names containing the filter (everything when it's empty), hiding the rest rather than greying them."""
         self._model.setNameFilters([f"*{text}*"] if text else [])
         self._model.setNameFilterDisables(False)
 
     def _on_item_double_clicked(self, index) -> None:
+        """A folder opens; a file is previewed."""
         path = Path(self._model.filePath(index))
         if self._model.isDir(index):
             self._navigate_to(path)
@@ -207,6 +216,7 @@ class FilesModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _selected_path(self) -> Path | None:
+        """The selected item's path, or None (and asks for a selection)."""
         indexes = self._view.selectionModel().selectedRows()
         if not indexes:
             self._set_status("Select an item first.")
@@ -218,6 +228,7 @@ class FilesModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _on_new_folder_clicked(self) -> None:
+        """Makes a folder here with the name asked for; a bad or taken name is said."""
         name, ok = QInputDialog.getText(None, "New Folder", "Folder name:")
         if not ok or not name:
             return
@@ -228,6 +239,7 @@ class FilesModule(ModuleBase):
             QMessageBox.warning(None, "Could Not Create Folder", str(exc))
 
     def _on_rename_clicked(self) -> None:
+        """Renames the selected item to the name asked for; a problem is said."""
         path = self._selected_path()
         if path is None:
             return
@@ -242,6 +254,7 @@ class FilesModule(ModuleBase):
             QMessageBox.warning(None, "Could Not Rename", str(exc))
 
     def _on_delete_clicked(self) -> None:
+        """Deletes the selected file or folder after confirming (a folder with everything in it)."""
         path = self._selected_path()
         if path is None:
             return
@@ -261,6 +274,7 @@ class FilesModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _preview_file(self, path: Path) -> None:
+        """Previews a file: an image shown, text shown (the start of it), else its name, size and type."""
         if is_image_file(path):
             pixmap = QPixmap(str(path))
             if not pixmap.isNull():
@@ -286,5 +300,6 @@ class FilesModule(ModuleBase):
         QMessageBox.information(None, "File Info", info)
 
     def _set_status(self, text: str) -> None:
+        """Shows a line in the status bar."""
         if self._status_label is not None:
             self._status_label.setText(text)

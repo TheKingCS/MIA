@@ -190,12 +190,14 @@ def format_glance_next_up(attention_count: int, first_task: Optional[Maintenance
 
 
 class GreenhouseModule(ModuleBase):
+    """The Greenhouse app (desktop): garden, greenhouse and aquaponics assets at a glance (how many, what needs attention, what's next), each with its own page of upkeep, missions and documents. The records themselves live in Maintenance."""
     module_id = "greenhouse"
     display_name = "Greenhouse"
     description = "At-a-glance status for garden, greenhouse, and aquaponics assets."
     icon = "\U0001F331"  # seedling
 
     def __init__(self, context) -> None:
+        """Nothing built yet: the list and detail pages are made when shown."""
         super().__init__(context)
         self._list_layout: Optional[QVBoxLayout] = None
         self._tracked_value_label: Optional[QLabel] = None
@@ -206,6 +208,7 @@ class GreenhouseModule(ModuleBase):
         self._detail_page: Optional[QWidget] = None
 
     def get_widget(self) -> QWidget:
+        """The page stack, starting on the list."""
         self._stack = QStackedWidget()
         self._list_page = self._build_list_page()
         self._stack.addWidget(self._list_page)
@@ -217,10 +220,12 @@ class GreenhouseModule(ModuleBase):
         self._show_detail_page(record_id)
 
     def _show_list_page(self) -> None:
+        """Refreshes the list and shows it."""
         self._refresh()
         self._stack.setCurrentWidget(self._list_page)
 
     def _show_detail_page(self, asset_id: str) -> None:
+        """Shows one asset's page, built fresh (the previous one is removed)."""
         if self._detail_page is not None:
             self._stack.removeWidget(self._detail_page)
             self._detail_page = None
@@ -353,6 +358,7 @@ class GreenhouseModule(ModuleBase):
         today: date,
         readings_by_task: dict[str, list[Reading]],
     ) -> QWidget:
+        """An asset's overview tab: a short summary (what needs attention, what's next, its details); the full lists have their own tabs."""
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setContentsMargins(0, 12, 0, 12)
@@ -425,6 +431,7 @@ class GreenhouseModule(ModuleBase):
         today: date,
         readings_by_task: dict[str, list[Reading]],
     ) -> QWidget:
+        """An asset's maintenance tab: every upkeep task with its state, not only those needing attention."""
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setContentsMargins(0, 12, 0, 12)
@@ -455,6 +462,7 @@ class GreenhouseModule(ModuleBase):
         return page
 
     def _build_missions_tab(self, asset: MaintenanceAsset) -> QWidget:
+        """An asset's missions tab: the missions tied to it."""
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setContentsMargins(0, 12, 0, 12)
@@ -470,6 +478,7 @@ class GreenhouseModule(ModuleBase):
         return page
 
     def _build_documents_tab(self, asset: MaintenanceAsset) -> QWidget:
+        """An asset's documents tab: each attached file by name, or that none are attached."""
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setContentsMargins(0, 12, 0, 12)
@@ -497,6 +506,7 @@ class GreenhouseModule(ModuleBase):
         return page
 
     def _build_quick_stat_tile(self, row_layout: QHBoxLayout, task: MaintenanceTask, readings: list[Reading]) -> None:
+        """A metered task's tile on the asset's page: its latest reading in its unit, and the task's name."""
         tile = QFrame()
         tile.setObjectName("NatureGlanceTile")
         tile_layout = QVBoxLayout(tile)
@@ -511,6 +521,7 @@ class GreenhouseModule(ModuleBase):
         row_layout.addWidget(tile, stretch=1)
 
     def _build_list_page(self) -> QWidget:
+        """The list page: a photo header (icon, title, tagline), the glance tiles, and the list of cards."""
         page = QWidget()
         page.setStyleSheet("background-color: #070f0d;")
         outer = QVBoxLayout(page)
@@ -576,11 +587,13 @@ class GreenhouseModule(ModuleBase):
         return page
 
     def _on_manage_in_maintenance(self) -> None:
+        """Opens the Maintenance app, where the assets' records are edited."""
         self.context.events.publish("assistant.open_module_requested", module_id="maintenance")
 
     def _build_glance_tile(
         self, row_layout: QHBoxLayout, caption: str, icon: str, danger: bool = False
     ) -> QLabel:
+        """One glance tile: an icon, a value and its caption."""
         tile = QFrame()
         tile.setObjectName("NatureGlanceTile")
         if danger:
@@ -619,6 +632,7 @@ class GreenhouseModule(ModuleBase):
         # modules/toolbox/tools/lite_captures_tool.py) and fixed across
         # this codebase's other actively-re-triggered refresh methods
         # the same day.
+        """Rebuilds the list (old cards hidden and detached first): every asset with its tasks' state, then the glance tiles: how many tracked, how many need attention (calendar or meter readings), and what's next."""
         while self._list_layout.count():
             item = self._list_layout.takeAt(0)
             widget = item.widget()
@@ -672,6 +686,7 @@ class GreenhouseModule(ModuleBase):
     def _add_section(
         self, title: str, lines: list[str], empty_text: str = "Nothing here yet.", asset_id: Optional[str] = None,
     ) -> None:
+        """Adds a card: an asset's (the whole card opens its page) or a callout across them like Needs Attention, with its lines or the empty text."""
         if asset_id is not None:
             card = QPushButton()
             card.setObjectName("NatureAssetCard")

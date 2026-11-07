@@ -60,12 +60,14 @@ def format_trip_row(trip: Trip) -> str:
 
 
 class ExpeditionsModule(ModuleBase):
+    """The Expeditions app (desktop): outings (expeditions) and the trips under each, with routes, gear, weather and logged speed and distance in each trip's details."""
     module_id = "expeditions"
     display_name = "Expeditions"
     description = "Expedition Mode: trip routes, gear, weather, and logged speed/distance for any outing."
     icon = "\U0001F3D5"  # camping
 
     def __init__(self, context) -> None:
+        """Nothing built yet: the page is made in get_widget()."""
         super().__init__(context)
         self._expedition_list: Optional[QListWidget] = None
         self._trip_list: Optional[QListWidget] = None
@@ -75,6 +77,7 @@ class ExpeditionsModule(ModuleBase):
         self._refresh_expedition_list()
 
     def get_widget(self) -> QWidget:
+        """The page: the expeditions list with Add, Edit and Delete, and the selected expedition's trips with Add, Edit, Delete and Open."""
         widget = QWidget()
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(24, 24, 24, 24)
@@ -144,6 +147,7 @@ class ExpeditionsModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _refresh_expedition_list(self) -> None:
+        """Lists every expedition, keeping the one selected, then its trips."""
         previously_selected = self._selected_expedition_id()
 
         self._expedition_list.clear()
@@ -161,6 +165,7 @@ class ExpeditionsModule(ModuleBase):
         self._refresh_trip_list()
 
     def _refresh_trip_list(self) -> None:
+        """Lists the selected expedition's trips (none when nothing is selected)."""
         self._trip_list.clear()
         expedition_id = self._selected_expedition_id()
         if expedition_id is None:
@@ -171,6 +176,7 @@ class ExpeditionsModule(ModuleBase):
             self._trip_list.addItem(item)
 
     def _on_expedition_selected(self) -> None:
+        """Shows the newly selected expedition's trips."""
         self._refresh_trip_list()
 
     # ------------------------------------------------------------------
@@ -178,12 +184,14 @@ class ExpeditionsModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _selected_expedition_id(self) -> Optional[str]:
+        """The selected expedition's id, or None."""
         item = self._expedition_list.currentItem()
         if item is None:
             return None
         return item.data(Qt.ItemDataRole.UserRole)
 
     def _selected_trip_id(self) -> Optional[str]:
+        """The selected trip's id, or None."""
         item = self._trip_list.currentItem()
         if item is None:
             return None
@@ -194,6 +202,7 @@ class ExpeditionsModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _on_add_expedition(self) -> None:
+        """Adds an expedition from the dialog and refreshes."""
         dialog = AddEditExpeditionDialog()
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -208,6 +217,7 @@ class ExpeditionsModule(ModuleBase):
         self._refresh_expedition_list()
 
     def _on_edit_expedition(self) -> None:
+        """Edits the selected expedition in the dialog (asks for a selection first)."""
         expedition_id = self._selected_expedition_id()
         if expedition_id is None:
             QMessageBox.information(None, "No Expedition Selected", "Select an Expedition to edit.")
@@ -229,6 +239,7 @@ class ExpeditionsModule(ModuleBase):
         self._refresh_expedition_list()
 
     def _on_delete_expedition(self) -> None:
+        """Deletes the selected expedition after confirming; when it has trips, first says they stay (only ungrouped)."""
         expedition_id = self._selected_expedition_id()
         if expedition_id is None:
             QMessageBox.information(None, "No Expedition Selected", "Select an Expedition to delete.")
@@ -261,6 +272,7 @@ class ExpeditionsModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _on_add_trip(self) -> None:
+        """Adds a trip under the selected expedition from the dialog (asks for an expedition first)."""
         expedition_id = self._selected_expedition_id()
         if expedition_id is None:
             QMessageBox.information(None, "No Expedition Selected", "Select an Expedition to add a trip to.")
@@ -281,6 +293,7 @@ class ExpeditionsModule(ModuleBase):
         self._refresh_trip_list()
 
     def _on_edit_trip(self) -> None:
+        """Edits the selected trip in the dialog (asks for a selection first)."""
         trip_id = self._selected_trip_id()
         if trip_id is None:
             QMessageBox.information(None, "No Trip Selected", "Select a trip to edit.")
@@ -302,6 +315,7 @@ class ExpeditionsModule(ModuleBase):
         self._refresh_trip_list()
 
     def _on_delete_trip(self) -> None:
+        """Deletes the selected trip after confirming (asks for a selection first)."""
         trip_id = self._selected_trip_id()
         if trip_id is None:
             QMessageBox.information(None, "No Trip Selected", "Select a trip to delete.")
@@ -316,6 +330,7 @@ class ExpeditionsModule(ModuleBase):
         self._refresh_trip_list()
 
     def _on_open_trip_detail(self) -> None:
+        """Opens the selected trip's details (route, gear, weather, logs), then refreshes the trips."""
         trip_id = self._selected_trip_id()
         if trip_id is None:
             QMessageBox.information(None, "No Trip Selected", "Select a trip to open.")
