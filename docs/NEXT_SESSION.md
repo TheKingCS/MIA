@@ -134,7 +134,11 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       Field Kit (`core/web_field_kit.py`: Devices, Network (hash kind, subnet) and Scripts tabs, read only; eject,
       run and port scan stay on the PC). Voice gained calculate_board_feet, calculate_concrete, switch_alarm and
       delete_lab_reading. Every app now has a web page except Diagnostics (an owner page) and Settings.
-- [ ] Glasses: the shared orb on `web/glasses.html`.
+- [x] Glasses (the canvas's GlassesHome and GlassesTraining): Home shows her state (Ready, Listening, Thinking,
+      Needs You), the one line that matters now (`core/glasses.priority`, amber orb from `priority_tone`), the latest
+      card for ten minutes, and a dot per card; gold once when something is earned. The live workout panel leads with
+      `core/glasses.training_hero` (exercise, set and weight, one big number that's never a guess). Checked in demo
+      mode; not yet on the real glasses.
 - Note: DEC-0119 (MIA for Zac alone) came after the canvas: drop household members from Party's leaderboard and
   Profile's household card when those screens are built.
 

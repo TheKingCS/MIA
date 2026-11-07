@@ -1,11 +1,12 @@
-"""The numbers on an app's glasses screen, a vehicle's own page, and "I Made This"."""
+"""The numbers on an app's glasses screen, a vehicle's own page, "I Made This", Home's line and its tone, and the live
+workout's one big number (the canvas's GlassesHome and GlassesTraining, DEC-0113)."""
 
 from datetime import date
 from pathlib import Path
 from types import SimpleNamespace
 
 from core.actions import ActionCenter
-from core.glasses import ASSET_ITEM, GLASSES_KINDS, TILES, glasses_apps, glasses_panel, priority_now
+from core.glasses import ASSET_ITEM, GLASSES_KINDS, TILES, glasses_apps, glasses_panel, priority_now, priority_tone
 from tests.engine_world import build_world
 
 TODAY = date(2026, 11, 2)
@@ -36,6 +37,12 @@ def test_home_says_what_matters_now():
     mission = {"objectives": [{"text": "Sort", "done": True}, {"text": "Hang the bikes", "done": False}]}
     assert priority_now([{"name": "Missions", "tone": "calm", "status": "", "mission": mission}]) == "Hang the bikes"
     assert priority_now([]) == ""
+
+
+def test_her_orb_turns_amber_only_when_something_needs_the_person():
+    assert priority_tone([{"name": "Garage", "tone": "attention", "status": "1 past due"}]) == "attention"
+    assert priority_tone([{"name": "Missions", "tone": "calm", "status": "Hang the bikes"}]) == ""
+    assert priority_tone([{"name": "Garage", "tone": "attention", "status": ""}]) == ""
 
 
 def test_a_rest_day_says_so(tmp_path, monkeypatch):
@@ -174,3 +181,18 @@ def test_a_live_workout_moves_on_one_press(tmp_path, monkeypatch):
     panel = glasses_panel(world, "workout", "live", TODAY)
     assert panel["live"] is True
     assert panel["lines"][0]["action"]["quick"] is True and "quick" not in panel["lines"][1]["action"]
+
+
+def test_the_live_workout_shows_one_big_number_that_is_never_a_guess():
+    from core.glasses import training_hero
+
+    s = {"status": "active", "next": "Rows", "now": {"name": "Back Squat", "set": 2, "sets": 4, "reps": 8,
+                                                     "target": "4 x 8", "weight": "135 lb", "last": 6, "last_counted": "said"}}
+    hero = training_hero(s)
+    assert (hero["set"], hero["big"], hero["of"], hero["how"], hero["next"]) == (
+        "Set 2 / 4 · 135 lb", "6", "/ 8", "Last set · Said", "Then: Rows")
+    resting = training_hero({**s, "status": "resting", "rest_left": 102})
+    assert (resting["big"], resting["how"], resting["resting"]) == ("1:42", "Rest", True)
+    first = training_hero({**s, "now": {**s["now"], "last": None, "weight": None}})
+    assert (first["set"], first["big"], first["how"]) == ("Set 2 / 4", "8", "Target · 4 x 8")
+    assert training_hero({"status": "complete"}) is None

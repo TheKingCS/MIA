@@ -99,18 +99,51 @@ body {
   inset 0 0 32px rgba(220, 248, 255, 0.7); } }
 #home.speaking #orb { animation: speak 0.6s ease-in-out infinite; }
 @keyframes speak { 50% { transform: scale(1.03); } }
-/* her answer: shows under her for a moment, then the orb is alone again */
-#home.answered #orb-wrap { transform: translateY(-80px) scale(0.8); }
+/* her answer: shows under her for a moment in the line's place (below) */
 #caption {
   position: absolute; left: 50px; right: 50px; bottom: 56px; margin: 0; text-align: center;
   font-size: 26px; line-height: 1.35; color: var(--ink); opacity: 0; transition: opacity 0.4s ease;
   display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
 }
 #home.answered #caption { opacity: 1; }
+/* ---------------- the canvas's Home (DEC-0113 GlassesHome): orb, state, one line, the latest card, dots ----------------
+   The orb sits smaller near the top; under it her state as a label, then the one line that matters now
+   (core/glasses.priority); her answer takes that line's place for a moment. Amber when something needs you; gold
+   once when something is earned. Outlines and light only. */
+#home { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 40px 44px 34px; gap: 16px; }
+#home #orb-wrap { flex: none; transform: scale(0.6); margin: -60px 0 -66px; }
+#home.answered #orb-wrap, #home.unavailable #orb-wrap { transform: scale(0.52); }
+#home-state { margin: 0; font-family: var(--font-mono); font-size: 16px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); }
+#home-line { margin: 0; font-size: 28px; line-height: 1.3; text-align: center; color: var(--ink);
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+#home #caption { position: static; opacity: 1; display: none; font-size: 28px; line-height: 1.3; }
+#home.answered #caption, #home.unavailable #caption { display: -webkit-box; }
+#home.answered #home-line, #home.unavailable #home-line { display: none; }
+#home-feed { margin-top: auto; display: flex; gap: 12px; align-items: center; padding: 12px 18px; border-radius: 6px;
+  border: 1.5px solid var(--accent-dim); max-width: 100%; }
+#home-feed .f-xp { font-family: var(--font-mono); font-size: 22px; color: var(--accent); flex: none; }
+#home-feed .f-head { font-size: 22px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#home-feed.attn { border-color: rgba(242, 179, 61, 0.7); }
+#home-feed.attn .f-xp { color: var(--attention); }
+#home-dots { display: flex; gap: 10px; }
+#home-feed[hidden] + #home-dots { margin-top: auto; }
+#home-dots i { width: 6px; height: 6px; border-radius: 999px; background: var(--ink-faint); }
+#home-dots i.on { width: 22px; background: var(--accent); }
+/* needs you: the orb and her state turn amber, nothing else */
+#home.needs #orb { background: radial-gradient(circle at 38% 30%, #fff6e2 0%, #ffd98a 16%, var(--attention) 46%, #a8700f 80%, #070401 100%);
+  box-shadow: 0 0 60px rgba(242, 179, 61, 0.6), 0 0 150px rgba(242, 179, 61, 0.25), inset 0 0 26px rgba(255, 240, 210, 0.6); }
+#home.needs #orb-wrap .ring { filter: drop-shadow(0 0 8px rgba(242, 179, 61, 0.9)); }
+#home.needs #home-state { color: var(--attention); }
+/* celebrate: gold, once */
+#home.celebrate #orb { animation: celebrate 1.6s ease-out 1; }
+@keyframes celebrate { 30% { transform: scale(1.12); box-shadow: 0 0 90px rgba(255, 210, 90, 0.9), 0 0 180px rgba(255, 210, 90, 0.45),
+  inset 0 0 32px rgba(255, 244, 214, 0.8); filter: hue-rotate(-150deg) saturate(1.4); } }
+#home.listening #home-state, #home.thinking #home-state { color: var(--accent-soft); }
+
 /* stopped mid-word: everything holds still at once */
 #home.interrupted * { animation-play-state: paused !important; }
 /* can't reach MIA: quiet, grey, still; she says so underneath */
-#home.unavailable #orb-wrap { filter: grayscale(1) brightness(0.5); transform: translateY(-80px) scale(0.8); }
+#home.unavailable #orb-wrap { filter: grayscale(1) brightness(0.5); transform: scale(0.52); }
 #home.unavailable #orb-wrap *, #home.unavailable #orb { animation-play-state: paused !important; }
 #home.unavailable #caption { opacity: 1; color: var(--ink-dim); }
 
@@ -452,3 +485,13 @@ body {
 @media (prefers-reduced-motion: reduce) { .hud-card { animation: none; } }
 body.hud-on .edge { display: none; }
 body.hud-on #stage::before { display: none; }  /* truly clear: black is see-through on the Display */
+
+/* ---------------- the live workout's hero (DEC-0113 GlassesTraining; glasses.js trainingHero) ---------------- */
+.t-hero { display: grid; gap: 2px; margin-bottom: 6px; }
+.t-hero .t-name { margin: 0; font-size: 36px; font-weight: 600; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.t-hero .t-set { margin: 0; font-family: var(--font-mono); font-size: 22px; color: var(--ink); }
+.t-hero .t-big { margin: 0; display: flex; align-items: baseline; justify-content: center; gap: 12px; font-family: var(--font-mono); line-height: 1; }
+.t-hero .t-big .n { font-size: 110px; font-weight: 600; }
+.t-hero .t-big .of { font-size: 34px; color: var(--ink-dim); }
+.t-hero.resting .t-big .n { color: var(--accent); }
+.t-hero .t-foot { margin: 0; display: flex; justify-content: space-between; gap: 12px; font-size: 20px; color: var(--ink-dim); }

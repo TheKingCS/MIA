@@ -1,5 +1,6 @@
 {
   "priority": "Change the oil on the truck",
+  "priority_tone": "",
   "as_of": "2026-10-16",
   "pinned": true,
   "apps": [
@@ -131,6 +132,11 @@
       "ask": "Log a 30 minute workout.",
       "pinned": true,
       "menu": [
+        {
+          "id": "live",
+          "label": "Active Training",
+          "type": "panel"
+        },
         {
           "id": "training",
           "label": "Today's Training",
