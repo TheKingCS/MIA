@@ -2,7 +2,6 @@
  "about": "core/code_atlas.py (DEC-0104): each file's undocumented classes and functions. It may only go down; a file not listed must be fully documented. Rewrite with python -m core.code_atlas baseline.",
  "undocumented": {
   "core/accessibility.py": 1,
-  "core/account_actions.py": 9,
   "core/answer_ratings.py": 6,
   "core/app_intro.py": 7,
   "core/assistant_accessibility_actions.py": 4,
@@ -88,7 +87,6 @@
   "core/gps_tracks.py": 8,
   "core/hash_identifier.py": 1,
   "core/heavy_jobs.py": 3,
-  "core/homestead_costs.py": 9,
   "core/journal_reflection.py": 4,
   "core/kitchen_blueprint.py": 2,
   "core/lab_actions.py": 9,

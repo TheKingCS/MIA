@@ -2,15 +2,15 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 229,725 lines; 1043 files describe themselves; 5,486 of 13,517 classes and functions are documented.
+1043 files, 229,759 lines; 1043 files describe themselves; 5,504 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 103,627 lines; 4,755 of 5,630 classes and functions documented
+367 files, 103,661 lines; 4,773 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
-- `core/account_actions.py`: What the web's Profile and Settings screens change (2026-10-07, core/web_account.py): your name, email, country and interests (`profile.edit`), one of your own settings (`setting.set`), and ending a break MIA took from a kind of message (`communication.resume`). All are the person's own and undoable *(9 undocumented)*
+- `core/account_actions.py`: What the web's Profile and Settings screens change (2026-10-07, core/web_account.py): your name, email, country and interests (`profile.edit`), one of your own settings (`setting.set`), and ending a break MIA took from a kind of message (`communication.resume`). All are the person's own and undoable
 - `core/account_data.py`: Your data is yours to take or remove (2026-10-01, accounts stage 5).
 - `core/achievements.py`: The deterministic "you unlocked something" narration layer — the "Achievements/Milestones" piece flagged as a real gap across both the "My Hero's Path" plan and the "connective infrastructure" architecture review that followed the whole-codebase audit (see docs/ROADMAP.md's dated entry).
 - `core/actions.py`: The action contract (2026-10-05, Phase 2 foundation, DEC-0013): how any surface (the web Home, the phone, the glasses, later MIA herself) changes something in a person's life. Always in five steps:
@@ -163,7 +163,7 @@
 - `core/hash_identifier.py`: Identifies the plausible algorithm(s) for a hash string, by prefix (for self-describing formats like bcrypt/crypt) or length+charset (for bare hex digests) — docs/ROADMAP.md milestone 11.5, Field Kit's Security/Network Toolkit. This is pattern-matching, not verification: there is no way to truly det *(1 undocumented)*
 - `core/heavy_jobs.py`: Heavy jobs on the home computer (DEC-0022; Zac, 2026-10-18): when this device can't do a job well itself and it's linked to MIA on the home computer (core/home_link.py), the computer does it: *(3 undocumented)*
 - `core/home_link.py`: Supercharged online (DEC-0022, level 2): when the phone can reach MIA on the home computer (same Wi-Fi, or anywhere through Tailscale), Talk uses the computer's bigger model; when it can't, mid-conversation or not, the phone's own model answers. MIA always says which one did (`level`).
-- `core/homestead_costs.py`: Finance #2 (2026-09-28): what the owner's homestead builds and tools actually cost. The owner asked for MIA to "help me manage my homestead I am building and the costs associated with my tools, and builds." *(9 undocumented)*
+- `core/homestead_costs.py`: Finance #2 (2026-09-28): what the owner's homestead builds and tools actually cost. The owner asked for MIA to "help me manage my homestead I am building and the costs associated with my tools, and builds."
 - `core/homestead_manager.py`: Watched-folder ingestion for MIA Home's summarized-state snapshots from sibling automation projects — the first (and so far only) source is MIA Homestead's greenhouse/aquaponics system (`~/Projects/mia-homestead`, a separate repo), which exports via its own `viewer/export_home_snapshot.py`. See that
 - `core/household_manager.py`: Households (2026-10-01, docs/ROADMAP.md "People and ownership"): MIA is built for anyone, so nothing is shared between people unless they choose it. Every new account starts in a household of its own. Two people share the household things (calendar, kitchen, budget, maintenance, builds, inventory, t
 - `core/household_routines.py`: The Household's web screen (web/household.html): the household's routines (recurring-mission templates in the "Household" category: laundry, dishes, hygiene), each with its current occurrence (today's, or this week's for a weekly one), how far along it is and its streak, and the total for the day. L

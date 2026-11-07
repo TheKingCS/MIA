@@ -16,6 +16,7 @@ from core.actions import ACTION_TYPES, ActionError, ActionType
 
 
 def _me(context):
+    """The signed-in person's profile, or ActionError asking them to sign in."""
     from core.web_account import _me as me
 
     profile = me(context)
@@ -74,6 +75,9 @@ def _profile_changes(context, params) -> dict:
 
 
 def _describe_profile(context, params) -> str:
+    """The sentence the approval card shows for `profile.edit` (Propose); raises ActionError when it can't be done. It names each change (name, email, country, what MIA helps with);
+    nothing to change is refused.
+    """
     from core.region import region
 
     changes = _profile_changes(context, params)
@@ -92,6 +96,9 @@ def _describe_profile(context, params) -> str:
 
 
 def _edit_profile(context, params) -> str:
+    """Does `profile.edit` once approved, and says what happened. The name and email go on the profile, the country into their own settings, and
+    the interests into their interview answers (the notes kept).
+    """
     from core import person_settings
 
     me = _me(context)
@@ -109,6 +116,9 @@ def _edit_profile(context, params) -> str:
 
 
 def _setting(context, params):
+    """The setting the params name and its cleaned new value; ActionError for a setting that isn't theirs, one a child
+    has to ask a parent about, or a value that won't do.
+    """
     from core.child_accounts import ASK_A_PARENT, is_child
     from core.web_account import SETTINGS_BY_KEY, clean_setting
 
@@ -125,6 +135,7 @@ def _setting(context, params):
 
 
 def _describe_setting(context, params) -> str:
+    """The sentence the approval card shows for `setting.set` (Propose); raises ActionError when it can't be done. A setting already at that value is refused."""
     from core.web_account import current_value, describe_value
 
     setting, value = _setting(context, params)
@@ -134,6 +145,9 @@ def _describe_setting(context, params) -> str:
 
 
 def _set_setting(context, params) -> str:
+    """Does `setting.set` once approved, and says what happened. Keeping the budget private goes through personal_data; every other setting is saved
+    in their own settings.
+    """
     from core import person_settings
     from core.web_account import describe_value
 
@@ -149,6 +163,7 @@ def _set_setting(context, params) -> str:
 
 
 def _paused(context, params) -> dict:
+    """The kind of message MIA is taking a break from that the params name; ActionError when there's no break on it."""
     gate = getattr(context, "communication", None)
     if gate is None:
         raise ActionError("That isn't available on this MIA.")
@@ -160,10 +175,12 @@ def _paused(context, params) -> dict:
 
 
 def _describe_resume(context, params) -> str:
+    """The sentence the approval card shows for `communication.resume` (Propose); raises ActionError when it can't be done."""
     return f"Let MIA tell you about {_paused(context, params)['label']} again"
 
 
 def _resume(context, params) -> str:
+    """Does `communication.resume` once approved, and says what happened. The communication gate may offer that kind of message again."""
     found = _paused(context, params)
     context.communication.resume(found["topic"])
     return f"MIA can tell you about {found['label']} again."

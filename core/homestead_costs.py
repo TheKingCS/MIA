@@ -41,6 +41,9 @@ TOOL_PURCHASE_CATEGORY = "Tools & Equipment"
 
 @dataclass
 class BuildCost:
+    """What a build (project) has cost, worked out now from the expenses tagged to it: the budget and spent, spending
+    by category (largest first), the tools bought for it, how many expenses and the latest one's date.
+    """
     project_id: str
     name: str
     status: str
@@ -53,15 +56,20 @@ class BuildCost:
 
     @property
     def remaining(self) -> Optional[float]:
+        """Budget left (negative when over), or None with no budget."""
         return round(self.budget - self.spent, 2) if self.budget > 0 else None
 
     @property
     def percent_used(self) -> Optional[float]:
+        """How much of the budget is spent, as a percent, or None with no budget."""
         return round(100 * self.spent / self.budget, 1) if self.budget > 0 else None
 
 
 @dataclass
 class ToolCost:
+    """What a tool (asset) has cost, worked out now: its purchase price, upkeep (the other expenses tagged to it) by
+    category, its hours, and the builds it was bought for.
+    """
     asset_id: str
     name: str
     category: str
@@ -73,14 +81,17 @@ class ToolCost:
 
     @property
     def total(self) -> float:
+        """Purchase price plus upkeep."""
         return round(self.purchase_price + self.upkeep, 2)
 
     @property
     def cost_per_hour(self) -> Optional[float]:
+        """Total over hours, or None when no hours are known."""
         return round(self.total / self.hours, 2) if self.hours else None
 
 
 def _money(value: float) -> str:
+    """An amount in the person's currency, with no .00 on whole amounts."""
     return f"{money(value, ',.2f')}".replace(".00", "")
 
 
@@ -90,6 +101,9 @@ def _money(value: float) -> str:
 
 
 def build_cost(context, project) -> BuildCost:
+    """A project's BuildCost from the budget's expenses tagged to it; the tools bought are the asset purchases
+    among them whose asset still exists.
+    """
     expenses = [e for e in context.budget.all_expenses() if e.project_id == project.project_id]
     by_category: dict[str, float] = defaultdict(float)
     for e in expenses:
@@ -165,6 +179,9 @@ def current_hours(context, asset) -> Optional[float]:
 
 
 def tool_cost(context, asset) -> ToolCost:
+    """An asset's ToolCost: the purchase counts once (the recorded price or the purchase expenses, whichever is more),
+    the rest is upkeep; hours come from the data logger when it's wired.
+    """
     tagged = [e for e in context.budget.all_expenses() if e.asset_id == asset.asset_id]
     purchases = sum(e.amount for e in tagged if e.asset_purchase)
     upkeep_entries = [e for e in tagged if not e.asset_purchase]
