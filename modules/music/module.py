@@ -89,12 +89,14 @@ def format_scan_result(result: ScanResult) -> str:
 
 
 class MusicModule(ModuleBase):
+    """The Music app (desktop): the local audio library (scanned, searched), playlists, and playback with a transport bar (previous, play/pause, stop, next, seek, volume)."""
     module_id = "music"
     display_name = "Music"
     description = "Local audio library, playlists, and playback."
     icon = "\U0001F3B5"  # musical note
 
     def __init__(self, context) -> None:
+        """Nothing built yet: the tabs, transport bar and its timer are made in get_widget()."""
         super().__init__(context)
         self._library_list: Optional[QListWidget] = None
         self._search_edit: Optional[QLineEdit] = None
@@ -108,6 +110,7 @@ class MusicModule(ModuleBase):
         self._transport_timer: Optional[QTimer] = None
 
     def get_widget(self) -> QWidget:
+        """The page: Library and Playlists tabs and the transport bar, which a timer keeps up to date."""
         widget = QWidget()
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(24, 24, 24, 24)
@@ -140,6 +143,7 @@ class MusicModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_library_tab(self) -> QWidget:
+        """The Library tab: the search box, the tracks, and Scan Library, Play and Add to Playlist."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
@@ -169,6 +173,7 @@ class MusicModule(ModuleBase):
         return tab
 
     def _refresh_library_list(self) -> None:
+        """Lists the tracks matching the search (title, artist or album); says when none match, or how to scan when the library is empty."""
         self._library_list.clear()
         query = self._search_edit.text() if self._search_edit is not None else ""
         tracks = self.context.music.search_tracks(query)
@@ -183,14 +188,17 @@ class MusicModule(ModuleBase):
                 add_empty_state_item(self._library_list, "No tracks in your library yet — click Scan Library to get started.")
 
     def _selected_library_track_id(self) -> Optional[str]:
+        """The selected track's id, or None."""
         return selected_item_data(self._library_list)
 
     def _on_scan_library(self) -> None:
+        """Scans the music folders and says what it found."""
         result = self.context.music.scan_library()
         self._refresh_library_list()
         QMessageBox.information(None, "Library Scan", format_scan_result(result))
 
     def _on_play_selected_track(self) -> None:
+        """Plays the selected track (asks for a selection first)."""
         track_id = self._selected_library_track_id()
         if track_id is None:
             QMessageBox.information(None, "No Track Selected", "Select a track to play.")
@@ -199,6 +207,7 @@ class MusicModule(ModuleBase):
         self._refresh_transport()
 
     def _on_add_selected_track_to_playlist(self) -> None:
+        """Offers a menu of playlists to add the selected track to, or a new one."""
         track_id = self._selected_library_track_id()
         if track_id is None:
             QMessageBox.information(None, "No Track Selected", "Select a track to add to a playlist.")
@@ -214,10 +223,12 @@ class MusicModule(ModuleBase):
         menu.exec(self._library_list.mapToGlobal(self._library_list.rect().center()))
 
     def _add_track_to_playlist(self, track_id: str, playlist_id: str) -> None:
+        """Adds a track to a playlist and refreshes the playlists."""
         self.context.music.add_track_to_playlist(playlist_id, track_id)
         self._refresh_playlist_list()
 
     def _on_new_playlist_with_track(self, track_id: str) -> None:
+        """Makes a playlist named in the dialog with this track in it."""
         dialog = AddEditPlaylistDialog()
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -230,6 +241,7 @@ class MusicModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_playlists_tab(self) -> QWidget:
+        """The Playlists tab: the playlists with New and Delete, and the selected one's tracks with Play Playlist and Remove Track."""
         tab = QWidget()
         layout = QHBoxLayout(tab)
 
@@ -266,6 +278,7 @@ class MusicModule(ModuleBase):
         return tab
 
     def _refresh_playlist_list(self) -> None:
+        """Lists every playlist with its track count, keeping the selection (signals held), then its tracks."""
         previously_selected_id = self._selected_playlist_id()
         self._playlist_list.blockSignals(True)
         self._playlist_list.clear()
@@ -282,9 +295,11 @@ class MusicModule(ModuleBase):
         self._refresh_playlist_tracks_list()
 
     def _selected_playlist_id(self) -> Optional[str]:
+        """The selected playlist's id, or None."""
         return selected_item_data(self._playlist_list)
 
     def _refresh_playlist_tracks_list(self) -> None:
+        """Lists the selected playlist's tracks, or that it has none."""
         self._playlist_tracks_list.clear()
         playlist_id = self._selected_playlist_id()
         if playlist_id is None:
@@ -298,6 +313,7 @@ class MusicModule(ModuleBase):
             add_empty_state_item(self._playlist_tracks_list, "No tracks in this playlist yet.")
 
     def _on_new_playlist(self) -> None:
+        """Makes a playlist named in the dialog."""
         dialog = AddEditPlaylistDialog()
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -305,6 +321,7 @@ class MusicModule(ModuleBase):
         self._refresh_playlist_list()
 
     def _on_delete_playlist(self) -> None:
+        """Deletes the selected playlist after asking (asks for a selection first)."""
         playlist_id = self._selected_playlist_id()
         if playlist_id is None:
             QMessageBox.information(None, "No Playlist Selected", "Select a playlist to delete.")
@@ -321,6 +338,7 @@ class MusicModule(ModuleBase):
         self._refresh_playlist_list()
 
     def _on_play_playlist(self) -> None:
+        """Plays the selected playlist from the track selected in it (else the first)."""
         playlist_id = self._selected_playlist_id()
         if playlist_id is None:
             QMessageBox.information(None, "No Playlist Selected", "Select a playlist to play.")
@@ -331,6 +349,7 @@ class MusicModule(ModuleBase):
         self._refresh_transport()
 
     def _on_remove_track_from_playlist(self) -> None:
+        """Removes the selected track from the selected playlist."""
         playlist_id = self._selected_playlist_id()
         track_id = selected_item_data(self._playlist_tracks_list)
         if playlist_id is None or track_id is None:
@@ -344,6 +363,7 @@ class MusicModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_transport_bar(self) -> QWidget:
+        """The transport bar: what's playing and the time, the seek slider, previous, play/pause, stop and next, and volume."""
         bar = QWidget()
         layout = QVBoxLayout(bar)
         layout.setContentsMargins(0, 8, 0, 0)
@@ -383,6 +403,7 @@ class MusicModule(ModuleBase):
         return bar
 
     def _refresh_transport(self) -> None:
+        """Shows what's playing, play or pause on the button, and the seek and volume sliders (left alone while being dragged); with nothing playing, the last volume used."""
         now_playing = self.context.music.now_playing()
         self._time_label.setText(format_now_playing_line(now_playing))
         self._play_pause_button.setText("⏸" if now_playing is not None and now_playing.is_playing else "▶")
@@ -398,6 +419,7 @@ class MusicModule(ModuleBase):
             self._volume_slider.setValue(last_volume)
 
     def _on_play_pause_clicked(self) -> None:
+        """Pauses what's playing, resumes what's paused, or plays the selected track."""
         now_playing = self.context.music.now_playing()
         if now_playing is not None and now_playing.is_playing:
             self.context.music.pause()
@@ -408,21 +430,26 @@ class MusicModule(ModuleBase):
         self._refresh_transport()
 
     def _on_stop_clicked(self) -> None:
+        """Stops playback."""
         self.context.music.stop()
         self._refresh_transport()
 
     def _on_previous_clicked(self) -> None:
+        """Goes to the previous track."""
         self.context.music.previous_track()
         self._refresh_transport()
 
     def _on_next_clicked(self) -> None:
+        """Goes to the next track."""
         self.context.music.next_track()
         self._refresh_transport()
 
     def _on_seek_slider_released(self) -> None:
+        """Seeks to where the slider was let go."""
         self.context.music.seek(self._seek_slider.value())
         self._refresh_transport()
 
     def _on_volume_slider_released(self) -> None:
+        """Sets the volume to where the slider was let go."""
         self.context.music.set_volume(self._volume_slider.value())
         self._refresh_transport()

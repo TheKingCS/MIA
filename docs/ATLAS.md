@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1069 files, 237,680 lines; 1069 files describe themselves; 7,079 of 13,808 classes and functions are documented.
+1069 files, 237,707 lines; 1069 files describe themselves; 7,106 of 13,808 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -524,7 +524,7 @@
 
 ## modules/: the desktop's apps, one folder each
 
-93 files, 22,439 lines; 674 of 1,030 classes and functions documented
+93 files, 22,466 lines; 701 of 1,030 classes and functions documented
 
 - `modules/__init__.py`: Every feature of MIA (Assistant, Files, Notes, Maps, etc.) lives here as an independent package. Each module package must:
 - `modules/assistant/__init__.py`: The assistant app's package: its screen and behaviour are in module.py (Assistant Chat UI — docs/ROADMAP.md milestones 5.2 (text chat), 5.3 (voice), 5.4 (device-help grounding), and 5.5 (tool use / action execution). A chat screen (). core/module_manager.py finds it by that file.
@@ -578,7 +578,7 @@
 - `modules/module_browser/__init__.py`: The module browser app's package: its screen and behaviour are in module.py (Backs the "Modules" button on the main menu). core/module_manager.py finds it by that file.
 - `modules/module_browser/module.py`: Backs the "Modules" button on the main menu.
 - `modules/music/__init__.py`: The music app's package: its screen and behaviour are in module.py (Music — replaces the pure placeholder that stood here since this module was first discovered by ModuleManager. Real local audio library scanning + playlists + r). core/module_manager.py finds it by that file.
-- `modules/music/module.py`: Music — replaces the pure placeholder that stood here since this module was first discovered by ModuleManager. Real local audio library scanning + playlists + real playback (core/music_manager.py, AppContext.music) — see that module's docstring for why the historical "blocked on missing libpulse" do *(27 undocumented)*
+- `modules/music/module.py`: Music — replaces the pure placeholder that stood here since this module was first discovered by ModuleManager. Real local audio library scanning + playlists + real playback (core/music_manager.py, AppContext.music) — see that module's docstring for why the historical "blocked on missing libpulse" do
 - `modules/navigation/__init__.py`: The navigation app's package: its screen and behaviour are in module.py (Navigation — docs/ROADMAP.md milestone 10.2: waypoints (name/lat/lon notes CRUD, same shape as Notes/Inventory/Components) plus a Sun/Moon panel (sunrise/sunset). core/module_manager.py finds it by that file.
 - `modules/navigation/module.py`: Navigation — docs/ROADMAP.md milestone 10.2: waypoints (name/lat/lon notes CRUD, same shape as Notes/Inventory/Components) plus a Sun/Moon panel (sunrise/sunset + moon phase for a selected waypoint's coordinates) via the `astral` package. `core/waypoint_manager.py`'s `distance_and_bearing()` (havers
 - `modules/notes/__init__.py`: The notes app's package: its screen and behaviour are in module.py (Notes: the Notes/Journal Engine's UI (docs/ROADMAP.md milestone 3.4), replacing the earlier placeholder. Dated, searchable, taggable entries — a filterable list). core/module_manager.py finds it by that file.
