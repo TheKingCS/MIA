@@ -1,0 +1,125 @@
+{
+  "available": true,
+  "devices": {
+    "available": true,
+    "storage": [
+      {
+        "name": "SanDisk Ultra (58.6G)",
+        "disk": "sdb",
+        "size": "58.6G",
+        "mounted": "/media/usb",
+        "fstype": "vfat",
+        "via": "USB"
+      }
+    ],
+    "serial": [
+      {
+        "name": "Arduino Uno (/dev/ttyACM0)",
+        "port": "/dev/ttyACM0",
+        "board": "Arduino Uno",
+        "description": "ttyACM0"
+      }
+    ]
+  },
+  "scripts": [
+    {
+      "id": "s1",
+      "name": "Back up the photos",
+      "interpreter": "shell",
+      "category": "Backups",
+      "lines": 3,
+      "content": "#!/bin/sh\nrsync -a ~/Pictures/ /media/usb/photos/\necho done\n",
+      "cut": false,
+      "updated": "2026-10-20"
+    },
+    {
+      "id": "s2",
+      "name": "Who's on the network",
+      "interpreter": "python",
+      "category": "Network",
+      "lines": 2,
+      "content": "import subprocess\nprint(subprocess.run(['ip','neigh'],capture_output=True,text=True).stdout)\n",
+      "cut": false,
+      "updated": "2026-09-12"
+    },
+    {
+      "id": "s3",
+      "name": "Free disk space",
+      "interpreter": "shell",
+      "category": "Other",
+      "lines": 1,
+      "content": "df -h\n",
+      "cut": false,
+      "updated": "2026-08-01"
+    }
+  ],
+  "categories": [
+    "Backups",
+    "Network",
+    "Other"
+  ],
+  "checks": [
+    {
+      "id": "hash",
+      "name": "What Hash Is This?",
+      "placeholder": "Paste a hash",
+      "about": "Tells a hash's kind from its prefix or length."
+    },
+    {
+      "id": "subnet",
+      "name": "Subnet",
+      "placeholder": "192.168.1.0/24",
+      "about": "The network, netmask, broadcast and usable range of a CIDR."
+    }
+  ],
+  "on_pc": [
+    "Ejecting or flashing a drive",
+    "Running a script",
+    "The port scan",
+    "Password strength"
+  ],
+  "demo_answers": {
+    "hash": {
+      "answer": "One of 2 kinds",
+      "lines": [
+        [
+          "Could be",
+          "MD5"
+        ],
+        [
+          "Could be",
+          "NTLM"
+        ]
+      ]
+    },
+    "subnet": {
+      "answer": "254 usable hosts",
+      "lines": [
+        [
+          "Network",
+          "192.168.1.0/24"
+        ],
+        [
+          "Netmask",
+          "255.255.255.0"
+        ],
+        [
+          "Broadcast",
+          "192.168.1.255"
+        ],
+        [
+          "First usable",
+          "192.168.1.1"
+        ],
+        [
+          "Last usable",
+          "192.168.1.254"
+        ],
+        [
+          "Addresses",
+          "256"
+        ]
+      ]
+    }
+  }
+}

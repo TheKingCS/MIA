@@ -1177,3 +1177,27 @@ body.cook-live .mia-orb-button, body.cook-live .bottom-bar { display: none; }
 .lab-reading:first-child { border-top: 0; }
 .lab-reading-value { font-family: var(--font-mono); color: var(--accent); }
 .lab-reading-what { display: grid; font-size: var(--text-sm); min-width: 0; }
+
+/* ---------------------------------------------------------------- Field Kit (DEC-0113 canvas, DEC-0125; web/field-kit.js) */
+.mod-field-kit .tb-list { margin-bottom: var(--gap); }
+.fk-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 56px; border-top: 1px solid var(--line); }
+.pw-label + .fk-row { border-top: 0; }
+.fk-row-main { display: grid; min-width: 0; }
+.fk-row-main .dim { font-size: var(--text-sm); overflow-wrap: anywhere; }
+.fk-tag { flex: none; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; padding: 3px 8px; border-radius: 999px;
+  border: 1px solid var(--line-strong); color: var(--text-dim); }
+.fk-tag.ok { color: var(--ok); border-color: rgba(var(--rgb-ok), 0.45); }
+.fk-pc { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.fk-pc p { margin: 0; font-size: var(--text-sm); }
+.fk-checks { display: grid; gap: var(--gap); grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); margin-bottom: var(--gap); }
+.fk-cat { display: grid; gap: 8px; margin-bottom: var(--gap); }
+.fk-cat > .pw-label { margin: 0; }
+.fk-script { padding: 0 14px; }
+.fk-script summary { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 52px; cursor: pointer; list-style: none; }
+.fk-script summary::-webkit-details-marker { display: none; }
+.fk-script summary .dim { font-size: var(--text-sm); font-family: var(--font-mono); }
+.fk-script[open] { padding-bottom: 12px; }
+.fk-code { margin: 0 0 10px; padding: 10px 12px; max-height: 360px; overflow: auto; border-radius: var(--radius-sm);
+  background: rgba(var(--rgb-panel), 0.9); border: 1px solid var(--line); font-family: var(--font-mono); font-size: 13px; line-height: 1.5;
+  white-space: pre; color: var(--text); }
+.fk-script .row-buttons { margin: 0; }

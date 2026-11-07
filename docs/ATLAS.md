@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1119 files, 251,752 lines; 1119 files describe themselves; 13,779 of 14,451 classes and functions are documented.
+1122 files, 252,038 lines; 1122 files describe themselves; 13,787 of 14,459 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-408 files, 117,402 lines; 6,220 of 6,309 classes and functions documented
+409 files, 117,508 lines; 6,224 of 6,313 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -386,6 +386,7 @@
 - `core/web_craft.py`: The Workshop's Recipes and Builds tabs (DEC-0030 phase B): put together here from core/craft_recipes.py, Materials, Jobs, Products and the Ledger, so the web only formats. Part of `workshop_page()`. The Goods tab (DEC-0036: homestead goods on hand, batch by batch, the market day and labels) is `good
 - `core/web_dungeon.py`: The Dungeon screen (DEC-0046, core/work_dungeon.py), put together here so the web only formats, and the same numbers MIA says in Talk and in Game Master mode: today's run, this week's loot (earned, projected, the boss bonus) and its runs (cleared out of all, for the canvas's week meter), the month a
 - `core/web_equipment.py`: Garage, Property, Greenhouse and Maintenance on the web (2026-10-06, DEC-0017), and one page per asset in the shape of Zac's concept (the mower page): everything the PC app shows, assembled here so `web/` holds no logic. Served as `/api/equipment?scope=…` and `/api/assets/{asset_id}`; changes are th
+- `core/web_field_kit.py`: The Field Kit's web screen (DEC-0113 canvas Field Kit, DEC-0125: the Field Kit had no phone screen). Three tabs, to look at from anywhere; doing things to the computer stays on the PC:
 - `core/web_fitness.py`: What the fitness screens show (DEC-0020, H-0026), assembled in core so the screens (Muse's) only draw it: today (training and its steps, skill practice, food and nutrition against the targets, planned meals, the day's fitness missions), the weight line, the week's meal plan with its prep and shoppin
 - `core/web_flock.py`: The Chickens screen (DEC-0037): each flock's numbers (eggs today and this week, the lay rate, loose eggs, feed cost per dozen), the last two weeks of eggs, the log, and the egg cartons on hand. Put together here from core/flock.py and homestead goods (core/goods.py), so the web only formats. Served 
 - `core/web_grow.py`: The Greenhouse's growing side (DEC-0030 phase D, folded into the Greenhouse by Zac 2026-10-17): every **place** (each tank or bed is a Greenhouse asset; older places are names typed before that) with what's growing there, its latest readings against your ranges (only ever a warning), and what it has
@@ -419,7 +420,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 2,859 lines; 34 of 34 classes and functions documented
+2 files, 2,874 lines; 34 of 34 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -687,7 +688,7 @@
 
 ## tests/: the test suite: what each part must do
 
-371 files, 67,134 lines; 5,322 of 5,905 classes and functions documented
+372 files, 67,184 lines; 5,326 of 5,909 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -813,7 +814,7 @@
 - `tests/test_gamification.py`: Unit tests for core.gamification.grant_xp() — the shared "credit XP credits + raise a real notification" helper every routine-completion hook (Workout/Kitchen/Maintenance/Budget) calls through. No Qt needed; fakes stand in for context.profiles/context.notifications/context.skills, same shape as test
 - `tests/test_garage_module.py`: Unit tests for modules.garage.module's pure functions, same style as tests/test_dashboard_module.py (no Qt event loop, no fixtures). *(5 undocumented)*
 - `tests/test_geo_grid.py`: Grid references and TAK (build plan step 14, DEC-0099): MGRS worked out in code (checked against pyproj and the mgrs package: 4,000 random points agreed to the metre, 2026-11-06; the reference outputs are pinned here), and MIA's waypoints as a TAK data package of Cursor on Target events and KML. *(2 undocumented)*
-- `tests/test_glasses.py`: The glasses' app cards and quick action menus (Zac 2026-10-16, H-0041 Phase 2; core/glasses.py): the person's own apps as cards, each with a menu; a panel's lines carry only glasses-safe actions, and money stays readouts; a change goes Propose -> Approve like everywhere else. *(3 undocumented)*
+- `tests/test_glasses.py`: The glasses' app cards and quick action menus (Zac 2026-10-16, H-0041 Phase 2; core/glasses.py): the person's own apps as cards, each with a menu; a panel's lines carry only glasses-safe actions, and money stays readouts; a change goes Propose -> Approve like everywhere else. Every ask reaches one o *(3 undocumented)*
 - `tests/test_glasses_feed.py`: The glasses' Heads-Up screen (Zac, 2026-10-18): new notifications and wins since the cursor, each once; the same moment shown once; money never to a child. *(2 undocumented)*
 - `tests/test_glasses_screens.py`: The numbers on an app's glasses screen, a vehicle's own page, and "I Made This".
 - `tests/test_glasses_voice.py`: Talking to MIA through the glasses (core/glasses_voice.py): "open Kitchen" switches the glasses to that app, anything else is a Talk turn, and the glasses hear about it through their feed. A phone linked to the home computer sends the words there first. *(1 undocumented)*
@@ -1027,6 +1028,7 @@
 - `tests/test_waypoint_manager.py`: Unit tests for core.waypoint_manager. haversine_distance_km() initial_bearing_degrees() are checked against real, well-known distances/bearings (New York <-> Los Angeles, London <-> Paris) rather than only synthetic values, so a sign error or unit mistake can't accidentally cancel out and still pass *(4 undocumented)*
 - `tests/test_waypoint_map_canvas.py`: Unit tests for gui.widgets.waypoint_map_canvas's project_waypoints() — pure math, no Qt/QWidget instantiation needed. See that module's own docstring for why this is a schematic layout, not a real map projection.
 - `tests/test_web_equipment.py`: DEC-0017 (2026-10-06): Garage, Property, Greenhouse and Maintenance on the web, and one page per asset (Zac's mower concept): the data (core/web_equipment.py) and every change as an action kind (core/equipment_actions.py, maintenance.done with a meter value); and the design canvas's Garage card and  *(5 undocumented)*
+- `tests/test_web_field_kit.py`: The Field Kit on the web (DEC-0125, the design canvas's Field Kit, DEC-0113: core/web_field_kit.py): what's plugged into the computer, a hash's kind and a subnet worked out in core, and the script library to read and copy; doing things to the computer stays on the PC.
 - `tests/test_web_fitness.py`: The fitness screens' data (core/web_fitness.py, DEC-0020): today, the weight line, missions and "is it working?" in one plain sentence, the meal-plan week, and the endpoints. Placeholder values. *(3 undocumented)*
 - `tests/test_web_fresh.py`: The web screens are never served from a stale browser copy (Zac, 2026-10-16: after a phone update the old Dashboard kept showing).
 - `tests/test_web_guide.py`: Start Here (core/web_guide.py) stays true: every "Try saying" phrase reaches one of MIA's tools (or is one of the few handled in code), every page it opens exists, and the sidebar's data carries the life areas and favorites the grouped sidebar draws.
@@ -1063,7 +1065,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-77 files, 13,940 lines
+78 files, 14,055 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
@@ -1085,6 +1087,7 @@
 - `web/dungeon.js`: dungeon.js — The Dungeon (claude, 2026-10-27, DEC-0046). Renders MIA.dungeon() (core/web_dungeon.py) in tabs: Today (clear today's run and say what made it hard mode, the overtime line, planned runs, make a hard day a quest), Loot (this week earned and projected, the month, the year at this pace, ba
 - `web/equipment.js`: equipment.js — Garage and Greenhouse (claude, 2026-10-06, DEC-0017; Maintenance and Property folded in, Zac 2026-10-16). The page's <body data-scope> picks the screen; tabs Assets, Past Due, Due Today, Due Soon; everything comes from MIA.equipment(scope). Tasks are marked done, assets and tasks adde
 - `web/expeditions.js`: expeditions.js — the Expeditions screen (claude, 2026-10-16; Zac: the app only opened a chat). Renders MIA.expeditions() (core/web_more.py): expeditions happening now, coming up and past; one opens to its trips, each with Start / Finish, its packing list (tap to pack) and its notes. Every change is 
+- `web/field-kit.js`: field-kit.js — the Field Kit (claude, 2026-11-07, DEC-0125; the design canvas's Field Kit, DEC-0113). Renders MIA.fieldKit() (core/web_field_kit.py) in three tabs: Devices (what's plugged into the computer), Network (a hash's kind and a subnet, worked out in core by MIA.fieldKitCheck as you type) an
 - `web/files.js`: files.js — the Files screen (claude, 2026-10-16; Zac: the app only opened a chat). Renders MIA.files(path) (core/web_more.py, core/my_files.py): your own MIA files folder, with folders, Upload (from this phone or computer), Open (a picture, PDF, song or text shows here; anything else downloads), Ren
 - `web/flock.js`: flock.js — the Chickens screen (claude, 2026-10-21, DEC-0037). Renders MIA.flock() (core/web_flock.py): per flock, eggs today and this week, the lay rate, loose eggs, feed cost per dozen, two weeks of eggs, cartons on hand and the log. Log Eggs is one tap per count (the tap is the approval; Undo in 
 - `web/freedom.js`: freedom.js — the Freedom screen (claude, 2026-10-21, DEC-0038). Renders MIA.freedom() (core/freedom.py): the estimated day and how far along the fund is, progress today / this week / this month, what a shift buys, how the fund adds up (each number with where it came from and what it is: Fact, Calcul

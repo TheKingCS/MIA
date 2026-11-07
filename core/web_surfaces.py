@@ -163,7 +163,7 @@ APPS: tuple[App, ...] = (
         "Calculators, unit conversion, and other quick tools.", KNOW, ("toolbox",), "Convert 5 gallons to liters."),
     App("lab", "The Lab", "🧪", "Experiments and sensors.", "lab.html",
         "Sensor testing, experiments, calibration, and graphs.", KNOW, ("lab",), "Start a temperature experiment."),
-    App("field_kit", "Field Kit", "🛠", "Devices and scripts.", None,
+    App("field_kit", "Field Kit", "🛠", "Devices and scripts.", "field-kit.html",
         "Detect and manage connected devices; run your own scripts.", KNOW, ("field_kit", "security"),
         "What devices are connected?"),
     App("passwords", "Passwords", "🔐", "Every login, locked.", "passwords.html",

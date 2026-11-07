@@ -78,7 +78,7 @@ LIMITS = {
     "knowledge": "Only packs copied onto this computer; articles read as plain text, without pictures.",
     "toolbox": "Inventory is on the PC; alarms ring on the PC.",
     "lab": "Readings are entered by hand; no sensors are connected yet.",
-    "field_kit": "No web screen yet.",
+    "field_kit": "Ejecting drives, running scripts and the port scan are on the PC.",
     "passwords": "MIA's assistant never sees a password; no autofill in other apps yet.",
     "files": "",
     "music": "",
