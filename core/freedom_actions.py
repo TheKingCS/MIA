@@ -31,12 +31,14 @@ MONEY_PARAMS = {"monthly_needs", "saved", "monthly_saving"}  # pay is the Dungeo
 
 
 def _money(x: float) -> str:
+    """An amount in the person's currency."""
     from core.region import money
 
     return money(x)
 
 
 def _grown_up(context) -> None:
+    """Freedom is a grown-up's plan: ActionError for a child account."""
     from core.child_accounts import is_child
 
     if is_child(context):
@@ -44,6 +46,7 @@ def _grown_up(context) -> None:
 
 
 def _number(raw, label: str) -> float:
+    """A number from the params (0 when blank), not negative; ActionError naming the field otherwise."""
     if raw in (None, ""):
         return 0.0
     try:
@@ -56,6 +59,9 @@ def _number(raw, label: str) -> float:
 
 
 def _changes(context, params) -> list[tuple]:
+    """The plan numbers the params actually change, as (setting, param, how it's said, value); the cushion is a whole
+    number of months up to 60. ActionError when nothing changes.
+    """
     from core.freedom import settings
 
     _grown_up(context)
@@ -77,6 +83,7 @@ def _changes(context, params) -> list[tuple]:
 
 
 def _said(param: str, value) -> str:
+    """A plan value in words: months, hours, an amount, or "worked out by MIA" / "not set" for a blank one."""
     if param == "cushion_months":
         return f"{value} months"
     if param == "shift_hours":
@@ -87,10 +94,12 @@ def _said(param: str, value) -> str:
 
 
 def _plan_describe(context, params) -> str:
+    """The sentence the approval card shows for `freedom.plan` (Propose); raises ActionError when it can't be done."""
     return "Your freedom plan: " + "; ".join(f"{said} {_said(param, value)}" for _k, param, said, value in _changes(context, params))
 
 
 def _plan(context, params) -> str:
+    """Does `freedom.plan` once approved, and says what happened. Each number is the person's own setting; 0 goes back to what MIA works out."""
     from core import person_settings
 
     for key, _param, _said_, value in _changes(context, params):
@@ -99,6 +108,9 @@ def _plan(context, params) -> str:
 
 
 def _build_values(params, partial: bool) -> dict:
+    """A build's name, budget (more than 0), notes and status (a project status) from the params; with partial=True
+    only the ones given.
+    """
     out = {}
     if "name" in params or not partial:
         name = str(params.get("name") or "").strip()
@@ -122,6 +134,7 @@ def _build_values(params, partial: bool) -> dict:
 
 
 def _build_describe(context, params) -> str:
+    """The sentence the approval card shows for `freedom.build` (Propose); raises ActionError when it can't be done."""
     _grown_up(context)
     _need(context, "projects")
     v = _build_values(params, partial=False)
@@ -129,6 +142,9 @@ def _build_describe(context, params) -> str:
 
 
 def _build(context, params) -> str:
+    """Does `freedom.build` once approved, and says what happened. A build is a Project in Planning with a budget; spending tagged to it counts
+    toward it.
+    """
     v = _build_values(params, partial=False)
     projects = _need(context, "projects")
     project = projects.add_project(v["name"], status="Planning", description=v.get("description", ""))
@@ -137,6 +153,7 @@ def _build(context, params) -> str:
 
 
 def _project(context, params):
+    """The build (project) the params name, or ActionError."""
     project = _need(context, "projects").get_project(str(params.get("project_id") or ""))
     if project is None:
         raise ActionError("That build isn't there anymore.")
@@ -144,6 +161,7 @@ def _project(context, params):
 
 
 def _build_edit_describe(context, params) -> str:
+    """The sentence the approval card shows for `freedom.build_edit` (Propose); raises ActionError when it can't be done."""
     _grown_up(context)
     project = _project(context, params)
     v = _build_values(params, partial=True)
@@ -154,12 +172,16 @@ def _build_edit_describe(context, params) -> str:
 
 
 def _build_edit(context, params) -> str:
+    """Does `freedom.build_edit` once approved, and says what happened."""
     project = _project(context, params)
     context.projects.update_project(project.project_id, **_build_values(params, partial=True))
     return "Build updated."
 
 
 def _account(context, params):
+    """What changing a fund account takes: the bank account (from the latest sync), in or out, and the new list of fund
+    accounts (all checking and savings until some are picked); at least one must stay.
+    """
     from core.freedom import bank_accounts, settings
 
     _grown_up(context)
@@ -177,12 +199,14 @@ def _account(context, params):
 
 
 def _account_describe(context, params) -> str:
+    """The sentence the approval card shows for `freedom.fund_account` (Propose); raises ActionError when it can't be done."""
     found, on, _picked = _account(context, params)
     name = found["name"] + (f" ····{found['mask']}" if found["mask"] else "")
     return f"{'Count' if on else 'Leave out'} {name} {'in' if on else 'of'} your freedom fund"
 
 
 def _account_run(context, params) -> str:
+    """Does `freedom.fund_account` once approved, and says what happened. The list is the person's own setting."""
     from core import person_settings
 
     _found, _on, picked = _account(context, params)
@@ -191,6 +215,9 @@ def _account_run(context, params) -> str:
 
 
 def _moving(context, params):
+    """What moving a build takes: its name, up or down, and the new order; ActionError when it's not in the plan or
+    already first or last.
+    """
     from core.freedom import gather, settings
     from datetime import date
 
@@ -210,11 +237,13 @@ def _moving(context, params):
 
 
 def _move_describe(context, params) -> str:
+    """The sentence the approval card shows for `freedom.build_move` (Propose); raises ActionError when it can't be done."""
     name, up, _ids = _moving(context, params)
     return f"Move {name} {'up' if up else 'down'} in your builds"
 
 
 def _move(context, params) -> str:
+    """Does `freedom.build_move` once approved, and says what happened. The order is the person's own setting."""
     from core import person_settings
 
     _name, _up, ids = _moving(context, params)
@@ -223,6 +252,7 @@ def _move(context, params) -> str:
 
 
 def _register() -> None:
+    """Adds the Freedom action kinds to ACTION_TYPES. Runs once, when this module is imported."""
     for kind in (
         ActionType("freedom.plan", "Save", {param: said for _k, param, said in PLAN_FIELDS}, _plan_describe, _plan),
         ActionType("freedom.fund_account", "Fund", {"account_id": "the bank account", "in_fund": "yes or no"},
