@@ -515,7 +515,7 @@ class SkillsModule(ModuleBase):
         self._refresh_rewards_card()
 
     def _refresh_rewards_card(self) -> None:
-        """Rebuilds the rewards card (its title kept): what's unlocked and what's next, by tier."""
+        """Rebuilds the rewards card (its title kept), after checking for new unlocks: each challenge chain's earned title (or that it's maxed) and its progress toward the next tier, then the hidden achievements found."""
         while self._rewards_layout.count() > 1:  # keep the eyebrow title (index 0)
             item = self._rewards_layout.takeAt(1)
             widget = item.widget()
@@ -629,7 +629,7 @@ class SkillsModule(ModuleBase):
                 self._rewards_layout.addWidget(emblem_label)
 
     def _refresh_achievements(self) -> None:
-        """Rebuilds the achievements card (its title kept): those earned and the hidden ones found."""
+        """Rebuilds the achievements card (its title kept): the three latest achievement notifications, or that none are logged yet."""
         while self._achievements_layout.count() > 1:  # keep the eyebrow title (index 0)
             item = self._achievements_layout.takeAt(1)
             widget = item.widget()
@@ -831,7 +831,7 @@ class SkillsModule(ModuleBase):
         self._refresh_achievements()
 
     def _on_profile_xp_changed(self, profile_id: str) -> None:
-        """When the signed-in person's XP changes: refreshes the stats line, prestige and rewards (only once the page is built)."""
+        """When the signed-in person's XP changes: refreshes the stats line (only once the page is built)."""
         if not self._widget_built or profile_id != self._active_profile_id():
             return
         self._refresh_stats_label()
