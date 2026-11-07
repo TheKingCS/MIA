@@ -29,7 +29,9 @@ authority, flattery), counted by tools/conversation_check.py.
 
 **Humor** (Zac, 2026-11-07: funny sometimes, when appropriate, and a
 surprise): `humor_for()` decides in code, by chance on a light turn only,
-when to nudge her toward one line of wit, in a flavor picked at random.
+when to nudge her toward one line of wit, in a flavor picked at random;
+how often is each person's own level (HUMOR_LEVELS, off to lots), set
+by asking in chat (core/assistant_humor_actions.py).
 """
 
 from __future__ import annotations
@@ -171,16 +173,44 @@ def humor_line(prompt: str, roll: float, flavor_roll: float, chance: float = HUM
             "skip it if nothing's actually funny.")
 
 
-def humor_for(context, prompt: str) -> str:
-    """humor_line for a real turn: the chance from config, the rolls at random (that's the surprise)."""
-    import random
+# How funny each person wants her, set by asking in chat (set_humor, core/assistant_humor_actions.py).
+HUMOR_LEVELS = {"off": 0.0, "rare": 0.1, "sometimes": HUMOR_CHANCE, "often": 0.5, "lots": 0.8}
+HUMOR_DEFAULT = "sometimes"
 
+
+def humor_level(context) -> str:
+    """The person's humor level (assistant.humor_level, their own setting), else the default."""
+    from core import person_settings
+
+    level = person_settings.get(context, "assistant.humor_level", HUMOR_DEFAULT)
+    return level if level in HUMOR_LEVELS else HUMOR_DEFAULT
+
+
+def humor_chance(context) -> float:
+    """The chance a light turn gets the nudge: the person's level, unless they never set one and the device's config
+    has assistant.humor_chance."""
+    from core import person_settings
+
+    if person_settings.get(context, "assistant.humor_level") in HUMOR_LEVELS:
+        return HUMOR_LEVELS[humor_level(context)]
     config = getattr(context, "config", None)
     try:
-        chance = float(config.get("assistant.humor_chance", HUMOR_CHANCE)) if config is not None else HUMOR_CHANCE
+        return float(config.get("assistant.humor_chance", HUMOR_CHANCE)) if config is not None else HUMOR_CHANCE
     except (TypeError, ValueError):
-        chance = HUMOR_CHANCE
-    return humor_line(prompt, random.random(), random.random(), chance)
+        return HUMOR_CHANCE
+
+
+def humor_for(context, prompt: str) -> str:
+    """humor_line for a real turn: the chance from the person's humor level, the rolls at random (that's the
+    surprise); NO_JOKES when they turned it off."""
+    import random
+
+    if humor_chance(context) <= 0:
+        return NO_JOKES
+    return humor_line(prompt, random.random(), random.random(), humor_chance(context))
+
+
+NO_JOKES = "They asked you not to joke for now: keep it warm but straight, no jokes or wordplay."
 
 
 GUILT_WORDS = ("failed", "failure", "you missed", "behind", "lazy", "should have", "shame", "disappointing",

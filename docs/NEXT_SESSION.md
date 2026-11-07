@@ -7,6 +7,12 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 *Last updated: 2026-11-07 (afternoon)*
 
+**New 2026-11-07 (evening): humor and plans (DEC-0118).** Humor: `core.personality.humor_for` (light turns, by
+chance, a random flavor) and each person's level by chat (`set_humor`). Plans: the Library's plans shelf
+(`core/plan_library.py`, tools in `core/assistant_plan_actions.py`, the Knowledge page's Plans section), material and
+cut lists worked out in `core/build_calcs.py`. Next for it: more calculators as Zac names them (chicken coop, lean-to,
+shelving, stairs), reading the text of dropped-in plan PDFs (OCR is in `core/ocr.py`), and a size form on the web.
+
 **New 2026-11-07: MIA's browser (DEC-0117, `docs/BROWSER.md`).** Edge through Playwright in her own profile per
 person; every step is sorted in code (`core/browser_safety.py`); commits wait as `browser.commit` for the person's
 OK (screen or a coded yes); secrets never typed; tasks taught by showing (`core/browser_routines.py`), learned after

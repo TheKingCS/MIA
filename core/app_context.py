@@ -34,6 +34,7 @@ if TYPE_CHECKING:
     from core.alarm_manager import AlarmManager
     from core.avatar_manager import AvatarManager
     from core.browser import Browsers
+    from core.plan_library import PlanLibrary
     from core.budget_manager import BudgetManager
     from core.plaid_manager import PlaidManager
     from core.real_estate_manager import RealEstateManager
@@ -156,6 +157,8 @@ class AppContext:
     actions: Optional["ActionCenter"] = field(default=None, repr=False)
     # MIA's own browser, one session per person (core/browser.py, DEC-0117).
     browsers: Optional["Browsers"] = field(default=None, repr=False)
+    # The Library's plans shelf (core/plan_library.py).
+    plans: Optional["PlanLibrary"] = field(default=None, repr=False)
     # How things relate (core/links.py): the household's stated links.
     links: Optional["LinkStore"] = field(default=None, repr=False)
     # "Undo that" for MIA's changes (core/undo_log.py).

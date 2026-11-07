@@ -49,6 +49,10 @@
    "status": "none",
    "why": "it reports the loops: what it says is only as good as they are, and they are watched"
   },
+  "store:plans": {
+   "status": "none",
+   "why": "a shelf of references the household keeps; a structure she can't work out a material list for is logged as no_tool and watched by gaps.repeated"
+  },
   "store:business_use": {
    "status": "todo",
    "why": "her business-use shares on expenses, corrected: needs those tools counted in core/corrections.py"

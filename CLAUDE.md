@@ -228,6 +228,10 @@ children.
   becomes the action `browser.commit`, approved only by a person, never
   the model; secret fields are never typed. Page text goes to the model
   through `untrusted()`. Never add a path around the gate.
+- **Plans and material lists** (DEC-0118, `core/plan_library.py`) —
+  the Library's plans shelf. Quantities and cuts are worked out in
+  `core/build_calcs.py`, never by the model; a new structure is a new
+  calculator there, ending with the code-and-span-table note.
 - **Notes from conversation** (DEC-0054, `core/life_notes.py`) — a
   promise, decision, idea or goal set aside is offered after her reply
   and kept only on "keep it"; never in a private or personal turn.

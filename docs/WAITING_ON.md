@@ -16,6 +16,13 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       wrong. One choice for you in the doc's Known limits: whether typing in ordinary fields should be limited to
       words you said that turn.
 
+- [ ] **Plans in the Library (DEC-0118):** after the restart, ask "what do I need to build a 10 by 12 shed?" or
+      "how many bags of concrete for a 10 by 12 slab?"; open Knowledge in the sidebar for the Plans shelf; save
+      plan PDFs and drawings into `reference_library\plans\` (subfolders like `woodworking\` become the kind) and
+      she finds them. Free ones: ask "where can I get free plans?". Tell Claude which structures to add next
+      (a chicken coop? a lean-to? shelving?).
+- [ ] **Her humor:** say "be funnier" or "no more jokes for now" and see her change; tell Claude how often feels right.
+
 ### Decisions
 - [ ] **The Highest Self (H-0089 → H-0090, DEC-0114 PROPOSED):** read H-0090 (one page) and decide its four questions (the foundation, faith for everyone's MIA, three new modes, keep the tuned prompt); and rate MIA's twelve new answers in `pc-check/conversation-highest-self-tune2.md` (faith, meaning, vulnerability, grand plans, dependency, free will, flattery): your ratings decide the next tuning.
 - [ ] **Experience Maturity (H-0087 → H-0088, DEC-0113 PROPOSED):** read H-0088 (one page) and Muse's reply H-0091 (agrees on all four, with a condition each; orb unification first) and decide: the direction

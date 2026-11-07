@@ -101,6 +101,7 @@ from core.operating_journal import OperatingJournal
 from core.recreation import RecreationLog
 from core.paths import PathBook
 from core.browser_routines import BrowserRoutines
+from core.plan_library import PlanLibrary
 from core.life_notes import LifeNotes
 from core.gps_tracks import GpsTracks
 from core.turn_trace import TurnTraces
@@ -190,6 +191,7 @@ HOUSEHOLD_STORES: tuple[tuple[str, type], ...] = (
     ("record_sets", RecordSets),  # the household's record sets (DEC-0089)
     ("alarms", AlarmManager),
     ("inventory", InventoryManager),
+    ("plans", PlanLibrary),  # the Library's plans shelf: plans the household kept (core/plan_library.py)
     ("data_logger", DataLoggerManager),
     ("components", ComponentManager),
     ("materials", MaterialManager),

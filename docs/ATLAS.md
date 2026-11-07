@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1075 files, 241,428 lines; 1075 files describe themselves; 13,284 of 13,954 classes and functions are documented.
+1080 files, 242,846 lines; 1080 files describe themselves; 13,361 of 14,031 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-383 files, 110,927 lines; 5,877 of 5,966 classes and functions documented
+387 files, 112,097 lines; 5,942 of 6,031 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -32,6 +32,7 @@
 - `core/assistant_focus_actions.py`: Assistant tools for each person's Apps screen (core/focus_presets.py, 2026-10-01): "switch me to student mode", "hide the Lab", "show me the Greenhouse again", "what's my focus?". Changes are the speaker's own.
 - `core/assistant_goods_actions.py`: Saying it to MIA (2026-10-21): the homestead's newest screens by voice. "How many eggs this week?", "I collected 9 eggs", "What goods do I have on hand?", "Sold 3 loaves of banana bread", "How close am I to freedom?", "What's due for taxes?". Each one runs the same code its screen does (the action k
 - `core/assistant_homestead_actions.py`: Assistant tools for Finance #2, homestead builds and tools (core/homestead_costs.py): "I spent $240 on lumber for the greenhouse", "I bought a DeWalt drill for $199 for the greenhouse", "How much have I spent on the greenhouse?", "What has the mower cost me?", "Set the greenhouse budget to $5,000".
+- `core/assistant_humor_actions.py`: "Be funnier", "tone down the jokes", "no jokes for now" (Zac, 2026-11-07): the person sets how funny MIA is with them, in chat. One tool, set_humor, moving their own level (core/personality.py HUMOR_LEVELS: off, rare, sometimes, often, lots) up or down a step or to a level by name. Only the speaker'
 - `core/assistant_inbox_actions.py`: Assistant tools for the document inbox (core/inbox_manager.py): what's waiting, "file it" (with MIA's proposal, or the owner's correction of which tool or build it's for), and "throw that one out". Filing by voice adds every maintenance step MIA found in a manual unless the owner says "without the t
 - `core/assistant_life_actions.py`: Assistant actions for the personal side of MIA (2026-09-27, following docs/ASSISTANT_AUDIT.md): workouts, people and pets, household routines, and Classroom learning. Same contract as core/assistant_domain_actions.py: handlers are pure functions of (context, arguments), find records from the user's 
 - `core/assistant_life_event_actions.py`: "What did I get done this week?", "what changed this month?", "what bills did I pay?" (core/life_events.py, 2026-10-05). Facts from the log, counted in code; the model only phrases them.
@@ -39,6 +40,7 @@
 - `core/assistant_lookup.py`: How Assistant actions find the user's own records from the words they actually say. People say "the truck" and "did the oil", not "Pickup Truck" and "Oil change", and the model can only pass on their words.
 - `core/assistant_ownership_actions.py`: "Whose truck is it?" and "the mower is mine" (core/ownership.py, 2026-10-01): owner marks on maintenance items (vehicles, tools, appliances).
 - `core/assistant_path_actions.py`: Learning paths by voice (DEC-0112; core/paths.py): any desire, the same loop. "I want to learn guitar" starts the guitar program; "I want to learn to weld", with no program for it, has MIA draft one (grounded in her specialists' notes) and describe it, and "start it" starts it. Then lessons, practic
+- `core/assistant_plan_actions.py`: The Library's plans by voice (core/plan_library.py): "do we have plans for a chicken coop?", "what do I need for a 10 by 12 shed?", "make me a cut list for a 4 by 8 raised bed", "what do I still need to buy for the fence?", "where can I get free barn plans?", "start the shed as a project". The numbe
 - `core/assistant_self_actions.py`: MIA about herself (2026-10-21, the intelligence spec's first slice): "What AI model are you using?" answered from the runtime (core/model_registry.py), never from the model's guess about itself.
 - `core/assistant_starter_actions.py`: "What starter sets are there?", "set me up with the homestead starter set", "add the student starter but not the weekly plan" (core/starter_templates.py, 2026-10-01). Adding one is undoable.
 - `core/assistant_tagging_actions.py`: Assistant tools for sorting bank charges to businesses (core/business_tagging.py): "which charges need a business?" and "the Shell charge was for lawn care" / "the Walmart one was personal".
@@ -61,6 +63,7 @@
 - `core/budget_manager.py`: MIA Home's household bookkeeping — bills, income, and expenses. Named `budget_manager`, deliberately neither `finance_manager` nor `ledger_manager` — both already exist as different concepts. `core/finance_manager.py` is a read-only watched-folder importer for externally-generated Kraken trading-age *(68 undocumented)*
 - `core/budget_nudges.py`: Pure decision logic for a proactive daily budget nudge — 2026-09-08, at the user's explicit request following up on the "Field Manual" brainstorm: "are we meeting our income needs or exceeding our planned expenses, are we paying things on time, and covering what's due next and when next expected pay
 - `core/buffs.py`: Buffs (DEC-0028, the game layer's fifth piece): good effects you've earned by what you really did. **Never debuffs** (DEC-0014): nothing here is ever taken away as a penalty; a buff simply runs out, and earning it again brings it back.
+- `core/build_calcs.py`: Material lists worked out in code (Zac, 2026-11-07: "references for all kinds of stuff like woodworking plans, structure blueprints, material lists"). Each calculator takes a structure's size and gives what to buy and what to cut: a stud wall, a floor or deck frame, a raised garden bed, a fence run,
 - `core/build_media.py`: Photos and videos of a workshop build (DEC-0030 phase B): the before and after of a furniture flip, the build in progress, the finished piece for the portfolio. They live with the household's workshop data, in `<jobs folder>/workshop_media/<job_id>/`; a name starting "before-" or "after-" is shown a
 - `core/business_actions.py`: Quotes, customers, orders and the portfolio (DEC-0030 phase C, core/business_book.py) on the action contract: proposed in plain words, approved, run, undoable.
 - `core/business_book.py`: Quotes, customers, orders and the portfolio (DEC-0030 phase C): the business loop on top of crafting recipes (core/craft_recipes.py), builds (Jobs) and the workshop ledger, never beside them.
@@ -270,6 +273,7 @@
 - `core/plaid_manager.py`: Bank/brokerage connectivity via Plaid — the one credible third-party path found after real research (2026-09-08): Robinhood has no public stocks API (crypto-only officially; everything else is unofficial and ToS-violating), Chime's own API is a B2B "Partner API," not self service for an individual.  *(21 undocumented)*
 - `core/plain_words.py`: Markdown out of what MIA says (2026-10-30). Models write **bold**, headings and `code`, which the desktop's chat bubbles show as asterisks and hashes and the voice reads as noise. Pure logic.
 - `core/plan_import.py`: "Paste a plan" (2026-10-14, Zac: "work with Muse to fill out my workouts, goals, meals, nutrition"). A whole fitness plan and its recipes as one block of plain text, the kind Muse (or anyone) writes in a chat and the person pastes into My plan on their phone. The person's details go from that chat s
+- `core/plan_library.py`: The Library's plans shelf (Zac, 2026-11-07: "references for all kinds of stuff like woodworking plans, structure blueprints, material lists"). Three kinds of plan, found together by `find()`:
 - `core/play_actions.py`: Recreation (core/recreation.py, DEC-0098) through the action contract (core/actions.py): `play.log` (a game or sport played) and `play.delete`. The log writes through atomic_write_text, so "undo that" takes it back. Children play too: both are child-safe.
 - `core/port_scanner.py`: Pure-Python TCP connect-scan port scanner — docs/ROADMAP.md milestone 11.5, Field Kit's Security/Network Toolkit. Deliberately doesn't wrap `nmap`: `nmap` isn't installed in this dev sandbox and can't be added without sudo (the same "no sudo" wall as every other missing system package this project h
 - `core/power_manager.py`: Power monitoring — docs/ROADMAP.md milestone 7.2. Defines a small backend-agnostic interface (`PowerBackend`, same shape as core/llm_manager.py's `LLMBackend` and core/voice_manager.py's `STTBackend`/`TTSBackend`), with one concrete implementation, `PsutilBatteryBackend`, using psutil's cross-platfo
@@ -394,7 +398,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 2,647 lines; 31 of 31 classes and functions documented
+2 files, 2,677 lines; 31 of 31 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -662,7 +666,7 @@
 
 ## tests/: the test suite: what each part must do
 
-358 files, 65,209 lines; 5,172 of 5,753 classes and functions documented
+359 files, 65,381 lines; 5,184 of 5,765 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -905,6 +909,7 @@
 - `tests/test_plaid_manager.py`: Unit tests for core.plaid_manager — the vault encrypt/decrypt round trip (real core.secrets_manager calls, no network) and poll_for_public_token()'s/extract_completed_public_token()'s stopping logic against fake, duck-typed response objects (SimpleNamespace, not real plaid.model classes — those requ
 - `tests/test_plain_words.py`: Markdown out of what MIA says (core/plain_words.py).
 - `tests/test_plan_import.py`: "Paste a plan" (core/plan_import.py, 2026-10-14): a whole plan and its recipes as text, the way a chat writes it, into MIA in one undoable action. Placeholder values only (DEC-0002). *(1 undocumented)*
+- `tests/test_plan_library.py`: The Library's plans shelf (core/plan_library.py) and the material lists behind it (core/build_calcs.py): boards packed into stock lengths, each calculator's counts checked by hand, plans found by name, kept and read from files, a shopping list against the workshop's stock, and the tools.
 - `tests/test_port_scanner.py`: Unit tests for core.port_scanner. Uses a real local TCP server bound to an ephemeral port (socket.bind(("127.0.0.1", 0))) rather than mocking sockets or reaching out to a real remote host — deterministic (no network/internet dependency) while still exercising the real connect_ex() path, not a hand-c
 - `tests/test_power_manager.py`: Unit tests for core.power_manager. should_warn_low_battery() is tested directly with constructed PowerStatus objects (pure, deterministic — no psutil or real battery involved). PsutilBatteryBackend/PowerManager are tested against monkeypatched psutil.sensors_battery(), same approach as test_system_h *(5 undocumented)*
 - `tests/test_power_module.py`: Unit tests for modules.power.module's pure formatting functions — no Qt event loop needed. Same shape as tests/test_system_health.py's format_system_health test.
@@ -1025,7 +1030,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-71 files, 12,182 lines
+71 files, 12,228 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
@@ -1060,7 +1065,7 @@
 - `web/journal.js`: journal.js — the Journal screen (claude, 2026-10-16; Zac: the app only opened a chat). Renders MIA.journal() (core/web_more.py): entries newest first, search, tags; an entry opens to read in full with Edit and Delete. Write Entry proposes journal.add. Talk It Out opens the chat to journal with MIA (
 - `web/kept.js`: kept.js — Kept (claude, 2026-11-06, DEC-0054). Renders MIA.lifeNotes() (core/life_notes.py): the promises, decisions, ideas and goals set aside the person asked MIA to keep. Done and Forget go through actions (life_note.done / .forget), so undo takes them back. Formatting only; the look is muse's.
 - `web/kitchen.js`: kitchen.js — the Kitchen screen (claude, 2026-10-06, DEC-0017/0018). Renders MIA.kitchen() (core/web_screens.py): recipes (with what's missing and which mission unlocks a locked one), the pantry, the grocery list, the meal log and suggestions. Every button proposes a kitchen action (core/kitchen_act
-- `web/knowledge.js`: knowledge.js — the offline reference library (claude, 2026-11-06). Renders MIA.knowledge(q) (core/reference_library_manager.py): the installed packs, a search across all of them, and an article read as plain text (MIA.knowledgeArticle). Works with no internet. Formatting only; the look is muse's.
+- `web/knowledge.js`: knowledge.js — the offline reference library (claude, 2026-11-06). Renders MIA.knowledge(q) (core/reference_library_manager.py): the installed packs, a search across all of them, and an article read as plain text (MIA.knowledgeArticle), and the plans shelf (MIA.knowledgePlans, core/plan_library.py):
 - `web/label.js`: label.js — printable labels for a homestead good (DEC-0036). Reads MIA.workshop()'s goods: ?recipe=<id> (today's date) or &job=<batch> (that batch's made date). Formatting only; the words are the person's own.
 - `web/look.js`: look.js — Look: show MIA something (claude, 2026-11-07, build plan step 15). A photo (the camera, or one you have) and a question ("what is this?", "read this label", "inspect this part"), answered on MIA's PC by her local vision model (core/sight.py, POST /api/sight). The photo isn't kept. She neve
 - `web/made.js`: made.js: every screen MIA makes (claude, 2026-11-04, DEC-0088 to DEC-0091). Draws a creation's blocks as core assembled them (core/creation_spec.py): stats, chart, table, list, cards, meter, timeline, form, note. Only MIA's own classes and tokens, no styling of its own, so whatever she makes looks l

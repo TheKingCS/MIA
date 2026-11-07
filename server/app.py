@@ -861,6 +861,36 @@ def create_app(context: AppContext) -> FastAPI:
             hits = library.search_titles(q.strip()[:200]) if q.strip() else []
         return {"available": True, "packs": packs, "hits": hits, "root": str(library.root_path)}
 
+    # The Library's plans shelf (core/plan_library.py): plans, one plan, and a plan's own file from the plans folder.
+    @app.get("/api/knowledge/plans")
+    def knowledge_plans(q: str = "", profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.plan_library import screen
+
+        with app.state.turn_lock:
+            return screen(view_for(context, profile_id), q.strip()[:200])
+
+    @app.get("/api/knowledge/plan")
+    def knowledge_plan(id: str, profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.plan_library import detail
+
+        with app.state.turn_lock:
+            found = detail(view_for(context, profile_id), id)
+        if found is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "That plan isn't on the shelf.")
+        return found
+
+    @app.get("/api/knowledge/plan/file")
+    def knowledge_plan_file(id: str, profile_id: str = Depends(require_profile_id)):
+        from fastapi.responses import FileResponse
+
+        from core.plan_library import file_path
+
+        with app.state.turn_lock:
+            path = file_path(view_for(context, profile_id), id)
+        if path is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "That file isn't in the plans folder.")
+        return FileResponse(path)
+
     @app.get("/api/knowledge/article")
     def knowledge_article(pack: str, path: str, profile_id: str = Depends(require_profile_id)) -> dict:
         library = getattr(context, "reference_library", None)

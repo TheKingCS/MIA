@@ -30,6 +30,7 @@ PERSONAL_SETTINGS = (
     "assistant.ask_support_kind",
     "assistant.support_choices",
     "assistant.safety.trusted_contact",
+    "assistant.humor_level",  # how funny MIA is with them (core/personality.py HUMOR_LEVELS)
     "apps.focus",
     "apps.featured",
     "apps.hidden",

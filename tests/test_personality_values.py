@@ -7,7 +7,8 @@ her foundational values change only by a decision, never by accident
 (section 10); the faith-and-meaning line joins the prompt only when a
 message turns there; and the integrity rules catch what she must never
 say (dependency, divine authority, flattery) without flagging ordinary
-warmth. Her humor is nudged only on light turns, and only sometimes.
+warmth. Her humor is nudged only on light turns, and only sometimes, as
+often as each person asks her to be funny.
 """
 
 from __future__ import annotations
@@ -63,3 +64,22 @@ def test_humor_only_on_light_turns_and_only_sometimes():
     for heavy in ("My dad died last week", "Rough day at work", "I'm worried about the bills", "Is God real?",
                   "I want to kill myself", "The dog is sick and I'm scared", ""):
         assert not light_moment(heavy) and humor_line(heavy, 0.0, 0.0) == ""
+
+
+def test_humor_level_set_by_asking(tmp_path, monkeypatch):
+    """Asking for more or less moves the person's own level a step; a level by name sets it; off means a no-jokes
+    line on every turn; and the levels' chances rise from off to lots."""
+    from core.assistant_humor_actions import _action_set_humor, level_for
+    from core.personality import HUMOR_LEVELS, NO_JOKES, humor_chance, humor_for, humor_level
+    from tests.engine_world import build_world
+
+    assert list(HUMOR_LEVELS.values()) == sorted(HUMOR_LEVELS.values())
+    assert level_for("more", "sometimes") == "often" and level_for("tone down", "sometimes") == "rare"
+    assert level_for("none", "often") == "off" and level_for("lots", "off") == "lots" and level_for("hm", "rare") == ""
+    world = build_world(tmp_path, monkeypatch)
+    assert humor_level(world) == "sometimes"
+    assert "funny often" in _action_set_humor(world, {"level": "more"})
+    assert humor_chance(world) == HUMOR_LEVELS["often"]
+    assert "no jokes" in _action_set_humor(world, {"level": "off"})
+    assert humor_for(world, "My coffee went cold again") == NO_JOKES
+    assert "already" in _action_set_humor(world, {"level": "less"})

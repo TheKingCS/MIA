@@ -1830,3 +1830,18 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Where: `core/browser_safety.py`, `core/browser.py`, `core/browser_routines.py`,
   `core/assistant_browser_actions.py`, `docs/BROWSER.md`, `tests/test_browser.py`
 - Related: DEC-0012 (the web front end and its actions), DEC-0094 (loops), DEC-0112 (learning paths: the same practise-until-verified shape)
+
+### DEC-0118: Humor she can turn up or down, and a plans shelf in the Library
+- Status: APPROVED
+- Decided by: zac, 2026-11-07 ("I also want her to be funny sometimes... it would be nice to be surprised by it";
+  "she can adjust her humor level if asked to in a chat"; "MIA should have in her Library references for all kinds of
+  stuff like woodworking plans, structure blueprints, material lists")
+- Decision: (1) Code decides when a light turn gets a nudge toward one line of wit, by chance and in a random flavor,
+  never on heavy, worried, grieving, urgent, faith or private turns (`core.personality.humor_for`). Each person sets
+  how often by asking (off, rare, sometimes, often, lots; `set_humor`), and "off" means no jokes at all.
+  (2) The Library gains a plans shelf (`core/plan_library.py`): built-in plans whose material lists and cut lists are
+  worked out in code for any size (`core/build_calcs.py`: stud wall, floor, deck, raised bed, fence, slab, gable shed,
+  workbench), plans the household keeps, and plan files dropped into `reference_library/plans/`; checked against the
+  workshop's materials for what to buy; a project started from a plan; links to free public-domain and extension
+  plans. Structural sizes are rules of thumb, always with "check your local code and a span table".
+- Related: DEC-0114 (personality), DEC-0115, DEC-0017 (the Library's web page)

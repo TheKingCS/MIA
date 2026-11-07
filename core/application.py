@@ -71,6 +71,9 @@ from core.assistant_comm_actions import register_communication_actions
 from core.assistant_email_actions import register_email_actions
 from core.assistant_focus_actions import register_focus_actions
 from core.assistant_accessibility_actions import register_accessibility_actions
+from core.assistant_humor_actions import register_humor_actions
+from core.assistant_plan_actions import register_plan_actions
+from core.plan_library import PlanLibrary
 from core.assistant_starter_actions import register_starter_actions
 from core.assistant_life_event_actions import register_life_event_actions
 from core.assistant_link_actions import register_link_actions
@@ -381,6 +384,8 @@ class MIAApplication:
 
         self.context.obligations = ObligationBook(self.context)  # tax and compliance deadlines (DEC-0040)
         self.context.reference_library = ReferenceLibraryManager(self.context)
+        # The Library's plans shelf: built-in plans, kept ones, and plan files (core/plan_library.py).
+        self.context.plans = PlanLibrary(self.context)
         self.context.llm = LLMManager(self.context)
         # Online/offline awareness — first check starts now in the
         # background; see core/connectivity.py.
@@ -1553,6 +1558,8 @@ class MIAApplication:
         register_checkin_actions(self.context.assistant_actions)  # the Sunday check-in (DEC-0047)
         register_failure_actions(self.context.assistant_actions)  # the Fix-It Log (DEC-0049)
         register_ownership_actions(self.context.assistant_actions)
+        register_humor_actions(self.context.assistant_actions)  # how funny she is, asked for in chat
+        register_plan_actions(self.context.assistant_actions)  # plans, blueprints and material lists
         register_accessibility_actions(self.context.assistant_actions)
         register_starter_actions(self.context.assistant_actions)
         register_life_event_actions(self.context.assistant_actions)

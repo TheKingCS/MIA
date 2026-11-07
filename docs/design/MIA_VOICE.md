@@ -89,3 +89,6 @@ wit, in one of six flavors picked at random, each shown by an example. Never on 
 urgent, dangerous, faith or private turn (`light_moment()`), never at their expense, and she may skip it when nothing's
 funny. Tried on llama3.2 3B: it lifts replies ("Cluck Norris" for a rooster) but not every line lands; a bigger chat
 model would do better.
+Each person sets how often by asking in chat ("be funnier", "no more jokes for now"; DEC-0118): off, rare, sometimes
+(the default, about one light turn in four), often, lots. Off adds a no-jokes line to every conversation turn, since
+her character otherwise plays along with jokes on its own.
