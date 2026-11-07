@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 226,629 lines; 1043 files describe themselves; 3,515 of 13,517 classes and functions are documented.
+1043 files, 226,669 lines; 1043 files describe themselves; 3,546 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 100,535 lines; 2,784 of 5,630 classes and functions documented
+367 files, 100,575 lines; 2,815 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -74,7 +74,7 @@
 - `core/chronicle.py`: The Chronicle (DEC-0028, the game layer's eighth idea): the story of your week, and of your year, told from what really happened. *(5 undocumented)*
 - `core/chronicle_issue.py`: MIA: The Chronicles*, the weekly issue (build plan step 17, DEC-0085 and DEC-0086; the Story Bible is `docs/chronicles/`, the archive `core/saga.py`). *(6 undocumented)*
 - `core/classroom_actions.py`: The Classroom (core/classroom_manager.py, the person's own study) through the action contract (core/actions.py), for its web screen: a subject, a course and a lesson added, a lesson marked done (its skill XP credited once, as on the desktop) or not done, and any of them taken out. The stores write t
-- `core/classroom_manager.py`: Classroom (2026-09-11) — the user's own self-education content model: Subjects (K-12-level academic subjects and trades) contain Courses, Courses contain Lessons. v1 is deliberately just this content/lesson structure — no Skills/Missions/Discovery wiring yet, see this module's own ROADMAP entry for  *(31 undocumented)*
+- `core/classroom_manager.py`: Classroom (2026-09-11) — the user's own self-education content model: Subjects (K-12-level academic subjects and trades) contain Courses, Courses contain Lessons. v1 is deliberately just this content/lesson structure — no Skills/Missions/Discovery wiring yet, see this module's own ROADMAP entry for 
 - `core/code_atlas.py`: Documentation for everything MIA is made of (DEC-0104, Zac 2026-11-06: "every line of code ... should have documentation that explains what it is and what it does and how it does it, so that if MIA ever needed to redo this entire process herself, she could. And this should be an ongoing thing").
 - `core/communication_gate.py`: "Know when to speak", slice C of docs/COGNITIVE_EXTENSION_PROPOSAL.md: the one path every proactive (unprompted) message from MIA goes through, so a context-aware assistant never turns into a nag. *(13 undocumented)*
 - `core/component_manager.py`: Backs the Component DB (modules/workshop/module.py) — docs/ROADMAP.md milestone 8.3. Same persisted-JSON pattern as core/inventory_manager.py: data/components.json, a dataclass with to_dict/from_dict, a manager class wrapping load/save. *(17 undocumented)*

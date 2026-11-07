@@ -53,6 +53,7 @@ _LESSONS_FILE = _DATA_DIR / "classroom_lessons.json"
 
 @dataclass
 class Subject:
+    """A subject the person is learning (an academic subject or a trade), with a free-text category and description."""
     subject_id: str
     name: str
     category: str = ""  # freeform, e.g. "Mathematics", "Trade Skills"
@@ -61,6 +62,7 @@ class Subject:
     updated_at: str = ""
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in its JSON file."""
         return {
             "subject_id": self.subject_id,
             "name": self.name,
@@ -72,6 +74,7 @@ class Subject:
 
     @staticmethod
     def from_dict(data: dict) -> "Subject":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return Subject(
             subject_id=data.get("subject_id", uuid.uuid4().hex[:10]),
             name=data.get("name", ""),
@@ -84,6 +87,7 @@ class Subject:
 
 @dataclass
 class Course:
+    """A course within a subject."""
     course_id: str
     subject_id: str
     name: str
@@ -92,6 +96,7 @@ class Course:
     updated_at: str = ""
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in its JSON file."""
         return {
             "course_id": self.course_id,
             "subject_id": self.subject_id,
@@ -103,6 +108,7 @@ class Course:
 
     @staticmethod
     def from_dict(data: dict) -> "Course":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return Course(
             course_id=data.get("course_id", uuid.uuid4().hex[:10]),
             subject_id=data.get("subject_id", ""),
@@ -115,6 +121,9 @@ class Course:
 
 @dataclass
 class Lesson:
+    """A lesson within a course: notes, whether it's completed (and when, set once on completion), and the skill XP it
+    grants when completed (credited once only, even if it's unchecked and checked again).
+    """
     lesson_id: str
     course_id: str
     name: str
@@ -134,6 +143,7 @@ class Lesson:
     updated_at: str = ""
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in its JSON file."""
         return {
             "lesson_id": self.lesson_id,
             "course_id": self.course_id,
@@ -149,6 +159,7 @@ class Lesson:
 
     @staticmethod
     def from_dict(data: dict) -> "Lesson":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return Lesson(
             lesson_id=data.get("lesson_id", uuid.uuid4().hex[:10]),
             course_id=data.get("course_id", ""),
@@ -166,8 +177,13 @@ class Lesson:
 
 
 class ClassroomManager:
+    """The person's Classroom: subjects, courses and lessons, one JSON file each in their folder (data/ by default),
+    written through atomic_write_text so undo can restore them. Deleting a subject or course deletes what's inside
+    it; completion is always counted from the lessons, never stored.
+    """
     def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
         # Whose data: a person's own folder (core/personal_data.py), or data/ by default.
+        """Points at the person's files and loads them."""
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._subjects_file = self.data_dir / "classroom_subjects.json" if data_dir is not None else _SUBJECTS_FILE
         self._courses_file = self.data_dir / "classroom_courses.json" if data_dir is not None else _COURSES_FILE
@@ -183,11 +199,15 @@ class ClassroomManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads all three files (undo calls this to reload)."""
         self._subjects = self._load_file(self._subjects_file, Subject.from_dict)
         self._courses = self._load_file(self._courses_file, Course.from_dict)
         self._lessons = self._load_file(self._lessons_file, Lesson.from_dict)
 
     def _load_file(self, path: Path, from_dict) -> list:
+        """One file's records; missing is empty, a damaged file is logged, reported (notify_data_corruption) and starts
+        empty.
+        """
         if not path.exists():
             return []
         try:
@@ -199,14 +219,17 @@ class ClassroomManager:
             return []
 
     def _save_subjects(self) -> None:
+        """Saves the subjects atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._subjects_file, json.dumps([s.to_dict() for s in self._subjects], indent=2), encoding="utf-8")
 
     def _save_courses(self) -> None:
+        """Saves the courses atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._courses_file, json.dumps([c.to_dict() for c in self._courses], indent=2), encoding="utf-8")
 
     def _save_lessons(self) -> None:
+        """Saves the lessons atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._lessons_file, json.dumps([l.to_dict() for l in self._lessons], indent=2), encoding="utf-8")
 
@@ -215,6 +238,7 @@ class ClassroomManager:
     # ------------------------------------------------------------------
 
     def add_subject(self, name: str, category: str = "", description: str = "") -> Subject:
+        """Adds a subject."""
         now = datetime.now().isoformat(timespec="seconds")
         subject = Subject(
             subject_id=uuid.uuid4().hex[:10], name=name, category=category,
@@ -225,6 +249,7 @@ class ClassroomManager:
         return subject
 
     def update_subject(self, subject_id: str, **fields) -> Subject:
+        """Changes a subject's fields and stamps updated_at (ValueError for an unknown subject or field, or created_at)."""
         subject = self.get_subject(subject_id)
         if subject is None:
             raise ValueError(f"No subject with id '{subject_id}'.")
@@ -251,12 +276,14 @@ class ClassroomManager:
         self._save_subjects()
 
     def get_subject(self, subject_id: str) -> Optional[Subject]:
+        """The subject with this id, or None."""
         for subject in self._subjects:
             if subject.subject_id == subject_id:
                 return subject
         return None
 
     def all_subjects(self) -> list[Subject]:
+        """Every subject, by name."""
         return sorted(self._subjects, key=lambda s: s.name.lower())
 
     # ------------------------------------------------------------------
@@ -264,6 +291,7 @@ class ClassroomManager:
     # ------------------------------------------------------------------
 
     def add_course(self, subject_id: str, name: str, description: str = "") -> Course:
+        """Adds a course to a subject."""
         now = datetime.now().isoformat(timespec="seconds")
         course = Course(
             course_id=uuid.uuid4().hex[:10], subject_id=subject_id, name=name,
@@ -274,6 +302,7 @@ class ClassroomManager:
         return course
 
     def update_course(self, course_id: str, **fields) -> Course:
+        """Changes a course's fields and stamps updated_at (it can't move to another subject; ValueError otherwise)."""
         course = self.get_course(course_id)
         if course is None:
             raise ValueError(f"No course with id '{course_id}'.")
@@ -295,12 +324,14 @@ class ClassroomManager:
         self._save_courses()
 
     def get_course(self, course_id: str) -> Optional[Course]:
+        """The course with this id, or None."""
         for course in self._courses:
             if course.course_id == course_id:
                 return course
         return None
 
     def courses_for_subject(self, subject_id: str) -> list[Course]:
+        """A subject's courses, by name."""
         return sorted(
             (c for c in self._courses if c.subject_id == subject_id),
             key=lambda c: c.name.lower(),
@@ -313,6 +344,7 @@ class ClassroomManager:
     def add_lesson(
         self, course_id: str, name: str, notes: str = "", skill_rewards: Optional[list[SkillWeight]] = None,
     ) -> Lesson:
+        """Adds a lesson to a course, with the skill XP it grants when completed."""
         now = datetime.now().isoformat(timespec="seconds")
         lesson = Lesson(
             lesson_id=uuid.uuid4().hex[:10], course_id=course_id, name=name,
@@ -324,6 +356,9 @@ class ClassroomManager:
         return lesson
 
     def update_lesson(self, lesson_id: str, **fields) -> Lesson:
+        """Changes a lesson's fields. Completing it stamps completed_at and grants its skill XP once (no flat XP: that
+        stays with missions); the fields that guard that can't be set directly.
+        """
         lesson = self.get_lesson(lesson_id)
         if lesson is None:
             raise ValueError(f"No lesson with id '{lesson_id}'.")
@@ -355,16 +390,19 @@ class ClassroomManager:
         return lesson
 
     def delete_lesson(self, lesson_id: str) -> None:
+        """Deletes a lesson."""
         self._lessons = [l for l in self._lessons if l.lesson_id != lesson_id]
         self._save_lessons()
 
     def get_lesson(self, lesson_id: str) -> Optional[Lesson]:
+        """The lesson with this id, or None."""
         for lesson in self._lessons:
             if lesson.lesson_id == lesson_id:
                 return lesson
         return None
 
     def lessons_for_course(self, course_id: str) -> list[Lesson]:
+        """A course's lessons in the order they were added."""
         return sorted(
             (l for l in self._lessons if l.course_id == course_id),
             key=lambda l: l.created_at,
@@ -375,10 +413,12 @@ class ClassroomManager:
     # ------------------------------------------------------------------
 
     def course_completion(self, course_id: str) -> tuple[int, int]:
+        """A course's (lessons done, lessons in all), counted fresh."""
         lessons = self.lessons_for_course(course_id)
         return sum(1 for l in lessons if l.completed), len(lessons)
 
     def subject_completion(self, subject_id: str) -> tuple[int, int]:
+        """A subject's (lessons done, lessons in all) across its courses, counted fresh."""
         done = 0
         total = 0
         for course in self.courses_for_subject(subject_id):

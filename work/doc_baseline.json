@@ -55,7 +55,6 @@
   "core/child_accounts.py": 7,
   "core/chronicle.py": 5,
   "core/chronicle_issue.py": 6,
-  "core/classroom_manager.py": 31,
   "core/communication_gate.py": 13,
   "core/component_manager.py": 17,
   "core/config_manager.py": 4,
