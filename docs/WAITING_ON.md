@@ -40,7 +40,9 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 - [ ] **Restart MIA** so she loads `cryptography` 50.0.2 (47 had three HIGH advisories, T-0048) and everything
       built 2026-11-06: Night School's second try, promises and notes (Kept), photo search, the new web pages
       (Diagnostics, Knowledge, Classroom, Household, Navigation, Observations, Memories, Maps with vector
-      areas and tap-to-add waypoints), near-duplicate photos offered like bursts, and the new loops.
+      areas and tap-to-add waypoints), near-duplicate photos offered like bursts, and the new loops; and
+      (2026-11-07) her own router running in the shadow on each turn, and her answers about herself coming from
+      her code and the Knowledge Vault too.
 - [ ] **Start the standing mission** when you want the council working the loops' tasks:
       `python -m tools.work mission start M-0001`.
 - [ ] **Sign the reviewers in:** `codex login` (the second reviewer), `gh auth login`, Copilot's `/login`.
