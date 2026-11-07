@@ -1569,3 +1569,16 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Why: so MIA could redo the whole process herself, and so every collaborator (Claude, Codex, Muse, ChatGPT, MIA's
   own coder) reads the same truth. Measured from the code so it can't drift.
 - Related: DEC-0094, DEC-0100 (Night School), DEC-0101 (loop coverage), CLAUDE.md
+
+### DEC-0105: Claude writes MIA knowledge entries explaining what it builds, how and why
+- Status: APPROVED
+- Proposed by: zac, 2026-11-07 ("while you are developing MIA, could you create documents for her? That explain
+  what you're doing and how and why that way, even if she's not really perfectly capable of studying it. Right now,
+  she would have those documents to reference from you") · Built by: claude, 2026-11-07
+- Decision: alongside the code docstrings (DEC-0104), Claude writes entries in the Development Knowledge Vault
+  (`work/knowledge/`, `core/dev_knowledge.py`) for the work it does: what was done, how, why that way, and what went
+  wrong, each citing its commit, task or decision and naming the files it concerns. Ongoing, every session.
+- Why: docstrings say what code does; the reasons and the mistakes live nowhere else. The vault is already
+  versioned, sourced and read by MIA's tools (`for_task()` puts the entries about a task's files into the
+  instructions of whoever works on it, her own coder and Night School included).
+- Related: DEC-0073 (the vault), DEC-0100 (Night School), DEC-0104

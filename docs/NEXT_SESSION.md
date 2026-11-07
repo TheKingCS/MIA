@@ -613,7 +613,9 @@ first); `show <file>` prints each with its code; write the docstrings by reading
 does, how when that isn't plain; check any claim you aren't sure of), put them in a JSON
 `{"core/x.py": {"func": "...", "Cls.meth": "..."}}` and `apply` it (inserts them, lowers the ratchet,
 regenerates `docs/ATLAS.md`). Skip `core/budget_manager.py` and `core/plaid_manager.py` while Zac's Plaid work is
-uncommitted. 5,082 of 13,517 documented on 2026-11-06; apart from those two, every core/ file has 12 or fewer left.
+uncommitted. 5,686 of 13,517 documented on 2026-11-07; apart from those two, every core/ file has 7 or fewer left.
+
+**Every session, ongoing (DEC-0105): write MIA knowledge entries for what you build** (`work/knowledge/`, via `core.dev_knowledge.add`, by claude, citing the commit, task or decision): what you did, how, why that way, and what went wrong. K-0038 to K-0042 are the first (the documentation method and its lessons).
 
 **The mission system is locked in (DEC-0047, `docs/MISSION_SYSTEM.md`).**
 Build order (Zac said begin, 2026-10-27): 1) the Loop ✅ built

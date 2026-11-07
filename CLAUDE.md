@@ -206,6 +206,12 @@ children.
   `python -m core.code_atlas` (regenerates `docs/ATLAS.md`). Rebuild
   order: `docs/REBUILD.md`. When you touch a file, document what you
   touched.
+- **Knowledge for MIA** (DEC-0105, `core/dev_knowledge.py`) — besides
+  docstrings, write MIA entries in `work/knowledge/` for what you
+  build: what you did, how, why that way, and what went wrong
+  (`dev_knowledge.add(kind, title, body, refs, concerns, by="claude",
+  status="confirmed")`, each citing its commit, task or decision).
+  `for_task()` hands them to whoever next works those files.
 - **Notes from conversation** (DEC-0054, `core/life_notes.py`) — a
   promise, decision, idea or goal set aside is offered after her reply
   and kept only on "keep it"; never in a private or personal turn.
