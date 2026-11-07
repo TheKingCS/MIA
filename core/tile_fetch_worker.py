@@ -42,9 +42,13 @@ log = get_logger(__name__)
 
 
 class TileFetchWorker(QThread):
+    """Downloads map tiles off the screen's thread: the screen asks for the tiles it's missing, each is fetched
+    once (asking twice while panning does nothing more), and tile_ready says where it landed.
+    """
     tile_ready = Signal(str, int, int, int, str)  # source, zoom, x, y, local file path
 
     def __init__(self, tile_cache: MapTileCache) -> None:
+        """An empty queue over the tile cache, running."""
         super().__init__()
         self._tile_cache = tile_cache
         self._queue: "queue.Queue[tuple[str, int, int, int] | None]" = queue.Queue()
@@ -63,11 +67,13 @@ class TileFetchWorker(QThread):
         self._queue.put(key)
 
     def stop(self) -> None:
+        """Stops the worker and waits up to two seconds for it."""
         self._running = False
         self._queue.put(None)  # wake the blocking get() so run() can exit
         self.wait(2000)
 
     def run(self) -> None:
+        """Fetches queued tiles one at a time until stopped; a tile that fails is logged and the next one goes on."""
         while self._running:
             item = self._queue.get()
             if item is None:

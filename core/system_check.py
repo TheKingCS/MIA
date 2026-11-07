@@ -33,6 +33,9 @@ _LOW_DISK_BYTES = 1_000_000_000
 
 @dataclass
 class Check:
+    """One line of the setup check: what was checked, whether it's ok, missing or optional, the detail, and how to
+    fix it.
+    """
     name: str
     status: str  # ok | missing | optional (not needed unless you want that feature)
     detail: str
@@ -52,10 +55,14 @@ def _ollama_models(base_url: str, timeout: float = 3.0) -> Optional[list[str]]:
 
 
 def _has_package(name: str) -> bool:
+    """Whether a Python package is installed here."""
     return importlib.util.find_spec(name) is not None
 
 
 def check_model(config, models: Optional[Callable[[str], Optional[list[str]]]] = None) -> Check:
+    """Whether the Assistant's model is ready: Ollama answering, and the configured model pulled; how to fix it
+    when not.
+    """
     models = models or _ollama_models
     base_url = config.get("llm.base_url", "http://localhost:11434")
     model = config.get("llm.model", "llama3.2:3b")
@@ -73,6 +80,9 @@ def check_model(config, models: Optional[Callable[[str], Optional[list[str]]]] =
 
 def run_checks(context, models: Optional[Callable[[str], Optional[list[str]]]] = None,
                data_dir: Optional[Path] = None) -> list[Check]:
+    """What's set up on this MIA and what to fix: Python, the model, hearing and speaking, reading photos, phone
+    access, bank sync, whether her data folder can be written, and the person's account (password, email).
+    """
     config = context.config
     checks: list[Check] = []
 

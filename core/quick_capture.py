@@ -36,12 +36,16 @@ NOTE_TAG = "capture"
 
 @dataclass
 class CaptureResult:
+    """What a quick capture did: what MIA says, whether a tool filed it somewhere (undoable), and the note's id when
+    it was kept as a note instead.
+    """
     reply: str
     filed: bool  # a tool put it somewhere (undoable); False = kept as a note
     note_id: Optional[str] = None
 
 
 def _conversation(context):
+    """The Quick capture conversation captures go through, made the first time."""
     conversations = getattr(context, "conversations", None)
     if conversations is None:
         return None
@@ -55,6 +59,7 @@ def _conversation(context):
 
 
 def _latest_change(context):
+    """This person's most recent undoable change, or None."""
     from core.person_settings import person_id
 
     undo = getattr(context, "undo", None)
@@ -63,6 +68,7 @@ def _latest_change(context):
 
 
 def save_as_note(context, text: str):
+    """Keeps a capture as a journal note (titled from its first line, tagged capture); None without a journal."""
     journal = getattr(context, "journal", None)
     if journal is None:
         return None

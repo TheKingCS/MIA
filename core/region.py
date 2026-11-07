@@ -36,6 +36,9 @@ from core import person_settings
 
 @dataclass(frozen=True)
 class Region:
+    """One country's settings: its code, name, currency (ISO code and symbol), the crisis line to say, and the
+    emergency number.
+    """
     code: str
     name: str
     currency: str  # ISO code
@@ -79,12 +82,14 @@ def region(code: Optional[str]) -> Region:
 
 
 def country_of(context) -> str:
+    """The person's country: their own setting, else the device's, else the default."""
     own = person_settings.get(context, "region.country", None) if getattr(context, "config", None) else None
     device = context.config.get("region.country", DEFAULT) if getattr(context, "config", None) else DEFAULT
     return (own or device or DEFAULT).upper()
 
 
 def region_for(context) -> Region:
+    """The person's Region."""
     return region(country_of(context))
 
 
@@ -109,6 +114,7 @@ def use_for(context) -> None:
 
 
 def symbol() -> str:
+    """The currency symbol set for the person signed in now ($ until it's set)."""
     return _symbol
 
 

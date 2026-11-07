@@ -34,6 +34,9 @@ class ImportError_(ValueError):
 
 
 def _name(header: str, taken: set) -> str:
+    """Pure logic. A column header as a field name (lowercase, underscores, at most 28, not starting with a digit),
+    numbered when it's already taken.
+    """
     base = re.sub(r"[^a-z0-9]+", "_", header.lower()).strip("_")[:28] or "column"
     if base[0].isdigit():
         base = "c_" + base
@@ -45,6 +48,7 @@ def _name(header: str, taken: set) -> str:
 
 
 def _date(text: str) -> Optional[str]:
+    """Pure logic. A cell as YYYY-MM-DD if it reads as a date in one of the known formats, else None."""
     for fmt in DATE_FORMATS:
         try:
             return datetime.strptime(text.strip(), fmt).date().isoformat()
@@ -54,6 +58,7 @@ def _date(text: str) -> Optional[str]:
 
 
 def _number(text: str) -> Optional[float]:
+    """Pure logic. A cell as a number (commas and currency signs ignored, brackets read as negative), or None."""
     cleaned = text.strip().replace(",", "").replace("$", "").replace("€", "").replace("£", "")
     if cleaned.startswith("(") and cleaned.endswith(")"):
         cleaned = "-" + cleaned[1:-1]
@@ -64,6 +69,7 @@ def _number(text: str) -> Optional[float]:
 
 
 def _cell(value) -> str:
+    """Pure logic. A value as cell text: yes or no, a list joined with commas, nothing for None."""
     if value is None:
         return ""
     if isinstance(value, bool):
