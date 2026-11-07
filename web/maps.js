@@ -16,6 +16,7 @@
   const SIZE = 256;
   let data = null, zoom = 4, cx = 0, cy = 0;  // the centre, in tile units at this zoom
   let vec = null, protocol = null;  // the vector map now shown, and MapLibre's pmtiles:// reader
+  const VENDOR = location.href.replace(/[?#].*$/, "").replace(/[^/]*$/, "") + "vendor/";
 
   // Web Mercator: degrees to tile units at zoom z, and back.
   const toTile = (lat, lon, z) => {
@@ -125,8 +126,9 @@
       container: view, center: area.center, zoom: Math.max(area.center_zoom, Math.min(13, area.max_zoom)), maxZoom: area.max_zoom + 3,
       attributionControl: { compact: true },
       style: { version: 8, sources: { protomaps: { type: "vector", url: "pmtiles://" + url, attribution: "© OpenStreetMap contributors" } },
-        // No labels yet: they need font files; roads, water, land and buildings draw without them.
-        layers: basemaps.layers("protomaps", basemaps.namedFlavor("dark")).filter((l) => l.type !== "symbol") },
+        // Place names and icons from web/vendor/ (Noto fonts for Latin script, Protomaps' sprite), so they work offline.
+        glyphs: VENDOR + "fonts/{fontstack}/{range}.pbf", sprite: VENDOR + "sprites/dark",
+        layers: basemaps.layers("protomaps", basemaps.namedFlavor("dark"), { lang: "en" }) },
     });
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }));
     map.on("click", (e) => addAt(e.lngLat.lat, e.lngLat.lng));

@@ -72,7 +72,7 @@ LIMITS = {
     "expeditions": "",
     "vault": "",
     "memories": "Recaps come from Expeditions' trips; the photos are on the Expeditions page.",
-    "maps": "Vector areas are the ones cut onto the PC (no place names yet); topo tiles are US-only.",
+    "maps": "Vector areas are the ones cut onto the PC (names in Latin script); topo tiles are US-only.",
     "navigation": "Waypoints are added by voice or on the map; sun times are for the day, not live.",
     "knowledge": "Only packs copied onto this computer; articles read as plain text, without pictures.",
     "toolbox": "No web screen yet.",
