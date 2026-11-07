@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 228,076 lines; 1043 files describe themselves; 4,409 of 13,517 classes and functions are documented.
+1043 files, 228,107 lines; 1043 files describe themselves; 4,427 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 101,982 lines; 3,678 of 5,630 classes and functions documented
+367 files, 102,013 lines; 3,696 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -269,7 +269,7 @@
 - `core/push_to_talk_source.py`: The headless counterpart to `core/push_to_talk_trigger.py` — that module is a `QObject` (needs Qt signals to marshal a GPIO interrupt back onto the GUI thread), which `core/voice_loop.py` deliberately avoids so a Core deployment never needs PySide6/Qt installed at all (see `core/core_runtime.py`'s d *(6 undocumented)*
 - `core/push_to_talk_trigger.py`: Unifies the two ways a push-to-talk press can originate — a real GPIO button interrupt in kiosk deployment, or the on-screen "Hold to Talk" button in dev (docs/ROADMAP.md milestone 5.3, docs/HARDWARE.md's Voice interface section) — behind one `pressed`/`released` signal pair, so modules/assistant/mo *(3 undocumented)*
 - `core/question_plans.py`: Question plans (DEC-0052 step 2a; docs/INTELLIGENCE_BENCHMARK.md section 4). The detailed questions people ask most ("What are my priorities today?", "Which debt should I prioritize?") each get a plan: the lookups it needs, run by code at once, the arithmetic between them done by code, and every lin
-- `core/questlines.py`: Questlines and seasons (DEC-0028, the game layer's seventh idea; Zac, 2026-10-17): linked chapters ("Harvest Home: Ch. 1 Bring it in → Ch. 2 Put it up → Ch. 3 Put the beds to bed"), seasonal starters, and MIA as the quest-giver and narrator. *(18 undocumented)*
+- `core/questlines.py`: Questlines and seasons (DEC-0028, the game layer's seventh idea; Zac, 2026-10-17): linked chapters ("Harvest Home: Ch. 1 Bring it in → Ch. 2 Put it up → Ch. 3 Put the beds to bed"), seasonal starters, and MIA as the quest-giver and narrator.
 - `core/quick_capture.py`: Quick capture (2026-10-01): one box, reachable from anywhere (the "+" in the header, or Ctrl+Shift+Space), for whatever is on your mind: "milk and eggs", "changed the truck's oil today", "dentist Tuesday at 2", "Pat's email is pat@example.com", "idea: a rain barrel by the shed". MIA files it where i *(4 undocumented)*
 - `core/quick_commands.py`: Things a person says that need no AI model (DEC-0020): "workout complete", "step one of today's workout complete", "finished my pull-ups", "today's lunch complete", "meal prep done", "this week's meal plans complete", "I weigh 182", "had 40 g of protein", "handstand 45 seconds", "undo that". MIA's o *(3 undocumented)*
 - `core/rarity.py`: Shared Borderlands-style five-tier rarity vocabulary, from the user's 2026-09-14 "Prestige, Rarity & Character Progression" design handoff (see the [[project_mia_prestige_rarity_vision]] memory) — Common through Legendary, the same white/green/blue/purple/orange scale `core.leveling.PRESTIGE_COLORS`

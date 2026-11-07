@@ -187,7 +187,6 @@
   "core/push_subscription_manager.py": 10,
   "core/push_to_talk_source.py": 6,
   "core/push_to_talk_trigger.py": 3,
-  "core/questlines.py": 18,
   "core/quick_capture.py": 4,
   "core/quick_commands.py": 3,
   "core/real_estate_manager.py": 15,

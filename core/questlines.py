@@ -89,6 +89,10 @@ def season_id(day: date, country: str = "") -> str:
 
 @dataclass(frozen=True)
 class Starter:
+    """A starter questline MIA offers: its name, icon, season (or any time), summary, its chapters (title, MIA's line
+    when it opens, objectives as "text" or "text|target"), and what it needs to be offered (a greenhouse,
+    vehicles, or nothing).
+    """
     starter_id: str
     name: str
     icon: str
@@ -195,6 +199,9 @@ def parse_chapters(text: str) -> list[dict]:
 
 @dataclass
 class Chapter:
+    """One chapter of a person's questline: its title, MIA's line for it, its objectives, the mission it became, and
+    the day it was finished.
+    """
     title: str
     story: str = ""
     objectives: list[str] = field(default_factory=list)
@@ -203,6 +210,7 @@ class Chapter:
 
     @staticmethod
     def from_dict(data: dict) -> "Chapter":
+        """A chapter from its saved dict; missing fields take their defaults."""
         return Chapter(title=str(data.get("title") or "Chapter"), story=str(data.get("story") or ""),
                        objectives=[str(o) for o in data.get("objectives") or []],
                        mission_id=data.get("mission_id") or None, done_on=str(data.get("done_on") or ""))
@@ -210,6 +218,9 @@ class Chapter:
 
 @dataclass
 class Questline:
+    """One of the person's questlines: its chapters, where it came from (a starter, and the season it was started in),
+    and when it was started and finished.
+    """
     quest_id: str
     name: str
     icon: str = "🗺️"
@@ -227,10 +238,12 @@ class Questline:
 
     @property
     def finished(self) -> bool:
+        """Whether the whole questline is finished."""
         return bool(self.finished_on)
 
     @staticmethod
     def from_dict(data: dict) -> "Questline":
+        """A questline from its saved dict; missing fields take their defaults."""
         return Questline(quest_id=str(data["quest_id"]), name=str(data.get("name") or "Questline"),
                          icon=str(data.get("icon") or "🗺️"), summary=str(data.get("summary") or ""),
                          season=str(data.get("season") or ""), starter_id=str(data.get("starter_id") or ""),
@@ -239,7 +252,11 @@ class Questline:
 
 
 class QuestBook:
+    """The person's questlines (questlines.json in their folder, written through atomic_write_text, so starting or
+    removing one can be undone).
+    """
     def __init__(self, context, data_dir: Optional[Path] = None) -> None:
+        """Points at the person's file (data/ by default) and loads it."""
         self.context = context
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._file = self.data_dir / _FILE
@@ -247,6 +264,7 @@ class QuestBook:
         self._load()
 
     def _load(self) -> None:
+        """Reads the questlines; an unreadable file is logged, reported and starts empty."""
         self.quests = []
         if not self._file.exists():
             return
@@ -258,18 +276,22 @@ class QuestBook:
             notify_data_corruption(self.context, _FILE)
 
     def reload(self) -> None:
+        """Reads the file again (after undo restored it)."""
         self._load()
 
     def _save(self) -> None:
+        """Writes every questline atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._file, json.dumps({"quests": [asdict(q) for q in self.quests]}, indent=2,
                                                  ensure_ascii=False))
 
     def get(self, quest_id: str) -> Optional[Questline]:
+        """The questline with this id, or None."""
         return next((q for q in self.quests if q.quest_id == quest_id), None)
 
     def add(self, name: str, chapters: list[dict], icon: str = "🗺️", summary: str = "", season: str = "",
             starter_id: str = "") -> Questline:
+        """Adds a questline from its chapters, started today."""
         quest = Questline(quest_id=uuid.uuid4().hex[:10], name=name, icon=icon or "🗺️", summary=summary,
                           season=season, starter_id=starter_id,
                           chapters=[Chapter(title=c["title"], story=c.get("story", ""), objectives=list(c["objectives"]))
@@ -280,10 +302,12 @@ class QuestBook:
         return quest
 
     def remove(self, quest_id: str) -> None:
+        """Removes a questline (its missions and what was earned stay)."""
         self.quests = [q for q in self.quests if q.quest_id != quest_id]
         self._save()
 
     def save(self) -> None:
+        """Saves now (after a chapter's state changed)."""
         self._save()
 
 
@@ -291,6 +315,7 @@ class QuestBook:
 
 
 def _person(context):
+    """Who these questlines are for (person_settings.person_id)."""
     from core.person_settings import person_id
 
     return person_id(context)
@@ -389,6 +414,9 @@ def available(context, today: Optional[date] = None) -> list[Starter]:
 
 
 def _has(context, need: str) -> bool:
+    """Whether MIA has something to hang a starter on: a greenhouse (grow-lab batches, or a Garden/Plant asset) or
+    vehicles (a Vehicle asset). False (logged) when it can't tell.
+    """
     try:
         if need == "greenhouse":
             grow = getattr(context, "grow_lab", None)
@@ -405,6 +433,9 @@ def _has(context, need: str) -> bool:
 
 
 def start(context, starter_id: str, today: Optional[date] = None) -> Questline:
+    """Starts a starter questline for the person (ValueError for an unknown one), tagged with the season in their
+    hemisphere when it's seasonal, and opens its first chapter as a mission.
+    """
     from core.region import country_of
 
     starter = STARTER_BY_ID.get(starter_id)
