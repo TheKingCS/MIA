@@ -140,7 +140,7 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     # own words asked for, and before the model, which the safety floor
     # never waits on.
     """One turn, in order: mode switches and the safety floor (before anything is stored or the model asked), then
-    show-off, plain-word commands, question plans and direct lookups (none in a personal conversation), then the
+    show-off, "look at this" (opens Look with the camera), plain-word commands, question plans and direct lookups (none in a personal conversation), then the
     model with the tools offered for what was said.
     """
     prepared = pre_turn(context, conversation, prompt)
@@ -158,6 +158,14 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
         if wants_show_off(prompt):  # "show off for my friends" (DEC-0031)
             add_message(conversation, "assistant", INTRO)
             return AssistantTurn(replies=[INTRO], open="showoff.html", route="show off")
+        from core.sight import LOOK_REPLY, wants_look
+
+        looking = wants_look(prompt)  # "look at this": Look opens with the camera (DEC-0125)
+        if looking is not None:
+            from urllib.parse import quote
+
+            add_message(conversation, "assistant", LOOK_REPLY)
+            return AssistantTurn(replies=[LOOK_REPLY], open=f"look.html?camera=1&ask={quote(looking)}", route="look")
         from core.quick_commands import handle
 
         quick = handle(context, prompt)

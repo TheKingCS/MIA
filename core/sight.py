@@ -27,6 +27,11 @@ picture, so it's said as one ("from the photo, it looks like..."), never as a
 fact; text Tesseract read is said as read. Each look is noted in the person's
 own folder (kind, how long, whether it answered: never the photo or the
 answer) for the `sight.failed` loop.
+
+**Asked out loud** (DEC-0125, 2026-11-07): "look at this", "what am I looking
+at?", "read this label", "inspect this part" in Talk open Look with that
+question and the camera (`wants_look()`, core/assistant_turn.py), since no tool
+can take the photo itself; the photo and the answer go on from there.
 """
 
 from __future__ import annotations
@@ -72,6 +77,27 @@ PROMPTS = {
 
 class SightError(ValueError):
     """A look that can't be done; the message says why."""
+
+
+_LOOK = re.compile(r"^\s*(?:(?:hey\s+)?mia[,:]?\s+)?(?:can you\s+|please\s+)?"
+                   r"(look at this|take a look at this|what am i looking at|what is this thing|what's this thing|"
+                   r"read this label(?: for me)?|read this(?: for me)?|inspect this(?: part)?|is this (?:worn|broken))"
+                   r"\s*(?:for me)?\s*[?.!]*\s*$", re.IGNORECASE)
+LOOK_REPLY = "Show me: the camera's opening. Take the photo and I'll tell you what I see."
+
+
+def wants_look(prompt: str) -> Optional[str]:
+    """Pure logic. The question to look with when the person asked MIA to look at something out loud ("look at this"
+    is "What is this?"), else None."""
+    found = _LOOK.match(prompt or "")
+    if found is None:
+        return None
+    said = found.group(1).lower()
+    if said.startswith("read"):
+        return "Read this label"
+    if said.startswith(("inspect", "is this")):
+        return "Inspect this part"
+    return "What is this?"
 
 
 def kind_of(question: str) -> str:

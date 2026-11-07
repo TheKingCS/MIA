@@ -61,5 +61,12 @@
       el("p", { class: "dim lk-note" }, "She looks on your PC and never says who a person is."));
   }
 
-  MIAShell.start(async () => { paint(); });
+  // Asked out loud (DEC-0125): Talk opens look.html?camera=1&ask=... — the question is set and the camera asked for
+  // (a browser may want a tap first: Take a Photo is right there).
+  const params = new URLSearchParams(location.search);
+  if (params.get("ask")) question = params.get("ask");
+  MIAShell.start(async () => {
+    paint();
+    if (params.get("camera") === "1") { history.replaceState(null, "", "look.html"); pick("environment"); }
+  });
 })();
