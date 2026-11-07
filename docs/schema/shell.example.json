@@ -16,7 +16,8 @@
       "icon": "✨",
       "tagline": "MIA, and a chat with her.",
       "page": "index.html",
-      "group": "Life, goals & self"
+      "group": "Life, goals & self",
+      "ask": "How are you, MIA?"
     },
     {
       "id": "dungeon",
@@ -24,7 +25,8 @@
       "icon": "🏰",
       "tagline": "Clear the run. Bank the loot.",
       "page": "dungeon.html",
-      "group": "Money & business"
+      "group": "Money & business",
+      "ask": "How much loot this week?"
     },
     {
       "id": "issues",
@@ -32,7 +34,8 @@
       "icon": "🛠",
       "tagline": "Where MIA stumbled, so it gets fixed.",
       "page": "issues.html",
-      "group": "Knowledge, tools & system"
+      "group": "Knowledge, tools & system",
+      "ask": "What's been going wrong?"
     },
     {
       "id": "freedom",
@@ -40,7 +43,8 @@
       "icon": "🌄",
       "tagline": "Your way out, in numbers.",
       "page": "freedom.html",
-      "group": "Money & business"
+      "group": "Money & business",
+      "ask": "When can I work from home?"
     },
     {
       "id": "compliance",
@@ -48,7 +52,8 @@
       "icon": "📋",
       "tagline": "Every deadline, on time.",
       "page": "compliance.html",
-      "group": "Money & business"
+      "group": "Money & business",
+      "ask": "What's due for taxes?"
     },
     {
       "id": "calendar",
@@ -56,7 +61,8 @@
       "icon": "📅",
       "tagline": "Everything with a date.",
       "page": "calendar.html",
-      "group": "Life, goals & self"
+      "group": "Life, goals & self",
+      "ask": "What's on my calendar this week?"
     },
     {
       "id": "greenhouse",
@@ -64,7 +70,8 @@
       "icon": "🌱",
       "tagline": "Grow food. Grow freedom.",
       "page": "greenhouse.html",
-      "group": "Home, homestead & equipment"
+      "group": "Home, homestead & equipment",
+      "ask": "What needs doing in the greenhouse?"
     },
     {
       "id": "flock",
@@ -72,7 +79,8 @@
       "icon": "🐔",
       "tagline": "Eggs, every day.",
       "page": "flock.html",
-      "group": "Home, homestead & equipment"
+      "group": "Home, homestead & equipment",
+      "ask": "How many eggs this week?"
     },
     {
       "id": "garage",
@@ -80,7 +88,8 @@
       "icon": "🚗",
       "tagline": "Keep it running. Keep it ready.",
       "page": "garage.html",
-      "group": "Home, homestead & equipment"
+      "group": "Home, homestead & equipment",
+      "ask": "What's overdue on my vehicles?"
     },
     {
       "id": "kitchen",
@@ -88,7 +97,8 @@
       "icon": "🍳",
       "tagline": "Good food. Good mood.",
       "page": "kitchen.html",
-      "group": "Home, homestead & equipment"
+      "group": "Home, homestead & equipment",
+      "ask": "What can I make with what's in the pantry?"
     },
     {
       "id": "household",
@@ -96,7 +106,8 @@
       "icon": "🧺",
       "tagline": "A home that runs itself.",
       "page": "household.html",
-      "group": "Home, homestead & equipment"
+      "group": "Home, homestead & equipment",
+      "ask": "I did the dishes."
     },
     {
       "id": "workout",
@@ -104,7 +115,8 @@
       "icon": "🏋",
       "tagline": "Stronger body. Clearer mind.",
       "page": "workout.html",
-      "group": "Life, goals & self"
+      "group": "Life, goals & self",
+      "ask": "Log a 30 minute workout."
     },
     {
       "id": "real_estate",
@@ -112,7 +124,8 @@
       "icon": "🏘",
       "tagline": "Cash flow. Equity. Freedom.",
       "page": "real-estate.html",
-      "group": "Money & business"
+      "group": "Money & business",
+      "ask": "How are my rentals doing this month?"
     },
     {
       "id": "missions",
@@ -120,7 +133,8 @@
       "icon": "🏆",
       "tagline": "Explore. Complete. Level up.",
       "page": "missions.html",
-      "group": "Life, goals & self"
+      "group": "Life, goals & self",
+      "ask": "Add a mission to build a chicken coop."
     },
     {
       "id": "skills",
@@ -128,7 +142,8 @@
       "icon": "⚔",
       "tagline": "Do the thing. Earn the level. Unlock the next thing.",
       "page": "skills.html",
-      "group": "Life, goals & self"
+      "group": "Life, goals & self",
+      "ask": "Which skills am I growing?"
     },
     {
       "id": "budget",
@@ -136,7 +151,8 @@
       "icon": "💰",
       "tagline": "Know where it goes.",
       "page": "money.html",
-      "group": "Money & business"
+      "group": "Money & business",
+      "ask": "Which debt should I pay first?"
     },
     {
       "id": "workshop",
@@ -144,7 +160,8 @@
       "icon": "🔩",
       "tagline": "Parts, jobs and products.",
       "page": "workshop.html",
-      "group": "Money & business"
+      "group": "Money & business",
+      "ask": "How much plywood do I have?"
     },
     {
       "id": "business",
@@ -152,7 +169,8 @@
       "icon": "🧾",
       "tagline": "Customers, quotes and orders.",
       "page": "business.html",
-      "group": "Money & business"
+      "group": "Money & business",
+      "ask": "What do customers still owe me?"
     },
     {
       "id": "insurance",
@@ -160,7 +178,8 @@
       "icon": "☂️",
       "tagline": "Covered, for less.",
       "page": "insurance.html",
-      "group": "Money & business"
+      "group": "Money & business",
+      "ask": "When does my car insurance renew?"
     },
     {
       "id": "security",
@@ -168,7 +187,8 @@
       "icon": "🛡️",
       "tagline": "Your cameras, at home.",
       "page": "security.html",
-      "group": "Home, homestead & equipment"
+      "group": "Home, homestead & equipment",
+      "ask": "Are the cameras working?"
     },
     {
       "id": "power",
@@ -176,7 +196,8 @@
       "icon": "🔋",
       "tagline": "Energy, tracked.",
       "page": "power.html",
-      "group": "Home, homestead & equipment"
+      "group": "Home, homestead & equipment",
+      "ask": "How's the battery?"
     },
     {
       "id": "character",
@@ -184,7 +205,8 @@
       "icon": "👤",
       "tagline": "Your story so far.",
       "page": "character.html",
-      "group": "Life, goals & self"
+      "group": "Life, goals & self",
+      "ask": "What have I done this week?"
     },
     {
       "id": "reward_shop",
@@ -192,7 +214,8 @@
       "icon": "🎁",
       "tagline": "Spend what you earn.",
       "page": "shop.html",
-      "group": "Life, goals & self"
+      "group": "Life, goals & self",
+      "ask": "What can I buy with my credits?"
     },
     {
       "id": "observations",
@@ -200,7 +223,8 @@
       "icon": "🔍",
       "tagline": "What MIA noticed.",
       "page": "observations.html",
-      "group": "Life, goals & self"
+      "group": "Life, goals & self",
+      "ask": "What have you noticed lately?"
     },
     {
       "id": "relationships",
@@ -208,7 +232,8 @@
       "icon": "👥",
       "tagline": "The ones who matter.",
       "page": "people.html",
-      "group": "Life, goals & self"
+      "group": "Life, goals & self",
+      "ask": "When is the next birthday?"
     },
     {
       "id": "notes",
@@ -216,7 +241,8 @@
       "icon": "📓",
       "tagline": "Write it down.",
       "page": "journal.html",
-      "group": "Life, goals & self"
+      "group": "Life, goals & self",
+      "ask": "Make a note: call the plumber Friday."
     },
     {
       "id": "classroom",
@@ -224,7 +250,8 @@
       "icon": "🎓",
       "tagline": "Keep learning.",
       "page": "classroom.html",
-      "group": "Life, goals & self"
+      "group": "Life, goals & self",
+      "ask": "Quiz me on chapter 2."
     },
     {
       "id": "inbox",
@@ -232,7 +259,8 @@
       "icon": "📥",
       "tagline": "Paperwork, handled.",
       "page": "inbox.html",
-      "group": "Money & business"
+      "group": "Money & business",
+      "ask": "What's waiting in my inbox?"
     },
     {
       "id": "expeditions",
@@ -240,7 +268,8 @@
       "icon": "🏕",
       "tagline": "Plan the trip.",
       "page": "expeditions.html",
-      "group": "Outdoors & field"
+      "group": "Outdoors & field",
+      "ask": "Plan a weekend camping trip."
     },
     {
       "id": "vault",
@@ -248,7 +277,8 @@
       "icon": "🗄",
       "tagline": "Your photos, kept safe.",
       "page": "vault.html",
-      "group": "Life, goals & self"
+      "group": "Life, goals & self",
+      "ask": "Are my photos backed up?"
     },
     {
       "id": "memories",
@@ -256,7 +286,8 @@
       "icon": "📸",
       "tagline": "Remember the trip.",
       "page": "memories.html",
-      "group": "Outdoors & field"
+      "group": "Outdoors & field",
+      "ask": "Show me my last trip."
     },
     {
       "id": "maps",
@@ -264,7 +295,8 @@
       "icon": "🗺",
       "tagline": "Know the ground.",
       "page": "maps.html",
-      "group": "Outdoors & field"
+      "group": "Outdoors & field",
+      "ask": "Which trail maps do I have?"
     },
     {
       "id": "navigation",
@@ -272,7 +304,8 @@
       "icon": "🧭",
       "tagline": "Find the way.",
       "page": "navigation.html",
-      "group": "Outdoors & field"
+      "group": "Outdoors & field",
+      "ask": "How far is camp from the trailhead?"
     },
     {
       "id": "knowledge",
@@ -280,7 +313,8 @@
       "icon": "📚",
       "tagline": "The offline library.",
       "page": "knowledge.html",
-      "group": "Knowledge, tools & system"
+      "group": "Knowledge, tools & system",
+      "ask": "How do I purify water?"
     },
     {
       "id": "toolbox",
@@ -288,7 +322,8 @@
       "icon": "🧰",
       "tagline": "Quick tools.",
       "page": "toolbox.html",
-      "group": "Knowledge, tools & system"
+      "group": "Knowledge, tools & system",
+      "ask": "Convert 5 gallons to liters."
     },
     {
       "id": "lab",
@@ -296,7 +331,8 @@
       "icon": "🧪",
       "tagline": "Experiments and sensors.",
       "page": "lab.html",
-      "group": "Knowledge, tools & system"
+      "group": "Knowledge, tools & system",
+      "ask": "Start a temperature experiment."
     },
     {
       "id": "field_kit",
@@ -304,7 +340,8 @@
       "icon": "🛠",
       "tagline": "Devices and scripts.",
       "page": "field-kit.html",
-      "group": "Knowledge, tools & system"
+      "group": "Knowledge, tools & system",
+      "ask": "What devices are connected?"
     },
     {
       "id": "passwords",
@@ -312,7 +349,8 @@
       "icon": "🔐",
       "tagline": "Every login, locked.",
       "page": "passwords.html",
-      "group": "Knowledge, tools & system"
+      "group": "Knowledge, tools & system",
+      "ask": ""
     },
     {
       "id": "files",
@@ -320,7 +358,8 @@
       "icon": "🗂",
       "tagline": "Your files.",
       "page": "files.html",
-      "group": "Knowledge, tools & system"
+      "group": "Knowledge, tools & system",
+      "ask": "Find my resume."
     },
     {
       "id": "music",
@@ -328,7 +367,8 @@
       "icon": "🎵",
       "tagline": "Your music.",
       "page": "music.html",
-      "group": "Knowledge, tools & system"
+      "group": "Knowledge, tools & system",
+      "ask": "Play something relaxing."
     },
     {
       "id": "operating_journal",
@@ -336,7 +376,8 @@
       "icon": "🧭",
       "tagline": "How you mean to live, and how you do.",
       "page": "operating.html",
-      "group": "Life, goals & self"
+      "group": "Life, goals & self",
+      "ask": "Am I living how I said I want to?"
     },
     {
       "id": "life_notes",
@@ -344,7 +385,8 @@
       "icon": "📌",
       "tagline": "What you said you'd do.",
       "page": "kept.html",
-      "group": "Life, goals & self"
+      "group": "Life, goals & self",
+      "ask": "What did I promise?"
     },
     {
       "id": "play",
@@ -352,7 +394,8 @@
       "icon": "🏓",
       "tagline": "Games and sports, counted.",
       "page": "play.html",
-      "group": "Life, goals & self"
+      "group": "Life, goals & self",
+      "ask": "Played pickleball for an hour, it was hard."
     },
     {
       "id": "good_news",
@@ -360,7 +403,8 @@
       "icon": "📻",
       "tagline": "What went right today.",
       "page": "news.html",
-      "group": "Knowledge, tools & system"
+      "group": "Knowledge, tools & system",
+      "ask": "What's the good news?"
     },
     {
       "id": "sight",
@@ -368,7 +412,8 @@
       "icon": "👁",
       "tagline": "Show MIA something.",
       "page": "look.html",
-      "group": "Knowledge, tools & system"
+      "group": "Knowledge, tools & system",
+      "ask": "What is this?"
     },
     {
       "id": "assistant",
@@ -376,7 +421,8 @@
       "icon": "🗨",
       "tagline": "Always here. Always with you.",
       "page": "assistant.html",
-      "group": "Knowledge, tools & system"
+      "group": "Knowledge, tools & system",
+      "ask": "Undo that."
     },
     {
       "id": "browser",
@@ -384,7 +430,8 @@
       "icon": "🌐",
       "tagline": "She browses. You approve.",
       "page": "browser.html",
-      "group": "Knowledge, tools & system"
+      "group": "Knowledge, tools & system",
+      "ask": "Open the county website."
     },
     {
       "id": "module_browser",
@@ -392,7 +439,8 @@
       "icon": "🧩",
       "tagline": "Everything MIA can do.",
       "page": "apps.html",
-      "group": "Knowledge, tools & system"
+      "group": "Knowledge, tools & system",
+      "ask": ""
     }
   ],
   "on_pc_only": [

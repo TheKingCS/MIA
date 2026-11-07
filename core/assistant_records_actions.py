@@ -14,7 +14,9 @@ phrased from its screen's own data so voice and screen agree:
 - get_operating_journal: each line and how it's going (core/operating_journal.py);
 - get_play: this week's games and the load (core/recreation.py);
 - find_my_files: a folder's contents or files by name, only inside the
-  person's own MIA files folder (core/my_files.py).
+  person's own MIA files folder (core/my_files.py);
+- get_vault_status: whether the phone's photos are safe at home
+  (core/memory_vault.py, the Memory Vault's summary).
 
 `register_area_keywords` gives older areas the words that should reach
 their tools ("what's my next trip?" reached none: DEC-0125's glasses asks
@@ -116,8 +118,16 @@ def _action_find_my_files(context, arguments: dict) -> str:
 
 def register_records_actions(registry: AssistantActionRegistry) -> None:
     """Registers get_insurance (insurance), list_kept (life_notes), get_operating_journal (operating_journal),
-    get_play (play) and find_my_files (files), and the older areas' keywords (register_area_keywords)."""
+    get_play (play), find_my_files (files) and get_vault_status (vault), and the older areas' keywords
+    (register_area_keywords)."""
     register_area_keywords(registry)
+    registry.register(AssistantAction(
+        name="get_vault_status", domain="vault",
+        description="Whether the user's phone photos are backed up on the home computer (the Memory Vault).",
+        parameters={"type": "object", "properties": {}},
+        handler=_action_get_vault_status,
+        trigger_phrases=("photos backed up", "pictures backed up", "memory vault", "photos safe"),
+    ))
     registry.register_domain_keywords("insurance", ("insurance", "insured", "premium", "premiums", "deductible"))
     registry.register_domain_keywords("life_notes", ("promise", "promised", "promises"))
     registry.register_domain_keywords("operating_journal", ("operating",))
@@ -169,13 +179,33 @@ def register_records_actions(registry: AssistantActionRegistry) -> None:
     ))
 
 
+def _action_get_vault_status(context, arguments: dict) -> str:
+    """Tool get_vault_status: whether the phone's photos are safe on the home computer: how many, how many are still
+    only on the phone, and when the last ones were sent (the Memory Vault screen's own summary)."""
+    from core.memory_vault import vault_page
+
+    page = vault_page(context)
+    if not page.get("available") or not page.get("on"):
+        return "The Memory Vault isn't on. Turn it on in the phone app (Memory Vault → Set Up) to keep your photos safe at home."
+    s = page["summary"]
+    said = f"{s['on_pc']:,} of {s['photos'] + s['videos']:,} photos and videos are safe on the home computer"
+    said += f"; {s['waiting']:,} still only on the phone ({s['waiting_size']})." if s["waiting"] else ", all of them."
+    if s.get("last_sent"):
+        said += f" Last sent {s['last_sent'][:10]}."
+    return said + (f" {page['state_words']}" if page.get("state_words") else "")
+
+
 def register_area_keywords(registry: AssistantActionRegistry) -> None:
     """Words that attach older areas whose everyday questions reached no tool: trips (expeditions), the lab, notes,
-    the inbox, and the battery (power, beside the system tools)."""
+    the inbox, the battery (power, beside the system tools), upkeep on vehicles, rentals, and photo backups."""
     registry.register_domain_keywords("expeditions", ("trip", "trips", "expedition", "expeditions", "hike", "hiking",
                                                       "camping"))
     registry.register_domain_keywords("lab", ("lab", "experiment", "experiments"))
     registry.register_domain_keywords("notes", ("notes",))
     registry.register_domain_keywords("inbox", ("inbox", "emails"))
     registry.register_domain_keywords("power", ("battery", "propane", "generator", "solar"))
+    registry.register_domain_keywords("maintenance", ("upkeep", "vehicle", "vehicles"))
+    # Not "property": "a useful property of this material" is small talk.
+    registry.register_domain_keywords("real_estate", ("rental", "rentals", "tenant", "tenants"))
+    registry.register_domain_keywords("vault", ("backed up", "backup", "photos safe"))
 

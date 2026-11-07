@@ -63,5 +63,5 @@ Of 50 apps: by voice 49, on the PC 50, on the phone 50, on the glasses 46.
 - `passwords:voice`: none, passwords, PINs and card numbers never by voice (Zac, 2026-11-07: "keep passwords screen only")
 - `passwords:glasses`: none, secrets never on the glasses' display (with passwords:voice, Zac 2026-11-07)
 - `sight:glasses`: todo, the glasses' own camera: 'what am I looking at' through them (the phone's camera works by voice since 2026-11-07)
-- `module_browser:glasses`: todo, a glasses ask: open an app on the phone
-- `settings:glasses`: todo, a glasses ask: change a setting by voice there
+- `module_browser:glasses`: none, choosing apps is a bigger screen's job; on the glasses it's said to the orb (set_app_visibility, set_app_focus)
+- `settings:glasses`: none, settings are changed by voice through the orb ("be funnier", text size, contrast); no card needed on the display

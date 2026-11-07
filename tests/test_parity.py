@@ -5,7 +5,7 @@ tests.test_parity
 Full use both ways on every device (DEC-0125, core/parity.py): every app can
 be used by voice, on the PC, on the phone and on the glasses, or the gap is
 decided in work/parity.json; parity can only grow, and docs/PARITY.md is
-current.
+current. Each app's ask (its screen's "Say: …") reaches that app's own tools.
 """
 
 import pytest
@@ -48,3 +48,23 @@ def test_gaps_lists_each_app_and_way_that_cannot_be_used():
 def test_the_parity_report_is_current(rows):
     """docs/PARITY.md matches the code; run python -m core.parity after a change."""
     assert parity.REPORT.read_text(encoding="utf-8") == parity.render(rows, parity.load_decisions())
+
+
+# Answered without a tool of their own: Home is the chat itself, Good News and Look by their own code (quick
+# commands, the turn's look route), Knowledge's reference packs in conversation (core/assistant_chat.py).
+ASK_BY_CODE_OR_CHAT = {"web_home", "assistant", "good_news", "sight", "knowledge"}
+
+
+def test_every_app_s_ask_reaches_its_own_tools(rows):
+    """The ask each screen shows as "Say: …" (DEC-0125) is answered by that app's tools, not a neighbour's."""
+    from core.web_surfaces import APPS, RETIRED
+
+    registry = parity.desktop_registry()
+    missed = []
+    for app in APPS:
+        if app.module_id in RETIRED or not app.ask or app.module_id in ASK_BY_CODE_OR_CHAT:
+            continue
+        areas = set(app.domains) | ({"system", "apps"} if app.module_id in parity.VOICE_ELSEWHERE else set())
+        if not {a.domain for a in registry.matching_actions(app.ask)} & areas:
+            missed.append((app.module_id, app.ask))
+    assert not missed, f"these asks don't reach their app's tools: {missed}"

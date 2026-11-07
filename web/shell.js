@@ -628,8 +628,9 @@
     const go = async () => {
       const app = $("#app") || $(".layout");
       if (app) app.hidden = false;
-      try { renderNav(await MIA.shell()); } catch (e) { say(e.message); }
-      if (!options || options.talk !== false) mountTalk();
+      let shell = null;
+      try { shell = await MIA.shell(); renderNav(shell); } catch (e) { say(e.message); }
+      if (!options || options.talk !== false) { mountTalk(); if (shell) sayLine(shell); }
       if (MIA.pageOpened) MIA.pageOpened(location.pathname.split("/").pop() || "index.html").catch(() => {});  // a count (page-usage audit)
       await refresh();
       backToPlace();  // the scroll and Talk you left, after the phone locked or the app was closed
@@ -645,6 +646,15 @@
     const info = await MIA.setupStatus();
     if (info.needed) setupForm(info, go);
     else signInForm(go);
+  }
+
+  // Every screen's voice twin (DEC-0125): "Say: …" under the title, the app's own ask; a tap puts it in Talk.
+  function sayLine(shell) {
+    const hero = $(".hero");
+    const here = (shell.apps || []).find((a) => a.id === document.body.dataset.app);
+    if (!hero || !here || !here.ask || $(".say-line", hero)) return;
+    hero.append(el("button", { type: "button", class: "say-line", title: "Try it in Talk",
+      onclick: () => toggleTalk(true, here.ask) }, el("span", { class: "say-label" }, "Say"), "“" + here.ask + "”"));
   }
 
   /** The frame alone (sidebar + MIA) for a page that runs its own render and sign-in. */
