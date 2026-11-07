@@ -51,6 +51,7 @@ OBLIGATION = Record("obligation", "obligation", "obligation_id", "get", "add", "
 
 
 def _grown_up(context) -> None:
+    """Obligations are a grown-up's (money and legal matters): ActionError for a child account."""
     from core.child_accounts import is_child
 
     if is_child(context):
@@ -58,6 +59,7 @@ def _grown_up(context) -> None:
 
 
 def _obligation(context, params):
+    """The obligation the params name, or ActionError."""
     _grown_up(context)
     o = _need(context, "obligations").get(str(params.get("obligation_id") or ""))
     if o is None:
@@ -66,6 +68,7 @@ def _obligation(context, params):
 
 
 def _day(raw, label: str) -> str:
+    """The date in the params (today when blank), or ActionError naming the field."""
     text = str(raw or "").strip()
     if not text:
         return date.today().isoformat()
@@ -79,6 +82,9 @@ def _day(raw, label: str) -> str:
 
 
 def _verifying(context, params):
+    """What verifying takes: the obligation, where it was checked (an official link, or who was asked: one is
+    required), the day, whether it applies, and how.
+    """
     o = _obligation(context, params)
     url = str(params.get("source_url") or o.source_url or "").strip()
     if not url.startswith(("http://", "https://")) and not str(params.get("how") or "").strip():
@@ -88,12 +94,16 @@ def _verifying(context, params):
 
 
 def _verify_describe(context, params) -> str:
+    """The sentence the approval card shows for `obligation.verify` (Propose); raises ActionError when it can't be done."""
     o, url, day, applies, how = _verifying(context, params)
     where = url or how
     return f"{o.title}: checked {day} ({where}); " + ("it applies" if applies else "it doesn't apply")
 
 
 def _verify(context, params) -> str:
+    """Does `obligation.verify` once approved, and says what happened. The only way an obligation becomes verified: the link and day are kept, a
+    note of how goes in its notes, and one that doesn't apply is kept, marked as not applicable.
+    """
     o, url, day, applies, how = _verifying(context, params)
     notes = (o.notes + "\n" if o.notes else "") + f"Checked {day}: {how}" if how else o.notes
     status = ("applies" if o.status == "to verify" else o.status) if applies else "not applicable"
@@ -105,6 +115,7 @@ def _verify(context, params) -> str:
 
 
 def _status(context, params):
+    """What a status change takes: the obligation, a real status (not "to verify"), and any proof."""
     o = _obligation(context, params)
     status = str(params.get("status") or "")
     if status not in STATUSES or status == "to verify":
@@ -113,6 +124,9 @@ def _status(context, params):
 
 
 def _status_describe(context, params) -> str:
+    """The sentence the approval card shows for `obligation.status` (Propose); raises ActionError when it can't be done. A repeating one that's done also names the next one's due
+    date.
+    """
     from core.obligations import next_period
 
     o, status, proof = _status(context, params)
@@ -124,6 +138,9 @@ def _status_describe(context, params) -> str:
 
 
 def _status_run(context, params) -> str:
+    """Does `obligation.status` once approved, and says what happened. A repeating one that's closed makes the next period's obligation
+    (carrying its details; verified only if this one was).
+    """
     from dataclasses import asdict
 
     from core.obligations import next_period
@@ -145,6 +162,7 @@ def _status_run(context, params) -> str:
 
 
 def _picked(context, params) -> list[str]:
+    """The starters ticked (s_<id> params) that aren't already open on the list; ActionError when none are."""
     from core.obligations import STARTERS_BY_ID
 
     _grown_up(context)
@@ -161,6 +179,7 @@ def _picked(context, params) -> list[str]:
 
 
 def _starters_describe(context, params) -> str:
+    """The sentence the approval card shows for `obligation.starters` (Propose); raises ActionError when it can't be done. They go in as things to check, never as confirmed."""
     from core.obligations import STARTERS_BY_ID
 
     names = [STARTERS_BY_ID[p]["title"] for p in _picked(context, params)]
@@ -168,6 +187,7 @@ def _starters_describe(context, params) -> str:
 
 
 def _starters(context, params) -> str:
+    """Does `obligation.starters` once approved, and says what happened. Each comes with where to check it, for its next date."""
     from core.obligations import STARTERS_BY_ID, starter_fields
 
     today = date.today()
@@ -180,6 +200,9 @@ def _starters(context, params) -> str:
 
 
 def _register() -> None:
+    """Adds the obligation record kinds and the verify, status and starters kinds to ACTION_TYPES. Runs once, when this
+    module is imported.
+    """
     kinds = [k for k in record_kinds(OBLIGATION)] + [
         ActionType("obligation.verify", "Verify", {"obligation_id": "the obligation", "source_url": "the official page",
                                                    "how": "or: who you asked, how", "verified_on": "the day you checked",
