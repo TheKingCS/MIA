@@ -163,11 +163,16 @@ def plan_step(text: Optional[str] = None) -> Optional[dict]:
 
 def self_assessment(progress: list[dict], ledger_row: dict, card: dict, todo_loops: int = 0) -> list[dict]:
     """Pure logic. What she'd study, ranked, each with her reason."""
+    from core.model_forge import specialists_for
+
     out = []
     for loop in progress:
         if loop.get("state") in ("below", "slid"):
+            kinds = specialists_for(loop["id"])  # DEC-0106: a model of her own could be the fix
+            model = (f" (a model of her own could help: a {kinds[0].kind} that {kinds[0].does}"
+                     + ("" if kinds[0].built else ", not built yet") + ")") if kinds else ""
             out.append({"area": f"loop {loop['id']}", "score": 3 if loop["state"] == "below" else 2,
-                        "why": f"{loop['what']}: {loop.get('why') or loop.get('detail')}"})
+                        "why": f"{loop['what']}: {loop.get('why') or loop.get('detail')}{model}"})
     for skill, row in (ledger_row or {}).items():
         if skill == "reviewing":
             continue

@@ -98,3 +98,14 @@ def test_a_night_sets_one_lesson_for_her_curriculum(school):
                    config=dict(ns.DEFAULTS, curriculum=False), store=school.store, tasks_dir=school.tasks,
                    log=school.log)
     assert "objective" not in off
+
+
+def test_her_self_assessment_names_a_model_that_could_help():
+    """A slipping loop one of her playbook's models serves says so in her reason (DEC-0106); one no model serves
+    doesn't."""
+    areas = ns.self_assessment([{"id": "answers.no_tool", "what": "no tool", "state": "below", "why": "3 this week"},
+                                {"id": "pc.disk", "what": "free space", "state": "slid", "why": "less"}], {}, {})
+    why = {a["area"]: a["why"] for a in areas}
+    assert why["loop answers.no_tool"].endswith("(a model of her own could help: a router that picks which of her "
+                                                "tools fit what was said)")
+    assert "model" not in why["loop pc.disk"]

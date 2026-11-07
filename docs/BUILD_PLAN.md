@@ -189,8 +189,8 @@ first. Each is a step below.
     `python -m tools.model_forge needs`. (c) ✅ the router in the shadow: every traced turn notes its top five
     (tool names only, about 1 ms), and the `models.router_shadow` loop watches how often the tool she called is
     in them (judged from 20 turns). Next: (d) the next kind, likely the classifier for unwelcome messages or the
-    extractor for documents read wrong, whichever loop slips first; (e) Night School's self-assessment names a
-    forge opportunity when one exists; (f) fine-tuning on the PC's GPU once the corpus is big enough.
+    extractor for documents read wrong, whichever loop slips first; (e) ✅ Night School's self-assessment names a
+    model that could help a slipping loop; (f) fine-tuning on the PC's GPU once the corpus is big enough.
     🧑 *Zac approves any model going into use.*
 
 20. ✅ **Her curriculum in computing** (DEC-0107; `core/curriculum.py`, `docs/CURRICULUM.md`, 2026-11-07): ten
