@@ -66,6 +66,9 @@ LISTING_STATUSES = ("Active", "Inactive", "Sold Out")
 
 @dataclass
 class ProductListing:
+    """Where a product is listed for sale: the platform (Etsy, a web store, local), price, status (Active, Inactive,
+    Sold Out) and link.
+    """
     listing_id: str
     platform: str  # e.g. "Etsy", "Web Store", "Local"
     price: float = 0.0
@@ -73,6 +76,7 @@ class ProductListing:
     url: str = ""
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in its JSON file."""
         return {
             "listing_id": self.listing_id,
             "platform": self.platform,
@@ -83,6 +87,7 @@ class ProductListing:
 
     @staticmethod
     def from_dict(data: dict) -> "ProductListing":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return ProductListing(
             listing_id=data.get("listing_id", uuid.uuid4().hex[:10]),
             platform=data.get("platform", ""),
@@ -94,6 +99,9 @@ class ProductListing:
 
 @dataclass
 class Product:
+    """A finished product the workshop sells: description, stock, base price, its listings, the job that last made it,
+    notes, and who first added it.
+    """
     product_id: str
     name: str
     description: str = ""
@@ -110,6 +118,7 @@ class Product:
     added_by_profile_id: Optional[str] = None
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in its JSON file."""
         return {
             "product_id": self.product_id,
             "name": self.name,
@@ -126,6 +135,7 @@ class Product:
 
     @staticmethod
     def from_dict(data: dict) -> "Product":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return Product(
             product_id=data.get("product_id", uuid.uuid4().hex[:10]),
             name=data.get("name", ""),
@@ -162,6 +172,7 @@ class ProductUsageEntry:
     timestamp: str = ""  # ISO datetime
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in its JSON file."""
         return {
             "entry_id": self.entry_id,
             "product_id": self.product_id,
@@ -172,6 +183,7 @@ class ProductUsageEntry:
 
     @staticmethod
     def from_dict(data: dict) -> "ProductUsageEntry":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return ProductUsageEntry(
             entry_id=data.get("entry_id", uuid.uuid4().hex[:10]),
             product_id=data.get("product_id", ""),
@@ -182,8 +194,12 @@ class ProductUsageEntry:
 
 
 class ProductManager:
+    """The workshop's products (products.json) and every stock change with who made it (product_usage_log.json), in
+    the household's folder, written through atomic_write_text so undo can restore them.
+    """
     def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
         # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        """Points at the household's files and loads them."""
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._products_file = self.data_dir / "products.json" if data_dir is not None else _PRODUCTS_FILE
         self._usage_log_file = self.data_dir / "product_usage_log.json" if data_dir is not None else _USAGE_LOG_FILE
@@ -198,6 +214,7 @@ class ProductManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads the products; a damaged file is logged, reported and starts empty."""
         if not self._products_file.exists():
             self._products = []
             return
@@ -210,6 +227,7 @@ class ProductManager:
             self._products = []
 
     def _load_usage_log(self) -> None:
+        """Reads the stock-change log; a damaged file is logged, reported and starts empty."""
         if not self._usage_log_file.exists():
             self._usage_log = []
             return
@@ -222,6 +240,7 @@ class ProductManager:
             self._usage_log = []
 
     def _save(self) -> None:
+        """Writes the products atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._products_file,
             json.dumps([p.to_dict() for p in self._products], indent=2),
@@ -229,6 +248,7 @@ class ProductManager:
         )
 
     def _save_usage_log(self) -> None:
+        """Writes the stock-change log atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(
             self._usage_log_file,
@@ -237,6 +257,7 @@ class ProductManager:
         )
 
     def _active_profile_id(self) -> Optional[str]:
+        """Who is signed in (for crediting a stock change), or None."""
         active_profile = self.context.profiles.get_active_profile() if self.context.profiles is not None else None
         return active_profile.profile_id if active_profile is not None else None
 
@@ -253,6 +274,7 @@ class ProductManager:
         base_price: float = 0.0,
         notes: str = "",
     ) -> Product:
+        """Adds a product, credited to whoever is signed in."""
         now = datetime.now().isoformat(timespec="seconds")
         product = Product(
             product_id=uuid.uuid4().hex[:10],
@@ -272,6 +294,9 @@ class ProductManager:
         return product
 
     def update_product(self, product_id: str, **fields) -> Product:
+        """Changes a product's fields, keeping stock and price at 0 or more (ValueError for an unknown product or field,
+        or the timestamps).
+        """
         product = self.get_product(product_id)
         if product is None:
             raise ValueError(f"No product with id '{product_id}'.")
@@ -290,6 +315,7 @@ class ProductManager:
         return product
 
     def delete_product(self, product_id: str) -> None:
+        """Deletes a product."""
         self._products = [p for p in self._products if p.product_id != product_id]
         self._save()
 
@@ -332,6 +358,7 @@ class ProductManager:
     def add_listing(
         self, product_id: str, platform: str, price: float = 0.0, status: str = "Active", url: str = ""
     ) -> Product:
+        """Lists a product somewhere (an unknown status becomes Active)."""
         product = self.get_product(product_id)
         if product is None:
             raise ValueError(f"No product with id '{product_id}'.")
@@ -348,6 +375,7 @@ class ProductManager:
         return product
 
     def remove_listing(self, product_id: str, listing_id: str) -> Product:
+        """Takes a listing off a product."""
         product = self.get_product(product_id)
         if product is None:
             raise ValueError(f"No product with id '{product_id}'.")
@@ -361,12 +389,14 @@ class ProductManager:
     # ------------------------------------------------------------------
 
     def get_product(self, product_id: str) -> Optional[Product]:
+        """The product with this id, or None."""
         for product in self._products:
             if product.product_id == product_id:
                 return product
         return None
 
     def all_products(self) -> list[Product]:
+        """Every product, by name."""
         return sorted(self._products, key=lambda p: p.name.lower())
 
     def search(self, query: str) -> list[Product]:

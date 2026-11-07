@@ -49,6 +49,9 @@ _PETS_FILE = _DATA_DIR / "relationships_pets.json"
 
 @dataclass
 class Person:
+    """Someone in the person's life: relationship, birthday, favorite things, gift ideas, shared memories (notes), email
+    (so MIA can address a draft by name) and when they last caught up.
+    """
     person_id: str
     name: str
     relationship: str = ""  # freeform: "Sister", "Best friend", "Coworker", ...
@@ -61,6 +64,7 @@ class Person:
     last_contact: str = ""   # 2026-10-17: ISO date you last caught up (People & Pets, Charisma)
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in its JSON file."""
         return {
             "person_id": self.person_id, "name": self.name, "relationship": self.relationship,
             "birthday": self.birthday, "favorite_things": self.favorite_things,
@@ -70,6 +74,7 @@ class Person:
 
     @staticmethod
     def from_dict(data: dict) -> "Person":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return Person(
             person_id=data.get("person_id", uuid.uuid4().hex[:10]),
             name=data.get("name", ""),
@@ -86,6 +91,7 @@ class Person:
 
 @dataclass
 class Pet:
+    """A pet: species, birthday (or adoption day), medical history and vet visits, notes."""
     pet_id: str
     name: str
     species: str = ""        # freeform: "Dog", "Cat", "Bird", ...
@@ -95,6 +101,7 @@ class Pet:
     created_at: str = ""
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in its JSON file."""
         return {
             "pet_id": self.pet_id, "name": self.name, "species": self.species,
             "birthday": self.birthday, "medical_notes": self.medical_notes,
@@ -103,6 +110,7 @@ class Pet:
 
     @staticmethod
     def from_dict(data: dict) -> "Pet":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return Pet(
             pet_id=data.get("pet_id", uuid.uuid4().hex[:10]),
             name=data.get("name", ""),
@@ -139,8 +147,12 @@ def days_until_birthday(birthday_iso: str, today: date) -> Optional[int]:
 
 
 class RelationshipsManager:
+    """People & Pets: relationships_people.json and relationships_pets.json in the household's folder (data/ by
+    default), written through atomic_write_text so undo can restore them.
+    """
     def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
         # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        """Points at the household's files and loads them."""
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._people_file = self.data_dir / "relationships_people.json" if data_dir is not None else _PEOPLE_FILE
         self._pets_file = self.data_dir / "relationships_pets.json" if data_dir is not None else _PETS_FILE
@@ -154,10 +166,14 @@ class RelationshipsManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads both files (undo calls this to reload)."""
         self._people = self._load_file(self._people_file, Person)
         self._pets = self._load_file(self._pets_file, Pet)
 
     def _load_file(self, path: Path, cls) -> list:
+        """One file's records; missing is empty, a damaged file is logged, reported (notify_data_corruption) and starts
+        empty.
+        """
         if not path.exists():
             return []
         try:
@@ -169,13 +185,16 @@ class RelationshipsManager:
             return []
 
     def _save_file(self, path: Path, records: list) -> None:
+        """Writes one file's records atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(path, json.dumps([r.to_dict() for r in records], indent=2), encoding="utf-8")
 
     def _save_people(self) -> None:
+        """Saves the people."""
         self._save_file(self._people_file, self._people)
 
     def _save_pets(self) -> None:
+        """Saves the pets."""
         self._save_file(self._pets_file, self._pets)
 
     # ------------------------------------------------------------------
@@ -186,6 +205,7 @@ class RelationshipsManager:
         self, name: str, relationship: str = "", birthday: str = "",
         favorite_things: str = "", gift_ideas: str = "", notes: str = "", email: str = "",
     ) -> Person:
+        """Adds a person (their email kept lowercase)."""
         person = Person(
             person_id=uuid.uuid4().hex[:10],
             name=name,
@@ -203,6 +223,7 @@ class RelationshipsManager:
         return person
 
     def update_person(self, person_id: str, **fields) -> Person:
+        """Changes a person's fields (ValueError for an unknown person or field)."""
         person = self.get_person(person_id)
         if person is None:
             raise ValueError(f"No person with id '{person_id}'.")
@@ -214,16 +235,19 @@ class RelationshipsManager:
         return person
 
     def delete_person(self, person_id: str) -> None:
+        """Deletes a person."""
         self._people = [p for p in self._people if p.person_id != person_id]
         self._save_people()
 
     def get_person(self, person_id: str) -> Optional[Person]:
+        """The person with this id, or None."""
         for person in self._people:
             if person.person_id == person_id:
                 return person
         return None
 
     def all_people(self) -> list[Person]:
+        """Everyone, by name."""
         return sorted(self._people, key=lambda p: p.name.lower())
 
     # ------------------------------------------------------------------
@@ -233,6 +257,7 @@ class RelationshipsManager:
     def add_pet(
         self, name: str, species: str = "", birthday: str = "", medical_notes: str = "", notes: str = "",
     ) -> Pet:
+        """Adds a pet."""
         pet = Pet(
             pet_id=uuid.uuid4().hex[:10],
             name=name,
@@ -248,6 +273,7 @@ class RelationshipsManager:
         return pet
 
     def update_pet(self, pet_id: str, **fields) -> Pet:
+        """Changes a pet's fields (ValueError for an unknown pet or field)."""
         pet = self.get_pet(pet_id)
         if pet is None:
             raise ValueError(f"No pet with id '{pet_id}'.")
@@ -259,16 +285,19 @@ class RelationshipsManager:
         return pet
 
     def delete_pet(self, pet_id: str) -> None:
+        """Deletes a pet."""
         self._pets = [p for p in self._pets if p.pet_id != pet_id]
         self._save_pets()
 
     def get_pet(self, pet_id: str) -> Optional[Pet]:
+        """The pet with this id, or None."""
         for pet in self._pets:
             if pet.pet_id == pet_id:
                 return pet
         return None
 
     def all_pets(self) -> list[Pet]:
+        """Every pet, by name."""
         return sorted(self._pets, key=lambda p: p.name.lower())
 
     # ------------------------------------------------------------------
