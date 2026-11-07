@@ -672,7 +672,7 @@ def test_the_new_screens_and_the_journal_keeps_its_own_route(client, context):
     journal = client.get("/api/operating-journal", headers=owner).json()
     assert journal["lines"] == [] and "rules" in journal["sections"]
     play = client.get("/api/play", headers=owner).json()
-    assert play["played"] == [] and len(play["weeks"]) == 5 and "hard" in play["efforts"]
+    assert play["played"] == [] and len(play["weeks"]) == 6 and "hard" in play["efforts"]
     news = client.get("/api/news", headers=owner).json()
     assert news["on"] is False and len(news["personalities"]) == 4
     assert "vector" in client.get("/api/maps", headers=owner).json()  # the vector areas kept on this PC
