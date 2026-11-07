@@ -12,8 +12,9 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 - [ ] **Your email for receipts (DEC-0120):** in Gmail, make an app password (Google Account, Security, 2-Step
       Verification, App passwords; don't paste it into a chat). Then MIA, Inbox, Email Settings: imap.gmail.com, your
       address, the app password, your journal passphrase, and **Yes** to "everyday mailbox". She looks back 30 days
-      for receipts and orders and leaves your mail untouched. Open the Inbox: each receipt shows what it means
-      (pantry, oil change, materials) ticked; file it and it happens. Tell Claude which stores' receipts read badly.
+      for receipts and orders and leaves your mail untouched. Emailed receipts file themselves (DEC-0121): the
+      Inbox's "Filed By MIA From Your Email" list shows each with Undo, or say "undo the Kroger receipt". Tell Claude
+      which stores' receipts read badly.
 - [ ] **MIA's browser (DEC-0117, `docs/BROWSER.md`):** restart MIA, then say "open the county website" (or any
       site): her own Edge window opens. Try "read the page", "click ...", and something that commits (she should
       ask first, and a "yes" after she names the button presses it). Then teach her one real task: open where it

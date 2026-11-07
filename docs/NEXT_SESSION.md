@@ -7,7 +7,7 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 *Last updated: 2026-11-07 (afternoon)*
 
-**New 2026-11-07 (night): receipts that do things (DEC-0120).** The inbox's email intake reads Zac's everyday
+**New 2026-11-07 (night): receipts that do things (DEC-0120), filed on their own with exact Undo (DEC-0121).** The inbox's email intake reads Zac's everyday
 mailbox read-only, taking only receipts and orders (`core/inbox_mail.fetch_receipts`); a receipt proposes what it
 means (`core/receipt_effects.py`: pantry and grocery list, a service done on the vehicle, workshop materials), done on
 filing. Next: Zac's first real receipts (store formats will need tuning), the web Inbox's email setup (desktop only
