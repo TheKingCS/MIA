@@ -1241,3 +1241,26 @@ body.mod-maps .hero { display: none; }
   .mp-head { right: 70px; }
   .mp-modes { margin: 0; }
 }
+
+/* ---------------------------------------------------------------- Household (DEC-0113 canvas; web/household.js) */
+.hh-today { display: grid; gap: 8px; padding: 14px; margin-bottom: var(--gap); }
+.hh-today-top { display: flex; justify-content: space-between; align-items: baseline; }
+.hh-today .pw-label { margin: 0; }
+.hh-count { font-family: var(--font-mono); font-size: var(--text-sm); }
+.meter-fill.gold { background: var(--win); box-shadow: 0 0 8px var(--win-glow); }
+.hh-list { display: grid; gap: 8px; margin-bottom: var(--gap); }
+.hh-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 10px; padding: 8px 8px 8px 14px; min-height: 56px; }
+.hh-main { display: grid; gap: 2px; min-width: 0; }
+.hh-name { font-weight: 600; }
+.hh-row.done .hh-name { color: var(--text-dim); font-weight: 500; }
+.hh-main .dim { font-size: 12px; }
+.hh-did { min-height: 44px; padding: 0 14px; }
+.hh-done { font-size: var(--text-sm); color: var(--ok); padding: 0 6px; }
+.hh-row .row-more { position: relative; }
+.hh-row .row-more summary { list-style: none; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%;
+  color: var(--text-dim); font-size: 20px; cursor: pointer; }
+.hh-row .row-more summary::-webkit-details-marker { display: none; }
+.hh-row .row-more-menu { position: absolute; right: 0; top: 42px; z-index: 5; padding: 6px; border-radius: var(--radius-sm);
+  background: rgb(var(--rgb-panel)); border: 1px solid var(--line-strong); }
+.hh-say { margin-top: 8px; font-size: var(--text-sm); }
+.mod-household .tb-list { margin-bottom: var(--gap); }

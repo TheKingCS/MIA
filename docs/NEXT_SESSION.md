@@ -126,6 +126,8 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       DEC-0119; the demo now has `docs/schema/profile.example.json`).
       Fix-It (a big Report a Problem, Open · Worst First cards with ×N and the latest thing said, learned phrasings).
       Diagnostics (Passed / Look At / Unread tiles, a dotted row per check-up, Run Again).
+      Household (Done Today with its meter, a card per routine with its streak in words and Did It, paused ones
+      apart; Add a Routine / Pause / Resume as `routine.add/pause/resume`, and by voice).
       Power has its web page (`core/web_power.py`, `/api/power`, `web/power.html`; energy sources and the battery),
       and readings can be logged by voice too (`log_energy_reading`, through `energy.reading`).
       Toolbox (`core/web_toolbox.py`: Ohm's law from any two, the unit converter, board feet, concrete volume,
