@@ -12,7 +12,6 @@
   "core/assistant_email_actions.py": 2,
   "core/assistant_focus_actions.py": 5,
   "core/assistant_goods_actions.py": 8,
-  "core/assistant_homestead_actions.py": 11,
   "core/assistant_inbox_actions.py": 8,
   "core/assistant_life_event_actions.py": 3,
   "core/assistant_link_actions.py": 4,

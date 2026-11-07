@@ -33,6 +33,7 @@ _N = {"type": "number"}
 
 
 def _amount(value) -> Optional[float]:
+    """An amount from what was said (currency signs and commas allowed), only when it's more than 0; else None."""
     try:
         amount = float(str(value).replace("$", "").replace(",", "").strip())
     except (TypeError, ValueError):
@@ -62,16 +63,22 @@ def _find_or_create_build(context: AppContext, name: str):
 
 
 def _find_tool(context: AppContext, name: str):
+    """The tool (a Maintenance asset) a name means, or the question to ask."""
     return _find(context.maintenance.all_assets(), name, lambda a: a.name, "tool")
 
 
 def _unavailable(context: AppContext) -> Optional[str]:
+    """Why build and tool costs can't be used here (no budget, projects or maintenance), or None."""
     if context.budget is None or context.projects is None or context.maintenance is None:
         return "Build and tool costs aren't available right now."
     return None
 
 
 def _action_log_build_expense(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `log_build_expense`: records money spent on a build ("$240 on lumber for the
+    greenhouse") as a Budget expense tagged to it, making the build as a project when it's named for the first time
+    (and saying so), and to a tool when one is named. Returns the sentence to say back.
+    """
     problem = _unavailable(context)
     if problem:
         return problem
@@ -108,6 +115,10 @@ def _action_log_build_expense(context: AppContext, arguments: dict) -> str:
 
 
 def _action_record_tool_purchase(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `record_tool_purchase`: records a tool bought: an existing one gets its price
+    and a purchase expense; a new one is added to Maintenance with its price; either tagged to a build when one is
+    named. Returns the sentence to say back.
+    """
     problem = _unavailable(context)
     if problem:
         return problem
@@ -145,6 +156,9 @@ def _action_record_tool_purchase(context: AppContext, arguments: dict) -> str:
 
 
 def _action_get_build_costs(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `get_build_costs`: what one build has cost (with its budget), or every build's
+    total. Returns the sentence to say back.
+    """
     problem = _unavailable(context)
     if problem:
         return problem
@@ -194,6 +208,9 @@ def _action_list_build_purchases(context: AppContext, arguments: dict) -> str:
 
 
 def _action_get_tool_costs(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `get_tool_costs`: what one tool has cost to own (price plus running costs), or the
+    total and the biggest. Returns the sentence to say back.
+    """
     problem = _unavailable(context)
     if problem:
         return problem
@@ -212,6 +229,7 @@ def _action_get_tool_costs(context: AppContext, arguments: dict) -> str:
 
 
 def _action_set_build_budget(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `set_build_budget`: sets a build's budget, making the build when it's new. Returns the sentence to say back."""
     problem = _unavailable(context)
     if problem:
         return problem
@@ -248,6 +266,9 @@ def _business_tool(context: AppContext, name: str):
 
 
 def _action_log_business_use(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `log_business_use`: logs hours (or miles) of business or personal use of a tool,
+    with who it was for (a rental, a business), and says this year's total of that kind. Returns the sentence to say back.
+    """
     if getattr(context, "business_use", None) is None or context.maintenance is None:
         return "Business-use tracking isn't available right now."
     hours = _amount(arguments.get("hours"))
@@ -287,6 +308,9 @@ def _action_log_business_use(context: AppContext, arguments: dict) -> str:
 
 
 def _action_get_business_use(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `get_business_use`: the business-use worksheet for a tool (or the first three with
+    business use) for a year, this year by default; records, not tax advice. Returns the sentence to say back.
+    """
     if getattr(context, "business_use", None) is None or context.maintenance is None:
         return "Business-use tracking isn't available right now."
     from datetime import date as _date
@@ -313,6 +337,7 @@ def _action_get_business_use(context: AppContext, arguments: dict) -> str:
 
 
 def register_homestead_actions(registry: AssistantActionRegistry) -> None:
+    """Registers the build, tool and business-use tools with the Assistant's registry."""
     registry.register(AssistantAction(
         name="log_business_use", domain="business_use",
         description=(
