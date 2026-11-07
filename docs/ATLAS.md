@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 230,099 lines; 1043 files describe themselves; 5,707 of 13,517 classes and functions are documented.
+1043 files, 230,236 lines; 1043 files describe themselves; 5,720 of 13,523 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 104,001 lines; 4,976 of 5,630 classes and functions documented
+367 files, 104,092 lines; 4,987 of 5,634 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -298,7 +298,7 @@
 - `core/secrets_manager.py`: Passphrase-based symmetric encryption for anything MIA needs to keep confidential at rest — introduced for encrypted Backup/Restore (core/backup_manager.py), but deliberately generic rather than backup-specific, so a future module with a real secret to protect (wifi credentials, radio configs, an AP *(1 undocumented)*
 - `core/security_actions.py`: Security's changes (DEC-0033, core/security_cams.py) on the action contract in core/actions.py: remove a camera (undoable), save the picture a camera shows now, delete a saved picture. Adding or changing a camera goes through `/api/security/camera` instead, so its password is never in an action's re
 - `core/security_cams.py`: Security (DEC-0033; Zac, 2026-10-18: "an app for Security or Smart Home where I can monitor camera feeds"): your cameras, watched from MIA, with no cloud in between. The smart-home half (lights, locks, thermostat) comes later through a local Home Assistant (docs/ROADMAP.md).
-- `core/self_docs.py`: MIA about her own design, from her own documents (DEC-0041; the intelligence spec's Phase 2C/3, docs/INTELLIGENCE_AUDIT.md): "how does the freedom estimate work?", "why can't the phone connect banks?", "what did we decide about eggs?", answered with the passage and the file it came from, never from  *(7 undocumented)*
+- `core/self_docs.py`: MIA about her own design, from her own documents (DEC-0041; the intelligence spec's Phase 2C/3, docs/INTELLIGENCE_AUDIT.md): "how does the freedom estimate work?", "why can't the phone connect banks?", "what did we decide about eggs?", answered with the passage and the file it came from, never from 
 - `core/self_report.py`: MIA's weekly self-report (build plan step 6, DEC-0094): once a week, to the PC's owner, through the communication gate: what got better, what's slipping, what she's working on, and how Night School went. Assembled in code from her own records (the loops' history, Night School, the benchmarks, the ta *(2 undocumented)*
 - `core/show_off.py`: Show-off mode (DEC-0031): "MIA, show off for my friends" starts a short narrated tour of what MIA can do, on the person's **real** profile, in front of other people. So the tour is built here, in code, from a filtered copy of the person's data, and the screens it shows are its own cards, never the r
 - `core/sight.py`: Sight (build plan step 15): a photo the person takes, with the glasses' camera, the phone or the PC, and a question about it, answered by a local vision model on this PC (Ollama, `sight.model`, Qwen2.5-VL 7B by default). Nothing leaves the PC. *(5 undocumented)*
@@ -643,7 +643,7 @@
 
 ## tests/: the test suite: what each part must do
 
-346 files, 63,055 lines; 301 of 5,658 classes and functions documented
+346 files, 63,101 lines; 303 of 5,660 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*

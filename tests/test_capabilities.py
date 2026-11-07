@@ -107,6 +107,52 @@ def test_the_real_docs_answer_about_mia():
     assert top and top[0][1].heading.startswith("DEC-0037")
 
 
+def test_she_answers_from_her_code_and_the_knowledge_vault(tmp_path):
+    """Her code's docstrings and the vault's live entries are searched and labelled: a definition with no
+    docstring and a withdrawn entry are left out, her own unconfirmed write-up says so, and a changed file rebuilds
+    the index."""
+    from core import dev_knowledge
+
+    docs, code, vault = tmp_path / "docs", tmp_path, tmp_path / "work" / "knowledge"
+    docs.mkdir()
+    (code / "core").mkdir()
+    (code / "core" / "hives.py").write_text(
+        '"""core.hives\n\nBeehives."""\n\n\nclass Hive:\n    """One hive."""\n\n    def harvest(self):\n'
+        '        """Takes the honey frames, leaving two for the winter."""\n\n    def _quiet(self):\n        pass\n',
+        encoding="utf-8")
+    dev_knowledge.add("decision", "Why two frames stay in the hive", "Bees need two frames of honey to winter well.",
+                      ["dec:DEC-0001"], by="claude", status="confirmed", folder=vault)
+    dev_knowledge.add("lesson", "Old frame rule", "Leave one frame.", ["dec:DEC-0001"], folder=vault)
+    old = dev_knowledge.entries(vault)[1]["id"]
+    dev_knowledge.withdraw(old, "claude", "wrong", folder=vault)
+    dev_knowledge.add("lesson", "Smoke calms bees", "Use a little smoke.", ["dec:DEC-0001"], folder=vault)
+    found = SelfDocs(docs, code=code, knowledge=vault)
+    kinds = {p.heading: p.kind for p in found._fresh()}
+    assert kinds["core.hives.Hive.harvest"] == "code" and kinds["core.hives"] == "code"
+    assert "core.hives.Hive._quiet" not in kinds  # no docstring, nothing to say
+    assert not any("Old frame rule" in h for h in kinds)  # withdrawn
+    assert any(k == "derived" and "Smoke" in h for h, k in kinds.items())  # MIA's own, unconfirmed
+    said = answer("How is the honey harvested?", found)
+    assert said.startswith("From my own documents, my code's own documentation: core.hives.Hive.harvest "
+                           "(core/hives.py). Takes the honey frames")
+    assert "what the team learned building me" in answer("Why do two frames stay in the hive?", found)
+    assert "not confirmed yet" in answer("Does smoke calm bees?", found)
+    (code / "core" / "hives.py").write_text('"""core.hives\n\nBeehives, rewritten."""\n', encoding="utf-8")
+    import os
+    os.utime(code / "core" / "hives.py", (1, 1))  # a different time, whatever the clock's resolution
+    assert "core.hives.Hive.harvest" not in {p.heading for p in found._fresh()}  # rebuilt on a change
+
+
+def test_the_real_index_holds_her_code_and_vault():
+    """The shared index holds the docs, the code and the vault, and a decision still outranks the code on its
+    subject."""
+    from core.self_docs import index
+
+    kinds = {p.kind for p in index()._fresh()}
+    assert {"decision", "code", "knowledge"} <= kinds
+    assert index().search("What did we decide about eggs?")[0][1].heading.startswith("DEC-0037")
+
+
 
 def test_an_app_with_a_web_page_never_says_it_has_none():
     from core.capabilities import LIMITS

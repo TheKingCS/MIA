@@ -15,7 +15,15 @@ What's searched, and how much it counts:
   history, `docs/specs/`, `docs/user_help/`): passages by heading.
 - **History** (`docs/ROADMAP.md`): counts least, and is labelled history,
   so an old plan never reads as how things are now.
-- Never `data/`, `config/` or anything personal: only the repo's own docs.
+- **Her code's own documentation** (DEC-0104): every file's and every
+  class's, function's and method's docstring in core/, server/, tools/,
+  modules/ and gui/, as "core.x.name": how a piece actually works. Counts
+  less than a doc on the same subject.
+- **The Knowledge Vault** (`work/knowledge/`, DEC-0105): what the team
+  learned building her, and why it was built that way; her own
+  unconfirmed write-ups count less and are labelled so.
+- Never `data/`, `config/` or anything personal: only the repo's own docs
+  and code.
 
 Keyword search (the help system's own chunking and scoring,
 core/device_help_manager.py): it works the same on the phone and needs no
@@ -24,6 +32,7 @@ model. Built once per process, rebuilt when a file changes.
 
 from __future__ import annotations
 
+import ast
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -31,10 +40,16 @@ from typing import Optional
 
 from core.device_help_manager import HelpChunk, _query_words, _tokenize, split_into_chunks
 
-DOCS = Path(__file__).resolve().parent.parent / "docs"
+ROOT = Path(__file__).resolve().parent.parent
+DOCS = ROOT / "docs"
+KNOWLEDGE = ROOT / "work" / "knowledge"
+CODE_LAYERS = ("core", "server", "tools", "modules", "gui")  # not tests: they say what's checked, not how she works
 HISTORY = {"ROADMAP.md"}
 SKIP = {"NEXT_SESSION.md"}  # the to-do list: what's pending, not how MIA works
-WEIGHT = {"decision": 3.0, "proposal": 1.5, "doc": 2.0, "spec": 1.5, "help": 2.0, "history": 0.5}
+# The code's own docstrings (DEC-0104) are detail, so a doc or decision on the same subject comes first;
+# the team's write-ups (DEC-0105) say why, and MIA's own unconfirmed ones count least of those.
+WEIGHT = {"decision": 3.0, "proposal": 1.5, "doc": 2.0, "spec": 1.5, "help": 2.0, "history": 0.5,
+          "code": 1.0, "knowledge": 1.8, "derived": 0.9}
 _DEC = re.compile(r"^### (DEC-\d{4}): (.+)$", re.M)
 # Words about asking, not about the subject.
 _ABOUT_MIA = {"decide", "decided", "decision", "decisions", "mia", "you", "your", "we", "why", "work", "works",
@@ -43,6 +58,7 @@ _ABOUT_MIA = {"decide", "decided", "decision", "decisions", "mia", "you", "your"
 
 @dataclass
 class Passage:
+    """One searchable passage: the file it is from, its heading, its text, and what kind of source it is (decision, proposal, doc, spec, help, history, code, knowledge, derived)."""
     file: str  # relative to the repo: "docs/DECISIONS.md"
     heading: str
     text: str
@@ -50,10 +66,12 @@ class Passage:
 
     @property
     def chunk(self) -> HelpChunk:
+        """The passage as a help chunk, so the help system scores it."""
         return HelpChunk(source=self.file, heading=self.heading, text=self.text)
 
 
 def _decisions(text: str, file: str) -> list[Passage]:
+    """DECISIONS.md as one passage per decision: approved ones are decisions, every other status a proposal."""
     out = []
     matches = list(_DEC.finditer(text))
     for i, m in enumerate(matches):
@@ -86,6 +104,58 @@ def build(root: Path = DOCS) -> list[Passage]:
     return passages
 
 
+def _code_file(path: Path, rel: str) -> list[Passage]:
+    """One Python file's own documentation (DEC-0104): the file's docstring, then each class, function and method
+    with a docstring, as "core.x.name" with its docstring. Functions nested in functions are left out, as in the
+    atlas; a file that won't parse gives nothing."""
+    try:
+        tree = ast.parse(path.read_text(encoding="utf-8", errors="replace"))
+    except (OSError, SyntaxError, ValueError):
+        return []
+    dotted = rel[:-3].replace("/", ".")
+    out = []
+    about = ast.get_docstring(tree)
+    if about:
+        out.append(Passage(rel, dotted, about, "code"))
+
+    def visit(body, prefix):
+        for node in body:
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                doc = ast.get_docstring(node)
+                if doc:
+                    out.append(Passage(rel, f"{prefix}.{node.name}", doc, "code"))
+                if isinstance(node, ast.ClassDef):
+                    visit(node.body, f"{prefix}.{node.name}")
+    visit(tree.body, dotted)
+    return out
+
+
+def code_passages(root: Path = ROOT, layers: tuple = CODE_LAYERS) -> list[Passage]:
+    """Every documented definition in MIA's own code."""
+    out: list[Passage] = []
+    for layer in layers:
+        for path in sorted((root / layer).rglob("*.py")):
+            if "__pycache__" not in path.parts:
+                out.extend(_code_file(path, path.relative_to(root).as_posix()))
+    return out
+
+
+def knowledge_passages(folder: Path = KNOWLEDGE) -> list[Passage]:
+    """The Knowledge Vault's live entries (DEC-0073, DEC-0105): what was learned building MIA and why. Superseded
+    and withdrawn entries are left out; MIA's own write-ups that no one has confirmed yet are their own kind, so
+    she says they're unconfirmed."""
+    from core.dev_knowledge import entries
+
+    out = []
+    for e in entries(folder):
+        if e.get("status") in ("superseded", "withdrawn"):
+            continue
+        kind = "derived" if e.get("status") == "derived" else "knowledge"
+        rel = f"work/knowledge/{e['id']}"
+        out.append(Passage(rel, f"{e['id']}: {e.get('title', '')}", e.get("body", ""), kind))
+    return out
+
+
 def _bullets(p: Passage, longest: int = 1500) -> list[Passage]:
     """Pure logic. A very long section that's a list ("Recent changes") as
     one passage per top-level bullet, so one entry is found, not the
@@ -101,22 +171,41 @@ def _bullets(p: Passage, longest: int = 1500) -> list[Passage]:
 
 
 class SelfDocs:
-    """The index, rebuilt when any doc changes (checked by modification times)."""
+    """The index, rebuilt when any doc changes (checked by modification times). With `code` (the repo root) it
+    also holds the code's own docstrings, and with `knowledge` the Knowledge Vault's entries; index() gives both,
+    so MIA answers about how she's built from her real architecture, not only the docs about it."""
 
-    def __init__(self, root: Path = DOCS) -> None:
+    def __init__(self, root: Path = DOCS, code: Optional[Path] = None, knowledge: Optional[Path] = None) -> None:
+        """Nothing is read until the first search."""
         self.root = root
+        self.code = code
+        self.knowledge = knowledge
         self._stamp: Optional[tuple] = None
         self._passages: list[Passage] = []
 
+    def _files(self) -> list[Path]:
+        """Every file the index is built from, so a change to any of them rebuilds it."""
+        files = list(self.root.rglob("*.md")) if self.root.exists() else []
+        if self.code is not None:
+            files += [p for layer in CODE_LAYERS for p in (self.code / layer).rglob("*.py")]
+        if self.knowledge is not None and self.knowledge.exists():
+            files += list(self.knowledge.glob("K-*.md"))
+        return files
+
     def _fresh(self) -> list[Passage]:
-        if not self.root.exists():
-            return []
-        stamp = tuple(sorted((str(p), p.stat().st_mtime) for p in self.root.rglob("*.md")))
+        """The passages, rebuilt first when a file was added, removed or changed."""
+        stamp = tuple(sorted((str(p), p.stat().st_mtime) for p in self._files()))
         if stamp != self._stamp:
-            self._passages, self._stamp = build(self.root), stamp
+            passages = build(self.root) if self.root.exists() else []
+            if self.code is not None:
+                passages += code_passages(self.code)
+            if self.knowledge is not None and self.knowledge.exists():
+                passages += knowledge_passages(self.knowledge)
+            self._passages, self._stamp = passages, stamp
         return self._passages
 
     def search(self, question: str, limit: int = 3) -> list[tuple[float, Passage]]:
+        """The best passages for a question, up to limit: scored on the question subject (not the asking words), times the source kind weight, times the square of how much of the question it covers, so a passage matching more of the question beats a long one repeating one word."""
         from core.capabilities import _stem
         from core.device_help_manager import score_chunk
 
@@ -141,15 +230,17 @@ _INDEX: Optional[SelfDocs] = None
 
 
 def index() -> SelfDocs:
+    """The one shared index: the docs, the code's own docstrings and the Knowledge Vault."""
     global _INDEX
     if _INDEX is None:
-        _INDEX = SelfDocs()
+        _INDEX = SelfDocs(DOCS, code=ROOT, knowledge=KNOWLEDGE)
     return _INDEX
 
 
 LABEL = {"decision": "an approved decision", "proposal": "a proposal, not decided yet", "doc": "MIA's docs",
          "spec": "a spec (what was asked for, not necessarily built)", "help": "the user guide",
-         "history": "history (may be out of date)"}
+         "history": "history (may be out of date)", "code": "my code's own documentation",
+         "knowledge": "what the team learned building me", "derived": "my own write-up, not confirmed yet"}
 
 
 def _plain(text: str) -> str:
