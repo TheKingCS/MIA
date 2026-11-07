@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 229,275 lines; 1043 files describe themselves; 5,197 of 13,517 classes and functions are documented.
+1043 files, 229,292 lines; 1043 files describe themselves; 5,209 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 103,177 lines; 4,466 of 5,630 classes and functions documented
+367 files, 103,194 lines; 4,478 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -253,7 +253,7 @@
 - `core/personality.py`: MIA's personality in one place (DEC-0067; the guide is docs/design/MIA_VOICE.md). Every prompt that speaks as her takes who she is from here: IDENTITY and CHARACTER. Zac's picks (2026-11-03): a companion, natural humor, independent initiative, with JARVIS's composure, EDITH's capability and Cortana'
 - `core/phone_link.py`: When a linked phone last reached this PC (build plan step 3's `phone.link`; the server kept it only in memory, so a restart forgot it). `seen()` is called when a linked phone's device key signs a request in (server/app.py); it writes at most once every `EVERY` per person, so a busy phone costs nothi *(3 undocumented)*
 - `core/phone_server.py`: Turning phone access on and off from Settings (2026-09-28), instead of hand-editing `server.enabled` in config/config.json (one missing comma there and MIA won't read its config).
-- `core/places.py`: Location quests (DEC-0028, the game layer's thirteenth idea; Zac, 2026-10-17): arrive at the gym and your workout opens; walk into the store and your grocery list is up. *(12 undocumented)*
+- `core/places.py`: Location quests (DEC-0028, the game layer's thirteenth idea; Zac, 2026-10-17): arrive at the gym and your workout opens; walk into the store and your grocery list is up.
 - `core/plaid_manager.py`: Bank/brokerage connectivity via Plaid — the one credible third-party path found after real research (2026-09-08): Robinhood has no public stocks API (crypto-only officially; everything else is unofficial and ToS-violating), Chime's own API is a B2B "Partner API," not self service for an individual.  *(21 undocumented)*
 - `core/plain_words.py`: Markdown out of what MIA says (2026-10-30). Models write **bold**, headings and `code`, which the desktop's chat bubbles show as asterisks and hashes and the voice reads as noise. Pure logic. *(2 undocumented)*
 - `core/plan_import.py`: "Paste a plan" (2026-10-14, Zac: "work with Muse to fill out my workouts, goals, meals, nutrition"). A whole fitness plan and its recipes as one block of plain text, the kind Muse (or anyone) writes in a chat and the person pastes into My plan on their phone. The person's details go from that chat s *(4 undocumented)*

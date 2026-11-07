@@ -49,6 +49,9 @@ ARRIVALS = {
 
 @dataclass
 class Place:
+    """One of a person's places: its name, where it is, how close counts as there (meters), what happens on arrival
+    (ARRIVALS), a note, and when and how often they've arrived.
+    """
     place_id: str
     name: str
     lat: float
@@ -61,7 +64,12 @@ class Place:
 
 
 class Places:
+    """A person's places (places.json in their folder, written through atomic_write_text so undo can restore it). The
+    phone compares its position with them itself; nothing about where the person is leaves it until they arrive and
+    say yes.
+    """
     def __init__(self, context, data_dir: Optional[Path] = None) -> None:
+        """Points at the person's file (data/ by default) and loads it."""
         self.context = context
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._file = self.data_dir / _FILE
@@ -69,6 +77,7 @@ class Places:
         self._load()
 
     def _load(self) -> None:
+        """Reads the places, keeping only fields a place knows; an unreadable file is logged, reported and starts empty."""
         self.places = []
         if not self._file.exists():
             return
@@ -81,24 +90,29 @@ class Places:
             notify_data_corruption(self.context, _FILE)
 
     def reload(self) -> None:
+        """Reads the file again (after undo restored it)."""
         self._load()
 
     def _save(self) -> None:
+        """Writes every place atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._file, json.dumps({"places": [asdict(p) for p in self.places]}, indent=2,
                                                  ensure_ascii=False))
 
     def get(self, place_id: str) -> Optional[Place]:
+        """The place with this id, or None."""
         return next((p for p in self.places if p.place_id == place_id), None)
 
     def add(self, name: str, lat: float, lon: float, radius_m: int = DEFAULT_RADIUS_M, on_arrive: str = "Just Remind Me",
             note: str = "") -> Place:
+        """Adds a place (its position kept to six decimals, about 10 cm)."""
         place = Place(uuid.uuid4().hex[:10], name, round(lat, 6), round(lon, 6), int(radius_m), on_arrive, note)
         self.places.append(place)
         self._save()
         return place
 
     def update(self, place_id: str, **fields) -> Place:
+        """Changes a place's known fields (ValueError when it's gone)."""
         place = self.get(place_id)
         if place is None:
             raise ValueError("No such place.")
@@ -109,10 +123,12 @@ class Places:
         return place
 
     def delete(self, place_id: str) -> None:
+        """Deletes a place."""
         self.places = [p for p in self.places if p.place_id != place_id]
         self._save()
 
     def arrived(self, place_id: str) -> Place:
+        """Notes an arrival: when, and one more to the count (ValueError when the place is gone)."""
         place = self.get(place_id)
         if place is None:
             raise ValueError("No such place.")
@@ -150,6 +166,7 @@ def watched(context) -> list[dict]:
 
 
 def places_page(context) -> dict:
+    """The Places screen's data: whether watching is on, every place, the arrival choices, and the default radius."""
     from core import person_settings
 
     book = getattr(context, "places", None)
