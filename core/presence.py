@@ -42,6 +42,9 @@ NOW_LIMIT = 7
 
 @dataclass
 class Item:
+    """One thing on the Presence list: a stable key, a title, why it's there, what kind it is (deadline, fact,
+    suggestion, progress), how urgent (0 to 100), the app it belongs to, a detail, an action to propose, and a link.
+    """
     key: str  # stable, for a surface to remember what it showed
     title: str
     why: str
@@ -53,10 +56,12 @@ class Item:
     href: str = ""
 
     def as_dict(self) -> dict:
+        """The item as a plain dict."""
         return asdict(self)
 
 
 def _safe(name: str, gather) -> list[Item]:
+    """One source's items; a source that fails is logged and left out, never emptying the list."""
     try:
         return gather()
     except Exception:  # one store failing never empties Presence
@@ -65,6 +70,9 @@ def _safe(name: str, gather) -> list[Item]:
 
 
 def _today(context, today: date) -> list[Item]:
+    """Presence source `today`: today's list (overdue, today, waiting, soon), weighted in that order and by position, each
+    with its suggested action.
+    """
     from core.today import OVERDUE, SOON, TODAY, WAITING, today_items
 
     weight = {OVERDUE: 90, TODAY: 72, WAITING: 50, SOON: 30}
@@ -80,6 +88,9 @@ def _today(context, today: date) -> list[Item]:
 
 
 def _compliance(context, today: date) -> list[Item]:
+    """Presence source `compliance`: obligations overdue or due within the window (sooner is more urgent), noting the
+    unverified ones, and a suggestion to check any not verified yet (grown-ups only).
+    """
     from core.child_accounts import is_child
     from core.obligations import CLOSED, state
 
@@ -111,6 +122,9 @@ def _compliance(context, today: date) -> list[Item]:
 
 
 def _goods(context, today: date) -> list[Item]:
+    """Presence source `goods`: an open market day, goods past their sell-by, and the oldest batches to sell first
+    (grown-ups only).
+    """
     from core.child_accounts import is_child
     from core.web_craft import goods_section
 
@@ -138,6 +152,7 @@ def _goods(context, today: date) -> list[Item]:
 
 
 def _flock(context, today: date) -> list[Item]:
+    """Presence source `flock`: a suggestion for each flock with a carton's worth (12) or more loose eggs."""
     from core.flock import figures
 
     book = getattr(context, "flock", None)
@@ -154,6 +169,7 @@ def _flock(context, today: date) -> list[Item]:
 
 
 def _freedom(context, today: date) -> list[Item]:
+    """Presence source `freedom`: the fund's progress and days to go, or a suggestion to set the plan up (grown-ups only)."""
     from core.child_accounts import is_child
     from core.freedom import freedom_page
 
@@ -176,6 +192,7 @@ def _freedom(context, today: date) -> list[Item]:
 
 
 def _missions(context, today: date) -> list[Item]:
+    """Presence source `missions`: the next step on the two most recently active missions."""
     missions = getattr(context, "missions", None)
     if missions is None:
         return []
@@ -263,6 +280,7 @@ def context_lines(context, today: Optional[date] = None, limit: int = 3) -> str:
 
 
 def _safe_value(get):
+    """What a function returns, or None (logged) when it fails."""
     try:
         return get()
     except Exception:

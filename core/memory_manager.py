@@ -36,6 +36,7 @@ from core.journal_manager import JournalEntry
 
 @dataclass
 class ActivityStats:
+    """One activity's totals in an expedition: how many trips, the distance and hours logged."""
     activity_type: str
     trip_count: int = 0
     distance_km: float = 0.0
@@ -43,6 +44,7 @@ class ActivityStats:
 
     @property
     def average_speed_kmh(self) -> Optional[float]:
+        """Distance over hours, or None with no hours."""
         if self.total_hours <= 0:
             return None
         return self.distance_km / self.total_hours
@@ -50,6 +52,9 @@ class ActivityStats:
 
 @dataclass
 class ExpeditionRecap:
+    """An expedition's recap, worked out now: how long it was, each activity's totals, the kinds of waypoints visited,
+    the journal entries from its trips, and its photos.
+    """
     expedition: Expedition
     duration_days: Optional[int]
     activity_breakdown: dict[str, ActivityStats] = field(default_factory=dict)
@@ -59,18 +64,28 @@ class ExpeditionRecap:
 
     @property
     def photo_count(self) -> int:
+        """How many photos the expedition's trips have."""
         return len(self.photo_filenames)
 
     @property
     def total_distance_km(self) -> float:
+        """The distance logged across every activity."""
         return sum(stats.distance_km for stats in self.activity_breakdown.values())
 
 
 class MemoryManager:
+    """Expedition memories, read-only: every recap is worked out on demand from the expeditions, trips, waypoints and
+    journal, so it can never go stale.
+    """
     def __init__(self, context: AppContext) -> None:
+        """Nothing to load: recaps are worked out from the other stores."""
         self.context = context
 
     def recap_for_expedition(self, expedition_id: str) -> Optional[ExpeditionRecap]:
+        """One expedition's recap (None when it's gone): per activity the trips, the distance and hours actually
+        logged (not planned), the waypoint kinds visited (planned route and logged arrivals), the trips' journal entries
+        and photos, and how long it lasted.
+        """
         expedition = self.context.expeditions.get_expedition(expedition_id)
         if expedition is None:
             return None
@@ -152,6 +167,7 @@ class MemoryManager:
 
     @staticmethod
     def _parse_date(value: str) -> Optional[date]:
+        """A date from ISO text, or None."""
         if not value:
             return None
         try:
@@ -160,6 +176,9 @@ class MemoryManager:
             return None
 
     def _duration_days(self, expedition: Expedition, trips: list) -> Optional[int]:
+        """How many days an expedition lasted: from its own dates, else the span of its trips' start dates; None when
+        neither is known.
+        """
         start = self._parse_date(expedition.start_date)
         end = self._parse_date(expedition.end_date) or start
         if start is not None and end is not None:
