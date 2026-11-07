@@ -314,7 +314,6 @@
   "core/work_tasks.py": 8,
   "core/workflows.py": 2,
   "core/workout_actions.py": 10,
-  "core/workout_manager.py": 36,
   "core/workshop_machine.py": 9,
   "core/world_map.py": 11,
   "gui/account_dialogs.py": 30,

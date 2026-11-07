@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 226,268 lines; 1043 files describe themselves; 3,280 of 13,517 classes and functions are documented.
+1043 files, 226,317 lines; 1043 files describe themselves; 3,316 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 100,174 lines; 2,549 of 5,630 classes and functions documented
+367 files, 100,223 lines; 2,585 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -372,7 +372,7 @@
 - `core/work_tasks.py`: Development tasks as records (DEC-0068, step 1 of `docs/DEV_ECOSYSTEM_AUDIT.md`): one Markdown file per task in `work/tasks/`, so the team's to-do list is in the repo, in git's history, readable by every session and by a program. `tools/work.py` is the command line over it. *(8 undocumented)*
 - `core/workflows.py`: Workflows MIA makes (ACAF step 3, DEC-0092; `docs/ACAF_REVIEW.md` section 6): something done again and again, written as a specification, not code. A trigger (every day, week or month) and steps from a fixed vocabulary: *(2 undocumented)*
 - `core/workout_actions.py`: Every change the Workout screen makes (2026-10-06, DEC-0017/0018), as action kinds on the contract in core/actions.py: exercises (add, edit, delete) and logging a session the way the concept's form does (an exercise, reps, sets, weight, how long, notes). Workout templates are gone (Zac, 2026-10-16): *(10 undocumented)*
-- `core/workout_manager.py`: MIA's Workout Module — an exercise library, named workout templates, logged sessions (sets/reps/weight, real elapsed time from a live session's own stopwatch), personal records, and per-exercise progress. *(36 undocumented)*
+- `core/workout_manager.py`: MIA's Workout Module — an exercise library, named workout templates, logged sessions (sets/reps/weight, real elapsed time from a live session's own stopwatch), personal records, and per-exercise progress.
 - `core/workshop_machine.py`: WorkshopMachine: the interface every controllable workshop-hardware device (laser engraver, CNC, 3D printer, ...) implements, plus WorkshopMachineRegistry holding whichever machines are actually registered. This reconciles a real architecture question from MIA Home's expanded-scope handoff doc (`doc *(9 undocumented)*
 - `core/world_map.py`: The world map with fog of war (DEC-0028, the game layer's sixth idea; Zac, 2026-10-17): the places you've actually been clear the fog, photos are pinned where they were taken, and new ground earns achievements. *(11 undocumented)*
 
