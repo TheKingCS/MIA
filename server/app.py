@@ -946,6 +946,35 @@ def create_app(context: AppContext) -> FastAPI:
         except SightError as problem:
             raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(problem)) from problem
 
+    @app.get("/api/guitar")
+    def guitar_state(profile_id: str = Depends(require_profile_id)) -> dict:
+        """Guitar (core/guitar.py, DEC-0111): this person's stage, stats, what's next and their open checks, for the
+        page that records them; this week's homework is made or brought up to date first."""
+        from core import guitar
+
+        view = view_for(context, profile_id)
+        coach = getattr(view, "guitar", None)
+        if coach is None:
+            raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Guitar lessons aren't on this MIA.")
+        guitar.ensure_homework(view)
+        return {"stats": guitar.stats(coach), "next": guitar.next_step(coach),
+                "open": [{"id": c.id, "what": c.what, "how": c.how, "chord": c.chord}
+                         for c in guitar.open_checks(coach)]}
+
+    @app.post("/api/guitar/listen")
+    async def guitar_listen(request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
+        """A guitar check heard (core/guitar.py, DEC-0111): a short WAV recording, the check in the x-check header
+        and, for tuning, the string (6 is the low E) in x-string. Worked out on this PC; the recording isn't kept."""
+        from core import guitar
+
+        data = await request.body()
+        string = request.headers.get("x-string")
+        try:
+            return guitar.listen(view_for(context, profile_id), unquote(request.headers.get("x-check", "")), data,
+                                 int(string) if string and string.isdigit() else None)
+        except ValueError as problem:
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(problem)) from problem
+
     @app.post("/api/inbox/upload")
     async def inbox_upload(request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
         if context.inbox is None:

@@ -280,6 +280,17 @@
     operatingJournal: () => demo ? Promise.resolve({ lines: [], sections: {} }) : call("GET", "/api/operating-journal"),
     play: () => demo ? Promise.resolve({ played: [], weeks: [], lines: [], efforts: {} }) : call("GET", "/api/play"),
     news: () => demo ? Promise.resolve({ on: false, day: null, stories: [], personalities: [] }) : call("GET", "/api/news"),
+    // Guitar (core/guitar.py, DEC-0111): the stage, stats and open checks; a check heard from a WAV recording.
+    guitar: () => demo ? Promise.resolve({ stats: { started: "2026-11-02", stage: 1, stage_name: "First sounds",
+        plan: { minutes_a_day: 15, days_a_week: 5 }, week_days: 3, week_minutes: 55, streak: 2, hours: 1.2,
+        checks_passed: 2, checks: 18, bests: { changes_em_am: 16 } },
+      next: "Stage 1, First sounds: next is \"Play A minor so every note rings\" (play it to me and I'll listen).",
+      open: [{ id: "tuned", what: "Tune all six strings; let MIA hear each one", how: "heard_tuning", chord: "" },
+             { id: "am_clean", what: "Play A minor so every note rings", how: "heard_chord", chord: "Am" },
+             { id: "changes_em_am", what: "One-minute changes: E minor to A minor and back", how: "counted", chord: "" }] })
+      : call("GET", "/api/guitar"),
+    guitarListen: (check, file, string) => MIA.upload("/api/guitar/listen", file,
+      Object.assign({ "X-Check": check }, string ? { "X-String": String(string) } : {})),
     // Her voice saying one line; rejected where this MIA has none (the words still show).
     // Music on the glasses: the phone plays it (Music.kt), through the relay. Elsewhere, the Music screen.
     musicPlay: () => demo ? Promise.resolve(DEMO_PLAYING) : Promise.reject(new MiaError(400, "Music plays from the glasses' page.")),

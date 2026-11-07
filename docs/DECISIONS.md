@@ -1704,3 +1704,29 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Why: documentation that says what the code used to do is worse than none: MIA answers from it (`self_docs`) and
   would rebuild from it (DEC-0104).
 - Related: DEC-0104, DEC-0105, DEC-0108
+
+### DEC-0111: MIA teaches guitar the way she teaches herself
+- Status: APPROVED
+- Proposed by: zac, 2026-11-07 ("I want to learn guitar and would like for MIA to be able to help teach me as well as
+  track my progress and assign missions like homework to be able to develop my skills ... being able to verify and
+  test a user's skills just like it would do for itself. One thing i like a lot about MIA is she is essentially
+  using herself the same way the user is") · Built by: claude, 2026-11-07
+- Decision: `core/guitar.py` is a five-stage program (first sounds, the open chords, rhythm and first songs, barre
+  and power chords, lead basics), each with lessons (steps, why, what to watch for, chord shapes verified in code
+  to make their chords' notes) and skill checks that have to be passed: **heard** (MIA listens to a WAV recording,
+  `core/guitar_ear.py`: the chord's notes rang and nothing stray did; each string in tune), **counted** (one-minute
+  chord changes, a tempo held, at or over the mark) or **said** (what can't be measured yet). A stage opens when
+  the last one's checks pass. Each person's own coach store (`guitar`, personal) keeps their goal in their own
+  words, their plan, every practice session and check attempt. Each week MIA assigns homework as a mission
+  (practice days, minutes, the open checks) whose progress comes from the log and which completes itself. Checks,
+  stages and homework earn XP in the Music skill. By voice: start_guitar, guitar_lesson, log_guitar_practice,
+  guitar_check, get_guitar_progress; the Guitar page (`web/guitar.html`) records the heard checks
+  (`POST /api/guitar/listen`; the recording isn't kept); `guitar.practice` watches the week against the plan; a
+  music specialist (DEC-0109) studies the area.
+- Why: it exercises every part of her at once on a real goal: understanding the desire, planning, teaching,
+  tracking, statistics, missions, and verifying a skill by evidence. The same shape as her own growth: skills,
+  missions, and checks that must be shown, not claimed.
+- Honest limits: her ear hears notes, not technique (the right notes can ring from the wrong fingers); its
+  thresholds were set on synthesized strings and may need adjusting from real recordings; the counted checks
+  trust the person's count.
+- Related: DEC-0020 (fitness plan, the same mission machinery), DEC-0107, DEC-0109

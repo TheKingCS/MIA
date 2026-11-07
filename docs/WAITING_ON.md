@@ -73,6 +73,13 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       the phone; name the first places to map (the property's corners, the well, trailheads).
 
 ### Using MIA (whenever)
+- [ ] **Start guitar (DEC-0111)** after the restart: say "I want to learn guitar" (and why, and how much time you
+      have: "20 minutes a day, 4 days a week"). She sets the plan and this week's homework (in Missions). Then
+      "give me my next guitar lesson", "show me the G chord shape", "I practiced guitar for 20 minutes",
+      "I did 22 chord changes in a minute, E minor to A minor", "how's my guitar going?". For the checks she
+      hears (tuning, clean chords), open the Guitar page (`/web/guitar.html`) on the phone or the PC and press
+      Record. If she says a chord you played cleanly isn't clean, tell Claude: her ear was tuned on synthetic
+      strings and real ones may need adjusting.
 - [ ] **Try the new web pages** (after the restart, in the sidebar): Kept, Classroom, Household, Navigation, Maps,
       Observations, Memories, Knowledge (copy Kiwix `.zim` packs into `reference_library\` first: her specialists also cite them
       when they study, DEC-0109), and

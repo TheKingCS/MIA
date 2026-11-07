@@ -128,6 +128,16 @@ SPECIALISTS: tuple[Specialist, ...] = (
                starts_from=("How do you navigate with a map, a compass and MGRS?", "How do you make water safe to drink?"),
                words=("hike", "camp", "compass", "navigation", "survival", "trail", "weather", "fire", "shelter",
                       "first aid", "mgrs")),
+    Specialist("music", "Music and guitar", "Playing and learning music: guitar technique, chords and scales, rhythm "
+               "and timing, ear training, practice that works, and teaching a person step by step (core/guitar.py's "
+               "program is its own).", skills=("Creative",),
+               limits="Pain is a sign to stop and rest, never to push through; a lasting pain points to a doctor or "
+               "a teacher in person.",
+               starts_from=("What makes practice effective for a beginner guitarist?",
+                            "How do you build calluses without hurting your fingers?",
+                            "How do you learn to change chords on the beat?"),
+               words=("guitar", "chord", "strum", "fret", "scale", "music", "song", "metronome", "tuning", "pick",
+                      "riff", "practice")),
     Specialist("research", "Research", "Finding out: how to search, judge a source, check a claim against a second "
                "one, read a study, and keep what was learned with where it came from. It answers the other "
                "specialists' open questions when they need digging.", skills=("Mind",),

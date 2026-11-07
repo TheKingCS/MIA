@@ -657,3 +657,33 @@ def test_the_pcs_check_up_is_its_owners(client, context, monkeypatch):
     monkeypatch.setattr(diagnostics, "screen", lambda ctx: {"checks": [{"id": "pc_ready", "ok": True}], "error": ""})
     owner = {"Authorization": f"Bearer {_login(client, context)}"}
     assert client.get("/api/diagnostics", headers=owner).json()["checks"][0]["id"] == "pc_ready"
+
+
+def test_guitar_hears_a_chord_and_says_what_to_work_on(client, context, tmp_path):
+    """GET /api/guitar gives the stage, stats and open checks; POST /api/guitar/listen hears a recording against a
+    check; a stranger is refused and a bad recording says why."""
+    import io
+    import wave
+
+    import numpy as np
+
+    from core import guitar, guitar_ear
+
+    context.guitar = guitar.GuitarCoach(context, data_dir=tmp_path / "guitar")
+    context.guitar.start("songs")
+    owner = {"Authorization": f"Bearer {_login(client, context)}"}
+    state = client.get("/api/guitar", headers=owner).json()
+    assert state["stats"]["stage"] == 1 and state["open"][0]["id"] == "tuned"
+    shape = guitar.CHORDS["Em"]
+    opens = [guitar_ear.freq_of(n, o) for n, o in guitar_ear.STANDARD_TUNING]
+    sound = guitar_ear.synth([f * 2 ** (int(x) / 12) for f, x in zip(opens, shape.frets) if x != "x"])
+    out = io.BytesIO()
+    with wave.open(out, "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(22050)
+        w.writeframes((np.asarray(sound) * 32767).astype("<i2").tobytes())
+    heard = client.post("/api/guitar/listen", content=out.getvalue(), headers={**owner, "x-check": "em_clean"}).json()
+    assert heard["passed"] and heard["said"].startswith("That's a clean Em")
+    assert client.post("/api/guitar/listen", content=b"noise", headers={**owner, "x-check": "em_clean"}).status_code == 422
+    assert client.post("/api/guitar/listen", content=out.getvalue(), headers={"x-check": "em_clean"}).status_code == 401

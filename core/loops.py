@@ -212,6 +212,20 @@ def _doc_freshness(_context) -> Optional[Reading]:
         "; " + ", ".join(f"{f['file']}:{f['name']}" for f in found[:4]) if found else ""))
 
 
+def _guitar_practice(context) -> Optional[Reading]:
+    """Measure: this week's guitar practice days against the plan's (core/guitar.py, DEC-0111). None before they've
+    started."""
+    coach = getattr(context, "guitar", None)
+    if coach is None or not coach.is_started:
+        return None
+    from core.guitar import stats
+
+    s = stats(coach)
+    want = s["plan"]["days_a_week"]
+    return Reading(round(s["week_days"] / want, 2), 1, f"{s['week_days']} of {want} days, {s['week_minutes']:g} min; "
+                                                      f"stage {s['stage']}, {s['checks_passed']} checks passed")
+
+
 def _slow(context) -> Optional[Reading]:
     """Measure: the share of this week's turns that took over 25 seconds. None when there's nothing to judge from yet."""
     turns = _turns(context)
@@ -1082,6 +1096,8 @@ LOOPS: tuple[Loop, ...] = (
     Loop("night.curriculum", "development", "her curriculum's objectives mastered (computing, DEC-0107)", "device",
          _curriculum, better="higher", acts="watch", files=("core/curriculum.py", "core/night_school.py"),
          covers=("dev:night_school",)),
+    Loop("guitar.practice", "life", "guitar practice days this week, of the plan's (DEC-0111)", "person",
+         _guitar_practice, better="higher", acts="watch", files=("core/guitar.py",), covers=("store:guitar",)),
     Loop("models.router_shadow", "models", "her own router's top five holding the tool she called (in the shadow)",
          "person", _router_shadow, better="higher", acts="watch", min_n=20,
          files=("core/model_forge.py", "core/turn_trace.py"), covers=("flow:tools",)),

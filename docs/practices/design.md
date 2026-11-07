@@ -12,4 +12,4 @@
 
 ## Learned building her
 
-- Nothing in the vault for this area yet.
+- **How MIA teaches, tracks and verifies a person's skill (guitar)** (K-0057): core/guitar.py and core/guitar_ear.py, DEC-0111.

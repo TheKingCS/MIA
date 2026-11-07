@@ -6,7 +6,7 @@
 - [Software development](development.md): 8 principles, 0 lessons learned
 - [Testing and debugging](testing.md): 7 principles, 3 lessons learned
 - [Security and privacy](security.md): 7 principles, 0 lessons learned
-- [Design and user experience](design.md): 5 principles, 0 lessons learned
+- [Design and user experience](design.md): 5 principles, 1 lesson learned
 - [Documentation](documentation.md): 6 principles, 9 lessons learned
 - [Interconnection](interconnection.md): 7 principles, 3 lessons learned
 - [Monitoring](monitoring.md): 5 principles, 3 lessons learned

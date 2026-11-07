@@ -211,6 +211,11 @@ first. Each is a step below.
     `ask_specialist` by voice. Next: specialists suggest curriculum objectives and model-forge work in their
     areas; a specialist reads her reference library (Kiwix) for sources; the council can call one in.
 
+23. ✅ **She teaches guitar** (DEC-0111; `core/guitar.py`, `core/guitar_ear.py`, `web/guitar.html`, 2026-11-07):
+    five stages of lessons and checks (heard from a recording, counted, or said), weekly homework missions that
+    complete from the log, stats, XP in Music, a music specialist. Next: tune the ear on real recordings; a
+    metronome on the page; the glasses (play, and she listens); more instruments on the same shape.
+
 ### Phase E: The rest already queued
 
 18. ⬜ T-0042 (the Skills module reaching into Missions), T-0040 (JSON imports, diagnostics), T-0041 (blueprint
