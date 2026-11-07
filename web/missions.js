@@ -10,6 +10,10 @@
  * Every change is a mission action (core/mission_actions.py). Formatting only.
  * Quests (2026-10-17, DEC-0028): the season, questlines as a path of
  * chapters (core/questlines.py), MIA's starters, and your own.
+ *
+ * 2026-11-07 (DEC-0113, the design canvas): a mission ready to complete
+ * comes first as a focus card with one big Complete; each card shows its
+ * XP, the next objective, its progress count and where it came from.
  */
 (function () {
   "use strict";
@@ -22,7 +26,7 @@
   const btn = (label, cls, onclick) => el("button", { type: "button", class: "btn " + cls, onclick }, label);
   const buttons = (...list) => el("div", { class: "row-buttons" }, list.filter(Boolean));
   const day = (iso) => iso ? new Date(iso + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "";
-  const DIFF = { EASY: "chip-ok", NORMAL: "", HARD: "chip-bad" };
+  const DIFF = { EASY: "chip-ok", NORMAL: "", HARD: "" };  // hard is a challenge, not an error: never red (DEC-0113)
   const section = (title, actions, ...body) =>
     el("section", { class: "glass money-section" }, el("div", { class: "sect" }, el("h2", {}, title), actions), ...body);
 
@@ -94,19 +98,35 @@
   }
 
   // ------------------------------------------------------------ cards
+  // The canvas's focus card (DEC-0113): a mission whose objectives are all done, one big Complete.
+  function readyCard(m) {
+    return el("section", { class: "surface-focus ms-ready", "aria-label": "Ready to complete: " + m.name },
+      el("div", { class: "ms-ready-head" }, el("span", { class: "wk-label", style: "color: var(--accent)" }, "Ready to Complete"),
+        el("span", { class: "chip " + (DIFF[m.difficulty] || "") }, m.difficulty.toLowerCase())),
+      el("h2", {}, m.name),
+      el("p", { class: "dim" }, [m.total + " / " + m.total + " objectives", rewards(m)].filter(Boolean).join(" · ")),
+      el("button", { type: "button", class: "btn-big", onclick: () => act({ kind: "mission.complete", params: { mission_id: m.id } }) },
+        "Complete Mission"));
+  }
+
+  const source = (m) => m.from_mia ? "MIA Assigned" : m.pathway ? "From a Pathway" : m.daily || m.weekly ? "From Your Plan" : "Yours";
+
   function card(m) {
     const meta = [m.area, m.total ? m.done + "/" + m.total + " objectives" : "no objectives yet", m.streak ? "🔥 " + m.streak : null]
       .filter(Boolean).join(" · ");
+    const next = m.status === "active" ? m.objectives.find((o) => !o.done) : null;
     return el("article", { class: "glass mission-card" + (m.ready ? " ready" : "") + (m.status !== "active" ? " finished" : ""),
       tabindex: "0", role: "button", "aria-label": "Open " + m.name,
       onclick: () => sheet(m), onkeydown: (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); sheet(m); } } },
     el("div", { class: "mission-top" },
       el("span", { class: "mission-icon", "aria-hidden": "true" }, m.icon),
       el("div", { class: "mission-title" }, el("h3", {}, m.name), el("p", { class: "dim" }, meta)),
-      el("div", { class: "mission-chips" },
-        m.from_mia ? el("span", { class: "chip chip-soon" }, "✦ MIA") : null,
-        el("span", { class: "chip " + (DIFF[m.difficulty] || "") }, m.difficulty.toLowerCase()))),
-    m.status === "active" ? bar(m.percent) : null,
+      m.reward_xp ? el("span", { class: "ms-xp" }, "+" + m.reward_xp + " XP") : null),
+    next ? el("p", { class: "ms-next" }, "Next: " + next.description) : null,
+    m.status === "active" ? el("div", { class: "ms-progress" }, bar(m.percent), el("span", { class: "ms-count" }, m.done + " / " + m.total)) : null,
+    el("div", { class: "mission-chips ms-tags" },
+      el("span", { class: "kind" + (m.from_mia ? " accent" : "") }, source(m)),
+      el("span", { class: "kind" }, m.difficulty.toLowerCase())),
     el("div", { class: "mission-foot" },
       el("span", { class: "mission-rewards" }, rewards(m) || ""),
       m.ready ? btn("Complete", "btn-green btn-small", (e) => { e.stopPropagation(); act({ kind: "mission.complete", params: { mission_id: m.id } }); })
@@ -229,9 +249,10 @@
         l)));
     if (tab === "bosses") { $("panel").replaceChildren(...bossesView()); MIAShell.levelCard($("level"), page.me); return; }
     if (tab === "quests") { $("panel").replaceChildren(...questsView()); MIAShell.levelCard($("level"), page.me); return; }
-    const list = page[tab];
-    $("panel").replaceChildren(section(TABS.find(([t]) => t === tab)[1] + " Missions", null,
-      list.length ? el("div", { class: "mission-grid" }, list.map(card)) : el("p", { class: "empty" }, EMPTY[tab]),
+    const all = page[tab], ready = tab === "active" ? all.filter((m) => m.ready) : [];
+    const list = all.filter((m) => !ready.includes(m));
+    $("panel").replaceChildren(...ready.map(readyCard), section(TABS.find(([t]) => t === tab)[1] + " Missions", null,
+      list.length ? el("div", { class: "mission-grid" }, list.map(card)) : el("p", { class: "empty" }, ready.length ? "Everything else is done." : EMPTY[tab]),
       tab === "active" ? el("div", { class: "mission-add" },
         btn("Add Mission", "btn-amber", add),
         btn("Ask MIA For One", "btn-ghost", () => MIAShell.talk(true, "Give me a new mission based on what's going on in my life."))) : null));

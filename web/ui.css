@@ -416,3 +416,15 @@ body.cook-live .mia-orb-button, body.cook-live .bottom-bar { display: none; }
 .money-row.overdue { border-color: rgba(var(--rgb-amber), 0.4); }
 .money-row.overdue .row-sub { color: var(--attention); }
 @media (max-width: 560px) { .strip .cell .n { font-size: min(var(--text-lg), 4vw); } }
+
+/* ------------------------------------------------------------ Missions (the canvas's Missions, DEC-0113) */
+.ms-ready { padding: 16px; display: flex; flex-direction: column; gap: 8px; margin-bottom: var(--gap); }
+.ms-ready-head { display: flex; justify-content: space-between; align-items: center; }
+.ms-ready h2 { margin: 0; font-size: var(--text-lg); text-transform: none; }
+.ms-ready p { margin: 0; }
+.ms-xp { font-family: var(--font-mono); font-size: var(--text-sm); color: var(--accent); white-space: nowrap; margin-left: auto; }
+.ms-next { margin: 6px 0 2px; font-size: var(--text-sm); color: var(--text-dim); }
+.ms-progress { display: flex; align-items: center; gap: 10px; }
+.ms-progress .bar { flex: 1; }
+.ms-count { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-dim); }
+.ms-tags { display: flex; gap: 6px; margin: 8px 0 0; }
