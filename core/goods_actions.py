@@ -372,8 +372,8 @@ def _market_close_describe(context, params) -> str:
 
 
 def _market_close(context, params) -> str:
-    """Does `market.close` once approved, and says what happened. Leftovers are tossed, the day closes, and XP for the day is granted (more
-    for more sold, with Hospitality skill XP).
+    """Does `market.close` once approved, and says what happened. Leftovers are tossed, the day closes, and XP for the day is granted
+    (_xp_for: 10, plus 1 per 5 earned, up to 100; with Hospitality skill XP).
     """
     from datetime import datetime
 
