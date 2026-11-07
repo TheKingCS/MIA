@@ -11,7 +11,6 @@
   "core/assistant_accessibility_actions.py": 4,
   "core/assistant_actions.py": 9,
   "core/assistant_comm_actions.py": 5,
-  "core/assistant_domain_actions.py": 37,
   "core/assistant_dungeon_actions.py": 10,
   "core/assistant_email_actions.py": 2,
   "core/assistant_focus_actions.py": 5,

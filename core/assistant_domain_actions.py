@@ -94,6 +94,7 @@ def _as_list(value) -> list[str]:
 
 
 def _num(value, default: Optional[float] = None) -> Optional[float]:
+    """A number from what was said ("$42", "1,200", "18%" all read), or the default when there isn't one."""
     if value in (None, ""):
         return default
     try:
@@ -103,14 +104,17 @@ def _num(value, default: Optional[float] = None) -> Optional[float]:
 
 
 def _money(amount: float) -> str:
+    """An amount in the person's currency, with cents."""
     return f"{money(amount, ',.2f')}"
 
 
 def _qty(quantity: float, unit: str) -> str:
+    """A quantity with its unit ("2 cups")."""
     return f"{quantity:g}{(' ' + unit) if unit else ''}"
 
 
 def _component_label(c) -> str:
+    """How a part is called: its value and name ("10k resistor")."""
     return " ".join(part for part in (c.value, c.name) if part).strip() or c.name
 
 
@@ -120,10 +124,14 @@ def _component_label(c) -> str:
 
 
 def _find_asset(context: AppContext, name: str):
+    """The tracked item a name means (resolve_by_name: one clear match, or the question to ask)."""
     return resolve_by_name(context.maintenance.all_assets(), name, lambda a: a.name, "tracked item")
 
 
 def _action_update_maintenance_asset(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `update_maintenance_asset`: saves details stated about a tracked item (make, model, serial, purchase date, a known category,
+    a new name), or asks what to update when none are given. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes.
+    """
     asset, error = _find_asset(context, str(arguments.get("asset_name", "")))
     if error:
         return error
@@ -150,6 +158,9 @@ def _action_update_maintenance_asset(context: AppContext, arguments: dict) -> st
 
 
 def _action_get_maintenance_asset(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `get_maintenance_asset`: everything about one tracked item: make and model, serial, purchase and warranty, each task with
+    when it's due, the latest meter readings, documents attached and the last three notes. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes.
+    """
     asset, error = _find_asset(context, str(arguments.get("asset_name", "")))
     if error:
         return error
@@ -194,6 +205,7 @@ def _action_get_maintenance_asset(context: AppContext, arguments: dict) -> str:
 
 
 def _action_add_asset_note(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `add_asset_note`: adds a dated note line to a tracked item (plants included: "I watered the tomatoes"). Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
     asset, error = _find_asset(context, str(arguments.get("asset_name", "")))
     if error:
         return error
@@ -212,10 +224,14 @@ def _action_add_asset_note(context: AppContext, arguments: dict) -> str:
 
 
 def _find_debt(context: AppContext, name: str):
+    """The debt a name means, or the question to ask."""
     return resolve_by_name(context.budget.all_debts(), name, lambda d: d.name, "debt")
 
 
 def _action_add_debt(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `add_debt`: starts tracking a debt (balance, APR, minimum, type, a promo rate with its end date); asks for the rate when
+    it's missing, since debts rank by it. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes.
+    """
     from core.budget_manager import DEBT_TYPES
 
     name = str(arguments.get("name", "") or "").strip()
@@ -238,6 +254,9 @@ def _action_add_debt(context: AppContext, arguments: dict) -> str:
 
 
 def _action_update_debt(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `update_debt`: changes a debt's balance, rate, minimum or promo; a bank-synced debt's balance is said to be reset by the
+    next sync. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes.
+    """
     debt, error = _find_debt(context, str(arguments.get("debt_name", "")))
     if error:
         return error
@@ -261,6 +280,7 @@ def _action_update_debt(context: AppContext, arguments: dict) -> str:
 
 
 def _action_list_debts(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `list_debts`: the open debts with their effective APR today, the total owed and the monthly minimums. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
     from core.budget_manager import effective_apr
 
     debts = [d for d in context.budget.all_debts() if d.balance > 0]
@@ -274,6 +294,7 @@ def _action_list_debts(context: AppContext, arguments: dict) -> str:
 
 
 def _action_record_debt_payment(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `record_debt_payment`: records a payment toward a debt and says what's left (or that it's paid off). Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
     debt, error = _find_debt(context, str(arguments.get("debt_name", "")))
     if error:
         return error
@@ -288,6 +309,7 @@ def _action_record_debt_payment(context: AppContext, arguments: dict) -> str:
 
 
 def _action_get_debt_payoff_plan(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `get_debt_payoff_plan`: the top five debts in payoff order (hybrid by default, or the strategy asked for), each with why. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
     strategy = str(arguments.get("strategy", "") or "hybrid").strip().lower()
     ranked = context.budget.debt_payoff_priority(strategy=strategy)
     if not ranked:
@@ -300,6 +322,7 @@ def _action_get_debt_payoff_plan(context: AppContext, arguments: dict) -> str:
 
 
 def _action_set_budget_target(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `set_budget_target`: sets a category's monthly budget (the category matched to the known ones). Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
     from core.budget_manager import EXPENSE_CATEGORIES
 
     wanted = str(arguments.get("category", "") or "").strip()
@@ -319,10 +342,14 @@ def _action_set_budget_target(context: AppContext, arguments: dict) -> str:
 
 
 def _find_recipe(context: AppContext, name: str):
+    """The recipe a name means, or the question to ask."""
     return resolve_by_name(context.kitchen.all_recipes(), name, lambda r: r.name, "recipe")
 
 
 def _action_add_recipe(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `add_recipe`: saves a new recipe (a known category, servings, instructions) and its ingredients read from phrases like
+    "2 cups flour"; a name already used is refused. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes.
+    """
     from core.kitchen_manager import RECIPE_CATEGORIES
 
     name = str(arguments.get("name", "") or "").strip()
@@ -348,6 +375,7 @@ def _action_add_recipe(context: AppContext, arguments: dict) -> str:
 
 
 def _action_list_recipes(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `list_recipes`: the recipes (by name or category), marking locked ones, at most 15 named. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
     query = str(arguments.get("query", "") or "").strip().lower()
     recipes = [r for r in context.kitchen.all_recipes() if not query or query in r.name.lower() or query == r.category.lower()]
     if not recipes:
@@ -358,6 +386,9 @@ def _action_list_recipes(context: AppContext, arguments: dict) -> str:
 
 
 def _action_suggest_recipes(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `suggest_recipes`: what can be made from the pantry now, and recipes missing only one or two things (locked recipes left
+    out). Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes.
+    """
     options = [(r, missing) for r, missing in context.kitchen.recipes_makeable_now() if not r.locked]
     if not options:
         return "I don't have any recipes to suggest yet. Save a few and keep your pantry updated, and I'll match them up."
@@ -374,6 +405,9 @@ def _action_suggest_recipes(context: AppContext, arguments: dict) -> str:
 
 
 def _action_log_meal(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `log_meal`: records that a recipe was made (the kitchen's log_meal: XP, the unlock mission, the history) and how many
+    times it has been. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes.
+    """
     recipe, error = _find_recipe(context, str(arguments.get("recipe_name", "")))
     if error:
         return error
@@ -389,6 +423,7 @@ def _action_log_meal(context: AppContext, arguments: dict) -> str:
 
 
 def _action_add_grocery_item(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `add_grocery_item`: adds items to the grocery list from phrases ("2 lb ground beef"), skipping ones already on it. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
     items = _as_list(arguments.get("items")) or _as_list(arguments.get("name"))
     if not items:
         return "What should I add to the grocery list?"
@@ -411,6 +446,7 @@ def _action_add_grocery_item(context: AppContext, arguments: dict) -> str:
 
 
 def _action_list_grocery_list(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `list_grocery_list`: what's on the grocery list and not checked off. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
     open_items = [g for g in context.kitchen.all_grocery_items() if not g.checked]
     if not open_items:
         return "Your grocery list is empty."
@@ -419,6 +455,7 @@ def _action_list_grocery_list(context: AppContext, arguments: dict) -> str:
 
 
 def _action_check_off_grocery_item(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `check_off_grocery_item`: checks items off the grocery list, each matched to one open line. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
     items = _as_list(arguments.get("items")) or _as_list(arguments.get("name"))
     open_items = [g for g in context.kitchen.all_grocery_items() if not g.checked]
     if not items:
@@ -437,6 +474,7 @@ def _action_check_off_grocery_item(context: AppContext, arguments: dict) -> str:
 
 
 def _action_add_recipe_ingredients_to_grocery_list(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `add_recipe_ingredients_to_grocery_list`: adds what a recipe needs that the pantry and list don't already have. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
     recipe, error = _find_recipe(context, str(arguments.get("recipe_name", "")))
     if error:
         return error
@@ -449,10 +487,12 @@ def _action_add_recipe_ingredients_to_grocery_list(context: AppContext, argument
 
 
 def _find_pantry(context: AppContext, name: str):
+    """The pantry item a name means, or the question to ask."""
     return resolve_by_name(context.kitchen.all_pantry_items(), name, lambda p: p.name, "pantry item")
 
 
 def _action_add_pantry_item(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `add_pantry_item`: adds a pantry item, or sets the quantity of one already there. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
     from core.kitchen_manager import PANTRY_CATEGORIES
 
     raw_name = str(arguments.get("name", "") or "").strip()
@@ -473,6 +513,7 @@ def _action_add_pantry_item(context: AppContext, arguments: dict) -> str:
 
 
 def _action_update_pantry_item(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `update_pantry_item`: sets how much of a pantry item is left; at 0 it's marked out and offered for the grocery list. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
     item, error = _find_pantry(context, str(arguments.get("name", "")))
     if error:
         return error
@@ -487,6 +528,7 @@ def _action_update_pantry_item(context: AppContext, arguments: dict) -> str:
 
 
 def _action_list_pantry(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `list_pantry`: what's in the pantry and what's run out. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
     items = context.kitchen.all_pantry_items()
     if not items:
         return "Your pantry list is empty."
@@ -504,6 +546,7 @@ def _action_list_pantry(context: AppContext, arguments: dict) -> str:
 
 
 def _action_adjust_component_quantity(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `adjust_component_quantity`: adds or uses whole parts (matched by value and name, "10k resistor"). Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
     component, error = resolve_by_name(context.components.all_components(), str(arguments.get("name", "")), _component_label, "part")
     if error:
         return error
@@ -516,6 +559,7 @@ def _action_adjust_component_quantity(context: AppContext, arguments: dict) -> s
 
 
 def _action_adjust_material_quantity(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `adjust_material_quantity`: adds or uses an amount of a material and says what's on hand. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
     material, error = resolve_by_name(context.materials.all_materials(), str(arguments.get("name", "")), lambda m: m.name, "material")
     if error:
         return error
@@ -529,6 +573,7 @@ def _action_adjust_material_quantity(context: AppContext, arguments: dict) -> st
 
 
 def _action_update_material(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `update_material`: changes a material's cost, unit, supplier, location, amount on hand or reorder level. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
     material, error = resolve_by_name(context.materials.all_materials(), str(arguments.get("name", "")), lambda m: m.name, "material")
     if error:
         return error
@@ -552,6 +597,7 @@ def _action_update_material(context: AppContext, arguments: dict) -> str:
 
 
 def _action_adjust_product_stock(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `adjust_product_stock`: changes a finished product's stock (made more, or given away); sales go through record_sale. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
     product, error = resolve_by_name(context.products.all_products(), str(arguments.get("name", "")), lambda p: p.name, "product")
     if error:
         return error
@@ -569,23 +615,31 @@ def _action_adjust_product_stock(context: AppContext, arguments: dict) -> str:
 
 
 def _obj(properties: dict, required: list[str]) -> dict:
+    """A JSON-schema object for a tool's parameters."""
     return {"type": "object", "properties": properties, "required": required}
 
 
 def _s(description: str) -> dict:
+    """A JSON-schema string parameter."""
     return {"type": "string", "description": description}
 
 
 def _n(description: str) -> dict:
+    """A JSON-schema number parameter."""
     return {"type": "number", "description": description}
 
 
 def _list(description: str) -> dict:
+    """A JSON-schema list-of-strings parameter."""
     return {"type": "array", "items": {"type": "string"}, "description": description}
 
 
 def register_domain_actions(registry: AssistantActionRegistry) -> None:
     # -- maintenance (assets incl. greenhouse/garden plants) --------------
+    """Registers every tool above with the Assistant's registry, with its description, parameters and trigger
+    phrases, plus each domain's everyday words and the names of the person's own records (assets, debts, recipes,
+    pantry, parts, materials, products), so plain speech reaches the right tools without a trigger phrase.
+    """
     registry.register(AssistantAction(
         name="update_maintenance_asset", domain="maintenance",
         description="Save details the user states about one of their tracked vehicles, tools, appliances or plants: make, model, serial number, purchase date, category, or a new name.",
