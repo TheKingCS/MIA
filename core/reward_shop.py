@@ -43,6 +43,9 @@ def flag(value) -> bool:
 
 @dataclass
 class ShopReward:
+    """A reward the person set for themselves: its name, cost in credits, icon, note, and whether it can be bought
+    again and again or just once.
+    """
     reward_id: str
     name: str
     cost: int
@@ -59,6 +62,7 @@ class ShopReward:
 
 @dataclass
 class Purchase:
+    """One purchase from the shop: the reward (its name, cost and icon as they were then) and when."""
     purchase_id: str
     reward_id: str
     name: str
@@ -69,12 +73,18 @@ class Purchase:
 
 @dataclass
 class _Data:
+    """The shop file's two lists, rewards and purchases."""
     rewards: list = field(default_factory=list)
     purchases: list = field(default_factory=list)
 
 
 class RewardShop:
+    """The person's own Reward Shop (reward_shop.json in their folder, written through atomic_write_text so a purchase
+    can be undone). Credits are never taken from the profile's lifetime total; what's left to spend is that total
+    less what this shop has spent.
+    """
     def __init__(self, context, data_dir: Optional[Path] = None) -> None:
+        """Points at the person's file (data/ by default) and loads it."""
         self.context = context
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._file = self.data_dir / _FILE
@@ -84,6 +94,9 @@ class RewardShop:
 
     # ------------------------------------------------------------------ storage
     def _load(self) -> None:
+        """Reads the rewards and purchases, keeping only the fields each knows; an unreadable file is logged, reported and
+        starts empty.
+        """
         self._rewards, self._purchases = [], []
         if not self._file.exists():
             return
@@ -98,21 +111,28 @@ class RewardShop:
             notify_data_corruption(self.context, _FILE)
 
     def reload(self) -> None:
+        """Reads the file again (after undo restored it)."""
         self._load()
 
     def _save(self) -> None:
+        """Writes rewards and purchases atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._file, json.dumps({"rewards": [asdict(r) for r in self._rewards],
                                                   "purchases": [asdict(p) for p in self._purchases]}, indent=2))
 
     # ------------------------------------------------------------------ rewards
     def all_rewards(self) -> list[ShopReward]:
+        """Every reward, cheapest first, then by name."""
         return sorted(self._rewards, key=lambda r: (r.cost, r.name.lower()))
 
     def get_reward(self, reward_id: str) -> Optional[ShopReward]:
+        """The reward with this id, or None."""
         return next((r for r in self._rewards if r.reward_id == reward_id), None)
 
     def add_reward(self, name: str, cost, icon: str = "🎁", note: str = "", repeatable=True, buy=None) -> ShopReward:
+        """Adds a reward: a name, a whole cost of at least 1 credit, and once or again and again (`buy` is the form's
+        wording for it).
+        """
         if buy is not None:
             repeatable = buy
         name = str(name or "").strip()
@@ -128,6 +148,7 @@ class RewardShop:
         return reward
 
     def update_reward(self, reward_id: str, **fields) -> ShopReward:
+        """Changes a reward's name, icon, note, cost (at least 1) or how often it can be bought; ValueError when it's gone."""
         reward = self.get_reward(reward_id)
         if reward is None:
             raise ValueError("That reward isn't in your shop anymore.")
@@ -144,20 +165,25 @@ class RewardShop:
         return reward
 
     def delete_reward(self, reward_id: str) -> None:
+        """Deletes a reward (past purchases of it stay)."""
         self._rewards = [r for r in self._rewards if r.reward_id != reward_id]
         self._save()
 
     # ------------------------------------------------------------------ spending
     def spent(self) -> int:
+        """How many credits this shop has spent, in all."""
         return sum(p.cost for p in self._purchases)
 
     def purchases(self) -> list[Purchase]:
+        """Every purchase, newest first."""
         return sorted(self._purchases, key=lambda p: p.bought_at, reverse=True)
 
     def times_bought(self, reward_id: str) -> int:
+        """How many times a reward has been bought."""
         return sum(1 for p in self._purchases if p.reward_id == reward_id)
 
     def available(self, reward: ShopReward) -> bool:
+        """Whether a reward can be bought now (again and again, or once and not yet)."""
         return reward.repeatable or self.times_bought(reward.reward_id) == 0
 
     def buy(self, reward_id: str, balance: int) -> Purchase:

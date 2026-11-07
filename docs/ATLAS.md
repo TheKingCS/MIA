@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 228,257 lines; 1043 files describe themselves; 4,531 of 13,517 classes and functions are documented.
+1043 files, 228,283 lines; 1043 files describe themselves; 4,548 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 102,163 lines; 3,800 of 5,630 classes and functions documented
+367 files, 102,189 lines; 3,817 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -285,7 +285,7 @@
 - `core/region.py`: Where a person lives (2026-10-01, accounts stage 4): MIA is built for anyone, so the safety floor's crisis lines and the money symbol follow the person's country instead of assuming the US. *(4 undocumented)*
 - `core/relationships_manager.py`: Relationship Profiles and Pet Profiles — docs/VISION.md's own "structured extensions of the same idea" as Memory Palace (core/user_memory_manager.py). One manager, two related dataclasses, same shape as core/kitchen_manager.py.
 - `core/response_composer.py`: How much MIA says, and how, on the device she's speaking through (DEC-0067; P2 of docs/PERSONALITY_AND_ECOSYSTEM_AUDIT.md). One identity, three surfaces: *(2 undocumented)*
-- `core/reward_shop.py`: The Reward Shop (DEC-0028, the game layer's first piece; Zac 2026-10-17): spend the credits you earn on real rewards you set yourself ("new bike pedals = 3,000", "guilt-free gaming night = 500"). *(17 undocumented)*
+- `core/reward_shop.py`: The Reward Shop (DEC-0028, the game layer's first piece; Zac 2026-10-17): spend the credits you earn on real rewards you set yourself ("new bike pedals = 3,000", "guilt-free gaming night = 500").
 - `core/rewards_manager.py`: Rewards — real lifetime stats (mower hours, workout hours, missions completed, ...) unlocking real cosmetic/emblem rewards at thresholds, the "Call of Duty headshots/kills/bloodthirstys" motivational-stats system the user asked for (2026-09-14), alongside a character customization vision (a hat unlo *(10 undocumented)*
 - `core/safety_escalation.py`: When a child's message triggers the safety floor (Q-0002, approved by the owner 2026-10-05, H-0011): the child gets the immediate safety reply (core/safety_floor.py) and is told plainly that a parent who looks after their account will be told; each guardian (core/child_accounts.py) gets a notificati *(2 undocumented)*
 - `core/safety_floor.py`: The safety floor from docs/COGNITIVE_EXTENSION_PROPOSAL.md (slice A): a deterministic check on every message, before any mode and before the model sees it. On clear signs that the user may be in danger (thoughts of suicide, self-harm, someone threatening them) MIA answers with fixed, human-written t *(1 undocumented)*

@@ -194,7 +194,6 @@
   "core/reference_library_manager.py": 17,
   "core/region.py": 4,
   "core/response_composer.py": 2,
-  "core/reward_shop.py": 17,
   "core/rewards_manager.py": 10,
   "core/safety_escalation.py": 2,
   "core/safety_floor.py": 1,
