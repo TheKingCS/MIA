@@ -37,6 +37,7 @@ log = get_logger(__name__)
 
 
 def _day(text) -> Optional[date]:
+    """A date from text (its first ten characters), or None."""
     try:
         return date.fromisoformat(str(text or "")[:10])
     except ValueError:
@@ -53,6 +54,7 @@ def nth_latest(days: list[Optional[date]], n: int, today: date, window: int) -> 
 
 
 def latest(days: list[Optional[date]], today: date, window: int) -> Optional[date]:
+    """The most recent of these days within the last `window` days, or None."""
     return nth_latest(days, 1, today, window)
 
 
@@ -71,6 +73,9 @@ def _buff(key, name, icon, stat, why, earned: Optional[date], days: Optional[int
 
 
 def _well_fed(context, today):
+    """Buff `Well Fed`: logging what was eaten today (Fitness or the Kitchen's meal log); lasts today, lifts
+    Vitality.
+    """
     fitness = getattr(context, "fitness", None)
     kitchen = getattr(context, "kitchen", None)
     ate = bool(fitness and fitness.food_on(today.isoformat())) or \
@@ -80,12 +85,14 @@ def _well_fed(context, today):
 
 
 def _momentum(context, today):
+    """Buff `Momentum`: three workouts in seven days; lasts seven days from the third, lifts Strength."""
     workout = getattr(context, "workout", None)
     earned = nth_latest([_day(s.date) for s in workout.all_sessions()], 3, today, 7) if workout else None
     return _buff("momentum", "Momentum", "🔥", "strength", "Three workouts in a week.", earned, 7, today)
 
 
 def _on_a_roll(context, today):
+    """Buff `On A Roll`: three missions finished in seven days; lasts seven days, lifts Wisdom."""
     missions = getattr(context, "missions", None)
     done = [_day(m.updated_at) for m in missions.all_missions() if m.status == "completed"] if missions else []
     return _buff("on_a_roll", "On A Roll", "⭐", "wisdom", "Three missions finished in a week.",
@@ -93,6 +100,7 @@ def _on_a_roll(context, today):
 
 
 def _prepared(context, today):
+    """Buff `Prepared`: every tracked asset at 50% condition or better; holds while that's true, lifts Craft."""
     from core.web_equipment import _task_row, condition
 
     maintenance = getattr(context, "maintenance", None)
@@ -110,6 +118,7 @@ def _prepared(context, today):
 
 
 def _good_company(context, today):
+    """Buff `Good Company`: catching up with someone in the last seven days; lifts Charisma."""
     people = getattr(context, "relationships", None)
     seen = [(_day(getattr(p, "last_contact", "")), p.name) for p in people.all_people()] if people else []
     earned = latest([d for d, _n in seen], today, 7)
@@ -119,12 +128,14 @@ def _good_company(context, today):
 
 
 def _clear_mind(context, today):
+    """Buff `Clear Mind`: a journal entry in the last two days; lifts Wisdom."""
     journal = getattr(context, "journal", None)
     earned = latest([_day(e.created_at) for e in journal.all_entries()], today, 2) if journal else None
     return _buff("clear_mind", "Clear Mind", "📘", "wisdom", "You wrote in your journal.", earned, 2, today)
 
 
 def _trailblazer(context, today):
+    """Buff `Trailblazer`: finishing a trip or an expedition in the last 14 days; lifts Stamina."""
     days = []
     trips = getattr(context, "trips", None)
     if trips is not None:
@@ -136,6 +147,7 @@ def _trailblazer(context, today):
 
 
 def _makers_pride(context, today):
+    """Buff `Maker's Pride`: finishing a workshop job in the last seven days; lifts Craft."""
     jobs = getattr(context, "jobs", None)
     done = [_day(j.updated_at) for j in jobs.all_jobs() if j.status == "Complete"] if jobs else []
     return _buff("makers_pride", "Maker's Pride", "🛠", "craft", "You finished a workshop job.",
@@ -143,6 +155,7 @@ def _makers_pride(context, today):
 
 
 def _debt_slayer(context, today):
+    """Buff `Debt Slayer`: a payment on a debt in the last seven days (never for a child); lifts Charisma."""
     from core.child_accounts import is_child
 
     budget = getattr(context, "budget", None)

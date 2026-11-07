@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 229,369 lines; 1043 files describe themselves; 5,266 of 13,517 classes and functions are documented.
+1043 files, 229,382 lines; 1043 files describe themselves; 5,277 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 103,271 lines; 4,535 of 5,630 classes and functions documented
+367 files, 103,284 lines; 4,546 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -54,7 +54,7 @@
 - `core/boss_battles.py`: Boss battles (DEC-0028, the game layer's third piece): big goals with an HP bar. *(7 undocumented)*
 - `core/budget_manager.py`: MIA Home's household bookkeeping — bills, income, and expenses. Named `budget_manager`, deliberately neither `finance_manager` nor `ledger_manager` — both already exist as different concepts. `core/finance_manager.py` is a read-only watched-folder importer for externally-generated Kraken trading-age *(68 undocumented)*
 - `core/budget_nudges.py`: Pure decision logic for a proactive daily budget nudge — 2026-09-08, at the user's explicit request following up on the "Field Manual" brainstorm: "are we meeting our income needs or exceeding our planned expenses, are we paying things on time, and covering what's due next and when next expected pay
-- `core/buffs.py`: Buffs (DEC-0028, the game layer's fifth piece): good effects you've earned by what you really did. **Never debuffs** (DEC-0014): nothing here is ever taken away as a penalty; a buff simply runs out, and earning it again brings it back. *(11 undocumented)*
+- `core/buffs.py`: Buffs (DEC-0028, the game layer's fifth piece): good effects you've earned by what you really did. **Never debuffs** (DEC-0014): nothing here is ever taken away as a penalty; a buff simply runs out, and earning it again brings it back.
 - `core/build_media.py`: Photos and videos of a workshop build (DEC-0030 phase B): the before and after of a furniture flip, the build in progress, the finished piece for the portfolio. They live with the household's workshop data, in `<jobs folder>/workshop_media/<job_id>/`; a name starting "before-" or "after-" is shown a *(4 undocumented)*
 - `core/business_actions.py`: Quotes, customers, orders and the portfolio (DEC-0030 phase C, core/business_book.py) on the action contract: proposed in plain words, approved, run, undoable.
 - `core/business_book.py`: Quotes, customers, orders and the portfolio (DEC-0030 phase C): the business loop on top of crafting recipes (core/craft_recipes.py), builds (Jobs) and the workshop ledger, never beside them.

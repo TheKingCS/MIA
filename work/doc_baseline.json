@@ -33,7 +33,6 @@
   "core/boot_sound_worker.py": 2,
   "core/boss_battles.py": 7,
   "core/budget_manager.py": 68,
-  "core/buffs.py": 11,
   "core/build_media.py": 4,
   "core/business_report.py": 3,
   "core/business_tagging.py": 6,
