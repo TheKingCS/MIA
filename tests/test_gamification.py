@@ -15,41 +15,54 @@ from core.gamification import SkillWeight, grant_xp
 
 
 class _FakeProfile:
+    """A profile with only an id."""
     def __init__(self, profile_id="p1"):
+        """Keeps the id."""
         self.profile_id = profile_id
 
 
 class _FakeProfiles:
+    """Profiles with one active, remembering every XP and credit grant."""
     def __init__(self, active=None):
+        """The active profile, and no grants yet."""
         self._active = active
         self.xp_calls: list[tuple[str, int]] = []
         self.credit_calls: list[tuple[str, int]] = []
 
     def get_active_profile(self):
+        """The active profile."""
         return self._active
 
     def add_xp(self, profile_id, amount):
+        """Remembers the XP granted and returns it."""
         self.xp_calls.append((profile_id, amount))
         return amount
 
     def add_credits(self, profile_id, amount):
+        """Remembers the credits granted and returns them."""
         self.credit_calls.append((profile_id, amount))
         return amount
 
 
 class _FakeNotifications:
+    """Notifications that remember each one raised."""
     def __init__(self):
+        """None raised yet."""
         self.calls: list[dict] = []
 
     def notify(self, title, message, level="info", source="system"):
+        """Remembers a notification."""
         self.calls.append({"title": title, "message": message, "level": level, "source": source})
 
 
 class _FakeSkills:
+    """Skills that remember every skill XP grant."""
     def __init__(self):
+        """No grants yet."""
         self.calls: list[tuple[str, str, int]] = []
 
     def add_skill_xp(self, profile_id, skill_id, amount):
+        """Remembers the grant and returns the amount."""
         self.calls.append((profile_id, skill_id, amount))
         return amount
 
@@ -62,12 +75,14 @@ class _FakeContext:
     with None for its actually-required config/events fields."""
 
     def __init__(self, profiles=None, notifications=None, skills=None):
+        """Keeps the profiles, notifications and skills given."""
         self.profiles = profiles
         self.notifications = notifications
         self.skills = skills
 
 
 def _make_context(profiles=None, notifications=None, skills=None) -> _FakeContext:
+    """A fake context with what's given."""
     return _FakeContext(profiles=profiles, notifications=notifications, skills=skills)
 
 

@@ -56,10 +56,12 @@ _MODULES = [budget_module, data_logger_module, maintenance_module, project_modul
 
 @pytest.fixture(scope="module")
 def qapp():
+    """The Qt application, made once."""
     return QApplication.instance() or QApplication([])
 
 
 def make_ctx(tmp_path, monkeypatch):
+    """A context for the inbox tests: every store's files in a temporary folder, the inbox folder too, and the records the tests file into (a riding mower, a greenhouse build...)."""
     for module in _MODULES:
         original = module._DATA_DIR
         for attr, value in list(vars(module).items()):
@@ -84,19 +86,23 @@ def make_ctx(tmp_path, monkeypatch):
 
 @pytest.fixture
 def ctx(tmp_path, monkeypatch, qapp):
+    """The inbox tests' context (with Qt running)."""
     return make_ctx(tmp_path, monkeypatch)
 
 
 def say(ctx, action, **arguments):
+    """Runs an Assistant tool with these arguments and returns what MIA says."""
     return ctx.assistant_actions.execute(ctx, action, arguments)
 
 
 def drop(ctx, name, data, source="folder"):
+    """Puts a file in the inbox and reads it straight away. Returns the items found."""
     ctx.inbox.receive_file(name, data if isinstance(data, bytes) else data.encode("utf-8"), source=source)
     return ctx.inbox.scan(now=float("inf"))
 
 
 def manual_pdf(ctx):
+    """The riding mower's manual as PDF bytes."""
     return write_pdf(ctx.tmp / "Z315E_manual.pdf", MANUAL_PAGES, None).read_bytes()
 
 
@@ -104,6 +110,7 @@ def manual_pdf(ctx):
 
 
 def test_document_types():
+    """A receipt, a manual, a warranty and an ordinary note are told apart; with no text, a file named as a receipt is one."""
     assert document_type(RECEIPT_TEXT) == RECEIPT
     assert document_type("\n".join(MANUAL_PAGES)) == MANUAL
     assert document_type("Limited warranty. Coverage period is 3 years with proof of purchase.") == WARRANTY
@@ -119,6 +126,7 @@ def test_receipt_fields_read_the_total_not_the_subtotal():
 
 
 def test_receipt_fields_fallbacks():
+    """Without a total line, a receipt's amount is its largest (and says so); the date and the vendor (from the sender's name) are read too."""
     fields = receipt_fields("Order placed Sep 3, 2026\nWidget 12.50\nGadget 40.00", sender='"Bob\'s Parts" <bob@example.com>')
     assert fields.amount == 40.00 and "largest" in fields.amount_basis
     assert fields.date == "2026-09-03"
@@ -144,6 +152,7 @@ def test_maintenance_schedule_from_a_manual():
 
 
 def test_expense_category():
+    """A receipt's category comes from the store (Lowe's: building materials, AutoZone: transportation), from what it's for (an oil filter for equipment: maintenance), else shopping."""
     assert expense_category("Lowe's", None, None, "") == "Building Materials"
     assert expense_category("AutoZone", None, None, "") == "Transportation"
     assert expense_category("Walmart", SimpleNamespace(), None, "oil filter") == "Maintenance"
@@ -270,6 +279,7 @@ def test_dismiss_and_find_pending(ctx):
 
 
 def test_tools(ctx):
+    """By voice: the inbox lists what's waiting (a receipt, a manual with four upkeep steps); the receipt files as an expense on the greenhouse build; the manual files to the mower without its tasks when asked; with nothing left it says so."""
     assert "empty" in say(ctx, "list_inbox")
     drop(ctx, "receipt.txt", RECEIPT_TEXT)
     drop(ctx, "Z315E_manual.pdf", manual_pdf(ctx))
@@ -295,6 +305,7 @@ def test_tool_asks_which_machine_and_rejects_unknown_names(ctx):
 
 
 def test_dismiss_tool(ctx):
+    """Dismissing an item by voice takes it out without filing it."""
     drop(ctx, "receipt.txt", RECEIPT_TEXT)
     assert "without filing" in say(ctx, "dismiss_inbox_item", item="Lowe's")
     assert ctx.inbox.pending() == []
@@ -316,28 +327,36 @@ def test_mail_vault_round_trip(ctx):
 
 
 class FakeIMAP:
+    """Stands in for an IMAP mailbox: two unread messages, a login that needs the right password, and what was marked read."""
     def __init__(self, host, port):
+        """The server and port, two messages, nothing marked yet."""
         self.host, self.port, self.stored, self.logged_out = host, port, [], False
         self.messages = {b"1": b"Subject: one\n\nfirst", b"2": b"Subject: two\n\nsecond"}
 
     def login(self, user, password):
+        """Logs in only with the right password."""
         if password != "pw":
             raise imaplib.IMAP4.error("bad login")
 
     def select(self, folder):
+        """Opens the folder."""
         return "OK", [b"2"]
 
     def search(self, charset, criterion):
+        """Both messages are unread (only UNSEEN is asked for)."""
         assert criterion == "UNSEEN"
         return "OK", [b"1 2"]
 
     def fetch(self, number, parts):
+        """A message as IMAP returns it."""
         return "OK", [(b"1 (RFC822 {10}", self.messages[number]), b")"]
 
     def store(self, number, flags, value):
+        """Remembers a message marked read."""
         self.stored.append(number)
 
     def logout(self):
+        """Notes the logout."""
         self.logged_out = True
 
 
@@ -387,6 +406,7 @@ def test_mail_checker_saves_messages_into_the_inbox(ctx):
 
 
 def test_upload_endpoint(ctx):
+    """The phone's upload: refused without signing in; signed in, the file arrives under its name, is read as a receipt from the phone with its amount, and an empty upload is refused."""
     from fastapi.testclient import TestClient
 
     import server.app as server_app
@@ -414,6 +434,7 @@ def test_upload_endpoint(ctx):
 
 
 def test_inbox_screen(ctx):
+    """The desktop Inbox shows a manual with its asset and its four upkeep steps, picks that asset to file to, and refreshes when another file arrives."""
     from modules.inbox.module import InboxModule, describe_item, format_inbox_row
 
     [item] = drop(ctx, "Z315E_manual.pdf", manual_pdf(ctx))

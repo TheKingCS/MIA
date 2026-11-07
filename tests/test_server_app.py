@@ -47,6 +47,7 @@ from core.push_subscription_manager import PushSubscriptionManager
 
 @pytest.fixture
 def context(tmp_path, monkeypatch):
+    """MIA's core context with every store's files in a temporary folder (config, push keys, history...) and one profile, Alice, with a password."""
     data_dir = tmp_path / "data"
     monkeypatch.setattr(config_manager_module, "_CONFIG_FILE", tmp_path / "config.json")
     # 2026-09-28: Core also loads what "remind me why" reads.
@@ -94,11 +95,13 @@ def context(tmp_path, monkeypatch):
 
 @pytest.fixture
 def client(context) -> TestClient:
+    """A test client for the server on that context."""
     app = server_app_module.create_app(context)
     return TestClient(app)
 
 
 def _profile_id(context) -> str:
+    """The first profile's id."""
     return context.profiles.list_profiles()[0].profile_id
 
 
@@ -158,6 +161,7 @@ def test_push_subscribe_requires_auth(client):
 
 
 def _login(client, context, password="hunter2") -> str:
+    """Signs in through /api/login and returns the session token."""
     res = client.post("/api/login", json={"profile_id": _profile_id(context), "password": password})
     return res.json()["token"]
 
@@ -228,6 +232,7 @@ from server.app import LLM_UNAVAILABLE_REPLY, MAX_VOICE_UPLOAD_BYTES, NOT_HEARD_
 
 
 def _wav_bytes(channels=1, sampwidth=2, rate=16000, frames=1600) -> bytes:
+    """A silent WAV of the shape given, as bytes."""
     buf = _io.BytesIO()
     with _wave.open(buf, "wb") as wf:
         wf.setnchannels(channels)
@@ -238,46 +243,58 @@ def _wav_bytes(channels=1, sampwidth=2, rate=16000, frames=1600) -> bytes:
 
 
 class _FakeVoice:
+    """Stands in for the voice: speech to text gives a fixed transcript, text to speech writes a tiny WAV and remembers what was said."""
     def __init__(self, transcript="what's on my schedule"):
+        """The transcript to give, and nothing said yet."""
         self.transcript = transcript
         self.spoken = []
 
     def is_stt_available(self):
+        """Speech to text is available."""
         return True
 
     def is_tts_available(self):
+        """Text to speech is available."""
         return True
 
     def transcribe(self, wav_path):
+        """The transcript (the recording must exist)."""
         assert Path(wav_path).exists()
         return self.transcript
 
     def synthesize(self, text, output_path):
+        """Remembers the text and writes a short WAV for it."""
         self.spoken.append(text)
         Path(output_path).write_bytes(_wav_bytes(rate=22050, frames=100))
         return Path(output_path)
 
 
 class _FakeLLM:
+    """Stands in for the model: a fixed reply, and every call remembered."""
     def __init__(self, reply=None):
+        """The reply to give (a walkthrough at 10 by default), and no calls yet."""
         self.reply = reply if reply is not None else ChatReply(content="You have a walkthrough at 10.")
         self.chat_calls = []
         self.generate_calls = []
 
     def is_available(self):
+        """The model is available."""
         return True
 
     def chat_with_tools(self, messages, tools):
+        """Remembers the messages and gives the reply."""
         self.chat_calls.append(messages)
         return self.reply
 
     def generate(self, prompt):
+        """Remembers the prompt and gives nothing."""
         self.generate_calls.append(prompt)
         return ""
 
 
 @pytest.fixture
 def voice_client(context):
+    """A client signed in as Alice, on a context with the fake voice and model."""
     context.voice = _FakeVoice()
     context.llm = _FakeLLM()
     app = server_app_module.create_app(context)
@@ -346,6 +363,7 @@ def test_voice_reset_starts_a_fresh_conversation(voice_client, context):
 
 
 def _memory_prompts(context, user_text):
+    """The memory-extraction prompts the model was asked for this text."""
     return [c for c in context.llm.generate_calls if c == build_memory_extraction_prompt(user_text)]
 
 
@@ -406,6 +424,7 @@ def fresh(context):
 
 
 def _phone(context):
+    """A client for the server as the phone app runs it (setup allowed, sign-in remembered)."""
     app = server_app_module.create_app(context)
     app.state.allow_setup = True
     app.state.remember_sign_in = True
@@ -464,11 +483,13 @@ def test_setup_refuses_plainly_and_saves_nothing(fresh, change, words):
 # ----------------------------------------------------------------------
 
 def _signed_in(client, context) -> dict:
+    """The Authorization header for a signed-in session."""
     token = client.post("/api/login", json={"profile_id": _profile_id(context), "password": "hunter2"}).json()["token"]
     return {"Authorization": f"Bearer {token}"}
 
 
 def _do(client, auth, kind, params):
+    """Proposes an action and approves it; returns the proposal's response when it was refused, else the approval's."""
     proposal = client.post("/api/actions/propose", json={"kind": kind, "params": params}, headers=auth)
     if proposal.status_code != 200:
         return proposal

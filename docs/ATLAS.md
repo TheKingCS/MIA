@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1070 files, 239,268 lines; 1070 files describe themselves; 12,679 of 13,816 classes and functions are documented.
+1070 files, 239,344 lines; 1070 files describe themselves; 12,755 of 13,816 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -658,7 +658,7 @@
 
 ## tests/: the test suite: what each part must do
 
-357 files, 64,486 lines; 4,679 of 5,727 classes and functions documented
+357 files, 64,562 lines; 4,755 of 5,727 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -680,7 +680,7 @@
 - `tests/test_answer_ratings.py`: Rating her answers (DEC-0067, core/answer_ratings.py): a 👍 is kept as a rating, a 👎 is kept and still reaches the Fix-It Log, and each person's ratings are their own. *(2 undocumented)*
 - `tests/test_application_daily_occasions.py`: Unit tests for core.application.MIAApplication._check_daily_occasions() and its per-check exception isolation (2026-09-14 stabilization pass). *(1 undocumented)*
 - `tests/test_assistant_action_gating.py`: Regression tests tying modules.assistant.module.looks_like_action_request() to the REAL trigger_phrases registered in core.application's _register_assistant_actions() (milestone 5.7-5.9) — not a hand-copied keyword list. Two real gaps were found only by live-model testing and are pinned here so they
-- `tests/test_assistant_action_handlers.py`: Unit tests for core.application.MIAApplication's assistant action handlers (_action_*) — milestone 5.7's read/list actions, plus regression coverage for the pre-existing write actions that had no direct unit test before (only exercised via test_llm_manager.py's chat_with_tools mocks and manual/live- *(19 undocumented)*
+- `tests/test_assistant_action_handlers.py`: Unit tests for core.application.MIAApplication's assistant action handlers (_action_*) — milestone 5.7's read/list actions, plus regression coverage for the pre-existing write actions that had no direct unit test before (only exercised via test_llm_manager.py's chat_with_tools mocks and manual/live-
 - `tests/test_assistant_actions.py`: Unit tests for core.assistant_actions.AssistantActionRegistry. No LLM or Ollama involved — these test the registry's own execute() to_ollama_tools() logic directly with fake handlers. *(2 undocumented)*
 - `tests/test_assistant_chat.py`: Unit tests for core.assistant_chat's pure logic — format_chat_line, looks_like_action_request, build_chat_request, and split_safe_tool_calls — no Qt event loop needed. Moved here from tests/test_assistant_module.py (2026-07-14 aesthetic pass part 4) alongside the functions themselves moving from mod
 - `tests/test_assistant_domain_actions.py`: Runs the Assistant's conversational actions (core/assistant_domain_actions.py plus the reworked Maintenance handlers in core/application.py) through the real registry against real managers on temp data — i.e. "the user said X, the model called tool Y with their words; did the right record change?" *(6 undocumented)*
@@ -779,7 +779,7 @@
 - `tests/test_focus_presets.py`: Each person's Apps screen (core/focus_presets.py) and MIA's setup questions (gui/onboarding_dialog.py), 2026-10-01. *(5 undocumented)*
 - `tests/test_food_table.py`: MIA's built-in food table (core/food_table.py, DEC-0020): matching an ingredient to a food, turning amounts into grams, and a recipe's nutrition per serving. Uses a small table in the real file's format (real USDA names and values for these foods). *(2 undocumented)*
 - `tests/test_freedom.py`: Freedom (DEC-0038): the fund that covers the gap between a month of living and what the homestead earns, plus the builds; the estimated day; progress by period; what a shift buys. Every number from the person's own records, or their own number, and it says which. *(1 undocumented)*
-- `tests/test_gamification.py`: Unit tests for core.gamification.grant_xp() — the shared "credit XP credits + raise a real notification" helper every routine-completion hook (Workout/Kitchen/Maintenance/Budget) calls through. No Qt needed; fakes stand in for context.profiles/context.notifications/context.skills, same shape as test *(15 undocumented)*
+- `tests/test_gamification.py`: Unit tests for core.gamification.grant_xp() — the shared "credit XP credits + raise a real notification" helper every routine-completion hook (Workout/Kitchen/Maintenance/Budget) calls through. No Qt needed; fakes stand in for context.profiles/context.notifications/context.skills, same shape as test
 - `tests/test_garage_module.py`: Unit tests for modules.garage.module's pure functions, same style as tests/test_dashboard_module.py (no Qt event loop, no fixtures). *(5 undocumented)*
 - `tests/test_geo_grid.py`: Grid references and TAK (build plan step 14, DEC-0099): MGRS worked out in code (checked against pyproj and the mgrs package: 4,000 random points agreed to the metre, 2026-11-06; the reference outputs are pinned here), and MIA's waypoints as a TAK data package of Cursor on Target events and KML. *(2 undocumented)*
 - `tests/test_glasses.py`: The glasses' app cards and quick action menus (Zac 2026-10-16, H-0041 Phase 2; core/glasses.py): the person's own apps as cards, each with a menu; a panel's lines carry only glasses-safe actions, and money stays readouts; a change goes Propose -> Approve like everywhere else. *(3 undocumented)*
@@ -803,7 +803,7 @@
 - `tests/test_household_module.py`: Unit tests for modules.household.module's pure functions, same style as tests/test_greenhouse_module.py (no Qt event loop, no fixtures). *(2 undocumented)*
 - `tests/test_household_routines.py`: The Household's web screen (core/household_routines.py): the household's routines, each with its current occurrence, how far along, and its streak.
 - `tests/test_imports.py`: Imports from other apps (core/imports.py), 2026-10-01: calendars (.ics), contacts (.vcf) and bank statements (.csv). *(1 undocumented)*
-- `tests/test_inbox.py`: Document inbox: classification (core/inbox_classify.py), intake and filing (core/inbox_manager.py), email checking (core/inbox_mail.py), the voice tools, the phone upload endpoint and the Inbox screen. *(21 undocumented)*
+- `tests/test_inbox.py`: Document inbox: classification (core/inbox_classify.py), intake and filing (core/inbox_manager.py), email checking (core/inbox_mail.py), the voice tools, the phone upload endpoint and the Inbox screen.
 - `tests/test_insight_manager.py`: Unit tests for core.insight_manager. Isolates _DATA_DIR/_INSIGHTS_FILE _RECOMMENDATIONS_FILE into a tmp_path scratch area, same monkeypatch pattern as every other manager test file. *(2 undocumented)*
 - `tests/test_inspection.py`: Universal Inspection (DEC-0056, core/inspection.py): every finding with its source, time and confidence; agreement confirms, disagreement is kept; what couldn't be determined says why; only passive methods run unasked. *(2 undocumented)*
 - `tests/test_installer.py`: MIA's installer (2026-10-01): install.sh (Linux, Raspberry Pi), install.ps1 / install.bat (Windows), and the shared finishing step deploy/finish_install.py. *(1 undocumented)*
@@ -941,7 +941,7 @@
 - `tests/test_security_cams.py`: Security (DEC-0033): cameras on the home network only, logins kept apart and never shown, frames from a picture address or an RTSP stream, saved pictures, grown-ups only. *(4 undocumented)*
 - `tests/test_self_audit.py`: MIA's weekly self-audit (core/self_audit.py) and her best-practices series (core/practices.py), DEC-0108: what the code audit finds, what the interconnection audit finds and leaves out by design, the weekly run's report and tasks, and the series written from the principles and the vault.
 - `tests/test_self_report.py`: MIA's weekly self-report and the standing mission (build plan step 6): what got better and what's slipping, from the loops' own history; Sundays, to the PC's owner only, through the gate; the "Keep MIA healthy" mission works the loops' tasks. *(1 undocumented)*
-- `tests/test_server_app.py`: Unit tests for server.app — exercised via FastAPI's TestClient, a real in-process HTTP client that needs no running server, no real network, and no HTTPS (see the Mobile Phase 1 plan's verification section for why this is a legitimate, complete way to verify this code from a sandbox with no real bro *(21 undocumented)*
+- `tests/test_server_app.py`: Unit tests for server.app — exercised via FastAPI's TestClient, a real in-process HTTP client that needs no running server, no real network, and no HTTPS (see the Mobile Phase 1 plan's verification section for why this is a legitimate, complete way to verify this code from a sandbox with no real bro
 - `tests/test_show_off.py`: Show-off mode (DEC-0031): a tour of MIA on the real profile that never shows money, the journal, memories, health or other people. *(1 undocumented)*
 - `tests/test_sight.py`: Sight (build plan step 15, core/sight.py): a photo and a question, answered on the PC: reading tries Tesseract first (its words are exactly what's printed), the vision model's judgment is said as one, a person is never identified, and only the kind and timing of each look are kept. *(1 undocumented)*
 - `tests/test_skill_leveling.py`: Skill levels (core/skill_leveling.py): the XP each skill level needs, progress within it, what a level means you can do (its capability status), and the next honest step to take. *(1 undocumented)*

@@ -72,6 +72,7 @@ from core.waypoint_manager import WaypointManager
 
 @pytest.fixture
 def context(tmp_path, monkeypatch):
+    """A context with every store the Assistant's tools use, each on files in a temporary folder (the config too, so a tool that saves it never writes the real one)."""
     data_dir = tmp_path / "data"
     # _action_set_theme() calls context.config.save() for real — without
     # this, that write would land in the actual config/config.json, not
@@ -176,6 +177,7 @@ def test_add_alarm_creates_alarm(context):
 
 
 def test_list_alarms_empty(context):
+    """With no alarms, listing them says so."""
     assert "no alarms" in MIAApplication._action_list_alarms(context, {}).lower()
 
 
@@ -224,6 +226,7 @@ def test_add_note_creates_entry(context):
 
 
 def test_list_notes_empty(context):
+    """With no notes, listing them says so."""
     assert "no notes" in MIAApplication._action_list_notes(context, {}).lower()
 
 
@@ -286,6 +289,7 @@ def test_add_inventory_item_creates_item(context):
 
 
 def test_list_inventory_empty(context):
+    """With nothing in the inventory, listing it says it's empty."""
     assert "empty" in MIAApplication._action_list_inventory(context, {}).lower()
 
 
@@ -349,6 +353,7 @@ def test_adjust_inventory_quantity_unknown_name_does_not_crash(context):
 # ----------------------------------------------------------------------
 
 def test_list_waypoints_empty(context):
+    """With no waypoints, listing them says so."""
     assert "no waypoints" in MIAApplication._action_list_waypoints(context, {}).lower()
 
 
@@ -469,6 +474,7 @@ def test_add_expedition_creates_expedition(context):
 
 
 def test_list_expeditions_empty(context):
+    """With no expeditions, listing them says so."""
     assert "no expeditions" in MIAApplication._action_list_expeditions(context, {}).lower()
 
 
@@ -514,6 +520,7 @@ def test_add_trip_unrecognized_activity_type_falls_back_to_unspecified(context):
 
 
 def test_list_trips_empty(context):
+    """With no trips, listing them says so."""
     assert "no trips" in MIAApplication._action_list_trips(context, {}).lower()
 
 
@@ -745,6 +752,7 @@ def test_add_component_creates_component(context):
 
 
 def test_list_components_empty(context):
+    """With no components, listing them says so."""
     assert "no components" in MIAApplication._action_list_components(context, {}).lower()
 
 
@@ -810,6 +818,7 @@ def test_list_connected_devices_reports_connected(context):
 
 
 def test_list_scripts_empty(context):
+    """With no saved scripts, listing them says so."""
     assert "no saved scripts" in MIAApplication._action_list_scripts(context, {}).lower()
 
 
@@ -833,6 +842,7 @@ def test_list_scripts_query_filters(context):
 # ----------------------------------------------------------------------
 
 def test_list_profiles_empty(context):
+    """With no profiles, listing them says so."""
     assert "no profiles" in MIAApplication._action_list_profiles(context, {}).lower()
 
 
@@ -901,12 +911,14 @@ def test_calculate_subnet_requires_a_cidr(context):
 
 
 def test_calculate_subnet_valid(context):
+    """A /24 subnet's broadcast address and its 254 usable hosts are given."""
     result = MIAApplication._action_calculate_subnet(context, {"cidr": "192.168.1.0/24"})
     assert "192.168.1.255" in result
     assert "254" in result
 
 
 def test_calculate_subnet_invalid(context):
+    """Something that isn't a CIDR is called invalid."""
     result = MIAApplication._action_calculate_subnet(context, {"cidr": "not-a-cidr"})
     assert "invalid" in result.lower()
 
@@ -992,6 +1004,7 @@ def test_add_project_unrecognized_status_falls_back_to_planning(context):
 
 
 def test_list_projects_empty(context):
+    """With no projects, listing them says so."""
     assert "no projects" in MIAApplication._action_list_projects(context, {}).lower()
 
 
@@ -1025,6 +1038,7 @@ def test_add_task_creates_task_under_project(context):
 
 
 def test_list_tasks_empty(context):
+    """With no tasks, listing them says so."""
     assert "no tasks" in MIAApplication._action_list_tasks(context, {}).lower()
 
 
@@ -1195,6 +1209,7 @@ def test_add_mission_unknown_trip_does_not_create_anything(context):
 
 
 def test_list_missions_empty(context):
+    """With no missions, listing them says so."""
     assert "no missions" in MIAApplication._action_list_missions(context, {}).lower()
 
 
@@ -1341,6 +1356,7 @@ def test_add_material_creates_material(context):
 
 
 def test_list_materials_empty(context):
+    """With no materials, listing them says so."""
     assert "no materials" in MIAApplication._action_list_materials(context, {}).lower()
 
 
@@ -1363,6 +1379,7 @@ def test_add_product_creates_product(context):
 
 
 def test_list_products_empty(context):
+    """With no products, listing them says so."""
     assert "no products" in MIAApplication._action_list_products(context, {}).lower()
 
 
@@ -1379,6 +1396,7 @@ def test_add_job_creates_job(context):
 
 
 def test_list_jobs_empty(context):
+    """With no jobs, listing them says so."""
     assert "no jobs" in MIAApplication._action_list_jobs(context, {}).lower()
 
 
@@ -1448,6 +1466,7 @@ def test_get_ledger_summary_reports_revenue_expenses_and_profit(context):
 # ----------------------------------------------------------------------
 
 def _seed_trail_map(context, tmp_path, park_name, state, filename="map.pdf"):
+    """Adds a trail map from a small fake PDF."""
     pdf_path = tmp_path / filename
     pdf_path.write_bytes(b"%PDF-1.4 fake trail map contents")
     return context.trail_maps.add_from_local_file(park_name, state, pdf_path)
