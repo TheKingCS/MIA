@@ -166,7 +166,7 @@ def test_the_startup_sounds_to_choose_from(tmp_path):
 
 def test_the_startup_sound_setting():
     """Settings offers each sound and Off; the choice is read from the device's config, an unknown or missing one
-    falls back to the original."""
+    falls back to the default (the soft swell, Zac's pick)."""
     from core.startup_sounds import DEFAULT_STARTUP, OFF, STARTUP_SOUNDS, options, startup_choice
     from core.web_account import SETTINGS_BY_KEY, clean_setting
 
@@ -181,7 +181,7 @@ def test_the_startup_sound_setting():
             """The value, else the default."""
             return dict.get(self, key, default)
 
-    assert startup_choice(Config()) == DEFAULT_STARTUP
+    assert startup_choice(Config()) == DEFAULT_STARTUP == "soft_swell"
     assert startup_choice(Config({"sound.startup": "off"})) == OFF
     assert startup_choice(Config({"sound.startup": "warm_chord"})) == "warm_chord"
     assert startup_choice(Config({"sound.startup": "gone"})) == DEFAULT_STARTUP

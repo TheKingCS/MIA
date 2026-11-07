@@ -21,7 +21,7 @@ STARTUP_SOUNDS = {  # id -> the name in Settings
     "ready_tone": "Ready tone",
     "power_up": "The original (sweep and ping)",
 }
-DEFAULT_STARTUP = "power_up"
+DEFAULT_STARTUP = "soft_swell"  # Zac picked it, 2026-11-07
 OFF = "off"
 
 
@@ -31,7 +31,7 @@ def options() -> tuple:
 
 
 def startup_choice(config) -> str:
-    """The sound chosen to play at startup ("off" for none): sound.startup in the device's config, else the
-    original."""
+    """The sound chosen to play at startup ("off" for none): sound.startup in the device's config, else the default
+    (the soft swell, Zac's pick)."""
     chosen = config.get("sound.startup", DEFAULT_STARTUP) if config is not None else DEFAULT_STARTUP
     return chosen if chosen == OFF or chosen in STARTUP_SOUNDS else DEFAULT_STARTUP
