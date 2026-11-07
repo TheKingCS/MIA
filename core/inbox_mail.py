@@ -15,7 +15,9 @@ Optional email intake for the document inbox (core/inbox_manager.py,
   (core/receipt_effects.py).
 MIA checks over IMAP, the standard mail-reading protocol (Python's own
 imaplib, no new dependency). From there it's the same as any dropped
-file.
+file. It's set up, unlocked and checked from the desktop's classic Inbox
+or, since the desktop opens on the web (DEC-0124), the web Inbox
+(`status`, `configure`, `unlock`, `check`).
 
 **The mailbox password is encrypted** with the owner's passphrase
 (core.secrets_manager, the same scheme as the Plaid vault) in
@@ -318,3 +320,70 @@ class MailChecker:
         except (imaplib.IMAP4.error, OSError) as exc:
             log.warning("Email check failed: %s", exc)
             self.last_result = f"Couldn't check email: {exc}"
+
+
+# ------------------------------------------------------------------ setting it up from the web (2026-11-07)
+#
+# The desktop opens on the web now (DEC-0124), so the mailbox is set up, unlocked and checked from the web Inbox too.
+# Its own endpoints call these (not the action contract, which keeps its proposals' parameters: a password and a
+# passphrase go only into the encrypted vault, never into a proposal, a log or the config).
+
+
+class MailSetupError(ValueError):
+    """Why the mailbox couldn't be set up or unlocked, said to the person."""
+
+
+def status(context) -> dict:
+    """The mailbox as the Inbox screen shows it: set up or not, its address and server, whether it's the person's
+    everyday mailbox, unlocked or not, and how the last check went (never the password)."""
+    mail = getattr(context, "inbox_mail", None)
+    if mail is None:
+        return {"available": False}
+    settings = mail.settings
+    return {"available": True, "configured": settings.configured, "unlocked": mail.vault.unlocked,
+            "address": settings.get("username", "") or "", "host": settings.get("host", "") or "",
+            "everyday": settings.everyday, "last": mail.last_result}
+
+
+def configure(context, host: str, address: str, password: str, passphrase: str, everyday: bool) -> dict:
+    """Sets the mailbox up: the app password encrypted with the passphrase (8 or more characters) into the vault and
+    held unlocked, the server and address in the config, then a first check. MailSetupError says what's missing."""
+    mail = getattr(context, "inbox_mail", None)
+    if mail is None:
+        raise MailSetupError("Email isn't available on this MIA.")
+    host, address = (host or "").strip(), (address or "").strip()
+    if not host or "." not in host:
+        raise MailSetupError("The mail server, like imap.gmail.com.")
+    if "@" not in address:
+        raise MailSetupError("The email address.")
+    if not password:
+        raise MailSetupError("The password (for Gmail, an app password).")
+    if len(passphrase or "") < 8:
+        raise MailSetupError("A passphrase of at least 8 characters, to encrypt the password.")
+    try:
+        mail.vault.store(password, passphrase)
+    except (SecretsError, OSError) as problem:
+        raise MailSetupError(str(problem)) from problem
+    mail.settings.save(host, address, everyday=bool(everyday))
+    mail.check_now()
+    return status(context)
+
+
+def unlock(context, passphrase: str) -> dict:
+    """Unlocks the stored mailbox password for this run of MIA, then checks; MailSetupError on a wrong passphrase."""
+    mail = getattr(context, "inbox_mail", None)
+    if mail is None or not mail.settings.configured:
+        raise MailSetupError("Set up your email first.")
+    if not mail.vault.try_unlock(passphrase or ""):
+        raise MailSetupError("That passphrase didn't work.")
+    mail.check_now()
+    return status(context)
+
+
+def check(context) -> dict:
+    """Checks the mailbox now (in the background), when it's set up and unlocked."""
+    mail = getattr(context, "inbox_mail", None)
+    if mail is None or not mail.settings.configured or not mail.vault.unlocked:
+        raise MailSetupError("Set up or unlock your email first.")
+    mail.check_now()
+    return status(context)

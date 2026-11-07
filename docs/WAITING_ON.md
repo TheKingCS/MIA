@@ -18,8 +18,8 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       It's called "MIA" now, with no title bar; lock the phone on any page with Talk open and come back: same page,
       same scroll, Talk still open with what you'd typed.
 - [ ] **Your email for receipts (DEC-0120):** in Gmail, make an app password (Google Account, Security, 2-Step
-      Verification, App passwords; don't paste it into a chat). Then MIA, Inbox, Email Settings: imap.gmail.com, your
-      address, the app password, your journal passphrase, and **Yes** to "everyday mailbox". She looks back 30 days
+      Verification, App passwords; don't paste it into a chat). Then MIA's Inbox page, Email section: imap.gmail.com,
+      your address, the app password, your journal passphrase, "everyday mailbox" ticked, Save. She looks back 30 days
       for receipts and orders and leaves your mail untouched. Emailed receipts file themselves (DEC-0121): the
       Inbox's "Filed By MIA From Your Email" list shows each with Undo, or say "undo the Kroger receipt". Tell Claude
       which stores' receipts read badly.

@@ -399,6 +399,10 @@
       return data;
     })(),
     inbox: () => read("/api/inbox", "inbox"),
+    // The inbox's mailbox (core/inbox_mail.py): set up, unlock, check now. Each answers with its status.
+    inboxEmailSetup: (fields) => demo ? demoOnly() : call("POST", "/api/inbox/email", fields),
+    inboxEmailUnlock: (passphrase) => demo ? demoOnly() : call("POST", "/api/inbox/email/unlock", { passphrase }),
+    inboxEmailCheck: () => demo ? demoOnly() : call("POST", "/api/inbox/email/check"),
     shop: () => read("/api/shop", "shop"),
     journal: () => read("/api/journal", "journal"),
     people: () => read("/api/people", "people"),

@@ -25,6 +25,12 @@ context.profiles.verify_password() and returns an opaque bearer token
 app's own state — no JWT library, no persistence (a server restart
 logs everyone out, acceptable for a personal device's first pass).
 
+**Secrets from the web** (2026-11-07): the inbox's email setup and unlock
+(`/api/inbox/email*`) take a password and passphrase in their own request
+models (`MailSetupRequest`, `MailUnlockRequest`), handed straight to
+core/inbox_mail.py's encrypted vault: never an action (whose parameters
+are kept), never logged.
+
 **Phone voice (2026-09-27)**: `/api/voice/*` lets the phone page hold a
 spoken conversation with the full desktop MIA. The phone records and
 encodes a 16 kHz mono WAV itself (no ffmpeg needed here), this server
@@ -134,6 +140,21 @@ class PageErrorRequest(BaseModel):
 class PageOpenedRequest(BaseModel):
     """A web page saying it was opened, for which apps are used."""
     page: str = Field(default="", max_length=120)
+
+
+class MailSetupRequest(BaseModel):
+    """Setting up the inbox's mailbox from the web: the server, address, app password, the passphrase that encrypts it,
+    and whether it's the person's everyday mailbox. Never logged or kept beyond the encrypted vault."""
+    host: str = Field(default="imap.gmail.com", max_length=200)
+    address: str = Field(default="", max_length=200)
+    password: str = Field(default="", max_length=400)
+    passphrase: str = Field(default="", max_length=400)
+    everyday: bool = True
+
+
+class MailUnlockRequest(BaseModel):
+    """Unlocking the stored mailbox password for this run of MIA."""
+    passphrase: str = Field(default="", max_length=400)
 
 
 class VoiceTextRequest(BaseModel):
@@ -1638,6 +1659,35 @@ def create_app(context: AppContext) -> FastAPI:
         from core.web_inbox import inbox_page
 
         return _screen(profile_id, "inbox", inbox_page)
+
+    # The inbox's mailbox from the web (core/inbox_mail.py, DEC-0124): set up, unlock, check. Their own endpoints,
+    # not actions: a password and passphrase go only into the encrypted vault, never into a proposal or a log.
+    def _mail(profile_id: str, do):
+        from core.inbox_mail import MailSetupError
+
+        try:
+            return _screen(profile_id, "inbox", do)
+        except MailSetupError as problem:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
+
+    @app.post("/api/inbox/email")
+    def web_inbox_email_setup(body: MailSetupRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.inbox_mail import configure
+
+        return _mail(profile_id, lambda view: configure(view, body.host, body.address, body.password,
+                                                         body.passphrase, body.everyday))
+
+    @app.post("/api/inbox/email/unlock")
+    def web_inbox_email_unlock(body: MailUnlockRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.inbox_mail import unlock
+
+        return _mail(profile_id, lambda view: unlock(view, body.passphrase))
+
+    @app.post("/api/inbox/email/check")
+    def web_inbox_email_check(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.inbox_mail import check
+
+        return _mail(profile_id, check)
 
     @app.get("/api/inbox/item/{item_id}/file")
     def web_inbox_file(item_id: str, name: str, profile_id: str = Depends(require_profile_id)):

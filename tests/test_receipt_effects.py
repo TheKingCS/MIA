@@ -9,8 +9,9 @@ on the truck at the receipt's mileage, a Lowe's receipt adds to the
 materials at the price paid; an emailed receipt files itself (unless it
 looks logged already, or that's turned off), and Undo, on screen or by
 voice, takes back exactly what it did; HTML e-receipts are read line by
-line; and the mailbox is read without marking anything read, taking only
-receipts.
+line; the mailbox is read without marking anything read, taking only
+receipts; and it's set up from the web with its password only in the
+encrypted vault.
 """
 
 from __future__ import annotations
@@ -280,3 +281,33 @@ def test_an_html_e_receipt_by_email_stocks_the_pantry(ctx):
     [item] = drop(ctx, "message.eml", message.as_bytes(), source="email")
     assert item.auto and item.amount == 11.26
     assert ctx.kitchen.get_pantry_item(ctx.milk.item_id).quantity == 3
+
+
+def test_setting_up_email_from_the_web(ctx, tmp_path, monkeypatch):
+    """The web Inbox sets the mailbox up (the password only into the encrypted vault, never in the status or the
+    config), says what's missing, unlocks it after a restart with the passphrase (a wrong one is refused), and checks
+    on asking."""
+    import core.inbox_mail as inbox_mail
+    from core.inbox_mail import MailChecker, MailSettings, MailSetupError, MailVault, check, configure, status, unlock
+    from core.web_inbox import inbox_page
+
+    monkeypatch.setattr(inbox_mail, "_DATA_DIR", tmp_path / "mail")
+    monkeypatch.setattr(inbox_mail, "_VAULT_FILE", tmp_path / "mail" / "inbox_mail.enc")
+    checks = []
+    ctx.inbox_mail = MailChecker(ctx.inbox, MailSettings(ctx), MailVault())
+    monkeypatch.setattr(ctx.inbox_mail, "check_now", lambda *a, **k: checks.append(1) or True)
+    assert inbox_page(ctx)["email"]["configured"] is False
+    with pytest.raises(MailSetupError, match="8 characters"):
+        configure(ctx, "imap.gmail.com", "me@example.com", "app-pass", "short", True)
+    with pytest.raises(MailSetupError, match="address"):
+        configure(ctx, "imap.gmail.com", "me", "app-pass", "a long passphrase", True)
+    said = configure(ctx, "imap.gmail.com", "me@example.com", "app-pass", "a long passphrase", True)
+    assert said["configured"] and said["unlocked"] and said["everyday"] and checks == [1]
+    assert "app-pass" not in str(said) and "app-pass" not in str(ctx.config.get("inbox.email"))
+    assert b"app-pass" not in (tmp_path / "mail" / "inbox_mail.enc").read_bytes()
+    ctx.inbox_mail.vault = MailVault()  # MIA restarted: locked
+    assert not status(ctx)["unlocked"]
+    with pytest.raises(MailSetupError, match="didn't work"):
+        unlock(ctx, "wrong passphrase")
+    assert unlock(ctx, "a long passphrase")["unlocked"] and ctx.inbox_mail.vault.password == "app-pass"
+    assert check(ctx)["configured"] and len(checks) == 3
