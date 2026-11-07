@@ -384,3 +384,35 @@ body.cook-live .mia-orb-button, body.cook-live .bottom-bar { display: none; }
   .cook-foot .btn-big { min-height: 64px; font-size: var(--text-lg); }
   .cook-back { flex: 0 1 120px; }
 }
+
+/* ------------------------------------------------------------ every app's frame, as the canvas draws it (DEC-0113) */
+/* Status strip: the label above, a white value, a thin index bar; "needs you" is amber, never a red fill (DEC-0014). */
+.strip .cell { display: flex; flex-direction: column-reverse; align-items: flex-start; justify-content: flex-end; gap: 2px; }
+.strip .cell .t {
+  font-family: var(--font-mono); font-size: var(--label-size); letter-spacing: var(--label-track);
+  text-transform: uppercase; color: var(--text-faint);
+}
+.strip .cell .n { color: var(--text); font-size: var(--text-lg); }
+.strip .cell.bad { border-color: var(--line); border-left-color: var(--attention); background: linear-gradient(180deg, rgba(var(--rgb-panel-2), 0.94), rgba(var(--rgb-panel), 0.96)); }
+.strip .cell.bad .n { color: var(--text); }
+@media (max-width: 560px) {
+  .strip .cell .n { font-size: min(var(--text-lg), 4.6vw); }
+  .strip .cell .t { font-size: calc(10px * var(--scale)); letter-spacing: 0.08em; }
+}
+/* Needs attention: an amber frame (needs you), calm inside. */
+.attention-panel {
+  border-color: rgba(var(--rgb-amber), 0.35); border-left: 1px solid rgba(var(--rgb-amber), 0.35);
+  background: linear-gradient(180deg, rgba(var(--rgb-panel-2), 0.96), rgba(var(--rgb-panel), 0.9));
+}
+.attention-panel h3, .attention-panel h2 { color: var(--attention); }
+/* Overdue upkeep, deadlines and builds: amber, the colour of "needs you". Red stays for real errors. */
+.row .when.overdue, .ob-when.overdue { color: var(--attention); border-color: rgba(var(--rgb-amber), 0.5); }
+.cal-row.overdue, .ob-card.overdue { border-left-color: var(--attention); }
+.craft-card.overdue { border-color: rgba(var(--rgb-amber), 0.45); }
+/* Tabs: a rail along the bottom; the current one lit from below, no fill. */
+.ptabs { background: transparent; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; padding-left: 0; padding-right: 0; }
+.ptabs button { background: transparent; color: var(--text-dim); border: 0; border-radius: 0; min-height: var(--touch); }
+.ptabs button[aria-selected="true"] { background: transparent; color: var(--text); box-shadow: inset 0 -2px 0 var(--accent); }
+.money-row.overdue { border-color: rgba(var(--rgb-amber), 0.4); }
+.money-row.overdue .row-sub { color: var(--attention); }
+@media (max-width: 560px) { .strip .cell .n { font-size: min(var(--text-lg), 4vw); } }

@@ -47,7 +47,13 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       `core/cooking_actions.py` (`cooking.start/next/back/go_to/timer/timer_cancel/made/stop`; made = `meal.cook`),
       `cooking` on the Kitchen and recipe reads. Left: voice quick commands for cooking ("next step", "set a timer"),
       the glasses' cooking panel, servings scaling on the recipe page.
-- [ ] Every other app, group by group as on the canvas's Phone page.
+- [~] Every other app: the shared frame now matches the canvas on every page (`web/ui.css`, "every app's frame"):
+      status strips with the label above, a white value and an index bar; "needs you" amber instead of red fills
+      (attention panels, overdue chips and rows; red stays for real errors); tabs as a rail lit from below. Checked
+      in demo mode on 60 pages (no new script errors; presence.html's old error is the page to retire). Still to do
+      per app, against its canvas artboard: the content layouts (Money's net-worth line and bill rows, Missions'
+      ready-to-complete focus card, Skills' capability card and next honest step, Freedom's How It Adds Up with
+      Fact/Estimate/Missing tags, Chickens' one-tap egg buttons, Security's camera grid, the rest as drawn).
 - [ ] Glasses: the shared orb on `web/glasses.html`.
 - Note: DEC-0119 (MIA for Zac alone) came after the canvas: drop household members from Party's leaderboard and
   Profile's household card when those screens are built.
