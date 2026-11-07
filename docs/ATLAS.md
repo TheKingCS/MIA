@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1088 files, 246,222 lines; 1088 files describe themselves; 13,521 of 14,191 classes and functions are documented.
+1088 files, 246,268 lines; 1088 files describe themselves; 13,523 of 14,193 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-391 files, 114,230 lines; 6,054 of 6,143 classes and functions documented
+391 files, 114,260 lines; 6,055 of 6,144 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -368,7 +368,7 @@
 - `core/waypoint_actions.py`: Waypoints (core/waypoint_manager.py) through the action contract (core/actions.py), for the web's Maps and Navigation pages: `waypoint.add` (a name and where: from a tap on the map, or typed) and `waypoint.delete`. The store writes through atomic_write_text, so "undo that" takes either back. Maps ar
 - `core/waypoint_manager.py`: Backs the Navigation module's waypoint list (modules/navigation/module.py) — docs/ROADMAP.md milestone 10.1. Same persisted-JSON pattern as core/inventory_manager.py: data/waypoints.json, a dataclass with to_dict/from_dict, a manager class wrapping load/save.
 - `core/web_account.py`: The web's Profile and Settings screens (2026-10-07, Zac: the gear's Profile and Settings). Profile is who you are: name, email, country, what MIA helps with, household, password and recovery code. Settings is how MIA behaves for you: the person's own settings from the PC app's Settings (core/person_
-- `core/web_business.py`: The Orders & Quotes screen (DEC-0030 phase C): orders (what's owed, the build's progress), quotes (with what the price is made of), customers, and the portfolio of finished builds. Put together here from core/business_book.py, crafting recipes, builds and the workshop ledger; the web only formats.
+- `core/web_business.py`: The Orders & Quotes screen (DEC-0030 phase C): orders (what's owed, the build's progress, and where each is on the stage rail with the step that moves it on: `order_stage`, DEC-0113), quotes (with what the price is made of), customers, and the portfolio of finished builds. Put together here from cor
 - `core/web_compliance.py`: The Compliance screen (DEC-0040): every obligation, sorted the way deadlines are read: **Overdue**, **Next 30 days**, **Later**, **To check** (unverified, or undated), and **Done**. Each says when it's really due (moved off a weekend or holiday, an extension to file kept apart from the money's date)
 - `core/web_craft.py`: The Workshop's Recipes and Builds tabs (DEC-0030 phase B): put together here from core/craft_recipes.py, Materials, Jobs, Products and the Ledger, so the web only formats. Part of `workshop_page()`. The Goods tab (DEC-0036: homestead goods on hand, batch by batch, the market day and labels) is `good
 - `core/web_dungeon.py`: The Dungeon screen (DEC-0046, core/work_dungeon.py), put together here so the web only formats, and the same numbers MIA says in Talk and in Game Master mode: today's run, this week's loot (earned, projected, the boss bonus) and its runs (cleared out of all, for the canvas's week meter), the month a
@@ -670,7 +670,7 @@
 
 ## tests/: the test suite: what each part must do
 
-362 files, 66,000 lines; 5,232 of 5,813 classes and functions documented
+362 files, 66,015 lines; 5,233 of 5,814 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -710,7 +710,7 @@
 - `tests/test_budget_module.py`: Unit tests for modules.budget.module's pure row formatters — no Qt event loop needed, same shape as tests/test_maintenance_module.py. *(3 undocumented)*
 - `tests/test_budget_nudges.py`: Unit tests for core.budget_nudges — no Qt, no manager instances, same shape as tests/test_daily_occasions.py. *(2 undocumented)*
 - `tests/test_buffs.py`: Buffs (DEC-0028): good effects earned from what you really did, each lasting a while and lifting one attribute by +1. Never debuffs. *(2 undocumented)*
-- `tests/test_business.py`: Quotes, customers, orders and the portfolio (DEC-0030 phase C): a quote from a recipe, accepted into an order, a deposit, the build, the rest paid, delivered, and the build's real profit counting what the customer paid. Every step is an undoable action. *(3 undocumented)*
+- `tests/test_business.py`: Quotes, customers, orders and the portfolio (DEC-0030 phase C): a quote from a recipe, accepted into an order, a deposit, the build, the rest paid, delivered, and the build's real profit counting what the customer paid. Every step is an undoable action. Each order's place on the stage rail and the s *(3 undocumented)*
 - `tests/test_business_report.py`: Unit tests for core.business_report — no Qt, no manager instances, same shape as tests/test_budget_nudges.py. Asserts on the literal returned HTML string's real content rather than just "it doesn't crash." *(5 undocumented)*
 - `tests/test_business_tagging.py`: Sorting bank charges to businesses (core/business_tagging.py): learning from the owner's choices, auto-tagging after a sync, the review list, the voice tools and the review dialog.
 - `tests/test_business_use.py`: Finance #3, business use of personal equipment (core/business_use.py): the meter math, the worksheet's numbers and notes, persistence, the HTML worksheet, and the Assistant tools. Numbers are checked exactly; it's arithmetic on the owner's own records. *(4 undocumented)*
@@ -1037,7 +1037,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-72 files, 12,821 lines
+72 files, 12,822 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
