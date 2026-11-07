@@ -29,6 +29,7 @@ from PySide6.QtWidgets import (
 )
 
 from core.product_manager import Product
+from core.region import symbol
 
 
 class AddEditProductDialog(QDialog):
@@ -55,7 +56,7 @@ class AddEditProductDialog(QDialog):
         self.quantity_spin.setDecimals(2)
         layout.addWidget(self.quantity_spin)
 
-        layout.addWidget(QLabel("Base Price ($):"))
+        layout.addWidget(QLabel(f"Base Price ({symbol()}):"))
         self.base_price_spin = QDoubleSpinBox()
         self.base_price_spin.setRange(0, 1_000_000)
         self.base_price_spin.setDecimals(2)

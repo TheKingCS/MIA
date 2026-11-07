@@ -45,6 +45,7 @@ from PySide6.QtWidgets import (
 
 from core.ownership import SHARED_LABEL, owner_choices
 from core.maintenance_manager import ASSET_CATEGORIES, MaintenanceAsset, MaintenanceManager
+from core.region import symbol
 
 _ISO_DATE_FORMAT = "yyyy-MM-dd"
 
@@ -114,7 +115,7 @@ class AddEditAssetDialog(QDialog):
         layout.addLayout(purchase_row)
 
         # Finance #2: counts toward its cost of ownership (Budget → Builds & Tools).
-        layout.addWidget(QLabel("Purchase Price ($, optional):"))
+        layout.addWidget(QLabel(f"Purchase Price ({symbol()}, optional):"))
         self.purchase_price_spin = QDoubleSpinBox()
         self.purchase_price_spin.setRange(0, 10_000_000)
         self.purchase_price_spin.setDecimals(2)

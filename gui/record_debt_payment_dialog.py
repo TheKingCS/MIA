@@ -15,6 +15,7 @@ starts pre-filled and editable rather than disabled behind a checkbox.
 from __future__ import annotations
 
 from PySide6.QtCore import QDate
+from core.region import symbol
 from PySide6.QtWidgets import (
     QDateEdit,
     QDialog,
@@ -42,7 +43,7 @@ class RecordDebtPaymentDialog(QDialog):
         self.paid_date_edit.setDate(QDate.currentDate())
         layout.addWidget(self.paid_date_edit)
 
-        layout.addWidget(QLabel("Amount ($):"))
+        layout.addWidget(QLabel(f"Amount ({symbol()}):"))
         self.amount_spin = QDoubleSpinBox()
         self.amount_spin.setRange(0.0, 1_000_000.0)
         self.amount_spin.setDecimals(2)

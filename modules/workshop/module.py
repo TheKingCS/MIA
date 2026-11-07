@@ -69,7 +69,7 @@ from gui.add_expense_dialog import AddExpenseDialog
 from gui.add_revenue_dialog import AddRevenueDialog
 from gui.pick_item_quantity_dialog import PickItemQuantityDialog
 from modules.module_base import ModuleBase
-from core.region import money
+from core.region import money, symbol
 
 
 def format_component_row(component: Component) -> str:
@@ -959,7 +959,7 @@ class WorkshopModule(ModuleBase):
         items = [(p.product_id, f"{p.name} ({money(p.base_price, '.2f')} base)") for p in products]
         dialog = PickItemQuantityDialog(
             title="Record Sale", item_label="Product:", items=items, quantity_label="Quantity Sold:",
-            include_amount=True, amount_label="Sale Amount ($):",
+            include_amount=True, amount_label=f"Sale Amount ({symbol()}):",
         )
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return

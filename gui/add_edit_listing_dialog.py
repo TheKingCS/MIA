@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
 )
 
 from core.product_manager import LISTING_STATUSES
+from core.region import symbol
 
 
 class AddListingDialog(QDialog):
@@ -38,7 +39,7 @@ class AddListingDialog(QDialog):
         self.platform_edit.setPlaceholderText("e.g. Etsy, Web Store, Local")
         layout.addWidget(self.platform_edit)
 
-        layout.addWidget(QLabel("Price ($):"))
+        layout.addWidget(QLabel(f"Price ({symbol()}):"))
         self.price_spin = QDoubleSpinBox()
         self.price_spin.setRange(0, 1_000_000)
         self.price_spin.setDecimals(2)

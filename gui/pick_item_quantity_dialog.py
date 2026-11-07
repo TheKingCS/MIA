@@ -22,6 +22,7 @@ pick from.
 from __future__ import annotations
 
 from typing import Optional
+from core.region import symbol
 
 from PySide6.QtWidgets import (
     QComboBox,
@@ -42,7 +43,7 @@ class PickItemQuantityDialog(QDialog):
         items: Optional[list[tuple[str, str]]] = None,
         quantity_label: str = "Quantity:",
         include_amount: bool = False,
-        amount_label: str = "Amount ($):",
+        amount_label: str = "",
     ) -> None:
         super().__init__(parent)
         self.setWindowTitle(title)
@@ -64,7 +65,7 @@ class PickItemQuantityDialog(QDialog):
         layout.addWidget(self.quantity_spin)
 
         if include_amount:
-            layout.addWidget(QLabel(amount_label))
+            layout.addWidget(QLabel(amount_label or f"Amount ({symbol()}):"))  # the signed-in person's currency, now
             self.amount_spin = QDoubleSpinBox()
             self.amount_spin.setRange(0, 1_000_000)
             self.amount_spin.setDecimals(2)

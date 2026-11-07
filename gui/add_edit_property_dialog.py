@@ -27,6 +27,7 @@ from PySide6.QtWidgets import (
 )
 
 from core.real_estate_manager import PROPERTY_TYPES, Property
+from core.region import symbol
 
 _ISO_DATE_FORMAT = "yyyy-MM-dd"
 
@@ -65,31 +66,31 @@ class AddEditPropertyDialog(QDialog):
         self.placed_in_service_date_edit.setDisplayFormat(_ISO_DATE_FORMAT)
         layout.addWidget(self.placed_in_service_date_edit)
 
-        layout.addWidget(QLabel("Purchase Price ($):"))
+        layout.addWidget(QLabel(f"Purchase Price ({symbol()}):"))
         self.purchase_price_spin = QDoubleSpinBox()
         self.purchase_price_spin.setRange(0.0, 100_000_000.0)
         self.purchase_price_spin.setDecimals(2)
         layout.addWidget(self.purchase_price_spin)
 
-        layout.addWidget(QLabel("Land Value ($):"))
+        layout.addWidget(QLabel(f"Land Value ({symbol()}):"))
         self.land_value_spin = QDoubleSpinBox()
         self.land_value_spin.setRange(0.0, 100_000_000.0)
         self.land_value_spin.setDecimals(2)
         layout.addWidget(self.land_value_spin)
 
-        layout.addWidget(QLabel("Current Value ($):"))
+        layout.addWidget(QLabel(f"Current Value ({symbol()}):"))
         self.current_value_spin = QDoubleSpinBox()
         self.current_value_spin.setRange(0.0, 100_000_000.0)
         self.current_value_spin.setDecimals(2)
         layout.addWidget(self.current_value_spin)
 
-        layout.addWidget(QLabel("Mortgage Balance ($):"))
+        layout.addWidget(QLabel(f"Mortgage Balance ({symbol()}):"))
         self.mortgage_balance_spin = QDoubleSpinBox()
         self.mortgage_balance_spin.setRange(0.0, 100_000_000.0)
         self.mortgage_balance_spin.setDecimals(2)
         layout.addWidget(self.mortgage_balance_spin)
 
-        layout.addWidget(QLabel("Original Loan Amount ($):"))
+        layout.addWidget(QLabel(f"Original Loan Amount ({symbol()}):"))
         self.original_loan_amount_spin = QDoubleSpinBox()
         self.original_loan_amount_spin.setRange(0.0, 100_000_000.0)
         self.original_loan_amount_spin.setDecimals(2)

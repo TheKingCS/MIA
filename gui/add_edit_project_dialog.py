@@ -33,6 +33,7 @@ from PySide6.QtWidgets import (
 )
 
 from core.project_manager import PROJECT_STATUSES, Project
+from core.region import symbol
 
 _ISO_DATE_FORMAT = "yyyy-MM-dd"
 
@@ -72,7 +73,7 @@ class AddEditProjectDialog(QDialog):
         layout.addWidget(self.due_date_edit)
 
         # Finance #2: planned spend for a build (0 = no budget).
-        layout.addWidget(QLabel("Budget ($, optional):"))
+        layout.addWidget(QLabel(f"Budget ({symbol()}, optional):"))
         self.budget_spin = QDoubleSpinBox()
         self.budget_spin.setRange(0, 10_000_000)
         self.budget_spin.setDecimals(2)

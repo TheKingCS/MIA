@@ -31,6 +31,7 @@ from PySide6.QtWidgets import (
 )
 
 from core.budget_manager import DEBT_TYPES, Debt
+from core.region import symbol
 
 _ISO_DATE_FORMAT = "yyyy-MM-dd"
 
@@ -50,7 +51,7 @@ class AddEditDebtDialog(QDialog):
         self.name_edit.setPlaceholderText("e.g. Chase Freedom, Sallie Mae Student Loan")
         layout.addWidget(self.name_edit)
 
-        layout.addWidget(QLabel("Balance ($):"))
+        layout.addWidget(QLabel(f"Balance ({symbol()}):"))
         self.balance_spin = QDoubleSpinBox()
         self.balance_spin.setRange(0.0, 10_000_000.0)
         self.balance_spin.setDecimals(2)
@@ -62,7 +63,7 @@ class AddEditDebtDialog(QDialog):
         self.rate_spin.setDecimals(2)
         layout.addWidget(self.rate_spin)
 
-        layout.addWidget(QLabel("Minimum Payment ($):"))
+        layout.addWidget(QLabel(f"Minimum Payment ({symbol()}):"))
         self.minimum_payment_spin = QDoubleSpinBox()
         self.minimum_payment_spin.setRange(0.0, 100_000.0)
         self.minimum_payment_spin.setDecimals(2)

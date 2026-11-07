@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
 )
 
 from core.material_manager import Material
+from core.region import symbol
 
 
 class AddEditMaterialDialog(QDialog):
@@ -44,7 +45,7 @@ class AddEditMaterialDialog(QDialog):
         self.unit_edit.setPlaceholderText("e.g. sheet, kg, spool, ft")
         layout.addWidget(self.unit_edit)
 
-        layout.addWidget(QLabel("Unit Cost ($):"))
+        layout.addWidget(QLabel(f"Unit Cost ({symbol()}):"))
         self.unit_cost_spin = QDoubleSpinBox()
         self.unit_cost_spin.setRange(0, 1_000_000)
         self.unit_cost_spin.setDecimals(2)

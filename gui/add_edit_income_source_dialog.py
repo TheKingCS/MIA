@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
 
 from core.budget_manager import INCOME_CATEGORIES, IncomeSource
 from core.calendar_manager import RECURRENCE_TYPES
+from core.region import symbol
 
 _ISO_DATE_FORMAT = "yyyy-MM-dd"
 _RECURRENCE_LABELS = [("Never", None)] + [(r.capitalize(), r) for r in RECURRENCE_TYPES]
@@ -48,7 +49,7 @@ class AddEditIncomeSourceDialog(QDialog):
         self.name_edit.setPlaceholderText("e.g. Paycheck, Rental — 123 Main St")
         layout.addWidget(self.name_edit)
 
-        layout.addWidget(QLabel("Expected Amount ($):"))
+        layout.addWidget(QLabel(f"Expected Amount ({symbol()}):"))
         self.amount_spin = QDoubleSpinBox()
         self.amount_spin.setRange(0.0, 1_000_000.0)
         self.amount_spin.setDecimals(2)

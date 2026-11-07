@@ -31,6 +31,7 @@ from PySide6.QtWidgets import (
 
 from core.budget_manager import EXPENSE_CATEGORIES, Bill
 from core.calendar_manager import RECURRENCE_TYPES
+from core.region import symbol
 
 _ISO_DATE_FORMAT = "yyyy-MM-dd"
 _RECURRENCE_LABELS = [("Never", None)] + [(r.capitalize(), r) for r in RECURRENCE_TYPES]
@@ -51,7 +52,7 @@ class AddEditBillDialog(QDialog):
         self.name_edit.setPlaceholderText("e.g. Electric, Mortgage, Internet")
         layout.addWidget(self.name_edit)
 
-        layout.addWidget(QLabel("Amount ($):"))
+        layout.addWidget(QLabel(f"Amount ({symbol()}):"))
         self.amount_spin = QDoubleSpinBox()
         self.amount_spin.setRange(0.0, 1_000_000.0)
         self.amount_spin.setDecimals(2)

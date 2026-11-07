@@ -14,6 +14,7 @@ case.
 """
 
 from __future__ import annotations
+from core.region import symbol
 
 from PySide6.QtWidgets import (
     QDialog,
@@ -33,7 +34,7 @@ class AddRevenueDialog(QDialog):
 
         layout = QVBoxLayout(self)
 
-        layout.addWidget(QLabel("Amount ($):"))
+        layout.addWidget(QLabel(f"Amount ({symbol()}):"))
         self.amount_spin = QDoubleSpinBox()
         self.amount_spin.setRange(0, 1_000_000)
         self.amount_spin.setDecimals(2)

@@ -13,6 +13,7 @@ from __future__ import annotations
 from typing import Optional
 
 from PySide6.QtCore import QDate
+from core.region import symbol
 from PySide6.QtWidgets import (
     QCheckBox,
     QDateEdit,
@@ -45,7 +46,7 @@ class MarkIncomeReceivedDialog(QDialog):
         self.override_checkbox.toggled.connect(self._on_override_toggle)
         layout.addWidget(self.override_checkbox)
 
-        layout.addWidget(QLabel("Amount ($):"))
+        layout.addWidget(QLabel(f"Amount ({symbol()}):"))
         self.amount_spin = QDoubleSpinBox()
         self.amount_spin.setRange(0.0, 1_000_000.0)
         self.amount_spin.setDecimals(2)

@@ -139,7 +139,7 @@ from gui.password_dialog import PasswordPromptDialog
 from gui.plaid_connect_progress_dialog import PlaidConnectProgressDialog
 from gui.plaid_setup_dialog import PlaidSetupDialog
 from modules.module_base import ModuleBase
-from core.region import money
+from core.region import money, symbol
 
 
 def format_bill_row(bill: Bill, today: date) -> str:
@@ -511,7 +511,7 @@ class BudgetModule(ModuleBase):
         if not ok:
             return
         project = projects[names.index(name)]
-        amount, ok = QInputDialog.getDouble(None, "Set Build Budget", f"Budget for {name} ($):", project.budget, 0, 10_000_000, 2)
+        amount, ok = QInputDialog.getDouble(None, "Set Build Budget", f"Budget for {name} ({symbol()}):", project.budget, 0, 10_000_000, 2)
         if ok:
             self.context.projects.update_project(project.project_id, budget=amount)
             self._refresh_homestead()
@@ -608,7 +608,7 @@ class BudgetModule(ModuleBase):
         name, ok = QInputDialog.getText(None, "Record Tool Purchase", "Tool (e.g. 'DeWalt drill'):")
         if not ok or not name.strip():
             return
-        price, ok = QInputDialog.getDouble(None, "Record Tool Purchase", f"What did the {name.strip()} cost ($)?", 0, 0, 10_000_000, 2)
+        price, ok = QInputDialog.getDouble(None, "Record Tool Purchase", f"What did the {name.strip()} cost ({symbol()})?", 0, 0, 10_000_000, 2)
         if not ok or price <= 0:
             return
         project_id = ""
@@ -1422,7 +1422,7 @@ class BudgetModule(ModuleBase):
         series.attachAxis(axis_x)
 
         axis_y = QValueAxis()
-        axis_y.setTitleText("Amount ($)")
+        axis_y.setTitleText(f"Amount ({symbol()})")
         chart.addAxis(axis_y, Qt.AlignmentFlag.AlignLeft)
         series.attachAxis(axis_y)
 

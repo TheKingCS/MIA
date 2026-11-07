@@ -29,6 +29,7 @@ from PySide6.QtWidgets import (
 )
 
 from core.budget_manager import EXPENSE_CATEGORIES, ExpenseEntry
+from core.region import symbol
 
 _ISO_DATE_FORMAT = "yyyy-MM-dd"
 
@@ -46,7 +47,7 @@ class AddEditExpenseDialog(QDialog):
 
         layout = QVBoxLayout(self)
 
-        layout.addWidget(QLabel("Amount ($):"))
+        layout.addWidget(QLabel(f"Amount ({symbol()}):"))
         self.amount_spin = QDoubleSpinBox()
         self.amount_spin.setRange(0.0, 1_000_000.0)
         self.amount_spin.setDecimals(2)
