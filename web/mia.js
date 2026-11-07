@@ -263,6 +263,16 @@
     knowledgeArticle: (pack, path) => demo ? Promise.resolve({ title: "Hypothermia",
       text: "Hypothermia is defined as a body core temperature below 35.0 °C. Symptoms depend on the temperature..." })
       : call("GET", "/api/knowledge/article?pack=" + encodeURIComponent(pack) + "&path=" + encodeURIComponent(path)),
+    // MIA's own browser (core/web_browser.py): what it's on, steps waiting with their screenshots (MIA.download
+    // "/api/browser/shot?id="), and the tasks she was taught.
+    browser: () => demo ? Promise.resolve({ available: true, open: { title: "County Tax Office", url: "https://tax.example.gov/pay" },
+      learning: null,
+      waiting: [{ id: "p1", proposal_id: "", summary: "On tax.example.gov, press \"Pay now\" (\"Pay now\" changes something)",
+        why: "\"Pay now\" changes something", site: "tax.example.gov", shot: false }],
+      tasks: [{ id: "t1", name: "Pay the property tax", start: "https://tax.example.gov", state: "practising",
+        summary: "Pay the property tax: 6 steps, practising, last run finished", steps: ["open https://tax.example.gov", "sign in yourself", "press \"Pay now\""],
+        last: { at: "2026-11-07T10:00:00", clean: true, note: "" } }] })
+      : call("GET", "/api/browser"),
     // The Library's plans shelf (core/plan_library.py): the plans, one plan, and a plan's file (MIA.download).
     knowledgePlans: (q = "") => demo ? Promise.resolve({ available: true, folder: "reference_library/plans",
       sources: [{ name: "University of Tennessee Extension plan file", what: "300+ farm building plans", url: "https://trace.tennessee.edu/utk_agexfarmbld/" }],

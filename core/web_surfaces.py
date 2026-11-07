@@ -187,7 +187,10 @@ APPS: tuple[App, ...] = (
         "A photo and a question (what is this, read this label, inspect this part), answered on your PC; never who "
         "a person is (build plan step 15).", KNOW, (), "What is this?"),
     App("assistant", "MIA Assistant", "🗨", "Always here. Always with you.", "assistant.html",
-        "Conversational assistant and local AI.", KNOW, ("communication", "undo", "system", "browser"), "Undo that."),
+        "Conversational assistant and local AI.", KNOW, ("communication", "undo", "system"), "Undo that."),
+    App("browser", "Browser", "🌐", "She browses. You approve.", "browser.html",
+        "MIA's own web browser: what she's on, the steps waiting for your OK with their screenshots, and the tasks you "
+        "taught her by showing (DEC-0117).", KNOW, ("browser",), "Open the county website."),
     App("diagnostics", "Diagnostics", "🩺", "How MIA is doing.", None,
         "System health, logs, and hardware status.", KNOW, (), "How is the computer doing?"),
     App("module_browser", "Apps", "🧩", "Everything MIA can do.", "apps.html",
@@ -199,7 +202,7 @@ APPS: tuple[App, ...] = (
 APPS_BY_ID = {a.module_id: a for a in APPS}
 # Apps that exist only as web screens (no PySide6 module of their own).
 WEB_ONLY = frozenset({"calendar", "reward_shop", "business", "security", "vault", "insurance", "passwords", "flock", "freedom", "compliance", "dungeon", "issues",
-                      "operating_journal", "play", "good_news", "sight", "life_notes"})
+                      "operating_journal", "play", "good_news", "sight", "life_notes", "browser"})
 # Apps folded into others (Zac, 2026-10-16): Garage holds vehicles, equipment
 # and tools; Real Estate holds buildings and appliances; the Calendar shows all
 # upkeep. Shown nowhere; the desktop keeps their modules loaded only because

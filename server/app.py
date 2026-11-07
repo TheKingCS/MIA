@@ -861,6 +861,27 @@ def create_app(context: AppContext) -> FastAPI:
             hits = library.search_titles(q.strip()[:200]) if q.strip() else []
         return {"available": True, "packs": packs, "hits": hits, "root": str(library.root_path)}
 
+    # MIA's browser (core/web_browser.py, DEC-0117): what it's on, the steps waiting for the person, the taught tasks,
+    # and a waiting step's screenshot (only from her own shots folder).
+    @app.get("/api/browser")
+    def browser_screen(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.web_browser import screen
+
+        with app.state.turn_lock:
+            return screen(view_for(context, profile_id))
+
+    @app.get("/api/browser/shot")
+    def browser_shot(id: str, profile_id: str = Depends(require_profile_id)):
+        from fastapi.responses import FileResponse
+
+        from core.web_browser import shot_path
+
+        with app.state.turn_lock:
+            path = shot_path(view_for(context, profile_id), id)
+        if path is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "That screenshot isn't there.")
+        return FileResponse(path, media_type="image/png")
+
     # The Library's plans shelf (core/plan_library.py): plans, one plan, and a plan's own file from the plans folder.
     @app.get("/api/knowledge/plans")
     def knowledge_plans(q: str = "", profile_id: str = Depends(require_profile_id)) -> dict:

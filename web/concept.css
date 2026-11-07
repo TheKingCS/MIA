@@ -1791,3 +1791,6 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
 .council-text { white-space: pre-wrap; margin: 4px 0 0; }
 .council-msg { align-items: flex-start; }
 .council-msg.mine .council-text { opacity: 0.85; }
+
+/* MIA's browser (web/browser.js): a waiting step's screenshot fits its card. */
+.browser-shot { display: block; width: 100%; height: auto; margin: 8px 0; border-radius: var(--radius); border: 1px solid var(--line); }

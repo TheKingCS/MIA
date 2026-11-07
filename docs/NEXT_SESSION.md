@@ -7,6 +7,11 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 *Last updated: 2026-11-07 (afternoon)*
 
+**New 2026-11-07 (night): the Browser page and HTML e-receipts.** `web/browser.html` (core/web_browser.py): what her
+browser is on, held steps with screenshots (Go ahead / Cancel on the step's own proposal), taught tasks with Do it /
+Forget (`browser.run_task`, `browser.forget_task`). Emailed HTML receipts now keep each item on its own line
+(core/document_text.py), so their pantry and materials effects work.
+
 **New 2026-11-07 (night): the phone keeps your place.** The app is "MIA" with no title bar (theme NoActionBar); it
 reopens the last page (MainActivity.remember / lastPlace, SharedPreferences, never the token), and every page keeps
 its scroll, an open Talk and its draft for 12 hours (web/shell.js keepPlace / backToPlace, localStorage). Checked in

@@ -40,6 +40,7 @@ LIMITS = {
     "operating_journal": "Lines MIA can't see in your records (sleep, mood, focus) are yours to rate; she never judges the gap.",
     "play": "Training load needs how hard it was; without it she counts a middle effort and asks next time.",
     "life_notes": "Kept only on your yes, from plain first-person words (\"I promised...\", \"we're going with...\"); some slip by, so tell her again.",
+    "browser": "Her own Edge window on your PC, none of your sign-ins: anything that submits, buys, sends, signs in or deletes waits for your OK, and she never types passwords or card numbers; a taught task stops when a site changes.",
     "sight": "Looks on your PC with a local model: a judgment from the picture, said as one; never who a person is; the photo isn't kept.",
     "good_news": "Reads its 16 sources once a day, only when you switch it on; stories are picked by rules in code, so one can slip through that isn't quite good news: say it was misleading.",
     "freedom": "The estimate assumes the last three months' pace; transfers between your own accounts can look like spending until the bank sync sorts them.",
@@ -103,7 +104,8 @@ AREAS = (
 # Not listed in the overview. MIA herself (Home, the chat, Apps, Settings,
 # Diagnostics, the Fix-It Log) gets the closing line instead; Freedom stays out at the
 # owner's request (2026-10-29), though "can you…?" still finds it.
-OVERVIEW_SKIP = {"web_home", "assistant", "module_browser", "settings", "diagnostics", "issues", "freedom"}
+OVERVIEW_SKIP = {"web_home", "assistant", "module_browser", "settings", "diagnostics", "issues", "freedom",
+                 "browser"}  # her browser is part of her, like the chat (DEC-0117)
 # Each app in a few words, for the overview.
 GIST = {
     "budget": "bills, income, spending and debts", "insurance": "your policies and quotes compared",

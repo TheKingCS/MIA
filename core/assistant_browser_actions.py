@@ -178,6 +178,53 @@ ACTION_TYPES["browser.commit"] = ActionType(
     "browser.commit", "Go ahead", {"pending_id": "the browser step waiting for approval"}, _describe_commit, _do_commit)
 
 
+# ------------------------------------------------------------------ the Browser screen's own changes (core/web_browser.py)
+
+def _task(context, params) -> dict:
+    """The taught task the params name; ActionError when it's gone."""
+    store = _routines(context)
+    routine = store.routines.get(str(params.get("task_id") or "")) if store is not None else None
+    if routine is None:
+        raise ActionError("That browser task isn't there any more.")
+    return routine
+
+
+def _describe_run(context, params) -> str:
+    """The sentence approved for running a taught task: which, and that commits still wait."""
+    return f"Do \"{_task(context, params)['name']}\" in MIA's browser (she stops for your OK at each sign-in and commit)"
+
+
+def _run_task(context, params) -> str:
+    """Runs a taught task from the screen, as do_browser_task does by voice."""
+    from core.browser_routines import run
+
+    routine = _task(context, params)
+    browser = _browser(context)
+    if browser is None:
+        raise ActionError("MIA's browser isn't on this device.")
+    try:
+        return run(context, browser, _routines(context), routine)
+    except BrowserError as problem:
+        raise ActionError(f"The browser couldn't do that: {problem}") from problem
+
+
+def _describe_forget(context, params) -> str:
+    """The sentence approved for forgetting a taught task."""
+    return f"Forget the browser task \"{_task(context, params)['name']}\""
+
+
+def _forget_task(context, params) -> str:
+    """Forgets a taught task (show her again to relearn it)."""
+    routine = _task(context, params)
+    _routines(context).delete(routine["id"])
+    return f"Forgot \"{routine['name']}\"."
+
+
+for _kind, _label, _describe, _execute in (("browser.run_task", "Do it", _describe_run, _run_task),
+                                           ("browser.forget_task", "Forget", _describe_forget, _forget_task)):
+    ACTION_TYPES[_kind] = ActionType(_kind, _label, {"task_id": "the taught browser task"}, _describe, _execute)
+
+
 def register_browser_actions(registry: AssistantActionRegistry) -> None:
     """Registers MIA's browser tools (domain browser; never offered to a child)."""
     control = {"control": {"type": "string", "description": "The control's number from browser_read (preferred)."},

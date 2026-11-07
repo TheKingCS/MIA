@@ -23,7 +23,8 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       site): her own Edge window opens. Try "read the page", "click ...", and something that commits (she should
       ask first, and a "yes" after she names the button presses it). Then teach her one real task: open where it
       starts, "learn this: <name>", do it in her window, "done", and "do <name>" twice. Tell Claude what she got
-      wrong. One choice for you in the doc's Known limits: whether typing in ordinary fields should be limited to
+      wrong (the new Browser page in the sidebar shows what's waiting, with its screenshot, and your taught tasks).
+      One choice for you in the doc's Known limits: whether typing in ordinary fields should be limited to
       words you said that turn.
 
 - [ ] **Plans in the Library (DEC-0118):** after the restart, ask "what do I need to build a 10 by 12 shed?" or

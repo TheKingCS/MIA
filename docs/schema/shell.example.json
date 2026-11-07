@@ -305,6 +305,13 @@
       "page": "assistant.html"
     },
     {
+      "id": "browser",
+      "name": "Browser",
+      "icon": "🌐",
+      "tagline": "She browses. You approve.",
+      "page": "browser.html"
+    },
+    {
       "id": "module_browser",
       "name": "Apps",
       "icon": "🧩",

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1082 files, 244,621 lines; 1082 files describe themselves; 13,434 of 14,104 classes and functions are documented.
+1084 files, 244,930 lines; 1084 files describe themselves; 13,445 of 14,115 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-388 files, 113,466 lines; 5,993 of 6,082 classes and functions documented
+389 files, 113,633 lines; 6,003 of 6,092 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -365,6 +365,7 @@
 - `core/waypoint_actions.py`: Waypoints (core/waypoint_manager.py) through the action contract (core/actions.py), for the web's Maps and Navigation pages: `waypoint.add` (a name and where: from a tap on the map, or typed) and `waypoint.delete`. The store writes through atomic_write_text, so "undo that" takes either back. Maps ar
 - `core/waypoint_manager.py`: Backs the Navigation module's waypoint list (modules/navigation/module.py) — docs/ROADMAP.md milestone 10.1. Same persisted-JSON pattern as core/inventory_manager.py: data/waypoints.json, a dataclass with to_dict/from_dict, a manager class wrapping load/save.
 - `core/web_account.py`: The web's Profile and Settings screens (2026-10-07, Zac: the gear's Profile and Settings). Profile is who you are: name, email, country, what MIA helps with, household, password and recovery code. Settings is how MIA behaves for you: the person's own settings from the PC app's Settings (core/person_
+- `core/web_browser.py`: The Browser screen's data (DEC-0117, 2026-11-07): MIA's own browser as the person sees it on the web, so held steps and taught tasks aren't only reachable by talking to her.
 - `core/web_business.py`: The Orders & Quotes screen (DEC-0030 phase C): orders (what's owed, the build's progress), quotes (with what the price is made of), customers, and the portfolio of finished builds. Put together here from core/business_book.py, crafting recipes, builds and the workshop ledger; the web only formats.
 - `core/web_compliance.py`: The Compliance screen (DEC-0040): every obligation, sorted the way deadlines are read: **Overdue**, **Next 30 days**, **Later**, **To check** (unverified, or undated), and **Done**. Each says when it's really due (moved off a weekend or holiday, an extension to file kept apart from the money's date)
 - `core/web_craft.py`: The Workshop's Recipes and Builds tabs (DEC-0030 phase B): put together here from core/craft_recipes.py, Materials, Jobs, Products and the Ledger, so the web only formats. Part of `workshop_page()`. The Goods tab (DEC-0036: homestead goods on hand, batch by batch, the market day and labels) is `good
@@ -399,7 +400,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 2,677 lines; 31 of 31 classes and functions documented
+2 files, 2,698 lines; 31 of 31 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -667,7 +668,7 @@
 
 ## tests/: the test suite: what each part must do
 
-360 files, 65,716 lines; 5,206 of 5,787 classes and functions documented
+360 files, 65,754 lines; 5,207 of 5,788 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -702,7 +703,7 @@
 - `tests/test_benchmarks.py`: The weekly benchmarks (build plan step 5, core/benchmarks.py): graded by code against the run before, kept as grades only (never an answer), read by the answers.* loops. *(2 undocumented)*
 - `tests/test_boot_sound.py`: Unit tests for core.boot_sound — pure synthesis logic, no audio hardware/I/O involved (see that module's docstring for why real playback can't be verified in this dev sandbox). write_boot_sound_wav() is exercised via a real tmp_path file write/read round trip, same reasoning test_script_runner.py gi *(1 undocumented)*
 - `tests/test_boss_battles.py`: Boss battles (DEC-0028): every debt is a boss (max HP is the highest balance seen, payments are hits, interest heals it), and any mission can be made into one (its objectives are its HP). *(3 undocumented)*
-- `tests/test_browser.py`: MIA's browser (DEC-0117) against a pretend browser: what the safety rules let her do alone, a commit waiting for the person (approved on screen or with a yes, refused when the page changed), secrets never typed, a task taught by showing and replayed, and learned after two clean runs.
+- `tests/test_browser.py`: MIA's browser (DEC-0117) against a pretend browser: what the safety rules let her do alone, a commit waiting for the person (approved on screen or with a yes, refused when the page changed), secrets never typed, a task taught by showing and replayed, learned after two clean runs, and the Browser scr
 - `tests/test_budget_manager.py`: Unit tests for core.budget_manager. Isolates _DATA_DIR/_*_FILE into a tmp_path scratch area, same monkeypatch pattern as test_calendar_manager.py's isolated_paths, so these tests never touch real data/*.json. *(5 undocumented)*
 - `tests/test_budget_module.py`: Unit tests for modules.budget.module's pure row formatters — no Qt event loop needed, same shape as tests/test_maintenance_module.py. *(3 undocumented)*
 - `tests/test_budget_nudges.py`: Unit tests for core.budget_nudges — no Qt, no manager instances, same shape as tests/test_daily_occasions.py. *(2 undocumented)*
@@ -1032,13 +1033,14 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-71 files, 12,268 lines
+72 files, 12,351 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
 - `web/arcade/progress.js`: Lens Arcade — universal progression. One XP/level/achievement profile shared across every game. Games include this file, then call: ArcadeProgress.award('snake', 'newbest', 50) The module persists to localStorage, handles the daily streak, unlocks achievements, and shows gold toast notifications by 
 - `web/asset.js`: asset.js — one asset's page (claude, 2026-10-06, DEC-0017). Renders MIA.asset(id). Done, readings, tasks, the asset itself and its documents all change through equipment actions (confirm, undo); files go through MIA.upload / MIA.download.
 - `web/assistant.js`: assistant.js — MIA Assistant (DEC-0018, claude). Typed turns go through MIA.talk; spoken ones are recorded here, turned into the mono 16-bit WAV MIA's voice path expects, and sent with MIA.voice. Her spoken reply plays when her computer has a voice.
+- `web/browser.js`: browser.js — MIA's own browser (claude, 2026-11-07, DEC-0117). Renders MIA.browser() (core/web_browser.py): the page she's on, each step waiting for your OK (its screenshot, Go ahead / Cancel on the step's own proposal), the task she's learning, and the tasks you taught her (how practised, the last 
 - `web/business.js`: business.js — Orders & Quotes (claude, 2026-10-17, DEC-0030 phase C). Renders MIA.business() (core/web_business.py) in tabs: Orders (what's owed, Payment, Start Build, Ready / Delivered), Quotes (what the price is made of, Sent / Accepted / Declined), Customers, and the Portfolio of finished builds 
 - `web/calendar.js`: calendar.js — the Calendar screen (claude, 2026-10-16). Renders MIA.calendar(month) (core/calendar_view.py): Past Due, Due Today, Due Soon (the next two weeks, by day) and a month grid. Each item says what it is and offers its own action (Done, Mark Paid...); your own events can be removed; Add Even
 - `web/character.js`: character.js — the Character screen (claude, 2026-10-06, DEC-0017/0018, H-0013). Renders MIA.character() (core/web_progress.py): the person's level and prestige, lifetime stats, everything they've unlocked (highest rarity first) and the tally by rarity, prestige emblems, top skills and latest missio

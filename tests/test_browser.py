@@ -5,7 +5,8 @@ tests.test_browser
 MIA's browser (DEC-0117) against a pretend browser: what the safety rules
 let her do alone, a commit waiting for the person (approved on screen or
 with a yes, refused when the page changed), secrets never typed, a task
-taught by showing and replayed, and learned after two clean runs.
+taught by showing and replayed, learned after two clean runs, and the
+Browser screen (core/web_browser.py) with its run and forget actions.
 """
 
 from __future__ import annotations
@@ -239,3 +240,30 @@ def test_never_offered_to_a_child():
     """The browser's tools are a grown-up's."""
     assert "browser" in CHILD_BLOCKED_DOMAINS
     assert browser_routines.LEARNED_AFTER == 2
+
+
+def test_the_browser_screen(world):
+    """The screen shows the page she's on, a held step with its screenshot (gone once cancelled), and a taught task
+    with its steps and how practised it is; Do it and Forget run through the action contract; a screenshot is served
+    only from her own shots folder."""
+    from core.web_browser import screen, shot_path
+
+    tool(world, "browse", target=SHOP)
+    tool(world, "browser_click", name="Place order")
+    data = screen(world)
+    assert data["available"] and data["open"]["title"] == "Your cart"
+    [step] = data["waiting"]
+    assert "Place order" in step["summary"] and step["shot"] and shot_path(world, step["id"]).is_file()
+    assert shot_path(world, "nope") is None
+    world.actions.reject(world, step["proposal_id"])
+    assert screen(world)["waiting"] == []
+    routine = world.browser_routines.add("Check the cart", SHOP, [{"kind": "open", "url": SHOP}])
+    [task] = screen(world)["tasks"]
+    assert task["name"] == "Check the cart" and task["state"] == "practising" and task["last"] is None
+    run = world.actions.propose(world, "browser.run_task", {"task_id": routine["id"]})
+    assert "stops for your OK" in run.summary
+    assert "Finished" in world.actions.approve(world, run.proposal_id).result
+    assert screen(world)["tasks"][0]["last"]["clean"]
+    forget = world.actions.propose(world, "browser.forget_task", {"task_id": routine["id"]})
+    world.actions.approve(world, forget.proposal_id)
+    assert screen(world)["tasks"] == []
