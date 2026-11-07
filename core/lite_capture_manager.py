@@ -81,6 +81,10 @@ CAPTURE_PROPOSAL_STATUSES = ("pending", "accepted", "rejected")
 
 @dataclass
 class CaptureProposal:
+    """A voice note from MIA Lite, transcribed and proposed as a journal entry: who it's for, when it was recorded and
+    transcribed, its source file, the transcript and title, its status (pending, accepted, rejected), and the journal
+    entry it became.
+    """
     proposal_id: str
     profile_id: Optional[str] = None
     status: str = "pending"
@@ -93,6 +97,7 @@ class CaptureProposal:
     journal_entry_id: str = ""  # set once accepted
 
     def to_dict(self) -> dict:
+        """The proposal as saved in capture_proposals.json."""
         return {
             "proposal_id": self.proposal_id,
             "profile_id": self.profile_id,
@@ -108,6 +113,7 @@ class CaptureProposal:
 
     @staticmethod
     def from_dict(data: dict) -> "CaptureProposal":
+        """A proposal from its saved dict; missing fields take their defaults."""
         return CaptureProposal(
             proposal_id=data.get("proposal_id", uuid.uuid4().hex[:10]),
             profile_id=data.get("profile_id"),
@@ -135,8 +141,15 @@ def format_capture_journal_title(captured_at: str) -> str:
 
 
 class LiteCaptureManager:
+    """Picks up MIA Lite's voice notes from the capture folder, transcribes each into a proposal the person accepts
+    (it becomes a journal entry) or rejects (capture_proposals.json, written through atomic_write_text). Nothing is
+    written to the journal until they say yes.
+    """
     def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
         # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        """Points at the household's file and loads it, and makes the capture folder with its processed/ and failed/
+        folders (only logging when storage isn't there).
+        """
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._proposals_file = self.data_dir / "capture_proposals.json" if data_dir is not None else _PROPOSALS_FILE
         self.context = context
@@ -156,6 +169,7 @@ class LiteCaptureManager:
 
     @property
     def capture_folder_path(self) -> Path:
+        """The capture folder: lite_capture.import_folder when configured, else the default."""
         configured = self.context.config.get("lite_capture.import_folder", "")
         if configured:
             return Path(configured).expanduser()
@@ -166,6 +180,7 @@ class LiteCaptureManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads the proposals; a damaged file is logged, reported and starts with none."""
         if not self._proposals_file.exists():
             return
         try:
@@ -177,6 +192,7 @@ class LiteCaptureManager:
             self._proposals = []
 
     def _save(self) -> None:
+        """Writes the proposals atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._proposals_file,
             json.dumps({"proposals": [p.to_dict() for p in self._proposals]}, indent=2),
@@ -247,6 +263,7 @@ class LiteCaptureManager:
         return new_proposals
 
     def _move_file(self, file_path: Path, subdir: str) -> None:
+        """Moves a capture file into processed/ or failed/ (logged, not raised, when it can't)."""
         destination = self.capture_folder_path / subdir / file_path.name
         try:
             shutil.move(str(file_path), str(destination))
@@ -258,12 +275,15 @@ class LiteCaptureManager:
     # ------------------------------------------------------------------
 
     def all_proposals(self) -> list[CaptureProposal]:
+        """Every proposal."""
         return list(self._proposals)
 
     def pending_proposals(self) -> list[CaptureProposal]:
+        """The proposals waiting for a yes or no."""
         return [p for p in self._proposals if p.status == "pending"]
 
     def get_proposal(self, proposal_id: str) -> Optional[CaptureProposal]:
+        """The proposal with this id, or None."""
         return next((p for p in self._proposals if p.proposal_id == proposal_id), None)
 
     def accept_proposal(self, proposal_id: str) -> Optional[CaptureProposal]:
@@ -292,6 +312,7 @@ class LiteCaptureManager:
         return proposal
 
     def reject_proposal(self, proposal_id: str) -> Optional[CaptureProposal]:
+        """Rejects a pending proposal (nothing goes in the journal); one already decided is returned as it is."""
         proposal = self.get_proposal(proposal_id)
         if proposal is None or proposal.status != "pending":
             return proposal

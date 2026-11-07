@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 229,031 lines; 1043 files describe themselves; 5,043 of 13,517 classes and functions are documented.
+1043 files, 229,052 lines; 1043 files describe themselves; 5,056 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 102,933 lines; 4,312 of 5,630 classes and functions documented
+367 files, 102,954 lines; 4,325 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -191,7 +191,7 @@
 - `core/life_note_actions.py`: What someone said they'd do, decided, want to try and set aside (core/life_notes.py, DEC-0054) through the action contract (core/actions.py): `life_note.done` (a promise kept, an idea tried) and `life_note.forget`. The notes write through atomic_write_text, so "undo that" takes either back. Said out
 - `core/life_notes.py`: Remembering what you say you'll do, decide and want to try (DEC-0054, T-0018). Four kinds of note MIA picks up from normal conversation, never a form, each shown back for a yes before it's kept (Propose → Approve):
 - `core/links.py`: How things relate (2026-10-05, Engine Phase 1 step 2, docs/ENGINE_PHASE1_PLAN.md): typed links between the records MIA already keeps, like "this loan FUNDS that property", "the walipini DEPENDS_ON selling the lot", "this mission is EVIDENCE_FOR that skill". (Named `links` because `relationships_mana
-- `core/lite_capture_manager.py`: The receiving/processing side of "MIA Lite" (`docs/VISION.md`'s Core/Home split section, "MIA Lite — a fourth tier, lighter than Core") — scoped directly with the user across 4 real questions before any code: hardware (a mode on the existing Receiver, no new device), capture scope v1 (voice notes on *(13 undocumented)*
+- `core/lite_capture_manager.py`: The receiving/processing side of "MIA Lite" (`docs/VISION.md`'s Core/Home split section, "MIA Lite — a fourth tier, lighter than Core") — scoped directly with the user across 4 real questions before any code: hardware (a mode on the existing Receiver, no new device), capture scope v1 (voice notes on
 - `core/live.py`: Live updates (2026-10-05, Phase 2 foundation, DEC-0013): one number, the state version, that goes up whenever any of MIA's data changes, so every open surface (the web Home, the phone, later the glasses) knows to re-read `/api/state` the moment something changes, wherever it changed: the desktop, th *(3 undocumented)*
 - `core/llm_manager.py`: The Assistant's LLM backend core service — docs/ROADMAP.md milestone 5.1. Defines a small backend-agnostic interface (`LLMBackend`) with one concrete implementation, `OllamaBackend`, talking to a local Ollama server's HTTP API (https://github.com/ollama/ollama/blob/main/docs/api.md), and a second, `
 - `core/local_model.py`: MIA's model on the phone (2026-10-07, DEC-0019, docs/PHONE_MODEL_TEST.md): download a small open model once, run it with llama.cpp's server (`llama-server`, built into the phone app) on 127.0.0.1, point MIA's Talk at it, and measure whether it does MIA's job (core/model_bench.py).
