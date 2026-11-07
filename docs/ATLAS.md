@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1121 files, 251,752 lines; 1121 files describe themselves; 13,765 of 14,438 classes and functions are documented.
+1122 files, 251,906 lines; 1122 files describe themselves; 13,780 of 14,452 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-409 files, 117,338 lines; 6,217 of 6,306 classes and functions documented
+409 files, 117,400 lines; 6,219 of 6,308 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -688,7 +688,7 @@
 
 ## tests/: the test suite: what each part must do
 
-371 files, 67,068 lines; 5,311 of 5,895 classes and functions documented
+372 files, 67,160 lines; 5,324 of 5,907 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -939,6 +939,7 @@
 - `tests/test_port_scanner.py`: Unit tests for core.port_scanner. Uses a real local TCP server bound to an ephemeral port (socket.bind(("127.0.0.1", 0))) rather than mocking sockets or reaching out to a real remote host — deterministic (no network/internet dependency) while still exercising the real connect_ex() path, not a hand-c
 - `tests/test_power_manager.py`: Unit tests for core.power_manager. should_warn_low_battery() is tested directly with constructed PowerStatus objects (pure, deterministic — no psutil or real battery involved). PsutilBatteryBackend/PowerManager are tested against monkeypatched psutil.sensors_battery(), same approach as test_system_h *(5 undocumented)*
 - `tests/test_power_module.py`: Unit tests for modules.power.module's pure formatting functions — no Qt event loop needed. Same shape as tests/test_system_health.py's format_system_health test.
+- `tests/test_power_web.py`: Power by voice (DEC-0125): a reading said out loud ("log the propane at 60 percent") is logged through the Power screen's own action, `energy.reading` (core/power_actions.py), so it's undoable. The screen itself is tested in tests/test_web_power.py.
 - `tests/test_presence.py`: What matters now across every app, with why (core/presence.py): it feeds every turn so MIA answers knowing the person's world. The five-places frame it came with (DEC-0044) was undone by Zac, 2026-10-24; the apps are the layout again. *(1 undocumented)*
 - `tests/test_private_budget.py`: A private budget (core/personal_data.py, 2026-10-01): one person keeps their money apart from the household's; everyone else keeps the shared budget; switching back keeps the private one. *(1 undocumented)*
 - `tests/test_private_journal.py`: The encrypted private journal (core/private_journal.py).
@@ -1040,7 +1041,7 @@
 - `tests/test_web_progress.py`: DEC-0017/0018 (2026-10-06), H-0013: Missions, Skills and Character on the web. The pages (core/web_progress.py) and every change as an action kind (core/mission_actions.py), each proposed, approved, recorded and undoable, with rewards going to the person who approved it.
 - `tests/test_web_push.py`: Unit tests for core.web_push. The actual push-service HTTP call (pywebpush.webpush) is mocked throughout — this is the standard, correct way to test Web Push code without a real browser/push service (see core/web_push.py's own docstring and the Mobile Phase 1 plan). *(5 undocumented)*
 - `tests/test_web_screens.py`: DEC-0017/0018 (2026-10-06): Kitchen, Workout and Real Estate on the web. The pages (core/web_screens.py) and every change as an action kind (core/kitchen_actions.py, core/workout_actions.py, core/estate_actions.py), each proposed, approved, recorded and undoable.
-- `tests/test_web_surfaces.py`: DEC-0017 (2026-10-06): the web shell and Home dashboard, assembled in core/web_surfaces.py so web/ holds no logic. The sidebar is the person's own (child-safe, tucked-away apps hidden), Home is the concept's dashboard: greeting, Today's Focus with each item's action and kind, Upcoming, the status st *(5 undocumented)*
+- `tests/test_web_surfaces.py`: DEC-0017 (2026-10-06): the web shell and Home dashboard, assembled in core/web_surfaces.py so web/ holds no logic. The sidebar is the person's own (child-safe, tucked-away apps hidden), Home is the concept's dashboard: greeting, Today's Focus with each item's action and kind, Upcoming, the status st *(4 undocumented)*
 - `tests/test_web_toolbox.py`: The Toolbox on the web (DEC-0125, the design canvas's Toolbox, DEC-0113: core/web_toolbox.py, core/toolbox_calcs.py, core/toolbox_actions.py and core/assistant_toolbox_actions.py): every calculator worked out in core, alarms set, switched and deleted as actions, and the same answers by voice. *(1 undocumented)*
 - `tests/test_welcome.py`: What comes after User Sync (core/welcome.py, core/app_intro.py). *(4 undocumented)*
 - `tests/test_what_i_used.py`: What I Used (DEC-0029, ALICE pick 1): a turn gets the memories that match what was asked, returns them with the reply, and each can be fixed or forgotten (and the forgetting undone).

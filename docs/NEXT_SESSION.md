@@ -124,9 +124,10 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       DEC-0119; the demo now has `docs/schema/profile.example.json`).
       Fix-It (a big Report a Problem, Open · Worst First cards with ×N and the latest thing said, learned phrasings).
       Diagnostics (Passed / Look At / Unread tiles, a dotted row per check-up, Run Again).
-      Power has its web page (`core/web_power.py`, `/api/power`, `web/power.html`; energy sources and the battery).
-      Still to do: Toolbox, Lab and Field Kit need web pages (WEB_PARITY). On the PC, run `python -m core.parity` to
-      confirm docs/PARITY.md (edited by hand here for power:phone).
+      Power has its web page (`core/web_power.py`, `/api/power`, `web/power.html`; energy sources and the battery),
+      and readings can be logged by voice too (`log_energy_reading`, through `energy.reading`).
+      Still to do: Toolbox, Lab and Field Kit need web pages (WEB_PARITY): the canvas-build session's (the DEC-0125
+      parity session leaves them to it after both built Power at once, 2026-11-07, and works on voice and glasses).
 - [ ] Glasses: the shared orb on `web/glasses.html`.
 - Note: DEC-0119 (MIA for Zac alone) came after the canvas: drop household members from Party's leaderboard and
   Profile's household card when those screens are built.

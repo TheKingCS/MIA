@@ -42,6 +42,8 @@ def test_pure_bits():
 
 
 def test_the_shell_is_the_persons_own(world):
+    """The sidebar is the signed-in person's: their name and level, their apps in order, and which apps are still
+    only on the PC."""
     data = shell(world, TODAY)
     assert data["person"]["name"] == "Robin" and data["person"]["level"] == 1
     ids = [a["id"] for a in data["apps"]]
@@ -130,6 +132,7 @@ def test_every_assistant_tool_belongs_to_an_app():
 
 
 def test_the_apps_page(world):
+    """The Apps page lists every app with whether it's on the web, what to ask it, and the tools it has."""
     from core.assistant_actions import AssistantAction
     from core.web_surfaces import apps_page
 

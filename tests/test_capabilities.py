@@ -55,7 +55,7 @@ def test_the_map_comes_from_the_code(ctx):
     apps = {a["id"]: a for a in capability_map(ctx)}
     assert apps["budget"]["where"] == "web and desktop" and "list_bills" in apps["budget"]["look_up"]
     assert "mark_bill_paid" in apps["budget"]["change"]
-    assert apps["compliance"]["where"] == "web" and apps["power"]["where"] == "desktop"
+    assert apps["compliance"]["where"] == "web" and apps["diagnostics"]["where"] == "desktop"
     assert apps["dashboard"]["where"] == "retired"
     said = overview(ctx)
     assert said.startswith("I have ") and "tax deadlines" in said and "Dashboard" not in said

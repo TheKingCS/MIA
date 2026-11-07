@@ -226,7 +226,7 @@
   "tests/test_web_money.py": 5,
   "tests/test_web_power.py": 1,
   "tests/test_web_push.py": 5,
-  "tests/test_web_surfaces.py": 5,
+  "tests/test_web_surfaces.py": 4,
   "tests/test_web_toolbox.py": 1,
   "tests/test_welcome.py": 4,
   "tests/test_work_activity.py": 1,

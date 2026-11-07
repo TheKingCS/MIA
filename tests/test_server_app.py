@@ -53,9 +53,9 @@ def context(tmp_path, monkeypatch):
     data_dir = tmp_path / "data"
     monkeypatch.setattr(config_manager_module, "_CONFIG_FILE", tmp_path / "config.json")
     # 2026-09-28: Core also loads what "remind me why" reads.
-    import core.budget_manager, core.intent_manager, core.kitchen_manager, core.project_manager, core.real_estate_manager, core.why_graph
-    for _module in (core.budget_manager, core.intent_manager, core.kitchen_manager, core.project_manager,
-                    core.real_estate_manager, core.why_graph):
+    import core.budget_manager, core.energy_manager, core.intent_manager, core.kitchen_manager, core.project_manager, core.real_estate_manager, core.why_graph
+    for _module in (core.budget_manager, core.energy_manager, core.intent_manager, core.kitchen_manager,
+                    core.project_manager, core.real_estate_manager, core.why_graph):
         _original = _module._DATA_DIR
         for _attr, _value in list(vars(_module).items()):
             if isinstance(_value, Path) and (_value == _original or _original in _value.parents):
@@ -751,3 +751,12 @@ def test_a_startup_sound_to_hear_before_choosing(client, context):
     res = client.get("/api/sounds/startup/warm_chord", headers=auth)
     assert res.status_code == 200 and res.headers["content-type"] == "audio/wav" and res.content[:4] == b"RIFF"
     assert client.get("/api/sounds/startup/nope", headers=auth).status_code == 404
+
+
+def test_power_on_the_web_lists_sources_and_adds_one_through_an_action(client, context):
+    """Power on the phone (DEC-0125): the screen reads the battery and the sources; adding one is an action."""
+    auth = _signed_in(client, context)
+    page = client.get("/api/power", headers=auth).json()
+    assert page["available"] and page["sources"] == [] and "energy_source" in page["forms"]
+    assert _do(client, auth, "energy_source.add", {"name": "Propane tank", "source_type": "Propane"}).json()["status"] == "executed"
+    assert [s["name"] for s in client.get("/api/power", headers=auth).json()["sources"]] == ["Propane tank"]
