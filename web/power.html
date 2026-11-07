@@ -11,19 +11,22 @@
   <link rel="stylesheet" href="concept.css">
   <link rel="stylesheet" href="ui.css">
 </head>
-<body data-app="power" data-icon="power" class="mod-power">
+<body data-app="power" class="mod-power">
   <!--
-    Power (DEC-0125: on the phone too): this computer's battery and the energy sources tracked by hand (solar, a
-    generator, propane). MIA.power() (core/web_power.py). Formatting only; the look is the design canvas's (claude, 2026-11-07).
+    Power (DEC-0125, the design canvas's Power, DEC-0113): this device's battery, and the energy sources tracked by
+    hand with their latest readings. MIA.power() (core/web_power.py); changes are core/power_actions.py.
+    Formatting only (claude, 2026-11-07).
   -->
   <div class="layout" id="app" hidden>
     <nav class="side" aria-label="Apps"></nav>
     <main class="layout-main">
       <header class="hero">
-        <h1>Power</h1>
+        <h1><span aria-hidden="true" id="hero-icon"></span> Power</h1>
         <p class="tagline" id="power-sub"></p>
       </header>
-      <div class="ptabs" role="tablist" id="tabs"></div>
+      <div class="ptabs" role="tablist" id="tabs" hidden></div>
+      <header hidden>
+      </header>
       <div id="panel"></div>
     </main>
   </div>

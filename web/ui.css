@@ -1084,16 +1084,17 @@ body.cook-live .mia-orb-button, body.cook-live .bottom-bar { display: none; }
 @media (max-width: 420px) { .dx-tile { flex-direction: column; align-items: flex-start; gap: 6px; } }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
-/* ---------------------------------------------------------------- Power (DEC-0125, the canvas's Power)
-   Each energy source a card: its meters' latest readings, a fill when read in percent, when it was logged. */
-.pw-source { display: grid; gap: 10px; padding: 12px 14px; margin-bottom: 10px; }
-.pw-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
-.pw-title { margin: 0; font-size: var(--text-md); font-weight: 600; }
-.pw-meters { display: grid; gap: 10px; }
-.pw-meter { display: grid; gap: 6px; }
-.pw-name { color: var(--text-dim); }
-.pw-value { font-family: var(--font-mono); }
-.pw-when, .pw-note { font-size: 12px; color: var(--text-faint); margin: 0; }
-.pw-note { margin: 4px 0 12px; }
-.meter-fill.low { background: var(--attention); box-shadow: none; }
-@media (min-width: 861px) { .pw-add { width: auto; min-width: 260px; } }
+/* ---------------------------------------------------------------- Power (DEC-0113, DEC-0125)
+   Each source: its name and reading, a meter for a percent (amber when low), when it was logged, Log Reading. */
+.pw-srcs { display: grid; gap: 10px; margin-bottom: var(--gap); }
+.pw-src { display: grid; gap: 8px; padding: 12px 14px; }
+.pw-src.low { border-color: rgba(var(--rgb-amber), 0.4); }
+.pw-src-top, .pw-src-more { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.pw-src-name { font-weight: 600; }
+.pw-src-read { font-family: var(--font-mono); font-weight: 600; color: var(--accent); }
+.pw-src-read.low { color: var(--attention); }
+.meter-fill.attention { background: var(--attention); box-shadow: none; }
+.pw-src-more { font-size: var(--text-sm); color: var(--text-dim); }
+.pw-src-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; font-size: var(--text-sm); }
+.pw-src-foot .row-buttons { margin: 0; }
+.pw-hand { margin: 0 0 10px; font-size: var(--text-sm); }

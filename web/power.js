@@ -1,76 +1,82 @@
 /*
- * power.js — Power (claude, 2026-11-07, DEC-0125: Power on the phone, as the design canvas draws it).
- * Renders MIA.power() (core/web_power.py): two tabs, Energy Sources (each source with its meters' latest readings,
- * a fill when read in percent, when it was logged, and Log Reading) and Battery (this computer's). Adding, editing
- * and removing a source and logging a reading go through actions (energy_source.add/edit/delete, energy.reading).
- * Formatting only.
+ * power.js — Power (claude, 2026-11-07, DEC-0125; the design canvas's Power,
+ * DEC-0113). Renders MIA.power() (core/web_power.py): Energy Sources (each
+ * with its latest reading per meter, a meter for a percent, when it was
+ * logged, Log Reading) and Battery (this device's). Adding a source, logging
+ * a reading and taking one out are actions (core/power_actions.py). Readings
+ * are entered by hand; no sensors yet. Formatting only.
  */
 (function () {
   "use strict";
-  const { el } = MIAShell;
+  const { el, act, form } = MIAShell;
   const $ = (id) => document.getElementById(id);
-  const button = (label, onclick, cls) => el("button", { type: "button", class: "btn " + (cls || "btn-ghost") + " btn-small", onclick }, label);
   const TABS = [["sources", "Energy Sources"], ["battery", "Battery"]];
-  let tab = "sources";
-  let data = null;
+  let page = null;
+  let tab = TABS.some(([t]) => t === location.hash.slice(1)) ? location.hash.slice(1) : "sources";
+  const btn = (label, cls, onclick) => el("button", { type: "button", class: "btn " + cls, onclick }, label);
 
   async function addSource() {
-    const v = await MIAShell.form("Add a Source", data.forms.source.fields, {});
-    if (v) MIAShell.act({ kind: "energy_source.add", params: v });
+    const v = await form("Add a Source", page.forms.energy_source.fields, {});
+    if (v) act({ kind: "energy_source.add", params: v });
   }
   async function editSource(s) {
-    const v = await MIAShell.form("Edit " + s.name, data.forms.source.fields, s.values);
-    if (v) MIAShell.act({ kind: "energy_source.edit", params: { ...v, source_id: s.id } });
+    const v = await form("Change " + s.name, page.forms.energy_source.fields, s.values);
+    if (v) act({ kind: "energy_source.edit", params: Object.assign({ source_id: s.id }, v) });
   }
   async function logReading(s) {
-    const last = s.meters[0] || {};
-    const v = await MIAShell.form("Log a Reading · " + s.name, data.forms.reading, { meter_name: last.meter || "", unit: last.unit || "" });
-    if (v) MIAShell.act({ kind: "energy.reading", params: { ...v, source_id: s.id } });
+    const last = s.meters[0];
+    const defaults = last ? { meter: last.name, unit: last.unit } : {};
+    const v = await form("Log a Reading: " + s.name, page.forms.reading.fields, defaults);
+    if (v) act({ kind: "energy.reading", params: Object.assign({ source_id: s.id }, v) });
   }
 
-  function meter(m) {
-    const value = (Math.round(m.value * 100) / 100) + (m.unit ? (m.unit === "%" ? "%" : " " + m.unit) : "");
-    const low = m.percent != null && m.percent <= 25;
-    return el("div", { class: "pw-meter" },
-      el("div", { class: "pw-row" }, el("span", { class: "pw-name" }, m.meter), el("span", { class: "pw-value" }, value)),
-      m.percent != null ? el("div", { class: "meter", role: "meter", "aria-label": m.meter, "aria-valuenow": m.percent, "aria-valuemin": 0, "aria-valuemax": 100 },
-        el("div", { class: "meter-fill" + (low ? " low" : ""), style: "width:" + m.percent + "%" })) : null,
-      el("span", { class: "pw-when" }, "Logged " + m.when));
+  // The canvas's source card: the name and its reading, a meter for a percent (amber when low), when it was
+  // logged, and Log Reading.
+  function sourceCard(s) {
+    const main = s.meters[0];
+    return el("article", { class: "glass pw-src" + (s.needs_you ? " low" : "") },
+      el("div", { class: "pw-src-top" }, el("span", { class: "pw-src-name" }, s.name),
+        el("span", { class: "pw-src-read" + (main && main.meter && main.meter.tone === "attention" ? " low" : "") }, main ? main.text : "No reading yet")),
+      main && main.meter ? el("div", { class: "meter" }, el("div", { class: "meter-fill " + main.meter.tone, style: "width:" + main.meter.pct + "%" })) : null,
+      ...s.meters.slice(1).map((m) => el("div", { class: "pw-src-more" }, el("span", {}, m.name), el("span", {}, m.text + " · " + m.when))),
+      el("div", { class: "pw-src-foot" }, el("span", { class: "dim" }, main ? "Logged " + main.when : s.type),
+        el("div", { class: "row-buttons" }, btn("Log Reading", "btn-ghost btn-small", () => logReading(s)),
+          btn("Change", "btn-ghost btn-small", () => editSource(s)),
+          btn("Remove", "btn-ghost btn-small", () => act({ kind: "energy_source.delete", params: { source_id: s.id } })))));
   }
 
   function sources() {
-    const cards = data.sources.map((s) => el("section", { class: "glass pw-source", "aria-label": s.name },
-      el("div", { class: "pw-row" }, el("h2", { class: "pw-title" }, s.name), el("span", { class: "label" }, s.kind)),
-      s.meters.length ? el("div", { class: "pw-meters" }, s.meters.map(meter)) : el("p", { class: "pw-when" }, "No readings yet."),
-      el("div", { class: "row-buttons" },
-        button("Log Reading", () => logReading(s)),
-        button("Edit", () => editSource(s)),
-        button("Remove", () => MIAShell.act({ kind: "energy_source.delete", params: { source_id: s.id } })))));
     return [
-      ...(cards.length ? cards : [el("p", { class: "empty" }, "No sources yet. Add your propane tank, solar array or generator.")]),
-      el("p", { class: "pw-note" }, "Readings are entered by hand. No sensors are connected yet. Or tell MIA: \"log the propane at 60 percent\"."),
-      el("button", { type: "button", class: "btn btn-big btn-ghost pw-add", onclick: addSource }, "Add a Source"),
+      page.sources.length ? el("div", { class: "pw-srcs" }, page.sources.map(sourceCard))
+        : el("p", { class: "empty" }, "Nothing tracked yet. Add your solar, generator, propane or a battery bank, then log a reading now and then."),
+      el("p", { class: "dim pw-hand" }, "Readings are entered by hand. No sensors are connected yet."),
+      btn("Add a Source", "btn-ghost", addSource),
     ];
   }
 
   function battery() {
-    const b = data.battery;
-    if (!b.present) return [el("section", { class: "glass pw-source" }, el("p", {}, "MIA's computer has no battery: it runs on the wall."))];
-    const left = b.plugged_in ? "Plugged in" : (b.minutes_left ? "About " + b.minutes_left + " min left" : "On battery");
-    return [el("section", { class: "glass pw-source", "aria-label": "Battery" },
-      el("div", { class: "pw-row" }, el("h2", { class: "pw-title" }, "This computer"), el("span", { class: "pw-value" }, b.percent + "%")),
-      el("div", { class: "meter", role: "meter", "aria-label": "Battery", "aria-valuenow": b.percent, "aria-valuemin": 0, "aria-valuemax": 100 },
-        el("div", { class: "meter-fill" + (b.percent <= 20 && !b.plugged_in ? " low" : ""), style: "width:" + b.percent + "%" })),
-      el("span", { class: "pw-when" }, left))];
+    const b = page.battery;
+    if (!b.available) return [el("p", { class: "empty" }, "This device has no battery to read (a desktop on mains power).")];
+    return [el("section", { class: "glass pw-src" },
+      el("div", { class: "pw-src-top" }, el("span", { class: "pw-src-name" }, "This device"),
+        el("span", { class: "pw-src-read" + (b.meter.tone === "attention" ? " low" : "") }, b.percent + "%")),
+      el("div", { class: "meter" }, el("div", { class: "meter-fill " + b.meter.tone, style: "width:" + b.meter.pct + "%" })),
+      el("p", { class: "dim" }, b.plugged_in ? "Plugged in." : b.minutes_left ? "About " + b.minutes_left + " minutes left." : "On battery."))];
   }
 
-  function paint() {
-    if (!data.available) { $("panel").replaceChildren(el("p", { class: "empty" }, "Power isn't available on this MIA.")); return; }
-    $("power-sub").textContent = "Battery · Energy Sources";
-    $("tabs").replaceChildren(...TABS.map(([id, label]) => el("button", { type: "button", role: "tab", "aria-selected": String(id === tab),
-      onclick: () => { tab = id; paint(); } }, label)));
+  function draw() {
+    if (window.MIAIcons) MIAIcons.badge($("hero-icon"), "power");
+    $("power-sub").textContent = page.sources.length ? page.sources.length + (page.sources.length === 1 ? " source" : " sources") + " tracked."
+      : "Battery and energy sources.";
+    $("tabs").hidden = false;
+    $("tabs").replaceChildren(...TABS.map(([id, l]) => el("button", { type: "button", role: "tab", "aria-selected": String(id === tab),
+      onclick: () => { tab = id; history.replaceState(null, "", "#" + id); draw(); } }, l)));
     $("panel").replaceChildren(...(tab === "battery" ? battery() : sources()));
   }
 
-  MIAShell.start(async () => { data = await MIA.power(); paint(); }, { refreshOnChange: true });
+  MIAShell.start(async () => {
+    page = await MIA.power();
+    if (!page.available) { $("panel").replaceChildren(el("p", { class: "empty" }, "Energy tracking isn't set up on this MIA.")); return; }
+    draw();
+  });
 })();

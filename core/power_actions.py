@@ -2,61 +2,87 @@
 core.power_actions
 ====================
 
-Every change the Power screen makes (2026-11-07, DEC-0125: Power on the
-phone), as action kinds on the contract in core/actions.py: an energy
-source (solar, a generator, propane...) added, edited or deleted, from one
-table (core/record_actions.py), and `energy.reading`, a reading logged by
-hand on one of its meters (no sensors yet: core/energy_manager.py). The
-sources write through atomic_write_text and the readings go through the
-Data Logger, so "undo that" takes either back.
+Power's changes on the web (DEC-0113 canvas, DEC-0125 parity: Power had no
+phone screen). Energy sources (solar, a generator, propane, a battery bank)
+are added, renamed and removed through the shared record kinds
+(`energy_source.add` / `.edit` / `.delete`, core/record_actions.py), and a
+reading is logged with `energy.reading` ("tank 62 %", "3.8 kWh today"),
+written through core/energy_manager.py into the Data Logger like every
+reading. Entered by hand: no sensors are connected yet.
 """
 
 from __future__ import annotations
 
-from core.actions import ACTION_TYPES, ActionType, _need
+from core.actions import ACTION_TYPES, ActionError, ActionType, _need
 from core.energy_manager import ENERGY_SOURCE_TYPES
-from core.record_actions import Field, Record, field_dict, get, parse, record_form, record_kinds
+from core.record_actions import Field, Record, record_form, record_kinds
 
-SOURCE = Record("energy_source", "energy source", "source_id", "get_energy_source", "add_energy_source",
-                "update_energy_source", "delete_energy_source", store="energy",
-                delete_note="Its readings stay in the Data Logger.", fields=(
-                    Field("name", "Name", "text", True),
-                    Field("source_type", "Kind", "choice", options=tuple(ENERGY_SOURCE_TYPES), default="Other",
-                          say="kind", quiet_default=True),
-                    Field("notes", "Notes", "textarea"),
-                ))
+ENERGY_SOURCE = Record(
+    "energy_source", "energy source", "source_id", "get_energy_source", "add_energy_source", "update_energy_source",
+    "delete_energy_source", store="energy",
+    delete_note="Its readings are kept in the history.", fields=(
+        Field("name", "Name", "text", True),
+        Field("source_type", "Kind", "choice", options=tuple(ENERGY_SOURCE_TYPES), default="Other", say="kind",
+              quiet_default=True),
+        Field("notes", "Notes", "textarea"),
+    ))
 
-_METER = Field("meter_name", "Meter", "text", True, say="meter")
-_VALUE = Field("value", "Reading", "number", True)
-_UNIT = Field("unit", "Unit (%, kWh, gal...)", "text")
-_NOTE = Field("note", "Note", "textarea")
+
+def _source(context, params):
+    """The energy source named by source_id, or ActionError."""
+    store = _need(context, "energy")
+    found = store.get_energy_source(str(params.get("source_id") or ""))
+    if found is None:
+        raise ActionError("That energy source isn't here any more.")
+    return found
+
+
+def _value(params) -> float:
+    """The reading's number, or ActionError."""
+    try:
+        return float(str(params.get("value") or "").replace(",", "").strip())
+    except ValueError:
+        raise ActionError("What does it read? Give a number.") from None
 
 
 def _describe_reading(context, params) -> str:
-    """The sentence the approval card shows for `energy.reading` (Propose); raises ActionError when it can't be done."""
-    source = get(context, SOURCE, params)
-    meter, value, unit = parse(_METER, params.get("meter_name")), parse(_VALUE, params.get("value")), parse(_UNIT, params.get("unit"))
-    return f"Log {meter} {value:g}{(' ' + unit) if unit else ''} on {source.name}"
+    """The sentence the approval card shows for `energy.reading` (Propose); ActionError when it can't be done."""
+    source = _source(context, params)
+    meter = str(params.get("meter") or "").strip() or "Level"
+    unit = str(params.get("unit") or "").strip()
+    return f"Log {_value(params):g}{(' ' + unit) if unit else ''} for {source.name} ({meter})"
 
 
-def _log_reading(context, params) -> str:
-    """Does `energy.reading` once approved, and says what happened. The reading goes on the source's own meter."""
-    source = get(context, SOURCE, params)
-    meter, value = parse(_METER, params.get("meter_name")), parse(_VALUE, params.get("value"))
-    _need(context, "data_logger")
-    context.energy.log_energy_reading(source.source_id, meter, value, unit=parse(_UNIT, params.get("unit")),
-                                      note=parse(_NOTE, params.get("note")))
-    return f"Logged {meter} on {source.name}."
+def _reading(context, params) -> str:
+    """Does `energy.reading` once approved: one reading on the source's meter, kept in the Data Logger."""
+    source = _source(context, params)
+    meter = str(params.get("meter") or "").strip() or "Level"
+    unit = str(params.get("unit") or "").strip()
+    try:
+        _need(context, "energy").log_energy_reading(source.source_id, meter, _value(params), unit,
+                                                    str(params.get("note") or "").strip())
+    except ValueError as problem:
+        raise ActionError(str(problem)) from None
+    return f"Logged {_value(params):g}{(' ' + unit) if unit else ''} for {source.name}."
 
 
-POWER_ACTIONS: dict[str, ActionType] = {k.kind: k for k in record_kinds(SOURCE) + [
-    ActionType("energy.reading", "Log reading", {"source_id": "the energy source", "meter_name": "e.g. Fuel",
+READING_FIELDS = [
+    {"name": "meter", "label": "What it measures (Level, kWh today, Fuel...)", "type": "text", "required": False,
+     "options": [], "default": "Level"},
+    {"name": "value", "label": "Reading", "type": "number", "required": True, "options": [], "default": None},
+    {"name": "unit", "label": "Unit (%, kWh, gal...)", "type": "text", "required": False, "options": [], "default": "%"},
+    {"name": "note", "label": "Note (optional)", "type": "text", "required": False, "options": [], "default": None},
+]
+
+_KINDS = record_kinds(ENERGY_SOURCE) + [
+    ActionType("energy.reading", "Log Reading", {"source_id": "the source", "meter": "what it measures",
                                                  "value": "the reading", "unit": "optional", "note": "optional"},
-               _describe_reading, _log_reading),
-]}
+               _describe_reading, _reading),
+]
+POWER_ACTIONS = {k.kind: k for k in _KINDS}
 ACTION_TYPES.update(POWER_ACTIONS)
 
 
-def form_spec() -> dict:
-    """The Power screen's forms: an energy source, and a reading."""
-    return {"source": record_form(SOURCE), "reading": [field_dict(f) for f in (_METER, _VALUE, _UNIT, _NOTE)]}
+def forms() -> dict:
+    """The forms Power's screen shows: an energy source, and a reading."""
+    return {"energy_source": record_form(ENERGY_SOURCE), "reading": {"fields": READING_FIELDS}}

@@ -372,14 +372,6 @@
     }
   ],
   "on_pc_only": [
-    "Household",
-    "Power",
-    "Observations",
-    "Classroom",
-    "Memories",
-    "Maps",
-    "Navigation",
-    "Knowledge",
     "Toolbox",
     "The Lab",
     "Field Kit",

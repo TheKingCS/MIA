@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1106 files, 250,254 lines; 1106 files describe themselves; 13,712 of 14,381 classes and functions are documented.
+1107 files, 250,372 lines; 1107 files describe themselves; 13,716 of 14,386 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-400 files, 116,291 lines; 6,162 of 6,251 classes and functions documented
+400 files, 116,354 lines; 6,166 of 6,255 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -283,7 +283,7 @@
 - `core/plan_library.py`: The Library's plans shelf (Zac, 2026-11-07: "references for all kinds of stuff like woodworking plans, structure blueprints, material lists"). Three kinds of plan, found together by `find()`:
 - `core/play_actions.py`: Recreation (core/recreation.py, DEC-0098) through the action contract (core/actions.py): `play.log` (a game or sport played) and `play.delete`. The log writes through atomic_write_text, so "undo that" takes it back. Children play too: both are child-safe.
 - `core/port_scanner.py`: Pure-Python TCP connect-scan port scanner — docs/ROADMAP.md milestone 11.5, Field Kit's Security/Network Toolkit. Deliberately doesn't wrap `nmap`: `nmap` isn't installed in this dev sandbox and can't be added without sudo (the same "no sudo" wall as every other missing system package this project h
-- `core/power_actions.py`: Every change the Power screen makes (2026-11-07, DEC-0125: Power on the phone), as action kinds on the contract in core/actions.py: an energy source (solar, a generator, propane...) added, edited or deleted, from one table (core/record_actions.py), and `energy.reading`, a reading logged by hand on o
+- `core/power_actions.py`: Power's changes on the web (DEC-0113 canvas, DEC-0125 parity: Power had no phone screen). Energy sources (solar, a generator, propane, a battery bank) are added, renamed and removed through the shared record kinds (`energy_source.add` / `.edit` / `.delete`, core/record_actions.py), and a reading is 
 - `core/power_manager.py`: Power monitoring — docs/ROADMAP.md milestone 7.2. Defines a small backend-agnostic interface (`PowerBackend`, same shape as core/llm_manager.py's `LLMBackend` and core/voice_manager.py's `STTBackend`/`TTSBackend`), with one concrete implementation, `PsutilBatteryBackend`, using psutil's cross-platfo
 - `core/practices.py`: MIA's best practices, a series that keeps growing (DEC-0108; Zac, 2026-11-07: "MIA should have some kind of understanding of best practices for AI building, development of any kind, honestly everything she does she should have an evolving best practices series of documentation").
 - `core/presence.py`: Presence (DEC-0044, docs/UX_SYSTEM_AUDIT.md): what matters now, across everything MIA keeps, in one ranked list, so nobody has to visit eight screens to find out. Each item says **why** it's there, what **kind** of thing it is (a deadline, a fact, a suggestion, progress), where it came from, where t
@@ -387,7 +387,7 @@
 - `core/web_inbox.py`: The Inbox on the web and the phone (Zac, 2026-10-16: "Can you build the inbox for sending stuff to MIA?"). The document inbox itself is core/inbox_manager.py: a file sent in (from the phone's Share menu, the Upload button, a dropped file, or email) becomes an item with MIA's reading of it (a receipt
 - `core/web_money.py`: The Money screen's data (2026-10-06, DEC-0017): everything the PC app's Budget screen shows, assembled here so `web/` holds no logic. Served as `/api/money`; changes go through the action kinds in core/money_actions.py.
 - `core/web_more.py`: The Journal, Workshop, Expeditions, Music, Files and People screens on the web (Zac, 2026-10-16: on the phone they "are empty right now and just bring up a chat with MIA"). Each assembler reads its stores and returns what its screen shows; every change is an action in core/more_actions.py.
-- `core/web_power.py`: The Power screen's data (web/power.html; 2026-11-07, DEC-0125: Power was the PC app's only). Two parts, as the design canvas draws them: this computer's battery (core/power_manager.py; a desktop usually has none) and the energy sources tracked by hand (core/energy_manager.py), each with the latest r
+- `core/web_power.py`: Power's web screen (DEC-0113 canvas, DEC-0125: Power had no phone screen). Two parts:
 - `core/web_progress.py`: Missions, Skills and Character on the web (2026-10-06, DEC-0017/0018, answering H-0013): everything the PC app's screens show, assembled here so `web/` holds no logic. Served as `/api/missions`, `/api/skills` and `/api/character`; changes are the action kinds in core/mission_actions.py.
 - `core/web_push.py`: Sends Web Push messages via pywebpush (VAPID-signed, per the standard Web Push protocol) and owns this device's VAPID keypair — generated once on first use and persisted to data/vapid_keys.json, never regenerated after that (regenerating it would silently invalidate every subscription a browser has 
 - `core/web_screens.py`: Kitchen, Workout and Real Estate on the web (2026-10-06, DEC-0017/0018): everything the PC app's screens show, assembled here so `web/` holds no logic. Served as `/api/kitchen` (and one recipe, `/api/kitchen/recipe/{id}`), `/api/workout` and `/api/real-estate`; changes are the action kinds in core/k
@@ -411,7 +411,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 2,834 lines; 34 of 34 classes and functions documented
+2 files, 2,835 lines; 34 of 34 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -679,7 +679,7 @@
 
 ## tests/: the test suite: what each part must do
 
-368 files, 66,856 lines; 5,307 of 5,887 classes and functions documented
+369 files, 66,910 lines; 5,307 of 5,888 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -930,7 +930,7 @@
 - `tests/test_port_scanner.py`: Unit tests for core.port_scanner. Uses a real local TCP server bound to an ephemeral port (socket.bind(("127.0.0.1", 0))) rather than mocking sockets or reaching out to a real remote host — deterministic (no network/internet dependency) while still exercising the real connect_ex() path, not a hand-c
 - `tests/test_power_manager.py`: Unit tests for core.power_manager. should_warn_low_battery() is tested directly with constructed PowerStatus objects (pure, deterministic — no psutil or real battery involved). PsutilBatteryBackend/PowerManager are tested against monkeypatched psutil.sensors_battery(), same approach as test_system_h *(5 undocumented)*
 - `tests/test_power_module.py`: Unit tests for modules.power.module's pure formatting functions — no Qt event loop needed. Same shape as tests/test_system_health.py's format_system_health test.
-- `tests/test_power_web.py`: Power on the web and by voice (DEC-0125): the screen's data (the battery, each energy source's meters with their latest reading), its action kinds, and logging a reading out loud through the same action.
+- `tests/test_power_web.py`: Power by voice (DEC-0125): a reading said out loud ("log the propane at 60 percent") is logged through the Power screen's own action, `energy.reading` (core/power_actions.py), so it's undoable. The screen itself is tested in tests/test_web_power.py.
 - `tests/test_presence.py`: What matters now across every app, with why (core/presence.py): it feeds every turn so MIA answers knowing the person's world. The five-places frame it came with (DEC-0044) was undone by Zac, 2026-10-24; the apps are the layout again. *(1 undocumented)*
 - `tests/test_private_budget.py`: A private budget (core/personal_data.py, 2026-10-01): one person keeps their money apart from the household's; everyone else keeps the shared budget; switching back keeps the private one. *(1 undocumented)*
 - `tests/test_private_journal.py`: The encrypted private journal (core/private_journal.py).
@@ -1026,6 +1026,7 @@
 - `tests/test_web_inbox.py`: The Inbox screen on the web and the phone (Zac, 2026-10-16: "build the inbox for sending stuff to MIA"): core/web_inbox.py shows what's waiting (reading the folder first, so the phone needs no timer), and core/inbox_actions.py files, dismisses and sends notes through Propose → Approve. *(3 undocumented)*
 - `tests/test_web_money.py`: DEC-0017 (2026-10-06): Money on the web does everything the PC app's Budget screen does. The page's data (core/web_money.py) and every change as an action kind (core/money_actions.py): add, edit, delete bills, income sources, income, expenses and debts; pay a debt; set budgets. Each one proposed, ap *(5 undocumented)*
 - `tests/test_web_more.py`: The Journal, Workshop, Expeditions (with what has to happen before a trip), Music, Files and People screens (Zac, 2026-10-16: on the phone they "are empty right now and just bring up a chat with MIA"): core/web_more.py builds each page, core/more_actions.py makes every change through Propose → Appro
+- `tests/test_web_power.py`: Power on the web (DEC-0125, the design canvas's Power, DEC-0113: core/web_power.py and core/power_actions.py): energy sources with their latest reading per meter, a meter for a percent (amber when low), when it was logged, and every change as an action; the device's battery when it has one. *(1 undocumented)*
 - `tests/test_web_progress.py`: DEC-0017/0018 (2026-10-06), H-0013: Missions, Skills and Character on the web. The pages (core/web_progress.py) and every change as an action kind (core/mission_actions.py), each proposed, approved, recorded and undoable, with rewards going to the person who approved it.
 - `tests/test_web_push.py`: Unit tests for core.web_push. The actual push-service HTTP call (pywebpush.webpush) is mocked throughout — this is the standard, correct way to test Web Push code without a real browser/push service (see core/web_push.py's own docstring and the Mobile Phase 1 plan). *(5 undocumented)*
 - `tests/test_web_screens.py`: DEC-0017/0018 (2026-10-06): Kitchen, Workout and Real Estate on the web. The pages (core/web_screens.py) and every change as an action kind (core/kitchen_actions.py, core/workout_actions.py, core/estate_actions.py), each proposed, approved, recorded and undoable.
@@ -1111,7 +1112,7 @@
 - `web/places.js`: places.js — My Places (claude, 2026-10-17, DEC-0028 #13). Renders MIA.places() (core/places.py): each place, what arriving there does, Add Place (where you are now, or typed in), Remove, and the switch that lets this device notice when you arrive (Settings → Location quests). Formatting only; the wa
 - `web/plan.js`: plan.js — My plan (claude, 2026-10-14, DEC-0020, Muse's H-0028): one screen, reached from both Kitchen and Workout. Goals, the training week (which days, and what each training day is), skills to practice, meals and preferences, milestones. Renders MIA.fitness() (plan, plan_text); every save is a fi
 - `web/play.js`: play.js — games and sports (claude, 2026-11-07, DEC-0098). Renders MIA.play() (core/recreation.py): the training load by week as bars and the latest games, as the design canvas has them (DEC-0113). Logging and taking one out go through actions (play.log, play.delete). Formatting only; the look is mu
-- `web/power.js`: power.js — Power (claude, 2026-11-07, DEC-0125: Power on the phone, as the design canvas draws it). Renders MIA.power() (core/web_power.py): two tabs, Energy Sources (each source with its meters' latest readings, a fill when read in percent, when it was logged, and Log Reading) and Battery (this com
+- `web/power.js`: power.js — Power (claude, 2026-11-07, DEC-0125; the design canvas's Power, DEC-0113). Renders MIA.power() (core/web_power.py): Energy Sources (each with its latest reading per meter, a meter for a percent, when it was logged, Log Reading) and Battery (this device's). Adding a source, logging a readi
 - `web/profile.js`: profile.js — the Profile screen (claude, 2026-10-07; Zac: the gear's Profile). Renders MIA.profile() (core/web_account.py) as the design canvas has it (DEC-0113): your name, email, country, what MIA helps with, the password and the recovery code; no household (DEC-0119). Name, email, country and int
 - `web/real-estate.js`: real-estate.js — the Real Estate screen (claude, 2026-10-06, DEC-0017/0018). Renders MIA.realEstate() (core/web_screens.py): each property with its status, where it is, rent, what's owed, equity and cash flow, its upkeep (its own Maintenance asset, opened on asset.html) and related missions. Since Z
 - `web/recipe.js`: recipe.js — one recipe, opened from a meal or recipe card (claude, 2026-10-14, Zac's idea; 2026-11-07, DEC-0113: Start Cooking opens cook mode, web/cook.js). Renders MIA.recipe(id) (core/web_screens. recipe_page): nutrition per serving, each ingredient with whether the house has it, the steps (tick 

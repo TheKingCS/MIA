@@ -322,19 +322,13 @@
       { id: "o2", text: "Train on the days the plan says.", section: "week", how: "checked against your workouts each week", self_rated: false, score: { pct: 75, text: "3 of 4 weeks" } },
       { id: "o3", text: "No phone at dinner.", section: "rules", how: "yours to rate, 1 to 5, each week", self_rated: true, score: { pct: 80, text: "4 / 5 last week" } }] })
       : call("GET", "/api/operating-journal"),
+    // Power (core/web_power.py, DEC-0125): the battery and the energy sources tracked by hand.
+    power: () => read("/api/power", "power"),
     play: () => demo ? Promise.resolve({ efforts: { easy: 3, moderate: 5, hard: 7 }, lines: [],
       weeks: [60, 90, 45, 120, 75, 100].map((m, i) => ({ week: ["2026-09-28", "2026-10-05", "2026-10-12", "2026-10-19", "2026-10-26", "2026-11-02"][i], played: 2, play_minutes: m, play_load: m * 5, workouts: 2, workout_minutes: 90 })),
       played: [{ id: "g1", what: "Pickup basketball", minutes: 60, effort: 7, effort_word: "Hard", with: [], date: "2026-11-05", load: 420 },
         { id: "g2", what: "Disc golf, 18 holes", minutes: 40, effort: 3, effort_word: "Easy", with: [], date: "2026-11-01", load: 120 }] })
       : call("GET", "/api/play"),
-    // Power (DEC-0125, core/web_power.py): the computer's battery and the energy sources logged by hand.
-    power: () => demo ? Promise.resolve({ available: true, battery: { present: false }, kinds: ["Solar", "Generator", "Propane", "Battery Bank", "Other"],
-      forms: { source: { noun: "energy source", id_param: "source_id", fields: [{ name: "name", label: "Name", type: "text", required: true, options: [] }] }, reading: [] },
-      sources: [
-        { id: "e1", name: "Propane tank", kind: "Propane", notes: "", values: {}, meters: [{ meter: "Level", value: 62, unit: "%", percent: 62, when: "Mon", note: "" }] },
-        { id: "e2", name: "Solar array", kind: "Solar", notes: "", values: {}, meters: [{ meter: "Today", value: 3.8, unit: "kWh", percent: null, when: "today, 4 pm", note: "" }] },
-        { id: "e3", name: "Generator fuel", kind: "Generator", notes: "", values: {}, meters: [{ meter: "Fuel", value: 20, unit: "%", percent: 20, when: "2 weeks ago", note: "" }] }] })
-      : call("GET", "/api/power"),
     news: () => demo ? Promise.resolve({ on: true, day: "2026-11-07", now: "morning", scripts: { morning: "Good morning. Three good things today…" }, tracks: {},
       personalities: [{ key: "morning", name: "Morning" }],
       stories: [{ title: "A river cleanup removed 12 tons of trash in a weekend.", topic: "Environment", known: "confirmed", tag: "Confirmed by two outlets", tone: "ok",

@@ -80,7 +80,7 @@ def _action_log_energy_reading(context, arguments: dict) -> str:
         unit = "%"
     try:
         done = actions.approve(context, actions.propose(context, "energy.reading", {
-            "source_id": source.source_id, "meter_name": meter, "value": value, "unit": unit}, proposed_by="mia").proposal_id)
+            "source_id": source.source_id, "meter": meter, "value": value, "unit": unit}, proposed_by="mia").proposal_id)
     except ActionError as problem:
         return str(problem)
     if done.status != "executed":

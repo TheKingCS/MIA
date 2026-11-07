@@ -757,6 +757,6 @@ def test_power_on_the_web_lists_sources_and_adds_one_through_an_action(client, c
     """Power on the phone (DEC-0125): the screen reads the battery and the sources; adding one is an action."""
     auth = _signed_in(client, context)
     page = client.get("/api/power", headers=auth).json()
-    assert page["available"] and page["sources"] == [] and "Propane" in page["kinds"]
+    assert page["available"] and page["sources"] == [] and "energy_source" in page["forms"]
     assert _do(client, auth, "energy_source.add", {"name": "Propane tank", "source_type": "Propane"}).json()["status"] == "executed"
     assert [s["name"] for s in client.get("/api/power", headers=auth).json()["sources"]] == ["Propane tank"]

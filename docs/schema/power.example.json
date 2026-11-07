@@ -1,0 +1,161 @@
+{
+  "available": true,
+  "low_percent": 25,
+  "battery": {
+    "available": false
+  },
+  "sources": [
+    {
+      "id": "g1",
+      "name": "Generator fuel",
+      "type": "Generator",
+      "notes": "",
+      "needs_you": true,
+      "values": {
+        "name": "Generator fuel",
+        "source_type": "Generator",
+        "notes": ""
+      },
+      "meters": [
+        {
+          "name": "Level",
+          "value": 20,
+          "unit": "%",
+          "text": "20%",
+          "when": "2 weeks ago",
+          "at": "2026-10-24T09:00:00",
+          "meter": {
+            "pct": 20,
+            "tone": "attention"
+          },
+          "count": 4
+        }
+      ]
+    },
+    {
+      "id": "p1",
+      "name": "Propane tank",
+      "type": "Propane",
+      "notes": "",
+      "needs_you": false,
+      "values": {
+        "name": "Propane tank",
+        "source_type": "Propane",
+        "notes": ""
+      },
+      "meters": [
+        {
+          "name": "Level",
+          "value": 62,
+          "unit": "%",
+          "text": "62%",
+          "when": "5 days ago",
+          "at": "2026-11-02T08:00:00",
+          "meter": {
+            "pct": 62,
+            "tone": "ok"
+          },
+          "count": 6
+        }
+      ]
+    },
+    {
+      "id": "s1",
+      "name": "Solar array",
+      "type": "Solar",
+      "notes": "",
+      "needs_you": false,
+      "values": {
+        "name": "Solar array",
+        "source_type": "Solar",
+        "notes": ""
+      },
+      "meters": [
+        {
+          "name": "kWh today",
+          "value": 3.8,
+          "unit": "kWh",
+          "text": "3.8 kWh",
+          "when": "3 h ago",
+          "at": "2026-11-07T16:00:00",
+          "meter": null,
+          "count": 30
+        }
+      ]
+    }
+  ],
+  "forms": {
+    "energy_source": {
+      "noun": "energy source",
+      "id_param": "source_id",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "source_type",
+          "label": "Kind",
+          "type": "choice",
+          "required": false,
+          "options": [
+            "Solar",
+            "Generator",
+            "Propane",
+            "Battery Bank",
+            "Other"
+          ],
+          "default": "Other"
+        },
+        {
+          "name": "notes",
+          "label": "Notes",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    },
+    "reading": {
+      "fields": [
+        {
+          "name": "meter",
+          "label": "What it measures (Level, kWh today, Fuel...)",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": "Level"
+        },
+        {
+          "name": "value",
+          "label": "Reading",
+          "type": "number",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "unit",
+          "label": "Unit (%, kWh, gal...)",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": "%"
+        },
+        {
+          "name": "note",
+          "label": "Note (optional)",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    }
+  }
+}

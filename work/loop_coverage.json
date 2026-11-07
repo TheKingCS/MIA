@@ -15,11 +15,11 @@
   },
   "action:energy": {
    "status": "none",
-   "why": "readings entered by hand, as on the Power screen and by voice; nothing of MIA's to judge until a sensor or a running-low finding needs one (like store:energy)"
+   "why": "readings and sources entered by hand (Power, DEC-0125): measurements, not her choices; nothing of MIA's to improve"
   },
   "action:energy_source": {
    "status": "none",
-   "why": "adding, renaming or removing a source is the person's own record-keeping"
+   "why": "readings and sources entered by hand (Power, DEC-0125): measurements, not her choices; nothing of MIA's to improve"
   },
   "action:firstboot": {
    "status": "none",
