@@ -256,11 +256,8 @@
       route: start && end ? { from: start, to: end, km: 1.11, miles: 0.69, bearing: 0, toward: "N" } : null,
       sky: { at: "w2", name: "Trailhead", sunrise: "06:31", sunset: "16:51", moon: "Full moon" } })
       : call("GET", "/api/navigation?start=" + encodeURIComponent(start) + "&end=" + encodeURIComponent(end)),
-    household: () => demo ? Promise.resolve({ done: 1, total: 3, routines: [
-      { id: "t1", name: "Dishes", every: "day", done: true, progress: 1, target: 1, streak: 6 },
-      { id: "t2", name: "Make the bed", every: "day", done: false, progress: 0, target: 1, streak: 0 },
-      { id: "t3", name: "Laundry", every: "week", done: false, progress: 1, target: 2, streak: 3 }] })
-      : call("GET", "/api/household"),
+    // The Household (core/household_routines.py): routines, Done Today, paused ones (DEC-0113 canvas).
+    household: () => read("/api/household", "household"),
     classroom: () => demo ? Promise.resolve({ available: true, subjects: [
       { id: "s1", name: "Welding", category: "Trade skills", done: 2, total: 4, courses: [
         { id: "c1", name: "MIG basics", done: 2, total: 3, lessons: [

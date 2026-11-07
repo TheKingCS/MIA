@@ -424,24 +424,15 @@ def _action_log_household_routine(context: AppContext, arguments: dict) -> str:
 
 
 def _action_add_household_routine(context: AppContext, arguments: dict) -> str:
-    """Assistant tool `add_household_routine`: sets up a household routine, so many times a day or a week, with a streak. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
-    from core.gamification import SkillWeight
+    """Assistant tool `add_household_routine`: sets up a household routine, so many times a day or a week, with a streak (core/household_routines.add_routine, the same as the Household screen's Add). Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
+    from core.household_routines import add_routine
 
-    if context.recurring_missions is None:
-        return "Household routines aren't available right now."
-    name = str(arguments.get("name", "") or "").strip()
-    if not name:
-        return "What's the routine called?"
-    if any(t.name.lower() == name.lower() for t in _household_templates(context)):
-        return f"You already have a {name} routine."
     recurrence = "weekly" if str(arguments.get("recurrence", "")).strip().lower().startswith("week") else "daily"
     target = max(1.0, _num(arguments.get("times"), 1.0) or 1.0)
-    context.recurring_missions.add_template(
-        name=name, objective_description_template=f"{name} ({{target:g}}x)", base_target=target,
-        target_increment_per_week=0.0, daily_reward_xp=10, weekly_bonus_reward_xp=25,
-        start_date=date.today().isoformat(), daily_skill_rewards=[SkillWeight("household_management", 5)],
-        icon="\U0001F9FA", recurrence=recurrence, category="Household",
-    )
+    try:
+        name = add_routine(context, arguments.get("name", ""), target, "week" if recurrence == "weekly" else "day").name
+    except ValueError as problem:
+        return str(problem)
     per = "a week" if recurrence == "weekly" else "a day"
     return f"Added {name}: {target:g} time{'s' if target != 1 else ''} {per}. I'll track your streak."
 

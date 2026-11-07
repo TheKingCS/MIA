@@ -1,0 +1,114 @@
+{
+  "routines": [
+    {
+      "id": "t2",
+      "name": "Trash to the road",
+      "every": "week",
+      "when": "This week",
+      "done": false,
+      "progress": 0,
+      "target": 1,
+      "streak": 0,
+      "streak_text": "a new streak"
+    },
+    {
+      "id": "t3",
+      "name": "Water the seedlings",
+      "every": "day",
+      "when": "Daily",
+      "done": false,
+      "progress": 0,
+      "target": 1,
+      "streak": 3,
+      "streak_text": "3 days"
+    },
+    {
+      "id": "t4",
+      "name": "Vacuum",
+      "every": "week",
+      "when": "This week",
+      "done": false,
+      "progress": 0,
+      "target": 1,
+      "streak": 0,
+      "streak_text": "a new streak"
+    },
+    {
+      "id": "t0",
+      "name": "Feed the chickens",
+      "every": "day",
+      "when": "Daily",
+      "done": true,
+      "progress": 1,
+      "target": 1,
+      "streak": 21,
+      "streak_text": "21 days"
+    },
+    {
+      "id": "t1",
+      "name": "Dishes",
+      "every": "day",
+      "when": "Daily",
+      "done": true,
+      "progress": 1,
+      "target": 1,
+      "streak": 6,
+      "streak_text": "6 days"
+    },
+    {
+      "id": "t5",
+      "name": "Laundry",
+      "every": "week",
+      "when": "This week",
+      "done": true,
+      "progress": 2,
+      "target": 2,
+      "streak": 4,
+      "streak_text": "4 weeks"
+    }
+  ],
+  "paused": [
+    {
+      "id": "t6",
+      "name": "Clean the gutters",
+      "every": "week",
+      "when": "Weekly"
+    }
+  ],
+  "done": 3,
+  "total": 6,
+  "pct": 50,
+  "forms": {
+    "routine": {
+      "fields": [
+        {
+          "name": "name",
+          "label": "What it is (Dishes, Trash to the road...)",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "times",
+          "label": "How many times",
+          "type": "number",
+          "required": false,
+          "options": [],
+          "default": 1
+        },
+        {
+          "name": "every",
+          "label": "Every",
+          "type": "choice",
+          "required": false,
+          "options": [
+            "day",
+            "week"
+          ],
+          "default": "day"
+        }
+      ]
+    }
+  }
+}

@@ -92,6 +92,7 @@ from core.waypoint_manager import WAYPOINT_CATEGORIES, WaypointManager
 from core.assistant_why_actions import register_why_actions
 from core.assistant_self_actions import register_capability_actions, register_self_actions
 from core.assistant_cooking_actions import register_cooking_actions
+from core.assistant_household_actions import register_household_actions
 from core.assistant_lab_actions import register_lab_actions
 from core.assistant_toolbox_actions import register_toolbox_actions
 from core.assistant_goods_actions import register_goods_actions
@@ -277,7 +278,8 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     for Character, Skills, the Reward Shop, Insurance, Kept, the Operating Journal, Play and Files, the Security
     cameras, and the energy sources read and logged (DEC-0125), so the phone can ask about them too, cook mode's tools
     (core/assistant_cooking_actions.py), the Toolbox's (board feet, concrete, alarms on or off:
-    core/assistant_toolbox_actions.py) and the Lab's delete_lab_reading (core/assistant_lab_actions.py)."""
+    core/assistant_toolbox_actions.py), the Lab's delete_lab_reading (core/assistant_lab_actions.py) and the
+    Household's pause_household_routine (core/assistant_household_actions.py)."""
     registry = context.assistant_actions
     registry.register(connectivity_action())
     register_journal_actions(registry)
@@ -288,6 +290,7 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     register_cooking_actions(registry)  # cook mode by voice (DEC-0113, DEC-0125)
     register_toolbox_actions(registry)  # board feet, concrete, alarms on/off (DEC-0125)
     register_lab_actions(registry)  # the Lab: delete a reading by voice (DEC-0125)
+    register_household_actions(registry)  # pause or resume a routine by voice (DEC-0125)
     register_dungeon_actions(registry)  # the Dungeon: shifts, loot, quests (DEC-0046)
     register_loop_actions(registry)  # the loop: when things happen (DEC-0047)
     register_checkin_actions(registry)  # the Sunday check-in (DEC-0047)

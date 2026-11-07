@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1125 files, 252,693 lines; 1125 files describe themselves; 13,820 of 14,492 classes and functions are documented.
+1127 files, 252,968 lines; 1127 files describe themselves; 13,832 of 14,504 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-410 files, 117,841 lines; 6,239 of 6,328 classes and functions documented
+412 files, 118,053 lines; 6,250 of 6,339 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -34,6 +34,7 @@
 - `core/assistant_focus_actions.py`: Assistant tools for each person's Apps screen (core/focus_presets.py, 2026-10-01): "switch me to student mode", "hide the Lab", "show me the Greenhouse again", "what's my focus?". Changes are the speaker's own.
 - `core/assistant_goods_actions.py`: Saying it to MIA (2026-10-21): the homestead's newest screens by voice. "How many eggs this week?", "I collected 9 eggs", "What goods do I have on hand?", "Sold 3 loaves of banana bread", "How close am I to freedom?", "What's due for taxes?". Each one runs the same code its screen does (the action k
 - `core/assistant_homestead_actions.py`: Assistant tools for Finance #2, homestead builds and tools (core/homestead_costs.py): "I spent $240 on lumber for the greenhouse", "I bought a DeWalt drill for $199 for the greenhouse", "How much have I spent on the greenhouse?", "What has the mower cost me?", "Set the greenhouse budget to $5,000".
+- `core/assistant_household_actions.py`: The Household by voice, for what its screen added (DEC-0125: full use both ways). "Pause the vacuum routine", "start the trash routine again": the same `routine.pause` / `routine.resume` action kinds the Household screen's buttons use (core/routine_actions.py), so "undo that" brings it back. Adding,
 - `core/assistant_humor_actions.py`: "Be funnier", "tone down the jokes", "no jokes for now" (Zac, 2026-11-07): the person sets how funny MIA is with them, in chat. One tool, set_humor, moving their own level (core/personality.py HUMOR_LEVELS: off, rare, sometimes, often, lots) up or down a step or to a level by name. Only the speaker'
 - `core/assistant_inbox_actions.py`: Assistant tools for the document inbox (core/inbox_manager.py): what's waiting, "file it" (with MIA's proposal, or the owner's correction of which tool or build it's for), and "throw that one out". Filing by voice adds every maintenance step MIA found in a manual unless the owner says "without the t
 - `core/assistant_lab_actions.py`: The Lab by voice, for what the web Lab added (DEC-0125: full use both ways). "Delete the last soil moisture reading" takes out the newest reading in that series with the same action kind the Lab's Delete button uses (core/lab_reading_actions.py), so "undo that" brings it back. Logging and listing re
@@ -187,7 +188,7 @@
 - `core/homestead_costs.py`: Finance #2 (2026-09-28): what the owner's homestead builds and tools actually cost. The owner asked for MIA to "help me manage my homestead I am building and the costs associated with my tools, and builds."
 - `core/homestead_manager.py`: Watched-folder ingestion for MIA Home's summarized-state snapshots from sibling automation projects — the first (and so far only) source is MIA Homestead's greenhouse/aquaponics system (`~/Projects/mia-homestead`, a separate repo), which exports via its own `viewer/export_home_snapshot.py`. See that
 - `core/household_manager.py`: Households (2026-10-01, docs/ROADMAP.md "People and ownership"): MIA is built for anyone, so nothing is shared between people unless they choose it. Every new account starts in a household of its own. Two people share the household things (calendar, kitchen, budget, maintenance, builds, inventory, t
-- `core/household_routines.py`: The Household's web screen (web/household.html): the household's routines (recurring-mission templates in the "Household" category: laundry, dishes, hygiene), each with its current occurrence (today's, or this week's for a weekly one), how far along it is and its streak, and the total for the day. L
+- `core/household_routines.py`: The Household's web screen (web/household.html; the design canvas's Household, DEC-0113): the household's routines (recurring-mission templates in the "Household" category: laundry, dishes, the trash), each with its current occurrence (today's, or this week's for a weekly one), how far along it is a
 - `core/imports.py`: Bring your life with you (2026-10-01): a new person shouldn't start from an empty MIA. Three common exports from other apps:
 - `core/inbox_actions.py`: The Inbox screen's changes (Zac, 2026-10-16), on the action contract in core/actions.py:
 - `core/inbox_classify.py`: Pure logic behind the document inbox (core/inbox_manager.py, 2026-09-28): given a document's text, what is it, whose is it, and what does it say that MIA can file.
@@ -318,6 +319,7 @@
 - `core/response_composer.py`: How much MIA says, and how, on the device she's speaking through (DEC-0067; P2 of docs/PERSONALITY_AND_ECOSYSTEM_AUDIT.md). One identity, three surfaces:
 - `core/reward_shop.py`: The Reward Shop (DEC-0028, the game layer's first piece; Zac 2026-10-17): spend the credits you earn on real rewards you set yourself ("new bike pedals = 3,000", "guilt-free gaming night = 500").
 - `core/rewards_manager.py`: Rewards — real lifetime stats (mower hours, workout hours, missions completed, ...) unlocking real cosmetic/emblem rewards at thresholds, the "Call of Duty headshots/kills/bloodthirstys" motivational-stats system the user asked for (2026-09-14), alongside a character customization vision (a hat unlo
+- `core/routine_actions.py`: The Household's routines changed from the screen (DEC-0113 canvas Household, DEC-0125: routines could only be added by voice). `routine.add` sets one up (core/household_routines.add_routine, the same as the add_household_routine voice tool); `routine.pause` stops it making new missions while keeping
 - `core/safety_escalation.py`: When a child's message triggers the safety floor (Q-0002, approved by the owner 2026-10-05, H-0011): the child gets the immediate safety reply (core/safety_floor.py) and is told plainly that a parent who looks after their account will be told; each guardian (core/child_accounts.py) gets a notificati
 - `core/safety_floor.py`: The safety floor from docs/COGNITIVE_EXTENSION_PROPOSAL.md (slice A): a deterministic check on every message, before any mode and before the model sees it. On clear signs that the user may be in danger (thoughts of suicide, self-harm, someone threatening them) MIA answers with fixed, human-written t
 - `core/saga.py`: The Chronicle Archive for *MIA: The Chronicles* (DEC-0084; Zac and ChatGPT, H-0081: "a dedicated structure that continuously gathers and organizes information that could become part of future comic issues"; `docs/COUNCIL_AND_CHRONICLES_REVIEW.md` section 7). Not `core/chronicle.py`: that's each pers
@@ -689,7 +691,7 @@
 
 ## tests/: the test suite: what each part must do
 
-374 files, 67,384 lines; 5,344 of 5,927 classes and functions documented
+374 files, 67,423 lines; 5,345 of 5,928 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -835,7 +837,7 @@
 - `tests/test_homestead_goods.py`: Homestead goods (DEC-0036): batches in kitchen units, stock with a made date and a sell-by, sold oldest first, leftovers tossed as a loss, a market day's tally read from the books, and the Builds tab's Sell First and Best Earner (DEC-0113).
 - `tests/test_homestead_manager.py`: Unit tests for core.homestead_manager — mirrors tests/test_finance_manager.py's structure exactly (same isolated tmp_path watched folder, same _FakeConfig pattern), since core.homestead_manager is a deliberate sibling of core.finance_manager, not a shared abstraction (see that module's own docstring *(4 undocumented)*
 - `tests/test_household_module.py`: Unit tests for modules.household.module's pure functions, same style as tests/test_greenhouse_module.py (no Qt event loop, no fixtures). *(2 undocumented)*
-- `tests/test_household_routines.py`: The Household's web screen (core/household_routines.py): the household's routines, each with its current occurrence, how far along, and its streak.
+- `tests/test_household_routines.py`: The Household's web screen (core/household_routines.py, the design canvas's Household): the household's routines, each with its current occurrence, how far along, and its streak in words; paused ones apart; and routines added, paused and resumed as actions (core/routine_actions.py) and by voice (cor
 - `tests/test_imports.py`: Imports from other apps (core/imports.py), 2026-10-01: calendars (.ics), contacts (.vcf) and bank statements (.csv). *(1 undocumented)*
 - `tests/test_inbox.py`: Document inbox: classification (core/inbox_classify.py), intake and filing (core/inbox_manager.py), email checking (core/inbox_mail.py), the voice tools, the phone upload endpoint and the Inbox screen.
 - `tests/test_inbox_goes_to.py`: Inbox (DEC-0113): each item says in one line where filing it would put it (core/web_inbox.goes_to). Pure logic, so it runs without Qt.
@@ -1068,7 +1070,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-78 files, 14,177 lines
+78 files, 14,201 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
@@ -1098,7 +1100,7 @@
 - `web/grow.js`: grow.js — the Grow Lab (claude, 2026-10-17, DEC-0030 phase D). Renders MIA.grow() (core/web_grow.py), as tabs of the Greenhouse (Zac, 2026-10-17: "Isn't Grow Lab essentially what the Greenhouse app is"): equipment.js shows them beside the greenhouse's equipment through window.MIAGrow. Tabs: Growing 
 - `web/guitar.js`: guitar.js — a learning path (claude, 2026-11-07, DEC-0111, DEC-0112): guitar by default, any path with ?path=<id>. Renders MIA.guitar() (core/guitar.py): the stage, this week against the plan, the streak, the bests, what to work on next, and each open check. A check MIA hears gets a Record button: a
 - `web/home.js`: home.js — MIA's Home (muse, 2026-10-05).
-- `web/household.js`: household.js — the household's routines (claude, 2026-11-06). Renders MIA.household() (core/household_routines.py): each routine's current occurrence (today's, or this week's), how far along it is, its streak, and the day's total. "Did it" is routine.log, so undo takes it back. Formatting only; the 
+- `web/household.js`: household.js — the household's routines (claude, 2026-11-06; the design canvas's Household, DEC-0113, 2026-11-07). Renders MIA.household() (core/household_routines.py): Done Today with its meter, then a card per routine (what it is, daily or this week, its streak in words) with Did It, or Done; what
 - `web/icons.js`: icons.js — MIA's interface icons (claude, 2026-10-15, DEC-0023). One line-icon set for the frame (navigation, the bottom bar, header badges, app tiles): 24-unit grid, 1.6 stroke, round joins, drawn in currentColor so the theme colors them. Content keeps its own icons (a mission's or a skill's emoji 
 - `web/inbox.js`: inbox.js — the Inbox screen (claude, 2026-10-16; Zac: "build the inbox for sending stuff to MIA"). Send To MIA: a photo, a file or a note (and from any app, the phone's Share menu). Waiting: what MIA read in each one and where she proposes it goes; File It opens the proposal to check (what it's for,
 - `web/insurance.js`: insurance.js — the insurance check-up (claude, 2026-10-19, DEC-0034). Renders MIA.insurance() (core/insurance.py) in tabs: My Policies (each policy, what it costs a year, what's worth a look), Shop It (what an agent asks for, the quote request MIA drafts, the quotes side by side against what you hav

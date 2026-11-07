@@ -19,6 +19,10 @@ per week (tally target 7 — "how many of this week's daily missions got
 done" — which doubles as this feature's whole streak/bonus mechanism,
 no separate counter needed).
 
+A routine can be paused and resumed (`set_active`, 2026-11-07, the
+Household screen's Pause): a paused one makes no new missions and keeps
+its history.
+
 Streak is deliberately NOT new persisted state: every daily occurrence
 is already a real Mission with a real `occurrence_key` (its ISO date)
 and a real `status`, so "how many days in a row" is fully derivable
@@ -275,6 +279,16 @@ class RecurringMissionManager:
         self._templates.append(template)
         self._save()
         log.info("Recurring mission template added: '%s'", name)
+        return template
+
+    def set_active(self, template_id: str, active: bool) -> RecurringMissionTemplate:
+        """Pauses (False) or resumes (True) a routine: a paused one makes no new missions and keeps its history, so
+        resuming picks it back up. ValueError for an unknown template."""
+        template = self.get_template(template_id)
+        if template is None:
+            raise ValueError(f"No routine with id '{template_id}'.")
+        template.active = bool(active)
+        self._save()
         return template
 
     def get_template(self, template_id: str) -> Optional[RecurringMissionTemplate]:
