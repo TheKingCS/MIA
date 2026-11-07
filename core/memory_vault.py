@@ -72,6 +72,7 @@ _NAME_DATE = re.compile(r"(20\d\d)[-_]?([01]\d)[-_]?([0-3]\d)[-_ T]?([0-2]\d)[-_
 
 
 def kind_of(name: str) -> str:
+    """"photo", "video" or "" for a file name, by its extension."""
     ext = Path(name).suffix.lower()
     return "photo" if ext in PHOTO_EXT else "video" if ext in VIDEO_EXT else ""
 
@@ -95,6 +96,10 @@ def exif_info(head: bytes) -> dict:
 
 
 def _exif_date(data: bytes) -> str:
+    """Pure logic. When a JPEG says it was taken, read from its EXIF block without a library: walks the JPEG's
+    segments to the APP1 Exif one (stopping at the image data), then reads the TIFF inside. "" for anything else or
+    anything unreadable.
+    """
     try:
         if data[:2] != b"\xff\xd8":
             return ""
@@ -115,6 +120,9 @@ def _exif_date(data: bytes) -> str:
 
 
 def _tiff_date(t: bytes) -> str:
+    """The date inside an EXIF TIFF block: DateTimeOriginal (0x9003, in the Exif sub-directory) if it's there, else
+    DateTime (0x0132), as ISO; handles both byte orders. "" when neither reads as a date.
+    """
     endian = "<" if t[:2] == b"II" else ">"
 
     def entries(offset):
@@ -341,6 +349,7 @@ def on_metered_network() -> bool:
 
 
 def sources(context) -> list[Path]:
+    """The folders the vault reads on the phone: the configured vault.sources, else the camera roll."""
     configured = context.config.get("vault.sources", None)
     if configured:
         return [Path(p).expanduser() for p in configured]
@@ -348,6 +357,7 @@ def sources(context) -> list[Path]:
 
 
 def _setting(context, key: str, default):
+    """One of the person's vault settings, or the default when it can't be read."""
     from core.person_settings import get
 
     try:
@@ -357,6 +367,7 @@ def _setting(context, key: str, default):
 
 
 def keep_days(context) -> int:
+    """How many days a photo stays on the phone before MIA offers to free its space (vault.keep_days)."""
     try:
         return max(0, int(_setting(context, "vault.keep_days", DEFAULT_KEEP_DAYS)))
     except (TypeError, ValueError):
@@ -364,10 +375,12 @@ def keep_days(context) -> int:
 
 
 def is_on(context) -> bool:
+    """Whether the person has switched the vault on (off until they do)."""
     return bool(_setting(context, "vault.on", False))
 
 
 def wifi_only(context) -> bool:
+    """Whether photos only go to the PC over Wi-Fi (the default)."""
     return bool(_setting(context, "vault.wifi_only", True))
 
 
@@ -379,6 +392,9 @@ class MemoryVault:
     home computer already holds."""
 
     def __init__(self, context=None, data_dir: Optional[Path] = None) -> None:
+        """Opens the phone's vault list in the person's folder: every memory by fingerprint, which phone paths hold
+        it (with size and time, so an unchanged file isn't fingerprinted again), what was freed, and the last status.
+        """
         self.context = context
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._file = self.data_dir / FILE_NAME
@@ -389,6 +405,7 @@ class MemoryVault:
         self._load()
 
     def _load(self) -> None:
+        """Reads the vault list; a damaged one is logged and the list starts again (the photos themselves are untouched)."""
         self.items, self.paths, self.freed, self.status = {}, {}, [], {}
         if not self._file.exists():
             return
@@ -402,12 +419,14 @@ class MemoryVault:
             log.exception("Couldn't read %s; the vault starts its list again (your photos are untouched).", FILE_NAME)
 
     def save(self) -> None:
+        """Writes the vault list atomically (the last 50 freed records only)."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._file, json.dumps({"version": 1, "items": self.items, "paths": self.paths,
                                                   "freed": self.freed[-50:], "status": self.status}))
 
     # -- reading
     def on_phone(self, item: dict) -> list[str]:
+        """The phone paths that still hold this memory."""
         return [p for p in item.get("sources") or [] if p in self.paths]
 
     def waiting(self) -> list[dict]:
@@ -416,6 +435,7 @@ class MemoryVault:
         return sorted(out, key=lambda i: i.get("taken_at") or "")
 
     def file_of(self, sha: str) -> Optional[Path]:
+        """A file on the phone that still holds this memory, or None."""
         item = self.items.get(sha)
         for p in self.on_phone(item) if item else []:
             if Path(p).is_file():
@@ -501,6 +521,9 @@ def scan(context, vault: MemoryVault, roots: Optional[list[Path]] = None, budget
 # ------------------------------------------------------------------ the phone sending
 
 class Stopped(Exception):
+    """Raised mid-send when a round has run three times its time on a slow link: the round ends, and the next
+    carries on from the byte the PC says it has.
+    """
     pass
 
 
@@ -563,6 +586,7 @@ def send(context, vault: MemoryVault, call=None, seconds: float = SEND_SECONDS, 
 
 
 def _q(text) -> str:
+    """Text quoted for a URL path or query (nothing left unescaped)."""
     import urllib.parse
 
     return urllib.parse.quote(str(text or ""), safe="")
@@ -617,24 +641,31 @@ class VaultLoop:
     send what's waiting. A background thread, like core/sync.SyncLoop."""
 
     def __init__(self, context, lock) -> None:
+        """The background loop that sends photos to the PC; the lock keeps it from colliding with other phone work."""
         self.context, self.lock = context, lock
         self._stop = threading.Event()
         self._wake = threading.Event()
         self.thread: Optional[threading.Thread] = None
 
     def start(self) -> None:
+        """Starts the loop's thread (mia-vault, a daemon) once."""
         if self.thread is None:
             self.thread = threading.Thread(target=self._run, name="mia-vault", daemon=True)
             self.thread.start()
 
     def stop(self) -> None:
+        """Asks the loop to stop and wakes it so it notices."""
         self._stop.set()
         self._wake.set()
 
     def poke(self) -> None:
+        """Wakes the loop now (a photo was taken, the PC came into reach) instead of waiting."""
         self._wake.set()
 
     def _run(self) -> None:
+        """The loop: a round right away, then one every LOOP_SECONDS or when poked, until stopped; a failed round is
+        logged and the next one tries again.
+        """
         first = True
         while not self._stop.is_set():
             if not first:
@@ -698,6 +729,9 @@ class VaultShelf:
     (`vault/index.json`) of what's there. Never deletes anything."""
 
     def __init__(self, folder: Path) -> None:
+        """The PC's side of a person's vault: the folder photos are kept in and its index (fingerprint -> file, date,
+        size, score...), started empty when it can't be read.
+        """
         self.folder = Path(folder)
         self._index_file = self.folder / "index.json"
         self._lock = threading.Lock()
@@ -707,18 +741,24 @@ class VaultShelf:
             self.index = {}
 
     def _save(self) -> None:
+        """Writes the index atomically."""
         self.folder.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._index_file, json.dumps(self.index, indent=1))
 
     def _part(self, sha: str) -> Path:
+        """Where a photo still arriving is kept, by its fingerprint (.incoming/<sha>.part)."""
         return self.folder / ".incoming" / f"{sha}.part"
 
     def path_of(self, sha: str) -> Optional[Path]:
+        """The kept file for a fingerprint, or None when it isn't kept (or the file is gone)."""
         entry = self.index.get(sha)
         path = self.folder / entry["path"] if entry else None
         return path if path is not None and path.is_file() else None
 
     def have(self, shas: Iterable[str]) -> dict:
+        """For each fingerprint: whether the PC keeps it, and how many bytes of a partial upload it has (so the phone
+        sends from where it stopped).
+        """
         out = {}
         for sha in shas:
             sha = _clean_sha(sha)
@@ -795,6 +835,9 @@ class VaultShelf:
         return out
 
     def scores(self, shas: Iterable[str]) -> dict:
+        """Each kept photo's quality score (sharpness and exposure, score_photo with Pillow), worked out once and saved;
+        for choosing a burst's best shot.
+        """
         out, changed = {}, False
         for sha in shas:
             sha = _clean_sha(sha)
@@ -830,6 +873,7 @@ def shelf_for(context, profile_id: str) -> VaultShelf:
 
 
 def _clean_sha(sha: str) -> str:
+    """A fingerprint checked to be 64 hex characters (lowercased), or ValueError, so it can't name a path."""
     sha = str(sha or "").lower()
     if not re.fullmatch(r"[0-9a-f]{64}", sha):
         raise ValueError("That isn't a photo's fingerprint.")
@@ -837,6 +881,7 @@ def _clean_sha(sha: str) -> str:
 
 
 def _parse(text: str) -> Optional[datetime]:
+    """A datetime from ISO text, or None."""
     try:
         return datetime.fromisoformat(str(text)) if text else None
     except ValueError:
@@ -867,6 +912,9 @@ def copies_offer(vault: MemoryVault) -> dict:
 
 
 def burst_offers(vault: MemoryVault, limit: int = 12) -> list[dict]:
+    """The newest bursts (photos seconds apart), each with its best shot, the others, how many of them are still on the
+    phone and their size, and whether the PC holds them all (only then can freeing them be offered).
+    """
     out = []
     for group in reversed(bursts(vault.items.values())):
         best = best_of(group)
@@ -944,6 +992,7 @@ STATE_WORDS = {
 
 
 def _size(n: int) -> str:
+    """A byte count in words ("3.2 MB")."""
     for unit, step in (("GB", 1 << 30), ("MB", 1 << 20), ("KB", 1 << 10)):
         if n >= step:
             return f"{n / step:.1f} {unit}"
@@ -951,6 +1000,7 @@ def _size(n: int) -> str:
 
 
 def _day_label(day: str) -> str:
+    """A day in words ("Sunday, October 18, 2026")."""
     try:
         d = date.fromisoformat(day)
     except ValueError:
@@ -1016,6 +1066,9 @@ def vault_page(context, month: str = "", today: Optional[date] = None) -> dict:
 
 
 def _what_happened(context, month: str) -> dict[str, list[str]]:
+    """What the history (core/life_events.py) says happened on each day of a month, for the vault's day view;
+    reversed and audit-only events left out, each summary once.
+    """
     from core.life_events import AUDIT_ONLY, events_for, reversed_ids
 
     try:
@@ -1040,6 +1093,7 @@ def _what_happened(context, month: str) -> dict[str, list[str]]:
 
 
 def _trips(context) -> list[dict]:
+    """The person's expeditions with dates, to label the photos taken on each."""
     expeditions = getattr(context, "expeditions", None)
     if expeditions is None:
         return []
