@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 227,646 lines; 1043 files describe themselves; 4,125 of 13,517 classes and functions are documented.
+1043 files, 227,704 lines; 1043 files describe themselves; 4,164 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 101,552 lines; 3,394 of 5,630 classes and functions documented
+367 files, 101,610 lines; 3,433 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -81,7 +81,7 @@
 - `core/config_manager.py`: Handles reading, writing, and defaulting MIA's configuration. *(4 undocumented)*
 - `core/connectivity.py`: What MIA can do with and without the internet, and whether she has it right now — so if the connection drops she keeps acting sensibly instead of promising things she can't deliver. *(7 undocumented)*
 - `core/context_assembler.py`: The "Life State" layer — a real service answering "what's going on in this person's life right now," synthesized live from every domain manager already in AppContext. This exact shape was discussed and agreed on 2026-09-11 (see mia_system_vision's own dated entry: a context_assembler.py query layer  *(10 undocumented)*
-- `core/conversation_manager.py`: Persistent Assistant conversations — 2026-07-14 aesthetic pass part 5 (docs/ROADMAP.md), at the user's explicit request for a ChatGPT-like experience: named conversation threads you can review, continue, or delete, rather than the stateless one-message-at-a-time exchanges the Assistant used before t *(20 undocumented)*
+- `core/conversation_manager.py`: Persistent Assistant conversations — 2026-07-14 aesthetic pass part 5 (docs/ROADMAP.md), at the user's explicit request for a ChatGPT-like experience: named conversation threads you can review, continue, or delete, rather than the stateless one-message-at-a-time exchanges the Assistant used before t
 - `core/conversation_modes.py`: How MIA should talk right now — slice A ("Talk it out") of docs/COGNITIVE_EXTENSION_PROPOSAL.md. Pure logic: the mode vocabulary, the explicit phrases that switch modes, and the one short tone line each mode adds to the system prompt. *(5 undocumented)*
 - `core/conversation_state.py`: What a conversation is about (DEC-0052 step 4, first slice; docs/REASONING_PLAN.md section 5). Before, every message started over: "Which debt should I pay first?" then "what if I added $300 a month?" or "why?" reached the model with no idea which records it was about. *(4 undocumented)*
 - `core/core_runtime.py`: Builds the `AppContext` and curated Assistant action registry for headless MIA Core** — docs/VISION.md's 2026-07-15 "Core drops its GUI entirely" split. Core is a voice-first, screen-free runtime (the Pi 5 + AI HAT+2 Receiver hardware, docs/HARDWARE.md): push-to-talk button in, speech out, no `gui/`
@@ -108,7 +108,7 @@
 - `core/dev_lab.py`: MIA's development lab (DEC-0058; the ROADMAP's self-modification stages 2 and 3; docs/INSPECTION_AND_SELF_PLAN.md section 6). MIA proposes an improvement; the change is written and tested in an isolated copy; it reaches the running MIA only when Zac approves. *(12 undocumented)*
 - `core/dev_ledger.py`: What MIA (and every member of the council) can be trusted with, measured (DEC-0075, T-0028; `docs/DEVELOPMENTAL_INDEPENDENCE_REVIEW.md` section 5). *(1 undocumented)*
 - `core/dev_map.py`: MIA's architecture and her branches of growth, derived from the code and the history (DEC-0078, T-0029; `docs/DEVELOPMENTAL_INDEPENDENCE_REVIEW.md` section 6.2). Never hand-drawn: read from the repository with Python's own `ast`, so nothing is run. *(2 undocumented)*
-- `core/dev_store.py`: Where the development history lives on this PC (DEC-0077, Zac 2026-11-04: "a way to not take up a ton of memory while maintaining MIAs ability to access the fullness of her memory and development"; `docs/DEVELOPMENTAL_INDEPENDENCE_REVIEW.md` section 6.5). *(19 undocumented)*
+- `core/dev_store.py`: Where the development history lives on this PC (DEC-0077, Zac 2026-11-04: "a way to not take up a ton of memory while maintaining MIAs ability to access the fullness of her memory and development"; `docs/DEVELOPMENTAL_INDEPENDENCE_REVIEW.md` section 6.5).
 - `core/dev_usage.py`: What each development model was used for, and when it ran out (DEC-0079, Zac 2026-11-03: "understanding usage and delegating tasks based on time available to use each model so that the dev team doesnt have to sit idle when one model is unavailable"; review section 6.4). *(2 undocumented)*
 - `core/device_framework.py`: Connected Device Framework — docs/ROADMAP.md milestone 11.1, the first piece of Field Kit. Detects and identifies devices physically attached to this Pi: USB storage (drives, SD cards, other Pis in USB mass-storage mode) via `lsblk`, and serial/MCU boards (Arduino, ESP32, etc.) via `pyserial`'s port *(10 undocumented)*
 - `core/device_help_manager.py`: Retrieval-grounded "what does this do / how do I use this device" answers — docs/ROADMAP.md milestone 5.4. This is explicitly **stage 1 ("Read & explain")** of the Self-Modification / Dev Mode staged plan in docs/ROADMAP.md: read-only retrieval over `docs/user_help/*.md` and module metadata, never a *(5 undocumented)*

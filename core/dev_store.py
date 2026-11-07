@@ -42,6 +42,7 @@ SEGMENT_BYTES = 2_000_000  # plain size before a segment closes; gzipped it's ~2
 
 
 def _now() -> str:
+    """Now, in UTC, as an ISO timestamp."""
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
@@ -49,22 +50,31 @@ class DevStore:
     """An append-only record in segments: `0001.jsonl` open, `0001.jsonl.gz` closed."""
 
     def __init__(self, folder: Path, segment_bytes: int = SEGMENT_BYTES) -> None:
+        """An append-only record kept in a folder as numbered segments, each closed (gzipped) at segment_bytes or a new
+        month.
+        """
         self.folder = Path(folder)
         self.segment_bytes = segment_bytes
 
     def _segments(self) -> list[str]:
+        """The segment numbers in the folder, oldest first."""
         if not self.folder.exists():
             return []
         names = {p.name.split(".", 1)[0] for p in self.folder.glob("*.jsonl*") if p.name[:4].isdigit()}
         return sorted(names)
 
     def _plain(self, seg: str) -> Path:
+        """A segment's open file (<n>.jsonl)."""
         return self.folder / f"{seg}.jsonl"
 
     def _packed(self, seg: str) -> Path:
+        """A segment's closed, gzipped file (<n>.jsonl.gz)."""
         return self.folder / f"{seg}.jsonl.gz"
 
     def _open_segment(self) -> str:
+        """The segment new records go into: the last one if it's still open, else the next number (cleaning up a plain
+        file left beside its packed copy by an interrupted close).
+        """
         segs = self._segments()
         if not segs:
             return "0001"
@@ -77,6 +87,7 @@ class DevStore:
         return last
 
     def _lines(self, seg: str) -> Iterator[str]:
+        """A segment's lines, streamed one at a time from its plain or packed file."""
         plain, packed = self._plain(seg), self._packed(seg)
         if plain.exists():
             with open(plain, encoding="utf-8") as f:
@@ -86,6 +97,7 @@ class DevStore:
                 yield from f
 
     def _close(self, seg: str) -> None:
+        """Closes a segment: gzips it to a temporary file, moves that into place, then removes the plain one."""
         plain, packed = self._plain(seg), self._packed(seg)
         tmp = packed.with_suffix(".gz.tmp")
         with open(plain, "rb") as src, gzip.open(tmp, "wb") as out:
@@ -95,6 +107,7 @@ class DevStore:
         plain.unlink()
 
     def _first_month(self, seg: str) -> str:
+        """The month (YYYY-MM) of a segment's first record, for closing a segment when the month changes."""
         for line in self._lines(seg):
             try:
                 return str(json.loads(line).get("at", ""))[:7]
@@ -143,6 +156,7 @@ class DevStore:
         return out[-n:] if n else []
 
     def at(self, seg: str, line: int) -> Optional[dict]:
+        """The record at a line of a segment, or None."""
         for i, text in enumerate(self._lines(seg)):
             if i == line:
                 try:
@@ -152,6 +166,7 @@ class DevStore:
         return None
 
     def size(self) -> int:
+        """The store's size on disk, in bytes."""
         return sum(p.stat().st_size for p in self.folder.glob("*.jsonl*")) if self.folder.exists() else 0
 
 
@@ -173,6 +188,7 @@ def _fts_query(text: str) -> str:
 
 
 def _body(record: dict) -> str:
+    """The words of a record that the full-text index keeps (who, action, task, text, detail, kind, title)."""
     return " ".join(str(record.get(k, "")) for k in ("who", "action", "task", "text", "detail", "kind", "title"))
 
 
@@ -181,6 +197,9 @@ class DevIndex:
 
     def __init__(self, path: Path = DEV_DATA / "index.sqlite", stores: Optional[dict] = None,
                  files: Optional[dict] = None) -> None:
+        """Opens (or makes) the search index: SQLite with an items table (where each record is), a contentless FTS5 table
+        of its words, and how far each source has been indexed; over the given DevStores and repo .jsonl files.
+        """
         self.path = Path(path)
         self.stores = stores or {}  # name -> DevStore
         self.files = files or {}  # name -> a repo .jsonl file
@@ -193,9 +212,11 @@ class DevIndex:
             "create table if not exists synced(source text primary key, mark text);")
 
     def close(self) -> None:
+        """Closes the index's database."""
         self.db.close()
 
     def _add(self, source: str, record: dict, loc: str) -> None:
+        """Indexes one record by where it lives (skipping one already indexed): its source, time, who, task and words."""
         cur = self.db.execute("insert or ignore into items(source, at, who, task, loc) values (?,?,?,?,?)",
                               (source, str(record.get("at", "")), str(record.get("who", "")),
                                str(record.get("task", "")), loc))
@@ -203,10 +224,12 @@ class DevIndex:
             self.db.execute("insert into words(rowid, body) values (?, ?)", (cur.lastrowid, _body(record)))
 
     def _mark(self, source: str) -> str:
+        """How far a source has been indexed ("" for not yet)."""
         row = self.db.execute("select mark from synced where source = ?", (source,)).fetchone()
         return row[0] if row else ""
 
     def _set_mark(self, source: str, mark: str) -> None:
+        """Remembers how far a source has been indexed."""
         self.db.execute("insert or replace into synced(source, mark) values (?, ?)", (source, mark))
 
     def sync(self) -> None:
@@ -253,6 +276,9 @@ class DevIndex:
         self.db.commit()
 
     def _fetch(self, loc: str) -> Optional[dict]:
+        """The one record a search hit points at, read from its place: a byte offset in a repo file, or a line in a
+        store's segment. None when it can't be read.
+        """
         kind, _, rest = loc.partition(":")
         if kind == "file":
             name, _, offset = rest.rpartition(":")
@@ -292,4 +318,5 @@ class DevIndex:
         return out
 
     def size(self) -> int:
+        """The index's size on disk, in bytes."""
         return self.path.stat().st_size if self.path.exists() else 0

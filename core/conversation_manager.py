@@ -68,16 +68,21 @@ PRIVACY_PRIVATE = "private"  # e.g. a turn that read the private journal back
 
 @dataclass
 class ConversationMessage:
+    """One message in a conversation: who (the person or MIA), what, when, and its privacy (journal, off the record,
+    or a private turn), which is never saved: a private message isn't written at all.
+    """
     role: str  # "user" | "assistant"
     content: str
     timestamp: str = ""  # ISO datetime
     privacy: str = PRIVACY_NONE  # never persisted: private messages aren't written at all
 
     def to_dict(self) -> dict:
+        """The message as saved (its privacy isn't)."""
         return {"role": self.role, "content": self.content, "timestamp": self.timestamp}
 
     @staticmethod
     def from_dict(data: dict) -> "ConversationMessage":
+        """A message from its saved dict."""
         return ConversationMessage(
             role=data.get("role", "user"),
             content=data.get("content", ""),
@@ -87,6 +92,10 @@ class ConversationMessage:
 
 @dataclass
 class Conversation:
+    """One conversation: its messages, title, mode (companion, journal...), whether it's journaling or off the record,
+    the textbook chapter it's studying, and this run's transient state (a private turn, the open journal session, an
+    offer waiting for a yes, a support choice asked), none of which is saved.
+    """
     conversation_id: str
     title: str = DEFAULT_TITLE
     messages: list[ConversationMessage] = field(default_factory=list)
@@ -124,6 +133,7 @@ class Conversation:
     journal_start_index: int = field(default=0, repr=False, compare=False)
 
     def current_privacy(self) -> str:
+        """What the next message is: off the record, journal, private (this turn read the private journal), or none."""
         if self.off_record:
             return PRIVACY_OFF_RECORD
         if self.journal:
@@ -133,6 +143,7 @@ class Conversation:
         return PRIVACY_NONE
 
     def to_dict(self) -> dict:
+        """The conversation as saved: only messages with no privacy are written."""
         return {
             "conversation_id": self.conversation_id,
             "title": self.title,
@@ -148,6 +159,7 @@ class Conversation:
 
     @staticmethod
     def from_dict(data: dict) -> "Conversation":
+        """A conversation from its saved dict."""
         return Conversation(
             conversation_id=data.get("conversation_id", uuid.uuid4().hex[:10]),
             title=data.get("title", DEFAULT_TITLE),
@@ -163,9 +175,13 @@ class Conversation:
 
 
 class ConversationManager:
+    """The person's conversations with MIA (conversations.json in their folder, written through atomic_write_text),
+    and which one is active: the thread both chat surfaces read and add to.
+    """
     def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
         # Whose data: a person's own folder (core/personal_data.py), or the
         # shared data/ folder by default.
+        """Points at the person's file (data/ by default) and loads it."""
         self.data_dir = Path(data_dir) if data_dir is not None else _CONVERSATIONS_FILE.parent
         self._conversations_file = self.data_dir / _CONVERSATIONS_FILE.name if data_dir is not None else _CONVERSATIONS_FILE
         self.context = context
@@ -177,6 +193,7 @@ class ConversationManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads the conversations; a damaged file is logged, reported (notify_data_corruption) and starts empty."""
         if not self._conversations_file.exists():
             self._conversations = []
             return
@@ -189,6 +206,7 @@ class ConversationManager:
             self._conversations = []
 
     def _save(self) -> None:
+        """Writes every conversation atomically (private messages left out by to_dict)."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._conversations_file,
             json.dumps([c.to_dict() for c in self._conversations], indent=2),
@@ -200,9 +218,11 @@ class ConversationManager:
         self._save()
 
     def _bump_updated_at(self, conversation: Conversation) -> None:
+        """Stamps a conversation as changed now."""
         conversation.updated_at = datetime.now().isoformat(timespec="seconds")
 
     def _publish_updated(self, conversation_id: str) -> None:
+        """Publishes conversation.updated, so a screen showing it refreshes."""
         if self.context.events is not None:
             self.context.events.publish("conversation.updated", conversation_id=conversation_id)
 
@@ -211,6 +231,7 @@ class ConversationManager:
     # ------------------------------------------------------------------
 
     def create_conversation(self) -> Conversation:
+        """Starts an empty conversation and saves it."""
         now = datetime.now().isoformat(timespec="seconds")
         conversation = Conversation(conversation_id=uuid.uuid4().hex[:10], created_at=now, updated_at=now)
         self._conversations.append(conversation)
@@ -219,6 +240,7 @@ class ConversationManager:
         return conversation
 
     def get_conversation(self, conversation_id: str) -> Optional[Conversation]:
+        """The conversation with this id, or None."""
         for conversation in self._conversations:
             if conversation.conversation_id == conversation_id:
                 return conversation
@@ -229,6 +251,7 @@ class ConversationManager:
         return sorted(self._conversations, key=lambda c: c.updated_at, reverse=True)
 
     def delete_conversation(self, conversation_id: str) -> None:
+        """Deletes a conversation (and clears the active one if it was that)."""
         self._conversations = [c for c in self._conversations if c.conversation_id != conversation_id]
         self._save()
         self._publish_updated(conversation_id)
@@ -236,6 +259,7 @@ class ConversationManager:
             self.set_active_conversation_id(None)
 
     def set_title(self, conversation_id: str, title: str) -> Optional[Conversation]:
+        """Renames a conversation (None when it's gone)."""
         conversation = self.get_conversation(conversation_id)
         if conversation is None:
             return None
@@ -245,6 +269,9 @@ class ConversationManager:
         return conversation
 
     def add_message(self, conversation_id: str, role: str, content: str) -> Optional[Conversation]:
+        """Adds a message, stamped now and marked with the conversation's current privacy (so a private one is never
+        saved), then saves and publishes conversation.updated. None when the conversation is gone.
+        """
         conversation = self.get_conversation(conversation_id)
         if conversation is None:
             return None
@@ -266,9 +293,13 @@ class ConversationManager:
     # ------------------------------------------------------------------
 
     def get_active_conversation_id(self) -> Optional[str]:
+        """The active conversation's id (assistant.active_conversation_id in the config), or None."""
         return self.context.config.get("assistant.active_conversation_id", None)
 
     def set_active_conversation_id(self, conversation_id: Optional[str]) -> None:
+        """Makes a conversation the active one (saved in the config) and publishes that the pointer changed (a
+        different event from a conversation's content changing, so both chat surfaces reload).
+        """
         self.context.config.set("assistant.active_conversation_id", conversation_id)
         self.context.config.save()
         # A distinct event from "conversation.updated" — that one means
