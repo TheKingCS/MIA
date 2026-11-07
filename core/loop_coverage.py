@@ -84,6 +84,7 @@ _CHECK = re.compile(r'\("([a-z_]+)", self\._check_[a-z_]+\)')
 
 
 def _stores() -> dict[str, str]:
+    """Each personal and household store as a process (store:name); none when personal_data can't be imported."""
     try:
         from core import personal_data
     except Exception:  # an install missing a store's package still lists the rest
@@ -94,6 +95,9 @@ def _stores() -> dict[str, str]:
 
 
 def _actions() -> dict[str, str]:
+    """Each action family as a process (action:family) with how many kinds it has; none when the actions can't be
+    imported.
+    """
     try:
         from core.actions import ACTION_TYPES
     except Exception:
@@ -105,11 +109,13 @@ def _actions() -> dict[str, str]:
 
 
 def _checks(root: Path = ROOT) -> dict[str, str]:
+    """Each daily check registered in core/application.py as a process (check:name), found in its source."""
     text = (root / "core" / "application.py").read_text(encoding="utf-8", errors="replace")
     return {f"check:{name}": "a daily check" for name in _CHECK.findall(text)}
 
 
 def _modules(root: Path = ROOT) -> dict[str, str]:
+    """Each app (a modules folder with a module.py) as a process (module:name)."""
     return {f"module:{p.parent.name}": "an app" for p in sorted((root / "modules").glob("*/module.py"))}
 
 
@@ -125,6 +131,9 @@ def processes(root: Path = ROOT) -> dict[str, str]:
 
 
 def decisions(path: Path = DECISIONS) -> dict[str, dict]:
+    """What's been decided about each process (work/loop_coverage.json): its status and why or its task; none when
+    the file is missing or unreadable.
+    """
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
@@ -133,6 +142,7 @@ def decisions(path: Path = DECISIONS) -> dict[str, dict]:
 
 
 def save_decisions(found: dict[str, dict], path: Path = DECISIONS) -> None:
+    """Writes the decisions atomically, sorted, with a note on what the file is."""
     body = {"about": "core/loop_coverage.py (DEC-0101): every process MIA has, with a loop or a reason. "
                      "status: todo (needs a loop), proposed (a task drafts it), none (why: no loop needed).",
             "processes": dict(sorted(found.items()))}
@@ -221,6 +231,9 @@ def next_family(root: Path = ROOT, path: Path = DECISIONS, limit: int = 6) -> li
 
 
 def mark(ids: list[str], status: str, why: str = "", task: str = "", path: Path = DECISIONS) -> None:
+    """Records a status (todo, proposed, none) for processes, with why or the task drafting its loop; ValueError for
+    another status.
+    """
     if status not in STATUSES:
         raise ValueError(f"The status is one of {', '.join(STATUSES)}.")
     found = decisions(path)
@@ -248,5 +261,6 @@ def seed(root: Path = ROOT, path: Path = DECISIONS) -> int:
 
 
 def share(root: Path = ROOT, path: Path = DECISIONS) -> Optional[float]:
+    """The share of processes needing a loop that have one (from report()), or None when there are no processes."""
     r = report(root, path)
     return r["share"] if r["total"] else None

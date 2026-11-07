@@ -63,6 +63,7 @@ def parse_gpx(text: str) -> tuple[str, list[dict]]:
 
 
 def _time(text: str) -> Optional[datetime]:
+    """A GPX timestamp as a datetime (a trailing Z read as UTC), or None."""
     try:
         return datetime.fromisoformat(text.replace("Z", "+00:00"))
     except (AttributeError, ValueError):
@@ -104,6 +105,9 @@ def stats(points: list[dict]) -> dict:
 
 
 def describe(track: dict) -> str:
+    """A track said in a line: its name and date, distance, climb and descent, time taken (and time moving), and where
+    it started and ended.
+    """
     s = track["stats"]
     parts = [f"{s['km']:g} km"]
     if s["climb_m"]:
@@ -132,6 +136,7 @@ class GpsTracks:
     """One person's tracks (context.gps_tracks)."""
 
     def __init__(self, context=None, data_dir: Optional[Path] = None) -> None:
+        """Loads the tracks from the person's own folder (gps_tracks.json, or data/ by default)."""
         self.context = context
         self.data_dir = Path(data_dir) if data_dir is not None else Path(__file__).resolve().parent.parent / "data"
         self._file = self.data_dir / FILE_NAME
@@ -139,16 +144,21 @@ class GpsTracks:
         self._load()
 
     def _load(self) -> None:
+        """Reads the tracks; a missing or unreadable file gives none."""
         try:
             self.tracks = json.loads(self._file.read_text(encoding="utf-8")).get("tracks", [])
         except (OSError, ValueError):
             self.tracks = []
 
     def _save(self) -> None:
+        """Writes the tracks atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._file, json.dumps({"tracks": self.tracks}, ensure_ascii=False))
 
     def add_gpx(self, text: str, name: str = "") -> dict:
+        """Keeps a track from a GPX file: its points, worked-out stats, a name (the one given, the file's, or A track),
+        and when it was added.
+        """
         found_name, points = parse_gpx(text)
         track = {"id": uuid.uuid4().hex[:10], "name": (name or found_name or "A track").strip()[:80],
                  "points": points, "stats": stats(points), "added": datetime.now().isoformat(timespec="seconds")}
@@ -157,8 +167,10 @@ class GpsTracks:
         return track
 
     def delete(self, track_id: str) -> None:
+        """Removes a track."""
         self.tracks = [t for t in self.tracks if t["id"] != track_id]
         self._save()
 
     def latest(self) -> Optional[dict]:
+        """The most recent track (by its date, else when it was added), or None."""
         return max(self.tracks, key=lambda t: t["stats"].get("date") or t["added"]) if self.tracks else None

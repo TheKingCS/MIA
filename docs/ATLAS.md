@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 229,899 lines; 1043 files describe themselves; 5,582 of 13,517 classes and functions are documented.
+1043 files, 229,935 lines; 1043 files describe themselves; 5,606 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 103,801 lines; 4,851 of 5,630 classes and functions documented
+367 files, 103,837 lines; 4,875 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -139,7 +139,7 @@
 - `core/fitness_missions.py`: A person's fitness plan as missions (DEC-0020, H-0026): made from the plan (core/fitness_manager.py) each day and week, on the existing mission path (Missions screen, XP, skills, complete, undo). *(5 undocumented)*
 - `core/flock.py`: Chickens (DEC-0037): a flock log that turns eggs into money you can see.
 - `core/flock_actions.py`: Chickens' actions (DEC-0037, core/flock.py) on the action contract: proposed in plain words, approved, run, undoable.
-- `core/focus_presets.py`: What each person sees first (2026-10-01, accounts stage 2): MIA has dozens of apps, and a student, a homesteader and a small-business owner each need a different handful up front. A **focus** puts the most useful apps first and tucks the unlikely ones away. It never blocks anything: a tucked-away ap *(8 undocumented)*
+- `core/focus_presets.py`: What each person sees first (2026-10-01, accounts stage 2): MIA has dozens of apps, and a student, a homesteader and a small-business owner each need a different handful up front. A **focus** puts the most useful apps first and tucks the unlikely ones away. It never blocks anything: a tucked-away ap
 - `core/food_table.py`: MIA's built-in food table (DEC-0020): nutrition facts for about 7,800 everyday foods from the USDA's FoodData Central (public domain), per 100 g, in data/foods.tsv (tools/make_food_table.py builds it). Offline. *(5 undocumented)*
 - `core/freedom.py`: Freedom (DEC-0038; Life Runway, slice E of docs/COGNITIVE_EXTENSION_PROPOSAL.md): the way out of the job you're saving to leave, in numbers. The person's own plan, never a child's.
 - `core/freedom_actions.py`: Freedom's actions (DEC-0038, core/freedom.py) on the action contract: proposed in plain words, approved, run.
@@ -157,7 +157,7 @@
 - `core/goods.py`: Homestead goods on hand (DEC-0036): what's made and not yet sold, batch by batch. No store of its own: a batch is a finished build (core/job_manager.py, with its recipe and `finished_at`), what it made is its products_produced, what sold is the Ledger's sales tagged with the batch (`job_id`), and wh *(4 undocumented)*
 - `core/goods_actions.py`: Homestead goods' actions (DEC-0036), on the action contract in core/actions.py: proposed in plain words, approved, run, undoable.
 - `core/goods_starters.py`: Starter recipes for homestead goods (DEC-0037): a cutting board, a planter, spice and herb blends, mixes in a jar, eggs, microgreens and plant starts, to copy into Workshop → Recipes and change to your own. Generic on purpose: no prices (yours to set), quantities a common starting point, allergens f
-- `core/gps_tracks.py`: Tracks (build plan step 14, DEC-0099): a walk, a ride or a drive as points with times, from a GPX file (what phones, watches and GPS units export). Worked out in code (`stats()`): distance (haversine, between successive points), climb and descent (changes under `CLIMB_NOISE` metres ignored, as GPS e *(8 undocumented)*
+- `core/gps_tracks.py`: Tracks (build plan step 14, DEC-0099): a walk, a ride or a drive as points with times, from a GPX file (what phones, watches and GPS units export). Worked out in code (`stats()`): distance (haversine, between successive points), climb and descent (changes under `CLIMB_NOISE` metres ignored, as GPS e
 - `core/grow_actions.py`: The grow lab's actions (DEC-0030 phase D, core/grow_lab.py) on the action contract: proposed in plain words, approved, run, undoable.
 - `core/grow_lab.py`: The grow lab (DEC-0030 phase D): running a greenhouse, aquaponics tanks and growing beds like a scientist. Record what's planted, measure the water, compare what works, learn from the results.
 - `core/hash_identifier.py`: Identifies the plausible algorithm(s) for a hash string, by prefix (for self-describing formats like bcrypt/crypt) or length+charset (for bare hex digests) — docs/ROADMAP.md milestone 11.5, Field Kit's Security/Network Toolkit. This is pattern-matching, not verification: there is no way to truly det *(1 undocumented)*
@@ -198,7 +198,7 @@
 - `core/logger.py`: Centralized logging setup for MIA
 - `core/loop_actions.py`: The Loop's actions (DEC-0047, core/the_loop.py) on the action contract: what the person says about when things happen, in plain words, undoable.
 - `core/loop_catalog.py`: The loops as built (DEC-0094, DEC-0101): `docs/LOOPS.md` is the code's own list of every loop in `core/loops.py`, by area, with what it watches, its floor, what it does when it slips and the processes it covers. It's generated, never edited by hand, and `tests/test_loop_catalog.py` fails when it fal
-- `core/loop_coverage.py`: How MIA's improvement loops keep spreading to every process (DEC-0101; Zac, 2026-11-06: "She also needs a method for developing these loops into all processes that could benefit from a self improvement loop and continue to do so throughout her development"). *(8 undocumented)*
+- `core/loop_coverage.py`: How MIA's improvement loops keep spreading to every process (DEC-0101; Zac, 2026-11-06: "She also needs a method for developing these loops into all processes that could benefit from a self improvement loop and continue to do so throughout her development").
 - `core/loops.py`: MIA's improvement loops (DEC-0094; the map is `docs/IMPROVEMENT_LOOPS.md`; Zac, 2026-11-06: "almost every process has the potential for some kind of self assessment and improvement loop and we should identify those and build it").
 - `core/mail_send.py`: Sending an email draft from your own address (2026-10-01, accounts stage 3, core/email_drafts.py). Optional: without it, Copy and "open in my mail app" always work.
 - `core/main_thread.py`: Publishing events safely from background threads (2026-09-28). *(2 undocumented)*

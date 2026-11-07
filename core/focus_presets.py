@@ -26,6 +26,7 @@ from core import person_settings
 
 @dataclass(frozen=True)
 class Focus:
+    """One focus: its id, name and description, the apps it shows first (in order) and the ones it tucks away."""
     focus_id: str
     name: str
     description: str
@@ -99,12 +100,14 @@ SPEAK_UP = (("rarely", "Rarely (2 a day at most)", 2), ("normal", "Now and then 
 
 @dataclass
 class Recommendation:
+    """What recommend() suggests from the setup questions: a focus, the apps to show first and the ones to hide."""
     focus_id: str
     featured: list[str]
     hidden: list[str]
 
     @property
     def focus(self) -> Focus:
+        """The Focus it names."""
         return FOCUSES[self.focus_id]
 
 
@@ -173,6 +176,9 @@ def current(context) -> tuple[Optional[str], list[str], list[str]]:
 
 
 def menu_modules(context, modules: list) -> list:
+    """The apps for this person's menu: arranged by their focus (featured first, hidden left out), only the ones
+    they may open (a child sees fewer), never a retired app.
+    """
     from core.child_accounts import app_allowed
 
     from core.web_surfaces import RETIRED
@@ -184,17 +190,20 @@ def menu_modules(context, modules: list) -> list:
 
 
 def hidden_modules(context, modules: list) -> list:
+    """The apps this person has tucked away (never one that's always visible)."""
     _focus, _featured, hidden = current(context)
     return [m for m in modules if m.module_id in hidden and m.module_id not in ALWAYS_VISIBLE]
 
 
 def _changed(context) -> None:
+    """Tells the screens the apps' arrangement changed (apps.arrangement_changed)."""
     events = getattr(context, "events", None)
     if events is not None:
         events.publish("apps.arrangement_changed")
 
 
 def apply(context, recommendation: Recommendation) -> None:
+    """Saves a recommendation as this person's focus, featured and hidden apps, then tells the screens."""
     person_settings.put(context, "apps.focus", recommendation.focus_id)
     person_settings.put(context, "apps.featured", list(recommendation.featured))
     person_settings.put(context, "apps.hidden", list(recommendation.hidden))
@@ -228,6 +237,7 @@ def favorite_apps(context) -> list[str]:
 
 
 def set_app_favorite(context, module_id: str, favorite: bool) -> None:
+    """Stars or unstars an app for this person (a new star goes last), then tells the screens."""
     favorites = [f for f in favorite_apps(context) if f != module_id]
     if favorite:
         favorites.append(module_id)
