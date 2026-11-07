@@ -88,6 +88,7 @@ from core.assistant_path_actions import register_path_actions
 from core.assistant_browser_actions import register_browser_actions
 from core.browser import Browsers
 from core.assistant_cooking_actions import register_cooking_actions
+from core.assistant_toolbox_actions import register_toolbox_actions
 from core.assistant_goods_actions import register_goods_actions
 from core.assistant_dungeon_actions import register_checkin_actions, register_dungeon_actions, register_loop_actions
 from core.failure_actions import register_failure_actions
@@ -1540,7 +1541,8 @@ class MIAApplication:
         having to duplicate this class or its Qt/gui-heavy imports.
         Every app's voice tools are registered here (DEC-0125:
         core/parity.py measures what this registers), including the
-        photo search the headless Core had alone until 2026-11-07.
+        photo search the headless Core had alone until 2026-11-07, and
+        the Toolbox's board feet, concrete and alarm switch (2026-11-07).
         """
         self.context.assistant_actions.register(connectivity_action())
         self.context.assistant_actions.register(remind_when_online_action())
@@ -1562,6 +1564,7 @@ class MIAApplication:
         register_browser_actions(self.context.assistant_actions)  # MIA's own browser, taught by showing (DEC-0117)
         register_goods_actions(self.context.assistant_actions)  # eggs, goods, freedom, deadlines by voice
         register_cooking_actions(self.context.assistant_actions)  # cook mode by voice (DEC-0113, DEC-0125)
+        register_toolbox_actions(self.context.assistant_actions)  # board feet, concrete, alarms on/off (DEC-0125)
         register_dungeon_actions(self.context.assistant_actions)  # the Dungeon: shifts, loot, quests (DEC-0046)
         register_loop_actions(self.context.assistant_actions)  # the loop: when things happen (DEC-0047)
         register_checkin_actions(self.context.assistant_actions)  # the Sunday check-in (DEC-0047)
@@ -3960,8 +3963,8 @@ class MIAApplication:
 
     @staticmethod
     def _action_convert_units(context: AppContext, arguments: dict) -> str:
-        """Assistant tool `convert_units`: converts a value between units, trying each category of the toolbox's unit converter until both units are recognized in the same one. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
-        from modules.toolbox.calculators.unit_converter import UNIT_CATEGORIES, convert, resolve_unit_key
+        """Assistant tool `convert_units`: converts a value between units, trying each category of the unit converter (core/unit_conversion.py, shared with the web Toolbox) until both units are recognized in the same one. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
+        from core.unit_conversion import UNIT_CATEGORIES, convert, resolve_unit_key
 
         from_text = str(arguments.get("from_unit", "")).strip()
         to_text = str(arguments.get("to_unit", "")).strip()
@@ -3982,8 +3985,8 @@ class MIAApplication:
 
     @staticmethod
     def _action_calculate_ohms_law(context: AppContext, arguments: dict) -> str:
-        """Assistant tool `calculate_ohms_law`: solves voltage, current or resistance from the other two with the toolbox's Ohm's law solver. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
-        from modules.toolbox.calculators.ohms_law import solve
+        """Assistant tool `calculate_ohms_law`: solves voltage, current or resistance from the other two with Ohm's law (core/toolbox_calcs.solve, shared with the web Toolbox). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
+        from core.toolbox_calcs import solve
 
         solve_for = str(arguments.get("solve_for", "")).strip().lower()
         if solve_for not in ("voltage", "current", "resistance"):

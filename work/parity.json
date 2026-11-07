@@ -41,10 +41,6 @@
       "status": "todo",
       "why": "a glasses ask: look up a plan or reference hands-free"
     },
-    "toolbox:phone": {
-      "status": "todo",
-      "why": "a web page: the quick tools (already by voice)"
-    },
     "toolbox:glasses": {
       "status": "todo",
       "why": "a glasses ask: convert or calculate (by voice there)"

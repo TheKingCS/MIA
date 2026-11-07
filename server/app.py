@@ -1106,6 +1106,22 @@ def create_app(context: AppContext) -> FastAPI:
         with app.state.turn_lock:
             return power_page(view_for(context, profile_id))
 
+    @app.get("/api/toolbox")
+    def toolbox_screen(profile_id: str = Depends(require_profile_id)) -> dict:
+        """The Toolbox (core/web_toolbox.py): the calculators, the alarms and the other tools."""
+        from core.web_toolbox import toolbox_page
+
+        with app.state.turn_lock:
+            return toolbox_page(view_for(context, profile_id))
+
+    @app.get("/api/toolbox/calc")
+    def toolbox_calc(request: Request, id: str, profile_id: str = Depends(require_profile_id)) -> dict:
+        """One calculator worked out in core (core/web_toolbox.calc) from the query's values; nothing is kept."""
+        from core.web_toolbox import calc
+
+        values = {k: v[:60] for k, v in request.query_params.items() if k != "id"}
+        return calc(id, values)
+
     @app.get("/api/play")
     def play_screen(profile_id: str = Depends(require_profile_id)) -> dict:
         from core.recreation import screen

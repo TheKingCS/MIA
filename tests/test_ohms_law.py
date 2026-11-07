@@ -2,14 +2,14 @@
 tests.test_ohms_law
 ======================
 
-Unit tests for modules.toolbox.calculators.ohms_law.solve().
+Unit tests for Ohm's law solve() (core/toolbox_calcs.py; modules.toolbox.calculators.ohms_law re-exports it).
 """
 
 from __future__ import annotations
 
 import pytest
 
-from modules.toolbox.calculators.ohms_law import solve
+from core.toolbox_calcs import solve  # the math moved to core (the Qt calculator re-exports it)
 
 
 def test_solve_voltage():

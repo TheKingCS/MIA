@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1107 files, 250,372 lines; 1107 files describe themselves; 13,716 of 14,386 classes and functions are documented.
+1114 files, 251,162 lines; 1114 files describe themselves; 13,751 of 14,422 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-400 files, 116,354 lines; 6,166 of 6,255 classes and functions documented
+405 files, 117,061 lines; 6,201 of 6,290 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -49,6 +49,7 @@
 - `core/assistant_tagging_actions.py`: Assistant tools for sorting bank charges to businesses (core/business_tagging.py): "which charges need a business?" and "the Shell charge was for lawn care" / "the Walmart one was personal".
 - `core/assistant_textbook_actions.py`: Assistant tools for the textbook tutor (core/textbook_manager.py): what books MIA has, a quick "where does the book talk about X" lookup, and making a Classroom course from a book. Studying and quizzing themselves are conversation modes (core/textbook_study.py: "let's study the wiring book", "quiz m
 - `core/assistant_today_actions.py`: "What's on today?" (core/today.py, 2026-10-01): everything that needs the person today, across every app, in one answer.
+- `core/assistant_toolbox_actions.py`: The Toolbox by voice, for what the web Toolbox added (DEC-0125: full use both ways). "How many board feet in ten 2x6s, 8 feet long", "how much concrete for a 10 by 12 pad, 4 inches thick", "turn off my wake up alarm". Each tool uses the same core math (core/toolbox_calcs.py) or the same action kind 
 - `core/assistant_turn.py`: One Assistant turn — user text in, the things MIA should say back out — shared by every voice surface: the headless Core loop (`core/voice_loop.py`) and the phone voice endpoint (`server/app.py`). Pulled out of `VoiceLoopController._handle_turn()` unchanged in behavior, so both surfaces answer, act,
 - `core/assistant_undo_actions.py`: "Undo that" and "what did you just change?" (core/undo_log.py), plus "why did you tell me that?" and "stop telling me about ..." (core/message_reasons.py, core/communication_gate.py), and "is everything set up?" (core/system_check.py). 2026-10-01.
 - `core/assistant_why_actions.py`: Assistant tools for the owner's chain of reasons, slice B ("Remember Why") of docs/COGNITIVE_EXTENSION_PROPOSAL.md. The chain lives on Intents (core/intent_manager.py: `serves_intent_id`, `reason`); the evidence is computed by core/why_graph.py.
@@ -352,6 +353,8 @@
 - `core/tile_fetch_worker.py`: Fetches individual missing basemap tiles off the GUI thread for gui/widgets/tile_map_view.py's live pan/zoom — same "network I/O never blocks a paint/input handler" reasoning as modules/field_kit/port_scan_worker.py's PortScanWorker, but shaped as a long-lived queue-processing thread rather than a o
 - `core/today.py`: "Today" (2026-10-01): one list of what needs you today, from every app, so nobody has to open eight screens to find out. Shown at the top of Home (gui/home_dashboard.py), on the phone (`/api/today`), and by the Assistant ("what's on today?").
 - `core/tool_loop.py`: The tool loop (DEC-0052 step 2b; docs/REASONING_PLAN.md section 3b; docs/TOOL_CALLING_RESEARCH.md R4). Before: a turn was one round; the model picked lookups, MIA said each result as it was, and nothing was combined or followed up. Now, when the model asks only to *look things up*:
+- `core/toolbox_actions.py`: The Toolbox's changes on the web (DEC-0113 canvas Toolbox, DEC-0125: alarms were set only on the PC or by voice). An alarm is set with `alarm.add` (a label, a clock time said any common way, and once / every day / weekdays weekends), switched on or off with `alarm.switch`, and taken out with `alarm.
+- `core/toolbox_calcs.py`: The Toolbox's calculators as pure math (DEC-0113 canvas Toolbox, DEC-0125: the same answer by voice, on the PC and on the phone). Ohm's law (solve() moved here from modules/toolbox/calculators/ohms_law.py, which re-exports it), Ohm's law from any two of the three, board feet and concrete volume. Uni
 - `core/trail_map_library.py`: A catalog of official state park / trail map PDFs — the "state park maps and trail maps" half of the Maps module's offline-maps upgrade, alongside core.map_tile_cache's real basemap tiles.
 - `core/training_actions.py`: The live workout session's changes (DEC-0055, core/training_session.py) as action kinds on the contract in core/actions.py, so the Workout screen, the glasses and voice all move the one session the same way: start today's training, a set done (with how it was counted), skip the rest, skip an exercis
 - `core/training_session.py`: The live workout session (DEC-0055, docs/ACTIVE_TRAINING_PLAN.md): one per person, shared by every surface (the PC, the phone, the glasses, voice), moving set by set through today's training.
@@ -359,6 +362,7 @@
 - `core/tts_worker.py`: Runs `VoiceManager.synthesize()` + `.play()` off the GUI thread — docs/ROADMAP.md milestone 5.3. Same reasoning as `core/chat_worker.py`: `play()`'s `sd.wait()` blocks for the full duration of the spoken reply, which scales with reply length and would freeze the GUI thread for that whole time otherw
 - `core/turn_trace.py`: One line per Assistant turn: how MIA got to what she said (DEC-0067, choice 4: native traces before Langfuse; phase 2 of docs/PERSONALITY_AND_ECOSYSTEM_AUDIT.md). The route that answered (a fixed reply, a plain-word command, a question plan, the model), what was asked and said, the tools offered and
 - `core/undo_log.py`: "Undo that" (2026-10-01, accounts stage 5): when MIA changes something for you (adds an expense, checks off a chore, logs a reading) and got it wrong, you can take it back.
+- `core/unit_conversion.py`: The unit converter's tables and math (moved from modules/toolbox/calculators/unit_converter.py so the web Toolbox and the convert_units voice tool can use them without Qt; the module re-exports them). Thirteen categories (length, area, volume, weight, temperature, speed, pressure, energy, power, tim
 - `core/units.py`: Kitchen and shop units, and converting between them (DEC-0036). A recipe can say "500 g flour" while the flour is kept in pounds, or "1 cup honey" while the honey is kept in cups: an amount converts when both units measure the same thing (weight to weight, volume to volume, a count to a count). Weig
 - `core/update_manager.py`: Apply an offline update package (a zip of new/changed project files) onto the running MIA installation, per docs/ROADMAP.md milestone 2.8. "No internet required" — the package is just a local file (from a USB drive, or anywhere else); this module never makes a network call.
 - `core/usage_tracker.py`: Per-module usage tracking — "has the user ever actually opened X through the app" — the real gap docs/VISION.md's modular tutorial system names as still unbuilt: "proactively suggest a walkthrough for never-used features... needs a real per-feature usage-tracking subsystem that doesn't exist yet."
@@ -392,6 +396,7 @@
 - `core/web_push.py`: Sends Web Push messages via pywebpush (VAPID-signed, per the standard Web Push protocol) and owns this device's VAPID keypair — generated once on first use and persisted to data/vapid_keys.json, never regenerated after that (regenerating it would silently invalidate every subscription a browser has 
 - `core/web_screens.py`: Kitchen, Workout and Real Estate on the web (2026-10-06, DEC-0017/0018): everything the PC app's screens show, assembled here so `web/` holds no logic. Served as `/api/kitchen` (and one recipe, `/api/kitchen/recipe/{id}`), `/api/workout` and `/api/real-estate`; changes are the action kinds in core/k
 - `core/web_surfaces.py`: What the web front end's shell and Home show (2026-10-06, DEC-0017: the web becomes all of MIA, function first, in the concept's look). Assembled here, in code, so `web/` holds no logic (DEC-0013): which apps a person sees, their level and XP, the greeting, Today's Focus, the upcoming list and the a
+- `core/web_toolbox.py`: The Toolbox's web screen (DEC-0113 canvas Toolbox, DEC-0125: the Toolbox had no phone screen). Three parts:
 - `core/weekly_checkin.py`: The Sunday check-in (DEC-0047 rule 5; Zac, 2026-10-27): Sunday morning, a recap of the week just past and the layout of the week ahead.
 - `core/welcome.py`: What comes after User Sync (slice 5 of docs/GLASSES_FIRST_BOOT_PLAN.md): the first mission, the tour of Home, the app menu with its optional tours, and the moment MIA hands over.
 - `core/why_graph.py`: "Remember Why", slice B of docs/COGNITIVE_EXTENSION_PROPOSAL.md: the owner's reasons as a chain, with live evidence from their own records, assembled in code so the model can only phrase it, never invent it.
@@ -411,7 +416,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 2,835 lines; 34 of 34 classes and functions documented
+2 files, 2,851 lines; 34 of 34 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -545,7 +550,7 @@
 
 ## modules/: the desktop's apps, one folder each
 
-93 files, 22,859 lines; 1,033 of 1,033 classes and functions documented
+93 files, 22,668 lines; 1,027 of 1,027 classes and functions documented
 
 - `modules/__init__.py`: Every feature of MIA (Assistant, Files, Notes, Maps, etc.) lives here as an independent package. Each module package must:
 - `modules/assistant/__init__.py`: The assistant app's package: its screen and behaviour are in module.py (Assistant Chat UI — docs/ROADMAP.md milestones 5.2 (text chat), 5.3 (voice), 5.4 (device-help grounding), and 5.5 (tool use / action execution). A chat screen (). core/module_manager.py finds it by that file.
@@ -679,7 +684,7 @@
 
 ## tests/: the test suite: what each part must do
 
-369 files, 66,910 lines; 5,307 of 5,888 classes and functions documented
+370 files, 67,004 lines; 5,313 of 5,895 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -902,7 +907,7 @@
 - `tests/test_observations_web.py`: Observations' web screen (core/observations_web.py): findings across apps, and the open insights by source, each with its card (kind, the apps it used, where to settle it: DEC-0113). *(2 undocumented)*
 - `tests/test_ocr.py`: Reading photos and scans (core/ocr.py) and how the inbox and the textbook tutor use it. Most tests use a stand-in engine so they run anywhere; the ones marked `needs_tesseract` run the real program when it's installed.
 - `tests/test_offline_maps.py`: Vector offline maps (core/offline_maps.py): names, the box around waypoints, a map file's header, the cut. *(3 undocumented)*
-- `tests/test_ohms_law.py`: Unit tests for modules.toolbox.calculators.ohms_law.solve(). *(3 undocumented)*
+- `tests/test_ohms_law.py`: Unit tests for Ohm's law solve() (core/toolbox_calcs.py; modules.toolbox.calculators.ohms_law re-exports it). *(3 undocumented)*
 - `tests/test_onboarding.py`: Unit tests for core.onboarding's pure functions — see gui/home_dashboard.py's _inject_first_run_welcome() for how this feeds a brand-new user's very first conversation. Same shape as tests/test_startup_briefing.py.
 - `tests/test_online_watch.py`: Offline awareness follow-ups (core/online_watch.py): noticing a settled change of connection, telling the owner through the communication gate, and "remind me when I'm back online". *(1 undocumented)*
 - `tests/test_operating_journal.py`: The Operating Journal (DEC-0097, core/operating_journal.py): lines in the person's words, each read by code for what the records can check; self-rated otherwise; how they did as plain numbers by week (and each line's meter), never a judgment; talked to with "add to my operating journal" and "rate .. *(3 undocumented)*
@@ -1002,7 +1007,7 @@
 - `tests/test_trip_manager.py`: Unit tests for core.trip_manager. Isolates _DATA_DIR/_TRIPS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_waypoint_manager.py's isolated_paths). planned_route_distance_km() is checked against the same known real-world distance test_waypoint_manager.py already uses (New York <-> *(5 undocumented)*
 - `tests/test_trip_map_view.py`: Unit tests for gui.trip_map_view's pure functions (project_to_scene_xy, compute_bounds), same style as tests/test_navigation_module.py — no Qt event loop, no QGraphicsScene/View instantiated.
 - `tests/test_turn_trace.py`: Turn traces (DEC-0067, core/turn_trace.py): one line per turn, how it was answered and how long it took; never a private turn, never a password. *(1 undocumented)*
-- `tests/test_unit_converter.py`: Unit tests for modules.toolbox.calculators.unit_converter.convert().
+- `tests/test_unit_converter.py`: Unit tests for the unit converter's convert() (core/unit_conversion.py; modules.toolbox.calculators.unit_converter re-exports it).
 - `tests/test_update_manager.py`: Unit tests for core.update_manager. Isolates _PROJECT_ROOT into a tmp_path scratch area (same monkeypatch pattern as test_backup_manager.py) so these tests never touch the real project files. Git-commit tests `git init` a throwaway repo in tmp_path — never the real project repo — with a local (not g *(2 undocumented)*
 - `tests/test_usage_loops.py`: Build plan step 3, the remaining usage loops (core/loops.py): numbers she didn't look up, memories corrected soon after she kept them, the gate's daily limit and the kinds it put on a break, published screens a later change broke, and data files found corrupt. Each record keeps kinds and counts, nev *(1 undocumented)*
 - `tests/test_usage_tracker.py`: Unit tests for core.usage_tracker. Isolates _DATA_DIR/_USAGE_FILE into a tmp_path scratch area (same monkeypatch pattern as test_activity_log_manager.py's isolated_paths). *(3 undocumented)*
@@ -1031,6 +1036,7 @@
 - `tests/test_web_push.py`: Unit tests for core.web_push. The actual push-service HTTP call (pywebpush.webpush) is mocked throughout — this is the standard, correct way to test Web Push code without a real browser/push service (see core/web_push.py's own docstring and the Mobile Phase 1 plan). *(5 undocumented)*
 - `tests/test_web_screens.py`: DEC-0017/0018 (2026-10-06): Kitchen, Workout and Real Estate on the web. The pages (core/web_screens.py) and every change as an action kind (core/kitchen_actions.py, core/workout_actions.py, core/estate_actions.py), each proposed, approved, recorded and undoable.
 - `tests/test_web_surfaces.py`: DEC-0017 (2026-10-06): the web shell and Home dashboard, assembled in core/web_surfaces.py so web/ holds no logic. The sidebar is the person's own (child-safe, tucked-away apps hidden), Home is the concept's dashboard: greeting, Today's Focus with each item's action and kind, Upcoming, the status st *(4 undocumented)*
+- `tests/test_web_toolbox.py`: The Toolbox on the web (DEC-0125, the design canvas's Toolbox, DEC-0113: core/web_toolbox.py, core/toolbox_calcs.py, core/toolbox_actions.py and core/assistant_toolbox_actions.py): every calculator worked out in core, alarms set, switched and deleted as actions, and the same answers by voice. *(1 undocumented)*
 - `tests/test_welcome.py`: What comes after User Sync (core/welcome.py, core/app_intro.py). *(4 undocumented)*
 - `tests/test_what_i_used.py`: What I Used (DEC-0029, ALICE pick 1): a turn gets the memories that match what was asked, returns them with the reply, and each can be fixed or forgotten (and the forgetting undone).
 - `tests/test_why_graph.py`: Slice B, "Remember Why": the reason chain on Intents, the evidence builder (core/why_graph.py), the tools (core/assistant_why_actions.py), and the Perspective path. Checks facts and structure, never wording.
@@ -1053,7 +1059,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-75 files, 13,665 lines
+76 files, 13,829 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
@@ -1125,6 +1131,7 @@
 - `web/sound.js`: sound.js — MIA's sounds (claude, 2026-10-17, DEC-0028 #11). Short tones made in the browser (Web Audio: no sound files to download, works offline): a chime for an objective, a quest-complete arpeggio for a mission, a fanfare for a level. MIA's voice line (from the engine's reward.say, core/actions.v
 - `web/start.js`: start.js — Start Here (claude, 2026-11-07). Renders MIA.guide() (core/web_guide.py): what she does, grouped by what you want to get done; each with how it works, "Try saying" buttons that open Talk with the words typed in (press Enter to send), and the page to open; then what's new. Formatting only;
 - `web/sync.js`: sync.js — User Sync on the phone (claude, 2026-11-02). Renders MIA.userSync() (core/user_sync.py): the question, a box to type the answer, the chips to approve, and the phone's permissions, asked through window.MIAPhonePermissions (Permissions.kt) and reported back. The steps and words are all the e
+- `web/toolbox.js`: toolbox.js — the Toolbox (claude, 2026-11-07, DEC-0125; the design canvas's Toolbox, DEC-0113). Renders MIA.toolbox() (core/web_toolbox.py): the open calculator (its boxes, and the answer core works out as you type, MIA.toolboxCalc), the list of calculators, alarms (set, on/off, delete: core/toolbox
 - `web/vault.js`: vault.js — Memory Vault (claude, 2026-10-18, DEC-0030 phase E). Renders MIA.vault() (core/memory_vault.py) in tabs: Photos (one month at a time, by day, with what happened that day and the trip it was on; each tile says whether it's safe on the home computer), Free Up Space (photos the PC holds, exa
 - `web/welcome.js`: welcome.js — Home (DEC-0018, claude; the canvas's Home, DEC-0113). Renders MIA.dashboard() and the frame's shell data: the date and greeting, the status strip, MIA's one finding, the focus rows (each with its kind; ticking runs the item's action: confirm, undo), what's upcoming, the level; and on a 
 - `web/workout.js`: workout.js — the Workout screen (claude, 2026-10-06, DEC-0017/0018). Renders MIA.workout() (core/web_screens.py): log a session right on the page (an exercise, reps, sets, weight, how long, notes), the latest entry, today's daily mission and streak, exercises, history, progress and Personal Bests (l
