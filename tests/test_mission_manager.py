@@ -39,6 +39,7 @@ from core.waypoint_manager import WaypointManager
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points missions', expeditions' and the config's files at a temporary folder."""
     data_dir = tmp_path / "data"
     monkeypatch.setattr(config_manager_module, "_CONFIG_FILE", tmp_path / "config.json")
     monkeypatch.setattr(mission_manager_module, "_DATA_DIR", data_dir)
@@ -62,6 +63,7 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _make_context() -> AppContext:
+    """A context with waypoints, expeditions, trips and missions."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     context.waypoints = WaypointManager(context)
     context.expeditions = ExpeditionManager(context)
@@ -373,14 +375,18 @@ def test_increment_tally_rejects_non_tally_objective(isolated_paths):
 # ----------------------------------------------------------------------
 
 class _FakeNotifications:
+    """Notifications that remember each one raised."""
     def __init__(self) -> None:
+        """None raised yet."""
         self.notified: list[dict] = []
 
     def notify(self, title, message, level="info", source="system"):
+        """Remembers a notification."""
         self.notified.append({"title": title, "message": message, "level": level, "source": source})
 
 
 def _make_context_with_notifications() -> tuple[AppContext, _FakeNotifications]:
+    """That context with fake notifications; returns both."""
     context = _make_context()
     notifications = _FakeNotifications()
     context.notifications = notifications

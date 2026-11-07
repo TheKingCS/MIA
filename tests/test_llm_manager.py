@@ -33,20 +33,26 @@ class _FakeConfig:
 
 
 class _FakeResponse:
+    """An HTTP response that gives fixed bytes, usable in a with block."""
     def __init__(self, body: bytes) -> None:
+        """Keeps the body."""
         self._body = body
 
     def read(self) -> bytes:
+        """The body."""
         return self._body
 
     def __enter__(self):
+        """Itself, for the with block."""
         return self
 
     def __exit__(self, *args) -> None:
+        """Lets any error through."""
         return None
 
 
 def _make_manager(monkeypatch, urlopen_impl) -> LLMManager:
+    """A model manager whose HTTP calls go to the stand-in given."""
     monkeypatch.setattr("core.llm_manager.urllib.request.urlopen", urlopen_impl)
     context = AppContext(config=_FakeConfig({}), events=None)
     return LLMManager(context)

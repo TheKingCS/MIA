@@ -32,11 +32,13 @@ def qapp():
 
 @pytest.fixture
 def inbox_ctx(tmp_path, monkeypatch, qapp):
+    """The inbox tests' context."""
     return test_inbox.make_ctx(tmp_path, monkeypatch)
 
 
 @pytest.fixture
 def tutor_ctx(tmp_path, monkeypatch, qapp):
+    """The textbook tests' context."""
     return test_textbook_tutor.make_ctx(tmp_path, monkeypatch)
 
 
@@ -60,6 +62,7 @@ def fake_engine(texts_by_suffix):
 
 
 def text_image(lines, width=1400, height=1000) -> QImage:
+    """A white image with these lines of text drawn large, for OCR to read."""
     image = QImage(width, height, QImage.Format.Format_RGB32)
     image.fill(QColor("white"))
     painter = QPainter(image)
@@ -91,6 +94,7 @@ def scanned_pdf(path: Path, pages: list[list[str]]) -> Path:
 
 
 def test_clean_text():
+    """OCR text loses trailing spaces, extra blank lines and page breaks."""
     assert clean_text("TOTAL 36.23  \n\n\n\nThanks\f\n") == "TOTAL 36.23\n\nThanks"
 
 
@@ -132,6 +136,7 @@ def test_queue_dedupes_reports_progress_and_cancels(tmp_path):
 
 
 def test_unavailable_without_tesseract(monkeypatch, tmp_path):
+    """Without Tesseract installed (nor in its Windows folder), OCR is unavailable."""
     monkeypatch.setattr(ocr_module.shutil, "which", lambda name: None)
     # Its Windows install folder too, or a PC that has it finds it there.
     monkeypatch.setattr(ocr_module, "_WINDOWS_DEFAULT", tmp_path / "no_tesseract.exe")
@@ -225,6 +230,7 @@ def test_a_scanned_textbook_is_read_then_indexed(tutor_ctx):
 
 
 def test_scanned_textbook_failures(tutor_ctx):
+    """A scan with no readable text finishes reading with the error said."""
     ctx = tutor_ctx
     scan = write_pdf(ctx.tmp / "scan.pdf", [""], None)
     ctx.ocr = OcrQueue(ctx, engine=fake_engine({".pdf": [""]}))

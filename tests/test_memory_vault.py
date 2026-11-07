@@ -82,6 +82,7 @@ def test_bursts_and_the_suggested_best_shot():
 
 @pytest.fixture
 def phone(tmp_path, monkeypatch):
+    """A phone's world with a camera roll folder, the vault reading it, kept in the person's folder."""
     from tests.engine_world import build_world
 
     world = build_world(tmp_path, monkeypatch)
@@ -94,6 +95,7 @@ def phone(tmp_path, monkeypatch):
 
 
 def _shoot(roll, name, data):
+    """Puts a photo in the camera roll; returns its hash."""
     (roll / name).write_bytes(data)
     return hashlib.sha256(data).hexdigest()
 
@@ -134,10 +136,12 @@ class PretendPC:
     """The home computer's vault endpoints, answered by a real VaultShelf."""
 
     def __init__(self, folder, cut_after=None):
+        """A home computer's vault shelf in a folder; it can cut uploads off after some pieces."""
         self.shelf = VaultShelf(folder)
         self.cut_after, self.pieces = cut_after, 0
 
     def __call__(self, context, path, payload=None, timeout=6.0, method="", raw=False, body=None, headers=None):
+        """Answers the phone's vault calls as the computer would: what it has, verifying, scores, and uploads."""
         from urllib.parse import parse_qs, urlsplit
 
         if path == "/api/vault/have":
@@ -223,6 +227,7 @@ def test_freeing_space_is_only_for_what_the_pc_just_confirmed(phone, tmp_path):
 
 
 def test_the_screen(phone, tmp_path):
+    """The vault screen counts the photos and what's waiting, by month and day; a burst's best shot is marked and the others aren't safe yet."""
     from core import person_settings
 
     _shoot(phone.roll, "IMG_20261003_090000.jpg", _jpeg("2026:10:03 09:00:00", pixels=b"A" * 40))
@@ -269,6 +274,7 @@ def test_one_round_waits_for_wifi_and_for_the_pc(phone, tmp_path, monkeypatch):
 
 
 def test_the_endpoints(phone, tmp_path, monkeypatch):
+    """The computer keeps a photo, verifies it and gives it back (a bad hash is refused); the phone's screen shows its photos, a small preview or the full one, and 404 for one it doesn't have."""
     from fastapi.testclient import TestClient
 
     import server.app as server_app

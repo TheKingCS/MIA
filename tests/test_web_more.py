@@ -34,6 +34,7 @@ TODAY = date.today()
 
 @pytest.fixture
 def world(tmp_path, monkeypatch):
+    """The shared test world with an action center and the journal and workshop stores."""
     context = build_world(tmp_path, monkeypatch)
     context.actions = ActionCenter()
     shop = tmp_path / "shop"
@@ -62,6 +63,7 @@ def world(tmp_path, monkeypatch):
 
 
 def do(world, kind, **params):
+    """Proposes and approves an action (it must run); returns its summary and result."""
     proposal = world.actions.propose(world, kind, params)
     done = world.actions.approve(world, proposal.proposal_id)
     assert done.status == "executed", done.result
@@ -69,6 +71,7 @@ def do(world, kind, **params):
 
 
 def test_pure_bits():
+    """The small helpers: tags, previews, durations, file kinds, sizes and names."""
     assert tags_of("Garden, ideas ,#garden;  ") == ["garden", "ideas"]
     assert preview("a  b\nc") == "a b c" and preview("word " * 60).endswith("…")
     assert duration_text(245) == "4:05" and duration_text(3725) == "1:02:05" and duration_text(None) == ""
@@ -81,6 +84,7 @@ def test_pure_bits():
 
 
 def test_the_journal(world):
+    """A journal entry added with tags shows on the Journal page with its tags, counts and form."""
     said, _ = do(world, "journal.add", title="Seed day", body="Planted the beans.", tags="garden, Spring")
     assert said == 'Add the journal entry "Seed day" (tagged garden, spring)'
     page = journal_page(world, TODAY)
@@ -99,6 +103,7 @@ def test_the_journal(world):
 
 
 def test_the_workshop(world):
+    """Using material on a job and selling a product move the stock (and say by how much); low stock, what each job used and made, and the profit show on the page."""
     do(world, "material.add", name="Plywood", unit="sheet", quantity_on_hand="4", reorder_threshold="2", unit_cost="30")
     do(world, "product.add", name="Birdhouse", base_price="25", quantity_in_stock="0")
     do(world, "component.add", name="Resistor", value="10k", quantity="50")
@@ -124,6 +129,7 @@ def test_the_workshop(world):
 
 
 def test_expeditions_and_packing(world):
+    """An upcoming expedition says how far off it is; a trip is added to it, its gear packed; on the day it's now."""
     start = (TODAY + timedelta(days=10)).isoformat()
     do(world, "expedition.add", name="Lake weekend", location="North lake", start_date=start)
     page = expeditions_page(world, TODAY)

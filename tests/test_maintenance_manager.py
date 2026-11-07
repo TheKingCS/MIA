@@ -59,6 +59,7 @@ from core.skill_manager import SkillManager
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points maintenance's files, documents and the readings log at a temporary folder."""
     data_dir = tmp_path / "data"
     monkeypatch.setattr(maintenance_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(maintenance_manager_module, "_MAINTENANCE_FILE", data_dir / "maintenance.json")
@@ -80,6 +81,7 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _make_context() -> AppContext:
+    """A context with the readings log and the calendar maintenance uses."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     context.data_logger = DataLoggerManager(context)
     context.calendar = CalendarManager(context)
@@ -87,18 +89,21 @@ def _make_context() -> AppContext:
 
 
 def _make_manager(context: AppContext) -> MaintenanceManager:
+    """A maintenance manager, set on the context."""
     manager = MaintenanceManager(context)
     context.maintenance = manager
     return manager
 
 
 def _task(**overrides) -> MaintenanceTask:
+    """An oil change task, with any field changed."""
     defaults = dict(task_id="t1", asset_id="a1", title="Oil change")
     defaults.update(overrides)
     return MaintenanceTask(**defaults)
 
 
 def _reading(value: float, timestamp: str) -> Reading:
+    """A reading of a value at a time."""
     return Reading(reading_id="r", series_id="s", value=value, timestamp=timestamp)
 
 
@@ -767,6 +772,7 @@ def test_update_task_raises_for_unknown_id(isolated_paths):
 
 
 def test_delete_task(isolated_paths):
+    """A deleted task is gone."""
     context = _make_context()
     manager = _make_manager(context)
     asset = manager.add_asset(name="Truck")

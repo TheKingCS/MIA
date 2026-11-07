@@ -16,10 +16,13 @@ QS = user_sync.TOPICS["meals"]["questions"]
 
 
 class Model:
+    """A model that always gives one reply (as JSON when it isn't text)."""
     def __init__(self, reply):
+        """Keeps the reply."""
         self.reply = reply
 
     def generate(self, prompt):
+        """The reply."""
         return self.reply if isinstance(self.reply, (str, type(None))) else json.dumps(self.reply)
 
 
@@ -37,6 +40,7 @@ def make(tmp_path, monkeypatch, reply=None, only="meals"):
 
 
 def answer_all(world, *answers):
+    """Answers each in turn; returns where the sync is after the last."""
     now = None
     for said in answers:
         now = user_sync.reply(world, said)
@@ -167,6 +171,7 @@ def test_the_glasses_voice_reaches_it_and_says_so(tmp_path, monkeypatch):
 
 
 def test_through_the_server(tmp_path, monkeypatch):
+    """The sync runs through the server: it's offered, starts on the phone's permissions, skips to routines, reviews and applies what was found."""
     from fastapi.testclient import TestClient
 
     import server.app as server_app
@@ -196,6 +201,7 @@ def test_through_the_server(tmp_path, monkeypatch):
 
 
 def chips_for(tmp_path, monkeypatch, topic, reply, *answers):
+    """Runs one topic's questions with a model reply and answers; returns the world and where it stands."""
     world = make(tmp_path, monkeypatch, reply, only=topic)
     world.relationships = RelationshipsManager(world, tmp_path)
     now = answer_all(world, *answers)

@@ -24,9 +24,11 @@ class FakeLab:
     NOT_READY, READY = "not ready", "ready"
 
     def __init__(self, fail_check_once=False):
+        """No proposals yet; it can fail one check (as if the computer slept)."""
         self.proposals, self.created, self.fail_check_once = {}, 0, fail_check_once
 
     def create(self, title, problem, evidence="", plan=""):
+        """Makes a numbered proposal on its own branch."""
         self.created += 1
         pid = f"20261103-{self.created:06d}"
         self.proposals[pid] = SimpleNamespace(proposal_id=pid, branch=f"lab/{pid}", status="drafted", note="",
@@ -34,11 +36,13 @@ class FakeLab:
         return self.proposals[pid]
 
     def write(self, pid, coder=None):
+        """The coder's turn: written, changing core/x.py."""
         p = self.proposals[pid]
         p.status, p.coder_said, p.files = "written", "changed core/x.py", ["core/x.py"]
         return p
 
     def check(self, pid, suite=None):
+        """The tests pass (after failing once when asked)."""
         if self.fail_check_once:
             self.fail_check_once = False
             raise RuntimeError("the computer went to sleep")
@@ -47,11 +51,13 @@ class FakeLab:
         return p
 
     def get(self, pid):
+        """A proposal by id."""
         return self.proposals[pid]
 
 
 @pytest.fixture
 def place(tmp_path):
+    """A task, its activity log and the agent registry in a temporary folder."""
     folder, log = tmp_path / "tasks", tmp_path / "activity.jsonl"
     tasks_mod.save(tasks_mod.Task(id="T-0001", title="A fix", files=["core/x.py"], body="Make x right."), folder)
     return folder, log, agents.parse(REGISTRY)

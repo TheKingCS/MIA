@@ -28,12 +28,14 @@ from core.user_memory_manager import (
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the memories' file at a temporary folder."""
     data_dir = tmp_path / "data"
     monkeypatch.setattr(user_memory_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(user_memory_manager_module, "_USER_MEMORIES_FILE", data_dir / "user_memories.json")
 
 
 def _make_manager() -> UserMemoryManager:
+    """A memory manager on a bare context."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     return UserMemoryManager(context)
 
@@ -63,6 +65,7 @@ def test_is_duplicate_memory_empty_existing_list():
 # ----------------------------------------------------------------------
 
 def _memory(memory_id: str, text: str, category: str = "Other") -> UserMemory:
+    """A memory with an id, text and category."""
     return UserMemory(memory_id=memory_id, text=text, category=category)
 
 
@@ -209,6 +212,7 @@ def test_starts_empty_when_no_file_exists(isolated_paths):
 
 
 def test_add_memory(isolated_paths):
+    """A memory added is kept as said."""
     manager = _make_manager()
     memory = manager.add_memory("The user's name is Alex.")
     assert memory is not None
@@ -285,6 +289,7 @@ def test_add_memory_accepts_every_real_category(isolated_paths):
 
 
 def test_delete_memory(isolated_paths):
+    """A memory deleted is gone."""
     manager = _make_manager()
     memory = manager.add_memory("Loves hiking.")
     manager.delete_memory(memory.memory_id)
@@ -297,6 +302,7 @@ def test_delete_memory_is_idempotent(isolated_paths):
 
 
 def test_clear_all(isolated_paths):
+    """Clearing forgets every memory."""
     manager = _make_manager()
     manager.add_memory("Fact one.")
     manager.add_memory("Fact two.")

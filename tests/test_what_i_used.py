@@ -12,10 +12,12 @@ from tests.engine_world import build_world
 
 
 def mem(i, text, when="2026-10-01"):
+    """A memory with an id, text and date."""
     return UserMemory(memory_id=str(i), text=text, created_at=when)
 
 
 def test_relevance():
+    """A memory's relevance to a question: names count double, question words never match, and the most relevant are picked."""
     jordan = mem(1, "The user's sister Jordan loves climbing.")
     mower = mem(2, "The user's mower blade was dull last spring.", "2026-10-05")
     coffee = mem(3, "The user drinks iced coffee.", "2026-10-09")
@@ -26,14 +28,18 @@ def test_relevance():
 
 
 class _Model:
+    """A model that answers with a chalk bag idea and remembers what it saw."""
     def __init__(self):
+        """Nothing seen yet."""
         self.seen = None
 
     def chat_with_tools(self, messages, tools):
+        """Remembers the messages and answers."""
         self.seen = messages
         return ChatReply(content="Maybe a new chalk bag.", tool_calls=[])
 
     def generate(self, prompt):
+        """Nothing to remember (NONE)."""
         return "NONE"
 
 

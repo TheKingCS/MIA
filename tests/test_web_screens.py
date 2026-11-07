@@ -20,12 +20,14 @@ TODAY = date.today()
 
 @pytest.fixture
 def world(tmp_path, monkeypatch):
+    """The shared test world with an action center."""
     context = build_world(tmp_path, monkeypatch)
     context.actions = ActionCenter()
     return context
 
 
 def run(world, kind, **params):
+    """Proposes and approves an action; returns both."""
     proposal = world.actions.propose(world, kind, params)
     return proposal, world.actions.approve(world, proposal.proposal_id)
 
@@ -41,6 +43,7 @@ def test_ingredients_one_per_line():
 
 
 def test_the_kitchen(world):
+    """A recipe, its ingredients and the pantry: the page says what's missing and expiring; what's missing goes to the grocery list; a meal is logged and the recipe favourited."""
     proposal, _ = run(world, "recipe.add", name="Fried rice", category="Dinner", servings="2", prep_time_minutes="10",
                       cook_time_minutes="15")
     assert proposal.summary == "Add the recipe Fried rice: meal Dinner, servings 2, prep 10, cook 15"
@@ -97,6 +100,7 @@ def test_kitchen_is_for_children_too_but_not_deleting_recipes(world):
 
 
 def test_streak_days():
+    """The streak counts days in a row up to today, or from yesterday when nothing's logged today yet."""
     from types import SimpleNamespace
 
     days = [SimpleNamespace(date=(TODAY - timedelta(days=n)).isoformat()) for n in (0, 1, 2, 4)]
@@ -106,6 +110,7 @@ def test_streak_days():
 
 
 def test_the_workout(world):
+    """A workout logged shows as the latest with its notes, counts this week and in the streak, and sets the personal best; templates are gone."""
     run(world, "exercise.add", name="Push-ups", category="Chest", equipment="Bodyweight")
     pushups = world.workout.all_exercises()[0]
     proposal, _ = run(world, "workout.log", exercise_id=pushups.exercise_id, reps="22", sets="1", notes="Felt good")
@@ -127,6 +132,7 @@ def test_the_workout(world):
 
 
 def test_real_estate(world):
+    """A rental's card shows its status, rent, equity, this month's money and the upkeep needing attention; deleting it says its money stays in Money."""
     proposal, _ = run(world, "property.add", name="Maple House", property_type="Rental", status="Rented",
                       location="Town, ST", monthly_rent="1200", current_value="200000", mortgage_balance="150000")
     assert proposal.summary.startswith("Add the property Maple House: kind Rental, status Rented, in Town, ST, rent $1,200.00")

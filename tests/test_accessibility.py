@@ -22,6 +22,7 @@ from core.profile_manager import ProfileManager
 
 @pytest.fixture
 def ctx(tmp_path, monkeypatch):
+    """A context with profiles on temporary files and one person, Robin."""
     monkeypatch.setattr(config_module, "_CONFIG_FILE", tmp_path / "config.json")
     monkeypatch.setattr(profile_module, "_DATA_PROFILES_DIR", tmp_path / "profiles")
     context = AppContext(config=ConfigManager(), events=EventBus())
@@ -34,12 +35,14 @@ def ctx(tmp_path, monkeypatch):
 
 @pytest.fixture
 def qapp():
+    """The Qt application, made once."""
     from PySide6.QtWidgets import QApplication
 
     return QApplication.instance() or QApplication([])
 
 
 def test_scaling_font_sizes():
+    """Every font size in a stylesheet scales by the text size (normal leaves it as it is); text sizes have their scales."""
     qss = "QLabel { font-size: 14px; } QLabel#TitleLabel { font-size: 28px; } X { font-size: 10pt; }"
     assert scale_font_sizes(qss, 1.5) == "QLabel { font-size: 21px; } QLabel#TitleLabel { font-size: 42px; } X { font-size: 15pt; }"
     assert scale_font_sizes(qss, 1.0) is qss
@@ -47,6 +50,7 @@ def test_scaling_font_sizes():
 
 
 def test_the_whole_look(qapp):
+    """High contrast adds its overlay at the text size chosen; without it the theme is as it was."""
     from gui.theme_manager import HIGH_CONTRAST_OVERLAY, build_stylesheet, get_theme_stylesheet
 
     plain = build_stylesheet("dark_field")
@@ -106,6 +110,7 @@ def test_screen_text_reads_well():
 
 
 def test_reading_a_screen(qapp):
+    """Reading a screen aloud says its visible text (never a password), and stops on a second press; without a voice it says so."""
     from PySide6.QtWidgets import QLabel, QLineEdit, QListWidget, QVBoxLayout, QWidget
 
     from gui.read_aloud import ReadAloud, visible_lines

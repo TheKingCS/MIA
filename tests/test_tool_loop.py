@@ -13,12 +13,14 @@ from core.llm_manager import ChatReply, ToolCall
 
 
 def _action(name, said):
+    """A money tool that says a fixed answer."""
     return AssistantAction(name=name, domain="money", description=name, parameters={"type": "object", "properties": {}},
                            handler=lambda context, arguments: said, trigger_phrases=(name,))
 
 
 @pytest.fixture
 def life(monkeypatch):
+    """A registry with list_bills, get_budget_summary and add_bill, and the loop allowed."""
     registry = AssistantActionRegistry()
     registry.register(_action("list_bills", "Electric $80.00 due Friday."))
     registry.register(_action("get_budget_summary", "Income: $2,000.00. Expenses: $1,500.00."))
@@ -31,14 +33,17 @@ class _Model:
     """Replies in order; remembers what it was sent."""
 
     def __init__(self, *replies):
+        """The replies to give in turn, and nothing sent yet."""
         self.replies, self.sent = list(replies), []
 
     def chat_with_tools(self, messages, tools):
+        """Remembers what was sent and gives the next reply."""
         self.sent.append((messages, tools))
         return self.replies.pop(0)
 
 
 def call(*names):
+    """A reply that calls these tools."""
     return ChatReply(content="", tool_calls=[ToolCall(name=n, arguments={}) for n in names])
 
 
@@ -118,6 +123,7 @@ def test_a_question_never_makes_a_change_nobody_asked_for(life):
 
 
 def test_asks_not_tells():
+    """Questions are told apart from requests to change something."""
     assert tool_loop.asks_not_tells("What lessons have I learned?")
     assert tool_loop.asks_not_tells("Is it more profitable to make products to order or keep inventory?")
     assert not tool_loop.asks_not_tells("Can you add milk to the list?")

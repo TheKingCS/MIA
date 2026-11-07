@@ -24,6 +24,7 @@ REGISTRY = {
 
 @pytest.fixture
 def place(tmp_path):
+    """An active mission with two tasks, in temporary folders."""
     folders = SimpleNamespace(missions=tmp_path / "missions", tasks=tmp_path / "tasks", log=tmp_path / "activity.jsonl",
                               stop=tmp_path / "STOP")
     m = runner.new("Make the OCR tests pass everywhere", ["tests/", "core/ocr.py"], tasks=2, folder=folders.missions,
@@ -38,10 +39,13 @@ def place(tmp_path):
 
 
 class FakeLoop:
+    """A stand-in work loop: records which provider ran each task and marks it for review, or fails as told."""
     def __init__(self, place, fail_with=""):
+        """Where it works, how it fails, and nothing run yet."""
         self.place, self.fail_with, self.ran = place, fail_with, []
 
     def run(self, task_id, role_name, registry, lab=None, folder=None, log=None):
+        """Records the run and puts the task in review on a lab branch, or raises."""
         provider = registry.roles[role_name].provider
         self.ran.append((task_id, provider))
         if self.fail_with:
@@ -54,6 +58,7 @@ class FakeLoop:
 
 
 def step(place, registry, **kw):
+    """One runner step on the mission with everything outside held still (the lab, provider state, learning, shadow review)."""
     kw.setdefault("lab", SimpleNamespace(get=lambda pid: SimpleNamespace(files=["core/ocr.py"])))
     kw.setdefault("state", lambda provider: {"state": "ready"})
     kw.setdefault("learn", lambda task_id: [])
@@ -143,6 +148,7 @@ def test_a_usage_limit_mid_write_is_a_rest_not_a_failure(place, monkeypatch):
 
 
 def test_scope():
+    """Files a mission didn't name are out of its scope."""
     assert runner.in_scope(["tests/test_ocr.py", "core/ocr.py", "core/ocr_extra.py"], ["tests/", "core/ocr.py"]) == \
         ["core/ocr_extra.py"]
 

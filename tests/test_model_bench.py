@@ -56,18 +56,22 @@ def test_the_frozen_cases_match_the_golden_set():
 
 
 class _FakeLlamaServer(BaseHTTPRequestHandler):
+    """A stand-in llama-server: /health answers, and each POST gets the next reply queued, remembering what was sent."""
     replies: list = []
     seen: list = []
 
     def log_message(self, *args):  # quiet
+        """Says nothing per request."""
         pass
 
     def do_GET(self):
+        """Healthy on /health, else 404."""
         self.send_response(200 if self.path == "/health" else 404)
         self.end_headers()
         self.wfile.write(b'{"status":"ok"}')
 
     def do_POST(self):
+        """Remembers the request and sends the next reply queued."""
         body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
         type(self).seen.append((self.path, body))
         reply = type(self).replies.pop(0)
@@ -79,6 +83,7 @@ class _FakeLlamaServer(BaseHTTPRequestHandler):
 
 @pytest.fixture
 def fake():
+    """Runs the stand-in for the test; gives its URL and its class (for the replies and what was seen)."""
     server = HTTPServer(("127.0.0.1", 0), _FakeLlamaServer)
     _FakeLlamaServer.replies, _FakeLlamaServer.seen = [], []
     thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -88,6 +93,7 @@ def fake():
 
 
 def _choice(content="", calls=()):
+    """A chat completion as llama-server gives one: its words, its tool calls, and its timings."""
     return {"choices": [{"message": {"content": content, "tool_calls": [
         {"type": "function", "function": {"name": n, "arguments": json.dumps(a)}} for n, a in calls]}}],
         "timings": {"prompt_n": 2000, "prompt_ms": 40000.0, "predicted_n": 20, "predicted_ms": 2000.0}}

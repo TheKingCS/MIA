@@ -28,21 +28,27 @@ from core.map_tile_math import tiles_covering_bbox
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the tile cache at a temporary folder."""
     monkeypatch.setattr(map_tile_cache_module, "_DATA_DIR", tmp_path / "data")
     monkeypatch.setattr(map_tile_cache_module, "_TILE_CACHE_DIR", tmp_path / "data" / "map_tiles")
 
 
 class _FakeResponse:
+    """An HTTP response that gives fixed bytes, usable in a with block."""
     def __init__(self, data: bytes) -> None:
+        """Keeps the body."""
         self._buffer = io.BytesIO(data)
 
     def read(self) -> bytes:
+        """The body."""
         return self._buffer.read()
 
     def __enter__(self):
+        """Itself, for the with block."""
         return self
 
     def __exit__(self, *args):
+        """Lets any error through."""
         return False
 
 

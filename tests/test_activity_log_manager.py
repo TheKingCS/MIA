@@ -20,6 +20,7 @@ from core.event_bus import EventBus
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the activity log at a temporary folder; returns the folder and the file."""
     data_dir = tmp_path / "data"
     log_file = data_dir / "activity_log.json"
     monkeypatch.setattr(activity_log_manager_module, "_DATA_DIR", data_dir)
@@ -28,12 +29,15 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 class _FakeNotification:
+    """A notification with a title and message."""
     def __init__(self, title, message) -> None:
+        """Keeps the title and message."""
         self.title = title
         self.message = message
 
 
 def _make_manager() -> tuple[ActivityLogManager, AppContext]:
+    """An activity log on a bare context; returns both."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     manager = ActivityLogManager(context)
     return manager, context
@@ -104,6 +108,7 @@ def test_recent_returns_most_recent_first(isolated_paths):
 
 
 def test_recent_respects_limit(isolated_paths):
+    """Recent activity gives at most the number asked."""
     manager, context = _make_manager()
     for i in range(5):
         context.events.publish("module.opened", module_id=f"mod{i}")

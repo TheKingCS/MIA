@@ -25,22 +25,28 @@ from core.trail_map_library import NotAPdfError, TrailMapLibrary
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the trail maps' files and folder at a temporary folder."""
     monkeypatch.setattr(trail_map_library_module, "_DATA_DIR", tmp_path / "data")
     monkeypatch.setattr(trail_map_library_module, "_TRAIL_MAPS_FILE", tmp_path / "data" / "trail_maps.json")
     monkeypatch.setattr(trail_map_library_module, "_DEFAULT_ROOT", tmp_path / "trail_maps")
 
 
 class _FakeResponse:
+    """An HTTP response that gives fixed bytes, usable in a with block."""
     def __init__(self, data: bytes) -> None:
+        """Keeps the body."""
         self._buffer = io.BytesIO(data)
 
     def read(self) -> bytes:
+        """The body."""
         return self._buffer.read()
 
     def __enter__(self):
+        """Itself, for the with block."""
         return self
 
     def __exit__(self, *args):
+        """Lets any error through."""
         return False
 
 

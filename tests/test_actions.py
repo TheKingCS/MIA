@@ -24,6 +24,7 @@ STATE_SCHEMA = schema_check.load("life_state.schema.json")
 
 @pytest.fixture
 def world(tmp_path, monkeypatch):
+    """The shared test world with an action center and an electric bill due yesterday."""
     context = build_world(tmp_path, monkeypatch)
     context.actions = ActionCenter()
     context.bill = context.budget.add_bill("Electric", 120.0, (TODAY - timedelta(days=1)).isoformat(),
@@ -32,6 +33,7 @@ def world(tmp_path, monkeypatch):
 
 
 def _due_action(state, title):
+    """The suggested action on a due item."""
     return next(i["action"] for i in state["due"]["items"] if i["title"] == title)
 
 
@@ -51,6 +53,7 @@ def test_due_items_carry_the_action_to_propose(world):
 
 
 def test_the_five_steps(world):
+    """Propose changes nothing; approve runs it as the person, recorded and undoable; undo puts it back and keeps the history."""
     center = world.actions
     proposal = center.propose(world, "bill.pay", {"bill_id": world.bill.bill_id})
     assert proposal.summary == "Mark Electric paid ($120.00)" and proposal.status == "proposed"
@@ -169,6 +172,7 @@ def test_any_write_moves_the_live_version(world):
 
 @pytest.fixture
 def client(world):
+    """A server client signed in as the world's person."""
     from fastapi.testclient import TestClient
 
     import server.app as server_app
@@ -243,6 +247,7 @@ def test_desktop_sessions_are_not_phones(world):
 
 
 def test_web_home_address():
+    """Home's address carries the session token, and the text size and contrast when set."""
     from modules.web_home.module import web_home_url
 
     assert web_home_url("http://127.0.0.1:8765", "abc") == "http://127.0.0.1:8765/web/#token=abc"

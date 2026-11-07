@@ -70,6 +70,7 @@ def write_pdf(path: Path, pages: list[str], qapp) -> Path:
 
 
 def make_ctx(tmp_path, monkeypatch):
+    """A context for textbooks: Classroom, the books and conversations on temporary files."""
     for module in (classroom_module, textbook_module, conversation_module):
         original = module._DATA_DIR
         for attr, value in list(vars(module).items()):
@@ -93,6 +94,7 @@ def ctx(tmp_path, monkeypatch, qapp):
 
 
 def add_wiring_book(ctx):
+    """Adds a four-page wiring textbook."""
     pdf = write_pdf(ctx.tmp / "Residential_Wiring.pdf", PAGES, None)
     return ctx.textbooks.add_book(pdf, title="Residential Wiring Basics")
 
@@ -160,6 +162,7 @@ def test_passages_keep_their_page_and_size():
 
 
 def test_tokenize():
+    """A question's words for search: question words dropped, plurals made singular."""
     assert tokenize("What does the book say about GFCI outlets and batteries?") == ["gfci", "outlet", "battery"]
 
 
@@ -215,6 +218,7 @@ def test_plain_text_book_gets_pages(ctx):
 
 
 def study_turn(ctx, conversation, prompt):
+    """One study turn's chat request, the message added first."""
     pre_turn(ctx, conversation, prompt)
     ctx.conversations.add_message(conversation.conversation_id, "user", prompt)
     return build_chat_request(ctx, conversation, prompt)
@@ -250,6 +254,7 @@ def test_study_without_books_says_so(ctx):
 
 
 def test_tools(ctx):
+    """By voice: the books are listed, a search answers with the book, page and chapter (or that nothing was found), and a book becomes a course once."""
     say = lambda name, **a: ctx.assistant_actions.execute(ctx, name, a)  # noqa: E731
     assert "don't have any textbooks" in say("list_textbooks")
     add_wiring_book(ctx)
@@ -262,6 +267,7 @@ def test_tools(ctx):
 
 
 def test_textbooks_page(ctx):
+    """The Textbooks panel lists the book with its pages and chapters, and shows its chapters with their pages."""
     from gui.textbooks_panel import TextbooksPanel, format_textbook_row
 
     book = add_wiring_book(ctx)
