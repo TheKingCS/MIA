@@ -33,6 +33,9 @@ log = get_logger(__name__)
 
 
 class PushToTalkSource(Protocol):
+    """Something that says when to start and stop listening: wait_for_press() and wait_for_release() block
+    until then.
+    """
     def wait_for_press(self) -> None:
         """Blocks until the user signals "start talking"."""
 
@@ -44,9 +47,11 @@ class KeyboardPushToTalkSource:
     """Dev-machine default — see this module's docstring for why Enter/Enter, not hold-to-talk."""
 
     def wait_for_press(self) -> None:
+        """Waits for Enter, to start talking."""
         input("\nPress Enter, then speak... ")
 
     def wait_for_release(self) -> None:
+        """Waits for Enter again, to stop."""
         input("Press Enter again to stop recording... ")
 
 
@@ -61,6 +66,9 @@ class GpioPushToTalkSource:
     """
 
     def __init__(self, pin: int) -> None:
+        """Claims the button on a GPIO pin (gpiozero); RuntimeError when gpiozero isn't installed or the
+        pin can't be claimed.
+        """
         try:
             from gpiozero import Button
         except ImportError as exc:
@@ -72,9 +80,11 @@ class GpioPushToTalkSource:
             raise RuntimeError(f"Could not claim push-to-talk GPIO button on pin {pin}: {exc}") from exc
 
     def wait_for_press(self) -> None:
+        """Waits for the button to be pressed."""
         self._button.wait_for_press()
 
     def wait_for_release(self) -> None:
+        """Waits for the button to be let go."""
         self._button.wait_for_release()
 
 

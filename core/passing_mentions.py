@@ -66,6 +66,10 @@ _STOP = {"the", "a", "an", "my", "our", "on", "in", "of", "to", "and", "for", "i
 
 @dataclass
 class Offer:
+    """What MIA offers to keep after her reply, from something said in passing: its kind (task, note, bill, debt,
+    grocery), the question she asks, the tool calls to run on a yes (in order), a cost to log with a note, when it
+    was made, and whether she has asked it yet.
+    """
     kind: str  # "task" | "note" | "bill" | "debt" | "grocery"
     question: str  # what MIA asks, after her reply
     calls: list[tuple[str, dict]] = field(default_factory=list)  # tools to run on a yes, in order
@@ -74,6 +78,7 @@ class Offer:
     shown: bool = False  # set once MIA has actually asked (core/talk_it_out.with_offer)
 
     def expired(self, now: Optional[float] = None) -> bool:
+        """Whether the offer is too old to act on (over 30 minutes)."""
         return (now or time.time()) - self.created > OFFER_LIFETIME_SECONDS
 
 
@@ -83,6 +88,7 @@ def is_yes(text: str) -> bool:
 
 
 def _stem(word: str) -> str:
+    """Pure logic. A crude stem, so "changed" and "changing" meet "chang"."""
     word = word.lower().strip("'")
     for suffix in ("ened", "ed", "ing", "en", "es", "s", "e"):
         if len(word) > 4 and word.endswith(suffix):
@@ -91,10 +97,12 @@ def _stem(word: str) -> str:
 
 
 def _tokens(text: str) -> set[str]:
+    """Pure logic. A text's stemmed words, little ones left out."""
     return {_stem(w) for w in re.findall(r"[a-z']+", text.lower()) if w not in _STOP and len(w) > 2}
 
 
 def _money(text: str) -> Optional[float]:
+    """Pure logic. The first amount after a currency sign in a text, as a number, or None."""
     match = _MONEY.search(text)
     if not match:
         return None
@@ -129,6 +137,7 @@ def _clause(text: str, verb: re.Match) -> str:
 
 
 def _and_list(items: list[str]) -> str:
+    """Pure logic. Items said as a list: "a", "a and b", "a, b and c"."""
     return items[0] if len(items) == 1 else ", ".join(items[:-1]) + " and " + items[-1]
 
 

@@ -53,12 +53,16 @@ class PowerUnavailableError(RuntimeError):
 
 @dataclass
 class PowerStatus:
+    """One battery reading: the percent, whether it's plugged in, and the seconds left (None when unknown or
+    unlimited).
+    """
     percent: float
     plugged_in: bool
     seconds_left: Optional[int]  # None if unknown or "unlimited" (typically means plugged in)
 
 
 class PowerBackend(Protocol):
+    """Where battery readings come from: read() returns a PowerStatus or raises PowerUnavailableError."""
     def read(self) -> PowerStatus:
         """Return the current power status, or raise PowerUnavailableError."""
         ...
@@ -68,6 +72,9 @@ class PsutilBatteryBackend:
     """PowerBackend implementation using psutil's cross-platform OS battery reporting."""
 
     def read(self) -> PowerStatus:
+        """The OS's battery reading through psutil; PowerUnavailableError without psutil or without a
+        battery or UPS.
+        """
         if psutil is None:
             raise PowerUnavailableError("This device doesn't report its battery to MIA yet.")
         battery = psutil.sensors_battery()
@@ -111,6 +118,9 @@ class PowerManager:
     """
 
     def __init__(self, context: AppContext) -> None:
+        """Reads batteries through psutil, with the low-battery warning level from the config
+        (power.low_battery_threshold_percent).
+        """
         self.context = context
         self._backend: PowerBackend = PsutilBatteryBackend()
         self._threshold_percent = float(
@@ -119,6 +129,7 @@ class PowerManager:
         self._already_warned = False
 
     def is_available(self) -> bool:
+        """Whether a battery can be read here."""
         try:
             self._backend.read()
         except PowerUnavailableError:
@@ -126,6 +137,7 @@ class PowerManager:
         return True
 
     def read(self) -> Optional[PowerStatus]:
+        """The battery now, or None when it can't be read (logged quietly)."""
         try:
             return self._backend.read()
         except PowerUnavailableError as exc:
