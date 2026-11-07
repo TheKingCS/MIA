@@ -351,5 +351,45 @@
       "introduction"
     ],
     "skipped": []
+  },
+  "areas": {
+    "status": "REAL",
+    "source": "core/life_areas.py",
+    "items": {
+      "calendar": {
+        "status": "REAL",
+        "source": "core/calendar_manager.py",
+        "counts": {
+          "events": 12,
+          "this_week": 2
+        },
+        "next": "Dentist on 2026-11-10"
+      },
+      "materials": {
+        "status": "REAL",
+        "source": "core/material_manager.py",
+        "counts": {
+          "materials": 8,
+          "low": 1
+        },
+        "next": "Plywood is low"
+      },
+      "trips": {
+        "status": "REAL",
+        "source": "core/trip_manager.py",
+        "counts": {
+          "trips": 3,
+          "planned": 1,
+          "active": 0
+        },
+        "next": null
+      },
+      "energy": {
+        "status": "PLANNED",
+        "source": "core/energy_manager.py",
+        "counts": {},
+        "next": null
+      }
+    }
   }
 }

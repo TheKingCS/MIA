@@ -203,7 +203,8 @@ first. Each is a step below.
     series (`docs/practices/`), from Night School once a week; one task a week for each audit's top finding.
     First run: 187 places, 49% connected. The big gaps it shows: life events (15 of 73 stores) and links (8).
     Then (2026-11-07): `life_events.on_change` on 109 store methods (history 15 to 51 stores) and 20 new link
-    kinds (links 8 to 28): 67% connected. Next gap: the life state (21 of 73 stores).
+    kinds (links 8 to 28): 67% connected. Then the life state's `areas` section (`core/life_areas.py`): 30
+    areas of counts and what's next (life state 21 to 50 stores): 76% connected.
 
 22. ✅ **Her specialists** (DEC-0109; `core/specialists.py`, `tools/specialists.py`, `docs/specialists/`,
     2026-11-07): nine knowledge workers with charters and limits, sourced workbooks, study hall in Night School,

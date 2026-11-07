@@ -212,7 +212,7 @@ def store_connections(root: Path = ROOT, assistant: Optional[str] = None) -> lis
     tools' code when the caller already has it (assistant_text())."""
     import inspect
 
-    from core import links, personal_data
+    from core import life_areas, links, personal_data
 
     core = root / "core"
     if assistant is None:  # the tools, the question plans and the quick spoken commands all answer by voice
@@ -225,6 +225,7 @@ def store_connections(root: Path = ROOT, assistant: Optional[str] = None) -> lis
              if p.name.startswith("web_") or _PAGE.search(p.read_text(encoding="utf-8", errors="replace"))]
     web = _read(pages + [p for p in (core / "more_actions.py", root / "server" / "app.py") if p.exists()])
     linkable = {k.store for k in links.KINDS.values()}
+    in_areas = {a.store for a in life_areas.AREAS}  # the life state's areas section reads these by its table
     modules = {p.stem: p.read_text(encoding="utf-8", errors="replace") for p in core.glob("*.py")
                if p.stem not in ("application", "personal_data", "app_context", "self_audit", "household_manager")}
     out = []
@@ -242,7 +243,7 @@ def store_connections(root: Path = ROOT, assistant: Optional[str] = None) -> lis
                         "history": "life_events.record" in source or "life_events.on_change" in source,
                         "links": name in linkable,
                         "assistant": _reaches(assistant, name, modules),
-                        "life_state": _reaches(state, name, modules),
+                        "life_state": name in in_areas or _reaches(state, name, modules),
                         "web": _reaches(web, name, modules)})
     return out
 
@@ -268,15 +269,16 @@ BY_DESIGN: dict[str, tuple[tuple[str, ...], str]] = {
     "life_events": (("history", "links"), "it is the history"),
     "personal_life_events": (("history", "links", "web", "assistant"), "it is the history"),
     "links": (("history", "links", "web"), "it is the links"),
-    "conversations": (("history", "links"), "the conversations themselves"),
+    "conversations": (("history", "links", "life_state"), "the conversations themselves"),
     "communication": (("history", "links", "life_state"), "the gate for her own messages"),
     "notifications": (("history", "links", "life_state"), "the messages themselves"),
     "online_reminders": (("history", "links", "life_state", "web"), "held only until the internet is back"),
     "saga_moments": (("history", "links", "life_state", "assistant"), "kept for the Chronicles, which tell them"),
     "data_logger": (("history",), "sensor readings: too many, and too small, to be a life's history"),
-    "freedom_log": (("history",), "a daily balance snapshot; the fund's real changes are the budget's history"),
+    "freedom_log": (("history", "life_state"), "a daily balance snapshot; the fund itself is in finances"),
     "insights": (("history",), "what MIA noticed, kept by the gate's log, not the person's history"),
-    "training": (("history",), "the live workout; the workout it becomes is recorded by the workout log"),
+    "training": (("history", "life_state"), "the live workout; the workout it becomes is in the workout log"),
+    "plaid": (("history", "links", "life_state"), "the bank connection; what it brings in is the budget's"),
 }
 
 

@@ -14,5 +14,6 @@
 
 ## Learned building her
 
+- **The rest of a life in the life state, as areas** (K-0054): the life state (assemble_life_state_v2, /api/state) had full sections for money, property, assets, kitchen, workouts, projects, goals and missions, and nothing for 50 other stores.
 - **One decorator puts a store in her history** (K-0052): the first self-audit found only 15 of 73 stores recorded life events.
 - **How the self-audit reads her code, and where it can be wrong** (K-0051): core/self_audit.py's two weekly audits.

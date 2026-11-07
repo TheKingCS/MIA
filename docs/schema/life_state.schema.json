@@ -24,7 +24,8 @@
     "goals",
     "links",
     "opportunities",
-    "onboarding"
+    "onboarding",
+    "areas"
   ],
   "$defs": {
     "status": {
@@ -62,6 +63,40 @@
         "kind",
         "label",
         "params"
+      ],
+      "additionalProperties": false
+    },
+    "area": {
+      "type": "object",
+      "description": "One area of a life (core/life_areas.py): a few counts and what's next, read live from its store.",
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "source": {
+          "type": "string",
+          "description": "Where it comes from in the MIA repo."
+        },
+        "counts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          },
+          "description": "Numbers only: how many, how many open, how many this month."
+        },
+        "next": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "What comes next in it, in one line, or null."
+        }
+      },
+      "required": [
+        "status",
+        "source",
+        "counts",
+        "next"
       ],
       "additionalProperties": false
     }
@@ -1217,6 +1252,32 @@
         "phase",
         "finished",
         "skipped"
+      ],
+      "additionalProperties": false
+    },
+    "areas": {
+      "type": "object",
+      "description": "The rest of a life at a glance (core/life_areas.py, 2026-11-07): calendar, workshop, outdoors, learning, notes and more, each a few counts and what's next. A child gets no money areas.",
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "source": {
+          "type": "string",
+          "description": "Where it comes from in the MIA repo."
+        },
+        "items": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/area"
+          },
+          "description": "Area key (calendar, parts, trips...) to its entry."
+        }
+      },
+      "required": [
+        "status",
+        "source",
+        "items"
       ],
       "additionalProperties": false
     }

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1056 files, 233,185 lines; 1056 files describe themselves; 5,841 of 13,644 classes and functions are documented.
+1058 files, 233,525 lines; 1058 files describe themselves; 5,877 of 13,680 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-372 files, 106,225 lines; 5,068 of 5,715 classes and functions documented
+373 files, 106,505 lines; 5,100 of 5,747 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -188,6 +188,7 @@
 - `core/lab_actions.py`: The development lab's changes as action kinds (DEC-0058, core/dev_lab.py): start a proposal (lab, write, check), approve one into the running MIA, reject one. Grown-ups only, never from the glasses; the long steps (the coder, the test suite) run in the background and say when they're done. "Approve"
 - `core/ledger_manager.py`: MIA Home's revenue/expense ledger — the fourth and final slice of the proposed `mia_home_schema.sql` (see `docs/VISION.md`'s "MIA Home's expanded scope" section, and `core/material_manager.py` `core/job_manager.py`/`core/product_manager.py`'s docstrings for slices 1-3), adapted to this project's per
 - `core/leveling.py`: Pure XP/Level math for the Missions gamification system — no Qt, no persistence, testable in isolation (see tests/test_leveling.py). `core/profile_manager.py` stores the one number that matters (`Profile.total_xp`, lifetime cumulative); everything else — what level that corresponds to, and how far i
+- `core/life_areas.py`: The rest of a life, at a glance: the life state's `areas` section (DEC-0108's interconnection audit, 2026-11-07). `core/context_assembler.py` has full sections for money, property, assets, the kitchen, workouts, projects, goals and missions; the other stores were missing from her picture of a life e
 - `core/life_events.py`: Life events (2026-10-05, Engine Phase 1, docs/ENGINE_PHASE1_PLAN.md): an append-only history of the meaningful things that happen in a person's life: a bill paid, a mission completed (and the skill evidence it earned), a workout or meal logged, maintenance done, rent received, an import, a starter s
 - `core/life_note_actions.py`: What someone said they'd do, decided, want to try and set aside (core/life_notes.py, DEC-0054) through the action contract (core/actions.py): `life_note.done` (a promise kept, an idea tried) and `life_note.forget`. The notes write through atomic_write_text, so "undo that" takes either back. Said out
 - `core/life_notes.py`: Remembering what you say you'll do, decide and want to try (DEC-0054, T-0018). Four kinds of note MIA picks up from normal conversation, never a form, each shown back for a yes before it's kept (Propose → Approve):
@@ -651,7 +652,7 @@
 
 ## tests/: the test suite: what each part must do
 
-351 files, 63,672 lines; 337 of 5,694 classes and functions documented
+352 files, 63,732 lines; 341 of 5,698 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -814,6 +815,7 @@
 - `tests/test_learning_from_dismissals.py`: Learning from being ignored (core/communication_gate.py): closing MIA's messages of one kind with their X pauses that kind for a while; urgent ones never pause; the owner can bring a kind back. *(8 undocumented)*
 - `tests/test_ledger_manager.py`: Unit tests for core.ledger_manager. Isolates _DATA_DIR/_REVENUE_FILE _EXPENSES_FILE into a tmp_path scratch area, same monkeypatch pattern as test_component_manager.py's isolated_paths. record_sale() also needs core.product_manager isolated in the same tmp_path, same "combined-manager fixture" patte *(33 undocumented)*
 - `tests/test_leveling.py`: Profile levels and prestige (core/leveling.py): the XP each level needs, progress within a level and a prestige cycle, when someone may prestige, and each prestige tier's colour. *(17 undocumented)*
+- `tests/test_life_areas.py`: The life state's `areas` section (core/life_areas.py): each area reads its store live, says PLANNED without one, never breaks the life state when one fails, keeps a child out of the money areas, and every area names a store MIA really has.
 - `tests/test_life_events.py`: Life events (core/life_events.py), Engine Phase 1 step 1, 2026-10-05: the append-only history beside the stores. What happened, who did it and how, in the folder the data lives in. *(17 undocumented)*
 - `tests/test_life_notes.py`: DEC-0054 (T-0018): what someone says they'll do, decide, want to try and set aside, spotted in code, kept only on their yes, and answered by the recall plan. *(20 undocumented)*
 - `tests/test_life_state_v2.py`: Life State v2 (core/context_assembler.py), Engine Phase 1 step 3, 2026-10-05: the whole picture as data, computed from the stores, the life-event history and the links. No hand-written prose in the path. *(8 undocumented)*

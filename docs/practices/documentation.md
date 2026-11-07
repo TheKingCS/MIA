@@ -13,6 +13,7 @@
 
 ## Learned building her
 
+- **The rest of a life in the life state, as areas** (K-0054): the life state (assemble_life_state_v2, /api/state) had full sections for money, property, assets, kitchen, workouts, projects, goals and missions, and nothing for 50 other stores.
 - **Why MIA's curriculum is practised on her own code** (K-0050): core/curriculum.py holds ten tracks of computing (engineering, testing, documentation, design, web, apps, deploying, security, pen testing on herself, monitoring), each objective saying what she can do once she has it…
 - **How to document a file so the words match the code** (K-0038): DEC-0104 asks for a docstring on every class, function and method, saying what it is, what it does and how.
 - **Why tools.docs inserts docstrings instead of rewriting files** (K-0039): tools/docs.py edits source files only by inserting text, never by regenerating them.
