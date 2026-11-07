@@ -10,7 +10,7 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 
 ### Try it
 - [ ] **The phone app, no test header, keeps your place (2026-11-07):** install the new build (GitHub's Android build
-      from this push, or `app-debug.apk` built on the PC: `adb install -r android-phoneppuild\outputspk\debugpp-debug.apk`).
+      from this push, or `app-debug.apk` built on the PC: `adb install -r android-phone/app/build/outputs/apk/debug/app-debug.apk`).
       It's called "MIA" now, with no title bar; lock the phone on any page with Talk open and come back: same page,
       same scroll, Talk still open with what you'd typed.
 - [ ] **Your email for receipts (DEC-0120):** in Gmail, make an app password (Google Account, Security, 2-Step
