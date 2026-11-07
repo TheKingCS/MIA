@@ -1,5 +1,5 @@
 """The Operating Journal (DEC-0097, core/operating_journal.py): lines in the person's words, each read by code for
-what the records can check; self-rated otherwise; how they did as plain numbers by week, never a judgment; talked
+what the records can check; self-rated otherwise; how they did as plain numbers by week (and each line's meter), never a judgment; talked
 to with "add to my operating journal" and "rate ... 4"."""
 
 from datetime import date, timedelta
@@ -96,3 +96,13 @@ def test_the_sunday_question_only_for_lines_theirs_to_rate(person):
     assert offer[0].topic == "operating_journal" and "rate be up before 4" in offer[0].message
     person.operating_journal.rate(line["id"], 4, sunday)
     assert oj.weekly_offer(person, sunday) == [] and oj.weekly_offer(person, TODAY) == []
+
+
+def test_each_line_has_a_meter_in_plain_numbers():
+    from core.operating_journal import line_score
+
+    assert line_score("count", {"on_pace": 3, "of": 4, "per": "week"}) == {"pct": 75, "text": "3 of 4 weeks"}
+    assert line_score("spending", {"on_pace": 1, "of": 1, "per": "month"}) == {"pct": 100, "text": "1 of 1 month"}
+    assert line_score("self", {"this": 4, "values": [3, 4]}) == {"pct": 80, "text": "4 / 5 this week"}
+    assert line_score("self", {"this": None, "values": [3, None]}) == {"pct": 60, "text": "3 / 5 last week"}
+    assert line_score("count", {"on_pace": 0, "of": 0, "per": "week"}) is None and line_score("self", None) is None

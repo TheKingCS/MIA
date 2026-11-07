@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1089 files, 246,530 lines; 1089 files describe themselves; 13,533 of 14,203 classes and functions are documented.
+1089 files, 246,573 lines; 1089 files describe themselves; 13,535 of 14,205 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-391 files, 114,373 lines; 6,061 of 6,150 classes and functions documented
+391 files, 114,393 lines; 6,062 of 6,151 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -670,7 +670,7 @@
 
 ## tests/: the test suite: what each part must do
 
-363 files, 66,071 lines; 5,237 of 5,818 classes and functions documented
+363 files, 66,081 lines; 5,238 of 5,819 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -896,7 +896,7 @@
 - `tests/test_ohms_law.py`: Unit tests for modules.toolbox.calculators.ohms_law.solve(). *(3 undocumented)*
 - `tests/test_onboarding.py`: Unit tests for core.onboarding's pure functions — see gui/home_dashboard.py's _inject_first_run_welcome() for how this feeds a brand-new user's very first conversation. Same shape as tests/test_startup_briefing.py.
 - `tests/test_online_watch.py`: Offline awareness follow-ups (core/online_watch.py): noticing a settled change of connection, telling the owner through the communication gate, and "remind me when I'm back online". *(1 undocumented)*
-- `tests/test_operating_journal.py`: The Operating Journal (DEC-0097, core/operating_journal.py): lines in the person's words, each read by code for what the records can check; self-rated otherwise; how they did as plain numbers by week, never a judgment; talked to with "add to my operating journal" and "rate ... 4". *(3 undocumented)*
+- `tests/test_operating_journal.py`: The Operating Journal (DEC-0097, core/operating_journal.py): lines in the person's words, each read by code for what the records can check; self-rated otherwise; how they did as plain numbers by week (and each line's meter), never a judgment; talked to with "add to my operating journal" and "rate .. *(3 undocumented)*
 - `tests/test_ownership.py`: Whose is it (core/ownership.py), 2026-10-01: owner marks on vehicles, tools and appliances; Today shows your things and shared ones. *(2 undocumented)*
 - `tests/test_party.py`: Party and guild (DEC-0028): household raids share their jobs out and their reward; the leaderboard only shows people who joined, counting wins. *(3 undocumented)*
 - `tests/test_passing_mentions.py`: "Propose, you confirm" (core/passing_mentions.py): offers to record what the owner mentions in passing, made after MIA's reply and carried out only on a yes; wired through core/talk_it_out.py for every chat surface. *(2 undocumented)*
@@ -1038,7 +1038,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-72 files, 12,917 lines
+72 files, 12,930 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
@@ -1088,7 +1088,7 @@
 - `web/navigation.js`: navigation.js — Navigation (claude, 2026-11-06). Renders MIA.navigation(start, end) (core/navigation_web.py): the waypoints with their grid references, the distance and bearing between two, and the sun and moon at the first. Read only; a waypoint is added by voice ("add a waypoint called Spring at 1
 - `web/news.js`: news.js — Good News Radio (claude, 2026-11-07, DEC-0096). Renders MIA.news() (core/good_news.py): today's stories, how each is known (confirmed by two outlets, from the source itself, or one outlet), its caveats and its links, and each personality's script. Formatting only; the look is muse's.
 - `web/observations.js`: observations.js — what MIA noticed (claude, 2026-11-06). Renders MIA.observations() (core/observations_web.py): findings across apps (each with why and one next step) and the open insights by where they came from. Read only: each is resolved where it lives. Formatting only; the look is muse's.
-- `web/operating.js`: operating.js — the Operating Journal (claude, 2026-11-07, DEC-0097). Renders MIA.operatingJournal() (core/operating_journal.py): each line, how it's checked, and how it's going, in plain numbers. Adding, rating and taking a line out go through actions (operating.add / .rate / .remove). Formatting on
+- `web/operating.js`: operating.js — the Operating Journal (claude, 2026-11-07, DEC-0097). Renders MIA.operatingJournal() (core/operating_journal.py): each line, how it's checked, and its meter with how it's going, in plain numbers (DEC-0113). Adding, rating and taking a line out go through actions (operating.add / .rate
 - `web/party.js`: party.js — Party and guild (claude, 2026-10-17, DEC-0028). Renders MIA.party() (core/party.py): raids going (everyone's jobs, who has what, +1 on your own), raids to start with who's in, your own raid, and the household leaderboard (opt-in: only people who joined it, wins this week, never money). Ev
 - `web/passwords.js`: passwords.js — Passwords (claude, 2026-10-20, DEC-0035). Renders MIA.passwords() (core/password_vault.py): make the vault (a master password, then the recovery code shown once), unlock it (or use the recovery code and set a new master password), and the logins: search, Show and Copy (a password come
 - `web/people.js`: people.js — People & Pets (claude, 2026-10-17). Renders MIA.people() (core/web_more.py) in tabs: Birthdays (the next 60 days, with gift ideas), People (who they are, favorites, gift ideas, when you last caught up) and Pets. Changes are actions: person.*, pet.*, person.caught_up ("Caught Up Today"). 

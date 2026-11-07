@@ -292,7 +292,11 @@
       { kind: "idea", title: "Ideas", notes: [
         { id: "n4", line: "an idea: selling honey at the market", status: "open", at: "2026-11-01", due: "" }] },
       { kind: "dropped_goal", title: "Goals set aside", notes: [] }] }) : call("GET", "/api/life-notes"),
-    operatingJournal: () => demo ? Promise.resolve({ lines: [], sections: {} }) : call("GET", "/api/operating-journal"),
+    operatingJournal: () => demo ? Promise.resolve({ sections: { values: "What I value", priorities: "My priorities", day: "My ideal day", week: "My ideal week", rules: "Rules I keep" }, lines: [
+      { id: "o1", text: "Pay myself first on payday.", section: "rules", how: "checked against what's spent on Savings each month", self_rated: false, score: { pct: 75, text: "3 of 4 months" } },
+      { id: "o2", text: "Train on the days the plan says.", section: "week", how: "checked against your workouts each week", self_rated: false, score: { pct: 75, text: "3 of 4 weeks" } },
+      { id: "o3", text: "No phone at dinner.", section: "rules", how: "yours to rate, 1 to 5, each week", self_rated: true, score: { pct: 80, text: "4 / 5 last week" } }] })
+      : call("GET", "/api/operating-journal"),
     play: () => demo ? Promise.resolve({ played: [], weeks: [], lines: [], efforts: {} }) : call("GET", "/api/play"),
     news: () => demo ? Promise.resolve({ on: false, day: null, stories: [], personalities: [] }) : call("GET", "/api/news"),
     // Guitar (core/guitar.py, DEC-0111): the stage, stats and open checks; a check heard from a WAV recording.

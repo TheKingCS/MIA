@@ -22,7 +22,8 @@ regular entry ("rate early mornings 4"), and that becomes its record.
 
 **How they did** (`picture()`): every line against the last four weeks (or
 months), as plain numbers and a trend by area, "3 of 4 weeks at your pace",
-never a judgment, never a nudge of its own (DEC-0014). The question plan
+never a judgment, never a nudge of its own (DEC-0014); on the screen each
+line also gets a meter (`line_score`, DEC-0113). The question plan
 `operating` puts it on a sheet ("am I living how I said I want to?"), and the
 `journal.pace` loop is the person's to see, never a task.
 
@@ -322,8 +323,26 @@ def pace(context, today: Optional[date] = None) -> Optional[tuple[float, int, di
     return round(hits / total, 2), total, by
 
 
+def line_score(kind: str, m: Optional[dict]) -> Optional[dict]:
+    """Pure logic. A line's meter and its words (the design canvas, DEC-0113): for one MIA checks, how many full
+    weeks or months were on pace ("3 of 4 weeks", pct 75); for one you rate, your latest rating out of 5 ("4 / 5
+    this week" or "last week"). None until there's something to show. Plain numbers, never a judgment."""
+    if m is None:
+        return None
+    if kind == "self":
+        if m.get("this") is not None:
+            return {"pct": round(100 * m["this"] / 5), "text": f"{m['this']} / 5 this week"}
+        last = next((v for v in reversed(m.get("values") or []) if v is not None), None)
+        return {"pct": round(100 * last / 5), "text": f"{last} / 5 last week"} if last is not None else None
+    if not m.get("of"):
+        return None
+    per = "week" if m.get("per") == "week" else "month"
+    return {"pct": round(100 * m["on_pace"] / m["of"]), "text": f"{m['on_pace']} of {m['of']} {per}{'s' if m['of'] != 1 else ''}"}
+
+
 def screen(context, today: Optional[date] = None) -> dict:
-    """The Operating Journal's web screen (web/operating.html): every line with how it's checked and how it's going."""
+    """The Operating Journal's web screen (web/operating.html): every line with how it's checked, how it's going
+    in words, and its meter (`line_score`)."""
     journal = getattr(context, "operating_journal", None)
     if journal is None:
         return {"lines": [], "sections": SECTION_WORDS}
@@ -335,5 +354,6 @@ def screen(context, today: Optional[date] = None) -> dict:
                else f"checked against what's spent on {h['category']} each month" if h["kind"] == "spending"
                else "yours to rate, 1 to 5, each week")
         out.append({"id": line["id"], "text": line["text"], "section": line["section"], "how": how,
-                    "self_rated": h["kind"] == "self", "now": pictures.get(line["id"], "")})
+                    "self_rated": h["kind"] == "self", "now": pictures.get(line["id"], ""),
+                    "score": line_score(h["kind"], measure(context, line, today))})
     return {"lines": out, "sections": SECTION_WORDS}

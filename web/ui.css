@@ -756,3 +756,15 @@ body.cook-live .mia-orb-button, body.cook-live .bottom-bar { display: none; }
   color: var(--text-dim); }
 .vault-what { font-size: var(--text-sm); color: var(--text-dim); }
 .vault-legend { margin: 12px 0 0; }
+
+/* ---------------------------------------------------------------- Operating Journal (DEC-0113)
+   Each line: your words, what checks it, its meter and the plain numbers. */
+.op-group { display: grid; gap: 10px; margin-bottom: var(--gap); }
+.op-label { margin: 0; font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-dim); }
+.op-line { display: grid; gap: 6px; padding: 12px 14px; }
+.op-text { margin: 0; font-weight: 600; }
+.op-how { margin: 0; font-size: var(--text-sm); color: var(--text-dim); }
+.op-meter { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+.op-score { font-family: var(--font-mono); font-size: 12px; white-space: nowrap; }
+.op-line .row-buttons { margin-top: 2px; }

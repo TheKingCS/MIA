@@ -79,8 +79,9 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       `core/web_more.catch_up` says to catch up with), Classroom (the course to continue from
       `core/classroom_manager.continue_course`, lessons to tick with their XP, subjects as rows that open), Guitar and any learning path (`core/paths.path_card`: stage rail, the week, Work On Next
       with homework, every check of the stage with who verifies it), Memory Vault ("N of M safe at home" per month from
-      `core/memory_vault.vault_page`, a green or amber dot on each photo).
-      Still to do per app, against its canvas artboard: Operating, Play, Observations, the outdoors pages, Knowledge, Music, Files, Passwords, News, Look,
+      `core/memory_vault.vault_page`, a green or amber dot on each photo), Operating Journal (a card per line with its meter from
+      `core/operating_journal.line_score`).
+      Still to do per app, against its canvas artboard: Play, Observations, the outdoors pages, Knowledge, Music, Files, Passwords, News, Look,
       Settings, Profile, Fix-It, Diagnostics; Power, Toolbox, Lab and Field Kit need web pages first (WEB_PARITY).
 - [ ] Glasses: the shared orb on `web/glasses.html`.
 - Note: DEC-0119 (MIA for Zac alone) came after the canvas: drop household members from Party's leaderboard and
