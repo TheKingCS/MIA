@@ -9,9 +9,10 @@
   "use strict";
   const { el, act, form } = MIAShell;
   const $ = (id) => document.getElementById(id);
-  const TABS = [["people", "People"], ["birthdays", "Birthdays"], ["pets", "Pets"]];
+  // Birthdays first, as the design canvas has it (DEC-0113).
+  const TABS = [["birthdays", "Birthdays"], ["people", "People"], ["pets", "Pets"]];
   let page = null;
-  let tab = TABS.some(([t]) => t === location.hash.slice(1)) ? location.hash.slice(1) : "people";
+  let tab = TABS.some(([t]) => t === location.hash.slice(1)) ? location.hash.slice(1) : "birthdays";
 
   const btn = (label, cls, onclick) => el("button", { type: "button", class: "btn " + cls, onclick }, label);
   const buttons = (...list) => el("div", { class: "row-buttons" }, list.filter(Boolean));
@@ -60,12 +61,26 @@
     people: () => section("People", btn("Add Person", "btn-amber", () => add("person")),
       page.people.length ? el("div", { class: "pp-grid" }, page.people.map(personCard))
         : el("p", { class: "empty" }, "Add the people who matter: family, friends, the ones you want to remember things about.")),
-    birthdays: () => section("Coming Up", null, page.upcoming.length ? el("div", { class: "rows" }, page.upcoming.map((u) =>
-      el("div", { class: "row money-row" },
-        el("div", {}, el("div", { class: "row-title" }, (u.kind === "pet" ? "🐾 " : "🎂 ") + u.name + (u.turning ? " · turning " + u.turning : "")),
-          el("div", { class: "row-sub" }, day(u.date) + (u.gifts ? " · gift ideas: " + u.gifts : ""))),
-        el("span", { class: "chip " + (u.in <= 7 ? "chip-soon" : "") }, when(u.in)))))
-      : el("p", { class: "empty" }, "No birthdays in the next 60 days. Add birthdays to people and pets and MIA will remember them.")),
+    // The canvas: a card per birthday (who, the day and the age they turn, how long, gift ideas), then the one person
+    // the engine says to catch up with (core/web_more.catch_up).
+    birthdays: () => {
+      const longDay = (iso) => new Date(iso + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
+      const cards = page.upcoming.map((u) => el("article", { class: "glass pp-bday" },
+        el("div", { class: "pp-bday-head" },
+          el("span", { class: "pp-avatar", "aria-hidden": "true" }, u.kind === "pet" ? "🐾" : (u.name || "?").trim().charAt(0).toUpperCase()),
+          el("div", { class: "pp-title" }, el("h3", {}, u.name), el("p", { class: "dim" }, longDay(u.date) + (u.turning ? " · turns " + u.turning : ""))),
+          el("span", { class: "pp-in" + (u.in <= 7 ? " soon" : "") }, u.in === 0 ? "Today" : u.in === 1 ? "Tomorrow" : u.in + " days")),
+        u.kind === "person" ? el("p", { class: "pp-gift" }, "Gift ideas: " + (u.gifts || "none yet")) : null));
+      const c = page.catch_up;
+      const nudge = c ? el("article", { class: "glass pp-catch" },
+        el("span", { class: "pp-avatar", "aria-hidden": "true" }, c.name.trim().charAt(0).toUpperCase()),
+        el("div", { class: "pp-title" }, el("h3", {}, c.name),
+          el("p", { class: "dim" }, c.days_since != null ? "Last caught up " + ago(c.days_since) : "No catch-up noted yet")),
+        btn("Caught Up Today", "btn-ghost btn-small", () => act({ kind: "person.caught_up", params: { person_id: c.id } }))) : null;
+      return el("div", { class: "pp-birthdays" },
+        ...(cards.length ? cards : [el("p", { class: "empty" }, "No birthdays in the next 60 days. Add birthdays to people and pets and MIA will remember them.")]),
+        nudge ? el("h2", { class: "pp-label" }, "Time To Catch Up") : null, nudge);
+    },
     pets: () => section("Pets", btn("Add Pet", "btn-amber", () => add("pet")),
       page.pets.length ? el("div", { class: "pp-grid" }, page.pets.map(petCard)) : el("p", { class: "empty" }, "No pets yet.")),
   };

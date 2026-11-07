@@ -1,5 +1,5 @@
 """
-The Journal, Workshop, Expeditions, Music and Files screens (Zac,
+The Journal, Workshop, Expeditions, Music, Files and People screens (Zac,
 2026-10-16: on the phone they "are empty right now and just bring up a
 chat with MIA"): core/web_more.py builds each page, core/more_actions.py
 makes every change through Propose → Approve, and core/my_files.py keeps
@@ -313,3 +313,13 @@ def test_people_and_pets(world):
     from core.chronicle import chronicle_page
 
     assert "You caught up with 1 person." in chronicle_page(world)["this_week"]["story"]
+
+
+def test_the_person_to_catch_up_with_is_whoever_it_has_been_longest_since():
+    from core.web_more import catch_up
+
+    people = [{"id": "a", "name": "Jordan", "days_since": 35}, {"id": "b", "name": "Sam", "days_since": 50},
+              {"id": "c", "name": "Riley", "days_since": 4}, {"id": "d", "name": "Avery", "days_since": None}]
+    assert catch_up(people) == {"id": "b", "name": "Sam", "days_since": 50}
+    assert catch_up(people[2:]) == {"id": "d", "name": "Avery", "days_since": None}  # never noted, nobody overdue
+    assert catch_up(people[2:3]) is None  # everyone's been caught up with lately

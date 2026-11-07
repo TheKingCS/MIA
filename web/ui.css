@@ -667,3 +667,20 @@ body.cook-live .mia-orb-button, body.cook-live .bottom-bar { display: none; }
 .journal-search:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .journal-private { color: var(--text-dim); }
 @media (min-width: 861px) { .journal-actions .btn { flex: 0 1 220px; } }
+
+/* ---------------------------------------------------------------- People: birthdays (DEC-0113)
+   One card per birthday (amber when it's within a week), gift ideas under it, then who to catch up with. */
+.pp-birthdays { display: grid; gap: 10px; }
+.pp-bday, .pp-catch { padding: 12px 14px; display: grid; gap: 8px; }
+.pp-bday-head, .pp-catch { grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; }
+.pp-bday-head { display: grid; }
+.pp-catch { display: grid; margin-top: 6px; }
+.pp-bday .pp-title h3, .pp-catch .pp-title h3 { margin: 0; }
+.pp-bday .pp-title p, .pp-catch .pp-title p { margin: 2px 0 0; font-size: var(--text-sm); }
+.pp-in { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); white-space: nowrap; }
+.pp-in.soon { color: var(--attention); }
+.pp-gift { margin: 0; padding-top: 8px; border-top: 1px solid var(--line); font-size: var(--text-sm); color: var(--text-dim); }
+.pp-label { margin: 10px 0 0; font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-dim); }
+.pp-catch { margin-top: 0; }
+@media (max-width: 520px) { .pp-catch { grid-template-columns: auto minmax(0, 1fr); } .pp-catch .btn { grid-column: 1 / -1; } }

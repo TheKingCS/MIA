@@ -75,8 +75,9 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       Hours and the next step, Sell First, Best Earner per hour, a big Start A Build), Orders (the stage rail New / Building / Ready / Delivered
       with the step `core/web_business.order_stage` says moves it on; owed amber, paid green), Inbox (each waiting item's "Goes to" line from `core/web_inbox.goes_to`),
       Calendar (one page: Due Today, Past Due, Due Soon as short lines, the month beside them on PC), Journal (Write Entry first, the privacy line, one column of entries with
-      date and tags above the title).
-      Still to do per app, against its canvas artboard: People, Classroom, Guitar,
+      date and tags above the title), People (Birthdays first: a card each with gift ideas, then the one person
+      `core/web_more.catch_up` says to catch up with).
+      Still to do per app, against its canvas artboard: Classroom, Guitar,
       Vault, Operating, Play, Observations, the outdoors pages, Knowledge, Music, Files, Passwords, News, Look,
       Settings, Profile, Fix-It, Diagnostics; Power, Toolbox, Lab and Field Kit need web pages first (WEB_PARITY).
 - [ ] Glasses: the shared orb on `web/glasses.html`.

@@ -2,7 +2,7 @@
 core.web_more
 ===============
 
-The Journal, Workshop, Expeditions, Music and Files screens on the web
+The Journal, Workshop, Expeditions, Music, Files and People screens on the web
 (Zac, 2026-10-16: on the phone they "are empty right now and just bring
 up a chat with MIA"). Each assembler reads its stores and returns what
 its screen shows; every change is an action in core/more_actions.py.
@@ -17,6 +17,8 @@ its screen shows; every change is an action in core/more_actions.py.
 - `music_page`: the music library and playlists; songs play in the
   browser, streamed from MIA (/api/music/track/<id>/audio).
 - `files_page`: the person's own files folder (core/my_files.py).
+- `people_page`: people and pets, birthdays in the next 60 days, and the
+  one person to catch up with (`catch_up`).
 """
 
 from __future__ import annotations
@@ -323,9 +325,25 @@ def next_birthday(raw: str, today: date):
     return None
 
 
+CATCH_UP_DAYS = 21
+
+
+def catch_up(people: list) -> Optional[dict]:
+    """Pure logic. The one person to catch up with (the design canvas's People, DEC-0113): whoever it's been longest
+    since, once that's three weeks or more; someone with no catch-up noted at all comes after anyone overdue. None
+    when everyone's been caught up with lately. A nudge, never a score (DEC-0014)."""
+    due = [p for p in people if p["days_since"] is not None and p["days_since"] >= CATCH_UP_DAYS]
+    if due:
+        top = max(due, key=lambda p: p["days_since"])
+        return {"id": top["id"], "name": top["name"], "days_since": top["days_since"]}
+    never = [p for p in people if p["days_since"] is None]
+    return {"id": never[0]["id"], "name": never[0]["name"], "days_since": None} if never else None
+
+
 def people_page(context, today: Optional[date] = None) -> dict:
     """The data the People screen shows, assembled here (the web only draws it); {"available": False} when there's no relationships store. People and pets with their details, days since last
-    contact, and next birthday; birthdays in the next 60 days, soonest first; counts and forms.
+    contact, and next birthday; birthdays in the next 60 days, soonest first; the one person to catch up with
+    (`catch_up`); counts and forms.
     """
     from core.more_actions import forms
 
@@ -364,5 +382,6 @@ def people_page(context, today: Optional[date] = None) -> dict:
     upcoming.sort(key=lambda u: u["in"])
     f = forms()
     return {"available": True, "as_of": today.isoformat(), "people": people, "pets": pets, "upcoming": upcoming,
+            "catch_up": catch_up(people),
             "counts": {"people": len(people), "pets": len(pets), "birthdays": len(upcoming)},
             "forms": {"person": f["person"], "pet": f["pet"]}}
