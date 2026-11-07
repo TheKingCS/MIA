@@ -57,6 +57,7 @@ PERIODS = ("day", "week", "month")
 
 
 def _fields(spec: dict) -> dict:
+    """The fields a screen's spec works with, by name: its source's, or its own record set's."""
     from core.creation_sources import fields_of, source_of
 
     source = source_of(spec)
@@ -65,6 +66,10 @@ def _fields(spec: dict) -> dict:
 
 
 def _value_problems(value, fields: dict, where: str) -> list[str]:
+    """What's wrong with one worked-out value in a spec: it must be one operation (count, sum, avg, min,
+    max, latest) on a field that exists and has the right type (numbers for sum and average; numbers, money or dates
+    for min and max).
+    """
     if not isinstance(value, dict) or len(value) != 1:
         return [f"{where}: a value is one of {', '.join(VALUES)}, like {{\"count\": true}} or {{\"sum\": \"field\"}}."]
     (op, field), = value.items()
@@ -191,6 +196,9 @@ def check(spec: dict, child: bool = False) -> list[str]:
 # ------------------------------------------------------------------ assembling (all the working out is here)
 
 def _text(field: dict, value, money) -> str:
+    """A field's value as it's shown: money in the person's currency, a number without trailing zeros, Yes or No, or
+    a dash for nothing.
+    """
     if value is None:
         return "—"
     if field["type"] == "money":
@@ -203,6 +211,9 @@ def _text(field: dict, value, money) -> str:
 
 
 def _work_out(value: dict, records: list[dict], fields: dict, money) -> tuple[Optional[float], str]:
+    """One worked-out value over the records: how many, the latest, the smallest or largest, the sum or the
+    average; its number and how it's shown.
+    """
     (op, name), = value.items()
     if op == "count":
         return float(len(records)), str(len(records))
@@ -222,6 +233,7 @@ def _work_out(value: dict, records: list[dict], fields: dict, money) -> tuple[Op
 
 
 def _sorted(records: list[dict], sort: str) -> list[dict]:
+    """Records in a spec's order: by a field (a leading - for descending, the ones without it last), or newest first."""
     if not sort:
         return list(reversed(records))  # newest first: records keep the order they came in
     name, reverse = sort.lstrip("-"), sort.startswith("-")

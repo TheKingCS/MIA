@@ -22,6 +22,10 @@ from typing import Optional
 
 @dataclass(frozen=True)
 class Source:
+    """One kind of her own records a made screen can draw from (Make Something): its id, title, what it is, the
+    life-event types it reads, its fields, which payload key fills each field, whether it's about money, and the app
+    its records are added in.
+    """
     id: str
     title: str
     about: str
@@ -33,6 +37,7 @@ class Source:
 
 
 def _f(name: str, label: str, kind: str) -> dict:
+    """One field: its name, label and type."""
     return {"name": name, "label": label, "type": kind}
 
 
@@ -73,10 +78,12 @@ def matching(need: str, child: bool = False) -> list[str]:
 
 
 def listing(child: bool = False) -> list[Source]:
+    """Every source a screen can draw from; a child gets none about money."""
     return [s for s in SOURCES.values() if not (child and s.money)]
 
 
 def fields_of(source_id: str) -> list[dict]:
+    """A source's fields, as copies."""
     return [dict(f) for f in SOURCES[source_id].fields]
 
 
@@ -105,4 +112,5 @@ def describe(child: bool = False) -> str:
 
 
 def source_of(spec: dict) -> Optional[Source]:
+    """The source a screen's spec names (with or without its history: prefix), or None."""
     return SOURCES.get(str(spec.get("source") or "").removeprefix("history:")) if spec.get("source") else None

@@ -83,10 +83,12 @@ class CouncilError(ValueError):
 
 
 def _store() -> DevStore:
+    """Where the council's messages are kept (data/dev/council)."""
     return DevStore(DEV_DATA / "council")
 
 
 def _now() -> str:
+    """The time now, in UTC, as ISO text."""
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
@@ -153,6 +155,7 @@ def sync(repo: Optional[Path] = None, store: Optional[DevStore] = None) -> int:
 
 
 def _find(message_id: str, store: DevStore) -> Optional[dict]:
+    """A message by id among the recent ones, or None."""
     return next((m for m in reversed(store.tail(THREAD_LOOKBACK)) if m.get("id") == message_id), None)
 
 
@@ -183,6 +186,7 @@ def post(who: str, text: str, task: str = "", reply_to: str = "", repo: Optional
 
 
 def recent(n: int = 60, repo: Optional[Path] = None, store: Optional[DevStore] = None) -> list[dict]:
+    """The latest n messages, after bringing in any that other sessions added to the repo copy."""
     store = store or _store()
     sync(repo, store)
     return [{k: v for k, v in m.items() if k != "from_repo"} for m in store.tail(n)]
@@ -240,6 +244,7 @@ def mia_answers(question: str, exclude: str = "", repo: Optional[Path] = None,
 
 
 def _is_local(provider: str) -> bool:
+    """Whether a provider runs on this PC (a local model), from work/agents.json; False when it can't tell."""
     try:
         from core.work_agents import load as load_agents
 

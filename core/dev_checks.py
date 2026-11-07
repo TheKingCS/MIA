@@ -61,6 +61,7 @@ def compare(failed: list[str], known_ones: dict[str, str]) -> dict:
 
 
 def _seconds(summary: str) -> Optional[float]:
+    """Pure logic. How long a pytest run took, from its summary line, or None."""
     m = re.search(r"in ([\d.]+)s", summary or "")
     return float(m.group(1)) if m else None
 
@@ -109,6 +110,7 @@ def reverts(events: list[dict], days: int = 30, now: Optional[datetime] = None) 
 # ------------------------------------------------------------------ dependencies
 
 def _post(url: str, body: dict, timeout: float = 30) -> dict:
+    """Posts JSON to a URL and returns the JSON answer."""
     request = urllib.request.Request(url, data=json.dumps(body).encode("utf-8"),
                                      headers={"Content-Type": "application/json"})
     with urllib.request.urlopen(request, timeout=timeout) as answer:
@@ -116,6 +118,7 @@ def _post(url: str, body: dict, timeout: float = 30) -> dict:
 
 
 def _get(url: str, timeout: float = 20) -> dict:
+    """Gets a URL's JSON."""
     with urllib.request.urlopen(url, timeout=timeout) as answer:
         return json.loads(answer.read())
 
@@ -164,6 +167,7 @@ def vulnerable(packages: Optional[dict[str, str]] = None, post: Callable[[str, d
 
 
 def required(path: Path = ROOT / "requirements.txt") -> list[str]:
+    """The packages requirements.txt names (lowercase, comments skipped)."""
     names = []
     for line in path.read_text(encoding="utf-8").splitlines():
         m = re.match(r"^\s*([A-Za-z0-9_.-]+)", line)
@@ -173,6 +177,7 @@ def required(path: Path = ROOT / "requirements.txt") -> list[str]:
 
 
 def _newer(latest: str, have: str) -> bool:
+    """Whether one version is newer than another (by the version rules; by inequality when it can't tell)."""
     try:
         from packaging.version import Version
 
