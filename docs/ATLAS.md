@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1060 files, 234,052 lines; 1060 files describe themselves; 6,080 of 13,690 classes and functions are documented.
+1060 files, 234,090 lines; 1060 files describe themselves; 6,100 of 13,690 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-374 files, 106,969 lines; 5,299 of 5,753 classes and functions documented
+374 files, 107,007 lines; 5,319 of 5,753 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -42,7 +42,7 @@
 - `core/assistant_tagging_actions.py`: Assistant tools for sorting bank charges to businesses (core/business_tagging.py): "which charges need a business?" and "the Shell charge was for lawn care" / "the Walmart one was personal".
 - `core/assistant_textbook_actions.py`: Assistant tools for the textbook tutor (core/textbook_manager.py): what books MIA has, a quick "where does the book talk about X" lookup, and making a Classroom course from a book. Studying and quizzing themselves are conversation modes (core/textbook_study.py: "let's study the wiring book", "quiz m
 - `core/assistant_today_actions.py`: "What's on today?" (core/today.py, 2026-10-01): everything that needs the person today, across every app, in one answer. *(2 undocumented)*
-- `core/assistant_turn.py`: One Assistant turn — user text in, the things MIA should say back out — shared by every voice surface: the headless Core loop (`core/voice_loop.py`) and the phone voice endpoint (`server/app.py`). Pulled out of `VoiceLoopController._handle_turn()` unchanged in behavior, so both surfaces answer, act, *(5 undocumented)*
+- `core/assistant_turn.py`: One Assistant turn — user text in, the things MIA should say back out — shared by every voice surface: the headless Core loop (`core/voice_loop.py`) and the phone voice endpoint (`server/app.py`). Pulled out of `VoiceLoopController._handle_turn()` unchanged in behavior, so both surfaces answer, act,
 - `core/assistant_undo_actions.py`: "Undo that" and "what did you just change?" (core/undo_log.py), plus "why did you tell me that?" and "stop telling me about ..." (core/message_reasons.py, core/communication_gate.py), and "is everything set up?" (core/system_check.py). 2026-10-01.
 - `core/assistant_why_actions.py`: Assistant tools for the owner's chain of reasons, slice B ("Remember Why") of docs/COGNITIVE_EXTENSION_PROPOSAL.md. The chain lives on Intents (core/intent_manager.py: `serves_intent_id`, `reason`); the evidence is computed by core/why_graph.py.
 - `core/atomic_write.py`: One shared helper for crash-safe file writes. Every core/*_manager.py persists its state as JSON via a direct `path.write_text(...)` call — which is NOT atomic: a crash, power loss, or disk-full condition mid write can leave that file truncated or corrupted, permanently losing everything in it. A re
@@ -66,13 +66,13 @@
 - `core/calendar_actions.py`: Your own calendar events (Zac, 2026-10-16), through the action contract (core/actions.py): `event.add` and `event.delete`. Everything else on the calendar (upkeep, bills, meals, training, birthdays) is read from its own store by core/calendar_view.py and changed where it lives. The calendar store wr
 - `core/calendar_manager.py`: Backs the Calendar tool (modules/toolbox/tools/calendar_tool.py) — a CRUD event store, persisted to data/calendar_events.json so events survive a restart, same durability guarantee core.notification_manager.NotificationManager gives notifications.
 - `core/calendar_view.py`: The Calendar (Zac, 2026-10-16): "I want the Calendar to be filled and I want to be able to access it both in the app and on the glasses."
-- `core/calibration.py`: Whether MIA's "how sure" means anything (build plan step 8, DEC-0094): every question-plan answer is marked sure, likely or unsure in code, from what its fact sheet holds (core/question_plans.sureness). Each one is noted here, in the person's own folder, by its plan, its level and a fingerprint of t *(5 undocumented)*
+- `core/calibration.py`: Whether MIA's "how sure" means anything (build plan step 8, DEC-0094): every question-plan answer is marked sure, likely or unsure in code, from what its fact sheet holds (core/question_plans.sureness). Each one is noted here, in the person's own folder, by its plan, its level and a fingerprint of t
 - `core/capabilities.py`: What MIA can do, built from the code (DEC-0041; the intelligence spec's Phase 2B, docs/INTELLIGENCE_AUDIT.md). Never a hand-written brochure:
 - `core/capability_gaps.py`: Self-enablement (build plan step 9, DEC-0094): "I can't do that" stops being a dead end. Every request no tool matched is already in the person's Fix-It Log (`no_tool`, core/failure_log.py). Here they become **capability gaps**:
 - `core/character_stats.py`: Real character stats (DEC-0028, the game layer's fourth piece): six RPG attributes, each 1 to 20, made from what the person has really done. Every point says where it came from. *(3 undocumented)*
 - `core/chat_worker.py`: Runs a single `AppContext.llm.chat_with_tools()` call off the GUI thread — docs/ROADMAP.md milestones 5.2/5.5. A blocking HTTP call to Ollama (core/llm_manager.py) on the GUI thread would freeze the whole app for the duration of every reply. This is the first module to need the scoped worker-thread  *(2 undocumented)*
 - `core/child_accounts.py`: Child accounts (2026-10-01): a young person in a household gets their own MIA, set up and looked after by a parent (their guardian).
-- `core/chronicle.py`: The Chronicle (DEC-0028, the game layer's eighth idea): the story of your week, and of your year, told from what really happened. *(5 undocumented)*
+- `core/chronicle.py`: The Chronicle (DEC-0028, the game layer's eighth idea): the story of your week, and of your year, told from what really happened.
 - `core/chronicle_issue.py`: MIA: The Chronicles*, the weekly issue (build plan step 17, DEC-0085 and DEC-0086; the Story Bible is `docs/chronicles/`, the archive `core/saga.py`).
 - `core/classroom_actions.py`: The Classroom (core/classroom_manager.py, the person's own study) through the action contract (core/actions.py), for its web screen: a subject, a course and a lesson added, a lesson marked done (its skill XP credited once, as on the desktop) or not done, and any of them taken out. The stores write t
 - `core/classroom_manager.py`: Classroom (2026-09-11) — the user's own self-education content model: Subjects (K-12-level academic subjects and trades) contain Courses, Courses contain Lessons. v1 is deliberately just this content/lesson structure — no Skills/Missions/Discovery wiring yet, see this module's own ROADMAP entry for 
@@ -83,7 +83,7 @@
 - `core/connectivity.py`: What MIA can do with and without the internet, and whether she has it right now — so if the connection drops she keeps acting sensibly instead of promising things she can't deliver.
 - `core/context_assembler.py`: The "Life State" layer — a real service answering "what's going on in this person's life right now," synthesized live from every domain manager already in AppContext. This exact shape was discussed and agreed on 2026-09-11 (see mia_system_vision's own dated entry: a context_assembler.py query layer 
 - `core/conversation_manager.py`: Persistent Assistant conversations — 2026-07-14 aesthetic pass part 5 (docs/ROADMAP.md), at the user's explicit request for a ChatGPT-like experience: named conversation threads you can review, continue, or delete, rather than the stateless one-message-at-a-time exchanges the Assistant used before t
-- `core/conversation_modes.py`: How MIA should talk right now — slice A ("Talk it out") of docs/COGNITIVE_EXTENSION_PROPOSAL.md. Pure logic: the mode vocabulary, the explicit phrases that switch modes, and the one short tone line each mode adds to the system prompt. *(5 undocumented)*
+- `core/conversation_modes.py`: How MIA should talk right now — slice A ("Talk it out") of docs/COGNITIVE_EXTENSION_PROPOSAL.md. Pure logic: the mode vocabulary, the explicit phrases that switch modes, and the one short tone line each mode adds to the system prompt.
 - `core/conversation_state.py`: What a conversation is about (DEC-0052 step 4, first slice; docs/REASONING_PLAN.md section 5). Before, every message started over: "Which debt should I pay first?" then "what if I added $300 a month?" or "why?" reached the model with no idea which records it was about. *(4 undocumented)*
 - `core/core_runtime.py`: Builds the `AppContext` and curated Assistant action registry for headless MIA Core** — docs/VISION.md's 2026-07-15 "Core drops its GUI entirely" split. Core is a voice-first, screen-free runtime (the Pi 5 + AI HAT+2 Receiver hardware, docs/HARDWARE.md): push-to-talk button in, speech out, no `gui/`
 - `core/corrections.py`: Corrections in every area (build plan step 4, DEC-0094; `docs/IMPROVEMENT_LOOPS.md` section C): when the person undoes, edits or deletes something MIA just did, that's a judgment of her work, and the same code counts it in every area.

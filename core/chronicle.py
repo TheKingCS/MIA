@@ -67,10 +67,12 @@ TYPE_THREAD = {t: key for key, types, *_ in THREADS for t in types}
 
 
 def _n(n: int, one: str, many: str = "") -> str:
+    """Pure logic. A count with its word, plural when it isn't one."""
     return f"{n} {one if n == 1 else (many or one + 's')}"
 
 
 def _times(n: int) -> str:
+    """Pure logic. once, twice, or n times."""
     return "once" if n == 1 else "twice" if n == 2 else f"{n} times"
 
 
@@ -81,6 +83,7 @@ def week_bounds(day: date) -> tuple[date, date]:
 
 
 def _span(start: date, end: date) -> str:
+    """Pure logic. Two dates as a span (Nov 1–7, or Oct 30 – Nov 5 across months)."""
     if start.month == end.month:
         return f"{start:%b} {start.day}–{end.day}"
     return f"{start:%b} {start.day} – {end:%b} {end.day}"
@@ -140,6 +143,9 @@ def tell(items: list[tuple[str, str, str]]) -> dict:
 
 
 def week_chapter(items: list, monday: date, today: date) -> dict:
+    """One week's chapter: the story of what happened Monday to Sunday, named, and so far until the week is
+    over.
+    """
     sunday = monday + timedelta(days=6)
     mine = [i for i in items if monday.isoformat() <= i[0] <= sunday.isoformat()]
     told = tell(mine)
@@ -153,6 +159,9 @@ def week_chapter(items: list, monday: date, today: date) -> dict:
 
 
 def year_edition(items: list, year: int, today: date) -> dict:
+    """A year's edition: its story, its biggest week and busiest month, named (A Quiet Year with nothing),
+    so far until the year is over.
+    """
     start, end = date(year, 1, 1), date(year, 12, 31)
     mine = [i for i in items if start.isoformat() <= i[0] <= end.isoformat()]
     told = tell(mine)

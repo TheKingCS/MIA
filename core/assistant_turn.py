@@ -35,6 +35,10 @@ log = get_logger(__name__)
 
 @dataclass
 class AssistantTurn:
+    """What one turn produced: each thing MIA says in order, a follow-up job to run in the background, whether
+    the model answered, the memories it used (What I Used), a page to open, and for the trace how it was answered
+    and the tools offered and called.
+    """
     replies: list[str] = field(default_factory=list)  # each thing MIA should say, in order
     followup: Optional[Followup] = None  # background job for run_followup(), if any
     llm_available: bool = True
@@ -50,6 +54,7 @@ class AssistantTurn:
 
 
 def add_message(conversation: Conversation, role: str, content: str) -> None:
+    """Adds a message to the conversation, stamped with the time and the conversation's privacy right now."""
     conversation.messages.append(
         ConversationMessage(
             role=role,
@@ -97,6 +102,9 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
 
 
 def _personal(conversation) -> bool:
+    """Whether the conversation is a personal one (talk-it-out or another personal mode, or the private journal):
+    no plain-word commands or lookups then.
+    """
     from core.conversation_modes import PERSONAL_MODES
 
     return getattr(conversation, "mode", None) in PERSONAL_MODES or bool(getattr(conversation, "journal", False))
@@ -131,6 +139,10 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     # before the message is stored, so it's stored with the privacy its
     # own words asked for, and before the model, which the safety floor
     # never waits on.
+    """One turn, in order: mode switches and the safety floor (before anything is stored or the model asked), then
+    show-off, plain-word commands, question plans and direct lookups (none in a personal conversation), then the
+    model with the tools offered for what was said.
+    """
     prepared = pre_turn(context, conversation, prompt)
     add_message(conversation, "user", prompt)
     if prepared.fixed_reply is not None:
@@ -209,6 +221,7 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
 
 
 def _garbled(content: str) -> bool:
+    """Whether the model's reply is a tool call written as text instead of made (a malformed call)."""
     from core.llm_manager import _looks_like_malformed_tool_call
 
     try:

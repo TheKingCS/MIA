@@ -37,6 +37,7 @@ def key(answer: str) -> str:
 
 
 def _folder(context) -> Optional[Path]:
+    """The person's folder calibration is kept in (the failure log's, else the traces'), or None."""
     for name in ("failures", "traces"):
         found = getattr(getattr(context, name, None), "data_dir", None)
         if found is not None:
@@ -45,6 +46,9 @@ def _folder(context) -> Optional[Path]:
 
 
 def note(context, plan: str, level: str, answer: str) -> None:
+    """Notes how sure an answer was (sureness.jsonl: its plan, its level and a fingerprint of the answer, never its
+    words); past 3,000 lines the oldest go, down to 1,800. A write that fails is logged.
+    """
     folder = _folder(context)
     if folder is None or not str(answer or "").strip():
         return
@@ -63,6 +67,7 @@ def note(context, plan: str, level: str, answer: str) -> None:
 
 
 def notes(context, days: int = 90) -> list[dict]:
+    """The notes of the last `days` days (90 by default); a bad line is skipped."""
     folder = _folder(context)
     if folder is None:
         return []
@@ -112,6 +117,7 @@ def project(context, kind: str, when: str, plan: str = "") -> None:
 
 
 def _due_day(when: str) -> Optional[datetime]:
+    """A projected date as a day: YYYY-MM-DD, or YYYY-MM taken as about the 28th; None when it won't read."""
     try:
         return datetime.fromisoformat(when + ("-28" if len(when) == 7 else ""))  # a year-month: its end, roughly
     except ValueError:
@@ -166,6 +172,7 @@ def check_due(context, now: Optional[datetime] = None, judge: Optional[Callable]
 
 
 def projections(context) -> list[dict]:
+    """Every projection kept (debt-free dates, freedom dates), to check when their day comes."""
     folder = _folder(context)
     try:
         return [json.loads(l) for l in (folder / PROJECTIONS).read_text(encoding="utf-8").splitlines() if l.strip()] \

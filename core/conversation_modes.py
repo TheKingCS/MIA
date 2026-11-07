@@ -109,6 +109,7 @@ MODE_INSTRUCTIONS = {
 }
 
 def _game_master_instruction() -> str:
+    """The Game Master's instruction for its mode, imported late."""
     from core.game_master import INSTRUCTION
 
     return INSTRUCTION
@@ -125,6 +126,7 @@ AGENCY_LINE = (
 
 
 def _phrases(*patterns: str) -> re.Pattern:
+    """Pure logic. One pattern matching any of the phrases as whole words."""
     return re.compile(r"\b(?:" + "|".join(patterns) + r")\b")
 
 
@@ -227,12 +229,16 @@ _BACK_TO_NORMAL = _phrases(
 
 @dataclass
 class ModeChange:
+    """What a message asks of the conversation's mode: a new mode, starting or stopping the private journal, and
+    going off the record (each None when unchanged).
+    """
     mode: Optional[str] = None  # new mode, or None to keep the current one
     journal: Optional[bool] = None  # True start, False stop, None unchanged
     off_record: Optional[bool] = None
 
     @property
     def is_empty(self) -> bool:
+        """Whether it asks for no change at all."""
         return self.mode is None and self.journal is None and self.off_record is None
 
 
@@ -279,4 +285,7 @@ _COMMAND_START = re.compile(
 
 
 def looks_like_direct_command(prompt: str) -> bool:
+    """Pure logic. Whether a message starts like a command (add, log, set, remind...), so it isn't
+    taken as talk.
+    """
     return bool(_COMMAND_START.search(prompt.lower().strip()))
