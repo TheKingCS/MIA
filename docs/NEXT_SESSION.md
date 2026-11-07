@@ -126,8 +126,14 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       Diagnostics (Passed / Look At / Unread tiles, a dotted row per check-up, Run Again).
       Power has its web page (`core/web_power.py`, `/api/power`, `web/power.html`; energy sources and the battery),
       and readings can be logged by voice too (`log_energy_reading`, through `energy.reading`).
-      Still to do: Toolbox, Lab and Field Kit need web pages (WEB_PARITY): the canvas-build session's (the DEC-0125
-      parity session leaves them to it after both built Power at once, 2026-11-07, and works on voice and glasses).
+      Toolbox (`core/web_toolbox.py`: Ohm's law from any two, the unit converter, board feet, concrete volume,
+      answered by core as you type at `/api/toolbox/calc`; alarms set / on-off / deleted as `alarm.*`; a stopwatch on
+      the page. The math moved out of the Qt calculators into `core/toolbox_calcs.py` and `core/unit_conversion.py`).
+      The Lab (`core/web_lab.py`: series chips, the chosen series' chart placed by core, latest/low/high/average/
+      change, readings with Delete, Add a Reading as `lab_reading.*`; Power's and Garage's series read only).
+      Field Kit (`core/web_field_kit.py`: Devices, Network (hash kind, subnet) and Scripts tabs, read only; eject,
+      run and port scan stay on the PC). Voice gained calculate_board_feet, calculate_concrete, switch_alarm and
+      delete_lab_reading. Every app now has a web page except Diagnostics (an owner page) and Settings.
 - [ ] Glasses: the shared orb on `web/glasses.html`.
 - Note: DEC-0119 (MIA for Zac alone) came after the canvas: drop household members from Party's leaderboard and
   Profile's household card when those screens are built.
