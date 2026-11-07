@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 227,457 lines; 1043 files describe themselves; 4,020 of 13,517 classes and functions are documented.
+1043 files, 227,494 lines; 1043 files describe themselves; 4,041 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 101,363 lines; 3,289 of 5,630 classes and functions documented
+367 files, 101,400 lines; 3,310 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -249,7 +249,7 @@
 - `core/password_vault.py`: Passwords (Zac, 2026-10-20, DEC-0035): every login a person has, kept in a vault only their own master password opens.
 - `core/pathway_manager.py`: Mission Pathways — the user-driven counterpart to the "Discovery" concept from the connective-infrastructure architecture review (deferred, Phase 6: MIA inferring a pattern from history). Here the user picks a skill and MIA hands them a structured, pre-authored sequence of real Missions that build i *(20 undocumented)*
 - `core/person_settings.py`: Settings that belong to a person, not the device (2026-10-01, accounts): how many messages MIA may send you a day, the weekly journal reflection, whether she asks what kind of support you want (and what you usually pick), your trusted contact for the safety floor, and which apps you see first (core/ *(4 undocumented)*
-- `core/personal_data.py`: Each person's own MIA (2026-10-01, "People and ownership" in docs/ROADMAP.md): MIA is built for any person or household, so what's personal belongs to the person, not the device. *(21 undocumented)*
+- `core/personal_data.py`: Each person's own MIA (2026-10-01, "People and ownership" in docs/ROADMAP.md): MIA is built for any person or household, so what's personal belongs to the person, not the device.
 - `core/personality.py`: MIA's personality in one place (DEC-0067; the guide is docs/design/MIA_VOICE.md). Every prompt that speaks as her takes who she is from here: IDENTITY and CHARACTER. Zac's picks (2026-11-03): a companion, natural humor, independent initiative, with JARVIS's composure, EDITH's capability and Cortana'
 - `core/phone_link.py`: When a linked phone last reached this PC (build plan step 3's `phone.link`; the server kept it only in memory, so a restart forgot it). `seen()` is called when a linked phone's device key signs a request in (server/app.py); it writes at most once every `EVERY` per person, so a busy phone costs nothi *(3 undocumented)*
 - `core/phone_server.py`: Turning phone access on and off from Settings (2026-09-28), instead of hand-editing `server.enabled` in config/config.json (one missing comma there and MIA won't read its config). *(15 undocumented)*

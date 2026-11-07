@@ -253,6 +253,9 @@ class ScopedView:
     attribute sets it on the main context."""
 
     def __init__(self, base, own: tuple[str, ...], **ids) -> None:
+        """A person's (or a household's) view of the app: the shared context underneath, the store names this view owns,
+        and ids such as profile_id or household_id set on it.
+        """
         object.__setattr__(self, "_base", base)
         object.__setattr__(self, "_own", own)
         object.__setattr__(self, "_stores", {})
@@ -260,12 +263,14 @@ class ScopedView:
             object.__setattr__(self, key, value)
 
     def __getattr__(self, name):
+        """A store this view owns, else whatever the shared context has under that name."""
         stores = object.__getattribute__(self, "_stores")
         if name in stores:
             return stores[name]
         return getattr(object.__getattribute__(self, "_base"), name)
 
     def __setattr__(self, name, value) -> None:
+        """Setting a store this view owns keeps it on the view; anything else is set on the shared context."""
         if name in self._own:
             self._stores[name] = value
         else:
@@ -278,7 +283,12 @@ def PersonView(base, profile_id: str) -> ScopedView:
 
 
 class PersonalData:
+    """Each person's own MIA: builds (once) each person's personal stores from data/profiles/<id>/, each household's
+    shared stores from its folder, and a private budget for someone who keeps theirs apart; gives each person a
+    view (their AppContext) and, on sign-in, puts their stores and their household's on the main context.
+    """
     def __init__(self, context, profiles_dir: Optional[Path] = None, shared_dir: Optional[Path] = None) -> None:
+        """Remembers where profiles' folders and the shared data are; nothing is built until someone is used."""
         self.context = context  # the main (desktop) context
         self.profiles_dir = Path(profiles_dir) if profiles_dir is not None else _profiles_dir()
         self.shared_dir = Path(shared_dir) if shared_dir is not None else _DATA_DIR
@@ -292,9 +302,11 @@ class PersonalData:
     # ------------------------------------------------------------------
 
     def folder(self, profile_id: str) -> Path:
+        """A person's own folder (data/profiles/<id>/)."""
         return self.profiles_dir / profile_id
 
     def _household_manager(self):
+        """The household manager, or None."""
         return getattr(self.context, "households", None)
 
     def household_stores(self, household_id: Optional[str]) -> dict:
@@ -320,6 +332,9 @@ class PersonalData:
         return self._households[household_id]
 
     def _personal_stores(self, profile_id: str, view: ScopedView) -> dict:
+        """A person's personal stores, built once from their folder (the first time, moving the owner's formerly shared
+        files into it).
+        """
         if profile_id not in self._personal:
             self._claim_shared_data_if_owner(profile_id)
             folder = self.folder(profile_id)
@@ -356,10 +371,14 @@ class PersonalData:
     # ------------------------------------------------------------------
 
     def has_private_budget(self, profile_id: str) -> bool:
+        """Whether this person keeps their budget private from the household (their budget.private setting)."""
         record = (self.context.config.get(f"profiles.{profile_id}") or {}) if getattr(self.context, "config", None) else {}
         return bool((record.get("settings") or {}).get("budget.private"))
 
     def _private_money(self, profile_id: str, view) -> dict:
+        """A person's private budget and bank sync, built once from private_budget/ in their folder; its bank balances
+        are kept out of the household's net worth.
+        """
         if profile_id not in self._private:
             folder = self.folder(profile_id) / "private_budget"
             stores = {attr: store(view, data_dir=folder) for attr, store in PRIVATE_MONEY_STORES
@@ -385,6 +404,7 @@ class PersonalData:
             publish("records.changed", action="budget.private")
 
     def stores_for(self, profile_id: str) -> dict:
+        """A person's own stores, from their view."""
         view = self.view(profile_id)
         return dict(view._stores)
 
@@ -413,15 +433,20 @@ class PersonalData:
         events.subscribe("profile.deleted", self._on_deleted)
 
     def _on_switched(self, profile_id: str = "", **_kwargs) -> None:
+        """On profile.switched: the newly signed-in person's stores go on the main context."""
         self.activate(profile_id)
 
     def _on_created(self, profile_id: str = "", **_kwargs) -> None:
+        """On profile.created: when the new profile is the one signed in, activate it."""
         profiles = getattr(self.context, "profiles", None)
         active = profiles.get_active_profile() if profiles is not None else None
         if active is not None and active.profile_id == profile_id:
             self.activate(profile_id)
 
     def _on_household_changed(self, profile_id: str = "", **_kwargs) -> None:
+        """On household.changed: rebuild that person's view with their new household, swap it in if they're signed in,
+        and tell the screens records changed.
+        """
         self._views.pop(profile_id, None)  # rebuilt with the new household's stores
         if profile_id and profile_id == self.active_profile_id:
             self.activate(profile_id)
@@ -439,6 +464,7 @@ class PersonalData:
             self.active_profile_id = None
 
     def activate_current(self) -> None:
+        """Activates whoever is signed in now (at boot)."""
         profiles = getattr(self.context, "profiles", None)
         active = profiles.get_active_profile() if profiles is not None else None
         if active is not None:
@@ -450,9 +476,13 @@ class PersonalData:
 
     @staticmethod
     def registered_store_types() -> set:
+        """Every store class in PERSONAL_STORES and HOUSEHOLD_STORES: what undo (core/undo_log.reload_stores) knows how
+        to reload.
+        """
         return {store for _attr, store in PERSONAL_STORES + HOUSEHOLD_STORES}
 
     def all_known_stores(self) -> list:
+        """Every store built so far, so undo can reload whichever read a restored file."""
         return self._all_stores()
 
     def replace_store(self, old, new) -> None:
@@ -471,6 +501,7 @@ class PersonalData:
         _close(old)
 
     def _all_stores(self) -> list:
+        """Every store built so far: the boot household's, each person's, each household's and each private budget."""
         stores = list((self._boot_household or {}).values())
         for group in list(self._personal.values()) + list(self._households.values()) + list(self._private.values()):
             stores.extend(group.values())
@@ -481,6 +512,7 @@ class PersonalData:
     # ------------------------------------------------------------------
 
     def owner_profile_id(self) -> Optional[str]:
+        """The device's first profile (the earliest created), whose folder receives the data that used to be shared."""
         profiles = getattr(self.context, "profiles", None)
         listed = profiles.list_profiles() if profiles is not None else []
         if not listed:
@@ -490,6 +522,10 @@ class PersonalData:
         return sorted(listed, key=lambda p: p.created_at or "")[0].profile_id
 
     def _claim_shared_data_if_owner(self, profile_id: str) -> None:
+        """The one-time move: when this is the owner and the files that used to live in data/ (LEGACY_FILES) haven't
+        all been claimed, move each one not already in their folder there, and write a marker saying what moved (an
+        unreadable marker counts as all claimed, so nothing moves twice).
+        """
         marker = self.profiles_dir / _CLAIM_MARKER
         record = {}
         if marker.exists():
@@ -522,6 +558,7 @@ class PersonalData:
 
 
 def _close(store) -> None:
+    """Closes a store that has a close(); a failure is logged, never breaks a sign-in."""
     close = getattr(store, "close", None)
     if callable(close):
         try:
