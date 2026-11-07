@@ -146,3 +146,13 @@ def test_a_second_try_goes_on_top_of_the_first(repo):
     assert p.status == lab.WRITTEN  # a second try that changed nothing leaves the first standing
     with pytest.raises(ValueError):
         lab.write(p.proposal_id, coder=lambda t, cwd, py: "")  # without `again`, a written one isn't rewritten
+
+
+def test_a_suite_run_that_crashed_is_run_once_more():
+    runs = iter([lab.suite_result("Fatal Python error: Aborted"), lab.suite_result("1 failed, 9 passed in 3.1s")])
+    got = lab.run_suite(Path("."), once=lambda cwd: next(runs))
+    assert got["finished"] and got["summary"] == "1 failed, 9 passed in 3.1s (run twice: the first didn't finish)"
+    both_bad = lab.run_suite(Path("."), once=lambda cwd: lab.suite_result("Fatal Python error: Aborted"))
+    assert not both_bad["finished"]  # twice: it stands as not finished
+    ok = lab.run_suite(Path("."), once=lambda cwd: lab.suite_result("9 passed in 3.1s"))
+    assert ok["summary"] == "9 passed in 3.1s"

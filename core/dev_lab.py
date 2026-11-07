@@ -253,12 +253,22 @@ def write(proposal_id: str, coder: Optional[Callable] = None, again: str = "") -
     return _put(p)
 
 
-def run_suite(cwd: Path) -> dict:
+def _suite_once(cwd: Path) -> dict:
     out = subprocess.run([_python(), "-m", "pytest", "-q", "-p", "no:cacheprovider"], cwd=str(cwd),
                          capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=SUITE_TIMEOUT,
                          env={**__import__("os").environ, "QT_QPA_PLATFORM": "offscreen"},
                          creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
     return suite_result((out.stdout or "") + "\n" + (out.stderr or ""))
+
+
+def run_suite(cwd: Path, once: Callable[[Path], dict] = _suite_once) -> dict:
+    """The full suite in that folder. A run that ends without pytest's summary (the rare native crash mid-suite,
+    docs/WAITING_ON.md) is run once more, and says so, so a lesson or a merge is never judged on a crash."""
+    result = once(cwd)
+    if not result.get("finished"):
+        result = once(cwd)
+        result["summary"] = f"{result['summary']} (run twice: the first didn't finish)"
+    return result
 
 
 def check(proposal_id: str, suite: Optional[Callable] = None) -> Proposal:

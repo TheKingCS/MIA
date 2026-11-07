@@ -110,7 +110,11 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       a subset. Signing in alone didn't trigger it; a request as that person afterwards (`/api/diagnostics` or
       `/api/council`, both a 403) did, so look at what building a person's view on a worker thread leaves behind
       (not a Qt object: no store is one; not the reference library: it isn't per person).
-      Worked around by checking the 403 inside the council test, which already signs a second person in;
+      Worked around by checking the 403 inside the council test, which already signs a second person in.
+      Later the same day: 8 clean runs with the trigger, uncaptured and with RAM nearly full (the 14B and the
+      vision model both loaded), so it's neither the trigger alone nor memory; it couldn't be reproduced. The
+      lab now reruns a suite that ended without pytest's summary, once, and says so, so a lesson, a merge or
+      dev.suite is never judged on a crash;
       `tests/test_inbox.py::test_what_she_read_and_the_person_corrected_is_noted` failed once in a full run (2026-11-06),
       never alone.
 - [ ] `vault.coverage` is built from the vault's own list (photos over a week old still only on the phone,
