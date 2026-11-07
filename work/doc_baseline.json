@@ -148,7 +148,6 @@
   "core/port_scanner.py": 1,
   "core/power_manager.py": 6,
   "core/presence.py": 10,
-  "core/profile_manager.py": 11,
   "core/push_subscription_manager.py": 10,
   "core/push_to_talk_source.py": 6,
   "core/push_to_talk_trigger.py": 3,

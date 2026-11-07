@@ -143,6 +143,7 @@ class Profile:
 
     @property
     def has_password(self) -> bool:
+        """Whether the profile is password-protected."""
         return bool(self.password_hash)
 
     @property
@@ -158,6 +159,7 @@ class Profile:
 
 
 def _profile_from_record(profile_id: str, data: dict) -> Profile:
+    """A Profile from its record in the config (profiles.<id>); missing fields take their defaults."""
     return Profile(
         profile_id=profile_id,
         name=data.get("name", "Unknown"),
@@ -204,6 +206,7 @@ def new_recovery_code() -> str:
 
 
 def _canonical_code(code: str) -> str:
+    """A recovery code reduced to its letters and digits in capitals (spaces and dashes don't matter)."""
     return re.sub(r"[^A-Z0-9]", "", (code or "").upper())
 
 
@@ -212,7 +215,11 @@ class AccountError(ValueError):
 
 
 class ProfileManager:
+    """The people on this MIA: their profiles live in the config (profiles.<id>), with the signed-in one in
+    system.active_profile_id; passwords and recovery codes are kept only as salted PBKDF2 hashes.
+    """
     def __init__(self, context: AppContext) -> None:
+        """Turns an old single-user config into this device's first profile, once."""
         self.context = context
         self._migrate_legacy_user_if_needed()
 
@@ -276,6 +283,7 @@ class ProfileManager:
 
     @staticmethod
     def _create_profile_record(name: str) -> Profile:
+        """A new profile with a fresh id, and its own folder made."""
         profile_id = uuid.uuid4().hex[:8]
         profile = Profile(
             profile_id=profile_id,
@@ -531,6 +539,7 @@ class ProfileManager:
         return True
 
     def has_any_profiles(self) -> bool:
+        """Whether anyone has a profile on this MIA yet (no one means the setup wizard)."""
         return bool(self.context.config.get("profiles", {}))
 
     def needs_profile_selection(self) -> bool:
@@ -542,6 +551,7 @@ class ProfileManager:
     # ------------------------------------------------------------------
 
     def _checked_email(self, email: str, for_profile: Optional[str] = None) -> str:
+        """An email tidied and checked: it must look like one, and nobody else here may sign in with it (AccountError)."""
         email = normalize_email(email)
         if not looks_like_email(email):
             raise AccountError("That doesn't look like an email address.")
@@ -551,6 +561,7 @@ class ProfileManager:
         return email
 
     def find_by_email(self, email: str) -> Optional[Profile]:
+        """The profile that signs in with this email, or None."""
         wanted = normalize_email(email)
         if not wanted:
             return None
@@ -615,10 +626,12 @@ class ProfileManager:
         return code
 
     def has_recovery_code(self, profile_id: str) -> bool:
+        """Whether a profile has a recovery code."""
         profile = self.get_profile(profile_id)
         return bool(profile and profile.recovery_hash)
 
     def check_recovery_code(self, profile_id: str, code: str) -> bool:
+        """Whether a recovery code is right: hashed with the profile's salt and compared in constant time."""
         raw = self.context.config.get(f"profiles.{profile_id}")
         if raw is None or not raw.get("recovery_hash"):
             return False
