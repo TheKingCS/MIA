@@ -748,14 +748,15 @@ every step below in order, from a blank machine, with Windows notes.
 
 *History since 2026-11-03: open work is in `work/tasks/`.*
 
-**Next: `docs/DEVELOPMENT_PLAN.md` stage 1** (phone pages for Power, Toolbox, The Lab, Field Kit; "Say: ..." on each
-screen; the design review back to Claude Design: `docs/design/CORE_SCREENS_REVIEW.md`). Done 2026-11-07: Talk's mic
-(the PC can be talked to again) and humor on the Settings screen.
-
-**Parity (DEC-0125): close the gaps in `docs/PARITY.md`.** Voice is done but Look (a voice "look at this" that
-takes the photo itself) and Passwords (screen-only by Zac's decision). Next the phone pages (Power, Toolbox, The
-Lab, Field Kit), then glasses cards and asks. Each closed gap: delete its line in `work/parity.json` and run
-`python -m core.parity`. New tools go in both `core/application.py` and `core/core_runtime.py` (K-0069).
+**Parity (DEC-0125) is nearly whole (2026-11-07 night).** Voice 50 of 50 apps but Passwords (on purpose), phone
+50, glasses 46: the only open gap is Look on the glasses (the glasses' own camera). Stage 1 of
+`docs/DEVELOPMENT_PLAN.md` is done (Talk's mic, humor in Settings, the four phone pages with the canvas session,
+"Say: ..." on every screen). Next: stage 2's glasses cards drawn for the apps that only have an ask; the design
+review back to Claude Design (`docs/design/CORE_SCREENS_REVIEW.md`, partly overtaken by the canvas build).
+Rules that hold it: a new app needs voice, phone and glasses or a decided gap (`work/parity.json`); its ask must
+reach its own tools (tests/test_parity.py); a glasses ask too (tests/test_glasses.py); new tools go in both
+`core/application.py` and `core/core_runtime.py` (K-0069); run the new questions against the live model
+(`python tests/live_model_check.py`, K-0080).
 
 **Every session, ongoing (DEC-0104): document what you touch, and work the backlog.**
 `.venv\Scripts\python -m tools.docs next 15` lists the files with the most undocumented definitions (engine
