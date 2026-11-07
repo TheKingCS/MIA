@@ -140,7 +140,6 @@
   "core/recreation.py": 6,
   "core/region.py": 4,
   "core/response_composer.py": 2,
-  "core/rewards_manager.py": 10,
   "core/safety_escalation.py": 2,
   "core/safety_floor.py": 1,
   "core/schema_check.py": 1,

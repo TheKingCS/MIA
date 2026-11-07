@@ -194,6 +194,9 @@ log = get_logger(__name__)
 
 @dataclass(frozen=True)
 class StatDefinition:
+    """One lifetime stat rewards are measured on (engine hours, workout hours, missions, miles...): its id, name, unit
+    and icon.
+    """
     stat_id: str
     name: str
     unit: str
@@ -485,7 +488,12 @@ def format_multi_unlock_notification(names: list[str], noun: str) -> tuple[str, 
 
 
 class RewardsManager:
+    """Rewards and hidden achievements, unlocked when a person's lifetime stats cross a tier. The stats are always
+    worked out from the real records; only what's been unlocked is kept (on the profile). Rescans whenever something
+    is logged or a mission is completed.
+    """
     def __init__(self, context: AppContext) -> None:
+        """Listens for activity.logged and mission.completed, so a threshold crossed unlocks at once."""
         self.context = context
         # Event-sourced groundwork (2026-09-14, fifth pass) — see this
         # module's own docstring. Subscribing here (not waiting for the
@@ -517,6 +525,7 @@ class RewardsManager:
     # ------------------------------------------------------------------
 
     def stat_value(self, stat_id: str, profile_id: str) -> float:
+        """One stat's value for a person, worked out now from the records (0 for an unknown stat)."""
         if stat_id == "engine_hours_logged":
             return self._compute_engine_hours_logged(profile_id)
         if stat_id == "workout_hours_logged":
@@ -532,6 +541,7 @@ class RewardsManager:
         return 0.0
 
     def all_stat_values(self, profile_id: str) -> dict[str, float]:
+        """Every stat's value for a person."""
         return {definition.stat_id: self.stat_value(definition.stat_id, profile_id) for definition in STAT_DEFINITIONS}
 
     def _compute_engine_hours_logged(self, profile_id: str) -> float:
@@ -567,6 +577,7 @@ class RewardsManager:
         return total
 
     def _compute_workout_hours_logged(self, profile_id: str) -> float:
+        """Hours of workouts credited to a person (or shared ones)."""
         if self.context.workout is None:
             return 0.0
         return sum(
@@ -649,12 +660,14 @@ class RewardsManager:
     # ------------------------------------------------------------------
 
     def is_unlocked(self, profile_id: str, reward_id: str) -> bool:
+        """Whether a person has unlocked a reward."""
         if self.context.profiles is None:
             return False
         profile = self.context.profiles.get_profile(profile_id)
         return profile is not None and reward_id in profile.unlocked_reward_ids
 
     def unlocked_reward_ids(self, profile_id: str) -> list[str]:
+        """The rewards a person has unlocked."""
         if self.context.profiles is None:
             return []
         profile = self.context.profiles.get_profile(profile_id)
@@ -703,6 +716,7 @@ class RewardsManager:
         return newly_unlocked
 
     def _notify_unlocked_tiers(self, tiers: list[ChallengeTier]) -> None:
+        """Says which rewards were just unlocked (one by name, several together)."""
         if len(tiers) == 1:
             tier = tiers[0]
             self.context.notifications.notify(
@@ -751,6 +765,7 @@ class RewardsManager:
         return newly_unlocked
 
     def _notify_unlocked_hidden_achievements(self, achievements: list[HiddenAchievement]) -> None:
+        """Says which hidden achievements were just unlocked (one by name, several together)."""
         if len(achievements) == 1:
             achievement = achievements[0]
             self.context.notifications.notify(
