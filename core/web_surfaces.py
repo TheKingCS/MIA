@@ -125,7 +125,7 @@ APPS: tuple[App, ...] = (
     App("security", "Security", "🛡️", "Your cameras, at home.", "security.html",
         "Your home cameras, watched live from MIA over your own network, no cloud (DEC-0033).", HOME, ("security",),
         "Show me the front door."),
-    App("power", "Power", "🔋", "Energy, tracked.", None,
+    App("power", "Power", "🔋", "Energy, tracked.", "power.html",
         "Battery status and manual energy/utility tracking.", HOME, ("power",), "How's the battery?"),
     App("character", "Character", "👤", "Your story so far.", "character.html",
         "A living record of what you've actually done.", LIFE, ("character",), "What have I done this week?"),

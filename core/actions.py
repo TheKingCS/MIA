@@ -361,6 +361,7 @@ import core.calendar_actions  # noqa: E402,F401
 import core.gap_actions  # noqa: E402,F401  (capability gaps, build plan step 9)
 import core.operating_actions  # noqa: E402,F401  (the Operating Journal, DEC-0097)
 import core.play_actions  # noqa: E402,F401  (recreation, DEC-0098)
+import core.power_actions  # noqa: E402,F401  (energy sources and readings, Power on the web, DEC-0125)
 import core.life_note_actions  # noqa: E402,F401  (promises, decisions, ideas, goals set aside, DEC-0054)
 import core.classroom_actions  # noqa: E402,F401  (the Classroom's web screen)
 import core.waypoint_actions  # noqa: E402,F401  (waypoints from the web's Maps and Navigation)

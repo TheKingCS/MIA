@@ -42,12 +42,14 @@ def test_pure_bits():
 
 
 def test_the_shell_is_the_persons_own(world):
+    """The sidebar is the signed-in person's: their name and level, their apps in order, and which apps are still
+    only on the PC (Diagnostics; Power has its web page since DEC-0125)."""
     data = shell(world, TODAY)
     assert data["person"]["name"] == "Robin" and data["person"]["level"] == 1
     ids = [a["id"] for a in data["apps"]]
     assert ids[0] == "web_home" and "dashboard" not in ids and "budget" in ids and "real_estate" in ids
     assert all(a["page"] for a in data["apps"])
-    assert "Power" in data["on_pc_only"] and "Workshop" not in data["on_pc_only"]
+    assert "Diagnostics" in data["on_pc_only"] and "Power" not in data["on_pc_only"] and "Workshop" not in data["on_pc_only"]
 
     set_app_visible(world, "kitchen", False)
     assert "kitchen" not in [a["id"] for a in shell(world, TODAY)["apps"]]
@@ -130,6 +132,7 @@ def test_every_assistant_tool_belongs_to_an_app():
 
 
 def test_the_apps_page(world):
+    """The Apps page lists every app with whether it's on the web, what to ask it, and the tools it has."""
     from core.assistant_actions import AssistantAction
     from core.web_surfaces import apps_page
 
@@ -140,7 +143,7 @@ def test_the_apps_page(world):
     apps = {a["id"]: a for g in page["groups"] for a in g["apps"]}
     assert apps["budget"]["on_web"] and apps["budget"]["tools"] == [
         {"name": "add_bill", "does": "Add bill", "detail": "Add a new bill."}]
-    assert not apps["power"]["on_web"] and apps["power"]["ask"] and apps["workshop"]["on_web"]
+    assert not apps["diagnostics"]["on_web"] and apps["power"]["on_web"] and apps["power"]["ask"] and apps["workshop"]["on_web"]
     assert not apps["module_browser"]["can_hide"] and apps["kitchen"]["can_hide"]
     assert page["counts"]["apps"] == len(apps)
 

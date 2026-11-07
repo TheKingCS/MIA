@@ -62,7 +62,7 @@ LIMITS = {
     "business": "",
     "insurance": "MIA compares the quotes you collect; she never shops or buys for you.",
     "security": "Cameras need a local stream (no cloud-only cameras).",
-    "power": "No web screen yet.",
+    "power": "Readings are logged by hand; no sensors are connected yet.",
     "character": "",
     "reward_shop": "",
     "observations": "Read only: each is resolved where it lives (the upkeep, the mission, the bill).",

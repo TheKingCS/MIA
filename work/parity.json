@@ -29,10 +29,6 @@
       "status": "todo",
       "why": "a glasses card: anything new on the network"
     },
-    "power:phone": {
-      "status": "todo",
-      "why": "a web page: battery and energy tracking"
-    },
     "reward_shop:glasses": {
       "status": "todo",
       "why": "a glasses card: coins and the next reward in reach"

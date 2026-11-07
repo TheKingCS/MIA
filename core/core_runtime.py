@@ -231,6 +231,9 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
 
     context.data_logger = DataLoggerManager(context)
     context.maintenance = MaintenanceManager(context)
+    from core.energy_manager import EnergyManager
+
+    context.energy = EnergyManager(context)  # Power on the phone (DEC-0125), as on the desktop
     context.tasks = TaskManager(context)
     context.kitchen = KitchenManager(context)
     context.relationships = RelationshipsManager(context)
@@ -269,8 +272,9 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
 
 def _register_core_assistant_actions(context: AppContext) -> None:
     """Registers Core's curated Assistant action subset — see this module's docstring. It includes the read tools
-    for Character, Skills, the Reward Shop, Insurance, Kept, the Operating Journal, Play and Files (DEC-0125), so
-    the phone can ask about them too, and cook mode's tools (core/assistant_cooking_actions.py)."""
+    for Character, Skills, the Reward Shop, Insurance, Kept, the Operating Journal, Play and Files, and the energy
+    sources read and logged (DEC-0125), so the phone can ask about them too, and cook mode's tools
+    (core/assistant_cooking_actions.py)."""
     registry = context.assistant_actions
     registry.register(connectivity_action())
     register_journal_actions(registry)
@@ -291,6 +295,9 @@ def _register_core_assistant_actions(context: AppContext) -> None:
 
     register_progress_actions(registry)  # Character, Skills, Reward Shop by voice (DEC-0125)
     register_records_actions(registry)  # Insurance, Kept, Operating Journal, Play, Files by voice (DEC-0125)
+    from core.assistant_energy_actions import register_energy_actions
+
+    register_energy_actions(registry)  # solar, generator, propane: read and logged by voice (DEC-0125)
 
     registry.register(AssistantAction(
         name="add_alarm",

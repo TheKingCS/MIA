@@ -13,6 +13,14 @@
    "status": "none",
    "why": "removing a camera they added is their own choice; the feed itself is a device, not a decision of hers"
   },
+  "action:energy": {
+   "status": "none",
+   "why": "readings entered by hand, as on the Power screen and by voice; nothing of MIA's to judge until a sensor or a running-low finding needs one (like store:energy)"
+  },
+  "action:energy_source": {
+   "status": "none",
+   "why": "adding, renaming or removing a source is the person's own record-keeping"
+  },
   "action:firstboot": {
    "status": "none",
    "why": "once per device; the glasses first boot is watched through glasses.voice once it is done"

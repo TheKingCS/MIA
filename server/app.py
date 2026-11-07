@@ -1105,6 +1105,13 @@ def create_app(context: AppContext) -> FastAPI:
         with app.state.turn_lock:
             return screen(view_for(context, profile_id))
 
+    @app.get("/api/power")
+    def power_screen(profile_id: str = Depends(require_profile_id)) -> dict:
+        """Power on the web (DEC-0125): this computer's battery and the energy sources tracked by hand."""
+        from core.web_power import power_page
+
+        return _screen(profile_id, "power", power_page)
+
     @app.get("/api/news")
     def news_screen(profile_id: str = Depends(require_profile_id)) -> dict:
         from core.good_news import screen
