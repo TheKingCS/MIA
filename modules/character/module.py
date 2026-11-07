@@ -96,18 +96,21 @@ def sorted_collection(
 
 
 class CharacterModule(ModuleBase):
+    """The Character app (desktop): a living record of what the signed-in person has actually done: lifetime stats, the collection unlocked, rarity counts and prestige."""
     module_id = "character"
     display_name = "Character"
     description = "A living record of what you've actually done."
     icon = "\U0001F464"  # bust in silhouette
 
     def __init__(self, context) -> None:
+        """Nothing built yet: the page is made in get_widget()."""
         super().__init__(context)
         self._hero_title: Optional[QLabel] = None
         self._hero_level_line: Optional[QLabel] = None
         self._body_layout: Optional[QVBoxLayout] = None
 
     def get_widget(self) -> QWidget:
+        """The page: a photo header with the person's title and level, and the body of sections."""
         page = QWidget()
         page.setStyleSheet("background-color: #070f0d;")
         outer = QVBoxLayout(page)
@@ -156,6 +159,7 @@ class CharacterModule(ModuleBase):
         return page
 
     def _active_profile(self):
+        """Who is signed in, or None."""
         if self.context.profiles is None:
             return None
         return self.context.profiles.get_active_profile()
@@ -167,6 +171,7 @@ class CharacterModule(ModuleBase):
         # modules/toolbox/tools/lite_captures_tool.py) and fixed across
         # this codebase's other actively-re-triggered refresh methods
         # the same day.
+        """Rebuilds the page for the signed-in person (old sections hidden and detached first): checks for new unlocks and hidden achievements, then the portrait, stats, collection, rarity and prestige; says why when there's no one signed in or no rewards."""
         while self._body_layout.count():
             item = self._body_layout.takeAt(0)
             widget = item.widget()
@@ -213,6 +218,7 @@ class CharacterModule(ModuleBase):
         self._build_prestige_section(active.profile_id)
 
     def _build_portrait_section(self) -> None:
+        """The portrait placeholder (character art comes later)."""
         portrait = PhotoBackgroundFrame()
         portrait.setFixedHeight(220)
         portrait_layout = QVBoxLayout(portrait)
@@ -224,6 +230,7 @@ class CharacterModule(ModuleBase):
         self._body_layout.addWidget(portrait)
 
     def _build_stats_section(self, profile_id: str) -> None:
+        """Lifetime stats: a line per stat with its value and unit."""
         card = QFrame()
         card.setObjectName("NatureAssetCard")
         layout = QVBoxLayout(card)
@@ -244,6 +251,7 @@ class CharacterModule(ModuleBase):
         self._body_layout.addWidget(card)
 
     def _build_collection_section(self, profile_id: str) -> None:
+        """The collection: every tier and hidden achievement unlocked, in order; "go do something real" when there are none."""
         card = QFrame()
         card.setObjectName("NatureAssetCard")
         layout = QVBoxLayout(card)
@@ -280,6 +288,7 @@ class CharacterModule(ModuleBase):
         self._body_layout.addWidget(card)
 
     def _build_rarity_tally_section(self, profile_id: str) -> None:
+        """How many unlocks of each rarity."""
         card = QFrame()
         card.setObjectName("NatureAssetCard")
         layout = QVBoxLayout(card)
@@ -303,6 +312,7 @@ class CharacterModule(ModuleBase):
         self._body_layout.addWidget(card)
 
     def _build_prestige_section(self, profile_id: str) -> None:
+        """Prestige rewards, when the person has any (nothing shown otherwise)."""
         prestige_rewards = self.context.rewards.prestige_rewards_for_profile(profile_id)
         if not prestige_rewards:
             return

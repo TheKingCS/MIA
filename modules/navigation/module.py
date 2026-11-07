@@ -93,12 +93,14 @@ def format_sun_moon_summary(latitude: float, longitude: float, for_date: date) -
 
 
 class NavigationModule(ModuleBase):
+    """The Navigation app (desktop): waypoints to add, edit and delete, distance and bearing between them, and the sun and moon for one."""
     module_id = "navigation"
     display_name = "Navigation"
     description = "Waypoints, distance/bearing, and sun/moon reference."
     icon = "\U0001F9ED"  # compass
 
     def __init__(self, context) -> None:
+        """Nothing built yet: the page is made in get_widget()."""
         super().__init__(context)
         self._list: Optional[QListWidget] = None
         self._sun_moon_label: Optional[QLabel] = None
@@ -109,6 +111,7 @@ class NavigationModule(ModuleBase):
         self._refresh_list()
 
     def get_widget(self) -> QWidget:
+        """The page: the waypoints list with Add, Edit and Delete, the waypoint picker and its sun and moon times."""
         widget = QWidget()
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(24, 24, 24, 24)
@@ -160,6 +163,7 @@ class NavigationModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _refresh_list(self) -> None:
+        """Lists every waypoint, refills the picker keeping its choice (signals held so it doesn't count as a change), then the sun and moon."""
         waypoints = self.context.waypoints.all_waypoints()
 
         self._list.clear()
@@ -182,6 +186,7 @@ class NavigationModule(ModuleBase):
         self._refresh_sun_moon()
 
     def _refresh_sun_moon(self) -> None:
+        """The picked waypoint's sun and moon today, or asks for a waypoint first."""
         waypoint_id = self._waypoint_combo.currentData()
         waypoint = self.context.waypoints.get_waypoint(waypoint_id) if waypoint_id is not None else None
         if waypoint is None:
@@ -190,6 +195,7 @@ class NavigationModule(ModuleBase):
         self._sun_moon_label.setText(format_sun_moon_summary(waypoint.latitude, waypoint.longitude, date.today()))
 
     def _selected_waypoint_id(self) -> Optional[str]:
+        """The selected waypoint's id, or None."""
         item = self._list.currentItem()
         if item is None:
             return None
@@ -200,6 +206,7 @@ class NavigationModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _on_add(self) -> None:
+        """Adds a waypoint from the dialog and refreshes."""
         dialog = AddEditWaypointDialog()
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -214,6 +221,7 @@ class NavigationModule(ModuleBase):
         self._refresh_list()
 
     def _on_edit(self) -> None:
+        """Edits the selected waypoint in the dialog (asks for a selection first)."""
         waypoint_id = self._selected_waypoint_id()
         if waypoint_id is None:
             QMessageBox.information(None, "No Waypoint Selected", "Select a waypoint to edit.")
@@ -235,6 +243,7 @@ class NavigationModule(ModuleBase):
         self._refresh_list()
 
     def _on_delete(self) -> None:
+        """Deletes the selected waypoint after asking (asks for a selection first)."""
         waypoint_id = self._selected_waypoint_id()
         if waypoint_id is None:
             QMessageBox.information(None, "No Waypoint Selected", "Select a waypoint to delete.")

@@ -60,17 +60,20 @@ def format_entry_row(entry: JournalEntry) -> str:
 
 
 class NotesModule(ModuleBase):
+    """The Notes app (desktop): dated journal entries with tags, filtered as you type, and reachable from Ctrl+K search."""
     module_id = "notes"
     display_name = "Notes"
     description = "Dated, searchable, taggable journal entries."
     icon = "\U0001F4DD"  # memo
 
     def __init__(self, context) -> None:
+        """Nothing built yet: the page is made in get_widget()."""
         super().__init__(context)
         self._list: Optional[QListWidget] = None
         self._filter_edit: Optional[QLineEdit] = None
 
     def on_load(self) -> None:
+        """Registers the notes search provider (Ctrl+K)."""
         super().on_load()
         self.context.search.register_provider("notes", self._search)
 
@@ -79,6 +82,7 @@ class NotesModule(ModuleBase):
         self._refresh_list()
 
     def get_widget(self) -> QWidget:
+        """The page: the filter, the entries list, and Add, Edit and Delete."""
         widget = QWidget()
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(24, 24, 24, 24)
@@ -133,6 +137,7 @@ class NotesModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _refresh_list(self) -> None:
+        """Lists the entries matching the filter (all of them when it's empty)."""
         query = self._filter_edit.text().strip()
         entries = self.context.journal.search(query) if query else self.context.journal.all_entries()
 
@@ -143,6 +148,7 @@ class NotesModule(ModuleBase):
             self._list.addItem(item)
 
     def _selected_entry_id(self) -> Optional[str]:
+        """The selected entry's id, or None."""
         item = self._list.currentItem()
         if item is None:
             return None
@@ -153,6 +159,7 @@ class NotesModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _on_add(self) -> None:
+        """Adds an entry from the dialog (title, body, tags) and refreshes."""
         dialog = AddEditJournalEntryDialog()
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -165,6 +172,7 @@ class NotesModule(ModuleBase):
         self._refresh_list()
 
     def _on_edit(self) -> None:
+        """Edits the selected entry in the dialog (asks for a selection first)."""
         entry_id = self._selected_entry_id()
         if entry_id is None:
             QMessageBox.information(None, "No Entry Selected", "Select an entry to edit.")
@@ -184,6 +192,7 @@ class NotesModule(ModuleBase):
         self._refresh_list()
 
     def _on_delete(self) -> None:
+        """Deletes the selected entry after asking (asks for a selection first)."""
         entry_id = self._selected_entry_id()
         if entry_id is None:
             QMessageBox.information(None, "No Entry Selected", "Select an entry to delete.")
@@ -208,6 +217,7 @@ class NotesModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _search(self, query: str) -> list[SearchResult]:
+        """Ctrl+K results: each matching entry, its tags as the description, opening Notes."""
         results = []
         for entry in self.context.journal.search(query):
             results.append(SearchResult(

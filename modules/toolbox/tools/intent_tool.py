@@ -43,16 +43,19 @@ def format_intent_row(intent: Intent) -> str:
 
 
 class IntentTool(ToolboxTool):
+    """The Intent Manager in the Toolbox: the long-term goals projects serve, one of them the current focus; add, edit, focus and delete."""
     tool_id = "intents"
     display_name = "Intent Manager"
     description = "Track long-term goals your projects serve."
     icon = "\U0001F9ED"  # compass
 
     def __init__(self, context) -> None:
+        """Nothing built yet: the list is made in build_widget()."""
         super().__init__(context)
         self._intent_list: Optional[QListWidget] = None
 
     def build_widget(self) -> QWidget:
+        """The screen: the intents list and Add, Edit, Make Current Focus and Delete."""
         widget = QWidget()
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(24, 24, 24, 24)
@@ -91,6 +94,7 @@ class IntentTool(ToolboxTool):
     # ------------------------------------------------------------------
 
     def _refresh_intent_list(self) -> None:
+        """Lists every intent, keeping the one selected."""
         previously_selected = self._selected_intent_id()
 
         self._intent_list.clear()
@@ -107,6 +111,7 @@ class IntentTool(ToolboxTool):
                     break
 
     def _selected_intent_id(self) -> Optional[str]:
+        """The selected intent's id, or None."""
         item = self._intent_list.currentItem()
         if item is None:
             return None
@@ -117,6 +122,7 @@ class IntentTool(ToolboxTool):
     # ------------------------------------------------------------------
 
     def _on_add_intent(self) -> None:
+        """Adds an intent from the dialog (its name, status, description and the intent it serves) and selects it."""
         dialog = AddEditIntentDialog(intents=self.context.intents.all_intents())
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -132,6 +138,7 @@ class IntentTool(ToolboxTool):
         self._refresh_intent_list()
 
     def _on_edit_intent(self) -> None:
+        """Edits the selected intent in the dialog (asks for a selection first)."""
         intent_id = self._selected_intent_id()
         if intent_id is None:
             QMessageBox.information(None, "No Intent Selected", "Select an intent to edit.")
@@ -162,6 +169,7 @@ class IntentTool(ToolboxTool):
             QMessageBox.warning(None, "Can't link that goal", str(exc))
 
     def _on_make_primary(self) -> None:
+        """Makes the selected intent the current focus (asks for a selection first)."""
         intent_id = self._selected_intent_id()
         if intent_id is None:
             QMessageBox.information(None, "No Intent Selected", "Select an intent to make your current focus.")
@@ -171,6 +179,7 @@ class IntentTool(ToolboxTool):
         self._refresh_intent_list()
 
     def _on_delete_intent(self) -> None:
+        """Deletes the selected intent after asking (asks for a selection first)."""
         intent_id = self._selected_intent_id()
         if intent_id is None:
             QMessageBox.information(None, "No Intent Selected", "Select an intent to delete.")

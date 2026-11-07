@@ -231,12 +231,14 @@ def format_glance_next_up(attention_count: int, first_task: Optional[Maintenance
 
 
 class GarageModule(ModuleBase):
+    """The Garage app (desktop): vehicles and motorized equipment at a glance (how many, what needs attention, what's next), each with its own page of upkeep, missions and documents. The records themselves live in Maintenance."""
     module_id = "garage"
     display_name = "Garage"
     description = "At-a-glance status for vehicles and motorized equipment."
     icon = "\U0001F697"  # car
 
     def __init__(self, context) -> None:
+        """Nothing built yet: the list and detail pages are made when shown."""
         super().__init__(context)
         self._list_layout: Optional[QVBoxLayout] = None
         self._tracked_value_label: Optional[QLabel] = None
@@ -247,6 +249,7 @@ class GarageModule(ModuleBase):
         self._detail_page: Optional[QWidget] = None
 
     def get_widget(self) -> QWidget:
+        """The page stack, starting on the list."""
         self._stack = QStackedWidget()
         self._list_page = self._build_list_page()
         self._stack.addWidget(self._list_page)
@@ -258,10 +261,12 @@ class GarageModule(ModuleBase):
         self._show_detail_page(record_id)
 
     def _show_list_page(self) -> None:
+        """Refreshes the list and shows it."""
         self._refresh()
         self._stack.setCurrentWidget(self._list_page)
 
     def _show_detail_page(self, asset_id: str) -> None:
+        """Shows one vehicle's page, built fresh (the previous one is removed)."""
         if self._detail_page is not None:
             self._stack.removeWidget(self._detail_page)
             self._detail_page = None
@@ -508,6 +513,7 @@ class GarageModule(ModuleBase):
         return page
 
     def _build_missions_tab(self, asset: MaintenanceAsset) -> QWidget:
+        """A vehicle's missions tab: the missions tied to it."""
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setContentsMargins(0, 12, 0, 12)
@@ -523,6 +529,7 @@ class GarageModule(ModuleBase):
         return page
 
     def _build_documents_tab(self, asset: MaintenanceAsset) -> QWidget:
+        """A vehicle's documents tab: each attached file by name, or that none are attached."""
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setContentsMargins(0, 12, 0, 12)
@@ -550,6 +557,7 @@ class GarageModule(ModuleBase):
         return page
 
     def _build_quick_stat_tile(self, row_layout: QHBoxLayout, task: MaintenanceTask, readings: list[Reading]) -> None:
+        """A metered task's tile on the vehicle's page: its latest reading in its unit, and the task's name."""
         tile = QFrame()
         tile.setObjectName("NatureGlanceTile")
         tile_layout = QVBoxLayout(tile)
@@ -637,6 +645,7 @@ class GarageModule(ModuleBase):
         return page
 
     def _on_manage_in_maintenance(self) -> None:
+        """Opens the Maintenance app, where the vehicles' records are edited."""
         self.context.events.publish("assistant.open_module_requested", module_id="maintenance")
 
     def _build_glance_tile(
@@ -683,6 +692,7 @@ class GarageModule(ModuleBase):
         # modules/toolbox/tools/lite_captures_tool.py) and fixed across
         # this codebase's other actively-re-triggered refresh methods
         # the same day.
+        """Rebuilds the list (old cards hidden and detached first): every garage asset with its tasks' state, then the glance tiles: how many tracked, how many need attention (calendar or meter readings), and what's next."""
         while self._list_layout.count():
             item = self._list_layout.takeAt(0)
             widget = item.widget()
