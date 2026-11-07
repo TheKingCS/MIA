@@ -135,6 +135,18 @@ def _thumbs(context) -> Optional[Reading]:
     return Reading(round(c.get("up", 0) / total, 2), total, f"{c.get('up', 0)} up, {c.get('down', 0)} down") if total else None
 
 
+def _router_shadow(context) -> Optional[Reading]:
+    """Measure: of this month's turns where she called a tool, the share where her own router (in the shadow,
+    DEC-0106) had that tool in its top five. None until the router has been in the shadow on such a turn."""
+    from core.model_forge import shadow_record
+
+    found = shadow_record(_turns(context, days=30))
+    if not found["turns"]:
+        return None
+    return Reading(found["top5"], found["turns"], f"first pick {found['top1']:.0%}, top five {found['top5']:.0%}, "
+                                                    f"of {found['turns']} turns")
+
+
 def _slow(context) -> Optional[Reading]:
     """Measure: the share of this week's turns that took over 25 seconds. None when there's nothing to judge from yet."""
     turns = _turns(context)
@@ -993,6 +1005,9 @@ LOOPS: tuple[Loop, ...] = (
     Loop("gaps.repeated", "answers", "things she can't do yet, asked more than once (self-enablement)", "person",
          _gaps, acts="watch", covers=("flow:tools", "check:capability_gaps", "action:gap")),
     Loop("answers.slow", "answers", "share of answers over 25 seconds", "person", _slow, floor=0.10, min_n=20, covers=("flow:talk", "store:traces")),
+    Loop("models.router_shadow", "models", "her own router's top five holding the tool she called (in the shadow)",
+         "person", _router_shadow, better="higher", acts="watch", min_n=20,
+         files=("core/model_forge.py", "core/turn_trace.py"), covers=("flow:tools",)),
     Loop("answers.model_down", "answers", "the model not answering, or garbled", "person",
          _count_of(("model_down", "garbled")), floor=0, covers=("flow:talk", "flow:pc")),
     Loop("answers.undo_soon", "answers", "what she did, undone right away, per 100 turns", "person",

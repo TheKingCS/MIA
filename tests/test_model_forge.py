@@ -103,3 +103,24 @@ def test_opportunities_are_slipping_loops_a_model_could_move(tmp_path):
     assert [o["loop"] for o in found] == ["inbox.reading", "answers.no_tool"]
     assert found[1]["assigned"] == ["tiny"] and found[0]["assigned"] == []
     assert [c["name"] for c in mf.assigned_to("project:P-0001", tmp_path)] == ["tiny"]
+
+
+def test_the_shadow_notes_the_routers_picks_and_never_gets_in_the_way(tmp_path):
+    """With a router saved, shadow_picks names its top tools (using the domains the request names); with none, or
+    when anything fails, it's empty. shadow_record scores it only on turns where a tool was called."""
+    mf.forge_router(TOOLS, HELD_OUT, name="router", folder=tmp_path, settings=((300, 4.0, 1e-4),))
+    named = SimpleNamespace(named_domains=lambda prompt, context: set())
+    context = SimpleNamespace(assistant_actions=named)
+    picks = mf.shadow_picks(context, "I got eggs from the hens", folder=tmp_path / "router")
+    assert picks[0] == "log_eggs" and len(picks) == 3
+    assert mf.shadow_router(tmp_path / "router") is mf.shadow_router(tmp_path / "router")  # loaded once
+    assert mf.shadow_picks(context, "eggs", folder=tmp_path / "none") == []
+    broken = SimpleNamespace(assistant_actions=SimpleNamespace(named_domains=None))  # calling it fails
+    assert mf.shadow_picks(broken, "eggs", folder=tmp_path / "router") == []
+    traces = [{"shadow": ["log_eggs", "add_expense"], "tools_called": ["log_eggs"]},
+              {"shadow": ["add_expense", "log_eggs"], "tools_called": ["log_eggs"]},
+              {"shadow": ["get_weather"], "tools_called": ["add_expense"]},
+              {"shadow": ["get_weather"], "tools_called": []},  # no tool called: not judged
+              {"tools_called": ["log_eggs"]}]  # before the router: not judged
+    assert mf.shadow_record(traces) == {"turns": 3, "top1": 0.333, "top5": 0.667}
+    assert mf.shadow_record([]) == {"turns": 0, "top1": None, "top5": None}

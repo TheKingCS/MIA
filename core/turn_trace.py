@@ -7,7 +7,8 @@ One line per Assistant turn: how MIA got to what she said (DEC-0067, choice
 docs/PERSONALITY_AND_ECOSYSTEM_AUDIT.md). The route that answered (a fixed
 reply, a plain-word command, a question plan, the model), what was asked and
 said, the tools offered and called, the memories used, which model and which
-computer answered, and how long it took.
+computer answered, and how long it took. And the shadow: what MIA's own
+router would have offered (core/model_forge.py, DEC-0106), tool names only.
 
 The Fix-It Log keeps where she stumbled; this keeps every turn, so "why did
 she answer like that?" has an answer, and the conversation corpus and Zac's
@@ -82,6 +83,9 @@ def record(context, conversation, prompt: str, turn, seconds: float, surface: st
         llm = getattr(context, "llm", None)
         backend = getattr(llm, "backend", None) if llm is not None else None
         reply = " ".join(getattr(turn, "replies", []) or [])
+        from core.model_forge import shadow_picks
+
+        shadow = shadow_picks(context, prompt or "")
         traces.add({
             "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "conversation": getattr(conversation, "conversation_id", ""),
@@ -98,6 +102,7 @@ def record(context, conversation, prompt: str, turn, seconds: float, surface: st
             "where": getattr(llm, "level", "") if llm is not None else "",
             "model_answered": bool(getattr(turn, "llm_available", True)),
             "seconds": round(seconds, 2),
+            **({"shadow": shadow} if shadow else {}),
         })
     except Exception:  # a trace is never in the way of an answer
         log.exception("Couldn't trace this turn")

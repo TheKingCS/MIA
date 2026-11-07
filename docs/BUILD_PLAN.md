@@ -186,8 +186,9 @@ first. Each is a step below.
     top five; its card in `data/models/router/`. Not in use. (a) ✅ the names of her records as features
     (`named_domains`): level on the scoring half, 80% and 95%. (b) ✅ each model assigned to an issue or project:
     the playbook of five kinds (router, classifier, extractor, forecaster, scorer) and the loops each could move;
-    `python -m tools.model_forge needs`. Next: (c) run the router in the shadow on new requests, the Fix-It Log's
-    misses first, and keep its record; (d) the next kind, likely the classifier for unwelcome messages or the
+    `python -m tools.model_forge needs`. (c) ✅ the router in the shadow: every traced turn notes its top five
+    (tool names only, about 1 ms), and the `models.router_shadow` loop watches how often the tool she called is
+    in them (judged from 20 turns). Next: (d) the next kind, likely the classifier for unwelcome messages or the
     extractor for documents read wrong, whichever loop slips first; (e) Night School's self-assessment names a
     forge opportunity when one exists; (f) fine-tuning on the PC's GPU once the corpus is big enough.
     🧑 *Zac approves any model going into use.*

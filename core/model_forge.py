@@ -43,11 +43,13 @@ extractor for documents read wrong, a forecaster for numbers she guesses, a scor
 and each model's card names what it `serves`. So a model is judged by the issue it was made for: its loop has to
 get better, not only its test score.
 
-**Nothing uses it yet.** It isn't wired into her answers: the keyword
-router was tuned on these same requests, so beating it here proves
-nothing. The next stage runs it in the shadow on new requests (the Fix-It
-Log's misses first), and it goes in only when it wins there and Zac
-approves.
+**In the shadow, never in charge** (`shadow_picks()`, `shadow_record()`):
+each traced turn notes the router's top five beside what the keyword
+router offered and the tool she called (core/turn_trace.py), tool names
+only. The keyword router was tuned on the corpus, so the corpus can't
+show which is better; new requests can. The `models.router_shadow` loop
+watches how often the tool she called is in the router's top five. It
+goes into use only when it wins there and Zac approves.
 """
 
 from __future__ import annotations
@@ -344,3 +346,50 @@ def opportunities(rows: list[dict], folder: Path = MODELS) -> list[dict]:
                               for s in kinds],
                     "assigned": [c["name"] for c in assigned_to(f"loop:{row['id']}", folder)]})
     return sorted(out, key=lambda o: o["state"] != "below")
+
+
+# ------------------------------------------------------------------ the shadow
+
+_LOADED: dict = {}  # folder -> (the weights file's time, the router)
+
+
+def shadow_router(folder: Path = MODELS / "router") -> Optional[Router]:
+    """The saved router, loaded once and again only when it's retrained; None when there isn't one (or it won't
+    read)."""
+    try:
+        stamp = (Path(folder) / "weights.npz").stat().st_mtime
+    except OSError:
+        return None
+    cached = _LOADED.get(str(folder))
+    if cached and cached[0] == stamp:
+        return cached[1]
+    try:
+        model = Router.load(folder)
+    except (OSError, ValueError, KeyError):
+        return None
+    _LOADED[str(folder)] = (stamp, model)
+    return model
+
+
+def shadow_picks(context, prompt: str, top: int = 5, folder: Path = MODELS / "router") -> list[str]:
+    """What the router would offer for a request, best first, for the trace: tool names only, and [] when there's
+    no router or anything goes wrong (the shadow never gets in the way of an answer)."""
+    try:
+        model = shadow_router(folder)
+        if model is None or not (prompt or "").strip():
+            return []
+        registry = getattr(context, "assistant_actions", None)
+        named = registry.named_domains(prompt, context) if registry is not None else set()
+        return [label for label, _p in model.scores(prompt, top, sorted(named))]
+    except Exception:
+        return []
+
+
+def shadow_record(traces: list[dict]) -> dict:
+    """Pure logic. How the router did in the shadow on turns where she called a tool: how often that tool was its
+    first pick, how often in its top five, and how often the keyword router had offered it."""
+    judged = [t for t in traces if t.get("shadow") and t.get("tools_called")]
+    first = sum(1 for t in judged if t["shadow"][0] in t["tools_called"])
+    in_top = sum(1 for t in judged if set(t["shadow"]) & set(t["tools_called"]))
+    n = len(judged)
+    return {"turns": n, "top1": round(first / n, 3) if n else None, "top5": round(in_top / n, 3) if n else None}
