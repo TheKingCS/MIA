@@ -73,8 +73,9 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       quotes side by side each with `core/insurance.verdict`'s sentence, and a big Draft A Quote Request), Real Estate (the property card: its word from `core/web_screens.property_badge`,
       Rent Due amber; Rent / Cash Flow / Equity in one row), Workshop (Builds first: the bench card with Budget / Spent /
       Hours and the next step, Sell First, Best Earner per hour, a big Start A Build), Orders (the stage rail New / Building / Ready / Delivered
-      with the step `core/web_business.order_stage` says moves it on; owed amber, paid green), Inbox (each waiting item's "Goes to" line from `core/web_inbox.goes_to`).
-      Still to do per app, against its canvas artboard: Calendar, Journal, People, Classroom, Guitar,
+      with the step `core/web_business.order_stage` says moves it on; owed amber, paid green), Inbox (each waiting item's "Goes to" line from `core/web_inbox.goes_to`),
+      Calendar (one page: Due Today, Past Due, Due Soon as short lines, the month beside them on PC).
+      Still to do per app, against its canvas artboard: Journal, People, Classroom, Guitar,
       Vault, Operating, Play, Observations, the outdoors pages, Knowledge, Music, Files, Passwords, News, Look,
       Settings, Profile, Fix-It, Diagnostics; Power, Toolbox, Lab and Field Kit need web pages first (WEB_PARITY).
 - [ ] Glasses: the shared orb on `web/glasses.html`.

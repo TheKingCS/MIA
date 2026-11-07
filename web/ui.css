@@ -609,3 +609,45 @@ body.cook-live .mia-orb-button, body.cook-live .bottom-bar { display: none; }
 .inbox-goes { margin: 0; padding: 8px 10px; border-radius: var(--radius-sm); border: 1px solid rgba(var(--rgb-accent), 0.25);
   background: rgba(var(--rgb-accent), 0.06); font-size: var(--text-sm); color: var(--accent); }
 .inbox-goes-t { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); }
+
+/* ---------------------------------------------------------------- Calendar: one page (DEC-0113)
+   Lists on the left, the month on the right (stacked on the phone). Past due is amber: it needs you. */
+.cal-layout { display: grid; gap: var(--gap); grid-template-areas: "today" "past" "month" "soon"; }
+.cal-today { grid-area: today; } .cal-past { grid-area: past; } .cal-soon-panel { grid-area: soon; } .cal-month { grid-area: month; }
+@media (min-width: 1100px) {
+  .cal-layout { grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr); align-items: start;
+    grid-template-areas: "today month" "past month" "soon month" ". month"; }
+}
+.cal-month { display: grid; gap: var(--gap); min-width: 0; align-self: start; }
+.cal-panel { min-width: 0; }
+/* Rows inside a calendar panel: one line each (icon, what and when, its kind, its action). */
+.cal-panel .rows { gap: 0; }
+.cal-panel .cal-row { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto auto; align-items: center; gap: 10px;
+  padding: 8px 0; border: 0; border-top: 1px solid var(--line); border-radius: 0; background: none; box-shadow: none; }
+.cal-panel .cal-row:first-child { border-top: 0; }
+.cal-panel .cal-row .row-buttons { grid-column: auto; margin: 0; flex-wrap: nowrap; }
+.cal-panel .cal-row .chip { font-size: 11px; }
+@media (max-width: 520px) { .cal-panel .cal-row { grid-template-columns: 22px minmax(0, 1fr) auto; } .cal-panel .cal-row .cal-kind { display: none; } }
+.cal-panel .cal-row .btn { min-height: 32px; padding: 0 12px; }
+.cal-panel .cal-row.overdue { border-left: 0; }
+.cal-panel { display: grid; gap: 10px; padding: 14px; }
+.cal-panel.needs { border-color: rgba(var(--rgb-amber), 0.45); }
+.cal-panel.needs .cal-label { color: var(--attention); }
+.cal-panel-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.cal-label { margin: 0; font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-dim); }
+.cal-soon { display: grid; }
+.cal-soon-row { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 12px; align-items: baseline; padding: 7px 0;
+  border-top: 1px solid var(--line); font-size: var(--text-sm); }
+.cal-soon-row:first-child { border-top: 0; }
+.cal-when { font-family: var(--font-mono); font-size: 12px; color: var(--accent); white-space: nowrap; }
+.cal-what { overflow-wrap: anywhere; }
+.cal-app { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); white-space: nowrap; }
+.cal-nav { display: flex; justify-content: space-between; align-items: center; }
+.cal-month-name { font-weight: 600; }
+.cal-arrow { width: 36px; height: 36px; border-radius: var(--radius-sm); border: 1px solid var(--line); background: none; color: var(--text);
+  font-size: 20px; cursor: pointer; }
+.cal-arrow:hover { border-color: var(--line-strong); }
+.cal-month .cal-grid { margin-top: 0; }
+.cal-month .cal-day { min-height: 44px; }
+.cal-day.late .n { color: var(--attention); }

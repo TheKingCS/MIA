@@ -1,17 +1,16 @@
 /*
  * calendar.js — the Calendar screen (claude, 2026-10-16).
- * Renders MIA.calendar(month) (core/calendar_view.py): Past Due, Due Today,
- * Due Soon (the next two weeks, by day) and a month grid. Each item says
- * what it is and offers its own action (Done, Mark Paid...); your own
+ * Renders MIA.calendar(month) (core/calendar_view.py) as the design canvas's
+ * one page (DEC-0113): Past Due and Due Today with their actions, Due Soon as
+ * short lines, and the month with its dots beside them. Each item says what
+ * it is and offers its own action (Done, Mark Paid...); your own
  * events can be removed; Add Event proposes event.add. Formatting only.
  */
 (function () {
   "use strict";
   const { el, act, form } = MIAShell;
   const $ = (id) => document.getElementById(id);
-  const TABS = [["past_due", "Past Due"], ["today", "Due Today"], ["soon", "Due Soon"], ["month", "Month"]];
   let page = null, month = "", picked = null;
-  let tab = TABS.some(([t]) => t === location.hash.slice(1)) ? location.hash.slice(1) : "today";
 
   const btn = (label, cls, onclick) => el("button", { type: "button", class: "btn " + cls, onclick }, label);
   const section = (title, actions, ...body) =>
@@ -52,33 +51,45 @@
       }, el("span", { class: "n" }, String(d.day)),
         el("span", { class: "dots" }, (d.kinds || []).slice(0, 4).map((k) => el("i", { class: "dot k-" + k }))))));
     const day = picked && m.by_date[picked] ? m.by_date[picked] : picked ? [] : null;
-    return [section(m.label, el("div", { class: "row-buttons" },
-        btn("‹ Previous", "btn-ghost", () => go(m.prev)), btn("Next ›", "btn-ghost", () => go(m.next))), grid),
+    return [el("section", { class: "glass cal-panel" }, el("div", { class: "cal-nav" },
+        el("button", { type: "button", class: "cal-arrow", "aria-label": "Previous month", onclick: () => go(m.prev) }, "‹"),
+        el("span", { class: "cal-month-name" }, m.label),
+        el("button", { type: "button", class: "cal-arrow", "aria-label": "Next month", onclick: () => go(m.next) }, "›")), grid),
       picked ? section(longDay(picked), btn("Add Event", "btn-amber", () => addEvent(picked)),
         list(day || [], false, "Nothing on this day.")) : null];
   }
 
   async function go(m) { month = m; picked = null; page = await MIA.calendar(month); draw(); }
 
+  // The canvas's one page (DEC-0113): what's past due and due today with their actions, the month with its dots,
+  // and what's coming as short lines (when, what, which app). Tapping a day lists it under the month.
+  const shortDay = (iso) => new Date(iso + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric" });
+  function soonLine(item) {
+    return el("div", { class: "cal-soon-row" },
+      el("span", { class: "cal-when" }, shortDay(item.date) + (item.time ? " " + item.time : "")),
+      el("span", { class: "cal-what" }, item.title),
+      el("span", { class: "cal-app k-" + item.kind }, item.kind_label));
+  }
   function draw() {
-    const soonCount = page.soon.reduce((n, d) => n + d.items.length, 0);
+    const soonItems = page.soon.flatMap((d) => d.items);
     $("strip").replaceChildren(
       el("div", { class: "cell " + (page.past_due.length ? "bad" : "ok") }, el("span", { class: "n" }, page.past_due.length), el("span", { class: "t" }, "Past Due")),
       el("div", { class: "cell soon" }, el("span", { class: "n" }, page.today.length), el("span", { class: "t" }, "Today")),
-      el("div", { class: "cell ok" }, el("span", { class: "n" }, soonCount), el("span", { class: "t" }, "Next 2 Weeks")));
-    $("tabs").hidden = false;
-    $("tabs").replaceChildren(...TABS.map(([id, l]) =>
-      el("button", { type: "button", role: "tab", "aria-selected": String(id === tab),
-        onclick: () => { tab = id; history.replaceState(null, "", "#" + id); draw(); } }, l)));
-    const add = btn("Add Event", "btn-amber", () => addEvent(null));
-    let body;
-    if (tab === "past_due") body = [section("Past Due", add, list(page.past_due, true, "Nothing past due. You're caught up."))];
-    else if (tab === "today") body = [section("Due Today · " + longDay(page.as_of), add, list(page.today, false, "Nothing on today."))];
-    else if (tab === "soon") body = page.soon.length
-      ? page.soon.map((d, i) => section(d.label, i === 0 ? add : null, list(d.items, false, "")))
-      : [section("Due Soon", add, el("p", { class: "empty" }, "Nothing in the next two weeks."))];
-    else body = monthView();
-    $("panel").replaceChildren(...body.filter(Boolean));
+      el("div", { class: "cell ok" }, el("span", { class: "n" }, soonItems.length), el("span", { class: "t" }, "Next 2 Weeks")));
+    $("tabs").hidden = true;
+    const add = btn("Add Event", "btn-ghost btn-small", () => addEvent(null));
+    const lists = [
+      el("section", { class: "glass cal-panel cal-today" }, el("div", { class: "cal-panel-head" }, el("h2", { class: "cal-label" }, "Due Today"), add),
+        list(page.today, false, "Nothing on today.")),
+      page.past_due.length ? el("section", { class: "glass cal-panel cal-past needs" }, el("h2", { class: "cal-label" }, "Past Due · " + page.past_due.length),
+        list(page.past_due, true, "")) : null,
+      el("section", { class: "glass cal-panel cal-soon-panel" }, el("h2", { class: "cal-label" }, "Due Soon"),
+        soonItems.length ? el("div", { class: "cal-soon" }, soonItems.slice(0, 12).map(soonLine))
+          : el("p", { class: "empty" }, "Nothing in the next two weeks."),
+        soonItems.length > 12 ? el("p", { class: "dim" }, "+" + (soonItems.length - 12) + " more: tap a day on the month.") : null),
+    ];
+    $("panel").replaceChildren(el("div", { class: "cal-layout" },
+      ...lists.filter(Boolean), el("div", { class: "cal-month" }, ...monthView().filter(Boolean))));
   }
 
   MIAShell.start(async () => {
