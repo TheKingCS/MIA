@@ -21,7 +21,8 @@ now gets one more with pytest's words (both from the first night's failures). Th
 photos are described at night by the local vision model, so "find my photos of the creek" works, and
 near-duplicates are offered like bursts. Seven more apps work on the web (DEC-0017, `docs/WEB_PARITY.md`):
 Diagnostics (the owner's), Knowledge (the offline library), Classroom, Household, Navigation, Observations and
-Memories, each rendered and checked in headless Edge; left on the desktop only: Maps and the Pi-era tools. The reference library's flaky tests had a second cause, found and fixed: a fresh file's
+Memories, then Maps (the offline topo tiles with waypoints as pins, checked with real tiles), each rendered and
+checked in headless Edge; left on the desktop only: the Pi-era tools. The reference library's flaky tests had a second cause, found and fixed: a fresh file's
 timestamp can read a few ms ahead of the clock on Windows (1 file in 10). The phone's web view now takes and chooses photos for
 Look (it builds; not yet tried on the phone). A rating said out loud ("thumbs
 up", "that's a bad answer") works on the glasses (T-0010). A finding for goods that won't make market day.

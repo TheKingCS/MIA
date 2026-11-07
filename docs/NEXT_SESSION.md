@@ -44,8 +44,8 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 - **Working web screens** (formatting only, the look is muse's): `web/operating.html`, `web/play.html`,
   `web/news.html`, `web/council.html`, and 2026-11-06 `web/kept.html`, `web/diagnostics.html` (owner only),
   `web/knowledge.html`, `web/classroom.html`, `web/household.html`, `web/navigation.html`,
-  `web/observations.html`, `web/memories.html`. Still desktop-only: Maps (waits on offline vector maps), and the
-  Pi-era Power, Toolbox, Lab and Field Kit (DEC-0015: the Pi is a later step). Check a new page's script with
+  `web/observations.html`, `web/memories.html`, `web/maps.html` (the offline topo tiles, no map library; vector
+  tiles later). Still desktop-only: the Pi-era Power, Toolbox, Lab and Field Kit (DEC-0015: the Pi is a later step). Check a new page's script with
   `C:\Users\zacrh\Android\node\node.exe --check web/<page>.js` (a syntax error leaves the page blank). To see a page render on this PC, use
   headless Edge (no Playwright here): `msedge --headless=new --window-size=600,900 --screenshot=x.png
   "file:///C:/Users/zacrh/MIA/web/<page>.html?demo=1"`.
