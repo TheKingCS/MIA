@@ -43,10 +43,12 @@ def roles(fields: list[dict]) -> dict:
 
 
 class _Missing(Exception):
+    """Raised inside _fill when a value needs a role the record type doesn't have, so the block holding it is left out."""
     pass
 
 
 def _fill(value, filled: dict, labels: dict):
+    """Pure logic. A blueprint value with its roles filled in: a role name becomes the field it maps to ("-$role" its negation), a role inside text becomes that field's label; in a list, a block (dict) needing a missing role is dropped, anything else needing one raises _Missing."""
     if isinstance(value, str):
         if value in filled:
             if filled[value] is None:

@@ -58,6 +58,7 @@ class ChatWorker(QThread):
 
     def __init__(self, llm: LLMManager, messages: list[dict], tools: list[dict], named: Optional[str] = None,
                  context=None, prompt: str = "") -> None:
+        """Keeps one chat turn's inputs: the model, the messages, the tools, the tool the message names, and (for the tool loop) the context and the prompt."""
         super().__init__()
         self._llm = llm
         self._messages = messages
@@ -67,6 +68,7 @@ class ChatWorker(QThread):
         self._prompt = prompt
 
     def run(self) -> None:
+        """Runs the turn off the UI thread and emits result_ready: with a context, the whole tool loop (core/tool_loop.py); without, one call with tools, settled on the named tool when the model picked another."""
         from core.assistant_chat import settle_on_named_tool
 
         if self._context is not None:

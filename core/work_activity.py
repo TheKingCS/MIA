@@ -39,6 +39,7 @@ def record(who: str, action: str, task_id: str = "", detail: str = "", path: Pat
 
 
 def events(path: Path = ACTIVITY) -> list[dict]:
+    """Every event in the work activity log, oldest first; a line that doesn't read is skipped, and no file is no events."""
     try:
         lines = path.read_text(encoding="utf-8").splitlines()
     except FileNotFoundError:

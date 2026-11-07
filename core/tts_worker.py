@@ -27,12 +27,14 @@ class TTSWorker(QThread):
     """Synthesizes `text` to `output_path` and plays it back; fire-and-forget (no result signal)."""
 
     def __init__(self, voice: VoiceManager, text: str, output_path: Path) -> None:
+        """Keeps the voice manager, the text to say and where its sound goes."""
         super().__init__()
         self._voice = voice
         self._text = text
         self._output_path = output_path
 
     def run(self) -> None:
+        """Makes the speech off the UI thread and plays it (nothing when synthesis gave no file)."""
         wav_path = self._voice.synthesize(self._text, self._output_path)
         if wav_path is not None:
             self._voice.play(wav_path)

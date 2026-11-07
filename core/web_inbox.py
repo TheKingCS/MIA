@@ -27,6 +27,7 @@ SOURCES = {"phone": "From your phone", "email": "By email", "folder": "Dropped i
 
 
 def _kind(name: str) -> str:
+    """Pure logic. What kind of file an inbox item is: email for a .eml, else the kind My Files gives it (photo, document...)."""
     from core.my_files import kind_of
 
     return "email" if name.lower().endswith(".eml") else kind_of(name)
@@ -75,6 +76,7 @@ def item_card(context, item) -> dict:
 
 
 def inbox_page(context) -> dict:
+    """The Inbox screen's data: it takes in anything sent since the last look (a failed scan is logged, not raised), then the items waiting, the last 25 handled, and what each can be filed to (maintenance, projects, expense categories). Not available without an inbox."""
     inbox = getattr(context, "inbox", None)
     if inbox is None:
         return {"available": False}

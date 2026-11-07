@@ -233,12 +233,14 @@ def owner_id(context) -> str:
 
 
 def allowed(context, profile_id: str) -> bool:
+    """Whether a person may see the work dashboard: only the device owner, and never a child account."""
     from core.child_accounts import is_child
 
     return bool(profile_id) and profile_id == owner_id(context) and not is_child(context, profile_id)
 
 
 def page(context, query: str = "", tasks_dir=tasks_mod.TASKS_DIR, log=activity.ACTIVITY) -> dict:
+    """The work dashboard's data: every task (filtered by the query) with its loop steps done, its reviews and agents, and the activity log; a broken agent registry still shows the work. Not available without a tasks folder."""
     if not tasks_dir.exists():
         return {"available": False}
     tasks = tasks_mod.load(tasks_dir)

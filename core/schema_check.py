@@ -30,6 +30,7 @@ _TYPES = {
 
 
 def load(name: str) -> dict:
+    """A JSON schema from docs/schema by file name."""
     return json.loads((SCHEMA_DIR / name).read_text(encoding="utf-8"))
 
 

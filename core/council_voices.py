@@ -58,6 +58,7 @@ def allowed(member: dict, voice: str) -> str:
 
 
 def _members() -> dict:
+    """The council's members (core.council), imported late so this module loads without it."""
     from core.council import members
 
     return members()

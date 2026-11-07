@@ -49,6 +49,7 @@ def done_steps(task_id: str, path=activity.ACTIVITY) -> list[str]:
 
 
 def proposal_id(task) -> str:
+    """Pure logic. The lab proposal a task came from (its branch after lab/), or "" when it didn't."""
     return task.branch[len("lab/"):] if task.branch.startswith("lab/") else ""
 
 

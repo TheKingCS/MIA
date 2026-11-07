@@ -36,6 +36,7 @@ _BYTES_PER_MB = 1024 ** 2
 
 @dataclass
 class SystemHealthSnapshot:
+    """The computer's health at one moment: CPU and memory use, disk use, temperature (None where it can't be read) and network traffic since boot."""
     cpu_percent: float
     memory_percent: float
     memory_used_gb: float

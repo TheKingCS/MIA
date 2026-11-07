@@ -65,6 +65,7 @@ def canonical(unit: str) -> str:
 
 
 def _singular(word: str) -> str:
+    """Pure logic. A unit or item word without its plural (loaves to loaf, boxes to box, berries to berry, cups to cup); a word that isn't plural comes back as it is."""
     irregular = {"loaves": "loaf", "halves": "half", "leaves": "leaf", "knives": "knife", "shelves": "shelf"}
     if word in irregular:
         return irregular[word]
@@ -129,6 +130,7 @@ def amount_text(quantity: float, unit: str) -> str:
 
 
 def _plural(word: str) -> str:
+    """Pure logic. A unit or item word's plural (loaf to loaves, knife to knives, box to boxes, berry to berries, cup to cups)."""
     if word in ("loaf", "half", "leaf", "shelf"):
         return word[:-1] + "ves"
     if word == "knife":

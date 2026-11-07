@@ -122,4 +122,5 @@ def receipts(context, limit: int = 15) -> list[dict]:
 
 
 def find(context, receipt_id: str) -> Optional[dict]:
+    """A scanned receipt by id, among the 200 most recent, or None."""
     return next((r for r in receipts(context, limit=200) if r["id"] == receipt_id), None)

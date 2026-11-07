@@ -25,6 +25,7 @@ _BULLET = re.compile(r"^\s*(?:[-*•]|\d+[.)])\s+", re.MULTILINE)
 
 
 def strip_markdown(text: str) -> str:
+    """Pure logic. Text without markdown: no rules or heading marks, bold, italics and code kept as plain words, * lists as - lists, blank runs at most one line."""
     out = _RULE.sub("", text or "")
     out = _HEADING.sub("", out)
     out = _BOLD.sub(r"\2", out)
@@ -35,6 +36,7 @@ def strip_markdown(text: str) -> str:
 
 
 def for_speech(text: str) -> str:
+    """Pure logic. Text as something to say aloud: markdown and bullets gone, its lines joined as sentences (a full stop added where a line has none)."""
     lines = [ln for ln in (_BULLET.sub("", line).strip() for line in strip_markdown(text).splitlines()) if ln]
     if len(lines) <= 1:
         return lines[0] if lines else ""

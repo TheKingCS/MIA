@@ -53,6 +53,7 @@ ALIASES = {
 
 
 def _clean(text: str) -> str:
+    """Pure logic. A spoken command lowercased, apostrophes straightened, spacing collapsed, FILLER words ("um", "hey MIA"...) removed and end punctuation trimmed."""
     text = " ".join(str(text or "").lower().replace("’", "'").split())
     return FILLER.sub("", text).strip(" .!?")
 

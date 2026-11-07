@@ -96,6 +96,7 @@ def remember(context, mode: str) -> None:
 
 
 def remembered(context) -> list[str]:
+    """The support choices this person asked MIA to remember (their own setting); [] without a config."""
     if context is None or getattr(context, "config", None) is None:
         return []
     return list(person_settings.get(context, "assistant.support_choices", []) or [])

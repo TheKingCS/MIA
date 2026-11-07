@@ -68,6 +68,7 @@ def skill_of(task) -> str:
 
 
 def provider_of(who: str) -> str:
+    """Pure logic. The provider in a "who" like "claude (anthropic)": the part in the last parentheses, else the whole name."""
     return who.rsplit("(", 1)[-1].rstrip(")") if who.endswith(")") else who
 
 

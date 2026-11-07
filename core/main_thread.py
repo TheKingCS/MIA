@@ -23,6 +23,7 @@ import threading
 
 
 def publish(context, event_name: str, **kwargs) -> None:
+    """Publishes an event on the main (Qt) thread: directly when already there or with no hand-off available, else handed over through context.main_thread_call, since the event bus isn't thread-safe and subscribers touch widgets."""
     events = getattr(context, "events", None)
     if events is None:
         return
@@ -38,6 +39,7 @@ _READ_ONLY_PREFIXES = ("get_", "list_", "search_", "check_", "what_", "find_", "
 
 
 def changes_records(action_name: str) -> bool:
+    """Pure logic. Whether a tool may change records: every tool except the read-only ones (get_, list_, search_, show_...)."""
     return not action_name.startswith(_READ_ONLY_PREFIXES)
 
 

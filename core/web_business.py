@@ -16,12 +16,14 @@ from typing import Optional
 
 
 def _money(x) -> str:
+    """An amount in the person's currency (core.region.money)."""
     from core.region import money
 
     return money(x)
 
 
 def business_page(context, today: Optional[date] = None) -> dict:
+    """The Business screen's data: customers, quotes (with their figures) and orders, each with its customer, the build or recipe it's for, its revenue entry and its form, plus the craft section (builds and recipes). Not available without a business book."""
     from core.business_actions import CUSTOMER, ORDER, QUOTE, quote_figures
     from core.record_actions import record_form
     from core.web_craft import craft_section

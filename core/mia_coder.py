@@ -67,6 +67,7 @@ def files_of(task_text: str) -> list[str]:
 
 
 def _ollama(prompt: str, schema: dict) -> str:
+    """One request to the local coder model: the prompt, its answer held to a JSON schema, near-zero temperature and a 32k context; up to 20 minutes. Returns the response text."""
     import urllib.request
 
     body = json.dumps({"model": MODEL, "prompt": prompt, "stream": False, "format": schema,
@@ -78,6 +79,7 @@ def _ollama(prompt: str, schema: dict) -> str:
 
 
 def _squash(line: str) -> str:
+    """Pure logic. A line with its spacing collapsed, to compare lines whose only difference is whitespace."""
     return " ".join(line.split())
 
 

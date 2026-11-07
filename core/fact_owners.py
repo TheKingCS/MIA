@@ -21,6 +21,7 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class Owner:
+    """Who owns one fact: the fact, the module that keeps it, and the function or field everything else must read it through (one source of truth)."""
     fact: str
     store: str  # the module that owns it
     read: str  # the function (or field) everything else reads it through

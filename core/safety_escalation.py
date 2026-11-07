@@ -53,6 +53,7 @@ def alert_text(child_name: str, when: datetime) -> tuple[str, str]:
 
 
 def _personal_log(context, profile_id: str):
+    """The history kept in a person's own folder (where a safety record goes, never the household's), or None without personal data. Works on a phone view too (through its base context)."""
     from core.life_events import PersonalLifeEventLog
 
     personal = getattr(context, "personal_data", None) or getattr(getattr(context, "_base", None),
@@ -63,6 +64,7 @@ def _personal_log(context, profile_id: str):
 
 
 def _guardian_notifications(context, guardian_id: str):
+    """A guardian's own notifications store, to alert them directly, or None without personal data."""
     personal = getattr(context, "personal_data", None) or getattr(getattr(context, "_base", None),
                                                                  "personal_data", None)
     if personal is None:

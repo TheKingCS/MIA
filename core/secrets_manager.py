@@ -50,6 +50,7 @@ class SecretsError(Exception):
 
 
 def _derive_key(passphrase: str, salt: bytes) -> bytes:
+    """The vault's encryption key from a passphrase and salt: PBKDF2-HMAC-SHA256, 32 bytes, _PBKDF2_ITERATIONS rounds, urlsafe base64 as Fernet wants it."""
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
         length=32,

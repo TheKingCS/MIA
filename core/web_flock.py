@@ -16,12 +16,14 @@ from typing import Optional
 
 
 def _money(x) -> str:
+    """An amount in the person's currency (core.region.money)."""
     from core.region import money
 
     return money(x)
 
 
 def flock_page(context, today: Optional[date] = None) -> dict:
+    """The Flock screen's data: the birds and their entries said in words, the figures (eggs, feed, costs), the week's series, what's kept and how fresh, and the recipes, jobs and ledger entries it touches, with its forms. Not available without a flock."""
     from core.flock import figures, week_series
     from core.flock_actions import FLOCK, USE_SAID, _entry_said
     from core.goods import freshness, lots

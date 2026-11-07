@@ -93,6 +93,7 @@ def safety_reply(trusted_contact: Optional[str] = None, where: Optional[Region] 
 
 
 def trusted_contact_from(context) -> Optional[str]:
+    """The person's own trusted contact for a crisis (their setting assistant.safety.trusted_contact), or None when they haven't set one."""
     from core import person_settings  # each person's own contact (accounts, 2026-10-01)
 
     return person_settings.get(context, "assistant.safety.trusted_contact", None) or None

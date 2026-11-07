@@ -36,6 +36,7 @@ NOT_SET_UP = ("Their work dungeon isn't set up in MIA yet (Apps → The Dungeon:
 
 
 def _recent_user_text(conversation, prompt: str, turns: int = 3) -> str:
+    """Pure logic. What the person just said and their last few messages before it, as one text, so a request spread across turns is still recognised."""
     said = [prompt]
     if conversation is not None:
         said += [m.content for m in reversed(conversation.messages or []) if m.role == "user"][:turns]

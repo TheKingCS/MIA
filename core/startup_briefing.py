@@ -50,6 +50,7 @@ def greeting_for_hour(hour: int) -> str:
 
 
 def _join_with_and(items: list[str]) -> str:
+    """Pure logic. Items as a spoken list: "a", "a and b", "a, b, and c"."""
     if len(items) == 1:
         return items[0]
     if len(items) == 2:

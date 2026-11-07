@@ -35,10 +35,12 @@ class GenerateWorker(QThread):
     result_ready = Signal(object)  # Optional[str]
 
     def __init__(self, llm: LLMManager, prompt: str) -> None:
+        """Keeps the model and the prompt."""
         super().__init__()
         self._llm = llm
         self._prompt = prompt
 
     def run(self) -> None:
+        """Generates the reply off the UI thread and emits result_ready with it (None when the model gave nothing)."""
         reply: Optional[str] = self._llm.generate(self._prompt)
         self.result_ready.emit(reply)

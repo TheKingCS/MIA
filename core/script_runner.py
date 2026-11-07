@@ -75,6 +75,7 @@ def find_bash() -> str:
 
 
 def _interpreter_command(interpreter: str, script_path: Path) -> list[str]:
+    """The command that runs a script: this Python for python, else the bash MIA finds (Git Bash on Windows)."""
     if interpreter == "python":
         return [sys.executable, str(script_path)]
     return [find_bash(), str(script_path)]
@@ -155,4 +156,5 @@ def terminate_process_tree(process: subprocess.Popen) -> None:
 
 
 def cleanup_script_file(script_path: Path) -> None:
+    """Deletes a script's temporary file (fine if it's already gone)."""
     script_path.unlink(missing_ok=True)

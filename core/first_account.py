@@ -27,6 +27,7 @@ MIN_PASSWORD = 6
 
 
 def _placeholders(profiles) -> list:
+    """The profiles that are only placeholders: no password and no email (made before sign-in by email existed)."""
     return [p for p in profiles.list_profiles() if not p.has_password and not p.email]
 
 

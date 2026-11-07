@@ -23,6 +23,7 @@ DAY = 6  # Sunday (Monday is 0)
 
 
 def _ago(days: int, now: Optional[datetime] = None) -> str:
+    """Pure logic. The ISO time some days before now (UTC)."""
     return ((now or datetime.now(timezone.utc)) - timedelta(days=days)).isoformat(timespec="seconds")
 
 
@@ -83,6 +84,7 @@ def report(now: Optional[datetime] = None) -> Optional[str]:
 
 
 def _owner(context) -> Optional[str]:
+    """The device owner: the first profile created, or None with no profiles."""
     profiles = getattr(context, "profiles", None)
     listed = profiles.list_profiles() if profiles is not None else []
     return sorted(listed, key=lambda p: p.created_at or "")[0].profile_id if listed else None

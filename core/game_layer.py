@@ -22,12 +22,14 @@ SHOP_IDEAS = (
 
 
 def _person(context):
+    """Whose rewards these are (game_actions' person: the context's own, else the signed-in profile)."""
     from core.game_actions import _person as person
 
     return person(context)
 
 
 def shop_page(context) -> dict:
+    """The reward shop's data: the person's balance, and each reward with its cost, note, how often bought, whether it's open and affordable now and how much more is needed, with the shop's forms. Not available without a shop."""
     from core.game_actions import forms
     from core.reward_shop import balance
 

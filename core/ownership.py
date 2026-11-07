@@ -42,10 +42,12 @@ def household_people(context) -> list:
 
 
 def owner_choices(context) -> list[tuple[str, Optional[str]]]:
+    """Pure logic over the household. Who a thing can belong to: Shared (None) first, then each person in the household."""
     return [(SHARED_LABEL, None)] + [(p.name, p.profile_id) for p in household_people(context)]
 
 
 def owner_name(context, owner_id: Optional[str]) -> Optional[str]:
+    """The name of whoever owns a thing, or None when it's shared or the person isn't known."""
     if not owner_id:
         return None
     profiles = getattr(context, "profiles", None)

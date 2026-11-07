@@ -40,6 +40,7 @@ _RESERVED_MODULE_IDS = {"base"}
 
 @dataclass
 class ValidationResult:
+    """Whether a module passed validation, with its errors and warnings, and the id and display name it would install as."""
     passed: bool
     errors: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)

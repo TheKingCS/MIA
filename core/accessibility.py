@@ -31,6 +31,7 @@ _FONT_SIZE = re.compile(r"(font-size\s*:\s*)(\d+(?:\.\d+)?)(px|pt)", re.IGNORECA
 
 
 def text_scale(size_id: str) -> float:
+    """Pure logic. How much a text size scales the page (the default size's scale for an id that isn't one)."""
     return TEXT_SIZES.get(size_id, TEXT_SIZES[DEFAULT_SIZE])[1]
 
 

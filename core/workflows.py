@@ -155,6 +155,7 @@ def check(spec: dict, context=None, child: bool = False) -> list[str]:
 
 
 def _flat(steps) -> list[dict]:
+    """Pure logic. A workflow's steps, nested then-steps included, as one flat list."""
     out = []
     for s in steps if isinstance(steps, list) else []:
         if isinstance(s, dict):
@@ -223,6 +224,7 @@ def due(spec: dict, last_run: str, now: datetime) -> bool:
 
 
 def _records(context, source: str, within: Optional[int], now: datetime) -> tuple[list[dict], dict]:
+    """A workflow's records and their fields from its source: history:<type> (life events) or a creation of hers (its sets), only those within the days given."""
     from core import creation_sources
 
     if source.startswith("history:"):

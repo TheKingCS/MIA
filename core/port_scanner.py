@@ -31,6 +31,7 @@ COMMON_PORTS: tuple[int, ...] = (21, 22, 23, 25, 53, 80, 110, 143, 443, 445, 330
 
 @dataclass
 class PortScanResult:
+    """A port scan of one host: the ports found open, how many were tried, and an error when the host couldn't be resolved (then nothing was scanned)."""
     host: str
     open_ports: list[int] = field(default_factory=list)
     scanned_count: int = 0

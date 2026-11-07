@@ -13,10 +13,12 @@ from core.today import describe, today_items
 
 
 def _action_get_today(context, arguments: dict) -> str:
+    """Tool get_today: everything that needs the person today, across every app (core.today)."""
     return describe(today_items(context))
 
 
 def register_today_actions(registry: AssistantActionRegistry) -> None:
+    """Registers get_today (domain today), for "what's on today"."""
     registry.register(AssistantAction(
         name="get_today", domain="today",
         description=("Everything that needs the user today across all apps: overdue things, today's events, bills, "

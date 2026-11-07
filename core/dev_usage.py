@@ -34,6 +34,7 @@ GUESS = timedelta(minutes=30)  # when a limit doesn't say when it lifts: look ag
 
 
 def _store() -> DevStore:
+    """The provider usage log's append-only store (data/dev/usage)."""
     return DevStore(DEV_DATA / "usage")
 
 
@@ -67,6 +68,7 @@ def reset_at(text: str, now: datetime) -> Optional[datetime]:
 
 def record(provider: str, purpose: str, seconds: float, sent: int, received: int, error: str = "",
            task: str = "", store: Optional[DevStore] = None, now: Optional[datetime] = None) -> dict:
+    """Keeps one call to a provider: when, which, what for, the task, seconds, tokens sent and received, and how it ended (ok, a limit with when it lifts, said or guessed, or an error with its last 200 characters). Returns the entry."""
     now = now or datetime.now(timezone.utc)
     ended = "ok" if not error else outcome(error)
     entry = {"at": now.isoformat(timespec="seconds"), "provider": provider, "purpose": purpose, "task": task,

@@ -19,6 +19,7 @@ from typing import Optional
 
 @dataclass
 class SubnetInfo:
+    """An IPv4 subnet worked out: its network and broadcast addresses, netmask and prefix, how many addresses and usable hosts, and the first and last usable (None when there are none)."""
     network_address: str
     broadcast_address: str
     netmask: str

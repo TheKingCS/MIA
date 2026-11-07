@@ -33,7 +33,9 @@ log = get_logger(__name__)
 
 
 class EventBus:
+    """Synchronous publish/subscribe between modules: a callback list per event name; publish calls each in order, and one that raises is logged without stopping the rest. Not thread-safe, by design."""
     def __init__(self) -> None:
+        """Starts with no subscribers."""
         self._subscribers: dict[str, list[Callable[..., None]]] = defaultdict(list)
 
     def subscribe(self, event_name: str, callback: Callable[..., None]) -> None:

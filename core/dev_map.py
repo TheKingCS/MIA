@@ -45,6 +45,7 @@ NAMED = re.compile(r"`((?:core|tools|server|gui|web)/[\w./-]+\.(?:py|js|html|css
 
 
 def _files(root: Path, folder: str, suffixes: tuple[str, ...]) -> list[Path]:
+    """Every file under a folder with one of these suffixes, skipping the SKIP folders (caches, venvs...); [] when the folder doesn't exist."""
     base = root / folder
     if not base.exists():
         return []
@@ -52,6 +53,7 @@ def _files(root: Path, folder: str, suffixes: tuple[str, ...]) -> list[Path]:
 
 
 def _imports(path: Path) -> list[tuple[str, int]]:
+    """Pure logic over one file. Each absolute import in it, with its line ([] when it doesn't parse); relative imports are left out."""
     try:
         tree = ast.parse(path.read_text(encoding="utf-8", errors="replace"))
     except SyntaxError:

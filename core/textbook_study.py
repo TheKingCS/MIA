@@ -88,4 +88,5 @@ def study_block(context, conversation, prompt: str) -> str:
 
 
 def is_study_mode(mode: str) -> bool:
+    """Pure logic. Whether a reading mode is one of the study ones (study or quiz)."""
     return mode in (STUDY, QUIZ)

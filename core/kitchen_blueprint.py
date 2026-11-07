@@ -22,6 +22,7 @@ from typing import Optional
 
 
 def _num(x) -> float:
+    """Pure logic. A number from anything (None, blank or unreadable as 0)."""
     try:
         return float(x or 0)
     except (TypeError, ValueError):
@@ -60,6 +61,7 @@ def check(recipe, pantry: list, batches: float = 1.0) -> list[dict]:
 
 
 def _amount(x: float, unit: str) -> str:
+    """Pure logic. An amount and its unit as text ("2 cups"; just the number with no unit)."""
     return f"{x:g} {unit}".strip()
 
 

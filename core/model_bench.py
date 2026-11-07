@@ -65,6 +65,7 @@ def score(case: dict, called: list, arguments: Optional[dict], destructive: set)
 
 
 def load_cases(path: Optional[Path] = None) -> dict:
+    """The benchmark cases (the default cases file, or the one given)."""
     return json.loads(Path(path or CASES_FILE).read_text(encoding="utf-8"))
 
 
@@ -137,6 +138,7 @@ def run(backend, bench: dict, count: Optional[int] = None, timeout: float = 300.
 
 
 def in_code(results: list) -> int:
+    """Pure logic. How many results MIA's code answered directly, with no model."""
     return sum(1 for r in results if r.get("direct"))
 
 

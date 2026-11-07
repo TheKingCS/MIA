@@ -26,12 +26,14 @@ _MIN_RECOMMENDED_LENGTH = 8
 
 @dataclass
 class PasswordStrength:
+    """How strong a password is: its entropy in bits, a rating from Very Weak to Very Strong, and what's wrong with it."""
     entropy_bits: float
     rating: str  # "Very Weak" | "Weak" | "Moderate" | "Strong" | "Very Strong"
     warnings: list[str] = field(default_factory=list)
 
 
 def assess_password(password: str) -> PasswordStrength:
+    """Pure logic. Rates a password by its entropy (length times the character sets it uses) with warnings: empty, short, one kind of character, or a common password (always Very Weak, whatever its entropy, since attackers try those first)."""
     if not password:
         return PasswordStrength(entropy_bits=0.0, rating="Very Weak", warnings=["Password is empty."])
 

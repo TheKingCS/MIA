@@ -44,6 +44,7 @@ _HEX_LENGTH_CANDIDATES: dict[int, list[str]] = {
 
 
 def identify_hash(value: str) -> list[str]:
+    """Pure logic. What kind of hash a value may be: the one its prefix names ($2b$ is bcrypt...), else the candidates for a hex string of its length; [] for anything else."""
     value = value.strip()
     if not value:
         return []

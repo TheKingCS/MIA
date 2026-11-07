@@ -57,12 +57,14 @@ class UpdateError(Exception):
 
 @dataclass
 class UpdateManifest:
+    """What an update package says about itself: what it does and the version it brings MIA to."""
     description: str
     target_version: str
 
 
 @dataclass
 class UpdateResult:
+    """How an update went: whether it passed, errors and warnings, the files it changed, and whether it was committed to git."""
     passed: bool
     errors: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)

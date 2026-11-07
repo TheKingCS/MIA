@@ -143,6 +143,7 @@ def gate(asker: str, target: str, question: str, messages: list[dict], budget_le
 
 
 def _plain(messages: list[dict]) -> str:
+    """Pure logic. The council's messages as plain lines, [who] text, each cut to 600 characters."""
     return "\n".join(f"[{m['who']}] {m['text'][:600]}" for m in messages)
 
 
@@ -184,6 +185,7 @@ def ready_members() -> set:
 
 
 def _local_model(prompt: str) -> str:
+    """Asks the local model (Ollama) for a summary, through work_review's provider call."""
     from core.work_review import ask_provider
 
     return ask_provider("ollama", prompt, purpose="summary")

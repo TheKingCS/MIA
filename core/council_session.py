@@ -51,6 +51,7 @@ _lock = threading.Lock()
 
 
 def active(profile_id: str) -> bool:
+    """Whether this person has a council session open."""
     with _lock:
         return profile_id in _sessions
 
@@ -140,6 +141,7 @@ def hear(context, profile_id: str, text: str, run=None) -> Optional[dict]:
 
 
 def _run_in_background(profile_id: str, message: dict) -> None:
+    """Runs one council turn on a daemon thread, saying each member's answer and the summary to the person's glasses as it arrives rather than after the whole turn."""
     def work() -> None:
         from core import council, council_floor
         from core.glasses_feed import council_said

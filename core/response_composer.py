@@ -58,11 +58,13 @@ REWRITE_PROMPT = (
 
 @dataclass
 class Composed:
+    """An answer fitted to a surface: what she says or shows there, and the whole answer kept in the conversation."""
     say: str  # what she says or shows on this surface
     full: str  # the whole answer, kept in the conversation
 
 
 def words(text: str) -> int:
+    """Pure logic. How many words a text has."""
     return len((text or "").split())
 
 

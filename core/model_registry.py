@@ -35,6 +35,7 @@ _TIMEOUT = 3.0
 
 
 def _get(url: str, payload: Optional[dict] = None, timeout: float = _TIMEOUT) -> dict:
+    """A JSON request to the local model runtime (POST when there's a payload, else GET); returns the reply as a dict ({} for an empty body)."""
     data = json.dumps(payload).encode() if payload is not None else None
     request = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"} if data else {})
     with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310 (a local runtime)
@@ -131,6 +132,7 @@ def assistant_info(context) -> dict:
 
 
 def _one(info: dict) -> str:
+    """Pure logic. A model said in a line: its name, family, parameters and quantization when known, and the runtime and version it runs in."""
     name = info.get("model") or "an unnamed model"
     bits = [b for b in (info.get("family") and f"{info['family']} family", info.get("parameters") and
                         f"{info['parameters']} parameters", info.get("quantization") and f"{info['quantization']} quantization")

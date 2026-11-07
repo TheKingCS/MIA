@@ -20,6 +20,7 @@ GREENHOUSE_CATEGORIES = ("Garden/Plant",)
 
 
 def grow_page(context, today: Optional[date] = None) -> dict:
+    """The Grow Lab screen's data: batches with their figures, experiments, the logger's readings with each checked against its range, and the forms; costs only for an adult. Not available without the lab."""
     from core.child_accounts import is_child
     from core.grow_actions import BATCH, EXPERIMENT
     from core.grow_lab import MEASURES, batch_figures, check_range, series_id

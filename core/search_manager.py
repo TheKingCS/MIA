@@ -52,7 +52,9 @@ class SearchResult:
 
 
 class SearchManager:
+    """Ctrl+K search: modules register a provider (a callback from a query to results); a search asks every provider and combines what they return, and a provider that raises is skipped and remembered, never breaking the search."""
     def __init__(self, context: AppContext) -> None:
+        """Starts with no providers and none failed."""
         self.context = context
         self._providers: dict[str, Callable[[str], list[SearchResult]]] = {}
         self._failed: set[str] = set()  # providers that raised since the last finished search

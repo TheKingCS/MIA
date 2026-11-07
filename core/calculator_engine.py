@@ -52,6 +52,7 @@ class CalculatorEngine:
     """Holds registered CalculatorPlugin instances, keyed by calculator_id."""
 
     def __init__(self) -> None:
+        """Starts with no calculators registered."""
         self._calculators: dict[str, CalculatorPlugin] = {}
 
     def register(self, calculator: CalculatorPlugin) -> None:
@@ -68,6 +69,7 @@ class CalculatorEngine:
         self._calculators[calculator.calculator_id] = calculator
 
     def get(self, calculator_id: str) -> CalculatorPlugin | None:
+        """The calculator with this id, or None."""
         return self._calculators.get(calculator_id)
 
     def all(self) -> list[CalculatorPlugin]:
