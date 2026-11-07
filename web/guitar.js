@@ -78,6 +78,15 @@
         : "Tell MIA when you've done it.")));
   }
 
+  // The design canvas's path screen (DEC-0113): the stage and its rail, this week against the plan, the streak and
+  // the best, what to work on next with the homework, every check of the stage (passed or open, and who verifies
+  // it; the ones MIA hears can be recorded here), then Log Practice and Tune.
+  function checkRow(c, open) {
+    const row = open && c.how.startsWith("heard") ? heardRow(open) : null;
+    return el("div", { class: "gp-check" + (c.passed ? " passed" : ""), id: "check-" + c.id },
+      el("div", { class: "gp-check-head" }, el("span", { class: "gp-what" }, c.what), el("span", { class: "gp-state" }, c.state)),
+      row ? row.querySelector(".row-buttons") : null, row ? row.querySelector("p.dim") : null);
+  }
   function paint(data) {
     const s = data.stats;
     document.querySelector(".hero h1").textContent = data.name || "Learning";
@@ -86,16 +95,37 @@
       $("panel").replaceChildren(el("section", { class: "glass money-section" }, el("p", {}, data.next)));
       return;
     }
-    $("guitar-sub").textContent = "Stage " + s.stage + ": " + s.stage_name;
-    const bests = Object.entries(s.bests || {}).map(([k, v]) => k.replace(/_/g, " ") + " " + v);
+    $("guitar-sub").textContent = "Learning path · Stage " + s.stage + (s.stages ? " of " + s.stages : "");
+    const plan = (s.plan.minutes_a_day || 0) * (s.plan.days_a_week || 0);
+    const best = Object.entries(s.bests || {})[0];
+    const openById = Object.fromEntries(data.open.map((c) => [c.id, c]));
+    const checks = (data.stage_checks && data.stage_checks.length) ? data.stage_checks
+      : data.open.map((c) => Object.assign({ passed: false, state: "Open" }, c));
+    const tuning = checks.find((c) => c.how === "heard_tuning" && !c.passed);
     $("panel").replaceChildren(
-      el("section", { class: "glass money-section" }, el("h2", {}, "This week"),
-        el("p", {}, s.week_days + " of " + s.plan.days_a_week + " days, " + s.week_minutes + " minutes · streak " +
-          s.streak + " · " + s.hours + " hours in all · " + s.checks_passed + " of " + s.checks + " checks passed"),
-        bests.length ? el("p", { class: "dim" }, "Bests: " + bests.join("; ")) : null,
-        el("p", {}, data.next)),
-      el("section", { class: "glass money-section" }, el("h2", {}, "Checks to pass"),
-        el("div", { class: "sync-rows" }, data.open.map((c) => c.how.startsWith("heard") ? heardRow(c) : plainRow(c)))));
+      el("section", { class: "gp-stage" },
+        el("h2", {}, "Stage " + s.stage + ": " + s.stage_name),
+        el("p", { class: "dim" }, "Understand · Plan · Practise · Verify · Next stage"),
+        s.stages ? el("div", { class: "gp-rail", role: "img", "aria-label": "Stage " + s.stage + " of " + s.stages },
+          Array.from({ length: s.stages }, (_, i) => el("span", { class: "gp-seg" + (i + 1 < s.stage ? " done" : i + 1 === s.stage ? " now" : "") }))) : null),
+      el("section", { class: "glass prop-trio gp-week", "aria-label": "This week" },
+        el("div", { class: "prop-trio-cell" }, el("span", { class: "prop-trio-t" }, "This Week"),
+          el("strong", {}, s.week_minutes + (plan ? " / " + plan : "") + " min")),
+        el("div", { class: "prop-trio-cell" }, el("span", { class: "prop-trio-t" }, "Streak"),
+          el("strong", {}, s.streak + " day" + (s.streak === 1 ? "" : "s"))),
+        el("div", { class: "prop-trio-cell" }, el("span", { class: "prop-trio-t" }, "Best"),
+          el("strong", {}, best ? String(best[1]) : "—"))),
+      el("section", { class: "glass surface-focus gp-next", "aria-label": "Work on next" },
+        el("span", { class: "gp-label" }, "Work On Next"), el("p", { class: "gp-next-text" }, data.next),
+        data.homework ? el("p", { class: "dim" }, "Homework: " + data.homework) : null),
+      el("section", { class: "glass gp-checks", "aria-label": "Checks to pass" },
+        el("h2", { class: "gp-label" }, "Checks To Pass · " + checks.filter((c) => c.passed).length + " of " + checks.length),
+        ...checks.map((c) => checkRow(c, openById[c.id]))),
+      el("div", { class: "gp-actions" },
+        el("button", { type: "button", class: "btn btn-big btn-green",
+          onclick: () => { location.href = "assistant.html?draft=" + encodeURIComponent("I practised " + (data.name || "") + " for  minutes."); } }, "Log Practice"),
+        tuning ? el("button", { type: "button", class: "btn btn-big quiet",
+          onclick: () => { const r = $("check-" + tuning.id); if (r) r.scrollIntoView({ behavior: "smooth", block: "center" }); } }, "Tune") : null));
   }
 
   async function load() { paint(await MIA.guitar(PATH)); }

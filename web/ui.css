@@ -711,3 +711,32 @@ body.cook-live .mia-orb-button, body.cook-live .bottom-bar { display: none; }
 .cl-subject.open { border-color: rgba(var(--rgb-accent), 0.5); }
 .cl-n { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); }
 .cl-subject-open { display: grid; gap: 8px; }
+
+/* ---------------------------------------------------------------- A learning path (Guitar) (DEC-0113)
+   The stage and its rail, the week, what's next with the homework, the stage's checks (green when passed), then
+   Log Practice and Tune. */
+.gp-stage { display: grid; gap: 6px; margin-bottom: var(--gap); }
+.gp-stage h2 { margin: 0; font-size: var(--text-2xl); text-transform: none; }
+.gp-stage p { margin: 0; font-size: var(--text-sm); }
+.gp-rail { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; margin-top: 6px; }
+.gp-seg { height: 4px; border-radius: var(--radius-pill); background: rgba(var(--rgb-line), 0.18); }
+.gp-seg.done { background: var(--ok); }
+.gp-seg.now { background: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
+.gp-week { padding: 12px 14px; margin-bottom: var(--gap); border-top: 1px solid var(--glass-line); border-bottom: 1px solid var(--glass-line); }
+.gp-label { margin: 0; font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-dim); }
+.gp-next { display: grid; gap: 6px; margin-bottom: var(--gap); }
+.gp-next .gp-label { color: var(--accent); }
+.gp-next-text { margin: 0; font-size: var(--text-lg); font-weight: 600; }
+.gp-next p.dim { margin: 0; font-size: var(--text-sm); }
+.gp-checks { display: grid; gap: 0; padding: 14px; margin-bottom: var(--gap); }
+.gp-checks .gp-label { margin-bottom: 6px; }
+.gp-check { display: grid; gap: 6px; padding: 10px 0; border-top: 1px solid var(--line); }
+.gp-check-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.gp-what { overflow-wrap: anywhere; }
+.gp-state { font-family: var(--font-mono); font-size: 11.5px; color: var(--text-dim); white-space: nowrap; }
+.gp-check.passed .gp-state { color: var(--ok); }
+.gp-check.passed .gp-what { color: var(--text-dim); }
+.gp-check p.dim { margin: 0; font-size: var(--text-sm); }
+.gp-actions { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
+@media (max-width: 520px) { .gp-check-head { flex-direction: column; gap: 2px; } .gp-state { white-space: normal; } }

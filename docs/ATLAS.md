@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1089 files, 246,448 lines; 1089 files describe themselves; 13,530 of 14,200 classes and functions are documented.
+1089 files, 246,523 lines; 1089 files describe themselves; 13,533 of 14,203 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-391 files, 114,342 lines; 6,059 of 6,148 classes and functions documented
+391 files, 114,369 lines; 6,061 of 6,150 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -402,7 +402,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 2,677 lines; 31 of 31 classes and functions documented
+2 files, 2,675 lines; 31 of 31 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -670,7 +670,7 @@
 
 ## tests/: the test suite: what each part must do
 
-363 files, 66,055 lines; 5,236 of 5,817 classes and functions documented
+363 files, 66,070 lines; 5,237 of 5,818 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -902,7 +902,7 @@
 - `tests/test_passing_mentions.py`: "Propose, you confirm" (core/passing_mentions.py): offers to record what the owner mentions in passing, made after MIA's reply and carried out only on a yes; wired through core/talk_it_out.py for every chat surface. *(2 undocumented)*
 - `tests/test_password_strength.py`: Unit tests for core.password_strength — pure computation, no dependency, no mocks needed.
 - `tests/test_password_vault.py`: Passwords (core/password_vault.py, DEC-0035): a vault only the master password (or the recovery code) opens; nothing readable on disk; it locks itself; guessing gets slower; a browser export comes in; the phone and the PC sync it still encrypted, only when they hold the same vault; and a password ne *(5 undocumented)*
-- `tests/test_paths.py`: MIA's learning paths (core/paths.py, DEC-0112): the same loop for any desire. A program for an interest with none is drafted (grounded, checked in code, kept as a draft until started); several paths run side by side, each with its own homework mission that completes from the log; statistics; and a d
+- `tests/test_paths.py`: MIA's learning paths (core/paths.py, DEC-0112): the same loop for any desire. A program for an interest with none is drafted (grounded, checked in code, kept as a draft until started); several paths run side by side, each with its own homework mission that completes from the log; statistics; a path'
 - `tests/test_pathway_manager.py`: Unit tests for core.pathway_manager. Isolates _DATA_DIR/_PATHWAYS_FILE _PROGRESS_FILE plus core.mission_manager's own file constants (Pathway tests need a real MissionManager — start_pathway() creates real Missions) into a tmp_path scratch area, same monkeypatch pattern as every other manager test f *(5 undocumented)*
 - `tests/test_pathway_tool.py`: Unit tests for modules.toolbox.tools.pathway_tool's pure functions, same style as tests/test_intent_tool.py (no Qt event loop, no fixtures). *(1 undocumented)*
 - `tests/test_pc_tools.py`: The home-PC kit (DEC-0022): the readiness check says what's missing, and the model comparison recommends the most accurate model, the faster of two that are about as accurate.
@@ -1038,7 +1038,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-72 files, 12,880 lines
+72 files, 12,915 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game

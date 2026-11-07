@@ -298,15 +298,20 @@
     // Guitar (core/guitar.py, DEC-0111): the stage, stats and open checks; a check heard from a WAV recording.
     guitar: (pathId) => demo ? Promise.resolve({ id: "guitar", name: "Guitar", stats: { started: "2026-11-02", stage: 1, stage_name: "First sounds",
         plan: { minutes_a_day: 15, days_a_week: 5 }, week_days: 3, week_minutes: 55, streak: 2, hours: 1.2,
-        checks_passed: 2, checks: 18, bests: { changes_em_am: 16 } },
+        checks_passed: 2, checks: 18, stages: 5, bests: { changes_em_am: 16 } },
       next: "Stage 1, First sounds: next is \"Play A minor so every note rings\" (play it to me and I'll listen).",
       open: [{ id: "tuned", what: "Tune all six strings; let MIA hear each one", how: "heard_tuning", chord: "" },
              { id: "am_clean", what: "Play A minor so every note rings", how: "heard_chord", chord: "Am" },
-             { id: "changes_em_am", what: "One-minute changes: E minor to A minor and back", how: "counted", chord: "" }] })
+             { id: "changes_em_am", what: "One-minute changes: E minor to A minor and back", how: "counted", chord: "" }],
+      stage_checks: [{ id: "em_clean", what: "Play E minor so every note rings", how: "heard_chord", passed: true, state: "Passed · MIA heard it" },
+             { id: "tuned", what: "Tune all six strings; let MIA hear each one", how: "heard_tuning", passed: false, state: "Open · MIA listens" },
+             { id: "am_clean", what: "Play A minor so every note rings", how: "heard_chord", passed: false, state: "Open · MIA listens" },
+             { id: "changes_em_am", what: "One-minute changes: E minor to A minor and back", how: "counted", passed: false, state: "Open · counted by you" }],
+      homework: "Practise on 5 days; Practise 75 minutes in all this week." })
       : call("GET", "/api/paths").then((all) => {
         const one = all.paths.find((p) => p.id === (pathId || "guitar")) || all.paths[0];
         return one ? { stats: one.stats, next: one.next, open: one.open.map((c) => Object.assign({ chord: c.about }, c)),
-                       id: one.id, name: one.name }
+                       id: one.id, name: one.name, stage_checks: one.stage_checks || [], homework: one.homework || "" }
           : { name: "Learning", stats: { started: false }, next: "Tell MIA what you'd like to learn.", open: [] };
       }),
     // Learning paths (core/paths.py, DEC-0112): every path started, and a check its program verifies (a recording).
