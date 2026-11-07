@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1089 files, 246,379 lines; 1089 files describe themselves; 13,528 of 14,198 classes and functions are documented.
+1089 files, 246,448 lines; 1089 files describe themselves; 13,530 of 14,200 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-391 files, 114,319 lines; 6,058 of 6,147 classes and functions documented
+391 files, 114,342 lines; 6,059 of 6,148 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -670,7 +670,7 @@
 
 ## tests/: the test suite: what each part must do
 
-363 files, 66,038 lines; 5,235 of 5,816 classes and functions documented
+363 files, 66,055 lines; 5,236 of 5,817 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -725,7 +725,7 @@
 - `tests/test_child_accounts.py`: Child accounts (core/child_accounts.py), 2026-10-01: a parent looks after a child's MIA; grown-up apps and tools say "ask a parent", the Assistant is told it's talking with a child, and the safety floor also asks the child to tell an adult. *(3 undocumented)*
 - `tests/test_chronicle.py`: The Chronicle (DEC-0028): each week (and year) told as a story from what really happened. Never made up, never a failure.
 - `tests/test_chronicle_issue.py`: The Chronicles' weekly issue (build plan step 17, core/chronicle_issue.py): told from approved series events, oldest first; captions in code with the event named; lines from the model in the characters' voices; the Story Bible's five rules checked in code; Zac's approval marks the events as told and *(3 undocumented)*
-- `tests/test_classroom_actions.py`: The Classroom's web screen (core/classroom_manager.screen) and its actions (core/classroom_actions.py). *(3 undocumented)*
+- `tests/test_classroom_actions.py`: The Classroom's web screen (core/classroom_manager.screen, with the course to continue: DEC-0113) and its actions (core/classroom_actions.py). *(3 undocumented)*
 - `tests/test_classroom_manager.py`: Unit tests for core.classroom_manager. Isolates _DATA_DIR/the three per-level file constants into a tmp_path scratch area, same pattern as tests/test_workout_manager.py. *(2 undocumented)*
 - `tests/test_classroom_module.py`: Unit tests for modules.classroom.module's pure functions, same style as tests/test_pathway_tool.py (no Qt event loop, no fixtures). *(1 undocumented)*
 - `tests/test_communication_gate.py`: Slice C, "Know when to speak" (core/communication_gate.py): every rule with a fake clock, the persisted gate with delivery and deferral, the daily checks routed through it, and a scripted day.
@@ -1038,7 +1038,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-72 files, 12,851 lines
+72 files, 12,880 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
@@ -1050,7 +1050,7 @@
 - `web/character.js`: character.js — the Character screen (claude, 2026-10-06, DEC-0017/0018, H-0013). Renders MIA.character() (core/web_progress.py): the person's level and prestige, lifetime stats, everything they've unlocked (highest rarity first) and the tally by rarity, prestige emblems, top skills and latest missio
 - `web/checkin.js`: checkin.js — the Sunday check-in (claude, 2026-10-27, DEC-0047 rule 5). Renders MIA.checkin() (core/weekly_checkin.py): last week (the story, the loop's honest score, loot, what MIA noticed, quests finished) and the week ahead, day by day (runs with projected loot, rhythms, calendar events), quests 
 - `web/chronicle.js`: chronicle.js — The Chronicle (claude, 2026-10-17, DEC-0028). Renders MIA.chronicle() (core/chronicle.py): this week's chapter, the weeks before it, and the yearly editions. Read only; formatting only.
-- `web/classroom.js`: classroom.js — the Classroom (claude, 2026-11-06). Renders MIA.classroom() (core/classroom_manager.py): each subject, its courses and their lessons, how far along each is. Adding, ticking a lesson done (its skill XP credited once) and taking things out go through actions (subject.*, course.*, lesson
+- `web/classroom.js`: classroom.js — the Classroom (claude, 2026-11-06). Renders MIA.classroom() (core/classroom_manager.py): the course to continue (the design canvas's card, DEC-0113), then each subject, its courses and their lessons, how far along each is. Adding, ticking a lesson done (its skill XP credited once) and
 - `web/compliance.js`: compliance.js — the Compliance screen (claude, 2026-10-21, DEC-0040). Renders MIA.compliance() (core/web_compliance.py): Overdue, Next 30 Days, Later, To Check and Done. Every change proposes an action (core/obligation_actions.py): add, edit, verify (the only way an obligation becomes verified), whe
 - `web/cook.js`: cook.js — cook mode (claude, 2026-11-07, DEC-0113: the design canvas's Kitchen · Cook Mode). The recipe being cooked takes the whole screen, on the Kitchen page and on a recipe's page alike: one step in large type, what this step uses, the step's own timer to start, every timer running (they keep go
 - `web/council.js`: council.js — the council from the phone (claude, 2026-11-06, build plan step 16). Renders MIA.council() (core/council.py through server/app.py): the latest messages, who's here and ready, and a box to write to them. Only the PC's owner gets an answer; anyone else sees why. Formatting only.

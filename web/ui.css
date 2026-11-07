@@ -684,3 +684,30 @@ body.cook-live .mia-orb-button, body.cook-live .bottom-bar { display: none; }
   text-transform: uppercase; color: var(--text-dim); }
 .pp-catch { margin-top: 0; }
 @media (max-width: 520px) { .pp-catch { grid-template-columns: auto minmax(0, 1fr); } .pp-catch .btn { grid-column: 1 / -1; } }
+
+/* ---------------------------------------------------------------- Classroom (DEC-0113)
+   The course to continue (progress, the next lessons to tick), then the subjects as rows that open. */
+.cl-label { margin: 0; font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-dim); }
+.cl-continue { display: grid; gap: 10px; margin-bottom: var(--gap); }
+.cl-continue .cl-label { color: var(--accent); }
+.cl-continue h2 { margin: 0; font-size: var(--text-xl); text-transform: none; }
+.cl-progress { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+.cl-count { font-family: var(--font-mono); font-size: var(--text-sm); }
+.cl-lessons { display: grid; gap: 6px; }
+.cl-lesson { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 10px; align-items: center; min-height: 44px;
+  padding: 0 10px; border-radius: var(--radius-sm); border: 1px solid var(--line); background: none; color: var(--text);
+  font: inherit; text-align: left; cursor: pointer; text-transform: none; }
+.cl-check { width: 20px; height: 20px; border-radius: 4px; border: 1px solid var(--line-strong); display: grid; place-items: center;
+  font-size: 12px; color: var(--ok); }
+.cl-lesson.done { color: var(--text-dim); }
+.cl-lesson.done .cl-check { border-color: var(--ok); background: rgba(var(--rgb-ok), 0.16); }
+.cl-xp { font-family: var(--font-mono); font-size: 12px; color: var(--win); white-space: nowrap; }
+.cl-lesson.done .cl-xp { color: var(--ok); }
+.cl-subjects-label { margin-bottom: 8px; }
+.cl-subjects { display: grid; gap: 8px; margin-bottom: var(--gap); }
+.cl-subject { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; min-height: 52px;
+  padding: 0 14px; color: var(--text); font: inherit; text-align: left; cursor: pointer; text-transform: none; }
+.cl-subject.open { border-color: rgba(var(--rgb-accent), 0.5); }
+.cl-n { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); }
+.cl-subject-open { display: grid; gap: 8px; }
