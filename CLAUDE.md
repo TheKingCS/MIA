@@ -139,11 +139,12 @@ from and merged with the defaults on load
 keys without wiping user settings, and lets a user factory-reset by
 deleting `config/config.json`.
 
-### Built for anyone; each person's data is their own
+### For Zac's household; each person's data is their own
 
-MIA is perfected for personal use but designed for any person or
-household, not one owner (2026-10-01 decision; the youth/school idea is
-parked in `docs/future/MIA_YOUTH_INITIATIVE.md`). People sign in with an
+MIA is for Zac and the people in his house (DEC-0115, 2026-11-07,
+superseding the 2026-10-01 "built for anyone"): new work needn't
+generalise for strangers, and what's already built for that stays.
+Each person in the house still has their own account and data. People sign in with an
 email (`core/profile_manager.py`); nothing is shared unless they join a
 household with a member's approval (`core/household_manager.py`).
 Personal stores live in each profile's folder, `data/profiles/<id>/`

@@ -7,7 +7,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 `docs/ENGINE_PHASE1_PLAN.md`.*
 
 ### DEC-0001: MIA is built for anyone; each person's data is their own
-- Status: IMPLEMENTED
+- Status: IMPLEMENTED; "for anyone" superseded by DEC-0115 (2026-11-07): MIA is for Zac and his household
 - Proposed by: claude, 2026-10-01 · Approved by: zac, 2026-10-01
 - Decision: MIA is perfected for personal use but designed for any
   person or household. People sign in with an email; nothing is shared
@@ -1790,4 +1790,18 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   faith-and-meaning line, the integrity rules counted by the corpus, twelve corpus cases, and the routing fix that
   stopped feelings being answered as data questions.
 - Related: DEC-0067, DEC-0014, DEC-0029, DEC-0052
+
+### DEC-0115: MIA is for Zac and his household
+- Status: APPROVED
+- Decided by: zac, 2026-11-07 ("I think at this point I have decided MIA is really just for me and my house")
+- Decision: MIA is built for Zac and the people in his house, not for any person or household. Supersedes the
+  "for anyone" part of DEC-0001 and its reason ("hundreds of different people may use MIA").
+- What stays: each person in the house has their own account and their own data, shared only through the household
+  (`core/personal_data.py`); child accounts; the privacy between household members; real personal data never in the
+  repo (DEC-0002, since the repo is on GitHub), so code and prompts still don't hardcode anyone's names or places.
+- What changes: new work no longer has to generalise for strangers (other kinds of lives, other countries'
+  conventions beyond what's built, onboarding for people Claude has never met). What's built for that stays and
+  keeps working; nothing is torn out. DEC-0114's faith question gets simpler: the Highest Self is this household's
+  foundation, and MIA still respects each member's own beliefs.
+- Related: DEC-0001, DEC-0002, DEC-0114, `docs/future/MIA_YOUTH_INITIATIVE.md` (parked)
 

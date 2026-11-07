@@ -62,7 +62,7 @@ the twelve new answers in `pc-check/conversation-highest-self-tune2.md`.
 ## What's for Zac (DEC-0114)
 
 1. **Adopt the doctrine as MIA's foundation.** Her values become data that change only by your decision.
-2. **Faith, for everyone's MIA.** MIA is built for any person or household. Claude recommends: the Fruits guide
+2. **Faith, for everyone's MIA.** *(Simpler since DEC-0115: MIA is for Zac's household, so the Highest Self is this house's foundation; she still respects each member's own beliefs.)* MIA is built for any person or household. Claude recommends: the Fruits guide
    every MIA as behavior (love, patience, kindness: words anyone recognises); Galatians is named in the doctrine and
    in her own docs; she speaks about Christian faith when someone asks or shares it, and respects every tradition
    (section 7). Later, a person could choose a faith perspective in their own settings.

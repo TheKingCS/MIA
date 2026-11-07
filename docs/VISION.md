@@ -1019,6 +1019,8 @@ the other.
 
 ## Built for anyone; the youth initiative is parked (2026-10-01)
 
+*Superseded 2026-11-07 (DEC-0115): Zac decided MIA is for him and his household. The youth initiative stays parked; each person in the house keeps their own data.*
+
 The owner wrote a larger vision: MIA as a free human-development and
 life-skills platform for young people, in schools and communities. His
 decision: park it as a future direction, keep perfecting MIA for
