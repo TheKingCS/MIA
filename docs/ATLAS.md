@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1086 files, 245,082 lines; 1086 files describe themselves; 13,466 of 14,136 classes and functions are documented.
+1086 files, 245,134 lines; 1086 files describe themselves; 13,468 of 14,138 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-390 files, 113,586 lines; 6,020 of 6,109 classes and functions documented
+390 files, 113,601 lines; 6,021 of 6,110 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -669,7 +669,7 @@
 
 ## tests/: the test suite: what each part must do
 
-361 files, 65,761 lines; 5,211 of 5,792 classes and functions documented
+361 files, 65,772 lines; 5,212 of 5,793 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1035,7 +1035,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-72 files, 12,590 lines
+72 files, 12,616 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
@@ -1058,7 +1058,7 @@
 - `web/expeditions.js`: expeditions.js — the Expeditions screen (claude, 2026-10-16; Zac: the app only opened a chat). Renders MIA.expeditions() (core/web_more.py): expeditions happening now, coming up and past; one opens to its trips, each with Start / Finish, its packing list (tap to pack) and its notes. Every change is 
 - `web/files.js`: files.js — the Files screen (claude, 2026-10-16; Zac: the app only opened a chat). Renders MIA.files(path) (core/web_more.py, core/my_files.py): your own MIA files folder, with folders, Upload (from this phone or computer), Open (a picture, PDF, song or text shows here; anything else downloads), Ren
 - `web/flock.js`: flock.js — the Chickens screen (claude, 2026-10-21, DEC-0037). Renders MIA.flock() (core/web_flock.py): per flock, eggs today and this week, the lay rate, loose eggs, feed cost per dozen, two weeks of eggs, cartons on hand and the log. Log Eggs is one tap per count (the tap is the approval; Undo in 
-- `web/freedom.js`: freedom.js — the Freedom screen (claude, 2026-10-21, DEC-0038). Renders MIA.freedom() (core/freedom.py): the estimated day and how far along the fund is, progress today / this week / this month, what a shift buys, how the fund adds up (each number with where it came from), what moves the day, the bu
+- `web/freedom.js`: freedom.js — the Freedom screen (claude, 2026-10-21, DEC-0038). Renders MIA.freedom() (core/freedom.py): the estimated day and how far along the fund is, progress today / this week / this month, what a shift buys, how the fund adds up (each number with where it came from and what it is: Fact, Calcul
 - `web/glasses.js`: MIA on Display glasses (DEC-0016; Muse's composition H-0041/H-0043; Zac's layout, 2026-10-16; pins DEC-0024).
 - `web/grow.js`: grow.js — the Grow Lab (claude, 2026-10-17, DEC-0030 phase D). Renders MIA.grow() (core/web_grow.py), as tabs of the Greenhouse (Zac, 2026-10-17: "Isn't Grow Lab essentially what the Greenhouse app is"): equipment.js shows them beside the greenhouse's equipment through window.MIAGrow. Tabs: Growing 
 - `web/guitar.js`: guitar.js — a learning path (claude, 2026-11-07, DEC-0111, DEC-0112): guitar by default, any path with ?path=<id>. Renders MIA.guitar() (core/guitar.py): the stage, this week against the plan, the streak, the bests, what to work on next, and each open check. A check MIA hears gets a Record button: a

@@ -262,5 +262,15 @@
     "left_text": "$1,500.00",
     "spent_text": "$0.00",
     "budget_text": "$1,500.00"
+  },
+  "kinds": {
+    "needs": "Calculation",
+    "homestead": "Calculation",
+    "saved": "Fact",
+    "pace": "Calculation",
+    "gap": "Calculation",
+    "cushion": "Calculation",
+    "builds_left": "Calculation",
+    "goal": "Calculation"
   }
 }

@@ -428,3 +428,6 @@ body.cook-live .mia-orb-button, body.cook-live .bottom-bar { display: none; }
 .ms-progress .bar { flex: 1; }
 .ms-count { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-dim); }
 .ms-tags { display: flex; gap: 6px; margin: 8px 0 0; }
+.free-val { display: inline-flex; align-items: center; gap: 8px; }
+.free-val { flex-direction: column; align-items: flex-end; gap: 4px; flex: none; text-align: right; }
+.free-line > span:first-child { min-width: 0; flex: 1; }

@@ -92,6 +92,17 @@ class Inputs:
     builds: list = field(default_factory=list)
 
 
+
+def figure_kind(source: str, value) -> str:
+    """Pure logic. What a Freedom figure is, from where it came from: "Missing" when there's no value, "Fact" when
+    it's the person's own number or read from their accounts, "Calculation" when MIA averaged it from their records.
+    """
+    if value in (None, "") or (source or "") == "":
+        return "Missing"
+    if "average" in source:
+        return "Calculation"
+    return "Fact"
+
 def _r(x: float) -> float:
     """A number rounded to cents."""
     return round(float(x or 0), 2)
@@ -491,6 +502,10 @@ def freedom_page(context, today: Optional[date] = None) -> dict:
                  "progress_pct": round(p["progress"] * 100, 1) if p["progress"] is not None else None},
         "sources": {"needs": i.needs_source, "homestead": i.homestead_source, "saved": i.saved_source,
                     "pace": i.pace_source},
+        # What each figure is (DEC-0113: every number says Fact, Calculation, Estimate or Missing).
+        "kinds": {"needs": figure_kind(i.needs_source, i.needs), "homestead": figure_kind(i.homestead_source, i.homestead),
+                  "saved": figure_kind(i.saved_source, p["saved"]), "pace": figure_kind(i.pace_source, i.pace),
+                  "gap": "Calculation", "cushion": "Calculation", "builds_left": "Calculation", "goal": "Calculation"},
         "cushion_months": i.cushion_months,
         "periods": [{**x, "total_text": _signed(x["total"]), "saved_text": _signed(x["saved"]),
                      "homestead_text": _signed(x["homestead"])} for x in periods(context, today)],

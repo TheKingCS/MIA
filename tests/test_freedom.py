@@ -183,3 +183,14 @@ def test_an_old_pay_rate_moves_to_the_dungeon_once(shop):  # noqa: F811
 
     person_settings.put(w, "freedom.hourly", 99)
     assert move_pay_to_dungeon(w) == "kept the Dungeon's rate" and w.dungeon.dungeons[0].hourly == 18.5
+
+
+def test_each_freedom_figure_says_what_it_is():
+    """DEC-0113: a figure is Missing with no value, Fact when it's their own number or their accounts, Calculation
+    when MIA averaged it."""
+    from core.freedom import figure_kind
+
+    assert figure_kind("your number", 2600) == "Fact"
+    assert figure_kind("the accounts you picked as the fund", 11400) == "Fact"
+    assert figure_kind("your spending, 3-month average", 2400) == "Calculation"
+    assert figure_kind("", None) == "Missing"
