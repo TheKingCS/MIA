@@ -65,6 +65,9 @@ class OcrError(Exception):
 
 
 def tesseract_path(config) -> Optional[str]:
+    """Where Tesseract is: ocr.tesseract_path when set (only if it exists), else on the PATH, else Windows' default
+    install folder; None when it isn't installed.
+    """
     configured = str(config.get("ocr.tesseract_path", "") or "") if config else ""
     if configured:
         return configured if Path(configured).exists() else None
@@ -75,6 +78,7 @@ def tesseract_path(config) -> Optional[str]:
 
 
 def available(config) -> bool:
+    """Whether OCR can run here: not turned off (ocr.enabled) and Tesseract found."""
     if config is not None and config.get("ocr.enabled", True) is False:
         return False
     return tesseract_path(config) is not None
@@ -92,6 +96,9 @@ def unavailable_note(kind: str) -> str:
 
 
 def run_tesseract(exe: str, image: Path, language: str = "eng", timeout: int = _PAGE_TIMEOUT) -> str:
+    """Reads one prepared image with Tesseract on one core and at lower priority (nice, on Linux), with a timeout; the
+    text tidied, or OcrError saying what went wrong.
+    """
     env = dict(os.environ, OMP_THREAD_LIMIT="1")  # one core: the rest of MIA keeps running smoothly
     command = [exe, str(image), "-", "-l", language]
     nice = shutil.which("nice") if os.name == "posix" else None
@@ -119,6 +126,7 @@ def clean_text(text: str) -> str:
 
 
 def _prepare_image(image, target: Path) -> None:
+    """Gets a page ready for Tesseract: shrunk to at most _MAX_SIDE, grayscale, saved as PNG."""
     from PySide6.QtCore import Qt
     from PySide6.QtGui import QImage
 
@@ -131,6 +139,9 @@ def _prepare_image(image, target: Path) -> None:
 
 
 def ocr_image(exe: str, path: Path, language: str = "eng") -> str:
+    """The text in a photo: HEIC is refused with how to fix it; the phone's EXIF rotation is applied, the image
+    prepared in a temporary folder, then read.
+    """
     from PySide6.QtGui import QImageReader
 
     if path.suffix.lower() in (".heic", ".heif"):
@@ -191,15 +202,18 @@ def ocr_pdf(
 
 @dataclass
 class OcrResult:
+    """What reading a document produced: its pages' text, or the error."""
     pages: list[str]
     error: str = ""
 
     @property
     def text(self) -> str:
+        """All the pages' text, a blank line between pages."""
         return "\n\n".join(self.pages)
 
 
 def _partial(output: Path) -> Path:
+    """Where a long document's progress is saved (<output>.partial.json), so a restart resumes."""
     return output.with_name(output.stem + ".partial.json")
 
 
@@ -215,6 +229,7 @@ def read_result(output: Path) -> Optional[OcrResult]:
 
 
 def _write(path: Path, pages: list[str], error: str = "") -> None:
+    """Writes a result file (pages and any error) atomically."""
     path.parent.mkdir(parents=True, exist_ok=True)
     atomic_write_text(path, json.dumps({"pages": pages, "error": error}))
 
@@ -226,6 +241,9 @@ def _write(path: Path, pages: list[str], error: str = "") -> None:
 
 @dataclass
 class OcrJob:
+    """One document waiting to be read: who asked ("inbox:...", "textbook:..."), the file, where the result goes,
+    pages done of how many, and whether it was cancelled.
+    """
     key: str  # who asked, e.g. "inbox:<item>/<file>" or "textbook:<id>"
     source: Path
     output: Path
@@ -242,6 +260,9 @@ class OcrQueue:
     replaceable for tests; the default runs Tesseract."""
 
     def __init__(self, context, engine: Optional[Engine] = None) -> None:
+        """The background reader: a queue of jobs read one at a time on its own thread, by Tesseract here (or a given
+        engine, for tests).
+        """
         self.context = context
         self._engine = engine or self._tesseract_engine
         self._jobs: deque[OcrJob] = deque()
@@ -253,6 +274,7 @@ class OcrQueue:
 
     @property
     def available(self) -> bool:
+        """Whether documents can be read: this device's Tesseract, or the linked home computer's."""
         if self._engine != self._tesseract_engine:
             return True
         from core.heavy_jobs import can_use_home
@@ -278,12 +300,14 @@ class OcrQueue:
         return True
 
     def cancel(self, key: str) -> None:
+        """Takes a job off the queue, or stops the one being read (its progress is kept if the file still exists)."""
         with self._lock:
             self._jobs = deque(j for j in self._jobs if j.key != key)
             if self._current and self._current.key == key:
                 self._current.cancelled = True
 
     def is_queued(self, key: str) -> bool:
+        """Whether a job is waiting or being read."""
         with self._lock:
             return bool(self._current and self._current.key == key and not self._current.cancelled) or any(
                 j.key == key for j in self._jobs)
@@ -303,6 +327,7 @@ class OcrQueue:
     # -- the thread -----------------------------------------------------
 
     def _run(self) -> None:
+        """The thread: reads jobs one after another until the queue is empty, then marks itself idle and ends."""
         while True:
             with self._lock:
                 if not self._jobs:
@@ -313,6 +338,9 @@ class OcrQueue:
             self._read(job)
 
     def _read(self, job: OcrJob) -> None:
+        """Reads one job: saves progress every few pages of a long document, writes the result (or the error, never
+        crashing the thread), and removes the progress file when done.
+        """
         partial = _partial(job.output)
 
         def on_page(pages: list[str], total: int) -> None:
@@ -336,6 +364,9 @@ class OcrQueue:
         partial.unlink(missing_ok=True)
 
     def _tesseract_engine(self, job: OcrJob, on_page, should_stop) -> list[str]:
+        """How a job is read: without Tesseract, by the linked home computer if it can (else OcrError with how to
+        install it); an image as one page; a PDF page by page, resuming from saved progress.
+        """
         exe = tesseract_path(self.context.config)
         if exe is None:
             from core.heavy_jobs import can_use_home, read_document

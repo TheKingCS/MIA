@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 228,226 lines; 1043 files describe themselves; 4,514 of 13,517 classes and functions are documented.
+1043 files, 228,257 lines; 1043 files describe themselves; 4,531 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 102,132 lines; 3,783 of 5,630 classes and functions documented
+367 files, 102,163 lines; 3,800 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -236,7 +236,7 @@
 - `core/obligation_actions.py`: Obligations' actions (DEC-0040, core/obligations.py) on the action contract: proposed in plain words, approved, run, undoable. Grown-ups only (money and legal matters). *(13 undocumented)*
 - `core/obligations.py`: Tax and compliance obligations (DEC-0040; the Business OS spec's first increment, docs/BUSINESS_OS_AUDIT.md): every filing, payment, permit, licence, registration, inspection and renewal the household has to keep, in one list with one calendar. *(16 undocumented)*
 - `core/observations_web.py`: Observations' web screen (web/observations.html): what MIA has noticed, in two kinds, read only, as on the desktop:
-- `core/ocr.py`: Reading text out of photos and scanned pages (2026-09-28), so a phone photo of a paper receipt or a scanned manual/textbook works in the document inbox (core/inbox_manager.py) and the textbook tutor (core/textbook_manager.py). *(17 undocumented)*
+- `core/ocr.py`: Reading text out of photos and scanned pages (2026-09-28), so a phone photo of a paper receipt or a scanned manual/textbook works in the document inbox (core/inbox_manager.py) and the textbook tutor (core/textbook_manager.py).
 - `core/offline_maps.py`: Vector offline maps (build plan step 14; Zac's OK for the outside code, 2026-11-06): an area of OpenStreetMap cut from the Protomaps daily world build into one small file (PMTiles), kept on this PC in `data/maps/`, and drawn by MapLibre on the web's Maps page (`web/vendor/`). Unlike the topo tiles (
 - `core/onboarding.py`: The one-time, first-run welcome message injected into a brand-new user's very first conversation — docs/VISION.md's "interactive first-time onboarding... MIA teaches herself through real conversation and real tasks, not docs/slides." See gui/home_dashboard.py's `__init__` for how this gets injected:
 - `core/online_watch.py`: Offline awareness follow-ups (2026-09-28), on top of core/connectivity.py: *(9 undocumented)*
