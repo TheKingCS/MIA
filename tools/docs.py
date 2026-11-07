@@ -110,7 +110,8 @@ def main(argv: list[str]) -> int:
         text = path.read_text(encoding="utf-8")
         lines = text.splitlines(keepends=True)
         for name, node in definitions(ast.parse(text)).items():
-            if not ast.get_docstring(node):
+            if not ast.get_docstring(node) and not (isinstance(node, ast.FunctionDef)
+                                                    and code_atlas.named_as_sentence(argv[1], node.name)):
                 end = getattr(node, "end_lineno", node.lineno)
                 print(f"### {name}  (lines {node.lineno}-{end})")
                 print("".join(lines[node.lineno - 1:min(end, node.lineno + 40)]))

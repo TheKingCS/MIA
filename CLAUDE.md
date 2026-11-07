@@ -200,7 +200,8 @@ children.
   Night School skips it.
 - **Documentation for everything** (DEC-0104, `core/code_atlas.py`) —
   every file opens with what it is, what it does and how; every class,
-  function and method gets a docstring. `tests/test_documentation.py`
+  function and method gets a docstring (a test named as a full sentence,
+  four words or more after `test_`, is documented by its name: DEC-0116). `tests/test_documentation.py`
   fails on a new file or definition without one, and an old file's
   undocumented count (`work/doc_baseline.json`) may only go down: after
   documenting, run `python -m core.code_atlas baseline` and

@@ -54,3 +54,14 @@ def test_putting_docstrings_in_place():
         insert(text, {"f": "Undoes \\, escapes."})  # a backslash would be an escape in the docstring
     quoted = insert(text, {"f": 'Says "Nothing here yet."'})  # a closing quote doesn't run into the """
     assert '"""Says "Nothing here yet." """' in quoted
+
+
+def test_a_test_named_as_a_sentence_counts_as_documented():
+    """Zac's rule (2026-11-07, "name is enough"): a test in tests/ whose name has at least four words after test_
+    already says what it proves; a vaguer test, a helper, or anything outside tests/ still needs a docstring."""
+    from core.code_atlas import named_as_sentence
+
+    assert named_as_sentence("tests/test_x.py", "test_list_alarms_returns_all")
+    assert not named_as_sentence("tests/test_x.py", "test_set_birthday")  # three words: vague
+    assert not named_as_sentence("tests/test_x.py", "build_world_with_two_people")  # a helper, not a test
+    assert not named_as_sentence("core/x.py", "test_list_alarms_returns_all")  # only in tests/

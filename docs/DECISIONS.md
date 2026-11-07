@@ -1805,3 +1805,12 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   foundation, and MIA still respects each member's own beliefs.
 - Related: DEC-0001, DEC-0002, DEC-0114, `docs/future/MIA_YOUTH_INITIATIVE.md` (parked)
 
+### DEC-0116: A test named as a sentence is documented by its name
+- Status: APPROVED
+- Decided by: zac, 2026-11-07 (asked how to document the ~4,500 test functions: "Name is enough")
+- Decision: under DEC-0104, a `test_` function in tests/ whose name has at least four words after `test_`
+  (`test_list_alarms_returns_all`) counts as documented: its name says what it proves. A test with a vaguer name
+  (one to three words), and every test helper, fixture and class, still gets a real docstring.
+  `core.code_atlas.named_as_sentence()` is the rule; `tests/test_documentation.py` checks it.
+- Related: DEC-0104, DEC-0110
+

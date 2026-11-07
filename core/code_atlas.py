@@ -15,7 +15,11 @@ by hand:
   is, what it does, how.
 - **A class, a function or a method** is documented when it has its own
   docstring. Functions nested inside another are the enclosing function's
-  to explain, so they aren't counted.
+  to explain, so they aren't counted. **A test named as a sentence** counts
+  as documented too (Zac, 2026-11-07: "name is enough"): a `test_` function
+  in tests/ whose name has at least SENTENCE_WORDS words after `test_`
+  (`test_list_alarms_returns_all`) already says what it proves; a vaguer one
+  (`test_basic`, `test_set_birthday`) still needs its docstring.
 
 What it keeps:
 
@@ -46,6 +50,14 @@ PY_LAYERS = ("core", "server", "gui", "modules", "tools", "tests")
 OTHER = (("web", "*.js"), ("android-phone/app/src/main/java", "*.kt"))
 BASELINE = ROOT / "work" / "doc_baseline.json"
 ATLAS = ROOT / "docs" / "ATLAS.md"
+SENTENCE_WORDS = 4  # a test name this many words long says what it proves
+
+
+def named_as_sentence(rel_path: str, name: str) -> bool:
+    """Pure logic. Whether a definition is a test whose name already says what it proves: a `test_` function in
+    tests/ with at least SENTENCE_WORDS words after `test_`."""
+    return (rel_path.replace("\\", "/").startswith("tests/") and name.startswith("test_")
+            and len([w for w in name[len("test_"):].split("_") if w]) >= SENTENCE_WORDS)
 
 
 def _first_paragraph(text: str) -> str:
@@ -68,12 +80,16 @@ def _first_paragraph(text: str) -> str:
 
 def py_file(path: Path) -> dict:
     """One Python file: its docstring's first paragraph, and its classes, functions and methods (not nested ones),
-    each documented or not."""
+    each documented or not (a test named as a sentence counts as documented)."""
     try:
         tree = ast.parse(path.read_text(encoding="utf-8", errors="replace"))
     except SyntaxError:
         return {"about": "", "doc": False, "defs": 0, "undocumented": [], "lines": 0}
     undocumented, defs = [], 0
+    try:
+        rel = path.resolve().relative_to(ROOT).as_posix()
+    except ValueError:
+        rel = path.as_posix()
 
     def visit(body, prefix=""):
         nonlocal defs
@@ -81,7 +97,8 @@ def py_file(path: Path) -> dict:
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
                 defs += 1
                 name = prefix + node.name
-                if not ast.get_docstring(node):
+                if not ast.get_docstring(node) and not (isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+                                                        and named_as_sentence(rel, node.name)):
                     undocumented.append(name)
                 if isinstance(node, ast.ClassDef):
                     visit(node.body, name + ".")  # methods, not functions nested in functions
