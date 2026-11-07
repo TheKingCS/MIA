@@ -209,12 +209,14 @@ def format_next_honest_step_line(skill_name: Optional[str]) -> str:
 
 
 class SkillsModule(ModuleBase):
+    """The Skills app (desktop), My Hero's Path: the skill tree by category (cards with level, XP and whether demonstrated, lines between connected skills), and beside it capability status, achievements, the next honest step, prestige and rewards."""
     module_id = "skills"
     display_name = "Skills"
     description = "My Hero's Path — skill tree and character progression."
     icon = "\U00002694"  # crossed swords
 
     def __init__(self, context) -> None:
+        """No category chosen and nothing built yet: the page is made in get_widget()."""
         super().__init__(context)
         self._current_category: Optional[str] = None
         self._category_buttons: dict[str, QPushButton] = {}
@@ -231,6 +233,7 @@ class SkillsModule(ModuleBase):
         self._focus_skill_id: Optional[str] = None
 
     def on_load(self) -> None:
+        """Listens for XP changes so the page stays current while it's open."""
         super().on_load()
         # Subscribed here, not __init__, so an unopened Skills module
         # costs nothing at boot beyond the cheap attribute assignment
@@ -328,6 +331,7 @@ class SkillsModule(ModuleBase):
         return root
 
     def _build_right_column(self) -> QWidget:
+        """The right column: the capability-status legend, achievements, the next honest step, prestige and rewards cards."""
         column = QWidget()
         column.setFixedWidth(360)
         column_layout = QVBoxLayout(column)
@@ -414,6 +418,7 @@ class SkillsModule(ModuleBase):
         return column
 
     def _build_category_tabs(self, categories: list[str]) -> None:
+        """A tab per skill category (those the person said they're interested in marked)."""
         for category in categories:
             label = format_category_tab_label(category, category in self._interest_categories)
             button = QPushButton(label)
@@ -425,6 +430,7 @@ class SkillsModule(ModuleBase):
         self._tabs_row.addStretch()
 
     def _select_category(self, category: str) -> None:
+        """Shows a category: its tab lit, its skills in the grid."""
         self._current_category = category
         for name, button in self._category_buttons.items():
             button.setProperty("active", name == category)
@@ -433,6 +439,7 @@ class SkillsModule(ModuleBase):
         self._refresh_grid()
 
     def _refresh(self) -> None:
+        """Refreshes the stats line, the next step and the grid."""
         self._refresh_stats_label()
         # _refresh_next_step() sets self._focus_skill_id, which
         # _refresh_grid()'s cards read to draw the current-focus
@@ -445,12 +452,14 @@ class SkillsModule(ModuleBase):
         self._refresh_rewards_card()
 
     def _active_profile_id(self) -> Optional[str]:
+        """Who is signed in, or None."""
         if self.context.profiles is None:
             return None
         active = self.context.profiles.get_active_profile()
         return active.profile_id if active else None
 
     def _demonstrated_count(self, profile_id: Optional[str]) -> int:
+        """How many skills the person has demonstrated (0 without skills or a person)."""
         if self.context.skills is None or profile_id is None:
             return 0
         return sum(
@@ -459,6 +468,7 @@ class SkillsModule(ModuleBase):
         )
 
     def _refresh_stats_label(self) -> None:
+        """The stats line: level, prestige tier, skills demonstrated."""
         if self.context.profiles is None or self.context.skills is None:
             self._stats_label.setText("")
             return
@@ -477,6 +487,7 @@ class SkillsModule(ModuleBase):
         self._stats_label.setStyleSheet(f"color: {color};" if color else "")
 
     def _refresh_prestige_card(self) -> None:
+        """The prestige card: whether the person can prestige at their level, with the button only then."""
         active = self.context.profiles.get_active_profile() if self.context.profiles is not None else None
         if active is None:
             self._prestige_body.setText("No active profile.")
@@ -489,6 +500,7 @@ class SkillsModule(ModuleBase):
         self._prestige_button.setVisible(eligible)
 
     def _on_prestige_clicked(self) -> None:
+        """Prestiges the signed-in person (the profile store checks eligibility again itself), then refreshes the stats, prestige and rewards."""
         if self.context.profiles is None:
             return
         active = self.context.profiles.get_active_profile()
@@ -503,6 +515,7 @@ class SkillsModule(ModuleBase):
         self._refresh_rewards_card()
 
     def _refresh_rewards_card(self) -> None:
+        """Rebuilds the rewards card (its title kept): what's unlocked and what's next, by tier."""
         while self._rewards_layout.count() > 1:  # keep the eyebrow title (index 0)
             item = self._rewards_layout.takeAt(1)
             widget = item.widget()
@@ -616,6 +629,7 @@ class SkillsModule(ModuleBase):
                 self._rewards_layout.addWidget(emblem_label)
 
     def _refresh_achievements(self) -> None:
+        """Rebuilds the achievements card (its title kept): those earned and the hidden ones found."""
         while self._achievements_layout.count() > 1:  # keep the eyebrow title (index 0)
             item = self._achievements_layout.takeAt(1)
             widget = item.widget()
@@ -651,6 +665,7 @@ class SkillsModule(ModuleBase):
             self._achievements_layout.addWidget(meta)
 
     def _refresh_next_step(self) -> None:
+        """The next honest step: the skill to work on next from real XP, which is also lit in the grid."""
         self._focus_skill_id = None
         if self.context.skills is None:
             self._next_step_body.setText(format_next_honest_step_line(None))
@@ -673,6 +688,7 @@ class SkillsModule(ModuleBase):
         # _grid_container) for one or more repaint cycles. hide() +
         # setParent(None) detaches it from view immediately; deleteLater()
         # still reclaims it once the event loop is idle.
+        """Rebuilds the category's skill cards (old ones hidden and detached first) and the lines between connected skills."""
         while self._grid_layout.count():
             item = self._grid_layout.takeAt(0)
             widget = item.widget()
@@ -714,6 +730,7 @@ class SkillsModule(ModuleBase):
         self._grid_container.set_connections(connections)
 
     def _build_skill_card(self, definition: SkillDefinition, profile_id: Optional[str]) -> QFrame:
+        """One skill's card: icon, name, level and XP bar, capability status, locked (display only: XP still lands) or the focus."""
         card = QFrame()
         card.setObjectName("DashboardCard")
         locked = profile_id is not None and not self.context.skills.is_unlocked(profile_id, definition.skill_id)
@@ -805,6 +822,7 @@ class SkillsModule(ModuleBase):
         return card
 
     def _on_skill_xp_changed(self, profile_id: str, skill_id: str) -> None:
+        """When the signed-in person's skill XP changes: refreshes the stats, next step, grid and achievements (only once the page is built)."""
         if not self._widget_built or profile_id != self._active_profile_id():
             return
         self._refresh_stats_label()
@@ -813,6 +831,7 @@ class SkillsModule(ModuleBase):
         self._refresh_achievements()
 
     def _on_profile_xp_changed(self, profile_id: str) -> None:
+        """When the signed-in person's XP changes: refreshes the stats line, prestige and rewards (only once the page is built)."""
         if not self._widget_built or profile_id != self._active_profile_id():
             return
         self._refresh_stats_label()

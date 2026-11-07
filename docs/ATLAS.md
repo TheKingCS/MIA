@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1069 files, 237,572 lines; 1069 files describe themselves; 6,971 of 13,808 classes and functions are documented.
+1069 files, 237,611 lines; 1069 files describe themselves; 7,010 of 13,808 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -524,7 +524,7 @@
 
 ## modules/: the desktop's apps, one folder each
 
-93 files, 22,331 lines; 566 of 1,030 classes and functions documented
+93 files, 22,370 lines; 605 of 1,030 classes and functions documented
 
 - `modules/__init__.py`: Every feature of MIA (Assistant, Files, Notes, Maps, etc.) lives here as an independent package. Each module package must:
 - `modules/assistant/__init__.py`: The assistant app's package: its screen and behaviour are in module.py (Assistant Chat UI — docs/ROADMAP.md milestones 5.2 (text chat), 5.3 (voice), 5.4 (device-help grounding), and 5.5 (tool use / action execution). A chat screen (). core/module_manager.py finds it by that file.
@@ -576,7 +576,7 @@
 - `modules/missions/module.py`: Mission Log — docs/ROADMAP.md milestone v0.18, module #20. Rebuilt 2026-07-18 against a design handoff (CCH.zip's Missions.dc.html) as a two-panel "Mission Log": a detail panel (icon/title/region, summary, an objectives checklist, difficulty/level tags, a rewards footer) on the left, and a mission l
 - `modules/module_base.py`: Defines ModuleBase, the contract every MIA module must implement.
 - `modules/module_browser/__init__.py`: The module browser app's package: its screen and behaviour are in module.py (Backs the "Modules" button on the main menu). core/module_manager.py finds it by that file.
-- `modules/module_browser/module.py`: Backs the "Modules" button on the main menu. *(20 undocumented)*
+- `modules/module_browser/module.py`: Backs the "Modules" button on the main menu.
 - `modules/music/__init__.py`: The music app's package: its screen and behaviour are in module.py (Music — replaces the pure placeholder that stood here since this module was first discovered by ModuleManager. Real local audio library scanning + playlists + r). core/module_manager.py finds it by that file.
 - `modules/music/module.py`: Music — replaces the pure placeholder that stood here since this module was first discovered by ModuleManager. Real local audio library scanning + playlists + real playback (core/music_manager.py, AppContext.music) — see that module's docstring for why the historical "blocked on missing libpulse" do *(27 undocumented)*
 - `modules/navigation/__init__.py`: The navigation app's package: its screen and behaviour are in module.py (Navigation — docs/ROADMAP.md milestone 10.2: waypoints (name/lat/lon notes CRUD, same shape as Notes/Inventory/Components) plus a Sun/Moon panel (sunrise/sunset). core/module_manager.py finds it by that file.
@@ -596,7 +596,7 @@
 - `modules/settings/__init__.py`: The settings app's package: its screen and behaviour are in module.py (Settings: Backup/Restore (docs/ROADMAP.md milestone 2.7) — export import config + the data directory (profiles, notifications, etc.), optionally passphrase-encr). core/module_manager.py finds it by that file.
 - `modules/settings/module.py`: Settings: Backup/Restore (docs/ROADMAP.md milestone 2.7) — export import config + the data directory (profiles, notifications, etc.), optionally passphrase-encrypted via core/secrets_manager.py — Update Manager (milestone 2.8) — apply an offline update package onto the running installation, see docs *(37 undocumented)*
 - `modules/skills/__init__.py`: The skills app's package: its screen and behaviour are in module.py (Skills — "My Hero's Path" (2026-09-11), the screen for the skill-tree layer core/skill_manager.py adds underneath the existing profile-wide Level/Missions syste). core/module_manager.py finds it by that file.
-- `modules/skills/module.py`: Skills — "My Hero's Path" (2026-09-11), the screen for the skill-tree layer core/skill_manager.py adds underneath the existing profile-wide Level/Missions system. A categorized grid of skill cards (icon, name, level, XP progress bar), locked skills shown dimmed with a lock badge and their prerequisi *(19 undocumented)*
+- `modules/skills/module.py`: Skills — "My Hero's Path" (2026-09-11), the screen for the skill-tree layer core/skill_manager.py adds underneath the existing profile-wide Level/Missions system. A categorized grid of skill cards (icon, name, level, XP progress bar), locked skills shown dimmed with a lock badge and their prerequisi
 - `modules/toolbox/__init__.py`: The toolbox app's package: its screen and behaviour are in module.py (Toolbox: the shared home for every calculator registered with core.calculator_engine.CalculatorEngine (self.context.calculators), per docs/ROADMAP.md's Calculat). core/module_manager.py finds it by that file.
 - `modules/toolbox/calculators/__init__.py`: toolbox/calculators: a package of 2 pieces (ohms_law, unit_converter), each described in its own file.
 - `modules/toolbox/calculators/ohms_law.py`: Ohm's Law — the second CalculatorPlugin (core/calculator_engine.py), proving the "solve for any one of several related values" shape of calculator (as opposed to unit_converter.py's "convert A to B" shape).

@@ -59,12 +59,14 @@ from modules.module_base import ModuleBase
 
 
 class ModuleBrowserModule(ModuleBase):
+    """The Modules screen (desktop, never disabled): every module with Mine/Tucked and Enable/Disable, Rescan, adding a module from a folder or a .zip (validated first), and a tab drawing MIA's architecture."""
     module_id = "module_browser"
     display_name = "Modules"
     description = "View, enable/disable, install, and rescan modules."
     icon = "\U0001F9E9"  # puzzle piece
 
     def __init__(self, context) -> None:
+        """No modules known and no manager yet (the window hands them over); nothing built."""
         super().__init__(context)
         # Populated by gui/main_window.py's _wire_module_browser().
         self.known_modules: list[ModuleBase] = []
@@ -73,6 +75,7 @@ class ModuleBrowserModule(ModuleBase):
         self._status_label = None
 
     def get_widget(self) -> QWidget:
+        """The page: the Modules and Architecture tabs."""
         widget = QWidget()
         outer = QVBoxLayout(widget)
         outer.setContentsMargins(24, 24, 24, 24)
@@ -86,6 +89,7 @@ class ModuleBrowserModule(ModuleBase):
         return widget
 
     def _build_modules_tab(self) -> QWidget:
+        """The Modules tab: the loaded modules, Rescan, Add Module Folder, Add Module .zip, and the status line."""
         widget = QWidget()
         outer = QVBoxLayout(widget)
         outer.setContentsMargins(0, 12, 0, 0)
@@ -139,6 +143,7 @@ class ModuleBrowserModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_architecture_tab(self) -> QWidget:
+        """The Architecture tab: MIA's layers drawn as rows (gui, modules, core and its services, persistence) with a footer on the rules between them."""
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.Shape.NoFrame)
@@ -161,6 +166,7 @@ class ModuleBrowserModule(ModuleBase):
 
     @staticmethod
     def _build_architecture_row(label_text: str, content: QHBoxLayout) -> QHBoxLayout:
+        """Pure layout. One architecture row: its label, then its content."""
         row = QHBoxLayout()
         label = QLabel(label_text)
         label.setObjectName("ArchitectureRowLabel")
@@ -172,12 +178,14 @@ class ModuleBrowserModule(ModuleBase):
 
     @staticmethod
     def _chip(text: str) -> QLabel:
+        """A solid chip naming a part."""
         chip = QLabel(text)
         chip.setObjectName("MissionDifficultyTag")
         return chip
 
     @staticmethod
     def _dashed_chip(text: str) -> QLabel:
+        """A dashed chip, for a part that's planned rather than built."""
         chip = QLabel(text)
         chip.setObjectName("ArchitectureDashedChip")
         return chip
@@ -201,6 +209,7 @@ class ModuleBrowserModule(ModuleBase):
         return row
 
     def _build_gui_layer_chips(self) -> QHBoxLayout:
+        """The gui row: gui/ talks to core/ only, with its main files."""
         row = QHBoxLayout()
         row.addWidget(self._chip("gui/"))
         arrow = QLabel("→ core/ only")
@@ -240,6 +249,7 @@ class ModuleBrowserModule(ModuleBase):
         return row
 
     def _build_core_block(self) -> QFrame:
+        """The core block: the shared AppContext and the services every module gets through it."""
         card = BlueprintFrame(accent=True)
         card.setObjectName("DashboardCard")
         apply_panel_glow(card)
@@ -282,6 +292,7 @@ class ModuleBrowserModule(ModuleBase):
         return card
 
     def _build_persistence_chips(self) -> QHBoxLayout:
+        """The persistence row: a chip per store standing for the core services' data."""
         row = QHBoxLayout()
         # Six representative data/*.json files (real filenames from
         # their owning managers — core/config_manager.py,
@@ -300,6 +311,7 @@ class ModuleBrowserModule(ModuleBase):
         return row
 
     def _build_architecture_footer(self) -> QWidget:
+        """The footer: a rule, then the layering rules in a line or two."""
         container = QWidget()
         layout = QVBoxLayout(container)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -327,6 +339,7 @@ class ModuleBrowserModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _populate_rows(self) -> None:
+        """Rebuilds the module rows (old ones hidden and detached first)."""
         if self._list_layout is None:
             return
         # hide()+setParent(None) before deleteLater() — deleteLater()
@@ -348,6 +361,7 @@ class ModuleBrowserModule(ModuleBase):
             self._list_layout.addWidget(self._build_row(module))
 
     def _build_row(self, module: ModuleBase) -> QFrame:
+        """One module's row: icon, name, description, its folder, and Mine/Tucked and Enable/Disable (the Modules screen itself can't be disabled)."""
         is_enabled = True if self.module_manager is None else self.module_manager.is_enabled(module.module_id)
         is_locked = module.module_id == "module_browser"
 
@@ -395,10 +409,12 @@ class ModuleBrowserModule(ModuleBase):
         return row
 
     def _on_mine_clicked(self, module_id: str, currently_tucked: bool) -> None:
+        """Shows or tucks away an app in the person's own sidebar (their focus preset)."""
         focus_presets.set_app_visible(self.context, module_id, currently_tucked)
         self._populate_rows()
 
     def _on_toggle_clicked(self, module_id: str, currently_enabled: bool) -> None:
+        """Enables or disables a module; says so when it's the Modules screen, which can't be."""
         if self.module_manager is None:
             return
         success = self.module_manager.set_enabled(module_id, not currently_enabled)
@@ -406,6 +422,7 @@ class ModuleBrowserModule(ModuleBase):
         self._populate_rows()
 
     def _on_rescan_clicked(self) -> None:
+        """Looks for module folders added since boot and says how many were found (code already loaded isn't reloaded)."""
         if self.module_manager is None:
             return
         new_count = self.module_manager.rescan()
@@ -420,6 +437,7 @@ class ModuleBrowserModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _on_add_module_folder_clicked(self) -> None:
+        """Installs a module from a folder picked on disk."""
         if self.module_manager is None:
             return
         folder = QFileDialog.getExistingDirectory(None, "Select Module Folder")
@@ -428,6 +446,7 @@ class ModuleBrowserModule(ModuleBase):
         self._install_and_report(Path(folder))
 
     def _on_add_module_zip_clicked(self) -> None:
+        """Installs a module from a .zip: unpacked to a temporary folder, its module folder found, then installed like a folder."""
         if self.module_manager is None:
             return
         zip_path, _ = QFileDialog.getOpenFileName(None, "Select Module .zip", "", "Zip files (*.zip)")
@@ -461,6 +480,7 @@ class ModuleBrowserModule(ModuleBase):
         return extracted_dir  # let the validator produce a clear error
 
     def _install_and_report(self, source_path: Path) -> None:
+        """Validates and installs a module folder (core/module_validator.py), then says how it went: installed with any warnings, or each reason it was refused."""
         result = self.module_manager.install_module_from_folder(source_path)
 
         if result.passed:
