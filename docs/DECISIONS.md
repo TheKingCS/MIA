@@ -1598,13 +1598,21 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
      Night School lessons and ratings holds hundreds of good examples.
   4. **Distillation:** her own small models learning from bigger teachers, to run fast and offline.
   Every model keeps a card (what it is, trained on what, tested on what, its scores against what she uses now).
+  **Each model is assigned to an issue or project** (Zac, 2026-11-07: "how she can best use this new feature to
+  better herself by assigning or building specialized models to an issue or project"): an issue is one of her
+  loops below its floor or sliding, and her playbook (`PLAYBOOK` in `core/model_forge.py`) says which kind of
+  model could move it (router, classifier, extractor, forecaster, scorer); `opportunities()` and
+  `python -m tools.model_forge needs` list where one could help now. The card names what the model `serves`,
+  and it's judged by that: its loop has to get better, not only its test score.
   A model goes into use only when it beats the current way on requests it never saw, and Zac approves it.
   Training a large model from scratch is out of reach on one home GPU; she learns how it's done and practises on
   small ones.
 - Why: models of her own make her faster, offline and suited to how her people talk; building them needs her
   to understand her own architecture (DEC-0104, DEC-0105, and `core/self_docs.py` now answering from her code and
   the vault), which is also what restoring herself and running efficiently need.
-- Honest limits: the first router scores 81% first pick and 97% in its top five on held-out requests, below the
-  keyword router (100%, but tuned on those same requests); it doesn't know the names of a person's own records yet.
+- Honest limits: the first router scores 80% first pick and 95% in its top five on held-out requests, below the
+  keyword router (100%, but tuned on those same requests). Knowing the person's record names helped on the
+  choosing half and was level on the scoring half (one or two requests of 95 either way: noise). Only the router
+  can be made today; the other four kinds are in the playbook, not built.
 - Related: DEC-0073 (the vault), DEC-0100 (Night School), DEC-0104, DEC-0105,
   `docs/DEVELOPMENTAL_INDEPENDENCE_REVIEW.md` (fine-tuning, later)

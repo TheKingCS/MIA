@@ -183,10 +183,14 @@ first. Each is a step below.
 19. 🔨 **Her own models** (DEC-0106; `core/model_forge.py`, `tools/model_forge.py`): stage 1 built 2026-11-07,
     the tool router: softmax regression in numpy, trained only on her tools' own words (1,987 examples, 222
     tools), settings chosen on half the routing corpus and scored on the other half: 81% first pick, 97% in the
-    top five; its card in `data/models/router/`. Not in use. Next: (a) give it the names of her records, as the
-    keyword router has (its misses are "the peppers", "plywood", "555 timers"); (b) run it in the shadow on new
-    requests, the Fix-It Log's misses first, and keep its record; (c) a Night School lesson family on the forge;
-    (d) fine-tuning on the PC's GPU once the corpus is big enough. 🧑 *Zac approves any model going into use.*
+    top five; its card in `data/models/router/`. Not in use. (a) ✅ the names of her records as features
+    (`named_domains`): level on the scoring half, 80% and 95%. (b) ✅ each model assigned to an issue or project:
+    the playbook of five kinds (router, classifier, extractor, forecaster, scorer) and the loops each could move;
+    `python -m tools.model_forge needs`. Next: (c) run the router in the shadow on new requests, the Fix-It Log's
+    misses first, and keep its record; (d) the next kind, likely the classifier for unwelcome messages or the
+    extractor for documents read wrong, whichever loop slips first; (e) Night School's self-assessment names a
+    forge opportunity when one exists; (f) fine-tuning on the PC's GPU once the corpus is big enough.
+    🧑 *Zac approves any model going into use.*
 
 ### Phase E: The rest already queued
 

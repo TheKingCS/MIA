@@ -254,6 +254,11 @@ class AssistantActionRegistry:
                     break
         return domains
 
+    def named_domains(self, prompt: str, context: Optional["AppContext"]) -> set[str]:
+        """The domains whose records `prompt` names, as the keyword router sees them; for a model that needs to know
+        "the peppers" is one of the person's own things (core/model_forge.py)."""
+        return self._entity_domains(prompt, context)
+
     def named_things(self, text: str, context: Optional["AppContext"]) -> list[str]:
         """The person's own records `text` names, by their full names
         ("the truck" -> "Pickup Truck"), with the same matching as

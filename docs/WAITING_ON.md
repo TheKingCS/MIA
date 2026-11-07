@@ -4,7 +4,7 @@
 agents or I need to do and I will address those later"). Claude adds to it as work needs someone, and strikes an
 item when it's done. Newest first within each person. Read with `docs/NEXT_SESSION.md`.*
 
-*Last updated: 2026-11-06*
+*Last updated: 2026-11-07*
 
 ## Zac
 
@@ -45,7 +45,14 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       `python -m tools.work mission start M-0001`.
 - [ ] **Sign the reviewers in:** `codex login` (the second reviewer), `gh auth login`, Copilot's `/login`.
 - [ ] **Approve or reject** what's waiting: Night School keeps real exercises she passes in `python -m tools.lab
-      list` (`python -m tools.lab approve <id>`).
+      list` (`python -m tools.lab approve <id>`). One is there now: the night of 2026-11-06's
+      phone_link lesson, `20261106-e2a5be` (a bad record no longer breaks the phone link).
+- [ ] **Her own models (DEC-0106):** nothing to do now. When you're curious: `.venv\Scripts\python -m tools.model_forge
+      list` shows each model she has made and how it scored; `... router` retrains the tool router (about half a
+      minute). A model only goes into use with your yes, and Claude will ask when one has earned it.
+- [ ] **Later, for fine-tuning (DEC-0106 stage 3):** training a local model on the 7900 XTX needs ROCm and PyTorch,
+      which work best on Linux (`docs/HARDWARE.md` recommends Ubuntu). When we get there: whether to dual-boot
+      Ubuntu on the PC, or try ROCm on Windows (more limited). Not needed until her corpus is big enough.
 - [ ] **Plaid:** finish the work in progress in `core/budget_manager.py` and `core/plaid_manager.py` (its test,
       `test_import_transaction_transfer_is_skipped`, fails until then), and link every card and bank.
 - [ ] **The phone:** install build 143 or newer (`adb install -r`), then reopen MIA on the glasses. The CI build

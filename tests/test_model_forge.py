@@ -75,3 +75,31 @@ def test_an_empty_training_set_is_refused():
 
     with pytest.raises(ValueError):
         mf.Router().train([])
+
+
+def test_every_specialist_in_the_playbook_serves_real_loops():
+    """The playbook names loops that exist (a renamed loop would leave a specialist serving nothing), and the router
+    is the one kind the forge can make today."""
+    from core.loops import LOOPS
+
+    ids = {l.id for l in LOOPS}
+    assert not [(s.kind, x) for s in mf.PLAYBOOK for x in s.serves if x not in ids]
+    assert [s.kind for s in mf.PLAYBOOK if s.built] == ["router"]
+    assert mf.specialists_for("inbox.reading")[0].kind in ("classifier", "extractor")
+    assert mf.specialists_for("answers.no_tool")[0].kind == "router"  # built ones first
+    assert mf.specialists_for("pc.disk") == []  # no model frees disk space
+
+
+def test_opportunities_are_slipping_loops_a_model_could_move(tmp_path):
+    """Only loops below their floor or sliding, only those a kind of model serves, below the floor first, with the
+    models already assigned to each."""
+    mf.forge_router(TOOLS, HELD_OUT, name="tiny", folder=tmp_path, settings=((50, 4.0, 1e-4),),
+                    serves=("loop:answers.no_tool", "project:P-0001"))
+    rows = [{"id": "answers.no_tool", "what": "no tool", "state": "slid", "why": "up"},
+            {"id": "inbox.reading", "what": "fields corrected", "state": "below", "why": "over"},
+            {"id": "answers.thumbs", "what": "rated", "state": "ok"},
+            {"id": "pc.disk", "what": "free space", "state": "below"}]
+    found = mf.opportunities(rows, tmp_path)
+    assert [o["loop"] for o in found] == ["inbox.reading", "answers.no_tool"]
+    assert found[1]["assigned"] == ["tiny"] and found[0]["assigned"] == []
+    assert [c["name"] for c in mf.assigned_to("project:P-0001", tmp_path)] == ["tiny"]

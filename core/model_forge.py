@@ -36,6 +36,13 @@ so its score is honest.
   the keyword router's on the same requests, and when. A model with no
   card isn't kept.
 
+**Assigning a model to an issue or project** (`PLAYBOOK`, `opportunities()`): an issue is one of her improvement
+loops (core/loops.py) below its floor or sliding. The playbook says which kinds of small model could move which
+loops (a router for requests reaching the wrong tool, a classifier for messages that aren't welcome, an
+extractor for documents read wrong, a forecaster for numbers she guesses, a scorer for answers that land badly),
+and each model's card names what it `serves`. So a model is judged by the issue it was made for: its loop has to
+get better, not only its test score.
+
 **Nothing uses it yet.** It isn't wired into her answers: the keyword
 router was tuned on these same requests, so beating it here proves
 nothing. The next stage runs it in the shadow on new requests (the Fix-It
@@ -81,19 +88,27 @@ def features(text: str) -> list[str]:
 
 @dataclass
 class Example:
-    """One thing to learn from or be tested on: some words, and the tool they mean."""
+    """One thing to learn from or be tested on: some words, the tool they mean, and the domains whose records the
+    words name (the person's own things: "the peppers" names a Maintenance record)."""
     text: str
     label: str
+    named: tuple = ()
 
 
-def examples_from_actions(actions: Iterable) -> list[Example]:
+def examples_from_actions(actions: Iterable, named: bool = True) -> list[Example]:
     """The training set from the tools themselves: each tool's name (as words), description, trigger phrases and
-    subjects, each an example of that tool. Nothing a person said is in it."""
+    subjects, each an example of that tool; and, with `named`, each of those again as though it named one of the
+    person's records in the tool's domain, so a request naming "the peppers" leans toward that domain's tools
+    (chosen on the half of the corpus that chooses: 86% to 87% first pick, 97% to 99% in the top five).
+    Nothing a person said is in it."""
     out = []
     for a in actions:
         texts = [a.name.replace("_", " "), a.description, *getattr(a, "trigger_phrases", ()),
                  *getattr(a, "subjects", ())]
-        out.extend(Example(t, a.name) for t in texts if t and t.strip())
+        texts = [t for t in texts if t and t.strip()]
+        out.extend(Example(t, a.name) for t in texts)
+        if named and getattr(a, "domain", None):
+            out.extend(Example(t, a.name, (a.domain,)) for t in texts)
     return out
 
 
@@ -107,12 +122,13 @@ class Router:
         self.weights = None  # numpy array, features x tools
         self.bias = None
 
-    def _vector(self, text: str):
-        """A text as a unit-length row of which known features it has (unknown words are ignored)."""
+    def _vector(self, text: str, named: Iterable[str] = ()):
+        """A text as a unit-length row of which known features it has (unknown words are ignored), with one
+        feature for each domain whose records it names."""
         import numpy as np
 
         row = np.zeros(len(self.vocab), dtype=np.float32)
-        for f in features(text):
+        for f in features(text) + [f"@{d}" for d in named]:
             i = self.vocab.get(f)
             if i is not None:
                 row[i] = 1.0
@@ -127,8 +143,9 @@ class Router:
         if not examples:
             raise ValueError("Nothing to learn from.")
         self.labels = sorted({e.label for e in examples})
-        self.vocab = {f: i for i, f in enumerate(sorted({f for e in examples for f in features(e.text)}))}
-        x = np.stack([self._vector(e.text) for e in examples])
+        self.vocab = {f: i for i, f in enumerate(sorted({f for e in examples
+                                                          for f in features(e.text) + [f"@{d}" for d in e.named]}))}
+        x = np.stack([self._vector(e.text, e.named) for e in examples])
         index = {label: i for i, label in enumerate(self.labels)}
         y = np.zeros((len(examples), len(self.labels)), dtype=np.float32)
         y[np.arange(len(examples)), [index[e.label] for e in examples]] = 1.0
@@ -146,13 +163,14 @@ class Router:
         self.weights, self.bias = w, b
         return self
 
-    def scores(self, text: str, top: int = 5) -> list[tuple[str, float]]:
-        """The `top` tools for a text with the model's probability for each, best first."""
+    def scores(self, text: str, top: int = 5, named: Iterable[str] = ()) -> list[tuple[str, float]]:
+        """The `top` tools for a text (and the domains whose records it names) with the model's probability for
+        each, best first."""
         import numpy as np
 
         if self.weights is None:
             return []
-        logits = self._vector(text) @ self.weights + self.bias
+        logits = self._vector(text, named) @ self.weights + self.bias
         p = np.exp(logits - logits.max())
         p /= p.sum()
         order = np.argsort(-p)[:top]
@@ -190,7 +208,7 @@ def evaluate(model: Router, held_out: list[Example], top: int = 5) -> dict:
     first = in_top = 0
     misses = []
     for e in known:
-        picks = [label for label, _p in model.scores(e.text, top)]
+        picks = [label for label, _p in model.scores(e.text, top, e.named)]
         first += bool(picks and picks[0] == e.label)
         in_top += e.label in picks
         if e.label not in picks:
@@ -211,11 +229,14 @@ def split(held_out: list[Example]) -> tuple[list[Example], list[Example]]:
 
 
 def forge_router(actions: Iterable, held_out: list[Example], name: str = "router", folder: Path = MODELS,
-                 baseline: Optional[float] = None, top: int = 5, settings=SETTINGS) -> dict:
+                 baseline: Optional[float] = None, top: int = 5, settings=SETTINGS,
+                 serves: tuple[str, ...] = ("loop:answers.no_tool", "loop:answers.rephrased",
+                                            "loop:answers.talked_instead", "loop:answers.routing")) -> dict:
     """Trains a router from the tools' own words, keeps it with its card in folder/name, and returns the card. Each
     of the settings is tried; the one that does best on half the held-out requests is kept, and its score is
     reported on the other half, which chose nothing. `baseline` is the keyword router's share on the same
-    requests, for the card."""
+    requests, for the card. `serves` names the issues or projects it's assigned to (loop:..., project:...,
+    mission:..., gap:...): whether it helps is read from those."""
     actions = list(actions)
     training = examples_from_actions(actions)
     choose_on, report_on = split(held_out)
@@ -241,6 +262,7 @@ def forge_router(actions: Iterable, held_out: list[Example], name: str = "router
         "keyword_router": {"offers_the_tool": baseline,
                            "note": "tuned by hand on these same requests, so it isn't a fair comparison"},
         "misses": scored["misses"][:40],
+        "serves": list(serves),  # the issues (loops) or projects it's assigned to, and judged by
         "in_use": False,
     }
     target = Path(folder) / name
@@ -258,3 +280,67 @@ def cards(folder: Path = MODELS) -> list[dict]:
         except (OSError, ValueError):
             continue
     return out
+
+
+def assigned_to(ref: str, folder: Path = MODELS) -> list[dict]:
+    """The models assigned to an issue or project (a ref like loop:answers.routing or project:...), by their cards."""
+    return [c for c in cards(folder) if ref in (c.get("serves") or [])]
+
+
+# ------------------------------------------------------------------ choosing a specialist for an issue
+
+@dataclass(frozen=True)
+class Specialist:
+    """One kind of small model she can make for an issue: what it does, what it learns from, the loops whose issues
+    it could move, and whether the forge can make it yet."""
+    kind: str
+    does: str
+    learns_from: str
+    serves: tuple[str, ...]
+    built: bool = False
+
+
+# Her playbook (Zac, 2026-11-07: "how she can best use this new feature to better herself by assigning or building
+# specialized models to an issue or project"). An issue is a loop that slipped; each kind of model here is a way to
+# move one. A project gets a model by naming it in the model's `serves`.
+PLAYBOOK: tuple[Specialist, ...] = (
+    Specialist("router", "picks which of her tools fit what was said",
+               "her tools' own words, then the requests that reached the wrong tool",
+               ("answers.no_tool", "answers.rephrased", "answers.talked_instead", "answers.routing", "gaps.repeated"),
+               built=True),
+    Specialist("classifier", "sorts a thing into a kind (a document's type, whether a message is welcome now)",
+               "past things and the kind each turned out to be (filed documents, dismissed or kept messages)",
+               ("inbox.reading", "gate.dismissed", "gate.unwelcome", "checks.dismissed", "actions.declined",
+                "notes.offers")),
+    Specialist("extractor", "reads fields out of text (a receipt's total, a due date, a part number)",
+               "documents and the fields a person corrected when filing them",
+               ("inbox.reading", "memory.quality", "corrections.all")),
+    Specialist("forecaster", "predicts a number or a date from a history (a bill, a lay rate, a work day)",
+               "the records' own history, checked against what then happened",
+               ("answers.projections", "loop.prediction", "answers.numbers", "missions.recurring")),
+    Specialist("scorer", "judges an answer or a candidate: how likely it lands well, or is right",
+               "answers rated, flagged or corrected, and how they were rated",
+               ("answers.corpus", "answers.calibration", "answers.thumbs", "answers.failures", "news.misleading")),
+)
+
+
+def specialists_for(loop_id: str) -> list[Specialist]:
+    """Pure logic. The kinds of model that could move a loop, the ones the forge can make today first."""
+    return sorted((s for s in PLAYBOOK if loop_id in s.serves), key=lambda s: not s.built)
+
+
+def opportunities(rows: list[dict], folder: Path = MODELS) -> list[dict]:
+    """Where a model of her own could help now: each loop below its floor or sliding (rows from loops.summary()),
+    with the kinds of model that could move it and the models already assigned to it; below the floor first."""
+    out = []
+    for row in rows:
+        if row.get("state") not in ("below", "slid"):
+            continue
+        kinds = specialists_for(row["id"])
+        if not kinds:
+            continue
+        out.append({"loop": row["id"], "what": row.get("what", ""), "state": row["state"], "why": row.get("why", ""),
+                    "kinds": [{"kind": s.kind, "does": s.does, "learns_from": s.learns_from, "built": s.built}
+                              for s in kinds],
+                    "assigned": [c["name"] for c in assigned_to(f"loop:{row['id']}", folder)]})
+    return sorted(out, key=lambda o: o["state"] != "below")
