@@ -13,6 +13,14 @@
    "status": "none",
    "why": "removing a camera they added is their own choice; the feed itself is a device, not a decision of hers"
   },
+  "action:energy": {
+   "status": "none",
+   "why": "readings and sources entered by hand (Power, DEC-0125): measurements, not her choices; nothing of MIA's to improve"
+  },
+  "action:energy_source": {
+   "status": "none",
+   "why": "readings and sources entered by hand (Power, DEC-0125): measurements, not her choices; nothing of MIA's to improve"
+  },
   "action:firstboot": {
    "status": "none",
    "why": "once per device; the glasses first boot is watched through glasses.voice once it is done"

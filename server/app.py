@@ -1098,6 +1098,14 @@ def create_app(context: AppContext) -> FastAPI:
         with app.state.turn_lock:
             return screen(view_for(context, profile_id))
 
+    @app.get("/api/power")
+    def power_screen(profile_id: str = Depends(require_profile_id)) -> dict:
+        """Power (core/web_power.py): this device's battery and the energy sources tracked by hand."""
+        from core.web_power import power_page
+
+        with app.state.turn_lock:
+            return power_page(view_for(context, profile_id))
+
     @app.get("/api/play")
     def play_screen(profile_id: str = Depends(require_profile_id)) -> dict:
         from core.recreation import screen

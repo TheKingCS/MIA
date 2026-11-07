@@ -322,6 +322,8 @@
       { id: "o2", text: "Train on the days the plan says.", section: "week", how: "checked against your workouts each week", self_rated: false, score: { pct: 75, text: "3 of 4 weeks" } },
       { id: "o3", text: "No phone at dinner.", section: "rules", how: "yours to rate, 1 to 5, each week", self_rated: true, score: { pct: 80, text: "4 / 5 last week" } }] })
       : call("GET", "/api/operating-journal"),
+    // Power (core/web_power.py, DEC-0125): the battery and the energy sources tracked by hand.
+    power: () => read("/api/power", "power"),
     play: () => demo ? Promise.resolve({ efforts: { easy: 3, moderate: 5, hard: 7 }, lines: [],
       weeks: [60, 90, 45, 120, 75, 100].map((m, i) => ({ week: ["2026-09-28", "2026-10-05", "2026-10-12", "2026-10-19", "2026-10-26", "2026-11-02"][i], played: 2, play_minutes: m, play_load: m * 5, workouts: 2, workout_minutes: 90 })),
       played: [{ id: "g1", what: "Pickup basketball", minutes: 60, effort: 7, effort_word: "Hard", with: [], date: "2026-11-05", load: 420 },

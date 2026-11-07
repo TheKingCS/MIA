@@ -171,6 +171,14 @@
       "group": "Home, homestead & equipment"
     },
     {
+      "id": "power",
+      "name": "Power",
+      "icon": "🔋",
+      "tagline": "Energy, tracked.",
+      "page": "power.html",
+      "group": "Home, homestead & equipment"
+    },
+    {
       "id": "character",
       "name": "Character",
       "icon": "👤",
@@ -364,14 +372,6 @@
     }
   ],
   "on_pc_only": [
-    "Household",
-    "Power",
-    "Observations",
-    "Classroom",
-    "Memories",
-    "Maps",
-    "Navigation",
-    "Knowledge",
     "Toolbox",
     "The Lab",
     "Field Kit",
