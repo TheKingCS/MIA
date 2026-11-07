@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1087 files, 246,033 lines; 1087 files describe themselves; 13,494 of 14,164 classes and functions are documented.
+1088 files, 246,321 lines; 1088 files describe themselves; 13,512 of 14,182 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-390 files, 114,109 lines; 6,034 of 6,123 classes and functions documented
+391 files, 114,300 lines; 6,049 of 6,138 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -54,7 +54,7 @@
 - `core/backup_manager.py`: Export/import MIA's config + data directory as a single backup file, per docs/ROADMAP.md milestone 2.7. Optionally passphrase-encrypted via core/secrets_manager.py.
 - `core/benchmarks.py`: The weekly benchmarks (build plan step 5, DEC-0094): Zac's 112-question Intelligence Benchmark on this PC's model and the person's real records, the golden conversation corpus on the glasses and the phone, and the routing audit. `tools/weekly_bench.py` runs them (Night School starts it once a week, 
 - `core/blueprints.py`: The blueprints MIA builds screens from (DEC-0090; `blueprints/README.md`): versioned JSON in the repo, with fields named by role (`$title`, `$date`, `$group`, `$number`, `$all`, `$details`). `fill()` turns one into blocks for a particular record set, leaving out what has no field to show.
-- `core/boot_sound.py`: Synthesizes the boot sequence's "growing pulsing energy" sound effect — a rising-pitch power-up sweep with a pulsing amplitude envelope, capped off with a bright high "ping" (the user's own description: "like a woooooooom ping") — timed to feel like it belongs alongside gui/presence_widget.py's brea
+- `core/boot_sound.py`: Six to choose from** (2026-11-07, Zac: "an odd ping... sample some sounds and I will pick"): `startup_samples()` makes each of core/startup_sounds.py's choices (a warm chord, rising chimes, a reactor power-up, a soft swell, a ready tone, and the original below); Settings plays and picks one (`sound.
 - `core/boot_sound_worker.py`: Plays the boot sound off the GUI thread — same reasoning as core/tts_worker.py: `VoiceManager.play()`'s `sd.wait()` blocks for the whole sound's duration, which would otherwise freeze core/application.py's own `QTimer`-chained boot steps for that long.
 - `core/boss_battles.py`: Boss battles (DEC-0028, the game layer's third piece): big goals with an HP bar.
 - `core/browser.py`: MIA's own web browser (DEC-0117, Zac 2026-11-07): Microsoft Edge, driven by Playwright, in a profile that is MIA's alone, never the person's own browser, logins, cookies or saved passwords. The window is visible on the computer, so what she does can be watched.
@@ -329,6 +329,7 @@
 - `core/specialists.py`: MIA's specialists (DEC-0109; Zac, 2026-11-07: "she should be able to specialize agents for each area of skill she is developing, like one that is catered towards construction knowledge, one towards radio technologies, one towards military strategy, one towards homesteading skills, one towards resear
 - `core/starter_templates.py`: Starter sets (2026-10-01): a new MIA is empty, and an empty app is hard to start with. A starter set fills in the usual things for a kind of life, so there's something to check off on day one:
 - `core/startup_briefing.py`: Pure logic for the "Good evening, Zac. Welcome back." launch greeting — docs/VISION.md's 2026-07-15 companion-philosophy update, "Startup Dashboard Briefing."
+- `core/startup_sounds.py`: The startup sounds' names and which one is chosen (Zac, 2026-11-07: "sample some sounds and I will pick a good start up sound, and make it a togglable setting"). Kept apart from core/boot_sound.py, which makes the sounds with numpy, so Settings can list them anywhere MIA runs (the phone too).
 - `core/subnet_calculator.py`: Subnet/CIDR calculator — docs/ROADMAP.md milestone 11.5, Field Kit's Security/Network Toolkit. A thin wrapper around stdlib `ipaddress` (handles both IPv4 and IPv6 correctly) rather than hand-rolling bitmask math — "don't reinvent the wheel", same reasoning behind this project's other integration de
 - `core/support_choice.py`: "When it's ambiguous, MIA asks instead of guessing" (2026-09-28), the part of slice B that was deferred (docs/COGNITIVE_EXTENSION_PROPOSAL.md, sections 8 and 9).
 - `core/sync.py`: Two-way sync between the phone and the home computer (DEC-0022, the step after the link; Zac, 2026-10-18). A change on either one shows up on the other: missions, the kitchen, money, the journal, quests, everything that lives in MIA's data files, and the XP and credits you earned.
@@ -401,7 +402,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 2,807 lines; 34 of 34 classes and functions documented
+2 files, 2,829 lines; 34 of 34 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -669,7 +670,7 @@
 
 ## tests/: the test suite: what each part must do
 
-361 files, 65,946 lines; 5,218 of 5,799 classes and functions documented
+361 files, 66,006 lines; 5,221 of 5,802 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -702,7 +703,7 @@
 - `tests/test_avatar_manager.py`: Unit tests for core.avatar_manager. list_devices()/is_available() are tested against a monkeypatched QMediaDevices.videoInputs() (same "mock the OS-level query, test our own mapping/decision logic" reasoning as test_power_manager.py mocking psutil and test_volume_manager.py mocking subprocess.run) —
 - `tests/test_backup_manager.py`: Unit tests for core.backup_manager. Isolates _CONFIG_FILE/_DATA_DIR into a tmp_path scratch area (same monkeypatch pattern as test_config_manager.py) so these tests never touch the real config/config.json or data/ directory. *(4 undocumented)*
 - `tests/test_benchmarks.py`: The weekly benchmarks (build plan step 5, core/benchmarks.py): graded by code against the run before, kept as grades only (never an answer), read by the answers.* loops. *(2 undocumented)*
-- `tests/test_boot_sound.py`: Unit tests for core.boot_sound — pure synthesis logic, no audio hardware/I/O involved (see that module's docstring for why real playback can't be verified in this dev sandbox). write_boot_sound_wav() is exercised via a real tmp_path file write/read round trip, same reasoning test_script_runner.py gi *(1 undocumented)*
+- `tests/test_boot_sound.py`: Unit tests for core.boot_sound — pure synthesis logic, no audio hardware/I/O involved; also the six startup sounds to choose from and the Settings choice that picks one (or Off) (see that module's docstring for why real playback can't be verified in this dev sandbox). write_boot_sound_wav() is exerc *(1 undocumented)*
 - `tests/test_boss_battles.py`: Boss battles (DEC-0028): every debt is a boss (max HP is the highest balance seen, payments are hits, interest heals it), and any mission can be made into one (its objectives are its HP). *(3 undocumented)*
 - `tests/test_browser.py`: MIA's browser (DEC-0117) against a pretend browser: what the safety rules let her do alone, a commit waiting for the person (approved on screen or with a yes, refused when the page changed), secrets never typed, a task taught by showing and replayed, learned after two clean runs, the Browser screen 
 - `tests/test_budget_manager.py`: Unit tests for core.budget_manager. Isolates _DATA_DIR/_*_FILE into a tmp_path scratch area, same monkeypatch pattern as test_calendar_manager.py's isolated_paths, so these tests never touch real data/*.json. *(5 undocumented)*
@@ -1035,7 +1036,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-73 files, 12,587 lines
+73 files, 12,602 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game

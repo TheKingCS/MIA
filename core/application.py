@@ -52,7 +52,7 @@ from core.app_context import AppContext
 from core.assistant_actions import AssistantAction
 from core.calendar_manager import RECURRENCE_TYPES as CALENDAR_RECURRENCE_TYPES, CalendarManager
 from core.component_manager import ComponentManager
-from core.boot_sound import write_boot_sound_wav
+from core.boot_sound import write_boot_sound_wav  # noqa: F401  (kept: the original sound, also a choice)
 from core.boot_sound_worker import BootSoundWorker
 from core.job_manager import JobManager
 from core.material_manager import MaterialManager
@@ -5583,11 +5583,16 @@ class MIAApplication:
         "growing pulsing energy" sound (core/boot_sound.py) is
         regenerated fresh each boot rather than cached — numpy
         synthesis of a few seconds of audio is cheap enough that
-        caching would be premature."""
-        if self.context.voice is None:
+        caching would be premature. Which sound (or none) is the device's
+        `sound.startup`, chosen in Settings (core/startup_sounds.py)."""
+        from core.boot_sound import write_startup_wav
+        from core.startup_sounds import OFF, startup_choice
+
+        chosen = startup_choice(self.config)  # Settings' "Startup sound" (2026-11-07), or off
+        if self.context.voice is None or chosen == OFF:
             return
         output_path = Path(tempfile.gettempdir()) / "mia_boot_sound.wav"
-        write_boot_sound_wav(output_path)
+        write_startup_wav(chosen, output_path)
         self._boot_sound_worker = BootSoundWorker(self.context.voice, output_path)
         self._boot_sound_worker.start()
 

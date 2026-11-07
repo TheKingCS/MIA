@@ -907,6 +907,28 @@ def create_app(context: AppContext) -> FastAPI:
         with app.state.turn_lock:
             return screen(view_for(context, profile_id))
 
+    # A startup sound to hear before choosing it in Settings (core/boot_sound.py, made on asking).
+    @app.get("/api/sounds/startup/{sound_id}")
+    def startup_sound(sound_id: str, profile_id: str = Depends(require_profile_id)):
+        import io
+        import wave
+
+        from fastapi.responses import Response
+
+        try:
+            from core.boot_sound import startup_samples
+
+            samples, rate = startup_samples(sound_id)
+        except (KeyError, ImportError):
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "There's no such startup sound here.") from None
+        buffer = io.BytesIO()
+        with wave.open(buffer, "wb") as out:
+            out.setnchannels(1)
+            out.setsampwidth(2)
+            out.setframerate(rate)
+            out.writeframes(samples.tobytes())
+        return Response(buffer.getvalue(), media_type="audio/wav", headers={"Cache-Control": "no-store"})
+
     # Start Here (core/web_guide.py): what MIA does and how, and what's new. The same for everyone; read only.
     @app.get("/api/guide")
     def guide_page(profile_id: str = Depends(require_profile_id)) -> dict:

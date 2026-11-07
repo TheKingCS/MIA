@@ -21,6 +21,8 @@ from dataclasses import dataclass, field
 from typing import Any, Optional
 
 from core.logger import get_logger
+from core.startup_sounds import DEFAULT_STARTUP
+from core.startup_sounds import options as startup_options
 
 log = get_logger(__name__)
 
@@ -78,6 +80,10 @@ SETTINGS: tuple[Setting, ...] = (
             "A chime for an objective, a fanfare for a level. Never for anything you didn't do."),
     Setting("sound.voice", "Sound", "MIA says a line when you win", "toggle", False,
             "Spoken out loud by this device's voice."),
+    # The startup sound (2026-11-07): one for the whole computer (it plays before anyone signs in), or off.
+    Setting("sound.startup", "Sound", "Startup sound", "choice", DEFAULT_STARTUP,
+            "Plays as MIA starts on this computer. Press Play to hear one before choosing.",
+            options=startup_options()),
     # Location quests (DEC-0028 #13, core/places.py): checked on this device only, while MIA is open.
     Setting("places.watch", "Location quests", "Notice when I arrive at my places", "toggle", False,
             "While MIA is open, this device checks where you are against your places. Where you are never leaves it."),

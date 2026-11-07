@@ -3,7 +3,8 @@ tests.test_boot_sound
 ========================
 
 Unit tests for core.boot_sound — pure synthesis logic, no audio
-hardware/I/O involved (see that module's docstring for why real
+hardware/I/O involved; also the six startup sounds to choose from and the
+Settings choice that picks one (or Off) (see that module's docstring for why real
 playback can't be verified in this dev sandbox). write_boot_sound_wav()
 is exercised via a real tmp_path file write/read round trip, same
 reasoning test_script_runner.py gives for using real filesystem
@@ -136,3 +137,51 @@ def test_ping_decays_to_near_silence():
 def test_ping_correct_sample_count():
     ping = _generate_ping(duration_seconds=0.6, sample_rate=22050)
     assert len(ping) == int(0.6 * 22050)
+
+
+def test_the_startup_sounds_to_choose_from(tmp_path):
+    """Every startup sound is real audio: under four seconds, loud enough to hear, never clipping, ending quietly
+    (no click), and written as a playable WAV; an unknown one is refused."""
+    import wave
+
+    import numpy as np
+    import pytest
+
+    from core.boot_sound import startup_samples, write_startup_wav
+    from core.startup_sounds import STARTUP_SOUNDS
+
+    for sound_id in STARTUP_SOUNDS:
+        samples, rate = startup_samples(sound_id)
+        seconds = len(samples) / rate
+        assert 1.0 < seconds <= 4.0, sound_id
+        peak = int(np.abs(samples).max())
+        assert 8000 < peak < 32767, sound_id
+        if sound_id != "power_up":  # the original ends on its ping
+            assert int(np.abs(samples[-50:]).max()) < 500, sound_id
+        with wave.open(str(write_startup_wav(sound_id, tmp_path / f"{sound_id}.wav")), "rb") as out:
+            assert out.getframerate() == rate and out.getnframes() == len(samples)
+    with pytest.raises(KeyError):
+        startup_samples("nope")
+
+
+def test_the_startup_sound_setting():
+    """Settings offers each sound and Off; the choice is read from the device's config, an unknown or missing one
+    falls back to the original."""
+    from core.startup_sounds import DEFAULT_STARTUP, OFF, STARTUP_SOUNDS, options, startup_choice
+    from core.web_account import SETTINGS_BY_KEY, clean_setting
+
+    setting = SETTINGS_BY_KEY["sound.startup"]
+    assert [o[0] for o in setting.options] == [o[0] for o in options()] == list(STARTUP_SOUNDS) + [OFF]
+    assert clean_setting("sound.startup", "reactor") == "reactor" and clean_setting("sound.startup", "off") == "off"
+
+    class Config(dict):
+        """A config with only what's set."""
+
+        def get(self, key, default=None):
+            """The value, else the default."""
+            return dict.get(self, key, default)
+
+    assert startup_choice(Config()) == DEFAULT_STARTUP
+    assert startup_choice(Config({"sound.startup": "off"})) == OFF
+    assert startup_choice(Config({"sound.startup": "warm_chord"})) == "warm_chord"
+    assert startup_choice(Config({"sound.startup": "gone"})) == DEFAULT_STARTUP
