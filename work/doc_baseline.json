@@ -112,7 +112,6 @@
   "core/findings.py": 5,
   "core/first_account.py": 1,
   "core/first_boot.py": 8,
-  "core/fitness_actions.py": 49,
   "core/fitness_manager.py": 32,
   "core/fitness_missions.py": 5,
   "core/flock.py": 16,

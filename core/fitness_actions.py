@@ -41,6 +41,7 @@ from core.actions import ACTION_TYPES, ActionError, ActionType
 
 
 def _fit(context):
+    """The person's fitness store, or ActionError when fitness isn't set up."""
     fit = getattr(context, "fitness", None)
     if fit is None:
         raise ActionError("Fitness isn't set up on this MIA.")
@@ -48,6 +49,7 @@ def _fit(context):
 
 
 def _number(value, what: str, low: float = 0.0) -> float:
+    """A number from the form (commas allowed) that must be more than `low`, or ActionError naming it."""
     try:
         number = float(str(value).replace(",", "").strip())
     except (TypeError, ValueError):
@@ -58,6 +60,7 @@ def _number(value, what: str, low: float = 0.0) -> float:
 
 
 def _day(params) -> str:
+    """The date the form gives (YYYY-MM-DD), or today."""
     raw = str(params.get("date") or "").strip()
     if not raw:
         return date.today().isoformat()
@@ -68,6 +71,7 @@ def _day(params) -> str:
 
 
 def _after(context) -> None:
+    """Brings the fitness missions up to date after a log (core/fitness_missions.py), since the logs are the truth."""
     from core.fitness_missions import sync
 
     sync(context)
@@ -77,6 +81,7 @@ def _after(context) -> None:
 
 
 def _describe_weigh_in(context, params) -> str:
+    """The sentence the approval card shows for `fitness.weigh_in` (Propose); raises ActionError when it can't be done. Units are lb or kg (the plan's by default)."""
     fit = _fit(context)
     weight = _number(params.get("weight"), "A weight")
     unit = params.get("unit") or fit.plan["units"]
@@ -86,6 +91,7 @@ def _describe_weigh_in(context, params) -> str:
 
 
 def _weigh_in(context, params) -> str:
+    """Does `fitness.weigh_in` once approved, and says what happened. It adds the weekly trend when there is one."""
     fit = _fit(context)
     try:
         entry = fit.log_weight(_number(params.get("weight"), "A weight"), _day(params), params.get("unit") or None)
@@ -129,6 +135,7 @@ def _food_entry(context, params) -> tuple[str, str, dict, str, float]:
 
 
 def _describe_food(context, params) -> str:
+    """The sentence the approval card shows for `fitness.food` (Propose); raises ActionError when it can't be done. It shows servings, kcal and protein."""
     meal, name, nutrients, _, servings = _food_entry(context, params)
     amount = f"{servings:g} × " if servings != 1 else ""
     facts = ", ".join(f"{round(nutrients[k]):g} {'kcal' if k == 'kcal' else 'g protein'}" for k in ("kcal", "protein_g")
@@ -137,6 +144,10 @@ def _describe_food(context, params) -> str:
 
 
 def _food(context, params) -> str:
+    """Does `fitness.food` once approved: logs what was eaten (a recipe's servings, or numbers). A recipe also counts in the
+    Kitchen's "times made" unless it was meal-prepped (that counted when cooked), and eating the planned lunch marks
+    the packed-lunch habit, and says what happened. It adds today's protein against the target.
+    """
     meal, name, nutrients, recipe_id, servings = _food_entry(context, params)
     fit = _fit(context)
     day = _day(params)
@@ -156,10 +167,12 @@ def _food(context, params) -> str:
 
 
 def _describe_protein(context, params) -> str:
+    """The sentence the approval card shows for `fitness.protein` (Propose); raises ActionError when it can't be done."""
     return f"Log {_number(params.get('grams'), 'Grams'):g} g of protein" + (f" ({params['name']})" if params.get("name") else "")
 
 
 def _protein(context, params) -> str:
+    """Does `fitness.protein` once approved: logs the grams as a snack (or the meal named) through _food, and says what happened."""
     grams = _number(params.get("grams"), "Grams")
     return _food(context, {"meal": params.get("meal") or "snack", "name": params.get("name") or "Protein",
                            "protein_g": grams, "date": params.get("date")})
@@ -169,6 +182,7 @@ def _protein(context, params) -> str:
 
 
 def _today(context):
+    """Today's planned training, or ActionError on a rest day."""
     todays = _fit(context).today_training()
     if todays is None:
         raise ActionError("No training is planned today. Rest counts too.")
@@ -176,6 +190,7 @@ def _today(context):
 
 
 def _describe_training(context, params) -> str:
+    """The sentence the approval card shows for `fitness.training_done` (Propose); raises ActionError when it can't be done. Training already done is refused."""
     todays = _today(context)
     if todays["done"]:
         raise ActionError(f"{todays.get('name') or 'Today’s training'} is already done.")
@@ -183,12 +198,14 @@ def _describe_training(context, params) -> str:
 
 
 def _training(context, params) -> str:
+    """Does `fitness.training_done` once approved: marks all of today's training done, and says what happened."""
     todays = _fit(context).complete_training()
     _after(context)
     return f"{todays.get('name') or 'Training'} done. Nice work."
 
 
 def _step_index(context, params) -> tuple[int, dict]:
+    """Which of today's steps the form means, by number (from 1) or by a name it contains, with today's training."""
     todays = _today(context)
     steps = todays.get("exercises") or []
     raw = params.get("step")
@@ -205,6 +222,7 @@ def _step_index(context, params) -> tuple[int, dict]:
 
 
 def _describe_step(context, params) -> str:
+    """The sentence the approval card shows for `fitness.step` (Propose); raises ActionError when it can't be done."""
     index, todays = _step_index(context, params)
     steps = todays.get("exercises") or []
     name = steps[index].get("name") if steps else todays.get("name")
@@ -212,6 +230,7 @@ def _describe_step(context, params) -> str:
 
 
 def _step(context, params) -> str:
+    """Does `fitness.step` once approved, and says what happened. It says how many are left, or that the training is done."""
     index, todays = _step_index(context, params)
     result = _fit(context).complete_step(index)
     _after(context)
@@ -223,6 +242,7 @@ def _step(context, params) -> str:
 
 
 def _describe_skill(context, params) -> str:
+    """The sentence the approval card shows for `fitness.skill` (Propose); raises ActionError when it can't be done. It shows the seconds, reps or minutes."""
     skill = str(params.get("skill") or "").strip() or "Skill"
     seconds, reps, minutes = params.get("seconds"), params.get("reps"), params.get("minutes")
     if seconds not in (None, ""):
@@ -238,6 +258,9 @@ def _describe_skill(context, params) -> str:
 
 
 def _skill(context, params) -> str:
+    """Does `fitness.skill` once approved: logs skill practice (a hold in seconds, reps, or minutes), and says what happened. A best hold or most
+    reps yet is called out.
+    """
     fit = _fit(context)
     skill = str(params.get("skill") or "").strip()
     if not skill:
@@ -260,6 +283,7 @@ HABITS = {"lunch": "packed lunch", "prep": "meal prep", "protein": "protein targ
 
 
 def _describe_habit(context, params) -> str:
+    """The sentence the approval card shows for `fitness.habit` (Propose); raises ActionError when it can't be done. Only the daily yeses in HABITS are allowed."""
     habit = str(params.get("habit") or "")
     if habit not in HABITS:
         raise ActionError("That isn't one of your daily yeses.")
@@ -267,6 +291,7 @@ def _describe_habit(context, params) -> str:
 
 
 def _habit(context, params) -> str:
+    """Does `fitness.habit` once approved: marks the yes for the day (meal prep counts for the week, keyed to its Monday), and says what happened."""
     from core.fitness_missions import monday
 
     habit = str(params.get("habit") or "")
@@ -287,10 +312,12 @@ def _words(value) -> list[str]:
 
 
 def _lines(value) -> list[str]:
+    """A list from the form: a list as is, or text split into its non-empty lines."""
     return value if isinstance(value, list) else [l for l in str(value or "").splitlines() if l.strip()]
 
 
 def _optional_number(value, what: str, whole: bool = False):
+    """A number when the form gave one (rounded with whole=True), else None."""
     if value in (None, ""):
         return None
     number = _number(value, what)
@@ -388,6 +415,7 @@ def _clean_plan(context, changes) -> dict:
 
 
 def _is_child(context) -> bool:
+    """Whether the signed-in person has a child account (False when that can't be told)."""
     from core.child_accounts import is_child
 
     try:
@@ -401,11 +429,13 @@ PLAN_PARTS = {"targets": "targets", "training": "training", "skill_tree": "skill
 
 
 def _describe_plan(context, params) -> str:
+    """The sentence the approval card shows for `fitness.plan` (Propose); raises ActionError when it can't be done. It names the parts of the plan that change."""
     changes = _clean_plan(context, params.get("changes"))
     return "Update your plan: " + ", ".join(PLAN_PARTS[k] for k in sorted(changes))
 
 
 def _plan(context, params) -> str:
+    """Does `fitness.plan` once approved: updates the plan, then makes sure its missions exist, and says what happened."""
     _fit(context).update_plan(_clean_plan(context, params["changes"]))
     from core.fitness_missions import ensure
 
@@ -414,6 +444,7 @@ def _plan(context, params) -> str:
 
 
 def _describe_milestone(context, params) -> str:
+    """The sentence the approval card shows for `fitness.milestone` (Propose); raises ActionError when it can't be done. One already reached is refused."""
     milestone = next((m for m in _fit(context).plan.get("milestones", []) if m.get("id") == params.get("milestone_id")), None)
     if milestone is None:
         raise ActionError("There's no milestone like that in your plan.")
@@ -423,6 +454,7 @@ def _describe_milestone(context, params) -> str:
 
 
 def _milestone(context, params) -> str:
+    """Does `fitness.milestone` once approved: marks it reached and grants 100 XP (50 toward Calisthenics), and says what happened."""
     from core.gamification import SkillWeight, grant_xp
 
     milestone = _fit(context).complete_milestone(str(params["milestone_id"]))
@@ -434,6 +466,7 @@ def _milestone(context, params) -> str:
 
 
 def _meal_slot(context, params) -> tuple[str, str, str, float]:
+    """The day, meal (breakfast, lunch, dinner or snack), recipe and servings a meal-plan form names, checked."""
     from core.fitness_manager import MEALS
 
     day = _day(params)
@@ -453,11 +486,13 @@ def _on_day(day: str) -> str:
 
 
 def _say_day(day: str) -> str:
+    """A date in words: "today" or "Mon Oct 12" (built by hand: %-d isn't on Windows)."""
     d = date.fromisoformat(day)
     return "today" if d == date.today() else f"{d:%a} {d:%b} {d.day}"  # %-d isn't on Windows
 
 
 def _describe_plan_meal(context, params) -> str:
+    """The sentence the approval card shows for `meal.plan` (Propose); raises ActionError when it can't be done. It says what the recipe replaces, or that the meal is cleared."""
     day, meal, recipe_id, servings = _meal_slot(context, params)
     if not recipe_id:
         return f"Clear {meal} {_on_day(day)}"
@@ -471,6 +506,7 @@ def _describe_plan_meal(context, params) -> str:
 
 
 def _plan_meal(context, params) -> str:
+    """Does `meal.plan` once approved: plans (or clears) one day's meal and brings the missions up to date, and says what happened."""
     from core.fitness_missions import ensure
 
     day, meal, recipe_id, servings = _meal_slot(context, params)
@@ -480,6 +516,7 @@ def _plan_meal(context, params) -> str:
 
 
 def _covers(params) -> list[str]:
+    """The meals a prep session covers, as "2026-10-13:lunch" slots (a list or comma-separated), each checked."""
     raw = params.get("covers") or []
     covers = raw if isinstance(raw, list) else [c.strip() for c in str(raw).split(",") if c.strip()]
     from core.fitness_manager import MEALS
@@ -496,6 +533,7 @@ def _covers(params) -> list[str]:
 
 
 def _describe_prep(context, params) -> str:
+    """The sentence the approval card shows for `meal.prep` (Propose); raises ActionError when it can't be done. It shows the recipe, servings and how many meals it covers."""
     recipe_id = str(params.get("recipe_id") or "")
     recipe = context.kitchen.get_recipe(recipe_id) if getattr(context, "kitchen", None) is not None else None
     if recipe is None:
@@ -506,6 +544,7 @@ def _describe_prep(context, params) -> str:
 
 
 def _prep(context, params) -> str:
+    """Does `meal.prep` once approved: plans a prep session for the meals it covers, and says what happened."""
     from core.fitness_missions import ensure
 
     recipe = context.kitchen.get_recipe(str(params["recipe_id"]))
@@ -516,6 +555,7 @@ def _prep(context, params) -> str:
 
 
 def _describe_prep_done(context, params) -> str:
+    """The sentence the approval card shows for `meal.prep_done` (Propose); raises ActionError when it can't be done."""
     session = next((p for p in _fit(context).prep_sessions() if p["id"] == params.get("prep_id")), None)
     if session is None:
         raise ActionError("There's no prep session like that.")
@@ -523,6 +563,9 @@ def _describe_prep_done(context, params) -> str:
 
 
 def _prep_done(context, params) -> str:
+    """Does `meal.prep_done` once approved: marks it cooked and counts the recipe made once in the Kitchen (eaten over the
+    week), and says what happened.
+    """
     session = _fit(context).finish_prep(str(params["prep_id"]))
     if getattr(context, "kitchen", None) is not None and context.kitchen.get_recipe(session["recipe_id"]) is not None:
         context.kitchen.log_meal(session["recipe_id"], date.today().isoformat(),
@@ -532,6 +575,7 @@ def _prep_done(context, params) -> str:
 
 
 def _prep_session(context, params) -> dict:
+    """The prep session the form names, or ActionError."""
     session = next((p for p in _fit(context).prep_sessions() if p["id"] == params.get("prep_id")), None)
     if session is None:
         raise ActionError("There's no prep session like that.")
@@ -539,6 +583,7 @@ def _prep_session(context, params) -> dict:
 
 
 def _describe_prep_delete(context, params) -> str:
+    """The sentence the approval card shows for `meal.prep_delete` (Propose); raises ActionError when it can't be done. It says how many planned meals go with it."""
     session = _prep_session(context, params)
     recipe = context.kitchen.get_recipe(session["recipe_id"]) if getattr(context, "kitchen", None) is not None else None
     covered = f" and the {len(session['covers'])} meals it covers" if session["covers"] else ""
@@ -546,6 +591,7 @@ def _describe_prep_delete(context, params) -> str:
 
 
 def _prep_delete(context, params) -> str:
+    """Does `meal.prep_delete` once approved: removes the session and the meals it covered, and says what happened."""
     from core.fitness_missions import ensure
 
     _fit(context).delete_prep(_prep_session(context, params)["id"])
@@ -554,6 +600,7 @@ def _prep_delete(context, params) -> str:
 
 
 def _entry(entries: list, entry_id, what: str) -> dict:
+    """The entry with this id in a list of logged entries, or ActionError naming what it is."""
     entry = next((e for e in entries if e["id"] == entry_id), None)
     if entry is None:
         raise ActionError(f"There's no {what} like that.")
@@ -561,11 +608,13 @@ def _entry(entries: list, entry_id, what: str) -> dict:
 
 
 def _describe_food_delete(context, params) -> str:
+    """The sentence the approval card shows for `fitness.food_delete` (Propose); raises ActionError when it can't be done."""
     entry = _entry(_fit(context)._data["food"], params.get("entry_id"), "food entry")
     return f"Remove {entry['name']} ({entry['meal']}, {_say_day(entry['date'])}) from what you ate"
 
 
 def _food_delete(context, params) -> str:
+    """Does `fitness.food_delete` once approved, and says what happened."""
     fit = _fit(context)
     fit.delete_food(_entry(fit._data["food"], params.get("entry_id"), "food entry")["id"])
     _after(context)
@@ -573,11 +622,13 @@ def _food_delete(context, params) -> str:
 
 
 def _describe_weigh_in_delete(context, params) -> str:
+    """The sentence the approval card shows for `fitness.weigh_in_delete` (Propose); raises ActionError when it can't be done."""
     entry = _entry(_fit(context).weigh_ins(), params.get("entry_id"), "weigh-in")
     return f"Remove the weigh-in of {entry['weight']:g} {entry['unit']} {_on_day(entry['date'])}"
 
 
 def _weigh_in_delete(context, params) -> str:
+    """Does `fitness.weigh_in_delete` once approved, and says what happened."""
     fit = _fit(context)
     fit.delete_weight(_entry(fit.weigh_ins(), params.get("entry_id"), "weigh-in")["id"])
     _after(context)
@@ -585,6 +636,9 @@ def _weigh_in_delete(context, params) -> str:
 
 
 def _suggestions(context, params) -> list[dict]:
+    """The recipes core/meal_plan.py suggests for the week's empty lunches and dinners, or ActionError when there's
+    nothing to fill or nothing to fill it with.
+    """
     from core.meal_plan import suggest_week
 
     picks = suggest_week(context, date.fromisoformat(_day(params)))
@@ -594,12 +648,14 @@ def _suggestions(context, params) -> list[dict]:
 
 
 def _describe_suggest(context, params) -> str:
+    """The sentence the approval card shows for `meal.suggest` (Propose); raises ActionError when it can't be done. It names the recipes it would use."""
     picks = _suggestions(context, params)
     names = sorted({p["name"] for p in picks})
     return f"Fill {len(picks)} meals this week from your recipes: " + ", ".join(names)
 
 
 def _suggest(context, params) -> str:
+    """Does `meal.suggest` once approved: plans each suggested meal, and says what happened."""
     from core.fitness_missions import ensure
 
     fit = _fit(context)
@@ -610,6 +666,7 @@ def _suggest(context, params) -> str:
 
 
 def _describe_shop(context, params) -> str:
+    """The sentence the approval card shows for `meal.shop` (Propose); raises ActionError when it can't be done. It warns when an item matches someone's allergy."""
     from core.meal_plan import shopping_list
 
     items = shopping_list(context, date.fromisoformat(_day(params)))["items"]
@@ -621,6 +678,9 @@ def _describe_shop(context, params) -> str:
 
 
 def _shop(context, params) -> str:
+    """Does `meal.shop` once approved: puts what the week's meals need (and the house doesn't have) on the Kitchen's grocery
+    list, and says what happened.
+    """
     from core.meal_plan import shopping_list
 
     items = shopping_list(context, date.fromisoformat(_day(params)))["items"]
