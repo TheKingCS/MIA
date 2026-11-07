@@ -69,6 +69,9 @@ MAX_LINES = 5
 
 
 def _line(text: str, detail: str = "", tone: str = "", action: Optional[dict] = None) -> dict:
+    """One panel line: text, a detail, a tone, and the action it proposes, kept only when its kind is in GLASSES_KINDS
+    (anything else stays a readout).
+    """
     out = {"text": text, "detail": detail, "tone": tone}
     if action and action.get("kind") in GLASSES_KINDS:
         out["action"] = {"kind": action["kind"], "label": action.get("label") or "Do it",
@@ -77,6 +80,7 @@ def _line(text: str, detail: str = "", tone: str = "", action: Optional[dict] = 
 
 
 def _panel(title: str, lines: list[dict], empty: str, more: int = 0, limit: int = MAX_LINES) -> dict:
+    """A panel: its title, the first `limit` lines, how many more there are, and what to show when it's empty."""
     return {"title": title, "lines": lines[:limit], "more": max(0, more + len(lines) - limit),
             "empty": empty}
 
@@ -94,12 +98,16 @@ def _asks_meter(context, params: dict) -> bool:
 
 
 def _fitness(context, today):
+    """The Fitness page's data (core/web_fitness.py), which several panels read from."""
     from core.web_fitness import fitness_page
 
     return fitness_page(context, today)
 
 
 def _kitchen_meals(context, today):
+    """Panel: today's planned meals with kcal and protein, each uneaten one offering "Ate it" (fitness.food), and
+    protein against the target (a menu item's readout; lines with an allowed action can be approved from the glasses).
+    """
     page = _fitness(context, today)
     meals = ((page.get("today") or {}).get("meals") or {})
     iso = meals.get("date") or today.isoformat()
@@ -122,6 +130,7 @@ def _kitchen_meals(context, today):
 
 
 def _kitchen_grocery(context, today):
+    """Panel: the unchecked grocery items with amount and recipe, each offering "Got it" (grocery.check) (a menu item's readout; lines with an allowed action can be approved from the glasses)."""
     from core.web_screens import kitchen_page
 
     items = [g for g in kitchen_page(context, today).get("grocery") or [] if not g.get("checked")]
@@ -140,10 +149,12 @@ MUSIC_LIST = "list-"
 
 
 def _slug(text: str) -> str:
+    """A short id from text (lowercase, dashes, at most 20 characters), for menu items made from names."""
     return "".join(c if c.isalnum() else "-" for c in text.lower()).strip("-")[:20]
 
 
 def _open_recipes(context, today):
+    """The recipes the person can open (not locked), from the Kitchen page."""
     from core.web_screens import kitchen_page
 
     return [r for r in kitchen_page(context, today).get("recipes") or [] if not r.get("locked")]
@@ -197,6 +208,7 @@ def _recipe_shelf(context, today, which: str) -> Optional[dict]:
 
 
 def _music(context):
+    """The Music page's data (core/web_more.py)."""
     from core.web_more import music_page
 
     return music_page(context)
@@ -214,11 +226,13 @@ def _song_lines(tracks: list[dict]) -> list[dict]:
 
 
 def _music_songs(context, today):
+    """Panel: every song (the first 60), each playable (a menu item's readout; lines with an allowed action can be approved from the glasses)."""
     tracks = _music(context).get("tracks") or []
     return _panel("Songs", _song_lines(tracks), "No songs yet. Add them on your phone.", more=max(0, len(tracks) - 60), limit=60)
 
 
 def _music_shelf(lines_of: list[tuple[str, str, int]]) -> list[dict]:
+    """Lines for a shelf of song lists (playlists or artists): each names its count and opens that list."""
     lines = []
     for label, item, count in lines_of:
         line = _line(label, f"{count} song{'' if count == 1 else 's'}")
@@ -228,12 +242,14 @@ def _music_shelf(lines_of: list[tuple[str, str, int]]) -> list[dict]:
 
 
 def _music_playlists(context, today):
+    """Panel: the playlists, each opening its songs (a menu item's readout; lines with an allowed action can be approved from the glasses)."""
     lists = _music(context).get("playlists") or []
     return _panel("Playlists", _music_shelf([(p["name"], f"p-{p['id']}"[:27], len(p["track_ids"])) for p in lists]),
                   "No playlists yet.", limit=60)
 
 
 def _music_artists(context, today):
+    """Panel: the artists, each opening their songs (a menu item's readout; lines with an allowed action can be approved from the glasses)."""
     artists = _music(context).get("artists") or []
     return _panel("Artists", _music_shelf([(a["name"], f"a-{i}", a["count"]) for i, a in enumerate(artists)]), "No artists yet.", limit=60)
 
@@ -257,6 +273,7 @@ def _music_list(context, which: str) -> Optional[dict]:
 
 
 def _kitchen_pantry(context, today):
+    """Panel: the pantry, soonest to expire first, flagging what expires within two days (a menu item's readout; lines with an allowed action can be approved from the glasses)."""
     from core.web_screens import kitchen_page
 
     items = kitchen_page(context, today).get("pantry") or []
@@ -291,6 +308,9 @@ def _workout_live(context, today):
 
 
 def _workout_live_lines(context, today):
+    """Panel: the live training session: the exercise and set now, the rest countdown (skip rest), set done,
+    pause or resume, skip, what's next and finish; with no session, a line to start today's workout (or a rest day) (a menu item's readout; lines with an allowed action can be approved from the glasses).
+    """
     from core.web_fitness import live_session
 
     s = live_session(context)
@@ -326,6 +346,9 @@ def _workout_live_lines(context, today):
 
 
 def _workout_training(context, today):
+    """Panel: today's training steps (sets and reps or holds), each undone one offering Done (fitness.step), then
+    "Training done" (a menu item's readout; lines with an allowed action can be approved from the glasses).
+    """
     t = (_fitness(context, today).get("today") or {})
     training = t.get("training")
     if t.get("rest_day") or not training:
@@ -345,6 +368,9 @@ def _workout_training(context, today):
 
 
 def _workout_practice(context, today):
+    """Panel: today's skill practice, best against target per step, offering "Practiced N min" until the day's
+    minutes are in (a menu item's readout; lines with an allowed action can be approved from the glasses).
+    """
     skills = (_fitness(context, today).get("today") or {}).get("skills") or []
     lines = []
     for s in skills:
@@ -365,6 +391,7 @@ def _workout_practice(context, today):
 
 
 def _workout_weight(context, today):
+    """Panel: the latest weigh-in, the weekly trend and the goal (and when it's on track for) (a menu item's readout; lines with an allowed action can be approved from the glasses)."""
     w = _fitness(context, today).get("weight") or {}
     if not w.get("latest"):
         return _panel("Weight", [], "No weigh-ins yet.")
@@ -379,6 +406,7 @@ def _workout_weight(context, today):
 
 
 def _workout_milestones(context, today):
+    """Panel: the plan's milestones, each unreached one offering "Reached it" (a menu item's readout; lines with an allowed action can be approved from the glasses)."""
     ms = _fitness(context, today).get("milestones") or []
     lines = [_line(m.get("name") or "", f"reached {m['done_on']}" if m.get("done_on") else "",
                    "ok" if m.get("done_on") else "",
@@ -394,22 +422,28 @@ BUCKETS = (("past_due", "Past Due"), ("due_today", "Due Today"), ("due_soon", "D
 
 
 def bucket_of(days: Optional[int], urgency: str = "") -> Optional[str]:
+    """Which due bucket a task falls in (past_due, due_today, due_soon); the same rule as Equipment's page."""
     from core.web_equipment import bucket_of as shared
 
     return shared(days, urgency)
 
 
 def _bucketed(lines: list[dict], bucket: Optional[str]) -> list[dict]:
+    """The lines in one bucket (all of them when bucket is None)."""
     return [line for line in lines if bucket is None or line.get("bucket") == bucket]
 
 
 def _missions(context, today):
+    """The Missions page's data (core/web_progress.py)."""
     from core.web_progress import missions_page
 
     return missions_page(context, today)
 
 
 def _mission_line(m: dict) -> dict:
+    """One mission as a line: "Claim" when it's ready; "Done" when one single-step objective is left (one that doesn't
+    count itself); otherwise its progress only.
+    """
     progress = f"{m.get('done', 0)} of {m.get('total', 0)}"
     if m.get("ready"):
         return _line(m.get("name") or "", f"ready · {m.get('reward_xp') or 0} XP", "ok",
@@ -423,6 +457,7 @@ def _mission_line(m: dict) -> dict:
 
 
 def _missions_claim(context, today):
+    """Panel: the missions ready to claim, daily and active (a menu item's readout; lines with an allowed action can be approved from the glasses)."""
     page = _missions(context, today)
     ready = [m for m in (page.get("daily") or []) + (page.get("active") or []) if m.get("ready")]
     return _panel("Ready to claim", [_mission_line(m) for m in ready], "Nothing to claim yet. Keep going.")
@@ -520,6 +555,7 @@ def _missions_pick(context, today, mission_id: Optional[str] = None):
 
 
 def _skills_focus(context, today):
+    """Panel: the focus skill and XP to its next level, and how many skills are growing (a menu item's readout; lines with an allowed action can be approved from the glasses)."""
     from core.web_progress import skills_page
 
     page = skills_page(context, today)
@@ -535,6 +571,7 @@ def _skills_focus(context, today):
 
 
 def _skills_week(context, today):
+    """Panel: the skills that gained XP this week, most first (a menu item's readout; lines with an allowed action can be approved from the glasses)."""
     from core.web_progress import skills_page
 
     growing = sorted((s for s in skills_page(context, today).get("skills") or [] if s.get("this_week")),
@@ -544,6 +581,7 @@ def _skills_week(context, today):
 
 
 def _character_stats(context, today):
+    """Panel: the person's level and XP and their non-zero character stats (a menu item's readout; lines with an allowed action can be approved from the glasses)."""
     from core.web_progress import character_page
 
     page = character_page(context, today)
@@ -556,6 +594,7 @@ def _character_stats(context, today):
 
 
 def _character_buffs(context, today):
+    """Panel: the buffs active today (core/buffs.py) (a menu item's readout; lines with an allowed action can be approved from the glasses)."""
     from core.buffs import buffs
 
     return _panel("Buffs", [_line(f"{b['icon']} {b['name']}", f"+{b['bonus']} {b['stat'].capitalize()} · {b['lasts']}", "ok")
@@ -563,6 +602,7 @@ def _character_buffs(context, today):
 
 
 def _character_chronicle(context, today):
+    """Panel: this week's chronicle story (a menu item's readout; lines with an allowed action can be approved from the glasses)."""
     from core.chronicle import chronicle_page
 
     week = chronicle_page(context, today)["this_week"]
@@ -570,6 +610,7 @@ def _character_chronicle(context, today):
 
 
 def _character_top(context, today):
+    """Panel: the top skills by level (a menu item's readout; lines with an allowed action can be approved from the glasses)."""
     from core.web_progress import character_page
 
     top = character_page(context, today).get("top_skills") or []
@@ -578,12 +619,16 @@ def _character_top(context, today):
 
 
 def _money(context, today):
+    """The Money page's data (core/web_money.py)."""
     from core.web_money import money_page
 
     return money_page(context, today)
 
 
 def _money_month(context, today):
+    """Panel: this month's in, out and net, and what's left a month after bills and minimums (readouts only: no
+    money actions on the glasses) (a menu item's readout; lines with an allowed action can be approved from the glasses).
+    """
     from core.region import money
 
     page = _money(context, today)
@@ -601,6 +646,7 @@ def _money_month(context, today):
 
 
 def _freedom(context, today):
+    """The Freedom page's data (core/freedom.py)."""
     from core.freedom import freedom_page
 
     return freedom_page(context, today)
@@ -631,6 +677,7 @@ def _freedom_glance(context, today):
 
 
 def _freedom_next(context, today):
+    """Panel: the next build in the Freedom plan: percent done, what's left, spent of budget (adults only) (a menu item's readout; lines with an allowed action can be approved from the glasses)."""
     page = _freedom(context, today)
     if not page.get("available"):
         return _panel("Next Build", [], "Freedom is a grown-up's plan.")
@@ -642,6 +689,7 @@ def _freedom_next(context, today):
 
 
 def _money_due(context, today):
+    """Panel: bills due in the next two weeks (overdue flagged), then income expected in that time (a menu item's readout; lines with an allowed action can be approved from the glasses)."""
     from core.region import money
 
     page = _money(context, today)
@@ -658,6 +706,7 @@ def _money_due(context, today):
 
 
 def _money_debts(context, today):
+    """Panel: what's owed and the minimum payments, then each debt with its rate and balance (a menu item's readout; lines with an allowed action can be approved from the glasses)."""
     from core.region import money
 
     debts = ((_money(context, today).get("summary") or {}).get("debts") or {})
@@ -671,6 +720,9 @@ def _money_debts(context, today):
 
 
 def _task_lines(context, rows: list[dict], with_asset: bool = True) -> list[dict]:
+    """Equipment tasks as lines, each with its due bucket; an action that needs a typed meter reading is dropped (the
+    glasses take no typed numbers).
+    """
     lines = []
     for t in rows:
         action = t.get("action")
@@ -684,6 +736,7 @@ def _task_lines(context, rows: list[dict], with_asset: bool = True) -> list[dict
 
 
 def _equipment_rows(context, scope: str, today) -> tuple[list[dict], list[dict]]:
+    """An equipment scope's assets and its tasks (needing attention first, then next up, without repeats)."""
     from core.web_equipment import equipment_page
 
     page = equipment_page(context, scope, today)
@@ -712,6 +765,9 @@ def _asset_panel(context, scope: str, asset_id: str, today) -> Optional[dict]:
 
 
 def _equipment(scope: str):
+    """Builds the four panels for an equipment scope (vehicles, home...): the assets (condition, past-due count, next
+    task, each opening its asset) and the Past Due, Due Today and Due Soon task lists.
+    """
     def assets(context, today):
         found, rows = _equipment_rows(context, scope, today)
         lines = []
@@ -738,6 +794,7 @@ def _equipment(scope: str):
 
 
 def _rentals(context, today):
+    """Panel: the rental properties with status and monthly cash flow, flagging ones with tasks that need attention (a menu item's readout; lines with an allowed action can be approved from the glasses)."""
     from core.region import money
     from core.web_screens import estate_page
 
@@ -775,6 +832,9 @@ def _calendar(bucket: str, label: str, empty: str):
 
 
 def calendar_status(context, today: date) -> dict:
+    """The Calendar card's one-line status: how many today, how many past due, or the next thing coming; {} when the
+    calendar fails (logged, never breaks the cards).
+    """
     from core.calendar_view import calendar_page
 
     try:
@@ -790,6 +850,9 @@ def calendar_status(context, today: date) -> dict:
 
 
 def _household_chores(context, today):
+    """Panel: the active household routines with this period's progress, each undone one offering Done
+    (routine.log), those still to do first (a menu item's readout; lines with an allowed action can be approved from the glasses).
+    """
     store = getattr(context, "recurring_missions", None)
     if store is None:
         return _panel("Chores", [], "Chores aren't available here.")
@@ -812,6 +875,7 @@ def _household_chores(context, today):
 
 
 def _people_birthdays(context, today):
+    """Panel: the birthdays of the people and pets kept, soonest first, flagging the coming week (a menu item's readout; lines with an allowed action can be approved from the glasses)."""
     from core.relationships_manager import days_until_birthday
 
     store = getattr(context, "relationships", None)
@@ -832,6 +896,7 @@ def _people_birthdays(context, today):
 
 
 def _inbox_waiting(context, today):
+    """Panel: the inbox documents waiting to be filed, newest first, with kind and date (a menu item's readout; lines with an allowed action can be approved from the glasses)."""
     store = getattr(context, "inbox", None)
     if store is None:
         return _panel("Waiting", [], "The inbox isn't available here.")
@@ -849,6 +914,7 @@ _GARAGE, _GREEN, _HOME = (_equipment(s) for s in ("garage", "greenhouse", "real_
 
 
 def _equipment_menu(builders) -> tuple:
+    """The menu entries (id, label, builder) for an equipment scope's four panels."""
     return tuple(zip(("assets", "past_due", "due_today", "due_soon"),
                      ("Assets", "Past Due", "Due Today", "Due Soon"), builders))
 
@@ -930,10 +996,12 @@ def _equipment_status(context, scope: str, today: date) -> dict:
 
 
 def _tile(label: str, value, tone: str = "") -> dict:
+    """One status tile on a card (label, value, tone)."""
     return {"label": label, "value": str(value), "tone": tone}
 
 
 def _kitchen_tiles(context, today) -> list[dict]:
+    """Kitchen's card tiles: meals eaten of planned, grocery items left, pantry expiring, recipes."""
     from core.web_screens import kitchen_page
 
     page = kitchen_page(context, today)
@@ -946,6 +1014,7 @@ def _kitchen_tiles(context, today) -> list[dict]:
 
 
 def _workout_tiles(context, today) -> list[dict]:
+    """Workout's card tiles: today's training (or Rest), steps done, protein against target."""
     page = _fitness(context, today)
     t = page.get("today") or {}
     training = t.get("training") if not t.get("rest_day") else None
@@ -960,6 +1029,7 @@ def _workout_tiles(context, today) -> list[dict]:
 
 
 def _equipment_tiles(scope: str):
+    """Builds an equipment scope's card tiles: tracked, past due, due today, due soon."""
     def build(context, today) -> list[dict]:
         found, rows = _equipment_rows(context, scope, today)
         buckets = [bucket_of(r.get("days"), r.get("urgency") or "") for r in rows]
@@ -970,12 +1040,14 @@ def _equipment_tiles(scope: str):
 
 
 def _music_tiles(context, today) -> list[dict]:
+    """Music's card tiles: songs, playlists, artists."""
     page = _music(context)
     return [_tile("Songs", len(page.get("tracks") or [])), _tile("Playlists", len(page.get("playlists") or [])),
             _tile("Artists", len(page.get("artists") or []))]
 
 
 def _calendar_tiles(context, today) -> list[dict]:
+    """Calendar's card tiles: past due, today, soon."""
     from core.calendar_view import calendar_page
 
     page = calendar_page(context, today)
@@ -989,6 +1061,7 @@ TILES = {"kitchen": _kitchen_tiles, "workout": _workout_tiles, "garage": _equipm
 
 
 def _tiles(context, module_id: str, today: date) -> list[dict]:
+    """A card's tiles, or [] for an app without them or when building them fails (logged)."""
     if module_id not in TILES:
         return []
     try:
@@ -999,6 +1072,9 @@ def _tiles(context, module_id: str, today: date) -> list[dict]:
 
 
 def _visible_apps(context) -> list:
+    """The apps the glasses show, in the glasses' order (FIRST, then the rest): visible to this person (child-safe,
+    not tucked away), not kept off the glasses, and with a panel or an ask to open.
+    """
     from core.web_surfaces import APPS, APPS_BY_ID, _visible
 
     order = list(FIRST) + [a.module_id for a in APPS if a.module_id not in FIRST]

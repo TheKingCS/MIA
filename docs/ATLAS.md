@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 225,950 lines; 1043 files describe themselves; 3,049 of 13,517 classes and functions are documented.
+1043 files, 226,026 lines; 1043 files describe themselves; 3,101 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 99,856 lines; 2,318 of 5,630 classes and functions documented
+367 files, 99,932 lines; 2,370 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -150,7 +150,7 @@
 - `core/gap_actions.py`: Capability gaps (core/capability_gaps.py, build plan step 9) through the action contract (core/actions.py): `gap.build` (the person says yes to a new ability being built: a development task naming the gap, never their words) and `gap.dismiss` (not wanted: never offered again). *(5 undocumented)*
 - `core/generate_worker.py`: Runs a single `AppContext.llm.generate()` call off the GUI thread — same reasoning as `core/chat_worker.py`, a separate class only because `generate()` and `chat_with_tools()` have different signatures/return types (`Optional[str]` vs `Optional[ChatReply]`), not because the threading concern itself  *(2 undocumented)*
 - `core/geo_grid.py`: Grid references (build plan step 14, DEC-0099): UTM and MGRS, the Military Grid Reference System that maps, search-and-rescue teams and TAK apps use ("18S UJ 23396 06441"), worked out in code from latitude and longitude on the WGS84 ellipsoid. No dependency, no network. Accurate to well under a metr *(5 undocumented)*
-- `core/glasses.py`: The glasses' app cards and their quick action menus (Zac, 2026-10-16; Muse's H-0041 Phase 2). The glasses boot to MIA's orb; one swipe away, the person flips through app cards; selecting one opens its quick action menu. Assembled here, in code, so `web/glasses.js` holds no logic (DEC-0013), from the *(52 undocumented)*
+- `core/glasses.py`: The glasses' app cards and their quick action menus (Zac, 2026-10-16; Muse's H-0041 Phase 2). The glasses boot to MIA's orb; one swipe away, the person flips through app cards; selecting one opens its quick action menu. Assembled here, in code, so `web/glasses.js` holds no logic (DEC-0013), from the
 - `core/glasses_feed.py`: The glasses' Heads-Up screen (Zac, 2026-10-18): blank until something happens, then a card ("+50 XP · Mission Complete", "Debt payment: Car loan"), then clear again. This is what's new for the person since the glasses last asked, wherever it happened (the phone, the PC, the glasses). *(3 undocumented)*
 - `core/glasses_voice.py`: Talking to MIA through the glasses (H-0041 Phase 3; Zac, 2026-10-19). The Display glasses pair to the phone as a Bluetooth headset, so MIA's phone app listens through the glasses' microphone (Android's own speech recognizer, on the phone), sends the words here, and speaks the answer back through the *(1 undocumented)*
 - `core/good_news.py`: Good News Radio (DEC-0096, build plan step 13; Zac, 2026-11-06: AI that reads credible outlets daily and gathers good news, healing, technology, medicine, renewable energy, societies improving, "heard through AI radio personalities matched to mood"; sources by Claude's recommendation, approved, and  *(14 undocumented)*

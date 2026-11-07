@@ -127,7 +127,6 @@
   "core/gap_actions.py": 5,
   "core/generate_worker.py": 2,
   "core/geo_grid.py": 5,
-  "core/glasses.py": 52,
   "core/glasses_feed.py": 3,
   "core/glasses_voice.py": 1,
   "core/good_news.py": 14,
