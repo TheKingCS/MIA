@@ -211,7 +211,6 @@
   "core/workflows.py": 2,
   "core/workout_actions.py": 10,
   "core/workshop_machine.py": 9,
-  "core/world_map.py": 11,
   "gui/account_dialogs.py": 30,
   "gui/add_edit_alarm_dialog.py": 7,
   "gui/add_edit_asset_dialog.py": 20,

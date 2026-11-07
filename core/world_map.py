@@ -52,6 +52,7 @@ REGION_RANKS = ((2, "Day Tripper", "🚗"), (5, "Far And Wide", "✈️"), (10, 
 
 
 def tile_of(lat: float, lon: float, zoom: int = ZOOM) -> tuple[int, int]:
+    """The map tile (x, y) a point falls in, at the world map's zoom (about 2 km)."""
     return lat_lon_to_tile_xy(lat, lon, zoom)
 
 
@@ -93,6 +94,7 @@ def ranks(tiles: int, regions: int) -> list[dict]:
 
 
 def _rational(data: bytes, offset: int, endian: str) -> float:
+    """An EXIF rational (numerator over denominator) as a number; 0 over 0 is 0."""
     num, den = struct.unpack(endian + "II", data[offset:offset + 8])
     return num / den if den else 0.0
 
@@ -119,6 +121,9 @@ def exif_gps(data: bytes) -> Optional[tuple[float, float]]:
 
 
 def _tiff_gps(t: bytes) -> Optional[tuple[float, float]]:
+    """Pure logic. A photo's GPS position from its EXIF TIFF block, read without a library: the GPS directory's
+    latitude and longitude (degrees, minutes, seconds) with their N/S and E/W. None when there's none, or it's 0, 0.
+    """
     endian = "<" if t[:2] == b"II" else ">"
     ifd0 = struct.unpack(endian + "I", t[4:8])[0]
 
@@ -154,6 +159,7 @@ def _tiff_gps(t: bytes) -> Optional[tuple[float, float]]:
 
 @dataclass
 class CheckIn:
+    """One "I'm here": where, when, and an optional name."""
     lat: float
     lon: float
     at: str
@@ -161,7 +167,12 @@ class CheckIn:
 
 
 class WorldMap:
+    """A person's world map (world_map.json in their folder, written through atomic_write_text so a check-in can be
+    undone): their check-ins, and the day each tile was first cleared. What clears the fog is worked out from trips,
+    photos and check-ins.
+    """
     def __init__(self, context, data_dir: Optional[Path] = None) -> None:
+        """Points at the person's file (data/ by default) and loads it."""
         self.context = context
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._file = self.data_dir / _FILE
@@ -170,6 +181,7 @@ class WorldMap:
         self._load()
 
     def _load(self) -> None:
+        """Reads the check-ins and first-cleared days; an unreadable file is logged, reported and starts empty."""
         self.checkins, self.first_seen = [], {}
         if not self._file.exists():
             return
@@ -183,14 +195,17 @@ class WorldMap:
             notify_data_corruption(self.context, _FILE)
 
     def reload(self) -> None:
+        """Reads the file again (after undo restored it)."""
         self._load()
 
     def _save(self) -> None:
+        """Writes everything atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._file, json.dumps({"checkins": [asdict(c) for c in self.checkins],
                                                   "first_seen": self.first_seen}, indent=2, ensure_ascii=False))
 
     def check_in(self, lat: float, lon: float, label: str = "") -> CheckIn:
+        """Records an "I'm here" (position kept to six decimals)."""
         c = CheckIn(round(lat, 6), round(lon, 6), datetime.now().isoformat(timespec="seconds"), label)
         self.checkins.append(c)
         self._save()
@@ -210,6 +225,7 @@ class WorldMap:
 
 
 def _waypoints(context) -> dict:
+    """The household's waypoints by id ({} when there's no waypoint store)."""
     w = getattr(context, "waypoints", None)
     return {p.waypoint_id: p for p in w.all_waypoints()} if w is not None else {}
 
