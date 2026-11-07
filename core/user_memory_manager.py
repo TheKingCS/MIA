@@ -86,6 +86,9 @@ MEMORY_CATEGORIES = [
 
 @dataclass
 class UserMemory:
+    """One thing MIA remembers about the person: the text, when, the conversation it came from, and its category
+    (MEMORY_CATEGORIES).
+    """
     memory_id: str
     text: str
     created_at: str = ""
@@ -93,6 +96,7 @@ class UserMemory:
     category: str = "Other"  # one of MEMORY_CATEGORIES — "Other" for pre-Memory-Palace records too
 
     def to_dict(self) -> dict:
+        """The memory as saved in user_memories.json."""
         return {
             "memory_id": self.memory_id,
             "text": self.text,
@@ -103,6 +107,7 @@ class UserMemory:
 
     @staticmethod
     def from_dict(data: dict) -> "UserMemory":
+        """A memory from its saved dict; missing fields take their defaults (Other for older ones)."""
         return UserMemory(
             memory_id=data.get("memory_id", uuid.uuid4().hex[:10]),
             text=data.get("text", ""),
@@ -202,10 +207,12 @@ _QUESTION_STOPWORDS = _RELATED_MEMORY_STOPWORDS | {
 
 
 def _stem(word: str) -> str:
+    """A word without a plural s (not "ss", not short words), for matching questions to memories."""
     return word[:-1] if len(word) > 3 and word.endswith("s") and not word.endswith("ss") else word
 
 
 def _question_words(text: str) -> set[str]:
+    """The meaningful words in a question, stemmed, stopwords left out."""
     return {_stem(w.lower()) for w in _WORD_RE.findall(text)} - _QUESTION_STOPWORDS
 
 
@@ -253,11 +260,13 @@ def relevant_memories(prompt: str, memories: list["UserMemory"], limit: int = 8)
 
 @dataclass
 class MemoryTreeNode:
+    """A memory with the memories that grew from it, for the Memory Palace's tree."""
     memory: "UserMemory"
     children: list["MemoryTreeNode"]
 
 
 def _tree_size(node: "MemoryTreeNode") -> int:
+    """How many memories a tree node holds, itself included."""
     return 1 + sum(_tree_size(child) for child in node.children)
 
 
@@ -325,9 +334,14 @@ def memory_relationship_trees(all_memories: list["UserMemory"]) -> list["MemoryT
 
 
 class UserMemoryManager:
+    """What MIA remembers about the person (user_memories.json in their folder, written through atomic_write_text so
+    undo can restore it). The model suggests memories; this only keeps and serves them, and every correction the
+    person makes is noted for MIA's memory-quality loop.
+    """
     def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
         # Whose data: a person's own folder (core/personal_data.py), or the
         # shared data/ folder by default.
+        """Points at the person's file (data/ by default) and loads it."""
         self.data_dir = Path(data_dir) if data_dir is not None else _USER_MEMORIES_FILE.parent
         self._user_memories_file = self.data_dir / _USER_MEMORIES_FILE.name if data_dir is not None else _USER_MEMORIES_FILE
         self.context = context
@@ -339,6 +353,7 @@ class UserMemoryManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads the memories; a damaged file is logged, reported (notify_data_corruption) and starts empty."""
         if not self._user_memories_file.exists():
             self._memories = []
             return
@@ -351,6 +366,7 @@ class UserMemoryManager:
             self._memories = []
 
     def _save(self) -> None:
+        """Writes every memory atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._user_memories_file,
             json.dumps([m.to_dict() for m in self._memories], indent=2),
@@ -368,6 +384,9 @@ class UserMemoryManager:
     def add_memory(
         self, text: str, category: str = "Other", source_conversation_id: Optional[str] = None,
     ) -> Optional[UserMemory]:
+        """Keeps a new memory (an unknown category becomes Other); None for empty text or a near-duplicate of one already
+        kept.
+        """
         text = text.strip()
         if not text:
             return None
@@ -386,9 +405,11 @@ class UserMemoryManager:
         return memory
 
     def get_memory(self, memory_id: str) -> Optional[UserMemory]:
+        """The memory with this id, or None."""
         return next((m for m in self._memories if m.memory_id == memory_id), None)
 
     def update_memory(self, memory_id: str, text: str) -> UserMemory:
+        """Corrects a memory's text (noted as a correction when it changes); ValueError when it's gone or empty."""
         memory = self.get_memory(memory_id)
         if memory is None:
             raise ValueError(f"No memory with id '{memory_id}'.")
@@ -401,6 +422,7 @@ class UserMemoryManager:
         return memory
 
     def delete_memory(self, memory_id: str) -> None:
+        """Forgets a memory (noted as a correction)."""
         memory = self.get_memory(memory_id)
         if memory is not None:
             self._note_correction(memory, "deleted")
@@ -447,5 +469,6 @@ class UserMemoryManager:
         return out
 
     def clear_all(self) -> None:
+        """Forgets every memory."""
         self._memories = []
         self._save()
