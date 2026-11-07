@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1069 files, 237,787 lines; 1069 files describe themselves; 7,186 of 13,808 classes and functions are documented.
+1069 files, 237,817 lines; 1069 files describe themselves; 7,216 of 13,808 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -524,7 +524,7 @@
 
 ## modules/: the desktop's apps, one folder each
 
-93 files, 22,546 lines; 781 of 1,030 classes and functions documented
+93 files, 22,576 lines; 811 of 1,030 classes and functions documented
 
 - `modules/__init__.py`: Every feature of MIA (Assistant, Files, Notes, Maps, etc.) lives here as an independent package. Each module package must:
 - `modules/assistant/__init__.py`: The assistant app's package: its screen and behaviour are in module.py (Assistant Chat UI — docs/ROADMAP.md milestones 5.2 (text chat), 5.3 (voice), 5.4 (device-help grounding), and 5.5 (tool use / action execution). A chat screen (). core/module_manager.py finds it by that file.
@@ -565,7 +565,7 @@
 - `modules/lab/__init__.py`: The lab app's package: its screen and behaviour are in module.py (The Lab — docs/ROADMAP.md milestone 8.2, the UI home of the Data Logger shared service (top-level module section 14: "sensor testing, experiments, calibration, ). core/module_manager.py finds it by that file.
 - `modules/lab/module.py`: The Lab — docs/ROADMAP.md milestone 8.2, the UI home of the Data Logger shared service (top-level module section 14: "sensor testing, experiments, calibration, graphs"). Pick or create a series, add a manual reading (value/unit/note), see it charted via `QtCharts` (bundled with PySide6 already — no 
 - `modules/maintenance/__init__.py`: The maintenance app's package: its screen and behaviour are in module.py (Maintenance: recurring upkeep tracking for anything the user owns that needs it — vehicles, power equipment (mower, e-bike), appliances, the property itself, an). core/module_manager.py finds it by that file.
-- `modules/maintenance/module.py`: Maintenance: recurring upkeep tracking for anything the user owns that needs it — vehicles, power equipment (mower, e-bike), appliances, the property itself, and tools. Two tabs (Assets, Tasks), same `QTabWidget` multi-feature-in-one-module shape as modules/workshop/module.py, since Assets and Tasks *(30 undocumented)*
+- `modules/maintenance/module.py`: Maintenance: recurring upkeep tracking for anything the user owns that needs it — vehicles, power equipment (mower, e-bike), appliances, the property itself, and tools. Two tabs (Assets, Tasks), same `QTabWidget` multi-feature-in-one-module shape as modules/workshop/module.py, since Assets and Tasks
 - `modules/maps/__init__.py`: The maps app's package: its screen and behaviour are in module.py (Maps — a schematic waypoint plot (the original zero-hardware slice), plus two real additions the user explicitly asked for next: a real pannable/zoomable basema). core/module_manager.py finds it by that file.
 - `modules/maps/module.py`: Maps — a schematic waypoint plot (the original zero-hardware slice), plus two real additions the user explicitly asked for next: a real pannable/zoomable basemap ("offline maps") and a catalog of official state park / trail map PDFs ("state park maps and trail maps"). Three tabs:
 - `modules/maps/tile_prefetch_worker.py`: Runs core.map_tile_cache.MapTileCache.ensure_region_cached() off the GUI thread — the explicit, user-initiated "download this region for offline use" action can fetch hundreds of tiles and take real time, so this is the same one-shot QThread-per-run pattern as modules/field_kit/script_worker.py's Sc

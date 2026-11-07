@@ -184,12 +184,14 @@ def format_task_row(
 
 
 class MaintenanceModule(ModuleBase):
+    """The Maintenance app (desktop): assets (vehicles, equipment, appliances, property, tools) and their upkeep tasks, due by date, meter (hours, miles, cycles) or a sensor crossing its threshold; what's due this week and month; and a Monitor of sensor readings. The Garage, Property and Greenhouse apps read the same records."""
     module_id = "maintenance"
     display_name = "Maintenance"
     description = "Recurring upkeep tracking for vehicles, equipment, appliances, property, and tools."
     icon = "\U0001F527"  # wrench
 
     def __init__(self, context) -> None:
+        """Nothing built yet: the tabs are made in get_widget()."""
         super().__init__(context)
         self._asset_filter_edit: Optional[QLineEdit] = None
         self._asset_list: Optional[QListWidget] = None
@@ -207,6 +209,7 @@ class MaintenanceModule(ModuleBase):
         self._monitor_quest_container: Optional[QVBoxLayout] = None
 
     def on_load(self) -> None:
+        """Registers the maintenance search provider (Ctrl+K)."""
         super().on_load()
         self.context.search.register_provider("maintenance", self._search)
 
@@ -217,6 +220,7 @@ class MaintenanceModule(ModuleBase):
         self._refresh_overview()
 
     def get_widget(self) -> QWidget:
+        """The page: Assets, Tasks, Overview and Monitor tabs, the Overview and Monitor refreshed when a tab is shown."""
         widget = QWidget()
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(24, 24, 24, 24)
@@ -253,6 +257,7 @@ class MaintenanceModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_assets_tab(self) -> QWidget:
+        """The Assets tab: the filter, the assets with Add, Edit, Log Usage and Delete."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
@@ -287,6 +292,7 @@ class MaintenanceModule(ModuleBase):
         return tab
 
     def _refresh_asset_list(self) -> None:
+        """Lists the assets matching the filter (name or category), each with whose it is when it belongs to someone."""
         query = self._asset_filter_edit.text().strip().lower()
         assets = self.context.maintenance.all_assets()
         if query:
@@ -300,12 +306,14 @@ class MaintenanceModule(ModuleBase):
             self._asset_list.addItem(item)
 
     def _selected_asset_id(self) -> Optional[str]:
+        """The selected asset's id, or None."""
         item = self._asset_list.currentItem()
         if item is None:
             return None
         return item.data(Qt.ItemDataRole.UserRole)
 
     def _on_add_asset(self) -> None:
+        """Adds an asset from the dialog (owner, name, category, notes, purchase, serial, make and model, price, warranty)."""
         dialog = AddEditAssetDialog(context=self.context)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -325,6 +333,7 @@ class MaintenanceModule(ModuleBase):
         self._refresh_asset_list()
 
     def _on_edit_asset(self) -> None:
+        """Edits the selected asset in the dialog (asks for a selection first)."""
         asset_id = self._selected_asset_id()
         if asset_id is None:
             QMessageBox.information(None, "No Asset Selected", "Select an asset to edit.")
@@ -352,6 +361,7 @@ class MaintenanceModule(ModuleBase):
         self._refresh_task_list()
 
     def _on_delete_asset(self) -> None:
+        """Deletes the selected asset after asking, saying how many of its tasks go with it."""
         asset_id = self._selected_asset_id()
         if asset_id is None:
             QMessageBox.information(None, "No Asset Selected", "Select an asset to delete.")
@@ -375,6 +385,7 @@ class MaintenanceModule(ModuleBase):
         self._refresh_task_list()
 
     def _on_log_asset_reading(self) -> None:
+        """Logs a usage reading for the selected asset's meter (its known meters offered)."""
         asset_id = self._selected_asset_id()
         if asset_id is None:
             QMessageBox.information(None, "No Asset Selected", "Select an asset to log usage for.")
@@ -394,6 +405,7 @@ class MaintenanceModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_tasks_tab(self) -> QWidget:
+        """The Tasks tab: the filter, the tasks with Add, Edit, Mark Complete, Schedule, Log Reading and Delete."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
@@ -436,6 +448,7 @@ class MaintenanceModule(ModuleBase):
         return tab
 
     def _refresh_task_list(self) -> None:
+        """Lists the tasks matching the filter (task or asset name), each coloured by how urgent it is."""
         query = self._task_filter_edit.text().strip().lower()
         today = date.today()
         tasks = self.context.maintenance.all_tasks()
@@ -459,6 +472,7 @@ class MaintenanceModule(ModuleBase):
             self._task_list.addItem(item)
 
     def _selected_task_id(self) -> Optional[str]:
+        """The selected task's id, or None."""
         item = self._task_list.currentItem()
         if item is None:
             return None
@@ -473,6 +487,7 @@ class MaintenanceModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_overview_tab(self) -> QWidget:
+        """The Overview tab: what's due this week and this month."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
@@ -492,6 +507,7 @@ class MaintenanceModule(ModuleBase):
         return tab
 
     def _refresh_overview(self) -> None:
+        """Works out each task's next date (meter tasks from their readings) and lists those within 7 days and within 30."""
         today = date.today()
         week_cutoff = today.toordinal() + 7
         month_cutoff = today.toordinal() + 30
@@ -516,6 +532,7 @@ class MaintenanceModule(ModuleBase):
         self._populate_overview_list(self._month_list, month_rows, today)
 
     def _populate_overview_list(self, list_widget: QListWidget, rows: list, today: date) -> None:
+        """Fills one overview list, soonest first, each coloured by urgency."""
         list_widget.clear()
         for occurrence, task in sorted(rows, key=lambda pair: pair[0]):
             asset = self.context.maintenance.get_asset(task.asset_id)
@@ -555,12 +572,14 @@ class MaintenanceModule(ModuleBase):
                 widget.deleteLater()
 
     def _assets_with_sensor_tasks(self) -> list[MaintenanceAsset]:
+        """The assets that have at least one sensor task."""
         return [
             asset for asset in self.context.maintenance.all_assets()
             if any(t.is_sensor_task for t in self.context.maintenance.tasks_for_asset(asset.asset_id))
         ]
 
     def _build_monitor_tab(self) -> QWidget:
+        """The Monitor tab: the asset picker, a tile per sensor task, the chart with its task picker, logging a reading, and the threshold quest card."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
@@ -622,6 +641,7 @@ class MaintenanceModule(ModuleBase):
         return tab
 
     def _refresh_monitor(self) -> None:
+        """Refills the Monitor for the picked asset (kept across refreshes): a tile per sensor task (latest value and target), the chart's and logging's task pickers, and which have crossed their threshold; says how to add one when no asset has sensor tasks."""
         if self._monitor_asset_combo is None:
             return
 
@@ -689,6 +709,7 @@ class MaintenanceModule(ModuleBase):
         self._refresh_monitor_quest_card(due_tasks)
 
     def _refresh_monitor_chart(self) -> None:
+        """Charts the picked sensor task's readings against its threshold, or says there are no tasks or no readings yet."""
         if self._monitor_chart_container is None:
             return
         self._clear_layout(self._monitor_chart_container)
@@ -711,6 +732,7 @@ class MaintenanceModule(ModuleBase):
             self._monitor_chart_container.addWidget(chart_view)
 
     def _refresh_monitor_quest_card(self, due_tasks: list[MaintenanceTask]) -> None:
+        """The quest card for the first sensor task past its threshold (worth a look, +10 XP, Start Quest), or that none have crossed."""
         if not due_tasks:
             hint = QLabel("No sensor thresholds currently crossed.")
             hint.setObjectName("SubtitleLabel")
@@ -745,6 +767,7 @@ class MaintenanceModule(ModuleBase):
         self._monitor_quest_container.addStretch(1)
 
     def _on_monitor_log_reading(self) -> None:
+        """Logs the value typed for the picked sensor task (it must be a number), then refreshes the Monitor."""
         task_id = self._monitor_reading_task_combo.currentData()
         if task_id is None:
             QMessageBox.information(None, "No Sensor Task", "This asset has no sensor tasks to log a reading against.")
@@ -783,6 +806,7 @@ class MaintenanceModule(ModuleBase):
         self.context.events.publish("assistant.open_module_requested", module_id="missions")
 
     def _on_add_task(self) -> None:
+        """Adds a task from the dialog (asks for an asset first when there are none): its trigger, interval, meter, threshold, auto-scheduling, priority and lifetime tracking."""
         assets = self.context.maintenance.all_assets()
         if not assets:
             QMessageBox.information(None, "No Assets Yet", "Add an asset first (Assets tab) before adding a task for it.")
@@ -809,6 +833,7 @@ class MaintenanceModule(ModuleBase):
         self._refresh_task_list()
 
     def _on_edit_task(self) -> None:
+        """Edits the selected task in the dialog (recorded as a screen edit, so a person fixing MIA's work counts)."""
         task_id = self._selected_task_id()
         if task_id is None:
             QMessageBox.information(None, "No Task Selected", "Select a task to edit.")
@@ -839,6 +864,7 @@ class MaintenanceModule(ModuleBase):
         self._refresh_task_list()
 
     def _on_mark_complete(self) -> None:
+        """Marks the selected task done; a meter task asks for the meter's value now (the latest reading offered)."""
         task_id = self._selected_task_id()
         if task_id is None:
             QMessageBox.information(None, "No Task Selected", "Select a task to mark complete.")
@@ -857,6 +883,7 @@ class MaintenanceModule(ModuleBase):
         self._refresh_task_list()
 
     def _on_log_reading(self) -> None:
+        """Logs a reading for the selected task (only meter and sensor tasks take them)."""
         task_id = self._selected_task_id()
         if task_id is None:
             QMessageBox.information(None, "No Task Selected", "Select a task to log a reading for.")
@@ -877,6 +904,7 @@ class MaintenanceModule(ModuleBase):
         self._refresh_task_list()
 
     def _on_schedule_task(self) -> None:
+        """Schedules the selected task on a day picked in the dialog, adding it to the Calendar."""
         task_id = self._selected_task_id()
         if task_id is None:
             QMessageBox.information(None, "No Task Selected", "Select a task to schedule.")
@@ -891,6 +919,7 @@ class MaintenanceModule(ModuleBase):
         QMessageBox.information(None, "Scheduled", f"Added to the Calendar on {dialog.entered_date}.")
 
     def _on_delete_task(self) -> None:
+        """Deletes the selected task after asking (recorded as a screen edit)."""
         task_id = self._selected_task_id()
         if task_id is None:
             QMessageBox.information(None, "No Task Selected", "Select a task to delete.")
@@ -916,6 +945,7 @@ class MaintenanceModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _search(self, query: str) -> list[SearchResult]:
+        """Ctrl+K results: assets matching by name or category, and tasks by title, opening Maintenance."""
         query_lower = query.strip().lower()
         if not query_lower:
             return []
