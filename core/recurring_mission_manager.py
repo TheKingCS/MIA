@@ -61,6 +61,11 @@ _DAYS_PER_WEEK = 7
 
 @dataclass
 class RecurringMissionTemplate:
+    """A routine that makes its own missions: the objective's wording ("Do {target:g} push-ups"), a target that grows
+    each week, XP and skill XP for each day and for a perfect week, the date its weeks count from, its icon, whether
+    it's active, daily (a mission each day plus a weekly bonus) or weekly (one mission a week, like laundry), and its
+    category (Household chores are shown in Household).
+    """
     template_id: str
     name: str
     objective_description_template: str  # e.g. "Do {target:g} push-ups" — .format(target=...)
@@ -85,6 +90,7 @@ class RecurringMissionTemplate:
     category: str = "Household"
 
     def to_dict(self) -> dict:
+        """The template as saved in recurring_mission_templates.json."""
         return {
             "template_id": self.template_id,
             "name": self.name,
@@ -105,6 +111,7 @@ class RecurringMissionTemplate:
 
     @staticmethod
     def from_dict(data: dict) -> "RecurringMissionTemplate":
+        """A template from its saved dict; missing fields take their defaults."""
         return RecurringMissionTemplate(
             template_id=data.get("template_id", uuid.uuid4().hex[:10]),
             name=data.get("name", ""),
@@ -142,6 +149,7 @@ def week_index_for(start_date: date, today: date) -> int:
 
 
 def current_target_for(template: RecurringMissionTemplate, today: date) -> float:
+    """Pure logic. This week's target: the base plus the weekly increase for every week since the start."""
     start = date.fromisoformat(template.start_date)
     return template.base_target + template.target_increment_per_week * week_index_for(start, today)
 
@@ -190,7 +198,12 @@ def current_weekly_streak_for(completed_week_indices: list[int], current_week_in
 
 
 class RecurringMissionManager:
+    """Routines (recurring_mission_templates.json, written through atomic_write_text so undo can restore it) and the
+    missions they make: each day's (or week's) mission is made once (found again by its occurrence key, never
+    duplicated), a missed day is recorded, and every daily mission completed counts toward the week's bonus.
+    """
     def __init__(self, context: AppContext) -> None:
+        """Loads the templates and listens for mission.completed (for the weekly bonus)."""
         self.context = context
         self._templates: list[RecurringMissionTemplate] = []
         # On the instance so "undo that" (core/undo_log.py) can find and reload it.
@@ -203,6 +216,7 @@ class RecurringMissionManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads the templates; a damaged file is logged, reported and starts empty."""
         if not self._templates_file.exists():
             self._templates = []
             return
@@ -215,6 +229,7 @@ class RecurringMissionManager:
             self._templates = []
 
     def _save(self) -> None:
+        """Writes the templates atomically."""
         self._templates_file.parent.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._templates_file,
             json.dumps([t.to_dict() for t in self._templates], indent=2),
@@ -240,6 +255,7 @@ class RecurringMissionManager:
         recurrence: str = "daily",
         category: str = "Household",
     ) -> RecurringMissionTemplate:
+        """Adds a routine."""
         template = RecurringMissionTemplate(
             template_id=uuid.uuid4().hex[:10],
             name=name,
@@ -262,6 +278,7 @@ class RecurringMissionManager:
         return template
 
     def get_template(self, template_id: str) -> Optional[RecurringMissionTemplate]:
+        """The template with this id, or None."""
         for template in self._templates:
             if template.template_id == template_id:
                 return template
@@ -290,6 +307,7 @@ class RecurringMissionManager:
         return len(gone)
 
     def all_templates(self) -> list[RecurringMissionTemplate]:
+        """Every template."""
         return list(self._templates)
 
     # ------------------------------------------------------------------
@@ -297,6 +315,7 @@ class RecurringMissionManager:
     # ------------------------------------------------------------------
 
     def _find_occurrence(self, template_id: str, kind: str, occurrence_key: str) -> Optional[Mission]:
+        """The mission a template already made for one occurrence (a day or a week, by its key and kind), or None."""
         for mission in self.context.missions.all_missions():
             if (
                 mission.recurring_template_id == template_id
@@ -323,6 +342,9 @@ class RecurringMissionManager:
         return self._ensure_current_missions_daily(template, today)
 
     def _ensure_current_mission_weekly(self, template: RecurringMissionTemplate, today: date) -> Mission:
+        """A weekly routine's mission for this week, made (with this week's target and the template's rewards) if
+        it isn't there yet.
+        """
         start = date.fromisoformat(template.start_date)
         week_index = week_index_for(start, today)
         week_key = week_key_for(start, week_index)
@@ -430,6 +452,9 @@ class RecurringMissionManager:
     # ------------------------------------------------------------------
 
     def current_streak_for_template(self, template_id: str, today: date) -> int:
+        """How long the routine's streak is today: consecutive weeks done for a weekly one, consecutive days for a
+        daily one.
+        """
         template = self.get_template(template_id)
         if template is not None and template.recurrence == "weekly":
             start = date.fromisoformat(template.start_date)
@@ -459,6 +484,9 @@ class RecurringMissionManager:
     # ------------------------------------------------------------------
 
     def _on_mission_completed(self, mission_id: str) -> None:
+        """When a routine's daily mission is completed, counts it on that week's bonus mission, and completes the
+        bonus (a perfect week) when every day is in.
+        """
         mission = self.context.missions.get_mission(mission_id)
         if mission is None or mission.recurring_kind != "daily" or mission.recurring_template_id is None:
             return
