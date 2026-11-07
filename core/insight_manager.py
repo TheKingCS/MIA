@@ -303,4 +303,5 @@ class InsightManager:
         return [r for r in self._recommendations if r.insight_id == insight_id]
 
     def all_recommendations(self) -> list[Recommendation]:
+        """Every recommendation."""
         return list(self._recommendations)

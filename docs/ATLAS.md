@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 227,789 lines; 1043 files describe themselves; 4,220 of 13,517 classes and functions are documented.
+1043 files, 227,820 lines; 1043 files describe themselves; 4,240 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 101,695 lines; 3,489 of 5,630 classes and functions documented
+367 files, 101,726 lines; 3,509 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -172,7 +172,7 @@
 - `core/inbox_classify.py`: Pure logic behind the document inbox (core/inbox_manager.py, 2026-09-28): given a document's text, what is it, whose is it, and what does it say that MIA can file. *(12 undocumented)*
 - `core/inbox_mail.py`: Optional email intake for the document inbox (core/inbox_manager.py, 2026-09-28). The owner picks a mailbox (a dedicated address is best, e.g. a new Gmail account used only for sending MIA receipts and manuals). MIA checks it over IMAP, the standard mail-reading protocol (Python's own imaplib, no ne *(15 undocumented)*
 - `core/inbox_manager.py`: The document inbox (2026-09-28): "an email inbox that I can send receipts and owners manuals and all kinds of business documents to and it be able to classify it and determine where to put it, like storing the manual and user guide and maintenance schedule for the mower and automatically assigning i *(15 undocumented)*
-- `core/insight_manager.py`: Insight + Recommendation — the first real piece of the observe → understand → insight → recommend → act → result → learn loop from the "connective infrastructure" architecture-review discussion (see docs/ROADMAP.md's dated entry), piloted in the Maintenance domain only (core/maintenance_insights.py) *(1 undocumented)*
+- `core/insight_manager.py`: Insight + Recommendation — the first real piece of the observe → understand → insight → recommend → act → result → learn loop from the "connective infrastructure" architecture-review discussion (see docs/ROADMAP.md's dated entry), piloted in the Maintenance domain only (core/maintenance_insights.py)
 - `core/inspection.py`: Universal Inspection, phases 1 and 2 (DEC-0056, docs/INSPECTION_AND_SELF_PLAN.md): MIA investigates a subject with every relevant *authorized* method she has, keeps each finding as evidence (what, where it came from, when, how sure), correlates findings from different methods, says what she couldn't
 - `core/insurance.py`: The insurance check-up (Zac, 2026-10-18 idea, picked 2026-10-19: `docs/future/IDEAS.md` #1, DEC-0034): keep your policies in one place, see what they cost and what's worth a look, and shop them with quotes you collect, compared fairly.
 - `core/insurance_actions.py`: The insurance check-up's changes (DEC-0034, core/insurance.py) on the action contract: policies and quotes are records (add, edit, delete, undoable); then drafting a quote request (MIA drafts, you press Send), "Switch To This" (a mission with the steps, no gap in coverage) and "I Switched" (the poli *(11 undocumented)*
@@ -316,7 +316,7 @@
 - `core/tak.py`: MIA's places in the open, civilian standards a TAK app speaks (build plan step 14, DEC-0099): Cursor on Target events and KML, packed as a TAK data package (a zip with a `MANIFEST/manifest.xml`) that ATAK-CIV, iTAK and WinTAK import, so the person's waypoints show on their TAK map with MIA's names,  *(3 undocumented)*
 - `core/talk_it_out.py`: Slice A of docs/COGNITIVE_EXTENSION_PROPOSAL.md, "Talk it out": the glue every chat surface (Home's chat bar, the character panel, the Assistant module, the phone, the headless voice loop) calls around one turn, so they all behave the same way. *(13 undocumented)*
 - `core/task_manager.py`: A single Task under a core.project_manager.Project — one concrete to-do item, checked off when done. Same persisted-JSON pattern as core/trip_manager.py, minus that module's photo/journal/gear extensions, which don't apply to a plain task list. *(14 undocumented)*
-- `core/textbook_manager.py`: The textbook tutor's library (2026-09-28): "a feature where MIA gets textbooks that can be added to her that she can reference to help educate the user on subjects of their choice... understand it and assist a user in understanding it." *(19 undocumented)*
+- `core/textbook_manager.py`: The textbook tutor's library (2026-09-28): "a feature where MIA gets textbooks that can be added to her that she can reference to help educate the user on subjects of their choice... understand it and assist a user in understanding it."
 - `core/textbook_study.py`: The study and quiz conversation modes of the textbook tutor (2026-09-28): which book and chapter a conversation is on, and the passages MIA answers from each turn. The library itself is core/textbook_manager.py; the tone lines are in core/conversation_modes.py (STUDY, QUIZ). *(1 undocumented)*
 - `core/the_loop.py`: The Loop (DEC-0047, step 1; Zac 2026-10-27): the normal week, run as the same grind every week, and MIA learning *when* it happens so she knows when to start each part and remind you.
 - `core/tile_fetch_worker.py`: Fetches individual missing basemap tiles off the GUI thread for gui/widgets/tile_map_view.py's live pan/zoom — same "network I/O never blocks a paint/input handler" reasoning as modules/field_kit/port_scan_worker.py's PortScanWorker, but shaped as a long-lived queue-processing thread rather than a o *(4 undocumented)*

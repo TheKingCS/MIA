@@ -93,12 +93,14 @@ def tokenize(text: str) -> list[str]:
 
 @dataclass
 class Chapter:
+    """A chapter of a textbook: its title and the page it starts on (from 1)."""
     title: str
     page: int  # 1-based
 
 
 @dataclass
 class Passage:
+    """A piece of a textbook's text, with the page it's on and its chapter, so an answer can say where it read it."""
     page: int  # 1-based
     chapter: int  # index into Textbook.chapters
     text: str
@@ -106,6 +108,9 @@ class Passage:
 
 @dataclass
 class Textbook:
+    """A book in the library: title, its file, page count, chapters, the Classroom course made from it, when it was
+    added, and, for a scanned book, whether OCR is still reading it or why that failed.
+    """
     book_id: str
     title: str
     filename: str
@@ -118,6 +123,7 @@ class Textbook:
 
     @staticmethod
     def from_dict(data: dict) -> "Textbook":
+        """A book from textbooks.json; missing fields take their defaults."""
         return Textbook(
             book_id=data["book_id"], title=data.get("title", ""), filename=data.get("filename", ""),
             page_count=int(data.get("page_count", 0)),
@@ -129,12 +135,14 @@ class Textbook:
 
 @dataclass
 class SearchHit:
+    """One passage found for a question, with its book and how well it matched."""
     book: Textbook
     passage: Passage
     score: float
 
     @property
     def chapter_title(self) -> str:
+        """The title of the chapter the passage is in ("" if unknown)."""
         chapters = self.book.chapters
         return chapters[self.passage.chapter].title if 0 <= self.passage.chapter < len(chapters) else ""
 
@@ -192,6 +200,7 @@ def find_chapters(pages: list[str]) -> list[Chapter]:
 
 
 def chapter_for_page(chapters: list[Chapter], page: int) -> int:
+    """Pure logic. Which chapter a page is in: the last one starting on or before it."""
     index = 0
     for i, chapter in enumerate(chapters):
         if chapter.page <= page:
@@ -226,8 +235,13 @@ def split_passages(pages: list[str], chapters: list[Chapter], max_chars: int = _
 
 
 class TextbookManager:
+    """The textbook library: textbooks.json (the books) and textbook_index/ (each book's passages) in the household's
+    folder, the books' files themselves in the textbooks folder beside data/ (books are big; data/ is what backups
+    copy). Passages load per book only when needed.
+    """
     def __init__(self, context, data_dir: Optional[Path] = None) -> None:
         # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        """Points at the household's files (data/ by default) and loads the list of books."""
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._library_file = self.data_dir / "textbooks.json" if data_dir is not None else _LIBRARY_FILE
         self._index_dir = self.data_dir / "textbook_index" if data_dir is not None else _INDEX_DIR
@@ -238,10 +252,12 @@ class TextbookManager:
 
     @property
     def root(self) -> Path:
+        """Where the book files are kept: textbooks.root_path when configured, else the default folder."""
         configured = self.context.config.get("textbooks.root_path", "") if self.context.config else ""
         return Path(configured) if configured else _DEFAULT_ROOT
 
     def _load(self) -> None:
+        """Reads the list of books; an unreadable file is logged, reported and starts empty."""
         if not self._library_file.exists():
             return
         try:
@@ -252,13 +268,16 @@ class TextbookManager:
             self._books = []
 
     def _save(self) -> None:
+        """Writes the list of books atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._library_file, json.dumps([asdict(b) for b in self._books], indent=2))
 
     def all_books(self) -> list[Textbook]:
+        """Every book."""
         return list(self._books)
 
     def get_book(self, book_id: str) -> Optional[Textbook]:
+        """The book with this id, or None."""
         return next((b for b in self._books if b.book_id == book_id), None)
 
     def add_book(self, source: Path, title: str = "") -> Textbook:
@@ -299,6 +318,9 @@ class TextbookManager:
         return book
 
     def _index(self, book: Textbook, pages: list[str], keep_title: bool) -> None:
+        """Indexes a book's pages: finds its chapters, splits it into passages (saved to its index file), takes its title
+        from its first heading unless one was given, and saves.
+        """
         chapters = find_chapters(pages)
         passages = split_passages(pages, chapters)
         if not keep_title:
@@ -314,9 +336,11 @@ class TextbookManager:
 
     @staticmethod
     def _ocr_key(book_id: str) -> str:
+        """The OCR queue's key for a book."""
         return f"textbook:{book_id}"
 
     def _ocr_output(self, book_id: str) -> Path:
+        """Where OCR writes a scanned book's pages."""
         return self._index_dir / f"{book_id}.ocr.json"
 
     def reading_progress(self, book_id: str) -> Optional[tuple[int, int]]:
@@ -359,6 +383,9 @@ class TextbookManager:
         return ["\n".join(lines[i:i + lines_per_page]) for i in range(0, max(len(lines), 1), lines_per_page)]
 
     def remove_book(self, book_id: str) -> bool:
+        """Removes a book: cancels any OCR still reading it and deletes its file, index and OCR output. False when it
+        wasn't there.
+        """
         book = self.get_book(book_id)
         if book is None:
             return False
@@ -377,6 +404,9 @@ class TextbookManager:
         return True
 
     def passages(self, book_id: str) -> list[Passage]:
+        """A book's passages, read from its index the first time (none while it's still being read, or if reading
+        failed).
+        """
         if book_id not in self._passages and not (self._index_dir / f"{book_id}.json").exists():
             return []  # still being read, or reading failed
         if book_id not in self._passages:
