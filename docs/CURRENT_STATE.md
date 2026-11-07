@@ -39,10 +39,11 @@ herself, she could").** Every one of the 1,042 files now says what it is; `core/
 `work/doc_baseline.json` is a ratchet (a file's undocumented count only goes down, a new file arrives fully
 documented, `tests/test_documentation.py` holds it), `docs/ATLAS.md` is the generated map and `docs/REBUILD.md` the
 rebuild order. `python -m tools.docs next|show|apply` works the backlog: biggest engine files first, each
-docstring written from reading the code, put in place and the ratchet lowered in one step. Done so far, fully:
-`core/application.py`, `more_actions`, `loops`, `glasses`, `kitchen_manager`, `fitness_actions`, `music_manager`,
-`assistant_domain_actions`, `workout_manager`, `actions` and today's new code: 3,351 of 13,517 definitions
-documented (from 2,713). `core/budget_manager.py` waits until Zac's Plaid work is committed.
+docstring written from reading the code (claims checked against it), put in place and the ratchet lowered in one
+step. Done so far, fully: the 40 biggest engine files, among them `core/application.py`, `actions`, `loops`,
+`sync`, `password_vault`, `private_journal`, `personal_data`, `mission_manager`, `the_loop`, `question_plans`,
+`voice_manager`, `security_cams` and every big store and action module: 4,125 of 13,517 definitions documented
+(from 2,713). `core/budget_manager.py` and `plaid_manager.py` wait until Zac's Plaid work is committed.
 
 **2026-11-06 to 07, Claude on the PC, overnight while Zac slept (build plan steps 1 to 17).** Phases A and C
 of `docs/BUILD_PLAN.md` are done and most of D is built; the queued tasks T-0040, T-0042, T-0044 and T-0045
