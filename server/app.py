@@ -865,6 +865,18 @@ def create_app(context: AppContext) -> FastAPI:
         return FileResponse(found, media_type="image/png" if found.suffix == ".png" else "image/jpeg",
                             headers={"Cache-Control": "private, max-age=604800"})
 
+    @app.get("/api/maps/vector/{name}")
+    def maps_vector(name: str, profile_id: str = Depends(require_profile_id)):
+        """A vector map area (core/offline_maps.py), read in byte ranges by the page's PMTiles reader."""
+        from fastapi.responses import FileResponse
+
+        from core.offline_maps import path_of
+
+        found = path_of(name)
+        if found is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "No map area by that name on this PC.")
+        return FileResponse(found, media_type="application/octet-stream")
+
     @app.get("/api/memories")
     def memories_screen(profile_id: str = Depends(require_profile_id)) -> dict:
         from core.memories_web import screen  # a recap per expedition, and on this day

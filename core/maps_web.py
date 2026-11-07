@@ -58,5 +58,8 @@ def screen(context) -> dict:
         center = (sum(p["lat"] for p in shown) / len(shown), sum(p["lon"] for p in shown) / len(shown))
     else:
         center = CENTER
+    from core.offline_maps import maps
+
     return {"waypoints": shown, "center": {"lat": round(center[0], 5), "lon": round(center[1], 5)},
-            "zoom": 12 if shown else 4, "max_zoom": MAX_ZOOM, "osm_max_zoom": OSM_MAX_ZOOM}
+            "zoom": 12 if shown else 4, "max_zoom": MAX_ZOOM, "osm_max_zoom": OSM_MAX_ZOOM,
+            "vector": maps()}  # the vector areas kept on this PC (core/offline_maps.py)

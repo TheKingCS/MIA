@@ -221,7 +221,7 @@
     council: () => demo ? Promise.resolve({ messages: [], members: [] }) : call("GET", "/api/council"),
     councilSay: (body) => demo ? Promise.resolve({}) : call("POST", "/api/council", body),
     // The Operating Journal, games played and Good News Radio (DEC-0097, 0098, 0096); changes go through actions.
-    maps: () => demo ? Promise.resolve({ center: { lat: 40.005, lon: -105.0 }, zoom: 13, max_zoom: 16, osm_max_zoom: 4,
+    maps: () => demo ? Promise.resolve({ center: { lat: 40.005, lon: -105.0 }, zoom: 13, max_zoom: 16, osm_max_zoom: 4, vector: [],
       waypoints: [{ id: "w1", name: "Spring", category: "Water", lat: 40.01, lon: -105.0 },
                   { id: "w2", name: "Trailhead", category: "Trail", lat: 40.0, lon: -105.0 }] })
       : call("GET", "/api/maps"),
@@ -332,6 +332,8 @@
       if (!response.ok) throw new MiaError(response.status, (await response.json().catch(() => ({}))).detail || response.statusText);
       return response.blob();
     },
+    // This tab's sign-in as a header, for a library that fetches by itself (the map's PMTiles reader).
+    authHeaders: () => (token ? { Authorization: "Bearer " + token } : {}),
     // A stored picture (a recipe's photo) as an object URL for an <img>,
     // fetched with this tab's sign-in; null when there isn't one (or in the demo).
     image: (path) => {

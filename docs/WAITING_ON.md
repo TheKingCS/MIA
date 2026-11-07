@@ -9,11 +9,6 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 ## Zac
 
 ### Decisions
-- [ ] **Vector offline maps need outside code (your OK)**: the `pmtiles` command-line tool (Protomaps,
-      BSD-3, a Windows .exe from its GitHub releases) to cut your area out of OpenStreetMap's public build, and
-      MapLibre GL JS and pmtiles.js (both BSD-3) saved into `web/vendor/` so the map draws offline. Claude Code's
-      safety check blocked downloading and running them without you (2026-11-06). Say yes (or allow it in the
-      permission settings) and Claude builds it; the topo map on the web works meanwhile (US only).
 - [ ] **The phone's old security packages (T-0051)**: keep them with the exposure written down, build newer ones,
       or move the phone's encryption to Android Keystore over time (Claude: keep now, Keystore over time). Details
       under Claude below.
@@ -34,6 +29,9 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       show I-0001`, `... approve I-0001`.
 
 ### At the PC
+- [ ] **Cut your area's vector map** (built 2026-11-06 with your OK): `.venv\Scripts\python -m tools.offline_map
+      cut home --around-waypoints 10` (every waypoint, 10 km around; or `--bbox west,south,east,north`). It
+      tells Protomaps' map server which area, nothing else; a few MB per town. Then Maps on the web opens on it.
 - [ ] **Night School's start time:** it's set for 01:30, but you work nights and sleep in the morning. Set
       `"start"` in `work/night_school.json` to when you're usually asleep (say `"09:30"`); it runs four hours
       from then. (On 2026-11-07 Claude started one by hand at 08:55, while you slept.)

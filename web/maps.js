@@ -1,5 +1,9 @@
 /*
  * maps.js — Maps (claude, 2026-11-06).
+ * Two kinds of map. Vector areas (core/offline_maps.py, cut from OpenStreetMap
+ * into data/maps/, anywhere in the world, sharp at every zoom) are drawn by
+ * MapLibre from web/vendor/, read in byte ranges with this tab's sign-in; the
+ * topo map below needs no library.
  * Renders MIA.maps() (core/maps_web.py) as a tile map with no library: the
  * basemap tiles the PC keeps offline (USGS topo for detail, OpenStreetMap only
  * for the world overview), fetched with this tab's sign-in, and the waypoints
@@ -11,6 +15,7 @@
   const $ = (id) => document.getElementById(id);
   const SIZE = 256;
   let data = null, zoom = 4, cx = 0, cy = 0;  // the centre, in tile units at this zoom
+  let vec = null, protocol = null;  // the vector map now shown, and MapLibre's pmtiles:// reader
 
   // Web Mercator: degrees to tile units at zoom z, and back.
   const toTile = (lat, lon, z) => {
@@ -73,13 +78,12 @@
       if (!tapped) return;
       const box = view.getBoundingClientRect();  // a tap: a waypoint there, named first
       const [lat, lon] = toDeg(cx + (e.clientX - box.left - box.width / 2) / SIZE, cy + (e.clientY - box.top - box.height / 2) / SIZE, zoom);
-      const values = await MIAShell.form("A waypoint here", [{ name: "name", label: "Name", type: "text", required: true }]);
-      if (values) MIAShell.act({ kind: "waypoint.add", params: { name: values.name, lat: lat.toFixed(6), lon: lon.toFixed(6) } });
+      addAt(lat, lon);
     });
-    const button = (label, onclick) => el("button", { type: "button", class: "btn btn-ghost btn-small", onclick }, label);
+    vec = null;
     $("panel").replaceChildren(
       el("section", { class: "glass money-section" },
-        el("div", { class: "row-buttons" }, button("+", () => setZoom(view, zoom + 1)), button("−", () => setZoom(view, zoom - 1)),
+        el("div", { class: "row-buttons" }, ...modes("topo"), button("+", () => setZoom(view, zoom + 1)), button("−", () => setZoom(view, zoom - 1)),
           data.waypoints.length ? button("Waypoints", () => { zoom = data.zoom; [cx, cy] = toTile(data.center.lat, data.center.lon, zoom); draw(view); }) : null),
         view,
         el("p", { class: "dim" }, "Tiles are kept on the PC once seen, so they work with no signal later. Tap the map to add a waypoint there, "
@@ -87,12 +91,58 @@
     draw(view);
   }
 
+  const button = (label, onclick, on) => el("button", { type: "button", class: "btn " + (on ? "btn-amber" : "btn-ghost") + " btn-small", onclick }, label);
+
+  async function addAt(lat, lon) {  // a tap on either map: a waypoint there, named first
+    const values = await MIAShell.form("A waypoint here", [{ name: "name", label: "Name", type: "text", required: true }]);
+    if (values) MIAShell.act({ kind: "waypoint.add", params: { name: values.name, lat: lat.toFixed(6), lon: lon.toFixed(6) } });
+  }
+
+  // The map kinds to switch between: the topo tiles, and each vector area kept on this PC.
+  const modes = (current) => [button("Topo", () => paint(), current === "topo"),
+    ...data.vector.map((a) => button(a.name, () => paintVector(a), current === a.name))];
+
+  function pins() {
+    vec.markers.forEach((m) => m.remove());
+    vec.markers = data.waypoints.map((p) => new maplibregl.Marker({ element: el("span", { class: "map-pin" }, p.name), anchor: "bottom" })
+      .setLngLat([p.lon, p.lat]).addTo(vec.map));
+  }
+
+  function paintVector(area) {
+    const view = el("div", { class: "map-view map-vector", role: "img", "aria-label": "Map of " + area.name });
+    $("panel").replaceChildren(el("section", { class: "glass money-section" },
+      el("div", { class: "row-buttons" }, ...modes(area.name)), view,
+      el("p", { class: "dim" }, area.name + ": " + area.size_mb + " MB on this PC, from OpenStreetMap, works with no signal. "
+        + "Tap the map to add a waypoint there.")));
+    if (!window.maplibregl || !window.pmtiles || !window.basemaps) { view.textContent = "The map's code didn't load."; return; }
+    if (!protocol) {
+      protocol = new pmtiles.Protocol();
+      maplibregl.addProtocol("pmtiles", protocol.tile);
+    }
+    const url = location.origin + "/api/maps/vector/" + encodeURIComponent(area.name);
+    protocol.add(new pmtiles.PMTiles(new pmtiles.FetchSource(url, new Headers(MIA.authHeaders()))));
+    const map = new maplibregl.Map({
+      container: view, center: area.center, zoom: Math.max(area.center_zoom, Math.min(13, area.max_zoom)), maxZoom: area.max_zoom + 3,
+      attributionControl: { compact: true },
+      style: { version: 8, sources: { protomaps: { type: "vector", url: "pmtiles://" + url, attribution: "© OpenStreetMap contributors" } },
+        // No labels yet: they need font files; roads, water, land and buildings draw without them.
+        layers: basemaps.layers("protomaps", basemaps.namedFlavor("dark")).filter((l) => l.type !== "symbol") },
+    });
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }));
+    map.on("click", (e) => addAt(e.lngLat.lat, e.lngLat.lng));
+    vec = { map, markers: [] };
+    pins();
+  }
+
   MIAShell.start(async () => {
     const first = data === null;
     data = await MIA.maps();
-    if (!first) { draw(document.querySelector(".map-view")); return; }  // a change elsewhere: new pins, same view
+    if (!first) {  // a change elsewhere: new pins, same view
+      if (vec) pins(); else draw(document.querySelector(".map-view"));
+      return;
+    }
     zoom = data.zoom;
     [cx, cy] = toTile(data.center.lat, data.center.lon, zoom);
-    paint();
+    if (data.vector.length) paintVector(data.vector[0]); else paint();
   }, { refreshOnChange: true });
 })();
