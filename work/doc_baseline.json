@@ -178,7 +178,6 @@
   "core/party.py": 4,
   "core/passing_mentions.py": 6,
   "core/password_strength.py": 2,
-  "core/pathway_manager.py": 20,
   "core/person_settings.py": 4,
   "core/phone_link.py": 3,
   "core/phone_server.py": 15,

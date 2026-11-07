@@ -62,6 +62,9 @@ PATHWAY_PROGRESS_STATUSES = ("active", "completed")
 
 @dataclass
 class PathwayStep:
+    """One step of a skill pathway, as the mission it becomes: name, icon, summary, difficulty, XP, credits and skill
+    XP, and how many times it must be completed before the pathway moves on (1 by default).
+    """
     name: str
     icon: str = "\U0001F4CB"
     summary: str = ""
@@ -79,6 +82,7 @@ class PathwayStep:
 
     @staticmethod
     def from_dict(data: dict) -> "PathwayStep":
+        """A step from the pathway definitions file; missing fields take their defaults."""
         return PathwayStep(
             name=data.get("name", ""),
             icon=data.get("icon", "\U0001F4CB"),
@@ -95,6 +99,9 @@ class PathwayStep:
 
 @dataclass
 class Pathway:
+    """A skill pathway (hand-written in data/mission_pathways.json): the skill it grows, its name and description, and
+    its steps in order.
+    """
     pathway_id: str
     skill_id: str
     name: str
@@ -103,6 +110,7 @@ class Pathway:
 
     @staticmethod
     def from_dict(data: dict) -> "Pathway":
+        """A pathway from the definitions file."""
         return Pathway(
             pathway_id=data.get("pathway_id", ""),
             skill_id=data.get("skill_id", ""),
@@ -114,6 +122,9 @@ class Pathway:
 
 @dataclass
 class PathwayProgress:
+    """One person's way along a pathway: which step they're on, the mission for it, how many of a repeating step
+    they've done, active or completed, and when.
+    """
     profile_id: str
     pathway_id: str
     current_step_index: int = 0
@@ -127,6 +138,7 @@ class PathwayProgress:
     current_step_repeats_done: int = 0
 
     def to_dict(self) -> dict:
+        """The progress as saved in pathway_progress.json."""
         return {
             "profile_id": self.profile_id,
             "pathway_id": self.pathway_id,
@@ -140,6 +152,7 @@ class PathwayProgress:
 
     @staticmethod
     def from_dict(data: dict) -> "PathwayProgress":
+        """Progress from its saved dict; missing fields take their defaults."""
         return PathwayProgress(
             profile_id=data.get("profile_id", ""),
             pathway_id=data.get("pathway_id", ""),
@@ -153,7 +166,14 @@ class PathwayProgress:
 
 
 class PathwayManager:
+    """Skill pathways: the definitions (read-only, from data/mission_pathways.json) and each person's progress
+    (pathway_progress.json, written through atomic_write_text so undo can restore it). Each step is a mission
+    MIA assigns; when it's completed (the mission.completed event) the pathway moves on.
+    """
     def __init__(self, context: AppContext) -> None:
+        """Loads the definitions and everyone's progress, and listens for mission.completed; progress_path tells undo
+        which file to reload.
+        """
         self.context = context
         self._pathways: dict[str, Pathway] = {}
         self._progress: list[PathwayProgress] = []
@@ -168,6 +188,7 @@ class PathwayManager:
     # ------------------------------------------------------------------
 
     def _load_definitions(self) -> None:
+        """Reads the pathway definitions (none when the file is missing; a damaged one is logged and reported)."""
         if not _PATHWAYS_FILE.exists():
             log.info("No mission_pathways.json found — no pathways registered yet.")
             return
@@ -182,12 +203,15 @@ class PathwayManager:
             self._pathways[pathway.pathway_id] = pathway
 
     def all_pathways(self) -> list[Pathway]:
+        """Every pathway defined."""
         return list(self._pathways.values())
 
     def get_pathway(self, pathway_id: str) -> Optional[Pathway]:
+        """The pathway with this id, or None."""
         return self._pathways.get(pathway_id)
 
     def pathways_for_skill(self, skill_id: str) -> list[Pathway]:
+        """The pathways that grow one skill."""
         return [p for p in self._pathways.values() if p.skill_id == skill_id]
 
     # ------------------------------------------------------------------
@@ -200,6 +224,7 @@ class PathwayManager:
         self._load_progress()
 
     def _load_progress(self) -> None:
+        """Reads everyone's progress; a damaged file is logged, reported and starts with none."""
         if not _PROGRESS_FILE.exists():
             return
         try:
@@ -211,15 +236,18 @@ class PathwayManager:
             self._progress = []
 
     def _save_progress(self) -> None:
+        """Writes everyone's progress atomically."""
         _DATA_DIR.mkdir(parents=True, exist_ok=True)
         atomic_write_text(_PROGRESS_FILE,
             json.dumps({"progress": [p.to_dict() for p in self._progress]}, indent=2), encoding="utf-8"
         )
 
     def progress_for_profile(self, profile_id: str) -> list[PathwayProgress]:
+        """One person's pathways, active and completed."""
         return [p for p in self._progress if p.profile_id == profile_id]
 
     def _active_progress(self, profile_id: str, pathway_id: str) -> Optional[PathwayProgress]:
+        """A person's active progress on one pathway, or None."""
         for progress in self._progress:
             if progress.profile_id == profile_id and progress.pathway_id == pathway_id and progress.status == "active":
                 return progress
@@ -275,6 +303,7 @@ class PathwayManager:
         return mission
 
     def _create_step_mission(self, step: PathwayStep):
+        """Makes the mission for a step (assigned by MIA, with the step's look and rewards)."""
         return self.context.missions.add_mission(
             name=step.name,
             assigned_by="mia",
@@ -287,12 +316,17 @@ class PathwayManager:
         )
 
     def _on_mission_completed(self, mission_id: str) -> None:
+        """When a pathway step's mission is completed, move that pathway on."""
         for progress in self._progress:
             if progress.status == "active" and progress.current_mission_id == mission_id:
                 self._advance(progress)
                 return
 
     def _advance(self, progress: PathwayProgress) -> None:
+        """Moves a pathway on after its step's mission is done: a repeating step not yet done enough gets another mission
+        ("Do It Again!"); otherwise the next step's mission is made ("New Mission Unlocked!"), or the pathway is
+        complete. Each is saved and said to the person.
+        """
         pathway = self._pathways.get(progress.pathway_id)
         if pathway is None:
             return
