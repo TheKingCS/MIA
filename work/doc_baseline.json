@@ -186,7 +186,6 @@
   "core/system_check.py": 4,
   "core/system_health.py": 1,
   "core/tak.py": 3,
-  "core/talk_it_out.py": 13,
   "core/textbook_study.py": 1,
   "core/tile_fetch_worker.py": 4,
   "core/tool_loop.py": 4,

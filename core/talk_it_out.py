@@ -78,6 +78,9 @@ JOURNAL_READ_PHRASES = (
 
 
 def _looks_like_journal_read(prompt: str) -> bool:
+    """Whether what was said asks to read the private journal back (so the turn is marked private and never
+    saved).
+    """
     text = f" {prompt.lower().replace('’', chr(39))} "
     return any(phrase in text for phrase in JOURNAL_READ_PHRASES)
 
@@ -86,17 +89,22 @@ def _looks_like_journal_read(prompt: str) -> bool:
 class PreTurn:
     # Say this and skip the model: the safety floor fired, or the owner
     # said yes to MIA's offer to record something (core/passing_mentions.py).
+    """What comes before the model: a fixed reply to say instead of calling it (the safety floor fired, or a yes to an
+    offer to record something), or a notice to say first and then carry on.
+    """
     fixed_reply: Optional[str] = None
     notice: Optional[str] = None  # say this first, then continue to the model as usual
 
 
 def _persist(context: AppContext, conversation: Conversation) -> None:
+    """Saves the conversation's mode flags, when it's one the conversation store keeps."""
     manager = getattr(context, "conversations", None)
     if manager is not None and manager.get_conversation(conversation.conversation_id) is conversation:
         manager.save()
 
 
 def _journal_ready(context: AppContext) -> bool:
+    """Whether the person has a private journal set up."""
     journal = getattr(context, "private_journal", None)
     return journal is not None and journal.is_set_up()
 
@@ -271,6 +279,7 @@ _ORGANIZE_PROMPT = (
 
 
 def journal_exchanges(conversation: Conversation) -> list[JournalExchange]:
+    """The journaling session's messages (from where it started), as journal turns."""
     return [
         JournalExchange(m.role, m.content, m.timestamp)
         for m in conversation.messages[conversation.journal_start_index:]
@@ -349,6 +358,9 @@ def record_journal_turn(context: AppContext, conversation: Conversation) -> bool
 
 @dataclass
 class Followup:
+    """The one background job after a reply: extract memories, or organize the journal session; with its prompt and
+    conversation.
+    """
     kind: str  # "memories" | "journal"
     prompt: str
     conversation_id: str
@@ -370,6 +382,9 @@ def plan_followup(context: AppContext, conversation: Conversation, user_message:
 
 
 def apply_followup(context: AppContext, conversation: Conversation, followup: Followup, raw: Optional[str]) -> None:
+    """Applies the background job's result: memories go into what MIA remembers (with their category and source), or
+    the journal session's title, mood, themes and summary update its encrypted entry.
+    """
     if followup.kind == "memories":
         if context.user_memories is None:
             return
@@ -397,6 +412,7 @@ _CONTEXT_ENTRIES = 3
 
 
 def _entry_date(entry: PrivateJournalEntry) -> str:
+    """A journal entry's date in words ("October 18")."""
     try:
         parsed = datetime.fromisoformat(entry.created_at)
     except ValueError:
@@ -435,6 +451,7 @@ def journal_context_block(context: AppContext) -> str:
 # ---------------------------------------------------------------------------
 
 def _journal_unavailable(context: AppContext) -> Optional[str]:
+    """Why the journal can't be read, in words (not set up, or locked), or None when it can."""
     journal = getattr(context, "private_journal", None)
     if journal is None or not journal.is_set_up():
         return "You haven't set up a private journal yet. You can do that in Notes under Private Journal."
@@ -444,11 +461,15 @@ def _journal_unavailable(context: AppContext) -> Optional[str]:
 
 
 def _describe(entry: PrivateJournalEntry) -> str:
+    """A journal entry in a sentence: when, its title, and its summary (or the start of what was said)."""
     body = entry.summary or (entry.user_text[:160] + ("…" if len(entry.user_text) > 160 else ""))
     return f"On {_entry_date(entry)} ({entry.title}): {body}"
 
 
 def _action_read_private_journal(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `read_private_journal`: the newest three entries (or those about a topic), only while
+    the journal is unlocked; says how many more there are.
+    """
     problem = _journal_unavailable(context)
     if problem:
         return problem
@@ -462,6 +483,9 @@ def _action_read_private_journal(context: AppContext, arguments: dict) -> str:
 
 
 def _action_get_journal_themes(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `get_journal_themes`: how often the person journaled in the last N days (30 by
+    default), the four commonest themes and the moods they described.
+    """
     problem = _journal_unavailable(context)
     if problem:
         return problem
@@ -481,6 +505,7 @@ def _action_get_journal_themes(context: AppContext, arguments: dict) -> str:
 
 
 def register_journal_actions(registry: AssistantActionRegistry) -> None:
+    """Registers the two private-journal tools with the Assistant's registry."""
     registry.register(AssistantAction(
         name="read_private_journal", domain="private_journal",
         description=(

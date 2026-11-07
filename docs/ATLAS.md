@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 229,075 lines; 1043 files describe themselves; 5,069 of 13,517 classes and functions are documented.
+1043 files, 229,100 lines; 1043 files describe themselves; 5,082 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 102,977 lines; 4,338 of 5,630 classes and functions documented
+367 files, 103,002 lines; 4,351 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -314,7 +314,7 @@
 - `core/system_check.py`: "Is everything set up?" (2026-10-01, accounts stage 5): one list that says what works on this device, what's missing, and exactly what to do about each, so a new person (or a new Raspberry Pi) doesn't have to guess why voice or photos of receipts don't work. *(4 undocumented)*
 - `core/system_health.py`: Point-in-time system health readings (CPU/RAM/disk/network/temperature) via `psutil` — originally lived in modules/diagnostics/module.py (v0.7 milestone 7.1) as that module's "own exclusive concern", deliberately not promoted to core/ at the time since nothing else needed it. Moved here when milesto *(1 undocumented)*
 - `core/tak.py`: MIA's places in the open, civilian standards a TAK app speaks (build plan step 14, DEC-0099): Cursor on Target events and KML, packed as a TAK data package (a zip with a `MANIFEST/manifest.xml`) that ATAK-CIV, iTAK and WinTAK import, so the person's waypoints show on their TAK map with MIA's names,  *(3 undocumented)*
-- `core/talk_it_out.py`: Slice A of docs/COGNITIVE_EXTENSION_PROPOSAL.md, "Talk it out": the glue every chat surface (Home's chat bar, the character panel, the Assistant module, the phone, the headless voice loop) calls around one turn, so they all behave the same way. *(13 undocumented)*
+- `core/talk_it_out.py`: Slice A of docs/COGNITIVE_EXTENSION_PROPOSAL.md, "Talk it out": the glue every chat surface (Home's chat bar, the character panel, the Assistant module, the phone, the headless voice loop) calls around one turn, so they all behave the same way.
 - `core/task_manager.py`: A single Task under a core.project_manager.Project — one concrete to-do item, checked off when done. Same persisted-JSON pattern as core/trip_manager.py, minus that module's photo/journal/gear extensions, which don't apply to a plain task list.
 - `core/textbook_manager.py`: The textbook tutor's library (2026-09-28): "a feature where MIA gets textbooks that can be added to her that she can reference to help educate the user on subjects of their choice... understand it and assist a user in understanding it."
 - `core/textbook_study.py`: The study and quiz conversation modes of the textbook tutor (2026-09-28): which book and chapter a conversation is on, and the passages MIA answers from each turn. The library itself is core/textbook_manager.py; the tone lines are in core/conversation_modes.py (STUDY, QUIZ). *(1 undocumented)*
