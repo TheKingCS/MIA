@@ -258,7 +258,6 @@
   "core/trail_map_library.py": 15,
   "core/training_actions.py": 10,
   "core/training_session.py": 17,
-  "core/trip_manager.py": 28,
   "core/tts_worker.py": 2,
   "core/turn_trace.py": 5,
   "core/undo_log.py": 8,

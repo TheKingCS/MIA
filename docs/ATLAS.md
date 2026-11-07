@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 227,084 lines; 1043 files describe themselves; 3,771 of 13,517 classes and functions are documented.
+1043 files, 227,121 lines; 1043 files describe themselves; 3,799 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 100,990 lines; 3,040 of 5,630 classes and functions documented
+367 files, 101,027 lines; 3,068 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -325,7 +325,7 @@
 - `core/trail_map_library.py`: A catalog of official state park / trail map PDFs — the "state park maps and trail maps" half of the Maps module's offline-maps upgrade, alongside core.map_tile_cache's real basemap tiles. *(15 undocumented)*
 - `core/training_actions.py`: The live workout session's changes (DEC-0055, core/training_session.py) as action kinds on the contract in core/actions.py, so the Workout screen, the glasses and voice all move the one session the same way: start today's training, a set done (with how it was counted), skip the rest, skip an exercis *(10 undocumented)*
 - `core/training_session.py`: The live workout session (DEC-0055, docs/ACTIVE_TRAINING_PLAN.md): one per person, shared by every surface (the PC, the phone, the glasses, voice), moving set by set through today's training. *(17 undocumented)*
-- `core/trip_manager.py`: Backs the Expeditions module (modules/expeditions/module.py) — docs/ROADMAP.md milestone 12.1, Expedition Mode. A Trip is one outing — a hike, paddle, ride, fishing trip, etc. (see `ACTIVITY_TYPES`) — always belonging to a core.expedition_manager.Expedition via the required `expedition_id`. It ties  *(28 undocumented)*
+- `core/trip_manager.py`: Backs the Expeditions module (modules/expeditions/module.py) — docs/ROADMAP.md milestone 12.1, Expedition Mode. A Trip is one outing — a hike, paddle, ride, fishing trip, etc. (see `ACTIVITY_TYPES`) — always belonging to a core.expedition_manager.Expedition via the required `expedition_id`. It ties 
 - `core/tts_worker.py`: Runs `VoiceManager.synthesize()` + `.play()` off the GUI thread — docs/ROADMAP.md milestone 5.3. Same reasoning as `core/chat_worker.py`: `play()`'s `sd.wait()` blocks for the full duration of the spoken reply, which scales with reply length and would freeze the GUI thread for that whole time otherw *(2 undocumented)*
 - `core/turn_trace.py`: One line per Assistant turn: how MIA got to what she said (DEC-0067, choice 4: native traces before Langfuse; phase 2 of docs/PERSONALITY_AND_ECOSYSTEM_AUDIT.md). The route that answered (a fixed reply, a plain-word command, a question plan, the model), what was asked and said, the tools offered and *(5 undocumented)*
 - `core/undo_log.py`: "Undo that" (2026-10-01, accounts stage 5): when MIA changes something for you (adds an expense, checks off a chore, logs a reading) and got it wrong, you can take it back. *(8 undocumented)*

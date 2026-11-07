@@ -74,15 +74,20 @@ ACTIVITY_TYPES: tuple[str, ...] = (
 
 @dataclass
 class GearItem:
+    """One line on a trip's packing list: its label (a snapshot of the Inventory item's name when it's linked to one), the
+    Inventory item it's linked to (None for ad-hoc gear) and whether it's packed.
+    """
     label: str  # display text; if item_id is set, this is a snapshot of the Inventory item's name at add-time
     item_id: Optional[str] = None  # links to InventoryManager, or None for ad-hoc gear not tracked in Inventory
     packed: bool = False
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved inside trips.json."""
         return {"label": self.label, "item_id": self.item_id, "packed": self.packed}
 
     @staticmethod
     def from_dict(data: dict) -> "GearItem":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return GearItem(
             label=data.get("label", ""),
             item_id=data.get("item_id"),
@@ -92,14 +97,17 @@ class GearItem:
 
 @dataclass
 class Split:
+    """One logged checkpoint: the waypoint reached and when (the person tapped "arrived here")."""
     waypoint_id: str
     logged_at: str  # ISO datetime — when the user tapped "arrived here"
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved inside trips.json."""
         return {"waypoint_id": self.waypoint_id, "logged_at": self.logged_at}
 
     @staticmethod
     def from_dict(data: dict) -> "Split":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return Split(waypoint_id=data.get("waypoint_id", ""), logged_at=data.get("logged_at", ""))
 
 
@@ -116,6 +124,9 @@ class LegSummary:
 
 @dataclass
 class Trip:
+    """One outing within an expedition: name, dates, status (planned, active, completed), activity, the planned route
+    (waypoints in order), the checkpoints actually logged, the packing list, photos and notes.
+    """
     trip_id: str
     expedition_id: str
     name: str
@@ -132,6 +143,7 @@ class Trip:
     updated_at: str = ""  # ISO datetime
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved inside trips.json."""
         return {
             "trip_id": self.trip_id,
             "expedition_id": self.expedition_id,
@@ -151,6 +163,7 @@ class Trip:
 
     @staticmethod
     def from_dict(data: dict) -> "Trip":
+        """A record from its saved dict; a missing field takes its default, so older files load."""
         return Trip(
             trip_id=data.get("trip_id", uuid.uuid4().hex[:10]),
             expedition_id=data.get("expedition_id", ""),
@@ -170,8 +183,15 @@ class Trip:
 
 
 class TripManager:
+    """The trips store (trips.json in the household's folder, data/ by default, written through atomic_write_text so
+    undo can restore it), with each trip's route, packing list, checkpoints and photos. Distance and speed are worked
+    out from the checkpoints, never stored.
+    """
     def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
         # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        """Points at the household's file and loads it, and makes the photo folder (only logging when storage isn't
+        there, never crashing the app over it).
+        """
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._trips_file = self.data_dir / "trips.json" if data_dir is not None else _TRIPS_FILE
         self.context = context
@@ -189,6 +209,7 @@ class TripManager:
             log.warning("Could not create/access trip photo folder: %s", self._photo_root)
 
     def _resolve_photo_root_path(self) -> Path:
+        """Where trip photos are kept: trips.photo_root_path when configured, else the default folder."""
         configured = self.context.config.get("trips.photo_root_path", "")
         if configured:
             return Path(configured).expanduser()
@@ -199,6 +220,7 @@ class TripManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads trips.json; a damaged file is logged, reported (notify_data_corruption) and starts empty."""
         if not self._trips_file.exists():
             self._trips = []
             return
@@ -215,6 +237,7 @@ class TripManager:
         self._load()
 
     def _save(self) -> None:
+        """Writes every trip atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._trips_file,
             json.dumps([t.to_dict() for t in self._trips], indent=2),
@@ -222,6 +245,7 @@ class TripManager:
         )
 
     def _bump_updated_at(self, trip: Trip) -> None:
+        """Stamps a trip as changed now."""
         trip.updated_at = datetime.now().isoformat(timespec="seconds")
 
     # ------------------------------------------------------------------
@@ -237,6 +261,7 @@ class TripManager:
         activity_type: str = "",
         notes: str = "",
     ) -> Trip:
+        """Adds a trip to an expedition."""
         now = datetime.now().isoformat(timespec="seconds")
         trip = Trip(
             trip_id=uuid.uuid4().hex[:10],
@@ -255,6 +280,7 @@ class TripManager:
         return trip
 
     def update_trip(self, trip_id: str, **fields) -> Trip:
+        """Changes a trip's fields (it can't move to another expedition; ValueError for an unknown trip or field)."""
         trip = self.get_trip(trip_id)
         if trip is None:
             raise ValueError(f"No trip with id '{trip_id}'.")
@@ -269,6 +295,7 @@ class TripManager:
         return trip
 
     def delete_trip(self, trip_id: str) -> None:
+        """Deletes a trip."""
         self._trips = [t for t in self._trips if t.trip_id != trip_id]
         self._save()
 
@@ -277,15 +304,18 @@ class TripManager:
     # ------------------------------------------------------------------
 
     def get_trip(self, trip_id: str) -> Optional[Trip]:
+        """The trip with this id, or None."""
         for trip in self._trips:
             if trip.trip_id == trip_id:
                 return trip
         return None
 
     def all_trips(self) -> list[Trip]:
+        """Every trip, by start date."""
         return sorted(self._trips, key=lambda t: t.start_date)
 
     def trips_for_expedition(self, expedition_id: str) -> list[Trip]:
+        """An expedition's trips, by start date."""
         return sorted(
             (t for t in self._trips if t.expedition_id == expedition_id),
             key=lambda t: t.start_date,
@@ -296,6 +326,7 @@ class TripManager:
     # ------------------------------------------------------------------
 
     def add_waypoint_to_route(self, trip_id: str, waypoint_id: str) -> Trip:
+        """Adds a waypoint to the end of a trip's planned route."""
         trip = self.get_trip(trip_id)
         if trip is None:
             raise ValueError(f"No trip with id '{trip_id}'.")
@@ -305,6 +336,7 @@ class TripManager:
         return trip
 
     def remove_waypoint_from_route(self, trip_id: str, waypoint_id: str) -> Trip:
+        """Takes a waypoint off a trip's route, only its first time (a route can visit one twice, out and back)."""
         trip = self.get_trip(trip_id)
         if trip is None:
             raise ValueError(f"No trip with id '{trip_id}'.")
@@ -322,6 +354,7 @@ class TripManager:
     # ------------------------------------------------------------------
 
     def add_gear_item(self, trip_id: str, label: str, item_id: Optional[str] = None) -> Trip:
+        """Adds an item to a trip's packing list (linked to an Inventory item when item_id is given)."""
         trip = self.get_trip(trip_id)
         if trip is None:
             raise ValueError(f"No trip with id '{trip_id}'.")
@@ -331,6 +364,7 @@ class TripManager:
         return trip
 
     def toggle_gear_packed(self, trip_id: str, index: int) -> Trip:
+        """Flips a packing-list item between packed and not (ValueError when it isn't there)."""
         trip = self.get_trip(trip_id)
         if trip is None:
             raise ValueError(f"No trip with id '{trip_id}'.")
@@ -342,6 +376,7 @@ class TripManager:
         return trip
 
     def remove_gear_item(self, trip_id: str, index: int) -> Trip:
+        """Takes an item off a trip's packing list (ValueError when it isn't there)."""
         trip = self.get_trip(trip_id)
         if trip is None:
             raise ValueError(f"No trip with id '{trip_id}'.")
@@ -512,12 +547,14 @@ class TripManager:
         return summaries
 
     def total_distance_km(self, trip_id: str) -> Optional[float]:
+        """The distance covered between the trip's logged checkpoints, in km, or None with none."""
         summaries = self.leg_summaries(trip_id)
         if not summaries:
             return None
         return sum(s.distance_km for s in summaries)
 
     def average_speed_kmh(self, trip_id: str) -> Optional[float]:
+        """The trip's average speed between checkpoints, in km/h, or None when there's no time to divide by."""
         summaries = self.leg_summaries(trip_id)
         total_hours = sum(s.elapsed_hours for s in summaries)
         if not summaries or total_hours <= 0:
