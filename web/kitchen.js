@@ -5,6 +5,8 @@
  * meal log and suggestions. Every button proposes a kitchen action
  * (core/kitchen_actions.py) and the engine decides. Formatting only here.
  */
+// 2026-11-07 (DEC-0113): Today leads with the next meal's Start Cooking; a recipe being cooked takes the screen
+// (web/cook.js, core/cooking_session.py).
 (function () {
   "use strict";
   const { el, act, form } = MIAShell;
@@ -164,6 +166,24 @@
     if (v) act({ kind: "fitness.protein", params: v });
   }
 
+  // The canvas's "Tonight" card (DEC-0113): the next meal still to eat today that has a recipe with steps, what's
+  // missing for it, and one big Start Cooking (cook mode, web/cook.js).
+  function tonightCard(plan) {
+    const order = ["dinner", "lunch", "breakfast", "snack"];
+    const next = plan.meals.filter((m) => !m.eaten && m.recipe_id).sort((a, b) => order.indexOf(a.meal) - order.indexOf(b.meal))[0];
+    if (!next) return null;
+    const r = page.recipes.find((x) => x.id === next.recipe_id);
+    if (!r || r.locked) return null;
+    const steps = (r.instructions || "").split("\n").filter((x) => x.trim()).length;
+    return el("section", { class: "glass money-section kt-tonight" },
+      el("span", { class: "wk-label atmo" }, cap(next.meal) + " · Today"),
+      recipeLink(r.id, el("h2", {}, r.name)),
+      el("p", { class: "dim" }, [meta(r), r.ingredients.length ? (r.ingredients.length - r.missing.length) + " of " + r.ingredients.length + " ingredients here" : null].filter(Boolean).join(" · ")),
+      r.missing.length ? el("p", { class: "kt-missing" }, "Missing: " + r.missing.join(", ")) : null,
+      steps ? el("button", { type: "button", class: "btn-big", onclick: () => MIACook.start(r.id) }, "Start Cooking")
+        : recipeLink(r.id, "Add its steps to cook along", "btn btn-ghost"));
+  }
+
   function todayView() {
     if (!fit) return [section("Today", null, el("p", { class: "dim" }, "Meal plans aren't set up on this MIA."))];
     const t = fit.today, plan = t.meals, food = t.food;
@@ -171,6 +191,7 @@
     const missions = fit.missions.filter((m) => ["meals", "lunch", "protein", "prep", "meal_plan"].includes(m.kind));
     const extra = food.entries.filter((e) => !(e.planned_id && planned.has(e.meal)));
     return [
+      page.cooking ? null : tonightCard(plan),
       section("Today", buttons(planLink(), importLink()),
         proteinBar(food.totals, food.targets),
         el("p", { class: "dim" }, g(food.totals.kcal) + " kcal eaten" + (food.targets.kcal ? " of " + food.targets.kcal.toLocaleString() : "") +
@@ -294,7 +315,8 @@
     $("tabs").hidden = false;
     $("tabs").replaceChildren(...TABS.map(([id, l]) =>
       el("button", { type: "button", role: "tab", "aria-selected": String(id === tab), onclick: () => { tab = id; history.replaceState(null, "", "#" + id); draw(); } }, l)));
-    $("panel").replaceChildren(...views[tab]());
+    $("panel").replaceChildren(...[window.MIACook ? MIACook.bar() : null, ...views[tab]()].filter(Boolean));
+    if (window.MIACook) MIACook.render(page.cooking);  // the recipe being cooked takes the screen (DEC-0113)
   }
 
   MIAShell.start(async () => {

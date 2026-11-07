@@ -331,3 +331,56 @@ body.wk-live .mia-orb-button, body.wk-live .bottom-bar { display: none; }
 .wk-row .wk-mono { font-size: var(--text-xs); }
 @media (prefers-reduced-motion: reduce) { .wk-ring-fill { transition: none; } }
 .wk-mode h1, .wk-mode h2 { text-transform: none; }
+
+/* ------------------------------------------------------------ Kitchen: Tonight and cook mode (DEC-0113) */
+.kt-tonight { display: flex; flex-direction: column; gap: 8px; border-color: rgba(var(--rgb-accent), 0.35); }
+.kt-tonight h2 { margin: 0; font-size: var(--text-xl); }
+.kt-tonight p { margin: 0; }
+.kt-missing { color: var(--attention); font-size: var(--text-sm); }
+.recipe-cook { margin: 12px 0 4px; }
+body.cook-live { overflow: hidden; }
+body.cook-live .mia-orb-button, body.cook-live .bottom-bar { display: none; }
+.cook-mode {
+  position: fixed; inset: 0; z-index: 900; overflow-y: auto; box-sizing: border-box;
+  display: flex; flex-direction: column; gap: 16px;
+  padding: max(14px, env(safe-area-inset-top)) clamp(14px, 3vw, 28px) max(16px, env(safe-area-inset-bottom));
+  background: radial-gradient(700px 500px at 30% 40%, rgba(var(--rgb-accent), 0.05), transparent 70%), var(--bg);
+}
+.cook-top { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.cook-exit { min-height: var(--touch-big); }
+.cook-title { flex: 1; display: flex; flex-direction: column; min-width: 160px; }
+.cook-title strong { font-size: var(--text-lg); }
+.cook-steps { display: flex; gap: 6px; width: min(360px, 100%); }
+.cook-steps span { flex: 1; height: 6px; border-radius: var(--radius-pill); background: rgba(var(--rgb-line), 0.18); }
+.cook-steps span.done { background: var(--ok); }
+.cook-steps span.now { background: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
+.cook-body { flex: 1; min-height: 0; display: flex; gap: 20px; flex-wrap: wrap; }
+.cook-step { flex: 999 1 420px; padding: clamp(18px, 3vw, 36px); display: flex; flex-direction: column; gap: 22px; }
+.cook-step h1 { margin: 0; font-size: clamp(26px, 3.6vw, 46px); line-height: 1.25; font-weight: 600; text-transform: none; text-wrap: pretty; }
+.cook-uses { display: flex; flex-direction: column; gap: 10px; }
+.cook-chips { display: flex; flex-wrap: wrap; gap: 10px; }
+.cook-chip { padding: 10px 14px; border-radius: var(--radius-sm); background: rgba(var(--rgb-line), 0.08); border: 1px solid var(--line); font-size: var(--text-lg); }
+.cook-offer { align-self: flex-start; min-height: var(--touch-big); font-size: var(--text-md); }
+.cook-side { flex: 1 1 300px; display: flex; flex-direction: column; gap: 16px; }
+.cook-timers { padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.cook-timer { display: flex; flex-direction: column; gap: 6px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.cook-timer-head { display: flex; justify-content: space-between; align-items: center; font-size: var(--text-md); }
+.cook-timer-n { font-family: var(--font-mono); font-size: var(--text-3xl); font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.05; }
+.cook-timer.done .cook-timer-n { color: var(--attention); }
+.cook-timer .btn { align-self: flex-start; min-height: 40px; }
+.cook-timer .meter { height: 6px; border-radius: var(--radius-pill); background: rgba(var(--rgb-line), 0.14); overflow: hidden; }
+.cook-timer .meter-fill { height: 100%; background: var(--accent); }
+.cook-mia { padding: 18px; display: flex; gap: 14px; align-items: center; }
+.cook-mia .mia-orb { --orb-d: 48px; }
+.cook-mia p { margin: 4px 0 0; font-size: var(--text-sm); }
+.cook-foot { display: flex; gap: 16px; }
+.cook-foot .btn-big { min-height: 80px; font-size: var(--text-xl); }
+.cook-back { flex: 0 1 300px; }
+.cook-foot > :last-child { flex: 1; }
+.cook-stop { align-self: center; color: var(--text-dim); }
+.cook-foot { position: sticky; bottom: 0; padding-top: 10px; background: linear-gradient(180deg, transparent, var(--bg) 18%); }
+@media (max-width: 860px) {
+  .cook-body { flex: none; }
+  .cook-foot .btn-big { min-height: 64px; font-size: var(--text-lg); }
+  .cook-back { flex: 0 1 120px; }
+}

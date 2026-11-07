@@ -44,7 +44,7 @@ def _r(value) -> float:
 def kitchen_page(context, today: Optional[date] = None) -> dict:
     """The data the Kitchen screen shows, assembled here (the web only draws it): recipes (what's missing for each, whether it can be made, times
     made, favourites, ratings, photos; locked ones with the mission that unlocks them), the pantry with what expires,
-    the grocery list, meals logged, and the forms.
+    the grocery list, meals logged, the forms, and the recipe being cooked in cook mode (`cooking`).
     """
     from core.kitchen_actions import RECORDS, form_spec, ingredients_text
     from core.kitchen_manager import days_until_expiration, recipe_missing_ingredients
@@ -105,7 +105,20 @@ def kitchen_page(context, today: Optional[date] = None) -> dict:
     page["suggestions"].sort(key=lambda x: len(x["missing"]))
     page["counts"] = {"recipes": len(recipes), "pantry": len(items), "expiring": sum(i["expiring"] for i in items),
                       "grocery": sum(not g["checked"] for g in page["grocery"])}
+    page["cooking"] = _cooking(context)  # the recipe being cooked in cook mode, or None (DEC-0113)
     return page
+
+
+def _cooking(context):
+    """Cook mode's session for the Kitchen and recipe screens (core/cooking_actions.screen), or None; a failure
+    there never hides the page."""
+    try:
+        from core.cooking_actions import screen
+
+        return screen(context)
+    except Exception:
+        log.exception("Kitchen: cook mode unavailable")
+        return None
 
 
 def recipe_steps(instructions: str) -> list[str]:
@@ -129,7 +142,8 @@ def recipe_page(context, recipe_id: str, today: Optional[date] = None) -> dict:
     its nutrition per serving, each ingredient with whether the house has
     it (in the pantry, already on the grocery list, or to buy), the steps,
     and when it's planned next. "Schedule meal" is meal.plan; "Add to
-    grocery list" is grocery.from_recipe, adding exactly `to_buy`."""
+    grocery list" is grocery.from_recipe, adding exactly `to_buy`. Also the
+    recipe being cooked in cook mode (`cooking`, DEC-0113), if any."""
     from core.fitness_manager import MEALS
     from core.kitchen_actions import RECORDS, form_spec
     from core.kitchen_manager import ingredient_key, recipe_missing_ingredients
@@ -182,7 +196,7 @@ def recipe_page(context, recipe_id: str, today: Optional[date] = None) -> dict:
         "available": True, "as_of": today.isoformat(), "id": recipe.recipe_id, "name": recipe.name,
         "category": recipe.category, "servings": recipe.servings, "prep_minutes": recipe.prep_time_minutes or 0,
         "cook_minutes": recipe.cook_time_minutes or 0, "source": recipe.source, "notes": recipe.notes,
-        "steps": recipe_steps(recipe.instructions), "ingredients": ingredients,
+        "steps": recipe_steps(recipe.instructions), "ingredients": ingredients, "cooking": _cooking(context),
         "to_buy": [i["name"] for i in ingredients if i["status"] == "to_buy"],
         "nutrition": {**{k: facts.get(k) for k in ("kcal", "protein_g", "carbs_g", "fat_g", "fiber_g", "sugar_g", "sodium_mg")},
                       "source": facts["source"], "not_found": facts["not_found"], "no_amount": facts["no_amount"],

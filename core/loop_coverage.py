@@ -185,6 +185,7 @@ CORRECTED_IN = {
     "module:missions": "missions", "store:quest_book": "missions", "store:boss_book": "missions",
     "store:reward_shop": "missions",
     "module:workout": "workouts", "store:workout": "workouts", "store:fitness": "workouts", "store:training": "workouts",
+    "store:cooking": "kitchen",
     "store:calendar": "calendar", "store:alarms": "calendar",
     "store:projects": "tasks", "store:tasks": "tasks",
     "store:products": "home", "store:materials": "home", "store:components": "home", "store:flock": "home",

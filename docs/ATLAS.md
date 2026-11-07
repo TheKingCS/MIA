@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1080 files, 243,632 lines; 1080 files describe themselves; 13,384 of 14,054 classes and functions are documented.
+1084 files, 244,357 lines; 1084 files describe themselves; 13,431 of 14,101 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-387 files, 112,592 lines; 5,958 of 6,047 classes and functions documented
+389 files, 113,065 lines; 5,999 of 6,088 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -93,6 +93,8 @@
 - `core/conversation_manager.py`: Persistent Assistant conversations — 2026-07-14 aesthetic pass part 5 (docs/ROADMAP.md), at the user's explicit request for a ChatGPT-like experience: named conversation threads you can review, continue, or delete, rather than the stateless one-message-at-a-time exchanges the Assistant used before t
 - `core/conversation_modes.py`: How MIA should talk right now — slice A ("Talk it out") of docs/COGNITIVE_EXTENSION_PROPOSAL.md. Pure logic: the mode vocabulary, the explicit phrases that switch modes, and the one short tone line each mode adds to the system prompt.
 - `core/conversation_state.py`: What a conversation is about (DEC-0052 step 4, first slice; docs/REASONING_PLAN.md section 5). Before, every message started over: "Which debt should I pay first?" then "what if I added $300 a month?" or "why?" reached the model with no idea which records it was about.
+- `core/cooking_actions.py`: Cook mode's changes (core/cooking_session.py, DEC-0113) as action kinds on the contract in core/actions.py, so the Kitchen screen, the tablet on the counter and, later, voice and the glasses all move the one session the same way: start cooking a recipe, next step, back, go to a step, start or stop a
+- `core/cooking_session.py`: Cook mode's engine (DEC-0113, the design canvas's Kitchen · Cook Mode; docs/design/applications/kitchen.md §13): one recipe being cooked, per person, shared by every surface the way the live workout is (core/training_session.py): the phone, the tablet on the counter, the PC and, later, voice and the
 - `core/core_runtime.py`: Builds the `AppContext` and curated Assistant action registry for headless MIA Core** — docs/VISION.md's 2026-07-15 "Core drops its GUI entirely" split. Core is a voice-first, screen-free runtime (the Pi 5 + AI HAT+2 Receiver hardware, docs/HARDWARE.md): push-to-talk button in, speech out, no `gui/`
 - `core/corrections.py`: Corrections in every area (build plan step 4, DEC-0094; `docs/IMPROVEMENT_LOOPS.md` section C): when the person undoes, edits or deletes something MIA just did, that's a judgment of her work, and the same code counts it in every area.
 - `core/council.py`: The council's group chat (DEC-0077, Zac 2026-11-03: "communicate with them all in a group chat style in the dev environment"). One conversation that Zac and every development agent post into, shown in the dev window, and the same record the glasses' Council Mode will speak (DEC-0081).
@@ -666,7 +668,7 @@
 
 ## tests/: the test suite: what each part must do
 
-359 files, 65,471 lines; 5,191 of 5,772 classes and functions documented
+360 files, 65,568 lines; 5,197 of 5,778 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -733,6 +735,7 @@
 - `tests/test_conversation_manager.py`: Unit tests for core.conversation_manager. Isolates _DATA_DIR _CONVERSATIONS_FILE into a tmp_path scratch area, same monkeypatch pattern as test_mission_manager.py's isolated_paths. Also isolates config_manager's _CONFIG_FILE, since set_active_conversation_id() calls context.config.save() — the exact *(5 undocumented)*
 - `tests/test_conversation_modes.py`: Explicit mode switches (core/conversation_modes.py): a sentence corpus, not wording. *(3 undocumented)*
 - `tests/test_conversation_state.py`: What a conversation is about (DEC-0052 step 4, core/conversation_state.py): a short follow-up goes back to the last question plan, with both questions. *(2 undocumented)*
+- `tests/test_cooking_session.py`: Cook mode (DEC-0113, core/cooking_session.py and core/cooking_actions.py): one recipe being cooked per person, step by step, with named timers that keep running across steps, what each step uses, and "I made this" logging the meal through the kitchen's own action.
 - `tests/test_core_runtime.py`: Unit tests for core.core_runtime — headless MIA Core's build_core_context() and its curated Assistant action handlers (_action_*). These are independent copies of core/application.py's own staticmethods (see that module's docstring for why), so this mirrors tests/test_assistant_action_handlers.py's 
 - `tests/test_corrections.py`: Corrections in every area (build plan step 4, core/corrections.py): MIA's changes are watched for three days; the person undoing one, or editing or deleting something of the same kind (the same record when both name it), corrects her, once; the corrections.* loops count them by area. Kinds and ids o *(3 undocumented)*
 - `tests/test_council.py`: The council chat (DEC-0077, core/council.py) and usage (DEC-0079, core/dev_usage.py). *(3 undocumented)*
@@ -1030,7 +1033,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-71 files, 12,429 lines
+72 files, 12,584 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
@@ -1044,6 +1047,7 @@
 - `web/chronicle.js`: chronicle.js — The Chronicle (claude, 2026-10-17, DEC-0028). Renders MIA.chronicle() (core/chronicle.py): this week's chapter, the weeks before it, and the yearly editions. Read only; formatting only.
 - `web/classroom.js`: classroom.js — the Classroom (claude, 2026-11-06). Renders MIA.classroom() (core/classroom_manager.py): each subject, its courses and their lessons, how far along each is. Adding, ticking a lesson done (its skill XP credited once) and taking things out go through actions (subject.*, course.*, lesson
 - `web/compliance.js`: compliance.js — the Compliance screen (claude, 2026-10-21, DEC-0040). Renders MIA.compliance() (core/web_compliance.py): Overdue, Next 30 Days, Later, To Check and Done. Every change proposes an action (core/obligation_actions.py): add, edit, verify (the only way an obligation becomes verified), whe
+- `web/cook.js`: cook.js — cook mode (claude, 2026-11-07, DEC-0113: the design canvas's Kitchen · Cook Mode). The recipe being cooked takes the whole screen, on the Kitchen page and on a recipe's page alike: one step in large type, what this step uses, the step's own timer to start, every timer running (they keep go
 - `web/council.js`: council.js — the council from the phone (claude, 2026-11-06, build plan step 16). Renders MIA.council() (core/council.py through server/app.py): the latest messages, who's here and ready, and a box to write to them. Only the PC's owner gets an answer; anyone else sees why. Formatting only.
 - `web/dev.js`: dev.js: the development board (claude, 2026-11-03, DEC-0068/0070). Zac: "a window that makes it all easy to view and understand the workflow and what is going on, what is building, who is building it." Renders MIA.dev() (core/work_dashboard.py) as the flow, Up Next to Done, each card opening to its 
 - `web/diagnostics.js`: diagnostics.js — the PC's check-ups (claude, 2026-11-06, T-0040). Renders MIA.diagnostics() (core/diagnostics.py): each built-in check-up over one passive inspection (nothing is probed or changed), what passed, what to look at, and what couldn't be read (never counted as a pass). The PC's owner's pa
@@ -1089,7 +1093,7 @@
 - `web/play.js`: play.js — games and sports (claude, 2026-11-07, DEC-0098). Renders MIA.play() (core/recreation.py): the latest games and the training load by week. Logging and taking one out go through actions (play.log, play.delete). Formatting only; the look is muse's.
 - `web/profile.js`: profile.js — the Profile screen (claude, 2026-10-07; Zac: the gear's Profile). Renders MIA.profile() (core/web_account.py): your level, name, email, country, what MIA helps with, household, password and recovery code. Name, email, country and interests are one action (profile.edit), so they're confi
 - `web/real-estate.js`: real-estate.js — the Real Estate screen (claude, 2026-10-06, DEC-0017/0018). Renders MIA.realEstate() (core/web_screens.py): each property with its status, where it is, rent, what's owed, equity and cash flow, its upkeep (its own Maintenance asset, opened on asset.html) and related missions. Since Z
-- `web/recipe.js`: recipe.js — one recipe, opened from a meal or recipe card (claude, 2026-10-14, Zac's idea). Renders MIA.recipe(id) (core/web_screens. recipe_page): nutrition per serving, each ingredient with whether the house has it, the steps (tick them off while cooking; that stays on this screen), when it's plan
+- `web/recipe.js`: recipe.js — one recipe, opened from a meal or recipe card (claude, 2026-10-14, Zac's idea; 2026-11-07, DEC-0113: Start Cooking opens cook mode, web/cook.js). Renders MIA.recipe(id) (core/web_screens. recipe_page): nutrition per serving, each ingredient with whether the house has it, the steps (tick 
 - `web/security.js`: security.js — Security (claude, 2026-10-18, DEC-0033). Renders MIA.security() (core/security_cams.py) in tabs: Cameras (a live grid: each tile asks MIA for the camera's picture every few seconds while it's on screen; tap one for a full view, refreshed every second, with Save Picture), Pictures (what
 - `web/settings.js`: settings.js — the Settings screen (claude, 2026-10-07; Zac: the gear's Settings). Renders MIA.settings() (core/web_account.py): the person's own settings, grouped as on the PC, the kinds of message MIA is taking a break from, and a way to choose which apps show. Each change is an action (setting.set
 - `web/shell.js`: shell.js — the frame every MIA web screen shares (claude, 2026-10-06, DEC-0017).
