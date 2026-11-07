@@ -132,7 +132,7 @@ class HomesteadManager:
 
     def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
         # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
-        """Loads the latest snapshot of each source, and makes the import folder with its processed/ and failed/ folders
+        """Loads the latest snapshot of each source, and makes the import folder with its imported/ and failed/ folders
         (only logging when storage isn't there).
         """
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
@@ -239,7 +239,7 @@ class HomesteadManager:
         return newly_imported
 
     def _move_file(self, file_path: Path, subdir: str) -> None:
-        """Moves an export into processed/ or failed/ (logged, not raised, when it can't)."""
+        """Moves an export into imported/ or failed/ (logged, not raised, when it can't)."""
         destination = self.import_folder_path / subdir / file_path.name
         try:
             if destination.exists():
