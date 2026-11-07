@@ -3,7 +3,6 @@
  "undocumented": {
   "core/accessibility.py": 1,
   "core/account_actions.py": 9,
-  "core/actions.py": 35,
   "core/activity_log_manager.py": 11,
   "core/alarm_manager.py": 12,
   "core/answer_ratings.py": 6,

@@ -52,6 +52,10 @@ class ActionError(ValueError):
 
 @dataclass(frozen=True)
 class ActionType:
+    """One kind of change MIA can make ("bill.pay"): the button's label, the parameters it takes (name -> what it is),
+    `describe` (context, params -> the sentence the person approves; raises ActionError when it can't be done),
+    `execute` (context, params -> one line saying what happened), and whether a child account may use it.
+    """
     kind: str
     label: str  # the button: "Mark paid"
     params: dict  # name -> what it is
@@ -60,11 +64,17 @@ class ActionType:
     child_ok: bool = False
 
     def as_dict(self) -> dict:
+        """What /api/actions lists for this kind: kind, label, params and child_ok (never the functions)."""
         return {"kind": self.kind, "label": self.label, "params": dict(self.params), "child_ok": self.child_ok}
 
 
 @dataclass
 class Proposal:
+    """One proposed change waiting for, or past, its decision: the kind and params, the summary the person approves
+    (made in code, never by the model), whose it is, who proposed it (the person or MIA), its status (proposed,
+    executed, rejected, failed, expired, undone), when, the result line, what it earned (for a surface to celebrate),
+    and the undo record (kept server-side, never sent).
+    """
     proposal_id: str
     kind: str
     params: dict
@@ -81,6 +91,7 @@ class Proposal:
     _change: object = field(default=None, repr=False)  # the undo record, never sent
 
     def as_dict(self) -> dict:
+        """The proposal as sent to a screen: everything but the undo record, plus whether it can still be undone."""
         data = asdict(self)
         data.pop("_change", None)
         data["undoable"] = self.status == EXECUTED and self._change is not None
@@ -91,6 +102,7 @@ class Proposal:
 
 
 def _need(context, store: str):
+    """A store from the context, or ActionError when this MIA doesn't have it."""
     found = getattr(context, store, None)
     if found is None:
         raise ActionError("That isn't available on this MIA.")
@@ -98,12 +110,14 @@ def _need(context, store: str):
 
 
 def _money(amount) -> str:
+    """An amount in the person's currency (core/region.py)."""
     from core.region import money
 
     return money(amount)
 
 
 def _bill(context, params):
+    """The bill the params name, or ActionError when it's gone."""
     bill = _need(context, "budget").get_bill(str(params.get("bill_id", "")))
     if bill is None:
         raise ActionError("That bill isn't there anymore.")
@@ -111,6 +125,7 @@ def _bill(context, params):
 
 
 def _amount(params, default: float) -> float:
+    """The amount from the params (the default when none is given); ActionError when it isn't a number or is negative."""
     raw = params.get("amount")
     if raw in (None, ""):
         return float(default)
@@ -124,11 +139,13 @@ def _amount(params, default: float) -> float:
 
 
 def _describe_bill(context, params) -> str:
+    """The sentence the approval card shows for `bill.pay` (Propose); raises ActionError when it can't be done."""
     bill = _bill(context, params)
     return f"Mark {bill.name} paid ({_money(_amount(params, bill.amount))})"
 
 
 def _pay_bill(context, params) -> str:
+    """Does `bill.pay` once approved, and says what happened. The amount defaults to the bill's."""
     bill = _bill(context, params)
     amount = _amount(params, bill.amount)
     context.budget.mark_bill_paid(bill.bill_id, amount=amount)
@@ -136,6 +153,7 @@ def _pay_bill(context, params) -> str:
 
 
 def _source(context, params):
+    """The income source the params name, or ActionError when it's gone."""
     source = _need(context, "budget").get_income_source(str(params.get("source_id", "")))
     if source is None:
         raise ActionError("That income source isn't there anymore.")
@@ -143,11 +161,13 @@ def _source(context, params):
 
 
 def _describe_income(context, params) -> str:
+    """The sentence the approval card shows for `income.receive` (Propose); raises ActionError when it can't be done."""
     source = _source(context, params)
     return f"Mark {source.name} received ({_money(_amount(params, source.expected_amount))})"
 
 
 def _receive_income(context, params) -> str:
+    """Does `income.receive` once approved, and says what happened. The amount defaults to what was expected."""
     source = _source(context, params)
     amount = _amount(params, source.expected_amount)
     context.budget.mark_income_received(source.source_id, amount=amount)
@@ -155,6 +175,7 @@ def _receive_income(context, params) -> str:
 
 
 def _maintenance_task(context, params):
+    """The maintenance task the params name and its asset, or ActionError when it's gone."""
     maintenance = _need(context, "maintenance")
     task = maintenance.get_task(str(params.get("task_id", "")))
     if task is None:
@@ -164,6 +185,7 @@ def _maintenance_task(context, params):
 
 
 def _describe_maintenance(context, params) -> str:
+    """The sentence the approval card shows for `maintenance.done` (Propose); raises ActionError when it can't be done. It includes the meter reading when one is given."""
     task, asset = _maintenance_task(context, params)
     meter = _meter_value(params)
     at = f" at {meter:g} {task.meter_unit}".rstrip() if meter is not None else ""
@@ -171,6 +193,7 @@ def _describe_maintenance(context, params) -> str:
 
 
 def _meter_value(params):
+    """The meter reading from the params, or None; ActionError when it isn't a number."""
     raw = params.get("meter_value")
     if raw in (None, ""):
         return None
@@ -181,12 +204,14 @@ def _meter_value(params):
 
 
 def _do_maintenance(context, params) -> str:
+    """Does `maintenance.done` once approved, and says what happened."""
     task, asset = _maintenance_task(context, params)
     context.maintenance.mark_complete(task.task_id, meter_value=_meter_value(params))
     return f"{task.title} is done" + (f" on {asset.name}" if asset else "") + "."
 
 
 def _task(context, params):
+    """The task the params name, or ActionError when it's gone or already done."""
     task = _need(context, "tasks").get_task(str(params.get("task_id", "")))
     if task is None:
         raise ActionError("That task isn't there anymore.")
@@ -196,16 +221,19 @@ def _task(context, params):
 
 
 def _describe_task(context, params) -> str:
+    """The sentence the approval card shows for `task.done` (Propose); raises ActionError when it can't be done."""
     return f"Check off \"{_task(context, params).title}\""
 
 
 def _do_task(context, params) -> str:
+    """Does `task.done` once approved, and says what happened."""
     task = _task(context, params)
     context.tasks.update_task(task.task_id, done=True)
     return f"\"{task.title}\" is done."
 
 
 def _routine(context, params):
+    """The household routine (a recurring-mission template) the params name, or ActionError."""
     store = _need(context, "recurring_missions")
     template = next((t for t in store.all_templates() if t.template_id == str(params.get("template_id", ""))), None)
     if template is None:
@@ -214,12 +242,16 @@ def _routine(context, params):
 
 
 def _describe_routine(context, params) -> str:
+    """The sentence the approval card shows for `routine.log` (Propose); raises ActionError when it can't be done. It shows how many times when more than one."""
     template = _routine(context, params)
     times = _amount(params, 1.0) or 1.0
     return f"Log {template.name}" + (f" ×{times:g}" if times != 1 else "")
 
 
 def _log_routine(context, params) -> str:
+    """Does `routine.log` once approved, and says what happened. It counts toward this period's mission for the routine (made if needed) and
+    says the progress.
+    """
     template = _routine(context, params)
     times = _amount(params, 1.0) or 1.0
     mission, _bonus = context.recurring_missions.ensure_current_missions(template, date.today())
@@ -231,6 +263,7 @@ def _log_routine(context, params) -> str:
 
 
 def _app(params):
+    """The app the params name (web_surfaces.APPS_BY_ID), or ActionError."""
     from core.web_surfaces import APPS_BY_ID
 
     app = APPS_BY_ID.get(str(params.get("module_id", "")))
@@ -240,6 +273,9 @@ def _app(params):
 
 
 def _describe_app(context, params) -> str:
+    """The sentence the approval card shows for `app.visibility` (Propose); raises ActionError when it can't be done. The apps that must always stay (ALWAYS_VISIBLE) can't be hidden, and a
+    child can't show an app their account doesn't allow.
+    """
     from core.child_accounts import app_allowed
     from core.focus_presets import ALWAYS_VISIBLE
 
@@ -256,6 +292,7 @@ def _describe_app(context, params) -> str:
 
 
 def _set_app(context, params) -> str:
+    """Does `app.visibility` once approved, and says what happened. Shows or tucks away an app for this person."""
     from core.focus_presets import set_app_visible
 
     app = _app(params)
@@ -265,10 +302,12 @@ def _set_app(context, params) -> str:
 
 
 def _favorite_on(params) -> bool:
+    """Whether the params star (True) or unstar the app; the default is to star it."""
     return params.get("favorite", True) not in (False, "false", 0, "0")
 
 
 def _describe_favorite(context, params) -> str:
+    """The sentence the approval card shows for `app.favorite` (Propose); raises ActionError when it can't be done. A child can't star an app their account doesn't allow."""
     from core.child_accounts import ASK_A_PARENT, app_allowed
 
     app = _app(params)
@@ -278,6 +317,7 @@ def _describe_favorite(context, params) -> str:
 
 
 def _set_favorite(context, params) -> str:
+    """Does `app.favorite` once approved, and says what happened. Favorites are also what the glasses show first."""
     from core.focus_presets import set_app_favorite
 
     app = _app(params)
@@ -352,6 +392,7 @@ import core.first_boot  # noqa: E402,F401  (meeting MIA, docs/GLASSES_FIRST_BOOT
 
 
 def _who(context) -> Optional[str]:
+    """Whose proposals these are: the person this context acts for (person_settings.person_id)."""
     from core.person_settings import person_id
 
     return person_id(context)
@@ -361,10 +402,12 @@ class ActionCenter:
     """The proposals waiting for a yes (context.actions)."""
 
     def __init__(self) -> None:
+        """Starts with no proposals; a lock keeps the phone server's threads from colliding."""
         self._proposals: dict[str, Proposal] = {}
         self._lock = threading.Lock()
 
     def _expire(self) -> None:
+        """Marks proposals left undecided past KEEP_FOR (a day) expired, so an old card can't be approved later."""
         cutoff = (datetime.now() - KEEP_FOR).isoformat(timespec="seconds")
         for proposal in self._proposals.values():
             if proposal.status == PROPOSED and proposal.created_at < cutoff:
@@ -392,6 +435,7 @@ class ActionCenter:
         return proposal
 
     def get(self, proposal_id: str, profile_id: Optional[str]) -> Proposal:
+        """A proposal by id, only for the person it belongs to (KeyError otherwise, never someone else's)."""
         with self._lock:
             self._expire()
             proposal = self._proposals.get(proposal_id)
@@ -400,6 +444,7 @@ class ActionCenter:
         return proposal
 
     def pending(self, profile_id: Optional[str]) -> list[Proposal]:
+        """This person's proposals still waiting for a decision."""
         with self._lock:
             self._expire()
             return [p for p in self._proposals.values() if p.profile_id == profile_id and p.status == PROPOSED]
@@ -454,6 +499,9 @@ class ActionCenter:
         return proposal
 
     def reject(self, context, proposal_id: str) -> Proposal:
+        """Declines a proposal still waiting (nothing runs); when MIA proposed it, the decline is noted for her
+        actions.* loops.
+        """
         proposal = self.get(proposal_id, _who(context))
         if proposal.status == PROPOSED:
             proposal.status = REJECTED
