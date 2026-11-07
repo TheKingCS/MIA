@@ -39,6 +39,7 @@ VOICE_ELSEWHERE = {
     "observations": "list_observations (the system area)",
     "diagnostics": "check_my_setup and get_system_health (the system area)",
     "module_browser": "set_app_visibility and set_app_focus (Settings' apps area)",
+    "good_news": "quick commands: \"what's the good news?\", \"turn on good news radio\" (core/good_news.py reply)",
 }
 # Has a web page the sidebar doesn't link as App.page: the gear opens Settings, Settings opens Diagnostics.
 PAGE_ELSEWHERE = {"settings": "settings.html", "diagnostics": "diagnostics.html"}
@@ -124,7 +125,10 @@ def render(rows: list[dict], decisions: dict) -> str:
 
 
 def main(argv: Optional[list] = None) -> None:
-    """Writes docs/PARITY.md from her real tools and screens."""
+    """Writes docs/PARITY.md from her real tools and screens, without the tool registry's log lines."""
+    import logging
+
+    logging.disable(logging.INFO)
     rows = matrix(desktop_registry())
     REPORT.write_text(render(rows, load_decisions()), encoding="utf-8")
     print(f"{REPORT.relative_to(ROOT)} written: {len(gaps(rows))} gaps")

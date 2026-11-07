@@ -185,6 +185,8 @@ every push). Anything that needs the PC waits.
 
 ## Recent changes (newest first)
 
+- 2026-11-07 · claude · **Every app can be asked about by voice (DEC-0125).** New tools: get_character, get_skills, list_rewards, buy_reward (through shop.buy, undoable), get_insurance, list_kept, get_operating_journal, get_play, find_my_files (only inside the person's own folder); find_photos now on the PC too (it was phone-only); Memories maps to the trip tools, Good News counts its quick commands. Voice 48 of 50 apps (Look and Passwords left, Passwords on purpose); 27 gaps left, all decided. Zac confirmed passwords stay screen-only.
+
 - 2026-11-07 · claude · **Full use both ways, on every device (DEC-0125, Zac's words).** `core/parity.py` measures every app by voice, PC, phone and glasses from her real tools and screens: 50 apps, voice 37, PC 50, phone 46, glasses 29. The 38 gaps are each decided in `work/parity.json` (36 to build, 2 deliberately not: passwords by voice and on the glasses, Zac to confirm); `tests/test_parity.py` fails on a new undecided gap; `docs/PARITY.md` is the table. The audit doc's "Full use, both ways, on every device" section says the same.
 
 - 2026-11-02 · claude · **The glasses' apps in the designs' look, and everyday actions through the relay (DEC-0064).** Home and the app menu are one tile screen, Missions the Phase 6 card, every app the same frame. The phone hands the page one-time references, so it can't name a change. Fixed first boot's save through the relay; User Sync's Money stays on the phone. Compiled and tested in code; not run on the real pair.

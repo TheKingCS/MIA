@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1090 files, 246,505 lines; 1090 files describe themselves; 13,524 of 14,194 classes and functions are documented.
+1093 files, 246,975 lines; 1093 files describe themselves; 13,550 of 14,220 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-392 files, 114,434 lines; 6,055 of 6,144 classes and functions documented
+394 files, 114,775 lines; 6,066 of 6,155 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -41,6 +41,8 @@
 - `core/assistant_ownership_actions.py`: "Whose truck is it?" and "the mower is mine" (core/ownership.py, 2026-10-01): owner marks on maintenance items (vehicles, tools, appliances).
 - `core/assistant_path_actions.py`: Learning paths by voice (DEC-0112; core/paths.py): any desire, the same loop. "I want to learn guitar" starts the guitar program; "I want to learn to weld", with no program for it, has MIA draft one (grounded in her specialists' notes) and describe it, and "start it" starts it. Then lessons, practic
 - `core/assistant_plan_actions.py`: The Library's plans by voice (core/plan_library.py): "do we have plans for a chicken coop?", "what do I need for a 10 by 12 shed?", "make me a cut list for a 4 by 8 raised bed", "what do I still need to buy for the fence?", "where can I get free barn plans?", "start the shed as a project". The numbe
+- `core/assistant_progress_actions.py`: Her game layer by voice (DEC-0125, full use both ways): the Character, Skills and Reward Shop screens had nothing to say when asked. Four tools, each phrased from the same data its screen draws (core/web_progress.py, core/game_layer.py), so voice and screen never disagree:
+- `core/assistant_records_actions.py`: Asking about what she keeps (DEC-0125, full use both ways): Insurance, Kept, the Operating Journal, Play and Files could be changed by voice or only seen on a screen, never asked about. Five read-only tools, each phrased from its screen's own data so voice and screen agree:
 - `core/assistant_self_actions.py`: MIA about herself (2026-10-21, the intelligence spec's first slice): "What AI model are you using?" answered from the runtime (core/model_registry.py), never from the model's guess about itself.
 - `core/assistant_starter_actions.py`: "What starter sets are there?", "set me up with the homestead starter set", "add the student starter but not the weekly plan" (core/starter_templates.py, 2026-10-01). Adding one is undoable.
 - `core/assistant_tagging_actions.py`: Assistant tools for sorting bank charges to businesses (core/business_tagging.py): "which charges need a business?" and "the Shell charge was for lawn care" / "the Walmart one was personal".
@@ -671,7 +673,7 @@
 
 ## tests/: the test suite: what each part must do
 
-362 files, 66,056 lines; 5,227 of 5,808 classes and functions documented
+363 files, 66,185 lines; 5,242 of 5,823 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -999,6 +1001,7 @@
 - `tests/test_vault_captions.py`: Finding a photo again (core/vault_captions.py): the photos this PC keeps for the phone, each described in one sentence by the local vision model (never who anyone is), kept beside the photo, and searched by what's in them. *(1 undocumented)*
 - `tests/test_voice_effects.py`: Unit tests for core.voice_effects' pure-numpy DSP functions. These test shape/dtype/range invariants (no clipping, no silent volume change, correct dtype) — not perceived audio quality, which no automated test can judge; see that module's docstring. *(1 undocumented)*
 - `tests/test_voice_manager.py`: Unit tests for core.voice_manager's VoiceManager delegation and graceful-degradation logic. Uses fake STT/TTS backends (same shape as test_llm_manager.py's mocked urlopen) rather than loading the real Vosk/Piper models, so this suite stays fast and independent of voice_models/ being present. The rea
+- `tests/test_voice_parity_tools.py`: The tools that made Character, Skills, the Reward Shop, Insurance, Kept, the Operating Journal, Play and Files usable by voice (DEC-0125): each answers from its screen's own data, and buying a reward goes through the shop's own action.
 - `tests/test_volume_manager.py`: Unit tests for core.volume_manager. parse_amixer_output() is tested directly against captured-shape amixer text (pure, deterministic — no real amixer binary involved, same reasoning as test_power_manager.py mocking psutil). AmixerVolumeBackend/VolumeManager are tested against monkeypatched subproces *(3 undocumented)*
 - `tests/test_volume_quick_control.py`: Unit tests for gui.widgets.volume_quick_control's pure format_volume_line() — moved here 2026-09-11 from tests/test_home_dashboard.py, alongside removing gui/home_dashboard.py's own dead copy of this function (and the entire dashboard-grid Volume widget it only ever served) — see that module's 2026-
 - `tests/test_warranty_watch.py`: A heads-up before a warranty ends (core/warranty_watch.py). *(3 undocumented)*

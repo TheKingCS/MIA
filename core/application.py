@@ -72,6 +72,8 @@ from core.assistant_email_actions import register_email_actions
 from core.assistant_focus_actions import register_focus_actions
 from core.assistant_accessibility_actions import register_accessibility_actions
 from core.assistant_humor_actions import register_humor_actions
+from core.assistant_progress_actions import register_progress_actions
+from core.assistant_records_actions import register_records_actions
 from core.assistant_plan_actions import register_plan_actions
 from core.plan_library import PlanLibrary
 from core.assistant_starter_actions import register_starter_actions
@@ -1533,6 +1535,9 @@ class MIAApplication:
         `core/core_runtime.py`'s headless Core entry point curate its
         own smaller Assistant action set (see that module) without
         having to duplicate this class or its Qt/gui-heavy imports.
+        Every app's voice tools are registered here (DEC-0125:
+        core/parity.py measures what this registers), including the
+        photo search the headless Core had alone until 2026-11-07.
         """
         self.context.assistant_actions.register(connectivity_action())
         self.context.assistant_actions.register(remind_when_online_action())
@@ -1559,6 +1564,11 @@ class MIAApplication:
         register_failure_actions(self.context.assistant_actions)  # the Fix-It Log (DEC-0049)
         register_ownership_actions(self.context.assistant_actions)
         register_humor_actions(self.context.assistant_actions)  # how funny she is, asked for in chat
+        register_progress_actions(self.context.assistant_actions)  # Character, Skills, Reward Shop (DEC-0125)
+        register_records_actions(self.context.assistant_actions)  # Insurance, Kept, Operating, Play, Files (DEC-0125)
+        from core.vault_captions import register_vault_caption_actions
+
+        register_vault_caption_actions(self.context.assistant_actions)  # "find my photos of the creek", on the PC too
         register_plan_actions(self.context.assistant_actions)  # plans, blueprints and material lists
         register_accessibility_actions(self.context.assistant_actions)
         register_starter_actions(self.context.assistant_actions)

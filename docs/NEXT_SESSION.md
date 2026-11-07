@@ -658,10 +658,10 @@ every step below in order, from a blank machine, with Windows notes.
 
 *History since 2026-11-03: open work is in `work/tasks/`.*
 
-**Parity (DEC-0125): close the gaps in `docs/PARITY.md`, voice first.** The 16 apps without a voice tool
-(Skills, Insurance, Character, Reward Shop, Memory Vault, Memories, Files, Operating Journal, Kept, Play, Good
-News Radio, Look), then the phone pages (Power, Toolbox, The Lab, Field Kit), then glasses cards and asks. Each
-closed gap: delete its line in `work/parity.json` and run `python -m core.parity`.
+**Parity (DEC-0125): close the gaps in `docs/PARITY.md`.** Voice is done but Look (a voice "look at this" that
+takes the photo itself) and Passwords (screen-only by Zac's decision). Next the phone pages (Power, Toolbox, The
+Lab, Field Kit), then glasses cards and asks. Each closed gap: delete its line in `work/parity.json` and run
+`python -m core.parity`. New tools go in both `core/application.py` and `core/core_runtime.py` (K-0069).
 
 **Every session, ongoing (DEC-0104): document what you touch, and work the backlog.**
 `.venv\Scripts\python -m tools.docs next 15` lists the files with the most undocumented definitions (engine

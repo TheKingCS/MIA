@@ -265,7 +265,9 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
 
 
 def _register_core_assistant_actions(context: AppContext) -> None:
-    """Registers Core's curated Assistant action subset — see this module's docstring."""
+    """Registers Core's curated Assistant action subset — see this module's docstring. It includes the read tools
+    for Character, Skills, the Reward Shop, Insurance, Kept, the Operating Journal, Play and Files (DEC-0125), so
+    the phone can ask about them too."""
     registry = context.assistant_actions
     registry.register(connectivity_action())
     register_journal_actions(registry)
@@ -280,6 +282,11 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     from core.vault_captions import register_vault_caption_actions
 
     register_vault_caption_actions(registry)  # "find my photos of the creek" (the memory vault, described on the PC)
+    from core.assistant_progress_actions import register_progress_actions
+    from core.assistant_records_actions import register_records_actions
+
+    register_progress_actions(registry)  # Character, Skills, Reward Shop by voice (DEC-0125)
+    register_records_actions(registry)  # Insurance, Kept, Operating Journal, Play, Files by voice (DEC-0125)
 
     registry.register(AssistantAction(
         name="add_alarm",
