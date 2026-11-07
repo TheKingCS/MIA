@@ -945,3 +945,25 @@ body.cook-live .mia-orb-button, body.cook-live .bottom-bar { display: none; }
 .fl-more:hover { color: var(--text); background: rgba(var(--rgb-line), 0.08); }
 .fl-row .row-buttons { margin: 0; flex-wrap: nowrap; }
 .fl-note { margin-top: var(--gap); font-size: var(--text-sm); }
+
+/* ---------------------------------------------------------------- Passwords (DEC-0113)
+   One line per login (name, user, dots, Show); Show opens one card at the top that hides itself. */
+.pw-group { display: grid; padding: 4px 14px; margin-bottom: var(--gap); }
+.pw-label { margin: 10px 0 4px; font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-dim); }
+.pw-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 10px; min-height: 58px;
+  border-top: 1px solid var(--line); }
+.pw-row:first-child, .pw-label + .pw-row { border-top: 0; }
+.pw-main { display: grid; gap: 2px; min-width: 0; }
+.pw-title { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.pw-user { font-size: var(--text-sm); color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pw-dots { font-family: var(--font-mono); color: var(--text-dim); letter-spacing: 0.1em; }
+.pw-row .row-buttons { margin: 0; flex-wrap: nowrap; align-items: center; }
+.pw-shown { display: grid; gap: 6px; margin-bottom: var(--gap); }
+.pw-shown-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.pw-countdown { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--attention); }
+.pw-shown .pw-secret { font-family: var(--font-mono); font-size: var(--text-lg); color: var(--accent); word-break: break-all; }
+@media (max-width: 520px) { .pw-dots { display: none; } }
+.pw-search { box-sizing: border-box; flex: 1 1 100%; min-height: 44px; padding: 0 12px; border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong); background: rgba(var(--rgb-panel), 0.9); color: var(--text); font: inherit; }
+.pw-search::placeholder { color: var(--text-dim); }
