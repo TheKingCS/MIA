@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 229,681 lines; 1043 files describe themselves; 5,466 of 13,517 classes and functions are documented.
+1043 files, 229,725 lines; 1043 files describe themselves; 5,486 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 103,583 lines; 4,735 of 5,630 classes and functions documented
+367 files, 103,627 lines; 4,755 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -25,7 +25,7 @@
 - `core/assistant_chat.py`: The pure, non-Qt logic for one Assistant chat turn — moved here from `modules/assistant/module.py` (2026-07-14 aesthetic pass part 4, docs/ROADMAP.md) once the sidebar chat in `gui/character_panel.py` needed the exact same request-building and tool-call-safety logic as the full-screen Assistant modu
 - `core/assistant_comm_actions.py`: Assistant tools for the communication gate (core/communication_gate.py, Cognitive Extension slice C): asking what MIA chose not to say, and changing how often she speaks up on her own. *(5 undocumented)*
 - `core/assistant_domain_actions.py`: Assistant actions added by the 2026-09-27 conversational audit (docs/ASSISTANT_AUDIT.md), so what the owner *says* updates the right records: kitchen (recipes, meals, grocery list, pantry), debts and budget targets, asset details and notes (including greenhouse/garden plants, which are Maintenance a
-- `core/assistant_dungeon_actions.py`: The Dungeon by voice (DEC-0046): "How much loot this week?", "I worked 9 hours, we were unstocked", "I picked up an overtime shift Saturday", "Make it a quest". Each runs the same code as the screen (the action kinds in core/dungeon_actions.py, the numbers in core/web_dungeon.py), so the loot matche *(10 undocumented)*
+- `core/assistant_dungeon_actions.py`: The Dungeon by voice (DEC-0046): "How much loot this week?", "I worked 9 hours, we were unstocked", "I picked up an overtime shift Saturday", "Make it a quest". Each runs the same code as the screen (the action kinds in core/dungeon_actions.py, the numbers in core/web_dungeon.py), so the loot matche
 - `core/assistant_email_actions.py`: The Assistant writes emails (2026-10-01, accounts stage 3, core/email_drafts.py). `draft_email` only ever makes a draft: the person sends it by pressing Send (desktop or phone), copies it, or opens it in their mail app. There is deliberately no tool that sends. *(2 undocumented)*
 - `core/assistant_focus_actions.py`: Assistant tools for each person's Apps screen (core/focus_presets.py, 2026-10-01): "switch me to student mode", "hide the Lab", "show me the Greenhouse again", "what's my focus?". Changes are the speaker's own. *(5 undocumented)*
 - `core/assistant_goods_actions.py`: Saying it to MIA (2026-10-21): the homestead's newest screens by voice. "How many eggs this week?", "I collected 9 eggs", "What goods do I have on hand?", "Sold 3 loaves of banana bread", "How close am I to freedom?", "What's due for taxes?". Each one runs the same code its screen does (the action k *(8 undocumented)*
@@ -168,7 +168,7 @@
 - `core/household_manager.py`: Households (2026-10-01, docs/ROADMAP.md "People and ownership"): MIA is built for anyone, so nothing is shared between people unless they choose it. Every new account starts in a household of its own. Two people share the household things (calendar, kitchen, budget, maintenance, builds, inventory, t
 - `core/household_routines.py`: The Household's web screen (web/household.html): the household's routines (recurring-mission templates in the "Household" category: laundry, dishes, hygiene), each with its current occurrence (today's, or this week's for a weekly one), how far along it is and its streak, and the total for the day. L
 - `core/imports.py`: Bring your life with you (2026-10-01): a new person shouldn't start from an empty MIA. Three common exports from other apps:
-- `core/inbox_actions.py`: The Inbox screen's changes (Zac, 2026-10-16), on the action contract in core/actions.py: *(10 undocumented)*
+- `core/inbox_actions.py`: The Inbox screen's changes (Zac, 2026-10-16), on the action contract in core/actions.py:
 - `core/inbox_classify.py`: Pure logic behind the document inbox (core/inbox_manager.py, 2026-09-28): given a document's text, what is it, whose is it, and what does it say that MIA can file.
 - `core/inbox_mail.py`: Optional email intake for the document inbox (core/inbox_manager.py, 2026-09-28). The owner picks a mailbox (a dedicated address is best, e.g. a new Gmail account used only for sending MIA receipts and manuals). MIA checks it over IMAP, the standard mail-reading protocol (Python's own imaplib, no ne
 - `core/inbox_manager.py`: The document inbox (2026-09-28): "an email inbox that I can send receipts and owners manuals and all kinds of business documents to and it be able to classify it and determine where to put it, like storing the manual and user guide and maintenance schedule for the mower and automatically assigning i

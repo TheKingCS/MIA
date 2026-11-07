@@ -23,6 +23,7 @@ from core.actions import ACTION_TYPES, ActionError, ActionType, _need
 
 
 def _item(context, params):
+    """The inbox item the params name, if it's still waiting; ActionError otherwise."""
     item = _need(context, "inbox").get_item(str(params.get("item_id") or ""))
     if item is None or item.status != "pending":
         raise ActionError("That isn't waiting in the inbox anymore.")
@@ -44,6 +45,7 @@ def _indexes(raw) -> list[int]:
 
 
 def _fields(raw):
+    """Which detail fields to keep, from a list or comma-separated text; None keeps the ones MIA ticked."""
     if raw is None:
         return None  # the defaults MIA ticked
     bits = raw if isinstance(raw, list) else [b.strip() for b in str(raw).split(",")]
@@ -51,6 +53,9 @@ def _fields(raw):
 
 
 def _choices(context, params) -> dict:
+    """What filing an item does, from the params: the asset it's for (which must exist), the project, the amount (a
+    number over 0), the category, the schedule rows to add and the detail fields. A receipt or invoice needs a total.
+    """
     item = _item(context, params)
     out: dict = {}
     if "asset_id" in params:
@@ -77,6 +82,9 @@ def _choices(context, params) -> dict:
 
 
 def _describe_file(context, params) -> str:
+    """The sentence the approval card shows for `inbox.file` (Propose); raises ActionError when it can't be done. It lists what filing will do: log the amount in Money, put it on an asset's
+    page, add maintenance tasks, or just keep it filed.
+    """
     from core.region import money
 
     item = _item(context, params)
@@ -96,6 +104,7 @@ def _describe_file(context, params) -> str:
 
 
 def _file(context, params) -> str:
+    """Does `inbox.file` once approved, and says what happened. The inbox store's own refusals come back as ActionError."""
     item = _item(context, params)
     c = _choices(context, params)
     try:
@@ -105,16 +114,21 @@ def _file(context, params) -> str:
 
 
 def _describe_dismiss(context, params) -> str:
+    """The sentence the approval card shows for `inbox.dismiss` (Propose); raises ActionError when it can't be done."""
     return f"Dismiss {_item(context, params).label} (it stays in the inbox's history)"
 
 
 def _dismiss(context, params) -> str:
+    """Does `inbox.dismiss` once approved, and says what happened. The item stays in the inbox's history."""
     item = _item(context, params)
     context.inbox.dismiss(item.item_id)
     return "Dismissed."
 
 
 def _note(params) -> tuple[str, str]:
+    """The note's title and text from the params: the text is required (up to 100,000 characters), and the title is
+    given or its first six words.
+    """
     text = str(params.get("text") or "").strip()
     if not text:
         raise ActionError("Write something to send.")
@@ -125,12 +139,16 @@ def _note(params) -> tuple[str, str]:
 
 
 def _describe_note(context, params) -> str:
+    """The sentence the approval card shows for `inbox.note` (Propose); raises ActionError when it can't be done."""
     _need(context, "inbox")
     title, _ = _note(params)
     return f"Send MIA the note \"{title}\""
 
 
 def _send_note(context, params) -> str:
+    """Does `inbox.note` once approved, and says what happened. The note becomes a .txt file in the inbox (its title first when one was given), and the
+    inbox is scanned at once so it's there now.
+    """
     import re
 
     title, text = _note(params)

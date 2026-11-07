@@ -38,6 +38,11 @@ def _when(raw: str, forward: bool) -> str:
 
 
 def _get_loot(context, arguments: dict) -> str:
+    """Tool get_dungeon_loot: for each dungeon (job), this week's loot from hours worked, the overtime boss bonus,
+    what the planned runs project, whether they're in overtime or how far off it is, this month earned and banked, and
+    the yearly pace; then how unlocked the next dungeon (Freedom) is. Read from dungeon_page, so it says what the
+    screen says.
+    """
     from core.web_dungeon import dungeon_page
 
     page = dungeon_page(context)
@@ -74,18 +79,27 @@ def _get_loot(context, arguments: dict) -> str:
 
 
 def _log_shift(context, arguments: dict) -> str:
+    """Tool log_shift: proposes `dungeon.run` for a shift worked (the day looked back from), with its hours, hard-mode
+    reasons and overtime.
+    """
     params = {"date": _when(arguments.get("day"), forward=False), "hours": arguments.get("hours"),
               "hard_mode": arguments.get("hard_mode") or "", "overtime": arguments.get("overtime") or ""}
     return _run(context, "dungeon.run", params)
 
 
 def _plan_shift(context, arguments: dict) -> str:
+    """Tool plan_shift: proposes `dungeon.plan` for an upcoming shift (the day looked ahead to), with its hours and
+    overtime.
+    """
     params = {"date": _when(arguments.get("day"), forward=True), "hours": arguments.get("hours"),
               "overtime": arguments.get("overtime") or ""}
     return _run(context, "dungeon.plan", params)
 
 
 def _start_quest(context, arguments: dict) -> str:
+    """Tool start_quest: proposes `dungeon.quest` for a challenge; with none named, it takes the first hard-mode
+    modifier of today's run, and asks which challenge when there isn't one.
+    """
     challenge = str(arguments.get("challenge") or "").strip()
     if not challenge:
         # "Make it a quest" right after a hard-mode run: that run's modifier.
@@ -99,6 +113,7 @@ def _start_quest(context, arguments: dict) -> str:
 
 
 def register_dungeon_actions(registry: AssistantActionRegistry) -> None:
+    """Registers the Dungeon tools: get_dungeon_loot, log_shift, plan_shift and start_quest."""
     registry.register(AssistantAction(
         name="get_dungeon_loot", domain="dungeon",
         description=("The Dungeon (work as a game): loot this week from hours worked, overtime boss bonus, projected "
@@ -155,12 +170,18 @@ def register_dungeon_actions(registry: AssistantActionRegistry) -> None:
 
 
 def _set_schedule(context, arguments: dict) -> str:
+    """Tool set_schedule: proposes `loop.set` with what they said (name, days, start, end, lead minutes); the name is
+    work when none is given.
+    """
     params = {k: arguments.get(k) for k in ("name", "days", "start", "end", "lead_minutes") if arguments.get(k) not in (None, "")}
     params.setdefault("name", "work")
     return _run(context, "loop.set", params)
 
 
 def _get_loop(context, arguments: dict) -> str:
+    """Tool get_loop: each rhythm of the normal week (check-ins left out) with its line, whether its start was learned,
+    and this week's runs cleared and missed; makes sure the rhythms exist first.
+    """
     from core.the_loop import ensure_rhythms, loop_page
 
     if getattr(context, "loop", None) is None:
@@ -186,6 +207,7 @@ def _get_loop(context, arguments: dict) -> str:
 
 
 def register_loop_actions(registry: AssistantActionRegistry) -> None:
+    """Registers the loop tools: set_schedule and get_loop."""
     registry.register(AssistantAction(
         name="set_schedule", domain="loop",
         description=("Tell MIA when part of the normal week happens, so she plans it and reminds you: the workday's "
@@ -212,6 +234,9 @@ def register_loop_actions(registry: AssistantActionRegistry) -> None:
 
 
 def _get_checkin(context, arguments: dict) -> str:
+    """Tool get_weekly_checkin: last week's chapter, each loop row cleared, the loot and banked pay, up to two things
+    MIA noticed, then this week's planned runs, projected loot and up to three quests in progress.
+    """
     from core.weekly_checkin import checkin
 
     c = checkin(context)
@@ -232,6 +257,7 @@ def _get_checkin(context, arguments: dict) -> str:
 
 
 def register_checkin_actions(registry: AssistantActionRegistry) -> None:
+    """Registers the get_weekly_checkin tool."""
     registry.register(AssistantAction(
         name="get_weekly_checkin", domain="loop",
         description="The weekly check-in: last week's recap (loop cleared, loot, what MIA noticed) and this week laid out.",
