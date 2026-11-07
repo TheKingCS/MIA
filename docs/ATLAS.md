@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 228,701 lines; 1043 files describe themselves; 4,813 of 13,517 classes and functions are documented.
+1043 files, 228,707 lines; 1043 files describe themselves; 4,814 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 102,607 lines; 4,082 of 5,630 classes and functions documented
+367 files, 102,613 lines; 4,083 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -60,7 +60,7 @@
 - `core/business_book.py`: Quotes, customers, orders and the portfolio (DEC-0030 phase C): the business loop on top of crafting recipes (core/craft_recipes.py), builds (Jobs) and the workshop ledger, never beside them.
 - `core/business_report.py`: Pure, Qt-free composition of a household + real estate "Business Report" HTML document — 2026-09-08, at the user's explicit request: "I want this to be something I can do business reports with my wife from." Same split as core/budget_nudges.py: this module never touches BudgetManager/RealEstateManag *(3 undocumented)*
 - `core/business_tagging.py`: Sorting bank transactions to the owner's businesses (2026-09-28): "auto-tagging business transactions (lawn care, rentals, homestead) to the right business entity after bank sync." *(6 undocumented)*
-- `core/business_use.py`: Finance #3 (2026-09-28): the business-use share of personal equipment, starting with the owner's mower ("help me with write offs for my real estate businesses with things like the mower if I do a certain amount of contracted lawn care with it"). *(1 undocumented)*
+- `core/business_use.py`: Finance #3 (2026-09-28): the business-use share of personal equipment, starting with the owner's mower ("help me with write offs for my real estate businesses with things like the mower if I do a certain amount of contracted lawn care with it").
 - `core/calculator_engine.py`: CalculatorEngine: a pluggable formula registry with one shared browsing UI (modules/toolbox/module.py), per docs/ROADMAP.md's "Shared core services" table. The goal: every future calculator-shaped tool (unit converter, Ohm's Law, wire gauge, antenna calculator, fuel estimates, coordinate conversion, *(2 undocumented)*
 - `core/calendar_actions.py`: Your own calendar events (Zac, 2026-10-16), through the action contract (core/actions.py): `event.add` and `event.delete`. Everything else on the calendar (upkeep, bills, meals, training, birthdays) is read from its own store by core/calendar_view.py and changed where it lives. The calendar store wr *(6 undocumented)*
 - `core/calendar_manager.py`: Backs the Calendar tool (modules/toolbox/tools/calendar_tool.py) — a CRUD event store, persisted to data/calendar_events.json so events survive a restart, same durability guarantee core.notification_manager.NotificationManager gives notifications. *(12 undocumented)*

@@ -276,6 +276,12 @@ class Worksheet:
 
 
 def build_worksheet(context, asset, year: int) -> Worksheet:
+    """One asset's business-use worksheet for a year, from MIA's own records: miles if any job logged miles, else
+    hours; total use from the hour meter or odometer's movement in the year (or what was logged, with a note saying
+    so; if more was logged than the meter moved, the logged total is used and flagged); the year's running costs
+    tagged to the asset by category; the cost basis (its purchase price, or purchase expenses if more); use by
+    business; and notes for what's missing (no business use, no purchase price).
+    """
     entries = context.business_use.entries_for(asset.asset_id, year)
     unit = MILES if any(e.miles > 0 for e in entries) else HOURS
     word = "miles" if unit == MILES else "hours"
