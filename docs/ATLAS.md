@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 229,538 lines; 1043 files describe themselves; 5,376 of 13,517 classes and functions are documented.
+1043 files, 229,570 lines; 1043 files describe themselves; 5,396 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 103,440 lines; 4,645 of 5,630 classes and functions documented
+367 files, 103,472 lines; 4,665 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -129,7 +129,7 @@
 - `core/fact_owners.py`: One owner per fact (DEC-0052, docs/REASONING_PLAN.md section 2). A fact MIA knows about a person lives in exactly one store; every other screen, answer and finding reads it from that owner and never keeps a copy, so two places can't disagree. `tests/test_fact_owners.py` fails when a retired copy com *(1 undocumented)*
 - `core/failure_actions.py`: The Fix-It Log's actions (DEC-0049, core/failure_log.py) on the action contract, and its screen (served as /api/failures).
 - `core/failure_log.py`: Where MIA stumbles, so it gets fixed (DEC-0049; Zac, 2026-10-27): "a log that you can be sent to audit the users interactions with MIA, see when she fails, why she fails, when the user runs into an issue and then use that information to fix her ... nearly self developing in a way that doesnt break h
-- `core/finance_manager.py`: Watched-folder ingestion for MIA Home's external financial snapshot exports — the Kraken trading agent and the real estate portfolio dashboard (both built as separate projects, per `docs/VISION.md`'s "MIA Home's expanded scope" section), each producing the same shared JSON export shape documented th *(10 undocumented)*
+- `core/finance_manager.py`: Watched-folder ingestion for MIA Home's external financial snapshot exports — the Kraken trading agent and the real estate portfolio dashboard (both built as separate projects, per `docs/VISION.md`'s "MIA Home's expanded scope" section), each producing the same shared JSON export shape documented th
 - `core/finance_summary.py`: Finance #4 (2026-09-28): "money on your phone". One read-only snapshot of the owner's finances, as plain JSON-ready data, served by server/app.py's /api/finance/summary to the phone web app and the Android app. *(3 undocumented)*
 - `core/findings.py`: Findings (DEC-0052 step 3; docs/REASONING_PLAN.md section 4): what MIA notices by putting two apps together, worked out in code, never by the model. Each one says what it noticed, the records it came from (`refs`, "kind:id"), why it matters, one suggested next step, how sure it is (REAL from records *(5 undocumented)*
 - `core/first_account.py`: Making the first account on a device (2026-10-07, DEC-0019 Phase 2): the phone app opens to "create your account" (name, email, password, country, what you want MIA to help with) instead of making a person called "You". Only when no account here has a password yet: after that, people sign in, and mo *(1 undocumented)*
@@ -164,7 +164,7 @@
 - `core/heavy_jobs.py`: Heavy jobs on the home computer (DEC-0022; Zac, 2026-10-18): when this device can't do a job well itself and it's linked to MIA on the home computer (core/home_link.py), the computer does it: *(3 undocumented)*
 - `core/home_link.py`: Supercharged online (DEC-0022, level 2): when the phone can reach MIA on the home computer (same Wi-Fi, or anywhere through Tailscale), Talk uses the computer's bigger model; when it can't, mid-conversation or not, the phone's own model answers. MIA always says which one did (`level`).
 - `core/homestead_costs.py`: Finance #2 (2026-09-28): what the owner's homestead builds and tools actually cost. The owner asked for MIA to "help me manage my homestead I am building and the costs associated with my tools, and builds." *(9 undocumented)*
-- `core/homestead_manager.py`: Watched-folder ingestion for MIA Home's summarized-state snapshots from sibling automation projects — the first (and so far only) source is MIA Homestead's greenhouse/aquaponics system (`~/Projects/mia-homestead`, a separate repo), which exports via its own `viewer/export_home_snapshot.py`. See that *(10 undocumented)*
+- `core/homestead_manager.py`: Watched-folder ingestion for MIA Home's summarized-state snapshots from sibling automation projects — the first (and so far only) source is MIA Homestead's greenhouse/aquaponics system (`~/Projects/mia-homestead`, a separate repo), which exports via its own `viewer/export_home_snapshot.py`. See that
 - `core/household_manager.py`: Households (2026-10-01, docs/ROADMAP.md "People and ownership"): MIA is built for anyone, so nothing is shared between people unless they choose it. Every new account starts in a household of its own. Two people share the household things (calendar, kitchen, budget, maintenance, builds, inventory, t
 - `core/household_routines.py`: The Household's web screen (web/household.html): the household's routines (recurring-mission templates in the "Household" category: laundry, dishes, hygiene), each with its current occurrence (today's, or this week's for a weekly one), how far along it is and its streak, and the total for the day. L
 - `core/imports.py`: Bring your life with you (2026-10-01): a new person shouldn't start from an empty MIA. Three common exports from other apps:

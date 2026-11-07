@@ -67,6 +67,9 @@ _SNAPSHOTS_FILE = _DATA_DIR / "homestead_snapshots.json"
 
 @dataclass
 class HomesteadSnapshot:
+    """One export from a sibling homestead project (the greenhouse and aquaponics system): its source, when it was made
+    and imported, and its data, kept as it came.
+    """
     source: str
     generated_at: str
     imported_at: str
@@ -79,10 +82,12 @@ class HomesteadSnapshot:
     data: dict = field(default_factory=dict)
 
     def to_dict(self) -> dict:
+        """The snapshot as saved in homestead_snapshots.json."""
         return {"source": self.source, "generated_at": self.generated_at, "imported_at": self.imported_at, "data": self.data}
 
     @classmethod
     def from_dict(cls, raw: dict) -> "HomesteadSnapshot":
+        """A snapshot from its saved dict (KeyError or TypeError for one that isn't a snapshot)."""
         return cls(
             source=raw["source"],
             generated_at=raw["generated_at"],
@@ -127,6 +132,9 @@ class HomesteadManager:
 
     def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
         # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        """Loads the latest snapshot of each source, and makes the import folder with its processed/ and failed/ folders
+        (only logging when storage isn't there).
+        """
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._snapshots_file = self.data_dir / "homestead_snapshots.json" if data_dir is not None else _SNAPSHOTS_FILE
         self.context = context
@@ -145,12 +153,16 @@ class HomesteadManager:
 
     @property
     def import_folder_path(self) -> Path:
+        """The watched folder exports are dropped into: homestead.snapshot_import_folder when configured, else the default."""
         configured = self.context.config.get("homestead.snapshot_import_folder", "")
         if configured:
             return Path(configured).expanduser()
         return _DEFAULT_IMPORT_DIR
 
     def _load(self) -> None:
+        """Reads the latest snapshots (homestead_snapshots.json); a damaged file is logged, reported and starts with none, and one
+        entry that isn't a snapshot is skipped.
+        """
         if not self._snapshots_file.exists():
             return
         try:
@@ -166,6 +178,7 @@ class HomesteadManager:
                 continue
 
     def _save(self) -> None:
+        """Writes the latest snapshots (homestead_snapshots.json) atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._snapshots_file,
             json.dumps({source: snap.to_dict() for source, snap in self._snapshots.items()}, indent=2),
@@ -226,6 +239,7 @@ class HomesteadManager:
         return newly_imported
 
     def _move_file(self, file_path: Path, subdir: str) -> None:
+        """Moves an export into processed/ or failed/ (logged, not raised, when it can't)."""
         destination = self.import_folder_path / subdir / file_path.name
         try:
             if destination.exists():
@@ -238,7 +252,9 @@ class HomesteadManager:
             log.warning("Could not move %s into %s/: %s", file_path, subdir, exc)
 
     def latest_snapshot(self, source: str) -> Optional[HomesteadSnapshot]:
+        """The newest snapshot from one source, or None."""
         return self._snapshots.get(source)
 
     def all_latest_snapshots(self) -> list[HomesteadSnapshot]:
+        """The newest snapshot from every source."""
         return list(self._snapshots.values())
