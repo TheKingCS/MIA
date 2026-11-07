@@ -17,6 +17,7 @@ import sys
 
 
 def main(argv: list[str]) -> int:
+    """The capability gaps' command line: refresh and list what people asked for that MIA can't do yet, or show one gap with how often and what it needs. Returns the exit code."""
     from core import capability_gaps
     from tools.intelligence_check import build_context
 

@@ -43,6 +43,7 @@ def export(context, who: str = "", today: date = None) -> dict:
 
 
 def main(argv=None) -> int:
+    """Prints (or saves) a person's Life State as JSON, checked against its schema; the person by email, name or id, else the only or first. Returns the exit code."""
     from core import schema_check
     from core.config_manager import ConfigManager
     from core.core_runtime import build_core_context

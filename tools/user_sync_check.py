@@ -32,10 +32,13 @@ BASE = "http://localhost:11434"
 
 
 class Ollama:
+    """The smallest model client the extractors need: generate(prompt) on this computer's Ollama, temperature 0."""
     def __init__(self, model: str) -> None:
+        """Keeps the model's name."""
         self.model = model
 
     def generate(self, prompt: str) -> str:
+        """One prompt to the model; its reply text (up to 3 minutes)."""
         data = json.dumps({"model": self.model, "prompt": prompt, "stream": False, "options": {"temperature": 0}}).encode()
         request = urllib.request.Request(BASE + "/api/generate", data=data, headers={"Content-Type": "application/json"})
         with urllib.request.urlopen(request, timeout=180) as response:
@@ -56,6 +59,7 @@ def missing_and_extra(chips: list[dict], case: dict) -> tuple[list[str], list[st
 
 
 def run_case(context, case: dict) -> list[dict]:
+    """One case's answers through its topic's extractor (answers that skip or say nothing left out); the chips it found."""
     topic = TOPICS[case["topic"]]
     answers = [{"q": q, "a": a} for q, a in zip(topic["questions"], case["answers"])
                if not SKIP.fullmatch(a.strip(" .!")) and not NOTHING.fullmatch(a.strip(" .!"))]
@@ -63,6 +67,7 @@ def run_case(context, case: dict) -> list[dict]:
 
 
 def main() -> int:
+    """Runs every user-sync case on a model (qwen2.5:14b unless one is named), printing what each missed and added and how long it took; returns 0 when all pass."""
     model = sys.argv[1] if len(sys.argv) > 1 else "qwen2.5:14b"
     context = SimpleNamespace(llm=Ollama(model), kitchen=None, missions=None, relationships=None,
                               fitness=SimpleNamespace(plan={}))

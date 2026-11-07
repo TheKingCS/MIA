@@ -19,6 +19,7 @@ from pathlib import Path
 
 
 def main(argv: list[str]) -> int:
+    """Exports every waypoint and GPS track as a TAK data package (a zip, to Documents/MIA_places.zip unless a path is given) for ATAK or iTAK. Returns 1 when there's nothing to export."""
     from core import tak
     from tools.intelligence_check import build_context
 

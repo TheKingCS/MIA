@@ -16,6 +16,7 @@ from pathlib import Path
 
 
 def main(argv: list[str]) -> int:
+    """The GPS tracks' command line: add a GPX file (with a name), or list the tracks in a line each. Returns the exit code."""
     from core.gps_tracks import TrackError, describe
     from tools.intelligence_check import build_context
 

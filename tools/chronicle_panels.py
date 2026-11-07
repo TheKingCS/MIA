@@ -25,6 +25,7 @@ REFERENCE_HOLD = 0.8  # img2img strength from the series' reference picture
 
 
 def main(prompts_path: str, out_dir: str, model_dir: str, reference: str = "") -> int:
+    """Draws a Chronicle's panels from their prompts with the local image model in the folder (SDXL-Turbo or SD-Turbo, 512 px in 4 steps), starting each from the reference picture when SDXL has one so a series keeps its look. Returns the exit code."""
     import torch
     from optimum.onnxruntime import (ORTStableDiffusionPipeline, ORTStableDiffusionXLImg2ImgPipeline,
                                      ORTStableDiffusionXLPipeline)

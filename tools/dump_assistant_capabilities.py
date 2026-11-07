@@ -34,6 +34,7 @@ from core.application import MIAApplication  # noqa: E402
 
 
 def main() -> None:
+    """Prints every Assistant tool by domain as markdown (name, what it does, its trigger phrases), for docs/ASSISTANT_CAPABILITIES.md."""
     app = MIAApplication()
     registry = app.context.assistant_actions
     actions = list(registry._actions.values())

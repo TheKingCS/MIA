@@ -44,6 +44,7 @@ def draw(issue: dict) -> str:
 
 
 def main(argv: list[str]) -> int:
+    """The Chronicle issues' command line: draft one from the approved archive events (and draw it), list them, and the rest of an issue's steps. Returns the exit code."""
     from core import chronicle_issue as ci
 
     if hasattr(sys.stdout, "reconfigure"):

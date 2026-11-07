@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1069 files, 237,158 lines; 1069 files describe themselves; 6,564 of 13,808 classes and functions are documented.
+1069 files, 237,233 lines; 1069 files describe themselves; 6,639 of 13,808 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -390,10 +390,10 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 2,621 lines; 5 of 31 classes and functions documented
+2 files, 2,647 lines; 31 of 31 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
-- `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that *(26 undocumented)*
+- `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
 
 ## gui/: the desktop's Qt shell and dialogs
 
@@ -622,39 +622,39 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-31 files, 3,119 lines; 35 of 91 classes and functions documented
+31 files, 3,168 lines; 84 of 91 classes and functions documented
 
 - `tools/audit.py`: MIA's self-audit from the command line (DEC-0108; core/self_audit.py, core/practices.py).
-- `tools/bench_audit.py`: What MIA's routing does today with each Intelligence Benchmark question (tests/intelligence_bench.py, docs/INTELLIGENCE_BENCHMARK.md): a question plan (core/question_plans.py: lookups by code, one answer), answered by code (a direct lookup), offered which tools, or left to the model with no tools at *(3 undocumented)*
-- `tools/chronicle_issue.py`: The Chronicles' weekly issue (core/chronicle_issue.py, build plan step 17). *(1 undocumented)*
-- `tools/chronicle_panels.py`: Draws an issue's panels with the local image model (T-0036: SD-Turbo as ONNX on the GPU through DirectML). It runs in the image model's own environment, kept apart from MIA's (`C:\Users\zacrh\DevTools\imagegen\.venv`), so it imports nothing from MIA: *(1 undocumented)*
-- `tools/conversation_check.py`: The golden conversation corpus, asked for real (DEC-0067; P5 of docs/PERSONALITY_AND_ECOSYSTEM_AUDIT.md): greetings, jokes, frustration, disagreement and the rest, through the same steps a turn takes, on this computer's model, for each device she answers on. Read-only like tools/intelligence_check.p *(4 undocumented)*
-- `tools/dev_window.py`: The development board in its own window (Zac, 2026-11-03: "I want this in a window that makes it all easy to view and understand the workflow and what is going on, what is building, who is building it"). The same board as `web/dev.html` inside MIA (core/work_dashboard.py), without MIA running or a s *(3 undocumented)*
+- `tools/bench_audit.py`: What MIA's routing does today with each Intelligence Benchmark question (tests/intelligence_bench.py, docs/INTELLIGENCE_BENCHMARK.md): a question plan (core/question_plans.py: lookups by code, one answer), answered by code (a direct lookup), offered which tools, or left to the model with no tools at *(1 undocumented)*
+- `tools/chronicle_issue.py`: The Chronicles' weekly issue (core/chronicle_issue.py, build plan step 17).
+- `tools/chronicle_panels.py`: Draws an issue's panels with the local image model (T-0036: SD-Turbo as ONNX on the GPU through DirectML). It runs in the image model's own environment, kept apart from MIA's (`C:\Users\zacrh\DevTools\imagegen\.venv`), so it imports nothing from MIA:
+- `tools/conversation_check.py`: The golden conversation corpus, asked for real (DEC-0067; P5 of docs/PERSONALITY_AND_ECOSYSTEM_AUDIT.md): greetings, jokes, frustration, disagreement and the rest, through the same steps a turn takes, on this computer's model, for each device she answers on. Read-only like tools/intelligence_check.p *(1 undocumented)*
+- `tools/dev_window.py`: The development board in its own window (Zac, 2026-11-03: "I want this in a window that makes it all easy to view and understand the workflow and what is going on, what is building, who is building it"). The same board as `web/dev.html` inside MIA (core/work_dashboard.py), without MIA running or a s *(1 undocumented)*
 - `tools/docs.py`: Working down the documentation backlog (DEC-0104, core/code_atlas.py): see what a file still lacks, write the docstrings (by reading the code: what it does, and how when that isn't plain), and put them in place.
-- `tools/dump_assistant_capabilities.py`: Regenerates `docs/ASSISTANT_CAPABILITIES.md`'s tool-registry table directly from the real, live `AssistantActionRegistry` (`core/application.py`'s `_register_assistant_actions()`) — never hand-typed, so this can't silently drift the way a hand-maintained list would (this project has hit that exact s *(1 undocumented)*
-- `tools/export_state.py`: Print (or save) a person's Life State v2 as JSON, computed from their data (core/context_assembler.py), checked against the published schema (docs/schema/life_state.schema.json). Engine Phase 1, 2026-10-05. *(1 undocumented)*
-- `tools/gaps.py`: The PC owner's capability gaps (core/capability_gaps.py, build plan step 9): what MIA was asked and couldn't do, grouped, with what each would take. The requests are the person's own words, so they're read here, on this PC, and never copied into the repo. *(1 undocumented)*
-- `tools/glasses_art.py`: MIA's orb as pictures for the real glasses (DEC-0061). *(2 undocumented)*
-- `tools/good_news.py`: Good News Radio on this PC (DEC-0096, core/good_news.py). *(1 undocumented)*
-- `tools/intelligence_check.py`: Zac's Intelligence Benchmark, asked for real: every question in tests/intelligence_bench.py through the same steps a turn takes (a question plan, a lookup answered by code, or the model with the tool loop), on this computer's model and the person's real records. Read-only: lookups run, but a change  *(5 undocumented)*
-- `tools/lab.py`: MIA's development lab from the command line (DEC-0058, core/dev_lab.py). *(1 undocumented)*
-- `tools/make_food_table.py`: Builds data/foods.tsv, MIA's built-in food table (DEC-0020), from the USDA's FoodData Central "SR Legacy" download: about 7,800 everyday foods, public domain (CC0, https://fdc.nal.usda.gov). Kept per 100 g: calories, protein, fat, carbohydrate, fiber, sugars, sodium; plus each food's household measu *(4 undocumented)*
-- `tools/make_model_bench.py`: Freezes MIA's golden set (tests/live_model_check.py) into data/model_bench_cases.json for the model test (core/model_bench.py, docs/PHONE_MODEL_TEST.md): for each case, the exact messages and offered tools MIA's request builder makes with the PC's full set of tools, against the live check's placehol *(2 undocumented)*
-- `tools/model_check.py`: Runs one of the phone's models (core/local_model.MODELS) through MIA's golden set (core/model_bench.py) with llama.cpp's server on a computer, started exactly as the phone starts it. CI's "Model check" workflow uses it to compare the models' accuracy; speed belongs to the phone's own Model test scre *(1 undocumented)*
+- `tools/dump_assistant_capabilities.py`: Regenerates `docs/ASSISTANT_CAPABILITIES.md`'s tool-registry table directly from the real, live `AssistantActionRegistry` (`core/application.py`'s `_register_assistant_actions()`) — never hand-typed, so this can't silently drift the way a hand-maintained list would (this project has hit that exact s
+- `tools/export_state.py`: Print (or save) a person's Life State v2 as JSON, computed from their data (core/context_assembler.py), checked against the published schema (docs/schema/life_state.schema.json). Engine Phase 1, 2026-10-05.
+- `tools/gaps.py`: The PC owner's capability gaps (core/capability_gaps.py, build plan step 9): what MIA was asked and couldn't do, grouped, with what each would take. The requests are the person's own words, so they're read here, on this PC, and never copied into the repo.
+- `tools/glasses_art.py`: MIA's orb as pictures for the real glasses (DEC-0061).
+- `tools/good_news.py`: Good News Radio on this PC (DEC-0096, core/good_news.py).
+- `tools/intelligence_check.py`: Zac's Intelligence Benchmark, asked for real: every question in tests/intelligence_bench.py through the same steps a turn takes (a question plan, a lookup answered by code, or the model with the tool loop), on this computer's model and the person's real records. Read-only: lookups run, but a change  *(1 undocumented)*
+- `tools/lab.py`: MIA's development lab from the command line (DEC-0058, core/dev_lab.py).
+- `tools/make_food_table.py`: Builds data/foods.tsv, MIA's built-in food table (DEC-0020), from the USDA's FoodData Central "SR Legacy" download: about 7,800 everyday foods, public domain (CC0, https://fdc.nal.usda.gov). Kept per 100 g: calories, protein, fat, carbohydrate, fiber, sugars, sodium; plus each food's household measu *(1 undocumented)*
+- `tools/make_model_bench.py`: Freezes MIA's golden set (tests/live_model_check.py) into data/model_bench_cases.json for the model test (core/model_bench.py, docs/PHONE_MODEL_TEST.md): for each case, the exact messages and offered tools MIA's request builder makes with the PC's full set of tools, against the live check's placehol *(1 undocumented)*
+- `tools/model_check.py`: Runs one of the phone's models (core/local_model.MODELS) through MIA's golden set (core/model_bench.py) with llama.cpp's server on a computer, started exactly as the phone starts it. CI's "Model check" workflow uses it to compare the models' accuracy; speed belongs to the phone's own Model test scre
 - `tools/model_forge.py`: MIA's model forge from the command line (DEC-0106; core/model_forge.py).
 - `tools/night_school.py`: Night School from the command line (DEC-0100, core/night_school.py).
 - `tools/offline_map.py`: Cut an area of OpenStreetMap into a vector offline map (core/offline_maps.py), kept in data/maps/ and drawn on the web's Maps page.
-- `tools/pc_check.py`: Is this computer ready to be MIA's home base? (DEC-0022, DEC-0033.) Everything the phone, the glasses and the cameras need from it, each with what to do if it isn't there yet: *(4 undocumented)*
-- `tools/pc_model_check.py`: Which model should MIA's home computer run? (DEC-0022.) Runs each model through MIA's golden set (core/model_bench.py) with Ollama on this computer, on its graphics card, exactly as Talk calls it, and writes what it found to `pc-check/models.md` (paste that file's contents to Claude, or just say "do *(2 undocumented)*
-- `tools/publish_glasses.py`: Copies MIA's glasses interface to the public page (DEC-0062). *(2 undocumented)*
+- `tools/pc_check.py`: Is this computer ready to be MIA's home base? (DEC-0022, DEC-0033.) Everything the phone, the glasses and the cameras need from it, each with what to do if it isn't there yet:
+- `tools/pc_model_check.py`: Which model should MIA's home computer run? (DEC-0022.) Runs each model through MIA's golden set (core/model_bench.py) with Ollama on this computer, on its graphics card, exactly as Talk calls it, and writes what it found to `pc-check/models.md` (paste that file's contents to Claude, or just say "do
+- `tools/publish_glasses.py`: Copies MIA's glasses interface to the public page (DEC-0062).
 - `tools/specialists.py`: MIA's specialists from the command line (DEC-0109; core/specialists.py).
-- `tools/tak_export.py`: MIA's waypoints as a TAK data package (core/tak.py, DEC-0099): open it in ATAK-CIV, iTAK or WinTAK (Import, then the file) and the places show on the TAK map with their names, notes and MGRS grid references. Nothing is sent: it's a file you carry to the TAK app. *(1 undocumented)*
-- `tools/tracks.py`: Tracks from GPX files (core/gps_tracks.py, DEC-0099), into the signed-in person's own folder. *(1 undocumented)*
-- `tools/user_sync_check.py`: A User Sync topic doesn't ship until it passes this (docs/GLASSES_FIRST_BOOT_PLAN.md): the sample answers in `data/user_sync_cases.json`, each with the chips they must produce, run through the real extraction with the real model on this computer's Ollama. Nothing else may come out: an extra chip is  *(5 undocumented)*
+- `tools/tak_export.py`: MIA's waypoints as a TAK data package (core/tak.py, DEC-0099): open it in ATAK-CIV, iTAK or WinTAK (Import, then the file) and the places show on the TAK map with their names, notes and MGRS grid references. Nothing is sent: it's a file you carry to the TAK app.
+- `tools/tracks.py`: Tracks from GPX files (core/gps_tracks.py, DEC-0099), into the signed-in person's own folder.
+- `tools/user_sync_check.py`: A User Sync topic doesn't ship until it passes this (docs/GLASSES_FIRST_BOOT_PLAN.md): the sample answers in `data/user_sync_cases.json`, each with the chips they must produce, run through the real extraction with the real model on this computer's Ollama. Nothing else may come out: an extra chip is 
 - `tools/vault_captions.py`: Describes the photos this PC keeps for the phone, so they can be found by what's in them (core/vault_captions.py). MIA's daily check starts `run` between 2 and 5 at night.
-- `tools/web_check.py`: The device check for the new web front end (Phase 2, DEC-0013: prove the slice on the real devices before any broad migration; per DEC-0015 that's Zac's new computer first, then the phone; Pi devices later). Run it on any computer MIA runs on. Opens the web Home (`web/`, in demo mode with the placeh *(5 undocumented)*
-- `tools/weekly_bench.py`: The weekly benchmarks, graded and kept (build plan step 5, core/benchmarks.py): Zac's Intelligence Benchmark (tools/intelligence_check.py), the golden conversation corpus on the glasses and the phone (tools/conversation_check.py) and the routing audit (tools/bench_audit.py). Read-only like those: lo *(3 undocumented)*
-- `tools/work.py`: The team's development tasks from the command line (DEC-0068; the records are `work/tasks/`, the rules `core/work_tasks.py`). Commit the task files with the work, like any other change. *(2 undocumented)*
+- `tools/web_check.py`: The device check for the new web front end (Phase 2, DEC-0013: prove the slice on the real devices before any broad migration; per DEC-0015 that's Zac's new computer first, then the phone; Pi devices later). Run it on any computer MIA runs on. Opens the web Home (`web/`, in demo mode with the placeh
+- `tools/weekly_bench.py`: The weekly benchmarks, graded and kept (build plan step 5, core/benchmarks.py): Zac's Intelligence Benchmark (tools/intelligence_check.py), the golden conversation corpus on the glasses and the phone (tools/conversation_check.py) and the routing audit (tools/bench_audit.py). Read-only like those: lo *(1 undocumented)*
+- `tools/work.py`: The team's development tasks from the command line (DEC-0068; the records are `work/tasks/`, the rules `core/work_tasks.py`). Commit the task files with the work, like any other change.
 
 ## tests/: the test suite: what each part must do
 

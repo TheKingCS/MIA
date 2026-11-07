@@ -21,6 +21,7 @@ import sys
 
 
 def intelligence(context) -> list[dict]:
+    """Every intelligence question asked through the real turn, with the warnings each raised; a question that fails is kept as an error row and the run goes on."""
     from tests.intelligence_bench import QUESTIONS
     from tools.intelligence_check import _Warnings, ask
 
@@ -39,6 +40,7 @@ def intelligence(context) -> list[dict]:
 
 
 def corpus(context) -> list[dict]:
+    """The golden conversation corpus asked on the glasses and the phone, each answer with its flags; a case that fails is kept as an error row."""
     from tools.conversation_check import CASES, ask, flags
 
     rows = []

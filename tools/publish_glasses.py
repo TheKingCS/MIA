@@ -51,6 +51,7 @@ PAIRING = """  <section id="pairing" hidden aria-live="polite">
 
 
 def page() -> str:
+    """The glasses page for publishing on its own: glasses.html without MIA's scripts and version stamps, titled MIA, with the published head, style and pairing screen."""
     html = (WEB / "glasses.html").read_text(encoding="utf-8")
     html = re.sub(r'\s*<script src="[^"]*"></script>', "", html)
     html = re.sub(r'href="glasses\.css\?v=\d+"', 'href="glasses.css"', html)
@@ -68,6 +69,7 @@ def stylesheet() -> str:
 
 
 def main(folder: str) -> None:
+    """Publishes the glasses page to a folder: its files, the stylesheet, index.html, and _headers asking for no-cache and nosniff."""
     out = Path(folder)
     for name in COPIED:
         shutil.copyfile(WEB / name, out / name)

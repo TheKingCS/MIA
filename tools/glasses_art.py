@@ -36,6 +36,7 @@ def ring(radius, angle, turn, width, r, reach):
 
 
 def orb(core, brightness, radii, turn, width) -> Image.Image:
+    """The glasses' orb drawn in numpy at SCALE times its size, then shrunk for smooth edges: a bright core, a glow, two orbit rings turned by the state, small sparks, fading before the square's edge, in MIA's cyan going to white where brightest."""
     n = SIZE * SCALE
     y, x = np.mgrid[-1:1:complex(n), -1:1:complex(n)]
     r = np.hypot(x, y)
@@ -54,6 +55,7 @@ def orb(core, brightness, radii, turn, width) -> Image.Image:
 
 
 def main(folder: str) -> None:
+    """Draws the orb in every state into the folder (orb-<state>.png) and prints each file's size."""
     out = Path(folder)
     out.mkdir(parents=True, exist_ok=True)
     for name, shape in STATES.items():

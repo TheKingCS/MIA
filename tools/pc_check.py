@@ -38,11 +38,13 @@ MARKS = {OK: "[ok]", MISSING: "[!!]", OPTIONAL: "[--]"}
 
 
 def _get(url: str, timeout: float = 4) -> dict:
+    """JSON from a local URL ({} for an empty body)."""
     with urllib.request.urlopen(url, timeout=timeout) as response:
         return json.loads(response.read().decode() or "{}")
 
 
 def _run(args: list[str], timeout: float = 10) -> tuple[int, str]:
+    """Runs a command and returns its exit code and everything it printed; (1, the problem) when it can't start or runs out of time."""
     try:
         done = subprocess.run(args, capture_output=True, text=True, timeout=timeout)
         return done.returncode, (done.stdout or "") + (done.stderr or "")
@@ -51,6 +53,7 @@ def _run(args: list[str], timeout: float = 10) -> tuple[int, str]:
 
 
 def _tailscale() -> str | None:
+    """Where Tailscale's command is (on the path, or its usual install places), or None."""
     found = shutil.which("tailscale")
     if found:
         return found
@@ -122,6 +125,7 @@ def _plain_console() -> None:
 
 
 def main() -> int:
+    """Prints MIA's setup on this computer: the system check, the model, phone access and Tailscale, the voice, start at sign-in and the rest, each with what to do when it's missing."""
     _plain_console()
     from core.app_context import AppContext
     from core.config_manager import ConfigManager

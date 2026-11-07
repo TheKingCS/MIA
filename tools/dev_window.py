@@ -40,6 +40,7 @@ _LOCK = threading.Lock()
 
 
 def _speaking(name: str, now: bool) -> None:
+    """Marks a team member as speaking or done (thread-safe), for the board's who-is-talking light."""
     with _LOCK:
         (ASKING.add if now else ASKING.discard)(name)
 
@@ -86,6 +87,7 @@ def _run_mission(mission_id: str) -> None:
 
 
 def handler(key: str, port_of: callable):
+    """The dev window's request handler class, bound to its access key and port: it answers only this computer by its own address with the key, sends with no-store, nosniff and a strict content policy, and serves the board, the team's messages and voice samples."""
     class Board(BaseHTTPRequestHandler):
         def log_message(self, *args) -> None:  # quiet; nothing to keep
             pass

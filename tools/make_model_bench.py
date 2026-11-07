@@ -25,6 +25,7 @@ sys.path.insert(0, str(ROOT))
 
 
 def build() -> dict:
+    """The model benchmark's cases from the live model check's golden cases, in an isolated world: each prompt's chat request, what MIA's code answers directly, the tool it names, and what's expected."""
     import os
 
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")

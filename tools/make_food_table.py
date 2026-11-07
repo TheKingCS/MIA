@@ -28,6 +28,7 @@ COLUMNS = ["fdc_id", "name", "category", *NUTRIENTS.values(), "portions"]
 
 
 def _find(folder: Path, name: str) -> Path:
+    """The first file with this name anywhere in the USDA download; exits saying which is missing."""
     found = sorted(folder.rglob(name))
     if not found:
         raise SystemExit(f"{name} isn't in {folder}")
@@ -35,6 +36,7 @@ def _find(folder: Path, name: str) -> Path:
 
 
 def _rows(path: Path):
+    """A CSV file's rows as dicts, read lazily."""
     with path.open(newline="", encoding="utf-8") as f:
         yield from csv.DictReader(f)
 
@@ -60,6 +62,7 @@ def _portion_name(row: dict, units: dict) -> str:
 
 
 def build(folder: Path) -> list[dict]:
+    """The offline food table from a USDA FoodData Central download: each food's name, category, the nutrients MIA uses and its portions in grams for one of each measure."""
     foods: dict[str, dict] = {}
     categories = {r["id"]: r["description"] for r in _rows(_find(folder, "food_category.csv"))}
     for r in _rows(_find(folder, "food.csv")):

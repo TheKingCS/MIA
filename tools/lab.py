@@ -17,6 +17,7 @@ import sys
 
 
 def main(argv: list[str]) -> int:
+    """The lab's command line: list proposals, propose one (Claude Code writes it in its own folder), and the rest of a proposal's steps. Returns the exit code."""
     from core import dev_lab
 
     if hasattr(sys.stdout, "reconfigure"):

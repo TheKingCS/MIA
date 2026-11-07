@@ -27,6 +27,7 @@ sys.path.insert(0, str(ROOT))
 
 
 def main(model_id: str, cases: int, binary: str, folder: str) -> int:
+    """Runs the model benchmark on one of MIA's own local models through llama-server: downloads the model if needed, starts the server, asks the cases, prints the results and stops the server. Returns the exit code."""
     from core import model_bench
     from core.llm_manager import OpenAIBackend
     from core.local_model import MODELS_BY_ID, PORT, server_args

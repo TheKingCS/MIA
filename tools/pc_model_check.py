@@ -32,6 +32,7 @@ RIGHT_ENOUGH = 3  # percentage points
 
 
 def _ollama(base: str, path: str, payload: dict | None = None, timeout: float = 30) -> dict:
+    """A JSON request to Ollama (POST with a payload, else GET)."""
     data = json.dumps(payload).encode() if payload is not None else None
     req = urllib.request.Request(base + path, data=data, headers={"Content-Type": "application/json"},
                                  method="POST" if data is not None else "GET")
@@ -71,6 +72,7 @@ def _plain_console() -> None:
 
 
 def main(argv: list[str]) -> int:
+    """Runs the model benchmark on each local model named (or the defaults) that Ollama has, optionally only the first N cases, and prints how each did; returns 1 when Ollama isn't answering."""
     _plain_console()
     from core import model_bench
     from core.config_manager import ConfigManager

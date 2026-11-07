@@ -34,6 +34,7 @@ from core import work_tasks as w
 
 
 def _line(task: w.Task, tasks: dict) -> str:
+    """Pure logic. A task in one line: its id, ready or its status, title, owner, and what it waits on."""
     flag = "ready" if w.ready(task, tasks) else task.status
     owner = f" [{task.owner}]" if task.owner else ""
     waiting = [d for d in task.depends if tasks.get(d) is None or tasks[d].status != "done"]
@@ -42,6 +43,7 @@ def _line(task: w.Task, tasks: dict) -> str:
 
 
 def main(argv=None) -> int:
+    """The work-queue command line: list (ready, all, by owner), show, new, claim and the rest of a task's steps. Returns the exit code."""
     parser = argparse.ArgumentParser(prog="tools.work")
     sub = parser.add_subparsers(dest="command", required=True)
     ls = sub.add_parser("list")

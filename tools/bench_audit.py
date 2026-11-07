@@ -23,6 +23,7 @@ ROUTES = ("plan", "code", "tools", "model only")
 
 
 def _context(embeddings: bool):
+    """The demo context the routing tests use; with embeddings, a model client on this computer's Ollama so plans that match by meaning can run."""
     from types import SimpleNamespace
 
     from tests.assistant_registry import demo_context
@@ -38,6 +39,7 @@ def _context(embeddings: bool):
 
 
 def audit(embeddings: bool = False) -> list[dict]:
+    """Every intelligence question through the routing alone (no model answer): which question plan matched, else which tools would be offered. A row per question."""
     from core.question_plans import match
     from tests.assistant_registry import build_desktop_registry, offered_tools
     from tests.intelligence_bench import QUESTIONS

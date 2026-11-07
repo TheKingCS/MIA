@@ -84,6 +84,7 @@ class _Fresh(StaticFiles):
     screens of an older app version after an update (Zac, 2026-10-16)."""
 
     def file_response(self, *args, **kwargs):
+        """The file's response with Cache-Control: no-cache, so the browser revalidates it every time."""
         response = super().file_response(*args, **kwargs)
         response.headers["Cache-Control"] = "no-cache"
         return response
@@ -125,19 +126,23 @@ def validate_voice_wav(audio: bytes) -> None:
 
 
 class PageErrorRequest(BaseModel):
+    """A web page reporting that it broke: which page and the error (both length-capped), for the apps-that-broke loop."""
     page: str = Field(default="", max_length=120)
     message: str = Field(default="", max_length=400)
 
 
 class PageOpenedRequest(BaseModel):
+    """A web page saying it was opened, for which apps are used."""
     page: str = Field(default="", max_length=120)
 
 
 class VoiceTextRequest(BaseModel):
+    """What the phone or glasses heard, as text."""
     text: str
 
 
 class UserSyncRequest(BaseModel):
+    """One step of syncing a person's phone (core/user_sync.py): what they said, their choice (start, approve, drop, skip, continue, later), which item, and what the phone app says it's allowed to read."""
     text: str = ""
     choice: str = ""  # start | approve | drop | skip | continue | later
     index: int = -1
@@ -145,20 +150,24 @@ class UserSyncRequest(BaseModel):
 
 
 class WelcomeRequest(BaseModel):
+    """A choice in the first mission or a tour (core/welcome.py), and the app it's about."""
     choice: str
     app: str = ""
 
 
 class OrbStateRequest(BaseModel):
+    """The state MIA's orb should show (listening, thinking...)."""
     state: str
 
 
 class ProposeRequest(BaseModel):
+    """An action proposed from a page: its kind (core/actions.py) and parameters."""
     kind: str
     params: dict = {}
 
 
 class SyncFileRequest(BaseModel):
+    """A file synced from the phone: its scope and name, the hash it's expected to replace ("" for new), and its contents in base64."""
     scope: str
     name: str
     expect: str = ""
@@ -166,12 +175,14 @@ class SyncFileRequest(BaseModel):
 
 
 class PasswordVaultRequest(BaseModel):
+    """Unlocking or changing the password vault: the master password, the recovery code, or the new master."""
     master: str = ""
     recovery: str = ""
     new: str = ""
 
 
 class VaultLoginRequest(BaseModel):  # a login in the password vault (not signing in to MIA: LoginRequest)
+    """A login kept in the password vault (not signing in to MIA: that's LoginRequest): title, username, password, site, note and folder; keep_password leaves the saved password as it is."""
     entry_id: str = ""
     title: str = ""
     username: str = ""
@@ -183,19 +194,23 @@ class VaultLoginRequest(BaseModel):  # a login in the password vault (not signin
 
 
 class CsvRequest(BaseModel):
+    """CSV text to import (a password export)."""
     text: str
 
 
 class VaultShasRequest(BaseModel):
+    """Photo hashes the phone has, to learn which the vault already keeps."""
     shas: list[str]
 
 
 class VaultFreeRequest(BaseModel):
+    """What to free on the phone because the vault keeps it safely: old photos, copies, or one burst, and the paths."""
     what: str = ""  # "old" | "copies" | "burst:<id>"
     paths: list[str] = []
 
 
 class CameraRequest(BaseModel):
+    """A camera added or changed: name, place, brand, host and stream path, login (None keeps the saved password), and whether a phone is setting it up on the linked home computer."""
     camera_id: Optional[str] = None
     name: str
     location: str = "Other"
@@ -208,36 +223,43 @@ class CameraRequest(BaseModel):
 
 
 class HomeLinkRequest(BaseModel):
+    """Linking a phone to the home computer (core/home_link.py): its address, who is linking and their password."""
     url: str
     who: str
     password: str
 
 
 class ModelChatRequest(BaseModel):
+    """A chat turn run on the home computer's model for a linked phone: the messages and the tools."""
     messages: list[dict]
     tools: list[dict] = []
 
 
 class LoginRequest(BaseModel):
+    """Signing in to MIA: the profile and its password."""
     profile_id: str
     password: str = ""
 
 
 class ModelStep(BaseModel):
+    """A step of getting a model ready: which model and how far along."""
     model: str = ""
     count: int = 0
 
 
 class PasswordChange(BaseModel):
+    """Changing a person's MIA password: the current one and the new one."""
     current: str
     new: str
 
 
 class PasswordCheck(BaseModel):
+    """A password to check against the person's own (before something sensitive)."""
     password: str
 
 
 class SetupRequest(BaseModel):
+    """Making the device's first account from the phone: name, email, password, country and interests."""
     name: str = ""
     email: str = ""
     password: str = ""
@@ -246,11 +268,13 @@ class SetupRequest(BaseModel):
 
 
 class PushKeys(BaseModel):
+    """A web push subscription's keys (p256dh and auth)."""
     p256dh: str
     auth: str
 
 
 class SubscribeRequest(BaseModel):
+    """A web push subscription: where to send and its keys."""
     endpoint: str
     keys: PushKeys
 
@@ -259,6 +283,7 @@ PHONE_CONVERSATION_IDLE = timedelta(hours=6)
 
 
 def _idle_too_long(conversation: Conversation, now: Optional[datetime] = None) -> bool:
+    """Pure logic. Whether a phone conversation has gone quiet longer than PHONE_CONVERSATION_IDLE (6 hours), so the next message starts a new one; False when its time doesn't read."""
     try:
         last = datetime.fromisoformat(conversation.updated_at)
     except (TypeError, ValueError):
@@ -290,6 +315,7 @@ def describe_timings(timings: dict) -> str:
 
 
 def create_app(context: AppContext) -> FastAPI:
+    """MIA's web server (FastAPI) for the phone, the glasses and the desktop's web view: sign-in sessions by bearer token (or a linked phone's device key), the access switch that turns away forwarded requests when phone access is off, every /api route (each runs on the signed-in person's own view, view_for), and the web front end served fresh at /web/."""
     app = FastAPI(title="MIA Mobile API")
     app.state.context = context
     app.state.sessions: dict[str, str] = {}  # token -> profile_id

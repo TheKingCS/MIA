@@ -42,6 +42,7 @@ class _Handler(http.server.SimpleHTTPRequestHandler):
     """Serves web/ at /web/ and docs/schema/ at /schema/, like MIA does."""
 
     def translate_path(self, path):
+        """Maps a request to the repo: /schema/ to docs/schema, /web/ to web/ (index.html for the folder), anything else to the web Home."""
         path = path.split("?", 1)[0].split("#", 1)[0]
         if path.startswith("/schema/"):
             return str(ROOT / "docs" / "schema" / path[len("/schema/"):])
@@ -51,16 +52,19 @@ class _Handler(http.server.SimpleHTTPRequestHandler):
         return str(ROOT / "web" / "index.html")
 
     def log_message(self, *_args):
+        """Says nothing per request, so the report stays readable."""
         pass
 
 
 def _serve() -> tuple[http.server.ThreadingHTTPServer, int]:
+    """Serves the repo on a free local port, on a daemon thread. Returns the server and the port."""
     server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), functools.partial(_Handler, directory=str(ROOT)))
     threading.Thread(target=server.serve_forever, daemon=True).start()
     return server, server.server_address[1]
 
 
 def _memory_mb() -> float:
+    """Memory used by this process and its children (the browser's helpers), in MB."""
     import psutil
 
     me = psutil.Process()
@@ -88,6 +92,7 @@ def verdict(load_ms: float, added_mb: float, fps: float, start_ms: float = 0.0) 
 
 
 def main(seconds: float = 5.0) -> int:
+    """Opens the web Home in demo mode in QtWebEngine and prints the report: browser start and page load times, memory added, and the orb's frames per second over the seconds given. Returns 2 when this PySide6 has no QtWebEngine."""
     try:
         from PySide6.QtCore import QTimer, QUrl
         from PySide6.QtWidgets import QApplication

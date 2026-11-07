@@ -59,6 +59,7 @@ def flags(text: str) -> list[str]:
 
 
 def words(text: str) -> int:
+    """Pure logic. How many words a text has."""
     return len((text or "").split())
 
 
@@ -100,6 +101,7 @@ def compose(context, full: str, surface: str) -> str:
 
 
 def summary(rows: list[dict]) -> dict:
+    """Pure logic. Per surface: how many cases, the median and 90th-percentile words, median spoken seconds, how many stayed within 25 words, median time, and how many each check flagged."""
     out = {}
     for surface in sorted({r["surface"] for r in rows}):
         mine = [r for r in rows if r["surface"] == surface]
@@ -117,6 +119,7 @@ def summary(rows: list[dict]) -> dict:
 
 
 def write(rows: list[dict], label: str, model: str) -> Path:
+    """Writes the run to pc-check/conversation-<label>.json and .md (the summary, then each answer with its flags; real answers, so pc-check stays out of git). Returns the .md path."""
     out = ROOT / "pc-check"
     out.mkdir(exist_ok=True)
     stats = summary(rows)

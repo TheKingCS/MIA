@@ -33,14 +33,17 @@ class _Warnings(logging.Handler):
     """The warnings a question raised: an answer replaced for an unchecked number, a failed lookup."""
 
     def __init__(self) -> None:
+        """Collects warnings and above, starting with none seen."""
         super().__init__(logging.WARNING)
         self.seen: list[str] = []
 
     def emit(self, record: logging.LogRecord) -> None:
+        """Keeps the warning's message."""
         self.seen.append(record.getMessage())
 
 
 def build_context(model: str = ""):
+    """MIA's engine as the app builds it (core services and every tool registered), without the window; another local model when one is named (qwen3 told to answer directly, as Talk needs)."""
     from core.application import MIAApplication
     from core.config_manager import ConfigManager
     from core.core_runtime import build_core_context
@@ -86,6 +89,7 @@ def ask(context, qid: str, question: str) -> dict:
 
 
 def main() -> None:
+    """Asks the intelligence questions (all categories, or those named) of this computer's model through the real turn, read-only, and prints how each did."""
     parser = argparse.ArgumentParser()
     parser.add_argument("categories", nargs="*", help="A to G (default: all)")
     parser.add_argument("--model", default="", help="another model on this computer's Ollama")

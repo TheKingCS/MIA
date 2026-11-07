@@ -16,6 +16,7 @@ import sys
 
 
 def main(argv: list[str]) -> int:
+    """The good-news command line: make today's stories from the feeds (skipping flagged sources), or show them in each personality's words. Returns the exit code."""
     from core import good_news
 
     if hasattr(sys.stdout, "reconfigure"):
