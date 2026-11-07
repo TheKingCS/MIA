@@ -73,6 +73,10 @@ WINDOW_MONTHS = 3
 
 @dataclass
 class Inputs:
+    """Freedom's numbers, each with where it came from: what a month of living needs, what the homestead earns, what's
+    saved, the pace of saving (with the slowest and best of the last three months, for the range), the cushion in
+    months, and the builds still to pay for.
+    """
     needs: float = 0.0
     needs_source: str = ""
     homestead: float = 0.0
@@ -89,6 +93,7 @@ class Inputs:
 
 
 def _r(x: float) -> float:
+    """A number rounded to cents."""
     return round(float(x or 0), 2)
 
 
@@ -183,6 +188,7 @@ def shift(hourly: float, hours: float, needs: float, goal: float) -> Optional[di
 
 
 def week_start(today: date) -> date:
+    """The Monday of a date's week."""
     return today - timedelta(days=today.weekday())
 
 
@@ -207,10 +213,12 @@ def _personal_spending(budget, start: str, end: str) -> float:
 
 
 def _personal_income(budget, start: str, end: str) -> float:
+    """Personal income between two dates (not a business entity's)."""
     return sum(i.amount for i in budget.all_income() if start <= i.date <= end and not getattr(i, "entity_id", ""))
 
 
 def _homestead(ledger, start: str, end: str) -> float:
+    """What the homestead (the workshop's books) netted between two dates."""
     return ledger.total_revenue(start, end) - ledger.total_expenses(start, end)
 
 
@@ -253,6 +261,7 @@ def bank_cash(context, only: Optional[list] = None) -> Optional[float]:
 
 
 def settings(context) -> dict:
+    """The person's own Freedom numbers (their settings, each with its default)."""
     from core import person_settings
 
     return {key: person_settings.get(context, key, default) for key, default in SETTINGS.items()}
@@ -377,12 +386,14 @@ class FreedomLog:
     KEEP = 800  # days
 
     def __init__(self, context, data_dir: Optional[Path] = None) -> None:
+        """A daily log of the freedom fund's balance (freedom_log.json, data/ by default), to show its pace."""
         self.context = context
         self.data_dir = Path(data_dir) if data_dir is not None else Path(__file__).resolve().parent.parent / "data"
         self._file = self.data_dir / self.FILE
         self._load()
 
     def _load(self) -> None:
+        """Reads the balances; an unreadable file is logged and starts empty."""
         self.balances: dict[str, float] = {}
         if self._file.exists():
             try:
@@ -392,9 +403,11 @@ class FreedomLog:
                 log.exception("freedom_log.json unreadable — starting empty.")
 
     def reload(self) -> None:
+        """Reads the file again (after undo restored it)."""
         self._load()
 
     def record(self, day: date, balance: float) -> None:
+        """Records a day's balance (only when it changed), keeping the last KEEP days, atomically."""
         key = day.isoformat()
         if self.balances.get(key) == round(float(balance), 2):
             return
@@ -419,12 +432,14 @@ class FreedomLog:
 
 
 def _money(x) -> str:
+    """An amount in the person's currency."""
     from core.region import money
 
     return money(x)
 
 
 def _signed(x: float) -> str:
+    """An amount with its sign (+ or −) in front."""
     return ("+" if x > 0 else "−" if x < 0 else "") + _money(abs(x))
 
 
@@ -500,6 +515,7 @@ def freedom_page(context, today: Optional[date] = None) -> dict:
 
 
 def _safe_weeks(context, today: date) -> list[float]:
+    """The weekly totals Freedom shows, or [] (logged) when they can't be worked out."""
     try:
         return week_totals(context, today)
     except Exception:
