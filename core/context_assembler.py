@@ -73,6 +73,7 @@ class LifeStateSnapshot:
 
 
 def _find_profile(context, profile_id: str):
+    """The profile with this id, or None."""
     if context.profiles is None:
         return None
     return next((p for p in context.profiles.list_profiles() if p.profile_id == profile_id), None)
@@ -230,11 +231,17 @@ def monthly_equivalent(amount: float, recurrence) -> float:
 
 
 def _section(status: str, source: str, **data) -> dict:
+    """One life-state section: its status (REAL, DERIVED, SIMULATED, STATIC or PLANNED: how far to trust it), where it
+    came from, and its data.
+    """
     assert status in STATUSES
     return {"status": status, "source": source, **data}
 
 
 def _person(context) -> dict:
+    """Who the life state is for: their profile id and name, their household and its name, and whether it's a child
+    account.
+    """
     from core.child_accounts import is_child
     from core.person_settings import person_id
 
@@ -252,6 +259,9 @@ def _person(context) -> dict:
 
 
 def _finances(context, today: date) -> dict:
+    """Life state section `finances` (DERIVED): the finance summary plus a monthly plan: repeating income and bills turned
+    into monthly amounts, the debt minimums, and the gap left (PLANNED when there's no budget).
+    """
     from core.finance_summary import build_finance_summary
 
     budget = getattr(context, "budget", None)
@@ -271,6 +281,7 @@ def _finances(context, today: date) -> dict:
 
 
 def _properties(context) -> dict:
+    """Life state section `properties` (REAL): each property's value, mortgage balance and equity."""
     real_estate = getattr(context, "real_estate", None)
     if real_estate is None:
         return _section("PLANNED", "core/real_estate_manager.py", items=[])
@@ -367,6 +378,7 @@ def _workout(context, today: date) -> dict:
 
 
 def _waiting_on(context, ref: str, all_links: list) -> list[str]:
+    """What a project waits on: the names of the things its depends-on, blocked-by and requires links point at."""
     from core import links
 
     return [links.name_of(context, l.target) for l in all_links
@@ -374,6 +386,9 @@ def _waiting_on(context, ref: str, all_links: list) -> list[str]:
 
 
 def _projects(context, all_links: list) -> dict:
+    """Life state section `projects` (REAL): each open project with its status, due date, tasks open and done, the goal it
+    supports, and what it's waiting on.
+    """
     projects = getattr(context, "projects", None)
     if projects is None:
         return _section("PLANNED", "core/project_manager.py", items=[])
@@ -396,12 +411,16 @@ def _projects(context, all_links: list) -> dict:
 
 
 def _due(context, today: date) -> dict:
+    """Life state section `due` (DERIVED): today's list (core/today.py), each item with its suggested action."""
     from core.today import today_items
 
     return _section("DERIVED", "core/today.py", items=[i.as_dict() for i in today_items(context, today)])
 
 
 def _missions_and_skills(context, profile_id, today: date) -> dict:
+    """Life state section `missions and skills` (DERIVED): active missions, streaks, skills growing, declining and
+    dormant, and the system's signals, for the signed-in person (PLANNED with no one signed in).
+    """
     if not profile_id:
         return _section("PLANNED", "core/context_assembler.py", available=False)
     snapshot = assemble_life_state(context, profile_id, today)
@@ -415,6 +434,9 @@ def _missions_and_skills(context, profile_id, today: date) -> dict:
 
 
 def _recent_wins(context, today: date) -> dict:
+    """Life state section `recent wins` (DERIVED): the last 7 days' history, counts of its wins, and the latest 15
+    events; undone changes and the undoing itself are left out (both stay in the history).
+    """
     from core import life_events
 
     since = (today - timedelta(days=_RECENT_DAYS - 1)).isoformat()

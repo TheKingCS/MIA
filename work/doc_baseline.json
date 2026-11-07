@@ -51,7 +51,6 @@
   "core/chronicle_issue.py": 6,
   "core/config_manager.py": 4,
   "core/connectivity.py": 7,
-  "core/context_assembler.py": 10,
   "core/conversation_modes.py": 5,
   "core/conversation_state.py": 4,
   "core/corrections.py": 6,

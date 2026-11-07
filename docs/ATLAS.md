@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 229,205 lines; 1043 files describe themselves; 5,152 of 13,517 classes and functions are documented.
+1043 files, 229,227 lines; 1043 files describe themselves; 5,162 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 103,107 lines; 4,421 of 5,630 classes and functions documented
+367 files, 103,129 lines; 4,431 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -80,7 +80,7 @@
 - `core/component_manager.py`: Backs the Component DB (modules/workshop/module.py) — docs/ROADMAP.md milestone 8.3. Same persisted-JSON pattern as core/inventory_manager.py: data/components.json, a dataclass with to_dict/from_dict, a manager class wrapping load/save.
 - `core/config_manager.py`: Handles reading, writing, and defaulting MIA's configuration. *(4 undocumented)*
 - `core/connectivity.py`: What MIA can do with and without the internet, and whether she has it right now — so if the connection drops she keeps acting sensibly instead of promising things she can't deliver. *(7 undocumented)*
-- `core/context_assembler.py`: The "Life State" layer — a real service answering "what's going on in this person's life right now," synthesized live from every domain manager already in AppContext. This exact shape was discussed and agreed on 2026-09-11 (see mia_system_vision's own dated entry: a context_assembler.py query layer  *(10 undocumented)*
+- `core/context_assembler.py`: The "Life State" layer — a real service answering "what's going on in this person's life right now," synthesized live from every domain manager already in AppContext. This exact shape was discussed and agreed on 2026-09-11 (see mia_system_vision's own dated entry: a context_assembler.py query layer 
 - `core/conversation_manager.py`: Persistent Assistant conversations — 2026-07-14 aesthetic pass part 5 (docs/ROADMAP.md), at the user's explicit request for a ChatGPT-like experience: named conversation threads you can review, continue, or delete, rather than the stateless one-message-at-a-time exchanges the Assistant used before t
 - `core/conversation_modes.py`: How MIA should talk right now — slice A ("Talk it out") of docs/COGNITIVE_EXTENSION_PROPOSAL.md. Pure logic: the mode vocabulary, the explicit phrases that switch modes, and the one short tone line each mode adds to the system prompt. *(5 undocumented)*
 - `core/conversation_state.py`: What a conversation is about (DEC-0052 step 4, first slice; docs/REASONING_PLAN.md section 5). Before, every message started over: "Which debt should I pay first?" then "what if I added $300 a month?" or "why?" reached the model with no idea which records it was about. *(4 undocumented)*
