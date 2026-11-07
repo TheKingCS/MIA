@@ -604,3 +604,8 @@ body.cook-live .mia-orb-button, body.cook-live .bottom-bar { display: none; }
 .ord-card.overdue { border-color: rgba(var(--rgb-amber), 0.45); }
 .ord-build, .ord-more { margin: 0; }
 .ord-more .btn { opacity: 0.8; }
+
+/* ---------------------------------------------------------------- Inbox: "Goes to" (DEC-0113) */
+.inbox-goes { margin: 0; padding: 8px 10px; border-radius: var(--radius-sm); border: 1px solid rgba(var(--rgb-accent), 0.25);
+  background: rgba(var(--rgb-accent), 0.06); font-size: var(--text-sm); color: var(--accent); }
+.inbox-goes-t { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); }

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1088 files, 246,268 lines; 1088 files describe themselves; 13,523 of 14,193 classes and functions are documented.
+1089 files, 246,323 lines; 1089 files describe themselves; 13,526 of 14,196 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-391 files, 114,260 lines; 6,055 of 6,144 classes and functions documented
+391 files, 114,300 lines; 6,057 of 6,146 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -670,7 +670,7 @@
 
 ## tests/: the test suite: what each part must do
 
-362 files, 66,015 lines; 5,233 of 5,814 classes and functions documented
+363 files, 66,028 lines; 5,234 of 5,815 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -818,6 +818,7 @@
 - `tests/test_household_routines.py`: The Household's web screen (core/household_routines.py): the household's routines, each with its current occurrence, how far along, and its streak.
 - `tests/test_imports.py`: Imports from other apps (core/imports.py), 2026-10-01: calendars (.ics), contacts (.vcf) and bank statements (.csv). *(1 undocumented)*
 - `tests/test_inbox.py`: Document inbox: classification (core/inbox_classify.py), intake and filing (core/inbox_manager.py), email checking (core/inbox_mail.py), the voice tools, the phone upload endpoint and the Inbox screen.
+- `tests/test_inbox_goes_to.py`: Inbox (DEC-0113): each item says in one line where filing it would put it (core/web_inbox.goes_to). Pure logic, so it runs without Qt.
 - `tests/test_insight_manager.py`: Unit tests for core.insight_manager. Isolates _DATA_DIR/_INSIGHTS_FILE _RECOMMENDATIONS_FILE into a tmp_path scratch area, same monkeypatch pattern as every other manager test file. *(2 undocumented)*
 - `tests/test_inspection.py`: Universal Inspection (DEC-0056, core/inspection.py): every finding with its source, time and confidence; agreement confirms, disagreement is kept; what couldn't be determined says why; only passive methods run unasked. *(2 undocumented)*
 - `tests/test_installer.py`: MIA's installer (2026-10-01): install.sh (Linux, Raspberry Pi), install.ps1 / install.bat (Windows), and the shared finishing step deploy/finish_install.py. *(1 undocumented)*
@@ -1037,7 +1038,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-72 files, 12,822 lines
+72 files, 12,824 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game

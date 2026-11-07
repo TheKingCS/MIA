@@ -2,6 +2,52 @@
   "available": true,
   "pending": [
     {
+      "id": "9a8b7c6d5e",
+      "label": "Hardware store receipt, $86.40",
+      "type": "receipt",
+      "type_label": "Receipt",
+      "status": "pending",
+      "source": "From your phone",
+      "received": "2026-11-07 08:12",
+      "subject": "",
+      "sender": "",
+      "vendor": "Hardware store",
+      "amount": "$86.40",
+      "amount_value": 86.4,
+      "date": "2026-11-07",
+      "category": "Building Materials",
+      "asset": null,
+      "project": {
+        "id": "p1",
+        "name": "Chicken coop"
+      },
+      "files": [
+        {
+          "name": "lowes-receipt.txt",
+          "kind": "text"
+        }
+      ],
+      "excerpt": "LOWE'S HOME CENTERS Store 1234 09/28/2026 10:42 AM 2X4X8 PINE STUD 6 @ 3.98 23.88 DECK SCREWS 1LB 9.98 SUBTOTAL 33.86 SALES TAX 2.37 TOTAL 36.23 VISA ************1234 36.23 Thank you for shopping at Lowe's",
+      "note": "",
+      "reading": false,
+      "readable": true,
+      "schedule": [],
+      "details": [],
+      "lines": [
+        {
+          "text": "2X4X8 Pine Stud",
+          "amount": "$23.88"
+        },
+        {
+          "text": "Deck Screws 1Lb",
+          "amount": "$9.98"
+        }
+      ],
+      "filed_note": "",
+      "needs_amount": false,
+      "goes_to": "Builds · Chicken coop costs"
+    },
+    {
       "id": "f7e426f944",
       "label": "Blade part number",
       "type": "other",
@@ -32,7 +78,8 @@
       "details": [],
       "lines": [],
       "filed_note": "",
-      "needs_amount": false
+      "needs_amount": false,
+      "goes_to": "Documents"
     }
   ],
   "done": [
@@ -79,11 +126,12 @@
         }
       ],
       "filed_note": "Filed: logged $36.23 for the Furnace, put it on the Furnace's page, filled in its purchase price.",
-      "needs_amount": false
+      "needs_amount": false,
+      "goes_to": "Real Estate · Furnace (its costs)"
     }
   ],
   "counts": {
-    "waiting": 1,
+    "waiting": 2,
     "reading": 0,
     "filed": 1
   },

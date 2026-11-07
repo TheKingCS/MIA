@@ -10,8 +10,10 @@ reading of it (a receipt's store, total and date; a manual's maintenance
 schedule; what it says about the tool it's for) and waits until the
 person files or dismisses it. `inbox_page` is that list; reading the
 page first takes in anything new (`scan()`), so it works on the phone,
-where nothing else checks the folder. Changes are actions in
-core/inbox_actions.py; files come in through /api/inbox/upload.
+where nothing else checks the folder. Each waiting item also says where
+File It would put it (`goes_to`, the design canvas's "Goes to",
+DEC-0113). Changes are actions in core/inbox_actions.py; files come in
+through /api/inbox/upload.
 """
 
 from __future__ import annotations
@@ -33,8 +35,34 @@ def _kind(name: str) -> str:
     return "email" if name.lower().endswith(".eml") else kind_of(name)
 
 
+def goes_to(asset: Optional[dict], scope_name: str, project: Optional[str], category: str,
+            schedule: int, money: bool) -> str:
+    """Pure logic. Where filing an item would put it, in one line (the design canvas's "Goes to", DEC-0113):
+    the app and the thing first ("Garage · Truck"), then what it becomes there ("costs", "maintenance done",
+    "a document"), or Money and its category for spending tied to nothing, or "Documents" for anything else. It
+    says what File It will do by default; the File It form can still change it."""
+    parts = []
+    if asset:
+        parts.append(f"{scope_name or 'Maintenance'} · {asset['name']}")
+    if project:
+        parts.append(f"Builds · {project} costs")
+    if not parts and money:
+        parts.append("Money · " + (category or "an expense"))
+    if not parts:
+        return "Documents"
+    what = []
+    if asset and money:
+        what.append("its costs")
+    if schedule:
+        what.append(f"{schedule} maintenance step{'s' if schedule != 1 else ''}")
+    if asset and not money and not schedule:
+        what.append("its documents")
+    return ", ".join(parts) + (" (" + ", ".join(what) + ")" if what else "")
+
+
 def item_card(context, item) -> dict:
-    """One inbox item as the screen shows it, with a receipt's effects to tick (and any note, like which vehicle)."""
+    """One inbox item as the screen shows it, with a receipt's effects to tick (and any note, like which vehicle),
+    and where filing it would put it (`goes_to`)."""
     from core.inbox_classify import DOC_TYPE_LABELS, ScheduleItem
     from core.region import money
 
@@ -76,7 +104,19 @@ def item_card(context, item) -> dict:
                   for line in (item.items or []) if isinstance(line, dict)][:30],
         "filed_note": item.filed_note,
         "needs_amount": item.doc_type in ("receipt", "invoice") and not item.amount,
+        "goes_to": goes_to({"name": asset.name} if asset is not None else None, _scope_name(asset),
+                           project.name if project is not None else None, item.category, len(schedule),
+                           item.doc_type in ("receipt", "invoice")),
     }
+
+
+def _scope_name(asset) -> str:
+    """The app an asset lives in (Garage, Real Estate, Greenhouse), for "Goes to"; "" without one."""
+    if asset is None:
+        return ""
+    from core.web_equipment import SCOPES, scope_of
+
+    return SCOPES[scope_of(asset.category)]["name"]
 
 
 def inbox_page(context) -> dict:

@@ -142,6 +142,8 @@
       (item.effects || []).length ? el("p", { class: "dim" }, item.receipt_kind[0].toUpperCase() + item.receipt_kind.slice(1) + ": "
         + item.effects.slice(0, 4).map((e) => e.text).join("; ") + (item.effects.length > 4 ? "; and " + (item.effects.length - 4) + " more" : "")) : null,
       !facts.length && item.excerpt ? el("p", { class: "inbox-excerpt" }, item.excerpt) : null,
+      // The canvas (DEC-0113): where File It will put it, in the engine's words (core/web_inbox.goes_to).
+      item.goes_to && item.status === "pending" ? el("p", { class: "inbox-goes" }, el("span", { class: "inbox-goes-t" }, "Goes to "), item.goes_to) : null,
       el("div", { class: "chip-row" }, item.files.map((f) => el("button", { type: "button", class: "chip chip-button", onclick: () => view(item, f) }, "📎 " + f.name))),
       buttons(btn("File It", "btn-green", () => fileIt(item)),
         btn("Dismiss", "btn-ghost", () => act({ kind: "inbox.dismiss", params: { item_id: item.id } }))));
