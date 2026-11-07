@@ -651,3 +651,19 @@ body.cook-live .mia-orb-button, body.cook-live .bottom-bar { display: none; }
 .cal-month .cal-grid { margin-top: 0; }
 .cal-month .cal-day { min-height: 44px; }
 .cal-day.late .n { color: var(--attention); }
+
+/* ---------------------------------------------------------------- Journal (DEC-0113)
+   Write Entry and Talk It Out, the privacy line, search, then one column of entries: date and tag above the title. */
+.journal-private { margin: -6px 0 var(--gap); font-size: var(--text-sm); }
+.journal-top { display: flex; justify-content: space-between; gap: 10px; }
+.journal-date, .journal-tag { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); }
+.journal-tag { color: var(--accent); text-align: right; }
+.journal-card h3 { margin: 0; text-transform: none; }
+.journal-preview { margin: 0; color: var(--text-dim); font-size: var(--text-sm); display: -webkit-box; -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden; }
+.journal-search { box-sizing: border-box; min-height: 44px; padding: 0 12px; border-radius: var(--radius-sm); border: 1px solid var(--line-strong);
+  background: rgba(var(--rgb-panel), 0.9); color: var(--text); font: inherit; }
+.journal-search::placeholder { color: var(--text-dim); }
+.journal-search:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.journal-private { color: var(--text-dim); }
+@media (min-width: 861px) { .journal-actions .btn { flex: 0 1 220px; } }
