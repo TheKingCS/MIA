@@ -24,8 +24,11 @@ build herself (her Night School curriculum, DEC-0107):
    passed, bests (`stats()`).
 7. **Verify by evidence**: a check is passed by showing it, and the record
    says how: **heard** or otherwise measured by a verifier in code (guitar's
-   ear, `core/guitar_ear.py`), **counted** (a number at or over the mark), or
-   **said** (what can't be measured yet, and it says so).
+   ear, `core/guitar_ear.py`), **recorded** (read from what MIA already
+   keeps for them since the path started: workouts, GPS tracks, meals
+   cooked; `SOURCES`, and `sweep()` passes these by itself), **counted** (a
+   number at or over the mark), or **said** (what can't be measured yet,
+   and it says so).
 8. **Next stage** when every check of this one is passed; XP in the
    program's skill along the way.
 
@@ -64,6 +67,7 @@ CHECK_XP = 25
 STAGE_XP = 100
 HOMEWORK_XP = 40
 PLAIN_HOWS = ("said", "counted")
+RECORDED = "recorded"
 
 
 # ------------------------------------------------------------------ programs
@@ -82,14 +86,16 @@ class Lesson:
 
 @dataclass(frozen=True)
 class Check:
-    """One skill check: its id, what to do, how it's verified (said, counted, or a verifier the program has), what
-    it's about (a chord for guitar), the mark that passes a counted one and its unit."""
+    """One skill check: its id, what to do, how it's verified (said, counted, recorded, or a verifier the program
+    has), what it's about (a chord for guitar), the mark that passes a counted or recorded one, its unit, and for a
+    recorded one the record that measures it (a key of `SOURCES`)."""
     id: str
     what: str
     how: str
     about: str = ""
     passes_at: float = 0.0
     unit: str = ""
+    source: str = ""
 
 
 @dataclass(frozen=True)
@@ -149,11 +155,12 @@ def program_of(context, path_id: str) -> Optional[Program]:
 
 
 def from_dict(raw: dict) -> Program:
-    """A drafted program from its saved form (no verifiers: drafted checks are counted or said)."""
+    """A drafted program from its saved form (no verifiers: drafted checks are counted, recorded or said)."""
     stages = tuple(Stage(int(s["number"]), s["name"], s.get("builds", ""),
                          tuple(Lesson(l["id"], l["title"], tuple(l["steps"]), l["why"], tuple(l.get("watch") or ()))
                                for l in s["lessons"]),
-                         tuple(Check(c["id"], c["what"], c["how"], "", float(c.get("passes_at") or 0), c.get("unit", ""))
+                         tuple(Check(c["id"], c["what"], c["how"], "", float(c.get("passes_at") or 0), c.get("unit", ""),
+                                     c.get("source", ""))
                                for c in s["checks"]))
                    for s in raw["stages"])
     return Program(raw["id"], raw["name"], raw.get("skill", ""), raw.get("icon", "🎯"), raw.get("about", ""),
@@ -172,7 +179,8 @@ def to_dict(program: Program) -> dict:
 
 def problems(program: Program) -> list[str]:
     """What's wrong with a program's shape: no stages; a stage without lessons or checks; a lesson without steps or
-    why; a check verified a way the program can't; a counted check without a mark and a unit; ids used twice."""
+    why; a check verified a way the program can't; a counted check without a mark and a unit; a recorded one without
+    a mark or a record MIA keeps; ids used twice."""
     out = []
     if not program.stages:
         out.append("it has no stages")
@@ -186,10 +194,12 @@ def problems(program: Program) -> list[str]:
             if not l.steps or not l.why:
                 out.append(f"lesson {l.id} needs steps and why")
         for c in s.checks:
-            if c.how not in PLAIN_HOWS and c.how not in program.verifiers:
+            if c.how not in PLAIN_HOWS and c.how != RECORDED and c.how not in program.verifiers:
                 out.append(f"check {c.id} is verified {c.how!r}, which this program can't")
             if c.how == "counted" and not (c.passes_at > 0 and c.unit):
                 out.append(f"check {c.id} is counted but has no mark or unit")
+            if c.how == RECORDED and not (c.passes_at > 0 and c.source in SOURCES):
+                out.append(f"check {c.id} is recorded but has no mark or no record MIA keeps")
     return out
 
 
@@ -481,7 +491,8 @@ def _progress(book: PathBook, program: Program, texts: list[str], today: date) -
 
 def ensure_homework(context, today: Optional[date] = None) -> list:
     """This week's homework mission for each path the signed-in person has started, made once (by MIA), its
-    progress brought up to date from the log, completed when all of it's done. Returns the missions."""
+    progress brought up to date from the log, completed when all of it's done; recorded checks that reached their
+    mark pass first (`sweep()`). Returns the missions."""
     from core.gamification import SkillWeight
     from core.person_settings import person_id
 
@@ -490,6 +501,7 @@ def ensure_homework(context, today: Optional[date] = None) -> list:
         return []
     today = today or date.today()
     pid = person_id(context)
+    sweep(context)
     out = []
     for path_id in book.started():
         program = program_of(context, path_id)
@@ -529,10 +541,135 @@ def verify(context, program: Program, check_id: str, payload) -> dict:
     if found is None:
         raise ValueError("There's no such check.")
     _stage, check = found
+    if check.how == RECORDED:
+        return check_records(context, program, check)
     verifier = program.verifiers.get(check.how)
     if verifier is None:
         raise ValueError("That check is counted or said: tell me how it went.")
     return verifier(context, program, check, payload)
+
+
+# ------------------------------------------------------------------ recorded: passed from what MIA already keeps
+
+@dataclass(frozen=True)
+class Source:
+    """A record MIA keeps that can pass a check: what it measures (said back), its unit, and how it's read:
+    read(context, since) -> a number from the person's own records since that ISO date, or None when MIA doesn't keep
+    that record here."""
+    what: str
+    unit: str
+    read: Callable
+
+
+def _theirs(entry_profile, context) -> bool:
+    """Whether a record is the signed-in person's: stamped with them, or with nobody (records from before people
+    were recorded count for everyone, as the stores themselves count them)."""
+    from core.person_settings import person_id
+
+    return entry_profile in (None, person_id(context))
+
+
+def _workouts(context, since: str) -> Optional[list]:
+    """The person's workouts since a date, or None without a workout store."""
+    store = getattr(context, "workout", None)
+    if store is None:
+        return None
+    return [s for s in store.all_sessions(start_date=since) if _theirs(s.profile_id, context)]
+
+
+def _tracks(context, since: str) -> Optional[list]:
+    """The person's GPS tracks since a date (by the track's own date, else when it was added), or None without
+    the store."""
+    store = getattr(context, "gps_tracks", None)
+    if store is None:
+        return None
+    return [t for t in store.tracks if (t["stats"].get("date") or t["added"][:10]) >= since]
+
+
+def _meals(context, since: str) -> Optional[list]:
+    """The meals this person has logged as made since a date, or None without a kitchen."""
+    store = getattr(context, "kitchen", None)
+    if store is None:
+        return None
+    return [m for m in store.all_meal_log_entries() if m.date >= since and _theirs(m.profile_id, context)]
+
+
+def _count(rows) -> Optional[float]:
+    """Pure logic. How many, or None for no store."""
+    return None if rows is None else float(len(rows))
+
+
+SOURCES: dict[str, Source] = {
+    "workouts": Source("workouts logged", "workouts", lambda c, since: _count(_workouts(c, since))),
+    "workout_minutes": Source("minutes of workouts logged", "minutes", lambda c, since: (
+        None if (w := _workouts(c, since)) is None else float(sum(s.duration_minutes for s in w)))),
+    "track_km": Source("kilometres in your GPS tracks", "km", lambda c, since: (
+        None if (t := _tracks(c, since)) is None else round(sum(x["stats"]["km"] for x in t), 2))),
+    "longest_track_km": Source("your longest GPS track", "km", lambda c, since: (
+        None if (t := _tracks(c, since)) is None else max((x["stats"]["km"] for x in t), default=0.0))),
+    "meals_cooked": Source("meals you logged as made", "meals", lambda c, since: _count(_meals(c, since))),
+    "recipes_cooked": Source("different recipes you've made", "recipes", lambda c, since: (
+        None if (m := _meals(c, since)) is None else float(len({x.recipe_id for x in m})))),
+}
+
+
+def measure(context, path_id: str, check: Check) -> Optional[float]:
+    """What a recorded check's record says now, counting only since the path started (what came before isn't this
+    path's work), or None when MIA doesn't keep that record here."""
+    source = SOURCES.get(check.source)
+    record = context.paths.path(path_id) if getattr(context, "paths", None) is not None else None
+    if source is None or record is None:
+        return None
+    return source.read(context, record["started"])
+
+
+def check_records(context, program: Program, check: Check, quiet: bool = False) -> dict:
+    """A recorded check read from the person's own records: it passes at the mark, and the attempt says it was
+    recorded and from what. Quiet (the sweep): only a pass is kept, so reading the records every day doesn't fill
+    the history with misses. Returns {passed, said, stage_done, value}. ValueError when MIA doesn't keep that record
+    here."""
+    book = context.paths
+    source = SOURCES.get(check.source)
+    value = measure(context, program.id, check)
+    if source is None or value is None:
+        raise ValueError(f"I don't keep the record that checks \"{check.what}\" on this MIA.")
+    unit = check.unit or source.unit
+    passed = value >= check.passes_at
+    if not passed:
+        if not quiet:
+            book.attempt(program, check.id, False, value=value, how=RECORDED, detail=check.source)
+        return {"passed": False, "stage_done": False, "value": value,
+                "said": (f"Your records show {value:g} {unit} ({source.what}) since you started; it passes at "
+                         f"{check.passes_at:g}. I'll pass it myself when they get there.")}
+    done = book.attempt(program, check.id, True, value=value, how=RECORDED, detail=check.source)
+    said = f"Passed from your records: {check.what} ({value:g} {unit}, {source.what})."
+    if done["stage_done"]:
+        said += f" That finishes the stage. Next: {stage_of(book, program).name}."
+    return {"passed": True, "stage_done": done["stage_done"], "value": value, "said": said}
+
+
+def sweep(context) -> list[dict]:
+    """Every open recorded check on the signed-in person's paths, read from their records; the ones that reached
+    their mark pass by themselves (a life event and XP, like any pass). Runs before homework is brought up to date.
+    Returns what passed: {path, check, said}."""
+    book = getattr(context, "paths", None)
+    if book is None:
+        return []
+    out = []
+    for path_id in book.started():
+        program = program_of(context, path_id)
+        if program is None:
+            continue
+        for check in open_checks(book, program):
+            if check.how != RECORDED:
+                continue
+            try:
+                result = check_records(context, program, check, quiet=True)
+            except ValueError:
+                continue
+            if result["passed"]:
+                out.append({"path": path_id, "check": check.id, "said": result["said"]})
+    return out
 
 
 def record_plain(context, program: Program, check: Check, value=None) -> dict:
@@ -566,7 +703,9 @@ Their goal, in their words: {goal}
 Write a learning program for them, the way a good teacher would: stages from where a beginner starts, each with
 lessons (clear steps, why it matters, the common mistakes) and skill checks that prove the stage is learned.
 A check is either "counted" (a number they measure against a mark, like repetitions in a minute, a time, a distance,
-a score; give passes_at and unit) or "said" (they tell you they did it, for what can't be measured). Prefer counted.
+a score; give passes_at and unit), "recorded" (MIA reads it from what she already keeps for them, counted from the
+day they start; give passes_at and a source, one of: {sources}), or "said" (they tell you they did it, for what can't
+be measured). Prefer recorded when a source fits, then counted.
 Be safe and correct; say when something needs a professional or a teacher in person.
 
 What MIA's specialists already know about it (use it, don't contradict it):
@@ -577,7 +716,8 @@ Reply with only a JSON object:
   "words": ["words someone would use about it"],
   "stages": [3 to 5 of {{"name": "...", "builds": "what it builds",
      "lessons": [1 to 3 of {{"title": "...", "steps": ["..."], "why": "...", "watch": ["..."]}}],
-     "checks": [1 to 4 of {{"what": "...", "how": "counted" or "said", "passes_at": number, "unit": "..."}}]}}]}}"""
+     "checks": [1 to 4 of {{"what": "...", "how": "counted", "recorded" or "said", "passes_at": number,
+                            "unit": "...", "source": "..."}}]}}]}}"""
 
 
 def _slug(text: str, n: int = 24) -> str:
@@ -600,6 +740,20 @@ def _ollama(prompt: str) -> str:
         raise ValueError(f"My local model isn't answering ({problem}), so I can't plan it right now.") from None
 
 
+def _drafted_check(check_id: str, c: dict) -> Check:
+    """Pure logic. A check from a model's draft: counted and recorded keep their mark (a recorded one its source and
+    the source's unit); anything else is said, with no mark."""
+    how = c.get("how") if c.get("how") in ("counted", RECORDED) else "said"
+    what = str(c.get("what", ""))[:200]
+    if how == "said":
+        return Check(check_id, what, how)
+    mark = float(c.get("passes_at") or 0)
+    if how == RECORDED:
+        source = str(c.get("source", ""))
+        return Check(check_id, what, how, "", mark, SOURCES[source].unit if source in SOURCES else "", source)
+    return Check(check_id, what, how, "", mark, str(c.get("unit", ""))[:30])
+
+
 def program_from_draft(raw: dict, interest: str) -> Program:
     """A program from a model's draft, its ids made in code; ValueError for one whose shape won't do (problems())."""
     name = " ".join(str(raw.get("name") or interest).split())[:40] or "My path"
@@ -610,10 +764,7 @@ def program_from_draft(raw: dict, interest: str) -> Program:
                                tuple(str(x)[:400] for x in l.get("steps") or [])[:8], str(l.get("why", ""))[:300],
                                tuple(str(x)[:200] for x in l.get("watch") or [])[:4])
                         for i, l in enumerate(s.get("lessons") or [], 1) if isinstance(l, dict))
-        checks = tuple(Check(f"{pid}_{n}_c{i}", str(c.get("what", ""))[:200],
-                             "counted" if c.get("how") == "counted" else "said", "",
-                             float(c.get("passes_at") or 0) if c.get("how") == "counted" else 0.0,
-                             str(c.get("unit", ""))[:30] if c.get("how") == "counted" else "")
+        checks = tuple(_drafted_check(f"{pid}_{n}_c{i}", c)
                        for i, c in enumerate(s.get("checks") or [], 1) if isinstance(c, dict))
         stages.append(Stage(n, str(s.get("name", f"Stage {n}"))[:60], str(s.get("builds", ""))[:200], lessons, checks))
     program = Program(pid, name, _slug(str(raw.get("skill") or ""), 40), "🎯", str(raw.get("about", ""))[:200],
@@ -639,8 +790,9 @@ def draft(context, interest: str, goal: str = "", ask: Optional[Callable[[str], 
                           for _s, _sid, n in notes) or "(nothing yet)"
     skills = getattr(context, "skills", None)
     names = ", ".join(sorted(s.skill_id for s in skills.all_skills())[:80]) if skills is not None else "music"
+    sources = "; ".join(f"{key} ({s.what}, in {s.unit})" for key, s in SOURCES.items())
     reply = (ask or _ollama)(DRAFT_PROMPT.format(interest=interest, goal=goal or "(not said)", grounding=grounding,
-                                                 skills=names))
+                                                 skills=names, sources=sources))
     try:
         raw = json.loads(reply[reply.find("{"): reply.rfind("}") + 1])
     except ValueError:

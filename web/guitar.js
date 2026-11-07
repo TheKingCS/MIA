@@ -6,7 +6,8 @@
  * A check MIA hears gets a Record button: a few seconds from the microphone,
  * made into a 16-bit mono WAV here (the engine reads WAV), sent to
  * MIA.guitarListen(); what she heard is shown under it. Tuning goes one
- * string at a time. Nothing is kept but the result. Formatting only; the
+ * string at a time. A check passed from the person's records (recorded) says
+ * so. Nothing is kept but the result. Formatting only; the
  * look is muse's.
  */
 (function () {
@@ -73,6 +74,7 @@
   function plainRow(check) {
     return el("div", { class: "sync-row" }, el("div", {}, el("p", {}, check.what),
       el("p", { class: "dim" }, check.how === "counted" ? "Time yourself, then tell MIA the number."
+        : check.how === "recorded" ? "MIA passes this from your own records when they reach the mark."
         : "Tell MIA when you've done it.")));
   }
 

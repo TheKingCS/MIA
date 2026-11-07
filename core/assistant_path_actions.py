@@ -147,7 +147,8 @@ def _find_check(program: paths.Program, book: paths.PathBook, words: str) -> Opt
 
 
 def _action_check(context, arguments: dict) -> str:
-    """Tool learning_check: a counted or said check passed or not; one a verifier checks points to the page."""
+    """Tool learning_check: a counted or said check passed or not; a recorded one read from the person's records; one
+    a verifier checks points to the page."""
     book = _book(context)
     if book is None:
         return "Learning paths aren't on this MIA."
@@ -157,11 +158,14 @@ def _action_check(context, arguments: dict) -> str:
     check = _find_check(program, book, str(arguments.get("check") or ""))
     if check is None:
         return "Which check? " + paths.next_step(book, program)
-    if check.how not in paths.PLAIN_HOWS:
+    if check.how not in paths.PLAIN_HOWS and check.how != paths.RECORDED:
         return (f"\"{check.what}\" is one I check myself: open the {program.name} page (web/guitar.html?path="
                 f"{program.id}) on the phone or the web and show me.")
     try:
-        result = paths.record_plain(context, program, check, arguments.get("value"))
+        if check.how == paths.RECORDED:
+            result = paths.check_records(context, program, check)
+        else:
+            result = paths.record_plain(context, program, check, arguments.get("value"))
     except ValueError as problem:
         return str(problem)
     paths.ensure_homework(context)

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1069 files, 236,772 lines; 1069 files describe themselves; 6,390 of 13,795 classes and functions are documented.
+1069 files, 236,997 lines; 1069 files describe themselves; 6,403 of 13,808 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-379 files, 109,050 lines; 5,590 of 5,840 classes and functions documented
+379 files, 109,206 lines; 5,600 of 5,850 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -658,7 +658,7 @@
 
 ## tests/: the test suite: what each part must do
 
-356 files, 64,253 lines; 363 of 5,720 classes and functions documented
+356 files, 64,320 lines; 366 of 5,723 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1019,7 +1019,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-71 files, 12,180 lines
+71 files, 12,182 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
