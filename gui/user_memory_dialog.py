@@ -62,7 +62,9 @@ from gui.memory_connections_dialog import MemoryConnectionsDialog
 
 
 class UserMemoryDialog(QDialog):
+    """What MIA Remembers About You: every memory, by category, each with a few related ones, to delete one by one or all at once."""
     def __init__(self, context: AppContext, parent=None) -> None:
+        """The explanation, the category filter, the memories, Clear All and View Connections."""
         super().__init__(parent)
         self.context = context
         self.setWindowTitle("What MIA Remembers About You")
@@ -113,6 +115,7 @@ class UserMemoryDialog(QDialog):
         self._refresh()
 
     def _refresh(self) -> None:
+        """Rebuilds the list for the category chosen (old rows hidden and detached first); says when there's nothing yet, or nothing in that category."""
         while self._list_layout.count():
             item = self._list_layout.takeAt(0)
             widget = item.widget()
@@ -147,6 +150,7 @@ class UserMemoryDialog(QDialog):
             self._list_layout.addWidget(self._build_row(memory, all_memories))
 
     def _build_row(self, memory, all_memories: list) -> QWidget:
+        """One memory with its category, a delete button, and up to two related memories."""
         card = QFrame()
         card.setObjectName("DashboardCard")
         column = QVBoxLayout(card)
@@ -183,14 +187,17 @@ class UserMemoryDialog(QDialog):
         return card
 
     def _on_view_connections(self) -> None:
+        """Opens the memory connections."""
         dialog = MemoryConnectionsDialog(self.context, parent=self)
         dialog.exec()
 
     def _on_delete(self, memory) -> None:
+        """Forgets one memory and refreshes."""
         self.context.user_memories.delete_memory(memory.memory_id)
         self._refresh()
 
     def _on_clear_all(self) -> None:
+        """Forgets every memory after asking (it can't be undone)."""
         if not self.context.user_memories.all_memories():
             return
         reply = QMessageBox.question(

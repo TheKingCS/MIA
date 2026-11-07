@@ -29,7 +29,9 @@ from core.dashboard_widgets import WidgetDescriptor
 
 
 class DashboardCustomizeDialog(QDialog):
+    """Customize Dashboard: tick the widgets to show and order them."""
     def __init__(self, context: AppContext, parent=None) -> None:
+        """The widgets list, Move Up, Move Down and Done."""
         super().__init__(parent)
         self.context = context
         self.setWindowTitle("Customize Dashboard")
@@ -65,6 +67,7 @@ class DashboardCustomizeDialog(QDialog):
         layout.addWidget(done_button)
 
     def _populate(self) -> None:
+        """Lists the widgets shown now, in their order and ticked, then the rest unticked."""
         self._list.clear()
         registry = self.context.dashboard_widgets
         enabled_descriptors = registry.enabled_widgets_in_order()
@@ -76,6 +79,7 @@ class DashboardCustomizeDialog(QDialog):
                 self._add_item(descriptor, checked=False)
 
     def _add_item(self, descriptor: WidgetDescriptor, checked: bool) -> None:
+        """One widget in the list, with its icon, name and tick."""
         item = QListWidgetItem(f"{descriptor.icon}  {descriptor.display_name}")
         item.setData(Qt.ItemDataRole.UserRole, descriptor.widget_id)
         item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
@@ -83,6 +87,7 @@ class DashboardCustomizeDialog(QDialog):
         self._list.addItem(item)
 
     def _on_move_up(self) -> None:
+        """Moves the selected widget up one."""
         row = self._list.currentRow()
         if row <= 0:
             return
@@ -91,6 +96,7 @@ class DashboardCustomizeDialog(QDialog):
         self._list.setCurrentRow(row - 1)
 
     def _on_move_down(self) -> None:
+        """Moves the selected widget down one."""
         row = self._list.currentRow()
         if row < 0 or row >= self._list.count() - 1:
             return
@@ -99,6 +105,7 @@ class DashboardCustomizeDialog(QDialog):
         self._list.setCurrentRow(row + 1)
 
     def _on_done(self) -> None:
+        """Saves which widgets show and their order, and closes."""
         registry = self.context.dashboard_widgets
         order: list[str] = []
         for index in range(self._list.count()):

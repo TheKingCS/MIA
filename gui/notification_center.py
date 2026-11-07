@@ -32,7 +32,9 @@ from core.app_context import AppContext
 
 
 class NotificationCenterDialog(QDialog):
+    """The notification center: every notification, to dismiss one by one or clear; opening it marks them all read."""
     def __init__(self, context: AppContext, parent=None) -> None:
+        """Builds the list and marks every notification read."""
         super().__init__(parent)
         self.context = context
         self.setWindowTitle("Notifications")
@@ -44,6 +46,7 @@ class NotificationCenterDialog(QDialog):
         self.context.notifications.mark_all_read()
 
     def _build_ui(self) -> None:
+        """The title, the scrolling list, and Clear All."""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(12)
@@ -77,6 +80,7 @@ class NotificationCenterDialog(QDialog):
         # modules/toolbox/tools/lite_captures_tool.py) and fixed across
         # this codebase's other actively-re-triggered refresh methods
         # the same day.
+        """Rebuilds the list (old rows hidden and detached first), or says there are no notifications."""
         while self._list_layout.count():
             item = self._list_layout.takeAt(0)
             widget = item.widget()
@@ -96,6 +100,7 @@ class NotificationCenterDialog(QDialog):
             self._list_layout.addWidget(self._build_row(notification))
 
     def _build_row(self, notification) -> QFrame:
+        """One notification: its title, message, source and time, styled by level, with a dismiss button."""
         row = QFrame()
         row.setObjectName("NotificationCard")
         row.setProperty("level", notification.level)
@@ -127,9 +132,11 @@ class NotificationCenterDialog(QDialog):
         return row
 
     def _on_dismiss(self, notification_id: str) -> None:
+        """Dismisses one notification and refreshes."""
         self.context.notifications.dismiss(notification_id)
         self._populate()
 
     def _on_clear_all(self) -> None:
+        """Clears every notification and refreshes."""
         self.context.notifications.clear_all()
         self._populate()

@@ -113,7 +113,9 @@ class AddEditBusinessEntityDialog(QDialog):
 
 
 class ManageBusinessEntitiesDialog(QDialog):
+    """Manage Entities: the business entities (LLCs, sole proprietorships...) that properties and Budget entries can be tagged with; add, edit and delete."""
     def __init__(self, context, parent=None) -> None:
+        """The explanation, the entities, Add, Edit, Delete and Close."""
         super().__init__(parent)
         self.context = context
         self.setWindowTitle("Manage Entities")
@@ -152,6 +154,7 @@ class ManageBusinessEntitiesDialog(QDialog):
         self._refresh()
 
     def _refresh(self) -> None:
+        """Lists every entity with its type."""
         self._entity_list.clear()
         for entity in self.context.budget.all_business_entities():
             item = QListWidgetItem(f"{entity.name}  [{entity.entity_type}]")
@@ -159,12 +162,14 @@ class ManageBusinessEntitiesDialog(QDialog):
             self._entity_list.addItem(item)
 
     def _selected_entity_id(self) -> Optional[str]:
+        """The selected entity's id, or None."""
         item = self._entity_list.currentItem()
         if item is None:
             return None
         return item.data(Qt.ItemDataRole.UserRole)
 
     def _on_add(self) -> None:
+        """Adds an entity from the dialog."""
         dialog = AddEditBusinessEntityDialog()
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -174,6 +179,7 @@ class ManageBusinessEntitiesDialog(QDialog):
         self._refresh()
 
     def _on_edit(self) -> None:
+        """Edits the selected entity in the dialog (asks for a selection first)."""
         entity_id = self._selected_entity_id()
         if entity_id is None:
             QMessageBox.information(None, "No Entity Selected", "Select an entity to edit.")
@@ -189,6 +195,7 @@ class ManageBusinessEntitiesDialog(QDialog):
         self._refresh()
 
     def _on_delete(self) -> None:
+        """Deletes the selected entity after asking; what's tagged with it keeps the tag but shows as unassigned until retagged."""
         entity_id = self._selected_entity_id()
         if entity_id is None:
             QMessageBox.information(None, "No Entity Selected", "Select an entity to delete.")

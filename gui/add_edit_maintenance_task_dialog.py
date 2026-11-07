@@ -150,6 +150,7 @@ class AddEditMaintenanceTaskDialog(QDialog):
     # ------------------------------------------------------------------
 
     def _build_calendar_page(self) -> QWidget:
+        """The calendar trigger's page: Recurring, and every how many days."""
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -167,6 +168,7 @@ class AddEditMaintenanceTaskDialog(QDialog):
         return page
 
     def _build_meter_page(self) -> QWidget:
+        """The meter trigger's page: its unit (engine hours, miles, starts), every how many, and whether it's the asset's real lifetime total rather than a service reminder."""
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -197,6 +199,7 @@ class AddEditMaintenanceTaskDialog(QDialog):
         return page
 
     def _build_sensor_page(self) -> QWidget:
+        """The sensor trigger's page: its unit, and the threshold (below or above a value) that makes it due."""
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -220,6 +223,7 @@ class AddEditMaintenanceTaskDialog(QDialog):
         return page
 
     def _on_trigger_changed(self, index: int) -> None:
+        """Shows the page for the trigger chosen; a meter trigger gets its usual unit when none is typed yet."""
         trigger_type = _TRIGGER_TYPE_LABELS[index][1]
         if trigger_type == "calendar":
             self.trigger_stack.setCurrentIndex(_CALENDAR_PAGE)
@@ -231,11 +235,13 @@ class AddEditMaintenanceTaskDialog(QDialog):
                 self.meter_unit_edit.setText(DEFAULT_METER_UNITS.get(trigger_type, ""))
 
     def _on_recurring_toggle(self, checked: bool) -> None:
+        """The interval is editable only while Recurring is ticked."""
         self.interval_spin.setEnabled(checked)
 
     # ------------------------------------------------------------------
 
     def _prefill(self, task: Optional[MaintenanceTask], default_asset_id: Optional[str]) -> None:
+        """Fills the fields from the task being edited; a new one starts on the asset given and recurring. Then shows the right trigger page."""
         if task is not None:
             index = self.asset_combo.findData(task.asset_id)
             if index >= 0:
@@ -279,6 +285,7 @@ class AddEditMaintenanceTaskDialog(QDialog):
         # Zero assets is a precondition the module checks BEFORE opening
         # this dialog (see modules/maintenance/module.py's _on_add_task),
         # not something this dialog needs to guard against itself.
+        """Keeps what was entered for the trigger chosen only (a calendar's interval when recurring, a sensor's unit and threshold, or a meter's unit, interval and lifetime flag; the rest cleared) and closes; an empty task is pointed out in its box instead."""
         title = self.title_edit.text().strip()
         if not title:
             self.title_edit.setPlaceholderText("Task can't be empty!")

@@ -41,6 +41,7 @@ class ProfileSelectScreen(QWidget):
     profile_selected = Signal()
 
     def __init__(self, context: AppContext) -> None:
+        """Keeps the context and builds the screen."""
         super().__init__()
         self.context = context
         self.setWindowTitle("MIA — Select Profile")
@@ -48,6 +49,7 @@ class ProfileSelectScreen(QWidget):
         self._build_ui()
 
     def _build_ui(self) -> None:
+        """Who's using MIA?: a button per profile, Sign in with email, and New Profile."""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(30, 30, 30, 30)
         layout.setSpacing(14)
@@ -81,6 +83,7 @@ class ProfileSelectScreen(QWidget):
         # screenshot while building modules/toolbox/tools/
         # lite_captures_tool.py and fixed across this codebase's other
         # actively-re-triggered refresh methods the same day.
+        """Rebuilds the profile rows (old ones removed first): each with a lock when it has a password and Delete, which is off for the only profile left."""
         while self._list_container.count():
             item = self._list_container.takeAt(0)
             widget = item.widget()
@@ -117,6 +120,7 @@ class ProfileSelectScreen(QWidget):
 
     @staticmethod
     def _clear_layout(layout) -> None:
+        """Empties a layout, hiding and detaching each widget before it's deleted."""
         while layout.count():
             item = layout.takeAt(0)
             widget = item.widget()
@@ -126,6 +130,7 @@ class ProfileSelectScreen(QWidget):
                 widget.deleteLater()
 
     def _on_profile_chosen(self, profile) -> None:
+        """Signs in as the profile chosen, asking for its password when it has one (a wrong one is said), and emits profile_selected."""
         if profile.has_password:
             cancelled, password = prompt_for_password(profile, parent=self)
             if cancelled:
@@ -139,6 +144,7 @@ class ProfileSelectScreen(QWidget):
         self.profile_selected.emit()
 
     def _on_sign_in_with_email(self) -> None:
+        """Signs in with an email and password, then emits profile_selected."""
         dialog = SignInDialog(self.context, self)
         if dialog.exec() == SignInDialog.DialogCode.Accepted and dialog.profile is not None:
             self.context.profiles.set_active_profile(dialog.profile.profile_id)
@@ -146,6 +152,7 @@ class ProfileSelectScreen(QWidget):
             self.profile_selected.emit()
 
     def _on_delete_requested(self, profile) -> None:
+        """Deletes a profile after asking (its data is archived, not erased), with its password when it has one; says so when it can't be."""
         confirm = QMessageBox.question(
             self,
             "Delete Profile",
@@ -177,6 +184,7 @@ class ProfileSelectScreen(QWidget):
         self._populate_profiles()
 
     def _on_add_profile(self) -> None:
+        """Makes a new profile from the dialog: joins the household chosen (or keeps its own and says so), makes it a child's account when asked, shows the recovery code for a password, and asks the setup questions."""
         dialog = AddProfileDialog(self, context=self.context)
         if dialog.exec() == AddProfileDialog.DialogCode.Accepted and dialog.entered_name:
             password = dialog.entered_password or None

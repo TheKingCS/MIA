@@ -209,9 +209,11 @@ class AddEditAssetDialog(QDialog):
                 self._purchase_date_cleared = False
 
     def _on_purchase_date_changed(self, _new_date: QDate) -> None:
+        """Picking a purchase date undoes Clear (the date counts again)."""
         self._purchase_date_cleared = False
 
     def _on_clear_purchase_date(self) -> None:
+        """Clears the purchase date: the box goes back to today without counting as picked, and none is saved."""
         self.purchase_date_edit.blockSignals(True)
         self.purchase_date_edit.setDate(QDate.currentDate())
         self.purchase_date_edit.blockSignals(False)
@@ -239,6 +241,7 @@ class AddEditAssetDialog(QDialog):
         self._usage_label.setText("  ·  ".join(parts) if parts else "No usage logged yet.")
 
     def _refresh_document_list(self) -> None:
+        """Lists the asset's attached documents (none for a new asset)."""
         self._document_list.clear()
         if self._asset is None:
             return
@@ -246,6 +249,7 @@ class AddEditAssetDialog(QDialog):
             self._document_list.addItem(QListWidgetItem(filename))
 
     def _on_add_documents(self) -> None:
+        """Attaches documents picked from disk (PDFs and photos) to the asset being edited."""
         if self._asset is None or self._maintenance is None:
             return
         file_paths, _ = QFileDialog.getOpenFileNames(
@@ -256,6 +260,7 @@ class AddEditAssetDialog(QDialog):
         self._refresh_document_list()
 
     def _on_open_document(self) -> None:
+        """Opens the selected document in its usual app."""
         if self._asset is None or self._maintenance is None:
             return
         item = self._document_list.currentItem()
@@ -265,6 +270,7 @@ class AddEditAssetDialog(QDialog):
         QDesktopServices.openUrl(QUrl.fromLocalFile(str(path)))
 
     def _on_remove_document(self) -> None:
+        """Removes the selected document from the asset."""
         if self._asset is None or self._maintenance is None:
             return
         item = self._document_list.currentItem()
@@ -274,6 +280,7 @@ class AddEditAssetDialog(QDialog):
         self._refresh_document_list()
 
     def _on_accept(self) -> None:
+        """Keeps what was entered (no purchase date when cleared) and closes; an empty name is pointed out in its box, and a warranty date not in YYYY-MM-DD form is said, instead."""
         name = self.name_edit.text().strip()
         if not name:
             self.name_edit.setPlaceholderText("Name can't be empty!")
@@ -296,6 +303,7 @@ class AddEditAssetDialog(QDialog):
 
     @property
     def entered_owner_profile_id(self) -> Optional[str]:
+        """Who the asset belongs to (None: shared)."""
         return self.owner_combo.currentData()
 
     @property

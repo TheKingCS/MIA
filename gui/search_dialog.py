@@ -42,6 +42,7 @@ class _ResultRow(QFrame):
     clicked = Signal()
 
     def __init__(self, result) -> None:
+        """One search result: its title, where it's from, and its description; clickable."""
         super().__init__()
         self.result = result
         self.setStyleSheet(
@@ -65,14 +66,17 @@ class _ResultRow(QFrame):
         layout.addWidget(desc_label)
 
     def mousePressEvent(self, event) -> None:
+        """A click emits clicked."""
         self.clicked.emit()
         super().mousePressEvent(event)
 
 
 class SearchDialog(QDialog):
+    """Search MIA (Ctrl+K): results from every app's search as you type; choosing one emits result_activated."""
     result_activated = Signal(object)  # emits a core.search_manager.SearchResult
 
     def __init__(self, context: AppContext, parent=None) -> None:
+        """Nothing searched or chosen yet; the search box and results."""
         super().__init__(parent)
         self.context = context
         self._found = 0  # what the last query found, and whether a result was opened: noted when the dialog closes
@@ -83,6 +87,7 @@ class SearchDialog(QDialog):
         self._build_ui()
 
     def _build_ui(self) -> None:
+        """The search box (focused) and the scrolling results."""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(12)
@@ -117,6 +122,7 @@ class SearchDialog(QDialog):
         # modules/toolbox/tools/lite_captures_tool.py) and fixed across
         # this codebase's other actively-re-triggered refresh methods
         # the same day — this one re-triggers on every keystroke.
+        """Searches as the text changes and lists the results, or No matches (old rows removed first)."""
         while self._results_layout.count():
             item = self._results_layout.takeAt(0)
             widget = item.widget()
@@ -143,11 +149,13 @@ class SearchDialog(QDialog):
             self._results_layout.addWidget(row)
 
     def _on_result_clicked(self, result) -> None:
+        """Notes a result was chosen, emits it and closes."""
         self._chosen = True
         self.result_activated.emit(result)
         self.accept()
 
     def done(self, result: int) -> None:
+        """On closing, tells the search what the last query found and whether a result was chosen (for the search.empty loop)."""
         if self._asked and hasattr(self.context.search, "finished"):  # for the search.empty loop
             self.context.search.finished(self._found, self._chosen)
         super().done(result)

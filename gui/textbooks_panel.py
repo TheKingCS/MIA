@@ -53,7 +53,9 @@ def format_chapter_list(book: Textbook) -> str:
 
 
 class TextbooksPanel(QWidget):
+    """Textbooks: add a PDF or text book and MIA teaches from it citing pages; scanned books are read in the background; a book can become a Classroom course."""
     def __init__(self, context, on_back: Optional[Callable[[], None]] = None, parent=None) -> None:
+        """Back (when given), the explanation, the books, the selected book's chapters, Add Textbook, Make a Course and Remove Selected, and the timer that checks on books being read."""
         super().__init__(parent)
         self.context = context
         layout = QVBoxLayout(self)
@@ -98,9 +100,11 @@ class TextbooksPanel(QWidget):
 
     @property
     def _library(self):
+        """The textbook library."""
         return self.context.textbooks
 
     def refresh(self) -> None:
+        """Lists the books (with reading progress for scans), keeping the selection; checks every 3 seconds while any is still being read."""
         selected = self._selected_id()
         self._list.clear()
         books = self._library.all_books() if self._library else []
@@ -121,16 +125,19 @@ class TextbooksPanel(QWidget):
             self._reading_timer.stop()
 
     def _on_reading_tick(self) -> None:
+        """While shown, finishes any reading that's done and refreshes."""
         if not self.isVisible():
             return
         self._library.finish_reading()
         self.refresh()
 
     def _selected_id(self) -> Optional[str]:
+        """The selected book's id, or None."""
         item = self._list.currentItem()
         return item.data(Qt.ItemDataRole.UserRole) if item is not None else None
 
     def _show_selected(self) -> None:
+        """Shows the selected book's chapters, or that MIA is still reading its scanned pages."""
         book = self._library.get_book(self._selected_id()) if self._selected_id() else None
         if book is not None and book.reading:
             self._details.setText("MIA is reading this scanned book's pages (OCR). Chapters appear when it's done.")
@@ -138,6 +145,7 @@ class TextbooksPanel(QWidget):
             self._details.setText(f"Chapters MIA found:\n{format_chapter_list(book)}" if book else "")
 
     def _on_add(self) -> None:
+        """Adds a book picked from disk; a scan is read in the background (about how long is said), else its pages and chapters are, and how to start studying."""
         path, _ = QFileDialog.getOpenFileName(self, "Add a Textbook", str(Path.home()), "Books (*.pdf *.txt *.md)")
         if not path:
             return
@@ -163,6 +171,7 @@ class TextbooksPanel(QWidget):
         )
 
     def _on_make_course(self) -> None:
+        """Makes the selected book a Classroom course (a lesson per chapter); not while it's still being read."""
         book_id = self._selected_id()
         if book_id is None:
             QMessageBox.information(self, "Make a Course", "Select a textbook first.")
@@ -177,6 +186,7 @@ class TextbooksPanel(QWidget):
         QMessageBox.information(self, "Make a Course", "Done: it's under the Textbooks subject in Classroom, one lesson per chapter.")
 
     def _on_remove(self) -> None:
+        """Removes the selected book from MIA after asking (the original file isn't touched)."""
         book_id = self._selected_id()
         if book_id is None:
             return
