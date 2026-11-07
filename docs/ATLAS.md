@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1122 files, 252,009 lines; 1122 files describe themselves; 13,784 of 14,456 classes and functions are documented.
+1122 files, 252,069 lines; 1122 files describe themselves; 13,787 of 14,459 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-409 files, 117,440 lines; 6,221 of 6,310 classes and functions documented
+409 files, 117,476 lines; 6,222 of 6,311 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -688,7 +688,7 @@
 
 ## tests/: the test suite: what each part must do
 
-372 files, 67,182 lines; 5,326 of 5,909 classes and functions documented
+372 files, 67,206 lines; 5,328 of 5,911 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -814,7 +814,7 @@
 - `tests/test_gamification.py`: Unit tests for core.gamification.grant_xp() — the shared "credit XP credits + raise a real notification" helper every routine-completion hook (Workout/Kitchen/Maintenance/Budget) calls through. No Qt needed; fakes stand in for context.profiles/context.notifications/context.skills, same shape as test
 - `tests/test_garage_module.py`: Unit tests for modules.garage.module's pure functions, same style as tests/test_dashboard_module.py (no Qt event loop, no fixtures). *(5 undocumented)*
 - `tests/test_geo_grid.py`: Grid references and TAK (build plan step 14, DEC-0099): MGRS worked out in code (checked against pyproj and the mgrs package: 4,000 random points agreed to the metre, 2026-11-06; the reference outputs are pinned here), and MIA's waypoints as a TAK data package of Cursor on Target events and KML. *(2 undocumented)*
-- `tests/test_glasses.py`: The glasses' app cards and quick action menus (Zac 2026-10-16, H-0041 Phase 2; core/glasses.py): the person's own apps as cards, each with a menu; a panel's lines carry only glasses-safe actions, and money stays readouts; a change goes Propose -> Approve like everywhere else. *(3 undocumented)*
+- `tests/test_glasses.py`: The glasses' app cards and quick action menus (Zac 2026-10-16, H-0041 Phase 2; core/glasses.py): the person's own apps as cards, each with a menu; a panel's lines carry only glasses-safe actions, and money stays readouts; a change goes Propose -> Approve like everywhere else. Every ask reaches one o *(3 undocumented)*
 - `tests/test_glasses_feed.py`: The glasses' Heads-Up screen (Zac, 2026-10-18): new notifications and wins since the cursor, each once; the same moment shown once; money never to a child. *(2 undocumented)*
 - `tests/test_glasses_screens.py`: The numbers on an app's glasses screen, a vehicle's own page, "I Made This", Home's line and its tone, and the live workout's one big number (the canvas's GlassesHome and GlassesTraining, DEC-0113).
 - `tests/test_glasses_voice.py`: Talking to MIA through the glasses (core/glasses_voice.py): "open Kitchen" switches the glasses to that app, anything else is a Talk turn, and the glasses hear about it through their feed. A phone linked to the home computer sends the words there first. *(1 undocumented)*

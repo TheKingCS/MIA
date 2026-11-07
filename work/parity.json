@@ -1,49 +1,9 @@
 {
   "about": "Each gap core/parity.py finds (app:way), decided: todo (to build, with what it needs) or none (deliberately not, with why). DEC-0125. tests/test_parity.py fails on a gap missing here and on an entry whose gap is gone.",
   "gaps": {
-    "dungeon:glasses": {
-      "status": "todo",
-      "why": "a glasses card: today's quest and a 'what's my quest' ask"
-    },
-    "issues:glasses": {
-      "status": "todo",
-      "why": "a glasses card: open issues count and the newest one"
-    },
-    "compliance:glasses": {
-      "status": "todo",
-      "why": "a glasses card: what's due next"
-    },
-    "flock:glasses": {
-      "status": "todo",
-      "why": "a glasses card: eggs today and chores due"
-    },
-    "business:glasses": {
-      "status": "todo",
-      "why": "a glasses card: today's business numbers"
-    },
-    "insurance:glasses": {
-      "status": "todo",
-      "why": "a glasses card: next renewal and the policy number on ask"
-    },
     "security:glasses": {
       "status": "todo",
       "why": "a glasses card: anything new on the network"
-    },
-    "reward_shop:glasses": {
-      "status": "todo",
-      "why": "a glasses card: coins and the next reward in reach"
-    },
-    "vault:glasses": {
-      "status": "todo",
-      "why": "a glasses card: a memory from this day"
-    },
-    "knowledge:glasses": {
-      "status": "todo",
-      "why": "a glasses ask: look up a plan or reference hands-free"
-    },
-    "toolbox:glasses": {
-      "status": "todo",
-      "why": "a glasses ask: convert or calculate (by voice there)"
     },
     "passwords:voice": {
       "status": "none",
@@ -53,26 +13,6 @@
       "status": "none",
       "why": "secrets never on the glasses' display (with passwords:voice, Zac 2026-11-07)"
     },
-    "files:glasses": {
-      "status": "todo",
-      "why": "a glasses ask: find a file, show it on the phone"
-    },
-    "operating_journal:glasses": {
-      "status": "todo",
-      "why": "a glasses card: what MIA did today"
-    },
-    "life_notes:glasses": {
-      "status": "todo",
-      "why": "a glasses card: the newest kept note"
-    },
-    "play:glasses": {
-      "status": "todo",
-      "why": "a glasses game sized for the display"
-    },
-    "good_news:glasses": {
-      "status": "todo",
-      "why": "a glasses ask: play the good news"
-    },
     "sight:voice": {
       "status": "todo",
       "why": "a voice 'look at this' that takes the photo itself (phone camera; glasses later)"
@@ -80,10 +20,6 @@
     "sight:glasses": {
       "status": "todo",
       "why": "the glasses' camera: 'what am I looking at'"
-    },
-    "browser:glasses": {
-      "status": "todo",
-      "why": "a glasses card: a step waiting for your OK, answered by voice"
     },
     "module_browser:glasses": {
       "status": "todo",

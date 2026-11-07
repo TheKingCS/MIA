@@ -59,8 +59,9 @@ GLASSES_KINDS = frozenset({
 })
 
 # Apps the glasses don't show as cards: the orb *is* Home and Talk; the
-# Apps manager, Settings and Files are for a bigger screen.
-NOT_ON_GLASSES = frozenset({"web_home", "assistant", "module_browser", "settings", "files", "dashboard",
+# Apps manager and Settings are for a bigger screen. Files has a card since
+# 2026-11-07 (DEC-0125): asking what's there; the files open on the phone.
+NOT_ON_GLASSES = frozenset({"web_home", "assistant", "module_browser", "settings", "dashboard",
                             "maintenance", "property"})
 
 # The glasses' order: Today, then the apps used most on the move, then
@@ -991,20 +992,38 @@ PANELS: dict[str, tuple[tuple[str, str, Panel], ...]] = {
 # menu. Questions only, never an example command: selecting one must not
 # make a note or start a trip.
 ASKS: dict[str, tuple[str, ...]] = {
-    "household": ("What did I get done this week?",),
+    "household": ("Which chores are due?",),
     "workshop": ("What jobs are open?", "Which parts are running low?"),
     "power": ("How's the battery?", "How much power did I use today?"),
     "observations": ("What have you noticed lately?",),
     "notes": ("What were my last notes?",),
-    "classroom": ("What should I study next?",),
-    "inbox": ("Any emails I should answer?",),
-    "expeditions": ("What's my next trip?", "What gear am I missing for it?"),
+    "classroom": ("How is my learning progress?",),
+    "inbox": ("What is waiting in my inbox?",),
+    "expeditions": ("What's my next trip?", "What gear do I need for my next trip?"),
     "memories": ("What was my last trip like?",),
     "maps": ("Which trail maps do I have?",),
     "navigation": ("How far is my nearest waypoint?", "When is sunset today?"),
-    "lab": ("What's my latest experiment reading?",),
+    "lab": ("What are my latest lab readings?",),
     "field_kit": ("What devices are connected?",),
-    "diagnostics": ("How is the computer doing?",),
+    "diagnostics": ("How is my system health?",),
+    # Full use on the glasses too (DEC-0125, 2026-11-07): each answered by the app's own voice tool (a test checks
+    # every ask reaches one), until a card of its own is drawn.
+    "dungeon": ("How much loot did I make this week?",),
+    "issues": ("What is in the Fix-It Log?",),
+    "compliance": ("What deadlines are coming up?",),
+    "flock": ("How many eggs did the hens lay today?", "How many eggs this week?"),
+    "business": ("How much profit did I make this month?",),
+    "insurance": ("When does my insurance renew?",),
+    "reward_shop": ("What can I buy with my credits?",),
+    "vault": ("Do I have photos of the garden?",),
+    "knowledge": ("Which woodworking plans do you have?",),
+    "toolbox": ("Can you convert 5 gallons to liters?", "How many board feet in a 2x6 that is 8 feet long?"),
+    "operating_journal": ("Am I living how I said I want to?",),
+    "life_notes": ("What did I promise?", "What ideas have I had?"),
+    "play": ("How much have I played this week?",),
+    "good_news": ("What's the good news?",),
+    "browser": ("Which browser tasks have you learned?",),
+    "files": ("Which files are in my MIA folder?",),
 }
 
 

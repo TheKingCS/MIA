@@ -2,7 +2,8 @@
 The glasses' app cards and quick action menus (Zac 2026-10-16, H-0041
 Phase 2; core/glasses.py): the person's own apps as cards, each with a
 menu; a panel's lines carry only glasses-safe actions, and money stays
-readouts; a change goes Propose -> Approve like everywhere else.
+readouts; a change goes Propose -> Approve like everywhere else. Every ask
+reaches one of its app's own tools (DEC-0125).
 """
 
 import json
@@ -274,3 +275,26 @@ def test_maintenance_and_property_are_folded_in(world):
             self.module_id = module_id
     listed = [m.module_id for m in menu_modules(world, [M("garage"), M("maintenance"), M("property"), M("real_estate")])]
     assert listed == ["garage", "real_estate"]
+
+
+def test_every_glasses_ask_reaches_one_of_its_app_s_own_tools():
+    """DEC-0125: an ask on the glasses is answered, not guessed at: each routes to a tool in its app's areas (Good
+    News answers through its quick commands, core/good_news.py reply)."""
+    from core.parity import desktop_registry
+    from core.web_surfaces import APPS
+
+    from core.parity import VOICE_ELSEWHERE
+
+    registry = desktop_registry()
+    # Apps reached by voice through her general tools (Observations, Diagnostics) count those.
+    areas = {a.module_id: set(a.domains) | ({"system", "apps"} if a.module_id in VOICE_ELSEWHERE else set()) for a in APPS}
+    missed = [(app, say) for app, asks in ASKS.items() if app != "good_news" for say in asks
+              if not {a.domain for a in registry.matching_actions(say)} & areas.get(app, set())]
+    assert not missed, f"these asks don't reach their app's tools: {missed}"
+
+
+def test_good_news_on_the_glasses_is_heard_by_its_quick_command():
+    """"What's the good news?" is answered by Good News Radio's own reply, not the model."""
+    from core.good_news import _ASK
+
+    assert all(_ASK.match(say) for say in ASKS["good_news"])
