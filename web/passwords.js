@@ -163,42 +163,61 @@
       " inside. It locks itself after " + page.lock_after_minutes + " minutes you're not using it."), box);
   }
 
+  // The design canvas (DEC-0113): each login on one line (name, user, dots, Show; ⋯ for the rest). Show opens one card
+  // at the top with the password, a countdown to when it hides, Copy and Hide. Nothing is kept once it hides.
+  let shown = null, menu = null, tick = null;
+  function hideShown() { shown = null; clearInterval(tick); tick = null; draw(); }
+  async function show(l) {
+    const got = await guard(() => MIA.vaultReveal(l.entry_id));
+    if (!got) return;
+    shown = { login: l, password: got.password, until: Date.now() + SHOW_SECONDS * 1000 };
+    clearInterval(tick);
+    tick = setInterval(() => {
+      const left = shown ? Math.ceil((shown.until - Date.now()) / 1000) : 0;
+      if (left <= 0) { hideShown(); return; }
+      const t = document.querySelector(".pw-countdown");
+      if (t) t.textContent = "Hides in " + left + " s";
+    }, 500);
+    draw();
+  }
+  function shownCard() {
+    if (!shown) return null;
+    const l = shown.login;
+    return el("section", { class: "glass surface-focus pw-shown", "aria-label": "Shown login" },
+      el("div", { class: "pw-shown-top" }, el("strong", {}, l.title),
+        el("span", { class: "pw-countdown" }, "Hides in " + Math.max(1, Math.ceil((shown.until - Date.now()) / 1000)) + " s")),
+      l.username ? el("span", { class: "dim" }, l.username) : null,
+      el("span", { class: "pw-secret open" }, shown.password),
+      el("div", { class: "row-buttons" }, btn("Copy", "btn-ghost btn-small", () => copy(shown.password, "Password")),
+        l.username ? btn("Copy User", "btn-ghost btn-small", () => copy(l.username, "Username")) : null,
+        btn("Hide", "btn-ghost btn-small", hideShown)));
+  }
   function row(l) {
-    const secret = el("span", { class: "pw-secret" }, "••••••••");
-    let hide = null;
-    const show = async () => {
-      const got = await guard(() => MIA.vaultReveal(l.entry_id));
-      if (!got) return;
-      secret.textContent = got.password; secret.classList.add("open");
-      clearTimeout(hide);
-      hide = setTimeout(() => { secret.textContent = "••••••••"; secret.classList.remove("open"); }, SHOW_SECONDS * 1000);
-    };
-    const copyPassword = async () => { const got = await guard(() => MIA.vaultReveal(l.entry_id)); if (got) copy(got.password, "Password"); };
-    return el("div", { class: "row money-row pw-row" },
+    return el("div", { class: "pw-row" },
       el("div", { class: "pw-main" },
-        el("div", { class: "row-title" }, l.title, l.reused ? el("span", { class: "pw-flag" }, "Reused") : null,
+        el("div", { class: "pw-title" }, l.title, l.reused ? el("span", { class: "pw-flag" }, "Reused") : null,
           l.weak ? el("span", { class: "pw-flag" }, "Weak") : null),
-        el("div", { class: "row-sub" }, [l.username, l.site].filter(Boolean).join(" · ")),
-        l.has_password ? secret : null),
-      el("div", { class: "row-buttons" },
-        l.has_password ? btn("Copy", "btn-amber btn-small", copyPassword) : null,
-        l.has_password ? btn("Show", "btn-ghost btn-small", show) : null,
+        el("div", { class: "pw-user" }, [l.username, l.site].filter(Boolean).join(" · "))),
+      l.has_password ? el("span", { class: "pw-dots", "aria-hidden": "true" }, "••••••") : null,
+      menu === l.entry_id ? el("div", { class: "row-buttons" },
         l.username ? btn("Copy User", "btn-ghost btn-small", () => copy(l.username, "Username")) : null,
         btn("Change", "btn-ghost btn-small", () => editLogin(l)),
         btn("Delete", "btn-ghost btn-small", async () => {
           if (!(await MIAShell.confirm("Delete the login for " + l.title + "? This can't be undone."))) return;
           const done = await guard(() => MIA.vaultDelete(l.entry_id));
           if (done) { say(done.message); MIAShell.refresh(); }
-        })));
+        })) : el("div", { class: "row-buttons" },
+        l.has_password ? btn("Show", "btn-ghost btn-small", () => show(l)) : null,
+        el("button", { type: "button", class: "fl-more", "aria-label": "More for " + l.title, onclick: () => { menu = l.entry_id; draw(); } }, "⋯")));
   }
 
   function logins() {
     const q = query.trim().toLowerCase();
-    const shown = page.logins.filter((l) => !q || [l.title, l.username, l.site, l.folder, l.note].join(" ").toLowerCase().includes(q));
+    const found = page.logins.filter((l) => !q || [l.title, l.username, l.site, l.folder, l.note].join(" ").toLowerCase().includes(q));
     const search = el("input", { type: "search", class: "pw-search", placeholder: "Search", value: query, "aria-label": "Search logins",
       oninput: (e) => { query = e.target.value; const at = e.target.selectionStart; draw(); const s = document.querySelector(".pw-search"); s.focus(); s.setSelectionRange(at, at); } });
     const groups = {};
-    shown.forEach((l) => (groups[l.folder || ""] = groups[l.folder || ""] || []).push(l));
+    found.forEach((l) => (groups[l.folder || ""] = groups[l.folder || ""] || []).push(l));
     const h = page.health;
     return [
       el("div", { class: "row-buttons pw-tools" }, search, btn("Add A Login", "btn-amber", () => editLogin(null)),
@@ -207,8 +226,9 @@
         [h.reused ? h.reused + (h.reused === 1 ? " uses" : " use") + " a password another login also uses" : "",
           h.weak ? h.weak + (h.weak === 1 ? " has" : " have") + " a weak password" : ""]
           .filter(Boolean).join("; ") + ". Change them on the site, then here.") : null,
-      ...(shown.length ? Object.keys(groups).sort().map((f) => section(f || "Logins", null,
-        el("div", { class: "rows" }, groups[f].map(row))))
+      shownCard(),
+      ...(found.length ? Object.keys(groups).sort().map((f) => el("section", { class: "glass pw-group", "aria-label": f || "Logins" },
+        Object.keys(groups).length > 1 ? el("h2", { class: "pw-label" }, f || "Logins") : null, ...groups[f].map(row)))
         : [el("p", { class: "empty" }, page.logins.length ? "Nothing matches." : "No logins yet. Add one, or bring them in from your browser.")]),
       section("Bring Them In", null,
         el("p", {}, "From Chrome or Edge: Settings → Passwords → Export. From Bitwarden, Firefox, 1Password or LastPass: their CSV export. Then pick the file here."),
@@ -218,6 +238,7 @@
   }
 
   function draw() {
+    if (!page.unlocked && shown) { shown = null; clearInterval(tick); tick = null; }  // locked: nothing stays on screen
     const cells = [el("div", { class: "cell ok" }, el("span", { class: "n" }, page.count), el("span", { class: "t" }, "Logins")),
       el("div", { class: "cell " + (page.unlocked ? "soon" : "ok") }, el("span", { class: "n" }, page.unlocked ? "Open" : "Locked"), el("span", { class: "t" }, "Vault"))];
     if (page.unlocked) cells.push(

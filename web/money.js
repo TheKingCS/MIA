@@ -52,6 +52,29 @@
       children.length ? el("div", { class: "rows" }, children) : el("p", { class: "dim" }, empty));
   }
 
+  // ------------------------------------------------------------ the net worth line
+  // The engine keeps one point a day (core/net_worth_history.py) and works out the change; this only draws them.
+  function change(h) {
+    if (!h || h.month_change == null) return null;
+    const up = h.month_change >= 0;  // a dip is shown plainly, never as an error (DEC-0014)
+    return el("span", { class: "nw-change" + (up ? " up" : "") }, (up ? "+" : "-") + fmt(Math.abs(h.month_change)).replace(/^-/, "") + " this month");
+  }
+  function nwLine(h) {
+    const pts = (h && h.line) || [];
+    if (pts.length < 2) return pts.length ? el("p", { class: "dim nw-note" }, "The line starts today; it grows a point each day you look.") : null;
+    const totals = pts.map((p) => p.total);
+    const lo = Math.min(...totals), hi = Math.max(...totals), span = hi - lo || 1;
+    const t0 = Date.parse(pts[0].date), tn = Date.parse(pts[pts.length - 1].date), tspan = tn - t0 || 1;
+    const xy = pts.map((p) => [Math.round(320 * (Date.parse(p.date) - t0) / tspan), Math.round(54 - 46 * (p.total - lo) / span)]);
+    const d = xy.map(([x, y], i) => (i ? "L" : "M") + x + " " + y).join(" ");
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 320 60"); svg.setAttribute("preserveAspectRatio", "none");
+    svg.setAttribute("class", "nw-line"); svg.setAttribute("role", "img");
+    svg.setAttribute("aria-label", "Net worth since " + day(pts[0].date) + ": from " + fmt(pts[0].total) + " to " + fmt(pts[pts.length - 1].total));
+    svg.innerHTML = '<path class="area" d="' + d + ' L320 60 L0 60Z"/><path class="stroke" d="' + d + '"/>';
+    return svg;
+  }
+
   // ------------------------------------------------------------ tabs
   function overview() {
     const s = page.summary;
@@ -63,8 +86,11 @@
     // The concept's Finances: net worth first, then four tiles, then upcoming bills.
     kids.push(el("section", { class: "glass glow money-section nw-card" },
       el("span", { class: "nw-label" }, "Net worth"),
-      el("span", { class: "nw-value" }, nw.total != null ? fmt(nw.total) : "—"),
-      nw.total == null ? el("p", { class: "dim" }, "Add property values or connect a bank to see it.") : null));
+      el("div", { class: "nw-head" },
+        el("span", { class: "nw-value" }, nw.total != null ? fmt(nw.total) : "—"),
+        change(page.net_worth)),
+      nw.total == null ? el("p", { class: "dim" }, "Add property values or connect a bank to see it.") : null,
+      nwLine(page.net_worth)));
     kids.push(el("div", { class: "nw-tiles" },
       tile("income", "Monthly income", plan ? fmt(plan.expected_income) : fmt(s.month.income), "good"),
       tile("bills", "Monthly bills", plan ? fmt(plan.bills) : fmt(s.month.expenses)),

@@ -58,6 +58,75 @@ two clean runs (`browser.runs` loop). Tests: `tests/test_browser.py` (a pretend 
 Next for it: Zac's first real try (WAITING_ON), a web screen listing taught tasks and their runs, and a routing
 corpus check that "open the website" reaches `browse`.
 
+**Canvas build (DEC-0113 approved 2026-11-07; the design canvas "MIA Core Screens" is the reference, H-0092).**
+Build order and where it stands (tick as each lands; screenshots in demo mode: serve a folder with `web/` and
+`schema/` -> `docs/schema/` and open `/web/<page>?demo`):
+- [x] Shared pieces: `web/ui.css` (orb states, finding, kind tags, status strip, focus surface, big action, states,
+      What I used), app accents in `web/tokens.css` (`--atmo` from `<body data-app>`: Workout, Kitchen, Workshop).
+- [x] Home: date, greeting, status strip, MIA Noticed (core/findings.py), focus rows with their kind, Upcoming beside
+      it, MIA's column on wide screens. Engine: `dashboard()` gained `strip`, `finding`, each row's `kind`/`tone`.
+- [x] Talk: her orb and state in the header (Ready, Listening, Thinking, Speaking, Can't Reach), What I used.
+- [x] Sidebar: Home, Apps, Pinned (favorites), life areas folded (`shell()` gained `favorites`, `groups`, each app's
+      `group`).
+- [x] Workout: Today leads with one big Start; a live session takes the whole screen as Active (count large, how
+      it was counted), Rest (draining ring) and Done (planned → done); tuck it away and a bar brings it back. Engine:
+      `training_session.view()` gained each count's `how`, `last_counted`, `weight`, `rest_total`. Left for Workout:
+      "+30 s" on rest needs a `training.rest_more` action; Progress charts (volume, frequency) per the canvas.
+- [x] Kitchen: Today leads with the next meal's Start Cooking; the recipe page has Start Cooking; cook mode
+      (`web/cook.js`) takes the screen: one step large, what it uses, the step's own timer offered, named timers that
+      keep running, Back / Next Step / I Made This. Engine: `core/cooking_session.py` (a personal store, `cooking`),
+      `core/cooking_actions.py` (`cooking.start/next/back/go_to/timer/timer_cancel/made/stop`; made = `meal.cook`),
+      `cooking` on the Kitchen and recipe reads. Left: voice quick commands for cooking ("next step", "set a timer"),
+      the glasses' cooking panel, servings scaling on the recipe page.
+- [~] Every other app: the shared frame now matches the canvas on every page (`web/ui.css`, "every app's frame"):
+      status strips with the label above, a white value and an index bar; "needs you" amber instead of red fills
+      (attention panels, overdue chips and rows; red stays for real errors); tabs as a rail lit from below. Checked
+      in demo mode on 60 pages (no new script errors; presence.html's old error is the page to retire).
+      Done per app: Missions (ready-to-complete focus card, next objective, XP, source), Freedom (each figure tagged
+      Fact/Calculation/Missing by `core.freedom.figure_kind`), Skills (capability status and next honest step first),
+      Money (net worth with "+$X this month" and its six-month line: `core/net_worth_history.py` keeps one point a
+      day, noted when Money is read, so the line starts the day it ships and grows with use), Garage and the asset
+      page (machine cards with meter and plain due words; Spent this year, condition, one Needs You card with a big
+      Done, what it cost lately: `core/web_equipment.due_words`, `meter_reading`, `_upkeep_this_year`), the Dungeon
+      (today's run card with gold projected loot and a big Run Cleared, the overtime boss card, the week's runs meter), Compliance (one panel per group, each obligation
+      a row with the one step `core/web_compliance.next_step` says comes next), Insurance (You Have, then
+      quotes side by side each with `core/insurance.verdict`'s sentence, and a big Draft A Quote Request), Real Estate (the property card: its word from `core/web_screens.property_badge`,
+      Rent Due amber; Rent / Cash Flow / Equity in one row), Workshop (Builds first: the bench card with Budget / Spent /
+      Hours and the next step, Sell First, Best Earner per hour, a big Start A Build), Orders (the stage rail New / Building / Ready / Delivered
+      with the step `core/web_business.order_stage` says moves it on; owed amber, paid green), Inbox (each waiting item's "Goes to" line from `core/web_inbox.goes_to`),
+      Calendar (one page: Due Today, Past Due, Due Soon as short lines, the month beside them on PC), Journal (Write Entry first, the privacy line, one column of entries with
+      date and tags above the title), People (Birthdays first: a card each with gift ideas, then the one person
+      `core/web_more.catch_up` says to catch up with), Classroom (the course to continue from
+      `core/classroom_manager.continue_course`, lessons to tick with their XP, subjects as rows that open), Guitar and any learning path (`core/paths.path_card`: stage rail, the week, Work On Next
+      with homework, every check of the stage with who verifies it), Memory Vault ("N of M safe at home" per month from
+      `core/memory_vault.vault_page`, a green or amber dot on each photo), Operating Journal (a card per line with its meter from
+      `core/operating_journal.line_score`), Play (six weeks of play minutes as bars, the latest games with
+      `core/recreation.effort_word`, a big Log a Game), Observations (a card each: Needs You or Noticed, the
+      apps it drew on, Open in <app>, from `core/observations_web.card`), Expeditions (the next one as one card:
+      heads-up from `core/web_more._trip_heads_up`, packing to tick, Start Trip; the rest as rows),
+      Maps (the route card under the map: from the first
+      waypoint to the one picked, distance, bearing, sunrise and sunset; no climb until MIA has elevation; the
+      canvas's full-screen map with floating controls is still to do).
+      Navigation (a compass with the needle on the bearing, waypoints with their grid, sun and moon tiles).
+      World Map (km² cleared as the headline, the next achievement from `core/world_map.next_rank`, a big I'm Here).
+      Knowledge (Search / Packs / Plans Shelf tabs; result cards with a snippet from
+      `ReferenceLibraryManager.search_titles`; its test needs libzim, so run it on the PC).
+      Music (song rows you tap to play, the one playing in cyan; a Now Playing bar held at the bottom).
+      Files (the path, Upload, one list with line icons and a meta line, ⋯ for Rename and Delete).
+      Passwords (one line per login; Show opens one card at the top with a countdown, Copy and Hide; ⋯ for the rest).
+      News ("Three stories today", a card per story tagged by how it's known: `core/good_news.KNOWN_TAGS`).
+      Look (the photo shown but not kept, the questions as chips, the answer with how she knows it, Take a Photo).
+      Settings (a label over one card per group; each setting a row with its note and a switch; the demo now has
+      `docs/schema/settings.example.json`).
+      Profile (initial, name and email; About You rows that open their editors; Security; Sign Out; no household per
+      DEC-0119; the demo now has `docs/schema/profile.example.json`).
+      Fix-It (a big Report a Problem, Open · Worst First cards with ×N and the latest thing said, learned phrasings).
+      Diagnostics (Passed / Look At / Unread tiles, a dotted row per check-up, Run Again).
+      Still to do: Power, Toolbox, Lab and Field Kit need web pages first (WEB_PARITY).
+- [ ] Glasses: the shared orb on `web/glasses.html`.
+- Note: DEC-0119 (MIA for Zac alone) came after the canvas: drop household members from Party's leaderboard and
+  Profile's household card when those screens are built.
+
 **What Zac and the other agents need to do is in `docs/WAITING_ON.md`** (kept current every session).
 
 **Where the build plan stands (`docs/BUILD_PLAN.md`, 2026-11-07).** Phases A and C are done; most of D is built.
@@ -685,7 +754,7 @@ uncommitted. 6,863 of 13,808 documented on 2026-11-07: every core/, server/ and 
 
 **The Highest Self (H-0089 → H-0090, DEC-0114 PROPOSED):** the doctrine is `docs/design/MIA_HIGHEST_SELF.md`; its core is in `core/personality.py` (two CHARACTER clauses, a tone example, the faith-and-meaning line, the integrity rules, the values pinned by `tests/test_personality_values.py`). Measured on the corpus (`pc-check/conversation-highest-self-*`): routing fixed, doubt and grand plans better, "is God real" still deflected, dependency uneven, answers six words longer. Next, after Zac's ratings and decision: the three modes (Intellectual, Counselor, Creative), then tune on his ratings.
 
-**Experience Maturity (H-0087 → H-0088, DEC-0113 PROPOSED):** Stage 1 is done (the audit, the identity draft, the design system, the collaboration workflow and library, the Workout and Kitchen briefs). Nothing in `web/` changes until Zac decides DEC-0113 and round one of concepts is in `docs/design/visual_library/`. Then: the contrast test, one orb component, named surfaces and controls (with aliases), Workout. Kitchen's cooking session (engine) can start earlier.
+**Experience Maturity (DEC-0113 APPROVED 2026-11-07, amended):** the design canvas "MIA Core Screens" (H-0092, `docs/design/MIA_DESIGN_STANDARDS.md` §13) is the reference; the build runs in order: shared pieces (`web/ui.css`, the orb), Home and Talk, Workout, Kitchen, then every other app. Progress is tracked in the "Canvas build" list below.
 
 **Learning paths (DEC-0112):** any desire runs through `core/paths.py` (guitar is its first program; anything else is drafted and started on the person's say-so). Don't build a parallel learn-a-skill feature: add a `Program`. MIA's own curriculum is ten Programs on her own PathBook (`core/curriculum.mia_book()`, `data/dev/mia_paths`); `python -m tools.night_school curriculum` shows it. **Guitar (DEC-0111):** when Zac has tried it, read his heard-check attempts (his folder's `paths.json`, path `guitar`): if real chords fail that should pass, adjust `CHORD_TONE`/`STRAY` in `core/guitar_ear.py` from those numbers (they were set on synthesized strings).
 

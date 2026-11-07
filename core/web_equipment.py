@@ -15,10 +15,14 @@ core/equipment_actions.py and `maintenance.done`.
   and the upcoming calendar).
 - **Task status** speaks the PC app's vocabulary ("overdue 13d", "due in
   3d", "120/150 engine hours", "ok — 72°F"), computed from the same
-  due-date functions in core/maintenance_manager.py.
+  due-date functions in core/maintenance_manager.py. Each task also says
+  when it's due in the Garage card's plain words (`due_words`: "Due
+  tomorrow", "Due in 188 mi", "Jan"; DEC-0113), and each asset's card
+  carries its latest meter reading (`meter_reading`).
 - **An asset's page:** details, quick stats (meters), current tasks,
-  related missions, documents, cost of ownership, and its history from
-  the life events log. Parts aren't tracked per asset yet (PLANNED).
+  related missions, documents, cost of ownership (with this year's
+  upkeep and the latest spending), and its history from the life events
+  log. Parts aren't tracked per asset yet (PLANNED).
 """
 
 from __future__ import annotations
@@ -134,6 +138,49 @@ def task_status(task, readings: list, today: date) -> dict:
             "latest": latest, "predicted": predicted[1] if predicted else None, "life": life}
 
 
+def due_words(task, status: dict, readings: list, today: date) -> str:
+    """Pure logic (given readings). When a task is due, in the words the Garage card shows (the design canvas,
+    DEC-0113): "Due tomorrow", "Due in 5 days", "Jan" (further than a month: the month it falls in), "Due in 188 mi"
+    (a meter task, by what's left), "Past due 3 days" / "Past due 20 h". Plain, never scolding (DEC-0014). "" for
+    a quick stat; the status text (never done, no readings logged...) when there's no due point to give."""
+    from core.maintenance_manager import meter_used_since_last, next_due_date
+
+    if status.get("quick_stat"):
+        return ""
+    days, unit = status.get("days"), (task.meter_unit or "").strip()
+    if task.trigger_type == "calendar" and days is not None:
+        if days < 0:
+            return f"Past due {-days} day{'s' if days != -1 else ''}"
+        if days == 0:
+            return "Due today"
+        if days == 1:
+            return "Due tomorrow"
+        if days <= 31:
+            return f"Due in {days} days"
+        due = next_due_date(task)
+        return due.strftime("%b") if due.year == today.year else due.strftime("%b %Y")
+    if task.is_meter_task and task.meter_interval and task.last_completed_meter_value is not None and readings:
+        left = task.meter_interval - (meter_used_since_last(task, readings) or 0.0)
+        amount = f"{abs(left):,.0f} {unit}".strip()
+        return f"Past due {amount}" if left <= 0 else f"Due in {amount}"
+    return (status.get("text") or "").capitalize()
+
+
+def meter_reading(context, tasks: list) -> Optional[str]:
+    """An asset's latest meter reading across its meter tasks ("4,812 mi", "50 h"), for its card; None without
+    one."""
+    latest = None
+    for task in tasks:
+        if not task.is_meter_task:
+            continue
+        readings = _readings(context, task)
+        if readings and (latest is None or readings[-1].timestamp > latest[0].timestamp):
+            latest = (readings[-1], task.meter_unit or "")
+    if latest is None:
+        return None
+    return f"{latest[0].value:,.0f} {latest[1]}".strip()
+
+
 CONDITION = ((80, "Mint", "ok"), (50, "Good", "ok"), (25, "Worn", "soon"), (1, "Needs Care", "bad"), (0, "Needs Care", "bad"))
 
 
@@ -162,13 +209,14 @@ def bucket_of(days: Optional[int], urgency: str = "") -> Optional[str]:
 
 
 def _task_row(context, task, asset, today: date) -> dict:
-    """One maintenance task for the screens: its status (due, overdue, its bucket), its form values, and its
+    """One maintenance task for the screens: its status (due, overdue, its bucket, the due words the Garage card shows), its form values, and its
     Done action (asking for the meter reading on a meter task); a quick stat has no action.
     """
     from core.equipment_actions import RECORDS
 
     readings = _readings(context, task)
     status = task_status(task, readings, today)
+    status["due"] = due_words(task, status, readings, today)
     data = asdict(task)
     values = {f.name: data.get(f.name) for f in RECORDS["maintenance_task"].fields}
     return {"id": task.task_id, "title": task.title, "asset_id": task.asset_id,
@@ -196,13 +244,22 @@ def _owner(context, asset) -> Optional[str]:
     return getattr(owner, "name", None)
 
 
+def _asset_meter(context, asset) -> Optional[str]:
+    """The asset's latest meter reading (`meter_reading` over its tasks), or None."""
+    maintenance = getattr(context, "maintenance", None)
+    if maintenance is None:
+        return None
+    return meter_reading(context, [t for t in maintenance.all_tasks() if t.asset_id == asset.asset_id])
+
+
 def _asset_card(context, asset, rows: list, today: date) -> dict:
-    """One asset's card: its details, owner, how many tasks need attention, its next three tasks, its quick
-    stats, warranty, scope and condition bar.
+    """One asset's card: its details, owner, its latest meter reading, how many tasks need attention, its next
+    three tasks, its quick stats, warranty, scope and condition bar.
     """
     current = sorted((r for r in rows if not r["quick_stat"]), key=_order)
     return {"id": asset.asset_id, "name": asset.name, "category": asset.category,
             "make_model": " ".join(p for p in (asset.manufacturer, asset.model) if p), "owner": _owner(context, asset),
+            "meter": _asset_meter(context, asset),
             "overdue": sum(r["needs_attention"] for r in rows), "tasks": current[:3], "task_count": len(current),
             "quick_stats": [{"title": r["title"], "text": r["text"]} for r in rows if r["quick_stat"]],
             "warranty_until": asset.warranty_until or None,
@@ -252,10 +309,22 @@ def equipment_page(context, scope: str = "maintenance", today: Optional[date] = 
     return page
 
 
+def _upkeep_this_year(context, asset, today: date, recent: int = 5) -> dict:
+    """What the asset's upkeep cost this calendar year (the expenses tagged to it, not its purchase) and its latest
+    upkeep spending with dates, for the asset page's "Spent this year" and its history with costs (the design
+    canvas, DEC-0113)."""
+    tagged = sorted((e for e in context.budget.all_expenses() if e.asset_id == asset.asset_id and not e.asset_purchase),
+                    key=lambda e: e.date or "", reverse=True)
+    start = date(today.year, 1, 1).isoformat()
+    return {"this_year": round(sum(e.amount for e in tagged if (e.date or "") >= start), 2),
+            "recent": [{"date": e.date, "what": e.description or e.payee or e.category, "amount": round(e.amount, 2)}
+                       for e in tagged[:recent]]}
+
+
 def asset_page(context, asset_id: str, today: Optional[date] = None) -> Optional[dict]:
     """One asset's page: its details, notes, tasks and what needs attention, its condition, quick stats and
-    meter readings, the missions about it, its documents, what it has cost (with a budget), and its history (undone
-    changes left out); None when it's gone.
+    meter readings, the missions about it, its documents, what it has cost (with a budget: this year's upkeep and the
+    latest spending too), and its history (undone changes left out); None when it's gone.
     """
     from core import life_events
     from core.equipment_actions import RECORDS, form_spec
@@ -310,7 +379,7 @@ def asset_page(context, asset_id: str, today: Optional[date] = None) -> Optional
             page["costs"] = {"purchase": cost.purchase_price, "upkeep": cost.upkeep, "total": cost.total,
                              "hours": cost.hours, "per_hour": cost.cost_per_hour,
                              "by_category": [{"category": k, "amount": round(v, 2)} for k, v in cost.by_category.items()],
-                             "for_builds": cost.for_builds}
+                             "for_builds": cost.for_builds, **_upkeep_this_year(context, asset, today)}
         except Exception:
             log.exception("Couldn't work out the cost of %s.", asset.name)
 

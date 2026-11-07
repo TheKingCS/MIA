@@ -42,7 +42,9 @@
         "projected_hours": 44.0,
         "projected_overtime": 4.0,
         "projected_bonus_text": "$43.00",
-        "projected_net_text": "$861.22"
+        "projected_net_text": "$861.22",
+        "runs_cleared": 1,
+        "runs": 5
       },
       "month": {
         "earned": 3569.0,

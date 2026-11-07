@@ -5,7 +5,7 @@
     {
       "id": "a694837991",
       "name": "Hinge",
-      "detail": "Hardware \u00b7 2 in",
+      "detail": "Hardware · 2 in",
       "quantity": 12,
       "location": "Drawer 3",
       "empty": false,
@@ -701,7 +701,7 @@
         },
         {
           "name": "category",
-          "label": "Kind (bench, planter, shelf\u2026)",
+          "label": "Kind (bench, planter, shelf…)",
           "type": "text",
           "required": false,
           "options": [],
@@ -993,7 +993,8 @@
         "cost": "$6.44",
         "profit": "$2.56",
         "hours": 1.0,
-        "per_hour": "$2.56/h"
+        "per_hour": "$2.56/h",
+        "per_hour_value": null
       },
       "values": {
         "name": "Banana bread",
@@ -1123,7 +1124,8 @@
         "cost": "",
         "profit": "",
         "hours": null,
-        "per_hour": ""
+        "per_hour": "",
+        "per_hour_value": null
       },
       "values": {
         "name": "Chocolate chip cookies",
@@ -1287,7 +1289,8 @@
         "cost": "",
         "profit": "",
         "hours": null,
-        "per_hour": ""
+        "per_hour": "",
+        "per_hour_value": null
       },
       "values": {
         "name": "Farmhouse bench",
@@ -1421,7 +1424,8 @@
         "cost": "$42.60",
         "profit": "$-6.60",
         "hours": 1.0,
-        "per_hour": "$-6.60/h"
+        "per_hour": "$-6.60/h",
+        "per_hour_value": null
       },
       "values": {
         "name": "Raw honey",
@@ -1491,7 +1495,10 @@
         "per_hour_text": "$-6.60/h",
         "after_labor_text": ""
       },
-      "in_stock": false
+      "in_stock": false,
+      "next": "Warm the jars",
+      "budget": 0.0,
+      "budget_text": ""
     },
     {
       "id": "93446a77c6",
@@ -1523,7 +1530,10 @@
         "per_hour_text": "$2.56/h",
         "after_labor_text": ""
       },
-      "in_stock": false
+      "in_stock": false,
+      "next": null,
+      "budget": 0.0,
+      "budget_text": ""
     },
     {
       "id": "4497b09ad6",
@@ -1555,7 +1565,10 @@
         "per_hour_text": "",
         "after_labor_text": ""
       },
-      "in_stock": true
+      "in_stock": true,
+      "next": null,
+      "budget": 0.0,
+      "budget_text": ""
     },
     {
       "id": "a21b01b568",
@@ -1566,28 +1579,47 @@
       "status": "In Progress",
       "finished": false,
       "started": "2026-10-21",
-      "steps": [],
-      "steps_done": 0,
-      "hours": 0.0,
+      "steps": [
+        {
+          "index": 0,
+          "text": "Cut the legs and stretchers",
+          "done": true
+        },
+        {
+          "index": 1,
+          "text": "Assemble the base",
+          "done": false
+        },
+        {
+          "index": 2,
+          "text": "Stain",
+          "done": false
+        }
+      ],
+      "steps_done": 1,
+      "hours": 6.5,
       "photos": [],
       "result": {
         "sold": 0,
         "materials": 0,
         "other": 0,
-        "cost": 0,
+        "cost": 112.0,
         "profit": 0,
         "hours": 0.0,
         "per_hour": null,
         "is_sold": false,
         "sold_text": "$0.00",
-        "cost_text": "$0.00",
+        "cost_text": "$112.00",
         "materials_text": "$0.00",
         "other_text": "$0.00",
         "profit_text": "$0.00",
         "per_hour_text": "",
         "after_labor_text": ""
       },
-      "in_stock": false
+      "in_stock": false,
+      "next": "Assemble the base",
+      "budget": 158.4,
+      "budget_text": "$158.40"
     }
   ],
   "receipts": [],
@@ -1941,5 +1973,18 @@
       "group": "From the coop & greenhouse",
       "makes": "36 pots"
     }
-  ]
+  ],
+  "sell_first": [
+    {
+      "name": "Banana bread",
+      "sell_by": "2026-10-22",
+      "days_left": 1,
+      "left_text": "1 loaves",
+      "state": "sell first"
+    }
+  ],
+  "best_earner": {
+    "name": "Banana bread",
+    "per_hour_text": "$11.56/h"
+  }
 }

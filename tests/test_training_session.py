@@ -21,7 +21,8 @@ def at(seconds: float) -> datetime:
 def test_a_session_goes_set_by_set_with_rest_by_itself():
     s = ts.start(DAY, T0)
     assert ts.view(s, T0)["now"] == {"name": "Push-ups", "set": 1, "sets": 2, "target": "15 reps", "reps": 15,
-                                     "hold_seconds": None, "cadence_seconds": 2.0, "last": None}
+                                     "hold_seconds": None, "cadence_seconds": 2.0, "last": None,
+                                     "last_counted": None, "weight": None}
     ts.log_set(s, at(40), reps=12, counted="cadence")  # a short set is a set
     assert s.status == ts.RESTING and ts.rest_left(s, at(50)) == 50
     assert ts.say(s, at(50)) == "Resting: 50 seconds. Then Push-ups, set 2 of 2, 15 reps."
@@ -197,3 +198,15 @@ def test_the_glasses_follow_the_workout(tmp_path, monkeypatch):
     lines = _workout_live(w, date.today())["lines"]
     assert lines[0]["text"] == "Push-ups" and lines[0]["detail"] == "Set 2/2 · 15 reps · last 10"
     assert lines[1]["action"]["kind"] == "training.skip_rest"  # resting: skip it from the glasses
+
+
+def test_the_view_says_how_each_count_was_made_and_the_whole_rest():
+    """DEC-0113 (the canvas's Active and Rest): every count carries how it was made, never "verified", and while
+    resting the view gives the whole rest so a ring can drain."""
+    s = ts.start(DAY, T0)
+    ts.log_set(s, at(40), reps=12, counted="cadence")
+    v = ts.view(s, at(41))
+    assert v["steps"][0]["how"] == ["cadence"]
+    assert v["now"]["last_counted"] == "cadence"
+    assert v["rest_total"] == s.steps[0].rest_seconds
+    assert "verified" not in str(v)

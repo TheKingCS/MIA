@@ -32,6 +32,122 @@
         "price": 306.0,
         "due_date": "2026-11-15",
         "notes": ""
+      },
+      "stage": {
+        "index": 1,
+        "name": "Building",
+        "names": [
+          "New",
+          "Building",
+          "Ready",
+          "Delivered"
+        ],
+        "next": {
+          "label": "Mark Ready",
+          "action": {
+            "kind": "order.status",
+            "label": "Mark Ready",
+            "params": {
+              "order_id": "ebc3a1c897",
+              "status": "Ready"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "a1b2c3d4e5",
+      "title": "Engraved sign",
+      "customer": "Sam",
+      "status": "Ready",
+      "quantity": 1,
+      "recipe": "",
+      "has_recipe": false,
+      "price": "$65.00",
+      "paid": "$65.00",
+      "left": "$0.00",
+      "left_value": 0.0,
+      "due": "2026-11-12",
+      "overdue": false,
+      "build": null,
+      "open": true,
+      "notes": "",
+      "values": {
+        "title": "Porch bench",
+        "customer_id": "fc215300ae",
+        "recipe_id": "63f4e559ee",
+        "quantity": 1,
+        "price": 306.0,
+        "due_date": "2026-11-15",
+        "notes": ""
+      },
+      "stage": {
+        "index": 2,
+        "name": "Ready",
+        "names": [
+          "New",
+          "Building",
+          "Ready",
+          "Delivered"
+        ],
+        "next": {
+          "label": "Delivered",
+          "action": {
+            "kind": "order.status",
+            "label": "Delivered",
+            "params": {
+              "order_id": "a1b2c3d4e5",
+              "status": "Delivered"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "f6e5d4c3b2",
+      "title": "Printed bracket set",
+      "customer": "Riley",
+      "status": "Open",
+      "quantity": 1,
+      "recipe": "Bracket",
+      "has_recipe": true,
+      "price": "$42.00",
+      "paid": "$0.00",
+      "left": "$42.00",
+      "left_value": 42.0,
+      "due": "2026-11-20",
+      "overdue": false,
+      "build": null,
+      "open": true,
+      "notes": "",
+      "values": {
+        "title": "Porch bench",
+        "customer_id": "fc215300ae",
+        "recipe_id": "63f4e559ee",
+        "quantity": 1,
+        "price": 306.0,
+        "due_date": "2026-11-15",
+        "notes": ""
+      },
+      "stage": {
+        "index": 0,
+        "name": "New",
+        "names": [
+          "New",
+          "Building",
+          "Ready",
+          "Delivered"
+        ],
+        "next": {
+          "label": "Start Build",
+          "action": {
+            "kind": "order.build",
+            "label": "Start Build",
+            "params": {
+              "order_id": "f6e5d4c3b2"
+            }
+          }
+        }
       }
     }
   ],
@@ -155,10 +271,10 @@
     }
   ],
   "counts": {
-    "open_orders": 1,
+    "open_orders": 3,
     "open_quotes": 1,
     "customers": 2,
-    "owed": "$206.00"
+    "owed": "$248.00"
   },
   "picks": {
     "customers": [

@@ -1010,7 +1010,8 @@ def _day_label(day: str) -> str:
 
 def vault_page(context, month: str = "", today: Optional[date] = None) -> dict:
     """The Memory Vault screen: how much is safe, what could be freed,
-    the bursts, and one month of photos by day with what happened then."""
+    the bursts, each month with how many of its photos are safe at home,
+    and one month of photos by day with what happened then."""
     from core.home_link import linked
 
     vault = getattr(context, "memory_vault", None)
@@ -1057,7 +1058,10 @@ def vault_page(context, month: str = "", today: Optional[date] = None) -> dict:
         "bursts": [{**b, "size": _size(b["bytes"])} for b in burst_offers(vault) if b["others_on_phone"]],
         "freed": [{**f, "size": _size(f.get("bytes", 0))} for f in reversed(vault.freed[-5:])],
         "months": [{"month": m, "label": f"{date.fromisoformat(m + '-01'):%B %Y}",
-                    "count": sum(1 for i in items if (i.get("taken_at") or "").startswith(m))} for m in months],
+                    "count": sum(1 for i in items if (i.get("taken_at") or "").startswith(m)),
+                    # how many of the month's are safe on the home computer (the canvas's "212 of 214 safe at home")
+                    "safe": sum(1 for i in items if (i.get("taken_at") or "").startswith(m) and i.get("on_pc"))}
+                   for m in months],
         "month": month,
         "days": [{"day": d, "label": _day_label(d), "items": its, "happened": happened.get(d, [])[:4],
                   "trip": next((t["name"] for t in trips if t["start"] <= d <= (t["end"] or t["start"])), "")}

@@ -35,7 +35,7 @@
       "gifts": "",
       "notes": "",
       "last_contact": "",
-      "days_since": null,
+      "days_since": 36,
       "birthday_in": 41,
       "turning": 34,
       "values": {
@@ -211,5 +211,10 @@
         }
       ]
     }
+  },
+  "catch_up": {
+    "id": "90d24bc40a",
+    "name": "Sam",
+    "days_since": 36
   }
 }

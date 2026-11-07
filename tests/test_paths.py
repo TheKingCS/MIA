@@ -5,8 +5,8 @@ tests.test_paths
 MIA's learning paths (core/paths.py, DEC-0112): the same loop for any desire.
 A program for an interest with none is drafted (grounded, checked in code,
 kept as a draft until started); several paths run side by side, each with
-its own homework mission that completes from the log; statistics; and a
-draft whose shape doesn't hold is refused.
+its own homework mission that completes from the log; statistics; a
+path's screen card; and a draft whose shape doesn't hold is refused.
 """
 
 from __future__ import annotations
@@ -192,3 +192,18 @@ def test_a_recorded_check_needs_a_record_mia_keeps(world):
     with pytest.raises(ValueError, match="don't keep the record"):
         paths.verify(world, program, program.stages[0].checks[1].id, None)
     assert paths.sweep(world) == []
+
+
+def test_a_paths_card_shows_every_check_of_its_stage_with_who_verifies_it(world):
+    """The design canvas's path screen (DEC-0113): the stage's checks, passed or open and how, and the homework."""
+    from core import guitar
+
+    book = world.paths
+    book.start(guitar.PROGRAM, "x", 15, 5, today=TODAY)
+    book.attempt(guitar.PROGRAM, "em_clean", True, how="heard_chord")
+    card = paths.path_card(book, guitar.PROGRAM, TODAY)
+    states = {c["id"]: c["state"] for c in card["stage_checks"]}
+    assert states["em_clean"] == "Passed · MIA heard it" and states["changes_em_am"] == "Open · counted by you"
+    assert states["tuned"] == "Open · MIA listens" and states["strum_60"] == "Open · you say when"
+    assert "em_clean" not in [c["id"] for c in card["open"]]
+    assert card["homework"] == "Practise on 5 days; Practise 75 minutes in all this week."

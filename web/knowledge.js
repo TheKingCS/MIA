@@ -57,25 +57,40 @@
         el("ul", {}, shelf.sources.map((s) => el("li", {}, el("a", { href: s.url, target: "_blank", rel: "noopener" }, s.name), " · " + s.what)))) : null);
   }
 
+  // The design canvas (DEC-0113): Search, Packs and the Plans Shelf as tabs; Search is a big box, "works with no
+  // internet", then a card per hit (its pack, title and a snippet), and matching plans with them.
+  const TABS = [["search", "Search"], ["packs", "Packs"], ["plans", "Plans Shelf"]];
+  let tab = TABS.some(([t]) => t === location.hash.slice(1)) ? location.hash.slice(1) : "search";
+  function hitCard(pack, title, snippet, onclick) {
+    return el("button", { type: "button", class: "glass kn-hit", onclick },
+      el("span", { class: "kn-pack" }, pack), el("span", { class: "kn-title" }, title), snippet ? el("span", { class: "kn-snip" }, snippet) : null);
+  }
   async function draw() {
     const [data, shelf] = await Promise.all([MIA.knowledge(query), MIA.knowledgePlans(query).catch(() => ({ available: false }))]);
     $("know-sub").textContent = data.packs.length ? data.packs.length + (data.packs.length === 1 ? " pack" : " packs") + ", offline."
       : "No packs yet.";
-    const input = el("input", { type: "search", class: "input", placeholder: "Search every pack", value: query });
-    const form = el("form", { class: "form-row", onsubmit: (e) => { e.preventDefault(); query = input.value.trim(); draw(); } }, input);
-    const results = query ? el("section", { class: "glass money-section" }, el("h2", {}, "Found"),
-      data.hits.length ? el("div", { class: "sync-rows" }, data.hits.map((h) => el("button", { type: "button", class: "sync-row council-msg",
-        onclick: () => read(h) }, el("p", { class: "council-text" }, h.title), el("p", { class: "dim" }, h.pack_title))))
-        : el("p", { class: "dim" }, "Nothing in the packs for that.")) : null;
-    $("panel").replaceChildren(
-      el("section", { class: "glass money-section" },
-        el("p", {}, data.packs.length ? "Encyclopedias and guides kept on this computer, readable with no internet. Ask MIA too: she looks here first."
-          : "Copy .zim files (Wikipedia, iFixit, medical and survival guides from kiwix.org) into " + (data.root || "the library folder") + "."),
-        data.packs.length ? form : null),
-      ...(results ? [results] : []),
-      plansSection(shelf),
-      data.packs.length ? el("section", { class: "glass money-section" }, el("h2", {}, "Packs"),
-        el("ul", {}, data.packs.map((p) => el("li", {}, p.title + " · " + p.articles.toLocaleString() + " articles")))) : null);
+    $("tabs").hidden = false;
+    $("tabs").replaceChildren(...TABS.map(([id, l]) => el("button", { type: "button", role: "tab", "aria-selected": String(id === tab),
+      onclick: () => { tab = id; history.replaceState(null, "", "#" + id); draw(); } }, l)));
+    if (tab === "plans") { $("panel").replaceChildren(plansSection(shelf) || el("p", { class: "empty" }, "The plans shelf isn't on this MIA.")); return; }
+    if (tab === "packs") {
+      $("panel").replaceChildren(el("section", { class: "glass money-section" }, el("h2", {}, "Packs"),
+        data.packs.length ? el("ul", {}, data.packs.map((p) => el("li", {}, p.title + " · " + p.articles.toLocaleString() + " articles")))
+          : el("p", {}, "Copy .zim files (Wikipedia, iFixit, medical and survival guides from kiwix.org) into " + (data.root || "the library folder") + ".")));
+      return;
+    }
+    const input = el("input", { type: "search", class: "input kn-search", placeholder: "Search the library", value: query, "aria-label": "Search the library" });
+    const form = el("form", { class: "kn-form", onsubmit: (e) => { e.preventDefault(); query = input.value.trim(); draw(); } }, input);
+    const plans = query && shelf.available ? shelf.plans.slice(0, 3) : [];
+    $("panel").replaceChildren(...[
+      form,
+      el("p", { class: "kn-note" }, data.packs.length ? "Works with no internet · " + data.packs.length + (data.packs.length === 1 ? " pack" : " packs") + " installed"
+        : "No packs yet: add some under Packs. Ask MIA too: she looks here first."),
+      query ? el("div", { class: "kn-hits" },
+        ...data.hits.map((h) => hitCard(h.pack_title, h.title, h.snippet, () => read(h))),
+        ...plans.map((p) => hitCard("Plans Shelf", p.title, [p.where, p.summary].filter(Boolean).join(" · "), () => openPlan(p))),
+        data.hits.length || plans.length ? null : el("p", { class: "dim" }, "Nothing in the library for that.")) : null,
+    ].filter(Boolean));
   }
 
   MIAShell.start(draw);

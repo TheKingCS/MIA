@@ -7,8 +7,9 @@ deadlines are read: **Overdue**, **Next 30 days**, **Later**, **To
 check** (unverified, or undated), and **Done**. Each says when it's
 really due (moved off a weekend or holiday, an extension to file kept
 apart from the money's date), the fee, the documents, the next step, the
-official link, and whether it's verified. Served as /api/compliance; the
-web only formats.
+official link, whether it's verified, and the one step its row offers
+(`next_step`: Verify, Where It Stands, Mark Filed, Mark Paid, Mark Done).
+Served as /api/compliance; the web only formats.
 """
 
 from __future__ import annotations
@@ -29,8 +30,30 @@ def _text(d: Optional[date]) -> str:
     return d.isoformat() if d else ""
 
 
+def next_step(card: dict) -> dict:
+    """Pure logic. The one thing a Compliance row offers (the design canvas's groups, DEC-0113): Verify (or Check
+    Again) while it isn't verified, since only the person can; Where It Stands when it's overdue, to say what
+    happened; otherwise the step its status points to: Mark Filed for a filing not yet in, Mark Paid once money is
+    what's left, Mark Done for the rest. `opens` names the form the web shows; `action` is a ready action."""
+    oid = card["id"]
+    if not card["verified"] or card["stale"]:
+        return {"label": "Check Again" if card["verified"] else "Verify", "opens": "verify"}
+    if card["where"] == "overdue":
+        return {"label": "Where It Stands", "opens": "status"}
+    filing = "filing" in (card.get("kind") or "") or "return" in (card.get("title") or "").lower()
+    if filing and card["status"] in ("applies", "ready to file", "extended"):
+        step = ("Mark Filed", "submitted")
+    elif card["status"] in ("submitted", "payment due") and (card.get("pay_on") or card.get("fee_text")
+                                                             or card.get("estimate_text")):
+        step = ("Mark Paid", "paid")
+    else:
+        step = ("Mark Done", "done")
+    return {"label": step[0], "action": {"kind": "obligation.status", "label": step[0],
+                                         "params": {"obligation_id": oid, "status": step[1]}}}
+
+
 def compliance_page(context, today: Optional[date] = None) -> dict:
-    """The Compliance screen's data: a card per obligation (licences, filings, taxes) with where it stands, its due, filing and payment dates (and whether a weekend or holiday moved them), fees, documents, next step, its source and when it was verified, and its form values; overdue first. Not available without the store or for a child."""
+    """The Compliance screen's data: a card per obligation (licences, filings, taxes) with where it stands, its due, filing and payment dates (and whether a weekend or holiday moved them), fees, documents, next step, its source and when it was verified, its form values, and (while open) the one step its row offers; overdue first. Not available without the store or for a child."""
     from core.child_accounts import is_child
     from core.obligation_actions import OBLIGATION
     from core.obligations import STATUSES, effective_dates, starter_list, state
@@ -58,6 +81,9 @@ def compliance_page(context, today: Optional[date] = None) -> dict:
             "values": {f.name: (" ".join(str(x) for x in o.reminders) if f.name == "reminders" else getattr(o, f.name))
                        for f in OBLIGATION.fields},
         })
+    for c in cards:
+        if c["where"] != "closed":
+            c["next"] = next_step(c)
     order = {"overdue": 0, "upcoming": 1, "later": 2, "undated": 3, "closed": 4}
     cards.sort(key=lambda c: (order[c["where"]], c["due"] or "9999", c["title"].lower()))
     groups = {

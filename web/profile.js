@@ -1,8 +1,8 @@
 /*
  * profile.js — the Profile screen (claude, 2026-10-07; Zac: the gear's
- * Profile). Renders MIA.profile() (core/web_account.py): your level, name,
- * email, country, what MIA helps with, household, password and recovery
- * code. Name, email, country and interests are one action (profile.edit),
+ * Profile). Renders MIA.profile() (core/web_account.py) as the design canvas
+ * has it (DEC-0113): your name, email, country, what MIA helps with, the
+ * password and the recovery code; no household (DEC-0119). Name, email, country and interests are one action (profile.edit),
  * so they're confirmed and undoable; the password and a new recovery code
  * have their own calls, so a password never sits in a proposal.
  */
@@ -15,7 +15,6 @@
 
   const section = (title, ...body) => el("section", { class: "glass money-section" }, el("div", { class: "sect" }, el("h2", {}, title)), ...body);
   const row = (label, input) => el("label", { class: "form-row" }, el("span", {}, label), input);
-  const fact = (label, value) => el("div", { class: "acct-fact" }, el("span", { class: "dim" }, label), el("strong", {}, value));
 
   function about() {
     const name = el("input", { type: "text", autocomplete: "name", maxlength: "60" });
@@ -49,15 +48,6 @@
       el("p", { class: "dim" }, "MIA puts these first in Skills and suggests missions for them."),
       el("div", { class: "setup-interests" }, picks),
       el("div", { class: "acct-actions" }, el("button", { type: "button", class: "btn btn-green", onclick: save }, "Save")));
-  }
-
-  function household() {
-    if (!page.household) return "";
-    const others = page.household.others;
-    return section("Household",
-      fact("Name", page.household.name),
-      fact("Shared with", others.length ? others.join(", ") : "Just you"),
-      el("p", { class: "dim" }, "People join a household on the PC with a member's approval."));
   }
 
   function password() {
@@ -101,15 +91,38 @@
     return section("Recovery code", box);
   }
 
+  // The design canvas (DEC-0113): your initial, name and email; About You as rows you tap to change (each opens its
+  // editor in place); Security (Change Password, New Recovery Code); Sign Out. No household card: MIA is for one
+  // person (DEC-0119). The level lives on Character.
+  let editing = freshCode ? "recovery" : null;
+  const open = (what) => { editing = editing === what ? null : what; draw(); };
+  function aboutRow(key, label, value) {
+    return el("button", { type: "button", class: "pf-row", "aria-expanded": String(editing === key), onclick: () => open(key) },
+      el("span", { class: "pf-k" }, label), el("span", { class: "pf-v" }, value || "—"), el("span", { class: "pf-go", "aria-hidden": "true" }, "›"));
+  }
   function draw() {
-    $("hero-name").textContent = page.name;
-    $("hero-tagline").textContent = (page.email || "No email yet") + (page.since ? " · since " + page.since : "");
-    const level = el("div", {});
-    MIAShell.levelCard(level, page.me);
-    $("panel").replaceChildren(level, about(), interests(), household(), password(), recovery(),
-      section("This phone", el("div", { class: "acct-actions" },
+    $("hero-name").textContent = "Profile";  // your name and email are in the header under it
+    $("hero-tagline").textContent = page.since ? "On MIA since " + page.since : "Who you are on this MIA.";
+    const country = (page.countries.find((c) => c.code === page.country) || {}).name || page.country;
+    $("panel").replaceChildren(...[
+      el("section", { class: "pf-head" }, el("div", { class: "pf-avatar", "aria-hidden": "true" }, (page.name || "?").trim().charAt(0).toUpperCase()),
+        el("div", {}, el("h2", {}, page.name), el("span", { class: "dim" }, page.email || "No email yet"))),
+      el("section", { class: "glass pf-card", "aria-label": "About you" },
+        aboutRow("about", "Name, Email, Country", [page.name, country].filter(Boolean).join(" · ")),
+        editing === "about" ? about() : null,
+        aboutRow("interests", "What MIA Helps With", page.interests.join(", ")),
+        editing === "interests" ? interests() : null),
+      el("section", { class: "glass pf-card pf-security", "aria-label": "Security" },
+        el("span", { class: "pf-label" }, "Security"),
+        el("div", { class: "row-buttons" },
+          el("button", { type: "button", class: "btn btn-ghost", "aria-expanded": String(editing === "password"), onclick: () => open("password") }, "Change Password"),
+          el("button", { type: "button", class: "btn btn-ghost", "aria-expanded": String(editing === "recovery"), onclick: () => open("recovery") }, "New Recovery Code")),
+        editing === "password" ? password() : null,
+        editing === "recovery" ? recovery() : null),
+      el("div", { class: "pf-end" },
         el("a", { class: "btn btn-ghost", href: "settings.html" }, "Settings"),
-        el("button", { type: "button", class: "btn btn-ghost", onclick: async () => { await MIA.signOut(); location.href = "index.html"; } }, "Log out"))));
+        el("button", { type: "button", class: "btn btn-danger", onclick: async () => { await MIA.signOut(); location.href = "index.html"; } }, "Sign Out")),
+    ].filter(Boolean));
   }
 
   MIAShell.start(async () => {

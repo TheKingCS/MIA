@@ -1,5 +1,5 @@
 """Good News Radio (DEC-0096, core/good_news.py): good news judged in code, each story saying how it's known
-(confirmed by two outlets, from the source itself, or one outlet), its caveats kept, four personalities, on only
+(confirmed by two outlets, from the source itself, or one outlet, each with its tag), its caveats kept, four personalities, on only
 when switched on, and stories called misleading counted by source."""
 
 from datetime import date, datetime
@@ -102,3 +102,10 @@ def test_it_goes_online_only_from_the_pc_and_never_from_a_test(person, monkeypat
     assert gn.due(person, datetime(2026, 11, 6, 8, 0)) and not gn.due(person, datetime(2026, 11, 6, 4, 0))
     gn.launch()  # a no-op in a test run: no process, no fetch
     assert not (gn.DATA / "last_run.log").exists()
+
+
+def test_each_way_a_story_is_known_has_its_tag():
+    from core.good_news import KNOWN_TAGS
+
+    assert KNOWN_TAGS["confirmed"]["tone"] == "ok" and KNOWN_TAGS["one outlet"]["tone"] == "attention"
+    assert set(KNOWN_TAGS) == {"confirmed", "from the source", "one outlet"}  # every value the reader gives `known`

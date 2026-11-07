@@ -1,0 +1,237 @@
+{
+  "groups": [
+    {
+      "title": "When MIA speaks up",
+      "settings": [
+        {
+          "key": "communication.daily_budget",
+          "label": "Messages per day, at most",
+          "kind": "number",
+          "help": "Her own messages (calendar, budget, check-ins, suggestions) are combined and limited per day. Urgent things, alarms you set and answers to you don't count.",
+          "value": 5,
+          "low": 1,
+          "high": 20,
+          "options": []
+        },
+        {
+          "key": "journal.weekly_reflection",
+          "label": "Weekly journal reflection",
+          "kind": "toggle",
+          "help": "If you journaled that week, MIA lets you know a reflection is ready. The notice never shows what you wrote.",
+          "value": false,
+          "low": 0,
+          "high": 0,
+          "options": []
+        },
+        {
+          "key": "journal.reflection_weekday",
+          "label": "Reflection day",
+          "kind": "choice",
+          "help": "",
+          "value": 6,
+          "low": 0,
+          "high": 0,
+          "options": [
+            {
+              "value": 0,
+              "label": "Monday"
+            },
+            {
+              "value": 1,
+              "label": "Tuesday"
+            },
+            {
+              "value": 2,
+              "label": "Wednesday"
+            },
+            {
+              "value": 3,
+              "label": "Thursday"
+            },
+            {
+              "value": 4,
+              "label": "Friday"
+            },
+            {
+              "value": 5,
+              "label": "Saturday"
+            },
+            {
+              "value": 6,
+              "label": "Sunday"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Support and safety",
+      "settings": [
+        {
+          "key": "assistant.ask_support_kind",
+          "label": "When I sound worn down, ask what kind of support I want",
+          "kind": "toggle",
+          "help": "Just listen, help figure it out, or remind me why. After the same answer three times, MIA uses it without asking.",
+          "value": true,
+          "low": 0,
+          "high": 0,
+          "options": []
+        },
+        {
+          "key": "assistant.safety.trusted_contact",
+          "label": "Someone you trust",
+          "kind": "text",
+          "help": "If you ever tell MIA you're in danger, she gives you your country's crisis line and emergency number, and names this person too. For example: my sister, and her number.",
+          "value": "",
+          "low": 0,
+          "high": 0,
+          "options": []
+        }
+      ]
+    },
+    {
+      "title": "Money",
+      "settings": [
+        {
+          "key": "region.currency",
+          "label": "Currency",
+          "kind": "choice",
+          "help": "Your country's, unless you pick another.",
+          "value": "",
+          "low": 0,
+          "high": 0,
+          "options": [
+            {
+              "value": "",
+              "label": "My country's"
+            },
+            {
+              "value": "USD",
+              "label": "USD $"
+            },
+            {
+              "value": "CAD",
+              "label": "CAD $"
+            },
+            {
+              "value": "AUD",
+              "label": "AUD $"
+            },
+            {
+              "value": "NZD",
+              "label": "NZD $"
+            },
+            {
+              "value": "GBP",
+              "label": "GBP £"
+            },
+            {
+              "value": "EUR",
+              "label": "EUR €"
+            },
+            {
+              "value": "INR",
+              "label": "INR ₹"
+            },
+            {
+              "value": "JPY",
+              "label": "JPY ¥"
+            },
+            {
+              "value": "MXN",
+              "label": "MXN $"
+            },
+            {
+              "value": "ZAR",
+              "label": "ZAR R"
+            },
+            {
+              "value": "CHF",
+              "label": "CHF CHF"
+            },
+            {
+              "value": "SEK",
+              "label": "SEK kr"
+            },
+            {
+              "value": "NOK",
+              "label": "NOK kr"
+            },
+            {
+              "value": "DKK",
+              "label": "DKK kr"
+            },
+            {
+              "value": "PHP",
+              "label": "PHP ₱"
+            },
+            {
+              "value": "BRL",
+              "label": "BRL R$"
+            }
+          ]
+        },
+        {
+          "key": "budget.private",
+          "label": "Keep my money private",
+          "kind": "toggle",
+          "help": "Your budget and bank accounts are kept apart from the household's.",
+          "value": false,
+          "low": 0,
+          "high": 0,
+          "options": []
+        }
+      ]
+    },
+    {
+      "title": "Sound",
+      "settings": [
+        {
+          "key": "sound.on",
+          "label": "Sounds when you win",
+          "kind": "toggle",
+          "help": "A chime for an objective, a fanfare for a level. Never for anything you didn't do.",
+          "value": true,
+          "low": 0,
+          "high": 0,
+          "options": []
+        },
+        {
+          "key": "sound.voice",
+          "label": "MIA says a line when you win",
+          "kind": "toggle",
+          "help": "Spoken out loud by this device's voice.",
+          "value": false,
+          "low": 0,
+          "high": 0,
+          "options": []
+        }
+      ]
+    },
+    {
+      "title": "Location quests",
+      "settings": [
+        {
+          "key": "places.watch",
+          "label": "Notice when I arrive at my places",
+          "kind": "toggle",
+          "help": "While MIA is open, this device checks where you are against your places. Where you are never leaves it.",
+          "value": false,
+          "low": 0,
+          "high": 0,
+          "options": []
+        }
+      ]
+    }
+  ],
+  "breaks": [
+    {
+      "topic": "recipes",
+      "label": "Recipe suggestions",
+      "until": "2026-11-21"
+    }
+  ],
+  "child": false,
+  "model_test": false,
+  "home_link": null
+}

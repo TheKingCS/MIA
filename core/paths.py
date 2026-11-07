@@ -21,7 +21,8 @@ build herself (her Night School curriculum, DEC-0107):
    plan and the open checks; its progress comes from the log and it
    completes itself (`ensure_homework()`).
 6. **Statistics**: the week against the plan, the streak, hours, checks
-   passed, bests (`stats()`).
+   passed, bests (`stats()`); a started path's screen is `path_card()`,
+   with each check of the stage and who verifies it (`check_state()`).
 7. **Verify by evidence**: a check is passed by showing it, and the record
    says how: **heard** or otherwise measured by a verifier in code (guitar's
    ear, `core/guitar_ear.py`), **recorded** (read from what MIA already
@@ -455,6 +456,32 @@ def describe_stats(book: PathBook, program: Program, today: Optional[date] = Non
         text += " Bests: " + "; ".join(f"{program.check(k)[1].what.split(':')[0]} {v:g} {program.check(k)[1].unit}"
                                        for k, v in s["bests"].items()) + "."
     return text + " " + next_step(book, program)
+
+
+def check_state(passed: bool, how: str) -> str:
+    """Pure logic. A check's state in a few words, for the path's screen (the design canvas, DEC-0113): passed or
+    open, and who verifies it: "Passed · MIA heard it", "Open · counted by you", "Open · MIA listens",
+    "Open · from your records", "Open · you say when"."""
+    if passed:
+        return "Passed · " + ("MIA heard it" if how.startswith("heard") else "counted" if how == "counted"
+                              else "from your records" if how == "recorded" else "you said so")
+    return "Open · " + ("MIA listens" if how.startswith("heard") else "counted by you" if how == "counted"
+                        else "from your records" if how == "recorded" else "you say when")
+
+
+def path_card(book: PathBook, program: Program, today: Optional[date] = None) -> dict:
+    """One started path for its screen (web/guitar.html and any path): the stats, what's next, the open checks (how
+    each is verified), and for the design canvas (DEC-0113) every check of the current stage with its state, and
+    this week's homework in a line."""
+    stage = stage_of(book, program)
+    homework = _homework(book, program, today or date.today())
+    return {"id": program.id, "name": program.name, "icon": program.icon, "stats": stats(book, program, today),
+            "next": next_step(book, program),
+            "open": [{"id": c.id, "what": c.what, "how": c.how, "about": c.about} for c in open_checks(book, program)],
+            "stage_checks": [{"id": c.id, "what": c.what, "how": c.how, "about": c.about,
+                              "passed": book.passed(program.id, c.id),
+                              "state": check_state(book.passed(program.id, c.id), c.how)} for c in stage.checks],
+            "homework": "; ".join(t for t, _n in homework["objectives"][:2]) + " this week."}
 
 
 # ------------------------------------------------------------------ homework (missions)

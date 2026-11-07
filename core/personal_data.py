@@ -54,6 +54,7 @@ from typing import Optional
 
 from core.alarm_manager import AlarmManager
 from core.budget_manager import BudgetManager
+from core.net_worth_history import NetWorthHistory
 from core.business_use import BusinessUseManager
 from core.calendar_manager import CalendarManager
 from core.classroom_manager import ClassroomManager
@@ -95,6 +96,7 @@ from core.boss_battles import BossBook
 from core.work_dungeon import DungeonBook
 from core.the_loop import LoopBook
 from core.training_session import TrainingStore
+from core.cooking_session import CookingStore
 from core.failure_log import FailureLog
 from core.answer_ratings import AnswerRatings
 from core.operating_journal import OperatingJournal
@@ -158,6 +160,7 @@ PERSONAL_STORES: tuple[tuple[str, type], ...] = (
     ("dungeon", DungeonBook),
     ("loop", LoopBook),
     ("training", TrainingStore),  # the live workout session (DEC-0055)
+    ("cooking", CookingStore),  # the recipe being cooked in cook mode (DEC-0113)
     ("failures", FailureLog),
     ("traces", TurnTraces),  # how each turn was answered (DEC-0067)
     ("saga_moments", SagaMoments),  # moments kept for MIA: The Chronicles (DEC-0084)
@@ -220,6 +223,7 @@ HOUSEHOLD_STORES: tuple[tuple[str, type], ...] = (
     ("maintenance", MaintenanceManager),
     ("insights", InsightManager),
     ("budget", BudgetManager),
+    ("net_worth", NetWorthHistory),  # one net worth point a day, for Money's line (DEC-0113)
     ("real_estate", RealEstateManager),
     ("energy", EnergyManager),
     ("plaid", PlaidManager),
@@ -245,6 +249,7 @@ LEGACY_FILES = FIRST_LEGACY_FILES + (
 # instead of the household's (set_private_budget()).
 PRIVATE_MONEY_STORES: tuple[tuple[str, type], ...] = (
     ("budget", BudgetManager),
+    ("net_worth", NetWorthHistory),
     ("plaid", PlaidManager),
 )
 

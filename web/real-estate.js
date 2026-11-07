@@ -74,26 +74,34 @@
       : el("p", { class: "dim" }, empty))];
   }
 
+  function trio(label, value, cls) {
+    return el("div", { class: "prop-trio-cell" + (cls ? " " + cls : "") }, el("span", { class: "prop-trio-t" }, label), el("strong", {}, value));
+  }
   function figure(label, value, cls) {
     return el("div", { class: "prop-fig" + (cls ? " " + cls : "") }, el("small", {}, label), el("strong", {}, value));
   }
 
+  // The canvas's property card (DEC-0113): name and where, the engine's word for it (Rent Due, Rented...), then
+  // Rent, Cash Flow and Equity side by side, and Record Rent / Add Expense. The rest sits under them.
   function card(p) {
     const attention = p.tasks.filter((t) => t.needs_attention);
-    return el("article", { class: "glass asset-card property-card" + (attention.length ? " attention" : "") },
-      el("div", { class: "asset-head" }, el("h3", {}, p.name),
-        p.status ? el("span", { class: "chip " + (STATUS_TONE[p.status] || "") }, p.status) : el("span", { class: "chip" }, p.type)),
-      p.location ? el("p", { class: "dim" }, "📍 " + p.location) : null,
-      el("div", { class: "prop-figs" },
-        p.rent ? figure("Rent", fmt(p.rent) + "/mo") : null,
-        p.owed ? figure("Balance", fmt(p.owed)) : null,
-        figure("Equity", fmt(p.equity), p.equity >= 0 ? "good" : "bad"),
-        p.cash_flow != null ? figure("Cash flow", fmt(p.cash_flow) + "/mo", p.cash_flow >= 0 ? "good" : "bad") : null,
-        p.income_month || p.expenses_month ? figure("This month", "+" + fmt(p.income_month) + " / -" + fmt(p.expenses_month)) : null),
-      attention.length ? el("p", { class: "attention-line" }, "⚠ " + attention.map((t) => t.title).join(", ")) : null,
+    const badge = p.badge || { text: p.status || p.type, tone: "" };
+    return el("article", { class: "glass asset-card property-card" + (attention.length || badge.tone === "attention" ? " attention" : "") },
+      el("div", { class: "asset-head" },
+        el("div", { class: "prop-name" }, el("h3", {}, p.name),
+          el("span", { class: "dim" }, [p.location, p.type].filter(Boolean).join(" · "))),
+        badge.text ? el("span", { class: "kind " + (badge.tone || "") }, badge.text) : null),
+      el("div", { class: "prop-trio" },
+        trio("Rent", p.rent ? fmt(p.rent) : "—"),
+        trio("Cash Flow", p.cash_flow != null ? [fmt(p.cash_flow), el("small", {}, " / mo")] : "—", p.cash_flow != null && p.cash_flow >= 0 ? "good" : ""),
+        trio("Equity", fmt(p.equity))),
+      p.owed || p.income_month || p.expenses_month ? el("p", { class: "dim prop-more" }, [p.owed ? "Owed " + fmt(p.owed) : null,
+        p.income_month || p.expenses_month ? "This month +" + fmt(p.income_month) + " / -" + fmt(p.expenses_month) : null]
+        .filter(Boolean).join(" · ")) : null,
+      attention.length ? el("p", { class: "attention-line" }, "Needs you: " + attention.map((t) => t.title + " (" + (t.due || t.text).toLowerCase() + ")").join(", ")) : null,
       buttons(
-        btn("Record rent", "btn-green", () => rent(p)),
-        btn("Add expense", "btn-ghost", () => expense(p)),
+        btn("Record Rent", "btn-ghost", () => rent(p)),
+        btn("Add Expense", "btn-ghost", () => expense(p)),
         p.asset_id ? el("a", { class: "btn btn-ghost", href: "asset.html?id=" + encodeURIComponent(p.asset_id) }, "Upkeep")
           : btn("Track upkeep", "btn-ghost", () => act({ kind: "property.track_upkeep", params: { property_id: p.id } })),
         btn("Edit", "btn-ghost", () => edit(p)),
@@ -126,7 +134,7 @@
     $("strip").replaceChildren(
       el("div", { class: "cell ok" }, el("span", { class: "n" }, fmt(t.equity)), el("span", { class: "t" }, "Equity")),
       el("div", { class: "cell soon" }, el("span", { class: "n" }, fmt(t.cash_flow)), el("span", { class: "t" }, "Cash flow /mo")),
-      el("div", { class: "cell " + (t.attention ? "bad" : "ok") }, el("span", { class: "n" }, t.attention), el("span", { class: "t" }, "Needs attention")));
+      el("div", { class: "cell " + (t.attention ? "bad" : "ok") }, el("span", { class: "n" }, t.attention), el("span", { class: "t" }, "Needs You")));
     $("tabs").hidden = false;
     $("tabs").replaceChildren(...TABS.map(([id, l]) =>
       el("button", { type: "button", role: "tab", "aria-selected": String(id === tab), onclick: () => { tab = id; history.replaceState(null, "", "#" + id); draw(); } },

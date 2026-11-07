@@ -37,6 +37,7 @@ if TYPE_CHECKING:
     from core.plan_library import PlanLibrary
     from core.budget_manager import BudgetManager
     from core.plaid_manager import PlaidManager
+    from core.net_worth_history import NetWorthHistory
     from core.real_estate_manager import RealEstateManager
     from core.calendar_manager import CalendarManager
     from core.classroom_manager import ClassroomManager
@@ -295,6 +296,7 @@ class AppContext:
     lite_captures: Optional["LiteCaptureManager"] = field(default=None, repr=False)
     maintenance: Optional["MaintenanceManager"] = field(default=None, repr=False)
     budget: Optional["BudgetManager"] = field(default=None, repr=False)
+    net_worth: Optional["NetWorthHistory"] = field(default=None, repr=False)  # Money's net worth line (DEC-0113)
     real_estate: Optional["RealEstateManager"] = field(default=None, repr=False)
     plaid: Optional["PlaidManager"] = field(default=None, repr=False)
     workshop_machines: Optional["WorkshopMachineRegistry"] = field(default=None, repr=False)

@@ -93,6 +93,17 @@ def ranks(tiles: int, regions: int) -> list[dict]:
     return out
 
 
+def next_rank(rows: list) -> dict | None:
+    """Pure logic. The achievement to show next (the design canvas's World Map, DEC-0113): of the ones not earned
+    yet, the closest to done (by share of the way there), with how far along it is in percent; None when all are
+    earned. `rows` is ranks()'s list."""
+    open_ = [r for r in rows if not r["earned"] and r["need"]]
+    if not open_:
+        return None
+    best = max(open_, key=lambda r: (r["have"] / r["need"], -r["need"]))
+    return {**best, "pct": round(100 * best["have"] / best["need"])}
+
+
 def _rational(data: bytes, offset: int, endian: str) -> float:
     """An EXIF rational (numerator over denominator) as a number; 0 over 0 is 0."""
     num, den = struct.unpack(endian + "II", data[offset:offset + 8])
@@ -310,7 +321,8 @@ def regions(tiles: dict[str, str]) -> int:
 
 def world_page(context, today: Optional[date] = None) -> dict:
     """Expeditions → World Map: the cleared tiles, pins, how much ground
-    that is, the achievements, and the newest discoveries."""
+    that is, the achievements and the next one to aim for (`next_rank`),
+    and the newest discoveries."""
     today = today or date.today()
     pts = points(context)
     tiles = explored(pts)
@@ -339,6 +351,7 @@ def world_page(context, today: Optional[date] = None) -> dict:
                   "places": len(arrivals), "photos": sum(1 for p in pins if p["kind"] == "photo"),
                   "to_discover": len(unknown)},
         "ranks": ranks(len(tiles), n_regions),
+        "next_rank": next_rank(ranks(len(tiles), n_regions)),
         "discoveries": [{"day": d, "tiles": sum(1 for x, _k in newest if x == d)} for d in recent_days],
         "can_check_in": book is not None,
     }

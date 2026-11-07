@@ -6,7 +6,8 @@ The Money screen's data (2026-10-06, DEC-0017): everything the PC app's
 Budget screen shows, assembled here so `web/` holds no logic. Served as
 `/api/money`; changes go through the action kinds in core/money_actions.py.
 
-Tabs, as on the PC: Overview (this month, the monthly plan, net worth,
+Tabs, as on the PC: Overview (this month, the monthly plan, net worth
+and its line over the last six months (core/net_worth_history.py),
 spending by category), Bills, Income (sources and what came in),
 Expenses, Debts (payoff order and why, under avalanche / snowball /
 hybrid), Budgets (monthly targets), Trends (the last six months) and
@@ -67,7 +68,7 @@ def _r(value) -> float:
 
 
 def money_page(context, today: Optional[date] = None, strategy: str = "hybrid") -> dict:
-    """The Money screen's data: the same finances summary Life State serves, this month's spending by category (largest first), bills, income, debts ranked by the chosen payoff strategy, and the rest of the budget's records, each with its form values and its one-tap action (Mark paid...). Not available without a budget."""
+    """The Money screen's data: the same finances summary Life State serves, this month's spending by category (largest first), bills, income, debts ranked by the chosen payoff strategy, and the rest of the budget's records, each with its form values and its one-tap action (Mark paid...), and net worth with its change this month and its line (`_net_worth_line`, which keeps today's point). Not available without a budget."""
     from core.budget_manager import (DEBT_PAYOFF_STRATEGIES, days_until_bill_due, days_until_income_due,
                                      days_until_promo_expires, next_bill_due_date, next_income_due_date, rank_debts)
     from core.context_assembler import _finances
@@ -164,7 +165,25 @@ def money_page(context, today: Optional[date] = None, strategy: str = "hybrid") 
     page["trends"] = trends
 
     page["bank"] = _bank(context)
+    page["net_worth"] = _net_worth_line(context, page["summary"], today)
     return page
+
+
+def _net_worth_line(context, summary: dict, today: date) -> dict:
+    """Net worth for the Overview's line (core/net_worth_history.py): today's total is kept (written only when it's
+    new or changed), then the change this month and the last six months' points. The line is empty without the
+    history store; the change is None until there's an earlier point to compare with."""
+    from core import net_worth_history
+
+    total = (summary.get("net_worth") or {}).get("total")
+    history = getattr(context, "net_worth", None)
+    if history is None:
+        return {"total": total, "month_change": None, "line": []}
+    try:
+        history.note(total, today)
+    except OSError:
+        log.exception("Couldn't keep today's net worth point.")
+    return {"total": total, **history.summary(today)}
 
 
 def _bank(context) -> dict:

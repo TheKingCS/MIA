@@ -239,6 +239,40 @@
         el("span", { class: "ico", "aria-hidden": "true" }, "＋"), el("span", { class: "label" }, "Make Something"))]);
   }
 
+  /** The sidebar as the canvas draws it (DEC-0113): Home and Apps, the person's Pinned apps, then each life area
+   *  folded (the one you're in opens), then what MIA made, the owner's pages and Make Something. Every app stays one
+   *  click away, as DEC-0045 asks; the groups only stop the list being a wall. */
+  function sideLinks(shell) {
+    const here = document.body.dataset.app || "web_home";
+    const link = (a) => el("a", { class: "nav", href: a.page, "aria-current": a.id === here ? "page" : null },
+      el("span", { class: "ico", "aria-hidden": "true" }, icon(a.id, a.icon)), el("span", { class: "label" }, a.name));
+    const byId = Object.fromEntries(shell.apps.map((a) => [a.id, a]));
+    const top = ["web_home", "module_browser"].map((id) => byId[id]).filter(Boolean);
+    const pinned = (shell.favorites || []).map((id) => byId[id]).filter((a) => a && !top.includes(a));
+    const rest = shell.apps.filter((a) => !top.includes(a));
+    const out = top.map(link);
+    // Start Here (2026-11-07, master's grouped sidebar) right under Home and Apps.
+    out.splice(1, 0, el("a", { class: "nav side-start", href: "start.html", "aria-current": here === "start" ? "page" : null },
+      el("span", { class: "ico", "aria-hidden": "true" }, "?"), el("span", { class: "label" }, "Start Here")));
+    if (pinned.length) out.push(el("div", { class: "side-section" }, el("span", { class: "side-head" }, "Pinned"), ...pinned.map(link)));
+    const groups = shell.groups && shell.groups.length ? shell.groups : [...new Set(rest.map((a) => a.group || ""))];
+    groups.forEach((g) => {
+      const apps = rest.filter((a) => (a.group || "") === g);
+      if (!apps.length) return;
+      // Open when this page is in it, or when you left it open (remembered per group, as master's sidebar does).
+      const key = "mia.side." + (g || "More");
+      let open = apps.some((a) => a.id === here);
+      try { open = open || localStorage.getItem(key) === "1"; } catch (e) { /* no storage */ }
+      const box = el("details", { class: "side-group", open: open || null },
+        el("summary", {}, el("span", {}, g || "More"), el("span", { class: "side-count" }, String(apps.length))),
+        ...apps.map(link));
+      box.addEventListener("toggle", () => { try { localStorage.setItem(key, box.open ? "1" : "0"); } catch (e) { /* fine */ } });
+      out.push(box);
+    });
+    // What MIA made, the owner's pages and Make Something keep their place at the end (no groups: just those).
+    return out.concat(appLinks({ ...shell, apps: [], groups: null }, "nav"));
+  }
+
   function more(shell) {
     return shell.on_pc_only.length
       ? el("a", { class: "side-more", href: "apps.html", title: shell.on_pc_only.join(", ") },
@@ -260,7 +294,7 @@
       side.replaceChildren(
         el("a", { class: "brand", href: "index.html" }, el("span", { class: "brand-mark brand-reactor", "aria-hidden": "true" }),
           el("span", {}, "MIA", el("small", {}, "Your Life. In Sync."))),
-        ...appLinks(shell, "nav"),
+        ...sideLinks(shell),
         el("div", { class: "side-foot" }, levelBlock(shell.person), more(shell)));
     }
     // Phone: the concept's bottom bar.

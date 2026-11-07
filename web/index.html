@@ -9,12 +9,15 @@
   <link rel="stylesheet" href="components.css">
   <link rel="stylesheet" href="shell.css">
   <link rel="stylesheet" href="concept.css">
+  <link rel="stylesheet" href="ui.css">
 </head>
 <body data-app="web_home">
   <!--
-    Home (DEC-0018, the mobile concept's Home; claude): MIA's greeting, the
-    day's focus as a checklist (ticking proposes the item's action), what's
-    upcoming, level and XP. Zac, 2026-10-16: no quick buttons (Apps reaches
+    Home (DEC-0018, the mobile concept's Home; claude; the canvas's Home, DEC-0113):
+    the date and greeting, the status strip, the one thing MIA noticed, the
+    day's focus as a checklist (ticking proposes the item's action, each row
+    says what kind it is), what's upcoming, level and XP; on a wide screen
+    MIA's own column (her orb, the last exchange, things to ask, a talk box). Zac, 2026-10-16: no quick buttons (Apps reaches
     everything), Upcoming moved here and the Dashboard went; MIA's badge
     opens the chat with her. Data: MIA.dashboard() + the frame's MIA.shell().
   -->
@@ -39,16 +42,25 @@
         </div>
       </div>
 
-      <header class="hero home-hero">
+      <header class="home-greet">
+        <span class="home-date" id="date"></span>
         <h1 id="greeting">Good morning</h1>
-        <p class="tagline" id="subtitle"></p>
+        <p class="dim" id="subtitle"></p>
       </header>
 
-      <div class="home-row">
+      <div class="stat-strip" id="strip" aria-label="Today at a glance"></div>
+      <section class="finding" id="finding" aria-labelledby="finding-h" hidden></section>
+
+      <div class="home-cols">
         <section class="glass glow home-focus" aria-labelledby="focus-h">
           <h2 id="focus-h">Today's Focus</h2>
           <ul class="focus-list" id="focus"></ul>
           <p class="dim" id="focus-empty" hidden>Nothing needs you today. Enjoy it.</p>
+        </section>
+        <section class="glass home-upcoming" aria-labelledby="up-h">
+          <h2 id="up-h">Upcoming</h2>
+          <ul class="focus-list" id="upcoming"></ul>
+          <p class="dim" id="upcoming-empty" hidden>Nothing in the next few days.</p>
         </section>
       </div>
 
@@ -61,14 +73,21 @@
         <ul class="remember-list" id="remember-list"></ul>
       </section>
 
-      <section class="glass home-upcoming" aria-labelledby="up-h">
-        <h2 id="up-h">Upcoming</h2>
-        <ul class="focus-list" id="upcoming"></ul>
-        <p class="dim" id="upcoming-empty" hidden>Nothing in the next few days.</p>
-      </section>
-
       <a class="glass home-level" id="level" href="skills.html"></a>
     </main>
+    <aside class="home-mia" id="home-mia" aria-label="MIA">
+      <div class="home-mia-top">
+        <span class="mia-orb" data-state="idle" role="img" aria-label="MIA is here"></span>
+        <span class="mia-orb-label">Say "MIA", or type</span>
+      </div>
+      <div class="home-mia-log" id="home-mia-log" aria-live="polite"></div>
+      <div class="home-mia-ask" id="home-mia-ask"></div>
+      <form class="home-mia-form" id="home-mia-form" action="assistant.html">
+        <label class="visually-hidden" for="home-mia-input">Talk to MIA</label>
+        <input id="home-mia-input" name="ask" placeholder="Talk to MIA" autocomplete="off">
+        <a class="btn btn-green home-mia-mic" href="assistant.html?voice=1" aria-label="Talk by voice"></a>
+      </form>
+    </aside>
   </div>
   <script src="mia.js"></script>
   <script src="icons.js"></script>

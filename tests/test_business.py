@@ -1,7 +1,8 @@
 """Quotes, customers, orders and the portfolio (DEC-0030 phase C): a quote
 from a recipe, accepted into an order, a deposit, the build, the rest
 paid, delivered, and the build's real profit counting what the customer
-paid. Every step is an undoable action."""
+paid. Every step is an undoable action. Each order's place on the stage
+rail and the step that moves it on (DEC-0113)."""
 
 import pytest
 
@@ -122,3 +123,17 @@ def test_quote_email_is_a_draft_without_the_inside_numbers(shop, tmp_path):
     assert p.summary.endswith("You press Send") and "jordan@example.com" in p.summary
     [draft] = w.email_drafts.open_drafts()
     assert draft.subject == "Your quote: Porch bench" and draft.status == "draft"  # drafted, never sent
+
+
+def test_each_order_sits_on_the_stage_rail_with_the_step_that_moves_it_on():
+    from core.web_business import order_stage
+
+    new = order_stage("Open", True, False, 180, "o1")
+    assert (new["index"], new["name"], new["next"]["label"]) == (0, "New", "Start Build")
+    assert new["next"]["action"] == {"kind": "order.build", "label": "Start Build", "params": {"order_id": "o1"}}
+    assert order_stage("Open", False, False, 0, "o1")["next"]["action"]["params"]["status"] == "Building"
+    assert order_stage("Building", True, True, 90, "o1")["next"]["label"] == "Mark Ready"
+    assert order_stage("Ready", True, True, 0, "o1")["next"]["action"]["params"]["status"] == "Delivered"
+    assert order_stage("Delivered", True, True, 42, "o1")["next"] == {"label": "Payment", "opens": "payment"}
+    assert order_stage("Delivered", True, True, 0, "o1")["next"] is None
+    assert order_stage("Cancelled", True, True, 0, "o1")["index"] is None

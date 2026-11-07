@@ -51,24 +51,25 @@
     } catch (e) { MIAShell.say(e.message); }
   }
 
+  // The canvas's order card (DEC-0113): what and the price, who and what's owed, the stage rail (New, Building,
+  // Ready, Delivered), and the one step the engine says moves it on (core/web_business.order_stage).
   function orderCard(o) {
-    return el("article", { class: "glass craft-card" + (o.overdue ? " overdue" : "") },
-      el("div", { class: "craft-head static" },
-        el("div", {}, el("h3", {}, o.title), el("p", { class: "dim" },
-          [o.customer, o.quantity > 1 ? o.quantity + " ×" : null, o.recipe, o.due ? "due " + day(o.due) : null].filter(Boolean).join(" · "))),
-        chip(o.overdue ? "Past Due" : o.status, o.overdue ? "chip-bad" : STATUS[o.status])),
-      el("div", { class: "craft-tiles" },
-        el("div", { class: "craft-tile" }, el("span", { class: "dim" }, "Price"), el("strong", {}, o.price)),
-        el("div", { class: "craft-tile ok" }, el("span", { class: "dim" }, "Paid"), el("strong", {}, o.paid)),
-        el("div", { class: "craft-tile" + (o.left_value > 0 ? "" : " ok") }, el("span", { class: "dim" }, "Left"), el("strong", {}, o.left)),
-        o.build && o.build.finished ? el("div", { class: "craft-tile ok" }, el("span", { class: "dim" }, "Build Profit"), el("strong", {}, o.build.profit)) : null),
-      o.build && !o.build.finished ? el("p", { class: "dim" }, "Building" + (o.build.steps ? " · " + o.build.steps + " steps" : "") + " · ",
-        el("a", { href: "workshop.html#builds" }, "open the build")) : null,
-      o.notes ? el("p", { class: "dim" }, o.notes) : null,
-      o.open ? buttons(o.left_value > 0 ? btn("Payment", "btn-green btn-small", () => pay(o)) : null,
-        o.has_recipe && !o.build ? btn("Start Build", "btn-amber btn-small", () => act({ kind: "order.build", params: { order_id: o.id } })) : null,
-        o.status !== "Ready" ? btn("Ready", "btn-ghost btn-small", () => status(o, "Ready")) : null,
-        o.status === "Ready" ? btn("Delivered", "btn-ghost btn-small", () => status(o, "Delivered")) : null,  // after Ready only (Muse, H-0057)
+    const st = o.stage, step = st.next;
+    const run = step ? (step.opens === "payment" ? () => pay(o) : () => act(step.action)) : null;
+    return el("article", { class: "glass ord-card" + (o.overdue ? " overdue" : "") },
+      el("div", { class: "ord-line" }, el("h3", {}, o.title), el("span", { class: "ord-price" }, o.price)),
+      el("div", { class: "ord-line ord-sub" },
+        el("span", { class: "dim" }, [o.customer, o.quantity > 1 ? o.quantity + " ×" : null, o.due ? (o.overdue ? "was due " : "due ") + day(o.due) : null]
+          .filter(Boolean).join(" · ")),
+        el("span", { class: "ord-owed" + (o.left_value > 0 ? " owed" : " paid") }, o.left_value > 0 ? o.left + " owed" : "Paid")),
+      st.index != null ? el("div", { class: "ord-rail", role: "img", "aria-label": "Stage: " + st.name },
+        st.names.map((n, i) => el("span", { class: "ord-seg" + (i < st.index ? " done" : i === st.index ? " now" : ""), title: n }))) : null,
+      el("div", { class: "ord-line ord-foot" }, el("span", { class: "ord-stage" }, st.name),
+        step ? btn(step.label, "btn-ghost btn-small ord-next", run) : null),
+      o.build && !o.build.finished ? el("p", { class: "dim ord-build" }, "Build" + (o.build.steps ? " · " + o.build.steps + " steps" : "") + " · ",
+        el("a", { href: "workshop.html#builds" }, "open it")) : null,
+      o.open ? el("div", { class: "row-buttons ord-more" },
+        o.left_value > 0 && !(step && step.opens === "payment") ? btn("Payment", "btn-ghost btn-small", () => pay(o)) : null,
         btn("Edit", "btn-ghost btn-small", () => edit("order", o, o.title)),
         btn("Cancel Order", "btn-ghost btn-small", () => status(o, "Cancelled"))) : null);
   }

@@ -437,9 +437,31 @@ class ClassroomManager:
         return done, total
 
 
+def continue_course(subjects: list) -> dict | None:
+    """Pure logic. The course to pick up (the design canvas's Classroom "Continue", DEC-0113): of the courses with
+    lessons left, the one you last finished a lesson in (the first unfinished one when nothing's done yet), with its
+    subject, how far along it is, and three lessons to show: the last one done, then the next ones. None when
+    there's nothing left to learn, or nothing added yet. `subjects` is screen()'s list."""
+    best, best_key = None, None
+    for order, (s, c) in enumerate((s, c) for s in subjects for c in s["courses"]):
+        if not c["total"] or c["done"] >= c["total"]:
+            continue
+        key = (max((l["done_at"] for l in c["lessons"] if l["done"]), default=""), -order)
+        if best_key is None or key > best_key:
+            best, best_key = (s, c), key
+    if best is None:
+        return None
+    s, c = best
+    done = [l for l in c["lessons"] if l["done"]]
+    left = [l for l in c["lessons"] if not l["done"]]
+    show = (done[-1:] + left)[:3]
+    return {"subject": s["name"], "course_id": c["id"], "course": c["name"], "done": c["done"], "total": c["total"],
+            "lessons": show}
+
+
 def screen(context) -> dict:
-    """The Classroom's web screen (web/classroom.html): each subject, its courses and their lessons, with how far along
-    each is."""
+    """The Classroom's web screen (web/classroom.html): each subject, its courses and their lessons (with the skill XP
+    each is worth), how far along each is, and the course to continue (`continue_course`)."""
     room = getattr(context, "classroom", None)
     subjects = []
     for s in (room.all_subjects() if room is not None else []):
@@ -449,8 +471,9 @@ def screen(context) -> dict:
             courses.append({"id": c.course_id, "name": c.name, "done": sum(1 for l in lessons if l.completed),
                             "total": len(lessons),
                             "lessons": [{"id": l.lesson_id, "name": l.name, "done": l.completed,
-                                         "done_at": (l.completed_at or "")[:10]} for l in lessons]})
+                                         "done_at": (l.completed_at or "")[:10],
+                                         "xp": sum(int(w.xp or 0) for w in l.skill_rewards)} for l in lessons]})
         done, total = room.subject_completion(s.subject_id)
         subjects.append({"id": s.subject_id, "name": s.name, "category": s.category, "done": done, "total": total,
                          "courses": courses})
-    return {"available": room is not None, "subjects": subjects}
+    return {"available": room is not None, "subjects": subjects, "continue": continue_course(subjects)}

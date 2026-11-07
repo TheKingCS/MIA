@@ -2,8 +2,9 @@
 DEC-0017 (2026-10-06): the web shell and Home dashboard, assembled in
 core/web_surfaces.py so web/ holds no logic. The sidebar is the
 person's own (child-safe, tucked-away apps hidden), Home is the
-concept's dashboard: greeting, Today's Focus with each item's action,
-Upcoming, glance cards.
+concept's dashboard: greeting, Today's Focus with each item's action and
+kind, Upcoming, the status strip, glance cards (DEC-0113 for the last two
+additions).
 """
 
 from datetime import date, datetime, timedelta
@@ -216,3 +217,26 @@ def test_the_published_examples_match_the_app_list():
     example = json.loads((schema / "apps.example.json").read_text(encoding="utf-8"))
     assert {a["id"] for g in example["groups"] for a in g["apps"]} == {a.module_id for a in live}
     assert {a["id"] for g in example["groups"] for a in g["apps"] if a["on_web"]} == {a.module_id for a in live if a.page}
+
+
+def test_each_due_row_says_what_kind_it_is():
+    """DEC-0113: a row on Home names its kind; overdue is amber (needs you), never red (DEC-0014)."""
+    from core.web_surfaces import due_kind
+
+    assert due_kind("overdue") == {"kind": "Overdue", "tone": "attention"}
+    assert due_kind("today")["kind"] == "Today"
+    assert due_kind(None) == {"kind": "", "tone": "quiet"}
+
+
+def test_home_strip_counts_only_what_the_engine_has():
+    """The status strip is three counts: needs you, coming up, and real wins logged today."""
+    from datetime import date
+
+    from core.web_surfaces import home_strip
+
+    today = date(2026, 11, 7)
+    wins = [{"at": "2026-11-07T08:00:00"}, {"at": "2026-11-06T20:00:00"}]
+    strip = home_strip([{"a": 1}, {"b": 2}], [{"c": 3}], wins, today)
+    assert [(t["label"], t["value"]) for t in strip] == [("Needs You", 2), ("Coming Up", 1), ("Done Today", 1)]
+    assert strip[0]["tone"] == "attention"
+    assert home_strip([], [], [], today)[0]["tone"] == "ok"

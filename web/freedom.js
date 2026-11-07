@@ -2,7 +2,8 @@
  * freedom.js — the Freedom screen (claude, 2026-10-21, DEC-0038). Renders
  * MIA.freedom() (core/freedom.py): the estimated day and how far along the
  * fund is, progress today / this week / this month, what a shift buys, how
- * the fund adds up (each number with where it came from), what moves the
+ * the fund adds up (each number with where it came from and what it is:
+ * Fact, Calculation or Missing, DEC-0113), what moves the
  * day, the builds, six months of history and the person's own reasons.
  * H-0067: the estimate as a range, the green-week streak, which accounts
  * are the fund, builds in the person's order with the next one marked.
@@ -110,18 +111,22 @@
   }
 
   function breakdown() {
-    const p = page.plan, t = p.text, src = page.sources;
-    const line = (label, value, source, cls) => el("div", { class: "free-line " + (cls || "") },
-      el("span", {}, label, source ? el("span", { class: "dim free-src" }, " · " + source) : null), el("strong", {}, value));
+    const p = page.plan, t = p.text, src = page.sources, kinds = page.kinds || {};
+    // each figure with where it came from and what it is (Fact, Calculation, Missing), as the canvas draws it
+    const KIND = { Missing: "attention", Fact: "", Calculation: "", Estimate: "" };
+    const line = (label, value, source, cls, key) => el("div", { class: "free-line " + (cls || "") },
+      el("span", {}, label, source ? el("span", { class: "dim free-src" }, " · " + source) : null),
+      el("span", { class: "free-val" }, el("strong", {}, value),
+        key && kinds[key] ? el("span", { class: "kind " + (KIND[kinds[key]] || "") }, kinds[key]) : null));
     return section("How The Fund Adds Up", btn("Your Plan", "btn-ghost btn-small", setPlan),
-      line("A month of living", t.needs || "not set", src.needs),
-      line("The homestead earns", t.homestead + " a month", src.homestead || "no sales yet"),
-      line("The gap", t.gap + " a month", "", "sum"),
-      line("× a cushion of " + page.cushion_months + " months", t.cushion, ""),
-      line("+ builds still to pay for", t.builds_left, page.builds.length ? page.builds.length + " builds" : "none yet"),
-      line("The freedom fund", t.goal, "", "total"),
-      line("Saved so far", t.saved, src.saved || "not set"),
-      line("Saved a month", t.pace || "not set", src.pace),
+      line("A month of living", t.needs || "not set", src.needs, "", "needs"),
+      line("The homestead earns", t.homestead + " a month", src.homestead || "no sales yet", "", "homestead"),
+      line("The gap", t.gap + " a month", "", "sum", "gap"),
+      line("× a cushion of " + page.cushion_months + " months", t.cushion, "", "", "cushion"),
+      line("+ builds still to pay for", t.builds_left, page.builds.length ? page.builds.length + " builds" : "none yet", "", "builds_left"),
+      line("The freedom fund", t.goal, "", "total", "goal"),
+      line("Saved so far", t.saved, src.saved || "not set", "", "saved"),
+      line("Saved a month", t.pace || "not set", src.pace, "", "pace"),
       page.levers.length ? el("div", { class: "free-levers" }, page.levers.map((lv) =>
         el("p", { class: "dim" }, "+" + lv.amount_text + " " + lv.what + " → ", el("strong", {}, lv.days_sooner + " days sooner")))) : null);
   }

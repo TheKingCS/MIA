@@ -1,6 +1,7 @@
 """Tax and compliance obligations (DEC-0040): deadlines moved off weekends
 and holidays, an extension to file never moving the money's date,
-reminders once each, unverified never shown as confirmed, repeats."""
+reminders once each, unverified never shown as confirmed, repeats, and
+the one next step each Compliance row offers (DEC-0113)."""
 
 from datetime import date
 
@@ -121,3 +122,18 @@ def test_reminders_go_through_the_gate_once_and_the_calendar_shows_deadlines(boo
     assert w.obligations.note_given(notes[0][2]) and not w.obligations.note_given(notes[0][2])
     items = calendar_items(w, date(2026, 11, 1), date(2026, 11, 30), date(2026, 10, 21))
     assert [i["title"] for i in items if i["kind"] == "obligation"] == ["Sales tax return"]
+
+
+def test_each_open_row_offers_the_one_step_that_comes_next():
+    from core.web_compliance import next_step
+
+    base = {"id": "o1", "verified": True, "stale": False, "where": "upcoming", "kind": "tax filing",
+            "title": "Sales tax return", "status": "applies", "pay_on": "", "fee_text": "", "estimate_text": ""}
+    assert next_step({**base, "verified": False}) == {"label": "Verify", "opens": "verify"}
+    assert next_step({**base, "stale": True})["label"] == "Check Again"
+    assert next_step({**base, "where": "overdue"}) == {"label": "Where It Stands", "opens": "status"}
+    filed = next_step(base)
+    assert filed["label"] == "Mark Filed" and filed["action"]["params"] == {"obligation_id": "o1", "status": "submitted"}
+    assert next_step({**base, "status": "submitted", "pay_on": "2026-12-01"})["action"]["params"]["status"] == "paid"
+    licence = {**base, "kind": "licence", "title": "Truck registration"}
+    assert next_step(licence)["action"]["params"]["status"] == "done"

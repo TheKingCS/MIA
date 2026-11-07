@@ -12,6 +12,12 @@
  * that count) and Progress ("is it working?": the sentence, the numbers,
  * the weight line) from MIA.fitness() (core/web_fitness.py). The old
  * Personal records are "Personal Bests" (Zac, 2026-10-16). My plan is plan.html.
+ *
+ * 2026-11-07 (DEC-0113, the design canvas): Today leads with one big Start;
+ * a live session takes the whole screen in three modes, Active (one set in
+ * focus, the count large with how it was counted), Rest (a draining ring)
+ * and Done (planned against done), with 56 px targets. Tuck it away and a
+ * bar brings it back.
  */
 (function () {
   "use strict";
@@ -235,14 +241,15 @@
           "aria-label": "Step " + (i + 1) + " done: " + x.name, onclick: () => act({ kind: "fitness.step", params: { step: i + 1 } }) }, x.done ? "✓" : String(i + 1)),
         el("span", {}, el("strong", {}, x.name),
           el("span", { class: "dim" }, " " + [x.sets && x.reps ? x.sets + " × " + x.reps : x.sets > 1 ? plural(x.sets, "set") : null, x.hold_seconds ? x.hold_seconds + " s hold" : null].filter(Boolean).join(" · ")))))),
-      all ? el("span", { class: "chip chip-ok" }, "✓ Workout complete") : btn("✓ Workout complete", "btn-green", () => act({ kind: "fitness.training_done", params: {} })));
+      !fit.session && !all ? startBlock() : null,
+      all ? el("span", { class: "chip chip-ok" }, "✓ Workout complete") : btn("✓ Mark Done Without a Session", "btn-ghost", () => act({ kind: "fitness.training_done", params: {} })));
   }
 
   // ---------------------------------------------------------------- the live session (DEC-0055)
   // core/training_session.py: the one workout going, shared with voice and the glasses. MIA counts the pace
   // here (Zac: "count the pace"): spoken where this browser can speak, a tick where it can't; the phone app can
   // hand its own voice in as window.MIAPhoneVoice.say. The count is confirmed before it's saved.
-  const live = { tick: null, beat: null, count: 0 };
+  const live = { tick: null, beat: null, count: 0, taps: 0, hidden: false };
 
   function sayNow(text) {
     try { if (window.MIAPhoneVoice && MIAPhoneVoice.say) { MIAPhoneVoice.say(String(text)); return; } } catch (e) { /* next */ }
@@ -287,8 +294,12 @@
     if (s.status !== "resting" || s.rest_left == null) return;
     const ends = Date.now() + s.rest_left * 1000;
     live.tick = setInterval(async () => {
-      const left = Math.max(0, Math.ceil((ends - Date.now()) / 1000)), shown = $("rest-left");
-      if (shown) shown.textContent = left + " s";
+      const left = Math.max(0, Math.ceil((ends - Date.now()) / 1000)), shown = $("rest-left"), ringNode = $("rest-ring");
+      if (shown) shown.textContent = Math.floor(left / 60) + ":" + String(left % 60).padStart(2, "0");
+      if (ringNode) {
+        const c = parseFloat(ringNode.dataset.c), total = parseFloat(ringNode.dataset.total) || 1;
+        ringNode.setAttribute("stroke-dashoffset", (c * (1 - Math.max(0, Math.min(1, left / total)))).toFixed(1));
+      }
       if (left === 10) sayNow("Ten seconds.");
       if (left === 0) {
         clearInterval(live.tick); live.tick = null;
@@ -299,43 +310,112 @@
     }, 1000);
   }
 
+  // ---------------------------------------------------------------- the canvas's modes (DEC-0113)
+  // Today shows one big Start; once a session is going, Active / Rest / Done take the whole screen: one thing in
+  // focus, 56 px+ targets for sweaty hands, how each count was made beside it (never "verified").
+  const HOW = { said: "Said", cadence: "MIA Pace", told: "Told", tapped: "Tapped" };
+  const how = (h) => HOW[h] || "Told";
+
+  function startBlock() {
+    return el("div", { class: "wk-start" },
+      el("button", { type: "button", class: "btn-big", onclick: () => act({ kind: "training.start", params: {} }) }, "▶ Start Workout"),
+      el("p", { class: "dim" }, "Or say “MIA, start my workout.” She counts the pace with you, starts your rest by itself, and logs what you actually did."));
+  }
+
+  function sessionBar() {  // the session is going but its screen is tucked away
+    const s = fit.session;
+    return el("button", { type: "button", class: "glass wk-bar", onclick: () => { live.hidden = false; draw(); } },
+      el("span", { class: "kind accent" }, s.status === "resting" ? "Resting" : s.status === "paused" ? "Paused" : "Workout Going"),
+      el("span", {}, s.title), el("span", { class: "dim" }, "Open"));
+  }
+
+  function ring(left, total) {  // the rest draining; the number stays for reduced motion and screen readers
+    const r = 124, c = 2 * Math.PI * r, frac = total ? Math.max(0, Math.min(1, left / total)) : 0;
+    const svg = svgEl("svg", { viewBox: "0 0 280 280", class: "wk-ring", "aria-hidden": "true" });
+    svg.append(svgEl("circle", { cx: 140, cy: 140, r, class: "wk-ring-track" }),
+      svgEl("circle", { cx: 140, cy: 140, r, class: "wk-ring-fill", "stroke-dasharray": c.toFixed(1),
+        "stroke-dashoffset": (c * (1 - frac)).toFixed(1), id: "rest-ring", "data-c": c.toFixed(1), "data-total": String(total || 0) }));
+    const mm = (n) => Math.floor(n / 60) + ":" + String(n % 60).padStart(2, "0");
+    return el("div", { class: "wk-ring-wrap", role: "timer", "aria-label": left + " seconds of rest left" }, svg,
+      el("div", { class: "wk-ring-text" }, el("span", { class: "wk-ring-n", id: "rest-left" }, mm(left)),
+        el("span", { class: "wk-label" }, "of " + mm(total || 0))));
+  }
+
+  function liveMode() {
+    const s = fit.session, n = s.now || {}, resting = s.status === "resting", paused = s.status === "paused";
+    const done = s.status === "complete", counting = !!live.beat;
+    const clock = Math.floor(s.elapsed / 3600) + ":" + String(Math.floor(s.elapsed / 60) % 60).padStart(2, "0") + ":" + String(s.elapsed % 60).padStart(2, "0");
+    const top = el("header", { class: "wk-top" },
+      done || resting ? el("button", { type: "button", class: "btn btn-ghost wk-icon", "aria-label": "Hide the workout screen", onclick: () => { live.hidden = true; draw(); } }, "✕")
+        : el("button", { type: "button", class: "btn btn-ghost wk-icon", "aria-label": paused ? "Resume" : "Pause",
+          onclick: () => { stopCounting(); act({ kind: paused ? "training.resume" : "training.pause", params: {} }); } }, paused ? "▶" : "❚❚"),
+      el("div", { class: "wk-clock" }, el("span", { class: "wk-label" }, resting ? "Rest" : done ? "Done" : paused ? "Paused" : "Session"),
+        el("span", { class: "wk-mono" }, clock)),
+      el("span", { class: "mia-orb", "data-state": counting || (!resting && !done && !paused) ? "listening" : "idle",
+        role: "img", "aria-label": "MIA is listening for your count" }));
+    if (done) {
+      return el("div", { class: "wk-mode", role: "dialog", "aria-label": "Workout done" }, top,
+        el("div", { class: "wk-done-head" }, el("span", { class: "wk-label ok" }, "Every Set Done"),
+          el("h1", {}, s.title + ", done."),
+          el("span", { class: "wk-mono dim" }, Math.round(s.elapsed / 60) + " min · " + s.steps.reduce((t, x) => t + x.done, 0) + " sets · " + s.steps.length + " exercises")),
+        el("section", { class: "glass wk-table" },
+          el("div", { class: "wk-table-head" }, el("span", { class: "wk-label" }, "Planned → Done"), el("span", { class: "wk-label" }, "How Counted")),
+          ...s.steps.map((x) => el("div", { class: "wk-row" },
+            el("div", {}, el("div", {}, x.name), el("div", { class: "wk-mono dim" }, x.target + " × " + x.sets + " → " + (x.counts.join(" · ") || (x.skipped ? "skipped" : "none")))),
+            el("span", { class: "kind" }, [...new Set((x.how || []).map(how))].join(", ") || "—"))),
+          s.steps.some((x) => x.counts.some((c, i) => typeof c === "number" && c < (x.target ? parseInt(x.target, 10) || 0 : 0)))
+            ? el("p", { class: "dim" }, "A short set is still a set. It counts.") : null),
+        el("div", { class: "wk-actions" },
+          el("button", { type: "button", class: "btn-big", onclick: () => { stopCounting(); act({ kind: "training.finish", params: {} }); } }, "Finish and Log It"),
+          el("p", { class: "dim" }, "XP, new bests and missions are counted when it's logged.")));
+    }
+    if (resting) {
+      return el("div", { class: "wk-mode", role: "dialog", "aria-label": "Rest" }, top,
+        ring(s.rest_left || 0, s.rest_total || s.rest_left || 0),
+        n.last != null ? el("p", { class: "wk-logged" }, "Last set: " + n.last + " · counted " + how(n.last_counted).toLowerCase()) : null,
+        el("section", { class: "glass wk-next" }, el("span", { class: "wk-label atmo" }, "Up Next"),
+          el("h2", {}, (n.name || s.next || "") + (n.set ? " · Set " + n.set + " of " + n.sets : "")),
+          el("span", { class: "wk-mono dim" }, [n.target, n.weight ? "weight " + n.weight : null].filter(Boolean).join(" · "))),
+        el("div", { class: "wk-actions" },
+          el("button", { type: "button", class: "btn-big", onclick: () => act({ kind: "training.skip_rest", params: {} }) }, "Skip Rest"),
+          el("p", { class: "dim" }, "A tone plays at zero. Say “skip rest” anytime.")));
+    }
+    const ex = s.steps.findIndex((x) => x.name === n.name);
+    const shown = counting ? live.count : live.taps || 0;
+    const goal = n.hold_seconds || n.reps || 0;
+    return el("div", { class: "wk-mode", role: "dialog", "aria-label": "Active set" }, top,
+      el("section", { class: "surface-focus wk-focus" },
+        el("div", { class: "wk-focus-head" }, el("span", { class: "wk-label atmo" }, "Exercise " + (ex + 1) + " of " + s.steps.length),
+          n.weight ? el("span", { class: "wk-label" }, "Weight " + n.weight) : null),
+        el("h1", {}, n.name || ""),
+        el("div", { class: "wk-sets", "aria-label": "Set " + n.set + " of " + n.sets }, ...Array.from({ length: n.sets || 0 }, (_, i) =>
+          el("span", { class: i < n.set - 1 ? "done" : i === n.set - 1 ? "now" : "" }))),
+        el("span", { class: "dim" }, "Set " + n.set + " of " + n.sets + " · target " + n.target),
+        el("div", { class: "wk-count", "aria-live": "polite" },
+          el("span", { class: "wk-count-n", id: counting ? "count-now" : null }, String(shown)),
+          goal ? el("span", { class: "wk-count-of" }, "/ " + goal) : null),
+        el("span", { class: "kind" }, counting ? "Counting · MIA Pace" : live.taps ? "Counted · Tapped" : n.last_counted ? "Last · " + how(n.last_counted) : "Say each number"),
+        s.next ? el("p", { class: "dim wk-caption" }, "Then: " + s.next) : null),
+      el("div", { class: "wk-actions" },
+        el("div", { class: "wk-pair" },
+          counting ? el("button", { type: "button", class: "btn-big quiet", onclick: () => { stopCounting(); confirmCount(n, "cadence"); } }, "■ Stop Count")
+            : el("button", { type: "button", class: "btn-big quiet", onclick: () => countWithMe(n) }, "Count With Me"),
+          el("button", { type: "button", class: "btn-big quiet", onclick: () => { stopCounting(); live.taps = (live.taps || 0) + 1; draw(); } }, "+1 Rep")),
+        el("button", { type: "button", class: "btn-big wk-done", onclick: () => {
+          stopCounting(); const t = live.taps; live.taps = 0;
+          if (t) { live.count = t; confirmCount(n, "tapped"); } else confirmCount(n, "told");
+        } }, "Set Done"),
+        el("div", { class: "wk-pair" },
+          el("button", { type: "button", class: "btn btn-ghost", onclick: () => act({ kind: "training.skip", params: {} }) }, "Skip Exercise"),
+          el("button", { type: "button", class: "btn btn-ghost", onclick: () => { stopCounting(); act({ kind: "training.finish", params: {} }); } }, "Finish Early")),
+        el("p", { class: "dim" }, "Say “twelve”, “next set”, “pause”, “make that ten” or “I'm done”, here or on the glasses.")));
+  }
+
   function sessionCard() {
     const s = fit.session;
-    if (!s) {
-      stopCounting(); restTicker({ status: "" });
-      if (!fit.today.training) return null;
-      return section("Active Training", buttons(btn("▶ Start Workout", "btn-green", () => act({ kind: "training.start", params: {} }))),
-        el("p", { class: "dim" }, "Or say “start my workout”. MIA counts the pace with you, starts your rest by itself, and logs what you actually did."));
-    }
-    const n = s.now || {}, resting = s.status === "resting", paused = s.status === "paused", counting = !!live.beat;
+    if (!s) { stopCounting(); restTicker({ status: "" }); return null; }
     restTicker(s);
-    const clock = Math.floor(s.elapsed / 60) + ":" + String(s.elapsed % 60).padStart(2, "0");
-    const strip = el("div", { class: "strip" },
-      el("div", { class: "cell ok" }, el("span", { class: "n" }, n.set ? n.set + "/" + n.sets : "✓"), el("span", { class: "t" }, "Set")),
-      el("div", { class: "cell soon" }, el("span", { class: "n", id: counting ? "count-now" : null }, counting ? String(live.count) : (n.last != null ? String(n.last) : "–")),
-        el("span", { class: "t" }, counting ? "Counting" : "Last · target " + (n.target || ""))),
-      el("div", { class: "cell" }, el("span", { class: "n", id: resting ? "rest-left" : null }, resting ? s.rest_left + " s" : clock),
-        el("span", { class: "t" }, resting ? "Rest" : "Time")));
-    const controls = s.status === "complete"
-      ? buttons(btn("✓ Finish Workout", "btn-green", () => act({ kind: "training.finish", params: {} })))
-      : buttons(
-        counting ? btn("■ Stop Counting", "btn-ghost", () => { stopCounting(); confirmCount(n, "cadence"); })
-          : btn("🔊 Count With Me", "btn-green", () => countWithMe(n)),
-        btn("Set Done", "btn-ghost", () => confirmCount(n, "tapped")),
-        resting ? btn("Skip Rest", "btn-ghost", () => act({ kind: "training.skip_rest", params: {} })) : null,
-        paused ? btn("Resume", "btn-ghost", () => act({ kind: "training.resume", params: {} }))
-          : btn("Pause", "btn-ghost", () => { stopCounting(); act({ kind: "training.pause", params: {} }); }),
-        btn("Skip Exercise", "btn-ghost", () => act({ kind: "training.skip", params: {} })),
-        btn("Finish", "btn-ghost", () => { stopCounting(); act({ kind: "training.finish", params: {} }); }));
-    return section("Active Training: " + s.title, null,
-      el("p", { class: "row-title" }, s.status === "complete" ? "All done." : (paused ? "Paused · " : "") + (n.name || "") + " · " + (n.target || "")),
-      strip,
-      s.next ? el("p", { class: "dim" }, "Next: " + s.next) : null,
-      controls,
-      el("ol", { class: "train-steps" }, s.steps.map((x) => el("li", { class: x.done >= x.sets || x.skipped ? "done" : "" },
-        el("span", {}, el("strong", {}, x.name), el("span", { class: "dim" }, " " + x.done + " of " + x.sets
-          + (x.counts.length ? " · " + x.counts.join(", ") : "") + (x.skipped ? " · skipped" : "")))))),
-      el("p", { class: "dim" }, "Say “twelve”, “next set”, “pause”, “make that ten” or “I'm done”, here or on the glasses."));
+    return live.hidden ? sessionBar() : null;
   }
 
   function todayView() {
@@ -505,6 +585,18 @@
     $("tabs").replaceChildren(...TABS.map(([id, l]) =>
       el("button", { type: "button", role: "tab", "aria-selected": String(id === tab), onclick: () => { tab = id; history.replaceState(null, "", "#" + id); draw(); } }, l)));
     $("panel").replaceChildren(...views[tab]().filter(Boolean));
+    // The live session takes the whole screen (the canvas's Active, Rest and Done), unless it's tucked away.
+    const going = fit && fit.session && fit.session.status !== "finished";
+    let mode = $("wk-mode-host");
+    if (going && !live.hidden) {
+      if (!mode) { mode = el("div", { id: "wk-mode-host" }); document.body.append(mode); }
+      restTicker(fit.session);
+      mode.replaceChildren(liveMode());
+      document.body.classList.add("wk-live");
+    } else {
+      if (mode) mode.remove();
+      document.body.classList.remove("wk-live");
+    }
   }
 
   MIAShell.start(async () => {

@@ -521,6 +521,7 @@ def test_titles_and_an_article_for_the_web_screen(isolated_root):
     manager = _make_manager()
     hits = manager.search_titles("hypothermia")
     assert [(h["pack_title"], h["title"]) for h in hits] == [("Demo Pack", "Hypothermia")]
+    assert "shivering" in hits[0]["snippet"] and "x()" not in hits[0]["snippet"]  # the result card's excerpt
     article = manager.article_text("demo", hits[0]["path"])
     assert article["title"] == "Hypothermia" and "shivering and confusion" in article["text"]
     assert "x()" not in article["text"]  # plain text: no script, no foreign HTML

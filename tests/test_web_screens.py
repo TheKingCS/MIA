@@ -229,3 +229,12 @@ def test_a_recipe_photo(world, tmp_path):
     assert client.post(path, content=b"\x89PNG" + b"1" * 32, headers={"X-Filename": "toast.png"}).status_code == 200
     assert world.kitchen.recipe_photo_path(recipe.recipe_id).suffix == ".png"
     assert len(list((world.kitchen.data_dir / "recipe_photos").iterdir())) == 1
+
+
+def test_a_rented_property_with_no_rent_in_this_month_says_rent_due():
+    from core.web_screens import property_badge
+
+    assert property_badge("Rented", 1450, 0) == {"text": "Rent Due", "tone": "attention"}
+    assert property_badge("Rented", 1450, 1450) == {"text": "Rented", "tone": "ok"}
+    assert property_badge("Vacant", 0, 0)["tone"] == "attention"  # needs you, never an error
+    assert property_badge("Primary Residence", 0, 0) == {"text": "Primary Residence", "tone": ""}

@@ -154,6 +154,36 @@
       when ? el("div", { class: "mission-chips" }, el("span", { class: "chip " + (x.when === "now" ? "chip-soon" : "") }, when)) : null));
   }
 
+  // The design canvas (DEC-0113): the next expedition as one card (when, its trips, what has to happen first, the
+  // packing list to tick across its trips, Start Trip), then the others as rows that open.
+  const openX = (x) => { open = x.id; history.replaceState(null, "", "#" + encodeURIComponent(x.id)); draw(); window.scrollTo(0, 0); };
+  function comingUp(x) {
+    const label = x.when === "now" ? "Happening Now" : "Coming Up" + (x.days_away != null ? " · " + (x.days_away === 0 ? "Today" : x.days_away === 1 ? "Tomorrow" : x.days_away + " Days") : "");
+    const planned = x.trips.find((t) => t.status === "planned"), active = x.trips.find((t) => t.status === "active");
+    const gear = x.trips.flatMap((t) => t.gear.map((g) => Object.assign({ trip: t.id }, g)));
+    return el("section", { class: "glass surface-focus ex-next", "aria-labelledby": "ex-next" },
+      el("div", { class: "ex-top" }, el("span", { class: "ex-label accent" }, label), el("span", { class: "ex-label" }, active ? "Active" : "Planned")),
+      el("h2", { id: "ex-next" }, x.name),
+      el("p", { class: "dim" }, [span(x.start, x.end), x.location, x.trips.length + (x.trips.length === 1 ? " trip" : " trips")].filter(Boolean).join(" · ")),
+      ...(x.heads_up || []).map((h) => el("p", { class: "ex-heads" }, h)),
+      gear.length ? el("div", { class: "ex-pack" },
+        el("div", { class: "ex-top" }, el("span", { class: "ex-label" }, "Packing"), el("span", { class: "ex-count" }, x.packed + " / " + x.gear_total)),
+        el("div", { class: "ex-gear" }, gear.map((g) => el("button", { type: "button", class: "ex-item" + (g.packed ? " on" : ""), "aria-pressed": String(g.packed),
+          onclick: () => act({ kind: "gear.toggle", params: { trip_id: g.trip, index: g.index } }, { quick: true }) },
+          el("span", { class: "ex-tick", "aria-hidden": "true" }, g.packed ? "✓" : ""), el("span", {}, g.label))))) : null,
+      el("div", { class: "row-buttons" },
+        planned && !active ? el("button", { type: "button", class: "btn btn-big btn-green ex-start",
+          onclick: () => act({ kind: "trip.status", params: { trip_id: planned.id, status: "active" } }) }, "Start " + planned.name) : null,
+        active ? el("button", { type: "button", class: "btn btn-big btn-green ex-start",
+          onclick: () => act({ kind: "trip.status", params: { trip_id: active.id, status: "completed" } }) }, "Finish " + active.name) : null,
+        btn("Open", "btn-ghost", () => openX(x))));
+  }
+  function row(x) {
+    const when = x.when === "past" ? span(x.start, x.end) : x.days_away != null ? (x.days_away === 1 ? "Tomorrow" : "In " + x.days_away + " days") : span(x.start, x.end);
+    return el("button", { type: "button", class: "glass ex-row", onclick: () => openX(x) },
+      el("span", {}, x.name), el("span", { class: "ex-count" }, [when, x.distance_km ? x.distance_km + " km" : null].filter(Boolean).join(" · ")));
+  }
+
   function detail(x) {
     return [
       el("p", {}, el("a", { href: "#", onclick: (ev) => { ev.preventDefault(); open = null; history.replaceState(null, "", location.pathname); draw(); } }, "‹ All Expeditions")),
@@ -175,13 +205,17 @@
       el("div", { class: "cell ok" }, el("span", { class: "n" }, c.trips), el("span", { class: "t" }, "Trips")));
     const x = open && page.expeditions.find((e) => e.id === open);
     if (x) { $("panel").replaceChildren(...detail(x)); return; }
-    const group = (title, list) => list.length ? section(title, null, el("div", { class: "mission-grid" }, list.map(card))) : null;
-    const by = (w) => page.expeditions.filter((e) => e.when === w);
+    const current = page.expeditions.filter((e) => e.when !== "past"), past = page.expeditions.filter((e) => e.when === "past");
+    const [next, ...later] = current;
     $("panel").replaceChildren(...[
-      el("div", { class: "journal-actions" }, btn("Plan An Expedition", "btn-amber", addExpedition),
-        el("a", { class: "btn btn-ghost", href: "worldmap.html" }, "World Map")),
-      group("Happening Now", by("now")), group("Coming Up", by("upcoming")), group("Past", by("past")),
+      next ? comingUp(next) : null,
+      later.length ? el("h2", { class: "ex-label" }, "Also Coming Up") : null,
+      later.length ? el("div", { class: "ex-rows" }, later.map(row)) : null,
+      past.length ? el("h2", { class: "ex-label" }, "Done") : null,
+      past.length ? el("div", { class: "ex-rows" }, past.map(row)) : null,
       page.expeditions.length ? null : el("p", { class: "empty" }, "No expeditions yet. Plan one: a weekend at the lake, a long hike."),
+      el("div", { class: "journal-actions ex-actions" }, btn("Plan An Expedition", "btn-ghost", addExpedition),
+        el("a", { class: "btn btn-ghost", href: "worldmap.html" }, "World Map")),
     ].filter(Boolean));
   }
 

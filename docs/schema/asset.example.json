@@ -74,7 +74,8 @@
                     "task_id": "11ff9d37e9"
                 },
                 "asks_meter": false
-            }
+            },
+            "due": "Past due 13 days"
         },
         {
             "id": "3410f83511",
@@ -114,7 +115,8 @@
                     "task_id": "3410f83511"
                 },
                 "asks_meter": false
-            }
+            },
+            "due": "Past due 10 days"
         },
         {
             "id": "09fe88c4dd",
@@ -154,7 +156,8 @@
                     "task_id": "09fe88c4dd"
                 },
                 "asks_meter": true
-            }
+            },
+            "due": "Due in 37 engine hours"
         }
     ],
     "attention": [
@@ -196,7 +199,8 @@
                     "task_id": "11ff9d37e9"
                 },
                 "asks_meter": false
-            }
+            },
+            "due": "Past due 13 days"
         },
         {
             "id": "3410f83511",
@@ -236,7 +240,8 @@
                     "task_id": "3410f83511"
                 },
                 "asks_meter": false
-            }
+            },
+            "due": "Past due 10 days"
         }
     ],
     "forms": {
@@ -535,7 +540,25 @@
         "hours": 12.8,
         "per_hour": 218.75,
         "by_category": [],
-        "for_builds": []
+        "for_builds": [],
+        "this_year": 42.5,
+        "recent": [
+            {
+                "date": "2026-10-12",
+                "what": "Oil and filter",
+                "amount": 18.0
+            },
+            {
+                "date": "2026-08-30",
+                "what": "New blades",
+                "amount": 24.5
+            },
+            {
+                "date": "2025-06-02",
+                "what": "Spark plug",
+                "amount": 9.0
+            }
+        ]
     },
     "history": [
         {
@@ -547,5 +570,11 @@
     "parts": {
         "status": "PLANNED",
         "items": []
+    },
+    "condition": {
+        "percent": 64,
+        "label": "Good",
+        "tone": "ok",
+        "tracked": 2
     }
 }

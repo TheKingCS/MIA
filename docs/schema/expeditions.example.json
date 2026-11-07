@@ -57,7 +57,36 @@
         "end_date": "2026-10-27",
         "notes": ""
       },
-      "media": []
+      "media": [],
+      "packed": 2,
+      "gear_total": 3,
+      "distance_km": null,
+      "heads_up": [
+        "Morning paddle starts Sunday, and Oil change on the Truck is due before then."
+      ]
+    },
+    {
+      "id": "9e8d7c6b5a",
+      "name": "Spring walk",
+      "location": "The ridge",
+      "start": "2026-10-01",
+      "end": null,
+      "notes": "",
+      "when": "past",
+      "days_away": null,
+      "trips": [],
+      "values": {
+        "name": "Lake weekend",
+        "location": "North lake",
+        "start_date": "2026-10-25",
+        "end_date": "2026-10-27",
+        "notes": ""
+      },
+      "media": [],
+      "packed": 0,
+      "gear_total": 0,
+      "distance_km": 10.0,
+      "heads_up": []
     }
   ],
   "counts": {

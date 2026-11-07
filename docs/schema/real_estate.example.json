@@ -278,7 +278,8 @@
               "task_id": "69869ef27b"
             },
             "asks_meter": false
-          }
+          },
+          "due": "Past due 5 days"
         },
         {
           "id": "444df10f48",
@@ -318,7 +319,8 @@
               "task_id": "444df10f48"
             },
             "asks_meter": false
-          }
+          },
+          "due": "Due in 30 days"
         }
       ],
       "missions": [],
@@ -338,6 +340,10 @@
         "loan_term_months": 360,
         "loan_start_date": null,
         "notes": ""
+      },
+      "badge": {
+        "text": "Rented",
+        "tone": "ok"
       }
     },
     {
@@ -374,6 +380,10 @@
         "loan_term_months": 0,
         "loan_start_date": null,
         "notes": ""
+      },
+      "badge": {
+        "text": "For Rent",
+        "tone": "attention"
       }
     },
     {
@@ -410,6 +420,10 @@
         "loan_term_months": 0,
         "loan_start_date": "",
         "notes": ""
+      },
+      "badge": {
+        "text": "",
+        "tone": ""
       }
     }
   ],

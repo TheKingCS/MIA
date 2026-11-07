@@ -8,14 +8,15 @@ Assembled here, in code, so `web/` holds no logic (DEC-0013): which
 apps a person sees, their level and XP, the greeting, Today's Focus,
 the upcoming list and the at-a-glance cards.
 
-- `shell(context)`: the sidebar (the person's apps, child-safe and
-  respecting the apps they've tucked away), their level and XP, today's
-  date. Served as `/api/shell`.
-- `dashboard(context)`: the Dashboard (the concept's "Good morning",
-  Today's Focus, a line of encouragement, quick actions, Upcoming and
-  at-a-glance cards). Served as `/api/dashboard`. Home itself
-  (`web/index.html`) is MIA's presence and a chat with her (Zac,
-  2026-10-06), reading Life State.
+- `shell(context)`: the sidebar (the person's apps, each with its life
+  area, child-safe and respecting the apps they've tucked away; their
+  favorites for the Pinned list; the life areas in order), their level and
+  XP, today's date. Served as `/api/shell`.
+- `dashboard(context)`: Home's data (the canvas's Home, DEC-0113): the
+  greeting and date, the status strip (`home_strip`), the one thing MIA
+  noticed across apps (`_top_finding`, from core/findings.py), Today's
+  Focus and Upcoming with each row's kind (`due_kind`), quick actions and
+  at-a-glance cards. Served as `/api/dashboard`; `web/index.html` shows it.
 - `apps_page(context)`: every app, grouped, with what MIA can do in each.
   Served as `/api/apps`.
 
@@ -443,8 +444,9 @@ def _glance(state: dict) -> list[dict]:
 
 
 def dashboard(context, now: Optional[datetime] = None) -> dict:
-    """Home's data: the greeting, the date, what needs doing today (from the life state's due items), what's
-    coming, quick actions, the glance, recent wins (only real wins, never spending), and something to remember.
+    """Home's data: the greeting, the date, what needs doing today (from the life state's due items, each with its
+    kind), what's coming, the status strip, the one thing MIA noticed across apps, quick actions, the glance, recent
+    wins (only real wins, never spending), and something to remember.
     """
     from core.context_assembler import assemble_life_state_v2
 
@@ -457,25 +459,73 @@ def dashboard(context, now: Optional[datetime] = None) -> dict:
     page_of.update({"maintenance": "calendar.html"})
 
     def item(d):
-        return {**d, "page": page_of.get(d.get("module_id"))}
+        return {**d, "page": page_of.get(d.get("module_id")), **due_kind(d.get("when"))}
 
+    focus = [item(d) for d in due if d.get("when") in ("overdue", "today", "waiting")][:8]
+    upcoming = [item(d) for d in due if d.get("when") == "soon"][:6]
+    wins = [e for e in ((state.get("recent_wins") or {}).get("latest") or []) if e.get("type") in _WINS][:5]
     return {
         "greeting": greeting(now.hour, getattr(profile, "name", None)),
         "subtitle": "Another day to build the life you want.",
         "date": date_text(today),
-        "focus": [item(d) for d in due if d.get("when") in ("overdue", "today", "waiting")][:8],
-        "upcoming": [item(d) for d in due if d.get("when") == "soon"][:6],
+        "focus": focus,
+        "upcoming": upcoming,
+        # The canvas's status strip (DEC-0113): counts the engine already has, never a guess.
+        "strip": home_strip(focus, upcoming, wins, today),
+        "finding": _top_finding(context, today),
         "saying": SAYINGS[today.toordinal() % len(SAYINGS)],
         "quick_actions": list(QUICK_ACTIONS),
         "glance": _glance(state),
         # "latest" is every event; only these are wins (no "Spent $40" on Home).
-        "wins": [e for e in ((state.get("recent_wins") or {}).get("latest") or []) if e.get("type") in _WINS][:5],
+        "wins": wins,
         "child": bool((state.get("person") or {}).get("child")),
         "remember": _remember(context, today),
     }
 
 
 from core.life_events import WINS as _WINS  # noqa: E402
+
+# What kind of thing a due item is, as the label on its row (DEC-0113: every row says what it is). Overdue is amber,
+# "needs you", not red: a late chore is a nudge, never a failure (DEC-0014).
+DUE_KINDS = {"overdue": ("Overdue", "attention"), "today": ("Today", "accent"), "waiting": ("Waiting", "quiet"),
+             "soon": ("Soon", "quiet")}
+
+
+def due_kind(when: Optional[str]) -> dict:
+    """Pure logic. The label and tone for a due item's row, from its `when`: {"kind": "Overdue", "tone": "attention"}."""
+    label, tone = DUE_KINDS.get(when or "", ("", "quiet"))
+    return {"kind": label, "tone": tone}
+
+
+def home_strip(focus: list, upcoming: list, wins: list, today: date) -> list[dict]:
+    """Pure logic. Home's three tiles: what needs you now, what's coming in the next days, and what got done today
+    (only real wins, from the life events). Each is a count the engine already has.
+    """
+    done_today = sum(1 for w in wins if str(w.get("at") or "").startswith(today.isoformat()))
+    return [
+        {"label": "Needs You", "value": len(focus), "tone": "attention" if focus else "ok"},
+        {"label": "Coming Up", "value": len(upcoming), "tone": "accent"},
+        {"label": "Done Today", "value": done_today, "tone": "ok"},
+    ]
+
+
+def _top_finding(context, today: date) -> Optional[dict]:
+    """The one thing MIA noticed across apps that Home leads with (core/findings.py), with why, how sure, the app it
+    belongs to (its page) and the next step; None when there's nothing, or a findings rule fails.
+    """
+    try:
+        from core.findings import findings
+
+        found = findings(context, today)
+    except Exception:
+        log.exception("Home: findings failed")
+        return None
+    if not found:
+        return None
+    f = found[0]
+    app = APPS_BY_ID.get(f.app)
+    return {"title": f.title, "claim": f.claim, "why": f.why, "next": f.next_step, "sure": f.sureness,
+            "app": f.app, "app_name": app.name if app else "", "page": app.page if app else None}
 
 
 def _remember(context, today: date) -> list[dict]:

@@ -75,10 +75,10 @@
 
   function tile(item) {
     const img = el("img", { alt: item.name + (item.time ? ", " + item.time : ""), "data-src": "/api/vault/photo/" + item.sha });
+    // The canvas's dot (DEC-0113): green, safe on the home computer; amber, only on this phone so far.
     const marks = [
-      !item.on_phone ? el("span", { class: "vault-mark ok", title: "Only on the home computer now" }, "PC only") :
-        item.on_pc ? el("span", { class: "vault-mark ok", title: "Safe on the home computer" }, "✓ PC") :
-        el("span", { class: "vault-mark wait", title: "Not on the home computer yet" }, "⏳"),
+      el("span", { class: "vault-dot " + (item.on_pc || !item.on_phone ? "ok" : "wait"),
+        title: !item.on_phone ? "Only on the home computer now" : item.on_pc ? "Safe on the home computer" : "Only on this phone so far" }),
       item.best ? el("span", { class: "vault-mark best", title: "Best of the burst" }, "★") : null,
       item.copies > 1 ? el("span", { class: "vault-mark", title: "On the phone " + item.copies + " times" }, "×" + item.copies) : null,
     ].filter(Boolean);
@@ -129,15 +129,17 @@
     }
     const pick = el("select", { "aria-label": "Month", onchange: async (e) => { month = e.target.value; MIAShell.refresh(); } },
       page.months.map((m) => el("option", { value: m.month, selected: m.month === page.month ? true : null }, m.label + " · " + m.count)));
-    parts.push(el("div", { class: "vault-month" }, pick));
-    // What the marks mean, once: there's no hover on a phone (Muse, H-0063 §1).
-    parts.push(el("p", { class: "dim vault-legend" },
-      "✓ PC safe on the home computer · ⏳ not yet copied · ★ best of the burst · ×2 on the phone twice · PC only freed from the phone"));
+    const m = page.months.find((x) => x.month === page.month);
+    parts.push(el("div", { class: "vault-month" }, pick,
+      m && m.safe != null ? el("span", { class: "vault-safe" + (m.safe === m.count ? " all" : "") }, m.safe + " of " + m.count + " safe at home") : null));
     // Days are plain, a hairline between them; cards stay for the sections with actions (H-0063 §2).
     page.days.forEach((d) => parts.push(el("section", { class: "vault-day", "aria-label": d.label },
-      el("div", { class: "vault-day-head" }, el("h2", {}, d.label), d.trip ? el("span", { class: "craft-tag" }, "🏕 " + d.trip) : null),
+      el("div", { class: "vault-day-head" }, el("h2", {}, d.label), d.trip ? el("span", { class: "vault-what" }, d.trip) : null),
       d.happened.length ? el("p", { class: "dim vault-happened" }, "That day: " + d.happened.join(" · ")) : null,
       el("div", { class: "media-grid" }, d.items.map(tile)))));
+    // What the marks mean, once: there's no hover on a phone (Muse, H-0063 §1).
+    parts.push(el("p", { class: "dim vault-legend" },
+      "Green dot: safe on the home computer. Amber: only on this phone so far. ★ best of the burst · ×2 on the phone twice."));
     return parts.filter(Boolean);
   }
 

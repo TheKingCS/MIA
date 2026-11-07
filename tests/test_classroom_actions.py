@@ -1,4 +1,5 @@
-"""The Classroom's web screen (core/classroom_manager.screen) and its actions (core/classroom_actions.py)."""
+"""The Classroom's web screen (core/classroom_manager.screen, with the course to continue: DEC-0113) and its actions
+(core/classroom_actions.py)."""
 
 from types import SimpleNamespace
 
@@ -47,4 +48,20 @@ def test_what_it_refuses(person):
         person.actions.propose(person, "subject.add", {"name": "  "}, proposed_by="person")
     with pytest.raises(ActionError):
         person.actions.propose(person, "course.add", {"subject_id": "nope", "name": "X"}, proposed_by="person")
-    assert screen(SimpleNamespace(classroom=None)) == {"available": False, "subjects": []}
+    assert screen(SimpleNamespace(classroom=None)) == {"available": False, "subjects": [], "continue": None}
+
+
+def test_continue_is_the_course_you_last_finished_a_lesson_in():
+    from core.classroom_manager import continue_course
+
+    def lesson(name, done_at=""):
+        return {"id": name, "name": name, "done": bool(done_at), "done_at": done_at, "xp": 30}
+    circuits = {"id": "c1", "name": "Basic circuits", "done": 2, "total": 4,
+                "lessons": [lesson("Ohm's law", "2026-11-01"), lesson("Meters", "2026-11-05"), lesson("Series"), lesson("Schematics")]}
+    soldering = {"id": "c2", "name": "Soldering", "done": 1, "total": 2, "lessons": [lesson("Irons", "2026-10-01"), lesson("Joints")]}
+    finished = {"id": "c3", "name": "Safety", "done": 1, "total": 1, "lessons": [lesson("Gloves", "2026-11-06")]}
+    subjects = [{"name": "Electronics", "courses": [soldering, circuits, finished]}]
+    got = continue_course(subjects)
+    assert (got["course"], got["subject"], got["done"], got["total"]) == ("Basic circuits", "Electronics", 2, 4)
+    assert [l["name"] for l in got["lessons"]] == ["Meters", "Series", "Schematics"]  # the last done, then what's next
+    assert continue_course([{"name": "Math", "courses": [finished]}]) is None  # nothing left

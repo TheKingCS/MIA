@@ -424,13 +424,21 @@ class ReferenceLibraryManager:
             hits.append(ReferenceSearchHit(path=path, title=title))
         return hits
 
+    SNIPPETS = 6  # how many hits get a snippet (each one reads a little of its article)
+
     def search_titles(self, query: str, per_pack: int = 8) -> list[dict]:
         """For the Knowledge web screen: every pack's best matches, pack by pack: [{pack_id, pack_title, path,
-        title}]."""
+        title, snippet}]. The first SNIPPETS hits carry a short plain-text excerpt for the result cards (the design
+        canvas, DEC-0113); the rest have "" (reading every article would be slow)."""
         out = []
         for pack in self.list_packs():
             for hit in self.search(pack.pack_id, query, limit=per_pack):
-                out.append({"pack_id": pack.pack_id, "pack_title": pack.title, "path": hit.path, "title": hit.title})
+                out.append({"pack_id": pack.pack_id, "pack_title": pack.title, "path": hit.path, "title": hit.title,
+                            "snippet": ""})
+        for row in out[:self.SNIPPETS]:
+            found = self.get_entry_content(row["pack_id"], row["path"])
+            if found is not None and str(found[1]).startswith("text/"):
+                row["snippet"] = _html_to_snippet(found[0], max_chars=180)
         return out
 
     def article_text(self, pack_id: str, entry_path: str, max_chars: int = 20_000) -> Optional[dict]:

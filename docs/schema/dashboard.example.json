@@ -18,7 +18,9 @@
           "task_id": "7a4464beaf"
         }
       },
-      "page": "calendar.html"
+      "page": "calendar.html",
+      "kind": "Overdue",
+      "tone": "attention"
     },
     {
       "when": "overdue",
@@ -35,7 +37,9 @@
           "task_id": "58cb39bfd5"
         }
       },
-      "page": "calendar.html"
+      "page": "calendar.html",
+      "kind": "Overdue",
+      "tone": "attention"
     },
     {
       "when": "overdue",
@@ -52,7 +56,9 @@
           "task_id": "6cbf096c22"
         }
       },
-      "page": "calendar.html"
+      "page": "calendar.html",
+      "kind": "Overdue",
+      "tone": "attention"
     },
     {
       "when": "overdue",
@@ -69,7 +75,9 @@
           "task_id": "68e719deaa"
         }
       },
-      "page": "calendar.html"
+      "page": "calendar.html",
+      "kind": "Overdue",
+      "tone": "attention"
     },
     {
       "when": "overdue",
@@ -86,7 +94,9 @@
           "task_id": "cd4ef5ed1b"
         }
       },
-      "page": "calendar.html"
+      "page": "calendar.html",
+      "kind": "Overdue",
+      "tone": "attention"
     },
     {
       "when": "today",
@@ -97,7 +107,9 @@
       "record_id": "fc01b54f3c",
       "icon": "📅",
       "action": null,
-      "page": "calendar.html"
+      "page": "calendar.html",
+      "kind": "Today",
+      "tone": "accent"
     },
     {
       "when": "today",
@@ -108,7 +120,9 @@
       "record_id": "03332a99b7",
       "icon": "📅",
       "action": null,
-      "page": "calendar.html"
+      "page": "calendar.html",
+      "kind": "Today",
+      "tone": "accent"
     },
     {
       "when": "today",
@@ -119,7 +133,9 @@
       "record_id": null,
       "icon": "🥬",
       "action": null,
-      "page": "kitchen.html"
+      "page": "kitchen.html",
+      "kind": "Today",
+      "tone": "accent"
     }
   ],
   "upcoming": [
@@ -138,7 +154,9 @@
           "task_id": "d4364f8f41"
         }
       },
-      "page": "calendar.html"
+      "page": "calendar.html",
+      "kind": "Soon",
+      "tone": "quiet"
     }
   ],
   "saying": "A little done is more than a lot planned.",
@@ -291,5 +309,32 @@
       "page": "people.html#birthdays",
       "days": 7
     }
-  ]
+  ],
+  "strip": [
+    {
+      "label": "Needs You",
+      "value": 8,
+      "tone": "attention"
+    },
+    {
+      "label": "Coming Up",
+      "value": 1,
+      "tone": "accent"
+    },
+    {
+      "label": "Done Today",
+      "value": 2,
+      "tone": "ok"
+    }
+  ],
+  "finding": {
+    "title": "The insurance bill lands before payday.",
+    "claim": "Insurance $340.00 is due in 4 days; pay arrives in 6.",
+    "why": "Checking has $212.40 after this week's bills.",
+    "next": "Move the due date, or pay it from savings.",
+    "sure": "REAL",
+    "app": "budget",
+    "app_name": "Money",
+    "page": "money.html"
+  }
 }

@@ -49,10 +49,6 @@
    "status": "none",
    "why": "it reports the loops: what it says is only as good as they are, and they are watched"
   },
-  "store:plans": {
-   "status": "none",
-   "why": "a shelf of references the household keeps; a structure she can't work out a material list for is logged as no_tool and watched by gaps.repeated"
-  },
   "store:business_use": {
    "status": "todo",
    "why": "her business-use shares on expenses, corrected: needs those tools counted in core/corrections.py"
@@ -93,6 +89,10 @@
    "status": "none",
    "why": "their own notes and scripts, kept as they wrote them: MIA writes none of it"
   },
+  "store:net_worth": {
+   "status": "none",
+   "why": "a reading of net worth once a day, worked out in code from the accounts and properties: a measurement, not her choices"
+  },
   "store:online_reminders": {
    "status": "none",
    "why": "a list they asked for, delivered whole the moment the connection returns: nothing is chosen or timed, so nothing to learn from"
@@ -108,6 +108,10 @@
   "store:plaid": {
    "status": "todo",
    "why": "after the Plaid work lands (Zac): imported transactions recategorized, a bank link failing"
+  },
+  "store:plans": {
+   "status": "none",
+   "why": "a shelf of references the household keeps; a structure she can't work out a material list for is logged as no_tool and watched by gaps.repeated"
   },
   "store:private_journal": {
    "status": "none",

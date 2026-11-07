@@ -3,7 +3,8 @@ core.web_business
 ===================
 
 The Orders & Quotes screen (DEC-0030 phase C): orders (what's owed,
-the build's progress), quotes (with what the price is made of),
+the build's progress, and where each is on the stage rail with the step
+that moves it on: `order_stage`, DEC-0113), quotes (with what the price is made of),
 customers, and the portfolio of finished builds. Put together here from
 core/business_book.py, crafting recipes, builds and the workshop ledger;
 the web only formats.
@@ -22,8 +23,36 @@ def _money(x) -> str:
     return money(x)
 
 
+STAGES = ("New", "Building", "Ready", "Delivered")
+
+
+def order_stage(status: str, has_recipe: bool, has_build: bool, left: float, order_id: str) -> dict:
+    """Pure logic. Where an order is on the canvas's stage rail (DEC-0113: New, Building, Ready, Delivered) and the
+    one step that moves it on: Start Build (from its recipe) or Mark Building while it's new, Mark Ready while it's
+    being built, Delivered once it's ready (only after Ready, H-0057), and Payment when it's delivered with money
+    still owed (`opens`: the web asks how much). A cancelled order is off the rail (index None, no step)."""
+    if status == "Cancelled":
+        return {"index": None, "name": "Cancelled", "names": list(STAGES), "next": None}
+    index = {"Open": 0, "Building": 1, "Ready": 2, "Delivered": 3}.get(status, 0)
+
+    def to(label, new):
+        return {"label": label, "action": {"kind": "order.status", "label": label,
+                                           "params": {"order_id": order_id, "status": new}}}
+    if index == 0:
+        step = ({"label": "Start Build", "action": {"kind": "order.build", "label": "Start Build",
+                                                    "params": {"order_id": order_id}}}
+                if has_recipe and not has_build else to("Mark Building", "Building"))
+    elif index == 1:
+        step = to("Mark Ready", "Ready")
+    elif index == 2:
+        step = to("Delivered", "Delivered")
+    else:
+        step = {"label": "Payment", "opens": "payment"} if left > 0 else None
+    return {"index": index, "name": STAGES[index], "names": list(STAGES), "next": step}
+
+
 def business_page(context, today: Optional[date] = None) -> dict:
-    """The Business screen's data: customers, quotes (with their figures) and orders, each with its customer, the build or recipe it's for, its revenue entry and its form, plus the craft section (builds and recipes). Not available without a business book."""
+    """The Business screen's data: customers, quotes (with their figures) and orders, each with its customer, the build or recipe it's for, its revenue entry, its stage and next step, and its form, plus the craft section (builds and recipes). Not available without a business book."""
     from core.business_actions import CUSTOMER, ORDER, QUOTE, quote_figures
     from core.record_actions import record_form
     from core.web_craft import craft_section
@@ -52,6 +81,7 @@ def business_page(context, today: Optional[date] = None) -> dict:
             "build": {"id": build["id"], "steps": f"{build['steps_done']}/{len(build['steps'])}" if build["steps"] else "",
                       "finished": build["finished"], "profit": build["result"]["profit_text"]} if build else None,
             "open": o.status not in ("Delivered", "Cancelled"), "notes": o.notes,
+            "stage": order_stage(o.status, bool(o.recipe_id), bool(build), max(0.0, o.price - paid), o.order_id),
             "values": {f.name: getattr(o, f.name) for f in ORDER.fields}})
 
     quotes = []

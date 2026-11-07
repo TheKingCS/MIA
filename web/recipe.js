@@ -1,6 +1,7 @@
 /*
  * recipe.js — one recipe, opened from a meal or recipe card (claude,
- * 2026-10-14, Zac's idea). Renders MIA.recipe(id) (core/web_screens.
+ * 2026-10-14, Zac's idea; 2026-11-07, DEC-0113: Start Cooking opens cook
+ * mode, web/cook.js). Renders MIA.recipe(id) (core/web_screens.
  * recipe_page): nutrition per serving, each ingredient with whether the
  * house has it, the steps (tick them off while cooking; that stays on
  * this screen), when it's planned, and the buttons. Every change is an
@@ -90,8 +91,10 @@
       el("div", { class: "recipe-macros" },
         [["kcal", "Calories", ""], ["protein_g", "Protein", " g"], ["carbs_g", "Carbs", " g"], ["fat_g", "Fat", " g"]].map(([k, label, unit]) =>
           el("div", { class: "macro" + (k === "protein_g" ? " macro-protein" : "") }, el("strong", {}, num(n[k], unit)), el("small", {}, label)))),
+      !page.locked && page.steps.length && !page.cooking
+        ? el("button", { type: "button", class: "btn-big recipe-cook", onclick: () => MIACook.start(page.id) }, "Start Cooking") : null,
       el("div", { class: "recipe-cta" },
-        page.can_schedule ? btn("Schedule meal", "btn-green", schedule) : null,
+        page.can_schedule ? btn("Schedule meal", "btn-ghost", schedule) : null,
         buyCount ? btn("Add to grocery list (" + buyCount + ")", "btn-amber", toList)
           : el("span", { class: "chip chip-ok" }, page.ingredients.length ? "✓ You have everything (or it's on the list)" : "No ingredients yet")));
   }
@@ -187,8 +190,9 @@
     document.title = page.name + " — MIA";
     $("hero-name").textContent = page.name;
     $("hero-tagline").textContent = page.notes || page.source || "";
-    $("panel").replaceChildren(top(), el("div", { class: "two-up" }, el("div", { class: "stack" }, ingredientList(), nutrition()),
-      el("div", { class: "stack" }, steps(), stats(), planned())), more());
+    $("panel").replaceChildren(...[MIACook.bar(), top(), el("div", { class: "two-up" }, el("div", { class: "stack" }, ingredientList(), nutrition()),
+      el("div", { class: "stack" }, steps(), stats(), planned())), more()].filter(Boolean));
+    MIACook.render(page.cooking);  // cook mode takes the screen while this or any recipe is cooking (DEC-0113)
   }
 
   const from = query.get("from");

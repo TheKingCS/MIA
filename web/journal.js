@@ -12,8 +12,6 @@
   let page = null, query = "", tag = "";
 
   const btn = (label, cls, onclick) => el("button", { type: "button", class: "btn " + cls, onclick }, label);
-  const section = (title, actions, ...body) =>
-    el("section", { class: "glass money-section" }, el("div", { class: "sect" }, el("h2", {}, title), actions), ...body);
   const day = (iso) => iso ? new Date(iso + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" }) : "";
 
   async function write() {
@@ -42,12 +40,15 @@
     dialog.showModal();
   }
 
+  // The canvas's entry (DEC-0113): the date and its first tag on a top line, then the title and the start of it.
+  const shortDay = (iso) => iso ? new Date(iso + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", day: "2-digit", month: "short" }) : "";
   function card(e) {
     return el("article", { class: "glass journal-card", tabindex: "0", role: "button", "aria-label": "Open " + e.title,
       onclick: () => open(e), onkeydown: (ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); open(e); } } },
-    el("div", { class: "journal-head" }, el("h3", {}, e.title), el("span", { class: "dim" }, day(e.date))),
-    e.preview ? el("p", { class: "journal-preview" }, e.preview) : null,
-    e.tags.length ? el("div", { class: "chip-row" }, e.tags.map((t) => el("span", { class: "chip" }, "#" + t))) : null);
+    el("div", { class: "journal-top" }, el("span", { class: "journal-date" }, shortDay(e.date)),
+      e.tags.length ? el("span", { class: "journal-tag" }, e.tags.join(" · ")) : null),
+    el("h3", {}, e.title),
+    e.preview ? el("p", { class: "journal-preview" }, e.preview) : null);
   }
 
   function matches(e) {
@@ -72,12 +73,12 @@
     const listBox = el("div", { id: "journal-list" });
     $("panel").replaceChildren(
       el("div", { class: "journal-actions" },
-        btn("Write Entry", "btn-amber", write),
+        btn("Write Entry", "btn-green", write),
         btn("Talk It Out", "btn-ghost", () => { location.href = "assistant.html?draft=" + encodeURIComponent("I want to journal."); })),
-      section("Entries", null, search, tags, listBox),
       el("p", { class: "dim journal-private" }, page.private.count
-        ? "Talk It Out entries (" + page.private.count + ") are private and encrypted. Ask MIA about them with your passphrase on the PC."
-        : "Talk It Out: journal by talking with MIA. Those entries are kept private and encrypted."));
+        ? "Talk It Out entries (" + page.private.count + ") stay private and encrypted on this account. Ask MIA about them with your passphrase on the PC."
+        : "Talk It Out entries stay private and encrypted on this account."),
+      search, tags, listBox);
     list();
   }
 

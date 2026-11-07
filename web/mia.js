@@ -241,9 +241,14 @@
     })() : call("GET", "/api/memories"),
     observations: () => demo ? Promise.resolve({
       findings: [{ title: "A bill before payday", claim: "Rent is due Friday; your pay comes Monday, and the account is $120 short.",
-        why: "Paid late, it costs a fee.", next: "Move it to Monday, or move $120 over.", app: "money", sure: "DERIVED" }],
+        why: "Paid late, it costs a fee.", next: "Move it to Monday, or move $120 over.", app: "budget", sure: "DERIVED",
+        kind: "Needs You", tone: "attention", used: "Money", open: { label: "Open in Money", href: "money.html" } },
+        { title: "A heavy work week", claim: "Long shifts this week; two workouts were cut short.", why: "both short sessions followed 12-hour runs",
+          next: "Move a training day to your day off.", app: "workout", sure: "DERIVED", kind: "Noticed", tone: "accent",
+          used: "Workout · The Dungeon", open: { label: "Open in Workout", href: "workout.html" } }],
       insights: [{ source: "Upkeep", items: [{ title: "Oil change is overdue", message: "The mower's oil change was due 12 days ago.",
-        next: "Mark it done, or reschedule it.", since: "2026-11-01" }] }] })
+        next: "Mark it done, or reschedule it.", since: "2026-11-01", kind: "Noticed", tone: "accent", used: "Maintenance",
+        open: { label: "Open in Maintenance", href: "maintenance.html" } }] }] })
       : call("GET", "/api/observations"),
     navigation: (start = "", end = "") => demo ? Promise.resolve({ day: "2026-11-06", waypoints: [
       { id: "w1", name: "Spring", category: "Water", lat: 40.01, lon: -105.0, grid: "13T DE 91476 30318" },
@@ -259,14 +264,17 @@
     classroom: () => demo ? Promise.resolve({ available: true, subjects: [
       { id: "s1", name: "Welding", category: "Trade skills", done: 2, total: 4, courses: [
         { id: "c1", name: "MIG basics", done: 2, total: 3, lessons: [
-          { id: "l1", name: "Safety and setup", done: true, done_at: "2026-10-20" },
-          { id: "l2", name: "Bead on plate", done: true, done_at: "2026-10-27" },
-          { id: "l3", name: "Butt joints", done: false, done_at: "" }] },
-        { id: "c2", name: "Stick welding", done: 0, total: 1, lessons: [{ id: "l4", name: "Striking an arc", done: false, done_at: "" }] }] }] })
+          { id: "l1", name: "Safety and setup", done: true, done_at: "2026-10-20", xp: 30 },
+          { id: "l2", name: "Bead on plate", done: true, done_at: "2026-10-27", xp: 30 },
+          { id: "l3", name: "Butt joints", done: false, done_at: "", xp: 30 }] },
+        { id: "c2", name: "Stick welding", done: 0, total: 1, lessons: [{ id: "l4", name: "Striking an arc", done: false, done_at: "", xp: 30 }] }] }],
+      continue: { subject: "Welding", course_id: "c1", course: "MIG basics", done: 2, total: 3, lessons: [
+        { id: "l2", name: "Bead on plate", done: true, done_at: "2026-10-27", xp: 30 },
+        { id: "l3", name: "Butt joints", done: false, done_at: "", xp: 30 }] } })
       : call("GET", "/api/classroom"),
     knowledge: (q = "") => demo ? Promise.resolve({ available: true, root: "reference_library", packs: [
       { id: "wikipedia_en_medicine", title: "Wikipedia: Medicine", description: "Medical articles, offline", articles: 52000 }],
-      hits: q ? [{ pack_id: "wikipedia_en_medicine", pack_title: "Wikipedia: Medicine", path: "A/Hypothermia", title: "Hypothermia" }] : [] })
+      hits: q ? [{ pack_id: "wikipedia_en_medicine", pack_title: "Wikipedia: Medicine", path: "A/Hypothermia", title: "Hypothermia", snippet: "Hypothermia is a body core temperature below 35.0 °C. Shivering and confusion come first…" }] : [] })
       : call("GET", "/api/knowledge?q=" + encodeURIComponent(q)),
     knowledgeArticle: (pack, path) => demo ? Promise.resolve({ title: "Hypothermia",
       text: "Hypothermia is defined as a body core temperature below 35.0 °C. Symptoms depend on the temperature..." })
@@ -309,21 +317,42 @@
       { kind: "idea", title: "Ideas", notes: [
         { id: "n4", line: "an idea: selling honey at the market", status: "open", at: "2026-11-01", due: "" }] },
       { kind: "dropped_goal", title: "Goals set aside", notes: [] }] }) : call("GET", "/api/life-notes"),
-    operatingJournal: () => demo ? Promise.resolve({ lines: [], sections: {} }) : call("GET", "/api/operating-journal"),
-    play: () => demo ? Promise.resolve({ played: [], weeks: [], lines: [], efforts: {} }) : call("GET", "/api/play"),
-    news: () => demo ? Promise.resolve({ on: false, day: null, stories: [], personalities: [] }) : call("GET", "/api/news"),
+    operatingJournal: () => demo ? Promise.resolve({ sections: { values: "What I value", priorities: "My priorities", day: "My ideal day", week: "My ideal week", rules: "Rules I keep" }, lines: [
+      { id: "o1", text: "Pay myself first on payday.", section: "rules", how: "checked against what's spent on Savings each month", self_rated: false, score: { pct: 75, text: "3 of 4 months" } },
+      { id: "o2", text: "Train on the days the plan says.", section: "week", how: "checked against your workouts each week", self_rated: false, score: { pct: 75, text: "3 of 4 weeks" } },
+      { id: "o3", text: "No phone at dinner.", section: "rules", how: "yours to rate, 1 to 5, each week", self_rated: true, score: { pct: 80, text: "4 / 5 last week" } }] })
+      : call("GET", "/api/operating-journal"),
+    play: () => demo ? Promise.resolve({ efforts: { easy: 3, moderate: 5, hard: 7 }, lines: [],
+      weeks: [60, 90, 45, 120, 75, 100].map((m, i) => ({ week: ["2026-09-28", "2026-10-05", "2026-10-12", "2026-10-19", "2026-10-26", "2026-11-02"][i], played: 2, play_minutes: m, play_load: m * 5, workouts: 2, workout_minutes: 90 })),
+      played: [{ id: "g1", what: "Pickup basketball", minutes: 60, effort: 7, effort_word: "Hard", with: [], date: "2026-11-05", load: 420 },
+        { id: "g2", what: "Disc golf, 18 holes", minutes: 40, effort: 3, effort_word: "Easy", with: [], date: "2026-11-01", load: 120 }] })
+      : call("GET", "/api/play"),
+    news: () => demo ? Promise.resolve({ on: true, day: "2026-11-07", now: "morning", scripts: { morning: "Good morning. Three good things today…" }, tracks: {},
+      personalities: [{ key: "morning", name: "Morning" }],
+      stories: [{ title: "A river cleanup removed 12 tons of trash in a weekend.", topic: "Environment", known: "confirmed", tag: "Confirmed by two outlets", tone: "ok",
+        caveats: ["Numbers are the organizers' count."], links: ["https://example.org/a", "https://example.org/b"], outlets: ["Example News", "Example Daily"] },
+        { title: "A seed library opens its third rural branch.", topic: "Community", known: "from the source", tag: "From the source itself", tone: "",
+          caveats: ["Announced by the library; not yet reported elsewhere."], links: ["https://example.org/c"], outlets: ["The library"] },
+        { title: "Monarch counts up along the eastern route.", topic: "Nature", known: "one outlet", tag: "One outlet", tone: "attention",
+          caveats: ["Early estimate; the full survey comes in spring."], links: ["https://example.org/d"], outlets: ["Example Weekly"] }] })
+      : call("GET", "/api/news"),
     // Guitar (core/guitar.py, DEC-0111): the stage, stats and open checks; a check heard from a WAV recording.
     guitar: (pathId) => demo ? Promise.resolve({ id: "guitar", name: "Guitar", stats: { started: "2026-11-02", stage: 1, stage_name: "First sounds",
         plan: { minutes_a_day: 15, days_a_week: 5 }, week_days: 3, week_minutes: 55, streak: 2, hours: 1.2,
-        checks_passed: 2, checks: 18, bests: { changes_em_am: 16 } },
+        checks_passed: 2, checks: 18, stages: 5, bests: { changes_em_am: 16 } },
       next: "Stage 1, First sounds: next is \"Play A minor so every note rings\" (play it to me and I'll listen).",
       open: [{ id: "tuned", what: "Tune all six strings; let MIA hear each one", how: "heard_tuning", chord: "" },
              { id: "am_clean", what: "Play A minor so every note rings", how: "heard_chord", chord: "Am" },
-             { id: "changes_em_am", what: "One-minute changes: E minor to A minor and back", how: "counted", chord: "" }] })
+             { id: "changes_em_am", what: "One-minute changes: E minor to A minor and back", how: "counted", chord: "" }],
+      stage_checks: [{ id: "em_clean", what: "Play E minor so every note rings", how: "heard_chord", passed: true, state: "Passed · MIA heard it" },
+             { id: "tuned", what: "Tune all six strings; let MIA hear each one", how: "heard_tuning", passed: false, state: "Open · MIA listens" },
+             { id: "am_clean", what: "Play A minor so every note rings", how: "heard_chord", passed: false, state: "Open · MIA listens" },
+             { id: "changes_em_am", what: "One-minute changes: E minor to A minor and back", how: "counted", passed: false, state: "Open · counted by you" }],
+      homework: "Practise on 5 days; Practise 75 minutes in all this week." })
       : call("GET", "/api/paths").then((all) => {
         const one = all.paths.find((p) => p.id === (pathId || "guitar")) || all.paths[0];
         return one ? { stats: one.stats, next: one.next, open: one.open.map((c) => Object.assign({ chord: c.about }, c)),
-                       id: one.id, name: one.name }
+                       id: one.id, name: one.name, stage_checks: one.stage_checks || [], homework: one.homework || "" }
           : { name: "Learning", stats: { started: false }, next: "Tell MIA what you'd like to learn.", open: [] };
       }),
     // Learning paths (core/paths.py, DEC-0112): every path started, and a check its program verifies (a recording).

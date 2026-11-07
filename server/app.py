@@ -1127,8 +1127,9 @@ def create_app(context: AppContext) -> FastAPI:
 
     @app.get("/api/paths")
     def learning_paths(profile_id: str = Depends(require_profile_id)) -> dict:
-        """Learning paths (core/paths.py, DEC-0112): each path this person has started, with its stats, what's next and
-        its open checks (how each is verified), and their drafts; this week's homework is made or brought up to date
+        """Learning paths (core/paths.py, DEC-0112): each path this person has started (`paths.path_card`: its stats,
+        what's next, its open checks and how each is verified, the stage's checks with their state, the homework),
+        and their drafts; this week's homework is made or brought up to date
         first."""
         from core import paths
 
@@ -1141,10 +1142,7 @@ def create_app(context: AppContext) -> FastAPI:
         for path_id in book.started():
             program = paths.program_of(view, path_id)
             if program is not None:
-                out.append({"id": program.id, "name": program.name, "icon": program.icon,
-                            "stats": paths.stats(book, program), "next": paths.next_step(book, program),
-                            "open": [{"id": c.id, "what": c.what, "how": c.how, "about": c.about}
-                                     for c in paths.open_checks(book, program)]})
+                out.append(paths.path_card(book, program))
         return {"paths": out, "drafts": [{"id": d["id"], "name": d["name"]} for d in book.drafts.values()
                                          if d["id"] not in book.paths]}
 

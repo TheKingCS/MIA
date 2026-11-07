@@ -78,8 +78,10 @@ def test_a_furniture_build_end_to_end(shop):
 
     do(w, "craft.start", recipe_id=recipe.recipe_id)
     build = workshop_page(w)["builds"][0]
+    assert build["next"] == "Cut" and build["budget"] > 0  # the canvas's build card: next step, what it should cost
     do(w, "craft.step", job_id=build["id"], index=0)
     assert workshop_page(w)["builds"][0]["steps_done"] == 1
+    assert workshop_page(w)["builds"][0]["next"] == "Assemble"
     save(w, build["id"], "bench.jpg", b"\xff\xd8 before", tag="before")
     save(w, build["id"], "bench.jpg", b"\xff\xd8 after", tag="after")
     assert [m["tag"] for m in media(w, build["id"])] == ["before", "after"]

@@ -387,15 +387,18 @@
     "voice": false
   },
   "places": [],
+  "favorites": [
+    "workout",
+    "kitchen",
+    "budget",
+    "missions",
+    "garage"
+  ],
   "groups": [
     "Life, goals & self",
     "Money & business",
     "Home, homestead & equipment",
     "Outdoors & field",
     "Knowledge, tools & system"
-  ],
-  "favorites": [
-    "kitchen",
-    "budget"
   ]
 }

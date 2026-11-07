@@ -24,7 +24,9 @@ through `play.log`) or on a screen. Each one:
 The people named are kept in the person's own folder, like the rest of it.
 `recreation.load` (core/loops.py) watches the week's load against the four
 weeks before it (the acute-to-chronic ratio: a jump past 1.5 is the usual
-sign of doing too much too soon), the person's to see.
+sign of doing too much too soon), the person's to see. The Play screen
+(`screen()`) shows six weeks of it as bars and each game's effort in a word
+(`effort_word()`, DEC-0113).
 """
 
 from __future__ import annotations
@@ -228,9 +230,18 @@ def lines(context, today: Optional[date] = None) -> list[str]:
     return out
 
 
+def effort_word(effort) -> str:
+    """Pure logic. An effort (1 to 10) in a word for the Play screen (the design canvas, DEC-0113): Easy up to 3,
+    Moderate up to 6, Hard from 7."""
+    effort = float(effort or DEFAULT_EFFORT)
+    return "Easy" if effort <= 3 else "Moderate" if effort <= 6 else "Hard"
+
+
 def screen(context, today: Optional[date] = None) -> dict:
-    """Recreation's web screen (web/play.html): the latest games, and the load by week."""
+    """Recreation's web screen (web/play.html): the latest games (each with its effort in a word), and the last six
+    weeks' load, as the canvas's bars."""
     log = getattr(context, "recreation", None)
     played = sorted(log.entries, key=lambda e: e["date"], reverse=True)[:30] if log is not None else []
-    return {"played": [{k: e[k] for k in ("id", "what", "minutes", "effort", "with", "date", "load")} for e in played],
-            "weeks": load(context, today), "lines": lines(context, today), "efforts": EFFORT_WORDS}
+    return {"played": [{**{k: e[k] for k in ("id", "what", "minutes", "effort", "with", "date", "load")},
+                        "effort_word": effort_word(e["effort"])} for e in played],
+            "weeks": load(context, today, weeks=6), "lines": lines(context, today), "efforts": EFFORT_WORDS}

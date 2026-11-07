@@ -2,7 +2,7 @@
 core.web_more
 ===============
 
-The Journal, Workshop, Expeditions, Music and Files screens on the web
+The Journal, Workshop, Expeditions, Music, Files and People screens on the web
 (Zac, 2026-10-16: on the phone they "are empty right now and just bring
 up a chat with MIA"). Each assembler reads its stores and returns what
 its screen shows; every change is an action in core/more_actions.py.
@@ -17,6 +17,8 @@ its screen shows; every change is an action in core/more_actions.py.
 - `music_page`: the music library and playlists; songs play in the
   browser, streamed from MIA (/api/music/track/<id>/audio).
 - `files_page`: the person's own files folder (core/my_files.py).
+- `people_page`: people and pets, birthdays in the next 60 days, and the
+  one person to catch up with (`catch_up`).
 """
 
 from __future__ import annotations
@@ -89,7 +91,7 @@ def journal_page(context, today: Optional[date] = None) -> dict:
 def workshop_page(context, today: Optional[date] = None) -> dict:
     """The data the Workshop screen shows, assembled here (the web only draws it); {"available": False} when none of its stores is here. Parts, materials (low ones first), products and
     their listings, jobs (not recipe builds) with their costs, the shop's money and totals, counts, the picks and
-    forms, and the recipes, builds, receipts and goods from web_craft.
+    forms, and the recipes, builds, receipts, best earner and goods (with what to sell first) from web_craft.
     """
     from core.region import money
 
@@ -163,6 +165,7 @@ def workshop_page(context, today: Optional[date] = None) -> dict:
         "forms": {**{k: v for k, v in _forms().items() if k in ("component", "material", "product", "job", "sale",
                                                                 "shop_expense", "product_sale")}, **craft["forms"]},
         "recipes": craft["recipes"], "builds": craft["builds"], "receipts": craft["receipts"],
+        "best_earner": craft.get("best_earner"),
         **goods,
     }
 
@@ -172,8 +175,9 @@ def workshop_page(context, today: Optional[date] = None) -> dict:
 
 def expeditions_page(context, today: Optional[date] = None) -> dict:
     """The data the Expeditions screen shows, assembled here (the web only draws it); {"available": False} when expeditions or trips aren't here. Each expedition with when it is
-    (now, upcoming, past), days away, its media and its trips (gear packed, distance, photos, journal notes);
-    current ones first, then past ones newest first; counts and forms.
+    (now, upcoming, past), days away, its media and its trips (gear packed, distance, photos, journal notes), the
+    packing and distance across them and what has to happen first (`_trip_heads_up`); current ones first, then past
+    ones newest first; counts and forms.
     """
     today = today or date.today()
     expeditions, trips = getattr(context, "expeditions", None), getattr(context, "trips", None)
@@ -215,6 +219,14 @@ def expeditions_page(context, today: Optional[date] = None) -> dict:
                       "trips": [trip_card(t) for t in its],
                       "values": {"name": e.name, "location": e.location, "start_date": e.start_date,
                                  "end_date": e.end_date, "notes": e.notes}})
+    # The canvas's Coming Up card (DEC-0113): what's packed across its trips, the distance, and anything MIA
+    # noticed elsewhere that has to happen first (core/findings.py, a finding whose key names one of its trips).
+    heads = _trip_heads_up(context, today)
+    for c in cards:
+        gear = [g for t in c["trips"] for g in t["gear"]]
+        c["packed"], c["gear_total"] = sum(1 for g in gear if g["packed"]), len(gear)
+        c["distance_km"] = round(sum(t["distance_km"] or 0 for t in c["trips"]), 1) or None
+        c["heads_up"] = [heads[t["id"]] for t in c["trips"] if t["id"] in heads]
     # Happening now, then coming up (soonest first), then past (latest first).
     current = sorted((c for c in cards if c["when"] != "past"),
                      key=lambda c: (c["when"] != "now", c["start"] or "9999", c["name"].lower()))
@@ -227,6 +239,23 @@ def expeditions_page(context, today: Optional[date] = None) -> dict:
                    "trips": sum(len(c["trips"]) for c in cards)},
         "forms": {k: v for k, v in _forms().items() if k in ("expedition", "trip")},
     }
+
+
+def _trip_heads_up(context, today: date) -> dict:
+    """What has to happen before a trip, by trip id, from MIA's findings (upkeep before the trip): {trip_id: claim}.
+    A findings rule that fails gives nothing, never an error."""
+    from core.findings import findings
+
+    try:
+        found = findings(context, today)
+    except Exception:
+        log.exception("Expeditions: findings failed")
+        return {}
+    out = {}
+    for f in found:
+        if f.key.startswith("upkeep_before_trip:"):
+            out.setdefault(f.key.split(":")[1], f.claim)
+    return out
 
 
 # ------------------------------------------------------------------ music
@@ -322,9 +351,25 @@ def next_birthday(raw: str, today: date):
     return None
 
 
+CATCH_UP_DAYS = 21
+
+
+def catch_up(people: list) -> Optional[dict]:
+    """Pure logic. The one person to catch up with (the design canvas's People, DEC-0113): whoever it's been longest
+    since, once that's three weeks or more; someone with no catch-up noted at all comes after anyone overdue. None
+    when everyone's been caught up with lately. A nudge, never a score (DEC-0014)."""
+    due = [p for p in people if p["days_since"] is not None and p["days_since"] >= CATCH_UP_DAYS]
+    if due:
+        top = max(due, key=lambda p: p["days_since"])
+        return {"id": top["id"], "name": top["name"], "days_since": top["days_since"]}
+    never = [p for p in people if p["days_since"] is None]
+    return {"id": never[0]["id"], "name": never[0]["name"], "days_since": None} if never else None
+
+
 def people_page(context, today: Optional[date] = None) -> dict:
     """The data the People screen shows, assembled here (the web only draws it); {"available": False} when there's no relationships store. People and pets with their details, days since last
-    contact, and next birthday; birthdays in the next 60 days, soonest first; counts and forms.
+    contact, and next birthday; birthdays in the next 60 days, soonest first; the one person to catch up with
+    (`catch_up`); counts and forms.
     """
     from core.more_actions import forms
 
@@ -363,5 +408,6 @@ def people_page(context, today: Optional[date] = None) -> dict:
     upcoming.sort(key=lambda u: u["in"])
     f = forms()
     return {"available": True, "as_of": today.isoformat(), "people": people, "pets": pets, "upcoming": upcoming,
+            "catch_up": catch_up(people),
             "counts": {"people": len(people), "pets": len(pets), "birthdays": len(upcoming)},
             "forms": {"person": f["person"], "pet": f["pet"]}}

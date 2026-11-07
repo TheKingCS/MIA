@@ -93,23 +93,20 @@
   function sideBySide(p) {
     const c = p.compare;
     if (!c.quotes.length) return el("p", { class: "empty" }, "No quotes yet. Draft a request, send it to a few insurers, and put in what they send back.");
-    return el("div", { class: "ins-quotes" }, el("p", { class: "dim" }, "Now: " + p.insurer + ", " + fmt(c.per_year) + " a year" +
-        (p.deductible ? ", " + fmt(p.deductible) + " deductible" : "") + "."),
+    return el("div", { class: "ins-quotes" }, el("h3", { class: "ins-side-label" }, "Quotes Side By Side"),
       ...c.quotes.map((q) => {
         const differs = c.rows.map((r, i) => ({ name: r.name, now: r.current, theirs: r.quotes[c.quotes.indexOf(q)] }))
           .filter((r) => r.theirs !== r.now && !(r.theirs === "—" && /^(no|none|excluded|declined|—)/i.test(r.now)))
           .map((r) => Object.assign(r, { theirs: r.theirs === "—" ? "not listed" : r.theirs }));
         // H-0066: coverage first, then the money (DEC-0034: a cheaper quote that covers less says so).
-        return el("article", { class: "ins-quote" + (q.id === c.best ? " best" : q.covers_less.length ? " less" : "") },
+        // The canvas: the insurer and the price, then the engine's one sentence (core/insurance.verdict).
+        return el("article", { class: "glass ins-quote tone-" + q.verdict.tone + (q.id === c.best ? " best" : "") },
           el("div", { class: "ins-head" }, el("div", { class: "row-title" }, (q.id === c.best ? "★ " : "") + q.insurer),
-            el("div", { class: "ins-cost" }, el("strong", {}, fmt(q.per_year)), el("span", { class: "dim" }, " a year"))),
-          q.covers_less.length ? el("p", { class: "ins-less" }, "⚠ Covers less: " + q.covers_less.join("; ")) :
-            q.unknown_coverage ? el("p", { class: "dim" }, "Coverage not put in: check it covers the same before you switch.") :
-            el("p", { class: "ins-same" }, "✓ Same coverage as now"),
-          el("p", { class: q.saves > 0 ? "ins-same" : "dim" }, q.saves > 0 ? "Saves " + fmt(q.saves) + " a year" :
-            q.saves < 0 ? fmt(-q.saves) + " more a year" : "The same price"),
-          !q.unknown_coverage && differs.length ? el("ul", { class: "ins-diff" }, differs.map((r) =>
-            el("li", {}, r.name + ": " + r.theirs + " (you have " + r.now + ")"))) : null,
+            el("div", { class: "ins-cost" }, el("strong", {}, fmt(q.per_year)), el("span", { class: "dim" }, " / yr"))),
+          el("p", { class: "ins-verdict" }, q.verdict.text),
+          !q.unknown_coverage && differs.length ? el("details", { class: "ins-diff-more" }, el("summary", {}, "Line by line"),
+            el("ul", { class: "ins-diff" }, differs.map((r) =>
+              el("li", {}, r.name + ": " + r.theirs + " (you have " + r.now + ")")))) : null,
           el("div", { class: "row-buttons" },
             q.chosen ? btn("I Switched", "btn-amber btn-small", () => act({ kind: "insurance.switched", params: { quote_id: q.id } }))
               : btn("Switch To This", "btn-ghost btn-small", () => act({ kind: "insurance.choose", params: { quote_id: q.id } })),
@@ -117,13 +114,27 @@
       }));
   }
 
+  // What you have now, as the canvas's first card: the insurer, the year's price, the renewal and the cover.
+  function youHave(p) {
+    const cover = (p.coverage_lines || []).find((l) => l.included && l.amounts && l.amounts.length);
+    return el("div", { class: "glass ins-have" },
+      el("span", { class: "ins-side-label" }, "You Have · " + p.kind),
+      el("div", { class: "ins-head" }, el("div", { class: "row-title" }, p.insurer),
+        el("div", { class: "ins-cost" }, el("strong", {}, fmt(p.per_year)), el("span", { class: "dim" }, " / yr"))),
+      el("p", { class: "dim" }, [p.renews ? "Renews " + day(p.renews) : null, cover ? cover.name + " " + cover.limit : null,
+        p.deductible ? fmt(p.deductible) + " deductible" : null].filter(Boolean).join(" · ")));
+  }
+
   function shop() {
     if (!page.policies.length) return policies();
     return page.policies.map((p) => section(p.icon + " " + p.name, el("div", { class: "row-buttons" },
-        btn("Draft A Quote Request", "btn-ghost btn-small", () => act({ kind: "insurance.request", params: { policy_id: p.id } })),
-        btn("Add A Quote", "btn-amber btn-small", () => addQuote(p))),
+        btn("Add A Quote", "btn-ghost btn-small", () => addQuote(p))),
+      youHave(p),
       checksOf(p),
       sideBySide(p),
+      el("button", { type: "button", class: "btn btn-big btn-green ins-request",
+        onclick: () => act({ kind: "insurance.request", params: { policy_id: p.id } }) }, "Draft A Quote Request"),
+      el("p", { class: "dim ins-you-send" }, "MIA drafts the request. You send it."),
       el("details", { class: "ins-list" }, el("summary", {}, "What an agent will ask for"),
         el("ul", {}, p.checklist.map((line) => el("li", {}, line))))));
   }

@@ -1,0 +1,1085 @@
+/*
+ * ui.css — the shared pieces from the design canvas (claude, 2026-11-07,
+ * DEC-0113 approved with the canvas "MIA Core Screens" as the reference;
+ * docs/design/MIA_DESIGN_STANDARDS.md says what each piece is for).
+ *
+ * Loaded last on every page, after concept.css, so these pieces win where
+ * they overlap. Values only from tokens.css (DEC-0023: never a literal
+ * color); an app's own data may use --atmo, everything MIA, active or
+ * primary stays --accent.
+ *
+ *   .mia-orb[data-state]   her presence, seven states, any size (--orb-d)
+ *   .finding               "MIA Noticed": kind, headline, why, what she used, one next step
+ *   .kind                  a small tag saying what something is (Deadline, Fact, Estimate, Missing...)
+ *   .stat-strip / .stat    three tiles, white value, colored index bar
+ *   .surface-focus         the one thing that matters now
+ *   .btn-big               the 56 px action for hands-busy modes
+ *   .state-*               empty, loading, error, offline
+ *   .used                  "What I used" under an answer
+ *   .atmo                  text in the app's own accent
+ */
+
+/* ------------------------------------------------------------ the orb */
+.mia-orb {
+  --orb-d: 112px;
+  width: var(--orb-d);
+  height: var(--orb-d);
+  flex: none;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 45%, var(--text) 0%, var(--accent-soft) 14%, var(--accent) 34%,
+    rgba(var(--rgb-accent), 0.45) 60%, rgba(var(--rgb-accent), 0) 72%);
+  box-shadow: 0 0 calc(var(--orb-d) * 0.36) rgba(var(--rgb-accent), 0.32);
+  animation: mia-orb-breathe 5s var(--ease) infinite;
+}
+.mia-orb[data-state="listening"] {
+  box-shadow: 0 0 0 calc(var(--orb-d) * 0.06) rgba(var(--rgb-accent), 0.22),
+    0 0 0 calc(var(--orb-d) * 0.13) rgba(var(--rgb-accent), 0.08);
+  animation: mia-orb-listen 1.6s ease-in-out infinite;
+}
+.mia-orb[data-state="thinking"] { animation: mia-orb-think 1.2s linear infinite; }
+.mia-orb[data-state="speaking"] { filter: brightness(1.2); animation: mia-orb-speak 0.6s ease-in-out infinite; }
+.mia-orb[data-state="needs-you"] {
+  background: radial-gradient(circle at 50% 45%, var(--text) 0%, var(--attention) 34%,
+    rgba(var(--rgb-amber), 0.45) 60%, rgba(var(--rgb-amber), 0) 72%);
+  box-shadow: 0 0 calc(var(--orb-d) * 0.36) var(--attention-glow);
+}
+.mia-orb[data-state="celebrate"] {
+  background: radial-gradient(circle at 50% 45%, var(--text) 0%, var(--win) 34%,
+    rgba(var(--rgb-win), 0.45) 60%, rgba(var(--rgb-win), 0) 72%);
+  box-shadow: 0 0 calc(var(--orb-d) * 0.45) var(--win-glow);
+  animation-iteration-count: 1;
+}
+.mia-orb[data-state="offline"] { filter: grayscale(1); opacity: 0.4; animation: none; }
+@keyframes mia-orb-breathe { 0%, 100% { transform: scale(1); opacity: 0.92; } 50% { transform: scale(1.05); opacity: 1; } }
+@keyframes mia-orb-listen {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(var(--rgb-accent), 0.18), 0 0 0 7px rgba(var(--rgb-accent), 0.06); }
+  50% { box-shadow: 0 0 0 5px rgba(var(--rgb-accent), 0.26), 0 0 0 11px rgba(var(--rgb-accent), 0.08); }
+}
+@keyframes mia-orb-think { from { filter: hue-rotate(0deg) brightness(1); } 50% { filter: brightness(1.15); } to { filter: brightness(1); } }
+@keyframes mia-orb-speak { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.07); } }
+.mia-orb-label {
+  font-family: var(--font-mono); font-size: var(--label-size); letter-spacing: var(--label-track);
+  text-transform: uppercase; color: var(--accent);
+}
+
+/* ------------------------------------------------------------ small tags */
+.kind {
+  display: inline-block;
+  font-family: var(--font-mono); font-size: calc(10.5px * var(--scale)); letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 2px 6px; border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong); color: var(--text-dim);
+  white-space: nowrap;
+}
+.kind.attention, .kind.deadline { color: var(--attention); border-color: rgba(var(--rgb-amber), 0.5); }
+.kind.ok { color: var(--ok); border-color: rgba(var(--rgb-ok), 0.5); }
+.kind.bad { color: var(--bad); border-color: rgba(var(--rgb-bad), 0.5); }
+.kind.accent, .kind.plan { color: var(--accent); border-color: rgba(var(--rgb-accent), 0.45); }
+.kind.win { color: var(--win); border-color: rgba(var(--rgb-win), 0.5); }
+.atmo { color: var(--atmo); }
+
+/* ------------------------------------------------------------ finding: MIA Noticed */
+.finding {
+  display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: flex-start;
+  padding: 16px 18px; margin-bottom: var(--gap);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, rgba(var(--rgb-panel-2), 0.96), rgba(var(--rgb-panel), 0.9));
+  border: 1px solid rgba(var(--rgb-amber), 0.35);
+}
+.finding-body { flex: 1 1 280px; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.finding-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.finding-label {
+  font-family: var(--font-mono); font-size: var(--label-size); letter-spacing: var(--label-track);
+  text-transform: uppercase; color: var(--attention);
+}
+.finding h2, .finding .finding-title { margin: 0; font-size: var(--text-md); font-weight: 600; line-height: 1.35; }
+.finding .finding-why { margin: 0; color: var(--text-dim); font-size: var(--text-sm); }
+.finding-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.finding-actions .btn { min-height: var(--touch); }
+.finding.calm { border-color: var(--line); }
+.finding.calm .finding-label { color: var(--accent); }
+
+/* ------------------------------------------------------------ what she used */
+.used {
+  font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-faint);
+  margin: 6px 0 0;
+}
+.used b { font-weight: 400; color: var(--text-dim); }
+
+/* ------------------------------------------------------------ status strip */
+.stat-strip {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
+  gap: 10px; margin-bottom: var(--gap);
+}
+.stat {
+  display: flex; gap: 12px; align-items: center; padding: 12px 14px;
+  border-radius: var(--radius); border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(var(--rgb-panel-2), 0.96), rgba(var(--rgb-panel), 0.9));
+  text-decoration: none; color: var(--text);
+}
+.stat::before { content: ""; width: 2px; align-self: stretch; border-radius: 2px; background: var(--accent); }
+.stat.ok::before { background: var(--ok); }
+.stat.attention::before { background: var(--attention); }
+.stat.quiet::before { background: var(--text-faint); }
+.stat .stat-label {
+  display: block; font-family: var(--font-mono); font-size: var(--label-size); letter-spacing: var(--label-track);
+  text-transform: uppercase; color: var(--text-faint);
+}
+.stat .stat-value { display: block; font-family: var(--font-mono); font-size: var(--text-lg); margin-top: 2px; }
+
+/* ------------------------------------------------------------ the focus surface */
+.surface-focus {
+  border-radius: var(--radius);
+  background: rgb(var(--rgb-panel-3));
+  border: 1px solid rgba(var(--rgb-accent), 0.42);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(var(--rgb-accent), 0.12);
+}
+
+/* ------------------------------------------------------------ big action (hands-busy) */
+.btn-big {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; min-height: var(--touch-big);
+  border: 0; border-radius: var(--radius-sm);
+  background: var(--accent); color: var(--bg);
+  font: inherit; font-size: var(--text-lg); font-weight: 700; text-decoration: none; cursor: pointer;
+  box-shadow: 0 0 22px var(--accent-glow);
+}
+.btn-big:active { transform: translateY(1px); }
+.btn-big.quiet { background: transparent; color: var(--text); border: 1px solid var(--line-strong); box-shadow: none; }
+
+/* ------------------------------------------------------------ the four states */
+.state-empty, .state-error, .state-offline {
+  display: flex; flex-direction: column; gap: 8px; padding: 18px;
+  border-radius: var(--radius); border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(var(--rgb-panel-2), 0.96), rgba(var(--rgb-panel), 0.9));
+}
+.state-error { border-color: rgba(var(--rgb-bad), 0.4); }
+.state-empty strong, .state-error strong, .state-offline strong { font-size: var(--text-md); }
+.state-empty p, .state-error p, .state-offline p { margin: 0; color: var(--text-dim); font-size: var(--text-sm); }
+.skeleton {
+  display: block; height: 14px; border-radius: var(--radius-sm); margin: 8px 0;
+  background: linear-gradient(90deg, rgba(var(--rgb-line), 0.08), rgba(var(--rgb-line), 0.16), rgba(var(--rgb-line), 0.08));
+  background-size: 200% 100%; animation: mia-skeleton 1.4s linear infinite;
+}
+@keyframes mia-skeleton { from { background-position: 200% 0; } to { background-position: 0 0; } }
+
+/* ------------------------------------------------------------ list rows with a kind on the right */
+.focus-list li .kind { margin-left: auto; align-self: center; }
+.focus-list li .why { display: block; color: var(--text-faint); font-size: var(--text-xs); }
+
+@media (prefers-reduced-motion: reduce) {
+  .mia-orb, .skeleton { animation: none !important; }
+}
+
+/* ------------------------------------------------------------ Home (the canvas's Home, DEC-0113) */
+.home-greet { display: flex; flex-direction: column; gap: 4px; margin: 6px 0 calc(var(--gap) * 1.25); }
+.home-greet h1 { margin: 0; font-size: var(--text-2xl); font-weight: 600; letter-spacing: -0.01em; line-height: 1.15; }
+.home-greet p { margin: 0; }
+.home-date {
+  font-family: var(--font-mono); font-size: var(--label-size); letter-spacing: var(--label-track);
+  text-transform: uppercase; color: var(--accent);
+}
+.home-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: var(--gap); margin-bottom: var(--gap); }
+.home-cols > section { margin: 0; }
+.home-cols h2::before {
+  content: ""; display: inline-block; width: 12px; height: 2px; margin-right: 10px; vertical-align: middle;
+  background: var(--accent);
+}
+.home-cols .focus-list li { display: flex; align-items: center; gap: 12px; }
+
+/* MIA's column, wide screens only: on narrower ones her orb button and Talk panel do this job. */
+.home-mia { display: none; }
+@media (min-width: 1240px) {
+  .layout:has(.home-mia) { grid-template-columns: 232px minmax(0, 1fr) 320px; }
+  .home-mia {
+    display: flex; flex-direction: column; gap: 16px; padding: 28px 20px;
+    border-left: 1px solid var(--line); background: rgba(var(--rgb-panel), 0.55);
+    position: sticky; top: 0; height: 100vh; box-sizing: border-box;
+  }
+  body:has(.home-mia) .mia-orb-button { display: none; }
+}
+.home-mia-top { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 8px 0 4px; }
+.home-mia-log { display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; overflow-y: auto; }
+.home-mia-msg { font-size: var(--text-sm); padding: 10px 12px; border-radius: var(--radius); line-height: 1.45; }
+.home-mia-msg.me { align-self: flex-end; max-width: 85%; background: rgba(var(--rgb-line), 0.10); }
+.home-mia-msg.mia { background: linear-gradient(180deg, rgba(var(--rgb-panel-2), 0.96), rgba(var(--rgb-panel), 0.9)); border: 1px solid var(--line); }
+.home-mia-ask { display: flex; flex-wrap: wrap; gap: 8px; }
+.home-mia-ask .btn { min-height: 36px; font-size: var(--text-xs); color: var(--text-dim); }
+.home-mia-form { display: flex; gap: 8px; }
+.home-mia-form input {
+  flex: 1; min-width: 0; min-height: var(--touch); box-sizing: border-box; padding: 0 12px;
+  border-radius: var(--radius-sm); border: 1px solid var(--line-strong); background: rgba(var(--rgb-bg), 0.6);
+  color: var(--text); font: inherit;
+}
+.home-mia-mic { width: var(--touch); min-height: var(--touch); padding: 0; display: grid; place-items: center; }
+.home-mia-mic::before {
+  content: ""; width: 20px; height: 20px; background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round'%3E%3Cpath d='M9 3h6v11h-6ZM5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7'/%3E%3C/svg%3E") center / contain no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round'%3E%3Cpath d='M9 3h6v11h-6ZM5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.home-mia .mia-orb { --orb-d: 112px; }
+.finding h2, .finding .finding-title, .finding-why, .finding-next, .home-mia-ask .btn { text-transform: none; }
+.finding .finding-next { margin: 0; font-size: var(--text-sm); color: var(--text); }
+.home-greet p { color: var(--text-dim); }
+@media (max-width: 560px) {
+  .stat-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .stat { padding: 10px; gap: 8px; }
+  .stat .stat-label { font-size: calc(10px * var(--scale)); letter-spacing: 0.08em; }
+  .finding-actions { width: 100%; }
+  .finding-actions .btn { flex: 1; }
+}
+/* A late chore is a nudge, not a failure (DEC-0014): amber, like the canvas's Deadline rows. */
+.focus-list li.overdue small, .focus-list li.overdue .why { color: var(--attention); }
+
+/* ------------------------------------------------------------ Talk (the canvas's Talk, DEC-0113) */
+.chat-head { align-items: center; }
+.chat-orb-link { display: grid; place-items: center; width: 48px; height: 48px; }
+.chat-head .mia-orb { --orb-d: 36px; }
+.chat-head h1 { margin: 0; font-size: var(--text-lg); }
+.chat-chips .btn, .chat-chips button { text-transform: none; }
+.chat-bubble.mia p {
+  background: linear-gradient(180deg, rgba(var(--rgb-panel-2), 0.96), rgba(var(--rgb-panel), 0.9));
+  border: 1px solid var(--line);
+}
+.chat-bubble .used summary { cursor: pointer; min-height: 28px; display: flex; align-items: center; }
+.chat-bubble .used div { margin: 4px 0 0; font-family: var(--font); font-size: var(--text-xs); color: var(--text-dim); }
+
+/* ------------------------------------------------------------ the sidebar's sections (DEC-0113) */
+.side-section { display: flex; flex-direction: column; margin-top: 12px; }
+.side-head, .side-group > summary {
+  font-family: var(--font-mono); font-size: var(--label-size); letter-spacing: var(--label-track);
+  text-transform: uppercase; color: var(--text-faint); padding: 6px 10px;
+}
+.side-group { margin-top: 2px; }
+.side-group:first-of-type { margin-top: 12px; }
+.side-group > summary {
+  list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+  min-height: 36px; border-radius: var(--radius-sm); text-transform: none; font-family: var(--font);
+  font-size: var(--text-sm); letter-spacing: 0; color: var(--text-dim);
+}
+.side-group > summary::-webkit-details-marker { display: none; }
+.side-group > summary:hover { color: var(--text); background: rgba(var(--rgb-line), 0.06); }
+.side-group[open] > summary { color: var(--text); }
+.side-count { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-faint); }
+
+/* ------------------------------------------------------------ Workout's live modes (the canvas's Active, Rest, Done) */
+.wk-start { display: flex; flex-direction: column; gap: 8px; margin: 12px 0 8px; }
+.wk-start p { margin: 0; text-align: center; font-size: var(--text-sm); }
+.train-steps .dim { color: var(--atmo); font-family: var(--font-mono); }
+.wk-bar {
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: var(--touch-big); padding: 0 16px;
+  margin-bottom: var(--gap); border-color: rgba(var(--rgb-accent), 0.45); color: var(--text); font: inherit; cursor: pointer;
+}
+.wk-bar > span:nth-child(2) { flex: 1; text-align: left; font-weight: 600; }
+body.wk-live { overflow: hidden; }
+body.wk-live .mia-orb-button, body.wk-live .bottom-bar { display: none; }
+.wk-mode {
+  position: fixed; inset: 0; z-index: 900; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 14px;
+  padding: max(12px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom));
+  max-width: 560px; margin: 0 auto;
+  background: radial-gradient(420px 360px at 50% 40%, rgba(var(--rgb-accent), 0.07), transparent 70%), var(--bg);
+}
+@media (min-width: 600px) { .wk-mode { max-width: none; padding-left: max(16px, calc(50vw - 280px)); padding-right: max(16px, calc(50vw - 280px)); } }
+.wk-top { display: flex; justify-content: space-between; align-items: center; }
+.wk-top .mia-orb { --orb-d: 40px; margin: 4px; }
+.wk-icon { width: 48px; min-height: 48px; padding: 0; }
+.wk-clock { display: flex; flex-direction: column; align-items: center; }
+.wk-label {
+  font-family: var(--font-mono); font-size: var(--label-size); letter-spacing: var(--label-track);
+  text-transform: uppercase; color: var(--text-faint);
+}
+.wk-label.ok { color: var(--ok); }
+.wk-label.atmo { color: var(--atmo); }
+.wk-mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.wk-clock .wk-mono { font-size: var(--text-lg); }
+.wk-focus { flex: 1; min-height: 360px; padding: 20px 18px; display: flex; flex-direction: column; gap: 10px; }
+.wk-focus-head { display: flex; justify-content: space-between; align-items: baseline; }
+.wk-focus h1 { margin: 0; font-size: calc(34px * var(--scale)); line-height: 1.1; font-weight: 600; }
+.wk-sets { display: flex; gap: 6px; }
+.wk-sets span { flex: 1; height: 6px; border-radius: var(--radius-pill); background: rgba(var(--rgb-line), 0.18); }
+.wk-sets span.done { background: var(--ok); }
+.wk-sets span.now { background: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
+.wk-count {
+  flex: 1; display: flex; align-items: baseline; justify-content: center; gap: 8px; padding: 12px 0;
+  font-family: var(--font-mono); font-variant-numeric: tabular-nums;
+}
+.wk-count-n { font-size: calc(140px * var(--scale)); font-weight: 600; line-height: 1; color: var(--text); }
+.wk-count-of { font-size: calc(32px * var(--scale)); color: var(--text-faint); }
+.wk-focus > .kind { align-self: center; }
+.wk-caption { text-align: center; margin: 0; }
+.wk-actions { display: flex; flex-direction: column; gap: 10px; }
+.wk-actions p { margin: 0; text-align: center; font-size: var(--text-sm); }
+.wk-pair { display: flex; gap: 10px; }
+.wk-pair > * { flex: 1; min-height: var(--touch); }
+.wk-done { min-height: 64px; }
+.wk-ring-wrap { position: relative; width: min(280px, 80vw); aspect-ratio: 1; margin: 12px auto 0; }
+.wk-ring { width: 100%; height: 100%; transform: rotate(-90deg); }
+.wk-ring circle { fill: none; stroke-width: 10; }
+.wk-ring-track { stroke: rgba(var(--rgb-line), 0.14); }
+.wk-ring-fill { stroke: var(--accent); stroke-linecap: round; filter: drop-shadow(0 0 8px var(--accent-glow)); transition: stroke-dashoffset 1s linear; }
+.wk-ring-text { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+.wk-ring-n { font-family: var(--font-mono); font-size: calc(72px * var(--scale)); font-weight: 600; font-variant-numeric: tabular-nums; }
+.wk-logged { text-align: center; margin: 0; color: var(--text-dim); font-size: var(--text-sm); }
+.wk-next { padding: 16px; display: flex; flex-direction: column; gap: 6px; }
+.wk-next h2 { margin: 0; font-size: var(--text-lg); }
+.wk-mode > .wk-actions { margin-top: auto; }
+.wk-done-head { display: flex; flex-direction: column; gap: 4px; padding-top: 8px; }
+.wk-done-head h1 { margin: 0; font-size: var(--text-xl); }
+.wk-table { padding: 14px 16px; }
+.wk-table-head { display: flex; justify-content: space-between; padding-bottom: 6px; }
+.wk-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 48px; border-top: 1px solid var(--line); }
+.wk-row .wk-mono { font-size: var(--text-xs); }
+@media (prefers-reduced-motion: reduce) { .wk-ring-fill { transition: none; } }
+.wk-mode h1, .wk-mode h2 { text-transform: none; }
+
+/* ------------------------------------------------------------ Kitchen: Tonight and cook mode (DEC-0113) */
+.kt-tonight { display: flex; flex-direction: column; gap: 8px; border-color: rgba(var(--rgb-accent), 0.35); }
+.kt-tonight h2 { margin: 0; font-size: var(--text-xl); }
+.kt-tonight p { margin: 0; }
+.kt-missing { color: var(--attention); font-size: var(--text-sm); }
+.recipe-cook { margin: 12px 0 4px; }
+body.cook-live { overflow: hidden; }
+body.cook-live .mia-orb-button, body.cook-live .bottom-bar { display: none; }
+.cook-mode {
+  position: fixed; inset: 0; z-index: 900; overflow-y: auto; box-sizing: border-box;
+  display: flex; flex-direction: column; gap: 16px;
+  padding: max(14px, env(safe-area-inset-top)) clamp(14px, 3vw, 28px) max(16px, env(safe-area-inset-bottom));
+  background: radial-gradient(700px 500px at 30% 40%, rgba(var(--rgb-accent), 0.05), transparent 70%), var(--bg);
+}
+.cook-top { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.cook-exit { min-height: var(--touch-big); }
+.cook-title { flex: 1; display: flex; flex-direction: column; min-width: 160px; }
+.cook-title strong { font-size: var(--text-lg); }
+.cook-steps { display: flex; gap: 6px; width: min(360px, 100%); }
+.cook-steps span { flex: 1; height: 6px; border-radius: var(--radius-pill); background: rgba(var(--rgb-line), 0.18); }
+.cook-steps span.done { background: var(--ok); }
+.cook-steps span.now { background: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
+.cook-body { flex: 1; min-height: 0; display: flex; gap: 20px; flex-wrap: wrap; }
+.cook-step { flex: 999 1 420px; padding: clamp(18px, 3vw, 36px); display: flex; flex-direction: column; gap: 22px; }
+.cook-step h1 { margin: 0; font-size: clamp(26px, 3.6vw, 46px); line-height: 1.25; font-weight: 600; text-transform: none; text-wrap: pretty; }
+.cook-uses { display: flex; flex-direction: column; gap: 10px; }
+.cook-chips { display: flex; flex-wrap: wrap; gap: 10px; }
+.cook-chip { padding: 10px 14px; border-radius: var(--radius-sm); background: rgba(var(--rgb-line), 0.08); border: 1px solid var(--line); font-size: var(--text-lg); }
+.cook-offer { align-self: flex-start; min-height: var(--touch-big); font-size: var(--text-md); }
+.cook-side { flex: 1 1 300px; display: flex; flex-direction: column; gap: 16px; }
+.cook-timers { padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.cook-timer { display: flex; flex-direction: column; gap: 6px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.cook-timer-head { display: flex; justify-content: space-between; align-items: center; font-size: var(--text-md); }
+.cook-timer-n { font-family: var(--font-mono); font-size: var(--text-3xl); font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.05; }
+.cook-timer.done .cook-timer-n { color: var(--attention); }
+.cook-timer .btn { align-self: flex-start; min-height: 40px; }
+.cook-timer .meter { height: 6px; border-radius: var(--radius-pill); background: rgba(var(--rgb-line), 0.14); overflow: hidden; }
+.cook-timer .meter-fill { height: 100%; background: var(--accent); }
+.cook-mia { padding: 18px; display: flex; gap: 14px; align-items: center; }
+.cook-mia .mia-orb { --orb-d: 48px; }
+.cook-mia p { margin: 4px 0 0; font-size: var(--text-sm); }
+.cook-foot { display: flex; gap: 16px; }
+.cook-foot .btn-big { min-height: 80px; font-size: var(--text-xl); }
+.cook-back { flex: 0 1 300px; }
+.cook-foot > :last-child { flex: 1; }
+.cook-stop { align-self: center; color: var(--text-dim); }
+.cook-foot { position: sticky; bottom: 0; padding-top: 10px; background: linear-gradient(180deg, transparent, var(--bg) 18%); }
+@media (max-width: 860px) {
+  .cook-body { flex: none; }
+  .cook-foot .btn-big { min-height: 64px; font-size: var(--text-lg); }
+  .cook-back { flex: 0 1 120px; }
+}
+
+/* ------------------------------------------------------------ every app's frame, as the canvas draws it (DEC-0113) */
+/* Status strip: the label above, a white value, a thin index bar; "needs you" is amber, never a red fill (DEC-0014). */
+.strip .cell { display: flex; flex-direction: column-reverse; align-items: flex-start; justify-content: flex-end; gap: 2px; }
+.strip .cell .t {
+  font-family: var(--font-mono); font-size: var(--label-size); letter-spacing: var(--label-track);
+  text-transform: uppercase; color: var(--text-faint);
+}
+.strip .cell .n { color: var(--text); font-size: var(--text-lg); }
+.strip .cell.bad { border-color: var(--line); border-left-color: var(--attention); background: linear-gradient(180deg, rgba(var(--rgb-panel-2), 0.94), rgba(var(--rgb-panel), 0.96)); }
+.strip .cell.bad .n { color: var(--text); }
+@media (max-width: 560px) {
+  .strip .cell .n { font-size: min(var(--text-lg), 4.6vw); }
+  .strip .cell .t { font-size: calc(10px * var(--scale)); letter-spacing: 0.08em; }
+}
+/* Needs attention: an amber frame (needs you), calm inside. */
+.attention-panel {
+  border-color: rgba(var(--rgb-amber), 0.35); border-left: 1px solid rgba(var(--rgb-amber), 0.35);
+  background: linear-gradient(180deg, rgba(var(--rgb-panel-2), 0.96), rgba(var(--rgb-panel), 0.9));
+}
+.attention-panel h3, .attention-panel h2 { color: var(--attention); }
+/* Overdue upkeep, deadlines and builds: amber, the colour of "needs you". Red stays for real errors. */
+.row .when.overdue, .ob-when.overdue { color: var(--attention); border-color: rgba(var(--rgb-amber), 0.5); }
+.cal-row.overdue, .ob-card.overdue { border-left-color: var(--attention); }
+.craft-card.overdue { border-color: rgba(var(--rgb-amber), 0.45); }
+/* Tabs: a rail along the bottom; the current one lit from below, no fill. */
+.ptabs { background: transparent; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; padding-left: 0; padding-right: 0; }
+.ptabs button { background: transparent; color: var(--text-dim); border: 0; border-radius: 0; min-height: var(--touch); }
+.ptabs button[aria-selected="true"] { background: transparent; color: var(--text); box-shadow: inset 0 -2px 0 var(--accent); }
+.money-row.overdue { border-color: rgba(var(--rgb-amber), 0.4); }
+.money-row.overdue .row-sub { color: var(--attention); }
+@media (max-width: 560px) { .strip .cell .n { font-size: min(var(--text-lg), 4vw); } }
+
+/* ------------------------------------------------------------ Missions (the canvas's Missions, DEC-0113) */
+.ms-ready { padding: 16px; display: flex; flex-direction: column; gap: 8px; margin-bottom: var(--gap); }
+.ms-ready-head { display: flex; justify-content: space-between; align-items: center; }
+.ms-ready h2 { margin: 0; font-size: var(--text-lg); text-transform: none; }
+.ms-ready p { margin: 0; }
+.ms-xp { font-family: var(--font-mono); font-size: var(--text-sm); color: var(--accent); white-space: nowrap; margin-left: auto; }
+.ms-next { margin: 6px 0 2px; font-size: var(--text-sm); color: var(--text-dim); }
+.ms-progress { display: flex; align-items: center; gap: 10px; }
+.ms-progress .bar { flex: 1; }
+.ms-count { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-dim); }
+.ms-tags { display: flex; gap: 6px; margin: 8px 0 0; }
+.free-val { display: inline-flex; align-items: center; gap: 8px; }
+.free-val { flex-direction: column; align-items: flex-end; gap: 4px; flex: none; text-align: right; }
+.free-line > span:first-child { min-width: 0; flex: 1; }
+
+/* ------------------------------------------------------------ Skills (DEC-0113) */
+.sk-cap { padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; margin-bottom: var(--gap); }
+.sk-cap-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; font-size: var(--text-xs); }
+.sk-cap-level { display: flex; align-items: baseline; gap: 10px; }
+.sk-cap-n { font-family: var(--font-mono); font-size: var(--text-xl); font-weight: 600; }
+.sk-cap .meter, .meter { height: 6px; border-radius: var(--radius-pill); background: rgba(var(--rgb-line), 0.14); overflow: hidden; }
+.meter-fill { height: 100%; background: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
+.sk-next { margin-top: 6px; padding-top: 10px; border-top: 1px solid var(--line); }
+.sk-next p { margin: 4px 0 0; font-size: var(--text-sm); }
+
+/* ---------------------------------------------------------------- Money: the net worth line (DEC-0113)
+   The canvas's Money artboard: the total, "+$X this month", and the last six months as one cyan line. */
+.nw-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.nw-change { font-family: var(--font-mono); font-size: var(--text-sm); color: var(--text-dim); }
+.nw-change.up { color: var(--ok); }
+.nw-line { width: 100%; height: 60px; display: block; margin-top: 6px; }
+.nw-line .stroke { fill: none; stroke: var(--accent); stroke-width: 2; vector-effect: non-scaling-stroke; }
+.nw-line .area { fill: rgba(var(--rgb-accent), 0.08); stroke: none; }
+.nw-note { margin: 4px 0 0; font-size: var(--text-sm); }
+
+/* ---------------------------------------------------------------- Garage: the machine card (DEC-0113)
+   Name and meter on one line, the condition bar, then each next task with its due words: amber when it
+   needs you or is close, grey when it's a way off. */
+.asset-head { display: flex; justify-content: space-between; align-items: baseline; }
+.asset-meter { font-family: var(--font-mono); font-size: var(--text-sm); color: var(--text); white-space: nowrap; flex: none; }
+.asset-kind { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim);
+  white-space: nowrap; flex: none; }
+.asset-model { margin: 0; font-size: var(--text-sm); }
+.asset-tasks { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.asset-tasks li { display: flex; justify-content: space-between; gap: 10px; font-size: var(--text-sm); }
+.asset-due { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); white-space: nowrap; }
+.asset-due.soon { color: var(--soon); }
+.asset-card { display: flex; flex-direction: column; justify-content: flex-start; gap: 8px; }
+.asset-card.attention, .glance .glass.attention { border-color: rgba(var(--rgb-amber), 0.5); }  /* needs you is amber, not an error */
+.asset-card > p.dim { margin: 0; font-size: var(--text-sm); }
+
+/* ---------------------------------------------------------------- Asset: the canvas's page (DEC-0113)
+   Its readings, this year's upkeep and its condition in the strip; Needs You as one focus card with a big
+   Done; what it cost lately as dated rows. */
+.stat-tile .stat-sub { font-size: var(--text-sm); color: var(--text-dim); }
+.stat-n.tone-ok { color: var(--ok); }
+.stat-n.tone-soon { color: var(--soon); }
+.stat-n.tone-bad { color: var(--attention); }  /* worn gear needs care: amber, not an error */
+.asset-focus { display: grid; gap: 8px; margin-bottom: var(--gap); }
+.asset-focus h2 { margin: 0; font-size: var(--text-lg); text-transform: none; }
+.asset-focus p { margin: 0; }
+.asset-focus .btn-big { justify-self: start; }
+.asset-spend { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: baseline; }
+.asset-when { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); white-space: nowrap; }
+.asset-focus .kind { justify-self: start; }
+@media (min-width: 861px) { .asset-focus .btn-big { width: auto; min-width: 260px; } }
+
+/* ---------------------------------------------------------------- The Dungeon: today's run (DEC-0113)
+   The canvas's run card, the overtime boss and the week's runs. Loot is gold (earned), the boss amber. */
+.dg-run-card { display: grid; gap: 10px; margin-bottom: var(--gap); }
+.dg-run-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.dg-run-card h2 { margin: 0; font-size: var(--text-xl); text-transform: none; }
+.dg-loot { display: flex; justify-content: space-between; align-items: baseline; padding: 10px 12px; border-radius: var(--radius);
+  background: rgba(var(--rgb-win), 0.08); border: 1px solid rgba(var(--rgb-win), 0.25); }
+.dg-loot strong { font-family: var(--font-mono); font-size: var(--text-lg); color: var(--win); }
+.dg-run-card p { margin: 0; }
+.dg-fields { display: grid; grid-template-columns: minmax(90px, 140px) minmax(0, 1fr); gap: 10px; }
+.dg-fields .form-row { margin: 0; }
+.dg-boss, .dg-week { display: grid; gap: 8px; margin-bottom: var(--gap); padding: 14px; }
+.dg-boss { border-color: rgba(var(--rgb-amber), 0.4); }
+.dg-boss-label { color: var(--attention); }
+.dg-boss-hours, .dg-week-n { font-family: var(--font-mono); font-size: var(--text-sm); }
+.dg-week-money { display: flex; justify-content: space-between; gap: 10px; font-size: var(--text-sm); font-family: var(--font-mono); }
+@media (min-width: 861px) { .dg-run-card .btn-big { justify-self: start; width: auto; min-width: 260px; } }
+.dg-run-top .label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); }
+.dg-run-top .dg-boss-label { color: var(--attention); }
+.dg-fields input { width: 100%; min-width: 0; box-sizing: border-box; }
+.dg-fields .form-row { min-width: 0; }
+
+/* ---------------------------------------------------------------- Compliance: the groups (DEC-0113)
+   One panel per group (Overdue and Next 30 Days amber-headed: they need you), each obligation one row: what, when
+   and who, and the one step that comes next. The row opens for everything else. */
+.ob-group { display: grid; gap: 10px; padding: 14px; margin-bottom: var(--gap); }
+.ob-group.overdue { border-color: rgba(var(--rgb-amber), 0.45); }
+.ob-group-name { margin: 0; font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-dim); }
+.ob-group.overdue .ob-group-name, .ob-group.soon .ob-group-name { color: var(--attention); }
+.ob-rows { display: grid; }
+.ob-row { padding: 10px 0; border-top: 1px solid var(--line); }
+.ob-row:first-child { border-top: 0; padding-top: 0; }
+.ob-row.open { display: grid; gap: 6px; }
+.ob-row.open p { margin: 0; }
+.ob-row-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ob-row-title { display: grid; gap: 3px; min-width: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit;
+  text-align: left; cursor: pointer; text-transform: none; }
+.ob-what { font-weight: 600; overflow-wrap: anywhere; }
+.ob-detail { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); }
+.ob-detail.overdue, .ob-detail.upcoming { color: var(--attention); }
+.ob-step { flex: none; white-space: nowrap; }
+.ob-step.verify { border-color: rgba(var(--rgb-accent), 0.5); color: var(--accent); }
+#panel > .row-buttons:first-child { margin-bottom: var(--gap); }
+
+/* ---------------------------------------------------------------- Insurance: Shop It (DEC-0113)
+   What you have, then the quotes side by side, each with the engine's one sentence: green when it's the same
+   cover for less, amber when cheaper means covering less. Then one big Draft A Quote Request. */
+.ins-have { display: grid; gap: 6px; padding: 12px 14px; margin: 6px 0 10px; }
+.ins-have p { margin: 0; font-size: var(--text-sm); }
+.ins-side-label { margin: 6px 0 0; font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-dim); }
+.ins-have .ins-side-label { margin: 0; }
+.ins-quote { display: grid; gap: 6px; padding: 12px 14px; border: 1px solid var(--line); }
+.ins-quote.tone-ok { border-color: rgba(var(--rgb-ok), 0.45); }
+.ins-quote.tone-attention { border-color: var(--line); border-left: 1px solid var(--line); }
+.ins-verdict { margin: 0; font-size: var(--text-sm); color: var(--text-dim); }
+.ins-quote.tone-ok .ins-verdict { color: var(--ok); }
+.ins-quote.tone-attention .ins-verdict { color: var(--attention); }
+.ins-diff-more summary { cursor: pointer; font-size: var(--text-sm); color: var(--text-dim); }
+.ins-request { margin-top: 8px; }
+.ins-you-send { margin: 6px 0 0; font-size: var(--text-sm); text-align: center; }
+@media (min-width: 861px) { .ins-request { width: auto; min-width: 280px; } .ins-you-send { text-align: left; } }
+
+/* ---------------------------------------------------------------- Real Estate: the property card (DEC-0113)
+   Name and where, its word (Rent Due amber, Rented green), then Rent / Cash Flow / Equity in one row. */
+.prop-name { display: grid; gap: 2px; min-width: 0; }
+.prop-name h3 { margin: 0; }
+.prop-name .dim { font-size: var(--text-sm); }
+.property-card .kind { flex: none; }
+.prop-trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding: 10px 0;
+  border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.prop-trio-cell { display: grid; gap: 4px; min-width: 0; }
+.prop-trio-t { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); }
+.prop-trio-cell strong { font-family: var(--font-mono); font-size: var(--text-md, 15px); font-weight: 600; overflow-wrap: anywhere; }
+.prop-trio-cell.good strong { color: var(--ok); }
+.prop-more { margin: 0; font-size: var(--text-sm); }
+.property-card .attention-line { color: var(--attention); font-size: var(--text-sm); }
+.prop-trio-cell strong small { font-size: 11px; font-weight: 400; color: var(--text-dim); }
+
+/* ---------------------------------------------------------------- Workshop: the bench (DEC-0113)
+   Each build in progress as the canvas's card (Budget / Spent / Hours, the next step), then what to sell first,
+   the best earner per hour, and one big Start A Build. Workshop's own steel is the app accent. */
+.ws-build { display: grid; gap: 10px; margin-bottom: var(--gap); }
+.ws-build h2 { margin: 0; font-size: var(--text-xl); text-transform: none; }
+.ws-build-top { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.ws-label { margin: 0; font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-dim); }
+.ws-next { margin: 0; color: rgb(var(--rgb-atmo)); }
+.prop-trio-cell.over strong { color: var(--attention); }
+.ws-panel { display: grid; gap: 8px; padding: 14px; margin-bottom: var(--gap); }
+.ws-sell { display: grid; }
+.ws-sell-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 12px; align-items: baseline; padding: 6px 0;
+  border-top: 1px solid var(--line); font-size: var(--text-sm); }
+.ws-sell-row:first-child { border-top: 0; }
+.ws-keeps { font-family: var(--font-mono); font-size: 12px; color: var(--attention); }
+.ws-n { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); }
+.ws-best strong { font-family: var(--font-mono); color: var(--ok); }
+.ws-start { margin-bottom: var(--gap); }
+@media (min-width: 861px) { .ws-start { width: auto; min-width: 260px; } }
+
+/* ---------------------------------------------------------------- Orders: the stage rail (DEC-0113)
+   Four segments: done green, now cyan, to come faint. What's owed is amber; paid is green. */
+.ord-card { display: grid; gap: 8px; padding: 14px; }
+.ord-line { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.ord-line h3 { margin: 0; overflow-wrap: anywhere; }
+.ord-price { font-family: var(--font-mono); font-weight: 600; white-space: nowrap; }
+.ord-sub { font-size: var(--text-sm); }
+.ord-owed { font-family: var(--font-mono); font-size: 12px; white-space: nowrap; }
+.ord-owed.owed { color: var(--attention); }
+.ord-owed.paid { color: var(--ok); }
+.ord-rail { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.ord-seg { height: 4px; border-radius: var(--radius-pill); background: rgba(var(--rgb-line), 0.18); }
+.ord-seg.done { background: var(--ok); }
+.ord-seg.now { background: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
+.ord-foot { align-items: center; }
+.ord-stage { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); }
+.ord-card.overdue { border-color: rgba(var(--rgb-amber), 0.45); }
+.ord-build, .ord-more { margin: 0; }
+.ord-more .btn { opacity: 0.8; }
+
+/* ---------------------------------------------------------------- Inbox: "Goes to" (DEC-0113) */
+.inbox-goes { margin: 0; padding: 8px 10px; border-radius: var(--radius-sm); border: 1px solid rgba(var(--rgb-accent), 0.25);
+  background: rgba(var(--rgb-accent), 0.06); font-size: var(--text-sm); color: var(--accent); }
+.inbox-goes-t { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); }
+
+/* ---------------------------------------------------------------- Calendar: one page (DEC-0113)
+   Lists on the left, the month on the right (stacked on the phone). Past due is amber: it needs you. */
+.cal-layout { display: grid; gap: var(--gap); grid-template-areas: "today" "past" "month" "soon"; }
+.cal-today { grid-area: today; } .cal-past { grid-area: past; } .cal-soon-panel { grid-area: soon; } .cal-month { grid-area: month; }
+@media (min-width: 1100px) {
+  .cal-layout { grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr); align-items: start;
+    grid-template-areas: "today month" "past month" "soon month" ". month"; }
+}
+.cal-month { display: grid; gap: var(--gap); min-width: 0; align-self: start; }
+.cal-panel { min-width: 0; }
+/* Rows inside a calendar panel: one line each (icon, what and when, its kind, its action). */
+.cal-panel .rows { gap: 0; }
+.cal-panel .cal-row { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto auto; align-items: center; gap: 10px;
+  padding: 8px 0; border: 0; border-top: 1px solid var(--line); border-radius: 0; background: none; box-shadow: none; }
+.cal-panel .cal-row:first-child { border-top: 0; }
+.cal-panel .cal-row .row-buttons { grid-column: auto; margin: 0; flex-wrap: nowrap; }
+.cal-panel .cal-row .chip { font-size: 11px; }
+@media (max-width: 520px) { .cal-panel .cal-row { grid-template-columns: 22px minmax(0, 1fr) auto; } .cal-panel .cal-row .cal-kind { display: none; } }
+.cal-panel .cal-row .btn { min-height: 32px; padding: 0 12px; }
+.cal-panel .cal-row.overdue { border-left: 0; }
+.cal-panel { display: grid; gap: 10px; padding: 14px; }
+.cal-panel.needs { border-color: rgba(var(--rgb-amber), 0.45); }
+.cal-panel.needs .cal-label { color: var(--attention); }
+.cal-panel-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.cal-label { margin: 0; font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-dim); }
+.cal-soon { display: grid; }
+.cal-soon-row { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 12px; align-items: baseline; padding: 7px 0;
+  border-top: 1px solid var(--line); font-size: var(--text-sm); }
+.cal-soon-row:first-child { border-top: 0; }
+.cal-when { font-family: var(--font-mono); font-size: 12px; color: var(--accent); white-space: nowrap; }
+.cal-what { overflow-wrap: anywhere; }
+.cal-app { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); white-space: nowrap; }
+.cal-nav { display: flex; justify-content: space-between; align-items: center; }
+.cal-month-name { font-weight: 600; }
+.cal-arrow { width: 36px; height: 36px; border-radius: var(--radius-sm); border: 1px solid var(--line); background: none; color: var(--text);
+  font-size: 20px; cursor: pointer; }
+.cal-arrow:hover { border-color: var(--line-strong); }
+.cal-month .cal-grid { margin-top: 0; }
+.cal-month .cal-day { min-height: 44px; }
+.cal-day.late .n { color: var(--attention); }
+
+/* ---------------------------------------------------------------- Journal (DEC-0113)
+   Write Entry and Talk It Out, the privacy line, search, then one column of entries: date and tag above the title. */
+.journal-private { margin: -6px 0 var(--gap); font-size: var(--text-sm); }
+.journal-top { display: flex; justify-content: space-between; gap: 10px; }
+.journal-date, .journal-tag { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); }
+.journal-tag { color: var(--accent); text-align: right; }
+.journal-card h3 { margin: 0; text-transform: none; }
+.journal-preview { margin: 0; color: var(--text-dim); font-size: var(--text-sm); display: -webkit-box; -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden; }
+.journal-search { box-sizing: border-box; min-height: 44px; padding: 0 12px; border-radius: var(--radius-sm); border: 1px solid var(--line-strong);
+  background: rgba(var(--rgb-panel), 0.9); color: var(--text); font: inherit; }
+.journal-search::placeholder { color: var(--text-dim); }
+.journal-search:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.journal-private { color: var(--text-dim); }
+@media (min-width: 861px) { .journal-actions .btn { flex: 0 1 220px; } }
+
+/* ---------------------------------------------------------------- People: birthdays (DEC-0113)
+   One card per birthday (amber when it's within a week), gift ideas under it, then who to catch up with. */
+.pp-birthdays { display: grid; gap: 10px; }
+.pp-bday, .pp-catch { padding: 12px 14px; display: grid; gap: 8px; }
+.pp-bday-head, .pp-catch { grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; }
+.pp-bday-head { display: grid; }
+.pp-catch { display: grid; margin-top: 6px; }
+.pp-bday .pp-title h3, .pp-catch .pp-title h3 { margin: 0; }
+.pp-bday .pp-title p, .pp-catch .pp-title p { margin: 2px 0 0; font-size: var(--text-sm); }
+.pp-in { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); white-space: nowrap; }
+.pp-in.soon { color: var(--attention); }
+.pp-gift { margin: 0; padding-top: 8px; border-top: 1px solid var(--line); font-size: var(--text-sm); color: var(--text-dim); }
+.pp-label { margin: 10px 0 0; font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-dim); }
+.pp-catch { margin-top: 0; }
+@media (max-width: 520px) { .pp-catch { grid-template-columns: auto minmax(0, 1fr); } .pp-catch .btn { grid-column: 1 / -1; } }
+
+/* ---------------------------------------------------------------- Classroom (DEC-0113)
+   The course to continue (progress, the next lessons to tick), then the subjects as rows that open. */
+.cl-label { margin: 0; font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-dim); }
+.cl-continue { display: grid; gap: 10px; margin-bottom: var(--gap); }
+.cl-continue .cl-label { color: var(--accent); }
+.cl-continue h2 { margin: 0; font-size: var(--text-xl); text-transform: none; }
+.cl-progress { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+.cl-count { font-family: var(--font-mono); font-size: var(--text-sm); }
+.cl-lessons { display: grid; gap: 6px; }
+.cl-lesson { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 10px; align-items: center; min-height: 44px;
+  padding: 0 10px; border-radius: var(--radius-sm); border: 1px solid var(--line); background: none; color: var(--text);
+  font: inherit; text-align: left; cursor: pointer; text-transform: none; }
+.cl-check { width: 20px; height: 20px; border-radius: 4px; border: 1px solid var(--line-strong); display: grid; place-items: center;
+  font-size: 12px; color: var(--ok); }
+.cl-lesson.done { color: var(--text-dim); }
+.cl-lesson.done .cl-check { border-color: var(--ok); background: rgba(var(--rgb-ok), 0.16); }
+.cl-xp { font-family: var(--font-mono); font-size: 12px; color: var(--win); white-space: nowrap; }
+.cl-lesson.done .cl-xp { color: var(--ok); }
+.cl-subjects-label { margin-bottom: 8px; }
+.cl-subjects { display: grid; gap: 8px; margin-bottom: var(--gap); }
+.cl-subject { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; min-height: 52px;
+  padding: 0 14px; color: var(--text); font: inherit; text-align: left; cursor: pointer; text-transform: none; }
+.cl-subject.open { border-color: rgba(var(--rgb-accent), 0.5); }
+.cl-n { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); }
+.cl-subject-open { display: grid; gap: 8px; }
+
+/* ---------------------------------------------------------------- A learning path (Guitar) (DEC-0113)
+   The stage and its rail, the week, what's next with the homework, the stage's checks (green when passed), then
+   Log Practice and Tune. */
+.gp-stage { display: grid; gap: 6px; margin-bottom: var(--gap); }
+.gp-stage h2 { margin: 0; font-size: var(--text-2xl); text-transform: none; }
+.gp-stage p { margin: 0; font-size: var(--text-sm); }
+.gp-rail { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; margin-top: 6px; }
+.gp-seg { height: 4px; border-radius: var(--radius-pill); background: rgba(var(--rgb-line), 0.18); }
+.gp-seg.done { background: var(--ok); }
+.gp-seg.now { background: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
+.gp-week { padding: 12px 14px; margin-bottom: var(--gap); border-top: 1px solid var(--glass-line); border-bottom: 1px solid var(--glass-line); }
+.gp-label { margin: 0; font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-dim); }
+.gp-next { display: grid; gap: 6px; margin-bottom: var(--gap); }
+.gp-next .gp-label { color: var(--accent); }
+.gp-next-text { margin: 0; font-size: var(--text-lg); font-weight: 600; }
+.gp-next p.dim { margin: 0; font-size: var(--text-sm); }
+.gp-checks { display: grid; gap: 0; padding: 14px; margin-bottom: var(--gap); }
+.gp-checks .gp-label { margin-bottom: 6px; }
+.gp-check { display: grid; gap: 6px; padding: 10px 0; border-top: 1px solid var(--line); }
+.gp-check-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.gp-what { overflow-wrap: anywhere; }
+.gp-state { font-family: var(--font-mono); font-size: 11.5px; color: var(--text-dim); white-space: nowrap; }
+.gp-check.passed .gp-state { color: var(--ok); }
+.gp-check.passed .gp-what { color: var(--text-dim); }
+.gp-check p.dim { margin: 0; font-size: var(--text-sm); }
+.gp-actions { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
+@media (max-width: 520px) { .gp-check-head { flex-direction: column; gap: 2px; } .gp-state { white-space: normal; } }
+
+/* ---------------------------------------------------------------- Memory Vault (DEC-0113)
+   The month and how much of it is safe at home; each photo's dot (green safe, amber only on the phone). */
+.vault-month { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.vault-month select { background: rgba(var(--rgb-panel), 0.9); color: var(--text); border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm); padding: 0 10px; font: inherit; font-weight: 600; }
+.vault-safe { font-family: var(--font-mono); font-size: 12px; color: var(--attention); }
+.vault-safe.all { color: var(--ok); }
+.vault-dot { width: 9px; height: 9px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.5); align-self: center; }
+.vault-dot.ok { background: var(--ok); }
+.vault-dot.wait { background: var(--attention); }
+.vault-marks { left: auto; right: 6px; bottom: 6px; align-items: center; }
+.vault-day-head h2 { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--text-dim); }
+.vault-what { font-size: var(--text-sm); color: var(--text-dim); }
+.vault-legend { margin: 12px 0 0; }
+
+/* ---------------------------------------------------------------- Operating Journal (DEC-0113)
+   Each line: your words, what checks it, its meter and the plain numbers. */
+.op-group { display: grid; gap: 10px; margin-bottom: var(--gap); }
+.op-label { margin: 0; font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-dim); }
+.op-line { display: grid; gap: 6px; padding: 12px 14px; }
+.op-text { margin: 0; font-weight: 600; }
+.op-how { margin: 0; font-size: var(--text-sm); color: var(--text-dim); }
+.op-meter { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+.op-score { font-family: var(--font-mono); font-size: 12px; white-space: nowrap; }
+.op-line .row-buttons { margin-top: 2px; }
+
+/* ---------------------------------------------------------------- Play (DEC-0113)
+   Six weeks of play minutes as bars (this week lit), the latest games, one big Log a Game. */
+.pl-panel { display: grid; gap: 10px; padding: 14px; margin-bottom: var(--gap); }
+.pl-label { margin: 0; font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-dim); }
+.pl-bars { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 10px; height: 120px; align-items: end; }
+.pl-bar { display: grid; grid-template-rows: 1fr auto; gap: 4px; height: 100%; }
+.pl-fill { align-self: end; border-radius: 3px 3px 0 0; background: rgba(var(--rgb-accent), 0.35); min-height: 2px; }
+.pl-bar.now .pl-fill { background: var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
+.pl-wk { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-dim); text-align: center; }
+.pl-week { margin: 0; font-size: var(--text-sm); color: var(--text-dim); }
+.pl-games { display: grid; }
+.pl-game { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 12px; align-items: center; padding: 8px 0;
+  border-top: 1px solid var(--line); }
+.pl-game:first-child { border-top: 0; }
+.pl-what { font-weight: 600; overflow-wrap: anywhere; }
+.pl-when { font-size: var(--text-sm); color: var(--text-dim); }
+.pl-min { font-family: var(--font-mono); font-size: 12px; }
+@media (min-width: 861px) { .pl-log { width: auto; min-width: 260px; } }
+
+/* ---------------------------------------------------------------- Observations (DEC-0113)
+   One card per thing noticed: Needs You (amber edge) first, then the calm ones. */
+.obs-list { display: grid; gap: 10px; }
+.obs-card { display: grid; gap: 6px; padding: 12px 14px; }
+.obs-card.tone-attention { border-color: rgba(var(--rgb-amber), 0.4); }
+.obs-top { display: flex; gap: 8px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; }
+.obs-kind { color: var(--accent); font-weight: 600; }
+.obs-card.tone-attention .obs-kind { color: var(--attention); }
+.obs-used { color: var(--text-dim); }
+.obs-what { margin: 0; font-weight: 600; }
+.obs-why, .obs-next { margin: 0; font-size: var(--text-sm); color: var(--text-dim); }
+.obs-open { font-size: var(--text-sm); color: var(--accent); text-decoration: none; justify-self: start; }
+.obs-open:hover { text-decoration: underline; }
+.obs-note { margin-top: var(--gap); font-size: var(--text-sm); }
+
+/* ---------------------------------------------------------------- Expeditions (DEC-0113)
+   The next expedition as one card (heads-up in amber, packing to tick, Start Trip), then the rest as rows. */
+.ex-label { margin: 0; font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-dim); }
+.ex-label.accent { color: var(--accent); }
+.ex-next { display: grid; gap: 10px; margin-bottom: var(--gap); }
+.ex-next h2 { margin: 0; font-size: var(--text-xl); text-transform: none; }
+.ex-next > p { margin: 0; }
+.ex-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.ex-heads { color: var(--attention); font-size: var(--text-sm); }
+.ex-pack { display: grid; gap: 8px; padding-top: 10px; border-top: 1px solid var(--line); }
+.ex-count { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); white-space: nowrap; }
+.ex-gear { display: grid; gap: 4px; }
+.ex-item { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; align-items: center; min-height: 40px; padding: 0 8px;
+  border: 0; border-radius: var(--radius-sm); background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer;
+  text-transform: none; }
+.ex-item:hover { background: rgba(var(--rgb-accent), 0.06); }
+.ex-tick { width: 20px; height: 20px; border-radius: 4px; border: 1px solid var(--line-strong); display: grid; place-items: center;
+  font-size: 12px; color: var(--ok); }
+.ex-item.on { color: var(--text-dim); }
+.ex-item.on .ex-tick { border-color: var(--ok); background: rgba(var(--rgb-ok), 0.16); }
+@media (min-width: 861px) { .ex-start { width: auto; min-width: 240px; } }
+.ex-rows { display: grid; gap: 8px; margin: 8px 0 var(--gap); }
+.ex-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 0 14px;
+  color: var(--text); font: inherit; text-align: left; cursor: pointer; text-transform: none; }
+.ex-actions { margin-top: var(--gap); }
+
+/* ---------------------------------------------------------------- Maps: the route card (DEC-0113) */
+.map-view { min-height: min(60vh, 520px); }
+.mp-route { display: grid; gap: 10px; padding: 14px; margin-top: var(--gap); }
+.mp-route p { margin: 0; }
+.mp-route-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.mp-label { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--text-dim); }
+.mp-bearing { margin-left: auto; color: var(--accent); }
+.mp-route select { min-height: 36px; padding: 0 8px; border-radius: var(--radius-sm); border: 1px solid var(--line-strong);
+  background: rgba(var(--rgb-panel), 0.9); color: var(--text); font: inherit; font-weight: 600; }
+.mp-route .prop-trio-cell small { font-family: var(--font-mono); font-size: 11px; }
+
+/* ---------------------------------------------------------------- Navigation (DEC-0113)
+   A compass with its needle on the bearing, the waypoints with their grid, sun and moon. */
+.nv-bearing { display: grid; justify-items: center; gap: 10px; padding: 18px; margin-bottom: var(--gap); }
+.nv-compass { width: 200px; height: 200px; }
+.nv-compass .ring { fill: none; stroke: rgba(var(--rgb-line), 0.2); }
+.nv-compass .ticks { stroke: rgba(var(--rgb-line), 0.35); }
+.nv-compass .dirs text { font-family: var(--font-mono); font-size: 12px; fill: var(--text-dim); text-anchor: middle; }
+.nv-compass .needle { fill: var(--accent); }
+.nv-compass .tail { fill: rgba(var(--rgb-line), 0.3); }
+.nv-read { display: flex; gap: 20px; align-items: baseline; font-family: var(--font-mono); font-size: var(--text-lg); }
+.nv-read .dim { font-size: var(--text-sm); }
+.nv-pick { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: center; font-size: var(--text-sm); color: var(--text-dim); }
+.nv-pick select { min-height: 36px; padding: 0 8px; border-radius: var(--radius-sm); border: 1px solid var(--line-strong);
+  background: rgba(var(--rgb-panel), 0.9); color: var(--text); font: inherit; }
+.nv-list { display: grid; padding: 12px 14px; margin-bottom: var(--gap); }
+.nv-label { margin: 0 0 4px; font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-dim); }
+.nv-wp { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 52px; border-top: 1px solid var(--line); }
+.nv-grid { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); }
+.nv-hint { margin: 8px 0 0; font-size: var(--text-sm); }
+.nv-sky { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.nv-tile { display: grid; gap: 4px; padding: 12px 14px; }
+.nv-tile strong { font-family: var(--font-mono); font-weight: 600; }
+.nv-tile .dim { font-size: 12px; }
+
+/* ---------------------------------------------------------------- World Map (DEC-0113) */
+.wm-head { display: grid; gap: 4px; margin-bottom: var(--gap); }
+.wm-head h2 { margin: 0; font-size: var(--text-2xl); text-transform: none; }
+.wm-head p { margin: 0; }
+.wm-label { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+.wm-map { padding: 8px; }
+.wm-next { display: grid; gap: 8px; padding: 12px 14px; margin: var(--gap) 0; }
+.wm-next .wm-label { color: var(--text-dim); }
+.wm-next-top { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: var(--text-sm); }
+.wm-progress { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+.wm-pct { font-family: var(--font-mono); font-size: 12px; color: var(--win); }
+.wm-here { display: grid; gap: 6px; justify-items: center; margin-bottom: var(--gap); }
+.wm-here p { margin: 0; font-size: var(--text-sm); text-align: center; }
+@media (min-width: 861px) { .wm-here { justify-items: start; } .wm-here .btn-big { width: auto; min-width: 240px; } }
+.wm-here a { color: var(--accent); }
+
+/* ---------------------------------------------------------------- Knowledge (DEC-0113)
+   A big search box, "works with no internet", then a card per hit: its pack, title and a snippet. */
+.kn-form { margin: 0 0 6px; }
+.kn-search { box-sizing: border-box; width: 100%; min-height: 52px; padding: 0 14px; border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong); background: rgba(var(--rgb-panel), 0.9); color: var(--text); font: inherit; font-size: var(--text-lg); }
+.kn-search:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.kn-note { margin: 0 0 var(--gap); font-family: var(--font-mono); font-size: 12px; color: var(--ok); }
+.kn-hits { display: grid; gap: 10px; }
+.kn-hit { display: grid; gap: 4px; padding: 12px 14px; color: var(--text); font: inherit; text-align: left; cursor: pointer; text-transform: none; }
+.kn-pack { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+.kn-title { font-weight: 600; }
+.kn-snip { font-size: var(--text-sm); color: var(--text-dim); }
+
+/* ---------------------------------------------------------------- Music (DEC-0113)
+   Song rows you tap to play (the one playing in cyan), and the Now Playing bar held at the bottom. */
+.mu-rows { display: grid; }
+.music-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; border-top: 1px solid var(--line); }
+.music-row:first-child { border-top: 0; }
+.mu-song { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; min-height: 56px; padding: 0 4px;
+  border: 0; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; text-transform: none; }
+.mu-titles { display: grid; gap: 2px; min-width: 0; }
+.mu-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mu-artist { font-size: var(--text-sm); color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mu-len { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); }
+.music-row.playing .mu-title, .music-row.playing .mu-len { color: var(--accent); }
+.music-row .row-buttons { margin: 0; flex-wrap: nowrap; }
+.music-player { position: sticky; bottom: calc(var(--phone-nav, 0px) + 10px); z-index: 5; display: grid; gap: 8px; padding: 12px 14px;
+  margin-top: var(--gap); box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.4); }
+.mu-bar { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; }
+.music-now { display: grid; gap: 2px; min-width: 0; }
+.music-now strong, .music-now .dim { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mu-label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+.mu-ctls { display: flex; gap: 6px; }
+.mu-ctl { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line-strong); background: none; color: var(--text);
+  font-size: 15px; cursor: pointer; }
+.mu-ctl:hover { border-color: var(--accent); color: var(--accent); }
+.music-audio { display: none; }
+@media (max-width: 860px) { .music-player { bottom: 92px; } }
+.mu-add { min-width: 36px; padding: 0 10px; font-size: 16px; }
+.music-library a { color: var(--accent); }
+
+/* ---------------------------------------------------------------- Files (DEC-0113) */
+.fl-crumbs { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; font-size: var(--text-sm); }
+.fl-crumbs a { color: var(--accent); text-decoration: none; }
+.fl-here { font-weight: 600; }
+.fl-actions { margin-bottom: var(--gap); }
+.fl-list { display: grid; padding: 0 14px; }
+.fl-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; border-top: 1px solid var(--line); }
+.fl-row:first-child { border-top: 0; }
+.fl-open { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 12px; align-items: center; min-height: 58px; padding: 0;
+  border: 0; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; text-transform: none; }
+.fl-ico { width: 22px; height: 22px; fill: none; stroke-width: 1.6; stroke-linejoin: round; }
+.fl-ico.folder { stroke: var(--accent); }
+.fl-ico.doc { stroke: var(--text-dim); }
+.fl-text { display: grid; gap: 2px; min-width: 0; }
+.fl-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fl-meta { font-family: var(--font-mono); font-size: 11.5px; color: var(--text-dim); }
+.fl-more { width: 40px; height: 40px; border: 0; border-radius: 50%; background: none; color: var(--text-dim); font-size: 20px; cursor: pointer; }
+.fl-more:hover { color: var(--text); background: rgba(var(--rgb-line), 0.08); }
+.fl-row .row-buttons { margin: 0; flex-wrap: nowrap; }
+.fl-note { margin-top: var(--gap); font-size: var(--text-sm); }
+
+/* ---------------------------------------------------------------- Passwords (DEC-0113)
+   One line per login (name, user, dots, Show); Show opens one card at the top that hides itself. */
+.pw-group { display: grid; padding: 4px 14px; margin-bottom: var(--gap); }
+.pw-label { margin: 10px 0 4px; font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-dim); }
+.pw-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 10px; min-height: 58px;
+  border-top: 1px solid var(--line); }
+.pw-row:first-child, .pw-label + .pw-row { border-top: 0; }
+.pw-main { display: grid; gap: 2px; min-width: 0; }
+.pw-title { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.pw-user { font-size: var(--text-sm); color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pw-dots { font-family: var(--font-mono); color: var(--text-dim); letter-spacing: 0.1em; }
+.pw-row .row-buttons { margin: 0; flex-wrap: nowrap; align-items: center; }
+.pw-shown { display: grid; gap: 6px; margin-bottom: var(--gap); }
+.pw-shown-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.pw-countdown { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--attention); }
+.pw-shown .pw-secret { font-family: var(--font-mono); font-size: var(--text-lg); color: var(--accent); word-break: break-all; }
+@media (max-width: 520px) { .pw-dots { display: none; } }
+.pw-search { box-sizing: border-box; flex: 1 1 100%; min-height: 44px; padding: 0 12px; border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong); background: rgba(var(--rgb-panel), 0.9); color: var(--text); font: inherit; }
+.pw-search::placeholder { color: var(--text-dim); }
+
+/* ---------------------------------------------------------------- Good News Radio (DEC-0113) */
+.nw-head { display: grid; gap: 4px; margin-bottom: var(--gap); }
+.nw-head h2 { margin: 0; font-size: var(--text-2xl); text-transform: none; }
+.nw-label { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+.nw-stories { display: grid; gap: 10px; margin-bottom: var(--gap); }
+.nw-story { display: grid; gap: 6px; padding: 12px 14px; justify-items: start; }
+.nw-title { margin: 0; font-weight: 600; }
+.nw-caveat { margin: 0; font-size: var(--text-sm); color: var(--text-dim); }
+.nw-sources summary { cursor: pointer; font-size: var(--text-sm); color: var(--accent); }
+.nw-sources ul { margin: 6px 0 0; padding-left: 18px; font-size: var(--text-sm); }
+.nw-sources a { color: var(--accent); }
+
+/* ---------------------------------------------------------------- Look (DEC-0113) */
+.lk-head h2 { margin: 0 0 var(--gap); font-size: var(--text-2xl); text-transform: none; }
+.lk-photo { position: relative; display: grid; place-items: center; aspect-ratio: 4 / 3; max-height: 360px; overflow: hidden;
+  margin-bottom: 10px; }
+.lk-photo img { width: 100%; height: 100%; object-fit: cover; }
+.lk-tag { position: absolute; left: 10px; bottom: 10px; padding: 3px 8px; border-radius: var(--radius-sm); background: rgba(0, 0, 0, 0.55);
+  font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text); }
+.lk-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.lk-chip { min-height: 40px; padding: 0 14px; border-radius: var(--radius-pill); border: 1px solid var(--line-strong); background: none;
+  color: var(--text); font: inherit; font-size: var(--text-sm); cursor: pointer; text-transform: none; }
+.lk-chip[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: rgba(var(--rgb-accent), 0.08); }
+.lk-ask { box-sizing: border-box; width: 100%; min-height: 44px; padding: 0 12px; margin-bottom: var(--gap); border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong); background: rgba(var(--rgb-panel), 0.9); color: var(--text); font: inherit; }
+.lk-answer { display: grid; gap: 6px; padding: 12px 14px; margin-bottom: var(--gap); justify-items: start; }
+.lk-answer[hidden] { display: none; }
+.lk-first { margin: 0; font-weight: 600; }
+.lk-rest { margin: 0; font-size: var(--text-sm); color: var(--text-dim); }
+.lk-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.lk-note { margin-top: 10px; font-size: var(--text-sm); text-align: center; }
+.lk-actions .btn-big { font-size: var(--text-md, 16px); }
+.lk-answer .kind { white-space: normal; }
+.lk-photo { padding: 0; }
+
+/* ---------------------------------------------------------------- Settings (DEC-0113)
+   A small label over one card per group; each setting a row: name and note left, its control right. */
+.st-group { margin-bottom: var(--gap); }
+.st-label { margin: 0 0 8px; font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-dim); }
+.st-card { display: grid; padding: 0 14px; }
+.st-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 14px; min-height: 60px; padding: 8px 0;
+  border-top: 1px solid var(--line); }
+.st-card > :first-child { border-top: 0; }
+.st-row.wide { grid-template-columns: 1fr; }
+.st-text { display: grid; gap: 2px; min-width: 0; }
+.st-text label { font-weight: 500; }
+.st-note { font-size: var(--text-sm); color: var(--text-dim); }
+.st-intro { margin: 10px 0 0; }
+.st-control select, .st-control input[type="number"], .st-control input[type="text"] { min-height: 38px; padding: 0 10px; border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong); background: rgba(var(--rgb-panel), 0.9); color: var(--text); font: inherit; max-width: 220px; }
+.st-row.wide .st-control input[type="text"] { max-width: none; width: 100%; box-sizing: border-box; }
+.st-card .acct-actions { padding: 10px 0; border-top: 1px solid var(--line); }
+.switch input:checked + span { background: var(--accent); }
+.st-control .switch { display: inline-block; vertical-align: middle; }
+.st-control input[type="number"] { width: 84px; }
+
+/* ---------------------------------------------------------------- Profile (DEC-0113) */
+.pf-head { display: flex; align-items: center; gap: 14px; margin-bottom: var(--gap); }
+.pf-head h2 { margin: 0; font-size: var(--text-xl); text-transform: none; }
+.pf-avatar { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; flex: none; font-size: 24px; font-weight: 700;
+  color: var(--accent); border: 1px solid rgba(var(--rgb-accent), 0.5); background: rgba(var(--rgb-accent), 0.08); }
+.pf-card { display: grid; padding: 0 14px; margin-bottom: var(--gap); }
+.pf-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; min-height: 56px; padding: 0;
+  border: 0; border-top: 1px solid var(--line); background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer;
+  text-transform: none; }
+.pf-card > .pf-row:first-child { border-top: 0; }
+.pf-k { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); }
+.pf-v { text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pf-go { color: var(--text-dim); font-size: 18px; }
+.pf-row[aria-expanded="true"] .pf-go { transform: rotate(90deg); color: var(--accent); }
+.pf-card .money-section { background: none; border: 0; box-shadow: none; padding: 0 0 12px; margin: 0; }
+.pf-card .money-section .sect { display: none; }
+.pf-security { padding: 14px; gap: 10px; }
+.pf-label { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); }
+.pf-end { display: flex; gap: 10px; justify-content: space-between; flex-wrap: wrap; }
+
+/* ---------------------------------------------------------------- Fix-It Log (DEC-0113) */
+.fx-report-btn { margin-bottom: var(--gap); }
+@media (min-width: 861px) { .fx-report-btn { width: auto; min-width: 260px; } }
+.fx-label { margin: 0 0 8px; font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-dim); }
+.fx-list { display: grid; gap: 10px; }
+.fx-card { display: grid; gap: 6px; padding: 12px 14px; }
+.fx-card.worst { border-color: rgba(var(--rgb-amber), 0.4); }
+.fx-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.fx-title { font-weight: 600; }
+.fx-n { font-family: var(--font-mono); font-size: var(--text-sm); color: var(--attention); }
+.fx-latest { margin: 0; font-size: var(--text-sm); }
+.fx-said { margin: 0; font-size: 12px; color: var(--text-dim); }
+.fx-card .row-buttons { margin: 0; }
+.fx-note { margin: 10px 0 var(--gap); font-size: var(--text-sm); }
+.fx-learned { display: grid; gap: 4px; padding: 12px 14px; margin-bottom: var(--gap); }
+.fx-phrase { display: flex; justify-content: space-between; align-items: center; gap: 10px; min-height: 44px; border-top: 1px solid var(--line); }
+.fx-learned .fx-label + .fx-phrase { border-top: 0; }
+.fx-card details summary { cursor: pointer; font-size: var(--text-sm); color: var(--text-dim); }
+
+/* ---------------------------------------------------------------- Diagnostics (DEC-0113) */
+.dx-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: var(--gap); }
+.dx-tile { display: flex; align-items: center; gap: 10px; padding: 12px; }
+.dx-label { margin: 0; font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); }
+.dx-n { font-family: var(--font-mono); font-size: var(--text-xl); font-weight: 600; }
+.dx-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; background: var(--text-dim); }
+.dx-dot.ok { background: var(--ok); }
+.dx-dot.look { background: var(--attention); }
+.dx-list { display: grid; padding: 12px 14px; }
+.dx-list .dx-label { margin-bottom: 4px; }
+.dx-row { display: grid; grid-template-columns: 10px minmax(0, 1fr); gap: 12px; align-items: center; min-height: 56px; padding: 6px 0;
+  border-top: 1px solid var(--line); }
+.dx-label + .dx-row { border-top: 0; }
+.dx-text { display: grid; gap: 2px; }
+.dx-note { font-size: var(--text-sm); color: var(--text-dim); }
+.dx-foot { margin: var(--gap) 0 10px; font-size: var(--text-sm); }
+@media (max-width: 420px) { .dx-tile { flex-direction: column; align-items: flex-start; gap: 6px; } }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }

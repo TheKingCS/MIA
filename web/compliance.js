@@ -53,22 +53,29 @@
   function when(c) {
     if (!c.due) return "No date yet";
     const d = c.days;
-    const rel = d < 0 ? (-d) + " days overdue" : d === 0 ? "due today" : d === 1 ? "due tomorrow" : "in " + d + " days";
+    if (d < 0) return "Was due " + day(c.due);  // plainly, as the canvas words it (DEC-0014)
+    const rel = d === 0 ? "due today" : d === 1 ? "due tomorrow" : "in " + d + " days";
     return day(c.due) + " · " + rel;
   }
 
+  // The canvas's row (DEC-0113): what it is, when and who it's with, and the one step the engine says comes next
+  // (core/web_compliance.next_step). Tapping the title opens everything else about it.
+  function stepButton(c) {
+    const n = c.next;
+    if (!n) return null;
+    const run = n.opens === "verify" ? () => verify(c) : n.opens === "status" ? () => setStatus(c) : () => act(n.action);
+    return btn(n.label, n.opens === "verify" ? "btn-ghost btn-small ob-step verify" : "btn-ghost btn-small ob-step", run);
+  }
   function card(c) {
     const open = openId === c.id;
-    const head = el("button", { type: "button", class: "craft-head", "aria-expanded": String(open), onclick: () => { openId = open ? null : c.id; draw(); } },
-      el("div", {}, el("h3", {}, c.title),
-        el("p", { class: "dim" }, [c.authority, c.applies_to, c.period].filter(Boolean).join(" · ")),
-        el("p", { class: "ob-when " + c.where }, when(c))),
-      el("div", { class: "ob-chips" },
-        c.verified ? chip(c.stale ? "Check Again" : "Verified", c.stale ? "chip-soon" : "chip-ok") : chip("To Verify", "chip-soon"),
-        c.status !== "to verify" && c.status !== "applies" ? chip(c.status) : null));
-    if (!open) return el("article", { class: "glass craft-card ob-card " + c.where }, head);
+    const detail = [c.due ? when(c) : "No date yet", c.authority || c.applies_to].filter(Boolean).join(" · ");
+    const head = el("div", { class: "ob-row-head" },
+      el("button", { type: "button", class: "ob-row-title", "aria-expanded": String(open), onclick: () => { openId = open ? null : c.id; draw(); } },
+        el("span", { class: "ob-what" }, c.title), el("span", { class: "ob-detail " + c.where }, detail)),
+      stepButton(c));
+    if (!open) return el("article", { class: "ob-row " + c.where }, head);
     const line = (label, value) => value ? el("p", {}, el("span", { class: "dim" }, label + ": "), value) : null;
-    return el("article", { class: "glass craft-card ob-card open " + c.where }, head,
+    return el("article", { class: "ob-row open " + c.where }, head,
       !c.verified ? el("p", { class: "ob-warn" }, "Not verified: check the official source before relying on this date or fee.") : null,
       c.moved.length ? el("p", { class: "dim" }, "Moved to the next business day (" + c.moved.join(" and ") + "): the stated date " + c.stated_due + " falls on a weekend or holiday.") : null,
       c.extended_to ? el("p", { class: "dim" }, "Extended to file until " + day(c.file_on) + ". The money is still due " + day(c.pay_on) + ": an extension to file isn't one to pay.") : null,
@@ -83,10 +90,10 @@
         btn("Delete", "btn-ghost btn-small", () => act({ kind: "obligation.delete", params: { obligation_id: c.id } }))));
   }
 
-  function group(title, list, empty) {
-    if (!list.length && !empty) return null;
-    return section(title + (list.length ? " · " + list.length : ""), null,
-      list.length ? el("div", { class: "craft-grid" }, list.map(card)) : el("p", { class: "empty" }, empty));
+  function group(title, list, cls) {
+    if (!list.length) return null;
+    return el("section", { class: "glass ob-group " + (cls || ""), "aria-label": title },
+      el("h2", { class: "ob-group-name" }, title + " · " + list.length), el("div", { class: "ob-rows" }, list.map(card)));
   }
 
   function draw() {
@@ -100,8 +107,9 @@
       buttons(btn("Add An Obligation", "btn-amber", add), btn("Things To Check", "btn-ghost btn-small", starters)),
       !c.open ? section("Start Here", null, el("p", { class: "empty" },
         "Nothing on the list yet. “Things To Check” offers the usual tax and licence deadlines, each with where to check it; nothing is assumed to apply until you verify it. Or add one from a letter or notice you got.")) : null,
-      group("Overdue", g.overdue), group("Next 30 Days", g.soon), group("Later", g.later), group("To Check", g.check), group("Done", g.done),
-      el("p", { class: "dim free-small" }, "MIA keeps the list and reminds you (90, 60, 30, 14 and 7 days before, on the day, and weekly when overdue). She never files, pays or signs anything, and a date she hasn't seen verified always says so."),
+      group("Overdue", g.overdue, "overdue"), group("Next 30 Days", g.soon, "soon"), group("Later", g.later),
+      group("To Check", g.check, "check"), group("Done", g.done, "done"),
+      el("p", { class: "dim free-small" }, "Only you can mark one verified, after checking it with the source. MIA keeps the list and reminds you (90, 60, 30, 14 and 7 days before, on the day, and weekly when overdue). She never files, pays or signs anything, and a date she hasn't seen verified always says so."),
     ].filter(Boolean));
   }
 
