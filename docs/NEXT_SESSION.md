@@ -613,7 +613,7 @@ first); `show <file>` prints each with its code; write the docstrings by reading
 does, how when that isn't plain; check any claim you aren't sure of), put them in a JSON
 `{"core/x.py": {"func": "...", "Cls.meth": "..."}}` and `apply` it (inserts them, lowers the ratchet,
 regenerates `docs/ATLAS.md`). Skip `core/budget_manager.py` and `core/plaid_manager.py` while Zac's Plaid work is
-uncommitted. 4,973 of 13,517 documented on 2026-11-06; the files left in core/ each have 12 or fewer.
+uncommitted. 5,082 of 13,517 documented on 2026-11-06; apart from those two, every core/ file has 12 or fewer left.
 
 **The mission system is locked in (DEC-0047, `docs/MISSION_SYSTEM.md`).**
 Build order (Zac said begin, 2026-10-27): 1) the Loop ✅ built
