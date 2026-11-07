@@ -118,7 +118,6 @@
   "core/food_table.py": 5,
   "core/freedom.py": 13,
   "core/freedom_actions.py": 20,
-  "core/game_actions.py": 33,
   "core/game_layer.py": 2,
   "core/game_master.py": 1,
   "core/gap_actions.py": 5,

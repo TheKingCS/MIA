@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 226,425 lines; 1043 files describe themselves; 3,385 of 13,517 classes and functions are documented.
+1043 files, 226,474 lines; 1043 files describe themselves; 3,418 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 100,331 lines; 2,654 of 5,630 classes and functions documented
+367 files, 100,380 lines; 2,687 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -143,7 +143,7 @@
 - `core/food_table.py`: MIA's built-in food table (DEC-0020): nutrition facts for about 7,800 everyday foods from the USDA's FoodData Central (public domain), per 100 g, in data/foods.tsv (tools/make_food_table.py builds it). Offline. *(5 undocumented)*
 - `core/freedom.py`: Freedom (DEC-0038; Life Runway, slice E of docs/COGNITIVE_EXTENSION_PROPOSAL.md): the way out of the job you're saving to leave, in numbers. The person's own plan, never a child's. *(13 undocumented)*
 - `core/freedom_actions.py`: Freedom's actions (DEC-0038, core/freedom.py) on the action contract: proposed in plain words, approved, run. *(20 undocumented)*
-- `core/game_actions.py`: The game layer's changes (DEC-0028, docs/GAME_LAYER.md), on the action contract in core/actions.py. *(33 undocumented)*
+- `core/game_actions.py`: The game layer's changes (DEC-0028, docs/GAME_LAYER.md), on the action contract in core/actions.py.
 - `core/game_layer.py`: The game layer's screens (DEC-0028, docs/GAME_LAYER.md). Built in order: *(2 undocumented)*
 - `core/game_master.py`: MIA as Game Master (DEC-0046): the real day's trouble, reframed as the game the person is playing, without pretending the trouble isn't real. *(1 undocumented)*
 - `core/gamification.py`: Shared "grant XP for a real completion" helper — docs/VISION.md's Missions/Gamification concept, extended 2026-09-11 from the dedicated Missions module out to routine completion moments in other domains (Kitchen/Workout/Maintenance/Budget), at the user's own explicit request to make MIA feel more li

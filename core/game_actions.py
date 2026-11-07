@@ -34,10 +34,12 @@ SHOP_REWARD = Record("shop_reward", "reward", "reward_id", "get_reward", "add_re
 
 
 def forms() -> dict:
+    """The record forms this module offers screens (the Reward Shop's add/edit form)."""
     return {"shop_reward": record_form(SHOP_REWARD)}
 
 
 def _person(context):
+    """The profile these actions are for (the context's own, else the active one), or None."""
     profiles = getattr(context, "profiles", None)
     profile_id = getattr(context, "profile_id", None)
     try:
@@ -47,6 +49,7 @@ def _person(context):
 
 
 def _reward(context, params):
+    """The shop reward the params name, or ActionError when it's gone."""
     reward = _need(context, "reward_shop").get_reward(str(params.get("reward_id") or ""))
     if reward is None:
         raise ActionError("That reward isn't in your shop anymore.")
@@ -54,6 +57,9 @@ def _reward(context, params):
 
 
 def _describe_buy(context, params) -> str:
+    """The sentence the approval card shows for `shop.buy` (Propose); raises ActionError when it can't be done. A one-time reward already claimed, or one costing more than the person's
+    credits, is refused (saying how many to go).
+    """
     from core.reward_shop import balance
 
     reward = _reward(context, params)
@@ -67,6 +73,7 @@ def _describe_buy(context, params) -> str:
 
 
 def _buy(context, params) -> str:
+    """Does `shop.buy` once approved, and says what happened. It spends the credits; undo gives them back."""
     from core.reward_shop import balance
 
     reward = _reward(context, params)
@@ -92,6 +99,9 @@ def _priced(describe):
 
 
 def _boss_mission(context, params, want: bool):
+    """The mission the params name, checked for making it a boss fight (want=True: not one yet, and it has objectives,
+    which are its HP) or for turning it back (want=False: it is one).
+    """
     mission = _need(context, "missions").get_mission(str(params.get("mission_id") or ""))
     if mission is None:
         raise ActionError("That mission isn't there anymore.")
@@ -106,18 +116,21 @@ def _boss_mission(context, params, want: bool):
 
 
 def _boss_add(context, params) -> str:
+    """Does `boss.add` once approved, and says what happened."""
     mission = _boss_mission(context, params, True)
     context.boss_book.add_mission(mission.mission_id)
     return f"{mission.name} is a boss fight. Every objective is a hit."
 
 
 def _boss_remove(context, params) -> str:
+    """Does `boss.remove` once approved, and says what happened."""
     mission = _boss_mission(context, params, False)
     context.boss_book.remove_mission(mission.mission_id)
     return f"{mission.name} is a plain mission again."
 
 
 def _quest(context, params):
+    """The questline the params name, or ActionError when it's gone."""
     quest = _need(context, "quest_book").get(str(params.get("quest_id") or ""))
     if quest is None:
         raise ActionError("That questline isn't there anymore.")
@@ -125,6 +138,7 @@ def _quest(context, params):
 
 
 def _starter(params):
+    """The starter questline the params name (core/questlines.py), or ActionError."""
     from core.questlines import STARTER_BY_ID
 
     starter = STARTER_BY_ID.get(str(params.get("starter_id") or ""))
@@ -134,6 +148,7 @@ def _starter(params):
 
 
 def _describe_quest_start(context, params) -> str:
+    """The sentence the approval card shows for `quest.start` (Propose); raises ActionError when it can't be done. It lists the chapters in order."""
     _need(context, "quest_book")
     _need(context, "missions")
     starter = _starter(params)
@@ -141,6 +156,9 @@ def _describe_quest_start(context, params) -> str:
 
 
 def _quest_start(context, params) -> str:
+    """Does `quest.start` once approved, and says what happened. It starts the questline (its first chapter becomes a mission) and tells
+    chapter 1's story.
+    """
     from core.questlines import start
 
     starter = _starter(params)
@@ -150,6 +168,9 @@ def _quest_start(context, params) -> str:
 
 
 def _own_chapters(params) -> list:
+    """The chapters of a person's own questline (one per line, "Title: objective; objective"), needing a name and at
+    least two chapters.
+    """
     from core.questlines import parse_chapters
 
     name = str(params.get("name") or "").strip()
@@ -162,12 +183,14 @@ def _own_chapters(params) -> list:
 
 
 def _describe_quest_add(context, params) -> str:
+    """The sentence the approval card shows for `quest.add` (Propose); raises ActionError when it can't be done."""
     _need(context, "quest_book")
     chapters = _own_chapters(params)
     return f"Start your own questline {str(params.get('name')).strip()}: " + " → ".join(c["title"] for c in chapters)
 
 
 def _quest_add(context, params) -> str:
+    """Does `quest.add` once approved, and says what happened. It saves the questline and opens its first chapter."""
     from core.questlines import open_chapter
 
     chapters = _own_chapters(params)
@@ -178,12 +201,14 @@ def _quest_add(context, params) -> str:
 
 
 def _quest_remove(context, params) -> str:
+    """Does `quest.remove` once approved, and says what happened. Its missions and whatever was earned stay."""
     quest = _quest(context, params)
     context.quest_book.remove(quest.quest_id)
     return f"{quest.name} is off your questlines. Its missions stay, and what you earned stays earned."
 
 
 def _where(params) -> tuple[float, float]:
+    """The latitude and longitude in the params, or ActionError (no location, or not on the map)."""
     try:
         lat, lon = float(params.get("lat")), float(params.get("lon"))
     except (TypeError, ValueError):
@@ -194,6 +219,7 @@ def _where(params) -> tuple[float, float]:
 
 
 def _new_tiles(context, lat, lon) -> int:
+    """How many world-map tiles around this spot haven't been explored yet."""
     from core.world_map import around, tile_of
 
     book = _need(context, "world_map")
@@ -205,6 +231,7 @@ def _new_tiles(context, lat, lon) -> int:
 
 
 def _describe_checkin(context, params) -> str:
+    """The sentence the approval card shows for `map.checkin` (Propose); raises ActionError when it can't be done. It says how many new tiles it would clear."""
     lat, lon = _where(params)
     new = _new_tiles(context, lat, lon)
     label = str(params.get("label") or "").strip()
@@ -213,6 +240,7 @@ def _describe_checkin(context, params) -> str:
 
 
 def _checkin(context, params) -> str:
+    """Does `map.checkin` once approved, and says what happened. New ground grants XP per tile (capped) and records an explored life event."""
     from core import life_events
     from core.gamification import grant_xp
     from core.world_map import XP_CAP, XP_PER_TILE
@@ -247,6 +275,7 @@ def _crew(context, params) -> list:
 
 
 def _raid_starter(params):
+    """The starter raid the params name (core/party.py), or ActionError."""
     from core.party import RAID_BY_ID
 
     raid = RAID_BY_ID.get(str(params.get("raid_id") or ""))
@@ -256,6 +285,7 @@ def _raid_starter(params):
 
 
 def _own_raid(params) -> list:
+    """The jobs of a person's own raid (one per line), needing a name and at least two."""
     if not str(params.get("name") or "").strip():
         raise ActionError("Give the raid a name.")
     objectives = [o.strip(" -•*") for o in str(params.get("objectives") or "").splitlines() if o.strip(" -•*")]
@@ -265,6 +295,7 @@ def _own_raid(params) -> list:
 
 
 def _describe_raid(context, params, own: bool) -> str:
+    """The sentence for `raid.start` or `raid.add` (own=True): the raid, the crew, and who gets which job."""
     from core.party import share_out
 
     _need(context, "missions")
@@ -279,6 +310,9 @@ def _describe_raid(context, params, own: bool) -> str:
 
 
 def _raid(context, params, own: bool) -> str:
+    """Does `raid.start` or `raid.add` once approved: starts the shared raid for the crew (the reward is shared when
+    it's done).
+    """
     from core.party import start_raid
 
     crew = _crew(context, params)
@@ -294,15 +328,18 @@ def _raid(context, params, own: bool) -> str:
 
 
 def _board(params) -> bool:
+    """Whether the params turn the leaderboard on."""
     return str(params.get("on")).strip().lower() in ("true", "1", "yes", "on")
 
 
 def _describe_board(context, params) -> str:
+    """The sentence the approval card shows for `party.leaderboard` (Propose); raises ActionError when it can't be done. The leaderboard shows wins this week, never money."""
     return ("Put yourself on the household leaderboard (your wins this week, never money)" if _board(params)
             else "Take yourself off the household leaderboard")
 
 
 def _set_board(context, params) -> str:
+    """Does `party.leaderboard` once approved, and says what happened. It's the person's own setting."""
     from core import person_settings
 
     person_settings.put(context, "party.leaderboard", _board(params))
@@ -310,6 +347,7 @@ def _set_board(context, params) -> str:
 
 
 def _place(context, params):
+    """The place the params name, or ActionError when it's gone."""
     place = _need(context, "places").get(str(params.get("place_id") or ""))
     if place is None:
         raise ActionError("That place isn't in your places anymore.")
@@ -317,6 +355,9 @@ def _place(context, params):
 
 
 def _place_fields(context, params) -> dict:
+    """A new place's fields from the params, checked: a name, a location, how close counts as there (30 to 2,000 m,
+    150 by default), what happens on arrival (ARRIVALS) and an optional note.
+    """
     from core.places import ARRIVALS, DEFAULT_RADIUS_M
 
     _need(context, "places")
@@ -338,17 +379,22 @@ def _place_fields(context, params) -> dict:
 
 
 def _describe_place_add(context, params) -> str:
+    """The sentence the approval card shows for `place.add` (Propose); raises ActionError when it can't be done."""
     f = _place_fields(context, params)
     return f"Add the place {f['name']} (within {f['radius_m']} m): when you get there, {f['on_arrive'].lower()}"
 
 
 def _place_add(context, params) -> str:
+    """Does `place.add` once approved, and says what happened."""
     f = _place_fields(context, params)
     context.places.add(f["name"], f["lat"], f["lon"], f["radius_m"], f["on_arrive"], f["note"])
     return f"{f['name']} is one of your places."
 
 
 def _place_arrive(context, params) -> str:
+    """Does `place.arrive` once approved, and says what happened. Being there also clears the world map's fog around it; the reply is the
+    place's arrival line.
+    """
     from core.places import arrival
 
     place = context.places.arrived(_place(context, params).place_id)
@@ -359,6 +405,9 @@ def _place_arrive(context, params) -> str:
 
 
 def _register() -> None:
+    """Adds every action kind this module defines to ACTION_TYPES, all child-safe (a person's own credits, shop,
+    quests and places). Runs once, when this module is imported.
+    """
     from dataclasses import replace
 
     kinds = [replace(k, describe=_priced(k.describe)) if k.kind != "shop_reward.delete" else k
