@@ -1,0 +1,283 @@
+{
+  "available": true,
+  "series": [
+    {
+      "id": "Soil moisture",
+      "name": "Soil moisture",
+      "latest": "49%",
+      "count": 15,
+      "when": "2 h ago",
+      "at": "2026-11-07T16:00:00"
+    },
+    {
+      "id": "Shop temp",
+      "name": "Shop temp",
+      "latest": "16.8 °C",
+      "count": 4,
+      "when": "5 h ago",
+      "at": "2026-11-07T13:00:00"
+    },
+    {
+      "id": "Tank pH",
+      "name": "Tank pH",
+      "latest": "6.8 pH",
+      "count": 6,
+      "when": "5 days ago",
+      "at": "2026-11-02T18:00:00"
+    }
+  ],
+  "other_series": [
+    {
+      "id": "energy_source_007560c548_Level",
+      "name": "Propane tank · Level",
+      "latest": "62%",
+      "count": 1,
+      "when": "6 h ago",
+      "at": "2026-11-07T11:56:09",
+      "app": "Power",
+      "page": "power.html"
+    }
+  ],
+  "chosen": {
+    "id": "Soil moisture",
+    "name": "Soil moisture",
+    "own": true,
+    "app": null,
+    "page": null,
+    "unit": "%",
+    "stats": {
+      "latest": "49%",
+      "low": "31%",
+      "high": "52%",
+      "average": "40.47%",
+      "change": "+7%",
+      "count": 15
+    },
+    "chart": {
+      "points": [
+        {
+          "x": 0.0,
+          "y": 0.5238,
+          "label": "42%"
+        },
+        {
+          "x": 0.0714,
+          "y": 0.4286,
+          "label": "40%"
+        },
+        {
+          "x": 0.1429,
+          "y": 0.2857,
+          "label": "37%"
+        },
+        {
+          "x": 0.2143,
+          "y": 0.1905,
+          "label": "35%"
+        },
+        {
+          "x": 0.2857,
+          "y": 0.0952,
+          "label": "33%"
+        },
+        {
+          "x": 0.3571,
+          "y": 0.8095,
+          "label": "48%"
+        },
+        {
+          "x": 0.4286,
+          "y": 0.7143,
+          "label": "46%"
+        },
+        {
+          "x": 0.5,
+          "y": 0.619,
+          "label": "44%"
+        },
+        {
+          "x": 0.5714,
+          "y": 0.4762,
+          "label": "41%"
+        },
+        {
+          "x": 0.6429,
+          "y": 0.381,
+          "label": "39%"
+        },
+        {
+          "x": 0.7143,
+          "y": 0.2381,
+          "label": "36%"
+        },
+        {
+          "x": 0.7857,
+          "y": 0.1429,
+          "label": "34%"
+        },
+        {
+          "x": 0.8571,
+          "y": 0.0,
+          "label": "31%"
+        },
+        {
+          "x": 0.9286,
+          "y": 1.0,
+          "label": "52%"
+        },
+        {
+          "x": 1.0,
+          "y": 0.8571,
+          "label": "49%"
+        }
+      ],
+      "low": "31%",
+      "high": "52%"
+    },
+    "readings": [
+      {
+        "id": "af9457cd19",
+        "text": "49%",
+        "note": "",
+        "when": "2 h ago",
+        "at": "2026-11-07 16:00"
+      },
+      {
+        "id": "ba18b0a99e",
+        "text": "52%",
+        "note": "watered",
+        "when": "yesterday",
+        "at": "2026-11-06 16:00"
+      },
+      {
+        "id": "650e057278",
+        "text": "31%",
+        "note": "",
+        "when": "2 days ago",
+        "at": "2026-11-05 16:00"
+      },
+      {
+        "id": "80ca003a84",
+        "text": "34%",
+        "note": "",
+        "when": "3 days ago",
+        "at": "2026-11-04 16:00"
+      },
+      {
+        "id": "0e86161618",
+        "text": "36%",
+        "note": "",
+        "when": "4 days ago",
+        "at": "2026-11-03 16:00"
+      },
+      {
+        "id": "f6b8270079",
+        "text": "39%",
+        "note": "",
+        "when": "5 days ago",
+        "at": "2026-11-02 16:00"
+      },
+      {
+        "id": "8c86e41589",
+        "text": "41%",
+        "note": "",
+        "when": "6 days ago",
+        "at": "2026-11-01 16:00"
+      },
+      {
+        "id": "cec7fac00b",
+        "text": "44%",
+        "note": "",
+        "when": "7 days ago",
+        "at": "2026-10-31 16:00"
+      },
+      {
+        "id": "13c7b70b41",
+        "text": "46%",
+        "note": "",
+        "when": "8 days ago",
+        "at": "2026-10-30 16:00"
+      },
+      {
+        "id": "f405311dd4",
+        "text": "48%",
+        "note": "watered",
+        "when": "9 days ago",
+        "at": "2026-10-29 16:00"
+      },
+      {
+        "id": "c966703596",
+        "text": "33%",
+        "note": "",
+        "when": "10 days ago",
+        "at": "2026-10-28 16:00"
+      },
+      {
+        "id": "e909adaaad",
+        "text": "35%",
+        "note": "",
+        "when": "11 days ago",
+        "at": "2026-10-27 16:00"
+      },
+      {
+        "id": "71c1c0daba",
+        "text": "37%",
+        "note": "",
+        "when": "12 days ago",
+        "at": "2026-10-26 16:00"
+      },
+      {
+        "id": "6d05515fd0",
+        "text": "40%",
+        "note": "",
+        "when": "13 days ago",
+        "at": "2026-10-25 16:00"
+      },
+      {
+        "id": "32ba920a1f",
+        "text": "42%",
+        "note": "",
+        "when": "2 weeks ago",
+        "at": "2026-10-24 16:00"
+      }
+    ]
+  },
+  "forms": {
+    "reading": {
+      "fields": [
+        {
+          "name": "series",
+          "label": "Series (Soil moisture, Tank pH...)",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "value",
+          "label": "Reading",
+          "type": "number",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "unit",
+          "label": "Unit (°C, %, pH...)",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "note",
+          "label": "Note (optional)",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    }
+  }
+}

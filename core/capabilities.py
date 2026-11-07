@@ -77,7 +77,7 @@ LIMITS = {
     "navigation": "Waypoints are added by voice or on the map; sun times are for the day, not live.",
     "knowledge": "Only packs copied onto this computer; articles read as plain text, without pictures.",
     "toolbox": "Inventory is on the PC; alarms ring on the PC.",
-    "lab": "No web screen yet.",
+    "lab": "Readings are entered by hand; no sensors are connected yet.",
     "field_kit": "No web screen yet.",
     "passwords": "MIA's assistant never sees a password; no autofill in other apps yet.",
     "files": "",

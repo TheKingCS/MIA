@@ -387,6 +387,7 @@ import core.training_actions  # noqa: E402,F401  (the live workout session, DEC-
 import core.cooking_actions  # noqa: E402,F401  (cook mode, DEC-0113)
 import core.power_actions  # noqa: E402,F401  (Power's energy sources, DEC-0125)
 import core.toolbox_actions  # noqa: E402,F401  (the Toolbox's alarms, DEC-0125)
+import core.lab_reading_actions  # noqa: E402,F401  (the Lab's readings, DEC-0125)
 import core.lab_actions  # noqa: E402,F401  (the development lab, DEC-0058)
 import core.first_boot  # noqa: E402,F401  (meeting MIA, docs/GLASSES_FIRST_BOOT_PLAN.md)
 

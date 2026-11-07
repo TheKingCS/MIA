@@ -291,6 +291,14 @@
       "group": "Knowledge, tools & system"
     },
     {
+      "id": "lab",
+      "name": "The Lab",
+      "icon": "🧪",
+      "tagline": "Experiments and sensors.",
+      "page": "lab.html",
+      "group": "Knowledge, tools & system"
+    },
+    {
       "id": "passwords",
       "name": "Passwords",
       "icon": "🔐",
@@ -380,7 +388,6 @@
     }
   ],
   "on_pc_only": [
-    "The Lab",
     "Field Kit",
     "Diagnostics",
     "Settings"

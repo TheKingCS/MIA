@@ -324,6 +324,8 @@
       : call("GET", "/api/operating-journal"),
     // Power (core/web_power.py, DEC-0125): the battery and the energy sources tracked by hand.
     power: () => read("/api/power", "power"),
+    // The Lab (core/web_lab.py, DEC-0125): the Data Logger's series, and one in full (?series=).
+    lab: (series = "") => read("/api/lab?series=" + encodeURIComponent(series), "lab"),
     // The Toolbox (core/web_toolbox.py, DEC-0125): calculators, alarms, tools; a calculator is worked out in core.
     // The demo can't calculate, so it answers with the example's own result.
     toolbox: () => read("/api/toolbox", "toolbox"),

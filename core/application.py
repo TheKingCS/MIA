@@ -88,6 +88,7 @@ from core.assistant_path_actions import register_path_actions
 from core.assistant_browser_actions import register_browser_actions
 from core.browser import Browsers
 from core.assistant_cooking_actions import register_cooking_actions
+from core.assistant_lab_actions import register_lab_actions
 from core.assistant_toolbox_actions import register_toolbox_actions
 from core.assistant_goods_actions import register_goods_actions
 from core.assistant_dungeon_actions import register_checkin_actions, register_dungeon_actions, register_loop_actions
@@ -1542,7 +1543,8 @@ class MIAApplication:
         Every app's voice tools are registered here (DEC-0125:
         core/parity.py measures what this registers), including the
         photo search the headless Core had alone until 2026-11-07, and
-        the Toolbox's board feet, concrete and alarm switch (2026-11-07).
+        the Toolbox's board feet, concrete and alarm switch and the Lab's
+        delete a reading (2026-11-07).
         """
         self.context.assistant_actions.register(connectivity_action())
         self.context.assistant_actions.register(remind_when_online_action())
@@ -1565,6 +1567,7 @@ class MIAApplication:
         register_goods_actions(self.context.assistant_actions)  # eggs, goods, freedom, deadlines by voice
         register_cooking_actions(self.context.assistant_actions)  # cook mode by voice (DEC-0113, DEC-0125)
         register_toolbox_actions(self.context.assistant_actions)  # board feet, concrete, alarms on/off (DEC-0125)
+        register_lab_actions(self.context.assistant_actions)  # the Lab: delete a reading by voice (DEC-0125)
         register_dungeon_actions(self.context.assistant_actions)  # the Dungeon: shifts, loot, quests (DEC-0046)
         register_loop_actions(self.context.assistant_actions)  # the loop: when things happen (DEC-0047)
         register_checkin_actions(self.context.assistant_actions)  # the Sunday check-in (DEC-0047)

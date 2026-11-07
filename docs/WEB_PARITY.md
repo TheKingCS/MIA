@@ -65,7 +65,7 @@ Screens: `docs/design_handoff/screens/<name>.png` (placeholder data).
 | Calendar | Events and alarms | `(inside Dashboard/Home)` | |  | |
 | Knowledge | Offline reference library | `knowledge` | ✅ `/api/knowledge`, `/api/knowledge/article` | ✅ the packs, search across every pack, an article read as plain text (2026-11-06) (not yet: installing or deleting a pack, pictures in articles) | |
 | Toolbox | Calculators and conversions | `toolbox` | ✅ `/api/toolbox`, `/api/toolbox/calc` (core/web_toolbox.py, math in core/toolbox_calcs.py and core/unit_conversion.py) + alarm.add/switch/delete | ✅ Ohm's law from any two, the unit converter (13 kinds), board feet, concrete volume, worked out in core as you type; alarms (set, on/off, delete); a stopwatch on the page; calendar and inventory linked (2026-11-07) (not yet: inventory on the web, the Qt Toolbox's other tools) | |
-| The Lab | Sensor experiments | `lab` | |  | |
+| The Lab | Sensor experiments | `lab` | ✅ `/api/lab` (core/web_lab.py) + lab_reading.add/delete | ✅ series chips, the chosen series' chart (placed by core), latest/low/high/average/change, readings newest first with Delete, Add a Reading (a new series starts with its first), other apps' series read only with a link there (2026-11-07) (not yet: live sensors) | |
 | Field Kit: Devices | Connected devices | `field_kit__01_devices` | |  | |
 | Field Kit: Scripts | Scripts | `field_kit__02_scripts` | |  | |
 | Field Kit: Security | Security | `field_kit__03_security` | |  | |
