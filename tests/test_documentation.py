@@ -47,3 +47,5 @@ def test_putting_docstrings_in_place():
         insert(out, {"f": "Again."})  # already documented
     with pytest.raises(ValueError):
         insert(text, {"nope": "x"})
+    with pytest.raises(ValueError):
+        insert(text, {"f": "Undoes \\, escapes."})  # a backslash would be an escape in the docstring

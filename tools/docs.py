@@ -56,6 +56,8 @@ def insert(text: str, docs: dict[str, str]) -> str:
         first = node.body[0]
         if first.lineno == node.lineno:
             raise ValueError(f"{name}: its body is on the def line; document it by hand")
+        if "\\" in doc:  # inside a plain docstring it's an escape: "\," warns, "\n" breaks the line
+            raise ValueError(f"{name}: say it without a backslash")
         indent = " " * first.col_offset
         body = doc.strip().replace('"""', "'''").splitlines()
         if len(body) == 1:

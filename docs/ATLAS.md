@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 229,027 lines; 1043 files describe themselves; 5,043 of 13,517 classes and functions are documented.
+1043 files, 229,031 lines; 1043 files describe themselves; 5,043 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -610,7 +610,7 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-28 files, 2,853 lines; 28 of 85 classes and functions documented
+28 files, 2,855 lines; 28 of 85 classes and functions documented
 
 - `tools/bench_audit.py`: What MIA's routing does today with each Intelligence Benchmark question (tests/intelligence_bench.py, docs/INTELLIGENCE_BENCHMARK.md): a question plan (core/question_plans.py: lookups by code, one answer), answered by code (a direct lookup), offered which tools, or left to the model with no tools at *(3 undocumented)*
 - `tools/chronicle_issue.py`: The Chronicles' weekly issue (core/chronicle_issue.py, build plan step 17). *(1 undocumented)*
@@ -643,7 +643,7 @@
 
 ## tests/: the test suite: what each part must do
 
-346 files, 63,053 lines; 301 of 5,658 classes and functions documented
+346 files, 63,055 lines; 301 of 5,658 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
