@@ -8,6 +8,8 @@ docstrings (by reading the code: what it does, and how when that isn't plain), a
     .venv\\Scripts\\python -m tools.docs next 15          the files with the most undocumented, engine first
     .venv\\Scripts\\python -m tools.docs show core/x.py   each undocumented definition with its code, to write from
     .venv\\Scripts\\python -m tools.docs apply docs.json  insert them: {"core/x.py": {"func": "...", "Cls.meth": "..."}}
+    .venv\\Scripts\\python -m tools.docs stale [base]     docstrings that may be out of date since base (HEAD: your
+                                                    uncommitted changes); run it before every commit (DEC-0110)
 
 `apply` puts each docstring where Python expects it (after the whole signature, at the body's indentation), refuses
 a definition that already has one, checks each file still parses, then lowers the ratchet
@@ -74,13 +76,24 @@ def insert(text: str, docs: dict[str, str]) -> str:
 
 
 def main(argv: list[str]) -> int:
-    """The command line (see the module docstring): next, show, apply."""
+    """The command line (see the module docstring): next, show, apply, stale."""
     from core import code_atlas
 
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     if not argv:
         print(__doc__)
+        return 1
+    if argv[0] == "stale":
+        from core import doc_freshness
+
+        found = doc_freshness.between(argv[1] if len(argv) > 1 else "HEAD")
+        if not found:
+            print("Every changed definition's docstring was changed with it, or its code didn't change.")
+            return 0
+        print("Their code changed and their docstrings didn't: read each, and change the words where they're no "
+              "longer true.")
+        print(doc_freshness.describe(found, limit=200))
         return 1
     if argv[0] == "next":
         found = code_atlas.census()

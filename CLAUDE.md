@@ -205,7 +205,9 @@ children.
   documenting, run `python -m core.code_atlas baseline` and
   `python -m core.code_atlas` (regenerates `docs/ATLAS.md`). Rebuild
   order: `docs/REBUILD.md`. When you touch a file, document what you
-  touched.
+  touched, and when you change what code does, change its docstring
+  with it (DEC-0110): run `python -m tools.docs stale` before every
+  commit and read each definition it lists.
 - **Knowledge for MIA** (DEC-0105, `core/dev_knowledge.py`) — besides
   docstrings, write MIA entries in `work/knowledge/` for what you
   build: what you did, how, why that way, and what went wrong

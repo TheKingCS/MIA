@@ -1687,3 +1687,20 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   where it's from and where the answer depends on local law.
 - First study, 2026-11-07: the radio specialist's first three notes (licences, Meshtastic range, a 2 m dipole).
 - Related: DEC-0100 (Night School), DEC-0105, DEC-0107, DEC-0108
+
+### DEC-0110: A change to the code is a change to its documentation
+- Status: APPROVED
+- Proposed by: zac, 2026-11-07 ("Now when anything is changed it needs to be reflected in that file's documentation
+  as well") · Built by: claude, 2026-11-07
+- Decision: whoever changes code (Claude, Codex, MIA's own coder, anyone) updates the documentation that describes
+  it in the same change: the docstring of every class, function and method whose behaviour changed, the file's
+  opening when what it holds changed, and any doc, guide or vault entry that describes it. `core/doc_freshness.py`
+  finds what may have been missed: every definition whose code changed while its docstring stayed word for word
+  the same, changed parameters first. It's run before every commit (`python -m tools.docs stale`, which exits 1
+  when something needs a look), given to every lab reviewer for the change they review (a stale docstring is a
+  problem to name), and watched weekly by `dev.doc_freshness`. A docstring that still holds after a change needs
+  no edit: the check is a prompt to read, not a rule that every change touches its words. Generated docs (the
+  atlas, the loops, the events, the practices) are regenerated with the code, as before.
+- Why: documentation that says what the code used to do is worse than none: MIA answers from it (`self_docs`) and
+  would rebuild from it (DEC-0104).
+- Related: DEC-0104, DEC-0105, DEC-0108

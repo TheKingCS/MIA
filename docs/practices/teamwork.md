@@ -12,6 +12,7 @@
 
 ## Learned building her
 
+- **How documentation keeps up with changed code** (K-0056): core/doc_freshness.py compares two versions of each changed Python file.
 - **The local model invents a process when a task record is thin** (K-0033): Asked to write up 11 finished tasks whose records held little more than created, claimed and done, qwen2.5:14b wrote 30 entries, most describing test failures, reviews and disagreements that never happened (K-0003 to…
 
 ## Her own write-ups, not confirmed yet

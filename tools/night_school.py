@@ -17,6 +17,7 @@ import sys
 
 
 def main(argv: list[str]) -> int:
+    """Runs one command (the latest night by default)."""
     from core import loop_coverage, loops, night_school
 
     if hasattr(sys.stdout, "reconfigure"):

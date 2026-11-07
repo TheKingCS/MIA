@@ -175,7 +175,8 @@ def plan_step(text: Optional[str] = None) -> Optional[dict]:
 
 
 def self_assessment(progress: list[dict], ledger_row: dict, card: dict, todo_loops: int = 0) -> list[dict]:
-    """Pure logic. What she'd study, ranked, each with her reason."""
+    """Pure logic. What she'd study, ranked, each with her reason; a slipping loop that one of her own models could
+    help (the model forge's playbook, DEC-0106) says which kind."""
     from core.model_forge import specialists_for
 
     out = []
@@ -502,7 +503,10 @@ def _loop_family(ask, teacher: str, family: list[dict], tasks_dir=None, log=None
 def night(now: Optional[datetime] = None, *, ask: Optional[Callable[[str, str], str]] = None, coder_ask=None, lab=None,
           suite=None, one_test=_one_test, shadow=None, clock: Optional[Callable[[], datetime]] = None,
           config: Optional[dict] = None, store: Optional[DevStore] = None, tasks_dir=None, log=None) -> dict:
-    """One night of school, as far as the window, the budget and her teacher allow. Returns the night's record."""
+    """One night of school, as far as the window, the budget and her teacher allow: her progress, what she'd
+    study, the focus, her teacher's exercises (one for her curriculum, DEC-0107), her lessons graded by code, a shadow
+    attempt at real work, study hall for one specialist (DEC-0109), loops drafted, the weekly benchmarks and the
+    weekly self-audit (DEC-0108). Returns the night's record."""
     from core import dev_ledger, loop_coverage, loops
     from core import work_tasks
     from core.dev_lab import PROTECTED

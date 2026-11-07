@@ -195,6 +195,23 @@ def _specialist_notes(_context) -> Optional[Reading]:
     return Reading(round(confirmed / len(notes), 3), len(notes), f"{confirmed} of {len(notes)} notes confirmed")
 
 
+def _doc_freshness(_context) -> Optional[Reading]:
+    """Measure: how many definitions the last week's commits changed without changing their docstrings
+    (core/doc_freshness.py, DEC-0110), the ones whose parameters changed counted in the detail. None without the
+    repo or a commit from a week ago."""
+    if not _has_repo():
+        return None
+    from core import doc_freshness
+
+    base = doc_freshness._git("rev-list", "-1", "--before=7 days ago", "HEAD").strip()
+    if not base:
+        return None
+    found = doc_freshness.between(base, "HEAD")
+    strong = sum(1 for f in found if f["strong"])
+    return Reading(float(len(found)), 1, f"{strong} with changed parameters" + (
+        "; " + ", ".join(f"{f['file']}:{f['name']}" for f in found[:4]) if found else ""))
+
+
 def _slow(context) -> Optional[Reading]:
     """Measure: the share of this week's turns that took over 25 seconds. None when there's nothing to judge from yet."""
     turns = _turns(context)
@@ -1053,6 +1070,8 @@ LOOPS: tuple[Loop, ...] = (
     Loop("gaps.repeated", "answers", "things she can't do yet, asked more than once (self-enablement)", "person",
          _gaps, acts="watch", covers=("flow:tools", "check:capability_gaps", "action:gap")),
     Loop("answers.slow", "answers", "share of answers over 25 seconds", "person", _slow, floor=0.10, min_n=20, covers=("flow:talk", "store:traces")),
+    Loop("dev.doc_freshness", "development", "definitions changed this week without their docstrings (DEC-0110)",
+         "device", _doc_freshness, acts="watch", files=("core/doc_freshness.py",), covers=("dev:docs",)),
     Loop("dev.audit_code", "development", "places the weekly code audit found to improve", "device", _audit_code,
          acts="watch", files=("core/self_audit.py",), covers=("dev:self_audit",)),
     Loop("dev.connected", "development", "store connections made, of those that should exist (weekly audit)", "device",

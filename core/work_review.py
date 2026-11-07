@@ -48,8 +48,9 @@ REVIEW_PROMPT = (
     "You are reviewing a change to MIA, a personal assistant, as {role}. You did not write it. Read the task and "
     "the diff, and look for real problems: bugs, a test that doesn't test what it says, security or privacy "
     "issues, a broken convention in CLAUDE.md, something the task asked for that's missing. Don't comment on "
-    "style. List each problem with the file and what to change. End with one line: VERDICT: approve, or "
-    "VERDICT: changes.\n\n{lessons}The task ({task_id}): {title}\n{body}\n\nThe diff:\n{diff}"
+    "style. List each problem with the file and what to change. A docstring that no longer says what its code "
+    "does is a problem (DEC-0110). End with one line: VERDICT: approve, or VERDICT: changes.\n\n{lessons}The task "
+    "({task_id}): {title}\n{body}\n\nThe diff:\n{diff}{stale}"
 )
 
 
@@ -110,7 +111,8 @@ def review(task_id: str, role_name: str, registry: Registry, *, ask: Callable[[s
            diff: Callable[[str], str], folder=tasks_mod.TASKS_DIR, log=activity.ACTIVITY,
            lessons: Optional[Path] = None) -> str:
     """One independent review of a task waiting in review. `ask(provider, prompt)`
-    runs the reviewer; `diff(proposal_id)` gives the change. Returns the verdict."""
+    runs the reviewer; `diff(proposal_id)` gives the change, and the reviewer is also
+    given the docstrings it may have left out of date (DEC-0110). Returns the verdict."""
     tasks = tasks_mod.load(folder)
     task = tasks_mod._get(tasks, task_id)
     if task.status != "review":
@@ -130,7 +132,7 @@ def review(task_id: str, role_name: str, registry: Registry, *, ask: Callable[[s
     if len(change) > MAX_DIFF:
         change = change[:MAX_DIFF] + "\n[... the rest of the diff was cut for length; say so if it matters]"
     said = ask(role.provider, REVIEW_PROMPT.format(role=role.role, task_id=task.id, title=task.title,
-                                                    body=task.body, diff=change,
+                                                    body=task.body, diff=change, stale=_stale_docs(pid),
                                                     lessons=lessons_for(role.provider, lessons) + _known(task)))
     found = verdict(said)
     tasks_mod.note(task, who, f"Review: {found}. " + " ".join((said or "").split())[:1500])
@@ -291,6 +293,20 @@ def approve(task_id: str, *, confirm: Callable[[str], str], lab=None, suite: Opt
     tasks_mod.save(task, folder)
     activity.record("zac", "approve", task.id, f"merged {p.merged_as[:10]}", log)
     return p.merged_as
+
+
+def _stale_docs(proposal_id: str) -> str:
+    """For the reviewer: the docstrings a lab change may have left out of date (core/doc_freshness.py, DEC-0110),
+    or nothing when there are none or the proposal can't be read."""
+    try:
+        from core import dev_lab, doc_freshness
+
+        p = dev_lab.get(proposal_id)
+        found = doc_freshness.describe(doc_freshness.between(p.base, p.branch))
+    except Exception:
+        return ""
+    return f"\n\nTheir code changed and their docstrings didn't (check each still says what it does):\n{found}" \
+        if found else ""
 
 
 def lab_diff(proposal_id: str) -> str:

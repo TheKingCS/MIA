@@ -122,7 +122,9 @@ AREAS: tuple[Area, ...] = (
         "Every file says what it is, what it does and how; every class, function and method has a docstring "
         "(DEC-0104).",
         "A docstring is a claim about the code: check it against the code. When they disagree, the code is right.",
-        "Docs change with the code, in the same commit; generated docs are regenerated, never hand-edited.",
+        "Docs change with the code, in the same commit (DEC-0110): a function whose behaviour changed gets its "
+        "docstring changed with it; python -m tools.docs stale lists the ones that may have been missed. Generated "
+        "docs are regenerated, never hand-edited.",
         "Write why, not only what: the reasons and the mistakes go in the Knowledge Vault (DEC-0105).",
         "A guide is for someone who wasn't there: steps in order, an example, what can go wrong.",
         "In a docstring, describe escapes in words; a backslash is read as code.",

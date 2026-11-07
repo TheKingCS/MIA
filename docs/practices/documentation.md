@@ -6,13 +6,14 @@
 
 1. Every file says what it is, what it does and how; every class, function and method has a docstring (DEC-0104).
 2. A docstring is a claim about the code: check it against the code. When they disagree, the code is right.
-3. Docs change with the code, in the same commit; generated docs are regenerated, never hand-edited.
+3. Docs change with the code, in the same commit (DEC-0110): a function whose behaviour changed gets its docstring changed with it; python -m tools.docs stale lists the ones that may have been missed. Generated docs are regenerated, never hand-edited.
 4. Write why, not only what: the reasons and the mistakes go in the Knowledge Vault (DEC-0105).
 5. A guide is for someone who wasn't there: steps in order, an example, what can go wrong.
 6. In a docstring, describe escapes in words; a backslash is read as code.
 
 ## Learned building her
 
+- **How documentation keeps up with changed code** (K-0056): core/doc_freshness.py compares two versions of each changed Python file.
 - **The rest of a life in the life state, as areas** (K-0054): the life state (assemble_life_state_v2, /api/state) had full sections for money, property, assets, kitchen, workouts, projects, goals and missions, and nothing for 50 other stores.
 - **Why MIA's curriculum is practised on her own code** (K-0050): core/curriculum.py holds ten tracks of computing (engineering, testing, documentation, design, web, apps, deploying, security, pen testing on herself, monitoring), each objective saying what she can do once she has it…
 - **How to document a file so the words match the code** (K-0038): DEC-0104 asks for a docstring on every class, function and method, saying what it is, what it does and how.

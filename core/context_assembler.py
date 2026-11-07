@@ -502,7 +502,10 @@ def _goals(context, all_links: list) -> dict:
 def assemble_life_state_v2(context, today: Optional[date] = None) -> dict:
     """The whole picture for the person this context is for (the
     signed-in person, or the phone user on their own view), as plain
-    JSON-ready data. Never raises for a missing store: that section says
+    JSON-ready data: the full sections (money, property, assets, kitchen,
+    workouts, projects, due, missions, wins, friction, goals, links), and
+    `areas` (core/life_areas.py) for the rest of a life, a few counts and
+    what's next each. Never raises for a missing store: that section says
     PLANNED instead."""
     from core import first_boot, life_areas, links
 

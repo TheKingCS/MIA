@@ -2,7 +2,7 @@
 
 *Generated from `core/loops.py` by `python -m core.loop_catalog`; never edit by hand (a test keeps it current). The design and the reasons: `docs/IMPROVEMENT_LOOPS.md`; what each process is watched by: `python -m tools.night_school coverage`.*
 
-87 loops in 8 areas.
+88 loops in 8 areas.
 
 ## Answers
 
@@ -72,6 +72,7 @@
 | `dev.connected` | store connections made, of those that should exist (weekly audit) | device | trend | shown, never acted on | `dev:self_audit` |
 | `dev.council_cost` | calls per council turn | device | trend | shown, never acted on | `dev:council` |
 | `dev.doc_drift` | files the docs name that don't exist | device | ≤ 0 | opens a task | `dev:code` |
+| `dev.doc_freshness` | definitions changed this week without their docstrings (DEC-0110) | device | trend | shown, never acted on | `dev:docs` |
 | `dev.docs` | MIA's classes and functions that are documented (DEC-0104) | device | trend | shown, never acted on, weekly | `dev:docs` |
 | `dev.knowledge` | MIA's write-ups withdrawn | device | ≤ 0.3 (from 5) | opens a task | `dev:knowledge` |
 | `dev.lab` | her lab proposals that went in, of those settled in 60 days | device | ≥ 0.5 (from 5) | opens a task | `action:lab` |

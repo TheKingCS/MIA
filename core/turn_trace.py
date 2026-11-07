@@ -79,7 +79,8 @@ class TurnTraces:
 
 
 def record(context, conversation, prompt: str, turn, seconds: float, surface: str = "") -> None:
-    """Trace one finished turn. Never raises, and never traces a private one."""
+    """Trace one finished turn, with her own router's picks in the shadow (tool names only). Never raises, and
+    never traces a private one."""
     try:
         traces = getattr(context, "traces", None)
         if traces is None:

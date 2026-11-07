@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1060 files, 234,373 lines; 1060 files describe themselves; 6,284 of 13,690 classes and functions are documented.
+1062 files, 234,719 lines; 1062 files describe themselves; 6,298 of 13,703 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-374 files, 107,290 lines; 5,503 of 5,753 classes and functions documented
+375 files, 107,502 lines; 5,513 of 5,763 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -117,6 +117,7 @@
 - `core/device_profile.py`: MIA runs as one codebase across two editions — docs/ROADMAP.md milestone 13.1: **Core** (the Pi 5 + AI HAT+ 2, resource-constrained, a field data-gathering tool) and **Home** (a desktop workstation, more storage/resources), distinguished only by `config.system.device_profile`. *(3 undocumented)*
 - `core/diagnostics.py`: Diagnostic procedures (ACAF step 4, T-0040; `docs/ACAF_REVIEW.md` section 6): a check-up written as a spec, not code, over what inspection's PASSIVE methods already read (core/inspection.py: the OS, CPU and memory, the drives, the network, the firewall, the AI runtime, MIA's own health). Nothing her
 - `core/discovery_manager.py`: Discovery — the AI-generated counterpart to Mission Pathways (core/pathway_manager.py, hand-authored) and the first real piece of the "Personal Capability & Progression Engine" the user described after Pathways shipped. Deliberately the smallest possible closed loop, not the full vision (cross-tree 
+- `core/doc_freshness.py`: Documentation that keeps up with the code (DEC-0110; Zac, 2026-11-07: "when anything is changed it needs to be reflected in that file's documentation as well"). DEC-0104 makes sure every definition *has* a docstring; this checks that a docstring is still *true* after its code changes.
 - `core/document_text.py`: Text out of the documents the owner gives MIA: shared by the textbook tutor (core/textbook_manager.py) and the document inbox (core/inbox_manager.py). 2026-09-28.
 - `core/dungeon_actions.py`: The Dungeon's actions (DEC-0046, core/work_dungeon.py) on the action contract: proposed in plain words with the loot they bring, approved, run, undoable.
 - `core/email_drafts.py`: Email drafts (2026-10-01, accounts stage 3): the Assistant can write an email for you, and you choose what happens to it: **Send** (only when you press Send, from your own address, core/mail_send.py), **Copy** it, or open it in your mail app** (a mailto: link). MIA never sends anything by herself; n
@@ -617,7 +618,7 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-31 files, 3,100 lines; 34 of 91 classes and functions documented
+31 files, 3,114 lines; 35 of 91 classes and functions documented
 
 - `tools/audit.py`: MIA's self-audit from the command line (DEC-0108; core/self_audit.py, core/practices.py).
 - `tools/bench_audit.py`: What MIA's routing does today with each Intelligence Benchmark question (tests/intelligence_bench.py, docs/INTELLIGENCE_BENCHMARK.md): a question plan (core/question_plans.py: lookups by code, one answer), answered by code (a direct lookup), offered which tools, or left to the model with no tools at *(3 undocumented)*
@@ -637,7 +638,7 @@
 - `tools/make_model_bench.py`: Freezes MIA's golden set (tests/live_model_check.py) into data/model_bench_cases.json for the model test (core/model_bench.py, docs/PHONE_MODEL_TEST.md): for each case, the exact messages and offered tools MIA's request builder makes with the PC's full set of tools, against the live check's placehol *(2 undocumented)*
 - `tools/model_check.py`: Runs one of the phone's models (core/local_model.MODELS) through MIA's golden set (core/model_bench.py) with llama.cpp's server on a computer, started exactly as the phone starts it. CI's "Model check" workflow uses it to compare the models' accuracy; speed belongs to the phone's own Model test scre *(1 undocumented)*
 - `tools/model_forge.py`: MIA's model forge from the command line (DEC-0106; core/model_forge.py).
-- `tools/night_school.py`: Night School from the command line (DEC-0100, core/night_school.py). *(1 undocumented)*
+- `tools/night_school.py`: Night School from the command line (DEC-0100, core/night_school.py).
 - `tools/offline_map.py`: Cut an area of OpenStreetMap into a vector offline map (core/offline_maps.py), kept in data/maps/ and drawn on the web's Maps page.
 - `tools/pc_check.py`: Is this computer ready to be MIA's home base? (DEC-0022, DEC-0033.) Everything the phone, the glasses and the cameras need from it, each with what to do if it isn't there yet: *(4 undocumented)*
 - `tools/pc_model_check.py`: Which model should MIA's home computer run? (DEC-0022.) Runs each model through MIA's golden set (core/model_bench.py) with Ollama on this computer, on its graphics card, exactly as Talk calls it, and writes what it found to `pc-check/models.md` (paste that file's contents to Claude, or just say "do *(2 undocumented)*
@@ -653,7 +654,7 @@
 
 ## tests/: the test suite: what each part must do
 
-353 files, 63,795 lines; 345 of 5,702 classes and functions documented
+354 files, 63,915 lines; 348 of 5,705 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -750,6 +751,7 @@
 - `tests/test_diagnostics_log_viewer.py`: Unit tests for the pure tail/filter helpers backing the Diagnostics module's log viewer (modules.diagnostics.module.tail_lines filter_lines). The QWidget-building side of get_widget() needs a live Qt event loop and is exercised manually instead — see docs/testing/2.6_system_logs_viewer.md. *(8 undocumented)*
 - `tests/test_discovery_manager.py`: Unit tests for core.discovery_manager. Isolates _DATA_DIR/file constants for discovery_manager, skill_manager, mission_manager, project_manager, and intent_manager into a shared tmp_path scratch area, same monkeypatch pattern as tests/test_pathway_manager.py. *(40 undocumented)*
 - `tests/test_discovery_tool.py`: Unit tests for modules.toolbox.tools.discovery_tool's pure format_proposal_card_text(), same style as tests/test_pathway_tool.py (no Qt event loop, no fixtures). *(3 undocumented)*
+- `tests/test_doc_freshness.py`: Documentation that keeps up with the code (core/doc_freshness.py, DEC-0110): a definition whose code changed while its docstring didn't is found, changed parameters most of all; a docstring edit, moved code or an added decorator is not; a file's opening is asked about only when public definitions co
 - `tests/test_documentation.py`: Documentation for everything MIA is made of (DEC-0104, core/code_atlas.py): every file says what it is; new code arrives documented; nothing already documented slips back; docs/ATLAS.md is current. *(4 undocumented)*
 - `tests/test_email_drafts.py`: Email drafts (core/email_drafts.py, core/mail_send.py, core/assistant_email_actions.py), 2026-10-01: MIA writes, the person sends (only by pressing Send), copies, or opens their mail app. *(15 undocumented)*
 - `tests/test_energy_manager.py`: Unit tests for core.energy_manager. Isolates _DATA_DIR _ENERGY_SOURCES_FILE (and core.data_logger_manager's own data file, since readings are real DataLogger entries this manager passes through), same monkeypatch pattern as tests/test_data_logger_manager .py's isolated_paths. *(16 undocumented)*

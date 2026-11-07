@@ -60,7 +60,9 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       which work best on Linux (`docs/HARDWARE.md` recommends Ubuntu). When we get there: whether to dual-boot
       Ubuntu on the PC, or try ROCm on Windows (more limited). Not needed until her corpus is big enough.
 - [ ] **Plaid:** finish the work in progress in `core/budget_manager.py` and `core/plaid_manager.py` (its test,
-      `test_import_transaction_transfer_is_skipped`, fails until then), and link every card and bank.
+      `test_import_transaction_transfer_is_skipped`, fails until then), and link every card and bank. Before
+      committing it, run `.venv\Scripts\python -m tools.docs stale` (DEC-0110): `add_expense` and `add_income`
+      gained a `kind` parameter, and their docstrings (and a dozen others there) haven't said so yet.
 - [ ] **The phone:** install build 143 or newer (`adb install -r`), then reopen MIA on the glasses. The CI build
       from 2026-11-06's push or later also lets Look take or choose a photo on the phone (and the Inbox choose a
       file): try both.
