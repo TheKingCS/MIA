@@ -94,16 +94,19 @@ def format_open_task_line(task: Task) -> str:
 
 
 class DashboardModule(ModuleBase):
+    """The Dashboard app (desktop): recent activity, active missions, memories, upcoming events, projects and open tasks at a glance."""
     module_id = "dashboard"
     display_name = "Dashboard"
     description = "Recent activity, active missions, memories, and upcoming items at a glance."
     icon = "\U0001F4CA"  # bar chart
 
     def __init__(self, context) -> None:
+        """Nothing built yet: the page is made in get_widget()."""
         super().__init__(context)
         self._list_layout: Optional[QVBoxLayout] = None
 
     def get_widget(self) -> QWidget:
+        """The page: a title, a refresh button and the scrolling list of sections."""
         page = QWidget()
         outer = QVBoxLayout(page)
         outer.setContentsMargins(24, 24, 24, 24)
@@ -138,6 +141,7 @@ class DashboardModule(ModuleBase):
         # modules/toolbox/tools/lite_captures_tool.py) and fixed across
         # this codebase's other actively-re-triggered refresh methods
         # the same day.
+        """Rebuilds every section (old rows hidden and detached first, so none ghost): recent activity, active missions with objectives done, recent memories, upcoming events, unfinished projects and open tasks, a few of each."""
         while self._list_layout.count():
             item = self._list_layout.takeAt(0)
             widget = item.widget()
@@ -176,6 +180,7 @@ class DashboardModule(ModuleBase):
         self._add_section("Open Tasks", [format_open_task_line(t) for t in open_tasks[:_SECTION_ITEM_LIMIT]])
 
     def _add_section(self, title: str, lines: list[str]) -> None:
+        """Adds one section: its title, then a line per item, or "Nothing here yet." """
         section_label = QLabel(title)
         section_label.setStyleSheet("font-weight: 600;")
         self._list_layout.addWidget(section_label)

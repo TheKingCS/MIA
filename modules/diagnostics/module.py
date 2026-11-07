@@ -85,12 +85,14 @@ def filter_lines(lines: list[str], level: str, query: str) -> list[str]:
 
 
 class DiagnosticsModule(ModuleBase):
+    """The Diagnostics app (desktop): the computer's health, refreshed on a timer, and MIA's log, filtered by level and words."""
     module_id = "diagnostics"
     display_name = "Diagnostics"
     description = "System health, logs, and hardware status."
     icon = "\U0001FA7A"  # stethoscope
 
     def __init__(self, context) -> None:
+        """Nothing built yet: the page and its health timer are made in get_widget()."""
         super().__init__(context)
         self._log_view: QPlainTextEdit | None = None
         self._level_combo: QComboBox | None = None
@@ -100,6 +102,7 @@ class DiagnosticsModule(ModuleBase):
         self._health_timer: QTimer | None = None
 
     def get_widget(self) -> QWidget:
+        """The page: the health line (refreshed every _HEALTH_REFRESH_MS), the level and search filters, and the log view."""
         widget = QWidget()
         outer = QVBoxLayout(widget)
         outer.setContentsMargins(24, 24, 24, 24)
@@ -164,6 +167,7 @@ class DiagnosticsModule(ModuleBase):
         return widget
 
     def _refresh_health(self) -> None:
+        """Shows the health snapshot (CPU, memory, disk, temperature, network), or says it's unavailable when it can't be read."""
         if self._health_label is None:
             return
         try:
@@ -175,6 +179,7 @@ class DiagnosticsModule(ModuleBase):
         self._health_label.setText(format_system_health(snapshot))
 
     def _refresh(self) -> None:
+        """Shows the log's last lines that match the level and the search, says how many of how many, and scrolls to the newest."""
         if self._log_view is None:
             return
 

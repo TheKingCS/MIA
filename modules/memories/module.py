@@ -80,16 +80,19 @@ def format_waypoint_categories_line(categories: dict[str, int]) -> str:
 
 
 class MemoriesModule(ModuleBase):
+    """The Memories app (desktop): on this day, then every expedition's recap with its stats, photos and route maps."""
     module_id = "memories"
     display_name = "Memories"
     description = "Trip recaps, stats, and photos from your Expeditions."
     icon = "\U0001F4F8"  # camera with flash
 
     def __init__(self, context) -> None:
+        """Nothing built yet: the page is made in get_widget()."""
         super().__init__(context)
         self._list_layout: Optional[QVBoxLayout] = None
 
     def get_widget(self) -> QWidget:
+        """The page: a title and the scrolling list of recaps."""
         page = QWidget()
         outer = QVBoxLayout(page)
         outer.setContentsMargins(24, 24, 24, 24)
@@ -124,6 +127,7 @@ class MemoriesModule(ModuleBase):
         # modules/toolbox/tools/lite_captures_tool.py) and fixed across
         # this codebase's other actively-re-triggered refresh methods
         # the same day.
+        """Rebuilds the list: what happened on this day in earlier years, then every recap; says how to make one when there are none."""
         while self._list_layout.count():
             item = self._list_layout.takeAt(0)
             widget = item.widget()
@@ -154,6 +158,7 @@ class MemoriesModule(ModuleBase):
             self._list_layout.addWidget(self._build_recap_card(recap))
 
     def _build_recap_card(self, recap: ExpeditionRecap) -> QFrame:
+        """One expedition's card: its name and dates, the stats, a few photos from its trips, and a View Route Map button per trip."""
         card = QFrame()
         card.setObjectName("CharacterPanel")  # reuse the dashed-panel style
         layout = QVBoxLayout(card)
@@ -208,5 +213,6 @@ class MemoriesModule(ModuleBase):
         return card
 
     def _on_view_route_map(self, trip_id: str) -> None:
+        """Opens a trip's details with its route map."""
         dialog = TripDetailDialog(self.context, trip_id)
         dialog.exec()

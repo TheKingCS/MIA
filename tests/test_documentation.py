@@ -35,6 +35,9 @@ def test_how_a_file_is_read(tmp_path):
 
 
 def test_putting_docstrings_in_place():
+    """tools.docs.insert puts a docstring after the whole signature at the body's indentation, one or several
+    lines; refuses a name already documented, one not there, and a backslash; and a docstring ending in a quote
+    still closes."""
     import pytest
 
     from tools.docs import insert
@@ -49,3 +52,5 @@ def test_putting_docstrings_in_place():
         insert(text, {"nope": "x"})
     with pytest.raises(ValueError):
         insert(text, {"f": "Undoes \\, escapes."})  # a backslash would be an escape in the docstring
+    quoted = insert(text, {"f": 'Says "Nothing here yet."'})  # a closing quote doesn't run into the """
+    assert '"""Says "Nothing here yet." """' in quoted

@@ -77,16 +77,19 @@ def group_open_insights_by_source(insights: list[Insight]) -> list[tuple[str, li
 
 
 class ObservationsModule(ModuleBase):
+    """The Observations app (desktop): what MIA has noticed and not yet closed, grouped by where it came from."""
     module_id = "observations"
     display_name = "Observations"
     description = "What MIA has noticed across your maintenance and missions."
     icon = "\U0001F50D"  # magnifying glass
 
     def __init__(self, context) -> None:
+        """Nothing built yet: the page is made in get_widget()."""
         super().__init__(context)
         self._list_layout: Optional[QVBoxLayout] = None
 
     def get_widget(self) -> QWidget:
+        """The page: a title and the scrolling list of observations."""
         page = QWidget()
         outer = QVBoxLayout(page)
         outer.setContentsMargins(24, 24, 24, 24)
@@ -125,6 +128,7 @@ class ObservationsModule(ModuleBase):
         # caught there by an actual screenshot showing overlapping
         # text) — fixed proactively so a future second refresh here
         # doesn't silently reintroduce it.
+        """Rebuilds the list (old rows hidden and detached first): a section per source, a card per open insight; says when there's nothing open, or when insights aren't available."""
         while self._list_layout.count():
             item = self._list_layout.takeAt(0)
             widget = item.widget()
@@ -156,6 +160,7 @@ class ObservationsModule(ModuleBase):
                 self._list_layout.addWidget(self._build_insight_card(insight))
 
     def _build_insight_card(self, insight: Insight) -> QFrame:
+        """One insight's card: its title, message and, when one is pending, what MIA recommends."""
         card = QFrame()
         card.setObjectName("DashboardCard")
         layout = QVBoxLayout(card)

@@ -43,8 +43,9 @@ def definitions(tree: ast.Module) -> dict:
 
 
 def insert(text: str, docs: dict[str, str]) -> str:
-    """Pure logic. The file's text with each docstring put first in its definition's body. Raises ValueError for a
-    name that isn't there, one that already has a docstring, or a body on the def line itself."""
+    """Pure logic. The file's text with each docstring put first in its definition's body (one ending in a quote
+    gets a space, so it doesn't run into the closing quotes). Raises ValueError for a name that isn't there, one
+    that already has a docstring, or a body on the def line itself."""
     tree = ast.parse(text)
     found = definitions(tree)
     lines = text.splitlines(keepends=True)
@@ -62,6 +63,8 @@ def insert(text: str, docs: dict[str, str]) -> str:
             raise ValueError(f"{name}: say it without a backslash")
         indent = " " * first.col_offset
         body = doc.strip().replace('"""', "'''").splitlines()
+        if body and body[-1].endswith('"'):  # a closing quote would run into the docstring's own """
+            body[-1] += " "
         if len(body) == 1:
             block = f'{indent}"""{body[0]}"""\n'
         else:

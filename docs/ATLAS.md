@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1069 files, 237,267 lines; 1069 files describe themselves; 6,673 of 13,808 classes and functions are documented.
+1069 files, 237,296 lines; 1069 files describe themselves; 6,695 of 13,808 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -524,7 +524,7 @@
 
 ## modules/: the desktop's apps, one folder each
 
-93 files, 22,034 lines; 269 of 1,030 classes and functions documented
+93 files, 22,055 lines; 290 of 1,030 classes and functions documented
 
 - `modules/__init__.py`: Every feature of MIA (Assistant, Files, Notes, Maps, etc.) lives here as an independent package. Each module package must:
 - `modules/assistant/__init__.py`: The assistant app's package: its screen and behaviour are in module.py (Assistant Chat UI — docs/ROADMAP.md milestones 5.2 (text chat), 5.3 (voice), 5.4 (device-help grounding), and 5.5 (tool use / action execution). A chat screen (). core/module_manager.py finds it by that file.
@@ -536,9 +536,9 @@
 - `modules/classroom/__init__.py`: The classroom app's package: its screen and behaviour are in module.py (Classroom — v1 (2026-09-11): the user's own self-education content model, Subjects -> Courses -> Lessons, three-level drill-down navigation (same "list page + a). core/module_manager.py finds it by that file.
 - `modules/classroom/module.py`: Classroom — v1 (2026-09-11): the user's own self-education content model, Subjects -> Courses -> Lessons, three-level drill-down navigation (same "list page + a QStackedWidget page per level, '<- Back' to go up" shape as modules/real_estate/module.py). Deliberately just the content lesson structure  *(30 undocumented)*
 - `modules/dashboard/__init__.py`: The dashboard app's package: its screen and behaviour are in module.py (Dashboard — docs/ROADMAP.md milestone v0.19, the last of the three new subsystems from the 2026-07-14 wearable-companion vision update. A read-only, at-a-glance). core/module_manager.py finds it by that file.
-- `modules/dashboard/module.py`: Dashboard — docs/ROADMAP.md milestone v0.19, the last of the three new subsystems from the 2026-07-14 wearable-companion vision update. A read-only, at-a-glance summary: recent activity, active Missions and their objective progress, recent Memories (Expedition recaps), upcoming Calendar events, and  *(5 undocumented)*
+- `modules/dashboard/module.py`: Dashboard — docs/ROADMAP.md milestone v0.19, the last of the three new subsystems from the 2026-07-14 wearable-companion vision update. A read-only, at-a-glance summary: recent activity, active Missions and their objective progress, recent Memories (Expedition recaps), upcoming Calendar events, and 
 - `modules/diagnostics/__init__.py`: The diagnostics app's package: its screen and behaviour are in module.py (Diagnostics: system health and the in-app log viewer). core/module_manager.py finds it by that file.
-- `modules/diagnostics/module.py`: Diagnostics: system health and the in-app log viewer. *(5 undocumented)*
+- `modules/diagnostics/module.py`: Diagnostics: system health and the in-app log viewer.
 - `modules/expeditions/__init__.py`: The expeditions app's package: its screen and behaviour are in module.py (Expedition Mode — docs/ROADMAP.md milestone 12.1. Two-level CRUD: Expeditions (the top-level dated outing, core.expedition_manager.Expedition) at the top, and t). core/module_manager.py finds it by that file.
 - `modules/expeditions/module.py`: Expedition Mode — docs/ROADMAP.md milestone 12.1. Two-level CRUD: Expeditions (the top-level dated outing, core.expedition_manager.Expedition) at the top, and the selected Expedition's Trips (one activity/leg each — hike, paddle, ride, fishing trip, etc., see core.trip_manager.ACTIVITY_TYPES — core. *(15 undocumented)*
 - `modules/field_kit/__init__.py`: The field kit app's package: its screen and behaviour are in module.py (Field Kit — docs/ROADMAP.md milestones 11.2 (Device Manager), 11.4 (Useful Scripts), and 11.5 (Security/Network Toolkit). Three tabs in one module (docs/MODULE_). core/module_manager.py finds it by that file.
@@ -571,7 +571,7 @@
 - `modules/maps/tile_prefetch_worker.py`: Runs core.map_tile_cache.MapTileCache.ensure_region_cached() off the GUI thread — the explicit, user-initiated "download this region for offline use" action can fetch hundreds of tiles and take real time, so this is the same one-shot QThread-per-run pattern as modules/field_kit/script_worker.py's Sc
 - `modules/maps/trail_map_fetch_worker.py`: Runs core.trail_map_library.TrailMapLibrary.add_from_url() off the GUI thread — a real network download, same one-shot QThread-per-run pattern as modules/field_kit/script_worker.py's ScriptWorker. add_from_local_file() needs no worker (no network I/O, just a local file copy — fast enough for a direc
 - `modules/memories/__init__.py`: The memories app's package: its screen and behaviour are in module.py (Memories — docs/ROADMAP.md milestone v0.17, module #19 in that doc's "Top-level module sections" list. Displays one recap card per Expedition (docs/ROADMAP.md 1). core/module_manager.py finds it by that file.
-- `modules/memories/module.py`: Memories — docs/ROADMAP.md milestone v0.17, module #19 in that doc's "Top-level module sections" list. Displays one recap card per Expedition (docs/ROADMAP.md 12.1), most-recent-first: duration, per-activity-type distance/pace, waypoint categories visited, a photo thumbnail strip, and a per-Trip row *(6 undocumented)*
+- `modules/memories/module.py`: Memories — docs/ROADMAP.md milestone v0.17, module #19 in that doc's "Top-level module sections" list. Displays one recap card per Expedition (docs/ROADMAP.md 12.1), most-recent-first: duration, per-activity-type distance/pace, waypoint categories visited, a photo thumbnail strip, and a per-Trip row
 - `modules/missions/__init__.py`: The missions app's package: its screen and behaviour are in module.py (Mission Log — docs/ROADMAP.md milestone v0.18, module #20. Rebuilt 2026-07-18 against a design handoff (CCH.zip's Missions.dc.html) as a two-panel "Mission Log"). core/module_manager.py finds it by that file.
 - `modules/missions/module.py`: Mission Log — docs/ROADMAP.md milestone v0.18, module #20. Rebuilt 2026-07-18 against a design handoff (CCH.zip's Missions.dc.html) as a two-panel "Mission Log": a detail panel (icon/title/region, summary, an objectives checklist, difficulty/level tags, a rewards footer) on the left, and a mission l *(16 undocumented)*
 - `modules/module_base.py`: Defines ModuleBase, the contract every MIA module must implement.
@@ -584,7 +584,7 @@
 - `modules/notes/__init__.py`: The notes app's package: its screen and behaviour are in module.py (Notes: the Notes/Journal Engine's UI (docs/ROADMAP.md milestone 3.4), replacing the earlier placeholder. Dated, searchable, taggable entries — a filterable list). core/module_manager.py finds it by that file.
 - `modules/notes/module.py`: Notes: the Notes/Journal Engine's UI (docs/ROADMAP.md milestone 3.4), replacing the earlier placeholder. Dated, searchable, taggable entries — a filterable list (title/tags/last-updated), Add/Edit/Delete via gui/add_edit_journal_entry_dialog.py. All persistence/query logic lives in core/journal_mana *(10 undocumented)*
 - `modules/observations/__init__.py`: The observations app's package: its screen and behaviour are in module.py ("Observations" — the real UI core.insight_manager.py's own docstring flagged as deferred: "Deliberately no dedicated browsing UI this phase — Insights surface t). core/module_manager.py finds it by that file.
-- `modules/observations/module.py`: "Observations" — the real UI core.insight_manager.py's own docstring flagged as deferred: "Deliberately no dedicated browsing UI this phase — Insights surface through the existing NotificationToast NotificationCenter... available for a later phase (a 'System Observation' view...) to query." That lat *(5 undocumented)*
+- `modules/observations/module.py`: "Observations" — the real UI core.insight_manager.py's own docstring flagged as deferred: "Deliberately no dedicated browsing UI this phase — Insights surface through the existing NotificationToast NotificationCenter... available for a later phase (a 'System Observation' view...) to query." That lat
 - `modules/power/__init__.py`: The power app's package: its screen and behaviour are in module.py (Power — docs/ROADMAP.md milestone 7.2, plus manual energy/utility tracking added 2026-09-09 (the last of four "Field Manual" brainstorm items this session). Two). core/module_manager.py finds it by that file.
 - `modules/power/module.py`: Power — docs/ROADMAP.md milestone 7.2, plus manual energy/utility tracking added 2026-09-09 (the last of four "Field Manual" brainstorm items this session). Two tabs: Battery (the original, unchanged `AppContext.power`/core/power_manager.py battery/UPS view) and Energy Sources (`AppContext.energy`/c *(14 undocumented)*
 - `modules/property/__init__.py`: The property app's package: its screen and behaviour are in module.py (Property — a read-only, at-a-glance place to check on the house itself and everything in it that isn't a vehicle or power equipment: HVAC filters, water heater,). core/module_manager.py finds it by that file.
@@ -622,7 +622,7 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-31 files, 3,175 lines; 91 of 91 classes and functions documented
+31 files, 3,178 lines; 91 of 91 classes and functions documented
 
 - `tools/audit.py`: MIA's self-audit from the command line (DEC-0108; core/self_audit.py, core/practices.py).
 - `tools/bench_audit.py`: What MIA's routing does today with each Intelligence Benchmark question (tests/intelligence_bench.py, docs/INTELLIGENCE_BENCHMARK.md): a question plan (core/question_plans.py: lookups by code, one answer), answered by code (a direct lookup), offered which tools, or left to the model with no tools at
@@ -658,7 +658,7 @@
 
 ## tests/: the test suite: what each part must do
 
-356 files, 64,320 lines; 366 of 5,723 classes and functions documented
+356 files, 64,325 lines; 367 of 5,723 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -756,7 +756,7 @@
 - `tests/test_discovery_manager.py`: Unit tests for core.discovery_manager. Isolates _DATA_DIR/file constants for discovery_manager, skill_manager, mission_manager, project_manager, and intent_manager into a shared tmp_path scratch area, same monkeypatch pattern as tests/test_pathway_manager.py. *(40 undocumented)*
 - `tests/test_discovery_tool.py`: Unit tests for modules.toolbox.tools.discovery_tool's pure format_proposal_card_text(), same style as tests/test_pathway_tool.py (no Qt event loop, no fixtures). *(3 undocumented)*
 - `tests/test_doc_freshness.py`: Documentation that keeps up with the code (core/doc_freshness.py, DEC-0110): a definition whose code changed while its docstring didn't is found, changed parameters most of all; a docstring edit, moved code or an added decorator is not; a file's opening is asked about only when public definitions co
-- `tests/test_documentation.py`: Documentation for everything MIA is made of (DEC-0104, core/code_atlas.py): every file says what it is; new code arrives documented; nothing already documented slips back; docs/ATLAS.md is current. *(4 undocumented)*
+- `tests/test_documentation.py`: Documentation for everything MIA is made of (DEC-0104, core/code_atlas.py): every file says what it is; new code arrives documented; nothing already documented slips back; docs/ATLAS.md is current. *(3 undocumented)*
 - `tests/test_email_drafts.py`: Email drafts (core/email_drafts.py, core/mail_send.py, core/assistant_email_actions.py), 2026-10-01: MIA writes, the person sends (only by pressing Send), copies, or opens their mail app. *(15 undocumented)*
 - `tests/test_energy_manager.py`: Unit tests for core.energy_manager. Isolates _DATA_DIR _ENERGY_SOURCES_FILE (and core.data_logger_manager's own data file, since readings are real DataLogger entries this manager passes through), same monkeypatch pattern as tests/test_data_logger_manager .py's isolated_paths. *(16 undocumented)*
 - `tests/test_event_bus.py`: Unit tests for core.event_bus.EventBus. *(4 undocumented)*
