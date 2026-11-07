@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Maps — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
+  <style>
+    /* The map's own frame (functional; the look is muse's). Tokens only. */
+    .map-view { position: relative; overflow: hidden; height: 60vh; min-height: 320px; border-radius: 8px;
+      background: var(--bg); touch-action: none; cursor: grab; }
+    .map-view img { position: absolute; width: 256px; height: 256px; user-select: none; pointer-events: none; }
+    .map-view img:not([src]) { visibility: hidden; }  /* a tile not here yet (or offline): no broken-image frame */
+    .map-pin { position: absolute; transform: translate(-50%, -100%); font-size: 12px; white-space: nowrap;
+      padding: 2px 6px; border-radius: 6px; background: rgba(var(--rgb-accent), 0.85); color: var(--bg);
+      pointer-events: none; }
+    .map-attrib { position: absolute; right: 6px; bottom: 4px; font-size: 10px; color: var(--text-faint); }
+  </style>
+</head>
+<body data-app="maps" data-icon="assistant" class="mod-maps">
+  <!--
+    Maps: the offline basemap tiles with the waypoints on top (core/maps_web.py). MIA.maps(); tiles through
+    /api/maps/tile/. Formatting only; the look is muse's (claude, 2026-11-06).
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <header class="hero">
+        <h1>Maps</h1>
+        <p class="tagline" id="maps-sub"></p>
+      </header>
+      <div id="panel"></div>
+    </main>
+  </div>
+  <script src="mia.js?v=17"></script>
+  <script src="icons.js"></script>
+  <script src="sound.js"></script>
+  <script src="places-watch.js"></script>
+  <script src="shell.js"></script>
+  <script src="maps.js"></script>
+</body>
+</html>

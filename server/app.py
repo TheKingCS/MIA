@@ -844,6 +844,27 @@ def create_app(context: AppContext) -> FastAPI:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "That article isn't in the library.")
         return found
 
+    # Maps (core/maps_web.py): the offline basemap tiles, with the waypoints on top. A tile route only touches the
+    # tile cache (it may fetch a tile once, by the cache's rules), so it never holds the turn lock.
+    @app.get("/api/maps")
+    def maps_screen(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.maps_web import screen
+
+        with app.state.turn_lock:
+            return screen(view_for(context, profile_id))
+
+    @app.get("/api/maps/tile/{source}/{z}/{x}/{y}")
+    def maps_tile(source: str, z: int, x: int, y: int, profile_id: str = Depends(require_profile_id)):
+        from fastapi.responses import FileResponse
+
+        from core.maps_web import tile
+
+        found = tile(context, source, z, x, y)
+        if found is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "No tile there (offline, or not allowed).")
+        return FileResponse(found, media_type="image/png" if found.suffix == ".png" else "image/jpeg",
+                            headers={"Cache-Control": "private, max-age=604800"})
+
     @app.get("/api/memories")
     def memories_screen(profile_id: str = Depends(require_profile_id)) -> dict:
         from core.memories_web import screen  # a recap per expedition, and on this day

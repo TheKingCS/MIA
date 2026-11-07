@@ -221,6 +221,10 @@
     council: () => demo ? Promise.resolve({ messages: [], members: [] }) : call("GET", "/api/council"),
     councilSay: (body) => demo ? Promise.resolve({}) : call("POST", "/api/council", body),
     // The Operating Journal, games played and Good News Radio (DEC-0097, 0098, 0096); changes go through actions.
+    maps: () => demo ? Promise.resolve({ center: { lat: 40.005, lon: -105.0 }, zoom: 13, max_zoom: 16, osm_max_zoom: 4,
+      waypoints: [{ id: "w1", name: "Spring", category: "Water", lat: 40.01, lon: -105.0 },
+                  { id: "w2", name: "Trailhead", category: "Trail", lat: 40.0, lon: -105.0 }] })
+      : call("GET", "/api/maps"),
     memories: () => demo ? (() => {
       const elk = { id: "e1", name: "Elk Creek", where: "the high country", start: "2025-11-06", end: "2025-11-08", days: 3, km: 18.4,
         photos: 42, activities: [{ kind: "hike", trips: 2, km: 18.4, kmh: 3.1 }], places: [{ kind: "Camp", count: 3 }, { kind: "Water", count: 2 }],

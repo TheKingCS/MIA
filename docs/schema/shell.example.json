@@ -221,6 +221,13 @@
       "page": "memories.html"
     },
     {
+      "id": "maps",
+      "name": "Maps",
+      "icon": "🗺",
+      "tagline": "Know the ground.",
+      "page": "maps.html"
+    },
+    {
       "id": "navigation",
       "name": "Navigation",
       "icon": "🧭",

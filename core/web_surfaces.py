@@ -147,7 +147,7 @@ APPS: tuple[App, ...] = (
         LIFE, ("vault",), "Are my photos backed up?"),
     App("memories", "Memories", "📸", "Remember the trip.", "memories.html",
         "Trip recaps, stats, and photos from your Expeditions.", OUTDOORS, (), "Show me my last trip."),
-    App("maps", "Maps", "🗺", "Know the ground.", None,
+    App("maps", "Maps", "🗺", "Know the ground.", "maps.html",
         "Waypoints, a real offline basemap, and official trail maps.", OUTDOORS, ("maps",),
         "Which trail maps do I have?"),
     App("navigation", "Navigation", "🧭", "Find the way.", "navigation.html",
