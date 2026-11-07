@@ -46,6 +46,9 @@ glasses 29. 27 gaps, each decided in `work/parity.json`.
 
 ## Zac's hands-on steps (they unlock the most)
 
+- **Fill MIA with your life** (Zac, 2026-11-07, for later): a guided session at the PC, app by app, through
+  MIA's own actions and User Sync, so every app has real data. Claude asks before reading any folder.
+
 - **Link every card and bank with Plaid** (his first priority at the PC, 2026-10-21): Money, Freedom and the
   findings on Home all get better with real balances.
 - **Email for receipts** (DEC-0120): the app password, then MIA files receipts on her own with an Undo.
