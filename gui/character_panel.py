@@ -203,6 +203,7 @@ class CharacterPanel(QFrame):
     """Reactive companion panel — see module docstring."""
 
     def __init__(self, context: AppContext) -> None:
+        """MIA's side panel: her presence orb and a line reacting to what's happening, suggested prompts, and a chat with her (typed or held to talk); no conversation loaded or worker running yet."""
         super().__init__()
         self.context = context
         self.setObjectName("CharacterPanel")
@@ -290,6 +291,7 @@ class CharacterPanel(QFrame):
         self.context.events.unsubscribe("conversation.active_changed", self._on_conversation_active_changed)
 
     def _load_active_conversation(self) -> None:
+        """Loads the active conversation (made if there's none) and shows it."""
         self._conversation = self.context.conversations.get_or_create_active_conversation()
         self._render_conversation_log()
 
@@ -330,6 +332,7 @@ class CharacterPanel(QFrame):
         QTimer.singleShot(0, self._scroll_chat_log_to_bottom)
 
     def _scroll_chat_log_to_bottom(self) -> None:
+        """Scrolls the chat to the newest message."""
         scrollbar = self._chat_log_scroll.verticalScrollBar()
         scrollbar.setValue(scrollbar.maximum())
 
@@ -344,6 +347,7 @@ class CharacterPanel(QFrame):
         self._load_active_conversation()
 
     def _on_module_opened(self, module_id: str) -> None:
+        """Reacts to an app opening: its icon and line, the orb loading for a moment, and that app's suggested prompts."""
         display_name = self._display_name_for(module_id)
         icon, line = reaction_for_module(module_id, display_name)
         self._apply_reaction(icon, line)
@@ -351,18 +355,22 @@ class CharacterPanel(QFrame):
         self._refresh_suggestions(module_id=module_id)
 
     def _on_menu_shown(self, **kwargs) -> None:
+        """Reacts to the menu: its line and the general suggested prompts."""
         self._apply_reaction(_MENU_ICON, _MENU_LINE)
         self._refresh_suggestions(module_id=None)
 
     def _on_home_shown(self, **kwargs) -> None:
+        """Reacts to Home: its line and the general suggested prompts."""
         self._apply_reaction(_HOME_ICON, _HOME_LINE)
         self._refresh_suggestions(module_id=None)
 
     def _on_notification_created(self, notification) -> None:
+        """Reacts to a notification: its title as her line, and the orb's notification state for a moment."""
         self._apply_reaction(_NOTIFICATION_ICON, f'"{notification.title}"')
         self._start_transient_state("notification", _NOTIFICATION_STATE_MS)
 
     def _on_idle_tick(self) -> None:
+        """After a while with nothing happening, shows the next of her idle lines."""
         if time.monotonic() - self._last_event_at < _IDLE_THRESHOLD_SECONDS:
             return
         self._set_display(_DEFAULT_ICON, idle_line(self._idle_index))
@@ -391,6 +399,7 @@ class CharacterPanel(QFrame):
         self._transient_state_timer.start(duration_ms)
 
     def _set_display(self, icon: str, line: str) -> None:
+        """Sets the orb's glyph and her line."""
         self._presence.set_glyph(icon)
         self._text_label.setText(line)
 
@@ -401,6 +410,7 @@ class CharacterPanel(QFrame):
     # ------------------------------------------------------------------
 
     def _build_chat_section(self) -> QWidget:
+        """The chat: History, the messages, the suggested prompts, the status line, and the input with Send, Hold to Talk and Stop."""
         section = QWidget()
         layout = QVBoxLayout(section)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -489,6 +499,7 @@ class CharacterPanel(QFrame):
         # quick glance at the widget tree. `hide()` + `setParent(None)`
         # removes it from the screen immediately; `deleteLater()` still
         # handles the actual C++ object cleanup.
+        """Shows the suggested prompts for an app (or the general ones), old ones removed first."""
         while self._suggestions_layout.count():
             item = self._suggestions_layout.takeAt(0)
             widget = item.widget()
@@ -513,10 +524,12 @@ class CharacterPanel(QFrame):
             self._suggestions_layout.addWidget(button, alignment=Qt.AlignmentFlag.AlignLeft)
 
     def _on_suggestion_clicked(self, prompt: str) -> None:
+        """Sends a suggested prompt as if typed."""
         self._input.setText(prompt)
         self._on_send()
 
     def _on_send(self) -> None:
+        """Sends what's typed, one turn at a time: the safety floor and its fixed reply first (even with no model), any notice, an answer from code when there is one; otherwise a question plan or the model with tools, off the UI thread."""
         prompt = self._input.text().strip()
         if not prompt or self._worker is not None:
             return
@@ -554,6 +567,7 @@ class CharacterPanel(QFrame):
         self._worker.start()
 
     def _on_reply(self, reply: Optional[ChatReply]) -> None:
+        """Handles the model's reply: a question plan's answer is finished in code; tool calls are run (a destructive one bundled with others is skipped and said) and each result said; plain words are kept, spoken, may offer to note something, title the conversation (never a private one) and add memories."""
         plan, self._plan = getattr(self, "_plan", None), None
         if plan is not None:  # never a number MIA didn't look up (core/question_plans.finish)
             reply = ChatReply(content=plan_finish(reply.content if reply is not None else "", *plan), tool_calls=[])
@@ -592,6 +606,7 @@ class CharacterPanel(QFrame):
         self._extract_memories(user_message)
 
     def _on_worker_finished(self) -> None:
+        """The turn is over: input back on, the worker let go."""
         self._set_busy(False)
         if self._worker is not None:
             self._worker.deleteLater()
@@ -603,6 +618,7 @@ class CharacterPanel(QFrame):
     # ------------------------------------------------------------------
 
     def _maybe_generate_title(self, user_message: str, assistant_message: str) -> None:
+        """Asks the model for a title for a conversation still under the default one, in the background (one at a time)."""
         if self._conversation.title != DEFAULT_TITLE or self._title_worker is not None:
             return
         prompt = build_title_generation_prompt(user_message, assistant_message)
@@ -613,11 +629,13 @@ class CharacterPanel(QFrame):
         self._title_worker.start()
 
     def _on_title_generated(self, conversation_id: str, raw_title: Optional[str]) -> None:
+        """Sets the generated title, once cleaned and found usable."""
         title = clean_generated_title(raw_title)
         if title is not None:
             self.context.conversations.set_title(conversation_id, title)
 
     def _on_title_worker_finished(self) -> None:
+        """Lets the title worker go."""
         if self._title_worker is not None:
             self._title_worker.deleteLater()
             self._title_worker = None
@@ -625,6 +643,7 @@ class CharacterPanel(QFrame):
     def _extract_memories(self, user_message: str) -> None:
         # Memory extraction, or organizing a journal session, or nothing
         # off the record — core/talk_it_out.py decides.
+        """After a turn, works out in the background what's worth remembering from what was said, one at a time."""
         if self._memory_worker is not None:
             return
         conversation = self._conversation
@@ -637,11 +656,13 @@ class CharacterPanel(QFrame):
         self._memory_worker.start()
 
     def _on_memory_worker_finished(self) -> None:
+        """Lets the memory worker go."""
         if self._memory_worker is not None:
             self._memory_worker.deleteLater()
             self._memory_worker = None
 
     def _set_busy(self, busy: bool) -> None:
+        """While she thinks: input, Send and Talk off, the orb thinking and Thinking… shown; back after."""
         self._input.setEnabled(not busy)
         self._send_button.setEnabled(not busy)
         self._talk_button.setEnabled(not busy)
@@ -654,6 +675,7 @@ class CharacterPanel(QFrame):
     # ------------------------------------------------------------------
 
     def _on_open_history(self) -> None:
+        """Opens earlier conversations and switches to the one picked."""
         current_id = self._conversation.conversation_id if self._conversation else None
         dialog = ConversationHistoryDialog(self.context, current_id, parent=self)
         if dialog.exec() and dialog.selected_conversation_id is not None:
@@ -668,6 +690,7 @@ class CharacterPanel(QFrame):
     # ------------------------------------------------------------------
 
     def _on_talk_pressed(self) -> None:
+        """Starts recording while Talk is held (says why when voice input is off or the microphone isn't available)."""
         if self.context.voice is None or self._worker is not None or self._recording:
             return
         if not self.context.config.get("voice.push_to_talk_enabled", True):
@@ -681,6 +704,7 @@ class CharacterPanel(QFrame):
         self._status_label.setText("Listening…")
 
     def _on_talk_released(self) -> None:
+        """Stops recording, transcribes it, and sends the words (says why when it can't)."""
         if self.context.voice is None or not self._recording:
             return
         self._recording = False
@@ -711,6 +735,7 @@ class CharacterPanel(QFrame):
     # ------------------------------------------------------------------
 
     def _speak(self, text: str) -> None:
+        """Says a reply aloud in the background (one at a time), with Stop on while she speaks."""
         if self.context.voice is None or self._tts_worker is not None:
             return
         output_path = Path(tempfile.gettempdir()) / "mia_character_panel_reply.wav"
@@ -720,11 +745,13 @@ class CharacterPanel(QFrame):
         self._stop_speaking_button.setEnabled(True)
 
     def _on_tts_finished(self) -> None:
+        """She's done speaking: the worker let go, Stop off."""
         if self._tts_worker is not None:
             self._tts_worker.deleteLater()
             self._tts_worker = None
         self._stop_speaking_button.setEnabled(False)
 
     def _on_stop_speaking(self) -> None:
+        """Stops her speaking now."""
         if self.context.voice is not None:
             self.context.voice.stop_playback()

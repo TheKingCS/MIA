@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1070 files, 238,985 lines; 1070 files describe themselves; 8,215 of 13,814 classes and functions are documented.
+1070 files, 239,012 lines; 1070 files describe themselves; 8,242 of 13,814 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -397,7 +397,7 @@
 
 ## gui/: the desktop's Qt shell and dialogs
 
-122 files, 21,597 lines; 929 of 1,083 classes and functions documented
+122 files, 21,624 lines; 956 of 1,083 classes and functions documented
 
 - `gui/__init__.py`: Presentation layer only. Everything in this package talks to the rest of the system through core.app_context.AppContext and modules.module_base. ModuleBase — never by importing module internals or reaching into core services directly beyond what AppContext exposes.
 - `gui/account_dialogs.py`: Accounts and households on the desktop (2026-10-01, docs/ROADMAP.md "People and ownership"; core/profile_manager.py, core/household_manager.py): *(30 undocumented)*
@@ -445,7 +445,7 @@
 - `gui/add_trail_map_dialog.py`: Small dialog for cataloging one trail map PDF into core.trail_map_library.TrailMapLibrary, used by modules/maps/module.py. Same "validate-then-expose-via-properties on accept" shape as gui/add_edit_waypoint_dialog.py. Source is exactly one of a URL or a local file — picking one clears the other, sin
 - `gui/backup_dialog.py`: Prompts for backup encryption options when creating a backup (see modules/settings/module.py and core/backup_manager.py). Unlike profile passwords (gui/add_profile_dialog.py), a backup passphrase has no recovery path if mistyped — losing it means losing the backup — so this dialog requires it to be 
 - `gui/business_tags_dialog.py`: Review Business Tags (2026-09-28, core/business_tagging.py): bank charges nobody has sorted yet, each with a choice of Decide later / Personal / one of the owner's businesses, MIA's guess preselected with its reason; and below, what MIA tagged on her own, which can be changed the same way.
-- `gui/character_panel.py`: MIA's reactive companion panel — docs/ROADMAP.md milestone 6.2. Subscribes to the module-activity events milestone 6.1 added ("module.opened"/"menu.shown" from gui/main_window.py's navigation methods, plus "home.shown" added in the 2026-07-14 aesthetic pass part 3 once Home became its own landing sc *(27 undocumented)*
+- `gui/character_panel.py`: MIA's reactive companion panel — docs/ROADMAP.md milestone 6.2. Subscribes to the module-activity events milestone 6.1 added ("module.opened"/"menu.shown" from gui/main_window.py's navigation methods, plus "home.shown" added in the 2026-07-14 aesthetic pass part 3 once Home became its own landing sc
 - `gui/conversation_history_dialog.py`: A small popup listing every saved conversation, letting the user pick one to make active again — the "way to access previous conversations" `gui/character_panel.py`'s sidebar needs now that it starts fresh on every app launch instead of showing whatever was last active (real user ask, 2026-07-18: "I
 - `gui/dashboard_customize_dialog.py`: Lets the user enable/disable and reorder Home dashboard widgets — 2026-07-15, the UI half of core/dashboard_widgets.py's "framework first" build (see that module's docstring for the full reasoning). Deliberately a checkable list + up/down move buttons, not drag-and-drop — matches this project's own 
 - `gui/delete_confirm_dialog.py`: Requires typing the exact item name before Delete is enabled — used for permanent, unrecoverable deletions (modules/files_mod/module.py). Chosen over a plain Yes/No confirmation because a real file manager's delete is genuinely irreversible (no trash/recycle bin — see modules/files_mod/file_operatio
