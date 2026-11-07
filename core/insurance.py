@@ -24,7 +24,8 @@ quote-request email MIA drafts with your current coverage (you press
 Send; MIA never sends, and never fills in an insurer's website). The
 quotes you get back go in as quotes, and `compare` lines them up against
 the policy, same coverage against same coverage, so a cheaper quote that
-covers less is called out, never hidden.
+covers less is called out, never hidden; `verdict` says each in one
+sentence for the side-by-side cards ("Same cover, $216 less a year.").
 
 **Switching:** "Switch To This" makes a mission with the steps (start the
 new policy before cancelling the old one, no gap); "I Switched" puts the
@@ -359,11 +360,29 @@ def parse_coverage(text: str) -> list[dict]:
     return out
 
 
+def verdict(quote: dict) -> dict:
+    """Pure logic. One quote in a sentence, the way the design canvas lays quotes side by side (DEC-0113): "Same
+    cover, $216.00 less a year." (tone ok) / "Cheaper, but covers less: lower Bodily injury (...); no Rental."
+    (tone attention: cheaper is never shown without what it gives up, DEC-0034) / "Coverage not put in yet: check
+    it covers the same." (tone info). `quote` is one of compare()'s quotes."""
+    saves = quote["saves"]
+    price = (f"{_money(saves)} less a year" if saves > 0 else f"{_money(-saves)} more a year" if saves < 0
+             else "the same price")
+    if quote["unknown_coverage"]:
+        return {"text": f"{price[0].upper() + price[1:]}. Coverage not put in yet: check it covers the same.",
+                "tone": "info"}
+    if quote["covers_less"]:
+        lead = "Cheaper, but covers less" if saves > 0 else "Covers less"
+        return {"text": f"{lead}: {'; '.join(quote['covers_less'])}.", "tone": "attention"}
+    return {"text": f"Same cover, {price}.", "tone": "ok" if saves > 0 else "info"}
+
+
 def compare(policy: Policy, quotes: list[Quote]) -> dict:
     """Pure logic. The quotes against the policy, same coverage against same
     coverage. Each quote: what it costs a year, what it saves, and anything
     it covers less (a lower limit, a coverage it leaves out, a higher
-    deductible), so a cheaper quote that covers less is never hidden."""
+    deductible), so a cheaper quote that covers less is never hidden; and
+    each quote's one-sentence verdict (`verdict`)."""
     current = parse_coverage(policy.coverage)
     now_year = annual(policy.premium, policy.every)
     rows_keys = [c["key"] for c in current]
@@ -399,6 +418,8 @@ def compare(policy: Policy, quotes: list[Quote]) -> dict:
     rows = [{"key": k, "name": names.get(k, k.title()),
              "current": next((c["limit"] for c in current if c["key"] == k), "—"),
              "quotes": [oq["coverage"].get(k, "—") for oq in out_quotes]} for k in rows_keys]
+    for oq in out_quotes:
+        oq["verdict"] = verdict(oq)
     out_quotes.sort(key=lambda q: (bool(q["covers_less"]), q["per_year"]))
     best = next((q for q in out_quotes if q["same_coverage"] and q["saves"] > 0), None)
     return {"per_year": now_year, "rows": rows, "quotes": out_quotes,

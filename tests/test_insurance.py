@@ -68,6 +68,9 @@ def test_quotes_side_by_side_never_hide_less_coverage(world):
     said = "; ".join(second["covers_less"])
     assert "lower Bodily injury" in said and "no Comprehensive" in said and "higher deductible" in said
     assert got["best"] == same.quote_id and got["best_saves"] == 200  # the cheapest isn't the best: it covers less
+    from core.region import money
+    assert first["verdict"] == {"text": f"Same cover, {money(200)} less a year.", "tone": "ok"}
+    assert second["verdict"]["tone"] == "attention" and second["verdict"]["text"].startswith("Cheaper, but covers less: lower")
 
 
 def test_reading_a_declarations_page():
@@ -139,3 +142,11 @@ def test_grown_ups_only(world):
     from core.child_accounts import CHILD_APPS
 
     assert "insurance" not in CHILD_APPS
+
+
+def test_a_quote_with_no_coverage_put_in_says_to_check_it():
+    from core.insurance import verdict
+
+    got = verdict({"saves": -50.0, "unknown_coverage": True, "covers_less": []})
+    assert got["tone"] == "info" and "more a year" in got["text"] and "check it covers the same" in got["text"]
+    assert verdict({"saves": 0.0, "unknown_coverage": False, "covers_less": []})["text"] == "Same cover, the same price."

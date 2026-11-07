@@ -179,7 +179,11 @@
               "comprehensive": "$250 deductible",
               "rental reimbursement": "none"
             },
-            "chosen": false
+            "chosen": false,
+            "verdict": {
+              "text": "Same cover, $188.00 less a year.",
+              "tone": "ok"
+            }
           },
           {
             "id": "9329d42be5",
@@ -203,7 +207,11 @@
               "property damage": "50,000",
               "collision": "$1,000 deductible"
             },
-            "chosen": false
+            "chosen": false,
+            "verdict": {
+              "text": "Cheaper, but covers less: lower Bodily injury (50,000/100,000 vs 100,000/300,000); lower Property damage (50,000 vs 100,000); no Uninsured motorist; no Comprehensive; higher deductible ($1,000.00 vs $500.00).",
+              "tone": "attention"
+            }
           }
         ],
         "best": "26598c8066",
