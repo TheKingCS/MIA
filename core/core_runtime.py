@@ -274,8 +274,8 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
 
 def _register_core_assistant_actions(context: AppContext) -> None:
     """Registers Core's curated Assistant action subset — see this module's docstring. It includes the read tools
-    for Character, Skills, the Reward Shop, Insurance, Kept, the Operating Journal, Play and Files, and the energy
-    sources read and logged (DEC-0125), so the phone can ask about them too, cook mode's tools
+    for Character, Skills, the Reward Shop, Insurance, Kept, the Operating Journal, Play and Files, the Security
+    cameras, and the energy sources read and logged (DEC-0125), so the phone can ask about them too, cook mode's tools
     (core/assistant_cooking_actions.py), the Toolbox's (board feet, concrete, alarms on or off:
     core/assistant_toolbox_actions.py) and the Lab's delete_lab_reading (core/assistant_lab_actions.py)."""
     registry = context.assistant_actions
@@ -299,6 +299,9 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     from core.assistant_records_actions import register_records_actions
 
     register_progress_actions(registry)  # Character, Skills, Reward Shop by voice (DEC-0125)
+    from core.assistant_camera_actions import register_camera_actions
+
+    register_camera_actions(registry)  # the Security cameras by voice (DEC-0125)
     register_records_actions(registry)  # Insurance, Kept, Operating Journal, Play, Files by voice (DEC-0125)
     from core.assistant_energy_actions import register_energy_actions
 
