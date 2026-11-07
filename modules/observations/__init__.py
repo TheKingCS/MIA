@@ -1,0 +1,1 @@
+"""The observations app's package: its screen and behaviour are in module.py ("Observations" — the real UI core.insight_manager.py's own docstring flagged as deferred: "Deliberately no dedicated browsing UI this phase — Insights surface t). core/module_manager.py finds it by that file."""

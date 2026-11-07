@@ -1,0 +1,1 @@
+"""The classroom app's package: its screen and behaviour are in module.py (Classroom — v1 (2026-09-11): the user's own self-education content model, Subjects -> Courses -> Lessons, three-level drill-down navigation (same "list page + a). core/module_manager.py finds it by that file."""

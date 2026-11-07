@@ -1,0 +1,1 @@
+"""The property app's package: its screen and behaviour are in module.py (Property — a read-only, at-a-glance place to check on the house itself and everything in it that isn't a vehicle or power equipment: HVAC filters, water heater,). core/module_manager.py finds it by that file."""

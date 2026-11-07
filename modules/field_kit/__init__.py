@@ -1,0 +1,1 @@
+"""The field kit app's package: its screen and behaviour are in module.py (Field Kit — docs/ROADMAP.md milestones 11.2 (Device Manager), 11.4 (Useful Scripts), and 11.5 (Security/Network Toolkit). Three tabs in one module (docs/MODULE_). core/module_manager.py finds it by that file."""

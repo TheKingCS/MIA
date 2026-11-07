@@ -1551,3 +1551,21 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Decision: MIA hunts savings on groceries and household needs, from receipt price history: receipt line items through the Inbox build floor prices (a cautious low percentile of what he actually paid, never one odd sale); household needs ride inside the grocery list as a kind, with a "runs out about every N weeks" from purchase history; a stock-up suggestion appears in the weekly review when a staple is at or under its floor; an honest savings ledger (offered / redeemed / saved-vs-normal kept separate). She proposes; the user approves in the existing review; no accounts or enrollments in his name without his say-so, and a coupon for something unneeded never counts as a saving.
 - Why: MIA has no cart build and no prices today (H-0085's correction of H-0081), so the price data has to come first, and receipts are the best first source: offline, already on the PC, his own records. Household needs inside the grocery list is less to keep in sync than a standalone list. Clipping in his name never happens through an unsanctioned channel; scraping store pages is refused.
 - Related: H-0081, H-0085, H-0086, DEC-0002, DEC-0014, DEC-0052, DEC-0053, DEC-0054. DEC-0102 is reserved for the benchmark-ladder draft (H-0084).
+
+### DEC-0104: Everything MIA is made of is documented, enough for her to rebuild herself
+- Status: APPROVED
+- Proposed by: zac, 2026-11-06 ("every line of code that has been written in every file that has been created.
+  Everything that makes up MIA so far should have documentation that explains what it is and what it does and how
+  it does it. So that if MIA ever needed to redo this entire process herself, she could. And this should be an
+  ongoing thing for everything we develop for MIA") · Built by: claude, 2026-11-06
+- Decision: every file opens with what it is, what it does and how (a docstring, or a header comment in
+  JavaScript and Kotlin); every class, function and method has its own docstring saying what it does, and how
+  when that isn't plain from the code. `core/code_atlas.py` measures it from the code; `docs/ATLAS.md` is the
+  generated map of every file; `docs/REBUILD.md` is the hand-written order to rebuild MIA in.
+  `tests/test_documentation.py` holds the line: a new file must be fully documented, and an existing file's
+  count of undocumented definitions (`work/doc_baseline.json`) may only go down. `dev.docs` watches the share
+  documented. The older code's backlog (about 10,800 definitions on 2026-11-06, most of them tests and the
+  desktop's Qt screens) is worked down file by file, engine first, by every agent and by Night School.
+- Why: so MIA could redo the whole process herself, and so every collaborator (Claude, Codex, Muse, ChatGPT, MIA's
+  own coder) reads the same truth. Measured from the code so it can't drift.
+- Related: DEC-0094, DEC-0100 (Night School), DEC-0101 (loop coverage), CLAUDE.md

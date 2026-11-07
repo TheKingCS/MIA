@@ -1,0 +1,1 @@
+"""The workshop app's package: its screen and behaviour are in module.py (Workshop & Electronics — docs/ROADMAP.md milestone 8.3 (Component DB) plus MIA Home's production pipeline (2026-07-16, see docs/VISION.md's "MIA Home's expanded). core/module_manager.py finds it by that file."""

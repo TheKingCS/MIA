@@ -197,6 +197,15 @@ children.
   `corrections.screen_edit()` so a person fixing MIA's work counts.
   In `docs/BUILD_PLAN.md`, ⏸ marks a step whose rest waits on someone:
   Night School skips it.
+- **Documentation for everything** (DEC-0104, `core/code_atlas.py`) —
+  every file opens with what it is, what it does and how; every class,
+  function and method gets a docstring. `tests/test_documentation.py`
+  fails on a new file or definition without one, and an old file's
+  undocumented count (`work/doc_baseline.json`) may only go down: after
+  documenting, run `python -m core.code_atlas baseline` and
+  `python -m core.code_atlas` (regenerates `docs/ATLAS.md`). Rebuild
+  order: `docs/REBUILD.md`. When you touch a file, document what you
+  touched.
 - **Notes from conversation** (DEC-0054, `core/life_notes.py`) — a
   promise, decision, idea or goal set aside is offered after her reply
   and kept only on "keep it"; never in a private or personal turn.

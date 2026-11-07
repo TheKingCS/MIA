@@ -1,0 +1,1 @@
+"""The garage app's package: its screen and behaviour are in module.py (Garage — a read-only, at-a-glance place to check on cars and other motorized property equipment, without digging through every maintenance task in the general M). core/module_manager.py finds it by that file."""

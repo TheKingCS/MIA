@@ -1,0 +1,1 @@
+"""The missions app's package: its screen and behaviour are in module.py (Mission Log — docs/ROADMAP.md milestone v0.18, module #20. Rebuilt 2026-07-18 against a design handoff (CCH.zip's Missions.dc.html) as a two-panel "Mission Log"). core/module_manager.py finds it by that file."""

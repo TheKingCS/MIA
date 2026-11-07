@@ -1,0 +1,1 @@
+"""The workout app's package: its screen and behaviour are in module.py (Workout: an exercise library, a live guided session (real elapsed time from a real stopwatch, not a guess), a session history, and per-exercise progress (person). core/module_manager.py finds it by that file."""

@@ -1,0 +1,1 @@
+"""The expeditions app's package: its screen and behaviour are in module.py (Expedition Mode — docs/ROADMAP.md milestone 12.1. Two-level CRUD: Expeditions (the top-level dated outing, core.expedition_manager.Expedition) at the top, and t). core/module_manager.py finds it by that file."""

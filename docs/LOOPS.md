@@ -2,7 +2,7 @@
 
 *Generated from `core/loops.py` by `python -m core.loop_catalog`; never edit by hand (a test keeps it current). The design and the reasons: `docs/IMPROVEMENT_LOOPS.md`; what each process is watched by: `python -m tools.night_school coverage`.*
 
-81 loops in 7 areas.
+82 loops in 7 areas.
 
 ## Answers
 
@@ -70,6 +70,7 @@
 | `dev.coder` | MIA's coder: shadow attempts passed | device | trend | shown, never acted on | `dev:shadow` |
 | `dev.council_cost` | calls per council turn | device | trend | shown, never acted on | `dev:council` |
 | `dev.doc_drift` | files the docs name that don't exist | device | ≤ 0 | opens a task | `dev:code` |
+| `dev.docs` | MIA's classes and functions that are documented (DEC-0104) | device | trend | shown, never acted on, weekly | `dev:docs` |
 | `dev.knowledge` | MIA's write-ups withdrawn | device | ≤ 0.3 (from 5) | opens a task | `dev:knowledge` |
 | `dev.lab` | her lab proposals that went in, of those settled in 60 days | device | ≥ 0.5 (from 5) | opens a task | `action:lab` |
 | `dev.layering` | breaks of the layering rule | device | ≤ 0 | opens a task | `dev:code` |

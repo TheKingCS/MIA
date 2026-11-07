@@ -1,0 +1,1 @@
+"""The budget app's package: its screen and behaviour are in module.py (Budget: household bills, income, expenses, expected/recurring income, and debt payoff tracking. Eight tabs (Bills, Income Sources, Income, Expenses, Debts, Summ). core/module_manager.py finds it by that file."""

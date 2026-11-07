@@ -1,3 +1,6 @@
+"""Skill levels (core/skill_leveling.py): the XP each skill level needs, progress within it, what a level means
+you can do (its capability status), and the next honest step to take."""
+
 from core.skill_leveling import (
     capability_status_for_level,
     compute_skill_level_progress,

@@ -1,0 +1,1 @@
+"""The web home app's package: its screen and behaviour are in module.py ("Home (preview)" (2026-10-05, Phase 2, DEC-0012/DEC-0013): MIA's new web front end (`web/`, Muse's) shown inside the desktop window, so the first vertical slice). core/module_manager.py finds it by that file."""

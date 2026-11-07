@@ -1,0 +1,1 @@
+"""The toolbox app's package: its screen and behaviour are in module.py (Toolbox: the shared home for every calculator registered with core.calculator_engine.CalculatorEngine (self.context.calculators), per docs/ROADMAP.md's Calculat). core/module_manager.py finds it by that file."""

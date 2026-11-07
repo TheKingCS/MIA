@@ -1,0 +1,1 @@
+"""The music app's package: its screen and behaviour are in module.py (Music — replaces the pure placeholder that stood here since this module was first discovered by ModuleManager. Real local audio library scanning + playlists + r). core/module_manager.py finds it by that file."""

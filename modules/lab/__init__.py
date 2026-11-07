@@ -1,0 +1,1 @@
+"""The lab app's package: its screen and behaviour are in module.py (The Lab — docs/ROADMAP.md milestone 8.2, the UI home of the Data Logger shared service (top-level module section 14: "sensor testing, experiments, calibration, ). core/module_manager.py finds it by that file."""

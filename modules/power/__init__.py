@@ -1,0 +1,1 @@
+"""The power app's package: its screen and behaviour are in module.py (Power — docs/ROADMAP.md milestone 7.2, plus manual energy/utility tracking added 2026-09-09 (the last of four "Field Manual" brainstorm items this session). Two). core/module_manager.py finds it by that file."""

@@ -1,0 +1,1 @@
+"""The relationships app's package: its screen and behaviour are in module.py (Relationship Profiles and Pet Profiles — docs/VISION.md's own "structured extensions" of Memory Palace. All persistence lives in core/relationships_manager.py (). core/module_manager.py finds it by that file."""

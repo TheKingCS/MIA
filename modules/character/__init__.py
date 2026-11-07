@@ -1,0 +1,1 @@
+"""The character app's package: its screen and behaviour are in module.py (Character — the last remaining slice of the user's 2026-09-14 "Prestige, Rarity & Character Progression System" design handoff (see the `project_mia_prestige_ra). core/module_manager.py finds it by that file."""

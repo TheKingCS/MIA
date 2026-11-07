@@ -1,0 +1,1 @@
+"""The dashboard app's package: its screen and behaviour are in module.py (Dashboard — docs/ROADMAP.md milestone v0.19, the last of the three new subsystems from the 2026-07-14 wearable-companion vision update. A read-only, at-a-glance). core/module_manager.py finds it by that file."""

@@ -1,0 +1,1 @@
+"""The notes app's package: its screen and behaviour are in module.py (Notes: the Notes/Journal Engine's UI (docs/ROADMAP.md milestone 3.4), replacing the earlier placeholder. Dated, searchable, taggable entries — a filterable list). core/module_manager.py finds it by that file."""

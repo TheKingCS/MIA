@@ -1,0 +1,1 @@
+"""The files mod app's package: its screen and behaviour are in module.py (Files: a real file manager (docs/ROADMAP.md milestone 3.6), replacing the earlier placeholder. Browses starting from the user's home directory but can navigate ). core/module_manager.py finds it by that file."""

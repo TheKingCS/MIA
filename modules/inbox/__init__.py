@@ -1,0 +1,1 @@
+"""The inbox app's package: its screen and behaviour are in module.py (Inbox: the document inbox's screen (2026-09-28). Receipts, manuals, warranties and other documents that were dropped in the inbox folder, sent from the phone, o). core/module_manager.py finds it by that file."""

@@ -1,3 +1,6 @@
+"""The dashboard's system numbers (core/dashboard_telemetry.py): uptime as "3h 42m" and network speed in Mb/s
+from two byte-counter readings."""
+
 from core.dashboard_telemetry import compute_network_mbps, format_uptime_line
 
 

@@ -1,0 +1,1 @@
+"""The settings app's package: its screen and behaviour are in module.py (Settings: Backup/Restore (docs/ROADMAP.md milestone 2.7) — export import config + the data directory (profiles, notifications, etc.), optionally passphrase-encr). core/module_manager.py finds it by that file."""

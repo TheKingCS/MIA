@@ -1,0 +1,1 @@
+"""The navigation app's package: its screen and behaviour are in module.py (Navigation — docs/ROADMAP.md milestone 10.2: waypoints (name/lat/lon notes CRUD, same shape as Notes/Inventory/Components) plus a Sun/Moon panel (sunrise/sunset). core/module_manager.py finds it by that file."""

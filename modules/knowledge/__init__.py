@@ -1,0 +1,1 @@
+"""The knowledge app's package: its screen and behaviour are in module.py (Knowledge: the Reference Library's UI (docs/ROADMAP.md milestone 4.2), replacing the earlier placeholder. A pack list (every .zim file core.reference_library_ma). core/module_manager.py finds it by that file."""

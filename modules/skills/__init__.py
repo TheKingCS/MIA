@@ -1,0 +1,1 @@
+"""The skills app's package: its screen and behaviour are in module.py (Skills — "My Hero's Path" (2026-09-11), the screen for the skill-tree layer core/skill_manager.py adds underneath the existing profile-wide Level/Missions syste). core/module_manager.py finds it by that file."""

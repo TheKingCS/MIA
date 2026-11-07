@@ -767,6 +767,21 @@ def _chronicles(_context) -> Optional[Reading]:
     return Reading(float(len(saga.candidates())), 1, "candidates waiting for Zac")
 
 
+def _docs(_context) -> Optional[Reading]:
+    """DEC-0104: the share of MIA's classes and functions that are documented (every file describes itself, and a
+    test keeps new code documented); the rest is the backlog, shown here until it's gone."""
+    if not _has_repo():
+        return None
+    from core import code_atlas
+
+    t = code_atlas.totals(code_atlas.census())
+    if not t["defs"]:
+        return None
+    return Reading(round(t["defs_documented"] / t["defs"], 3), t["defs"],
+                   f"{t['defs_documented']:,} of {t['defs']:,} classes and functions documented; "
+                   f"{t['files_documented']} of {t['files']} files describe themselves")
+
+
 def _loop_coverage(_context) -> Optional[Reading]:
     if not _has_repo():
         return None
@@ -1023,6 +1038,8 @@ LOOPS: tuple[Loop, ...] = (
          covers=("dev:dependencies", "flow:phone")),
     Loop("dev.outdated", "development", "required packages behind their latest release", "device", _outdated,
          acts="watch", every=7, heavy=True, covers=("dev:dependencies",)),
+    Loop("dev.docs", "development", "MIA's classes and functions that are documented (DEC-0104)", "device", _docs,
+         better="higher", acts="watch", every=7, covers=("dev:docs",)),
     Loop("dev.loop_coverage", "development", "processes with a loop, of those that need one", "device",
          _loop_coverage, better="higher", acts="watch", covers=("dev:loops", "check:loops")),
     Loop("night.lessons", "development", "Night School lessons passed this week", "device", _night_lessons,

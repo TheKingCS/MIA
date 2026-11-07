@@ -78,6 +78,7 @@ DEV = {
     "dev:chronicles": "the Chronicles",
     "dev:night_school": "Night School: her lessons, her choices, her teacher",
     "dev:loops": "the loops themselves and how far they reach",
+    "dev:docs": "documentation for every file, class and function, enough for MIA to rebuild herself (DEC-0104)",
 }
 _CHECK = re.compile(r'\("([a-z_]+)", self\._check_[a-z_]+\)')
 

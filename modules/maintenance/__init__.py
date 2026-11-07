@@ -1,0 +1,1 @@
+"""The maintenance app's package: its screen and behaviour are in module.py (Maintenance: recurring upkeep tracking for anything the user owns that needs it — vehicles, power equipment (mower, e-bike), appliances, the property itself, an). core/module_manager.py finds it by that file."""

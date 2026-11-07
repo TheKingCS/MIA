@@ -1,0 +1,1 @@
+"""The greenhouse app's package: its screen and behaviour are in module.py (Greenhouse — a read-only, at-a-glance place to check on garden/plant assets (a greenhouse, aquaponics system, raised beds — anything logged in core.maintenance_). core/module_manager.py finds it by that file."""

@@ -1,0 +1,1 @@
+"""The maps app's package: its screen and behaviour are in module.py (Maps — a schematic waypoint plot (the original zero-hardware slice), plus two real additions the user explicitly asked for next: a real pannable/zoomable basema). core/module_manager.py finds it by that file."""

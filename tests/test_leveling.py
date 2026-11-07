@@ -1,3 +1,6 @@
+"""Profile levels and prestige (core/leveling.py): the XP each level needs, progress within a level and a
+prestige cycle, when someone may prestige, and each prestige tier's colour."""
+
 from core.leveling import (
     XP_PER_PRESTIGE_CYCLE,
     compute_level_progress,

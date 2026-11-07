@@ -1,0 +1,1 @@
+"""The real estate app's package: its screen and behaviour are in module.py (Real Estate: a property portfolio — values, equity, rental income, and linked Maintenance history per property). core/module_manager.py finds it by that file."""

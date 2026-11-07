@@ -1,0 +1,1 @@
+"""The kitchen app's package: its screen and behaviour are in module.py (Kitchen: recipes, a pantry/inventory list, a grocery list, a meal log, and suggestions — which recipes are makeable right now from what's in the pantry, and add). core/module_manager.py finds it by that file."""

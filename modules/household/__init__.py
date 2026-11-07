@@ -1,0 +1,1 @@
+"""The household app's package: its screen and behaviour are in module.py (Household — Garage/Property/Greenhouse's fourth sibling, but over core.recurring_mission_manager.RecurringMissionTemplate (filtered to category == "Household") ). core/module_manager.py finds it by that file."""

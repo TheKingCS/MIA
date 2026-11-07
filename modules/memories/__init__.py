@@ -1,0 +1,1 @@
+"""The memories app's package: its screen and behaviour are in module.py (Memories — docs/ROADMAP.md milestone v0.17, module #19 in that doc's "Top-level module sections" list. Displays one recap card per Expedition (docs/ROADMAP.md 1). core/module_manager.py finds it by that file."""

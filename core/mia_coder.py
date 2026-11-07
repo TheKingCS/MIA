@@ -48,7 +48,8 @@ with its full current contents. Reply with JSON: "edits", each one a path, an ex
 that file ("find": a few whole lines, enough to appear only once) and what replaces it ("replace"); and
 "said", two sentences on what you changed and why. For a listed file that's empty (a new file), give "find" as ""
 and the whole file as "replace". Change as little as the task needs. Keep each file's style. Don't change files
-that aren't listed.
+that aren't listed. Every new file starts with a docstring saying what it is, what it does and how; every new
+class and function gets a docstring saying what it does (DEC-0104: a test fails otherwise).
 
 {task}
 
