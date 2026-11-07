@@ -17,6 +17,7 @@ from core.actions import ACTION_TYPES, ActionError, ActionType
 
 
 def _grown_up(context) -> None:
+    """ActionError for a child account: the lab is for grown-ups."""
     from core.child_accounts import is_child
 
     if is_child(context):
@@ -24,6 +25,7 @@ def _grown_up(context) -> None:
 
 
 def _tell(context, title: str, message: str) -> None:
+    """Raises a notification from the lab; a failure to notify is swallowed, since the work itself is done."""
     notifications = getattr(context, "notifications", None)
     if notifications is not None:
         try:
@@ -33,6 +35,9 @@ def _tell(context, title: str, message: str) -> None:
 
 
 def _background(context, title: str, work) -> None:
+    """Runs a slow lab step on a daemon thread (mia-lab) and notifies how the proposal ended up, or that it didn't
+    finish.
+    """
     def run():
         from core import dev_lab
 
@@ -45,6 +50,7 @@ def _background(context, title: str, work) -> None:
 
 
 def _proposal(params):
+    """The lab proposal the params name, or ActionError."""
     from core import dev_lab
 
     try:
@@ -54,6 +60,7 @@ def _proposal(params):
 
 
 def _describe_propose(context, params) -> str:
+    """The sentence the approval card shows for `lab.propose` (Propose); raises ActionError when it can't be done. It needs a title and the problem; nothing changes in MIA yet."""
     _grown_up(context)
     title = str(params.get("title") or "").strip()
     if not title or not str(params.get("problem") or "").strip():
@@ -62,6 +69,9 @@ def _describe_propose(context, params) -> str:
 
 
 def _propose(context, params) -> str:
+    """Does `lab.propose` once approved, and says what happened. The proposal is created, then written by Claude Code in the lab and tested in the
+    background; they're told when it's done.
+    """
     from core import dev_lab
 
     _grown_up(context)
@@ -76,6 +86,7 @@ def _propose(context, params) -> str:
 
 
 def _describe_approve(context, params) -> str:
+    """The sentence the approval card shows for `lab.approve` (Propose); raises ActionError when it can't be done. Only a ready proposal can go in."""
     _grown_up(context)
     p = _proposal(params)
     if p.status != "ready":
@@ -84,6 +95,7 @@ def _describe_approve(context, params) -> str:
 
 
 def _approve(context, params) -> str:
+    """Does `lab.approve` once approved, and says what happened. The merge and tests run in the background (the lab undoes it if anything new breaks)."""
     from core import dev_lab
 
     _grown_up(context)
@@ -93,6 +105,7 @@ def _approve(context, params) -> str:
 
 
 def _reject(context, params) -> str:
+    """Does `lab.reject` once approved, and says what happened. The lab copy is removed and the reason kept."""
     from core import dev_lab
 
     _grown_up(context)

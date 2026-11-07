@@ -42,12 +42,16 @@ class OnlineWatch:
     """Pure logic. Feed it readings; it reports a settled change."""
 
     def __init__(self, confirm: int = 2) -> None:
+        """Starts with nothing settled; a change counts after `confirm` readings in a row agree."""
         self._confirm = confirm
         self._settled: Optional[str] = None
         self._candidate: Optional[str] = None
         self._count = 0
 
     def observe(self, status: str) -> Optional[str]:
+        """Takes one reading (online, offline; unknown is ignored) and returns WENT_OFFLINE or CAME_BACK once a new
+        status has held for `confirm` readings; None otherwise, including the first settled reading after boot.
+        """
         if status not in (ONLINE, OFFLINE):
             return None  # "unknown" is no news
         if status == self._settled:
@@ -75,9 +79,15 @@ def transition_message(kind: str, waiting: int) -> tuple[str, str]:
 
 
 class OnlineReminders:
+    """Things to remind a person about once the internet is back (online_reminders.json in their folder, written
+    through atomic_write_text), delivered and removed all at once.
+    """
     def __init__(self, context, data_dir: Optional[Path] = None) -> None:
         # Whose data: a person's own folder (core/personal_data.py), or the
         # shared data/ folder by default.
+        """Loads the reminders from a person's folder (or data/); a damaged file is logged, reported and starts
+        empty.
+        """
         self.data_dir = Path(data_dir) if data_dir is not None else _REMINDERS_FILE.parent
         self._reminders_file = self.data_dir / _REMINDERS_FILE.name if data_dir is not None else _REMINDERS_FILE
         self.context = context
@@ -90,14 +100,17 @@ class OnlineReminders:
                 notify_data_corruption(context, "online_reminders.json")
 
     def _save(self) -> None:
+        """Writes the reminders atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._reminders_file, json.dumps(self._items, indent=2))
 
     def add(self, what: str) -> None:
+        """Keeps one reminder, with when it was made."""
         self._items.append({"what": what.strip(), "created": datetime.now().isoformat(timespec="seconds")})
         self._save()
 
     def pending(self) -> list[str]:
+        """What the reminders say, oldest first."""
         return [item["what"] for item in self._items]
 
     def take_all(self) -> list[str]:
@@ -109,6 +122,9 @@ class OnlineReminders:
 
 
 def _action_remind_when_online(context, arguments: dict) -> str:
+    """Tool remind_when_online: keeps the reminder; when MIA is online already, it says so (and keeps it
+    anyway).
+    """
     what = str(arguments.get("what") or "").strip()
     reminders = getattr(context, "online_reminders", None)
     if not what:
@@ -123,6 +139,7 @@ def _action_remind_when_online(context, arguments: dict) -> str:
 
 
 def remind_when_online_action() -> AssistantAction:
+    """The remind_when_online tool (system domain)."""
     return AssistantAction(
         name="remind_when_online", domain="system",
         description="Remind the user about something as soon as MIA's internet connection is back "

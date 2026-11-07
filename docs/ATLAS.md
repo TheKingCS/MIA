@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 229,759 lines; 1043 files describe themselves; 5,504 of 13,517 classes and functions are documented.
+1043 files, 229,789 lines; 1043 files describe themselves; 5,522 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 103,661 lines; 4,773 of 5,630 classes and functions documented
+367 files, 103,691 lines; 4,791 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -184,7 +184,7 @@
 - `core/kitchen_actions.py`: Every change the Kitchen screen makes (2026-10-06, DEC-0017/0018), as action kinds on the contract in core/actions.py, from the shared table in core/record_actions.py: recipes (add, edit, delete, their ingredients written one per line), the pantry (add, edit, delete), the grocery list (add, check of
 - `core/kitchen_blueprint.py`: Kitchen recipes as blueprints (DEC-0028 #9, the kitchen half; Zac, 2026-10-17), the same way Workshop recipes work (core/craft_recipes.py): the recipe is the blueprint, the pantry is the materials. *(2 undocumented)*
 - `core/kitchen_manager.py`: MIA's Kitchen Module — recipes, a pantry/inventory list, a grocery list, and a meal log, plus the logic that connects them: which recipes are makeable right now from what's in the pantry, and adding a recipe's missing ingredients to the grocery list in one action.
-- `core/lab_actions.py`: The development lab's changes as action kinds (DEC-0058, core/dev_lab.py): start a proposal (lab, write, check), approve one into the running MIA, reject one. Grown-ups only, never from the glasses; the long steps (the coder, the test suite) run in the background and say when they're done. "Approve" *(9 undocumented)*
+- `core/lab_actions.py`: The development lab's changes as action kinds (DEC-0058, core/dev_lab.py): start a proposal (lab, write, check), approve one into the running MIA, reject one. Grown-ups only, never from the glasses; the long steps (the coder, the test suite) run in the background and say when they're done. "Approve"
 - `core/ledger_manager.py`: MIA Home's revenue/expense ledger — the fourth and final slice of the proposed `mia_home_schema.sql` (see `docs/VISION.md`'s "MIA Home's expanded scope" section, and `core/material_manager.py` `core/job_manager.py`/`core/product_manager.py`'s docstrings for slices 1-3), adapted to this project's per
 - `core/leveling.py`: Pure XP/Level math for the Missions gamification system — no Qt, no persistence, testable in isolation (see tests/test_leveling.py). `core/profile_manager.py` stores the one number that matters (`Profile.total_xp`, lifetime cumulative); everything else — what level that corresponds to, and how far i
 - `core/life_events.py`: Life events (2026-10-05, Engine Phase 1, docs/ENGINE_PHASE1_PLAN.md): an append-only history of the meaningful things that happen in a person's life: a bill paid, a mission completed (and the skill evidence it earned), a workout or meal logged, maintenance done, rent received, an import, a starter s
@@ -239,7 +239,7 @@
 - `core/ocr.py`: Reading text out of photos and scanned pages (2026-09-28), so a phone photo of a paper receipt or a scanned manual/textbook works in the document inbox (core/inbox_manager.py) and the textbook tutor (core/textbook_manager.py).
 - `core/offline_maps.py`: Vector offline maps (build plan step 14; Zac's OK for the outside code, 2026-11-06): an area of OpenStreetMap cut from the Protomaps daily world build into one small file (PMTiles), kept on this PC in `data/maps/`, and drawn by MapLibre on the web's Maps page (`web/vendor/`). Unlike the topo tiles (
 - `core/onboarding.py`: The one-time, first-run welcome message injected into a brand-new user's very first conversation — docs/VISION.md's "interactive first-time onboarding... MIA teaches herself through real conversation and real tasks, not docs/slides." See gui/home_dashboard.py's `__init__` for how this gets injected:
-- `core/online_watch.py`: Offline awareness follow-ups (2026-09-28), on top of core/connectivity.py: *(9 undocumented)*
+- `core/online_watch.py`: Offline awareness follow-ups (2026-09-28), on top of core/connectivity.py:
 - `core/operating_actions.py`: The Operating Journal (core/operating_journal.py, DEC-0097) through the action contract (core/actions.py): `operating.add` (a line of how they mean to operate), `operating.remove`, and `operating.rate` (a self-rated line, 1 to 5, for this week). The journal writes through atomic_write_text, so "undo *(8 undocumented)*
 - `core/operating_journal.py`: The Operating Journal (DEC-0097, build plan step 11; Zac, 2026-11-06: "a template that is essentially a journal entry for how I want to operate, and how I do operate so that MIA can learn my goals as well as my actual routine"). *(8 undocumented)*
 - `core/ownership.py`: Whose is it? (2026-10-01) In a shared household some things belong to one person: the truck is Zac's, the sewing machine is Faith's, the tractor is everyone's. A maintenance item (vehicle, tool, appliance) can name its owner (`MaintenanceAsset.owner_profile_id`; None means shared by the household). *(2 undocumented)*
