@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 228,629 lines; 1043 files describe themselves; 4,764 of 13,517 classes and functions are documented.
+1043 files, 228,652 lines; 1043 files describe themselves; 4,780 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 102,535 lines; 4,033 of 5,630 classes and functions documented
+367 files, 102,558 lines; 4,049 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -137,7 +137,7 @@
 - `core/fitness_actions.py`: What the fitness screens and plain-word commands change (DEC-0020, H-0026), as action kinds: proposed, approved, recorded, undoable, and credited to the person (core/actions.py). Each logs into the person's fitness store (core/fitness_manager.py) and then brings the fitness missions up to date (core
 - `core/fitness_manager.py`: A person's fitness plan and what they log against it (DEC-0020, docs/KITCHEN_FITNESS_PLAN.md, Muse's H-0026): weigh-ins and their trend, what they ate and its nutrition, timed skill practice (handstand holds in seconds), and milestones. Personal (core/personal_data.py PERSONAL_STORES): each person's
 - `core/fitness_missions.py`: A person's fitness plan as missions (DEC-0020, H-0026): made from the plan (core/fitness_manager.py) each day and week, on the existing mission path (Missions screen, XP, skills, complete, undo). *(5 undocumented)*
-- `core/flock.py`: Chickens (DEC-0037): a flock log that turns eggs into money you can see. *(16 undocumented)*
+- `core/flock.py`: Chickens (DEC-0037): a flock log that turns eggs into money you can see.
 - `core/flock_actions.py`: Chickens' actions (DEC-0037, core/flock.py) on the action contract: proposed in plain words, approved, run, undoable.
 - `core/focus_presets.py`: What each person sees first (2026-10-01, accounts stage 2): MIA has dozens of apps, and a student, a homesteader and a small-business owner each need a different handful up front. A **focus** puts the most useful apps first and tucks the unlikely ones away. It never blocks anything: a tucked-away ap *(8 undocumented)*
 - `core/food_table.py`: MIA's built-in food table (DEC-0020): nutrition facts for about 7,800 everyday foods from the USDA's FoodData Central (public domain), per 100 g, in data/foods.tsv (tools/make_food_table.py builds it). Offline. *(5 undocumented)*

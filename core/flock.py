@@ -44,11 +44,13 @@ USES = ("carton", "baking", "home")  # where loose eggs go
 
 
 def _now() -> str:
+    """Now, as an ISO timestamp to the second."""
     return datetime.now().isoformat(timespec="seconds")
 
 
 @dataclass
 class Flock:
+    """A flock of chickens: breed, hens and roosters, when they came, the good its egg cartons go into, notes."""
     flock_id: str
     name: str
     breed: str = ""
@@ -77,6 +79,7 @@ class Entry:
 
 
 def _day(text: str) -> Optional[date]:
+    """A date from text (its first ten characters), or None."""
     try:
         return date.fromisoformat(str(text or "")[:10])
     except ValueError:
@@ -125,13 +128,21 @@ def week_series(flock_id: str, entries: list[Entry], today: date, days: int = 14
 
 
 class FlockBook:
+    """The household's chickens (flock.json, written through atomic_write_text so undo can restore it): the flocks
+    and their log (eggs collected, feed bought, birds added or lost, eggs used). Every figure is worked out from the
+    log.
+    """
     def __init__(self, context, data_dir: Optional[Path] = None) -> None:
+        """Points at the household's file (data/ by default) and loads it."""
         self.context = context
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._file = self.data_dir / _FILE
         self._load()
 
     def _load(self) -> None:
+        """Reads the flocks and the log, keeping only fields each knows; an unreadable file is logged, reported and starts
+        empty.
+        """
         self.flocks: list[Flock] = []
         self.entries: list[Entry] = []
         if not self._file.exists():
@@ -146,9 +157,11 @@ class FlockBook:
             notify_data_corruption(self.context, _FILE)
 
     def reload(self) -> None:
+        """Reads the file again (after undo restored it)."""
         self._load()
 
     def _save(self) -> None:
+        """Writes everything atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._file, json.dumps({"flocks": [asdict(f) for f in self.flocks],
                                                   "entries": [asdict(e) for e in self.entries]}, indent=2))
@@ -156,9 +169,11 @@ class FlockBook:
     # ---------------------------------------------------------------- flocks
 
     def get_flock(self, flock_id: str) -> Optional[Flock]:
+        """The flock with this id, or None."""
         return next((f for f in self.flocks if f.flock_id == flock_id), None)
 
     def add_flock(self, name: str, **fields) -> Flock:
+        """Adds a flock (a name is required)."""
         if not str(name or "").strip():
             raise ValueError("A flock needs a name.")
         f = Flock(flock_id=uuid.uuid4().hex[:10], name=name.strip(), created_at=_now())
@@ -168,6 +183,7 @@ class FlockBook:
         return f
 
     def update_flock(self, flock_id: str, **fields) -> Flock:
+        """Changes a flock's fields (ValueError when it's gone)."""
         f = self.get_flock(flock_id)
         if f is None:
             raise ValueError("That flock isn't there anymore.")
@@ -176,12 +192,14 @@ class FlockBook:
         return f
 
     def delete_flock(self, flock_id: str) -> None:
+        """Deletes a flock and its log."""
         self.flocks = [f for f in self.flocks if f.flock_id != flock_id]
         self.entries = [e for e in self.entries if e.flock_id != flock_id]
         self._save()
 
     @staticmethod
     def _apply(f: Flock, fields: dict) -> None:
+        """Sets a flock's fields; hens and roosters are whole and never negative."""
         for name, value in fields.items():
             if name in ("flock_id", "created_at") or not hasattr(f, name):
                 raise ValueError(f"A flock has no '{name}'.")
@@ -192,6 +210,9 @@ class FlockBook:
     # ---------------------------------------------------------------- the log
 
     def log(self, flock_id: str, kind: str, on: str = "", **fields) -> Entry:
+        """Adds a line to a flock's log (eggs, feed, birds or use; today unless a day is given). Birds change the hen count;
+        eggs are recorded in the history.
+        """
         if self.get_flock(flock_id) is None:
             raise ValueError("That flock isn't there anymore.")
         if kind not in ("eggs", "feed", "birds", "use"):
@@ -214,6 +235,7 @@ class FlockBook:
         return entry
 
     def delete_entry(self, entry_id: str) -> None:
+        """Takes back a log line (birds put the hen count back)."""
         entry = next((e for e in self.entries if e.entry_id == entry_id), None)
         if entry is None:
             raise ValueError("That entry isn't there anymore.")
@@ -225,4 +247,5 @@ class FlockBook:
         self._save()
 
     def entries_for(self, flock_id: str) -> list[Entry]:
+        """One flock's log, by date (lines on the same day as logged)."""
         return sorted((e for e in self.entries if e.flock_id == flock_id), key=lambda e: e.date)  # stable: as logged
