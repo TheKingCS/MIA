@@ -160,10 +160,11 @@ Settings that belong to a person go through `core/person_settings.py`.
 Tools always use the `context` they're given, never a global, because the
 phone runs a turn on the signed-in person's own view (`view_for()`).
 Never hardcode the owner's names, places or things in code or prompts.
-A child account (`core/child_accounts.py`) sees only `CHILD_APPS` and is
-never offered `CHILD_BLOCKED_DOMAINS` tools; give a new module or tool
-domain a place in one of those lists when it's clearly for (or not for)
-children.
+DEC-0119 (2026-11-07) narrows this further: MIA is for Zac alone and
+never for children. Child accounts (`core/child_accounts.py`) still work
+as built, but new modules and tool domains no longer need a place in
+`CHILD_APPS` / `CHILD_BLOCKED_DOMAINS`, and new work doesn't design for
+other people in the house.
 
 ### Other core services
 

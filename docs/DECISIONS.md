@@ -1845,3 +1845,15 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   workshop's materials for what to buy; a project started from a plan; links to free public-domain and extension
   plans. Structural sizes are rules of thumb, always with "check your local code and a span table".
 - Related: DEC-0114 (personality), DEC-0115, DEC-0017 (the Library's web page)
+
+### DEC-0119: MIA is for Zac alone, never for children
+- Status: APPROVED
+- Decided by: zac, 2026-11-07 ("MIA will never be for children. Shes really just for me"; "we can also remove all
+  info regarding child accounts")
+- Decision: MIA is built for Zac only. No new work for child accounts or for other people in the house: new modules
+  and tool domains no longer need a place in `CHILD_APPS` / `CHILD_BLOCKED_DOMAINS`, and design briefs leave child
+  and household-member states out. Narrows DEC-0115.
+- What stays for now: the code already built for accounts, households and children keeps working and its tests
+  stay; removing `core/child_accounts.py` and the per-person plumbing is a separate cleanup Zac approves on its own.
+  No personal data in the repo still holds (DEC-0002).
+- Related: DEC-0115, DEC-0001, DEC-0002

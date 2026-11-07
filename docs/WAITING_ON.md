@@ -23,7 +23,14 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       (a chicken coop? a lean-to? shelving?).
 - [ ] **Her humor:** say "be funnier" or "no more jokes for now" and see her change; tell Claude how often feels right.
 
+- [ ] **The Claude Design brief** ("MIA: Screens and Flows for Claude Design", a Claude Doc:
+      https://claude.ai/artifact/3R3ZjAWg4JzV1yE6dXK515): read it, answer its five open questions, then hand it to
+      Claude Design for round one (the frame plus six screens).
+
 ### Decisions
+- [ ] **Child-account code (DEC-0119):** MIA is for you alone now. Remove `core/child_accounts.py` and the
+      per-person/household plumbing, or leave it dormant (Claude: leave it; it costs nothing and removing it touches
+      many files)?
 - [ ] **The Highest Self (H-0089 → H-0090, DEC-0114 PROPOSED):** read H-0090 (one page) and decide its four questions (the foundation, faith for everyone's MIA, three new modes, keep the tuned prompt); and rate MIA's twelve new answers in `pc-check/conversation-highest-self-tune2.md` (faith, meaning, vulnerability, grand plans, dependency, free will, flattery): your ratings decide the next tuning.
 - [ ] **Experience Maturity (H-0087 → H-0088, DEC-0113 PROPOSED):** read H-0088 (one page) and Muse's reply H-0091 (agrees on all four, with a condition each; orb unification first) and decide: the direction
       and sequence; per-app atmosphere (Claude: yes); dark only (Claude: yes); the image pipeline (library + ChatGPT

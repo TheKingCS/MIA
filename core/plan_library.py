@@ -124,6 +124,71 @@ BUILT_IN = (
      "steps": ["Dig out, set forms level (or sloped 1/8 in per ft), compact a 4 in gravel base.",
                "Tie rebar on chairs at mid-depth.", "Pour, screed, float; edge and joint it.",
                "Keep it damp for a week while it cures."]},
+    {"id": "chicken-coop", "title": "Chicken coop and run", "kind": "homestead", "calc": "chicken_coop",
+     "args": {"hens": 8},
+     "summary": "A shed-roof coop at 4 sq ft a hen with roosts, nest boxes and vents, and a hardware-cloth run; "
+                "any flock size.",
+     "tools": ["circular saw", "drill/driver", "post hole digger", "level", "tin snips", "staple gun"],
+     "steps": ["Pick high, dry ground; level a base of blocks or gravel.", "Build the floor, then frame the walls "
+               "(the back 1 ft lower for the roof's fall) with the door and pop-door openings.",
+               "Set rafters, screw on the metal roof, side the walls, cover vents with hardware cloth.",
+               "Fit roosts (higher than the nest boxes) and nest boxes; hang doors with two-step latches.",
+               "Set the run posts, rails, and hardware cloth with a 12 in apron buried or pinned flat."]},
+    {"id": "garage-shelving", "title": "Garage shelving", "kind": "woodworking", "calc": "shelving",
+     "args": {"width_ft": 8, "depth_in": 24, "height_ft": 6, "shelves": 4},
+     "summary": "Heavy 2x4-and-plywood shelves for totes and tools; any width, depth and count.",
+     "tools": ["circular saw", "drill/driver", "square", "level", "clamps"],
+     "steps": ["Build each shelf frame: two rails with cross pieces every 24 in.", "Screw the legs to the lowest and "
+               "top frames on the floor, stand it up, then fit the middle frames level.", "Rip and screw down the "
+               "plywood.", "Screw the top frame to the wall studs."]},
+    {"id": "bookshelf", "title": "Solid-wood bookshelf", "kind": "woodworking", "calc": "bookshelf",
+     "args": {"width_in": 36, "height_in": 72},
+     "summary": "Sides, fixed shelves about every 12 in, a plywood back and a toe kick; any size.",
+     "tools": ["miter or circular saw", "drill/driver", "pocket-hole jig", "clamps", "square", "sander"],
+     "steps": ["Cut the sides and shelves; sand to 150 grit.", "Mark shelf positions on both sides together so "
+               "they match.", "Glue and pocket-screw the shelves between the sides, checking square.",
+               "Fit the toe kick, nail on the back (it squares the case), finish, and strap it to a wall."]},
+    {"id": "lean-to", "title": "Lean-to shelter", "kind": "structure", "calc": "lean_to",
+     "args": {"depth_ft": 8, "length_ft": 12},
+     "summary": "A post-frame shelter with a metal roof for firewood, equipment or animals; any size.",
+     "tools": ["post hole digger", "circular saw", "drill/driver", "level", "string line", "ladder"],
+     "steps": ["Lay out and square the post holes; set the posts in concrete, plumb.", "Cut posts to the high and "
+               "low heights; bolt the doubled headers on.", "Set rafters with ties, then purlins across them.",
+               "Screw on the metal panels, overlapping one rib, screws in the flats or as the maker says."]},
+    {"id": "compost-bin", "title": "Three-bay compost bin", "kind": "garden", "calc": "compost_bin",
+     "args": {"bays": 3, "size_ft": 3},
+     "summary": "Slatted bays with air gaps and lift-out fronts, so a pile turns from one bay to the next.",
+     "tools": ["saw", "drill/driver", "level", "spacer block"],
+     "steps": ["Set the posts level on the ground or on pavers.", "Screw the back and divider slats on with a 1 in "
+               "spacer between.", "Screw 1x2 guides to the front posts so the front slats slide in.",
+               "Fill bay one; turn it into bay two when it heats and settles."]},
+    {"id": "cold-frame", "title": "Cold frame", "kind": "garden", "calc": "cold_frame",
+     "args": {"width_ft": 3, "length_ft": 6},
+     "summary": "A sloped box with a polycarbonate lid to start seedlings early and grow late; any size.",
+     "tools": ["saw", "drill/driver", "square"],
+     "steps": ["Cut the side boards to the slope from back height to front height.", "Screw the boards to the "
+               "corner posts.", "Build the lid frame, screw on the polycarbonate, and hinge it at the back.",
+               "Set it facing the sun; prop it open on warm days."]},
+    {"id": "picnic-table", "title": "Picnic table", "kind": "woodworking", "calc": "picnic_table",
+     "args": {"length_ft": 8},
+     "summary": "The classic A-frame table with attached benches.",
+     "tools": ["miter saw", "drill/driver", "speed square", "wrench", "clamps"],
+     "steps": ["Cut the legs at 22 1/2 deg both ends; cut the seat supports and cleats.", "Bolt each pair of legs "
+               "to a top cleat and a seat support (an A).", "Screw the top boards across the two A-frames, then "
+               "the seat boards.", "Add the angled braces from the seat supports to the center cleat."]},
+    {"id": "firewood-rack", "title": "Firewood rack", "kind": "homestead", "calc": "firewood_rack",
+     "args": {"length_ft": 8, "height_ft": 4},
+     "summary": "A rack that keeps a third of a cord off the ground and drying; any size.",
+     "tools": ["saw", "drill/driver", "level"],
+     "steps": ["Set the blocks level and lay the base rails on them.", "Screw the uprights to the rail ends, tie "
+               "them across, and brace each end.", "Stack bark up, ends out, with air between rows."]},
+    {"id": "deck-stairs", "title": "Deck or porch stairs", "kind": "structure", "calc": "stairs",
+     "args": {"rise_in": 30},
+     "summary": "Stringers and treads worked out from the height to climb, inside common code limits.",
+     "tools": ["circular saw", "framing square with stair gauges", "jigsaw or handsaw", "drill/driver", "level"],
+     "steps": ["Measure the total rise from the landing spot to the deck surface.", "Lay out one stringer with the "
+               "square, cut it, test it, then trace the rest from it.", "Fix the stringers to the deck rim with "
+               "ties; set them on a solid pad.", "Screw on the treads; add a handrail for four or more risers."]},
     {"id": "workbench", "title": "Shop workbench", "kind": "woodworking", "calc": "workbench",
      "args": {},
      "summary": "A sturdy 6 ft bench from 2x4s and one sheet of plywood, with a shelf.",

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1080 files, 242,846 lines; 1080 files describe themselves; 13,361 of 14,031 classes and functions are documented.
+1080 files, 243,393 lines; 1080 files describe themselves; 13,381 of 14,051 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-387 files, 112,097 lines; 5,942 of 6,031 classes and functions documented
+387 files, 112,591 lines; 5,958 of 6,047 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -666,7 +666,7 @@
 
 ## tests/: the test suite: what each part must do
 
-359 files, 65,381 lines; 5,184 of 5,765 classes and functions documented
+359 files, 65,434 lines; 5,188 of 5,769 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -909,7 +909,7 @@
 - `tests/test_plaid_manager.py`: Unit tests for core.plaid_manager — the vault encrypt/decrypt round trip (real core.secrets_manager calls, no network) and poll_for_public_token()'s/extract_completed_public_token()'s stopping logic against fake, duck-typed response objects (SimpleNamespace, not real plaid.model classes — those requ
 - `tests/test_plain_words.py`: Markdown out of what MIA says (core/plain_words.py).
 - `tests/test_plan_import.py`: "Paste a plan" (core/plan_import.py, 2026-10-14): a whole plan and its recipes as text, the way a chat writes it, into MIA in one undoable action. Placeholder values only (DEC-0002). *(1 undocumented)*
-- `tests/test_plan_library.py`: The Library's plans shelf (core/plan_library.py) and the material lists behind it (core/build_calcs.py): boards packed into stock lengths, each calculator's counts checked by hand, plans found by name, kept and read from files, a shopping list against the workshop's stock, and the tools.
+- `tests/test_plan_library.py`: The Library's plans shelf (core/plan_library.py) and the material lists behind it (core/build_calcs.py): boards packed into stock lengths, each calculator's counts checked by hand, plans found by name, kept and read from files, a shopping list against the workshop's stock, the tools, the homestead, 
 - `tests/test_port_scanner.py`: Unit tests for core.port_scanner. Uses a real local TCP server bound to an ephemeral port (socket.bind(("127.0.0.1", 0))) rather than mocking sockets or reaching out to a real remote host — deterministic (no network/internet dependency) while still exercising the real connect_ex() path, not a hand-c
 - `tests/test_power_manager.py`: Unit tests for core.power_manager. should_warn_low_battery() is tested directly with constructed PowerStatus objects (pure, deterministic — no psutil or real battery involved). PsutilBatteryBackend/PowerManager are tested against monkeypatched psutil.sensors_battery(), same approach as test_system_h *(5 undocumented)*
 - `tests/test_power_module.py`: Unit tests for modules.power.module's pure formatting functions — no Qt event loop needed. Same shape as tests/test_system_health.py's format_system_health test.

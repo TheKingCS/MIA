@@ -4,6 +4,8 @@
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
 session. Last updated: 2026-11-07 (DEC-0104 to 0109: documentation, models, curriculum, self-audit, specialists), by claude.*
 
+**2026-11-07 (late): more projects and a design brief.** The plans shelf grew to fifteen built-in plans (a chicken coop and run, shelving, a bookshelf, a lean-to, a compost bin, a cold frame, a picnic table, a firewood rack, deck stairs and more), plus a cut list for any project of Zac's own. A brief for Claude Design scopes every screen and flow. DEC-0119: MIA is for Zac alone, never for children.
+
 **2026-11-07 (evening): humor and plans (DEC-0118).** MIA is funny now and then, on light turns and by surprise, never on heavy ones, and each person turns it up or down by asking ("be funnier", "no jokes for now"). Her Library has a plans shelf: built-in plans for a raised bed, shed, deck, fence, slab and workbench whose material and cut lists are worked out in code for any size, plans the household keeps, and plan files saved into `reference_library/plans/`; she says what's left to buy against the workshop's materials, points to free public-domain plans, and starts a project from a plan. The suite: 5,150+ passing.
 
 **2026-11-07 (afternoon): MIA has her own browser (DEC-0117).** Edge in a profile of her own (none of Zac's sign-ins). She reads, searches and follows links by herself. Anything that commits waits for a person's OK with a screenshot, and she never types passwords or card numbers. You teach her a task by doing it once in her window; she practises it, waiting at each commit, until two clean runs make it learned. Also: MIA is for Zac and his household (DEC-0115), and tests named as sentences count as documented (DEC-0116). See `docs/BROWSER.md`.

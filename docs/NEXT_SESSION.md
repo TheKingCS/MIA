@@ -7,6 +7,13 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 *Last updated: 2026-11-07 (afternoon)*
 
+**New 2026-11-07 (late): more projects, the design brief, MIA for Zac alone (DEC-0119).** Calculators for a chicken
+coop and run, garage shelving, a bookshelf, a lean-to, a compost bin, a cold frame, a picnic table, a firewood rack
+and deck stairs, each a built-in plan with steps, and `cut_list` for any project of his own parts (boards and 4x8
+sheets). The Claude Design brief, "MIA: Screens and Flows for Claude Design", is a Claude Doc
+(https://claude.ai/artifact/3R3ZjAWg4JzV1yE6dXK515): every screen, the frame, flows, states, round-one order.
+DEC-0119: MIA is for Zac alone, never children; whether to remove the old child-account code is his call (WAITING_ON).
+
 **New 2026-11-07 (evening): humor and plans (DEC-0118).** Humor: `core.personality.humor_for` (light turns, by
 chance, a random flavor) and each person's level by chat (`set_humor`). Plans: the Library's plans shelf
 (`core/plan_library.py`, tools in `core/assistant_plan_actions.py`, the Knowledge page's Plans section), material and

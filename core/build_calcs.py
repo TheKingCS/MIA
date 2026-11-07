@@ -6,8 +6,13 @@ Material lists worked out in code (Zac, 2026-11-07: "references for all
 kinds of stuff like woodworking plans, structure blueprints, material
 lists"). Each calculator takes a structure's size and gives what to buy
 and what to cut: a stud wall, a floor or deck frame, a raised garden bed,
-a fence run, a concrete slab, and a gable shed built from the others. The
-model only phrases the result; it never does this arithmetic.
+a fence run, a concrete slab, a gable shed built from the others, and
+(added the same evening) a chicken coop and run, garage shelving, a
+bookshelf, a lean-to, a compost bin, a cold frame, a picnic table, a
+firewood rack and deck stairs. `custom_cuts()` does any project of the
+person's own: their parts packed into boards (`buy_boards()`) and 4x8
+sheets (`sheets_for()`). The model only phrases the result; it never does
+this arithmetic.
 
 - Lumber is bought in stock lengths (8 to 16 ft). `buy_boards()` packs the
   cuts into whole boards (first fit, biggest cut first, an eighth of an inch
@@ -343,6 +348,286 @@ def shed(width_ft: float, length_ft: float, wall_height_ft: float = 8, pitch: fl
     return out
 
 
+# ------------------------------------------------------------------ homestead, garden and woodworking (2026-11-07)
+
+
+def _boards(out: MaterialList, size: str, parts: list, note: str = "") -> None:
+    """Buys one lumber size for its parts ((name, how many, inches) each), packed into stock lengths, and lists the
+    cuts."""
+    pieces = [inches for _name, qty, inches in parts for _ in range(qty)]
+    if not pieces:
+        return
+    length, boards = buy_boards(pieces)
+    out.add(f"{size} x {length} ft", boards, "", note)
+    out.cuts += [Cut(name, qty, round(inches, 2), f"{size} x {length} ft") for name, qty, inches in parts if qty]
+
+
+def chicken_coop(width_ft: float = 0, length_ft: float = 0, hens: int = 0, height_ft: float = 6,
+                 run: bool = True) -> MaterialList:
+    """A shed-roof chicken coop on a 2x4 floor: 4 sq ft a hen inside (sized from the hens when no size is given, or
+    the hens from the size), framed walls with a people door and a pop door, a metal roof, siding, a roost (10 in a
+    hen), nest boxes (one per 4 hens), vents, and a run of 10 sq ft a hen in 1/2 in hardware cloth."""
+    if not hens and width_ft and length_ft:
+        hens = max(1, int(width_ft * length_ft // 4))
+    hens = int(hens or 6)
+    if not (width_ft and length_ft):
+        width_ft = 4 if hens <= 8 else 6 if hens <= 18 else 8
+        length_ft = max(4, math.ceil(hens * 4 / width_ft / 2) * 2)
+    out = MaterialList(f"{_qty(width_ft)} x {_qty(length_ft)} ft chicken coop for {hens} hens",
+                       {"width_ft": width_ft, "length_ft": length_ft, "hens": hens, "height_ft": height_ft, "run": run})
+    joists = math.ceil(length_ft * 12 / 16) + 1
+    _boards(out, "2x4", [("floor joist", joists, width_ft * 12 - 3), ("floor rim", 2, length_ft * 12)], "floor")
+    out.add("3/4 in plywood 4x8", math.ceil(width_ft * length_ft / SHEET_SQFT), "sheets", "floor")
+    back_ft = height_ft - 1  # a shed roof falling 1 ft front to back
+    for name, wall, tall, doors in (("front wall", length_ft, height_ft, (2,)), ("back wall", length_ft, back_ft, ()),
+                                    ("side wall", width_ft - 7 / 12, height_ft, ()),
+                                    ("side wall", width_ft - 7 / 12, back_ft, ())):
+        out.merge(stud_wall(wall, tall, 24, doors, sheathing=False), f"{name}: ")
+    rafter_in = math.hypot(width_ft * 12 + 12, 12)
+    rafters = math.ceil(length_ft * 12 / 24) + 1
+    _boards(out, "2x4", [("rafter", rafters, rafter_in)], "rafters at 24 in")
+    panels = math.ceil((length_ft * 12 + 12) / 24)
+    out.add(f"metal roof panels x {stock_for(rafter_in / 12)} ft", panels, "", "24 in coverage")
+    out.add("roofing screws with washers", math.ceil(panels * rafter_in / 12 * 1.5), "")
+    wall_sqft = 2 * length_ft * (height_ft + back_ft) / 2 + 2 * width_ft * (height_ft + back_ft) / 2
+    out.add("T1-11 siding 4x8", with_waste(wall_sqft / SHEET_SQFT), "sheets", "or plywood, painted")
+    roost_in = hens * 10
+    _boards(out, "2x4", [("roost bar (wide face up)", math.ceil(roost_in / (width_ft * 12 - 3)), width_ft * 12 - 3)],
+            "roosts")
+    nests = max(1, math.ceil(hens / 4))
+    out.add("1/2 in plywood 4x8", math.ceil(nests / 4), "sheets", f"{nests} nest boxes, 12 x 12 x 12 in")
+    out.add("1/2 in hardware cloth, 3 x 10 ft roll", 1, "", "vents and windows: 1 sq ft of vent a hen")
+    out.add("door hinges", 3, "pair", "people door, pop door, nest lid")
+    out.add("latches (two-step, raccoon-proof)", 3)
+    if run:
+        run_length = max(4, math.ceil(hens * 10 / width_ft / 2) * 2)
+        perimeter = 2 * run_length + width_ft  # the coop closes the fourth side
+        posts = math.ceil(perimeter / 6) + 1
+        out.add("4x4 x 10 ft pressure-treated posts", posts, "", f"run, {_qty(width_ft)} x {_qty(run_length)} ft, "
+                "set 2.5 ft deep")
+        out.add("80 lb bags of concrete", posts * 2)
+        out.add("2x4 x 8 ft pressure-treated", with_waste(math.ceil(perimeter / 8) * 2), "", "run rails, top and bottom")
+        cloth_ft = perimeter * 2 + perimeter  # 6 ft walls in two 3 ft strips, and a 3 ft strip for the apron
+        out.add("1/2 in hardware cloth, 3 x 25 ft roll", math.ceil(cloth_ft / 25), "", "run walls and a 12 in apron")
+        out.add("hardware cloth staples or screws with washers", math.ceil(cloth_ft / 50), "boxes")
+        out.notes.append("Bury or apron the run's hardware cloth 12 in out: diggers come under, not through.")
+    out.notes.append("Use 1/2 in hardware cloth, not chicken wire: chicken wire keeps chickens in, not predators out.")
+    return out
+
+
+def _qty_of(result: MaterialList, starts: str) -> float:
+    """The quantity of a list's item whose name starts with these words (0 when there's none)."""
+    return next((i.qty for i in result.items if i.name.startswith(starts)), 0)
+
+
+def shelving(width_ft: float = 8, depth_in: float = 24, height_ft: float = 6, shelves: int = 4) -> MaterialList:
+    """Garage shelving: shelf frames of 2x4 (front and back rails, cross pieces every 24 in) on 2x4 legs at each end
+    and every 4 ft, topped with 3/4 in plywood ripped to depth."""
+    shelves = int(shelves) or 4
+    out = MaterialList(f"{_qty(width_ft)} ft garage shelving, {_qty(depth_in)} in deep, {shelves} shelves",
+                       {"width_ft": width_ft, "depth_in": depth_in, "height_ft": height_ft, "shelves": shelves})
+    across = math.ceil(width_ft * 12 / 24) + 1
+    legs = 2 * (math.ceil(width_ft / 4) + 1)
+    _boards(out, "2x4", [("shelf rail", 2 * shelves, width_ft * 12), ("cross piece", across * shelves, depth_in - 3),
+                         ("leg", legs, height_ft * 12)])
+    per_sheet = max(1, int(48 // depth_in))
+    strips = shelves * math.ceil(width_ft / 8)
+    out.add("3/4 in plywood or OSB 4x8", math.ceil(strips / per_sheet), "sheets", f"ripped to {_qty(depth_in)} in")
+    out.add("3 in screws", shelves * (across * 4) + legs * shelves * 2)
+    out.add("1 1/4 in screws", shelves * across * 3, "", "plywood to the frames")
+    out.notes.append("Screw the unit to the wall studs at the top so it can't tip.")
+    return out
+
+
+def bookshelf(width_in: float = 36, height_in: float = 72, depth_in: float = 11.25, shelves: int = 0) -> MaterialList:
+    """A solid-wood bookshelf of 1x boards (3/4 in thick): two sides, a top, a bottom and fixed shelves about every
+    12 in, a 1/4 in plywood back and a toe kick."""
+    shelves = int(shelves) or max(2, round((height_in - 4) / 12) + 1)  # top and bottom count
+    board = "1x12" if depth_in > 9.25 else "1x10" if depth_in > 7.25 else "1x8"
+    inner = width_in - 1.5
+    out = MaterialList(f"{_qty(width_in)} x {_qty(height_in)} in bookshelf, {shelves} shelves",
+                       {"width_in": width_in, "height_in": height_in, "depth_in": depth_in, "shelves": shelves})
+    _boards(out, board, [("side", 2, height_in), ("shelf (with top and bottom)", shelves, inner)],
+            "pine or poplar, 3/4 in")
+    _boards(out, "1x4", [("toe kick", 1, inner)])
+    out.add("1/4 in plywood 4x8", math.ceil(width_in * height_in / 4608), "sheets", "back")
+    out.add("wood glue", 1, "bottle")
+    out.add("1 1/4 in pocket screws or 2 in finish nails", shelves * 8)
+    if inner > 34.5:
+        out.notes.append("Shelves of 3/4 in pine longer than about 36 in sag under books: add a center divider or a "
+                         "1x2 front edge.")
+    out.notes.append("Anchor it to a wall stud with a furniture strap.")
+    return out
+
+
+def lean_to(depth_ft: float = 8, length_ft: float = 12, high_ft: float = 8, low_ft: float = 6.5) -> MaterialList:
+    """A post-frame lean-to with a metal roof: 4x4 posts set in concrete every 8 ft front and back, doubled 2x8
+    headers, 2x6 rafters at 24 in to the slope, 2x4 purlins at 24 in, metal panels, screws and ties."""
+    out = MaterialList(f"{_qty(depth_ft)} x {_qty(length_ft)} ft lean-to",
+                       {"depth_ft": depth_ft, "length_ft": length_ft, "high_ft": high_ft, "low_ft": low_ft})
+    per_line = math.ceil(length_ft / 8) + 1
+    out.add(f"4x4 x {stock_for(high_ft + 2.5)} ft pressure-treated", per_line, "", "tall posts, 2.5 ft deep")
+    out.add(f"4x4 x {stock_for(low_ft + 2.5)} ft pressure-treated", per_line, "", "short posts, 2.5 ft deep")
+    out.add("80 lb bags of concrete", per_line * 2 * 2)
+    _boards(out, "2x8", [("header (doubled)", 4, length_ft * 12)], "headers")
+    rafter_in = math.hypot(depth_ft * 12 + 12, (high_ft - low_ft) * 12)
+    rafters = math.ceil(length_ft * 12 / 24) + 1
+    _boards(out, "2x6", [("rafter", rafters, rafter_in)], "rafters at 24 in")
+    rows = math.ceil(rafter_in / 24) + 1
+    _boards(out, "2x4", [("purlin", rows, length_ft * 12 + 12)], "purlins at 24 in")
+    panels = math.ceil((length_ft * 12 + 12) / 36)
+    out.add(f"metal roof panels x {stock_for(rafter_in / 12)} ft", panels, "", "36 in coverage")
+    out.add("roofing screws with washers", math.ceil(panels * rows * 4 * 1.1))
+    out.add("hurricane ties", rafters * 2)
+    out.add("1/2 x 8 in carriage bolts", per_line * 4, "", "headers to posts")
+    if depth_ft > 12:
+        out.notes.append("Past about 12 ft deep, 2x6 rafters need a mid-span beam or a bigger size: check a span table.")
+    out.notes.append(CODE_NOTE)
+    return out
+
+
+def compost_bin(bays: int = 3, size_ft: float = 3, height_ft: float = 3) -> MaterialList:
+    """A slatted wooden compost bin of side-by-side bays: 4x4 corner posts, 2x6 slats with 1 in air gaps on the back
+    and dividers, and front slats that lift out."""
+    bays = int(bays) or 3
+    rows = math.ceil(height_ft * 12 / 6.5)
+    out = MaterialList(f"{bays}-bay compost bin, {_qty(size_ft)} ft bays, {_qty(height_ft)} ft tall",
+                       {"bays": bays, "size_ft": size_ft, "height_ft": height_ft})
+    out.add("4x4 x 8 ft (untreated cedar or other rot-resistant wood)",
+            math.ceil(2 * (bays + 1) / int(96 // (height_ft * 12))), "", "posts")
+    out.cuts.append(Cut("post", 2 * (bays + 1), height_ft * 12, "4x4 x 8 ft"))
+    _boards(out, "2x6", [("back slat", rows, bays * size_ft * 12), ("divider slat", rows * (bays + 1), size_ft * 12 - 7),
+                         ("front slat (lift-out)", rows * bays, size_ft * 12 - 4)], "cedar or untreated")
+    _boards(out, "1x2", [("front slat guide", 4 * bays, height_ft * 12)])
+    out.add("3 in exterior screws", rows * (bays + 1) * 4 + rows * 4 * bays)
+    return out
+
+
+def cold_frame(width_ft: float = 3, length_ft: float = 6, back_in: float = 18, front_in: float = 12) -> MaterialList:
+    """A cold frame: a box of 2x8 boards higher at the back so the lid faces the sun, corner posts, and a hinged
+    lid of a 2x2 frame under twinwall polycarbonate."""
+    out = MaterialList(f"{_qty(width_ft)} x {_qty(length_ft)} ft cold frame",
+                       {"width_ft": width_ft, "length_ft": length_ft, "back_in": back_in, "front_in": front_in})
+    back_rows, front_rows = math.ceil(back_in / 7.25), math.ceil(front_in / 7.25)
+    _boards(out, "2x8", [("back board", back_rows, length_ft * 12), ("front board", front_rows, length_ft * 12),
+                         ("side board (cut to the slope)", 2 * back_rows, width_ft * 12 - 3)], "cedar")
+    _boards(out, "2x4", [("corner post", 2, back_in), ("corner post", 2, front_in)])
+    _boards(out, "2x2", [("lid rail", 2, length_ft * 12), ("lid stile", math.ceil(length_ft / 3) + 1, width_ft * 12)])
+    out.add("twinwall polycarbonate 4x8", math.ceil(width_ft * length_ft / SHEET_SQFT), "sheets", "lid")
+    out.add("polycarbonate screws with washers", math.ceil(2 * (width_ft + length_ft) * 1.5))
+    out.add("hinges", math.ceil(length_ft / 3), "pair")
+    out.add("lid prop or automatic vent opener", 1)
+    out.add("3 in exterior screws", 40)
+    out.notes.append("Face the low side south (north in the southern hemisphere) and vent it on warm days.")
+    return out
+
+
+def picnic_table(length_ft: float = 8) -> MaterialList:
+    """A classic A-frame picnic table: five 2x6 top boards, two 2x6 boards per seat, 2x6 legs and seat supports,
+    2x4 top cleats and braces, carriage bolts and screws."""
+    out = MaterialList(f"{_qty(length_ft)} ft picnic table", {"length_ft": length_ft})
+    _boards(out, "2x6", [("top board", 5, length_ft * 12), ("seat board", 4, length_ft * 12),
+                         ("leg (22 1/2 deg both ends)", 4, 33), ("seat support", 2, 60)], "pressure-treated or cedar")
+    _boards(out, "2x4", [("top cleat", 3, 29), ("brace (angled)", 2, 34)])
+    out.add("3/8 x 4 in carriage bolts with nuts and washers", 12)
+    out.add("3 in exterior screws", 80)
+    out.notes.append("Cut one leg, test the angle, then use it as the pattern for the rest.")
+    return out
+
+
+def firewood_rack(length_ft: float = 8, height_ft: float = 4, depth_in: float = 16) -> MaterialList:
+    """A firewood rack: two 2x4 base rails on blocks, 2x4 end uprights braced across, and how much wood it holds (a
+    full cord is 128 cu ft)."""
+    out = MaterialList(f"{_qty(length_ft)} ft firewood rack, {_qty(height_ft)} ft tall",
+                       {"length_ft": length_ft, "height_ft": height_ft, "depth_in": depth_in})
+    _boards(out, "2x4", [("base rail", 2, length_ft * 12), ("upright", 4, height_ft * 12),
+                         ("end tie", 4, depth_in), ("end brace", 2, round(math.hypot(depth_in, height_ft * 12 / 2), 1))],
+            "pressure-treated")
+    out.add("concrete blocks", 4, "", "keep the rails off the ground")
+    out.add("3 in exterior screws", 40)
+    cords = length_ft * height_ft * depth_in / 12 / 128
+    out.notes.append(f"Holds about {round(cords, 2)} cord ({round(cords * 128)} cu ft); a face cord of 16 in wood is "
+                     "a third of a cord.")
+    return out
+
+
+MAX_RISE_IN, MIN_RUN_IN = 7.75, 10  # the common residential code limits
+
+
+def stairs(rise_in: float, width_in: float = 36, run_in: float = 10.5) -> MaterialList:
+    """Outdoor stairs: as few steps as keep each riser at or under 7 3/4 in, treads at least 10 in deep (two 2x6s
+    each), 2x12 stringers every 16 in or less, and the stringer's length and cut marks."""
+    run_in = max(MIN_RUN_IN, run_in)
+    steps = max(1, math.ceil(rise_in / MAX_RISE_IN))
+    riser = rise_in / steps
+    treads = steps - 1 if steps > 1 else 1  # the top step is the deck or landing
+    stringer_in = math.hypot(rise_in, treads * run_in) + 12
+    count = max(3, math.ceil(width_in / 16) + 1)
+    out = MaterialList(f"stairs for a {_qty(rise_in)} in rise, {_qty(width_in)} in wide",
+                       {"rise_in": rise_in, "width_in": width_in, "run_in": run_in})
+    out.add(f"2x12 x {stock_for(stringer_in / 12)} ft pressure-treated", count, "", "stringers")
+    out.cuts.append(Cut("stringer", count, round(stringer_in, 1), "2x12"))
+    _boards(out, "2x6", [("tread board", 2 * treads, width_in)], "pressure-treated or 5/4 decking")
+    out.add("stringer ties or hangers", count)
+    out.add("3 in deck screws", treads * count * 4)
+    out.notes.append(f"{steps} risers of {inches(riser)} and {treads} treads of {inches(run_in)}: mark the stringer with "
+                     "a framing square and stair gauges, cut one, test it, then use it as the pattern.")
+    if steps >= 4:
+        out.notes.append("Four or more risers need a graspable handrail, and guards where it's over 30 in up.")
+    out.notes.append(CODE_NOTE)
+    return out
+
+
+# ------------------------------------------------------------------ any project: a cut list of your own parts
+
+
+def sheets_for(parts: list[tuple[float, float]], sheet: tuple[float, float] = (48, 96)) -> int:
+    """Pure logic. How many sheets (4x8 by default) hold these rectangular parts (width, length in inches), packed in
+    rows along the sheet, biggest first, a saw kerf around each, either way round."""
+    width, length = sheet
+    pieces = sorted(((min(w, l), max(w, l)) for w, l in parts), key=lambda p: (-p[1], -p[0]))
+    sheets: list[dict] = []  # each: its rows ([row depth, length used]) and whether it's taken whole
+    for short, long in pieces:
+        if long > length + FIT_SLACK_IN or short > width + FIT_SLACK_IN:
+            sheets.append({"rows": [], "full": True})  # bigger than a sheet: a sheet to itself (it's spliced)
+            continue
+        placed = False
+        for current in (s for s in sheets if not s["full"]):
+            rows = current["rows"]
+            row = next((r for r in rows if short <= r[0] + FIT_SLACK_IN and r[1] + long <= length + FIT_SLACK_IN),
+                       None)
+            if row is not None:
+                row[1] += long + KERF_IN
+                placed = True
+            elif sum(r[0] + KERF_IN for r in rows) + short <= width + FIT_SLACK_IN:
+                rows.append([short, long + KERF_IN])
+                placed = True
+            if placed:
+                break
+        if not placed:
+            sheets.append({"rows": [[short, long + KERF_IN]], "full": False})
+    return len(sheets)
+
+
+def custom_cuts(parts: list[dict], title: str = "your project") -> MaterialList:
+    """A cut list of a project's own parts, each {name, qty, length_in, width_in (sheet goods only), material}:
+    boards bought per lumber size in stock lengths, sheet goods per material in 4x8 sheets."""
+    out = MaterialList(f"Cut list for {title}", {"parts": len(parts)})
+    by_material: dict[str, list] = {}
+    for part in parts:
+        by_material.setdefault(part.get("material") or "2x4", []).append(part)
+    for material, group in by_material.items():
+        if any(p.get("width_in") for p in group):
+            rects = [(p.get("width_in") or 3.5, p["length_in"]) for p in group for _ in range(int(p.get("qty", 1)))]
+            out.add(f"{material} 4x8", sheets_for(rects), "sheets")
+            out.cuts += [Cut(f"{p.get('name') or 'part'} ({_qty(p.get('width_in') or 0)} in wide)", int(p.get("qty", 1)),
+                             p["length_in"], material) for p in group]
+        else:
+            _boards(out, material, [(p.get("name") or "part", int(p.get("qty", 1)), p["length_in"]) for p in group])
+    out.notes.append("Lengths include no allowance for joinery: add tenons, dados or overlaps to the parts first.")
+    return out
+
+
 CALCULATORS = {
     "stud_wall": stud_wall,
     "floor": floor_frame,
@@ -351,4 +636,13 @@ CALCULATORS = {
     "fence": fence,
     "slab": concrete_slab,
     "shed": shed,
+    "chicken_coop": chicken_coop,
+    "shelving": shelving,
+    "bookshelf": bookshelf,
+    "lean_to": lean_to,
+    "compost_bin": compost_bin,
+    "cold_frame": cold_frame,
+    "picnic_table": picnic_table,
+    "firewood_rack": firewood_rack,
+    "stairs": stairs,
 }
