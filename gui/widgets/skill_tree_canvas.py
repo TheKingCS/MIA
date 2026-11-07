@@ -32,7 +32,9 @@ _LINE_WIDTH = 1.5
 
 
 class SkillTreeCanvas(QWidget):
+    """The skill tree's background: lines from each skill to the ones it unlocks, drawn behind the cards."""
     def __init__(self, parent: QWidget | None = None) -> None:
+        """No connections to draw yet."""
         super().__init__(parent)
         self._connections: list[tuple[QWidget, QWidget]] = []
 
@@ -44,6 +46,7 @@ class SkillTreeCanvas(QWidget):
         self.update()
 
     def paintEvent(self, event) -> None:  # noqa: N802 (Qt override signature)
+        """Draws a line from the bottom of each prerequisite's card to the top of its dependent's, skipping hidden ones."""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         pen = QPen(_LINE_COLOR)

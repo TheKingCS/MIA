@@ -160,40 +160,50 @@ class AddEditExpenseDialog(QDialog):
 
     @property
     def entered_amount(self) -> float:
+        """The amount entered in the dialog (kept when OK is pressed)."""
         return self._amount
 
     @property
     def entered_category(self) -> str:
+        """The category entered in the dialog (kept when OK is pressed)."""
         return self._category
 
     @property
     def entered_description(self) -> str:
+        """The description entered in the dialog (kept when OK is pressed)."""
         return self._description
 
     @property
     def entered_date(self) -> str:
+        """The date entered in the dialog (kept when OK is pressed)."""
         return self._date
 
     @property
     def entered_entity_id(self) -> str:
+        """The entity id entered in the dialog (kept when OK is pressed)."""
         return self._entity_id
 
     @property
     def entered_tax_relevant(self) -> bool:
+        """The tax relevant entered in the dialog (kept when OK is pressed)."""
         return self._tax_relevant
 
     @property
     def entered_payee(self) -> str:
+        """The payee entered in the dialog (kept when OK is pressed)."""
         return self._payee
 
     @property
     def entered_notes(self) -> str:
+        """The notes entered in the dialog (kept when OK is pressed)."""
         return self._notes
 
     @property
     def entered_project_id(self) -> str:
+        """The project id entered in the dialog (kept when OK is pressed)."""
         return self._project_id
 
     @property
     def entered_asset_id(self) -> str:
+        """The asset id entered in the dialog (kept when OK is pressed)."""
         return self._asset_id

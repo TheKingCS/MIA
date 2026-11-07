@@ -90,12 +90,15 @@ class AddEditJournalEntryDialog(QDialog):
 
     @property
     def entered_title(self) -> str:
+        """The title entered in the dialog (kept when OK is pressed)."""
         return self._title
 
     @property
     def entered_body(self) -> str:
+        """The body entered in the dialog (kept when OK is pressed)."""
         return self._body
 
     @property
     def entered_tags(self) -> list[str]:
+        """The tags entered in the dialog (kept when OK is pressed)."""
         return self._tags

@@ -58,11 +58,13 @@ class ReadAloud:
     """Speaks a screen; calling it again while speaking stops."""
 
     def __init__(self, context) -> None:
+        """Keeps the context; nothing is being read."""
         self.context = context
         self._worker = None
 
     @property
     def speaking(self) -> bool:
+        """Whether something is being read aloud now."""
         return self._worker is not None
 
     def toggle(self, root: Optional[QWidget]) -> str:
@@ -85,6 +87,7 @@ class ReadAloud:
         return "Reading this screen aloud (Ctrl+Shift+R again to stop)."
 
     def _on_finished(self) -> None:
+        """Reading is over: the worker is let go."""
         if self._worker is not None:
             self._worker.deleteLater()
         self._worker = None

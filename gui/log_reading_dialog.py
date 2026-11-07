@@ -28,7 +28,9 @@ from PySide6.QtWidgets import (
 
 
 class LogReadingDialog(QDialog):
+    """Logging a meter or sensor reading for a maintenance task: the value (in its unit) and a note."""
     def __init__(self, parent=None, unit: str = "") -> None:
+        """The fields (the current value, labelled with the unit, and a note) with OK and Cancel."""
         super().__init__(parent)
         self.setWindowTitle("Log Reading")
         self.setFixedSize(320, 200)
@@ -56,14 +58,17 @@ class LogReadingDialog(QDialog):
         self._note: str = ""
 
     def _on_accept(self) -> None:
+        """Keeps the value and note and closes."""
         self._value = self.value_spin.value()
         self._note = self.note_edit.text().strip()
         self.accept()
 
     @property
     def entered_value(self) -> float:
+        """The value entered in the dialog (kept when OK is pressed)."""
         return self._value
 
     @property
     def entered_note(self) -> str:
+        """The note entered in the dialog (kept when OK is pressed)."""
         return self._note

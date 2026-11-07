@@ -28,7 +28,9 @@ _UNIT_COLOR = QColor("#5b6a80")
 
 
 class CircularGauge(QWidget):
+    """A ring gauge: a track with an arc filled to the value's share of the maximum."""
     def __init__(self, diameter: int = 150, stroke_width: int = 8, parent=None) -> None:
+        """A gauge of the size and stroke width given, at 0 of 100."""
         super().__init__(parent)
         self.setFixedSize(diameter, diameter)
         self._stroke_width = stroke_width
@@ -51,6 +53,7 @@ class CircularGauge(QWidget):
         self.update()
 
     def paintEvent(self, event) -> None:  # noqa: N802 (Qt override signature)
+        """Draws the track, then the arc clockwise from the top to the value's fraction, and the value's text in the middle."""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 

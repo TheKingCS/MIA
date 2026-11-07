@@ -39,6 +39,7 @@ class ChatBubble(QFrame):
     not of the widget itself)."""
 
     def __init__(self, role: str, text: str, parent=None) -> None:
+        """A chat bubble for one message, styled by who said it; its height is worked out from the wrapped text and fixed, since Qt's layouts clipped long bubbles."""
         super().__init__(parent)
         self.setObjectName("ChatBubbleUser" if role == "user" else "ChatBubbleAssistant")
         self.setMaximumWidth(_MAX_BUBBLE_WIDTH)

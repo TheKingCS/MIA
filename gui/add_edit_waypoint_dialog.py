@@ -113,20 +113,25 @@ class AddEditWaypointDialog(QDialog):
 
     @property
     def entered_name(self) -> str:
+        """The name entered in the dialog (kept when OK is pressed)."""
         return self._name
 
     @property
     def entered_latitude(self) -> float:
+        """The latitude entered in the dialog (kept when OK is pressed)."""
         return self._latitude
 
     @property
     def entered_longitude(self) -> float:
+        """The longitude entered in the dialog (kept when OK is pressed)."""
         return self._longitude
 
     @property
     def entered_notes(self) -> str:
+        """The notes entered in the dialog (kept when OK is pressed)."""
         return self._notes
 
     @property
     def entered_category(self) -> str:
+        """The category entered in the dialog (kept when OK is pressed)."""
         return self._category

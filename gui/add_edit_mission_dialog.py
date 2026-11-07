@@ -227,52 +227,65 @@ class AddEditMissionDialog(QDialog):
 
     @property
     def entered_name(self) -> str:
+        """The name entered in the dialog (kept when OK is pressed)."""
         return self._name
 
     @property
     def entered_trip_id(self):
+        """The trip id entered in the dialog (kept when OK is pressed)."""
         return self._trip_id
 
     @property
     def entered_project_id(self):
+        """The project id entered in the dialog (kept when OK is pressed)."""
         return self._project_id
 
     @property
     def entered_status(self) -> str:
+        """The status entered in the dialog (kept when OK is pressed)."""
         return self._status
 
     @property
     def entered_icon(self) -> str:
+        """The icon entered in the dialog (kept when OK is pressed)."""
         return self._icon
 
     @property
     def entered_region(self) -> str:
+        """The region entered in the dialog (kept when OK is pressed)."""
         return self._region
 
     @property
     def entered_summary(self) -> str:
+        """The summary entered in the dialog (kept when OK is pressed)."""
         return self._summary
 
     @property
     def entered_difficulty(self) -> str:
+        """The difficulty entered in the dialog (kept when OK is pressed)."""
         return self._difficulty
 
     @property
     def entered_mission_type(self) -> str:
+        """The mission type entered in the dialog (kept when OK is pressed)."""
         return self._mission_type
 
     @property
     def entered_reward_xp(self) -> int:
+        """The reward xp entered in the dialog (kept when OK is pressed)."""
         return self._reward_xp
 
     @property
     def entered_reward_credits(self) -> int:
+        """The reward credits entered in the dialog (kept when OK is pressed)."""
         return self._reward_credits
 
     @property
     def entered_abandon_reason(self) -> str:
+        """The abandon reason entered in the dialog (kept when OK is pressed)."""
         return self._abandon_reason
 
     @property
     def entered_participant_profile_ids(self) -> list[str]:
+        """The participant profile ids entered in the dialog (kept when OK is pressed)."""
         return self._participant_profile_ids

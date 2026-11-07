@@ -34,7 +34,9 @@ from PySide6.QtWidgets import (
 
 
 class LogAssetReadingDialog(QDialog):
+    """Logging a usage reading for an asset: the meter (fuel, odometer, engine hours...), its value, unit and a note."""
     def __init__(self, parent=None, known_meter_names: Optional[list[str]] = None) -> None:
+        """The fields (the meter, offering the asset's known ones, value, unit, note) with OK and Cancel."""
         super().__init__(parent)
         self.setWindowTitle("Log Usage")
         self.setFixedSize(320, 260)
@@ -76,6 +78,7 @@ class LogAssetReadingDialog(QDialog):
         self._note: str = ""
 
     def _on_accept(self) -> None:
+        """Keeps what was entered and closes; without a meter name nothing happens."""
         meter_name = self.meter_name_combo.currentText().strip()
         if not meter_name:
             return
@@ -87,16 +90,20 @@ class LogAssetReadingDialog(QDialog):
 
     @property
     def entered_meter_name(self) -> str:
+        """The meter name entered in the dialog (kept when OK is pressed)."""
         return self._meter_name
 
     @property
     def entered_value(self) -> float:
+        """The value entered in the dialog (kept when OK is pressed)."""
         return self._value
 
     @property
     def entered_unit(self) -> str:
+        """The unit entered in the dialog (kept when OK is pressed)."""
         return self._unit
 
     @property
     def entered_note(self) -> str:
+        """The note entered in the dialog (kept when OK is pressed)."""
         return self._note

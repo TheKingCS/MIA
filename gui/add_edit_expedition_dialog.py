@@ -114,20 +114,25 @@ class AddEditExpeditionDialog(QDialog):
 
     @property
     def entered_name(self) -> str:
+        """The name entered in the dialog (kept when OK is pressed)."""
         return self._name
 
     @property
     def entered_start_date(self) -> str:
+        """The start date entered in the dialog (kept when OK is pressed)."""
         return self._start_date
 
     @property
     def entered_end_date(self) -> str:
+        """The end date entered in the dialog (kept when OK is pressed)."""
         return self._end_date
 
     @property
     def entered_location(self) -> str:
+        """The location entered in the dialog (kept when OK is pressed)."""
         return self._location
 
     @property
     def entered_notes(self) -> str:
+        """The notes entered in the dialog (kept when OK is pressed)."""
         return self._notes

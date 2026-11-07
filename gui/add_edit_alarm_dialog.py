@@ -98,12 +98,15 @@ class AddEditAlarmDialog(QDialog):
 
     @property
     def entered_label(self) -> str:
+        """The label entered in the dialog (kept when OK is pressed)."""
         return self._label
 
     @property
     def entered_time(self) -> str:
+        """The time entered in the dialog (kept when OK is pressed)."""
         return self._time
 
     @property
     def entered_days(self) -> list[int]:
+        """The days entered in the dialog (kept when OK is pressed)."""
         return self._days

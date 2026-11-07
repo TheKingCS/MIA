@@ -29,6 +29,7 @@ from gui.widgets.mission_list_row import MissionListRow
 
 
 def build_asset_missions_panel(context: AppContext, asset_id: str) -> QWidget:
+    """The missions tied to a maintenance asset, each opening in Missions, or that none are tagged yet."""
     panel = QWidget()
     layout = QVBoxLayout(panel)
     layout.setContentsMargins(0, 0, 0, 0)

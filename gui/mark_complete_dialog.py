@@ -26,7 +26,9 @@ from PySide6.QtWidgets import (
 
 
 class MarkCompleteDialog(QDialog):
+    """Marking a meter task done: the meter's value at completion."""
     def __init__(self, parent=None, unit: str = "", default_value: Optional[float] = None) -> None:
+        """The value field (labelled with the unit, the latest reading to start) with OK and Cancel."""
         super().__init__(parent)
         self.setWindowTitle("Mark Complete")
         self.setFixedSize(320, 160)
@@ -51,9 +53,11 @@ class MarkCompleteDialog(QDialog):
         self._value: float = default_value or 0.0
 
     def _on_accept(self) -> None:
+        """Keeps the value and closes."""
         self._value = self.value_spin.value()
         self.accept()
 
     @property
     def entered_value(self) -> float:
+        """The value entered in the dialog (kept when OK is pressed)."""
         return self._value

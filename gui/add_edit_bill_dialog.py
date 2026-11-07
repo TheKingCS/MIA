@@ -147,32 +147,40 @@ class AddEditBillDialog(QDialog):
 
     @property
     def entered_name(self) -> str:
+        """The name entered in the dialog (kept when OK is pressed)."""
         return self._name
 
     @property
     def entered_amount(self) -> float:
+        """The amount entered in the dialog (kept when OK is pressed)."""
         return self._amount
 
     @property
     def entered_category(self) -> str:
+        """The category entered in the dialog (kept when OK is pressed)."""
         return self._category
 
     @property
     def entered_due_date(self) -> str:
+        """The due date entered in the dialog (kept when OK is pressed)."""
         return self._due_date
 
     @property
     def entered_recurrence(self) -> Optional[str]:
+        """The recurrence entered in the dialog (kept when OK is pressed)."""
         return self._recurrence
 
     @property
     def entered_tax_relevant(self) -> bool:
+        """The tax relevant entered in the dialog (kept when OK is pressed)."""
         return self._tax_relevant
 
     @property
     def entered_entity_id(self) -> str:
+        """The entity id entered in the dialog (kept when OK is pressed)."""
         return self._entity_id
 
     @property
     def entered_notes(self) -> str:
+        """The notes entered in the dialog (kept when OK is pressed)."""
         return self._notes

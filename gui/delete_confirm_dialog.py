@@ -24,7 +24,9 @@ from PySide6.QtWidgets import (
 
 
 class DeleteConfirmDialog(QDialog):
+    """Confirming a permanent delete by typing the item's name exactly: OK stays off until it matches."""
     def __init__(self, item_name: str, is_directory: bool, parent=None) -> None:
+        """Says what will be deleted (a folder and everything in it, or an item) and asks for its name to be typed."""
         super().__init__(parent)
         self.setWindowTitle("Confirm Delete")
         self.setFixedSize(420, 220)
@@ -56,4 +58,5 @@ class DeleteConfirmDialog(QDialog):
         layout.addWidget(self._buttons)
 
     def _on_text_changed(self, text: str) -> None:
+        """Turns OK on only while the text typed is exactly the item's name."""
         self._buttons.button(QDialogButtonBox.StandardButton.Ok).setEnabled(text == self._item_name)

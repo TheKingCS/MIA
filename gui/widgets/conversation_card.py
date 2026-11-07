@@ -52,6 +52,7 @@ class ConversationCard(QPushButton):
     delete_requested = Signal(str)  # emits conversation_id when ✕ is clicked
 
     def __init__(self, conversation: Conversation) -> None:
+        """The card for a conversation: its title and when, clickable to open, with a delete button."""
         super().__init__()
         self.setObjectName("ConversationCard")
         self.setToolTip(conversation.title)
@@ -98,6 +99,7 @@ class ConversationCard(QPushButton):
         layout.addWidget(delete_button)
 
     def set_selected(self, selected: bool) -> None:
+        """Lights the card when it's the conversation open (restyled at once)."""
         self.setProperty("selected", selected)
         self.style().unpolish(self)
         self.style().polish(self)

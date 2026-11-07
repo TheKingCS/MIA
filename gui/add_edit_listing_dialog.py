@@ -27,7 +27,9 @@ from core.region import symbol
 
 
 class AddListingDialog(QDialog):
+    """Adding a listing for a product: the platform, price, status and link."""
     def __init__(self, parent=None) -> None:
+        """The fields (platform, price in the person's currency, status, URL) with OK and Cancel."""
         super().__init__(parent)
         self.setWindowTitle("Add Listing")
         self.setFixedSize(340, 300)
@@ -70,6 +72,7 @@ class AddListingDialog(QDialog):
         self._url: str = ""
 
     def _on_accept(self) -> None:
+        """Keeps what was entered and closes; an empty platform is pointed out in its box instead."""
         platform = self.platform_edit.text().strip()
         if not platform:
             self.platform_edit.setPlaceholderText("Platform can't be empty!")
@@ -83,16 +86,20 @@ class AddListingDialog(QDialog):
 
     @property
     def entered_platform(self) -> str:
+        """The platform entered in the dialog (kept when OK is pressed)."""
         return self._platform
 
     @property
     def entered_price(self) -> float:
+        """The price entered in the dialog (kept when OK is pressed)."""
         return self._price
 
     @property
     def entered_status(self) -> str:
+        """The status entered in the dialog (kept when OK is pressed)."""
         return self._status
 
     @property
     def entered_url(self) -> str:
+        """The url entered in the dialog (kept when OK is pressed)."""
         return self._url

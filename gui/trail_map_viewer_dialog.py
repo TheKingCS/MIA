@@ -35,7 +35,9 @@ from core.trail_map_library import TrailMap
 
 
 class TrailMapViewerDialog(QDialog):
+    """Viewing a trail map PDF: every page, scrolling, with its park and state."""
     def __init__(self, trail_map: TrailMap, file_path: Path, parent=None) -> None:
+        """Renders the PDF's pages into a scroll area, titled with the park, and Close."""
         super().__init__(parent)
         self.setWindowTitle(f"{trail_map.park_name} — Trail Map")
         self.resize(720, 860)

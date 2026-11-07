@@ -27,7 +27,9 @@ from PySide6.QtWidgets import (
 
 
 class AddRevenueDialog(QDialog):
+    """Adding revenue to the Workshop ledger: amount, description and notes."""
     def __init__(self, parent=None) -> None:
+        """The fields (amount in the person's currency, description, notes) with OK and Cancel."""
         super().__init__(parent)
         self.setWindowTitle("Add Revenue")
         self.setFixedSize(340, 260)
@@ -64,6 +66,7 @@ class AddRevenueDialog(QDialog):
         self._notes: str = ""
 
     def _on_accept(self) -> None:
+        """Keeps what was entered and closes."""
         self._amount = self.amount_spin.value()
         self._description = self.description_edit.text().strip()
         self._notes = self.notes_edit.text().strip()
@@ -71,12 +74,15 @@ class AddRevenueDialog(QDialog):
 
     @property
     def entered_amount(self) -> float:
+        """The amount entered in the dialog (kept when OK is pressed)."""
         return self._amount
 
     @property
     def entered_description(self) -> str:
+        """The description entered in the dialog (kept when OK is pressed)."""
         return self._description
 
     @property
     def entered_notes(self) -> str:
+        """The notes entered in the dialog (kept when OK is pressed)."""
         return self._notes

@@ -297,36 +297,45 @@ class AddEditAssetDialog(QDialog):
 
     @property
     def entered_name(self) -> str:
+        """The name entered in the dialog (kept when OK is pressed)."""
         return self._name
 
     @property
     def entered_category(self) -> str:
+        """The category entered in the dialog (kept when OK is pressed)."""
         return self._category
 
     @property
     def entered_notes(self) -> str:
+        """The notes entered in the dialog (kept when OK is pressed)."""
         return self._notes
 
     @property
     def entered_purchase_date(self) -> str:
+        """The purchase date entered in the dialog (kept when OK is pressed)."""
         return self._purchase_date
 
     @property
     def entered_serial_number(self) -> str:
+        """The serial number entered in the dialog (kept when OK is pressed)."""
         return self._serial_number
 
     @property
     def entered_manufacturer(self) -> str:
+        """The manufacturer entered in the dialog (kept when OK is pressed)."""
         return self._manufacturer
 
     @property
     def entered_model(self) -> str:
+        """The model entered in the dialog (kept when OK is pressed)."""
         return self._model
 
     @property
     def entered_purchase_price(self) -> float:
+        """The purchase price entered in the dialog (kept when OK is pressed)."""
         return self._purchase_price
 
     @property
     def entered_warranty_until(self) -> str:
+        """The warranty until entered in the dialog (kept when OK is pressed)."""
         return self._warranty_until

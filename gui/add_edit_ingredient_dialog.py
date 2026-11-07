@@ -90,16 +90,20 @@ class AddEditIngredientDialog(QDialog):
 
     @property
     def entered_name(self) -> str:
+        """The name entered in the dialog (kept when OK is pressed)."""
         return self._name
 
     @property
     def entered_quantity(self) -> float:
+        """The quantity entered in the dialog (kept when OK is pressed)."""
         return self._quantity
 
     @property
     def entered_unit(self) -> str:
+        """The unit entered in the dialog (kept when OK is pressed)."""
         return self._unit
 
     @property
     def entered_notes(self) -> str:
+        """The notes entered in the dialog (kept when OK is pressed)."""
         return self._notes

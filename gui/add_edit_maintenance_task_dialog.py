@@ -311,48 +311,60 @@ class AddEditMaintenanceTaskDialog(QDialog):
 
     @property
     def entered_asset_id(self) -> str:
+        """The asset id entered in the dialog (kept when OK is pressed)."""
         return self._asset_id
 
     @property
     def entered_title(self) -> str:
+        """The title entered in the dialog (kept when OK is pressed)."""
         return self._title
 
     @property
     def entered_interval_days(self) -> Optional[int]:
+        """The interval days entered in the dialog (kept when OK is pressed)."""
         return self._interval_days
 
     @property
     def entered_notes(self) -> str:
+        """The notes entered in the dialog (kept when OK is pressed)."""
         return self._notes
 
     @property
     def entered_trigger_type(self) -> str:
+        """The trigger type entered in the dialog (kept when OK is pressed)."""
         return self._trigger_type
 
     @property
     def entered_meter_unit(self) -> str:
+        """The meter unit entered in the dialog (kept when OK is pressed)."""
         return self._meter_unit
 
     @property
     def entered_meter_interval(self) -> Optional[float]:
+        """The meter interval entered in the dialog (kept when OK is pressed)."""
         return self._meter_interval
 
     @property
     def entered_threshold_value(self) -> Optional[float]:
+        """The threshold value entered in the dialog (kept when OK is pressed)."""
         return self._threshold_value
 
     @property
     def entered_threshold_direction(self) -> str:
+        """The threshold direction entered in the dialog (kept when OK is pressed)."""
         return self._threshold_direction
 
     @property
     def entered_auto_schedule(self) -> bool:
+        """The auto schedule entered in the dialog (kept when OK is pressed)."""
         return self._auto_schedule
 
     @property
     def entered_priority(self) -> str:
+        """The priority entered in the dialog (kept when OK is pressed)."""
         return self._priority
 
     @property
     def entered_tracks_lifetime_usage(self) -> bool:
+        """The tracks lifetime usage entered in the dialog (kept when OK is pressed)."""
         return self._tracks_lifetime_usage

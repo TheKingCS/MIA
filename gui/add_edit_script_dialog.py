@@ -92,16 +92,20 @@ class AddEditScriptDialog(QDialog):
 
     @property
     def entered_name(self) -> str:
+        """The name entered in the dialog (kept when OK is pressed)."""
         return self._name
 
     @property
     def entered_category(self) -> str:
+        """The category entered in the dialog (kept when OK is pressed)."""
         return self._category
 
     @property
     def entered_interpreter(self) -> str:
+        """The interpreter entered in the dialog (kept when OK is pressed)."""
         return self._interpreter
 
     @property
     def entered_content(self) -> str:
+        """The content entered in the dialog (kept when OK is pressed)."""
         return self._content

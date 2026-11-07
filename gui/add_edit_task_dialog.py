@@ -98,16 +98,20 @@ class AddEditTaskDialog(QDialog):
 
     @property
     def entered_title(self) -> str:
+        """The title entered in the dialog (kept when OK is pressed)."""
         return self._title
 
     @property
     def entered_done(self) -> bool:
+        """The done entered in the dialog (kept when OK is pressed)."""
         return self._done
 
     @property
     def entered_due_date(self) -> str:
+        """The due date entered in the dialog (kept when OK is pressed)."""
         return self._due_date
 
     @property
     def entered_notes(self) -> str:
+        """The notes entered in the dialog (kept when OK is pressed)."""
         return self._notes

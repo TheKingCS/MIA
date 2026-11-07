@@ -134,20 +134,25 @@ class AddEditEventDialog(QDialog):
 
     @property
     def entered_title(self) -> str:
+        """The title entered in the dialog (kept when OK is pressed)."""
         return self._title
 
     @property
     def entered_date(self) -> str:
+        """The date entered in the dialog (kept when OK is pressed)."""
         return self._date
 
     @property
     def entered_time(self) -> Optional[str]:
+        """The time entered in the dialog (kept when OK is pressed)."""
         return self._time
 
     @property
     def entered_notes(self) -> str:
+        """The notes entered in the dialog (kept when OK is pressed)."""
         return self._notes
 
     @property
     def entered_recurrence(self) -> Optional[str]:
+        """The recurrence entered in the dialog (kept when OK is pressed)."""
         return self._recurrence

@@ -26,7 +26,9 @@ from core.region import symbol
 
 
 class AddExpenseDialog(QDialog):
+    """Adding a shop expense to the Workshop ledger: amount, category, description and notes."""
     def __init__(self, parent=None) -> None:
+        """The fields (amount in the person's currency, category, description, notes) with OK and Cancel."""
         super().__init__(parent)
         self.setWindowTitle("Add Expense")
         self.setFixedSize(340, 300)
@@ -69,6 +71,7 @@ class AddExpenseDialog(QDialog):
         self._notes: str = ""
 
     def _on_accept(self) -> None:
+        """Keeps what was entered and closes."""
         self._amount = self.amount_spin.value()
         self._category = self.category_combo.currentText()
         self._description = self.description_edit.text().strip()
@@ -77,16 +80,20 @@ class AddExpenseDialog(QDialog):
 
     @property
     def entered_amount(self) -> float:
+        """The amount entered in the dialog (kept when OK is pressed)."""
         return self._amount
 
     @property
     def entered_category(self) -> str:
+        """The category entered in the dialog (kept when OK is pressed)."""
         return self._category
 
     @property
     def entered_description(self) -> str:
+        """The description entered in the dialog (kept when OK is pressed)."""
         return self._description
 
     @property
     def entered_notes(self) -> str:
+        """The notes entered in the dialog (kept when OK is pressed)."""
         return self._notes

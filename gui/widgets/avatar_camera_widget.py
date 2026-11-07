@@ -53,6 +53,7 @@ class AvatarCameraWidget(QWidget):
     release whatever device id it's given."""
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:
+        """A video area with its placeholder message, nothing playing yet."""
         super().__init__(parent)
         self._camera: Optional[QCamera] = None
         self._capture_session: Optional[QMediaCaptureSession] = None
@@ -82,6 +83,7 @@ class AvatarCameraWidget(QWidget):
         self._video_widget.hide()
 
     def show_not_selected(self) -> None:
+        """Stops the camera and says none is chosen."""
         self.stop()
         self._placeholder.setText(_PLACEHOLDER_NOT_SELECTED)
         self._placeholder.show()
@@ -124,5 +126,6 @@ class AvatarCameraWidget(QWidget):
         self._capture_session = None
 
     def _on_error(self, error, error_string: str) -> None:  # noqa: ANN001 - QCamera.Error enum
+        """Logs the camera's error and shows it in the placeholder."""
         log.warning("Companion avatar camera error: %s", error_string)
         self.show_unavailable(f"{_PLACEHOLDER_ERROR_PREFIX}{error_string}")

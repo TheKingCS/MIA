@@ -133,24 +133,30 @@ class AddEditProjectDialog(QDialog):
 
     @property
     def entered_name(self) -> str:
+        """The name entered in the dialog (kept when OK is pressed)."""
         return self._name
 
     @property
     def entered_status(self) -> str:
+        """The status entered in the dialog (kept when OK is pressed)."""
         return self._status
 
     @property
     def entered_intent_id(self) -> Optional[str]:
+        """The intent id entered in the dialog (kept when OK is pressed)."""
         return self._intent_id
 
     @property
     def entered_due_date(self) -> str:
+        """The due date entered in the dialog (kept when OK is pressed)."""
         return self._due_date
 
     @property
     def entered_description(self) -> str:
+        """The description entered in the dialog (kept when OK is pressed)."""
         return self._description
 
     @property
     def entered_budget(self) -> float:
+        """The budget entered in the dialog (kept when OK is pressed)."""
         return self._budget

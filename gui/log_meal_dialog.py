@@ -28,7 +28,9 @@ _ISO_DATE_FORMAT = "yyyy-MM-dd"
 
 
 class LogMealDialog(QDialog):
+    """Logging a meal: which recipe, the day and notes."""
     def __init__(self, parent=None, recipes: Optional[list] = None) -> None:
+        """The fields (recipe from the list given, date, notes) with OK and Cancel."""
         super().__init__(parent)
         self.setWindowTitle("Log a Meal")
         self.setFixedSize(340, 260)
@@ -65,6 +67,7 @@ class LogMealDialog(QDialog):
         self._notes: str = ""
 
     def _on_accept(self) -> None:
+        """Keeps what was entered and closes; without a recipe picked nothing happens."""
         recipe_id = self.recipe_combo.currentData()
         if not recipe_id:
             return
@@ -75,12 +78,15 @@ class LogMealDialog(QDialog):
 
     @property
     def entered_recipe_id(self) -> str:
+        """The recipe id entered in the dialog (kept when OK is pressed)."""
         return self._recipe_id
 
     @property
     def entered_date(self) -> str:
+        """The date entered in the dialog (kept when OK is pressed)."""
         return self._date
 
     @property
     def entered_notes(self) -> str:
+        """The notes entered in the dialog (kept when OK is pressed)."""
         return self._notes

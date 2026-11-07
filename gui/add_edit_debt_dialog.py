@@ -169,36 +169,45 @@ class AddEditDebtDialog(QDialog):
 
     @property
     def entered_name(self) -> str:
+        """The name entered in the dialog (kept when OK is pressed)."""
         return self._name
 
     @property
     def entered_balance(self) -> float:
+        """The balance entered in the dialog (kept when OK is pressed)."""
         return self._balance
 
     @property
     def entered_interest_rate(self) -> float:
+        """The interest rate entered in the dialog (kept when OK is pressed)."""
         return self._interest_rate
 
     @property
     def entered_minimum_payment(self) -> float:
+        """The minimum payment entered in the dialog (kept when OK is pressed)."""
         return self._minimum_payment
 
     @property
     def entered_debt_type(self) -> str:
+        """The debt type entered in the dialog (kept when OK is pressed)."""
         return self._debt_type
 
     @property
     def entered_promo_apr(self) -> Optional[float]:
+        """The promo apr entered in the dialog (kept when OK is pressed)."""
         return self._promo_apr
 
     @property
     def entered_promo_expires_date(self) -> Optional[str]:
+        """The promo expires date entered in the dialog (kept when OK is pressed)."""
         return self._promo_expires_date
 
     @property
     def entered_entity_id(self) -> str:
+        """The entity id entered in the dialog (kept when OK is pressed)."""
         return self._entity_id
 
     @property
     def entered_notes(self) -> str:
+        """The notes entered in the dialog (kept when OK is pressed)."""
         return self._notes

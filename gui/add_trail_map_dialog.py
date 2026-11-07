@@ -109,10 +109,12 @@ class AddTrailMapDialog(QDialog):
 
     @property
     def entered_park_name(self) -> str:
+        """The park name entered in the dialog (kept when OK is pressed)."""
         return self._park_name
 
     @property
     def entered_state(self) -> str:
+        """The state entered in the dialog (kept when OK is pressed)."""
         return self._state
 
     @property

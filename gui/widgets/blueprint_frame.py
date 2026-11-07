@@ -51,10 +51,12 @@ class BlueprintFrame(QFrame):
     background — see the design handoff's own color table."""
 
     def __init__(self, parent: Optional[QWidget] = None, accent: bool = False) -> None:
+        """The frame, in the accent ink when asked."""
         super().__init__(parent)
         self._ink = _ACCENT_INK_COLOR if accent else _INK_COLOR
 
     def paintEvent(self, event) -> None:  # noqa: N802 (Qt override signature)
+        """Draws the frame, then a small mark in each corner like a blueprint's registration marks."""
         super().paintEvent(event)
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)

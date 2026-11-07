@@ -85,4 +85,5 @@ class ScheduleTaskDialog(QDialog):
 
     @property
     def entered_date(self) -> str:
+        """The date entered in the dialog (kept when OK is pressed)."""
         return self._date

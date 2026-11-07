@@ -29,7 +29,9 @@ _ISO_DATE_FORMAT = "yyyy-MM-dd"
 
 
 class RecordDebtPaymentDialog(QDialog):
+    """Recording a payment on a debt: the day paid and the amount."""
     def __init__(self, parent=None, default_amount: float = 0.0) -> None:
+        """The fields (paid on, amount in the person's currency, the minimum to start) with OK and Cancel."""
         super().__init__(parent)
         self.setWindowTitle("Record Debt Payment")
         self.setFixedSize(320, 220)
@@ -61,14 +63,17 @@ class RecordDebtPaymentDialog(QDialog):
         self._amount: float = 0.0
 
     def _on_accept(self) -> None:
+        """Keeps the date and amount and closes."""
         self._paid_date = self.paid_date_edit.date().toString(_ISO_DATE_FORMAT)
         self._amount = self.amount_spin.value()
         self.accept()
 
     @property
     def entered_paid_date(self) -> str:
+        """The paid date entered in the dialog (kept when OK is pressed)."""
         return self._paid_date
 
     @property
     def entered_amount(self) -> float:
+        """The amount entered in the dialog (kept when OK is pressed)."""
         return self._amount

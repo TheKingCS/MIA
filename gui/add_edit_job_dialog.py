@@ -104,20 +104,25 @@ class AddEditJobDialog(QDialog):
 
     @property
     def entered_name(self) -> str:
+        """The name entered in the dialog (kept when OK is pressed)."""
         return self._name
 
     @property
     def entered_description(self) -> str:
+        """The description entered in the dialog (kept when OK is pressed)."""
         return self._description
 
     @property
     def entered_status(self) -> str:
+        """The status entered in the dialog (kept when OK is pressed)."""
         return self._status
 
     @property
     def entered_labor_hours(self) -> float:
+        """The labor hours entered in the dialog (kept when OK is pressed)."""
         return self._labor_hours
 
     @property
     def entered_notes(self) -> str:
+        """The notes entered in the dialog (kept when OK is pressed)."""
         return self._notes

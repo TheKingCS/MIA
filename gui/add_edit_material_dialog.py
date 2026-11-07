@@ -125,32 +125,40 @@ class AddEditMaterialDialog(QDialog):
 
     @property
     def entered_name(self) -> str:
+        """The name entered in the dialog (kept when OK is pressed)."""
         return self._name
 
     @property
     def entered_unit(self) -> str:
+        """The unit entered in the dialog (kept when OK is pressed)."""
         return self._unit
 
     @property
     def entered_unit_cost(self) -> float:
+        """The unit cost entered in the dialog (kept when OK is pressed)."""
         return self._unit_cost
 
     @property
     def entered_quantity_on_hand(self) -> float:
+        """The quantity on hand entered in the dialog (kept when OK is pressed)."""
         return self._quantity_on_hand
 
     @property
     def entered_reorder_threshold(self) -> float:
+        """The reorder threshold entered in the dialog (kept when OK is pressed)."""
         return self._reorder_threshold
 
     @property
     def entered_supplier(self) -> str:
+        """The supplier entered in the dialog (kept when OK is pressed)."""
         return self._supplier
 
     @property
     def entered_location(self) -> str:
+        """The location entered in the dialog (kept when OK is pressed)."""
         return self._location
 
     @property
     def entered_notes(self) -> str:
+        """The notes entered in the dialog (kept when OK is pressed)."""
         return self._notes

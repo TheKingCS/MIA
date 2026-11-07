@@ -45,6 +45,7 @@ def build_sensor_chart_view(
     threshold_value: Optional[float] = None,
     threshold_direction: str = "below",
 ) -> Optional[QChartView]:
+    """A chart of a sensor's readings in time order, with its threshold as a dashed line when it has one; None without readings."""
     if not readings:
         return None
 

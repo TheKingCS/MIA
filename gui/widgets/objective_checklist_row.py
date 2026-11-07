@@ -28,10 +28,12 @@ from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QWidget
 
 
 class ObjectiveChecklistRow(QWidget):
+    """One objective in a mission: a tick (clickable for a single-step objective), its description, +1 for a multi-step one, and delete."""
     increment_requested = Signal(int)  # emits this objective's index
     delete_requested = Signal(int)
 
     def __init__(self, index: int, description: str, is_complete: bool, can_increment: bool, is_multi_step: bool = False) -> None:
+        """The row for an objective at its index: the tick on only when it can be done by hand and isn't multi-step, +1 for multi-step ones not done, and delete; each emits the index."""
         super().__init__()
         self._index = index
 

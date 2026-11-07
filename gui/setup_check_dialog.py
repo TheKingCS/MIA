@@ -18,7 +18,9 @@ _MARK = {OK: "✅", MISSING: "❌"}
 
 
 class SetupCheckDialog(QDialog):
+    """Check my setup: every check of this computer (model, voice, phone access...) with what's wrong and what to do, and Check again."""
     def __init__(self, context, parent=None, checks=None) -> None:
+        """The list of checks (run now unless given) and Check again."""
         super().__init__(parent)
         self.context = context
         self.setWindowTitle("Check my setup")
@@ -40,6 +42,7 @@ class SetupCheckDialog(QDialog):
         self._show(checks)
 
     def _show(self, checks) -> None:
+        """Runs the checks (a wait cursor while they run) and lists each with its mark, detail and fix (old rows removed first)."""
         while self.rows.count():
             widget = self.rows.takeAt(0).widget()
             if widget is not None:

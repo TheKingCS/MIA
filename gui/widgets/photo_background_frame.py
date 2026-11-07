@@ -41,13 +41,16 @@ _PLACEHOLDER_BOTTOM = QColor(7, 15, 13)
 
 
 class PhotoBackgroundFrame(QFrame):
+    """A header with a photo behind it (or a placeholder gradient), darkened toward the bottom so text on it reads."""
     def __init__(self, parent: Optional[QWidget] = None, pixmap_path: Optional[str] = None) -> None:
+        """The frame, with the photo given when there is one."""
         super().__init__(parent)
         self._pixmap: Optional[QPixmap] = QPixmap(pixmap_path) if pixmap_path else None
         if self._pixmap is not None and self._pixmap.isNull():
             self._pixmap = None
 
     def paintEvent(self, event) -> None:  # noqa: N802 (Qt override signature)
+        """Draws the photo scaled to cover and centred (or the placeholder gradient), then the darkening scrim."""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         rect = self.rect()

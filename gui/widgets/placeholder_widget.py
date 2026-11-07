@@ -16,6 +16,7 @@ from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget
 
 
 def build_placeholder_widget(title: str, description: str, icon: str) -> QWidget:
+    """A centred Coming soon page for an app not built yet: its icon, title and description."""
     widget = QWidget()
     layout = QVBoxLayout(widget)
     layout.setAlignment(Qt.AlignmentFlag.AlignCenter)

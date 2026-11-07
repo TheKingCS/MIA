@@ -114,28 +114,35 @@ class AddEditComponentDialog(QDialog):
 
     @property
     def entered_name(self) -> str:
+        """The name entered in the dialog (kept when OK is pressed)."""
         return self._name
 
     @property
     def entered_category(self) -> str:
+        """The category entered in the dialog (kept when OK is pressed)."""
         return self._category
 
     @property
     def entered_value(self) -> str:
+        """The value entered in the dialog (kept when OK is pressed)."""
         return self._value
 
     @property
     def entered_package(self) -> str:
+        """The package entered in the dialog (kept when OK is pressed)."""
         return self._package
 
     @property
     def entered_quantity(self) -> int:
+        """The quantity entered in the dialog (kept when OK is pressed)."""
         return self._quantity
 
     @property
     def entered_location(self) -> str:
+        """The location entered in the dialog (kept when OK is pressed)."""
         return self._location
 
     @property
     def entered_notes(self) -> str:
+        """The notes entered in the dialog (kept when OK is pressed)."""
         return self._notes

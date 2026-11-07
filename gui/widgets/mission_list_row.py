@@ -19,9 +19,11 @@ from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton
 
 
 class MissionListRow(QPushButton):
+    """One mission in a list: its icon, title and a tick when done; clicking it emits activated with its id."""
     activated = Signal(str)  # emits mission_id when clicked
 
     def __init__(self, mission_id: str, icon: str, title: str, completed: bool = False) -> None:
+        """The row for a mission (a tick when completed, an arrow to open)."""
         super().__init__()
         self.setObjectName("MissionListRow")
         self.setToolTip(f"View '{title}'")
@@ -57,6 +59,7 @@ class MissionListRow(QPushButton):
             layout.addWidget(chevron)
 
     def set_selected(self, selected: bool) -> None:
+        """Lights the row when it's the one selected (restyled at once)."""
         self.setProperty("selected", selected)
         self.style().unpolish(self)
         self.style().polish(self)

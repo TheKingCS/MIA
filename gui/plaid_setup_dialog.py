@@ -25,7 +25,9 @@ from core.plaid_manager import ENVIRONMENTS
 
 
 class PlaidSetupDialog(QDialog):
+    """Setting up Plaid: the client id and secret from the person's own Plaid dashboard, the environment, and a passphrase that encrypts them on disk."""
     def __init__(self, parent=None) -> None:
+        """The fields (client id, secret, environment, the new passphrase twice) and where the keys come from, with OK and Cancel."""
         super().__init__(parent)
         self.setWindowTitle("Set Up Plaid")
         self.setFixedSize(380, 380)
@@ -82,6 +84,7 @@ class PlaidSetupDialog(QDialog):
         self._passphrase: str = ""
 
     def _on_accept(self) -> None:
+        """Checks the id and secret are both there, a passphrase is given and the two match (saying which isn't), then keeps them and closes."""
         client_id = self.client_id_edit.text().strip()
         secret = self.secret_edit.text().strip()
         passphrase = self.passphrase_edit.text()
@@ -105,16 +108,20 @@ class PlaidSetupDialog(QDialog):
 
     @property
     def entered_client_id(self) -> str:
+        """The client id entered in the dialog (kept when OK is pressed)."""
         return self._client_id
 
     @property
     def entered_secret(self) -> str:
+        """The secret entered in the dialog (kept when OK is pressed)."""
         return self._secret
 
     @property
     def entered_environment(self) -> str:
+        """The environment entered in the dialog (kept when OK is pressed)."""
         return self._environment
 
     @property
     def entered_passphrase(self) -> str:
+        """The passphrase entered in the dialog (kept when OK is pressed)."""
         return self._passphrase

@@ -76,4 +76,5 @@ class PlaidConnectProgressDialog(QDialog):
 
     @property
     def entered_public_token(self) -> Optional[str]:
+        """The public token entered in the dialog."""
         return self._public_token

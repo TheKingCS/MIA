@@ -46,7 +46,9 @@ from core.device_framework import BlockDevice, flash_confirmation_matches
 
 
 class FlashConfirmDialog(QDialog):
+    """Confirming that a drive will be erased and flashed with an image: OK stays off until the device's name is typed, since it can't be undone."""
     def __init__(self, device: BlockDevice, image_path: str, image_size_display: str, parent=None) -> None:
+        """Says which device will be erased and with which image (and its size), and asks for the device name to be typed."""
         super().__init__(parent)
         self.setWindowTitle("Confirm Flash — This Cannot Be Undone")
         self.setMinimumSize(480, 320)
@@ -87,6 +89,7 @@ class FlashConfirmDialog(QDialog):
         layout.addWidget(self._buttons)
 
     def _on_text_changed(self, text: str) -> None:
+        """Turns OK on only while the text typed matches the device's name."""
         self._buttons.button(QDialogButtonBox.StandardButton.Ok).setEnabled(
             flash_confirmation_matches(text, self._device.name)
         )

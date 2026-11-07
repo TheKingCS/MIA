@@ -36,7 +36,9 @@ _MAX_TRAVEL = 48  # how far the orb can shift from home toward the mouse, at mos
 
 
 class FloatingOrbWidget(QPushButton):
+    """MIA's orb floating over the window, in the bottom-right corner unless moved."""
     def __init__(self, parent: QWidget) -> None:
+        """The orb at its fixed size."""
         super().__init__(parent)
         self.setObjectName("FloatingOrb")
         self.setFixedSize(_DIAMETER, _DIAMETER)
@@ -53,6 +55,7 @@ class FloatingOrbWidget(QPushButton):
         self.hide()
 
     def home_center(self) -> QPoint:
+        """Where the orb rests: the bottom-right corner of its parent, inside the margin."""
         parent = self.parentWidget()
         size = parent.size() if parent is not None else self.size()
         return QPoint(size.width() - _MARGIN - _DIAMETER // 2, size.height() - _MARGIN - _DIAMETER // 2)

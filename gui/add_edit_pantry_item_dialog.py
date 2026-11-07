@@ -127,24 +127,30 @@ class AddEditPantryItemDialog(QDialog):
 
     @property
     def entered_name(self) -> str:
+        """The name entered in the dialog (kept when OK is pressed)."""
         return self._name
 
     @property
     def entered_quantity(self) -> float:
+        """The quantity entered in the dialog (kept when OK is pressed)."""
         return self._quantity
 
     @property
     def entered_unit(self) -> str:
+        """The unit entered in the dialog (kept when OK is pressed)."""
         return self._unit
 
     @property
     def entered_category(self) -> str:
+        """The category entered in the dialog (kept when OK is pressed)."""
         return self._category
 
     @property
     def entered_expiration_date(self) -> str:
+        """The expiration date entered in the dialog (kept when OK is pressed)."""
         return self._expiration_date
 
     @property
     def entered_notes(self) -> str:
+        """The notes entered in the dialog (kept when OK is pressed)."""
         return self._notes

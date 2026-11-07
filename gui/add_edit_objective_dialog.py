@@ -45,7 +45,9 @@ _SHARED_ASSIGNEE_LABEL = "(Shared — anyone)"
 
 
 class AddEditObjectiveDialog(QDialog):
+    """Adding an objective to a mission: what to do, how it's measured, the target, and who it's for when the mission has participants."""
     def __init__(self, parent=None, participant_names_by_id: Optional[dict[str, str]] = None) -> None:
+        """The fields (description, metric, target, and Assign to only when there are participants) with OK and Cancel."""
         super().__init__(parent)
         self.setWindowTitle("New Objective")
         self.setFixedSize(360, 260 if not participant_names_by_id else 300)
@@ -91,6 +93,7 @@ class AddEditObjectiveDialog(QDialog):
         self._assignee_profile_id: Optional[str] = None
 
     def _on_accept(self) -> None:
+        """Keeps what was entered (and who it's assigned to, when that's offered) and closes; an empty description is pointed out in its box instead."""
         description = self.description_edit.text().strip()
         if not description:
             self.description_edit.setPlaceholderText("Description can't be empty!")
@@ -105,16 +108,20 @@ class AddEditObjectiveDialog(QDialog):
 
     @property
     def entered_description(self) -> str:
+        """The description entered in the dialog (kept when OK is pressed)."""
         return self._description
 
     @property
     def entered_metric_type(self) -> str:
+        """The metric type entered in the dialog (kept when OK is pressed)."""
         return self._metric_type
 
     @property
     def entered_target(self) -> float:
+        """The target entered in the dialog (kept when OK is pressed)."""
         return self._target
 
     @property
     def entered_assignee_profile_id(self) -> Optional[str]:
+        """The assignee profile id entered in the dialog (kept when OK is pressed)."""
         return self._assignee_profile_id

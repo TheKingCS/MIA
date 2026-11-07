@@ -32,7 +32,9 @@ from core.notification_manager import Notification
 
 
 class NotificationToast(QFrame):
+    """A notification shown briefly in the corner: its title and message styled by level, with a close button."""
     def __init__(self, parent, notification: Notification, duration_ms: int = 5000) -> None:
+        """The toast for a notification; it closes itself after duration_ms."""
         super().__init__(parent)
         self.setObjectName("NotificationCard")
         self.setProperty("level", notification.level)

@@ -112,12 +112,15 @@ class AddEditLessonDialog(QDialog):
 
     @property
     def entered_name(self) -> str:
+        """The name entered in the dialog (kept when OK is pressed)."""
         return self._name
 
     @property
     def entered_notes(self) -> str:
+        """The notes entered in the dialog (kept when OK is pressed)."""
         return self._notes
 
     @property
     def entered_skill_rewards(self) -> list[SkillWeight]:
+        """The skill rewards entered in the dialog (kept when OK is pressed)."""
         return self._skill_rewards

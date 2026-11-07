@@ -33,13 +33,16 @@ _KNOB_COLOR = QColor("#06131a")
 
 
 class ToggleSwitch(QAbstractButton):
+    """An on/off switch: a rounded track with a knob, a checkable button underneath."""
     def __init__(self, parent=None) -> None:
+        """The switch at its fixed size, checkable."""
         super().__init__(parent)
         self.setCheckable(True)
         self.setFixedSize(_WIDTH, _HEIGHT)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
 
     def paintEvent(self, event) -> None:  # noqa: N802 (Qt override signature)
+        """Draws the track (its on or off colour) and the knob at that end."""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setPen(Qt.PenStyle.NoPen)

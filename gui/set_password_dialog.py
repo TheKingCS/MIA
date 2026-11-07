@@ -75,6 +75,7 @@ class SetPasswordDialog(QDialog):
 
     @property
     def entered_wants_password(self) -> bool:
+        """The wants password entered in the dialog (kept when OK is pressed)."""
         return self._wants_password
 
     @property

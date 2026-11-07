@@ -105,20 +105,25 @@ class AddEditProductDialog(QDialog):
 
     @property
     def entered_name(self) -> str:
+        """The name entered in the dialog (kept when OK is pressed)."""
         return self._name
 
     @property
     def entered_description(self) -> str:
+        """The description entered in the dialog (kept when OK is pressed)."""
         return self._description
 
     @property
     def entered_quantity_in_stock(self) -> float:
+        """The quantity in stock entered in the dialog (kept when OK is pressed)."""
         return self._quantity_in_stock
 
     @property
     def entered_base_price(self) -> float:
+        """The base price entered in the dialog (kept when OK is pressed)."""
         return self._base_price
 
     @property
     def entered_notes(self) -> str:
+        """The notes entered in the dialog (kept when OK is pressed)."""
         return self._notes

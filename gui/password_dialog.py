@@ -24,7 +24,9 @@ from PySide6.QtWidgets import (
 
 
 class PasswordPromptDialog(QDialog):
+    """Asking for a password or passphrase (a profile's, a vault's), hidden as it's typed."""
     def __init__(self, profile_name: str, prompt: str = "Enter password for", parent=None) -> None:
+        """The prompt naming what it's for, and the hidden field, with OK and Cancel."""
         super().__init__(parent)
         self.setWindowTitle("Password Required")
         self.setFixedSize(340, 150)
@@ -46,6 +48,7 @@ class PasswordPromptDialog(QDialog):
 
     @property
     def entered_password(self) -> str:
+        """The password typed."""
         return self.password_edit.text()
 
 

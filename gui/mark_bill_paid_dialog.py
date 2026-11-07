@@ -75,8 +75,10 @@ class MarkBillPaidDialog(QDialog):
 
     @property
     def entered_paid_date(self) -> str:
+        """The paid date entered in the dialog (kept when OK is pressed)."""
         return self._paid_date
 
     @property
     def entered_amount(self) -> Optional[float]:
+        """The amount entered in the dialog (kept when OK is pressed)."""
         return self._amount

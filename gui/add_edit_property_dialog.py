@@ -214,56 +214,70 @@ class AddEditPropertyDialog(QDialog):
 
     @property
     def entered_name(self) -> str:
+        """The name entered in the dialog (kept when OK is pressed)."""
         return self._name
 
     @property
     def entered_property_type(self) -> str:
+        """The property type entered in the dialog (kept when OK is pressed)."""
         return self._property_type
 
     @property
     def entered_purchase_date(self) -> str:
+        """The purchase date entered in the dialog (kept when OK is pressed)."""
         return self._purchase_date
 
     @property
     def entered_purchase_price(self) -> float:
+        """The purchase price entered in the dialog (kept when OK is pressed)."""
         return self._purchase_price
 
     @property
     def entered_current_value(self) -> float:
+        """The current value entered in the dialog (kept when OK is pressed)."""
         return self._current_value
 
     @property
     def entered_mortgage_balance(self) -> float:
+        """The mortgage balance entered in the dialog (kept when OK is pressed)."""
         return self._mortgage_balance
 
     @property
     def entered_entity_id(self) -> str:
+        """The entity id entered in the dialog (kept when OK is pressed)."""
         return self._entity_id
 
     @property
     def entered_land_value(self) -> float:
+        """The land value entered in the dialog (kept when OK is pressed)."""
         return self._land_value
 
     @property
     def entered_placed_in_service_date(self) -> str:
+        """The placed in service date entered in the dialog (kept when OK is pressed)."""
         return self._placed_in_service_date
 
     @property
     def entered_original_loan_amount(self) -> float:
+        """The original loan amount entered in the dialog (kept when OK is pressed)."""
         return self._original_loan_amount
 
     @property
     def entered_interest_rate_pct(self) -> float:
+        """The interest rate pct entered in the dialog (kept when OK is pressed)."""
         return self._interest_rate_pct
 
     @property
     def entered_loan_term_months(self) -> int:
+        """The loan term months entered in the dialog (kept when OK is pressed)."""
         return self._loan_term_months
 
     @property
     def entered_loan_start_date(self) -> str:
+        """The loan start date entered in the dialog (kept when OK is pressed)."""
         return self._loan_start_date
 
     @property
     def entered_notes(self) -> str:
+        """The notes entered in the dialog (kept when OK is pressed)."""
         return self._notes

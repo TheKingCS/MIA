@@ -57,6 +57,7 @@ class ModuleButton(QPushButton):
     activated = Signal(str)  # emits the module_id when clicked
 
     def __init__(self, module: ModuleBase) -> None:
+        """A button for an app: its icon and name; clicking it emits activated with the module id."""
         super().__init__()
         self.setObjectName("ModuleButton")
         self.setToolTip(module.description or module.display_name)
@@ -123,4 +124,5 @@ class ModuleButton(QPushButton):
         self.setGraphicsEffect(shadow)
 
     def _on_clicked(self) -> None:
+        """Emits activated with this button's module id."""
         self.activated.emit(self._module_id)

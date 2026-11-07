@@ -21,7 +21,9 @@ from PySide6.QtWidgets import (
 
 
 class AddEditGroceryItemDialog(QDialog):
+    """Adding a grocery item: its name, quantity and unit."""
     def __init__(self, parent=None) -> None:
+        """The fields (name, quantity, unit) with OK and Cancel."""
         super().__init__(parent)
         self.setWindowTitle("Add Grocery Item")
         self.setFixedSize(340, 260)
@@ -56,6 +58,7 @@ class AddEditGroceryItemDialog(QDialog):
         self._unit: str = ""
 
     def _on_accept(self) -> None:
+        """Keeps what was entered and closes; an empty name is pointed out in its box instead."""
         name = self.name_edit.text().strip()
         if not name:
             self.name_edit.setPlaceholderText("Name can't be empty!")
@@ -68,12 +71,15 @@ class AddEditGroceryItemDialog(QDialog):
 
     @property
     def entered_name(self) -> str:
+        """The name entered in the dialog (kept when OK is pressed)."""
         return self._name
 
     @property
     def entered_quantity(self) -> float:
+        """The quantity entered in the dialog (kept when OK is pressed)."""
         return self._quantity
 
     @property
     def entered_unit(self) -> str:
+        """The unit entered in the dialog (kept when OK is pressed)."""
         return self._unit

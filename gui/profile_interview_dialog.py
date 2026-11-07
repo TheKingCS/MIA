@@ -19,7 +19,9 @@ from gui.widgets.interview_form import InterviewForm
 
 
 class ProfileInterviewDialog(QDialog):
+    """Tell MIA About You: the interview form for a profile, with Save and Skip for now."""
     def __init__(self, context, profile_name: str, parent=None) -> None:
+        """The interview form for this profile, with Save and Skip for now."""
         super().__init__(parent)
         self.setWindowTitle("Tell MIA About You")
         self.setFixedSize(420, 420)

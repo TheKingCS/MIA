@@ -22,7 +22,9 @@ from PySide6.QtWidgets import QDialog, QLabel, QPushButton, QVBoxLayout
 
 
 class EasterEggDialog(QDialog):
+    """The hidden easter egg: who made MIA, and a note for finding it."""
     def __init__(self, parent=None) -> None:
+        """The secret card with its one button."""
         super().__init__(parent)
         self.setWindowTitle("???")
         self.setMinimumWidth(380)

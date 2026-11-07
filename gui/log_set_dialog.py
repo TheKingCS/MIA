@@ -22,7 +22,9 @@ from PySide6.QtWidgets import (
 
 
 class LogSetDialog(QDialog):
+    """Logging one set of an exercise: reps and weight."""
     def __init__(self, parent=None, exercise_name: str = "") -> None:
+        """The fields (reps, weight), titled with the exercise when given, with OK and Cancel."""
         super().__init__(parent)
         self.setWindowTitle(f"Log Set — {exercise_name}" if exercise_name else "Log Set")
         self.setFixedSize(320, 240)
@@ -52,14 +54,17 @@ class LogSetDialog(QDialog):
         self._weight: float = 0.0
 
     def _on_accept(self) -> None:
+        """Keeps the reps and weight and closes."""
         self._reps = self.reps_spin.value()
         self._weight = self.weight_spin.value()
         self.accept()
 
     @property
     def entered_reps(self) -> int:
+        """The reps entered in the dialog (kept when OK is pressed)."""
         return self._reps
 
     @property
     def entered_weight(self) -> float:
+        """The weight entered in the dialog (kept when OK is pressed)."""
         return self._weight

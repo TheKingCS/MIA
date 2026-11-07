@@ -74,8 +74,10 @@ class MarkIncomeReceivedDialog(QDialog):
 
     @property
     def entered_received_date(self) -> str:
+        """The received date entered in the dialog (kept when OK is pressed)."""
         return self._received_date
 
     @property
     def entered_amount(self) -> Optional[float]:
+        """The amount entered in the dialog (kept when OK is pressed)."""
         return self._amount

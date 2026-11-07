@@ -35,6 +35,7 @@ from PySide6.QtWidgets import (
 
 
 class PickItemQuantityDialog(QDialog):
+    """Picking an item from a list and a quantity, and an amount when asked (consuming a material, producing a product, recording a sale)."""
     def __init__(
         self,
         parent=None,
@@ -45,6 +46,7 @@ class PickItemQuantityDialog(QDialog):
         include_amount: bool = False,
         amount_label: str = "",
     ) -> None:
+        """The fields: the item list, the quantity, and the amount when include_amount (labelled in the person's currency unless a label is given), with OK and Cancel."""
         super().__init__(parent)
         self.setWindowTitle(title)
         self.setFixedSize(340, 260 if include_amount else 200)
@@ -85,6 +87,7 @@ class PickItemQuantityDialog(QDialog):
         self._amount: float = 0.0
 
     def _on_accept(self) -> None:
+        """Keeps the item, quantity and (when asked) the amount, and closes."""
         self._item_id = self.item_combo.currentData()
         self._quantity = self.quantity_spin.value()
         if self._include_amount:
@@ -93,12 +96,15 @@ class PickItemQuantityDialog(QDialog):
 
     @property
     def entered_item_id(self) -> str:
+        """The item id entered in the dialog (kept when OK is pressed)."""
         return self._item_id
 
     @property
     def entered_quantity(self) -> float:
+        """The quantity entered in the dialog (kept when OK is pressed)."""
         return self._quantity
 
     @property
     def entered_amount(self) -> float:
+        """The amount entered in the dialog (kept when OK is pressed)."""
         return self._amount

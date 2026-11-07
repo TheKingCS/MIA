@@ -115,20 +115,25 @@ class AddEditPetDialog(QDialog):
 
     @property
     def entered_name(self) -> str:
+        """The name entered in the dialog (kept when OK is pressed)."""
         return self._name
 
     @property
     def entered_species(self) -> str:
+        """The species entered in the dialog (kept when OK is pressed)."""
         return self._species
 
     @property
     def entered_birthday(self) -> str:
+        """The birthday entered in the dialog (kept when OK is pressed)."""
         return self._birthday
 
     @property
     def entered_medical_notes(self) -> str:
+        """The medical notes entered in the dialog (kept when OK is pressed)."""
         return self._medical_notes
 
     @property
     def entered_notes(self) -> str:
+        """The notes entered in the dialog (kept when OK is pressed)."""
         return self._notes

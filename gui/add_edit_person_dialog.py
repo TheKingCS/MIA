@@ -131,28 +131,35 @@ class AddEditPersonDialog(QDialog):
 
     @property
     def entered_email(self) -> str:
+        """The email entered in the dialog (kept when OK is pressed)."""
         return self._email
 
     @property
     def entered_name(self) -> str:
+        """The name entered in the dialog (kept when OK is pressed)."""
         return self._name
 
     @property
     def entered_relationship(self) -> str:
+        """The relationship entered in the dialog (kept when OK is pressed)."""
         return self._relationship
 
     @property
     def entered_birthday(self) -> str:
+        """The birthday entered in the dialog (kept when OK is pressed)."""
         return self._birthday
 
     @property
     def entered_favorite_things(self) -> str:
+        """The favorite things entered in the dialog (kept when OK is pressed)."""
         return self._favorite_things
 
     @property
     def entered_gift_ideas(self) -> str:
+        """The gift ideas entered in the dialog (kept when OK is pressed)."""
         return self._gift_ideas
 
     @property
     def entered_notes(self) -> str:
+        """The notes entered in the dialog (kept when OK is pressed)."""
         return self._notes

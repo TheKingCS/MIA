@@ -125,6 +125,7 @@ class AddProfileDialog(QDialog):
 
     @property
     def entered_name(self) -> str:
+        """The name entered in the dialog (kept when OK is pressed)."""
         return self._name
 
     @property
@@ -133,6 +134,7 @@ class AddProfileDialog(QDialog):
 
     @property
     def entered_email(self) -> str:
+        """The email entered in the dialog (kept when OK is pressed)."""
         return self._email
 
     @property

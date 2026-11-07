@@ -17,7 +17,9 @@ from core.music_manager import Playlist
 
 
 class AddEditPlaylistDialog(QDialog):
+    """Naming a new playlist or renaming one."""
     def __init__(self, parent=None, playlist: Optional[Playlist] = None) -> None:
+        """The name field (the current name when renaming) with OK and Cancel."""
         super().__init__(parent)
         self.setWindowTitle("Rename Playlist" if playlist is not None else "New Playlist")
         self.setFixedSize(320, 130)
@@ -42,6 +44,7 @@ class AddEditPlaylistDialog(QDialog):
         self._name: str = ""
 
     def _on_accept(self) -> None:
+        """Keeps the name and closes; an empty name is pointed out in its box instead."""
         name = self.name_edit.text().strip()
         if not name:
             self.name_edit.setPlaceholderText("Name can't be empty!")
@@ -51,4 +54,5 @@ class AddEditPlaylistDialog(QDialog):
 
     @property
     def entered_name(self) -> str:
+        """The name entered in the dialog (kept when OK is pressed)."""
         return self._name

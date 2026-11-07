@@ -183,52 +183,65 @@ class AddEditRecipeDialog(QDialog):
 
     @property
     def entered_name(self) -> str:
+        """The name entered in the dialog (kept when OK is pressed)."""
         return self._name
 
     @property
     def entered_category(self) -> str:
+        """The category entered in the dialog (kept when OK is pressed)."""
         return self._category
 
     @property
     def entered_servings(self) -> int:
+        """The servings entered in the dialog (kept when OK is pressed)."""
         return self._servings
 
     @property
     def entered_prep_time_minutes(self) -> int:
+        """The prep time minutes entered in the dialog (kept when OK is pressed)."""
         return self._prep_time_minutes
 
     @property
     def entered_cook_time_minutes(self) -> int:
+        """The cook time minutes entered in the dialog (kept when OK is pressed)."""
         return self._cook_time_minutes
 
     @property
     def entered_instructions(self) -> str:
+        """The instructions entered in the dialog (kept when OK is pressed)."""
         return self._instructions
 
     @property
     def entered_calories_per_serving(self) -> Optional[float]:
+        """The calories per serving entered in the dialog (kept when OK is pressed)."""
         return self._calories_per_serving
 
     @property
     def entered_protein_g(self) -> Optional[float]:
+        """The protein g entered in the dialog (kept when OK is pressed)."""
         return self._protein_g
 
     @property
     def entered_carbs_g(self) -> Optional[float]:
+        """The carbs g entered in the dialog (kept when OK is pressed)."""
         return self._carbs_g
 
     @property
     def entered_fat_g(self) -> Optional[float]:
+        """The fat g entered in the dialog (kept when OK is pressed)."""
         return self._fat_g
 
     @property
     def entered_source(self) -> str:
+        """The source entered in the dialog (kept when OK is pressed)."""
         return self._source
 
     @property
     def entered_notes(self) -> str:
+        """The notes entered in the dialog (kept when OK is pressed)."""
         return self._notes
 
     @property
     def entered_locked(self) -> bool:
+        """The locked entered in the dialog (kept when OK is pressed)."""
         return self._locked

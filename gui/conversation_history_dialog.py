@@ -30,6 +30,7 @@ class ConversationHistoryDialog(QDialog):
     """`.selected_conversation_id` is set only if the user actually picked a row (None if dismissed)."""
 
     def __init__(self, context: AppContext, current_conversation_id: Optional[str], parent=None) -> None:
+        """Lists the conversations to pick from, the current one highlighted, or says there are none yet."""
         super().__init__(parent)
         self.setWindowTitle("Previous Conversations")
         self.resize(360, 480)
@@ -63,5 +64,6 @@ class ConversationHistoryDialog(QDialog):
         layout.addWidget(scroll)
 
     def _on_selected(self, conversation_id: str) -> None:
+        """Keeps the conversation picked and closes."""
         self.selected_conversation_id = conversation_id
         self.accept()

@@ -117,24 +117,30 @@ class AddEditIntentDialog(QDialog):
 
     @property
     def entered_name(self) -> str:
+        """The name entered in the dialog (kept when OK is pressed)."""
         return self._name
 
     @property
     def entered_status(self) -> str:
+        """The status entered in the dialog (kept when OK is pressed)."""
         return self._status
 
     @property
     def entered_description(self) -> str:
+        """The description entered in the dialog (kept when OK is pressed)."""
         return self._description
 
     @property
     def entered_primary(self) -> bool:
+        """The primary entered in the dialog (kept when OK is pressed)."""
         return self._primary
 
     @property
     def entered_serves_intent_id(self) -> Optional[str]:
+        """The serves intent id entered in the dialog (kept when OK is pressed)."""
         return self._serves_intent_id
 
     @property
     def entered_reason(self) -> str:
+        """The reason entered in the dialog (kept when OK is pressed)."""
         return self._reason

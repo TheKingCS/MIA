@@ -84,6 +84,7 @@ class PresenceWidget(QWidget):
     became `(1 - pulse_amplitude) + pulse_amplitude * sin(...)`."""
 
     def __init__(self, parent=None, diameter: int = 96, pulse_amplitude: float = 0.2) -> None:
+        """A presence orb of the size and pulse given, in its default state, animated by a timer."""
         super().__init__(parent)
         self.setFixedSize(diameter, diameter)
         self._phase = 0.0
@@ -115,6 +116,7 @@ class PresenceWidget(QWidget):
         self._timer.stop()
 
     def _tick(self) -> None:
+        """One animation step: the pulse moves on, the ring turns when the state rotates, and it repaints."""
         config = _STATE_CONFIG[self._state]
         self._phase += config["pulse_step"]
         if config["rotating"]:
@@ -122,6 +124,7 @@ class PresenceWidget(QWidget):
         self.update()
 
     def paintEvent(self, event) -> None:  # noqa: N802 (Qt override signature)
+        """Draws the orb in its state's colour: three soft rings and a solid core, their brightness pulsing."""
         config = _STATE_CONFIG[self._state]
         core_color = QColor(config["color"])
 
