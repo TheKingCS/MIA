@@ -75,6 +75,11 @@ PANTRY_CATEGORIES = [
 
 @dataclass
 class Recipe:
+    """One shared household recipe: what it is, servings and times, instructions, its ingredients
+    ([{name, quantity, unit, notes}]), nutrition per serving (None means not entered, never a made-up zero), source,
+    notes, its photo, and whether it's locked behind a mission reward (with who unlocked it and when). One object for
+    the whole household; each person's rating, favorite and notes live in RecipeUserStats.
+    """
     recipe_id: str
     name: str
     category: str = "Dinner"  # one of RECIPE_CATEGORIES
@@ -116,6 +121,7 @@ class Recipe:
     photo: str = ""
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in its JSON file."""
         return {
             "photo": self.photo,
             "recipe_id": self.recipe_id, "name": self.name, "category": self.category,
@@ -132,6 +138,7 @@ class Recipe:
 
     @staticmethod
     def from_dict(data: dict) -> "Recipe":
+        """A record from its saved dict; a missing field takes its default (a missing id gets a new one), so older files load."""
         return Recipe(
             recipe_id=data.get("recipe_id", uuid.uuid4().hex[:10]),
             name=data.get("name", ""),
@@ -157,6 +164,9 @@ class Recipe:
 
 @dataclass
 class PantryItem:
+    """One thing in the pantry: name, quantity and unit, category (PANTRY_CATEGORIES), expiration date ("" when not
+    tracked) and notes.
+    """
     item_id: str
     name: str
     quantity: float = 0.0
@@ -167,6 +177,7 @@ class PantryItem:
     updated_at: str = ""
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in its JSON file."""
         return {
             "item_id": self.item_id, "name": self.name, "quantity": self.quantity, "unit": self.unit,
             "category": self.category, "expiration_date": self.expiration_date,
@@ -175,6 +186,7 @@ class PantryItem:
 
     @staticmethod
     def from_dict(data: dict) -> "PantryItem":
+        """A record from its saved dict; a missing field takes its default (a missing id gets a new one), so older files load."""
         return PantryItem(
             item_id=data.get("item_id", uuid.uuid4().hex[:10]),
             name=data.get("name", ""),
@@ -189,6 +201,9 @@ class PantryItem:
 
 @dataclass
 class GroceryListItem:
+    """One line on the grocery list: name, quantity and unit, whether it's checked off, and the recipe it came from (""
+    when added by hand).
+    """
     item_id: str
     name: str
     quantity: float = 0.0
@@ -198,6 +213,7 @@ class GroceryListItem:
     added_at: str = ""
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in its JSON file."""
         return {
             "item_id": self.item_id, "name": self.name, "quantity": self.quantity, "unit": self.unit,
             "checked": self.checked, "source_recipe_id": self.source_recipe_id, "added_at": self.added_at,
@@ -205,6 +221,7 @@ class GroceryListItem:
 
     @staticmethod
     def from_dict(data: dict) -> "GroceryListItem":
+        """A record from its saved dict; a missing field takes its default (a missing id gets a new one), so older files load."""
         return GroceryListItem(
             item_id=data.get("item_id", uuid.uuid4().hex[:10]),
             name=data.get("name", ""),
@@ -218,6 +235,9 @@ class GroceryListItem:
 
 @dataclass
 class MealLogEntry:
+    """One time a recipe was made: the recipe, the date, notes, and who made it (the signed-in profile then; None counts
+    for everyone, as entries from before people were recorded do).
+    """
     entry_id: str
     recipe_id: str
     date: str
@@ -233,6 +253,7 @@ class MealLogEntry:
     profile_id: Optional[str] = None
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in its JSON file."""
         return {
             "entry_id": self.entry_id, "recipe_id": self.recipe_id, "date": self.date,
             "notes": self.notes, "profile_id": self.profile_id,
@@ -240,6 +261,7 @@ class MealLogEntry:
 
     @staticmethod
     def from_dict(data: dict) -> "MealLogEntry":
+        """A record from its saved dict; a missing field takes its default (a missing id gets a new one), so older files load."""
         return MealLogEntry(
             entry_id=data.get("entry_id", uuid.uuid4().hex[:10]),
             recipe_id=data.get("recipe_id", ""),
@@ -270,6 +292,7 @@ class RecipeUserStats:
     personal_notes: str = ""
 
     def to_dict(self) -> dict:
+        """The record as the plain dict saved in its JSON file."""
         return {
             "profile_id": self.profile_id, "recipe_id": self.recipe_id,
             "rating": self.rating, "favorite": self.favorite, "personal_notes": self.personal_notes,
@@ -277,6 +300,7 @@ class RecipeUserStats:
 
     @staticmethod
     def from_dict(data: dict) -> "RecipeUserStats":
+        """A record from its saved dict; a missing field takes its default (a missing id gets a new one), so older files load."""
         return RecipeUserStats(
             profile_id=data.get("profile_id", ""),
             recipe_id=data.get("recipe_id", ""),
@@ -369,8 +393,14 @@ def recipes_makeable_from_pantry(
 
 
 class KitchenManager:
+    """The household's kitchen store: recipes, pantry, grocery list, the meal log and each person's recipe ratings,
+    favorites and notes, one JSON file each in the household's folder (data/ by default). Every write goes through
+    atomic_write_text, so undo can restore it; logging a meal grants XP, completes the mission that unlocks that
+    recipe, and records a life event.
+    """
     def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
         # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        """Points at the household's files (data_dir, or data/ by default) and loads them."""
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._recipes_file = self.data_dir / "kitchen_recipes.json" if data_dir is not None else _RECIPES_FILE
         self._pantry_file = self.data_dir / "kitchen_pantry.json" if data_dir is not None else _PANTRY_FILE
@@ -390,6 +420,7 @@ class KitchenManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        """Reads all five files (undo calls this to reload after restoring one)."""
         self._recipes = self._load_file(self._recipes_file, Recipe)
         self._pantry = self._load_file(self._pantry_file, PantryItem)
         self._grocery_list = self._load_file(self._grocery_list_file, GroceryListItem)
@@ -397,6 +428,9 @@ class KitchenManager:
         self._recipe_user_stats = self._load_file(self._recipe_user_stats_file, RecipeUserStats)
 
     def _load_file(self, path: Path, cls) -> list:
+        """One file's records; a missing file is an empty list, a damaged one is logged, reported to the person
+        (notify_data_corruption) and starts empty rather than crashing.
+        """
         if not path.exists():
             return []
         try:
@@ -408,22 +442,28 @@ class KitchenManager:
             return []
 
     def _save_file(self, path: Path, records: list) -> None:
+        """Writes one file's records atomically (atomic_write_text)."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(path, json.dumps([r.to_dict() for r in records], indent=2), encoding="utf-8")
 
     def _save_recipes(self) -> None:
+        """Saves the recipes."""
         self._save_file(self._recipes_file, self._recipes)
 
     def _save_pantry(self) -> None:
+        """Saves the pantry."""
         self._save_file(self._pantry_file, self._pantry)
 
     def _save_grocery_list(self) -> None:
+        """Saves the grocery list."""
         self._save_file(self._grocery_list_file, self._grocery_list)
 
     def _save_meal_log(self) -> None:
+        """Saves the meal log."""
         self._save_file(self._meal_log_file, self._meal_log)
 
     def _save_recipe_user_stats(self) -> None:
+        """Saves each person's recipe ratings, favorites and notes."""
         self._save_file(self._recipe_user_stats_file, self._recipe_user_stats)
 
     # ------------------------------------------------------------------
@@ -446,6 +486,7 @@ class KitchenManager:
         notes: str = "",
         locked: bool = False,
     ) -> Recipe:
+        """Adds a recipe and saves it: an unknown category becomes Other, servings at least 1, times never negative."""
         recipe = Recipe(
             recipe_id=uuid.uuid4().hex[:10],
             name=name,
@@ -469,6 +510,7 @@ class KitchenManager:
         return recipe
 
     def update_recipe(self, recipe_id: str, **fields) -> Recipe:
+        """Changes a recipe's fields (ValueError for an unknown recipe or field), keeping the same limits as add_recipe."""
         recipe = self.get_recipe(recipe_id)
         if recipe is None:
             raise ValueError(f"No recipe with id '{recipe_id}'.")
@@ -485,16 +527,19 @@ class KitchenManager:
         return recipe
 
     def delete_recipe(self, recipe_id: str) -> None:
+        """Deletes a recipe."""
         self._recipes = [r for r in self._recipes if r.recipe_id != recipe_id]
         self._save_recipes()
 
     def get_recipe(self, recipe_id: str) -> Optional[Recipe]:
+        """The recipe with this id, or None."""
         for recipe in self._recipes:
             if recipe.recipe_id == recipe_id:
                 return recipe
         return None
 
     def all_recipes(self) -> list[Recipe]:
+        """Every recipe, by name."""
         return sorted(self._recipes, key=lambda r: r.name.lower())
 
     def unlock_recipe(self, recipe_id: str) -> Optional[Recipe]:
@@ -537,6 +582,7 @@ class KitchenManager:
     # ------------------------------------------------------------------
 
     def add_ingredient(self, recipe_id: str, name: str, quantity: float = 0.0, unit: str = "", notes: str = "") -> Recipe:
+        """Adds an ingredient to a recipe (quantity never negative)."""
         recipe = self.get_recipe(recipe_id)
         if recipe is None:
             raise ValueError(f"No recipe with id '{recipe_id}'.")
@@ -545,6 +591,7 @@ class KitchenManager:
         return recipe
 
     def remove_ingredient(self, recipe_id: str, index: int) -> Recipe:
+        """Removes a recipe's ingredient by its position (an index out of range changes nothing)."""
         recipe = self.get_recipe(recipe_id)
         if recipe is None:
             raise ValueError(f"No recipe with id '{recipe_id}'.")
@@ -561,6 +608,7 @@ class KitchenManager:
         self, name: str, quantity: float = 0.0, unit: str = "", category: str = "Pantry/Dry Goods",
         expiration_date: str = "", notes: str = "",
     ) -> PantryItem:
+        """Adds a pantry item: an unknown category becomes Other, quantity never negative."""
         item = PantryItem(
             item_id=uuid.uuid4().hex[:10],
             name=name,
@@ -577,6 +625,9 @@ class KitchenManager:
         return item
 
     def update_pantry_item(self, item_id: str, **fields) -> PantryItem:
+        """Changes a pantry item's fields (ValueError for an unknown item or field), with add's limits, and stamps
+        updated_at.
+        """
         item = self.get_pantry_item(item_id)
         if item is None:
             raise ValueError(f"No pantry item with id '{item_id}'.")
@@ -593,16 +644,19 @@ class KitchenManager:
         return item
 
     def delete_pantry_item(self, item_id: str) -> None:
+        """Deletes a pantry item."""
         self._pantry = [p for p in self._pantry if p.item_id != item_id]
         self._save_pantry()
 
     def get_pantry_item(self, item_id: str) -> Optional[PantryItem]:
+        """The pantry item with this id, or None."""
         for item in self._pantry:
             if item.item_id == item_id:
                 return item
         return None
 
     def all_pantry_items(self) -> list[PantryItem]:
+        """Every pantry item, by name."""
         return sorted(self._pantry, key=lambda p: p.name.lower())
 
     # ------------------------------------------------------------------
@@ -612,6 +666,7 @@ class KitchenManager:
     def add_grocery_item(
         self, name: str, quantity: float = 0.0, unit: str = "", source_recipe_id: str = "",
     ) -> GroceryListItem:
+        """Adds a line to the grocery list (from a recipe when source_recipe_id is given)."""
         item = GroceryListItem(
             item_id=uuid.uuid4().hex[:10],
             name=name,
@@ -625,26 +680,31 @@ class KitchenManager:
         return item
 
     def set_grocery_item_checked(self, item_id: str, checked: bool) -> None:
+        """Checks a grocery line off, or back on."""
         item = self.get_grocery_item(item_id)
         if item is not None:
             item.checked = checked
             self._save_grocery_list()
 
     def delete_grocery_item(self, item_id: str) -> None:
+        """Deletes a grocery line."""
         self._grocery_list = [g for g in self._grocery_list if g.item_id != item_id]
         self._save_grocery_list()
 
     def clear_checked_grocery_items(self) -> None:
+        """Removes every checked line from the grocery list."""
         self._grocery_list = [g for g in self._grocery_list if not g.checked]
         self._save_grocery_list()
 
     def get_grocery_item(self, item_id: str) -> Optional[GroceryListItem]:
+        """The grocery line with this id, or None."""
         for item in self._grocery_list:
             if item.item_id == item_id:
                 return item
         return None
 
     def all_grocery_items(self) -> list[GroceryListItem]:
+        """The grocery list in the order it was added."""
         return list(self._grocery_list)
 
     def add_missing_ingredients_to_grocery_list(self, recipe_id: str) -> list[GroceryListItem]:
@@ -678,6 +738,10 @@ class KitchenManager:
     # ------------------------------------------------------------------
 
     def log_meal(self, recipe_id: str, date_str: Optional[str] = None, notes: str = "") -> MealLogEntry:
+        """Records that a recipe was made (today unless a date is given) by whoever is signed in. It grants 5 XP toward
+        Nutrition, completes any active mission whose reward unlocks this recipe ("cook it to unlock it"), and records a
+        meal_logged life event.
+        """
         active_profile = self.context.profiles.get_active_profile() if self.context.profiles is not None else None
         entry = MealLogEntry(
             entry_id=uuid.uuid4().hex[:10],
@@ -727,10 +791,12 @@ class KitchenManager:
         return entry
 
     def delete_meal_log_entry(self, entry_id: str) -> None:
+        """Deletes a meal-log entry."""
         self._meal_log = [m for m in self._meal_log if m.entry_id != entry_id]
         self._save_meal_log()
 
     def all_meal_log_entries(self) -> list[MealLogEntry]:
+        """The meal log, newest first."""
         return sorted(self._meal_log, key=lambda m: m.date, reverse=True)
 
     def times_made(
@@ -774,6 +840,7 @@ class KitchenManager:
         return RecipeUserStats(profile_id=profile_id, recipe_id=recipe_id)
 
     def _get_or_create_recipe_user_stats(self, profile_id: str, recipe_id: str) -> RecipeUserStats:
+        """This person's stats for a recipe, made (unsaved) when they have none yet."""
         for stats in self._recipe_user_stats:
             if stats.profile_id == profile_id and stats.recipe_id == recipe_id:
                 return stats
@@ -782,6 +849,7 @@ class KitchenManager:
         return stats
 
     def set_recipe_rating(self, profile_id: str, recipe_id: str, rating: Optional[float]) -> RecipeUserStats:
+        """Sets this person's rating of a recipe (None clears it)."""
         stats = self._get_or_create_recipe_user_stats(profile_id, recipe_id)
         stats.rating = rating
         self._save_recipe_user_stats()
@@ -799,6 +867,9 @@ class KitchenManager:
     PHOTO_TYPES = (".jpg", ".jpeg", ".png", ".webp")
 
     def recipe_photo_path(self, recipe_id: str) -> Optional[Path]:
+        """The recipe's photo file in the kitchen's recipe_photos/ folder, or None when it has none or the file is gone
+        (only the file's own name is used, so a stored path can't point outside the folder).
+        """
         recipe = self.get_recipe(recipe_id)
         if recipe is None or not recipe.photo:
             return None
@@ -826,18 +897,21 @@ class KitchenManager:
         return name
 
     def set_recipe_favorite(self, profile_id: str, recipe_id: str, favorite: bool) -> RecipeUserStats:
+        """Stars or unstars a recipe for this person."""
         stats = self._get_or_create_recipe_user_stats(profile_id, recipe_id)
         stats.favorite = favorite
         self._save_recipe_user_stats()
         return stats
 
     def set_recipe_personal_notes(self, profile_id: str, recipe_id: str, personal_notes: str) -> RecipeUserStats:
+        """Sets this person's own notes on a recipe."""
         stats = self._get_or_create_recipe_user_stats(profile_id, recipe_id)
         stats.personal_notes = personal_notes
         self._save_recipe_user_stats()
         return stats
 
     def favorite_recipe_ids(self, profile_id: str) -> list[str]:
+        """The recipes this person has starred."""
         return [s.recipe_id for s in self._recipe_user_stats if s.profile_id == profile_id and s.favorite]
 
     # ------------------------------------------------------------------
@@ -845,4 +919,5 @@ class KitchenManager:
     # ------------------------------------------------------------------
 
     def recipes_makeable_now(self) -> list[tuple[Recipe, list[str]]]:
+        """Every recipe with what it's missing from the pantry, the ones that can be made now first."""
         return recipes_makeable_from_pantry(self.all_recipes(), self._pantry)

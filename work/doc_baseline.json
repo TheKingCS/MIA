@@ -157,7 +157,6 @@
   "core/journal_reflection.py": 4,
   "core/kitchen_actions.py": 27,
   "core/kitchen_blueprint.py": 2,
-  "core/kitchen_manager.py": 52,
   "core/lab_actions.py": 9,
   "core/ledger_manager.py": 26,
   "core/life_events.py": 9,
