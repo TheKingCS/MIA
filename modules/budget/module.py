@@ -254,12 +254,14 @@ def month_buckets(today: date, count: int = 12) -> list[tuple[str, str, str]]:
 
 
 class BudgetModule(ModuleBase):
+    """The Budget app (desktop): bills, income sources, income, expenses, debts (ranked by a payoff strategy), what builds and tools cost, a summary per business entity with budget targets and reports, twelve months of trends, and bank sync through Plaid. Each person can keep a private budget apart from the household's."""
     module_id = "budget"
     display_name = "Budget"
     description = "Household bills, income, expenses, and tax-relevant totals."
     icon = "\U0001F4B0"  # money bag
 
     def __init__(self, context) -> None:
+        """Nothing built yet: the tabs are made in get_widget(); the summary starts with no date range."""
         super().__init__(context)
         self._bill_filter_edit: Optional[QLineEdit] = None
         self._bill_list: Optional[QListWidget] = None
@@ -312,6 +314,7 @@ class BudgetModule(ModuleBase):
         return active.profile_id, personal.has_private_budget(active.profile_id), others
 
     def _refresh_budget_owner(self) -> None:
+        """The line saying whose budget this is (private, or the household's and who shares it) and the button to switch; hidden with no one signed in."""
         label = getattr(self, "_budget_owner_label", None)
         if label is None:
             return
@@ -331,6 +334,7 @@ class BudgetModule(ModuleBase):
             self._budget_owner_button.setText("Keep my money private...")
 
     def _on_toggle_private_budget(self) -> None:
+        """Switches the signed-in person between a private budget and the household's after asking (the private one is kept either way), then refreshes."""
         profile_id, private, others = self._private_budget_state()
         if profile_id is None:
             return
@@ -348,6 +352,7 @@ class BudgetModule(ModuleBase):
         self.refresh()
 
     def on_load(self) -> None:
+        """Registers the budget search provider (Ctrl+K)."""
         super().on_load()
         self.context.search.register_provider("budget", self._search)
 
@@ -364,6 +369,7 @@ class BudgetModule(ModuleBase):
         self._refresh_homestead()
 
     def get_widget(self) -> QWidget:
+        """The page: whose budget it is, then Bills, Income Sources, Income, Expenses, Debts, Builds & Tools, Summary, Trends and Bank Sync tabs."""
         widget = QWidget()
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(24, 24, 24, 24)
@@ -415,6 +421,7 @@ class BudgetModule(ModuleBase):
         return widget
 
     def _on_tab_changed(self, index: int) -> None:
+        """Refreshes the summary, targets, trends, debts and builds when the tab changes."""
         self._refresh_summary()
         self._refresh_budget_targets()
         self._refresh_trends_chart()
@@ -433,6 +440,7 @@ class BudgetModule(ModuleBase):
         }
 
     def _build_homestead_tab(self) -> QWidget:
+        """The Builds & Tools tab: what each build and tool has really cost, with Set Build Budget, Record Tool Purchase, Log Business Use and the Business Use Worksheet."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
         hint = QLabel(
@@ -474,6 +482,7 @@ class BudgetModule(ModuleBase):
         return tab
 
     def _refresh_homestead(self) -> None:
+        """Lists each build's and each tool's costs, or that there are none yet."""
         if not hasattr(self, "_builds_list"):
             return
         self._builds_list.clear()
@@ -492,6 +501,7 @@ class BudgetModule(ModuleBase):
                 self._tools_list.addItem("No tool costs yet.")
 
     def _on_set_build_budget(self) -> None:
+        """Sets a build's budget (the build picked, the amount asked); says to add a build first when there are none."""
         projects = self.context.projects.all_projects() if self.context.projects is not None else []
         if not projects:
             QMessageBox.information(None, "No Builds", "Add a build first (Toolbox → Projects), or tell MIA about one.")
@@ -507,6 +517,7 @@ class BudgetModule(ModuleBase):
             self._refresh_homestead()
 
     def _pick_tool(self, title: str):
+        """Asks which tool or piece of equipment (from Maintenance); None when cancelled or there are none."""
         assets = self.context.maintenance.all_assets() if self.context.maintenance is not None else []
         if not assets:
             QMessageBox.information(None, title, "Add the equipment in Maintenance first.")
@@ -516,6 +527,7 @@ class BudgetModule(ModuleBase):
         return assets[names.index(name)] if ok else None
 
     def _on_log_business_use(self) -> None:
+        """Logs business use of a tool: miles for a vehicle, else hours; who it was for, and which business when there are several."""
         if self.context.business_use is None:
             return
         asset = self._pick_tool("Log Business Use")
@@ -542,6 +554,7 @@ class BudgetModule(ModuleBase):
         QMessageBox.information(None, "Log Business Use", f"Logged {amount:g} business {unit} on the {asset.name}.")
 
     def _on_business_use_worksheet(self) -> None:
+        """Shows a tool's business-use worksheet for a tax year, with Export PDF and, for a vehicle, setting that year's standard mileage rate."""
         if self.context.business_use is None:
             return
         asset = self._pick_tool("Business Use Worksheet")
@@ -589,6 +602,7 @@ class BudgetModule(ModuleBase):
         dialog.exec()
 
     def _on_record_tool_purchase(self) -> None:
+        """Records a tool bought (name, price, and the build it was for, if any) as an expense tied to the tool."""
         if self.context.maintenance is None:
             return
         name, ok = QInputDialog.getText(None, "Record Tool Purchase", "Tool (e.g. 'DeWalt drill'):")
@@ -613,6 +627,7 @@ class BudgetModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_bills_tab(self) -> QWidget:
+        """The Bills tab: the filter, the bills, and Add, Edit, Mark Paid and Delete."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
@@ -647,6 +662,7 @@ class BudgetModule(ModuleBase):
         return tab
 
     def _refresh_bill_list(self) -> None:
+        """Lists the bills matching the filter (name or category) with when each is due; says when none match, or how to add the first."""
         query = self._bill_filter_edit.text().strip().lower()
         today = date.today()
         bills = self.context.budget.all_bills()
@@ -664,9 +680,11 @@ class BudgetModule(ModuleBase):
             add_empty_state_item(self._bill_list, message)
 
     def _selected_bill_id(self) -> Optional[str]:
+        """The selected bill's id, or None."""
         return selected_item_data(self._bill_list)
 
     def _on_add_bill(self) -> None:
+        """Adds a bill from the dialog."""
         dialog = AddEditBillDialog(entities=self.context.budget.all_business_entities())
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -684,6 +702,7 @@ class BudgetModule(ModuleBase):
         self._refresh_bill_list()
 
     def _on_edit_bill(self) -> None:
+        """Edits the selected bill in the dialog (asks for a selection first)."""
         bill_id = self._selected_bill_id()
         if bill_id is None:
             QMessageBox.information(None, "No Bill Selected", "Select a bill to edit.")
@@ -708,6 +727,7 @@ class BudgetModule(ModuleBase):
         self._refresh_bill_list()
 
     def _on_mark_bill_paid(self) -> None:
+        """Marks the selected bill paid (the date and amount asked, the bill's amount offered): an expense is recorded and its last-paid date moves."""
         bill_id = self._selected_bill_id()
         if bill_id is None:
             QMessageBox.information(None, "No Bill Selected", "Select a bill to mark paid.")
@@ -723,6 +743,7 @@ class BudgetModule(ModuleBase):
         self._refresh_expense_list()
 
     def _on_delete_bill(self) -> None:
+        """Deletes the selected bill after asking."""
         bill_id = self._selected_bill_id()
         if bill_id is None:
             QMessageBox.information(None, "No Bill Selected", "Select a bill to delete.")
@@ -749,6 +770,7 @@ class BudgetModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_income_sources_tab(self) -> QWidget:
+        """The Income Sources tab: the filter, the expected income, and Add, Edit, Mark Received and Delete."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
@@ -783,6 +805,7 @@ class BudgetModule(ModuleBase):
         return tab
 
     def _refresh_income_source_list(self) -> None:
+        """Lists the income sources matching the filter with when each is next due; says when none match, or how to add the first."""
         query = self._income_source_filter_edit.text().strip().lower()
         today = date.today()
         sources = self.context.budget.all_income_sources()
@@ -800,9 +823,11 @@ class BudgetModule(ModuleBase):
             add_empty_state_item(self._income_source_list, message)
 
     def _selected_income_source_id(self) -> Optional[str]:
+        """The selected income source's id, or None."""
         return selected_item_data(self._income_source_list)
 
     def _on_add_income_source(self) -> None:
+        """Adds an income source from the dialog."""
         dialog = AddEditIncomeSourceDialog(entities=self.context.budget.all_business_entities())
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -819,6 +844,7 @@ class BudgetModule(ModuleBase):
         self._refresh_income_source_list()
 
     def _on_edit_income_source(self) -> None:
+        """Edits the selected income source in the dialog (asks for a selection first)."""
         source_id = self._selected_income_source_id()
         if source_id is None:
             QMessageBox.information(None, "No Income Source Selected", "Select an income source to edit.")
@@ -842,6 +868,7 @@ class BudgetModule(ModuleBase):
         self._refresh_income_source_list()
 
     def _on_mark_income_received(self) -> None:
+        """Marks the selected income source received (the amount expected offered), recording the income."""
         source_id = self._selected_income_source_id()
         if source_id is None:
             QMessageBox.information(None, "No Income Source Selected", "Select an income source to mark received.")
@@ -859,6 +886,7 @@ class BudgetModule(ModuleBase):
         self._refresh_income_list()
 
     def _on_delete_income_source(self) -> None:
+        """Deletes the selected income source after asking."""
         source_id = self._selected_income_source_id()
         if source_id is None:
             QMessageBox.information(None, "No Income Source Selected", "Select an income source to delete.")
@@ -883,6 +911,7 @@ class BudgetModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_income_tab(self) -> QWidget:
+        """The Income tab: the income recorded, with Add, Edit and Delete."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
@@ -908,6 +937,7 @@ class BudgetModule(ModuleBase):
         return tab
 
     def _refresh_income_list(self) -> None:
+        """Lists every income entry, or how to add the first."""
         self._income_list.clear()
         for entry in self.context.budget.all_income():
             item = QListWidgetItem(format_income_row(entry))
@@ -917,9 +947,11 @@ class BudgetModule(ModuleBase):
             add_empty_state_item(self._income_list, "No income recorded yet — click Add Income to get started.")
 
     def _selected_income_id(self) -> Optional[str]:
+        """The selected income entry's id, or None."""
         return selected_item_data(self._income_list)
 
     def _on_add_income(self) -> None:
+        """Adds an income entry from the dialog."""
         dialog = AddEditIncomeDialog(entities=self.context.budget.all_business_entities())
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -936,6 +968,7 @@ class BudgetModule(ModuleBase):
         self._refresh_income_list()
 
     def _on_edit_income(self) -> None:
+        """Edits the selected income entry in the dialog (asks for a selection first)."""
         entry_id = self._selected_income_id()
         if entry_id is None:
             QMessageBox.information(None, "No Income Selected", "Select an income entry to edit.")
@@ -959,6 +992,7 @@ class BudgetModule(ModuleBase):
         self._refresh_income_list()
 
     def _on_delete_income(self) -> None:
+        """Deletes the selected income entry after asking."""
         entry_id = self._selected_income_id()
         if entry_id is None:
             QMessageBox.information(None, "No Income Selected", "Select an income entry to delete.")
@@ -982,6 +1016,7 @@ class BudgetModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_expenses_tab(self) -> QWidget:
+        """The Expenses tab: the expenses recorded, with Add, Edit and Delete."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
@@ -1007,6 +1042,7 @@ class BudgetModule(ModuleBase):
         return tab
 
     def _refresh_expense_list(self) -> None:
+        """Lists every expense entry, or how to add the first."""
         self._expense_list.clear()
         for entry in self.context.budget.all_expenses():
             item = QListWidgetItem(format_expense_row(entry))
@@ -1016,9 +1052,11 @@ class BudgetModule(ModuleBase):
             add_empty_state_item(self._expense_list, "No expenses recorded yet — click Add Expense to get started.")
 
     def _selected_expense_id(self) -> Optional[str]:
+        """The selected expense entry's id, or None."""
         return selected_item_data(self._expense_list)
 
     def _on_add_expense(self) -> None:
+        """Adds an expense from the dialog (it can be tied to a build or tool)."""
         dialog = AddEditExpenseDialog(entities=self.context.budget.all_business_entities(), **self._expense_link_choices())
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -1038,6 +1076,7 @@ class BudgetModule(ModuleBase):
         self._refresh_expense_list()
 
     def _on_edit_expense(self) -> None:
+        """Edits the selected expense in the dialog (asks for a selection first)."""
         entry_id = self._selected_expense_id()
         if entry_id is None:
             QMessageBox.information(None, "No Expense Selected", "Select an expense entry to edit.")
@@ -1064,6 +1103,7 @@ class BudgetModule(ModuleBase):
         self._refresh_expense_list()
 
     def _on_delete_expense(self) -> None:
+        """Deletes the selected expense entry after asking."""
         entry_id = self._selected_expense_id()
         if entry_id is None:
             QMessageBox.information(None, "No Expense Selected", "Select an expense entry to delete.")
@@ -1091,6 +1131,7 @@ class BudgetModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_debts_tab(self) -> QWidget:
+        """The Debts tab: the totals, the payoff strategy picker (hybrid to start), the debts in that order, and Add, Edit, Record Payment and Delete."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
@@ -1138,6 +1179,7 @@ class BudgetModule(ModuleBase):
         return tab
 
     def _refresh_debt_list(self) -> None:
+        """Lists the debts with their place in the chosen payoff strategy, and the totals: balance, weighted average APR and minimum payments a month (nothing before the tab exists)."""
         if self._debt_list is None or self._debt_strategy_combo is None:
             return  # not built yet — _on_tab_changed can fire before the Debts tab exists
         today = date.today()
@@ -1161,9 +1203,11 @@ class BudgetModule(ModuleBase):
         )
 
     def _selected_debt_id(self) -> Optional[str]:
+        """The selected debt's id, or None."""
         return selected_item_data(self._debt_list)
 
     def _on_add_debt(self) -> None:
+        """Adds a debt from the dialog."""
         dialog = AddEditDebtDialog(entities=self.context.budget.all_business_entities())
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -1182,6 +1226,7 @@ class BudgetModule(ModuleBase):
         self._refresh_debt_list()
 
     def _on_edit_debt(self) -> None:
+        """Edits the selected debt in the dialog (asks for a selection first)."""
         debt_id = self._selected_debt_id()
         if debt_id is None:
             QMessageBox.information(None, "No Debt Selected", "Select a debt to edit.")
@@ -1207,6 +1252,7 @@ class BudgetModule(ModuleBase):
         self._refresh_debt_list()
 
     def _on_record_debt_payment(self) -> None:
+        """Records a payment on the selected debt (its minimum offered): an expense, and the balance goes down."""
         debt_id = self._selected_debt_id()
         if debt_id is None:
             QMessageBox.information(None, "No Debt Selected", "Select a debt to record a payment against.")
@@ -1222,6 +1268,7 @@ class BudgetModule(ModuleBase):
         self._refresh_expense_list()
 
     def _on_delete_debt(self) -> None:
+        """Deletes the selected debt after asking."""
         debt_id = self._selected_debt_id()
         if debt_id is None:
             QMessageBox.information(None, "No Debt Selected", "Select a debt to delete.")
@@ -1249,6 +1296,7 @@ class BudgetModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_summary_tab(self) -> QWidget:
+        """The Summary tab: This Month, This Year and All Time; the entity picker and Manage Entities; income, expenses, net, tax-relevant totals and debt; the month's budget targets; and the business and consolidated report exports."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
@@ -1316,6 +1364,7 @@ class BudgetModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_trends_tab(self) -> QWidget:
+        """The Trends tab: the entity picker, the chart, and the year's net cash flow."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
@@ -1339,6 +1388,7 @@ class BudgetModule(ModuleBase):
         return tab
 
     def _refresh_trends_chart(self) -> None:
+        """Charts income against expenses for each of the last 12 months (for the entity picked) and the net over them."""
         entity_id = self._trends_entity_combo.currentData()
         buckets = month_buckets(date.today(), count=12)
 
@@ -1424,6 +1474,7 @@ class BudgetModule(ModuleBase):
         return self._budget_targets_group
 
     def _refresh_budget_targets(self) -> None:
+        """Fills the budget targets for the entity picked: each category's monthly target and what's actually been spent this month."""
         entity_id = self._budget_target_entity_id()
         title = "Budget Targets (this month)"
         if entity_id:
@@ -1446,6 +1497,7 @@ class BudgetModule(ModuleBase):
             self._budget_target_actual_labels[category].setText(f"actual: {money(actual_by_category.get(category, 0.0), ',.2f')}")
 
     def _on_budget_target_changed(self, category: str) -> None:
+        """Saves a category's monthly target (zero removes it)."""
         entity_id = self._budget_target_entity_id()
         amount = self._budget_target_spins[category].value()
         if amount <= 0.0:
@@ -1476,30 +1528,36 @@ class BudgetModule(ModuleBase):
             self._populate_entity_combo(self._trends_entity_combo)
 
     def _on_manage_entities(self) -> None:
+        """Opens the business entities, then refreshes the entity pickers."""
         dialog = ManageBusinessEntitiesDialog(self.context)
         dialog.exec()
         self._refresh_entity_combo()
 
     def _on_summary_this_month(self) -> None:
+        """The summary for this month."""
         today = date.today()
         start = today.replace(day=1).isoformat()
         self._set_summary_range("This Month", start, None)
 
     def _on_summary_this_year(self) -> None:
+        """The summary for this year."""
         today = date.today()
         start = today.replace(month=1, day=1).isoformat()
         self._set_summary_range("This Year", start, None)
 
     def _on_summary_all_time(self) -> None:
+        """The summary for all time."""
         self._set_summary_range("All Time", None, None)
 
     def _set_summary_range(self, label: str, start_date: Optional[str], end_date: Optional[str]) -> None:
+        """Sets the summary's date range and its label, then refreshes it."""
         self._summary_start_date = start_date
         self._summary_end_date = end_date
         self._summary_range_label.setText(label)
         self._refresh_summary()
 
     def _refresh_summary(self) -> None:
+        """Fills the summary for the range and entity: income, expenses, net, tax-relevant income and deductible expenses, and total debt with its weighted APR."""
         start, end = self._summary_start_date, self._summary_end_date
         entity_id = self._summary_entity_combo.currentData()
         budget = self.context.budget
@@ -1519,6 +1577,7 @@ class BudgetModule(ModuleBase):
         self._summary_debt_label.setText(f"Total Debt: {money(total_debt, ',.2f')}  (weighted avg {avg_apr:.2f}% APR)")
 
     def _gather_equipment_use(self, entity_id: Optional[str], year: int) -> list[dict]:
+        """The business-use rows for a report: each tool with business use that year, for one entity, for no specific one, or all (None)."""
         if self.context.business_use is None or self.context.maintenance is None:
             return []
         budget = self.context.budget
@@ -1798,6 +1857,7 @@ class BudgetModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _build_bank_sync_tab(self) -> QWidget:
+        """The Bank Sync tab: what Plaid is (a third-party service, and the Fidelity caveat), the status, the connected accounts, set-up, unlock, connect, add access (transactions, investments, cards and loans), sync, disconnect, reset, business tags, and holdings."""
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
@@ -1875,6 +1935,7 @@ class BudgetModule(ModuleBase):
         return tab
 
     def _refresh_plaid_tab(self) -> None:
+        """Shows Plaid's state (not set up, locked, or unlocked with how many accounts), turns each button on only when it can work, counts the business tags waiting, and lists the connected accounts with what each can read."""
         plaid = self.context.plaid
         configured = plaid.is_configured()
         unlocked = plaid.is_unlocked()
@@ -1950,27 +2011,32 @@ class BudgetModule(ModuleBase):
             self._plaid_holdings_list.addItem("Select a connected account to see its holdings.")
 
     def _selected_plaid_item_id(self) -> Optional[str]:
+        """The selected connected account's id, or None."""
         return selected_item_data(self._plaid_accounts_list)
 
     def _selected_plaid_item_needs_upgrade(self) -> bool:
+        """Whether the selected account still lacks transaction access."""
         item_id = self._selected_plaid_item_id()
         if item_id is None or not self.context.plaid.is_unlocked():
             return False
         return any(i.item_id == item_id and not i.transactions_enabled for i in self.context.plaid.connected_items())
 
     def _selected_plaid_item_needs_investments_upgrade(self) -> bool:
+        """Whether the selected account still lacks investments access."""
         item_id = self._selected_plaid_item_id()
         if item_id is None or not self.context.plaid.is_unlocked():
             return False
         return any(i.item_id == item_id and not i.investments_enabled for i in self.context.plaid.connected_items())
 
     def _selected_plaid_item_needs_liabilities_upgrade(self) -> bool:
+        """Whether the selected account still lacks card and loan access."""
         item_id = self._selected_plaid_item_id()
         if item_id is None or not self.context.plaid.is_unlocked():
             return False
         return any(i.item_id == item_id and not i.liabilities_enabled for i in self.context.plaid.connected_items())
 
     def _on_plaid_setup(self) -> None:
+        """Sets up Plaid from the dialog (its keys kept encrypted) and unlocks it for this session."""
         dialog = PlaidSetupDialog()
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -1985,6 +2051,7 @@ class BudgetModule(ModuleBase):
         self._refresh_plaid_tab()
 
     def _on_plaid_unlock(self) -> None:
+        """Unlocks the Plaid vault with its passphrase (says so when it's wrong)."""
         dialog = PasswordPromptDialog("your Plaid vault", prompt="Enter the passphrase for")
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
@@ -1997,6 +2064,7 @@ class BudgetModule(ModuleBase):
         self._refresh_plaid_tab()
 
     def _on_plaid_connect(self) -> None:
+        """Connects a bank: opens Plaid's hosted page in the browser, waits for it, finishes the connection, then asks for the passphrase again to save it (connected for this session even if saving fails)."""
         try:
             link_token, hosted_link_url = self.context.plaid.create_hosted_link_session()
         except Exception as exc:  # noqa: BLE001 — surface any real Plaid API error to the user
@@ -2131,6 +2199,7 @@ class BudgetModule(ModuleBase):
         self._refresh_plaid_tab()
 
     def _on_plaid_disconnect(self) -> None:
+        """Disconnects the selected account after warning what happens (its balances leave net worth, its synced debts become manual, imported transactions stay) and asking for the passphrase; kept when Plaid doesn't remove it."""
         item_id = self._selected_plaid_item_id()
         if item_id is None:
             QMessageBox.information(None, "No Account Selected", "Select a connected account to disconnect.")
@@ -2165,6 +2234,7 @@ class BudgetModule(ModuleBase):
         self._refresh_debt_list()
 
     def _on_plaid_reset(self) -> None:
+        """Resets the Plaid setup from the dialog: disconnects every bank and removes the saved keys, optionally deleting what was imported; when some can't be removed, the setup is kept and says which."""
         plaid = self.context.plaid
         dialog = ResetPlaidDialog(plaid.environment or "", len(plaid.connected_items()))
         if dialog.exec() != QDialog.DialogCode.Accepted:
@@ -2200,6 +2270,7 @@ class BudgetModule(ModuleBase):
         self._refresh_expense_list()
 
     def _on_plaid_sync(self) -> None:
+        """Syncs every connected account (asks for the passphrase when transactions are read) and says what came in: balances, transactions new and updated, holdings, debts, and business tags applied."""
         passphrase = None
         if any(i.transactions_enabled for i in self.context.plaid.connected_items()):
             pw_dialog = PasswordPromptDialog("your Plaid vault", prompt="Re-enter the passphrase for")
@@ -2237,6 +2308,7 @@ class BudgetModule(ModuleBase):
         self._refresh_income_list()
 
     def _on_review_business_tags(self) -> None:
+        """Opens the business tags to review (which business each bank charge is for)."""
         from gui.business_tags_dialog import BusinessTagsDialog
 
         if BusinessTagsDialog(self.context).exec() == QDialog.DialogCode.Accepted:
@@ -2248,6 +2320,7 @@ class BudgetModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _search(self, query: str) -> list[SearchResult]:
+        """Ctrl+K results: bills matching by name or category, opening Budget."""
         query_lower = query.strip().lower()
         if not query_lower:
             return []

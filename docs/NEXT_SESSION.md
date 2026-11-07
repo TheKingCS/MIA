@@ -613,7 +613,7 @@ first); `show <file>` prints each with its code; write the docstrings by reading
 does, how when that isn't plain; check any claim you aren't sure of), put them in a JSON
 `{"core/x.py": {"func": "...", "Cls.meth": "..."}}` and `apply` it (inserts them, lowers the ratchet,
 regenerates `docs/ATLAS.md`). Skip `core/budget_manager.py` and `core/plaid_manager.py` while Zac's Plaid work is
-uncommitted. 6,863 of 13,808 documented on 2026-11-07: every core/, server/ and tools/ file is done (but those two); modules/ is under way (the small apps, the Toolbox and its tools done; next the big ones: budget, workshop, settings, kitchen...), then gui/, then tests/. A docstring may now end in a quote (`apply` adds a space).
+uncommitted. 6,863 of 13,808 documented on 2026-11-07: every core/, server/ and tools/ file is done (but those two); every modules/ file is done too (7,435 of 13,808); next gui/ (about 930), then tests/. A docstring may now end in a quote (`apply` adds a space).
 
 **Her own models (DEC-0106, build plan step 19):** the model forge (`core/model_forge.py`, `python -m tools.model_forge router` / `list`) made her first model 2026-11-07, a tool router trained on her tools' own words and the person's record names: 80% first pick, 95% top five on requests it never saw (card in `data/models/router/`, not in use). Each model is assigned to an issue (a slipping loop) or a project and judged by it; the playbook of five kinds and `python -m tools.model_forge needs` say where one could help. The router now runs in the shadow on every traced turn (its top five in the trace, the `models.router_shadow` loop); once it has 20 turns with a tool called, read how it did before deciding anything. Next: build plan step 19 (d) onward. `self_docs` (get_mia_docs, the council) now answers from her code's docstrings and the Knowledge Vault too.
 
@@ -880,6 +880,7 @@ it, and went with Claude's recommendations. The plan, in order:
 
 ## 4. Known loose ends
 
+- **Literal "$" in the desktop (found 2026-11-07, documenting modules/):** 17 files in `gui/` and `modules/` label money fields "Amount ($):", "Price ($):" and so on (the Budget's mileage prompt also names the IRS), against the rule to format money with `core.region` (`currency_symbol_for(context)`). The web screens are right; only the Qt dialogs. A small sweep: `grep -rn '(\$' gui modules`.
 - **On Zac's PC (2026-10-20):** `pytest` used to save into the real
   `config\config.json`: one run left 49 test profiles (Alex, Faith) and
   made a Faith the active one. Fixed in `tests/conftest.py` (a temp

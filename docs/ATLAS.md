@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1069 files, 237,963 lines; 1069 files describe themselves; 7,362 of 13,808 classes and functions are documented.
+1069 files, 238,036 lines; 1069 files describe themselves; 7,435 of 13,808 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -524,13 +524,13 @@
 
 ## modules/: the desktop's apps, one folder each
 
-93 files, 22,722 lines; 957 of 1,030 classes and functions documented
+93 files, 22,795 lines; 1,030 of 1,030 classes and functions documented
 
 - `modules/__init__.py`: Every feature of MIA (Assistant, Files, Notes, Maps, etc.) lives here as an independent package. Each module package must:
 - `modules/assistant/__init__.py`: The assistant app's package: its screen and behaviour are in module.py (Assistant Chat UI — docs/ROADMAP.md milestones 5.2 (text chat), 5.3 (voice), 5.4 (device-help grounding), and 5.5 (tool use / action execution). A chat screen (). core/module_manager.py finds it by that file.
 - `modules/assistant/module.py`: Assistant Chat UI — docs/ROADMAP.md milestones 5.2 (text chat), 5.3 (voice), 5.4 (device-help grounding), and 5.5 (tool use / action execution). A chat screen (scrollback + input box) wired to `AppContext.llm` (core/llm_manager.py), plus a push-to-talk "Hold to Talk" button wired to `AppContext.voic
 - `modules/budget/__init__.py`: The budget app's package: its screen and behaviour are in module.py (Budget: household bills, income, expenses, expected/recurring income, and debt payoff tracking. Eight tabs (Bills, Income Sources, Income, Expenses, Debts, Summ). core/module_manager.py finds it by that file.
-- `modules/budget/module.py`: Budget: household bills, income, expenses, expected/recurring income, and debt payoff tracking. Eight tabs (Bills, Income Sources, Income, Expenses, Debts, Summary, Trends, Bank Sync) — same `QTabWidget` multi-feature-in-one-module shape as modules/maintenance/module.py and modules/workshop/module.p *(73 undocumented)*
+- `modules/budget/module.py`: Budget: household bills, income, expenses, expected/recurring income, and debt payoff tracking. Eight tabs (Bills, Income Sources, Income, Expenses, Debts, Summary, Trends, Bank Sync) — same `QTabWidget` multi-feature-in-one-module shape as modules/maintenance/module.py and modules/workshop/module.p
 - `modules/character/__init__.py`: The character app's package: its screen and behaviour are in module.py (Character — the last remaining slice of the user's 2026-09-14 "Prestige, Rarity & Character Progression System" design handoff (see the `project_mia_prestige_ra). core/module_manager.py finds it by that file.
 - `modules/character/module.py`: Character — the last remaining slice of the user's 2026-09-14 "Prestige, Rarity & Character Progression System" design handoff (see the `project_mia_prestige_rarity_vision` memory): "a Character page [that] should become one of the primary M.I.A. interfaces... a visual archive of the user's actual l
 - `modules/classroom/__init__.py`: The classroom app's package: its screen and behaviour are in module.py (Classroom — v1 (2026-09-11): the user's own self-education content model, Subjects -> Courses -> Lessons, three-level drill-down navigation (same "list page + a). core/module_manager.py finds it by that file.

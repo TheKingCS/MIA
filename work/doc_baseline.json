@@ -118,7 +118,6 @@
   "gui/widgets/toggle_switch.py": 3,
   "gui/widgets/volume_quick_control.py": 5,
   "gui/widgets/waypoint_map_canvas.py": 10,
-  "modules/budget/module.py": 73,
   "tests/assistant_registry.py": 2,
   "tests/conftest.py": 4,
   "tests/core_live_music_check.py": 3,
