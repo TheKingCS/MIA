@@ -73,6 +73,11 @@ _DETAIL_WORDS = {"model": "model", "serial_number": "serial number", "manufactur
 
 @dataclass
 class InboxItem:
+    """One document that came into the inbox (from the folder, the phone or email): its files, the email's subject,
+    sender and date, and MIA's reading of it, all only proposed until the person files it: what kind of document,
+    whether it could be read, the item or project it's for, a receipt's amount, date, vendor, category and lines, a
+    manual's maintenance schedule, details about the thing it's for, and whether OCR is still reading it.
+    """
     item_id: str
     received_at: str
     source: str  # "folder" | "phone" | "email"
@@ -106,6 +111,7 @@ class InboxItem:
 
     @staticmethod
     def from_dict(data: dict) -> "InboxItem":
+        """An item from its saved dict, keeping only the fields an item knows."""
         fields = InboxItem.__dataclass_fields__
         return InboxItem(**{k: v for k, v in data.items() if k in fields})
 
@@ -121,8 +127,13 @@ class InboxItem:
 
 
 class InboxManager:
+    """The document inbox: the household's inbox.json (written through atomic_write_text) and the inbox folder each
+    document is moved into (inbox/items/<id>/). Every document is read and classified, but nothing is filed until the
+    person says so.
+    """
     def __init__(self, context, data_dir: Optional[Path] = None) -> None:
         # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
+        """Points at the household's file (data/ by default) and loads it."""
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._items_file = self.data_dir / "inbox.json" if data_dir is not None else _ITEMS_FILE
         self.context = context
@@ -135,13 +146,16 @@ class InboxManager:
 
     @property
     def folder(self) -> Path:
+        """The inbox folder: inbox.folder when configured, else inbox/ at the repo root."""
         configured = self.context.config.get("inbox.folder", "") if self.context.config else ""
         return Path(configured) if configured else _DEFAULT_FOLDER
 
     def item_folder(self, item_id: str) -> Path:
+        """Where one item's files are kept."""
         return self.folder / "items" / item_id
 
     def _load(self) -> None:
+        """Reads the items; an unreadable file is logged, reported and starts empty."""
         if not self._items_file.exists():
             return
         try:
@@ -152,6 +166,7 @@ class InboxManager:
             self._items = []
 
     def _save(self) -> None:
+        """Writes every item atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._items_file, json.dumps([asdict(i) for i in self._items], indent=2))
 
@@ -161,9 +176,11 @@ class InboxManager:
         return sorted(newest_first, key=lambda i: i.status != PENDING)
 
     def pending(self) -> list[InboxItem]:
+        """The items waiting to be filed, oldest first."""
         return sorted((i for i in self._items if i.status == PENDING), key=lambda i: i.received_at)
 
     def get_item(self, item_id: str) -> Optional[InboxItem]:
+        """The item with this id, or None."""
         return next((i for i in self._items if i.item_id == item_id), None)
 
     # ------------------------------------------------------------------
@@ -219,6 +236,9 @@ class InboxManager:
         return ready
 
     def _ingest(self, path: Path) -> InboxItem:
+        """Takes in one new file: moves it into a new item's folder (its name says if it came from the phone or email),
+        unpacks an email's attachments beside it (names made safe), then reads and classifies it.
+        """
         source, name = "folder", path.name
         m = _SENT.match(path.name)
         if m:
@@ -242,6 +262,7 @@ class InboxManager:
         return item
 
     def _ocr_output(self, item: InboxItem, name: str) -> Path:
+        """Where OCR writes the text of one of an item's files."""
         return self.item_folder(item.item_id) / ".ocr" / f"{name}.json"
 
     def _read(self, item: InboxItem) -> None:
@@ -286,6 +307,10 @@ class InboxManager:
 
     def _classify(self, item: InboxItem, text: str, filename: str, email_date: str) -> None:
         # Start clean: an item is classified again once its OCR finishes.
+        """MIA's reading of a document's text (starting clean, so it can run again once OCR finishes): its kind, the
+        asset or project it's about, for a receipt or invoice the amount, date (the email's when none), vendor, category
+        and lines, details about the thing it's for, and for a manual or warranty its maintenance schedule.
+        """
         item.amount, item.amount_basis, item.doc_date, item.vendor, item.category = None, "", "", "", ""
         item.schedule, item.details, item.items, item.items_note = [], {}, [], ""
         item.excerpt = " ".join(text.split())[:400]
@@ -424,6 +449,9 @@ class InboxManager:
             log.exception("Inbox: couldn't note the reading")
 
     def readings(self, days: int = 60) -> list[dict]:
+        """The record of how filed documents were read and what the person corrected, for the last `days` days (what the
+        inbox-reading loop learns from).
+        """
         since = (datetime.now() - timedelta(days=days)).isoformat(timespec="seconds")
         try:
             lines = (self.data_dir / "inbox_reading.jsonl").read_text(encoding="utf-8").splitlines()
@@ -446,6 +474,7 @@ class InboxManager:
         return attachments or item.files
 
     def dismiss(self, item_id: str) -> None:
+        """Dismisses an item without filing it (ValueError when it's gone)."""
         item = self.get_item(item_id)
         if item is None:
             raise ValueError("No such inbox item.")

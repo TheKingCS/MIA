@@ -122,7 +122,6 @@
   "core/inbox_actions.py": 10,
   "core/inbox_classify.py": 12,
   "core/inbox_mail.py": 15,
-  "core/inbox_manager.py": 15,
   "core/insurance_actions.py": 11,
   "core/intent_manager.py": 13,
   "core/journal_manager.py": 10,
