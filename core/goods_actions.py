@@ -34,12 +34,14 @@ from core.units import amount_text
 
 
 def _money(x: float) -> str:
+    """An amount in the person's currency."""
     from core.region import money
 
     return money(x)
 
 
 def _number(params, name: str, label: str) -> float:
+    """A number from the params (0 when blank); ActionError when it isn't a number or is negative."""
     raw = params.get(name)
     if raw in (None, ""):
         return 0.0
@@ -53,6 +55,7 @@ def _number(params, name: str, label: str) -> float:
 
 
 def _recipe(context, recipe_id: str):
+    """The craft recipe with this id, or ActionError."""
     recipe = _need(context, "craft_recipes").get_recipe(str(recipe_id or ""))
     if recipe is None:
         raise ActionError("That recipe isn't there anymore.")
@@ -60,6 +63,9 @@ def _recipe(context, recipe_id: str):
 
 
 def _lots(context, recipe_id: str = "") -> list:
+    """The batches of goods in stock (core/goods.py: each finished job's goods, less what's sold or tossed), all or
+    one recipe's.
+    """
     from core.goods import lots
 
     book = _need(context, "craft_recipes")
@@ -71,6 +77,7 @@ def _lots(context, recipe_id: str = "") -> list:
 
 
 def _units(recipe, quantity: float) -> str:
+    """A quantity in the recipe's own unit ("6 jars"), or the bare number."""
     return amount_text(quantity, recipe.makes_unit) if recipe.makes_unit else f"{quantity:g}"
 
 
@@ -78,6 +85,10 @@ def _units(recipe, quantity: float) -> str:
 
 
 def _selling(context, params) -> tuple:
+    """What a sale takes, checked: the recipe, how many, the amount (the recipe's price each when blank), the
+    batches it comes from oldest first (fifo), and the open market day if there is one. ActionError when there
+    isn't enough in stock or no price.
+    """
     from core.goods import fifo
 
     recipe = _recipe(context, params.get("recipe_id"))
@@ -100,6 +111,7 @@ def _selling(context, params) -> tuple:
 
 
 def _sell_describe(context, params) -> str:
+    """The sentence the approval card shows for `goods.sell` (Propose); raises ActionError when it can't be done. It names the market and how many batches it draws on."""
     recipe, quantity, amount, taken, market = _selling(context, params)
     where = f" at {market.place}" if market is not None and market.place else ""
     batches = f" (from {len(taken)} batches, oldest first)" if len(taken) > 1 else ""
@@ -107,6 +119,9 @@ def _sell_describe(context, params) -> str:
 
 
 def _sell(context, params) -> str:
+    """Does `goods.sell` once approved, and says what happened. One ledger sale per batch, the amount split between them, tagged to the market day
+    when one is open.
+    """
     from core.goods import market_tag, split_amount
 
     recipe, quantity, amount, taken, market = _selling(context, params)
@@ -122,6 +137,9 @@ def _sell(context, params) -> str:
 
 
 def _tossing(context, params) -> tuple:
+    """What a toss takes: the batch, what's left of it, and how many (all that's left when blank); ActionError when
+    there isn't that many.
+    """
     job = _need(context, "jobs").get_job(str(params.get("job_id") or ""))
     if job is None:
         raise ActionError("That batch isn't there anymore.")
@@ -135,12 +153,14 @@ def _tossing(context, params) -> tuple:
 
 
 def _toss_describe(context, params) -> str:
+    """The sentence the approval card shows for `goods.toss` (Propose); raises ActionError when it can't be done. It says the loss at the batch's cost."""
     job, lot, quantity = _tossing(context, params)
     loss = quantity * lot.unit_cost
     return f"Toss {quantity:g} of {lot.name} (made {lot.made})" + (f": a {_money(loss)} loss" if loss else "")
 
 
 def _toss(context, params) -> str:
+    """Does `goods.toss` once approved, and says what happened. It's counted on the batch and taken out of the product's stock."""
     job, lot, quantity = _tossing(context, params)
     context.jobs.update_job(job.job_id, tossed=round(float(job.tossed or 0) + quantity, 4))
     product_id = next((p.product_id for p in job.products_produced), "")
@@ -180,6 +200,9 @@ def add_to_stock(context, recipe, quantity: float, cost_each: float = 0.0, made:
 
 
 def _adding(context, params) -> tuple:
+    """What adding to stock takes, checked: the recipe, how many, a date if given, what one cost, and where it came
+    from.
+    """
     recipe = _recipe(context, params.get("recipe_id"))
     quantity = _number(params, "quantity", "How many")
     if quantity <= 0:
@@ -194,6 +217,7 @@ def _adding(context, params) -> tuple:
 
 
 def _add_describe(context, params) -> str:
+    """The sentence the approval card shows for `goods.add` (Propose); raises ActionError when it can't be done."""
     recipe, quantity, cost_each, made, source = _adding(context, params)
     bits = f"{_units(recipe, quantity)} of {recipe.name} into stock"
     if source:
@@ -204,6 +228,7 @@ def _add_describe(context, params) -> str:
 
 
 def _add(context, params) -> str:
+    """Does `goods.add` once approved, and says what happened. It goes in as a batch (add_to_stock, the same path the flock and the Grow Lab use)."""
     recipe, quantity, cost_each, made, source = _adding(context, params)
     add_to_stock(context, recipe, quantity, cost_each, made, source)
     return f"{_units(recipe, quantity)} of {recipe.name} in stock."
@@ -213,6 +238,7 @@ def _add(context, params) -> str:
 
 
 def _starter(context, params) -> dict:
+    """A starter recipe's fields (core/goods_starters.py), or ActionError."""
     from core.goods_starters import starter_fields
 
     _need(context, "craft_recipes")
@@ -223,6 +249,7 @@ def _starter(context, params) -> dict:
 
 
 def _starter_describe(context, params) -> str:
+    """The sentence the approval card shows for `craft_recipe.starter` (Propose); raises ActionError when it can't be done. It mentions when they already have a recipe by that name."""
     fields = _starter(context, params)
     taken = {r.name.lower() for r in context.craft_recipes.all_recipes()}
     note = " (you have one by that name already; this is a second)" if fields["name"].lower() in taken else ""
@@ -230,6 +257,7 @@ def _starter_describe(context, params) -> str:
 
 
 def _starter_add(context, params) -> str:
+    """Does `craft_recipe.starter` once approved, and says what happened. The copy is theirs to change."""
     fields = _starter(context, params)
     name = fields.pop("name")
     context.craft_recipes.add_recipe(name, **fields)
@@ -240,6 +268,7 @@ def _starter_add(context, params) -> str:
 
 
 def _brought(context, params) -> dict:
+    """What's being taken to a market day, from b_<recipe_id> params: recipe id -> how many."""
     book = _need(context, "craft_recipes")
     out = {}
     for name, raw in params.items():
@@ -255,6 +284,7 @@ def _brought(context, params) -> dict:
 
 
 def _market_start_describe(context, params) -> str:
+    """The sentence the approval card shows for `market.start` (Propose); raises ActionError when it can't be done. Only one market day is open at a time."""
     business = _need(context, "business")
     if business.open_market() is not None:
         raise ActionError("A market day is already open: close it first.")
@@ -266,6 +296,7 @@ def _market_start_describe(context, params) -> str:
 
 
 def _market_start(context, params) -> str:
+    """Does `market.start` once approved, and says what happened."""
     brought = _brought(context, params)
     place = str(params.get("place") or "").strip()
     _need(context, "business").start_market(place, str(params.get("date") or date.today().isoformat()), brought)
@@ -273,6 +304,7 @@ def _market_start(context, params) -> str:
 
 
 def _market(context, params):
+    """The market day named (or the open one), or ActionError when none is open or it's closed."""
     business = _need(context, "business")
     market = business.get_market(str(params.get("market_id") or "")) if params.get("market_id") else business.open_market()
     if market is None:
@@ -299,6 +331,9 @@ def market_tally(context, market) -> dict:
 
 
 def _tosses(context, params) -> list[tuple]:
+    """The leftovers being tossed at close, from t_<recipe_id> params: (recipe, how many, the batches it comes from),
+    checked against what's left.
+    """
     from core.goods import fifo
 
     out = []
@@ -321,6 +356,9 @@ def _xp_for(revenue: float) -> int:
 
 
 def _market_close_describe(context, params) -> str:
+    """The sentence the approval card shows for `market.close` (Propose); raises ActionError when it can't be done. It gives the day's tally: what sold, takings, cost and profit,
+    and what's tossed.
+    """
     market = _market(context, params)
     tally = market_tally(context, market)
     tossing = _tosses(context, params)
@@ -334,6 +372,9 @@ def _market_close_describe(context, params) -> str:
 
 
 def _market_close(context, params) -> str:
+    """Does `market.close` once approved, and says what happened. Leftovers are tossed, the day closes, and XP for the day is granted (more
+    for more sold, with Hospitality skill XP).
+    """
     from datetime import datetime
 
     from core.gamification import SkillWeight, grant_xp
@@ -352,12 +393,14 @@ def _market_close(context, params) -> str:
 
 
 def _label_values(params) -> dict:
+    """The label fields the params set (business name, address, statement)."""
     from core.business_book import LABEL_FIELDS
 
     return {k: str(params.get(k) or "").strip() for k in LABEL_FIELDS if k in params}
 
 
 def _label_describe(context, params) -> str:
+    """The sentence the approval card shows for `goods.label` (Propose); raises ActionError when it can't be done."""
     _need(context, "business")
     values = _label_values(params)
     if not values:
@@ -367,6 +410,7 @@ def _label_describe(context, params) -> str:
 
 
 def _label(context, params) -> str:
+    """Does `goods.label` once approved, and says what happened. MIA prints what's entered; it never says what the law requires."""
     context.business.set_label(**_label_values(params))
     return "Labels updated."
 
@@ -381,6 +425,7 @@ LABEL_FORM = [
 
 
 def _register() -> None:
+    """Adds every goods and market action kind to ACTION_TYPES. Runs once, when this module is imported."""
     for kind in (
         ActionType("goods.sell", "Sold", {"recipe_id": "the recipe", "quantity": "how many",
                                           "amount": "what they sold for (blank: the recipe's price each)"},

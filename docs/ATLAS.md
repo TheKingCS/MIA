@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 226,870 lines; 1043 files describe themselves; 3,662 of 13,517 classes and functions are documented.
+1043 files, 226,915 lines; 1043 files describe themselves; 3,690 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 100,776 lines; 2,931 of 5,630 classes and functions documented
+367 files, 100,821 lines; 2,959 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -155,7 +155,7 @@
 - `core/glasses_voice.py`: Talking to MIA through the glasses (H-0041 Phase 3; Zac, 2026-10-19). The Display glasses pair to the phone as a Bluetooth headset, so MIA's phone app listens through the glasses' microphone (Android's own speech recognizer, on the phone), sends the words here, and speaks the answer back through the *(1 undocumented)*
 - `core/good_news.py`: Good News Radio (DEC-0096, build plan step 13; Zac, 2026-11-06: AI that reads credible outlets daily and gathers good news, healing, technology, medicine, renewable energy, societies improving, "heard through AI radio personalities matched to mood"; sources by Claude's recommendation, approved, and  *(14 undocumented)*
 - `core/goods.py`: Homestead goods on hand (DEC-0036): what's made and not yet sold, batch by batch. No store of its own: a batch is a finished build (core/job_manager.py, with its recipe and `finished_at`), what it made is its products_produced, what sold is the Ledger's sales tagged with the batch (`job_id`), and wh *(4 undocumented)*
-- `core/goods_actions.py`: Homestead goods' actions (DEC-0036), on the action contract in core/actions.py: proposed in plain words, approved, run, undoable. *(28 undocumented)*
+- `core/goods_actions.py`: Homestead goods' actions (DEC-0036), on the action contract in core/actions.py: proposed in plain words, approved, run, undoable.
 - `core/goods_starters.py`: Starter recipes for homestead goods (DEC-0037): a cutting board, a planter, spice and herb blends, mixes in a jar, eggs, microgreens and plant starts, to copy into Workshop → Recipes and change to your own. Generic on purpose: no prices (yours to set), quantities a common starting point, allergens f
 - `core/gps_tracks.py`: Tracks (build plan step 14, DEC-0099): a walk, a ride or a drive as points with times, from a GPX file (what phones, watches and GPS units export). Worked out in code (`stats()`): distance (haversine, between successive points), climb and descent (changes under `CLIMB_NOISE` metres ignored, as GPS e *(8 undocumented)*
 - `core/grow_actions.py`: The grow lab's actions (DEC-0030 phase D, core/grow_lab.py) on the action contract: proposed in plain words, approved, run, undoable. *(21 undocumented)*
