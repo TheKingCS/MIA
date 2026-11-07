@@ -15,6 +15,10 @@ phrased from its screen's own data so voice and screen agree:
 - get_play: this week's games and the load (core/recreation.py);
 - find_my_files: a folder's contents or files by name, only inside the
   person's own MIA files folder (core/my_files.py).
+
+`register_area_keywords` gives older areas the words that should reach
+their tools ("what's my next trip?" reached none: DEC-0125's glasses asks
+found it, 2026-11-07).
 """
 
 from __future__ import annotations
@@ -112,7 +116,8 @@ def _action_find_my_files(context, arguments: dict) -> str:
 
 def register_records_actions(registry: AssistantActionRegistry) -> None:
     """Registers get_insurance (insurance), list_kept (life_notes), get_operating_journal (operating_journal),
-    get_play (play) and find_my_files (files)."""
+    get_play (play) and find_my_files (files), and the older areas' keywords (register_area_keywords)."""
+    register_area_keywords(registry)
     registry.register_domain_keywords("insurance", ("insurance", "insured", "premium", "premiums", "deductible"))
     registry.register_domain_keywords("life_notes", ("promise", "promised", "promises"))
     registry.register_domain_keywords("operating_journal", ("operating",))
@@ -162,3 +167,15 @@ def register_records_actions(registry: AssistantActionRegistry) -> None:
         handler=_action_find_my_files,
         trigger_phrases=("find my file", "find the file", "my files", "what files", "find a file"),
     ))
+
+
+def register_area_keywords(registry: AssistantActionRegistry) -> None:
+    """Words that attach older areas whose everyday questions reached no tool: trips (expeditions), the lab, notes,
+    the inbox, and the battery (power, beside the system tools)."""
+    registry.register_domain_keywords("expeditions", ("trip", "trips", "expedition", "expeditions", "hike", "hiking",
+                                                      "camping"))
+    registry.register_domain_keywords("lab", ("lab", "experiment", "experiments"))
+    registry.register_domain_keywords("notes", ("notes",))
+    registry.register_domain_keywords("inbox", ("inbox", "emails"))
+    registry.register_domain_keywords("power", ("battery", "propane", "generator", "solar"))
+
