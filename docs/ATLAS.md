@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1043 files, 229,441 lines; 1043 files describe themselves; 5,310 of 13,517 classes and functions are documented.
+1043 files, 229,473 lines; 1043 files describe themselves; 5,328 of 13,517 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-367 files, 103,343 lines; 4,579 of 5,630 classes and functions documented
+367 files, 103,375 lines; 4,597 of 5,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in. *(1 undocumented)*
@@ -21,7 +21,7 @@
 - `core/app_intro.py`: What MIA says when she introduces an app (slice 5 of docs/GLASSES_FIRST_BOOT_PLAN.md), in two halves: *(7 undocumented)*
 - `core/application.py`: MIAApplication: the orchestrator that boots the system.
 - `core/assistant_accessibility_actions.py`: "Make the text bigger", "turn on high contrast", "read this screen to me" (core/accessibility.py, 2026-10-01). Each changes only the speaker's own look. *(4 undocumented)*
-- `core/assistant_actions.py`: The Assistant's tool-use/action-execution registry — docs/ROADMAP.md milestone 5.5. Lets the LLM actually DO things in MIA (open a module, add an alarm, a note, an inventory item), not just answer questions, via Ollama's structured tool-calling API (core/llm_manager.py's `chat_with_tools()`). *(9 undocumented)*
+- `core/assistant_actions.py`: The Assistant's tool-use/action-execution registry — docs/ROADMAP.md milestone 5.5. Lets the LLM actually DO things in MIA (open a module, add an alarm, a note, an inventory item), not just answer questions, via Ollama's structured tool-calling API (core/llm_manager.py's `chat_with_tools()`).
 - `core/assistant_chat.py`: The pure, non-Qt logic for one Assistant chat turn — moved here from `modules/assistant/module.py` (2026-07-14 aesthetic pass part 4, docs/ROADMAP.md) once the sidebar chat in `gui/character_panel.py` needed the exact same request-building and tool-call-safety logic as the full-screen Assistant modu
 - `core/assistant_comm_actions.py`: Assistant tools for the communication gate (core/communication_gate.py, Cognitive Extension slice C): asking what MIA chose not to say, and changing how often she speaks up on her own. *(5 undocumented)*
 - `core/assistant_domain_actions.py`: Assistant actions added by the 2026-09-27 conversational audit (docs/ASSISTANT_AUDIT.md), so what the owner *says* updates the right records: kitchen (recipes, meals, grocery list, pantry), debts and budget targets, asset details and notes (including greenhouse/garden plants, which are Maintenance a
@@ -187,7 +187,7 @@
 - `core/lab_actions.py`: The development lab's changes as action kinds (DEC-0058, core/dev_lab.py): start a proposal (lab, write, check), approve one into the running MIA, reject one. Grown-ups only, never from the glasses; the long steps (the coder, the test suite) run in the background and say when they're done. "Approve" *(9 undocumented)*
 - `core/ledger_manager.py`: MIA Home's revenue/expense ledger — the fourth and final slice of the proposed `mia_home_schema.sql` (see `docs/VISION.md`'s "MIA Home's expanded scope" section, and `core/material_manager.py` `core/job_manager.py`/`core/product_manager.py`'s docstrings for slices 1-3), adapted to this project's per
 - `core/leveling.py`: Pure XP/Level math for the Missions gamification system — no Qt, no persistence, testable in isolation (see tests/test_leveling.py). `core/profile_manager.py` stores the one number that matters (`Profile.total_xp`, lifetime cumulative); everything else — what level that corresponds to, and how far i
-- `core/life_events.py`: Life events (2026-10-05, Engine Phase 1, docs/ENGINE_PHASE1_PLAN.md): an append-only history of the meaningful things that happen in a person's life: a bill paid, a mission completed (and the skill evidence it earned), a workout or meal logged, maintenance done, rent received, an import, a starter s *(9 undocumented)*
+- `core/life_events.py`: Life events (2026-10-05, Engine Phase 1, docs/ENGINE_PHASE1_PLAN.md): an append-only history of the meaningful things that happen in a person's life: a bill paid, a mission completed (and the skill evidence it earned), a workout or meal logged, maintenance done, rent received, an import, a starter s
 - `core/life_note_actions.py`: What someone said they'd do, decided, want to try and set aside (core/life_notes.py, DEC-0054) through the action contract (core/actions.py): `life_note.done` (a promise kept, an idea tried) and `life_note.forget`. The notes write through atomic_write_text, so "undo that" takes either back. Said out
 - `core/life_notes.py`: Remembering what you say you'll do, decide and want to try (DEC-0054, T-0018). Four kinds of note MIA picks up from normal conversation, never a form, each shown back for a yes before it's kept (Propose → Approve):
 - `core/links.py`: How things relate (2026-10-05, Engine Phase 1 step 2, docs/ENGINE_PHASE1_PLAN.md): typed links between the records MIA already keeps, like "this loan FUNDS that property", "the walipini DEPENDS_ON selling the lot", "this mission is EVIDENCE_FOR that skill". (Named `links` because `relationships_mana

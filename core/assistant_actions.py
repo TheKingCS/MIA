@@ -84,6 +84,11 @@ _ALWAYS_ON_DOMAIN = "system"
 
 @dataclass
 class AssistantAction:
+    """One tool the Assistant can call: its name, description and parameters (the tool-call schema), the handler that
+    runs it in code, the phrases that offer it, its domain (which tools travel together), whether it changes or
+    deletes something (never run when bundled with other calls), the words for what it's about, and the parameter a
+    lookup can take the question itself as.
+    """
     name: str
     description: str
     parameters: dict  # JSON schema "parameters" object (Ollama/OpenAI tool-call format)
@@ -131,6 +136,7 @@ class AssistantAction:
         return {self.prompt_arg: prompt} if self.prompt_arg else {}
 
     def to_ollama_tool(self) -> dict:
+        """The tool in the shape the model expects (a function with its name, description and parameters)."""
         return {
             "type": "function",
             "function": {
@@ -142,6 +148,9 @@ class AssistantAction:
 
 
 class AssistantActionRegistry:
+    """Every tool the Assistant has, and how a request picks the few that travel with it: their trigger phrases, each
+    domain's everyday words, and the names of the person's own records in each domain.
+    """
     def __init__(self) -> None:
         # 2026-09-27 conversational audit: exact trigger phrases alone
         # missed how people actually talk ("I just put 120 hours on the
@@ -149,12 +158,14 @@ class AssistantActionRegistry:
         # gets attached: its everyday vocabulary (whole words), and the
         # names of the user's own records in it (mention "the mower"
         # and Maintenance's tools come along).
+        """Starts empty: modules and core register their tools, domain words and record-name providers."""
         self._domain_keywords: dict[str, tuple[str, ...]] = {}
         self._entity_providers: dict[str, Callable[["AppContext"], Iterable[str]]] = {}
         self._entity_match_all: set[str] = set()
         self._actions: dict[str, AssistantAction] = {}
 
     def register(self, action: AssistantAction) -> None:
+        """Adds a tool (replacing one of the same name)."""
         self._actions[action.name] = action
         log.info("Registered assistant action: %s", action.name)
 
@@ -164,6 +175,7 @@ class AssistantActionRegistry:
         return action.destructive if action is not None else False
 
     def destructive_action_names(self) -> set[str]:
+        """The names of the tools that change or delete something."""
         return {action.name for action in self._actions.values() if action.destructive}
 
     def to_ollama_tools(self, actions: Optional[list[AssistantAction]] = None) -> list[dict]:
@@ -204,12 +216,16 @@ class AssistantActionRegistry:
             self._entity_match_all.add(domain)
 
     def _keyword_domains(self, lowered: str) -> set[str]:
+        """The domains whose everyday words appear (as whole words) in what was said."""
         return {
             domain for domain, keywords in self._domain_keywords.items()
             if any(re.search(rf"(?<![a-z0-9]){re.escape(k)}(?![a-z0-9])", lowered) for k in keywords)
         }
 
     def _entity_domains(self, prompt: str, context: Optional["AppContext"]) -> set[str]:
+        """The domains whose records the person named ("the mower" brings Maintenance's tools); a provider that fails is
+        logged and skipped.
+        """
         if context is None or not self._entity_providers:
             return set()
         from core.assistant_lookup import head_word, name_tokens
@@ -420,6 +436,7 @@ _QUESTION_STARTS = ("what", "when", "which", "who", "where", "how many", "how mu
 
 
 def _singular(word: str) -> str:
+    """A word without a plural s (not "ss", not short words)."""
     return word[:-1] if len(word) > 3 and word.endswith("s") and not word.endswith("ss") else word
 
 

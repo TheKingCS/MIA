@@ -104,6 +104,9 @@ _local = threading.local()
 
 @dataclass
 class LifeEvent:
+    """One thing that happened, in the history: when, what kind, a summary in words, references to the things it's
+    about ("kind:id"), a payload of numbers, where it came from, and whose it is.
+    """
     event_id: str
     at: str
     type: str
@@ -115,6 +118,7 @@ class LifeEvent:
 
     @staticmethod
     def from_dict(data: dict) -> "LifeEvent":
+        """An event from one saved line; missing fields take their defaults."""
         return LifeEvent(
             event_id=str(data.get("event_id", "")), at=str(data.get("at", "")), type=str(data.get("type", "")),
             summary=str(data.get("summary", "")), refs=list(data.get("refs") or []),
@@ -124,6 +128,7 @@ class LifeEvent:
 
     @property
     def day(self) -> str:
+        """The day it happened (YYYY-MM-DD)."""
         return self.at[:10]
 
 
@@ -155,6 +160,9 @@ def quiet():
 
 
 def _who(where) -> Optional[str]:
+    """Whose event this is: the person set for this thread (crediting), else the person the store's context acts for,
+    else None.
+    """
     explicit = getattr(_local, "profile_id", None)
     if explicit:
         return explicit
@@ -216,14 +224,19 @@ class LifeEventLog:
     Reads the file on each query: it's append-only and small."""
 
     def __init__(self, context=None, data_dir: Optional[Path] = None) -> None:
+        """The history beside the stores (life_events.jsonl in the person's or household's folder): append-only, one
+        event a line, never rewritten.
+        """
         self.context = context
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
 
     @property
     def path(self) -> Path:
+        """The history file."""
         return self.data_dir / FILE_NAME
 
     def all_events(self) -> list[LifeEvent]:
+        """Every event in the file, in order; a damaged line is skipped (logged), never the whole history."""
         if not self.path.exists():
             return []
         events = []
@@ -242,6 +255,7 @@ class LifeEventLog:
 
     def record(self, type: str, summary: str, refs: Iterable[str] = (), payload: Optional[dict] = None,
                **kwargs) -> Optional[LifeEvent]:
+        """Records an event in this log (see the module's record())."""
         return record(self, type, summary, refs, payload, **kwargs)
 
 
@@ -301,6 +315,7 @@ def period_start(period: str, today: Optional[date] = None) -> str:
 
 
 def counts(events: list[LifeEvent]) -> dict[str, int]:
+    """How many events of each kind."""
     totals: dict[str, int] = {}
     for event in events:
         totals[event.type] = totals.get(event.type, 0) + 1
