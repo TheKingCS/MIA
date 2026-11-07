@@ -89,6 +89,9 @@ def relation_from(text: str) -> Optional[str]:
 
 @dataclass(frozen=True)
 class Kind:
+    """One kind of thing a link can point at (an asset, a mission, a person...): its name and label, the store and method
+    that list them, and which attributes are its id and its name.
+    """
     kind: str
     label: str
     store: str  # AppContext attribute
@@ -118,6 +121,7 @@ KINDS: dict[str, Kind] = {k.kind: k for k in (
 
 
 def _records(context, kind: Kind) -> list:
+    """Every record of a kind, from its store; [] (logged) when the store is missing or fails."""
     store = getattr(context, kind.store, None)
     lister: Optional[Callable] = getattr(store, kind.lister, None)
     if lister is None:
@@ -130,6 +134,7 @@ def _records(context, kind: Kind) -> list:
 
 
 def ref_of(kind: str, record) -> str:
+    """A record's reference, "kind:id" (how links point at things, never by copying them)."""
     return f"{kind}:{getattr(record, KINDS[kind].id_attr)}"
 
 
@@ -146,6 +151,7 @@ def name_of(context, ref: str) -> str:
 
 
 def exists(context, ref: str) -> bool:
+    """Whether a reference points at a record that's still there."""
     return name_of(context, ref) != ref
 
 
@@ -174,6 +180,9 @@ def find(context, text: str, kinds: Optional[Iterable[str]] = None) -> tuple[Opt
 
 @dataclass
 class Link:
+    """One relation between two things, by reference: source, relation (RELATIONS), target, a note, when, who stated
+    it, and whether it was derived from the stores rather than stated.
+    """
     source: str  # kind:id
     relation: str
     target: str  # kind:id
@@ -184,6 +193,7 @@ class Link:
     derived: bool = False  # computed from the stores, not stated
 
     def as_dict(self) -> dict:
+        """The link as a plain dict."""
         return asdict(self)
 
 
@@ -191,6 +201,7 @@ class LinkStore:
     """A household's stated links (`links.json`)."""
 
     def __init__(self, context=None, data_dir: Optional[Path] = None) -> None:
+        """The stated links (links.json in the household's folder, data/ by default); derived ones are worked out when asked."""
         self.context = context
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._file = self.data_dir / FILE_NAME
@@ -198,6 +209,7 @@ class LinkStore:
         self._load()
 
     def _load(self) -> None:
+        """Reads the stated links; an unreadable file is logged, reported and starts with none."""
         self._links = []
         if not self._file.exists():
             return
@@ -211,13 +223,16 @@ class LinkStore:
             notify_data_corruption(self.context, FILE_NAME)
 
     def _save(self) -> None:
+        """Writes the stated links atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._file, json.dumps([l.as_dict() for l in self._links], indent=2), encoding="utf-8")
 
     def all_links(self) -> list[Link]:
+        """Every stated link."""
         return list(self._links)
 
     def add(self, source: str, relation: str, target: str, note: str = "", by: Optional[str] = None) -> Link:
+        """States a link (a known relation, between two different things); the same link twice is kept once."""
         if relation not in RELATIONS:
             raise ValueError(f"Unknown relation '{relation}'.")
         if source == target:
@@ -232,6 +247,7 @@ class LinkStore:
         return link
 
     def remove(self, source: str, target: str, relation: Optional[str] = None) -> int:
+        """Removes the links between two things (either way round), or only those of one relation; returns how many."""
         before = len(self._links)
         self._links = [l for l in self._links
                        if not ({l.source, l.target} == {source, target} and (relation is None or l.relation == relation))]
@@ -282,6 +298,7 @@ def all_links(context) -> list[Link]:
 
 
 def links_for(context, ref: str) -> list[Link]:
+    """Every link, stated or derived, that touches one thing."""
     return [l for l in all_links(context) if ref in (l.source, l.target)]
 
 
@@ -305,4 +322,5 @@ def downstream(context, ref: str, relations: Iterable[str] = ("DEPENDS_ON", "BLO
 
 
 def describe_link(context, link: Link) -> str:
+    """A link in words: "<source> <relation> <target>" with their names."""
     return f"{name_of(context, link.source)} {RELATIONS.get(link.relation, link.relation)} {name_of(context, link.target)}"

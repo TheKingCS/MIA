@@ -125,7 +125,6 @@
   "core/kitchen_blueprint.py": 2,
   "core/lab_actions.py": 9,
   "core/life_events.py": 9,
-  "core/links.py": 14,
   "core/lite_capture_manager.py": 13,
   "core/live.py": 3,
   "core/loop_actions.py": 12,
