@@ -65,6 +65,7 @@ PROFILE = Page("profile", "Profile", "character", "You, and how MIA knows you.",
 YOURDATA = Page("yourdata", "Your Data", "files", "What MIA keeps, and taking it out.", "yourdata.html")
 CHANGES = Page("changes", "Recent Changes", "issues", "What changed, with Undo.", "changes.html")
 NOTIFS = Page("notifications", "Notifications", "inbox", "What MIA told you.", "notifications.html")
+HEALTH = Page("health", "Health", "workout", "Sleep, visits, medications and records.", "health.html")
 COMMS = Page("communications", "Communications", "inbox", "Email, MIA's messages and people to reach.",
              "communications.html")
 # Maintenance by area (Zac, 2026-10-16: buildings and appliances live in Real Estate, vehicles and tools in Garage):
@@ -81,7 +82,7 @@ AREAS: tuple[Area, ...] = (
          ("garage", "toolbox", "sight")),
     Area("plants_animals", "Plants and Animals", "greenhouse", "What grows and who you feed.",
          ("greenhouse", "flock", PETS)),
-    Area("health", "Health and Fitness", "workout", "Training, food and how you feel.", ("workout", "kitchen")),
+    Area("health", "Health and Fitness", "workout", "Training, food and how you feel.", (HEALTH, "workout", "kitchen")),
     Area("recreation", "Recreation", "expeditions", "Trips, maps, music and play.",
          ("expeditions", "maps", "navigation", "memories", WORLD, PLACES, "music", "play")),
     Area("security", "Security", "security", "Cameras, passwords and sign-ins.",

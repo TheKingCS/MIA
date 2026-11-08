@@ -1,0 +1,282 @@
+{
+  "available": true,
+  "sleep": {
+    "nights": [
+      {
+        "night": "2026-11-01",
+        "hours": 6.5,
+        "rested": 3
+      },
+      {
+        "night": "2026-11-02",
+        "hours": 7.2,
+        "rested": 4
+      },
+      {
+        "night": "2026-11-03",
+        "hours": null,
+        "rested": null
+      },
+      {
+        "night": "2026-11-04",
+        "hours": 5.8,
+        "rested": 2
+      },
+      {
+        "night": "2026-11-05",
+        "hours": 7.9,
+        "rested": 5
+      },
+      {
+        "night": "2026-11-06",
+        "hours": 7.0,
+        "rested": 4
+      },
+      {
+        "night": "2026-11-07",
+        "hours": 8.1,
+        "rested": 5
+      }
+    ],
+    "average": 7.1
+  },
+  "visits": [
+    {
+      "id": "f948fb9439",
+      "kind": "Doctor",
+      "when": "2026-09-03",
+      "who": "Family clinic",
+      "what_for": "Annual physical",
+      "notes": "All normal.",
+      "next_due": "2027-09-03",
+      "upcoming": false
+    },
+    {
+      "id": "e4bd63503a",
+      "kind": "Dentist",
+      "when": "2026-05-12",
+      "who": "Dr. Rivera",
+      "what_for": "Cleaning",
+      "notes": "",
+      "next_due": "2026-11-10",
+      "upcoming": false
+    }
+  ],
+  "meds": [
+    {
+      "id": "7c5e37c424",
+      "name": "Allergy tablet",
+      "kind": "Medication",
+      "dose": "10 mg",
+      "times": [
+        "21:00"
+      ],
+      "refills": 2,
+      "refill_on": "2026-11-11",
+      "notes": "",
+      "active": true,
+      "added": "2026-11-08",
+      "taken_today": 0,
+      "reminders": false
+    },
+    {
+      "id": "0c11041031",
+      "name": "Vitamin D3",
+      "kind": "Supplement",
+      "dose": "2000 IU",
+      "times": [
+        "08:00"
+      ],
+      "refills": null,
+      "refill_on": "",
+      "notes": "",
+      "active": true,
+      "added": "2026-11-08",
+      "taken_today": 1,
+      "reminders": false
+    }
+  ],
+  "records": [
+    {
+      "id": "3d55bbe779",
+      "kind": "Test result",
+      "name": "Cholesterol (total)",
+      "when": "2026-09-03",
+      "value": "182 mg/dL",
+      "notes": ""
+    },
+    {
+      "id": "569af69134",
+      "kind": "Vaccination",
+      "name": "Tetanus (Tdap)",
+      "when": "2024-03-02",
+      "value": "",
+      "notes": ""
+    },
+    {
+      "id": "183c6b1dc6",
+      "kind": "Allergy",
+      "name": "Penicillin",
+      "when": "",
+      "value": "",
+      "notes": "Hives"
+    }
+  ],
+  "due": [
+    {
+      "what": "visit",
+      "id": "e4bd63503a",
+      "title": "Dentist visit due",
+      "when": "2026-11-10",
+      "days": 2
+    },
+    {
+      "what": "refill",
+      "id": "7c5e37c424",
+      "title": "Refill Allergy tablet",
+      "when": "2026-11-11",
+      "days": 3
+    }
+  ],
+  "forms": {
+    "sleep": [
+      {
+        "name": "hours",
+        "label": "Hours slept",
+        "type": "number",
+        "required": true
+      },
+      {
+        "name": "rested",
+        "label": "How rested, 1 (not at all) to 5 (fully)",
+        "type": "int"
+      },
+      {
+        "name": "night",
+        "label": "The night of",
+        "type": "date"
+      },
+      {
+        "name": "note",
+        "label": "Note",
+        "type": "text"
+      }
+    ],
+    "visit": [
+      {
+        "name": "kind",
+        "label": "Kind",
+        "type": "choice",
+        "options": [
+          "Doctor",
+          "Dentist",
+          "Eye",
+          "Other"
+        ]
+      },
+      {
+        "name": "when",
+        "label": "When",
+        "type": "date",
+        "required": true
+      },
+      {
+        "name": "who",
+        "label": "Who (doctor or office)",
+        "type": "text"
+      },
+      {
+        "name": "what_for",
+        "label": "What for",
+        "type": "text"
+      },
+      {
+        "name": "next_due",
+        "label": "Next one due",
+        "type": "date"
+      },
+      {
+        "name": "notes",
+        "label": "Notes",
+        "type": "textarea"
+      }
+    ],
+    "med": [
+      {
+        "name": "name",
+        "label": "Name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "name": "kind",
+        "label": "Kind",
+        "type": "choice",
+        "options": [
+          "Medication",
+          "Supplement"
+        ]
+      },
+      {
+        "name": "dose",
+        "label": "Dose, as written on the label",
+        "type": "text"
+      },
+      {
+        "name": "times",
+        "label": "Times to take it, like 8:00, 20:00 (each gets a reminder)",
+        "type": "text"
+      },
+      {
+        "name": "refills",
+        "label": "Refills left",
+        "type": "int"
+      },
+      {
+        "name": "refill_on",
+        "label": "Next refill",
+        "type": "date"
+      },
+      {
+        "name": "notes",
+        "label": "Notes",
+        "type": "textarea"
+      }
+    ],
+    "record": [
+      {
+        "name": "kind",
+        "label": "Kind",
+        "type": "choice",
+        "options": [
+          "Test result",
+          "Vaccination",
+          "Allergy",
+          "Document",
+          "Other"
+        ]
+      },
+      {
+        "name": "name",
+        "label": "What (a test, a vaccine, an allergy...)",
+        "type": "text",
+        "required": true
+      },
+      {
+        "name": "when",
+        "label": "Date",
+        "type": "date"
+      },
+      {
+        "name": "value",
+        "label": "Result or value (with units)",
+        "type": "text"
+      },
+      {
+        "name": "notes",
+        "label": "Notes",
+        "type": "textarea"
+      }
+    ]
+  }
+}

@@ -65,6 +65,8 @@ SEALED = frozenset({
     "gps_tracks.json",  # walks, rides and drives
     "operating_journal.json",  # how they mean to operate, and how they do
     "turn_traces.jsonl",  # what they asked and what she said, turn by turn
+    # 2026-11-08 (DEC-0129): health is sealed from its first save
+    "health.json",  # sleep, doctor and dentist visits, medications, health records
 })
 # Every store reading a SEALED file uses open_text and catches ValueError (UnreadableFile is one) with OSError, so a
 # file that won't open is copied aside and the store starts empty instead of MIA failing to start. Not yet: the

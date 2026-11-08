@@ -1756,3 +1756,12 @@ a.comms-row:hover .row-title { color: var(--accent); }
 /* Look from the chat (DEC-0129). */
 .talk-photo { display: grid; gap: 6px; }
 .talk-photo img { max-width: 220px; max-height: 220px; border-radius: 8px; object-fit: cover; }
+/* Health (DEC-0129), 2026-11-08: the week's sleep as seven tappable bars. */
+.sleep-week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; align-items: end; height: 140px; margin-top: 10px; }
+.sleep-night { display: grid; grid-template-rows: 1fr auto auto; justify-items: center; gap: 4px; height: 100%; padding: 0; border: 0; background: none; color: inherit; cursor: pointer; }
+.sleep-night .sleep-bar { align-self: end; width: 70%; border-radius: 4px 4px 0 0; background: var(--accent); }
+.sleep-night .sleep-bar.empty { background: rgba(var(--rgb-accent), .15); }
+.sleep-night .sleep-h { font-family: var(--font-mono); font-size: 12px; }
+.sleep-night .sleep-d { font-size: 11px; color: var(--text-faint); }
+.row.muted .row-title { color: var(--text-dim); }
+.health-note { font-size: 13px; margin-top: 8px; }

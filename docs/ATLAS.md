@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1210 files, 264,332 lines; 1210 files describe themselves; 14,410 of 15,097 classes and functions are documented.
+1215 files, 265,235 lines; 1215 files describe themselves; 14,469 of 15,156 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-446 files, 124,029 lines; 6,612 of 6,698 classes and functions documented
+449 files, 124,731 lines; 6,663 of 6,749 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -37,6 +37,7 @@
 - `core/assistant_energy_actions.py`: Energy by voice (T-0053, from the weekly interconnection audit, DEC-0108): "how's the solar doing?", "what did the generator read last?". The energy store (core/energy_manager.py: solar, a generator, propane, tracked by hand) had no Assistant tool, so nothing about it could be asked out loud.
 - `core/assistant_focus_actions.py`: Assistant tools for each person's Apps screen (core/focus_presets.py, 2026-10-01): "switch me to student mode", "hide the Lab", "show me the Greenhouse again", "what's my focus?". Changes are the speaker's own.
 - `core/assistant_goods_actions.py`: Saying it to MIA (2026-10-21): the homestead's newest screens by voice. "How many eggs this week?", "I collected 9 eggs", "What goods do I have on hand?", "Sold 3 loaves of banana bread", "How close am I to freedom?", "What's due for taxes?". Each one runs the same code its screen does (the action k
+- `core/assistant_health_actions.py`: Health by voice (DEC-0129, DEC-0125; the screen is web/health.html, the records core/health_manager.py): "I slept seven hours, pretty rested", "add a dentist visit on the 20th", "add vitamin D, 2000 IU at 8 am", "I took my vitamin D", "stop the antibiotics", "add my tetanus shot from 2024", "how hav
 - `core/assistant_homestead_actions.py`: Assistant tools for Finance #2, homestead builds and tools (core/homestead_costs.py): "I spent $240 on lumber for the greenhouse", "I bought a DeWalt drill for $199 for the greenhouse", "How much have I spent on the greenhouse?", "What has the mower cost me?", "Set the greenhouse budget to $5,000". 
 - `core/assistant_household_actions.py`: The Household by voice, for what its screen added (DEC-0125: full use both ways). "Pause the vacuum routine", "start the trash routine again": the same `routine.pause` / `routine.resume` action kinds the Household screen's buttons use (core/routine_actions.py), so "undo that" brings it back. Adding,
 - `core/assistant_humor_actions.py`: "Be funnier", "tone down the jokes", "no jokes for now" (Zac, 2026-11-07): the person sets how funny MIA is with them, in chat. One tool, set_humor, moving their own level (core/personality.py HUMOR_LEVELS: off, rare, sometimes, often, lots) up or down a step or to a level by name. Only the speaker'
@@ -198,6 +199,8 @@
 - `core/guitar.py`: Guitar, the first program on MIA's learning paths (DEC-0111, DEC-0112; Zac, 2026-11-07: "I want to learn guitar and would like for MIA to be able to help teach me as well as track my progress and assign missions like homework ... being able to verify and test a user's skills just like it would do fo
 - `core/guitar_ear.py`: How MIA hears a guitar (DEC-0111): a recording, worked out in code, so a skill check can be passed by playing it, not only by saying so. The same rule she keeps for herself: a skill counts when it's shown.
 - `core/hash_identifier.py`: Identifies the plausible algorithm(s) for a hash string, by prefix (for self-describing formats like bcrypt/crypt) or length+charset (for bare hex digests) — docs/ROADMAP.md milestone 11.5, Field Kit's Security/Network Toolkit. This is pattern-matching, not verification: there is no way to truly det
+- `core/health_actions.py`: Every change to Health (core/health_manager.py) as an action, so the page, the phone, the glasses and voice agree and undo takes each one back, and the Health page's data (`health_page`) with its forms.
+- `core/health_manager.py`: Health and Fitness's records (DEC-0129, Zac 2026-11-08: "sleep, doctor and dentist visits, medications and supplements, health records... are good"). One personal store, `health.json` in the person's own folder, sealed at rest (core/at_rest.SEALED, DEC-0126), never on a shared screen and never sent 
 - `core/heavy_jobs.py`: Heavy jobs on the home computer (DEC-0022; Zac, 2026-10-18): when this device can't do a job well itself and it's linked to MIA on the home computer (core/home_link.py), the computer does it:
 - `core/home_link.py`: Supercharged online (DEC-0022, level 2): when the phone can reach MIA on the home computer (same Wi-Fi, or anywhere through Tailscale), Talk uses the computer's bigger model; when it can't, mid-conversation or not, the phone's own model answers. MIA always says which one did (`level`).
 - `core/homestead_costs.py`: Finance #2 (2026-09-28): what the owner's homestead builds and tools actually cost. The owner asked for MIA to "help me manage my homestead I am building and the costs associated with my tools, and builds."
@@ -457,7 +460,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 3,544 lines; 39 of 39 classes and functions documented
+2 files, 3,552 lines; 39 of 39 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -728,7 +731,7 @@
 
 ## tests/: the test suite: what each part must do
 
-410 files, 70,365 lines; 5,539 of 6,140 classes and functions documented
+411 files, 70,458 lines; 5,547 of 6,148 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -872,6 +875,7 @@
 - `tests/test_grow_lab.py`: The grow lab (DEC-0030 phase D): batches, harvests and losses, readings against the person's own ranges (only ever a warning), experiments that compare batches, all undoable; and a planting's stage from what's known. *(4 undocumented)*
 - `tests/test_guitar.py`: Guitar, the first program on MIA's learning paths (core/guitar.py, core/guitar_ear.py, DEC-0111): her ear hears notes and chords right (and wrong ones as wrong), the program is sound (every shape makes its chord's notes), and the path runs end to end by voice: start, practise, checks counted, said a
 - `tests/test_hash_identifier.py`: Unit tests for core.hash_identifier — pure pattern-matching logic, no external dependency, real hashes used as test fixtures (not mocks). *(1 undocumented)*
+- `tests/test_health.py`: Health (DEC-0129: core/health_manager.py, core/health_actions.py, core/assistant_health_actions.py): nights of sleep, visits, medications with their reminders, and records, each change an action; what comes due shows on Today; the file is sealed at rest; and nothing about a medication's name reaches
 - `tests/test_heavy_jobs.py`: Heavy jobs on the home computer (core/heavy_jobs.py): a device without Tesseract, a speech model or a voice sends the job to the linked PC; the PC unreachable means the old answer, and it isn't asked again for a while. *(1 undocumented)*
 - `tests/test_history_and_links.py`: The interconnection work from the first self-audit (DEC-0108, 2026-11-07): `life_events.on_change` puts a store's changes in her history, and the new link kinds let the rest of a life's records be linked, with the refs the history carries.
 - `tests/test_home_dashboard.py`: Unit tests for gui.home_dashboard's pure formatting helpers. The reactive widget/QTimer behavior itself is verified with a headless offscreen-QPA smoke test (this project's convention for Qt widget behavior), not pytest — see gui/character_panel.py's own test file for the same split.
@@ -1143,7 +1147,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-88 files, 15,709 lines
+89 files, 15,809 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
@@ -1176,6 +1180,7 @@
 - `web/grow-redirect.js`: grow-redirect.js — the old Grow page now lives in the Greenhouse (its Growing tab); this sends you there, keeping the part of the page asked for. Its own file because MIA's pages run no inline script (and not grow.js, which is the Grow Lab module the Greenhouse and asset pages load) (Content-Securit
 - `web/grow.js`: grow.js — the Grow Lab (claude, 2026-10-17, DEC-0030 phase D). Renders MIA.grow() (core/web_grow.py), as tabs of the Greenhouse (Zac, 2026-10-17: "Isn't Grow Lab essentially what the Greenhouse app is"): equipment.js shows them beside the greenhouse's equipment through window.MIAGrow. Tabs: Growing 
 - `web/guitar.js`: guitar.js — a learning path (claude, 2026-11-07, DEC-0111, DEC-0112): guitar by default, any path with ?path=<id>. Renders MIA.guitar() (core/guitar.py): the stage, this week against the plan, the streak, the bests, what to work on next, and each open check. A check MIA hears gets a Record button: a
+- `web/health.js`: health.js — Health (DEC-0129, claude, 2026-11-08). Renders MIA.health() (core/health_actions.health_page): what's coming up, the week's sleep (tap a night's hours to log it), medications and supplements (Taken, reminders at their times, refills), visits, and records. Every change is an action, so un
 - `web/home.js`: home.js — MIA's Home (muse, 2026-10-05).
 - `web/household.js`: household.js — the household's routines (claude, 2026-11-06; the design canvas's Household, DEC-0113, 2026-11-07). Renders MIA.household() (core/household_routines.py): Done Today with its meter, then a card per routine (what it is, daily or this week, its streak in words) with Did It, or Done; what
 - `web/hub.js`: hub.js — an area's hub (DEC-0129, claude, 2026-11-08). Renders MIA.hub(area) (core/web_areas.hub): the area's apps and pages as tiles, each opening its own page, then the other areas to jump to. Which apps are in which area is decided in core; this only lays them out.
