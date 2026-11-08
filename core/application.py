@@ -1144,7 +1144,19 @@ class MIAApplication:
         book = getattr(self.context, "direction", None)
         if book is None or not hasattr(book, "due_for_nudge") or not book.due_for_nudge(today_iso):
             return
-        message = book.a_nudge(random.random())
+        # Prefer a grounded seed (core/whimsy.py): concrete, seasonal, shelf-aware inspiration toward one of the
+        # person's own directions. Falls back to the direction's plain nudge when no seed fits.
+        from core import whimsy
+
+        active = book.active()
+        blobs = [f"{d.title} {d.statement}" for d in active]
+        materials = []
+        if getattr(self.context, "materials", None) is not None:
+            try:
+                materials = [m.name for m in self.context.materials.all_materials()]
+            except Exception:
+                materials = []
+        message = whimsy.a_seed(blobs, materials, now.month, random.random()) or book.a_nudge(random.random())
         if not message:
             return
         self._offer(topic="produce", title="\U0001F331 A nudge", message=message, urgency=AMBIENT, source="system",

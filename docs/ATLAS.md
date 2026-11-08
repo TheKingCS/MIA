@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1260 files, 273,435 lines; 1260 files describe themselves; 14,862 of 15,562 classes and functions are documented.
+1262 files, 273,626 lines; 1262 files describe themselves; 14,872 of 15,572 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-467 files, 128,820 lines; 6,910 of 6,996 classes and functions documented
+468 files, 128,955 lines; 6,914 of 7,000 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -460,6 +460,7 @@
 - `core/web_why.py`: "My Why" on the web (DEC-0125: the why chain was voice-only; "Remember Why", docs/COGNITIVE_EXTENSION_PROPOSAL.md slice B). The person's reasons as chains ("Factory work → Pay off debt → Control over my time"), each link with the reason in their own words, whether it's done (and why), and the facts 
 - `core/weekly_checkin.py`: The Sunday check-in (DEC-0047 rule 5; Zac, 2026-10-27): Sunday morning, a recap of the week just past and the layout of the week ahead.
 - `core/welcome.py`: What comes after User Sync (slice 5 of docs/GLASSES_FIRST_BOOT_PLAN.md): the first mission, the tour of Home, the app menu with its optional tours, and the moment MIA hands over.
+- `core/whimsy.py`: A little grounded inspiration toward the slow, made, hand-crafted life — the whimsy and art Zac asked MIA to keep alive (2026-11-08: "slow down, draw, create, think about forest creatures, make stuff, dream, do", and his shift from consumer to producer). The standing directions (`core/direction.py`)
 - `core/why_graph.py`: "Remember Why", slice B of docs/COGNITIVE_EXTENSION_PROPOSAL.md: the owner's reasons as a chain, with live evidence from their own records, assembled in code so the model can only phrase it, never invent it.
 - `core/work_activity.py`: Who did what to the development work, and when (DEC-0068, step 2 of `docs/DEV_ECOSYSTEM_AUDIT.md`): `work/activity.jsonl`, one line per event, only ever added to. Every change `tools/work.py` makes to a task is recorded here, so the history is searchable and a task interrupted halfway can be picked 
 - `core/work_agents.py`: Who can do the development work, and what each may do (DEC-0068/0069, step 3 of `docs/DEV_ECOSYSTEM_AUDIT.md`). Roles live in `work/agents.json`: each is a provider (Claude Code, Ollama, Codex...), a model, a permission tier and the documents it reads first. Roles are configuration; providers are ad
@@ -753,7 +754,7 @@
 
 ## tests/: the test suite: what each part must do
 
-429 files, 72,197 lines; 5,669 of 6,283 classes and functions documented
+430 files, 72,253 lines; 5,675 of 6,289 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1166,6 +1167,7 @@
 - `tests/test_web_why.py`: My Why on the web (core/web_why.py): the chains of reasons with their facts, and linking, unlinking and achieving goals as why.* actions, the same goals the voice tools keep (DEC-0125). *(2 undocumented)*
 - `tests/test_welcome.py`: What comes after User Sync (core/welcome.py, core/app_intro.py). *(4 undocumented)*
 - `tests/test_what_i_used.py`: What I Used (DEC-0029, ALICE pick 1): a turn gets the memories that match what was asked, returns them with the reply, and each can be fixed or forgotten (and the forgetting undone).
+- `tests/test_whimsy.py`: The grounded little inspiration MIA offers toward the slow, made life (core/whimsy.py, 2026-11-08). A seed is composed from real things — the season, the workshop shelf, the person's own standing directions — never improvised; it only grows from a direction the person actually set; a material seed n
 - `tests/test_why_graph.py`: Slice B, "Remember Why": the reason chain on Intents, the evidence builder (core/why_graph.py), the tools (core/assistant_why_actions.py), and the Perspective path. Checks facts and structure, never wording.
 - `tests/test_work_activity.py`: Who did what to the development work (DEC-0068, core/work_activity.py): an append-only log, searchable, that says where an interrupted task got to, and closing a task gathers its evidence. *(1 undocumented)*
 - `tests/test_work_dashboard.py`: The development dashboard (DEC-0068/0070, core/work_dashboard.py): the device's owner sees the work, the queue and the history; nobody else does. *(1 undocumented)*
