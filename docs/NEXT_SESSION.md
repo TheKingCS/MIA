@@ -1126,6 +1126,9 @@ it, and went with Claude's recommendations. The plan, in order:
 
 ## 4. Known loose ends
 
+- **DEC-0126 next stages (Claude):** seal money and people next (add the file names to `at_rest.SEALED`, make their `_load` use `open_text`, grep for other readers of the names first: K-0105), then the rest of PERSONAL_STORES; the phone's Android Keystore; a Settings line showing sealing on/off and the recovery key behind the password. The optional passphrase waits on Zac.
+- **1,382 "Finished a book" life events (2026-11-08)** in data/life_events.jsonl from the decorator bug (fixed in 9bb99d47). History is never rewritten, so they stay unless Zac says to clear them.
+
 - **On Zac's PC (2026-10-20):** `pytest` used to save into the real
   `config\config.json`: one run left 49 test profiles (Alex, Faith) and
   made a Faith the active one. Fixed in `tests/conftest.py` (a temp
