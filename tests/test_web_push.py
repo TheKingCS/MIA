@@ -32,6 +32,7 @@ from core.web_push import _relay_notification_to_all_subscriptions
 
 
 class _FakeConfig:
+    """A config that always gives the default."""
     def get(self, key: str, default=None):
         """The default."""
         return default
@@ -39,6 +40,7 @@ class _FakeConfig:
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the push keys, subscriptions and notifications files at a temporary folder."""
     data_dir = tmp_path / "data"
     monkeypatch.setattr(web_push_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(web_push_module, "_VAPID_KEYS_FILE", data_dir / "vapid_keys.json")
@@ -50,12 +52,14 @@ def isolated_paths(tmp_path, monkeypatch):
 
 @pytest.fixture
 def subscriptions(isolated_paths) -> PushSubscriptionManager:
+    """A push subscription manager on a fresh context."""
     context = AppContext(config=_FakeConfig(), events=EventBus())
     return PushSubscriptionManager(context)
 
 
 @pytest.fixture
 def context(isolated_paths) -> AppContext:
+    """A context with a push subscription manager."""
     ctx = AppContext(config=_FakeConfig(), events=EventBus())
     ctx.push_subscriptions = PushSubscriptionManager(ctx)
     return ctx
@@ -155,6 +159,7 @@ def test_send_web_push_unreachable_service_returns_false(isolated_paths, subscri
 # ----------------------------------------------------------------------
 
 def _notification(title="MIA", message="Something happened") -> Notification:
+    """A notification with a title and message."""
     return Notification(notification_id="n1", title=title, message=message)
 
 

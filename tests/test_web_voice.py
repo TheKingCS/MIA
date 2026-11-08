@@ -13,14 +13,17 @@ class FakeVoice:
     """A voice manager with two voices installed and one whose model file has gone."""
 
     def __init__(self):
+        """Starts on the American Heart voice."""
         self.current_voice_id = "kokoro:af_heart"
 
     def list_available_voices(self):
+        """Three voices: two Kokoro ones and one ("gone") that can't be set."""
         return [SimpleNamespace(voice_id="kokoro:af_heart", display_name="Heart (American)", engine="kokoro"),
                 SimpleNamespace(voice_id="kokoro:bf_emma", display_name="Emma (British)", engine="kokoro"),
                 SimpleNamespace(voice_id="gone", display_name="Gone", engine="piper")]
 
     def set_voice(self, voice_id):
+        """Switches to the voice, except "gone", which fails as an uninstalled voice would."""
         if voice_id == "gone":
             return False
         self.current_voice_id = voice_id
@@ -33,13 +36,16 @@ class Config(dict):
     saved = False
 
     def set(self, key, value):
+        """Keeps the value under its key."""
         self[key] = value
 
     def save(self):
+        """Notes that it was saved."""
         self.saved = True
 
 
 def home():
+    """A pretend MIA with only a voice and a config, for the voice settings page."""
     return SimpleNamespace(voice=FakeVoice(), config=Config())
 
 

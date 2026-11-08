@@ -24,6 +24,7 @@ TODAY = date.today()
 
 @pytest.fixture
 def world(tmp_path, monkeypatch):
+    """A world with a mower (oil overdue, blades due, an engine-hours meter), a fridge and a tomato bed."""
     monkeypatch.setattr(maintenance_module, "_DOCUMENT_ROOT", tmp_path / "documents")
     context = build_world(tmp_path, monkeypatch)
     context.actions = ActionCenter()
@@ -42,6 +43,7 @@ def world(tmp_path, monkeypatch):
 
 
 def run(world, kind, **params):
+    """Proposes and approves an action; the proposal and the result."""
     proposal = world.actions.propose(world, kind, params)
     return proposal, world.actions.approve(world, proposal.proposal_id)
 
@@ -60,6 +62,7 @@ def test_task_status_speaks_the_pc_apps_words(world):
 
 
 def test_the_garage_page(world):
+    """The Garage page shows each vehicle and tool with its tasks, what needs you and what's next; other scopes show their own assets."""
     page = equipment_page(world, "garage", TODAY)
     assert [a["name"] for a in page["assets"]] == ["Mower"]
     [mower] = page["assets"]
@@ -77,6 +80,7 @@ def test_the_garage_page(world):
 
 
 def test_the_asset_page(world):
+    """An asset's page shows its details, readings, missions, history and parts."""
     world.missions.add_mission("Mow the lawn", maintenance_asset_id=world.mower.asset_id, reward_xp=75)
     run(world, "asset.reading", asset_id=world.mower.asset_id, meter_name="Fuel", value="72", unit="%")
     run(world, "maintenance.reading", task_id=world.hours.task_id, value="12.8")
@@ -145,6 +149,7 @@ def test_the_engine_keeps_the_rules(world):
 
 
 def test_documents(world, tmp_path):
+    """Removing an asset's document keeps the file, so undo brings it back."""
     source = tmp_path / "manual.pdf"
     source.write_bytes(b"%PDF-1.4 placeholder")
     world.maintenance.add_document(world.mower.asset_id, source)

@@ -86,6 +86,7 @@ class PretendPC:
     """Answers the sync calls the way MIA on the computer does, from dicts."""
 
     def __init__(self):
+        """The PC's two folders (mine and home), their files and photos, the journal key and the game totals."""
         self.files = {"mine": {}, "home": {}}
         self.blobs = {"mine": {}, "home": {}}
         self.journal_key = ""
@@ -93,6 +94,7 @@ class PretendPC:
 
     def __call__(self, context, path, payload=None, timeout=6.0, method="", raw=False, body=None, headers=None,
                  save_to=None):
+        """Answers the phone's sync calls as the PC would: the manifest, files and photos up and down (refusing a push over a newer one), and the game totals."""
         import hashlib
         from urllib.parse import parse_qs, urlsplit
 
@@ -132,6 +134,7 @@ class PretendPC:
 
 @pytest.fixture
 def phone(tmp_path, monkeypatch):
+    """A phone's world with its own two folders and sync state in a temporary folder."""
     from tests.engine_world import build_world
 
     world = build_world(tmp_path, monkeypatch)
@@ -145,6 +148,7 @@ def phone(tmp_path, monkeypatch):
 
 
 def _missions(*ids):
+    """A missions file's bytes with the given mission ids."""
     return json.dumps([{"mission_id": i, "name": i} for i in ids]).encode()
 
 
@@ -190,6 +194,7 @@ def test_xp_earned_on_both_adds_up(phone):
 
 
 def test_the_pcs_endpoints(tmp_path, monkeypatch):
+    """The PC's sync endpoints serve the manifest and files, refuse paths outside the folders, stale pushes and files that aren't synced, and stream photos checked by their hash."""
     from fastapi.testclient import TestClient
 
     import server.app as server_app

@@ -38,6 +38,7 @@ from modules.maintenance.module import (
 
 
 def _task(interval_days=None, last_completed=None):
+    """An oil change task, by days or with no interval."""
     return MaintenanceTask(
         task_id="t1", asset_id="a1", title="Oil change",
         interval_days=interval_days, last_completed=last_completed,
@@ -45,6 +46,7 @@ def _task(interval_days=None, last_completed=None):
 
 
 def _meter_task(meter_interval=5000.0, last_completed_meter_value=40000.0, meter_unit="miles"):
+    """An oil change by the meter (miles by default), last done at a given reading."""
     return MaintenanceTask(
         task_id="t2", asset_id="a1", title="Oil change", trigger_type="mileage",
         meter_unit=meter_unit, meter_interval=meter_interval,
@@ -53,6 +55,7 @@ def _meter_task(meter_interval=5000.0, last_completed_meter_value=40000.0, meter
 
 
 def _sensor_task(threshold_value=11.5, threshold_direction="below"):
+    """A battery check due when the voltage crosses a threshold."""
     return MaintenanceTask(
         task_id="t3", asset_id="a1", title="Check battery", trigger_type="sensor",
         meter_unit="V", threshold_value=threshold_value, threshold_direction=threshold_direction,
@@ -60,6 +63,7 @@ def _sensor_task(threshold_value=11.5, threshold_direction="below"):
 
 
 def _reading(value, timestamp, series_id="maintenance_t2"):
+    """One reading at a time for a series."""
     return Reading(reading_id="r", series_id=series_id, value=value, unit="", note="", timestamp=timestamp)
 
 
@@ -121,6 +125,7 @@ def test_is_overdue_false_for_one_time_or_never_completed():
 # ------------------------------------------------------------------
 
 def test_format_asset_row():
+    """An asset's list row is its name and its category in brackets."""
     asset = MaintenanceAsset(asset_id="a1", name="Lawn Mower", category="Power Equipment")
     assert format_asset_row(asset) == "Lawn Mower   [Power Equipment]"
 

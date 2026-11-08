@@ -19,6 +19,7 @@ from core.power_manager import PowerManager, PowerStatus, PsutilBatteryBackend, 
 
 
 class _FakeConfig:
+    """A config that answers only from the overrides it was given."""
     def __init__(self, overrides: dict) -> None:
         """Keeps the overrides."""
         self._overrides = overrides
@@ -29,14 +30,18 @@ class _FakeConfig:
 
 
 class _FakeNotifications:
+    """Notifications that are only remembered, so a test can see what was raised."""
     def __init__(self) -> None:
+        """None raised yet."""
         self.notified: list[dict] = []
 
     def notify(self, title, message, level="info", source="system"):
+        """Remembers a notification."""
         self.notified.append({"title": title, "message": message, "level": level, "source": source})
 
 
 def _make_manager(threshold: float = 20.0) -> tuple[PowerManager, _FakeNotifications]:
+    """A power manager with the low-battery threshold set, and its pretend notifications."""
     notifications = _FakeNotifications()
     context = AppContext(config=_FakeConfig({"power.low_battery_threshold_percent": threshold}), events=None)
     context.notifications = notifications
