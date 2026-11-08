@@ -359,6 +359,9 @@
       { id: "kokoro:af_heart", name: "Heart (American)", engine: "kokoro" }, { id: "kokoro:bf_emma", name: "Emma (British)", engine: "kokoro" },
       { id: "en_US-amy-medium", name: "Amy", engine: "piper" }] }) : call("GET", "/api/settings/voice"),
     chooseVoice: (change) => demo ? demoOnly() : call("POST", "/api/settings/voice", change),
+    search: (q) => demo ? read("", "search").then((d) => ({ query: q, results: d.results.filter((r) =>
+      q.toLowerCase().split(/\s+/).filter(Boolean).every((w) => r.title.toLowerCase().includes(w))) }))
+      : call("GET", "/api/search?q=" + encodeURIComponent(q)),
     suggestMission: () => demo ? demoOnly() : call("POST", "/api/missions/idea", {}),
     checkCaptures: () => demo ? demoOnly() : call("POST", "/api/journal/captures/check", {}),
     deletePack: (id, confirm) => demo ? demoOnly() : call("POST", "/api/knowledge/pack/delete", { id, confirm }),
