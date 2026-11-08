@@ -17,47 +17,1317 @@
     {
       "name": "Body",
       "interest": false,
-      "trend": "growing"
+      "trend": "growing",
+      "tree": {
+        "w": 0,
+        "h": 0,
+        "nodes": [],
+        "edges": []
+      }
     },
     {
       "name": "Construction",
       "interest": false,
-      "trend": null
+      "trend": null,
+      "tree": {
+        "w": 540,
+        "h": 556,
+        "box_w": 160,
+        "box_h": 44,
+        "nodes": [
+          {
+            "id": "carpentry",
+            "name": "Carpentry",
+            "x": 0,
+            "y": 0,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "code_standards",
+            "name": "Code Standards",
+            "x": 0,
+            "y": 64,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "concrete",
+            "name": "Concrete",
+            "x": 0,
+            "y": 128,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "drywall",
+            "name": "Drywall",
+            "x": 0,
+            "y": 192,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "electrical_wiring",
+            "name": "Electrical Wiring",
+            "x": 0,
+            "y": 256,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "hvac",
+            "name": "HVAC",
+            "x": 0,
+            "y": 320,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "insulation",
+            "name": "Insulation",
+            "x": 0,
+            "y": 384,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "painting_finishing",
+            "name": "Painting & Finishing",
+            "x": 0,
+            "y": 448,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "plumbing",
+            "name": "Plumbing",
+            "x": 0,
+            "y": 512,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "foundation_work",
+            "name": "Foundation Work",
+            "x": 190,
+            "y": 0,
+            "unlocked": false,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "framing",
+            "name": "Framing",
+            "x": 190,
+            "y": 64,
+            "unlocked": false,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "masonry",
+            "name": "Masonry",
+            "x": 190,
+            "y": 128,
+            "unlocked": false,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "permitting_inspection",
+            "name": "Permitting & Inspection",
+            "x": 190,
+            "y": 192,
+            "unlocked": false,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "roofing",
+            "name": "Roofing",
+            "x": 190,
+            "y": 256,
+            "unlocked": false,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "home_building",
+            "name": "Home Building",
+            "x": 380,
+            "y": 0,
+            "unlocked": false,
+            "started": false,
+            "outside": false
+          }
+        ],
+        "edges": [
+          {
+            "from": "concrete",
+            "to": "foundation_work",
+            "x1": 160,
+            "y1": 150.0,
+            "x2": 190,
+            "y2": 22.0,
+            "met": false
+          },
+          {
+            "from": "carpentry",
+            "to": "framing",
+            "x1": 160,
+            "y1": 22.0,
+            "x2": 190,
+            "y2": 86.0,
+            "met": false
+          },
+          {
+            "from": "concrete",
+            "to": "masonry",
+            "x1": 160,
+            "y1": 150.0,
+            "x2": 190,
+            "y2": 150.0,
+            "met": false
+          },
+          {
+            "from": "code_standards",
+            "to": "permitting_inspection",
+            "x1": 160,
+            "y1": 86.0,
+            "x2": 190,
+            "y2": 214.0,
+            "met": false
+          },
+          {
+            "from": "framing",
+            "to": "roofing",
+            "x1": 350,
+            "y1": 86.0,
+            "x2": 190,
+            "y2": 278.0,
+            "met": false
+          },
+          {
+            "from": "carpentry",
+            "to": "home_building",
+            "x1": 160,
+            "y1": 22.0,
+            "x2": 380,
+            "y2": 22.0,
+            "met": false
+          },
+          {
+            "from": "framing",
+            "to": "home_building",
+            "x1": 350,
+            "y1": 86.0,
+            "x2": 380,
+            "y2": 22.0,
+            "met": false
+          },
+          {
+            "from": "plumbing",
+            "to": "home_building",
+            "x1": 160,
+            "y1": 534.0,
+            "x2": 380,
+            "y2": 22.0,
+            "met": false
+          },
+          {
+            "from": "electrical_wiring",
+            "to": "home_building",
+            "x1": 160,
+            "y1": 278.0,
+            "x2": 380,
+            "y2": 22.0,
+            "met": false
+          },
+          {
+            "from": "hvac",
+            "to": "home_building",
+            "x1": 160,
+            "y1": 342.0,
+            "x2": 380,
+            "y2": 22.0,
+            "met": false
+          },
+          {
+            "from": "code_standards",
+            "to": "home_building",
+            "x1": 160,
+            "y1": 86.0,
+            "x2": 380,
+            "y2": 22.0,
+            "met": false
+          },
+          {
+            "from": "foundation_work",
+            "to": "home_building",
+            "x1": 350,
+            "y1": 22.0,
+            "x2": 380,
+            "y2": 22.0,
+            "met": false
+          }
+        ]
+      }
     },
     {
       "name": "Creative",
       "interest": false,
-      "trend": null
+      "trend": null,
+      "tree": {
+        "w": 350,
+        "h": 428,
+        "box_w": 160,
+        "box_h": 44,
+        "nodes": [
+          {
+            "id": "costume_design",
+            "name": "Costume Design",
+            "x": 0,
+            "y": 0,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "lighting",
+            "name": "Lighting",
+            "x": 0,
+            "y": 64,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "music",
+            "name": "Music",
+            "x": 0,
+            "y": 128,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "photography",
+            "name": "Photography",
+            "x": 0,
+            "y": 192,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "projection_mapping",
+            "name": "Projection Mapping",
+            "x": 0,
+            "y": 256,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "storytelling",
+            "name": "Storytelling",
+            "x": 0,
+            "y": 320,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "videography",
+            "name": "Videography",
+            "x": 0,
+            "y": 384,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "content_creation",
+            "name": "Content Creation",
+            "x": 190,
+            "y": 0,
+            "unlocked": false,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "djing",
+            "name": "DJing",
+            "x": 190,
+            "y": 64,
+            "unlocked": false,
+            "started": false,
+            "outside": false
+          }
+        ],
+        "edges": [
+          {
+            "from": "photography",
+            "to": "content_creation",
+            "x1": 160,
+            "y1": 214.0,
+            "x2": 190,
+            "y2": 22.0,
+            "met": false
+          },
+          {
+            "from": "videography",
+            "to": "content_creation",
+            "x1": 160,
+            "y1": 406.0,
+            "x2": 190,
+            "y2": 22.0,
+            "met": false
+          },
+          {
+            "from": "storytelling",
+            "to": "content_creation",
+            "x1": 160,
+            "y1": 342.0,
+            "x2": 190,
+            "y2": 22.0,
+            "met": false
+          },
+          {
+            "from": "music",
+            "to": "djing",
+            "x1": 160,
+            "y1": 150.0,
+            "x2": 190,
+            "y2": 86.0,
+            "met": false
+          }
+        ]
+      }
     },
     {
       "name": "Homestead",
       "interest": false,
-      "trend": null
+      "trend": null,
+      "tree": {
+        "w": 1490,
+        "h": 556,
+        "box_w": 160,
+        "box_h": 44,
+        "nodes": [
+          {
+            "id": "automation",
+            "name": "Automation",
+            "x": 0,
+            "y": 0,
+            "unlocked": false,
+            "started": false,
+            "outside": true
+          },
+          {
+            "id": "animal_care",
+            "name": "Animal Care",
+            "x": 190,
+            "y": 0,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "composting",
+            "name": "Composting",
+            "x": 190,
+            "y": 64,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "construction",
+            "name": "Construction",
+            "x": 190,
+            "y": 128,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "energy_systems",
+            "name": "Energy Systems",
+            "x": 190,
+            "y": 192,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "food_production",
+            "name": "Food Production",
+            "x": 190,
+            "y": 256,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "gardening",
+            "name": "Gardening",
+            "x": 190,
+            "y": 320,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "home_maintenance",
+            "name": "Home Maintenance",
+            "x": 190,
+            "y": 384,
+            "unlocked": true,
+            "started": true,
+            "outside": false
+          },
+          {
+            "id": "landscaping",
+            "name": "Landscaping",
+            "x": 190,
+            "y": 448,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "water_systems",
+            "name": "Water Systems",
+            "x": 190,
+            "y": 512,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "seed_starting",
+            "name": "Seed Starting",
+            "x": 380,
+            "y": 0,
+            "unlocked": false,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "soil_science",
+            "name": "Soil Science",
+            "x": 380,
+            "y": 64,
+            "unlocked": false,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "greenhouse_management",
+            "name": "Greenhouse Management",
+            "x": 570,
+            "y": 0,
+            "unlocked": false,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "irrigation",
+            "name": "Irrigation",
+            "x": 570,
+            "y": 64,
+            "unlocked": false,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "hydroponics",
+            "name": "Hydroponics",
+            "x": 760,
+            "y": 0,
+            "unlocked": false,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "aquaponics",
+            "name": "Aquaponics",
+            "x": 950,
+            "y": 0,
+            "unlocked": false,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "greenhouse_automation",
+            "name": "Greenhouse Automation",
+            "x": 1140,
+            "y": 0,
+            "unlocked": false,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "closed_loop_agriculture",
+            "name": "Closed-Loop Agriculture",
+            "x": 1330,
+            "y": 0,
+            "unlocked": false,
+            "started": false,
+            "outside": false
+          }
+        ],
+        "edges": [
+          {
+            "from": "gardening",
+            "to": "seed_starting",
+            "x1": 350,
+            "y1": 342.0,
+            "x2": 380,
+            "y2": 22.0,
+            "met": false
+          },
+          {
+            "from": "gardening",
+            "to": "soil_science",
+            "x1": 350,
+            "y1": 342.0,
+            "x2": 380,
+            "y2": 86.0,
+            "met": false
+          },
+          {
+            "from": "gardening",
+            "to": "greenhouse_management",
+            "x1": 350,
+            "y1": 342.0,
+            "x2": 570,
+            "y2": 22.0,
+            "met": false
+          },
+          {
+            "from": "seed_starting",
+            "to": "irrigation",
+            "x1": 540,
+            "y1": 22.0,
+            "x2": 570,
+            "y2": 86.0,
+            "met": false
+          },
+          {
+            "from": "soil_science",
+            "to": "irrigation",
+            "x1": 540,
+            "y1": 86.0,
+            "x2": 570,
+            "y2": 86.0,
+            "met": false
+          },
+          {
+            "from": "irrigation",
+            "to": "hydroponics",
+            "x1": 730,
+            "y1": 86.0,
+            "x2": 760,
+            "y2": 22.0,
+            "met": false
+          },
+          {
+            "from": "hydroponics",
+            "to": "aquaponics",
+            "x1": 920,
+            "y1": 22.0,
+            "x2": 950,
+            "y2": 22.0,
+            "met": false
+          },
+          {
+            "from": "aquaponics",
+            "to": "greenhouse_automation",
+            "x1": 1110,
+            "y1": 22.0,
+            "x2": 1140,
+            "y2": 22.0,
+            "met": false
+          },
+          {
+            "from": "automation",
+            "to": "greenhouse_automation",
+            "x1": 160,
+            "y1": 22.0,
+            "x2": 1140,
+            "y2": 22.0,
+            "met": false
+          },
+          {
+            "from": "greenhouse_automation",
+            "to": "closed_loop_agriculture",
+            "x1": 1300,
+            "y1": 22.0,
+            "x2": 1330,
+            "y2": 22.0,
+            "met": false
+          }
+        ]
+      }
     },
     {
       "name": "Maker",
       "interest": false,
-      "trend": null
+      "trend": null,
+      "tree": {
+        "w": 920,
+        "h": 364,
+        "box_w": 160,
+        "box_h": 44,
+        "nodes": [
+          {
+            "id": "3d_printing",
+            "name": "3D Printing",
+            "x": 0,
+            "y": 0,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "electronics",
+            "name": "Electronics",
+            "x": 0,
+            "y": 64,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "laser_engraving",
+            "name": "Laser Engraving",
+            "x": 0,
+            "y": 128,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "metalworking",
+            "name": "Metalworking",
+            "x": 0,
+            "y": 192,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "repair",
+            "name": "Repair",
+            "x": 0,
+            "y": 256,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "woodworking",
+            "name": "Woodworking",
+            "x": 0,
+            "y": 320,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "cad",
+            "name": "CAD / 3D Design",
+            "x": 190,
+            "y": 0,
+            "unlocked": false,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "soldering",
+            "name": "Soldering",
+            "x": 190,
+            "y": 64,
+            "unlocked": false,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "mechanical_design",
+            "name": "Mechanical Design",
+            "x": 380,
+            "y": 0,
+            "unlocked": false,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "prototyping",
+            "name": "Prototyping",
+            "x": 570,
+            "y": 0,
+            "unlocked": false,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "fabrication",
+            "name": "Fabrication",
+            "x": 760,
+            "y": 0,
+            "unlocked": false,
+            "started": false,
+            "outside": false
+          }
+        ],
+        "edges": [
+          {
+            "from": "3d_printing",
+            "to": "cad",
+            "x1": 160,
+            "y1": 22.0,
+            "x2": 190,
+            "y2": 22.0,
+            "met": false
+          },
+          {
+            "from": "electronics",
+            "to": "soldering",
+            "x1": 160,
+            "y1": 86.0,
+            "x2": 190,
+            "y2": 86.0,
+            "met": false
+          },
+          {
+            "from": "cad",
+            "to": "mechanical_design",
+            "x1": 350,
+            "y1": 22.0,
+            "x2": 380,
+            "y2": 22.0,
+            "met": false
+          },
+          {
+            "from": "mechanical_design",
+            "to": "prototyping",
+            "x1": 540,
+            "y1": 22.0,
+            "x2": 570,
+            "y2": 22.0,
+            "met": false
+          },
+          {
+            "from": "prototyping",
+            "to": "fabrication",
+            "x1": 730,
+            "y1": 22.0,
+            "x2": 760,
+            "y2": 22.0,
+            "met": false
+          }
+        ]
+      }
     },
     {
       "name": "Mind",
       "interest": false,
-      "trend": "growing"
+      "trend": "growing",
+      "tree": {
+        "w": 0,
+        "h": 0,
+        "nodes": [],
+        "edges": []
+      }
     },
     {
       "name": "Outdoor",
       "interest": false,
-      "trend": null
+      "trend": null,
+      "tree": {
+        "w": 350,
+        "h": 428,
+        "box_w": 160,
+        "box_h": 44,
+        "nodes": [
+          {
+            "id": "camping",
+            "name": "Camping",
+            "x": 0,
+            "y": 0,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "fishing",
+            "name": "Fishing",
+            "x": 0,
+            "y": 64,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "foraging",
+            "name": "Foraging",
+            "x": 0,
+            "y": 128,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "hiking",
+            "name": "Hiking",
+            "x": 0,
+            "y": 192,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "kayaking",
+            "name": "Kayaking",
+            "x": 0,
+            "y": 256,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "navigation",
+            "name": "Navigation",
+            "x": 0,
+            "y": 320,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "survival",
+            "name": "Survival",
+            "x": 0,
+            "y": 384,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "wilderness_knowledge",
+            "name": "Wilderness Knowledge",
+            "x": 190,
+            "y": 0,
+            "unlocked": false,
+            "started": false,
+            "outside": false
+          }
+        ],
+        "edges": [
+          {
+            "from": "hiking",
+            "to": "wilderness_knowledge",
+            "x1": 160,
+            "y1": 214.0,
+            "x2": 190,
+            "y2": 22.0,
+            "met": false
+          },
+          {
+            "from": "camping",
+            "to": "wilderness_knowledge",
+            "x1": 160,
+            "y1": 22.0,
+            "x2": 190,
+            "y2": 22.0,
+            "met": false
+          },
+          {
+            "from": "survival",
+            "to": "wilderness_knowledge",
+            "x1": 160,
+            "y1": 406.0,
+            "x2": 190,
+            "y2": 22.0,
+            "met": false
+          }
+        ]
+      }
     },
     {
       "name": "Social",
       "interest": false,
-      "trend": "growing"
+      "trend": "growing",
+      "tree": {
+        "w": 540,
+        "h": 300,
+        "box_w": 160,
+        "box_h": 44,
+        "nodes": [
+          {
+            "id": "learning",
+            "name": "Learning",
+            "x": 0,
+            "y": 0,
+            "unlocked": true,
+            "started": true,
+            "outside": true
+          },
+          {
+            "id": "communication",
+            "name": "Communication",
+            "x": 190,
+            "y": 0,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "cooking",
+            "name": "Cooking",
+            "x": 190,
+            "y": 64,
+            "unlocked": true,
+            "started": true,
+            "outside": false
+          },
+          {
+            "id": "hospitality",
+            "name": "Hospitality",
+            "x": 190,
+            "y": 128,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "organization",
+            "name": "Organization",
+            "x": 190,
+            "y": 192,
+            "unlocked": true,
+            "started": true,
+            "outside": false
+          },
+          {
+            "id": "teamwork",
+            "name": "Teamwork",
+            "x": 190,
+            "y": 256,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "household_management",
+            "name": "Household Management",
+            "x": 380,
+            "y": 0,
+            "unlocked": true,
+            "started": true,
+            "outside": false
+          },
+          {
+            "id": "leadership",
+            "name": "Leadership",
+            "x": 380,
+            "y": 64,
+            "unlocked": false,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "teaching",
+            "name": "Teaching",
+            "x": 380,
+            "y": 128,
+            "unlocked": false,
+            "started": false,
+            "outside": false
+          }
+        ],
+        "edges": [
+          {
+            "from": "organization",
+            "to": "household_management",
+            "x1": 350,
+            "y1": 214.0,
+            "x2": 380,
+            "y2": 22.0,
+            "met": true
+          },
+          {
+            "from": "cooking",
+            "to": "household_management",
+            "x1": 350,
+            "y1": 86.0,
+            "x2": 380,
+            "y2": 22.0,
+            "met": true
+          },
+          {
+            "from": "communication",
+            "to": "leadership",
+            "x1": 350,
+            "y1": 22.0,
+            "x2": 380,
+            "y2": 86.0,
+            "met": false
+          },
+          {
+            "from": "communication",
+            "to": "teaching",
+            "x1": 350,
+            "y1": 22.0,
+            "x2": 380,
+            "y2": 150.0,
+            "met": false
+          },
+          {
+            "from": "learning",
+            "to": "teaching",
+            "x1": 160,
+            "y1": 22.0,
+            "x2": 380,
+            "y2": 150.0,
+            "met": true
+          }
+        ]
+      }
     },
     {
       "name": "Technology",
       "interest": false,
-      "trend": null
+      "trend": null,
+      "tree": {
+        "w": 1680,
+        "h": 172,
+        "box_w": 160,
+        "box_h": 44,
+        "nodes": [
+          {
+            "id": "fabrication",
+            "name": "Fabrication",
+            "x": 0,
+            "y": 0,
+            "unlocked": false,
+            "started": false,
+            "outside": true
+          },
+          {
+            "id": "arduino",
+            "name": "Arduino",
+            "x": 190,
+            "y": 0,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "linux",
+            "name": "Linux",
+            "x": 190,
+            "y": 64,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "networking",
+            "name": "Networking",
+            "x": 190,
+            "y": 128,
+            "unlocked": true,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "python",
+            "name": "Python",
+            "x": 380,
+            "y": 0,
+            "unlocked": false,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "smart_home",
+            "name": "Smart Home",
+            "x": 380,
+            "y": 64,
+            "unlocked": false,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "raspberry_pi",
+            "name": "Raspberry Pi",
+            "x": 570,
+            "y": 0,
+            "unlocked": false,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "sensors",
+            "name": "Sensors",
+            "x": 760,
+            "y": 0,
+            "unlocked": false,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "automation",
+            "name": "Automation",
+            "x": 950,
+            "y": 0,
+            "unlocked": false,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "ai",
+            "name": "AI",
+            "x": 1140,
+            "y": 0,
+            "unlocked": false,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "robotics",
+            "name": "Robotics",
+            "x": 1330,
+            "y": 0,
+            "unlocked": false,
+            "started": false,
+            "outside": false
+          },
+          {
+            "id": "autonomous_systems",
+            "name": "Autonomous Systems",
+            "x": 1520,
+            "y": 0,
+            "unlocked": false,
+            "started": false,
+            "outside": false
+          }
+        ],
+        "edges": [
+          {
+            "from": "linux",
+            "to": "python",
+            "x1": 350,
+            "y1": 86.0,
+            "x2": 380,
+            "y2": 22.0,
+            "met": false
+          },
+          {
+            "from": "sensors",
+            "to": "smart_home",
+            "x1": 920,
+            "y1": 22.0,
+            "x2": 380,
+            "y2": 86.0,
+            "met": false
+          },
+          {
+            "from": "automation",
+            "to": "smart_home",
+            "x1": 1110,
+            "y1": 22.0,
+            "x2": 380,
+            "y2": 86.0,
+            "met": false
+          },
+          {
+            "from": "python",
+            "to": "raspberry_pi",
+            "x1": 540,
+            "y1": 22.0,
+            "x2": 570,
+            "y2": 22.0,
+            "met": false
+          },
+          {
+            "from": "raspberry_pi",
+            "to": "sensors",
+            "x1": 730,
+            "y1": 22.0,
+            "x2": 760,
+            "y2": 22.0,
+            "met": false
+          },
+          {
+            "from": "sensors",
+            "to": "automation",
+            "x1": 920,
+            "y1": 22.0,
+            "x2": 950,
+            "y2": 22.0,
+            "met": false
+          },
+          {
+            "from": "automation",
+            "to": "ai",
+            "x1": 1110,
+            "y1": 22.0,
+            "x2": 1140,
+            "y2": 22.0,
+            "met": false
+          },
+          {
+            "from": "automation",
+            "to": "robotics",
+            "x1": 1110,
+            "y1": 22.0,
+            "x2": 1330,
+            "y2": 22.0,
+            "met": false
+          },
+          {
+            "from": "fabrication",
+            "to": "robotics",
+            "x1": 160,
+            "y1": 22.0,
+            "x2": 1330,
+            "y2": 22.0,
+            "met": false
+          },
+          {
+            "from": "ai",
+            "to": "autonomous_systems",
+            "x1": 1300,
+            "y1": 22.0,
+            "x2": 1520,
+            "y2": 22.0,
+            "met": false
+          },
+          {
+            "from": "robotics",
+            "to": "autonomous_systems",
+            "x1": 1490,
+            "y1": 22.0,
+            "x2": 1520,
+            "y2": 22.0,
+            "met": false
+          }
+        ]
+      }
     }
   ],
   "skills": [
@@ -76,7 +1346,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "calisthenics",
@@ -93,7 +1364,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "coordination",
@@ -110,7 +1382,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "endurance",
@@ -127,7 +1400,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "mobility",
@@ -144,7 +1418,8 @@
       "focus": false,
       "needs": [],
       "this_week": 20,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "nutrition",
@@ -161,7 +1436,8 @@
       "focus": false,
       "needs": [],
       "this_week": 10,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "recovery",
@@ -178,7 +1454,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "strength",
@@ -206,7 +1483,8 @@
           "step_name": null,
           "first_step": "Complete Your First Full Workout"
         }
-      ]
+      ],
+      "requires": []
     },
     {
       "id": "carpentry",
@@ -234,7 +1512,8 @@
           "step_name": "Build a Birdhouse",
           "first_step": "Build a Birdhouse"
         }
-      ]
+      ],
+      "requires": []
     },
     {
       "id": "code_standards",
@@ -251,7 +1530,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "concrete",
@@ -268,7 +1548,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "drywall",
@@ -285,7 +1566,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "electrical_wiring",
@@ -302,7 +1584,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "hvac",
@@ -319,7 +1602,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "insulation",
@@ -336,7 +1620,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "painting_finishing",
@@ -353,7 +1638,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "plumbing",
@@ -370,7 +1656,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "foundation_work",
@@ -389,7 +1676,10 @@
         "Concrete"
       ],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": [
+        "concrete"
+      ]
     },
     {
       "id": "framing",
@@ -408,7 +1698,10 @@
         "Carpentry"
       ],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": [
+        "carpentry"
+      ]
     },
     {
       "id": "masonry",
@@ -427,7 +1720,10 @@
         "Concrete"
       ],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": [
+        "concrete"
+      ]
     },
     {
       "id": "permitting_inspection",
@@ -446,7 +1742,10 @@
         "Code Standards"
       ],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": [
+        "code_standards"
+      ]
     },
     {
       "id": "roofing",
@@ -465,7 +1764,10 @@
         "Framing"
       ],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": [
+        "framing"
+      ]
     },
     {
       "id": "home_building",
@@ -490,7 +1792,16 @@
         "Foundation Work"
       ],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": [
+        "carpentry",
+        "framing",
+        "plumbing",
+        "electrical_wiring",
+        "hvac",
+        "code_standards",
+        "foundation_work"
+      ]
     },
     {
       "id": "costume_design",
@@ -507,7 +1818,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "lighting",
@@ -524,7 +1836,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "music",
@@ -541,7 +1854,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "photography",
@@ -558,7 +1872,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "projection_mapping",
@@ -575,7 +1890,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "storytelling",
@@ -592,7 +1908,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "videography",
@@ -609,7 +1926,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "content_creation",
@@ -630,7 +1948,12 @@
         "Storytelling"
       ],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": [
+        "photography",
+        "videography",
+        "storytelling"
+      ]
     },
     {
       "id": "djing",
@@ -649,7 +1972,10 @@
         "Music"
       ],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": [
+        "music"
+      ]
     },
     {
       "id": "animal_care",
@@ -666,7 +1992,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "composting",
@@ -683,7 +2010,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "construction",
@@ -700,7 +2028,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "energy_systems",
@@ -717,7 +2046,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "food_production",
@@ -734,7 +2064,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "gardening",
@@ -762,7 +2093,8 @@
           "step_name": "Start a Seed Tray",
           "first_step": "Start a Seed Tray"
         }
-      ]
+      ],
+      "requires": []
     },
     {
       "id": "home_maintenance",
@@ -779,7 +2111,8 @@
       "focus": true,
       "needs": [],
       "this_week": 10,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "landscaping",
@@ -796,7 +2129,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "water_systems",
@@ -813,7 +2147,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "seed_starting",
@@ -832,7 +2167,10 @@
         "Gardening"
       ],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": [
+        "gardening"
+      ]
     },
     {
       "id": "soil_science",
@@ -851,7 +2189,10 @@
         "Gardening"
       ],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": [
+        "gardening"
+      ]
     },
     {
       "id": "greenhouse_management",
@@ -870,7 +2211,10 @@
         "Gardening"
       ],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": [
+        "gardening"
+      ]
     },
     {
       "id": "irrigation",
@@ -890,7 +2234,11 @@
         "Soil Science"
       ],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": [
+        "seed_starting",
+        "soil_science"
+      ]
     },
     {
       "id": "hydroponics",
@@ -909,7 +2257,10 @@
         "Irrigation"
       ],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": [
+        "irrigation"
+      ]
     },
     {
       "id": "aquaponics",
@@ -928,7 +2279,10 @@
         "Hydroponics"
       ],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": [
+        "hydroponics"
+      ]
     },
     {
       "id": "greenhouse_automation",
@@ -948,7 +2302,11 @@
         "Automation"
       ],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": [
+        "aquaponics",
+        "automation"
+      ]
     },
     {
       "id": "closed_loop_agriculture",
@@ -967,7 +2325,10 @@
         "Greenhouse Automation"
       ],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": [
+        "greenhouse_automation"
+      ]
     },
     {
       "id": "3d_printing",
@@ -984,7 +2345,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "electronics",
@@ -1001,7 +2363,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "laser_engraving",
@@ -1018,7 +2381,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "metalworking",
@@ -1035,7 +2399,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "repair",
@@ -1052,7 +2417,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "woodworking",
@@ -1069,7 +2435,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "cad",
@@ -1088,7 +2455,10 @@
         "3D Printing"
       ],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": [
+        "3d_printing"
+      ]
     },
     {
       "id": "soldering",
@@ -1107,7 +2477,10 @@
         "Electronics"
       ],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": [
+        "electronics"
+      ]
     },
     {
       "id": "mechanical_design",
@@ -1126,7 +2499,10 @@
         "CAD / 3D Design"
       ],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": [
+        "cad"
+      ]
     },
     {
       "id": "prototyping",
@@ -1145,7 +2521,10 @@
         "Mechanical Design"
       ],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": [
+        "mechanical_design"
+      ]
     },
     {
       "id": "fabrication",
@@ -1164,7 +2543,10 @@
         "Prototyping"
       ],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": [
+        "prototyping"
+      ]
     },
     {
       "id": "engineering",
@@ -1181,7 +2563,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "focus",
@@ -1198,7 +2581,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "learning",
@@ -1215,7 +2599,8 @@
       "focus": false,
       "needs": [],
       "this_week": 30,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "mathematics",
@@ -1232,7 +2617,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "memory",
@@ -1249,7 +2635,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "problem_solving",
@@ -1266,7 +2653,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "programming",
@@ -1283,7 +2671,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "research",
@@ -1300,7 +2689,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "camping",
@@ -1317,7 +2707,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "fishing",
@@ -1334,7 +2725,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "foraging",
@@ -1351,7 +2743,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "hiking",
@@ -1368,7 +2761,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "kayaking",
@@ -1385,7 +2779,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "navigation",
@@ -1402,7 +2797,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "survival",
@@ -1419,7 +2815,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "wilderness_knowledge",
@@ -1440,7 +2837,12 @@
         "Survival"
       ],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": [
+        "hiking",
+        "camping",
+        "survival"
+      ]
     },
     {
       "id": "communication",
@@ -1457,7 +2859,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "cooking",
@@ -1485,7 +2888,8 @@
           "step_name": null,
           "first_step": "Cook a New Recipe"
         }
-      ]
+      ],
+      "requires": []
     },
     {
       "id": "hospitality",
@@ -1502,7 +2906,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "organization",
@@ -1519,7 +2924,8 @@
       "focus": false,
       "needs": [],
       "this_week": 10,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "teamwork",
@@ -1536,7 +2942,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "household_management",
@@ -1556,7 +2963,11 @@
         "Cooking"
       ],
       "this_week": 5,
-      "pathways": []
+      "pathways": [],
+      "requires": [
+        "organization",
+        "cooking"
+      ]
     },
     {
       "id": "leadership",
@@ -1575,7 +2986,10 @@
         "Communication"
       ],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": [
+        "communication"
+      ]
     },
     {
       "id": "teaching",
@@ -1595,7 +3009,11 @@
         "Learning"
       ],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": [
+        "communication",
+        "learning"
+      ]
     },
     {
       "id": "arduino",
@@ -1612,7 +3030,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "linux",
@@ -1629,7 +3048,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "networking",
@@ -1646,7 +3066,8 @@
       "focus": false,
       "needs": [],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": []
     },
     {
       "id": "python",
@@ -1665,7 +3086,10 @@
         "Linux"
       ],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": [
+        "linux"
+      ]
     },
     {
       "id": "smart_home",
@@ -1685,7 +3109,11 @@
         "Automation"
       ],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": [
+        "sensors",
+        "automation"
+      ]
     },
     {
       "id": "raspberry_pi",
@@ -1704,7 +3132,10 @@
         "Python"
       ],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": [
+        "python"
+      ]
     },
     {
       "id": "sensors",
@@ -1723,7 +3154,10 @@
         "Raspberry Pi"
       ],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": [
+        "raspberry_pi"
+      ]
     },
     {
       "id": "automation",
@@ -1742,7 +3176,10 @@
         "Sensors"
       ],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": [
+        "sensors"
+      ]
     },
     {
       "id": "ai",
@@ -1761,7 +3198,10 @@
         "Automation"
       ],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": [
+        "automation"
+      ]
     },
     {
       "id": "robotics",
@@ -1781,7 +3221,11 @@
         "Fabrication"
       ],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": [
+        "automation",
+        "fabrication"
+      ]
     },
     {
       "id": "autonomous_systems",
@@ -1801,7 +3245,11 @@
         "Robotics"
       ],
       "this_week": 0,
-      "pathways": []
+      "pathways": [],
+      "requires": [
+        "ai",
+        "robotics"
+      ]
     }
   ],
   "focus": {

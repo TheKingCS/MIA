@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1171 files, 258,762 lines; 1171 files describe themselves; 14,132 of 14,818 classes and functions are documented.
+1172 files, 258,853 lines; 1172 files describe themselves; 14,134 of 14,821 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-433 files, 121,445 lines; 6,451 of 6,537 classes and functions documented
+433 files, 121,481 lines; 6,452 of 6,538 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -713,7 +713,7 @@
 
 ## tests/: the test suite: what each part must do
 
-392 files, 68,972 lines; 5,433 of 6,033 classes and functions documented
+393 files, 68,996 lines; 5,434 of 6,035 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1080,6 +1080,7 @@
 - `tests/test_web_notifications.py`: Notifications on the web (core/web_notifications.py, DEC-0125): newest first, a tone for each level (amber for a warning, red only for an error), why MIA sent the ones she sent on her own, Mark All Read and Dismiss as actions, and the same by voice (core/assistant_notification_actions.py). *(1 undocumented)*
 - `tests/test_web_power.py`: Power on the web (DEC-0125, the design canvas's Power, DEC-0113: core/web_power.py and core/power_actions.py): energy sources with their latest reading per meter, a meter for a percent (amber when low), when it was logged, and every change as an action; the device's battery when it has one. *(1 undocumented)*
 - `tests/test_web_progress.py`: DEC-0017/0018 (2026-10-06), H-0013: Missions, Skills and Character on the web. The pages (core/web_progress.py) and every change as an action kind (core/mission_actions.py), each proposed, approved, recorded and undoable, with rewards going to the person who approved it.
+- `tests/test_web_progress_tree.py`: The Skills page's tree (core/web_progress.skill_tree): a column per tier, prerequisites from other categories in a first column marked outside, and a line from each prerequisite to the skill it opens, lit once the prerequisite has XP. *(1 undocumented)*
 - `tests/test_web_projects.py`: Projects on the web (core/web_projects.py, DEC-0125: they were voice-only): each project with its money, reason and tasks, underway first; started, edited, budgeted, finished and deleted, and tasks added, ticked, reopened and taken off, all as actions the voice tools agree with; and the glasses' Pro *(1 undocumented)*
 - `tests/test_web_push.py`: Unit tests for core.web_push. The actual push-service HTTP call (pywebpush.webpush) is mocked throughout — this is the standard, correct way to test Web Push code without a real browser/push service (see core/web_push.py's own docstring and the Mobile Phase 1 plan). *(5 undocumented)*
 - `tests/test_web_screens.py`: DEC-0017/0018 (2026-10-06): Kitchen, Workout and Real Estate on the web. The pages (core/web_screens.py) and every change as an action kind (core/kitchen_actions.py, core/workout_actions.py, core/estate_actions.py), each proposed, approved, recorded and undoable; a recipe's amounts scaled to the ser
@@ -1110,7 +1111,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-82 files, 14,733 lines
+82 files, 14,764 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game

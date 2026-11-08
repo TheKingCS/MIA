@@ -1654,3 +1654,15 @@ body.mod-maps .hero { display: none; }
 .vc-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; flex-wrap: wrap; }
 .vc-row select { min-height: 44px; flex: 1; max-width: 60%; }
 .vc-row input[type=range] { flex: 1; }
+
+/* Skills: the tree with its prerequisite lines (core/web_progress.skill_tree, 2026-11-07). Scrolls sideways when wide. */
+.sk-tree-wrap { overflow-x: auto; padding: 8px 0; }
+.sk-tree { display: block; max-width: none; }
+.sk-edge { fill: none; stroke: rgba(var(--rgb-accent), .25); stroke-width: 1.5; stroke-dasharray: 4 4; }
+.sk-edge.met { stroke: var(--accent); stroke-dasharray: none; }
+.sk-node rect { fill: var(--bg); stroke: rgba(var(--rgb-accent), .3); }
+.sk-node.open rect { stroke: rgba(var(--rgb-accent), .6); }
+.sk-node.started rect { fill: rgba(var(--rgb-accent), .12); stroke: var(--accent); }
+.sk-node.outside rect { stroke-dasharray: 3 3; }
+.sk-node text { fill: var(--text); font-size: 13px; }
+.sk-node.locked text { fill: var(--text-dim); }
