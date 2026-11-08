@@ -947,6 +947,11 @@ freely. `get_homestead_next_step` is its voice twin.
 DEC-0134 Phase 2 was approved by Zac when it was offered ("Lets build it and continue"); the DECISIONS record had
 wrongly still said it waited, now corrected. The core is `core/dungeon_master.take_turn(book, campaign_id, version_id,
 action, model_proposer(context))` → `TurnResult(narration, committed, failed)`, fictional events only.
+**Claimed by the engine session (2026-11-08 overnight), core only:** (5) Living Worlds turn history: each turn kept
+in the campaign (action, narration, what changed) and the last few fed to the DM for continuity (`living_worlds`,
+`dungeon_master`), so a play screen can show the story so far; (6) DEC-0146's "research before raising one": a held
+connection carries what MIA found about it in her own offline sources (a built-in plan, a specialist's sourced note,
+what's on the shelf), said with it (`core/connections.py`).
 
 **Who builds what (2026-11-07 night, after Power and Recent Changes were each built twice at once):** screens
 (web pages, the canvas's look, the review's missing screens: Waiting For You, a plan's page, the Browser in the
