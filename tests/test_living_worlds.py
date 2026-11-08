@@ -81,3 +81,24 @@ def test_the_store_is_sealed_on_disk(tmp_path):
     book.create_universe("Secret World", premise="nobody should read this on disk")
     on_disk = (tmp_path / "living_worlds.json").read_text(encoding="utf-8")
     assert is_sealed(on_disk) and "Secret World" not in on_disk
+
+
+def test_a_quest_mirrors_real_mission_assignment_but_stays_fictional(tmp_path):
+    """assign_quest/complete_quest follow the same assign->track shape as a real Mission (assigned_by, status), but
+    every event is tagged fictional (DEC-0137), so a real-life view never sees it and no real XP is earned."""
+    import json
+
+    book = LivingWorldsBook(data_dir=tmp_path)
+    u = book.create_universe("Aethelgard")
+    c = book.create_campaign(u.universe_id, "The Shattered Crown")
+    q = book.assign_quest(c.campaign_id, "Recover the Sunstone", objective="Reach the drowned temple", assigned_by="dm")
+    assert q.assigned_by == "dm" and q.status == "open"
+    book.complete_quest(q.quest_id)
+    assert book.get_quest(q.quest_id).status == "done"
+    assert [x.name for x in book.quests_in(c.campaign_id)] == ["Recover the Sunstone"]
+    # persists like everything else
+    assert LivingWorldsBook(data_dir=tmp_path).get_quest(q.quest_id).status == "done"
+    # every Living Worlds event is fictional — a real timeline (environment == "real") would show none of them
+    events = [json.loads(x) for x in (tmp_path / "life_events.jsonl").read_text(encoding="utf-8").splitlines() if x]
+    assert events and all(e.get("environment") == "fictional" for e in events)
+    assert not [e for e in events if e.get("environment") == "real"]
