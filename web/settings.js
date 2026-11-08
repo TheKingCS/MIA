@@ -175,6 +175,24 @@
       }));
   }
 
+  // Backups (core/web_backups.py), for the PC's owner: how long since the last one, the newest few, and Back Up Now
+  // with an optional passphrase (sent once, never kept). Restoring is on the PC. By voice: "when did I last back up?"
+  let backups = null;
+  function backupSection() {
+    if (!backups) return "";
+    const pass = el("input", { type: "password", autocomplete: "new-password", placeholder: "Passphrase (optional, 8+)", "aria-label": "Backup passphrase" });
+    return section("Backups",
+      el("p", { class: "dim" }, backups.count ? "Last backup " + backups.last + ". Saved in " + backups.folder + "." : "No backups yet. They're saved in " + backups.folder + "."),
+      backups.backups.length ? el("ul", { class: "bk-list" }, backups.backups.map((b) => el("li", {},
+        el("span", {}, b.when), el("span", { class: "dim" }, b.size + (b.locked ? " · passphrase" : ""))))) : null,
+      el("div", { class: "acct-actions bk-make" }, pass, el("button", { type: "button", class: "btn btn-amber", onclick: async (ev) => {
+        ev.target.disabled = true;
+        try { const done = await MIA.backupNow(pass.value); pass.value = ""; MIAShell.say("Backed up: " + done.made); backups = await MIA.backups(); draw(); }
+        catch (e) { MIAShell.say(e.message); ev.target.disabled = false; }
+      } }, "Back Up Now")),
+      el("p", { class: "dim" }, "With a passphrase the backup is encrypted; keep it somewhere safe, it can't be recovered. Restoring is on the PC."));
+  }
+
   function draw() {
     $("panel").replaceChildren(
       ...page.groups.map((g) => group(g.title, ...g.settings.map(setting), g.title === "Sound" ? soundCheck() : null)),
@@ -185,6 +203,7 @@
         el("div", { class: "acct-actions" }, el("a", { class: "btn btn-ghost", href: "model-test.html" }, "Model test"))) : "",
       glassesSection(),
       starterSets(),
+      backupSection(),
       section("My Places", el("p", { class: "dim" }, "Places where arriving opens something: your workout at the gym, your grocery list at the store."),
         el("div", { class: "acct-actions" }, el("a", { class: "btn btn-ghost", href: "places.html" }, "My Places"))),
       section("Notifications", el("p", { class: "dim" }, "Everything MIA has told you, and why she sent the ones she sent on her own."),
@@ -200,6 +219,7 @@
 
   MIAShell.start(async () => {
     page = await MIA.settings();
+    try { backups = await MIA.backups(); } catch (e) { backups = null; }  // the PC owner's only
     draw();
   });
 })();

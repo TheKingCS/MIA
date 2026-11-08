@@ -352,6 +352,10 @@
     toolbox: () => read("/api/toolbox", "toolbox"),
     why: () => read("/api/why", "why"),
     projects: () => read("/api/projects", "projects"),
+    backups: () => demo ? Promise.resolve({ folder: "C:\\Users\\you\\MIA Backups", count: 3, last: "12 days ago", days: 12,
+      backups: [{ name: "mia_backup_2026-10-26_2130.miabackup", size: "48.2 MB", when: "Oct 26, 2026 21:30", locked: true }] })
+      : call("GET", "/api/backups"),
+    backupNow: (passphrase) => demo ? demoOnly() : call("POST", "/api/backups", { passphrase: passphrase || "" }),
     textbookSearch: (q, book) => demo ? Promise.resolve({ query: q, hits: q ? [{ book_id: "b1", book: "Welding Fundamentals", page: 112,
       chapter: "Chapter 6: Gas Metal Arc Welding", text: "Hold the gun at a 10 to 15 degree push angle. Too steep an angle traps gas and leaves porosity in the bead…" }] : [] })
       : call("GET", "/api/classroom/textbooks/search?q=" + encodeURIComponent(q) + (book ? "&book=" + encodeURIComponent(book) : "")),

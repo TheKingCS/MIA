@@ -1643,3 +1643,9 @@ body.mod-maps .hero { display: none; }
 .st-set summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
 .st-parts { display: flex; flex-direction: column; gap: 6px; margin: 6px 0 10px; }
 .st-part { display: flex; gap: 10px; align-items: center; min-height: 36px; }
+
+/* Settings: backups (core/web_backups.py, 2026-11-07). */
+.bk-list { list-style: none; margin: 6px 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+.bk-list li { display: flex; justify-content: space-between; gap: 10px; }
+.bk-make { flex-wrap: wrap; align-items: center; }
+.bk-make input { flex: 1; min-width: 180px; min-height: 44px; }

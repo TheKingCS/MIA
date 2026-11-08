@@ -290,6 +290,11 @@ class PasswordChange(BaseModel):
     new: str
 
 
+class BackupMake(BaseModel):
+    """A backup made from the web: its passphrase, when it should be encrypted (never kept)."""
+    passphrase: str = ""
+
+
 class PasswordCheck(BaseModel):
     """A password to check against the person's own (before something sensitive)."""
     password: str
@@ -834,6 +839,35 @@ def create_app(context: AppContext) -> FastAPI:
 
         if not _is_first_account(context, profile_id):
             raise HTTPException(status.HTTP_403_FORBIDDEN, f"{what} is the PC owner's.")
+
+    # Backups (core/web_backups.py), for the PC's owner: the newest ones, and Back Up Now (not an action: a passphrase
+    # never sits in a proposal or the undo log). Restoring stays on the PC.
+    @app.get("/api/backups")
+    def backups_screen(profile_id: str = Depends(require_profile_id)) -> dict:
+        """Where backups go and the newest ones."""
+        from core.web_backups import status as backup_status
+
+        _owner_only(profile_id, "Backups")
+        return backup_status(context)
+
+    @app.post("/api/backups")
+    async def backup_now(body: BackupMake, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Makes one backup into the backups folder, encrypted when a passphrase is given."""
+        from core.web_backups import make
+
+        _owner_only(profile_id, "Backups")
+        if body.passphrase and len(body.passphrase) < 8:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Pick a passphrase of at least 8 characters, or none.")
+
+        def run():
+            with app.state.turn_lock:
+                return make(context, body.passphrase)
+
+        done = await run_in_threadpool(run)
+        if "error" in done:
+            raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, done["error"])
+        log.info("Backup made from the web: %s", done["made"])
+        return done
 
     @app.get("/api/diagnostics")
     def diagnostics_screen(profile_id: str = Depends(require_profile_id)) -> dict:

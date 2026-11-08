@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1150 files, 256,765 lines; 1150 files describe themselves; 14,000 of 14,681 classes and functions are documented.
+1153 files, 256,990 lines; 1153 files describe themselves; 14,011 of 14,692 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-423 files, 120,196 lines; 6,375 of 6,464 classes and functions documented
+425 files, 120,324 lines; 6,382 of 6,471 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -22,6 +22,7 @@
 - `core/application.py`: MIAApplication: the orchestrator that boots the system.
 - `core/assistant_accessibility_actions.py`: "Make the text bigger", "turn on high contrast", "read this screen to me" (core/accessibility.py, 2026-10-01). Each changes only the speaker's own look.
 - `core/assistant_actions.py`: The Assistant's tool-use/action-execution registry — docs/ROADMAP.md milestone 5.5. Lets the LLM actually DO things in MIA (open a module, add an alarm, a note, an inventory item), not just answer questions, via Ollama's structured tool-calling API (core/llm_manager.py's `chat_with_tools()`).
+- `core/assistant_backup_actions.py`: Backups by voice (DEC-0125), read only: "when did I last back up?" says how long since the last backup in the backups folder and where they go (core/web_backups.py). Making one is on Settings (a passphrase is typed, never said aloud); restoring is on the PC.
 - `core/assistant_browser_actions.py`: MIA's browser by voice and chat (DEC-0117): open a page or search, read it, click, type, go back, close; learn a task the person shows her, do it again, list what she's learned. Every step goes through core/browser.py, which sorts it with core/browser_safety.py: a step that commits is held as the ac
 - `core/assistant_camera_actions.py`: The cameras by voice (DEC-0125, 2026-11-07): the Security screen (core/security_cams.py, DEC-0033) had no tool, so "are the cameras working?" reached the network utilities that share its area. Two tools, in their own area `cameras`:
 - `core/assistant_chat.py`: The pure, non-Qt logic for one Assistant chat turn — moved here from `modules/assistant/module.py` (2026-07-14 aesthetic pass part 4, docs/ROADMAP.md) once the sidebar chat in `gui/character_panel.py` needed the exact same request-building and tool-call-safety logic as the full-screen Assistant modu
@@ -389,6 +390,7 @@
 - `core/waypoint_actions.py`: Waypoints (core/waypoint_manager.py) through the action contract (core/actions.py), for the web's Maps and Navigation pages: `waypoint.add` (a name and where: from a tap on the map, or typed), `waypoint.edit` (its name, kind and notes; where it is stays) and `waypoint.delete`. The store writes throu
 - `core/waypoint_manager.py`: Backs the Navigation module's waypoint list (modules/navigation/module.py) — docs/ROADMAP.md milestone 10.1. Same persisted-JSON pattern as core/inventory_manager.py: data/waypoints.json, a dataclass with to_dict/from_dict, a manager class wrapping load/save.
 - `core/web_account.py`: The web's Profile and Settings screens (2026-10-07, Zac: the gear's Profile and Settings). Profile is who you are: name, email, country, what MIA helps with, household, password and recovery code. Settings is how MIA behaves for you: the person's own settings from the PC app's Settings (core/person_
+- `core/web_backups.py`: Backups from the web's Settings (DEC-0125: Backup & Restore was on the desktop's Settings only). For the PC's owner (the first account) only, since a backup holds everyone's data on this MIA.
 - `core/web_browser.py`: The Browser screen's data (DEC-0117, 2026-11-07): MIA's own browser as the person sees it on the web, so held steps and taught tasks aren't only reachable by talking to her.
 - `core/web_business.py`: The Orders & Quotes screen (DEC-0030 phase C): orders (what's owed, the build's progress, and where each is on the stage rail with the step that moves it on: `order_stage`, DEC-0113), quotes (with what the price is made of), customers, and the portfolio of finished builds. Put together here from cor
 - `core/web_changes.py`: Recent Changes on the web (the screens review's missing "Recent changes Undo history", docs/design/CORE_SCREENS_REVIEW.md section 3; DEC-0125: "undo that" and "what did you just change?" were voice-only). Two parts:
@@ -434,7 +436,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 2,948 lines; 34 of 34 classes and functions documented
+2 files, 2,982 lines; 35 of 35 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -703,7 +705,7 @@
 
 ## tests/: the test suite: what each part must do
 
-381 files, 68,248 lines; 5,380 of 5,972 classes and functions documented
+382 files, 68,287 lines; 5,383 of 5,975 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1046,6 +1048,7 @@
 - `tests/test_waypoint_actions.py`: Waypoints from the web (core/waypoint_actions.py): added from a tap on the map, taken out from Navigation. *(3 undocumented)*
 - `tests/test_waypoint_manager.py`: Unit tests for core.waypoint_manager. haversine_distance_km() initial_bearing_degrees() are checked against real, well-known distances/bearings (New York <-> Los Angeles, London <-> Paris) rather than only synthetic values, so a sign error or unit mistake can't accidentally cancel out and still pass *(4 undocumented)*
 - `tests/test_waypoint_map_canvas.py`: Unit tests for gui.widgets.waypoint_map_canvas's project_waypoints() — pure math, no Qt/QWidget instantiation needed. See that module's own docstring for why this is a schematic layout, not a real map projection.
+- `tests/test_web_backups.py`: Backups from the web's Settings (core/web_backups.py) and by voice (core/assistant_backup_actions.py): the PC owner's backups folder, the newest backups, Back Up Now with or without a passphrase, and the status said aloud.
 - `tests/test_web_changes.py`: Recent Changes on the web (core/web_changes.py, DEC-0125): what MIA can put back, newest first, in the history's own words; the fortnight's history by day with undone ones marked; and Undo as the action undo.last, which never leaves a change of its own behind.
 - `tests/test_web_equipment.py`: DEC-0017 (2026-10-06): Garage, Property, Greenhouse and Maintenance on the web, and one page per asset (Zac's mower concept): the data (core/web_equipment.py) and every change as an action kind (core/equipment_actions.py, maintenance.done with a meter value); and the design canvas's Garage card and  *(5 undocumented)*
 - `tests/test_web_field_kit.py`: The Field Kit on the web (DEC-0125, the design canvas's Field Kit, DEC-0113: core/web_field_kit.py): what's plugged into the computer, a hash's kind and a subnet worked out in core, and the script library to read and copy; doing things to the computer stays on the PC.
@@ -1089,7 +1092,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-82 files, 14,870 lines
+82 files, 14,894 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
