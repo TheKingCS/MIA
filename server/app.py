@@ -351,6 +351,20 @@ def describe_timings(timings: dict) -> str:
     return " · ".join(f"{words[k]} {v:.1f}s" for k, v in timings.items())
 
 
+# Every response's browser protections (security_headers in create_app; docs/SECURITY.md).
+SECURITY_HEADERS = {
+    "Content-Security-Policy": ("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
+                                "img-src 'self' data: blob:; media-src 'self' data: blob:; connect-src 'self'; "
+                                "font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; "
+                                "frame-ancestors 'self'"),
+    "X-Frame-Options": "SAMEORIGIN",
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "no-referrer",
+    "Permissions-Policy": "camera=(self), microphone=(self), geolocation=(self), payment=(), usb=(), interest-cohort=()",
+    "Cross-Origin-Opener-Policy": "same-origin",
+}
+
+
 def create_app(context: AppContext) -> FastAPI:
     """MIA's web server (FastAPI) for the phone, the glasses and the desktop's web view: sign-in sessions by bearer token (or a linked phone's device key), the access switch that turns away forwarded requests when phone access is off, every /api route (each runs on the signed-in person's own view, view_for), and the web front end served fresh at /web/."""
     app = FastAPI(title="MIA Mobile API")
@@ -363,6 +377,11 @@ def create_app(context: AppContext) -> FastAPI:
     app.state.remember_sign_in = False
     # token -> when that phone last used MIA (Settings shows "phone last connected").
     app.state.last_seen: dict[str, float] = {}
+    # Sign-in protection (core/sign_in_guard.py, docs/SECURITY.md): slow password guessing, sessions that end.
+    from core.sign_in_guard import SignInGuard, session_expired
+
+    app.state.guard = SignInGuard()
+    app.state.session_started: dict[str, float] = {}  # sessions signed in from another device, by token
 
     @app.middleware("http")
     async def phone_access_switch(request: Request, call_next):
@@ -378,16 +397,73 @@ def create_app(context: AppContext) -> FastAPI:
             return JSONResponse({"detail": "Phone access is off in MIA's Settings."}, status_code=403)
         return await call_next(request)
 
+    @app.middleware("http")
+    async def security_headers(request: Request, call_next):
+        """The standard browser protections on every response (OWASP secure headers, docs/SECURITY.md): pages run
+        only MIA's own scripts and load nothing from other sites (Content-Security-Policy), can't be framed by another
+        site, aren't sniffed into another type, send no referrer; the camera, microphone and location only for MIA
+        herself; and nothing from /api is cached, since it's the person's own data."""
+        response = await call_next(request)
+        for name, value in SECURITY_HEADERS.items():
+            response.headers.setdefault(name, value)
+        if request.url.path.startswith("/api/"):
+            response.headers.setdefault("Cache-Control", "no-store")
+        return response
+
     def require_profile_id(credentials: Optional[HTTPAuthorizationCredentials] = Depends(_bearer_scheme)) -> str:
         if credentials is None:
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Missing bearer token.")
-        profile_id = app.state.sessions.get(credentials.credentials)
+        token = credentials.credentials
+        profile_id = app.state.sessions.get(token)
+        if profile_id is not None and session_expired(app.state.session_started.get(token),
+                                                      app.state.last_seen.get(token), time.time()):
+            _end_session(token)  # unused too long, or too old: sign in again
+            profile_id = None
         if profile_id is None:
-            profile_id = _linked_device(credentials.credentials)
+            profile_id = _linked_device(token)
         if profile_id is None:
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired session.")
-        app.state.last_seen[credentials.credentials] = time.time()
+        app.state.last_seen[token] = time.time()
         return profile_id
+
+    def _end_session(token: str) -> None:
+        """Forgets a session: its profile, when it was last used and when it began."""
+        app.state.sessions.pop(token, None)
+        app.state.last_seen.pop(token, None)
+        app.state.session_started.pop(token, None)
+
+    def _new_session(profile_id: str) -> str:
+        """A session for a sign-in from another device (it ends: core/sign_in_guard.session_expired)."""
+        token = secrets.token_urlsafe(32)
+        now = time.time()
+        app.state.sessions[token] = profile_id
+        app.state.last_seen[token] = now
+        app.state.session_started[token] = now
+        return token
+
+    def _guard_keys(request: Request, who: str) -> list[str]:
+        """What a password try counts against: the account named, and the device it came from (the first forwarded
+        address when it came in through Tailscale, else the connection's)."""
+        forwarded = (request.headers.get("x-forwarded-for") or "").split(",")[0].strip()
+        device = forwarded or (request.client.host if request.client else "")
+        return [f"who:{(who or '').strip().lower()}", f"from:{device}"]
+
+    def _checked(request: Request, who: str, check) -> bool:
+        """Runs a password check under the sign-in guard: refused with 429 while a wait is running, the failure
+        counted, a success clearing the account's count. Returns the check's answer."""
+        keys = _guard_keys(request, who)
+        wait = app.state.guard.wait_left(keys)
+        if wait:
+            raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS,
+                                f"Too many wrong passwords. Try again in {wait} seconds.",
+                                headers={"Retry-After": str(wait)})
+        ok = check()
+        if ok:
+            app.state.guard.succeeded(keys[:1])
+        else:
+            app.state.guard.failed(keys)
+            log.warning("Sign-in refused for '%s' (wrong password).", (who or "").strip().lower()[:60])
+        return ok
 
     def _linked_device(key: str) -> Optional[str]:
         """A phone linked to this computer (DEC-0022, core/home_link.py)
@@ -413,8 +489,8 @@ def create_app(context: AppContext) -> FastAPI:
     def logout(credentials: Optional[HTTPAuthorizationCredentials] = Depends(_bearer_scheme)) -> dict:
         """Ends this session on this device (the web's account menu, 2026-10-07)."""
         if credentials is not None:
-            profile_id = app.state.sessions.pop(credentials.credentials, None)
-            app.state.last_seen.pop(credentials.credentials, None)
+            profile_id = app.state.sessions.get(credentials.credentials)
+            _end_session(credentials.credentials)
             if profile_id and context.config.get("phone.signed_in_profile_id") == profile_id:
                 _remember(None)
         return {"signed_out": True}
@@ -443,29 +519,27 @@ def create_app(context: AppContext) -> FastAPI:
                                                      body.interests)
             except AccountError as problem:
                 raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
-        token = secrets.token_urlsafe(32)
-        app.state.sessions[token] = profile.profile_id
-        app.state.last_seen[token] = time.time()
+        token = _new_session(profile.profile_id)
         _remember(profile.profile_id)
         log.info("First account made on this device: '%s'.", profile.profile_id)
         return {"token": token, "profile_id": profile.profile_id, "name": profile.name, "recovery_code": code}
 
     @app.post("/api/login")
-    def login(body: LoginRequest) -> dict:
+    def login(body: LoginRequest, request: Request) -> dict:
         # Accepts the person's email (accounts, 2026-10-01), or for
         # profiles made before emails their profile_id or display name
         # (case-insensitive, only when no one else has that name).
+        # Guarded (core/sign_in_guard.py): guessing slows down after five wrong tries.
         profile = context.profiles.find_for_sign_in(body.profile_id)
-        if profile is None or not context.profiles.verify_password(profile.profile_id, body.password):
+        if not _checked(request, body.profile_id, lambda: profile is not None and
+                        context.profiles.verify_password(profile.profile_id, body.password)):
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Incorrect profile or password.")
         if not profile.has_password:
             raise HTTPException(
                 status.HTTP_403_FORBIDDEN,
                 "Set a password for this profile in MIA's Settings before using MIA remotely.",
             )
-        token = secrets.token_urlsafe(32)
-        app.state.sessions[token] = profile.profile_id
-        app.state.last_seen[token] = time.time()
+        token = _new_session(profile.profile_id)
         _remember(profile.profile_id)
         log.info("Mobile login for profile '%s'.", profile.profile_id)
         return {"token": token, "profile_id": profile.profile_id, "name": profile.name}
@@ -473,14 +547,14 @@ def create_app(context: AppContext) -> FastAPI:
     # ---------------------------------------------------------------- the home computer's model (DEC-0022)
 
     @app.post("/api/model/link")
-    def model_link(body: LoginRequest) -> dict:
+    def model_link(body: LoginRequest, request: Request) -> dict:
         """A phone links to MIA on this computer: the person's own sign-in
         (never a new account), and a device key back for Talk to use."""
         import hashlib
 
         profile = context.profiles.find_for_sign_in(body.profile_id)
-        if profile is None or not profile.has_password or \
-                not context.profiles.verify_password(profile.profile_id, body.password):
+        if not _checked(request, body.profile_id, lambda: profile is not None and profile.has_password and
+                        context.profiles.verify_password(profile.profile_id, body.password)):
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Incorrect profile or password.")
         key = secrets.token_urlsafe(32)
         devices = dict(context.config.get("home_link.devices", {}) or {})
@@ -1891,23 +1965,28 @@ def create_app(context: AppContext) -> FastAPI:
             return settings_page(view_for(context, profile_id))
 
     @app.post("/api/account/password")
-    def change_password(body: PasswordChange, profile_id: str = Depends(require_profile_id)) -> dict:
-        """Not an action: a password never sits in a proposal or the undo log."""
+    def change_password(body: PasswordChange, request: Request, profile_id: str = Depends(require_profile_id),
+                        credentials: Optional[HTTPAuthorizationCredentials] = Depends(_bearer_scheme)) -> dict:
+        """Not an action: a password never sits in a proposal or the undo log. Guarded like sign-in, and every other
+        session of this account ends with the old password (OWASP: a stolen session doesn't outlive the change)."""
         from core.first_account import MIN_PASSWORD
 
-        if not context.profiles.verify_password(profile_id, body.current):
+        if not _checked(request, profile_id, lambda: context.profiles.verify_password(profile_id, body.current)):
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "Your current password isn't right.")
         if len(body.new or "") < MIN_PASSWORD:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, f"Pick a password of at least {MIN_PASSWORD} characters.")
         with app.state.turn_lock:
             context.profiles.set_password(profile_id, body.new)
-        log.info("Password changed from the web for profile '%s'.", profile_id)
+        this = credentials.credentials if credentials is not None else ""
+        for token in [t for t, pid in list(app.state.sessions.items()) if pid == profile_id and t != this]:
+            _end_session(token)
+        log.info("Password changed from the web for profile '%s'; its other sessions ended.", profile_id)
         return {"changed": True}
 
     @app.post("/api/account/recovery-code")
-    def new_recovery_code(body: PasswordCheck, profile_id: str = Depends(require_profile_id)) -> dict:
-        """A new recovery code (the old one stops working), shown once."""
-        if not context.profiles.verify_password(profile_id, body.password):
+    def new_recovery_code(body: PasswordCheck, request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
+        """A new recovery code (the old one stops working), shown once; the password check is guarded like sign-in."""
+        if not _checked(request, profile_id, lambda: context.profiles.verify_password(profile_id, body.password)):
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "That password isn't right.")
         with app.state.turn_lock:
             code = context.profiles.issue_recovery_code(profile_id)
