@@ -2135,7 +2135,12 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0128 (device fabric), DEC-0126, DEC-0127; core/connectors.py, core/inbox_classify.py, core/actions.py
 
 ### DEC-0134: Living Worlds & The Convergence (interactive RPG / world-sim / experiential learning)
-- Status: PROPOSED
+- Status: APPROVED for Phase 1 (Zac, 2026-11-08: "approve Living Worlds Phase 1 and start building the world/character
+  data models"); later phases still proposed. **Phase 1 built 2026-11-08** (`core/living_worlds.py`): the data models
+  — Universe, Campaign, Character and per-universe CharacterVersion — created and persisted through a sealed personal
+  store (`living_worlds.json`, DEC-0126), with save/resume, id validation, independent per-version growth, and a
+  life-event on every create. The model writes nothing (only code does). Not yet wired into PERSONAL_STORES/the app
+  or the DM turn loop — that's the next step. Tested in `tests/test_living_worlds.py`.
 - Proposed by: claude, 2026-11-08, from Zac's "MIA — Living Worlds" handoff (the Convergence multiverse saga).
 - Proposal (`docs/LIVING_WORLDS_PROPOSAL.md`): a major subsystem turning MIA into a persistent-world DM, world
   simulator and experiential-learning guide, with an overarching cross-universe narrative (the Convergence) and a
@@ -2192,3 +2197,23 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
      Theme Studio's step 2 (preview, tweak, save your own) is built; an accent that reads as a meaning colour or
      text under 4.5:1 contrast is refused in core.
 - Related: DEC-0135, DEC-0023, DEC-0130, DEC-0017, DEC-0014, DEC-0125
+
+### DEC-0137: Living Systems Framework — generalize the existing foundation, don't rebuild it
+- Status: PROPOSED
+- Proposed by: claude, 2026-11-08, from ChatGPT's "MIA — Living Systems Framework" handoff (a universal
+  context/state/simulation/progression/intelligence foundation unifying Living Worlds and the real-world domains).
+- Assessment (`docs/LIVING_SYSTEMS_ASSESSMENT.md`): MIA already implements ~80% of the proposed framework as working
+  systems — context_assembler (memory/Life State), life_events (event/timeline), the store pattern + links (entities/
+  relationships), mission_manager/pathway_manager/paths (goals/progression/learning), loops/benchmarks/corrections
+  (continuous improvement, the doc's §9), and actions.py/safety_floor/communication_gate (validation — "reasoning is
+  not authority", already enforced). So the recommendation is NOT a new universal abstraction layer or microservices
+  (the handoff itself warns against those), but: (A) name the existing shared foundation and add the one genuinely
+  missing guarantee — an explicit `environment` tag (real|fictional|simulated) on events/XP/scenario output, with a
+  test that no fictional/simulated record reaches a real store or the real XP ledger (the §7 isolation requirement);
+  (B) prove cross-domain reuse with Living Worlds + one real domain (homestead or projects) on the same primitives;
+  (C) a small scenario/what-if engine over the existing calculators (build_calcs, finance, maintenance projection),
+  everything tagged `simulated`, never auto-committed; (D) planning/orchestration only where a concrete need appears.
+  Generalizes DEC-0134 (Living Worlds), doesn't replace it.
+- Open: confirm "generalize + isolate, don't build a new layer"; second domain to prove reuse (homestead vs projects);
+  timing of the scenario engine.
+- Related: DEC-0134, DEC-0094/0101, DEC-0112, DEC-0092, DEC-0126
