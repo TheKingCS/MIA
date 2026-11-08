@@ -36,6 +36,7 @@
 .dev-chip.ok { border-color: var(--ok); color: var(--ok); }
 .dev-chip.bad { border-color: var(--bad); color: var(--bad); }
 .dev-chip.wait { border-style: dashed; }
+.dev-chip.attn { border-color: var(--attention); color: var(--attention); }  /* yours to decide: amber, never red (an error) */
 
 .dev-steps { display: flex; gap: 3px; margin-top: 6px; }
 .dev-steps span { flex: 1; height: 4px; border-radius: 2px; background: var(--line); }
