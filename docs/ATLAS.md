@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1264 files, 273,776 lines; 1264 files describe themselves; 14,880 of 15,580 classes and functions are documented.
+1266 files, 274,168 lines; 1266 files describe themselves; 14,904 of 15,604 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-469 files, 129,063 lines; 6,917 of 7,003 classes and functions documented
+470 files, 129,337 lines; 6,929 of 7,015 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -148,6 +148,7 @@
 - `core/dev_map.py`: MIA's architecture and her branches of growth, derived from the code and the history (DEC-0078, T-0029; `docs/DEVELOPMENTAL_INDEPENDENCE_REVIEW.md` section 6.2). Never hand-drawn: read from the repository with Python's own `ast`, so nothing is run.
 - `core/dev_store.py`: Where the development history lives on this PC (DEC-0077, Zac 2026-11-04: "a way to not take up a ton of memory while maintaining MIAs ability to access the fullness of her memory and development"; `docs/DEVELOPMENTAL_INDEPENDENCE_REVIEW.md` section 6.5).
 - `core/dev_usage.py`: What each development model was used for, and when it ran out (DEC-0079, Zac 2026-11-03: "understanding usage and delegating tasks based on time available to use each model so that the dev team doesnt have to sit idle when one model is unavailable"; review section 6.4).
+- `core/development_engine.py`: The strategic layer (DEC-0144, proposed, from ChatGPT's Development Intelligence + Convergence handoffs; proving domain: homestead, Zac 2026-11-08). Over the systems MIA already has — projects, intents, missions, plans, skills, materials — it does the one thing they don't: decide *what's worth doing
 - `core/device_framework.py`: Connected Device Framework — docs/ROADMAP.md milestone 11.1, the first piece of Field Kit. Detects and identifies devices physically attached to this Pi: USB storage (drives, SD cards, other Pis in USB mass-storage mode) via `lsblk`, and serial/MCU boards (Arduino, ESP32, etc.) via `pyserial`'s port
 - `core/device_help_manager.py`: Retrieval-grounded "what does this do / how do I use this device" answers — docs/ROADMAP.md milestone 5.4. This is explicitly **stage 1 ("Read & explain")** of the Self-Modification / Dev Mode staged plan in docs/ROADMAP.md: read-only retrieval over `docs/user_help/*.md` and module metadata, never a
 - `core/device_profile.py`: MIA runs as one codebase across two editions — docs/ROADMAP.md milestone 13.1: **Core** (the Pi 5 + AI HAT+ 2, resource-constrained, a field data-gathering tool) and **Home** (a desktop workstation, more storage/resources), distinguished only by `config.system.device_profile`.
@@ -755,7 +756,7 @@
 
 ## tests/: the test suite: what each part must do
 
-431 files, 72,295 lines; 5,680 of 6,294 classes and functions documented
+432 files, 72,413 lines; 5,692 of 6,306 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -854,6 +855,7 @@
 - `tests/test_dev_ledger.py`: The independence ledger (DEC-0075, core/dev_ledger.py): computed from the history, scored by a lower confidence bound, stages proposed by the evidence and confirmed by Zac, never above what the evidence supports now. *(1 undocumented)*
 - `tests/test_dev_map.py`: MIA's architecture map (DEC-0078, core/dev_map.py): read from the code with ast, nothing run; the layering rule checked; docs that describe how things are checked against the files. *(1 undocumented)*
 - `tests/test_dev_store.py`: The development history on this PC (DEC-0077, core/dev_store.py): kept whole, kept small, found without loading it.
+- `tests/test_development_engine.py`: The strategic layer (core/development_engine.py, DEC-0144). The heart of it is the **Zero-to-Something benchmark (the handoffs' §10/§12 acceptance test, made executable): someone with a small budget, few tools and an objective should get a plan that assesses the start honestly, prioritises low-cost/
 - `tests/test_device_framework.py`: Unit tests for core.device_framework (v0.11 milestone 11.1). No real `lsblk`/serial hardware involved — `subprocess.run` and `serial.tools.list_ports.comports` are monkeypatched to fakes, same "fake the external dependency" approach as test_llm_manager.py mocking urlopen. identify_serial_board() and
 - `tests/test_device_help_manager.py`: Unit tests for core.device_help_manager: the pure chunking/scoring logic (no filesystem), retrieval ranking (with pre-set chunks, bypassing the filesystem), and one test of the actual doc-loading path against a tmp_path fixture directory (monkeypatching `_DOCS_DIR`, same approach as test_voice_manag
 - `tests/test_device_loops.py`: Step 3's leftovers: turns traced by device, so glasses.voice can watch the glasses' turns; and a durable record of when a linked phone last reached the PC (core/phone_link.py), for phone.link. *(1 undocumented)*
