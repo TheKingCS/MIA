@@ -2068,3 +2068,40 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   behavior; serialization defaults the field to None. Tested store-by-case in `tests/test_maintenance_manager.py`
   (compound section), including the brand-new-mower case (annual reminder fires with zero hours logged).
 - Related: ROADMAP 11 (Field Kit), the asset-intelligence seed import; `data/_import/` (private, uncommitted).
+
+### DEC-0132: Generated environments — MIA builds the place around you
+- Status: PROPOSED (Zac's direction, 2026-11-08; scope and tiering await his answers to H-0094's open questions)
+- Proposed by: muse, from Zac's direction of 2026-11-08 — his study of AETHER's (@ae.t.he.r) orb and
+  room-transformation reels — and his two extensions in the same conversation: shared generated places
+  (a virtual bar at home, alone or with friends; friends cut into the same scene, each seeing it from
+  their own perspective; meeting people in virtual places) and live people-editing (filters and
+  accessories applied live; everyone in a scene dressed digitally for a style or theme).
+- Decision:
+  1. **Environment generation is a named MIA capability**: speak, and MIA generates the environment
+     around you. Generation is an engine capability, never a surface fork — the PC builds; Quest is
+     the dive surface; the Nexus (DEC-0130) is where generated places live as destinations (portals);
+     glasses get the glance layer and, on Orion-class hardware later, generated overlays in real space.
+  2. **Tier 1 — she builds it, you step in (near-term).** Spoken request → MIA composes/builds a scene
+     on the PC from a room scan or a Nexus environment brief (minutes, honestly labeled) → step in on
+     Quest. First scenes are places with jobs: walk the walipini before digging it, stand in a workshop
+     layout before buying lumber, a focus room, a bar's first rough cut. Generated places persist in
+     the Nexus and can be re-entered and revised by voice.
+  3. **Tier 2 — shared generated places.** Friends present in the same generated scene, each from their
+     own perspective. Everyone present is opted in. MIA hosts: scene coherence across viewers, the
+     ambience, a presence in the place. The scene dresses its people too — filters, accessories and
+     themed outfits on each person's presence; a theme proposes a look, each person accepts their own.
+  4. **Tier 3 — real-time generation (frontier, no dates).** Speak and the room re-renders around you
+     live; objects and characters persist across transformations; live overlays on co-located real
+     people (the mustache on the friend across the table). Generation latency and Orion-class hardware
+     decide when this tier opens; Tiers 1–2 build toward it.
+  5. **Guardrails.** DEC-0002 holds absolutely: room scans/geometry of Zac's home stay local, never in
+     this repo; public demos use a sample persona's room. Cloud generation is opt-in per service
+     (DEC-0053 pattern); local GPU generation is the default. People are not props: no real person's
+     likeness generated into a scene uninvited; no recording a shared space without everyone knowing;
+     nobody restyled uninvited. Tier 2 is friends-only; public social worlds need their own decision
+     (DEC-0119 boundary). Generated places are entered by choice, never ambient interruption
+     (DEC-0014). Generation costs beyond the local GPU stay visible; subscription questions stay with
+     DEC-0127.
+- Open (Zac's calls, in H-0094): approve direction/tiering; Tier 1's first scene; local-only vs one
+  approved cloud generation service; Tier 2 friends-only as drafted.
+- Related: DEC-0130, DEC-0128, DEC-0123, DEC-0127, DEC-0119, DEC-0114, DEC-0002, DEC-0053, DEC-0014; H-0094
