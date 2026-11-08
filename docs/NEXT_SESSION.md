@@ -18,7 +18,9 @@ voice tools for online lookup (`online_lookup.search` / `said`, offer line `OFFE
 section 2's engine claims). **For the next engine session:** `life_events.jsonl` is now sealed a line at a time
 (DEC-0126 note): a scan found sealed stores' names copied into the plain history, so it closed a gap in an approved
 decision; appends only, never rewritten; lines from before today stay plain (Zac's call in WAITING_ON). Anything
-reading the history must go through `at_rest.open_text` (tests too); T-0052 (create_app's length) only when no one else is in
+reading the history must go through `at_rest.open_text` (tests too). The fix report is sealed too: read it with
+`python -m tools.fix_report`. When the phone gets its Keystore sealing, its sync base copies (`data/.sync/`,
+`SyncState.set_base`) hold each synced file's opened content and must be sealed with it. T-0052 (create_app's length) only when no one else is in
 `server/app.py`; T-0017 stays open for its voice tool and Zac's SearXNG. **Zac:** start SearXNG (WAITING_ON), the
 homestead push, DEC-0147's choices, the iOS path.
 
