@@ -109,5 +109,16 @@
         }
       ]
     }
+  },
+  "captures": {
+    "available": true,
+    "captures": [
+      {
+        "id": "cap-demo",
+        "when": "2026-11-06 07:42",
+        "title": "Field Note — Nov 6, 2026 7:42 AM",
+        "words": "Two deer crossed the north trail at the creek bend. Fresh scrape on the big oak, about knee high."
+      }
+    ]
   }
 }

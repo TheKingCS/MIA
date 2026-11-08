@@ -55,7 +55,8 @@ def preview(body: str, limit: int = 140) -> str:
 def journal_page(context, today: Optional[date] = None) -> dict:
     """The data the Journal screen shows, assembled here (the web only draws it); {"available": False} when there's no journal. Entries newest first (with a preview, tags, conditions and
     the trip they belong to), tags by how often they're used, counts, whether the private journal is set up and how
-    many entries it holds (never their words), and the entry form.
+    many entries it holds (never their words), the entry form, and MIA Lite's recordings waiting to be kept
+    (core/web_proposals.field_captures).
     """
     today = today or date.today()
     journal = getattr(context, "journal", None)
@@ -82,6 +83,7 @@ def journal_page(context, today: Optional[date] = None) -> dict:
         "private": {"set_up": bool(private and private.is_set_up()),
                     "count": private.entry_count() if private is not None else 0},
         "forms": {"journal": _forms()["journal"]},
+        "captures": __import__("core.web_proposals", fromlist=["field_captures"]).field_captures(context),
     }
 
 

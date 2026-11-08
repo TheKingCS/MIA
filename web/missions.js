@@ -237,6 +237,30 @@
     ].filter(Boolean);
   }
 
+  // MIA's mission idea (core/web_proposals.py, the Toolbox's Discovery): made from your skills, projects and recent
+  // missions, checked in core (it can only name real skills; the rewards are worked out, not picked by the model);
+  // Accept makes it a mission (mission_idea.accept), Set Aside drops it. By voice: "suggest a mission", "accept it".
+  function ideaCard(box) {
+    if (!box || !box.idea) return null;
+    const i = box.idea;
+    return el("section", { class: "glass money-section mission-idea", "aria-label": "MIA's mission idea" },
+      el("span", { class: "pw-label" }, "MIA's Idea · " + i.difficulty.toLowerCase()),
+      el("h3", {}, i.name), i.summary ? el("p", {}, i.summary) : null,
+      i.why ? el("p", { class: "dim" }, i.why) : null,
+      el("p", { class: "dim" }, [i.skills.join(", "), i.xp ? i.xp + " XP" : null, i.credits ? i.credits + " credits" : null].filter(Boolean).join(" · ")),
+      el("div", { class: "row-buttons" },
+        btn("Accept", "btn-amber", () => MIAShell.act({ kind: "mission_idea.accept", params: { proposal_id: i.id } })),
+        btn("Set Aside", "btn-ghost", () => MIAShell.act({ kind: "mission_idea.reject", params: { proposal_id: i.id } }, { quick: true }))));
+  }
+
+  async function suggest() {
+    MIAShell.say("Thinking one up…");
+    const r = await MIA.suggestMission().catch((e) => ({ error: e.message }));
+    if (r.error) { MIAShell.say(r.error); return; }
+    page = await MIA.missions();
+    draw();
+  }
+
   function draw() {
     const c = page.counts;
     $("strip").replaceChildren(
@@ -251,11 +275,12 @@
     if (tab === "quests") { $("panel").replaceChildren(...questsView()); MIAShell.levelCard($("level"), page.me); return; }
     const all = page[tab], ready = tab === "active" ? all.filter((m) => m.ready) : [];
     const list = all.filter((m) => !ready.includes(m));
-    $("panel").replaceChildren(...ready.map(readyCard), section(TABS.find(([t]) => t === tab)[1] + " Missions", null,
+    $("panel").replaceChildren(...ready.map(readyCard), tab === "active" ? ideaCard(page.idea) : null, section(TABS.find(([t]) => t === tab)[1] + " Missions", null,
       list.length ? el("div", { class: "mission-grid" }, list.map(card)) : el("p", { class: "empty" }, ready.length ? "Everything else is done." : EMPTY[tab]),
       tab === "active" ? el("div", { class: "mission-add" },
         btn("Add Mission", "btn-amber", add),
-        btn("Ask MIA For One", "btn-ghost", () => MIAShell.talk(true, "Give me a new mission based on what's going on in my life."))) : null));
+        btn("Ask MIA For One", "btn-ghost", () => MIAShell.talk(true, "Give me a new mission based on what's going on in my life.")),
+        page.idea && page.idea.available && !page.idea.idea ? btn("Suggest One", "btn-ghost", suggest) : null) : null));
     MIAShell.levelCard($("level"), page.me);
   }
 

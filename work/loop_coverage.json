@@ -49,6 +49,14 @@
    "status": "none",
    "why": "their own settings: nothing MIA chose, so nothing of hers to correct"
   },
+  "action:mission_idea": {
+   "status": "none",
+   "why": "the person's yes or no on an idea MIA made (DEC-0125); the mission it becomes has the missions loop, and a set-aside idea is kept as history"
+  },
+  "action:capture": {
+   "status": "none",
+   "why": "the person keeps or leaves out a recording (DEC-0125); a kept one is a journal entry, which has its own loop"
+  },
   "action:starter": {
    "status": "none",
    "why": "a starter set added by the person from Settings or by voice (DEC-0125); what it adds are routines and upkeep, which have their own loops"

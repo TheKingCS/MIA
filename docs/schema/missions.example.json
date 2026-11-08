@@ -1,4 +1,5 @@
 {
+  "idea": {"available": true, "idea": {"id": "idea-demo", "name": "Build a Seed-Starting Rack", "summary": "Three shelves of 2x4 and plywood with a shop light on each, sized for six flats.", "difficulty": "NORMAL", "why": "It uses the carpentry you have been practising and gets the garden started six weeks early.", "xp": 30, "credits": 15, "skills": ["🪚 Carpentry", "🌱 Gardening"]}},
   "available": true,
   "forms": {
     "mission": {

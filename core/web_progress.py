@@ -73,7 +73,8 @@ def _rarity(index: int) -> dict:
 def missions_page(context, today: Optional[date] = None) -> dict:
     """The data the Missions screen shows, assembled here (the web only draws it): today's fitness missions made first, then each mission's card
     (objectives and who each is for, progress, skill rewards, the asset, task or recipes it's tied to, its streak),
-    the skills to pick from, the forms, and the person's level.
+    the skills to pick from, the forms, the person's level, and MIA's mission idea waiting for a yes or no
+    (core/web_proposals.py).
     """
     from core.mission_actions import ABANDON_LABELS, RECORDS, form_spec, is_mine
 
@@ -84,8 +85,10 @@ def missions_page(context, today: Optional[date] = None) -> dict:
     missions = getattr(context, "missions", None)
     profile = _profile(context)
     pid = profile.profile_id if profile is not None else None
+    from core.web_proposals import mission_idea
+
     page = {"available": missions is not None, "forms": form_spec(), "as_of": today.isoformat(),
-            "me": level_block(profile)}
+            "me": level_block(profile), "idea": mission_idea(context)}
     if missions is None:
         return page
     skills = getattr(context, "skills", None)

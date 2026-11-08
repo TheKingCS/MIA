@@ -1828,6 +1828,19 @@ def create_app(context: AppContext) -> FastAPI:
 
         return _screen(profile_id, "notes", journal_page)
 
+    @app.post("/api/journal/captures/check")
+    async def web_check_captures(profile_id: str = Depends(require_profile_id)) -> dict:
+        """Looks for new MIA Lite recordings and transcribes them (core/web_proposals.check_captures)."""
+        from core.web_proposals import check_captures
+
+        view = view_for(context, profile_id)
+
+        def run() -> dict:
+            """Checks under the turn lock, off the event loop (transcribing takes a while)."""
+            with app.state.turn_lock:
+                return check_captures(view)
+        return await run_in_threadpool(run)
+
     @app.get("/api/workshop")
     def web_workshop(profile_id: str = Depends(require_profile_id)) -> dict:
         from core.web_more import workshop_page
@@ -2093,6 +2106,19 @@ def create_app(context: AppContext) -> FastAPI:
         from core.web_progress import missions_page
 
         return _screen(profile_id, "missions", missions_page)
+
+    @app.post("/api/missions/idea")
+    async def web_mission_idea(profile_id: str = Depends(require_profile_id)) -> dict:
+        """Asks the model for a mission idea (core/web_proposals.suggest); it waits for the person's yes or no."""
+        from core.web_proposals import suggest
+
+        view = view_for(context, profile_id)
+
+        def run() -> dict:
+            """Suggests under the turn lock, off the event loop (the model can take a while)."""
+            with app.state.turn_lock:
+                return suggest(view)
+        return await run_in_threadpool(run)
 
     @app.get("/api/skills")
     def web_skills(profile_id: str = Depends(require_profile_id)) -> dict:

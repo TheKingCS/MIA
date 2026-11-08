@@ -78,8 +78,29 @@
       el("p", { class: "dim journal-private" }, page.private.count
         ? "Talk It Out entries (" + page.private.count + ") stay private and encrypted on this account. Ask MIA about them with your passphrase on the PC."
         : "Talk It Out entries stay private and encrypted on this account."),
-      search, tags, listBox);
+      captures(page.captures), search, tags, listBox);
     list();
+  }
+
+  // MIA Lite's recordings waiting for review (core/web_proposals.field_captures, the Toolbox's Field Captures): the
+  // words as heard, Keep It puts them in the journal (capture.keep), Leave It Out doesn't. Check For New looks in the
+  // capture folder (transcribed with the PC's voice).
+  function captures(box) {
+    if (!box || !box.available) return null;
+    const check = async () => {
+      const r = await MIA.checkCaptures().catch((e) => ({ error: e.message }));
+      MIAShell.say(r.error || (r.found ? r.found + " new recording" + (r.found === 1 ? "" : "s") + "." : "Nothing new."));
+      if (r.found) { page = await MIA.journal(); draw(); }
+    };
+    return el("section", { class: "glass money-section journal-captures", "aria-label": "Field recordings" },
+      el("span", { class: "pw-label" }, "From the Field" + (box.captures.length ? " · " + box.captures.length + " to review" : "")),
+      box.captures.length ? el("div", { class: "sync-rows" }, box.captures.map((c) => el("div", { class: "sync-row council-msg" },
+        el("div", {}, el("p", { class: "council-text" }, c.title), el("p", {}, c.words || "(nothing heard)")),
+        el("div", { class: "row-buttons" },
+          btn("Keep It", "btn-amber", () => MIAShell.act({ kind: "capture.keep", params: { capture_id: c.id } }, { quick: true })),
+          btn("Leave It Out", "btn-ghost", () => MIAShell.act({ kind: "capture.discard", params: { capture_id: c.id } }, { quick: true }))))))
+        : el("p", { class: "dim" }, "Voice notes from MIA Lite show up here to keep or leave out."),
+      el("div", { class: "row-buttons" }, btn("Check for new", "btn-ghost", check)));
   }
 
   function list() {
