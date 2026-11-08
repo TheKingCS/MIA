@@ -2396,6 +2396,11 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   (toilet-roll cups / bought trays, a scrap shelf / a bought one, seed mix, a first batch as proof, a stand built after
   the proof), and tests hold the rules: revenue needs proof and an outlet, an outlet needs proof, every need has a way to
   get it, every candidate has a path. `plan()` carries `next.goal`, `next.path`, `next.checks` for the What's Next screen.
+  **Deeper chains (2026-11-08 overnight):** the flock the same way (a coop, then a feed bin and a small laying flock in
+  spring, eggs before selling them; a flock in the records means the coop and the bin exist), and a compost bin's first
+  finished compost as made seed mix, slow, so a path takes it only when nothing quicker meets the need. Compounding
+  value is now a step's share of the work to reach what it unlocks (a $25 bin isn't credited with a flock that also
+  needs a $300 coop), and seasonal income is spread over the year (selling starts: spring only).
 - From: ChatGPT's two handoffs, pasted by Zac 2026-11-08 — "Real-World Development Intelligence" (Homestead/Business
   Architect) and "The Convergence" (unified progression + living campaign). Both ask, in their own section 11, to
   inspect the architecture and propose before building, reusing MIA's mission/progression/memory/campaign systems.

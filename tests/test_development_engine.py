@@ -10,7 +10,9 @@ Greenhouse page and the get_homestead_next_step tool show it: what they already 
 each option isn't ready, a budget only from money words. Then the deep next steps: the infrastructure before
 the payoff (selling starts only through cups, a shelf, a first batch and a stand), made before bought, a big build
 waiting while cheap foundations remain, the checks with each step, and the catalog rules that hold it. And the budget
-read from their own build targets when they don't give one. The rest are
+read from their own build targets when they don't give one. The flock and the compost by the same rules (a coop and
+a feed bin before hens, eggs before selling them; slow compost only when nothing quicker), a step's share of the work
+it unlocks, and what a flock in the records says exists. The rest are
 unit tests on
 the scoring, the dependency gate, compounding value and the defensive profile reader.
 """
@@ -270,3 +272,47 @@ def test_the_spoken_plan_says_which_budget_it_weighed():
     assert p["budget"] == 150 and p["budget_from"] == "your build budget"
     assert de.describe(p).endswith("Weighed against the $150 left in your build budget this month.")
     assert de.plan(SimpleNamespace(), budget=80, month=7)["budget_from"] == "you"
+
+
+
+# --- the flock and the compost, the same deep rules (2026-11-08) ---------
+
+def test_eggs_are_sold_only_after_a_coop_a_feed_bin_and_a_laying_flock():
+    cat = de.homestead_catalog()
+    goal = next(c for c in cat if c.id == "egg_sales")
+    ids = [s.id for s in de.path_to(goal, DevelopmentProfile(month=4), cat, _FOUNDATIONS)]
+    assert ids.index("chickens") < ids.index("flock") and ids.index("feed_bin") < ids.index("flock")
+    assert ids.index("flock") < ids.index("sales_stand") < ids.index("egg_sales")
+
+
+def test_with_the_coop_built_in_spring_the_next_step_is_toward_the_flock():
+    step = de.next_step(DevelopmentProfile(month=5), de.homestead_catalog(), _FOUNDATIONS | {"chickens"})
+    assert step["recommend"]["id"] == "feed_bin" and step["goal"]["id"] == "flock"
+
+
+def test_a_step_earns_only_its_share_of_the_work_it_unlocks():
+    """A $25 feed bin is a sliver of the way to a flock that also needs a $300 coop."""
+    cat = de.homestead_catalog()
+    by_id = {c.id: c for c in cat}
+    alone = de.compounding_value(by_id["feed_bin"], cat)
+    with_coop = de.compounding_value(by_id["feed_bin"], cat, done=frozenset({"chickens"}))
+    assert alone < 0.1 * by_id["flock"].benefit < with_coop
+
+
+def test_a_slow_provider_is_used_only_when_nothing_quicker_meets_the_need():
+    cat = de.homestead_catalog()
+    goal = next(c for c in cat if c.id == "first_seedlings")
+    ids = [s.id for s in de.path_to(goal, DevelopmentProfile(month=3), cat, _FOUNDATIONS)]
+    assert "seed_mix" in ids and "finished_compost" not in ids  # months of curing would miss the season
+    no_bag = [c for c in cat if c.id != "seed_mix"]
+    ids = [s.id for s in de.path_to(goal, DevelopmentProfile(month=3), no_bag, _FOUNDATIONS)]
+    assert "finished_compost" in ids
+
+
+def test_a_flock_means_a_coop_and_a_feed_bin_but_water_means_no_rain_barrel():
+    ctx = SimpleNamespace(maintenance=SimpleNamespace(all_assets=lambda: [SimpleNamespace(name="Laying hens flock"),
+                                                                          SimpleNamespace(name="Greenhouse")]))
+    have = {h["name"]: h["found_in"] for h in de.plan(ctx, month=5)["have"]}
+    assert have["Chicken coop and run"] == "needed for start a small laying flock"
+    assert have["A rodent-proof feed bin"] == "needed for start a small laying flock"
+    assert "Rain-barrel water collection" not in have  # a greenhouse's water could come from a hose

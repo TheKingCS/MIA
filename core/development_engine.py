@@ -47,8 +47,11 @@ PROFESSIONAL = "A qualified professional should verify this before you build or 
 # Selling waits for proof it can be made well and a place to sell it (Zac, 2026-11-08: no selling plant starts before
 # the shelf, the cups and a first batch). These tags say which is which; a test holds every revenue candidate to them.
 OUTLET_TAGS = frozenset({"sales_outlet"})
-PROOF_TAGS = frozenset({"grown_seedlings"})
+PROOF_TAGS = frozenset({"grown_seedlings", "eggs", "something_to_sell"})  # made well, before anyone pays
 STEP_PENALTY = 2.0  # each extra step on a path is a little less certain
+# Needs that mean one particular thing, so a finished step that needed one says it exists: a laying flock means a coop
+# and a feed bin. "Water" isn't one: a greenhouse watered by a hose doesn't mean a rain barrel.
+IMPLIED_TAGS = frozenset({"coop", "feed_storage"})
 HOUR_VALUE = 15.0  # a rough worth of an hour, so work counts against a project the way money does (soft, not a wage)
 
 
@@ -77,7 +80,8 @@ class DevelopmentProfile:
 class Candidate:
     """One project MIA could recommend. `requires`/`provides` are capability tags that form the dependency graph;
     `unlocks` names the candidates this one makes possible or much better (its compounding value); `made` marks one
-    made by hand or upcycled, chosen over a bought one that provides the same."""
+    made by hand or upcycled, chosen over a bought one that provides the same; `slow` one that takes months to be
+    ready, chosen on a path only when nothing quicker would do."""
 
     id: str
     name: str
@@ -94,6 +98,7 @@ class Candidate:
     scalable: bool = False
     needs_professional: bool = False  # safety-critical: structural, electrical, legal, financial
     made: bool = False  # made by hand or upcycled rather than bought: preferred when both would do (DEC-0141)
+    slow: bool = False  # takes months to be ready (finished compost): on a path, only when nothing quicker meets the need
     note: str = ""
     evidence: tuple = ()  # words that mark it already done in the person's records ("greenhouse", "coop")
 
@@ -123,22 +128,49 @@ def compounding_value(candidate: Candidate, catalog: Sequence[Candidate], discou
                       done=frozenset()) -> float:
     """The discounted monthly benefit of everything this candidate unlocks, out to `depth` hops — why a foundational
     project (compost, water) outscores a leaf project of the same cost. Something already `done` unlocks nothing new,
-    so it adds nothing."""
+    so it adds nothing. And a step earns only its share of what it unlocks: its part of all the work still needed to
+    get that thing (its own money and hours, against the cheapest way to meet each other need, plus the thing's own
+    cost). A $25 feed bin is a sliver of the way to a flock that also needs a $300 coop, so it isn't credited with the
+    flock (2026-11-08: crediting the whole had outranked selling starts that were ready)."""
     by_id = {c.id: c for c in catalog}
+    have = set(candidate.provides)
+    for cid in done:
+        if cid in by_id:
+            have |= set(by_id[cid].provides)
     total = 0.0
     seen = set()
-    frontier = [(uid, 1) for uid in candidate.unlocks]
+    frontier = [(uid, 1, 1.0) for uid in candidate.unlocks]
     while frontier:
-        uid, hop = frontier.pop()
+        uid, hop, carried = frontier.pop()
         if uid in seen or hop > depth or uid in done:
             continue
         seen.add(uid)
         nxt = by_id.get(uid)
         if nxt is None:
             continue
-        total += nxt.benefit * (discount ** (hop - 1))
-        frontier.extend((u, hop + 1) for u in nxt.unlocks)
+        share = carried * _share_of_work(candidate, nxt, have, catalog, done)
+        total += nxt.benefit * share * (discount ** (hop - 1))
+        frontier.extend((u, hop + 1, share) for u in nxt.unlocks)
     return round(total, 2)
+
+
+def _effort(c: Candidate) -> float:
+    """Pure logic. Everything a candidate takes, in one soft unit: its money (six months of running costs) and its
+    hours at HOUR_VALUE."""
+    return c.entry_cost + c.recurring_cost * 6 + c.labour_hours * HOUR_VALUE
+
+
+def _share_of_work(step: Candidate, target: Candidate, have: set, catalog: Sequence[Candidate], done) -> float:
+    """Pure logic. How much of the work of reaching `target` `step` is: its effort against its own plus the cheapest
+    provider of each need still unmet, plus the target's own. 0 when a need has no way to be met."""
+    extra = 0.0
+    for tag in target.requires - have:
+        options = [_effort(c) for c in catalog if tag in c.provides and c.id not in done and c is not step]
+        if not options:
+            return 0.0
+        extra += min(options)
+    mine = max(_effort(step), 1.0)
+    return mine / (mine + extra + _effort(target))
 
 
 def score(candidate: Candidate, profile: DevelopmentProfile, catalog: Sequence[Candidate], done=frozenset()) -> dict:
@@ -203,7 +235,8 @@ def path_to(goal: Candidate, profile: DevelopmentProfile, catalog: Sequence[Cand
     """The ordered steps that make `goal` doable from here, ending with the goal itself (Zac, 2026-11-08: "going
     straight to selling plant starts without any kind of building the infrastructure to manage that wouldn't be a good
     idea"). For each thing it still needs, the candidate that provides it: made or upcycled first (his producer
-    direction, DEC-0141), then cheapest, then least work, with that candidate's own needs before it. None when
+    direction, DEC-0141), then cheapest, then least work, and never a slow one (months to be ready) when something
+    quicker meets the need, with that candidate's own needs before it. None when
     something on the way has no way to get it. Pure logic."""
     done = frozenset(done)
     have = _have_after(profile, catalog, done)
@@ -214,7 +247,7 @@ def path_to(goal: Candidate, profile: DevelopmentProfile, catalog: Sequence[Cand
         if tag in have:
             return True
         options = sorted((c for c in catalog if tag in c.provides and c.id not in done and c.id not in seen),
-                         key=lambda c: (not c.made, c.entry_cost, c.labour_hours))
+                         key=lambda c: (c.slow, not c.made, c.entry_cost, c.labour_hours))
         return any(visit(c, seen | {c.id}) for c in options)
 
     def visit(c: Candidate, seen: frozenset) -> bool:
@@ -301,8 +334,9 @@ def next_step(profile: DevelopmentProfile, catalog: Sequence[Candidate], done=fr
     """The single logical next move, with its reasoning, or None when the catalog is empty. It looks ahead: every goal
     gets its whole path (`path_to`), each path is weighed as a whole (`_path_score`), and the first step of the best
     one whose first step can be done now is the recommendation, with the path and the checks behind it
-    (`readiness`). So a goal that needs infrastructure first (selling starts needs cups, a shelf, a first batch and a
-    stand) is reached through that infrastructure, never jumped to. When no path can start now, it names a seasonal
+    (`readiness`), said as the start of the most productive goal that step begins. So a goal that needs
+    infrastructure first (selling starts needs cups, a shelf, a first batch and a stand) is reached through that
+    infrastructure, never jumped to. When no path can start now, it names a seasonal
     wait, a savings target, or the prerequisite to clear first."""
     done = frozenset(done)
     rows = ranked(profile, catalog, done)
@@ -329,7 +363,7 @@ def next_step(profile: DevelopmentProfile, catalog: Sequence[Candidate], done=fr
             leads[steps[0].id] = (aim, goal, steps)
     if best is not None:
         _, goal, steps, first = best
-        if len(steps) == 1 and first["id"] in leads:  # a step worth doing on its own that's also the start of more
+        if first["id"] in leads:  # the same first step, said as the start of the most productive goal it begins
             _, goal, steps = leads[first["id"]]
         reason = _reason(first)
         if len(steps) > 1:
@@ -377,7 +411,9 @@ def homestead_catalog() -> list:
     and unlocks exercise compounding value — compost and water are cheap and foundational (they unlock the beds and
     the greenhouse); the greenhouse is dear but scalable. Selling seedling starts sits at the end of a real chain:
     seed cups (toilet-paper rolls, made, before bought trays), a seed-starting shelf (scrap, before a bought one), seed
-    mix, a first batch as proof, then a stand, so the plan reaches it through the infrastructure it needs. Grounded in plans MIA already knows
+    mix, a first batch as proof, then a stand, so the plan reaches it through the infrastructure it needs. The flock
+    the same way: a coop and a feed bin, hens in spring, eggs before selling eggs; and a compost bin's first finished
+    compost becomes made seed mix months later. Grounded in plans MIA already knows
     (`core/plan_library.py`), each with the words that mark it already done in the person's records (`_EVIDENCE`,
     read by `done_from_records`). Costs are rough starting figures, not quotes."""
     catalog = [
@@ -385,7 +421,8 @@ def homestead_catalog() -> list:
                   provides=frozenset({"water"}), unlocks=("drip_irrigation", "greenhouse"), risk=0.1,
                   note="A barrel, a diverter and a screen — the cheapest thing that unlocks the most."),
         Candidate("compost_bin", "Three-bay compost bin", entry_cost=30, benefit=12, labour_hours=6, made=True,
-                  provides=frozenset({"compost", "soil"}), unlocks=("raised_bed", "greenhouse"), risk=0.1,
+                  provides=frozenset({"compost", "soil"}), unlocks=("raised_bed", "greenhouse", "finished_compost"),
+                  risk=0.1,
                   note="Pallets are often free; turns scraps into the soil everything else needs."),
         Candidate("raised_bed", "Raised garden bed", entry_cost=60, benefit=25, labour_hours=8, made=True,
                   provides=frozenset({"beds"}), unlocks=("cold_frame",), season=(3, 4, 5), risk=0.15,
@@ -396,9 +433,26 @@ def homestead_catalog() -> list:
         Candidate("cold_frame", "Cold frame", entry_cost=50, benefit=15, labour_hours=6, made=True,
                   requires=frozenset({"beds"}), provides=frozenset({"season_extension"}), season=(9, 10, 11), risk=0.15,
                   note="Extends the growing season at both ends."),
-        Candidate("chickens", "Chicken coop and run", entry_cost=300, recurring_cost=25, benefit=40, labour_hours=20,
-                  made=True, provides=frozenset({"manure", "eggs"}), unlocks=("compost_bin",), risk=0.3,
-                  note="Eggs and manure for the compost; ongoing feed cost and daily chores."),
+        Candidate("chickens", "Chicken coop and run", entry_cost=300, benefit=0, labour_hours=20, made=True,
+                  provides=frozenset({"coop"}), unlocks=("flock",), risk=0.3,
+                  note="Built before any bird comes home: roosts, nest boxes, vents and a predator-proof run."),
+        # The flock: a coop and somewhere to keep feed first, hens in spring, eggs before selling eggs (2026-11-08).
+        Candidate("feed_bin", "A rodent-proof feed bin", entry_cost=25, benefit=1, labour_hours=0.2,
+                  provides=frozenset({"feed_storage"}), unlocks=("flock",), risk=0.05,
+                  note="A metal can with a tight lid keeps feed dry and the mice out."),
+        Candidate("flock", "Start a small laying flock", entry_cost=60, recurring_cost=20, benefit=40, labour_hours=4,
+                  requires=frozenset({"coop", "feed_storage"}), provides=frozenset({"eggs", "manure", "something_to_sell"}),
+                  unlocks=("compost_bin", "egg_sales"), season=(3, 4, 5, 6), risk=0.3,
+                  note="Four to six pullets in spring; daily care, feed and water every day."),
+        Candidate("egg_sales", "Sell extra eggs", entry_cost=15, benefit=30, labour_hours=2,
+                  requires=frozenset({"eggs", "sales_outlet"}), scalable=True, risk=0.2, sector="business",
+                  note="Once the flock lays more than you eat: cartons, a fair price, the same stand."),
+        # Compost matures: months after the bin, its sieved compost is seed mix you made.
+        Candidate("finished_compost", "Turn and sieve the first finished compost", entry_cost=0, benefit=6,
+                  labour_hours=4, made=True, slow=True, requires=frozenset({"compost"}),
+                  provides=frozenset({"seed_mix", "rich_soil"}),
+                  unlocks=("first_seedlings",), risk=0.1,
+                  note="A few months after the bin starts: turned, cured and sieved, it's the seed mix and the beds' food."),
         Candidate("greenhouse", "Greenhouse", entry_cost=800, recurring_cost=10, benefit=90, labour_hours=40, made=True,
                   requires=frozenset({"water"}), provides=frozenset({"year_round"}), unlocks=("plant_sales",),
                   scalable=True, risk=0.35, needs_professional=True,
@@ -424,17 +478,19 @@ def homestead_catalog() -> list:
                   note="Stockier starts than a window alone; hang it a few inches over the tops."),
         Candidate("first_seedlings", "Start a first batch of seedlings", entry_cost=5, benefit=8, labour_hours=3,
                   requires=frozenset({"seed_cups", "seedling_space", "seed_mix"}),
-                  provides=frozenset({"grown_seedlings"}), unlocks=("raised_bed", "sales_stand", "plant_sales"),
+                  provides=frozenset({"grown_seedlings", "something_to_sell"}),
+                  unlocks=("raised_bed", "sales_stand", "plant_sales"),
                   season=(2, 3, 4), risk=0.2,
                   note="A dozen or two of something easy (tomatoes, peppers, herbs): proof you grow them well first."),
         Candidate("sales_stand", "A roadside stand or market table", entry_cost=20, benefit=0, labour_hours=4,
-                  made=True, requires=frozenset({"grown_seedlings"}), provides=frozenset({"sales_outlet"}),
-                  unlocks=("plant_sales",), risk=0.1,
+                  made=True, requires=frozenset({"something_to_sell"}), provides=frozenset({"sales_outlet"}),
+                  unlocks=("plant_sales", "egg_sales"), risk=0.1,
                   note="Pallets and a sign, or a table at the local market, built once there's something to sell."),
-        Candidate("plant_sales", "Sell seedling starts", entry_cost=10, benefit=60, labour_hours=3,
+        Candidate("plant_sales", "Sell seedling starts", entry_cost=10, benefit=20, labour_hours=3,
                   requires=frozenset({"grown_seedlings", "sales_outlet"}), season=(3, 4, 5), scalable=True, risk=0.4,
                   sector="business",
-                  note="Start small: a few flats of what grew best, priced by the pot. Where the homestead pays back."),
+                  note="Start small: a few flats of what grew best, priced by the pot. Spring sales, so its value is "
+                       "spread over the year."),
     ]
     for c in catalog:
         c.evidence = _EVIDENCE.get(c.id, ())
@@ -499,7 +555,9 @@ _EVIDENCE = {
     "raised_bed": ("raised bed", "garden bed", "grow bed"),
     "drip_irrigation": ("drip",),
     "cold_frame": ("cold frame",),
-    "chickens": ("coop", "chicken", "flock"),
+    "chickens": ("coop",),
+    "flock": ("flock", "hens", "laying"),
+    "feed_bin": ("feed bin",),
     "greenhouse": ("greenhouse", "walipini", "hoop house", "polytunnel"),
     "seed_cups": ("seed cup",),
     "cell_trays": ("seed tray", "cell tray", "seedling tray", "plug tray"),
@@ -518,7 +576,8 @@ _MONTHS = ("January", "February", "March", "April", "May", "June", "July", "Augu
 def done_from_records(context, catalog: Sequence[Candidate]) -> dict:
     """Which candidates the person already has, read from their own records: an asset (the Garage or Greenhouse), a
     finished project, a tank or bed in the grow lab (and any batch grown there, the proof selling waits for), a flock,
-    a material on the workshop shelf, each matched by the candidate's `evidence` words.
+    a material on the workshop shelf, each matched by the candidate's `evidence` words; and what a done one needed
+    when the need means one particular thing (IMPLIED_TAGS: a flock means a coop and a feed bin).
     {candidate id: where it was found}. A source that won't read just contributes nothing."""
     from core import links
 
@@ -551,6 +610,18 @@ def done_from_records(context, catalog: Sequence[Candidate]) -> dict:
         where = next((w for name, w in names for word in c.evidence if word in name), None)
         if where:
             done[c.id] = where
+    # What a finished step needed is done too, for the needs that mean one particular thing (IMPLIED_TAGS): a laying
+    # flock means there's a coop and a feed bin. A general need (water) or alternatives (cups or trays) assume nothing.
+    by_id = {c.id: c for c in catalog}
+    changed = True
+    while changed:
+        changed = False
+        for cid in list(done):
+            for tag in by_id[cid].requires & IMPLIED_TAGS:
+                providers = [c for c in catalog if tag in c.provides]
+                if len(providers) == 1 and providers[0].id not in done:
+                    done[providers[0].id] = f"needed for {by_id[cid].name.lower()}"
+                    changed = True
     return done
 
 

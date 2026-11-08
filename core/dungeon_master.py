@@ -121,9 +121,11 @@ def commit(book, version, intent: Intent) -> Optional[str]:
 
 
 def take_turn(book, campaign_id: str, version_id: str, action: str, propose: Callable,
-              roll: Callable[[], float] = random.random) -> TurnResult:
+              roll: Optional[Callable[[], float]] = None) -> TurnResult:
     """Play one turn. `propose(state, action) -> {"narration": str, "intents": [dicts]}` is the model (a stub in
-    tests); it sees the last RECENT_TURNS of the story, and this turn joins the story when it's done. ValueError when
+    tests); it sees the last RECENT_TURNS of the story, and this turn joins the story when it's done. `roll` is the
+    die (0-1); without one it's `random.random`, looked up when the turn is played (so a test that sets the module's
+    random gets it; a default bound at import didn't, and a test of a failed check passed one time in twenty). ValueError when
     the campaign or version isn't this person's."""
     campaign = book.get_campaign(campaign_id)
     version = book.get_version(version_id)
@@ -147,7 +149,7 @@ def take_turn(book, campaign_id: str, version_id: str, action: str, propose: Cal
         if intent.kind == "narrate":
             continue
         version = book.get_version(version_id)  # re-read: an earlier intent may have changed it
-        if not validate(intent, version, roll()):
+        if not validate(intent, version, (roll or random.random)()):
             failed.append(intent.kind + (f" ({intent.params})" if intent.params else ""))
             continue
         done = commit(book, version, intent)
