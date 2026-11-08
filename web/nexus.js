@@ -33,8 +33,11 @@
 
   function portal(p) {
     // The glass inside the frame holds the swirl: its own flat, clipped layer (3D space turns clipping off).
-    const frame = el("span", { class: "portal-frame" }, el("span", { class: "portal-glass", "aria-hidden": "true" }),
-      el("span", { class: "portal-ico", "aria-hidden": "true" }, icon(p.icon)));
+    // The flat Nexus (reduced motion, no WebGL 2) shows the area's picture too when Muse's is in (H-0096); else its icon.
+    const frame = el("span", { class: "portal-frame" + (p.art ? " has-art" : "") },
+      p.art ? el("span", { class: "portal-art", "aria-hidden": "true", style: "background-image:url('" + p.art + "')" }) : null,
+      el("span", { class: "portal-glass", "aria-hidden": "true" }),
+      p.art ? null : el("span", { class: "portal-ico", "aria-hidden": "true" }, icon(p.icon)));
     if (p.needs) frame.append(el("span", { class: "portal-needs" }, p.needs + " need" + (p.needs === 1 ? "s" : "") + " you"));
     const a = el("a", { class: "portal", href: p.page, role: "listitem", style: "--hue:" + p.hue,
       "aria-label": p.name + (p.needs ? ", " + p.needs + " need you" : "") + ". " + p.line }, frame, el("span", { class: "portal-name" }, p.name));
