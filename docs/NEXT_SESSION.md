@@ -975,7 +975,9 @@ about MIA. **(11) and (12) built.** **Claimed (engine), core only:** (14) deeper
 `core/development_engine.py`, the same rules as the seed-starting chain: a coop, then a feed bin and a small laying flock
 in spring, eggs before selling them; a compost bin's first finished compost as made seed mix, months later. **(14) built.** **(15) claimed (engine):** preserving the harvest (a canning setup, a first batch
 put up, selling preserves only after a cottage-food rules check, eggs too) and a greenhouse's level, drained site before
-the frame. Ready for a voice tool (parity session): "what isn't working?" / "what's
+the frame. **(15) built.** **(16) claimed (engine): T-0020**, a read-only repository subject for
+`core/inspection.py`: docs checked against the repo (files a doc names that aren't there, decisions marked built whose
+files are missing), findings as tasks. Ready for a voice tool (parity session): "what isn't working?" / "what's
 broken?" -> `core.capabilities.status_summary(context, here)`.
 
 **Who builds what (2026-11-07 night, after Power and Recent Changes were each built twice at once):** screens
