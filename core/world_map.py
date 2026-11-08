@@ -30,6 +30,7 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Optional
 
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
 from core.logger import get_logger
@@ -192,12 +193,12 @@ class WorldMap:
         self._load()
 
     def _load(self) -> None:
-        """Reads the check-ins and first-cleared days; an unreadable file is logged, reported and starts empty."""
+        """Reads the check-ins and first-cleared days; an unreadable file is logged, reported and starts empty. Sealed at rest (DEC-0126): a sealed file is opened; one that won't open is copied aside and starts empty."""
         self.checkins, self.first_seen = [], {}
         if not self._file.exists():
             return
         try:
-            raw = json.loads(self._file.read_text(encoding="utf-8"))
+            raw = json.loads(open_text(self._file))
             self.checkins = [CheckIn(float(c["lat"]), float(c["lon"]), str(c.get("at") or ""), str(c.get("label") or ""))
                              for c in raw.get("checkins") or []]
             self.first_seen = {str(k): str(v) for k, v in (raw.get("first_seen") or {}).items()}

@@ -45,6 +45,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.logger import get_logger
 
@@ -102,12 +103,12 @@ class ArtStore:
         self._load()
 
     def _load(self) -> None:
-        """Reads the index."""
+        """Reads the index. Sealed at rest (DEC-0126): a sealed file is opened; one that won't open is copied aside and starts empty."""
         self.items: list[dict] = []
         if not self._file.exists():
             return
         try:
-            data = json.loads(self._file.read_text(encoding="utf-8"))
+            data = json.loads(open_text(self._file))
         except (OSError, ValueError):
             log.exception("Art: couldn't read %s; starting empty", self._file)
             return

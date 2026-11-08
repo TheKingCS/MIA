@@ -204,6 +204,22 @@ SEALED_STORES = [
     ("core.workout_manager", "WorkoutManager", "workout_templates.json"),
     ("core.workout_manager", "WorkoutManager", "workout_sessions.json"),
     ("core.fitness_manager", "FitnessManager", "fitness.json"),
+    ("core.reward_shop", "RewardShop", "reward_shop.json"),
+    ("core.boss_battles", "BossBook", "boss_battles.json"),
+    ("core.questlines", "QuestBook", "questlines.json"),
+    ("core.world_map", "WorldMap", "world_map.json"),
+    ("core.classroom_manager", "ClassroomManager", "classroom_subjects.json"),
+    ("core.classroom_manager", "ClassroomManager", "classroom_courses.json"),
+    ("core.classroom_manager", "ClassroomManager", "classroom_lessons.json"),
+    ("core.answer_ratings", "AnswerRatings", "answer_ratings.json"),
+    ("core.creations", "Creations", "creations.json"),
+    ("core.record_sets", "RecordSets", "record_sets.json"),
+    ("core.online_watch", "OnlineReminders", "online_reminders.json"),
+    ("core.art_studio", "ArtStore", "art.json"),
+    ("core.the_loop", "LoopBook", "loop.json"),
+    ("core.training_session", "TrainingStore", "training_session.json"),
+    ("core.cooking_session", "CookingStore", "cooking_session.json"),
+    ("core.saga", "SagaMoments", "saga_moments.json"),
 ]
 
 

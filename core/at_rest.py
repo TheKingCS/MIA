@@ -86,6 +86,23 @@ SEALED = frozenset({
     "notifications.json",  # what MIA told them
     "workout_exercises.json", "workout_templates.json", "workout_sessions.json",  # their training
     "fitness.json",  # their fitness plan and records
+    # 2026-11-08, the rest of their own stores: the game layer, learning, ratings, what MIA made for them
+    "reward_shop.json",
+    "boss_battles.json",
+    "questlines.json",
+    "world_map.json",
+    "classroom_subjects.json",
+    "classroom_courses.json",
+    "classroom_lessons.json",
+    "answer_ratings.json",
+    "creations.json",
+    "record_sets.json",
+    "online_reminders.json",
+    "art.json",
+    "loop.json",
+    "training_session.json",
+    "cooking_session.json",
+    "saga_moments.json",
 })
 # Every store reading a SEALED file uses open_text and catches ValueError (UnreadableFile is one) with OSError, so a
 # file that won't open is copied aside and the store starts empty instead of MIA failing to start. Not yet: the

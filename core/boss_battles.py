@@ -28,6 +28,7 @@ from datetime import date
 from pathlib import Path
 from typing import Optional
 
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
 from core.logger import get_logger
@@ -77,12 +78,12 @@ class BossBook:
         self._load()
 
     def _load(self) -> None:
-        """Reads the book; a damaged file is logged, reported and starts empty."""
+        """Reads the book; a damaged file is logged, reported and starts empty. Sealed at rest (DEC-0126): a sealed file is opened; one that won't open is copied aside and starts empty."""
         self.peaks, self.missions, self.defeated = {}, [], {}
         if not self._file.exists():
             return
         try:
-            raw = json.loads(self._file.read_text(encoding="utf-8"))
+            raw = json.loads(open_text(self._file))
             self.peaks = {str(k): float(v) for k, v in (raw.get("peaks") or {}).items()}
             self.missions = [str(m) for m in raw.get("missions") or []]
             self.defeated = {str(k): str(v) for k, v in (raw.get("defeated") or {}).items()}

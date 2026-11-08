@@ -29,6 +29,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.logger import get_logger
 
@@ -56,9 +57,9 @@ class Creations:
         self._load()
 
     def _load(self) -> None:
-        """Reads the creations; an unreadable file is logged and starts empty."""
+        """Reads the creations; an unreadable file is logged and starts empty. Sealed at rest (DEC-0126): a sealed file is opened; one that won't open is copied aside and starts empty."""
         try:
-            self.items: list[dict] = json.loads(self._file.read_text(encoding="utf-8")).get("creations", [])
+            self.items: list[dict] = json.loads(open_text(self._file)).get("creations", [])
         except FileNotFoundError:
             self.items = []
         except (OSError, ValueError):

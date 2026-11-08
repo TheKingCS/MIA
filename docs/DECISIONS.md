@@ -1976,8 +1976,11 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   email drafts, places, the work dungeon (pay and hours), notifications, workouts (exercises, templates, sessions) and
   fitness now read through `open_text` and are written sealed; an unreadable one starts empty with a copy kept aside
   (the at-rest tests hold each). Existing plain files still read and seal on their next write. Left on purpose: the
-  private journal and the password vault (their own encryption), and the append-only `.jsonl` logs. Still to do:
-  the saga's files, the game stores (rewards, bosses, questlines, world map), classroom, ratings and the rest.
+  private journal and the password vault (their own encryption), and the append-only `.jsonl` logs. **Then the rest
+  of their own stores** (same day): the reward shop, boss battles, questlines, world map, classroom (subjects, courses,
+  lessons), answer ratings, creations, record sets, online reminders, art, the loop, training and cooking sessions and
+  the Chronicles' moments. Still plain on purpose: the journal and passwords (own encryption), the `.jsonl` logs, and
+  the saga's development records (Night School's, not the person's). Next: the `.jsonl` logs, the phone's Keystore.
 - Related: DEC-0035 (the password vault), DEC-0125
 
 ### DEC-0127: MIA becomes a product, sold by subscription, local-first

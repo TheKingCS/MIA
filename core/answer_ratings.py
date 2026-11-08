@@ -20,6 +20,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.logger import get_logger
 
@@ -46,9 +47,9 @@ class AnswerRatings:
         self._load()
 
     def _load(self) -> None:
-        """Reads the ratings; a missing file gives none, a damaged one is logged and starts a new list."""
+        """Reads the ratings; a missing file gives none, a damaged one is logged and starts a new list. Sealed at rest (DEC-0126): a sealed file is opened; one that won't open is copied aside and starts empty."""
         try:
-            self.ratings = json.loads(self._file.read_text(encoding="utf-8")).get("ratings", [])
+            self.ratings = json.loads(open_text(self._file)).get("ratings", [])
         except FileNotFoundError:
             self.ratings = []
         except (OSError, ValueError):

@@ -43,6 +43,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.logger import get_logger
 
@@ -447,11 +448,11 @@ class TrainingStore:
 
     def _load(self) -> None:
         """Reads the session in progress, keeping only fields it knows; an unreadable file is logged and means no
-        session.
+        session. Sealed at rest (DEC-0126): a sealed file is opened; one that won't open is copied aside and starts empty.
         """
         self.session: Optional[Session] = None
         try:
-            raw = json.loads(self._file.read_text(encoding="utf-8")) if self._file.exists() else None
+            raw = json.loads(open_text(self._file)) if self._file.exists() else None
         except (OSError, ValueError):
             log.exception("%s unreadable; no session in progress.", _FILE)
             raw = None

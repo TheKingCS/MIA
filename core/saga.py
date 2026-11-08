@@ -37,6 +37,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.logger import get_logger
 
@@ -271,9 +272,9 @@ class SagaMoments:
         self._load()
 
     def _load(self) -> None:
-        """Reads the moments; an unreadable file is logged and starts a new list."""
+        """Reads the moments; an unreadable file is logged and starts a new list. Sealed at rest (DEC-0126): a sealed file is opened; one that won't open is copied aside and starts empty."""
         try:
-            self.moments = json.loads(self._file.read_text(encoding="utf-8")).get("moments", [])
+            self.moments = json.loads(open_text(self._file)).get("moments", [])
         except FileNotFoundError:
             self.moments = []
         except (OSError, ValueError):

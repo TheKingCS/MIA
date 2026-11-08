@@ -26,6 +26,7 @@ from pathlib import Path
 from typing import Optional
 
 from core import life_events
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.logger import get_logger
 
@@ -104,9 +105,9 @@ class RecordSets:
         self._load()
 
     def _load(self) -> None:
-        """Reads the sets; a missing file gives none, and a damaged one is logged and starts empty."""
+        """Reads the sets; a missing file gives none, and a damaged one is logged and starts empty. Sealed at rest (DEC-0126): a sealed file is opened; one that won't open is copied aside and starts empty."""
         try:
-            self.sets: list[dict] = json.loads(self._file.read_text(encoding="utf-8")).get("sets", [])
+            self.sets: list[dict] = json.loads(open_text(self._file)).get("sets", [])
         except FileNotFoundError:
             self.sets = []
         except (OSError, ValueError):

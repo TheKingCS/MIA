@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Optional
 
 from core.assistant_actions import AssistantAction
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.connectivity import OFFLINE, ONLINE, UNKNOWN
 from core.data_recovery import notify_data_corruption
@@ -86,7 +87,7 @@ class OnlineReminders:
         # Whose data: a person's own folder (core/personal_data.py), or the
         # shared data/ folder by default.
         """Loads the reminders from a person's folder (or data/); a damaged file is logged, reported and starts
-        empty.
+        empty. Sealed at rest (DEC-0126): a sealed file is opened; one that won't open is copied aside and starts empty.
         """
         self.data_dir = Path(data_dir) if data_dir is not None else _REMINDERS_FILE.parent
         self._reminders_file = self.data_dir / _REMINDERS_FILE.name if data_dir is not None else _REMINDERS_FILE
@@ -94,7 +95,7 @@ class OnlineReminders:
         self._items: list[dict] = []
         if self._reminders_file.exists():
             try:
-                self._items = list(json.loads(self._reminders_file.read_text(encoding="utf-8")))
+                self._items = list(json.loads(open_text(self._reminders_file)))
             except (OSError, ValueError, TypeError):
                 log.exception("online_reminders.json unreadable, starting empty.")
                 notify_data_corruption(context, "online_reminders.json")

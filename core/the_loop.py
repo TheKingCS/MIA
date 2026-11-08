@@ -47,6 +47,7 @@ from datetime import date, datetime, time, timedelta
 from pathlib import Path
 from typing import Optional
 
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
 from core.logger import get_logger
@@ -252,7 +253,7 @@ class LoopBook:
 
     def _load(self) -> None:
         """Reads loop.json, keeping only the fields a rhythm knows; an unreadable file is logged, reported
-        (notify_data_corruption) and starts empty.
+        (notify_data_corruption) and starts empty. Sealed at rest (DEC-0126): a sealed file is opened; one that won't open is copied aside and starts empty.
         """
         self.rhythms: list[Rhythm] = []
         self.made: dict[str, list[str]] = {}  # rhythm_id -> days its work run was planned (never planned again)
@@ -262,14 +263,14 @@ class LoopBook:
         if not self._file.exists():
             return
         try:
-            raw = json.loads(self._file.read_text(encoding="utf-8"))
+            raw = json.loads(open_text(self._file))
             self.rhythms = [Rhythm(**{k: v for k, v in d.items() if k in Rhythm.__dataclass_fields__})
                             for d in raw.get("rhythms", [])]
             self.made = {str(k): list(v) for k, v in (raw.get("made") or {}).items()}
             self.fired = {str(k): str(v) for k, v in (raw.get("fired") or {}).items()}
             self.learned_on = str(raw.get("learned_on") or "")
             self.checkins = [str(x) for x in raw.get("checkins") or []]
-        except (json.JSONDecodeError, OSError, TypeError, AttributeError):
+        except (ValueError, OSError, TypeError, AttributeError):  # ValueError: bad JSON or a sealed file that won't open (DEC-0126)
             log.exception("loop.json unreadable — starting empty.")
             notify_data_corruption(self.context, _FILE)
 
