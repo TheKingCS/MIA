@@ -9,7 +9,8 @@ and season, and names a sensible logical next step — never "build the greenhou
 Greenhouse page and the get_homestead_next_step tool show it: what they already have read from their records, why
 each option isn't ready, a budget only from money words. Then the deep next steps: the infrastructure before
 the payoff (selling starts only through cups, a shelf, a first batch and a stand), made before bought, a big build
-waiting while cheap foundations remain, the checks with each step, and the catalog rules that hold it. The rest are
+waiting while cheap foundations remain, the checks with each step, and the catalog rules that hold it. And the budget
+read from their own build targets when they don't give one. The rest are
 unit tests on
 the scoring, the dependency gate, compounding value and the defensive profile reader.
 """
@@ -236,3 +237,36 @@ def test_proof_and_supplies_are_read_from_their_records():
     have = {h["name"]: h["found_in"] for h in de.plan(ctx, month=4)["have"]}
     assert have["Start a first batch of seedlings"] == "your grow lab"
     assert have["Seed-starting mix"] == "your workshop shelf"
+
+
+# --- the budget from their own targets ------------------------------------
+
+def _budget_store(targets, spent):
+    """A budget store with these (category, monthly amount, entity id) targets and this month's spending by category."""
+    return SimpleNamespace(
+        all_budget_targets=lambda: [SimpleNamespace(category=c, monthly_amount=a, entity_id=e) for c, a, e in targets],
+        total_expenses_by_category=lambda start, end, entity_id=None: dict(spent))
+
+
+def test_the_budget_is_what_is_left_of_their_build_targets_this_month():
+    store = _budget_store([("Building Materials", 150, ""), ("Tools & Equipment", 50, ""),
+                           ("Building Materials", 999, "biz1"), ("Groceries", 400, "")],
+                          {"Building Materials": 70, "Groceries": 300})
+    assert de.homestead_budget(SimpleNamespace(budget=store)) == 130.0  # 150 + 50 - 70; a business's and groceries' aside
+    assert de.development_profile(SimpleNamespace(budget=store)).budget == 130.0
+    assert de.development_profile(SimpleNamespace(budget=store), budget=300).budget == 300  # what they say wins
+
+
+def test_no_build_target_means_no_budget_and_overspent_means_zero():
+    assert de.homestead_budget(SimpleNamespace(budget=_budget_store([("Groceries", 400, "")], {}))) is None
+    assert de.homestead_budget(SimpleNamespace()) is None
+    over = _budget_store([("Building Materials", 100, "")], {"Building Materials": 160})
+    assert de.homestead_budget(SimpleNamespace(budget=over)) == 0.0
+
+
+def test_the_spoken_plan_says_which_budget_it_weighed():
+    store = _budget_store([("Building Materials", 150, "")], {})
+    p = de.plan(SimpleNamespace(budget=store), month=7)
+    assert p["budget"] == 150 and p["budget_from"] == "your build budget"
+    assert de.describe(p).endswith("Weighed against the $150 left in your build budget this month.")
+    assert de.plan(SimpleNamespace(), budget=80, month=7)["budget_from"] == "you"

@@ -441,9 +441,31 @@ def homestead_catalog() -> list:
     return catalog
 
 
+# The budget categories a homestead build's money goes to (core/homestead_costs.py, Finance #2).
+BUILD_CATEGORIES = ("Building Materials", "Tools & Equipment")
+
+
+def homestead_budget(context, today=None) -> Optional[float]:
+    """What's left this month of the person's own monthly targets for homestead builds (BUILD_CATEGORIES, the personal
+    ones, not a business's): the targets less this month's spending in them, never below zero. None when they've set
+    no such target, so a budget is never invented. Reads the budget store only."""
+    import datetime
+
+    store = getattr(context, "budget", None)
+    if store is None:
+        return None
+    targets = [t for t in store.all_budget_targets() if t.category in BUILD_CATEGORIES and not getattr(t, "entity_id", "")]
+    if not targets:
+        return None
+    today = today or datetime.date.today()
+    spent = store.total_expenses_by_category(today.replace(day=1).isoformat(), today.isoformat(), entity_id="")
+    return round(max(0.0, sum(t.monthly_amount for t in targets) - sum(spent.get(c, 0.0) for c in BUILD_CATEGORIES)), 2)
+
+
 def development_profile(context, budget: Optional[float] = None) -> DevelopmentProfile:
     """Assemble the starting position from state MIA already holds — budget, time, skills, what's on the shelf, the
-    season, the person's stated objectives, and a budget when they give one (None: unknown, not $0) —
+    season, the person's stated objectives, and a budget: the one they give, else what's left this month of their
+    homestead build targets (`homestead_budget`), else None (unknown, not $0) —
     reading every source defensively so a missing store just leaves a gap
     rather than crashing the plan. Everything stays `simulated`; this never writes."""
     import datetime
@@ -463,6 +485,8 @@ def development_profile(context, budget: Optional[float] = None) -> DevelopmentP
         skills |= {s.name.lower() for s in _safe(lambda: context.skills.all_skills(), [])}
     if getattr(context, "intents", None) is not None:
         objectives = [i.name for i in _safe(lambda: context.intents.all_intents(), [])]
+    if budget is None:
+        budget = _safe(lambda: homestead_budget(context), None)
     return DevelopmentProfile(budget=budget, have=frozenset(have), skills=frozenset(skills),
                               month=datetime.date.today().month, objectives=tuple(objectives))
 
@@ -547,7 +571,8 @@ def plan(context, budget: Optional[float] = None, catalog: Optional[Sequence[Can
          month: Optional[int] = None) -> dict:
     """The homestead plan as a screen and a tool both show it (DEC-0125): what the person already has (from their
     records), the logical next step with its reasoning, the goal it leads toward, the whole path and the checks behind
-    it (`next.goal`, `next.path`, `next.checks`), and the best few options with why each isn't ready yet.
+    it (`next.goal`, `next.path`, `next.checks`), the best few options with why each isn't ready yet, and the budget it
+    weighed (`budget`, and `budget_from`: "you", "your build budget", or None when unknown).
     Advisory and `simulated`: nothing here changes anything."""
     catalog = list(catalog) if catalog is not None else homestead_catalog()
     profile = development_profile(context, budget)
@@ -563,7 +588,8 @@ def plan(context, budget: Optional[float] = None, catalog: Optional[Sequence[Can
                 "why_not": _why_not(r, profile, by_id), "needs_professional": r["needs_professional"],
                 "note": by_id[r["id"]].note}
                for r in ranked(profile, catalog, frozenset(have))[:6]]
-    return {"environment": SIMULATED, "budget": budget, "month": profile.month,
+    source = "you" if budget is not None else "your build budget" if profile.budget is not None else None
+    return {"environment": SIMULATED, "budget": profile.budget, "budget_from": source, "month": profile.month,
             "have": [{"name": by_id[i].name, "found_in": where} for i, where in have.items()],
             "next": ({"kind": step["kind"], "id": step["recommend"]["id"], "name": step["recommend"]["name"],
                       "reason": step["reason"], "goal": step.get("goal"), "path": step.get("path", []),
@@ -574,7 +600,8 @@ def plan(context, budget: Optional[float] = None, catalog: Optional[Sequence[Can
 
 def describe(p: dict) -> str:
     """Plain words for the tool: the next step and why (with its path, when it's the start of one), what's already
-    done, what comes after when there's no path, the checks that aren't met yet or need lining up, and a budget ask."""
+    done, what comes after when there's no path, the checks that aren't met yet or need lining up, and a budget ask
+    (or which budget it weighed, when it read it from their build targets)."""
     if not p.get("next"):
         return "I don't have homestead projects to weigh yet."
     lines = [f"Next on the homestead: {p['next']['reason']}"]
@@ -590,4 +617,6 @@ def describe(p: dict) -> str:
         lines.append(" ".join(unmet))
     if p["budget"] is None:
         lines.append("Tell me your budget and I'll weigh it in.")
+    elif p.get("budget_from") == "your build budget":
+        lines.append(f"Weighed against the {money(p['budget'], ',.0f')} left in your build budget this month.")
     return " ".join(lines)
