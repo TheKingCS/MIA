@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1262 files, 273,626 lines; 1262 files describe themselves; 14,872 of 15,572 classes and functions are documented.
+1264 files, 273,776 lines; 1264 files describe themselves; 14,880 of 15,580 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-468 files, 128,955 lines; 6,914 of 7,000 classes and functions documented
+469 files, 129,063 lines; 6,917 of 7,003 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -100,6 +100,7 @@
 - `core/calibration.py`: Whether MIA's "how sure" means anything (build plan step 8, DEC-0094): every question-plan answer is marked sure, likely or unsure in code, from what its fact sheet holds (core/question_plans.sureness). Each one is noted here, in the person's own folder, by its plan, its level and a fingerprint of t
 - `core/capabilities.py`: What MIA can do, built from the code (DEC-0041; the intelligence spec's Phase 2B, docs/INTELLIGENCE_AUDIT.md). Never a hand-written brochure:
 - `core/capability_gaps.py`: Self-enablement (build plan step 9, DEC-0094): "I can't do that" stops being a dead end. Every request no tool matched is already in the person's Fix-It Log (`no_tool`, core/failure_log.py). Here they become **capability gaps**:
+- `core/capability_reminders.py`: Now and then, MIA reminds the person of what they're already capable of doing right now — "did you know you could go do X?" (Zac, 2026-11-08). It isn't a new task and it isn't a value to live up to: it's a subtle redirect that meets him where he is — the gentle reminder that the ability is already i
 - `core/character_stats.py`: Real character stats (DEC-0028, the game layer's fourth piece): six RPG attributes, each 1 to 20, made from what the person has really done. Every point says where it came from.
 - `core/chat_worker.py`: Runs a single `AppContext.llm.chat_with_tools()` call off the GUI thread — docs/ROADMAP.md milestones 5.2/5.5. A blocking HTTP call to Ollama (core/llm_manager.py) on the GUI thread would freeze the whole app for the duration of every reply. This is the first module to need the scoped worker-thread 
 - `core/child_accounts.py`: Child accounts (2026-10-01): a young person in a household gets their own MIA, set up and looked after by a parent (their guardian).
@@ -754,7 +755,7 @@
 
 ## tests/: the test suite: what each part must do
 
-430 files, 72,253 lines; 5,675 of 6,289 classes and functions documented
+431 files, 72,295 lines; 5,680 of 6,294 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -808,6 +809,7 @@
 - `tests/test_camera_voice.py`: The Security cameras by voice (DEC-0125, core/assistant_camera_actions.py): which cameras there are and whether each last worked, and saving a camera's picture through the screen's own Save Picture.
 - `tests/test_capabilities.py`: What MIA can do and how she's built (DEC-0041): the capability map from the code, "can you…?" answered from it (or "not that I can find", never a guess), and MIA's own docs searched with the file each answer came from. *(1 undocumented)*
 - `tests/test_capability_gaps.py`: Self-enablement (build plan step 9, core/capability_gaps.py): requests no tool matched become gaps with what they'd take, worked out in code; a repeated one is offered through the gate; "build it" opens a task that names the gap by id, never the person's words; "bring it back" shows a tucked-away ap *(1 undocumented)*
+- `tests/test_capability_reminders.py`: The gentle "did you know you could go do X right now?" reminder MIA offers (core/capability_reminders.py, Zac 2026-11-08). It only ever fires with a real ability behind it (empty in, empty out), it wraps the ability in a warm, low-pressure frame and appends the honest reason, and a given roll always
 - `tests/test_character_module.py`: Unit tests for modules.character.module's pure functions, same style as tests/test_household_module.py (no Qt event loop, no fixtures). *(1 undocumented)*
 - `tests/test_character_panel.py`: Unit test for gui.character_panel.reaction_for_module — pure lookup logic, no Qt event loop needed. The reactive subscribe/unsubscribe widget behavior itself was verified with a headless offscreen-QPA smoke test (this project's convention for Qt widget behavior — see tests/test_assistant_module.py's
 - `tests/test_character_stats.py`: Real character stats (DEC-0028): six attributes, 1 to 20, from skills (training) and the last 30 days (recent), never falling below training. *(1 undocumented)*

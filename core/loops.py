@@ -331,6 +331,7 @@ CHECK_TOPICS = {
     "finding_": "findings", "obligation_deadline": "obligation_reminders", "promise_due": "promises",
     "dependency_audit": "dependency_audit",
     "produce": "direction_nudge",
+    "capability": "capability_reminder",
 }
 
 

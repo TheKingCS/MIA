@@ -792,6 +792,7 @@ class MIAApplication:
             ("dependency_audit", self._check_dependency_audit),
             ("system_map", self._check_system_map),
             ("direction_nudge", self._check_direction_nudge),
+            ("capability_reminder", self._check_capability_reminder),
         ]
         # 2026-09-27, Cognitive Extension slice C: checks no longer notify
         # directly. Each one offers what it would say (_offer()), and the
@@ -1162,6 +1163,62 @@ class MIAApplication:
         self._offer(topic="produce", title="\U0001F331 A nudge", message=message, urgency=AMBIENT, source="system",
                     fingerprint=f"produce:{today_iso}")
         book.mark_nudged(today_iso)
+
+    def _check_capability_reminder(self, now: datetime, today_iso: str) -> None:
+        """Now and then, a reminder of what the person can already go and do right now (Zac, 2026-11-08) — a learning
+        path a step from advancing, a project they started and parked. A subtle, affirming redirect, paced every few
+        days and sent through the gate, so it stays gentle and never a push."""
+        import random
+        from datetime import date
+
+        config = self.context.config
+        last = config.get("system.last_capability_reminder_date")
+        if last:
+            try:
+                if (date.fromisoformat(today_iso) - date.fromisoformat(last)).days < 4:
+                    return
+            except ValueError:
+                pass
+        abilities = self._capabilities_on_hand()
+        if not abilities:
+            return
+        from core import capability_reminders
+
+        message = capability_reminders.a_reminder(abilities, random.random())
+        if not message:
+            return
+        self._offer(topic="capability", title="\U0001F4A1 You could, you know", message=message, urgency=AMBIENT,
+                    source="system", fingerprint=f"capability:{today_iso}")
+        config.set("system.last_capability_reminder_date", today_iso)
+        config.save()
+
+    def _capabilities_on_hand(self) -> list:
+        """The real, right-now abilities a reminder can draw from (core/capability_reminders.py): a started learning
+        path with an open next step (core/paths.py), and a project begun but not finished (core/project_manager.py).
+        Each is a (verb phrase, honest reason) pair; every source is read defensively, so a missing one simply
+        contributes nothing."""
+        out = []
+        try:
+            from core import paths
+
+            book = paths.PathBook(context=self.context)
+            for path_id in book.started():
+                program = paths.program_of(self.context, path_id)
+                if program is not None and paths.open_checks(book, program):
+                    stage = paths.stage_of(book, program)
+                    out.append((f"put some time into {program.name}",
+                                f"You're on stage {stage.number}, {stage.name} — the next step is ready when you are."))
+        except Exception:
+            log.exception("Capability reminder: reading learning paths failed — skipped.")
+        try:
+            if getattr(self.context, "projects", None) is not None:
+                done = {"done", "complete", "completed", "finished", "archived", "sold", "cancelled", "canceled"}
+                for p in self.context.projects.all_projects():
+                    if (p.status or "").strip().lower() not in done:
+                        out.append((f"get back to your {p.name} project", f"it's been sitting at “{p.status}.”"))
+        except Exception:
+            log.exception("Capability reminder: reading projects failed — skipped.")
+        return out
 
     def _check_chronicle(self, now: datetime, today_iso: str) -> None:
         """Sundays: this week's chapter of the Chronicle is ready (DEC-0028)."""

@@ -126,7 +126,7 @@
 
 | Loop | Watches | Scope | Floor | When it slips | Covers |
 |---|---|---|---|---|---|
-| `checks.dismissed` | the daily check whose messages are dismissed most, in 30 days | person | ≤ 0.6 (from 10) | opens a task | `check:budget_nudge`, `check:calendar_digest`, `check:checkin`, `check:chronicle`, `check:dependency_audit`, `check:direction_nudge` and 18 more |
+| `checks.dismissed` | the daily check whose messages are dismissed most, in 30 days | person | ≤ 0.6 (from 10) | opens a task | `check:budget_nudge`, `check:calendar_digest`, `check:capability_reminder`, `check:checkin`, `check:chronicle`, `check:dependency_audit` and 19 more |
 | `gate.dismissed` | unprompted messages dismissed, in 7 days | person | ≤ 0.5 (from 5) | opens a task | `flow:gate`, `store:communication`, `store:notifications` |
 | `gate.expired` | messages held back that expired before they went out | person | trend (from 3) | shown, never acted on | `flow:gate` |
 | `gate.saturation` | days the daily limit of unprompted messages was hit, in 7 | person | ≤ 2 | opens a task | `flow:gate` |
