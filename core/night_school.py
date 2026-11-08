@@ -18,7 +18,9 @@ of the window, or when her teacher is resting at a usage limit:
 2. **She chooses what to study** (`self_assessment()`), with her reasons:
    the loops below their floor, her weakest skills, the lessons she failed.
 3. **The focus**: in `plan` mode, the next step of `docs/BUILD_PLAN.md`; in
-   `self` mode, her own pick. She's trained in both: every night her
+   `self` mode, her own pick. Over both sits her standing **directive** (a
+   setting Zac sets), which shapes every night's exercises — 2026-11-08: build
+   herself into a top-tier AI (loops, infrastructure, capability, personality). She's trained in both: every night her
    teacher says whether her pick was the right one, and `choosing()` keeps
    score. Zac moves her to `self` mode when that score supports it.
 4. **Her teacher** (Claude Code, read-only: it reads her code and never
@@ -76,7 +78,9 @@ PLAN = ROOT / "docs" / "BUILD_PLAN.md"
 WHO = "MIA (night school)"
 DEFAULTS = {"enabled": True, "start": "01:30", "hours": 4.0, "mode": "plan", "lessons": 3, "shadow": 1,
             "loop_families": 1, "teachers": ["claude-code", "codex"], "teacher_calls": 8, "benchmarks": True,
-            "curriculum": True, "audit": True, "specialists": True}
+            "curriculum": True, "audit": True, "specialists": True,
+            # A standing objective (Zac) she shapes every night's work toward, over and above the nightly focus. "" = none.
+            "directive": ""}
 MODES = ("plan", "self")
 LESSON_MINUTES = 45  # a lesson isn't started with less of the window left than this
 TEST_NAME = re.compile(r"^tests/test_night_[a-z0-9_]{3,60}\.py$")
@@ -266,6 +270,8 @@ files listed (a listed file that doesn't exist yet starts empty). Each file must
 may never change these: {protected}.
 
 Tonight's focus: {focus}
+
+Her standing objective (Zac set it; shape every exercise toward it, and let it steer what's worth building): {directive}
 
 What she chose to study, with her reasons:
 {assessment}
@@ -575,6 +581,7 @@ def night(now: Optional[datetime] = None, *, ask: Optional[Callable[[str, str], 
                                f"\"objective\": \"{objective.id}\". {lesson_brief(objective)}")
             said = _json_in(ask(teacher, SYLLABUS_PROMPT.format(
                 protected=", ".join(PROTECTED), focus=focus_text,
+                directive=cfg.get("directive") or "(none set — study toward the focus and her own growth)",
                 assessment="\n".join(f"{i + 1}. {a['area']}: {a['why']}" for i, a in enumerate(areas[:6])) or "(nothing yet)",
                 card=json.dumps(card) if card else "no lessons yet",
                 notes="; ".join(n for s in card for n in notes_for(s, store, 2)) or "none yet",

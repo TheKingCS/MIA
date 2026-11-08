@@ -230,3 +230,21 @@ def test_a_first_try_that_fails_its_test_gets_one_more_with_what_pytest_said(tmp
     asked.clear()
     passed_first = ns.lesson(exercise(), lab=lab, one_test=lambda w, n: False, test_run=lambda w, n: (True, ""))
     assert not passed_first.get("retried") and asked == [""]  # passing the first time: no second try
+
+
+def test_a_standing_directive_steers_the_night(tmp_path):
+    """The directive (Zac, DEC-0100) loads over the defaults and goes into the teacher's prompt so every night's work
+    is shaped toward it; self mode lets her research and decide what to build."""
+    import json
+
+    from core import night_school
+
+    p = tmp_path / "ns.json"
+    p.write_text(json.dumps({"mode": "self", "directive": "Become top-tier: build loops and infrastructure."}),
+                 encoding="utf-8")
+    s = night_school.settings(p)
+    assert s["mode"] == "self" and "top-tier" in s["directive"]
+    assert "directive" in night_school.DEFAULTS and night_school.DEFAULTS["directive"] == ""
+    msg = night_school.SYLLABUS_PROMPT.format(protected="x", focus="f", directive=s["directive"],
+                                              assessment="a", card="c", notes="n", count=1, skills="s")
+    assert "Become top-tier" in msg

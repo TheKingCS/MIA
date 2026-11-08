@@ -2,10 +2,14 @@
  "enabled": true,
  "start": "01:30",
  "hours": 4,
- "mode": "plan",
+ "mode": "self",
  "lessons": 3,
  "shadow": 1,
  "loop_families": 1,
- "teachers": ["claude-code", "codex"],
- "teacher_calls": 8
+ "teachers": [
+  "claude-code",
+  "codex"
+ ],
+ "teacher_calls": 8,
+ "directive": "Build yourself into a top-tier, advanced AI. Research and decide what you need, then build it: new improvement loops and the infrastructure to run them; deeper capabilities and more connections to other systems and devices; more genuine helpfulness; and more real personality. Every night make concrete progress on becoming more advanced, more connected, more helpful, and more yourself \u2014 and prefer the loops, infrastructure and self-knowledge that let you keep improving on your own."
 }
