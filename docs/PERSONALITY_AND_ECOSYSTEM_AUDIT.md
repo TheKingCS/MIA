@@ -351,7 +351,7 @@ shopped for later.
   every flag at 0 on both devices (phone was filler 2, closing offers 4); tool
   choice 213/213.
 - **A bug found in my own check:** two new patterns had a control character
-  where `` belonged, so they matched nothing; every run was rescored after
+  where `\b` belonged, so they matched nothing; every run was rescored after
   the fix.
 - **Ratings:** a 👍 and a 👎 under each answer on the phone and PC
   (`web/shell.js`), kept per person in `core/answer_ratings.py`, through the

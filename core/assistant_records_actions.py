@@ -198,8 +198,9 @@ def _action_get_vault_status(context, arguments: dict) -> str:
 def register_area_keywords(registry: AssistantActionRegistry) -> None:
     """Words that attach older areas whose everyday questions reached no tool: trips (expeditions), the lab, notes,
     the inbox, the battery (power, beside the system tools), upkeep on vehicles, rentals, and photo backups."""
-    registry.register_domain_keywords("expeditions", ("trip", "trips", "expedition", "expeditions", "hike", "hiking",
-                                                      "camping"))
+    # Not a bare "trip": "that trip to the store took forever" is small talk (tests/live_model_check.py).
+    registry.register_domain_keywords("expeditions", ("next trip", "last trip", "my trip", "trips", "expedition",
+                                                      "expeditions", "hike", "hiking", "camping"))
     registry.register_domain_keywords("lab", ("lab", "experiment", "experiments"))
     registry.register_domain_keywords("notes", ("notes",))
     registry.register_domain_keywords("inbox", ("inbox", "emails"))

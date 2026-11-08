@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1158 files, 257,492 lines; 1158 files describe themselves; 14,035 of 14,722 classes and functions are documented.
+1165 files, 258,345 lines; 1165 files describe themselves; 14,095 of 14,782 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-427 files, 120,579 lines; 6,395 of 6,484 classes and functions documented
+430 files, 121,107 lines; 6,427 of 6,516 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -28,6 +28,7 @@
 - `core/assistant_chat.py`: The pure, non-Qt logic for one Assistant chat turn — moved here from `modules/assistant/module.py` (2026-07-14 aesthetic pass part 4, docs/ROADMAP.md) once the sidebar chat in `gui/character_panel.py` needed the exact same request-building and tool-call-safety logic as the full-screen Assistant modu
 - `core/assistant_comm_actions.py`: Assistant tools for the communication gate (core/communication_gate.py, Cognitive Extension slice C): asking what MIA chose not to say, and changing how often she speaks up on her own.
 - `core/assistant_cooking_actions.py`: Cook mode by voice (DEC-0113 cook mode, DEC-0125: full use both ways). With flour on your hands: "start cooking the chili", "next step", "go back", "what step am I on", "go to step 4", "set a rice timer for 18 minutes", "stop the rice timer", "I made it", "stop cooking". Each tool runs the same acti
+- `core/assistant_correction_actions.py`: Fixing and planning by voice what the screens already let you change (DEC-0125: every action has a voice twin; 2026-11-08). Measuring the screens' 332 action kinds against her tools showed everyday ones with no voice twin: taking something off the grocery list, clearing what's checked off, a pantry 
 - `core/assistant_domain_actions.py`: Assistant actions added by the 2026-09-27 conversational audit (docs/ASSISTANT_AUDIT.md), so what the owner *says* updates the right records: kitchen (recipes, meals, grocery list, pantry), debts and budget targets, asset details and notes (including greenhouse/garden plants, which are Maintenance a
 - `core/assistant_dungeon_actions.py`: The Dungeon by voice (DEC-0046): "How much loot this week?", "I worked 9 hours, we were unstocked", "I picked up an overtime shift Saturday", "Make it a quest". Each runs the same code as the screen (the action kinds in core/dungeon_actions.py, the numbers in core/web_dungeon.py), so the loot matche
 - `core/assistant_email_actions.py`: The Assistant writes emails (2026-10-01, accounts stage 3, core/email_drafts.py). `draft_email` only ever makes a draft: the person sends it by pressing Send (desktop or phone), copies it, or opens it in their mail app. There is deliberately no tool that sends.
@@ -43,10 +44,12 @@
 - `core/assistant_life_event_actions.py`: "What did I get done this week?", "what changed this month?", "what bills did I pay?" (core/life_events.py, 2026-10-05). Facts from the log, counted in code; the model only phrases them.
 - `core/assistant_link_actions.py`: "The land loan funds the rental", "the greenhouse depends on selling the lot", "what depends on selling the lot?", "what's connected to the truck?" (core/links.py, 2026-10-05). Names are matched to real records in code; a link is only saved between things that exist. Undoable.
 - `core/assistant_lookup.py`: How Assistant actions find the user's own records from the words they actually say. People say "the truck" and "did the oil", not "Pickup Truck" and "Oil change", and the model can only pass on their words.
+- `core/assistant_more_twins_actions.py`: More voice twins for what the screens change (DEC-0125, 2026-11-08), each through the screen's own action kind (core/assistant_correction_actions.py `_run`: the screen's checks and sentence, and "undo that"):
 - `core/assistant_notification_actions.py`: Notifications by voice (DEC-0125), for what the Notifications page shows: "what are my notifications?" (the unread ones, newest first) and "mark my notifications read" (the same `notification.read_all` action as the page's button). Why one was sent, and muting a kind, were already voice tools (core/
 - `core/assistant_ownership_actions.py`: "Whose truck is it?" and "the mower is mine" (core/ownership.py, 2026-10-01): owner marks on maintenance items (vehicles, tools, appliances).
 - `core/assistant_path_actions.py`: Learning paths by voice (DEC-0112; core/paths.py): any desire, the same loop. "I want to learn guitar" starts the guitar program; "I want to learn to weld", with no program for it, has MIA draft one (grounded in her specialists' notes) and describe it, and "start it" starts it. Then lessons, practic
 - `core/assistant_plan_actions.py`: The Library's plans by voice (core/plan_library.py): "do we have plans for a chicken coop?", "what do I need for a 10 by 12 shed?", "make me a cut list for a 4 by 8 raised bed", "what do I still need to buy for the fence?", "where can I get free barn plans?", "start the shed as a project". The numbe
+- `core/assistant_playlist_actions.py`: Playlists by voice (DEC-0125, 2026-11-08): Music could play a playlist out loud but not make or change one; the screen's five playlist kinds had no voice twin. Five tools, each through the screen's own action (core/assistant_correction_actions.py `_run`, so "undo that" works):
 - `core/assistant_progress_actions.py`: Her game layer by voice (DEC-0125, full use both ways): the Character, Skills and Reward Shop screens had nothing to say when asked. Four tools, each phrased from the same data its screen draws (core/web_progress.py, core/game_layer.py), so voice and screen never disagree:
 - `core/assistant_records_actions.py`: Asking about what she keeps (DEC-0125, full use both ways): Insurance, Kept, the Operating Journal, Play and Files could be changed by voice or only seen on a screen, never asked about. Five read-only tools, each phrased from its screen's own data so voice and screen agree:
 - `core/assistant_self_actions.py`: MIA about herself (2026-10-21, the intelligence spec's first slice): "What AI model are you using?" answered from the runtime (core/model_registry.py), never from the model's guess about itself.
@@ -707,7 +710,7 @@
 
 ## tests/: the test suite: what each part must do
 
-385 files, 68,443 lines; 5,392 of 5,990 classes and functions documented
+389 files, 68,768 lines; 5,420 of 6,018 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -927,6 +930,7 @@
 - `tests/test_navigation_web.py`: Navigation's web screen (core/navigation_web.py): waypoints with grid references, distance and bearing, the sun and the moon; and a waypoint changed with waypoint.edit, on the page and by voice.
 - `tests/test_net_worth_history.py`: Tests for core/net_worth_history.py: one net worth point a day, the change this month, and the Overview's line.
 - `tests/test_night_school.py`: Night School (DEC-0100, core/night_school.py): she chooses what to study, her teacher sets exercises with a test that fails first, code grades her, the teacher's lesson comes back the next time, practice never merges, and her picks are scored against her teacher's before she's trusted to choose.
+- `tests/test_no_control_characters.py`: No stray control characters in MIA's code or docs. A shell heredoc turns a regex's \b into a backspace byte, and the pattern then silently matches nothing (it happened in 2026-11 twice: the turn traces' patterns, and the check that keeps passwords out of what MIA remembers by voice).
 - `tests/test_notes_module.py`: Unit test for modules.notes.module.format_entry_row — pure formatting logic, no Qt event loop needed (importing the module only defines widget classes; nothing here instantiates one).
 - `tests/test_notification_manager.py`: Unit tests for core.notification_manager — previously untested (a real, pre-existing gap, not something this file tries to backfill in full). Added now specifically to cover notify()'s new "notifications.enabled" gate (2026-07-15 "ForMIA" design handoff's Quick Bus widget) — the first real, non-cosm *(3 undocumented)*
 - `tests/test_obligations.py`: Tax and compliance obligations (DEC-0040): deadlines moved off weekends and holidays, an extension to file never moving the money's date, reminders once each, unverified never shown as confirmed, repeats, and the one next step each Compliance row offers (DEC-0113). *(2 undocumented)*
@@ -1043,9 +1047,12 @@
 - `tests/test_user_memory_manager.py`: Unit tests for core.user_memory_manager. is_duplicate_memory() is tested directly (pure, deterministic). UserMemoryManager is tested against a tmp_path scratch area, same monkeypatch pattern as test_mission_manager.py's isolated_paths.
 - `tests/test_user_sync.py`: User Sync, Meals (core/user_sync.py): what the code decides, with a stand-in model. tools/user_sync_check.py runs the same steps on the real one.
 - `tests/test_vault_captions.py`: Finding a photo again (core/vault_captions.py): the photos this PC keeps for the phone, each described in one sentence by the local vision model (never who anyone is), kept beside the photo, and searched by what's in them. *(1 undocumented)*
+- `tests/test_voice_corrections.py`: Fixing and planning by voice (DEC-0125, core/assistant_correction_actions.py): each tool finds the record from the words said and runs the screen's own action kind (undoable); unclear names are asked about and change nothing.
 - `tests/test_voice_effects.py`: Unit tests for core.voice_effects' pure-numpy DSP functions. These test shape/dtype/range invariants (no clipping, no silent volume change, correct dtype) — not perceived audio quality, which no automated test can judge; see that module's docstring. *(1 undocumented)*
 - `tests/test_voice_manager.py`: Unit tests for core.voice_manager's VoiceManager delegation and graceful-degradation logic. Uses fake STT/TTS backends (same shape as test_llm_manager.py's mocked urlopen) rather than loading the real Vosk/Piper models, so this suite stays fast and independent of voice_models/ being present. The rea
+- `tests/test_voice_more_twins.py`: More voice twins (DEC-0125, core/assistant_more_twins_actions.py): remember that, an order paid (the rest owed when no amount is said), the last weigh-in deleted, a mission renamed, an operating journal line removed, each through its screen's own action.
 - `tests/test_voice_parity_tools.py`: The tools that made Character, Skills, the Reward Shop, Insurance, Kept, the Operating Journal, Play, Files and the Memory Vault usable by voice (DEC-0125): each answers from its screen's own data, and buying a reward goes through the shop's own action.
+- `tests/test_voice_playlists.py`: Playlists by voice (DEC-0125, core/assistant_playlist_actions.py): listed, made, a song added ("this song" is the one playing), taken off, renamed and deleted, each through the Music screen's own action.
 - `tests/test_volume_manager.py`: Unit tests for core.volume_manager. parse_amixer_output() is tested directly against captured-shape amixer text (pure, deterministic — no real amixer binary involved, same reasoning as test_power_manager.py mocking psutil). AmixerVolumeBackend/VolumeManager are tested against monkeypatched subproces *(3 undocumented)*
 - `tests/test_volume_quick_control.py`: Unit tests for gui.widgets.volume_quick_control's pure format_volume_line() — moved here 2026-09-11 from tests/test_home_dashboard.py, alongside removing gui/home_dashboard.py's own dead copy of this function (and the entire dashboard-grid Volume widget it only ever served) — see that module's 2026-
 - `tests/test_warranty_watch.py`: A heads-up before a warranty ends (core/warranty_watch.py). *(3 undocumented)*

@@ -661,6 +661,31 @@ GOLDEN_CASES = [
     ("expeditions: next trip", "What's my next trip?", "list_trips"),
     ("power: the battery", "How's the battery?", "get_power_status"),
     ("maintenance: vehicles", "What upkeep is due on my vehicles?", "list_maintenance_tasks"),
+    # Fixing and planning by voice what the screens change (DEC-0125, 2026-11-08): 10/10 on this PC's model.
+    ("groceries: take one off", "Take milk off the grocery list", "remove_grocery_item"),
+    ("groceries: clear checked", "Clear the checked items off the grocery list", "clear_checked_groceries"),
+    ("pantry: remove for good", "Remove the flour from the pantry, we stopped buying it", "remove_pantry_item"),
+    ("pantry: run out is a quantity", "We are out of flour", "update_pantry_item"),
+    ("recipe: rate", "Rate the venison chili 5 stars", "rate_recipe"),
+    ("recipe: favorite", "Make the venison chili a favorite", "favorite_recipe"),
+    ("meal plan: a day's dinner", "Plan the venison chili for dinner Tuesday", "plan_meal"),
+    ("bill: new amount", "The electric bill is now $130 a month", "change_bill"),
+    ("bill: cancelled", "I cancelled Netflix, delete the bill", "delete_bill"),
+    ("expense: logged by mistake", "Delete the expense for the pizza, I logged it by mistake", "delete_expense"),
+    # Playlists by voice (DEC-0125, 2026-11-08).
+    ("playlists: which", "What playlists do I have?", "list_playlists"),
+    ("playlists: make one", "Make a playlist called Shop Music", "make_playlist"),
+    ("playlists: add this song", "Add this song to the Shop Music playlist", "add_to_playlist"),
+    ("playlists: take a song off", "Take Slow River off my Garage playlist", "remove_from_playlist"),
+    ("playlists: rename", "Rename the playlist Shop Music to Garage Music", "rename_playlist"),
+    ("playlists: delete", "Delete the playlist called Old Stuff", "delete_playlist"),
+    # More voice twins (DEC-0125, 2026-11-08): 6/6 on this PC's model.
+    ("memory: remember that", "Remember that my truck takes 5W-30 oil", "remember_this"),
+    ("memory: please remember", "Please remember the well pump is on the north breaker", "remember_this"),
+    ("orders: paid", "Customer A paid for the PCB order", "order_paid"),
+    ("weigh-in: delete the last", "Delete my last weigh-in, it was wrong", "delete_last_weigh_in"),
+    ("missions: rename", "Rename the mission Read the Tractor Manual to Learn Hydraulics", "rename_mission"),
+    ("operating journal: remove a line", "Take early mornings out of my operating journal", "remove_operating_line"),
 ]
 
 
