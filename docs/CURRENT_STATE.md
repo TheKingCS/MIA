@@ -258,7 +258,9 @@ every push). Anything that needs the PC waits.
   (`life_events.jsonl`): `seal_line` on append, `open_lines` on read (plain lines from before still read; one that won't
   open is kept and skipped), sync merges sealed line by line. Found by scanning sealed stores for named history lines.
   Creations, art and the world map record life events (DEC-0108's top findings), naming no details. The daily fix
-  report is sealed like the Fix-It Log it copies from: `python -m tools.fix_report` prints it. K-0150, K-0151.
+  report is sealed like the Fix-It Log it copies from: `python -m tools.fix_report` prints it; the kept seasons
+  (`seasons.json`, drawn from the sealed memories) are sealed too; `tools.data_key seal --history` seals the history's
+  earlier lines when Zac chooses, with MIA closed. K-0150, K-0151.
 - 2026-11-08 · claude (engine) · **Deep next steps (DEC-0144).** `core/development_engine.py`: `path_to`, `_worth`,
   `readiness`, made-before-bought, effort-share compounding, seasonal-wait discount, the seed, flock, compost,
   preserving and greenhouse-site chains, the budget from your own targets. K-0139 to K-0141.
