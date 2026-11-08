@@ -2445,3 +2445,23 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   specialists' workbooks with its source (said "not yet confirmed" when it isn't), and what's on the workshop shelf
   that it names; at most two, never the network, said with the connection so she brings something new with it.
 - Related: DEC-0054 (notes from conversation), DEC-0108 (interconnection audit), DEC-0094/0101 (loops), DEC-0126
+
+### DEC-0147: The Woodworking Studio — one design of real parts, and one Make pattern for every craft
+- Status: PROPOSED (claude, engine, 2026-11-08), awaiting Zac. Nothing built.
+- From: ChatGPT's "MIA Development Handoff: Woodworking Studio", pasted by Zac, plus his note that baked goods,
+  produce, the flock "and more could share this same structure". The handoff's own sections 7-8 ask for the audit,
+  structure, data model, interface, MVP, risks and tests before building, and not all five phases at once.
+- Finding (`docs/WOODWORKING_STUDIO_PROPOSAL.md`): about two thirds exists — workshop recipes with materials, cut
+  lists, tools and steps checked against stock (`core/craft_recipes.py`), cut lists packed in code with kerf and waste
+  (`core/build_calcs.py`), 15 sized plans (`core/plan_library.py`), materials and receiving, projects and jobs, pricing
+  and margins (`core/business_book.py`), goods by batch, local vision for "how is this built?" (`core/sight.py`). The
+  missing core: actual lumber sizes (today only 2× widths are real), a design made of parts that every output derives
+  from, 2D drawings, a printable plan, and per-part structural labels (verified / estimate / assumption, a
+  professional flag for anything load-bearing).
+- Proposed first version: `core/lumber.py` (nominal → actual, used by build_calcs too) → parts on a recipe and
+  `core/design.py` (cut list, bill of materials, stock check, cost from parts) → SVG front/side/top views → the
+  structural flag and labels → the design session's Studio page and a printable plan, the parity session's voice tools.
+- Open for Zac: (1) approve that first version; (2) a woodworking-only Studio, or one shared Make space for the
+  workshop, kitchen and bakery, garden and flock with woodworking first; (3) 2D views first or wait for 3D; (4) a
+  print-ready page or a generated PDF.
+- Related: DEC-0030, DEC-0036, DEC-0118, DEC-0120, DEC-0141, DEC-0144
