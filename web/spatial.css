@@ -180,3 +180,46 @@ body.env .hero h1 { text-shadow: 0 0 18px color-mix(in srgb, var(--hue) 70%, tra
 @keyframes holo-in { from { opacity: 0; transform: translateY(14px) scale(.98); filter: blur(4px); } }
 .bay:nth-child(2) { animation-delay: 60ms; } .bay:nth-child(3) { animation-delay: 120ms; } .bay:nth-child(4) { animation-delay: 180ms; }
 @media (prefers-reduced-motion: reduce) { .holo, .bay { animation: none; } .bay, .bay:hover { transition: none; } }
+
+/* ---------------------------------------------------------------- the room (web/nexus3d.js)
+   The scene fills the page behind the HUD; the flat ring's links stay for the keyboard and screen readers but aren't
+   drawn; each portal's name and the chosen one's card are page text over the scene, clean and sharp (DEC-0130: the
+   liquid feel lives in motion and the room, panels stay clean). */
+.n3-canvas { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; display: block; touch-action: pan-y; cursor: grab; }
+.n3-canvas:active { cursor: grabbing; }
+.nexus-3d .nexus-hud, .nexus-3d .nexus-foot { position: relative; z-index: 3; }
+.nexus-3d .nexus-chamber { pointer-events: none; }
+.nexus-3d .nexus-vapor, .nexus-3d .nexus-grain, .nexus-3d .nexus-beam, .nexus-3d .nexus-platform { display: none; }
+.nexus-3d .nexus-ring { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.nexus-3d .nexus-orb { opacity: 0; pointer-events: none; }
+.nexus-3d .nexus-here { visibility: hidden; }
+.nexus-3d .nexus-foot { background: linear-gradient(0deg, rgba(0, 0, 0, .6), transparent); }
+.n3-labels { position: fixed; inset: 0; z-index: 2; pointer-events: none; }
+.n3-label { position: absolute; left: 0; top: 0; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  padding: 5px 12px; border-radius: 8px; font-size: 13px; letter-spacing: .04em; color: var(--text);
+  background: rgba(2, 6, 12, .72); border: 1px solid color-mix(in srgb, var(--hue) 55%, transparent);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--hue) 35%, transparent); transform-origin: 50% 100%; will-change: transform; }
+.n3-label.on { font-size: 16px; font-weight: 600; border-color: var(--hue);
+  box-shadow: 0 0 22px color-mix(in srgb, var(--hue) 60%, transparent); }
+.n3-label b { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; display: inline-grid; place-items: center;
+  font-size: 11px; color: #120a00; background: var(--attention, #f2b33d); }
+.n3-card { position: fixed; z-index: 3; left: max(24px, 4vw); bottom: 18vh; width: min(340px, 30vw); padding: 18px 20px 16px;
+  border-radius: 14px; background: linear-gradient(160deg, rgba(4, 12, 22, .88), rgba(2, 5, 10, .82));
+  border: 1px solid color-mix(in srgb, var(--hue, var(--accent)) 60%, transparent);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .03) inset, 0 0 28px color-mix(in srgb, var(--hue, var(--accent)) 28%, transparent);
+  backdrop-filter: blur(10px); animation: n3-card-in .45s var(--sp-ease); }
+.n3-card-head { display: flex; align-items: center; gap: 12px; }
+.n3-card-head h2 { margin: 0; font-size: 22px; font-weight: 600; }
+.n3-card-ico svg { width: 30px; height: 30px; color: var(--hue); filter: drop-shadow(0 0 6px var(--hue)); }
+.n3-card-line { margin: 8px 0 12px; color: var(--text-dim); font-size: 14px; line-height: 1.45;
+  padding-bottom: 12px; border-bottom: 1px solid rgba(var(--rgb-accent), .14); }
+.n3-card-needs { margin: 0 0 14px; font-size: 14px; color: var(--text-dim); }
+.n3-card-needs.attn { color: var(--attention, #f2b33d); }
+.n3-enter { width: 100%; justify-content: center; font-size: 15px; letter-spacing: .08em; }
+@keyframes n3-card-in { from { opacity: 0; transform: translateY(10px); } }
+@media (max-width: 760px) {
+  .n3-card { left: 12px; right: 12px; width: auto; bottom: 86px; padding: 12px 14px; }
+  .n3-card-line { display: none; }
+  .n3-card-head h2 { font-size: 18px; }
+  .n3-card-needs { margin: 6px 0 10px; }
+}

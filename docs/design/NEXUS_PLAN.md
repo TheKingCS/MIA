@@ -60,9 +60,9 @@ Follows its section 10: inspect, map, find what's reused, plan milestones, then 
 
 ## 4. Technical approach
 
-- **2.5D first.** CSS 3D transforms (perspective, `translateZ`, `rotateY`) for portals and panels; one canvas for
-  ambient particles, paused when the tab is hidden; no 3D engine until something needs one (then three.js, vendored,
-  since MIA is offline-first).
+- **2.5D first** (superseded 2026-11-08 for the Nexus itself: Zac wanted a room you stand in). The Nexus is drawn in
+  WebGL 2 by `web/nexus3d.js`, written without a library so nothing is downloaded; the CSS ring stays as the fallback
+  and the keyboard and screen-reader path. three.js stays the plan for generated places (H-0095).
 - **Shared, not per screen.** `web/spatial.css` (depth, glow, motion tokens and the components' classes) and
   `web/spatial.js` (portal ring, ambient background, transitions, materialize and dissolve), used by the frame.
 - **Each device at its own depth.** PC: the full ring with parallax. Phone: a vertical arc you scroll, lighter
@@ -77,8 +77,15 @@ Follows its section 10: inspect, map, find what's reused, plan milestones, then 
 the liquid style in motion and backdrop). M1 and M2 built: `web/spatial.css`, `web/spatial.js` (vapor, ring, enter),
 `web/nexus.html` with `core/web_nexus.py`, the Nexus opening first, "take me to the garage" by voice. M3 built
 02:15: the Garage environment (`core/web_environments.py`; hub.html draws it): bays with depth, needs-you, parts
-running low across assets, the bench, lit in copper. Next: Zac's review of M3, then the glasses' flat ring (M4), then
-the other environments one at a time.*
+running low across assets, the bench, lit in copper. M4's glasses part built 04:40: a Nexus card first among the glasses' cards opens the areas as a
+flat ring of names on black (`web/glasses.js` nexusRing; `core/glasses.glasses_areas`), each lit faintly in its hue with
+an amber dot where something needs you; stepping in shows only that area's apps; ▼ goes back to the ring, then out. Then 05:30, after Zac's concept images ("like you're in a room", "game like and
+animated, flowing, seamless", everything orbiting MIA): the Nexus became a real-time 3D room, `web/nexus3d.js` (WebGL 2,
+no library, offline): the orb with orbits on a ringed platform, the portals on an oval ring behind her with fire and
+smoke in their hues, a reflecting floor, motes, bloom; drag, swipe, arrows or click to turn, the chosen one's card, and
+a flight through the portal on Enter. The flat Nexus stays for reduced motion and machines without WebGL 2 (`?flat`).
+Portal pictures: Muse (H-0096). Next: the pictures, Zac's look on the real PC, then each area's own space in 3D
+(entering the Garage lands in a workshop, not a page), then the other environments one at a time.*
 
 | # | What | Done when |
 |---|---|---|

@@ -52,6 +52,8 @@
   let data = null;           // MIA.glasses(): {apps, others, pinned, hint}
   let view = "home";         // home | cards | menu | panel | confirm | result | reward | hud | log | boot | sync | welcome
   let showingAll = false;    // browsing the apps that aren't pinned
+  let nexus = null;          // the Nexus (DEC-0130): null, "ring" (the areas), or an area's id (its apps)
+  let nexusArea = 0;         // where on the ring you stepped in from
   let appIndex = 0, row = 0;
   let panel = null, proposal = null, resultText = "", after = "menu", busy = false, crumbs = [], panelItem = "";
   const LIVE_MS = 2000;  // a live panel (the workout going now) keeps itself current
@@ -73,10 +75,27 @@
   const LOG_CARD = { id: "__log", name: "Conversation", status: "Everything you and MIA have said" };
   const WELCOME_CARD = { id: "__welcome", name: "Know Your System", status: "Your first mission and the tours" };
   const SYNC_CARD = { id: "__sync", name: "Getting To Know You", status: "Pick up where we left off" };
+  const NEXUS_CARD = { id: "__nexus", name: "Nexus", status: "Your areas, and what needs you in each" };
+  const NEXUS_BACK = { id: "__nexus_back", name: "Back", status: "To the Nexus" };
+  // The Nexus on the glasses: the areas as a ring of names (each an "__area" card), then one area's apps.
+  function nexusCards() {
+    const d = data || {};
+    const areas = d.areas || [];
+    if (nexus === "ring") {
+      return areas.map((r) => ({ id: "__area", area: r.id, name: r.name, short: r.short, hue: r.hue, needs: r.needs || 0,
+        tone: r.needs ? "attention" : "", status: r.needs ? r.needs + (r.needs === 1 ? " needs you" : " need you") : r.apps.length + (r.apps.length === 1 ? " app" : " apps") }))
+        .concat([Object.assign({}, BACK_CARD, { status: "To your apps" })]);
+    }
+    const area = areas.find((r) => r.id === nexus) || { apps: [] };
+    const all = (d.apps || []).concat(d.others || []);
+    return area.apps.map((id) => all.find((c) => c.id === id)).filter(Boolean).concat([NEXUS_BACK]);
+  }
   function cards() {
     const d = data || {};
+    if (nexus) return nexusCards();
     if (showingAll) return (d.others || []).concat([BACK_CARD]);
-    const list = (syncLeft ? [SYNC_CARD] : welcomeLeft ? [WELCOME_CARD] : []).concat(d.apps || []);
+    const nx = (d.areas || []).length ? [NEXUS_CARD] : [];
+    const list = (syncLeft ? [SYNC_CARD] : welcomeLeft ? [WELCOME_CARD] : []).concat(nx, d.apps || []);
     // The log comes last: one move back from the orb reaches it.
     return (d.pinned && (d.others || []).length
       ? list.concat([Object.assign({}, ALL, { status: d.others.length + " more apps" })]) : list).concat([LOG_CARD]);
@@ -246,7 +265,8 @@
     return el("p", "hint", "<b>◀ ▶</b> move &nbsp;·&nbsp; <b>●</b> " + esc(selectWhat));
   }
   function badge(a) {
-    const icon = window.MIAIcons && MIAIcons.svg(a.id === "__all" ? "apps" : a.id === "__back" || a.id === "__log" ? "mia" : a.id);
+    const icon = window.MIAIcons && MIAIcons.svg(a.id === "__all" ? "apps" : a.id === "__nexus" ? "mia"
+      : a.id === "__back" || a.id === "__nexus_back" || a.id === "__log" ? "mia" : a.id);
     const b = el("div", "badge");
     if (icon) b.append(icon); else b.textContent = (a.name || "?").trim().charAt(0).toUpperCase();
     return b;
@@ -322,17 +342,45 @@
   // Home and the app menu, from the boards: her orb and the time, what matters
   // now, and every app as a tile, eight to a page. Move walks the tiles.
   const TILES_A_PAGE = 8;
+  // The Nexus's ring: every area's name around a ring on black, each lit faintly in its own hue (its frame and glow
+  // only, DEC-0130), the chosen one bright in the middle with what needs you. No particles: black is see-through.
+  function nexusRing(list, a) {
+    const wrap = el("div", "sync app-screen dash nexus-ring");
+    ["tl", "tr", "bl", "br"].forEach((k) => wrap.append(el("i", "rc " + k)));
+    const top = el("div", "s-top");
+    const who = el("span", "s-who");
+    who.append(el("i", "log-orb"), el("span", "", "Nexus"));
+    top.append(who, el("span", "d-time", (appIndex + 1) + " of " + list.length));
+    const ring = el("div", "n-ring");
+    const n = list.length;
+    list.forEach((c, i) => {
+      const t = ((i + 0.5) / n) * Math.PI * 2 - Math.PI / 2;  // half a step round: nothing sits on the top or bottom
+      const name = el("span", "n-name" + (i === appIndex ? " on" : "") + (c.needs ? " needs" : ""), esc(c.short || c.name));
+      name.style.left = (50 + 44 * Math.cos(t)) + "%";
+      name.style.top = (50 + 42 * Math.sin(t)) + "%";
+      if (c.hue) name.style.setProperty("--hue", c.hue);
+      ring.append(name);
+    });
+    const mid = el("div", "n-mid");
+    if (a.hue) mid.style.setProperty("--hue", a.hue);
+    mid.append(el("p", "n-big", esc(a.name)), el("p", "w-sum" + (a.tone === "attention" ? " attn" : ""), esc(a.status || "")));
+    ring.append(mid);
+    wrap.append(top, ring, el("p", "s-hint", "<b>▶</b> move &nbsp;·&nbsp; <b>●</b> step in &nbsp;·&nbsp; <b>▼</b> back"));
+    return wrap;
+  }
   function dashScreen(list, a) {
     const d = data || {};
+    if (nexus === "ring") return nexusRing(list, a);
     const wrap = el("div", "sync app-screen dash");
     ["tl", "tr", "bl", "br"].forEach((k) => wrap.append(el("i", "rc " + k)));
     const top = el("div", "s-top");
     const who = el("span", "s-who");
-    who.append(el("i", "log-orb"), el("span", "", showingAll ? "All Apps" : "MIA"));
+    const inArea = nexus && ((d.areas || []).find((r) => r.id === nexus) || {}).name;
+    who.append(el("i", "log-orb"), el("span", "", inArea || (showingAll ? "All Apps" : "MIA")));
     const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     top.append(who, el("span", "d-time", esc(time)));
     wrap.append(top);
-    if (!showingAll) {
+    if (!showingAll && !nexus) {
       const now = el("div", "d-now");
       now.append(el("p", "s-label", "Priority now"), el("p", "d-line", esc(d.priority || "Nothing needs you right now.")));
       wrap.append(now);
@@ -348,7 +396,7 @@
     box.append(el("div", "s-top", "<span>" + esc(a.name) + "</span><span>" + (appIndex + 1) + " of " + list.length + "</span>"));
     const line = a.status || a.tagline || "";
     if (line) box.append(el("p", "w-sum" + (a.tone === "attention" ? " attn" : ""), esc(line)));
-    wrap.append(grid, box, el("p", "s-hint", "<b>▶</b> move &nbsp;·&nbsp; <b>●</b> open &nbsp;·&nbsp; <b>▼</b> her orb"));
+    wrap.append(grid, box, el("p", "s-hint", "<b>▶</b> move &nbsp;·&nbsp; <b>●</b> open &nbsp;·&nbsp; <b>▼</b> " + (nexus ? "the Nexus" : "her orb")));
     return wrap;
   }
   // A mission, from the Phase 6 board: its card, each objective ticked or not, the XP.
@@ -973,8 +1021,9 @@
     if (c.open !== undefined) {
       if (!c.open) { show("home"); answer(c.text, 5); return; }
       let i = (data && data.apps || []).findIndex((a) => a.id === c.open);
+      nexus = null;
       showingAll = i < 0;
-      if (showingAll) i = (data && data.others || []).findIndex((a) => a.id === c.open);
+      i = cards().findIndex((a) => a.id === c.open);  // in the list as shown (the Nexus card or sync card come first)
       if (i >= 0) { appIndex = i; menuIndex = 0; row = 0; panel = null; show("menu"); return; }
     }
     if (view === "hud") { hudQueue.push(c); if (!hudCard) hudNext(); return; }
@@ -1065,7 +1114,7 @@
     if (view === "cards") {
       const n = cards().length;
       const next = appIndex + dir;
-      if (!showingAll && (next < 0 || next >= n)) { show("home"); return; }  // the orb sits between the ends
+      if (!showingAll && !nexus && (next < 0 || next >= n)) { show("home"); return; }  // the orb sits between the ends
       appIndex = (next + n) % n;
       render();
       return;
@@ -1104,6 +1153,10 @@
       if (a.id === "__welcome") { await welcomeStep("resume"); return; }
       if (a.id === "__log") { await openLog(); return; }
       if (a.id === "__all") { showingAll = true; appIndex = 0; render(); return; }
+      if (a.id === "__nexus") { nexus = "ring"; appIndex = 0; render(); return; }
+      if (a.id === "__area") { nexusArea = appIndex; nexus = a.area; appIndex = 0; render(); return; }
+      if (a.id === "__nexus_back") { leaveArea(); return; }
+      if (a.id === "__back" && nexus) { leaveNexus(); return; }
       if (a.id === "__back") { showingAll = false; appIndex = Math.max(0, cards().length - 1); render(); return; }
       menuIndex = 0; row = 0; show("menu");
       return;
@@ -1231,7 +1284,8 @@
       const id = (app() || {}).id;
       await load();
       const d = data || {};
-      showingAll = !!d.pinned && !(d.apps || []).some((c) => c.id === id);
+      if (nexus && !cards().some((c) => c.id === id)) nexus = null;
+      showingAll = !nexus && !!d.pinned && !(d.apps || []).some((c) => c.id === id);
       const at = cards().findIndex((c) => c.id === id);
       appIndex = at >= 0 ? at : 0; row = 0; show("cards");
       return;
@@ -1259,9 +1313,14 @@
     if (view === "recipe") { show("panel"); return; }
     if (view === "panel") { leavePanel(); return; }
     if (view === "menu") { row = 0; show("cards"); return; }
+    if (nexus && nexus !== "ring") { leaveArea(); return; }
+    if (nexus) { leaveNexus(); return; }
     if (showingAll) { showingAll = false; appIndex = Math.max(0, cards().length - 1); render(); return; }
     show("home");
   }
+  // Out of an area to the ring (on the area you came from), and out of the ring to the Nexus card.
+  function leaveArea() { nexus = "ring"; appIndex = nexusArea; render(); }
+  function leaveNexus() { nexus = null; appIndex = Math.max(0, cards().findIndex((c) => c.id === "__nexus")); render(); }
 
   // ------------------------------------------------------------ input
   document.addEventListener("keydown", (e) => {

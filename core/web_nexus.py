@@ -13,14 +13,17 @@ across the top. This module is what the page shows; `web/nexus.html` and
 - `wants_area(prompt)` (pure): "take me to the garage", "open finances",
   "go to the Nexus" -> where to go (the area's hub, or the Nexus), for the
   turn to open at once (core/assistant_turn.py), no model.
+- `portal_art(area_id)`: the picture inside a portal in the room, once
+  Muse's is in web/img/portals/ (H-0096), else "".
 - `nexus(context, today)`: the portals (id, name, icon, hue, hub page,
-  line, what needs you), the HUD (name, level, XP to the next level, active
+  line, what needs you, art), the HUD (name, level, XP to the next level, active
   missions) and the day in one line, for the page.
 """
 
 from __future__ import annotations
 
 from datetime import date
+from pathlib import Path
 from typing import Optional
 
 import re
@@ -41,6 +44,15 @@ def portal_status(items: list) -> dict[str, int]:
         for area in areas_of(item.get("module_id") or ""):
             out[area] = out.get(area, 0) + 1
     return out
+
+
+PORTAL_ART = Path(__file__).resolve().parent.parent / "web" / "img" / "portals"
+
+
+def portal_art(area_id: str) -> str:
+    """The picture inside an area's portal in the room (web/nexus3d.js), as a page path, or "" until Muse's picture
+    for it is in web/img/portals/<area id>.jpg (H-0096): the room draws a placeholder in the area's colour meanwhile."""
+    return f"img/portals/{area_id}.jpg" if (PORTAL_ART / f"{area_id}.jpg").is_file() else ""
 
 
 def _today(context, today: date) -> list[dict]:
@@ -65,7 +77,8 @@ def _missions(context) -> int:
 
 
 def nexus(context, today: Optional[date] = None) -> dict:
-    """The Nexus screen: portals in sidebar order with what needs you in each, the HUD, and the day in one line."""
+    """The Nexus screen: portals in sidebar order with what needs you in each and its picture (once there), the HUD,
+    and the day in one line."""
     from core.web_areas import sidebar
     from core.web_surfaces import _level, _profile, date_text
 
@@ -74,7 +87,7 @@ def nexus(context, today: Optional[date] = None) -> dict:
     status = portal_status(items)
     visible = {a["id"] for a in sidebar(context)}
     portals = [{"id": a.id, "name": a.name, "icon": a.icon, "hue": a.hue, "line": a.tagline,
-                "page": f"hub.html?area={a.id}", "needs": status.get(a.id, 0)}
+                "page": f"hub.html?area={a.id}", "needs": status.get(a.id, 0), "art": portal_art(a.id)}
                for a in AREAS if a.id in visible]
     _pid, profile = _profile(context)
     due = sum(1 for i in items if i.get("when") in ("overdue", "today"))

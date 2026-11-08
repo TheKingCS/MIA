@@ -3,7 +3,7 @@ tests.test_web_nexus
 ======================
 
 The Nexus (DEC-0130, core/web_nexus.py): what needs you in each portal, going to an area by voice, and the screen's
-data in sidebar order with each area's hue.
+data in sidebar order with each area's hue; a portal's picture only once it exists (H-0096).
 """
 
 from types import SimpleNamespace
@@ -30,5 +30,15 @@ def test_going_to_an_area_by_its_name_or_an_everyday_name():
 def test_the_screen_has_portals_in_order_with_hues_and_the_hud(monkeypatch):
     monkeypatch.setattr(surfaces, "_visible", lambda context, app: True)
     page = nexus(SimpleNamespace())
-    assert page["portals"][0]["id"] == "home" and page["portals"][1]["hue"] == "#e8792f"
+    assert page["portals"][0]["id"] == "home" and page["portals"][1]["hue"] == "#8fa7bf"
     assert {"level", "missions"} <= set(page["hud"]) and page["day"] == "Nothing needs you today"
+
+
+def test_a_portal_carries_its_picture_only_once_muses_art_is_there(monkeypatch, tmp_path):
+    """The room (web/nexus3d.js) asks only for pictures that exist (H-0096); the rest draw a placeholder."""
+    import core.web_nexus as web_nexus
+
+    monkeypatch.setattr(web_nexus, "PORTAL_ART", tmp_path)
+    (tmp_path / "garage.jpg").write_bytes(b"jpg")
+    assert web_nexus.portal_art("garage") == "img/portals/garage.jpg"
+    assert web_nexus.portal_art("home") == ""

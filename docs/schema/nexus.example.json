@@ -14,7 +14,7 @@
       "id": "garage",
       "name": "Garage",
       "icon": "garage",
-      "hue": "#e8792f",
+      "hue": "#8fa7bf",
       "line": "Vehicles, tools and the work on them.",
       "page": "hub.html?area=garage",
       "needs": 3
@@ -23,7 +23,7 @@
       "id": "plants_animals",
       "name": "Plants and Animals",
       "icon": "greenhouse",
-      "hue": "#2fd27e",
+      "hue": "#35d4ff",
       "line": "What grows and who you feed.",
       "page": "hub.html?area=plants_animals",
       "needs": 0
@@ -32,7 +32,7 @@
       "id": "kitchen",
       "name": "Kitchen",
       "icon": "kitchen",
-      "hue": "#ffd5a8",
+      "hue": "#e9d4a8",
       "line": "Meals, recipes and the pantry.",
       "page": "hub.html?area=kitchen",
       "needs": 1
@@ -41,7 +41,7 @@
       "id": "health",
       "name": "Health and Fitness",
       "icon": "workout",
-      "hue": "#ff4f8b",
+      "hue": "#ff8a3d",
       "line": "Training, food and how you feel.",
       "page": "hub.html?area=health",
       "needs": 2
@@ -59,7 +59,7 @@
       "id": "security",
       "name": "Security",
       "icon": "security",
-      "hue": "#5be0c8",
+      "hue": "#c0c8d4",
       "line": "Cameras, passwords and sign-ins.",
       "page": "hub.html?area=security",
       "needs": 0
@@ -95,7 +95,7 @@
       "id": "business",
       "name": "Business",
       "icon": "business",
-      "hue": "#e8d29a",
+      "hue": "#7f95ff",
       "line": "Customers, products and the paperwork.",
       "page": "hub.html?area=business",
       "needs": 0
@@ -122,7 +122,7 @@
       "id": "missions",
       "name": "Missions",
       "icon": "missions",
-      "hue": "#b8f04a",
+      "hue": "#c86bff",
       "line": "Quests, levels and rewards.",
       "page": "hub.html?area=missions",
       "needs": 0
@@ -131,7 +131,7 @@
       "id": "projects",
       "name": "Projects",
       "icon": "workshop",
-      "hue": "#9dffd9",
+      "hue": "#b9a8ff",
       "line": "Things you're building.",
       "page": "hub.html?area=projects",
       "needs": 0
@@ -140,7 +140,7 @@
       "id": "communications",
       "name": "Communications",
       "icon": "inbox",
-      "hue": "#8fb3ff",
+      "hue": "#6fc6ff",
       "line": "Email, MIA's messages and people.",
       "page": "hub.html?area=communications",
       "needs": 0

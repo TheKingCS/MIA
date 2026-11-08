@@ -15,7 +15,9 @@ menu. Assembled here, in code, so `web/glasses.js` holds no logic
   rest wait behind an "All apps" card. With no favorites, every app shows
   in the glasses' order. Served as `/api/glasses`, with Home's one line
   (`priority`) and its tone (`priority_tone`: amber orb when it needs you,
-  the canvas's GlassesHome, DEC-0113).
+  the canvas's GlassesHome, DEC-0113), and `areas` for the Nexus's ring
+  (`glasses_areas`: each area with its apps here, hue and what needs you;
+  `short_name` fits its name on the ring; DEC-0130).
 - `glasses_panel(context, app_id, item_id)`: what one menu item shows: a
   title and a few lines, each line optionally carrying the action it
   proposes. Served as `/api/glasses/{app_id}/{item_id}`.
@@ -1411,7 +1413,7 @@ def priority_tone(apps: list[dict]) -> str:
 def glasses_apps(context, today: Optional[date] = None, mission_id: Optional[str] = None) -> dict:
     """The person's glasses cards: their pinned apps (favorites), then the
     rest behind "All apps". Each card has a status line and its menu; Home's
-    line is `priority`, with `priority_tone` for her orb."""
+    line is `priority`, with `priority_tone` for her orb; `areas` is the Nexus's ring (glasses_areas)."""
     from core.focus_presets import favorite_apps
     from core.web_surfaces import dashboard
 
@@ -1452,7 +1454,33 @@ def glasses_apps(context, today: Optional[date] = None, mission_id: Optional[str
             "priority_tone": priority_tone(pinned + others),
             "apps": pinned or others, "others": others if pinned else [],
             "hint": "" if pinned else "Star your favorite apps to pin them here.",
-            "kinds": sorted(GLASSES_KINDS)}
+            "kinds": sorted(GLASSES_KINDS),
+            # DEC-0130 (NEXUS_PLAN M4): the Nexus on the glasses, a flat ring of areas, each with its apps here
+            "areas": glasses_areas(context, [c["id"] for c in pinned + others], today)}
+
+
+def short_name(name: str) -> str:
+    """Pure logic. An area's name short enough for the glasses' ring: "and" becomes "&", and Settings and Diagnostics
+    is Settings."""
+    return "Settings" if name.startswith("Settings") else name.replace(" and ", " & ")
+
+
+def glasses_areas(context, app_ids: list[str], today: date) -> list[dict]:
+    """The Nexus on the glasses (DEC-0130): each area (in order) that has an app on the glasses, with its hue, those
+    apps' ids, and how many of today's items in it need you. No particles or depth here: the display shows light and
+    black is see-through, so it's names on black."""
+    from core.web_areas import AREAS
+    from core.web_nexus import _today, portal_status
+
+    have = set(app_ids)
+    status = portal_status(_today(context, today))
+    out = []
+    for area in AREAS:
+        ids = [m for m in area.members if isinstance(m, str) and m in have]
+        if ids:
+            out.append({"id": area.id, "name": area.name, "short": short_name(area.name), "hue": area.hue, "apps": ids,
+                        "needs": status.get(area.id, 0)})
+    return out
 
 
 def glasses_panel(context, app_id: str, item_id: str, today: Optional[date] = None,
