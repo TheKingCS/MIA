@@ -8,6 +8,7 @@ committed to the store; the turn records a fictional event (DEC-0137), never rea
 state itself; and each turn is kept as the story so far, the last few fed back to the DM for continuity.
 """
 
+from core import at_rest
 import json
 
 import pytest
@@ -73,7 +74,7 @@ def test_the_turn_records_a_fictional_event_and_never_real_state(game):
     book, c, v, tmp_path = game
     propose = _propose("A quiet moment.", [{"kind": "narrate"}])
     take_turn(book, c.campaign_id, v.version_id, "look around", propose, roll=lambda: 0.5)
-    events = [json.loads(x) for x in (tmp_path / "life_events.jsonl").read_text(encoding="utf-8").splitlines() if x]
+    events = [json.loads(x) for x in at_rest.open_text(tmp_path / "life_events.jsonl").splitlines() if x]
     turn_events = [e for e in events if e["type"] == "campaign_turn"]
     assert turn_events and all(e.get("environment") == "fictional" for e in turn_events)
 

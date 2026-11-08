@@ -4,6 +4,7 @@ kept in the person's folder, and can go up as their theme's backdrop. Tested aga
 port: the same HTTP calls, a tiny PNG back.
 """
 
+from core import at_rest
 import io
 import json
 import threading
@@ -180,7 +181,7 @@ def test_a_painting_added_or_removed_is_a_line_in_her_history(tmp_path):
     item = store.add(staged, "my grandmother's porch", "backdrop", {"positive": "a porch", "width": 8, "height": 8}, 1,
                      "comfyui")
     store.remove(item["id"])
-    lines = [json.loads(x) for x in (tmp_path / "life_events.jsonl").read_text(encoding="utf-8").splitlines() if x]
+    lines = [json.loads(x) for x in at_rest.open_text(tmp_path / "life_events.jsonl").splitlines() if x]
     assert [(e["type"], e["summary"]) for e in lines] == [("art_added", "Added a painting MIA made"),
                                                          ("art_removed", "Removed a painting")]
     assert "porch" not in json.dumps(lines)

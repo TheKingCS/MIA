@@ -3,6 +3,7 @@ sentence about information MIA has no screen for, she makes a record set and
 a screen, checked, previewed, published on approval, used, undone and
 rolled back, all through her own design system and the action contract."""
 
+from core import at_rest
 import json
 
 import pytest
@@ -386,9 +387,9 @@ def test_what_mia_made_reaches_the_persons_history_when_published_and_put_away(t
     assert not (tmp_path / "life_events.jsonl").exists()
     store.mark_published(made["id"], 1, "S-1")
     store.retire(made["id"])
-    lines = [json.loads(x) for x in (tmp_path / "life_events.jsonl").read_text(encoding="utf-8").splitlines() if x]
+    lines = [json.loads(x) for x in at_rest.open_text(tmp_path / "life_events.jsonl").splitlines() if x]
     assert [(e["type"], e["summary"]) for e in lines] == [
         ("creation_published", "Published something MIA made for you"),
         ("creation_retired", "Put away something MIA made for you")]
     assert lines[0]["payload"] == {"id": made["id"], "version": 1}
-    assert "Egg log" not in (tmp_path / "life_events.jsonl").read_text(encoding="utf-8")  # creations.json is sealed
+    assert "Egg log" not in (tmp_path / "life_events.jsonl").read_bytes().decode("utf-8")  # creations.json is sealed

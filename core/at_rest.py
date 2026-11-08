@@ -11,6 +11,11 @@ shows nothing but noise.
 `open_text` (and `open_bytes`, for sync and export, which want the person's real content): a sealed file is opened, a
 plain one is returned as it is, so each store reads both ways while it moves. A store moves the next time it saves.
 
+**The history, a line at a time.** `life_events.jsonl` is appended and never rewritten, so it can't be one envelope:
+it's in `LINE_SEALED`, each line sealed as it's appended (`seal_line`) and opened line by line (`open_lines`), plain
+lines from before reading as they are and a line that won't open kept as it is, never the whole history lost. It's
+sealed because the history repeats what sealed stores keep ("Added a person: ...").
+
 **The data key.** 32 random bytes, kept in data/.keys/data_key.json protected by Windows DPAPI (`_protect`): tied to
 the Windows sign-in, so there's nothing to type when MIA starts, and the file is useless anywhere else. A sealed file
 names the key it was sealed with (`_kid`); the key file can hold more than one, so a recovered key (`restore`) opens
@@ -107,6 +112,12 @@ SEALED = frozenset({
     "failures.jsonl",
     "failure_state.json",
 })
+# Sealed a line at a time (2026-11-08): an append-only history, where a whole-file envelope would mean rewriting it
+# (CLAUDE.md: never rewrite it). Each line is its own envelope as it's appended (seal_line); a file can hold plain lines
+# from before, and a line that won't open is kept as it is, never the whole file lost (open_text reads it leniently).
+# The person's history repeats the names sealed stores keep ("Added a person: ..."), so it's sealed too.
+LINE_SEALED = frozenset({"life_events.jsonl"})
+
 # Every store reading a SEALED file uses open_text and catches ValueError (UnreadableFile is one) with OSError, so a
 # file that won't open is copied aside and the store starts empty instead of MIA failing to start. Not yet: the
 # budget's files (bills, income, expenses, debts) wait on the Plaid work in core/budget_manager.py.
@@ -274,6 +285,32 @@ def sealed_name(path: Path) -> bool:
     return Path(path).name in SEALED
 
 
+def line_sealed(path: Path) -> bool:
+    """Whether a file of this name is sealed a line at a time (LINE_SEALED)."""
+    return Path(path).name in LINE_SEALED
+
+
+def seal_line(path: Path, line: str) -> str:
+    """One line as it's appended to `path`: its own envelope when the file is LINE_SEALED (and there's a key), else
+    as it is."""
+    return seal(line) if line_sealed(path) and line.strip() else line
+
+
+def open_lines(text: str) -> tuple[list[str], int]:
+    """Pure-ish. A line-sealed file's lines, each sealed one opened; one that won't open (a key not held here, a
+    damaged line) is kept as it was and counted, so nothing is ever dropped. Returns (lines, how many wouldn't open)."""
+    out, failed = [], 0
+    for line in text.split("\n"):
+        if is_sealed(line.strip()):
+            try:
+                out.append(unseal(line.strip()))
+                continue
+            except ValueError:
+                failed += 1
+        out.append(line)
+    return out, failed
+
+
 def is_sealed(text) -> bool:
     """Whether some file content (text or bytes) is a sealed envelope."""
     return text.startswith(PREFIX if isinstance(text, str) else PREFIX.encode("ascii"))
@@ -315,7 +352,10 @@ def unseal(envelope: str) -> str:
 
 
 def seal_text(path: Path, text: str) -> str:
-    """What atomic_write_text writes for `path`: sealed when its name is in SEALED, else `text` as it is."""
+    """What atomic_write_text writes for `path`: sealed when its name is in SEALED, each line sealed when it's in
+    LINE_SEALED (a sync merge writing the history back), else `text` as it is."""
+    if line_sealed(path):
+        return "\n".join(seal_line(path, line) for line in text.split("\n"))
     return seal(text) if sealed_name(path) else text
 
 
@@ -332,9 +372,18 @@ def _set_aside(path: Path) -> Optional[Path]:
 
 
 def open_text(path: Path, encoding: str = "utf-8") -> str:
-    """A store file's text, sealed or plain. A sealed one that won't open is copied aside, then UnreadableFile."""
+    """A store file's text, sealed or plain. A sealed one that won't open is copied aside, then UnreadableFile. A
+    line-sealed file (LINE_SEALED) opens each sealed line; one that won't open stays as it was (logged), never the
+    whole file."""
     path = Path(path)
     text = path.read_text(encoding=encoding)
+    if line_sealed(path):
+        if PREFIX not in text:
+            return text
+        lines, failed = open_lines(text)
+        if failed:
+            log.warning("%d line(s) of %s wouldn't open; kept as they are.", failed, path.name)
+        return "\n".join(lines)
     if not is_sealed(text):
         return text
     try:
@@ -344,20 +393,23 @@ def open_text(path: Path, encoding: str = "utf-8") -> str:
 
 
 def open_bytes(path: Path) -> bytes:
-    """A file's real content as bytes (sync and export): a sealed one opened, any other read as it is."""
+    """A file's real content as bytes (sync and export): a sealed one opened (a line-sealed one line by line,
+    wherever its sealed lines are), any other read as it is."""
     path = Path(path)
     data = path.read_bytes()
-    return open_text(path).encode("utf-8") if is_sealed(data) else data
+    sealed = is_sealed(data) or (line_sealed(path) and PREFIX.encode("ascii") in data)
+    return open_text(path).encode("utf-8") if sealed else data
 
 
 # ------------------------------------------------------------------ status and the recovery key
 
 
 def status() -> dict:
-    """Whether sealing works here, how the key is protected, and which files are sealed."""
+    """Whether sealing works here, how the key is protected, which files are sealed, and which a line at a time."""
     held = _current_key()
     return {"sealing": held is not None, "protection": "test" if _test_key is not None else
             ("dpapi" if held is not None else "none"), "why_not": _blocked, "files": sorted(SEALED),
+            "lines": sorted(LINE_SEALED),
             "key_id": held[0] if held else ""}
 
 

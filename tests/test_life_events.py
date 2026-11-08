@@ -2,7 +2,8 @@
 Life events (core/life_events.py), Engine Phase 1 step 1, 2026-10-05:
 the append-only history beside the stores. What happened, who did it
 and how, in the folder the data lives in. A decorated method that
-answers False changed nothing and records nothing.
+answers False changed nothing and records nothing. Each line is sealed
+on its own as it's appended (DEC-0126).
 """
 
 import json
@@ -171,10 +172,21 @@ def test_what_did_i_get_done(world):
     assert life_events.describe([], "month") == "Nothing recorded in the last 30 days yet."
 
 
-def test_the_file_is_plain_json_lines(world):
+def test_each_line_of_the_file_is_its_own_sealed_json_record(world):
+    """DEC-0126: the history is sealed a line at a time as it's appended (never rewritten); opened, each line is the
+    event's JSON; a plain line from before still reads, and a line that won't open is skipped, never the history."""
+    from core import at_rest
+
     world.life_events.record("task_done", "Done: x", ["task:1"])
-    line = world.life_events.path.read_text(encoding="utf-8").strip()
-    assert json.loads(line)["type"] == "task_done"
+    raw = world.life_events.path.read_text(encoding="utf-8").strip()
+    assert at_rest.is_sealed(raw) and "Done" not in raw
+    assert json.loads(at_rest.open_text(world.life_events.path).strip())["type"] == "task_done"
+    with open(world.life_events.path, "a", encoding="utf-8") as f:
+        f.write(json.dumps({"event_id": "old", "at": "2026-11-01T00:00:00", "type": "note_added", "summary": "Before",
+                            "refs": [], "payload": {}, "source": "manual", "profile_id": None}) + "\n")
+        f.write(at_rest.PREFIX + "deadbeef:bm90IGEgcmVhbCBsaW5l\n")  # a line sealed under a key that isn't here
+    world.life_events.record("task_done", "Done: y", ["task:2"])
+    assert [e.summary for e in world.life_events.all_events()] == ["Done: x", "Before", "Done: y"]
 
 
 def test_personal_data_gives_each_household_and_person_their_own_log(tmp_path, monkeypatch):

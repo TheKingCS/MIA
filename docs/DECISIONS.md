@@ -2001,8 +2001,14 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   carries each file's opened content (`open_bytes`) and writes the merge back through `atomic_write_text`, so each
   device seals with its own key. `failures.jsonl` (what was said, redacted) is now rewritten whole, sealed, on each
   stumble (lines still only added, the newest three fifths kept past 5,000), and `failure_state.json` with it. Those
-  writes happen inside `undo_log.outside_undo()`, so "undo that" never takes a stumble back. `life_events.jsonl` stays
-  plain for now (written on nearly every change and read by every view: a whole rewrite each time needs measuring).
+  writes happen inside `undo_log.outside_undo()`, so "undo that" never takes a stumble back. **The history sealed a
+  line at a time (same afternoon):** a scan found nearly every sealed store writing its records' names into the plain
+  `life_events.jsonl` ("Added a person: ...", places, policies, goals, journal titles), so the history broke the seal's
+  promise. Each line is now its own envelope as it's appended (`at_rest.LINE_SEALED`, `seal_line`: never rewritten,
+  CLAUDE.md), read line by line (`open_lines`: a plain line from before still reads, one that won't open is kept as
+  it is and skipped, never the history), and a sync merge written back is sealed line by line. Measured: opening all
+  2,247 lines of the household's log takes about 5 ms. Lines written before today stay plain until the file is
+  rewritten once with MIA closed (Zac's call: WAITING_ON). New sealed stores' history lines name no details (K-0150).
 - Related: DEC-0035 (the password vault), DEC-0125
 
 ### DEC-0127: MIA becomes a product, sold by subscription, local-first

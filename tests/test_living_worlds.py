@@ -7,6 +7,7 @@ are created and persisted so a campaign survives sessions; a version's growth is
 ids are validated; and a campaign can be paused and resumed. The store is sealed on disk (DEC-0126).
 """
 
+from core import at_rest
 import json
 
 import pytest
@@ -100,6 +101,6 @@ def test_a_quest_mirrors_real_mission_assignment_but_stays_fictional(tmp_path):
     # persists like everything else
     assert LivingWorldsBook(data_dir=tmp_path).get_quest(q.quest_id).status == "done"
     # every Living Worlds event is fictional — a real timeline (environment == "real") would show none of them
-    events = [json.loads(x) for x in (tmp_path / "life_events.jsonl").read_text(encoding="utf-8").splitlines() if x]
+    events = [json.loads(x) for x in at_rest.open_text(tmp_path / "life_events.jsonl").splitlines() if x]
     assert events and all(e.get("environment") == "fictional" for e in events)
     assert not [e for e in events if e.get("environment") == "real"]

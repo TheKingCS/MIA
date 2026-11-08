@@ -22,7 +22,7 @@ import json
 from pathlib import Path
 from typing import Optional
 
-from core.at_rest import is_sealed, open_text
+from core.at_rest import is_sealed, line_sealed, open_text
 from core.logger import get_logger
 
 log = get_logger(__name__)
@@ -87,15 +87,19 @@ def count_records(text: str, name: str) -> Optional[int]:
 
 
 def describe(path: Path) -> dict:
-    """One file: its name, what it is, records, size in bytes, and whether it's sealed. A sealed file that won't open
-    still shows (records unknown)."""
+    """One file: its name, what it is, records, size in bytes, and whether it's sealed (a line-sealed history only
+    when every line is). A sealed file that won't open still shows (records unknown)."""
     entry = {"file": path.name, "what": label(path.name), "bytes": path.stat().st_size, "records": None,
              "sealed": False}
     if path.suffix.lower() not in (".json", ".jsonl"):
         return entry
     try:
-        with open(path, "rb") as f:
-            entry["sealed"] = is_sealed(f.read(16))
+        if line_sealed(path):  # sealed a line at a time: sealed only when every line is (older lines may be plain)
+            lines = [x.strip() for x in path.read_text(encoding="utf-8").splitlines() if x.strip()]
+            entry["sealed"] = bool(lines) and all(is_sealed(x) for x in lines)
+        else:
+            with open(path, "rb") as f:
+                entry["sealed"] = is_sealed(f.read(16))
         entry["records"] = count_records(open_text(path), path.name)
     except (OSError, ValueError):
         log.info("Couldn't count %s for Your Data", path.name)

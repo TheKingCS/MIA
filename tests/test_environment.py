@@ -8,6 +8,7 @@ life event carries its environment, so a real-life view can filter to `real` and
 the leaderboard never counts a story's win; and no module reads the history directly without checking.
 """
 
+from core import at_rest
 import json
 
 import pytest
@@ -38,7 +39,7 @@ def test_a_life_event_carries_its_environment_and_a_real_view_excludes_fiction(t
     life_events.record(log, "bill_paid", "Paid the water bill")  # real by default
     life_events.record(log, "quest_completed", "Slew the dragon", environment="fictional")
 
-    lines = [json.loads(x) for x in (tmp_path / "life_events.jsonl").read_text(encoding="utf-8").splitlines() if x]
+    lines = [json.loads(x) for x in at_rest.open_text(tmp_path / "life_events.jsonl").splitlines() if x]
     envs = {e["summary"]: e.get("environment") for e in lines}
     assert envs["Paid the water bill"] == "real" and envs["Slew the dragon"] == "fictional"
     # a real-life timeline keeps to environment == "real" and never shows the campaign event

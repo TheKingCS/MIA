@@ -55,6 +55,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Iterable, Optional
 
+from core.at_rest import open_text, seal_line
 from core.logger import get_logger
 
 log = get_logger(__name__)
@@ -216,7 +217,8 @@ def record(where, type: str, summary: str, refs: Iterable[str] = (), payload: Op
            profile_id: Optional[str] = None, source: Optional[str] = None, environment: str = REAL) -> Optional[LifeEvent]:
     """Called by a store right after a meaningful change. Never raises:
     a history that can't be written must not undo the change itself. `environment` tags the event real (default),
-    fictional or simulated (DEC-0137) so a fictional campaign's events never read as real life."""
+    fictional or simulated (DEC-0137) so a fictional campaign's events never read as real life. The line is sealed
+    on its own as it's appended (core/at_rest.py LINE_SEALED, DEC-0126): appended, never rewritten."""
     if where is None or getattr(_local, "quiet", 0):
         return None
     event = LifeEvent(
@@ -228,7 +230,7 @@ def record(where, type: str, summary: str, refs: Iterable[str] = (), payload: Op
     try:
         folder = folder_of(where)
         folder.mkdir(parents=True, exist_ok=True)
-        line = json.dumps(asdict(event), ensure_ascii=False)
+        line = seal_line(folder / FILE_NAME, json.dumps(asdict(event), ensure_ascii=False))  # its own envelope
         with _lock, open(folder / FILE_NAME, "a", encoding="utf-8") as handle:
             handle.write(line + "\n")
     except Exception:
@@ -311,18 +313,19 @@ class LifeEventLog:
         return self.data_dir / FILE_NAME
 
     def all_events(self) -> list[LifeEvent]:
-        """Every event in the file, in order; a damaged line is skipped (logged), never the whole history."""
+        """Every event in the file, in order; a damaged line, or a sealed one that won't open here, is skipped (logged),
+        never the whole history. Each line is sealed on disk (at_rest.LINE_SEALED, DEC-0126)."""
         if not self.path.exists():
             return []
         events = []
         try:
-            for line in self.path.read_text(encoding="utf-8").splitlines():
+            for line in open_text(self.path).splitlines():
                 line = line.strip()
                 if not line:
                     continue
                 try:
                     events.append(LifeEvent.from_dict(json.loads(line)))
-                except (json.JSONDecodeError, TypeError, AttributeError):
+                except (ValueError, TypeError, AttributeError):
                     log.warning("Skipped a damaged line in %s.", self.path)
         except OSError:
             log.exception("Couldn't read %s.", self.path)

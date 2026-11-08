@@ -14,7 +14,7 @@ import inspect
 from dataclasses import dataclass
 from pathlib import Path
 
-from core import life_events, links
+from core import at_rest, life_events, links
 
 
 @dataclass
@@ -62,7 +62,7 @@ def test_a_decorated_store_method_records_its_change(tmp_path):
     store.keep("the code is 1234")
     with pytest.raises(ValueError):
         store.broken()
-    lines = (tmp_path / life_events.FILE_NAME).read_text(encoding="utf-8").splitlines()
+    lines = at_rest.open_text(tmp_path / life_events.FILE_NAME).splitlines()  # each line sealed on disk (DEC-0126)
     assert len(lines) == 3, lines
     import json
 

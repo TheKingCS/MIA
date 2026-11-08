@@ -7,7 +7,7 @@ envelope and read back, any other file stays plain; a plain file still reads (ea
 file that won't open is copied aside before the error, so a store starting empty can't lose it (and every sealed
 store starts empty rather than stopping MIA; every file naming a sealed file reads it with open_text); a changed file is
 refused; a recovery key brings a key back; sync and export carry the real content; the Fix-It Log is written whole,
-sealed, and never part of an undoable change; and, on Windows, the key is protected by DPAPI and only opens for this
+sealed, and never part of an undoable change; the history is sealed a line at a time; and, on Windows, the key is protected by DPAPI and only opens for this
 Windows user.
 """
 
@@ -309,3 +309,26 @@ def test_a_stumble_written_during_a_change_is_never_part_of_it(tmp_path):
         atomic_write_text(other, "{}")
         book.record("tool_error", tool="log_shift", error="boom")
     assert list(change.files) == [other]
+
+
+def test_the_history_is_sealed_a_line_at_a_time_and_sync_carries_it_open(tmp_path):
+    """life_events.jsonl (LINE_SEALED): a line appended is its own envelope; a file mixing plain lines from before,
+    sealed lines and one that won't open here opens line by line (that one kept as it is, never the rest lost); sync
+    reads its real content wherever the sealed lines are, and a merge written back is sealed line by line."""
+    from core import your_data
+
+    path = tmp_path / "life_events.jsonl"
+    assert at_rest.line_sealed(path) and not at_rest.line_sealed(tmp_path / "notes.jsonl")
+    stranger = at_rest.PREFIX + "deadbeef:bm90IGEgcmVhbCBsaW5l"
+    path.write_text('{"a": "plain before"}\n' + at_rest.seal_line(path, '{"b": "Added a person: Sam"}') + "\n"
+                    + stranger + "\n", encoding="utf-8")
+    assert "Sam" not in path.read_text(encoding="utf-8")
+    opened = at_rest.open_text(path)
+    assert opened.splitlines() == ['{"a": "plain before"}', '{"b": "Added a person: Sam"}', stranger]
+    assert at_rest.open_bytes(path) == opened.encode("utf-8")  # the first line is plain: still opened for sync
+    assert your_data.describe(path)["sealed"] is False  # older lines are plain: not all of it is sealed
+    atomic_write_text(path, '{"a": 1}\n{"b": 2}\n')  # a sync merge written back
+    raw = path.read_text(encoding="utf-8").splitlines()
+    assert len(raw) == 2 and all(at_rest.is_sealed(x) for x in raw)
+    assert at_rest.open_text(path) == '{"a": 1}\n{"b": 2}\n' and your_data.describe(path)["sealed"] is True
+    assert "life_events.jsonl" in at_rest.status()["lines"] and at_rest.seal_line(tmp_path / "notes.jsonl", "x") == "x"

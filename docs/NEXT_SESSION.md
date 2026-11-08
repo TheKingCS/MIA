@@ -15,10 +15,10 @@ method traces (checked against a real headless Claude Code run); T-0017's core (
 Log sealed at rest (DEC-0126). CURRENT_STATE has the summary; knowledge K-0139 to K-0149. **For the parity session:**
 voice tools for online lookup (`online_lookup.search` / `said`, offer line `OFFER`), "what isn't working?"
 (`capabilities.status_summary`). **For the design session:** `/api/dev` `disagreements` and `evolution` (shapes in
-section 2's engine claims). **For the next engine session:** `life_events.jsonl` sealing, measured: the person's own
-log is small (72 lines, 18 KB), but a whole-file rewrite breaks CLAUDE.md's "never rewrite it" and can lose an event
-when two processes write at once (appends can't), and the name is shared with the household's log (2,247 lines) and
-Night School's, so it needs a per-line sealed format: a design change to put to Zac, not a quiet edit; T-0052 (create_app's length) only when no one else is in
+section 2's engine claims). **For the next engine session:** `life_events.jsonl` is now sealed a line at a time
+(DEC-0126 note): a scan found sealed stores' names copied into the plain history, so it closed a gap in an approved
+decision; appends only, never rewritten; lines from before today stay plain (Zac's call in WAITING_ON). Anything
+reading the history must go through `at_rest.open_text` (tests too); T-0052 (create_app's length) only when no one else is in
 `server/app.py`; T-0017 stays open for its voice tool and Zac's SearXNG. **Zac:** start SearXNG (WAITING_ON), the
 homestead push, DEC-0147's choices, the iOS path.
 

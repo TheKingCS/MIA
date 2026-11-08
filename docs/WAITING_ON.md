@@ -148,6 +148,11 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       `C:\Users\zacrh\DevTools\imagegen\series_reference.png`.
 
 ### At the PC
+- [ ] **Your history is sealed now; its older lines aren't yet** (2026-11-08, DEC-0126): MIA's history repeated the
+      names your sealed stores keep (people, places, policies, goals), so each new line of `life_events.jsonl` is now
+      sealed as it's written. Lines from before today are still plain. Sealing them means rewriting the file once,
+      with MIA closed (the history is otherwise never rewritten). Say if you want it, and Claude adds a
+      `tools.data_key seal --history` for you to run. Or say if you'd rather the history stayed plain.
 - [ ] **Start MIA's own search engine (SearXNG)** so she can look things up online when you ask (DEC-0053, your
       pick 2026-10-31; `core/online_lookup.py` built 2026-11-08, T-0017): Docker Desktop, then the one command and
       the JSON setting in `docs/ONLINE_LOOKUP.md`. Only search words leave the PC; no account, no tracking.

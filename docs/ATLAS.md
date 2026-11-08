@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1308 files, 283,598 lines; 1308 files describe themselves; 15,961 of 16,055 classes and functions are documented.
+1308 files, 283,698 lines; 1308 files describe themselves; 15,965 of 16,059 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-488 files, 134,462 lines; 7,196 of 7,282 classes and functions documented
+488 files, 134,521 lines; 7,199 of 7,285 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -774,7 +774,7 @@
 
 ## tests/: the test suite: what each part must do
 
-448 files, 75,309 lines; 6,477 of 6,485 classes and functions documented
+448 files, 75,350 lines; 6,478 of 6,486 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -973,7 +973,7 @@
 - `tests/test_ledger_manager.py`: Unit tests for core.ledger_manager. Isolates _DATA_DIR/_REVENUE_FILE _EXPENSES_FILE into a tmp_path scratch area, same monkeypatch pattern as test_component_manager.py's isolated_paths. record_sale() also needs core.product_manager isolated in the same tmp_path, same "combined-manager fixture" patte
 - `tests/test_leveling.py`: Profile levels and prestige (core/leveling.py): the XP each level needs, progress within a level and a prestige cycle, when someone may prestige, and each prestige tier's colour.
 - `tests/test_life_areas.py`: The life state's `areas` section (core/life_areas.py): each area reads its store live, says PLANNED without one, never breaks the life state when one fails, keeps a child out of the money areas, and every area names a store MIA really has.
-- `tests/test_life_events.py`: Life events (core/life_events.py), Engine Phase 1 step 1, 2026-10-05: the append-only history beside the stores. What happened, who did it and how, in the folder the data lives in. A decorated method that answers False changed nothing and records nothing.
+- `tests/test_life_events.py`: Life events (core/life_events.py), Engine Phase 1 step 1, 2026-10-05: the append-only history beside the stores. What happened, who did it and how, in the folder the data lives in. A decorated method that answers False changed nothing and records nothing. Each line is sealed on its own as it's appen
 - `tests/test_life_notes.py`: DEC-0054 (T-0018): what someone says they'll do, decide, want to try and set aside, spotted in code, kept only on their yes, and answered by the recall plan.
 - `tests/test_life_state_v2.py`: Life State v2 (core/context_assembler.py), Engine Phase 1 step 3, 2026-10-05: the whole picture as data, computed from the stores, the life-event history and the links. No hand-written prose in the path.
 - `tests/test_links.py`: How things relate (core/links.py), Engine Phase 1 step 2, 2026-10-05: stated links between real records, links the stores already imply, and what waits on what.

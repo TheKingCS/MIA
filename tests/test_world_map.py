@@ -5,6 +5,7 @@ stay in the fog; new ground earns achievements and XP, and the closest
 one not earned is shown next.
 """
 
+from core import at_rest
 import struct
 
 import pytest
@@ -128,7 +129,7 @@ def test_the_history_hears_a_check_in_and_new_ground_but_never_where(tmp_path):
     book.check_in(35.123456, -90.654321, "the old mill")
     assert book.see({"t1": "2026-11-08", "t2": "2026-11-08"}) == ["t1", "t2"]
     assert book.see({"t1": "2026-11-08"}) == []  # nothing new: no line
-    text = (tmp_path / "life_events.jsonl").read_text(encoding="utf-8")
+    text = at_rest.open_text(tmp_path / "life_events.jsonl")
     lines = [json.loads(x) for x in text.splitlines() if x]
     assert [e["summary"] for e in lines] == ["Checked in on the world map",
                                              "Cleared new ground on the world map: 2 new tiles"]
