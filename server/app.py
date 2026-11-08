@@ -35,7 +35,8 @@ request to core/id_wallet.py, sealed at rest; lists mask it. MIA paints on this
 PC's graphics card (`ArtRequest`, /api/art, core/art_studio.py, DEC-0140) and
 serves each person only their own pictures. The Theme Studio
 asks MIA to design a theme from a description (`ThemeDesignRequest`, POST
-/api/themes/design, core/theme_design.py): nothing is kept there; saving is
+/api/themes/design, core/theme_design.py) or to mix two (`ThemeMixRequest`,
+POST /api/themes/mix, core/themes.combine): nothing is kept there; saving is
 an action.
 
 **My Directions and How MIA Answers** (2026-11-08): `/api/directions`
@@ -338,6 +339,13 @@ class CompareRequest(BaseModel):
     are never compared."""
     reply: str = Field(..., max_length=6000)
     private: bool = False
+
+
+class ThemeMixRequest(BaseModel):
+    """Two of the person's themes to mix (core/themes.combine): the first, the second, and which parts come from it."""
+    first: str = Field(..., max_length=40)
+    second: str = Field(..., max_length=40)
+    parts: list[str] = Field(default_factory=list, max_length=8)
 
 
 class ThemeDesignRequest(BaseModel):
@@ -2553,6 +2561,18 @@ def create_app(context: AppContext) -> FastAPI:
             return {}
         with app.state.turn_lock:
             return keep(view, experiment, body.reply, other) or {}
+
+    @app.post("/api/themes/mix")
+    def web_theme_mix(body: ThemeMixRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Mix Two (core/themes.combine, DEC-0136): the first theme with chosen parts of the second, and whether it can
+        be kept as it is. Nothing is kept here; saving is theme.save."""
+        from core.themes import combine
+
+        with app.state.turn_lock:
+            try:
+                return combine(view_for(context, profile_id), body.first, body.second, body.parts)
+            except ValueError as problem:
+                raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
 
     @app.get("/api/nexus")
     def web_nexus(profile_id: str = Depends(require_profile_id)) -> dict:

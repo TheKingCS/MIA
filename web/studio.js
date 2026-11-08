@@ -5,7 +5,8 @@
  * (web/nexus3d.js). Save proposes `theme.save` (core/theme_actions.py): core builds the tokens from the same choices
  * (core/themes.build_theme, the arithmetic mirrored in tokensFrom below for the live preview) and makes the checks
  * that count: an accent that reads as a warning colour, or text too faint to read. The checks here only say so early.
- * Describe One asks MIA to design a theme (MIA.designTheme, core/theme_design.py) and loads it here to tweak; Export
+ * Mix Two takes one theme with chosen parts of another (MIA.mixThemes, core/themes.combine); Sounds picks the
+ * theme's chimes (web/sound.js sets, opt-in). Describe One asks MIA to design a theme (MIA.designTheme, core/theme_design.py) and loads it here to tweak; Export
  * downloads what's on screen as a mia-theme/1 file; Import proposes `theme.import`, which core reads and checks.
  * Backdrop: MIA paints a picture on the PC's graphics card (MIA.paint, core/art_studio.py, DEC-0140); pick one of
  * your paintings (or none) and how strongly it shows; it's part of the theme you save.
@@ -16,6 +17,7 @@
   const $ = (id) => document.getElementById(id);
   let data = null, base = null, picks = null, own = null, room = null, roomTimer = 0, savedName = "";
   let described = "", designNote = "", designedName = "";  // MIA's last design, kept while you tweak it
+  let mixA = "", mixB = "", mixParts = ["room"], mixNote = "";  // Mix Two: the first theme, the second, what comes from it
   let art = null, painting = "", artTimer = 0;  // MIA's paintings (core/art_studio.status) and what you asked her to paint
 
   // ------------------------------------------------------------ colour arithmetic (mirrors core/themes.py)
@@ -71,7 +73,8 @@
   }
   function preview() {
     const theme = { id: base.id, name: "Preview", tokens: tokensFrom(picks, base), material: picks.material, room: roomFrom(picks, base),
-      backdrop: picks.backdrop ? { art: picks.backdrop, strength: picks.backdrop_strength || 0.6 } : null };
+      backdrop: picks.backdrop ? { art: picks.backdrop, strength: picks.backdrop_strength || 0.6 } : null,
+      sound: picks.sound || "classic" };
     MIAShell.previewTheme(theme);
     const issues = problems();
     $("st-issues").replaceChildren(...issues.map((p) => el("p", { class: "st-issue" }, p)));
@@ -118,7 +121,7 @@
 
   function start(theme) {
     base = theme;
-    picks = Object.assign({ backdrop: "", backdrop_strength: 0.6 }, theme.choices, { palette: (theme.choices.palette || []).slice() });
+    picks = Object.assign({ backdrop: "", backdrop_strength: 0.6, sound: "classic" }, theme.choices, { palette: (theme.choices.palette || []).slice() });
     own = theme.own ? theme.id : null;
     designNote = ""; designedName = "";
     paint();
@@ -213,6 +216,53 @@
     await MIAShell.act({ kind: "theme.save", params });
   }
 
+  // Mix Two (Theme Studio step 3): one theme with chosen parts of another (core/themes.combine); it loads here to look at
+  // and tweak, and nothing is kept until you save. Core says if the mix can't be kept (and why) before you try.
+  async function mixIt() {
+    if (!mixA || !mixB || mixA === mixB || !mixParts.length) { MIAShell.say("Pick two different themes and at least one part."); return; }
+    try {
+      const made = await MIA.mixThemes(mixA, mixB, mixParts);
+      base = data.themes.find((t) => t.id === made.base) || data.themes[0];
+      picks = Object.assign({}, made.choices, { palette: (made.choices.palette || []).slice() });
+      own = null;
+      designedName = made.name;
+      designNote = "";
+      mixNote = made.problem ? "This mix can't be kept as it is: " + made.problem : "Mixed. Tweak it below, then save.";
+      paint();
+    } catch (e) { MIAShell.say(e.message); }
+  }
+
+  function mixSection() {
+    const pick = (value, on) => el("select", { "aria-label": on, onchange: (e) => { if (on === "First theme") mixA = e.target.value; else mixB = e.target.value; } },
+      data.themes.map((t) => el("option", { value: t.id, selected: t.id === value ? "" : null }, t.name)));
+    if (!mixA) mixA = base.id;
+    if (!mixB) mixB = (data.themes.find((t) => t.id !== mixA) || data.themes[0]).id;
+    return el("section", { class: "glass st-mix", "aria-label": "Mix two themes" },
+      el("h2", { class: "pw-label" }, "Mix Two"),
+      el("div", { class: "st-mix-row" },
+        el("label", { class: "st-select" }, el("span", {}, "Start with"), pick(mixA, "First theme")),
+        el("label", { class: "st-select" }, el("span", {}, "Take from"), pick(mixB, "Second theme"))),
+      el("div", { class: "chip-row st-mix-parts", role: "group", "aria-label": "Parts from the second theme" },
+        ...data.parts.map((p) => el("button", { type: "button", class: "chip-button" + (mixParts.includes(p.id) ? " on" : ""),
+          "aria-pressed": String(mixParts.includes(p.id)),
+          onclick: (e) => {
+            mixParts = mixParts.includes(p.id) ? mixParts.filter((x) => x !== p.id) : mixParts.concat(p.id);
+            e.currentTarget.classList.toggle("on"); e.currentTarget.setAttribute("aria-pressed", String(mixParts.includes(p.id)));
+          } }, p.label))),
+      el("div", { class: "st-actions" }, el("button", { type: "button", class: "btn", onclick: mixIt }, "Mix Them")),
+      mixNote ? el("p", { class: "st-designed", role: "status" }, mixNote) : null);
+  }
+
+  // A theme's chimes (opt-in): pick a set and hear it.
+  function soundRow() {
+    const row = select("sound", "Chimes", data.sounds.map((x) => [x.id, x.label]));
+    return el("div", { class: "st-sound" }, row,
+      el("button", { type: "button", class: "btn btn-ghost btn-small", onclick: () => {
+        if (!window.MIASound) return;
+        MIASound.useSet(picks.sound || "classic"); MIASound.preview("quest");
+      } }, "Hear It"));
+  }
+
   function paint() {
     const chips = data.themes.map((t) => el("button", { type: "button", class: "chip-button st-theme" + (t.id === base.id ? " on" : ""),
       "aria-pressed": String(t.id === base.id), onclick: () => start(t) },
@@ -230,6 +280,7 @@
     $("panel").replaceChildren(
       describe,
       el("section", { class: "st-start", "aria-label": "Start from" }, el("h2", { class: "pw-label" }, "Start From"), el("div", { class: "chip-row" }, ...chips)),
+      mixSection(),
       el("div", { class: "st-grid" },
         el("section", { class: "glass st-controls", "aria-label": "Tweak" },
           el("h2", { class: "pw-label" }, "Colours"),
@@ -242,6 +293,8 @@
           el("h2", { class: "pw-label" }, "The Room"),
           ...Object.keys(data.levels).map((k) => slider(k, LEVEL_NAMES[k] || k, data.levels[k][0], data.levels[k][1], 0.05)),
           palette(),
+          el("h2", { class: "pw-label" }, "Sounds"),
+          soundRow(),
           el("div", { id: "st-backdrop", class: "st-backdrop" }, ...backdropSection()),
           el("h2", { class: "pw-label" }, "Keep It"),
           el("label", { class: "st-select" }, el("span", {}, "Name"), el("input", { id: "st-name", type: "text", maxlength: "40", value: name })),

@@ -41,6 +41,7 @@
     root.dataset.material = theme.material || "solid";
     themeNow = theme;
     backdrop(theme.backdrop);
+    if (window.MIASound && MIASound.useSet) MIASound.useSet(theme.sound || "classic");  // the theme's chimes (opt-in)
     if (previewOnly) return;  // the Theme Studio trying a look on: not kept for the next page
     try { localStorage.setItem(THEME_CACHE, JSON.stringify(theme)); } catch (e) { /* fine: it applies when the shell comes */ }
   }

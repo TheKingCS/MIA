@@ -62,6 +62,10 @@ TOKENS = frozenset({
 })
 # What panels are made of (web/themes.css draws each): solid graphite, glass, chrome, wire.
 MATERIALS = ("solid", "glass", "chrome", "wire")
+# A theme's chimes for wins (web/sound.js, Theme Studio step 5): "classic" is MIA's own; the others are opt-in, picked
+# in the Studio. Only these names are kept, so a theme file can't name anything else.
+SOUND_SETS = {"classic": "Classic chimes", "bubbly": "Bubbly (Y2K)", "synth": "Synth (Cyberpunk)",
+              "soft": "Soft glass", "quiet": "Quiet ticks"}
 # The room's light (web/nexus3d.js): colours, a palette for the vapor and mist, and effect strengths.
 ROOM_COLOURS = ("accent", "back_top", "back_bottom")
 ROOM_LEVELS = {"fire": (0.0, 2.0), "bloom": (0.0, 2.0), "mist": (0.0, 2.5), "scan": (0.0, 1.0), "grain": (0.0, 1.0)}
@@ -153,7 +157,8 @@ STARK_CHOICES = {"accent": "#35d4ff", "background": "#05070a", "panel": "#0c1016
                  "line": "#96b6d4", "radius": 6, "font": "system", "material": "solid",
                  "fire": 1.0, "bloom": 1.0, "mist": 1.0, "scan": 0.0, "grain": 0.0, "palette": [],
                  # DEC-0140: a picture MIA painted, behind every page and on the room's far wall, and how strongly
-                 "backdrop": "", "backdrop_strength": 0.6}
+                 "backdrop": "", "backdrop_strength": 0.6,
+                 "sound": "classic"}  # the theme's chimes (SOUND_SETS), opt-in by picking one
 _ART_ID = re.compile(r"^[a-f0-9]{12}$")
 # Hues that mean something (DEC-0014): an accent near them would read as a warning, an error or "done".
 MEANING_HUES = (("amber, which means something needs you", 39), ("red, which means an error", 2),
@@ -211,8 +216,8 @@ def accent_problem(hex_colour: str) -> Optional[str]:
 
 
 def choices_of(theme: dict) -> dict:
-    """Pure logic. A theme as the Studio's choices: its saved ones, else read back from its tokens, room and backdrop
-    picture over Stark's."""
+    """Pure logic. A theme as the Studio's choices: its saved ones, else read back from its tokens, room, backdrop
+    picture and sound set over Stark's."""
     if theme.get("choices"):
         return {**STARK_CHOICES, **theme["choices"]}
     tokens, room = theme.get("tokens") or {}, theme.get("room") or {}
@@ -237,7 +242,8 @@ def choices_of(theme: dict) -> dict:
             "font": font, "material": theme.get("material") or "solid",
             **{k: room[k] for k in ROOM_LEVELS if k in room}, "palette": list(room.get("palette") or []),
             "backdrop": (theme.get("backdrop") or {}).get("art", ""),
-            "backdrop_strength": (theme.get("backdrop") or {}).get("strength", 0.6)}
+            "backdrop_strength": (theme.get("backdrop") or {}).get("strength", 0.6),
+            "sound": theme.get("sound") if theme.get("sound") in SOUND_SETS else "classic"}
 
 
 def build_theme(choices: dict, base: Optional[dict] = None, theme_id: str = "", name: str = "") -> dict:
@@ -277,7 +283,8 @@ def build_theme(choices: dict, base: Optional[dict] = None, theme_id: str = "", 
     else:
         room.pop("palette", None)
     data = clean_theme({"id": theme_id or base.get("id") or "my_theme", "name": name or base.get("name") or "My theme",
-                        "line": base.get("line", ""), "tokens": tokens, "material": c["material"], "room": room})
+                        "line": base.get("line", ""), "tokens": tokens, "material": c["material"], "room": room,
+                        "sound": c.get("sound")})
     art = str(c.get("backdrop") or "")
     if _ART_ID.match(art):
         try:
@@ -289,6 +296,7 @@ def build_theme(choices: dict, base: Optional[dict] = None, theme_id: str = "", 
     data["choices"]["radius"] = radius
     data["choices"]["palette"] = palette
     data["choices"]["backdrop"] = art if _ART_ID.match(art) else ""
+    data["choices"]["sound"] = data["sound"]
     return data
 
 
@@ -296,8 +304,8 @@ def clean_theme(data: dict) -> dict:
     """Pure logic. A theme's data as the page may use it: {id, name, line, tokens, material, room}, keeping only the
     tokens and room settings a theme may change, dropping any value that could break out of CSS (url(), braces,
     semicolons, angle brackets, backslashes) or runs long, clamping the room's levels, and keeping only #rrggbb
-    colours in the room; a backdrop picture is kept only as a picture id with its strength (DEC-0140). Raises
-    ValueError without an id or name."""
+    colours in the room; a backdrop picture is kept only as a picture id with its strength (DEC-0140), and the sound
+    set only as one of SOUND_SETS (else classic). Raises ValueError without an id or name."""
     theme_id = str(data.get("id") or "").strip()
     name = str(data.get("name") or "").strip()
     if not re.fullmatch(r"[a-z0-9_]{1,32}", theme_id) or not name:
@@ -323,7 +331,8 @@ def clean_theme(data: dict) -> dict:
                 pass
     material = data.get("material") if data.get("material") in MATERIALS else "solid"
     out = {"id": theme_id, "name": name[:40], "line": str(data.get("line") or "")[:160], "tokens": tokens,
-           "material": material, "room": room}
+           "material": material, "room": room,
+           "sound": data.get("sound") if data.get("sound") in SOUND_SETS else "classic"}
     backdrop = data.get("backdrop") if isinstance(data.get("backdrop"), dict) else {}
     if _ART_ID.match(str(backdrop.get("art", ""))):  # one of the person's pictures, by id (core/art_studio.py)
         try:
@@ -337,7 +346,7 @@ def clean_theme(data: dict) -> dict:
 def as_data(theme: Theme) -> dict:
     """Pure logic. A built-in theme as plain data (what clean_theme takes)."""
     return {"id": theme.id, "name": theme.name, "line": theme.line, "tokens": dict(theme.tokens),
-            "material": theme.material, "room": dict(theme.room)}
+            "material": theme.material, "room": dict(theme.room), "sound": "classic"}
 
 
 def custom_themes(context) -> list[dict]:
@@ -384,8 +393,8 @@ def for_shell(context) -> dict:
 
 def studio(context) -> dict:
     """The Theme Studio's screen: every theme with its Studio choices and its export file (built-in first, then
-    theirs), the one in use, the fonts, materials, the room's level ranges, the file format, a few sample portals and
-    the checks' values."""
+    theirs), the one in use, the fonts, materials, the room's level ranges, the sound sets, the parts Mix Two can take,
+    the file format, a few sample portals and the checks' values."""
     themes = all_themes(context)
     from core.theme_actions import export
 
@@ -394,6 +403,8 @@ def studio(context) -> dict:
                        for theme_id, data in themes.items()],
             "fonts": [{"id": k, "label": label, "stack": stack} for k, (label, stack) in FONTS.items()],
             "materials": list(MATERIALS), "levels": {k: list(v) for k, v in ROOM_LEVELS.items()},
+            "sounds": [{"id": k, "label": label} for k, label in SOUND_SETS.items()],
+            "parts": [{"id": k, "label": label} for k, (label, _keys) in PARTS.items()],
             "max_own": MAX_CUSTOM, "sample": _sample_portals(), "file_format": "mia-theme/1",
             # the same checks build_theme makes, so the page can say so as you pick (core still decides on save)
             "meaning_hues": [{"meaning": m, "hue": h} for m, h in MEANING_HUES], "min_contrast": 4.5}
@@ -405,6 +416,64 @@ def _sample_portals() -> list[dict]:
 
     return [{"id": a.id, "name": a.name, "icon": a.icon, "hue": a.hue, "needs": 1 if i == 1 else 0}
             for i, a in enumerate(AREAS[:5])]
+
+
+# The parts of a theme that can come from another when mixing two (Theme Studio step 3): the Studio's choices in each.
+PARTS = {
+    "colours": ("Colours", ("accent", "background", "panel", "text", "line")),
+    "shape": ("Shape and type", ("radius", "font", "material")),
+    "room": ("The room's light", ("fire", "bloom", "mist", "scan", "grain", "palette")),
+    "sound": ("Sounds", ("sound",)),
+    "backdrop": ("Backdrop picture", ("backdrop", "backdrop_strength")),
+}
+
+
+def combine(context, first: str, second: str, parts) -> dict:
+    """Two of the person's themes mixed: the first theme with the named parts (PARTS) taken from the second. Returns
+    {name, base, choices, from_second, problem}: problem is the sentence build_theme would refuse it with ("" when it
+    can be kept), so the Studio and voice say why before anything is saved. ValueError for a theme that isn't theirs
+    or no parts."""
+    themes = all_themes(context)
+    if first not in themes or second not in themes:
+        raise ValueError("Pick two of your themes to mix.")
+    taking = [p for p in (parts or []) if p in PARTS]
+    if not taking:
+        raise ValueError("Pick which parts come from " + themes[second]["name"] + ".")
+    a, b = choices_of(themes[first]), choices_of(themes[second])
+    choices = dict(a)
+    for part in taking:
+        for key in PARTS[part][1]:
+            choices[key] = b.get(key, a.get(key))
+    problem = ""
+    try:
+        build_theme(choices, themes[first], "mix_check", "Mix")
+    except ValueError as why:
+        problem = str(why)
+    name = f"{themes[first]['name']} \u00d7 {themes[second]['name']}"[:40]
+    return {"name": name, "base": first, "choices": choices, "from_second": taking, "problem": problem}
+
+
+def parts_from(words: str) -> list[str]:
+    """Pure logic. The parts someone named ("its colours and the room", "the sounds"), in PARTS' order."""
+    said = (words or "").lower()
+    keys = {"colours": ("colour", "color", "palette of colours", "accent"), "shape": ("shape", "font", "corner", "type", "material", "panels"),
+            "room": ("room", "light", "glow", "mist", "fire"), "sound": ("sound", "chime"),
+            "backdrop": ("backdrop", "background picture", "painting", "wallpaper")}
+    return [p for p in PARTS if any(k in said for k in keys[p])]
+
+
+def glasses_accent(context) -> dict:
+    """The person's theme accent for the glasses (DEC-0136 devices): the display shows light and black is see-through,
+    so only the accent travels, lifted until it's bright enough to read on the lens. {accent, rgb, soft, deep}."""
+    accent = choices_of(for_shell(context)).get("accent") or STARK_CHOICES["accent"]
+    if not _HEX.match(str(accent)):
+        accent = STARK_CHOICES["accent"]
+    for _ in range(10):
+        if contrast(accent, "#000000") >= 9:
+            break
+        accent = mix(accent, "#ffffff", 0.15)
+    return {"accent": accent, "rgb": triplet(accent), "soft": mix(accent, "#ffffff", 0.6),
+            "deep": mix(accent, "#000000", 0.45)}
 
 
 def own_id(name: str, taken: set) -> str:

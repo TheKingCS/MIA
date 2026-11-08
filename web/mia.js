@@ -222,6 +222,7 @@
     nexus: () => read("/api/nexus", "nexus"),
     themes: () => read("/api/themes", "themes"),  // the Theme Studio (DEC-0136)
     designTheme: (description) => demo ? demoOnly() : call("POST", "/api/themes/design", { description }),
+    mixThemes: (first, second, parts) => demo ? demoOnly() : call("POST", "/api/themes/mix", { first, second, parts }),  // Mix Two
     art: () => read("/api/art", "art"),  // MIA's paintings (DEC-0140)
     directions: () => read("/api/directions", "directions"),  // My Directions (DEC-0141)
     answers: () => read("/api/answers", "answers"),  // How MIA Answers (DEC-0138)

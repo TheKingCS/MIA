@@ -58,3 +58,11 @@
 .st-art.on { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(var(--rgb-accent), 0.5); }
 .st-none { display: grid; place-items: center; height: 100%; font-size: var(--text-xs); color: var(--text-dim); }
 .st-jobs { display: grid; gap: 6px; }
+
+/* Mix Two and Sounds (Theme Studio steps 3 and 5) */
+.st-mix { display: grid; gap: 10px; padding: 14px 16px; margin-bottom: var(--gap); }
+.st-mix > .pw-label { margin: 0; }
+.st-mix-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 10px; }
+.st-mix .st-actions { margin: 0; }
+.st-sound { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
+.st-sound .st-select { flex: 1 1 200px; }

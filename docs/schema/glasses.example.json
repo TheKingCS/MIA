@@ -1,1325 +1,1331 @@
 {
-  "priority": "Change the oil on the truck",
-  "priority_tone": "",
-  "as_of": "2026-10-16",
-  "pinned": true,
-  "apps": [
+ "priority": "Change the oil on the truck",
+ "priority_tone": "",
+ "as_of": "2026-10-16",
+ "pinned": true,
+ "apps": [
+  {
+   "id": "missions",
+   "name": "Missions",
+   "full_name": "Missions",
+   "tagline": "Explore. Complete. Level up.",
+   "status": "15 active",
+   "tone": "calm",
+   "ask": "Add a mission to build a chicken coop.",
+   "pinned": true,
+   "menu": [
     {
-      "id": "missions",
-      "name": "Missions",
-      "full_name": "Missions",
-      "tagline": "Explore. Complete. Level up.",
-      "status": "15 active",
-      "tone": "calm",
-      "ask": "Add a mission to build a chicken coop.",
-      "pinned": true,
-      "menu": [
-        {
-          "id": "pick",
-          "label": "Select Mission",
-          "type": "panel"
-        },
-        {
-          "id": "progress",
-          "label": "Log Progress",
-          "type": "panel"
-        },
-        {
-          "id": "claim",
-          "label": "Ready To Claim",
-          "type": "panel"
-        }
-      ],
-      "mission": {
-        "id": "b79fca2284",
-        "name": "Organize the garage",
-        "icon": "🧰",
-        "ready": true,
-        "done": 2,
-        "total": 2,
-        "reward_xp": 60,
-        "objectives": [
-          {
-            "text": "Sort the tools",
-            "done": true,
-            "progress": 1.0,
-            "target": 1.0
-          },
-          {
-            "text": "Hang the bikes",
-            "done": true,
-            "progress": 1.0,
-            "target": 1.0
-          }
-        ]
-      },
-      "tiles": []
+     "id": "pick",
+     "label": "Select Mission",
+     "type": "panel"
     },
     {
-      "id": "kitchen",
-      "name": "Kitchen",
-      "full_name": "Kitchen",
-      "tagline": "Good food. Good mood.",
-      "status": "9 recipes · 4 on the grocery list · chicken expires in 0d",
-      "tone": "attention",
-      "ask": "What can I make with what's in the pantry?",
-      "pinned": true,
-      "menu": [
-        {
-          "id": "cooking",
-          "label": "Cooking Now",
-          "type": "panel"
-        },
-        {
-          "id": "recipes",
-          "label": "Recipes",
-          "type": "panel"
-        },
-        {
-          "id": "meals",
-          "label": "Today's Meal Plan",
-          "type": "panel"
-        },
-        {
-          "id": "pantry",
-          "label": "My Pantry",
-          "type": "panel"
-        },
-        {
-          "id": "grocery",
-          "label": "Grocery List",
-          "type": "panel"
-        },
-        {
-          "id": "pin",
-          "label": "Unpin From Glasses",
-          "type": "action",
-          "action": {
-            "kind": "app.favorite",
-            "label": "Unpin",
-            "params": {
-              "module_id": "kitchen",
-              "favorite": false
-            }
-          }
-        }
-      ],
-      "tiles": [
-        {
-          "label": "Meals",
-          "value": "1/3",
-          "tone": ""
-        },
-        {
-          "label": "Grocery",
-          "value": "6",
-          "tone": ""
-        },
-        {
-          "label": "Expiring",
-          "value": "1",
-          "tone": "attention"
-        },
-        {
-          "label": "Recipes",
-          "value": "24",
-          "tone": ""
-        }
-      ]
+     "id": "progress",
+     "label": "Log Progress",
+     "type": "panel"
     },
     {
-      "id": "workout",
-      "name": "Workout",
-      "full_name": "Workout",
-      "tagline": "Stronger body. Clearer mind.",
-      "status": "4 sessions this week · last: Beginner full body (2026-10-15)",
-      "tone": "calm",
-      "ask": "Log a 30 minute workout.",
-      "pinned": true,
-      "menu": [
-        {
-          "id": "live",
-          "label": "Active Training",
-          "type": "panel"
-        },
-        {
-          "id": "training",
-          "label": "Today's Training",
-          "type": "panel"
-        },
-        {
-          "id": "practice",
-          "label": "Skill Practice",
-          "type": "panel"
-        },
-        {
-          "id": "weight",
-          "label": "Weight",
-          "type": "panel"
-        },
-        {
-          "id": "milestones",
-          "label": "Milestones",
-          "type": "panel"
-        },
-        {
-          "id": "pin",
-          "label": "Unpin From Glasses",
-          "type": "action",
-          "action": {
-            "kind": "app.favorite",
-            "label": "Unpin",
-            "params": {
-              "module_id": "workout",
-              "favorite": false
-            }
-          }
-        }
-      ],
-      "tiles": [
-        {
-          "label": "Today",
-          "value": "Push",
-          "tone": ""
-        },
-        {
-          "label": "Steps",
-          "value": "2/5",
-          "tone": ""
-        },
-        {
-          "label": "Protein",
-          "value": "96/170 g",
-          "tone": ""
-        }
-      ]
-    },
-    {
-      "id": "garage",
-      "name": "Garage",
-      "full_name": "Garage",
-      "tagline": "Keep it running. Keep it ready.",
-      "status": "4 tracked · 3 need attention · next: Test run (Generator)",
-      "tone": "attention",
-      "ask": "What's overdue on my vehicles?",
-      "pinned": true,
-      "menu": [
-        {
-          "id": "assets",
-          "label": "Assets",
-          "type": "panel"
-        },
-        {
-          "id": "past_due",
-          "label": "Past Due",
-          "type": "panel"
-        },
-        {
-          "id": "due_today",
-          "label": "Due Today",
-          "type": "panel"
-        },
-        {
-          "id": "due_soon",
-          "label": "Due Soon",
-          "type": "panel"
-        },
-        {
-          "id": "pin",
-          "label": "Unpin From Glasses",
-          "type": "action",
-          "action": {
-            "kind": "app.favorite",
-            "label": "Unpin",
-            "params": {
-              "module_id": "garage",
-              "favorite": false
-            }
-          }
-        }
-      ],
-      "tiles": [
-        {
-          "label": "Tracked",
-          "value": "3",
-          "tone": ""
-        },
-        {
-          "label": "Past Due",
-          "value": "1",
-          "tone": "attention"
-        },
-        {
-          "label": "Today",
-          "value": "0",
-          "tone": ""
-        },
-        {
-          "label": "Soon",
-          "value": "2",
-          "tone": ""
-        }
-      ]
+     "id": "claim",
+     "label": "Ready To Claim",
+     "type": "panel"
     }
-  ],
-  "others": [
+   ],
+   "mission": {
+    "id": "b79fca2284",
+    "name": "Organize the garage",
+    "icon": "🧰",
+    "ready": true,
+    "done": 2,
+    "total": 2,
+    "reward_xp": 60,
+    "objectives": [
+     {
+      "text": "Sort the tools",
+      "done": true,
+      "progress": 1.0,
+      "target": 1.0
+     },
+     {
+      "text": "Hang the bikes",
+      "done": true,
+      "progress": 1.0,
+      "target": 1.0
+     }
+    ]
+   },
+   "tiles": []
+  },
+  {
+   "id": "kitchen",
+   "name": "Kitchen",
+   "full_name": "Kitchen",
+   "tagline": "Good food. Good mood.",
+   "status": "9 recipes · 4 on the grocery list · chicken expires in 0d",
+   "tone": "attention",
+   "ask": "What can I make with what's in the pantry?",
+   "pinned": true,
+   "menu": [
     {
-      "id": "calendar",
-      "name": "Calendar",
-      "full_name": "Calendar",
-      "tagline": "Everything with a date.",
-      "status": "5 today · 6 past due",
-      "tone": "attention",
-      "ask": "What's on my calendar this week?",
-      "pinned": false,
-      "menu": [
-        {
-          "id": "past_due",
-          "label": "Past Due",
-          "type": "panel"
-        },
-        {
-          "id": "today",
-          "label": "Due Today",
-          "type": "panel"
-        },
-        {
-          "id": "soon",
-          "label": "Due Soon",
-          "type": "panel"
-        },
-        {
-          "id": "pin",
-          "label": "Pin To Glasses",
-          "type": "action",
-          "action": {
-            "kind": "app.favorite",
-            "label": "Pin",
-            "params": {
-              "module_id": "calendar",
-              "favorite": true
-            }
-          }
-        }
-      ],
-      "tiles": [
-        {
-          "label": "Past Due",
-          "value": "0",
-          "tone": ""
-        },
-        {
-          "label": "Today",
-          "value": "2",
-          "tone": ""
-        },
-        {
-          "label": "Soon",
-          "value": "4",
-          "tone": ""
-        }
-      ]
+     "id": "cooking",
+     "label": "Cooking Now",
+     "type": "panel"
     },
     {
-      "id": "budget",
-      "name": "Money",
-      "full_name": "Money",
-      "tagline": "Know where it goes.",
-      "status": "Insurance $340.00 in 4d · $2,290.00 left each month after bills",
-      "tone": "calm",
-      "ask": "Which debt should I pay first?",
-      "pinned": false,
-      "menu": [
-        {
-          "id": "month",
-          "label": "This Month",
-          "type": "panel"
-        },
-        {
-          "id": "due",
-          "label": "What's Due",
-          "type": "panel"
-        },
-        {
-          "id": "debts",
-          "label": "Debts",
-          "type": "panel"
-        },
-        {
-          "id": "pin",
-          "label": "Pin To Glasses",
-          "type": "action",
-          "action": {
-            "kind": "app.favorite",
-            "label": "Pin",
-            "params": {
-              "module_id": "budget",
-              "favorite": true
-            }
-          }
-        }
-      ],
-      "tiles": []
+     "id": "recipes",
+     "label": "Recipes",
+     "type": "panel"
     },
     {
-      "id": "real_estate",
-      "name": "Rentals",
-      "full_name": "Real Estate",
-      "tagline": "Cash flow. Equity. Freedom.",
-      "status": "3 properties · $232,000.00 equity",
-      "tone": "calm",
-      "ask": "How are my rentals doing this month?",
-      "pinned": false,
-      "menu": [
-        {
-          "id": "properties",
-          "label": "Properties",
-          "type": "panel"
-        },
-        {
-          "id": "assets",
-          "label": "Home & Appliances",
-          "type": "panel"
-        },
-        {
-          "id": "past_due",
-          "label": "Past Due",
-          "type": "panel"
-        },
-        {
-          "id": "due_today",
-          "label": "Due Today",
-          "type": "panel"
-        },
-        {
-          "id": "due_soon",
-          "label": "Due Soon",
-          "type": "panel"
-        },
-        {
-          "id": "pin",
-          "label": "Pin To Glasses",
-          "type": "action",
-          "action": {
-            "kind": "app.favorite",
-            "label": "Pin",
-            "params": {
-              "module_id": "real_estate",
-              "favorite": true
-            }
-          }
-        }
-      ],
-      "tiles": []
+     "id": "meals",
+     "label": "Today's Meal Plan",
+     "type": "panel"
     },
     {
-      "id": "greenhouse",
-      "name": "Greenhouse",
-      "full_name": "Greenhouse",
-      "tagline": "Grow food. Grow freedom.",
-      "status": "1 tracked · 1 needs attention",
-      "tone": "attention",
-      "ask": "What needs doing in the greenhouse?",
-      "pinned": false,
-      "menu": [
-        {
-          "id": "assets",
-          "label": "Assets",
-          "type": "panel"
-        },
-        {
-          "id": "past_due",
-          "label": "Past Due",
-          "type": "panel"
-        },
-        {
-          "id": "due_today",
-          "label": "Due Today",
-          "type": "panel"
-        },
-        {
-          "id": "due_soon",
-          "label": "Due Soon",
-          "type": "panel"
-        },
-        {
-          "id": "pin",
-          "label": "Pin To Glasses",
-          "type": "action",
-          "action": {
-            "kind": "app.favorite",
-            "label": "Pin",
-            "params": {
-              "module_id": "greenhouse",
-              "favorite": true
-            }
-          }
-        }
-      ],
-      "tiles": [
-        {
-          "label": "Tracked",
-          "value": "2",
-          "tone": ""
-        },
-        {
-          "label": "Past Due",
-          "value": "0",
-          "tone": ""
-        },
-        {
-          "label": "Today",
-          "value": "1",
-          "tone": ""
-        },
-        {
-          "label": "Soon",
-          "value": "1",
-          "tone": ""
-        }
-      ]
+     "id": "pantry",
+     "label": "My Pantry",
+     "type": "panel"
     },
     {
-      "id": "skills",
-      "name": "Skills",
-      "full_name": "Skills",
-      "tagline": "Do the thing. Earn the level. Unlock the next thing.",
-      "status": "",
-      "tone": "calm",
-      "ask": "Which skills am I growing?",
-      "pinned": false,
-      "menu": [
-        {
-          "id": "focus",
-          "label": "Focus",
-          "type": "panel"
-        },
-        {
-          "id": "week",
-          "label": "This Week",
-          "type": "panel"
-        },
-        {
-          "id": "pin",
-          "label": "Pin To Glasses",
-          "type": "action",
-          "action": {
-            "kind": "app.favorite",
-            "label": "Pin",
-            "params": {
-              "module_id": "skills",
-              "favorite": true
-            }
-          }
-        }
-      ],
-      "tiles": []
+     "id": "grocery",
+     "label": "Grocery List",
+     "type": "panel"
     },
     {
-      "id": "character",
-      "name": "Character",
-      "full_name": "Character",
-      "tagline": "Your story so far.",
-      "status": "",
-      "tone": "calm",
-      "ask": "What have I done this week?",
-      "pinned": false,
-      "menu": [
-        {
-          "id": "story",
-          "label": "Your Story",
-          "type": "panel"
-        },
-        {
-          "id": "buffs",
-          "label": "Buffs",
-          "type": "panel"
-        },
-        {
-          "id": "chronicle",
-          "label": "This Week's Story",
-          "type": "panel"
-        },
-        {
-          "id": "top",
-          "label": "Top Skills",
-          "type": "panel"
-        },
-        {
-          "id": "pin",
-          "label": "Pin To Glasses",
-          "type": "action",
-          "action": {
-            "kind": "app.favorite",
-            "label": "Pin",
-            "params": {
-              "module_id": "character",
-              "favorite": true
-            }
-          }
-        }
-      ],
-      "tiles": []
-    },
-    {
-      "id": "household",
-      "name": "Household",
-      "full_name": "Household",
-      "tagline": "A home that runs itself.",
-      "status": "",
-      "tone": "calm",
-      "ask": "I did the dishes.",
-      "pinned": false,
-      "menu": [
-        {
-          "id": "chores",
-          "label": "Chores Due",
-          "type": "panel"
-        },
-        {
-          "id": "ask0",
-          "label": "What did I get done this week",
-          "type": "ask",
-          "say": "What did I get done this week?"
-        },
-        {
-          "id": "pin",
-          "label": "Pin To Glasses",
-          "type": "action",
-          "action": {
-            "kind": "app.favorite",
-            "label": "Pin",
-            "params": {
-              "module_id": "household",
-              "favorite": true
-            }
-          }
-        }
-      ],
-      "tiles": []
-    },
-    {
-      "id": "workshop",
-      "name": "Workshop",
-      "full_name": "Workshop",
-      "tagline": "Parts, jobs and products.",
-      "status": "",
-      "tone": "calm",
-      "ask": "How much plywood do I have?",
-      "pinned": false,
-      "menu": [
-        {
-          "id": "ask0",
-          "label": "What jobs are open",
-          "type": "ask",
-          "say": "What jobs are open?"
-        },
-        {
-          "id": "ask1",
-          "label": "Which parts are running low",
-          "type": "ask",
-          "say": "Which parts are running low?"
-        },
-        {
-          "id": "pin",
-          "label": "Pin To Glasses",
-          "type": "action",
-          "action": {
-            "kind": "app.favorite",
-            "label": "Pin",
-            "params": {
-              "module_id": "workshop",
-              "favorite": true
-            }
-          }
-        }
-      ],
-      "tiles": []
-    },
-    {
-      "id": "power",
-      "name": "Power",
-      "full_name": "Power",
-      "tagline": "Energy, tracked.",
-      "status": "",
-      "tone": "calm",
-      "ask": "How's the battery?",
-      "pinned": false,
-      "menu": [
-        {
-          "id": "ask0",
-          "label": "How's the battery",
-          "type": "ask",
-          "say": "How's the battery?"
-        },
-        {
-          "id": "ask1",
-          "label": "How much power did I use today",
-          "type": "ask",
-          "say": "How much power did I use today?"
-        },
-        {
-          "id": "pin",
-          "label": "Pin To Glasses",
-          "type": "action",
-          "action": {
-            "kind": "app.favorite",
-            "label": "Pin",
-            "params": {
-              "module_id": "power",
-              "favorite": true
-            }
-          }
-        }
-      ],
-      "tiles": []
-    },
-    {
-      "id": "observations",
-      "name": "Observations",
-      "full_name": "Observations",
-      "tagline": "What MIA noticed.",
-      "status": "",
-      "tone": "calm",
-      "ask": "What have you noticed lately?",
-      "pinned": false,
-      "menu": [
-        {
-          "id": "ask0",
-          "label": "What have you noticed lately",
-          "type": "ask",
-          "say": "What have you noticed lately?"
-        },
-        {
-          "id": "pin",
-          "label": "Pin To Glasses",
-          "type": "action",
-          "action": {
-            "kind": "app.favorite",
-            "label": "Pin",
-            "params": {
-              "module_id": "observations",
-              "favorite": true
-            }
-          }
-        }
-      ],
-      "tiles": []
-    },
-    {
-      "id": "relationships",
-      "name": "People",
-      "full_name": "People & Pets",
-      "tagline": "The ones who matter.",
-      "status": "",
-      "tone": "calm",
-      "ask": "When is the next birthday?",
-      "pinned": false,
-      "menu": [
-        {
-          "id": "birthdays",
-          "label": "Next Birthdays",
-          "type": "panel"
-        },
-        {
-          "id": "pin",
-          "label": "Pin To Glasses",
-          "type": "action",
-          "action": {
-            "kind": "app.favorite",
-            "label": "Pin",
-            "params": {
-              "module_id": "relationships",
-              "favorite": true
-            }
-          }
-        }
-      ],
-      "tiles": []
-    },
-    {
-      "id": "notes",
-      "name": "Notes",
-      "full_name": "Notes",
-      "tagline": "Write it down.",
-      "status": "",
-      "tone": "calm",
-      "ask": "Make a note: call the plumber Friday.",
-      "pinned": false,
-      "menu": [
-        {
-          "id": "ask0",
-          "label": "What were my last notes",
-          "type": "ask",
-          "say": "What were my last notes?"
-        },
-        {
-          "id": "pin",
-          "label": "Pin To Glasses",
-          "type": "action",
-          "action": {
-            "kind": "app.favorite",
-            "label": "Pin",
-            "params": {
-              "module_id": "notes",
-              "favorite": true
-            }
-          }
-        }
-      ],
-      "tiles": []
-    },
-    {
-      "id": "classroom",
-      "name": "Classroom",
-      "full_name": "Classroom",
-      "tagline": "Keep learning.",
-      "status": "",
-      "tone": "calm",
-      "ask": "Quiz me on chapter 2.",
-      "pinned": false,
-      "menu": [
-        {
-          "id": "ask0",
-          "label": "What should I study next",
-          "type": "ask",
-          "say": "What should I study next?"
-        },
-        {
-          "id": "pin",
-          "label": "Pin To Glasses",
-          "type": "action",
-          "action": {
-            "kind": "app.favorite",
-            "label": "Pin",
-            "params": {
-              "module_id": "classroom",
-              "favorite": true
-            }
-          }
-        }
-      ],
-      "tiles": []
-    },
-    {
-      "id": "inbox",
-      "name": "Inbox",
-      "full_name": "Inbox",
-      "tagline": "Paperwork, handled.",
-      "status": "",
-      "tone": "calm",
-      "ask": "What's waiting in my inbox?",
-      "pinned": false,
-      "menu": [
-        {
-          "id": "waiting",
-          "label": "Waiting To File",
-          "type": "panel"
-        },
-        {
-          "id": "ask0",
-          "label": "Any emails I should answer",
-          "type": "ask",
-          "say": "Any emails I should answer?"
-        },
-        {
-          "id": "pin",
-          "label": "Pin To Glasses",
-          "type": "action",
-          "action": {
-            "kind": "app.favorite",
-            "label": "Pin",
-            "params": {
-              "module_id": "inbox",
-              "favorite": true
-            }
-          }
-        }
-      ],
-      "tiles": []
-    },
-    {
-      "id": "expeditions",
-      "name": "Expeditions",
-      "full_name": "Expeditions",
-      "tagline": "Plan the trip.",
-      "status": "",
-      "tone": "calm",
-      "ask": "Plan a weekend camping trip.",
-      "pinned": false,
-      "menu": [
-        {
-          "id": "ask0",
-          "label": "What's my next trip",
-          "type": "ask",
-          "say": "What's my next trip?"
-        },
-        {
-          "id": "ask1",
-          "label": "What gear am I missing for it",
-          "type": "ask",
-          "say": "What gear am I missing for it?"
-        },
-        {
-          "id": "pin",
-          "label": "Pin To Glasses",
-          "type": "action",
-          "action": {
-            "kind": "app.favorite",
-            "label": "Pin",
-            "params": {
-              "module_id": "expeditions",
-              "favorite": true
-            }
-          }
-        }
-      ],
-      "tiles": []
-    },
-    {
-      "id": "memories",
-      "name": "Memories",
-      "full_name": "Memories",
-      "tagline": "Remember the trip.",
-      "status": "",
-      "tone": "calm",
-      "ask": "Show me my last trip.",
-      "pinned": false,
-      "menu": [
-        {
-          "id": "ask0",
-          "label": "What was my last trip like",
-          "type": "ask",
-          "say": "What was my last trip like?"
-        },
-        {
-          "id": "pin",
-          "label": "Pin To Glasses",
-          "type": "action",
-          "action": {
-            "kind": "app.favorite",
-            "label": "Pin",
-            "params": {
-              "module_id": "memories",
-              "favorite": true
-            }
-          }
-        }
-      ],
-      "tiles": []
-    },
-    {
-      "id": "maps",
-      "name": "Maps",
-      "full_name": "Maps",
-      "tagline": "Know the ground.",
-      "status": "",
-      "tone": "calm",
-      "ask": "Which trail maps do I have?",
-      "pinned": false,
-      "menu": [
-        {
-          "id": "ask0",
-          "label": "Which trail maps do I have",
-          "type": "ask",
-          "say": "Which trail maps do I have?"
-        },
-        {
-          "id": "pin",
-          "label": "Pin To Glasses",
-          "type": "action",
-          "action": {
-            "kind": "app.favorite",
-            "label": "Pin",
-            "params": {
-              "module_id": "maps",
-              "favorite": true
-            }
-          }
-        }
-      ],
-      "tiles": []
-    },
-    {
-      "id": "navigation",
-      "name": "Navigation",
-      "full_name": "Navigation",
-      "tagline": "Find the way.",
-      "status": "",
-      "tone": "calm",
-      "ask": "How far is camp from the trailhead?",
-      "pinned": false,
-      "menu": [
-        {
-          "id": "ask0",
-          "label": "How far is my nearest waypoint",
-          "type": "ask",
-          "say": "How far is my nearest waypoint?"
-        },
-        {
-          "id": "ask1",
-          "label": "When is sunset today",
-          "type": "ask",
-          "say": "When is sunset today?"
-        },
-        {
-          "id": "pin",
-          "label": "Pin To Glasses",
-          "type": "action",
-          "action": {
-            "kind": "app.favorite",
-            "label": "Pin",
-            "params": {
-              "module_id": "navigation",
-              "favorite": true
-            }
-          }
-        }
-      ],
-      "tiles": []
-    },
-    {
-      "id": "lab",
-      "name": "The Lab",
-      "full_name": "The Lab",
-      "tagline": "Experiments and sensors.",
-      "status": "",
-      "tone": "calm",
-      "ask": "Start a temperature experiment.",
-      "pinned": false,
-      "menu": [
-        {
-          "id": "ask0",
-          "label": "What's my latest experiment reading",
-          "type": "ask",
-          "say": "What's my latest experiment reading?"
-        },
-        {
-          "id": "pin",
-          "label": "Pin To Glasses",
-          "type": "action",
-          "action": {
-            "kind": "app.favorite",
-            "label": "Pin",
-            "params": {
-              "module_id": "lab",
-              "favorite": true
-            }
-          }
-        }
-      ],
-      "tiles": []
-    },
-    {
-      "id": "field_kit",
-      "name": "Field Kit",
-      "full_name": "Field Kit",
-      "tagline": "Devices and scripts.",
-      "status": "",
-      "tone": "calm",
-      "ask": "What devices are connected?",
-      "pinned": false,
-      "menu": [
-        {
-          "id": "ask0",
-          "label": "What devices are connected",
-          "type": "ask",
-          "say": "What devices are connected?"
-        },
-        {
-          "id": "pin",
-          "label": "Pin To Glasses",
-          "type": "action",
-          "action": {
-            "kind": "app.favorite",
-            "label": "Pin",
-            "params": {
-              "module_id": "field_kit",
-              "favorite": true
-            }
-          }
-        }
-      ],
-      "tiles": []
-    },
-    {
-      "id": "music",
-      "name": "Music",
-      "full_name": "Music",
-      "tagline": "Your music.",
-      "status": "",
-      "tone": "calm",
-      "ask": "Play something relaxing.",
-      "pinned": false,
-      "menu": [
-        {
-          "id": "now",
-          "label": "Now Playing",
-          "type": "player"
-        },
-        {
-          "id": "songs",
-          "label": "Songs",
-          "type": "panel"
-        },
-        {
-          "id": "playlists",
-          "label": "Playlists",
-          "type": "panel"
-        },
-        {
-          "id": "artists",
-          "label": "Artists",
-          "type": "panel"
-        },
-        {
-          "id": "pin",
-          "label": "Pin To Glasses",
-          "type": "action",
-          "action": {
-            "kind": "app.favorite",
-            "label": "Pin",
-            "params": {
-              "module_id": "music",
-              "favorite": true
-            }
-          }
-        }
-      ],
-      "tiles": [
-        {
-          "label": "Songs",
-          "value": "212",
-          "tone": ""
-        },
-        {
-          "label": "Playlists",
-          "value": "6",
-          "tone": ""
-        },
-        {
-          "label": "Artists",
-          "value": "41",
-          "tone": ""
-        }
-      ]
-    },
-    {
-      "id": "diagnostics",
-      "name": "Diagnostics",
-      "full_name": "Diagnostics",
-      "tagline": "How MIA is doing.",
-      "status": "",
-      "tone": "calm",
-      "ask": "How is the computer doing?",
-      "pinned": false,
-      "menu": [
-        {
-          "id": "ask0",
-          "label": "How is the computer doing",
-          "type": "ask",
-          "say": "How is the computer doing?"
-        },
-        {
-          "id": "pin",
-          "label": "Pin To Glasses",
-          "type": "action",
-          "action": {
-            "kind": "app.favorite",
-            "label": "Pin",
-            "params": {
-              "module_id": "diagnostics",
-              "favorite": true
-            }
-          }
-        }
-      ],
-      "tiles": []
+     "id": "pin",
+     "label": "Unpin From Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Unpin",
+      "params": {
+       "module_id": "kitchen",
+       "favorite": false
+      }
+     }
     }
-  ],
-  "hint": "",
-  "kinds": [
-    "app.favorite",
-    "fitness.food",
-    "fitness.milestone",
-    "fitness.skill",
-    "fitness.step",
-    "fitness.training_done",
-    "grocery.check",
-    "maintenance.done",
-    "meal.prep_done",
-    "mission.complete",
-    "objective.tick",
-    "routine.log",
-    "task.done"
-  ],
-  "areas": [
+   ],
+   "tiles": [
     {
-      "id": "home",
-      "name": "Home",
-      "short": "Home",
-      "hue": "#35d4ff",
-      "apps": [
-        "household",
-        "kitchen",
-        "power"
-      ],
-      "needs": 0
+     "label": "Meals",
+     "value": "1/3",
+     "tone": ""
     },
     {
-      "id": "garage",
-      "name": "Garage",
-      "short": "Garage",
-      "hue": "#8fa7bf",
-      "apps": [
-        "garage"
-      ],
-      "needs": 1
+     "label": "Grocery",
+     "value": "6",
+     "tone": ""
     },
     {
-      "id": "plants_animals",
-      "name": "Plants and Animals",
-      "short": "Plants & Animals",
-      "hue": "#35d4ff",
-      "apps": [
-        "greenhouse"
-      ],
-      "needs": 0
+     "label": "Expiring",
+     "value": "1",
+     "tone": "attention"
     },
     {
-      "id": "kitchen",
-      "name": "Kitchen",
-      "short": "Kitchen",
-      "hue": "#e9d4a8",
-      "apps": [
-        "kitchen"
-      ],
-      "needs": 1
-    },
-    {
-      "id": "health",
-      "name": "Health and Fitness",
-      "short": "Health & Fitness",
-      "hue": "#ff8a3d",
-      "apps": [
-        "workout",
-        "kitchen"
-      ],
-      "needs": 0
-    },
-    {
-      "id": "recreation",
-      "name": "Recreation",
-      "short": "Recreation",
-      "hue": "#9b6bff",
-      "apps": [
-        "expeditions",
-        "maps",
-        "navigation",
-        "memories",
-        "music"
-      ],
-      "needs": 0
-    },
-    {
-      "id": "security",
-      "name": "Security",
-      "short": "Security",
-      "hue": "#c0c8d4",
-      "apps": [
-        "field_kit"
-      ],
-      "needs": 0
-    },
-    {
-      "id": "system",
-      "name": "Settings and Diagnostics",
-      "short": "Settings",
-      "hue": "#dfe9f2",
-      "apps": [
-        "diagnostics"
-      ],
-      "needs": 0
-    },
-    {
-      "id": "finances",
-      "name": "Finances",
-      "short": "Finances",
-      "hue": "#3f7bff",
-      "apps": [
-        "budget",
-        "real_estate",
-        "inbox"
-      ],
-      "needs": 0
-    },
-    {
-      "id": "business",
-      "name": "Business",
-      "short": "Business",
-      "hue": "#7f95ff",
-      "apps": [
-        "workshop",
-        "real_estate"
-      ],
-      "needs": 0
-    },
-    {
-      "id": "personal",
-      "name": "Personal",
-      "short": "Personal",
-      "hue": "#ff8ad8",
-      "apps": [
-        "calendar",
-        "notes",
-        "relationships",
-        "observations"
-      ],
-      "needs": 0
-    },
-    {
-      "id": "learning",
-      "name": "Learning",
-      "short": "Learning",
-      "hue": "#6a5cff",
-      "apps": [
-        "classroom",
-        "skills"
-      ],
-      "needs": 0
-    },
-    {
-      "id": "missions",
-      "name": "Missions",
-      "short": "Missions",
-      "hue": "#c86bff",
-      "apps": [
-        "missions",
-        "skills",
-        "character"
-      ],
-      "needs": 0
-    },
-    {
-      "id": "projects",
-      "name": "Projects",
-      "short": "Projects",
-      "hue": "#b9a8ff",
-      "apps": [
-        "workshop",
-        "lab"
-      ],
-      "needs": 0
-    },
-    {
-      "id": "communications",
-      "name": "Communications",
-      "short": "Communications",
-      "hue": "#6fc6ff",
-      "apps": [
-        "inbox"
-      ],
-      "needs": 0
+     "label": "Recipes",
+     "value": "24",
+     "tone": ""
     }
-  ]
+   ]
+  },
+  {
+   "id": "workout",
+   "name": "Workout",
+   "full_name": "Workout",
+   "tagline": "Stronger body. Clearer mind.",
+   "status": "4 sessions this week · last: Beginner full body (2026-10-15)",
+   "tone": "calm",
+   "ask": "Log a 30 minute workout.",
+   "pinned": true,
+   "menu": [
+    {
+     "id": "live",
+     "label": "Active Training",
+     "type": "panel"
+    },
+    {
+     "id": "training",
+     "label": "Today's Training",
+     "type": "panel"
+    },
+    {
+     "id": "practice",
+     "label": "Skill Practice",
+     "type": "panel"
+    },
+    {
+     "id": "weight",
+     "label": "Weight",
+     "type": "panel"
+    },
+    {
+     "id": "milestones",
+     "label": "Milestones",
+     "type": "panel"
+    },
+    {
+     "id": "pin",
+     "label": "Unpin From Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Unpin",
+      "params": {
+       "module_id": "workout",
+       "favorite": false
+      }
+     }
+    }
+   ],
+   "tiles": [
+    {
+     "label": "Today",
+     "value": "Push",
+     "tone": ""
+    },
+    {
+     "label": "Steps",
+     "value": "2/5",
+     "tone": ""
+    },
+    {
+     "label": "Protein",
+     "value": "96/170 g",
+     "tone": ""
+    }
+   ]
+  },
+  {
+   "id": "garage",
+   "name": "Garage",
+   "full_name": "Garage",
+   "tagline": "Keep it running. Keep it ready.",
+   "status": "4 tracked · 3 need attention · next: Test run (Generator)",
+   "tone": "attention",
+   "ask": "What's overdue on my vehicles?",
+   "pinned": true,
+   "menu": [
+    {
+     "id": "assets",
+     "label": "Assets",
+     "type": "panel"
+    },
+    {
+     "id": "past_due",
+     "label": "Past Due",
+     "type": "panel"
+    },
+    {
+     "id": "due_today",
+     "label": "Due Today",
+     "type": "panel"
+    },
+    {
+     "id": "due_soon",
+     "label": "Due Soon",
+     "type": "panel"
+    },
+    {
+     "id": "pin",
+     "label": "Unpin From Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Unpin",
+      "params": {
+       "module_id": "garage",
+       "favorite": false
+      }
+     }
+    }
+   ],
+   "tiles": [
+    {
+     "label": "Tracked",
+     "value": "3",
+     "tone": ""
+    },
+    {
+     "label": "Past Due",
+     "value": "1",
+     "tone": "attention"
+    },
+    {
+     "label": "Today",
+     "value": "0",
+     "tone": ""
+    },
+    {
+     "label": "Soon",
+     "value": "2",
+     "tone": ""
+    }
+   ]
+  }
+ ],
+ "others": [
+  {
+   "id": "calendar",
+   "name": "Calendar",
+   "full_name": "Calendar",
+   "tagline": "Everything with a date.",
+   "status": "5 today · 6 past due",
+   "tone": "attention",
+   "ask": "What's on my calendar this week?",
+   "pinned": false,
+   "menu": [
+    {
+     "id": "past_due",
+     "label": "Past Due",
+     "type": "panel"
+    },
+    {
+     "id": "today",
+     "label": "Due Today",
+     "type": "panel"
+    },
+    {
+     "id": "soon",
+     "label": "Due Soon",
+     "type": "panel"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "calendar",
+       "favorite": true
+      }
+     }
+    }
+   ],
+   "tiles": [
+    {
+     "label": "Past Due",
+     "value": "0",
+     "tone": ""
+    },
+    {
+     "label": "Today",
+     "value": "2",
+     "tone": ""
+    },
+    {
+     "label": "Soon",
+     "value": "4",
+     "tone": ""
+    }
+   ]
+  },
+  {
+   "id": "budget",
+   "name": "Money",
+   "full_name": "Money",
+   "tagline": "Know where it goes.",
+   "status": "Insurance $340.00 in 4d · $2,290.00 left each month after bills",
+   "tone": "calm",
+   "ask": "Which debt should I pay first?",
+   "pinned": false,
+   "menu": [
+    {
+     "id": "month",
+     "label": "This Month",
+     "type": "panel"
+    },
+    {
+     "id": "due",
+     "label": "What's Due",
+     "type": "panel"
+    },
+    {
+     "id": "debts",
+     "label": "Debts",
+     "type": "panel"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "budget",
+       "favorite": true
+      }
+     }
+    }
+   ],
+   "tiles": []
+  },
+  {
+   "id": "real_estate",
+   "name": "Rentals",
+   "full_name": "Real Estate",
+   "tagline": "Cash flow. Equity. Freedom.",
+   "status": "3 properties · $232,000.00 equity",
+   "tone": "calm",
+   "ask": "How are my rentals doing this month?",
+   "pinned": false,
+   "menu": [
+    {
+     "id": "properties",
+     "label": "Properties",
+     "type": "panel"
+    },
+    {
+     "id": "assets",
+     "label": "Home & Appliances",
+     "type": "panel"
+    },
+    {
+     "id": "past_due",
+     "label": "Past Due",
+     "type": "panel"
+    },
+    {
+     "id": "due_today",
+     "label": "Due Today",
+     "type": "panel"
+    },
+    {
+     "id": "due_soon",
+     "label": "Due Soon",
+     "type": "panel"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "real_estate",
+       "favorite": true
+      }
+     }
+    }
+   ],
+   "tiles": []
+  },
+  {
+   "id": "greenhouse",
+   "name": "Greenhouse",
+   "full_name": "Greenhouse",
+   "tagline": "Grow food. Grow freedom.",
+   "status": "1 tracked · 1 needs attention",
+   "tone": "attention",
+   "ask": "What needs doing in the greenhouse?",
+   "pinned": false,
+   "menu": [
+    {
+     "id": "assets",
+     "label": "Assets",
+     "type": "panel"
+    },
+    {
+     "id": "past_due",
+     "label": "Past Due",
+     "type": "panel"
+    },
+    {
+     "id": "due_today",
+     "label": "Due Today",
+     "type": "panel"
+    },
+    {
+     "id": "due_soon",
+     "label": "Due Soon",
+     "type": "panel"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "greenhouse",
+       "favorite": true
+      }
+     }
+    }
+   ],
+   "tiles": [
+    {
+     "label": "Tracked",
+     "value": "2",
+     "tone": ""
+    },
+    {
+     "label": "Past Due",
+     "value": "0",
+     "tone": ""
+    },
+    {
+     "label": "Today",
+     "value": "1",
+     "tone": ""
+    },
+    {
+     "label": "Soon",
+     "value": "1",
+     "tone": ""
+    }
+   ]
+  },
+  {
+   "id": "skills",
+   "name": "Skills",
+   "full_name": "Skills",
+   "tagline": "Do the thing. Earn the level. Unlock the next thing.",
+   "status": "",
+   "tone": "calm",
+   "ask": "Which skills am I growing?",
+   "pinned": false,
+   "menu": [
+    {
+     "id": "focus",
+     "label": "Focus",
+     "type": "panel"
+    },
+    {
+     "id": "week",
+     "label": "This Week",
+     "type": "panel"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "skills",
+       "favorite": true
+      }
+     }
+    }
+   ],
+   "tiles": []
+  },
+  {
+   "id": "character",
+   "name": "Character",
+   "full_name": "Character",
+   "tagline": "Your story so far.",
+   "status": "",
+   "tone": "calm",
+   "ask": "What have I done this week?",
+   "pinned": false,
+   "menu": [
+    {
+     "id": "story",
+     "label": "Your Story",
+     "type": "panel"
+    },
+    {
+     "id": "buffs",
+     "label": "Buffs",
+     "type": "panel"
+    },
+    {
+     "id": "chronicle",
+     "label": "This Week's Story",
+     "type": "panel"
+    },
+    {
+     "id": "top",
+     "label": "Top Skills",
+     "type": "panel"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "character",
+       "favorite": true
+      }
+     }
+    }
+   ],
+   "tiles": []
+  },
+  {
+   "id": "household",
+   "name": "Household",
+   "full_name": "Household",
+   "tagline": "A home that runs itself.",
+   "status": "",
+   "tone": "calm",
+   "ask": "I did the dishes.",
+   "pinned": false,
+   "menu": [
+    {
+     "id": "chores",
+     "label": "Chores Due",
+     "type": "panel"
+    },
+    {
+     "id": "ask0",
+     "label": "What did I get done this week",
+     "type": "ask",
+     "say": "What did I get done this week?"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "household",
+       "favorite": true
+      }
+     }
+    }
+   ],
+   "tiles": []
+  },
+  {
+   "id": "workshop",
+   "name": "Workshop",
+   "full_name": "Workshop",
+   "tagline": "Parts, jobs and products.",
+   "status": "",
+   "tone": "calm",
+   "ask": "How much plywood do I have?",
+   "pinned": false,
+   "menu": [
+    {
+     "id": "ask0",
+     "label": "What jobs are open",
+     "type": "ask",
+     "say": "What jobs are open?"
+    },
+    {
+     "id": "ask1",
+     "label": "Which parts are running low",
+     "type": "ask",
+     "say": "Which parts are running low?"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "workshop",
+       "favorite": true
+      }
+     }
+    }
+   ],
+   "tiles": []
+  },
+  {
+   "id": "power",
+   "name": "Power",
+   "full_name": "Power",
+   "tagline": "Energy, tracked.",
+   "status": "",
+   "tone": "calm",
+   "ask": "How's the battery?",
+   "pinned": false,
+   "menu": [
+    {
+     "id": "ask0",
+     "label": "How's the battery",
+     "type": "ask",
+     "say": "How's the battery?"
+    },
+    {
+     "id": "ask1",
+     "label": "How much power did I use today",
+     "type": "ask",
+     "say": "How much power did I use today?"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "power",
+       "favorite": true
+      }
+     }
+    }
+   ],
+   "tiles": []
+  },
+  {
+   "id": "observations",
+   "name": "Observations",
+   "full_name": "Observations",
+   "tagline": "What MIA noticed.",
+   "status": "",
+   "tone": "calm",
+   "ask": "What have you noticed lately?",
+   "pinned": false,
+   "menu": [
+    {
+     "id": "ask0",
+     "label": "What have you noticed lately",
+     "type": "ask",
+     "say": "What have you noticed lately?"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "observations",
+       "favorite": true
+      }
+     }
+    }
+   ],
+   "tiles": []
+  },
+  {
+   "id": "relationships",
+   "name": "People",
+   "full_name": "People & Pets",
+   "tagline": "The ones who matter.",
+   "status": "",
+   "tone": "calm",
+   "ask": "When is the next birthday?",
+   "pinned": false,
+   "menu": [
+    {
+     "id": "birthdays",
+     "label": "Next Birthdays",
+     "type": "panel"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "relationships",
+       "favorite": true
+      }
+     }
+    }
+   ],
+   "tiles": []
+  },
+  {
+   "id": "notes",
+   "name": "Notes",
+   "full_name": "Notes",
+   "tagline": "Write it down.",
+   "status": "",
+   "tone": "calm",
+   "ask": "Make a note: call the plumber Friday.",
+   "pinned": false,
+   "menu": [
+    {
+     "id": "ask0",
+     "label": "What were my last notes",
+     "type": "ask",
+     "say": "What were my last notes?"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "notes",
+       "favorite": true
+      }
+     }
+    }
+   ],
+   "tiles": []
+  },
+  {
+   "id": "classroom",
+   "name": "Classroom",
+   "full_name": "Classroom",
+   "tagline": "Keep learning.",
+   "status": "",
+   "tone": "calm",
+   "ask": "Quiz me on chapter 2.",
+   "pinned": false,
+   "menu": [
+    {
+     "id": "ask0",
+     "label": "What should I study next",
+     "type": "ask",
+     "say": "What should I study next?"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "classroom",
+       "favorite": true
+      }
+     }
+    }
+   ],
+   "tiles": []
+  },
+  {
+   "id": "inbox",
+   "name": "Inbox",
+   "full_name": "Inbox",
+   "tagline": "Paperwork, handled.",
+   "status": "",
+   "tone": "calm",
+   "ask": "What's waiting in my inbox?",
+   "pinned": false,
+   "menu": [
+    {
+     "id": "waiting",
+     "label": "Waiting To File",
+     "type": "panel"
+    },
+    {
+     "id": "ask0",
+     "label": "Any emails I should answer",
+     "type": "ask",
+     "say": "Any emails I should answer?"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "inbox",
+       "favorite": true
+      }
+     }
+    }
+   ],
+   "tiles": []
+  },
+  {
+   "id": "expeditions",
+   "name": "Expeditions",
+   "full_name": "Expeditions",
+   "tagline": "Plan the trip.",
+   "status": "",
+   "tone": "calm",
+   "ask": "Plan a weekend camping trip.",
+   "pinned": false,
+   "menu": [
+    {
+     "id": "ask0",
+     "label": "What's my next trip",
+     "type": "ask",
+     "say": "What's my next trip?"
+    },
+    {
+     "id": "ask1",
+     "label": "What gear am I missing for it",
+     "type": "ask",
+     "say": "What gear am I missing for it?"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "expeditions",
+       "favorite": true
+      }
+     }
+    }
+   ],
+   "tiles": []
+  },
+  {
+   "id": "memories",
+   "name": "Memories",
+   "full_name": "Memories",
+   "tagline": "Remember the trip.",
+   "status": "",
+   "tone": "calm",
+   "ask": "Show me my last trip.",
+   "pinned": false,
+   "menu": [
+    {
+     "id": "ask0",
+     "label": "What was my last trip like",
+     "type": "ask",
+     "say": "What was my last trip like?"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "memories",
+       "favorite": true
+      }
+     }
+    }
+   ],
+   "tiles": []
+  },
+  {
+   "id": "maps",
+   "name": "Maps",
+   "full_name": "Maps",
+   "tagline": "Know the ground.",
+   "status": "",
+   "tone": "calm",
+   "ask": "Which trail maps do I have?",
+   "pinned": false,
+   "menu": [
+    {
+     "id": "ask0",
+     "label": "Which trail maps do I have",
+     "type": "ask",
+     "say": "Which trail maps do I have?"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "maps",
+       "favorite": true
+      }
+     }
+    }
+   ],
+   "tiles": []
+  },
+  {
+   "id": "navigation",
+   "name": "Navigation",
+   "full_name": "Navigation",
+   "tagline": "Find the way.",
+   "status": "",
+   "tone": "calm",
+   "ask": "How far is camp from the trailhead?",
+   "pinned": false,
+   "menu": [
+    {
+     "id": "ask0",
+     "label": "How far is my nearest waypoint",
+     "type": "ask",
+     "say": "How far is my nearest waypoint?"
+    },
+    {
+     "id": "ask1",
+     "label": "When is sunset today",
+     "type": "ask",
+     "say": "When is sunset today?"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "navigation",
+       "favorite": true
+      }
+     }
+    }
+   ],
+   "tiles": []
+  },
+  {
+   "id": "lab",
+   "name": "The Lab",
+   "full_name": "The Lab",
+   "tagline": "Experiments and sensors.",
+   "status": "",
+   "tone": "calm",
+   "ask": "Start a temperature experiment.",
+   "pinned": false,
+   "menu": [
+    {
+     "id": "ask0",
+     "label": "What's my latest experiment reading",
+     "type": "ask",
+     "say": "What's my latest experiment reading?"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "lab",
+       "favorite": true
+      }
+     }
+    }
+   ],
+   "tiles": []
+  },
+  {
+   "id": "field_kit",
+   "name": "Field Kit",
+   "full_name": "Field Kit",
+   "tagline": "Devices and scripts.",
+   "status": "",
+   "tone": "calm",
+   "ask": "What devices are connected?",
+   "pinned": false,
+   "menu": [
+    {
+     "id": "ask0",
+     "label": "What devices are connected",
+     "type": "ask",
+     "say": "What devices are connected?"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "field_kit",
+       "favorite": true
+      }
+     }
+    }
+   ],
+   "tiles": []
+  },
+  {
+   "id": "music",
+   "name": "Music",
+   "full_name": "Music",
+   "tagline": "Your music.",
+   "status": "",
+   "tone": "calm",
+   "ask": "Play something relaxing.",
+   "pinned": false,
+   "menu": [
+    {
+     "id": "now",
+     "label": "Now Playing",
+     "type": "player"
+    },
+    {
+     "id": "songs",
+     "label": "Songs",
+     "type": "panel"
+    },
+    {
+     "id": "playlists",
+     "label": "Playlists",
+     "type": "panel"
+    },
+    {
+     "id": "artists",
+     "label": "Artists",
+     "type": "panel"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "music",
+       "favorite": true
+      }
+     }
+    }
+   ],
+   "tiles": [
+    {
+     "label": "Songs",
+     "value": "212",
+     "tone": ""
+    },
+    {
+     "label": "Playlists",
+     "value": "6",
+     "tone": ""
+    },
+    {
+     "label": "Artists",
+     "value": "41",
+     "tone": ""
+    }
+   ]
+  },
+  {
+   "id": "diagnostics",
+   "name": "Diagnostics",
+   "full_name": "Diagnostics",
+   "tagline": "How MIA is doing.",
+   "status": "",
+   "tone": "calm",
+   "ask": "How is the computer doing?",
+   "pinned": false,
+   "menu": [
+    {
+     "id": "ask0",
+     "label": "How is the computer doing",
+     "type": "ask",
+     "say": "How is the computer doing?"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "diagnostics",
+       "favorite": true
+      }
+     }
+    }
+   ],
+   "tiles": []
+  }
+ ],
+ "hint": "",
+ "kinds": [
+  "app.favorite",
+  "fitness.food",
+  "fitness.milestone",
+  "fitness.skill",
+  "fitness.step",
+  "fitness.training_done",
+  "grocery.check",
+  "maintenance.done",
+  "meal.prep_done",
+  "mission.complete",
+  "objective.tick",
+  "routine.log",
+  "task.done"
+ ],
+ "areas": [
+  {
+   "id": "home",
+   "name": "Home",
+   "short": "Home",
+   "hue": "#35d4ff",
+   "apps": [
+    "household",
+    "kitchen",
+    "power"
+   ],
+   "needs": 0
+  },
+  {
+   "id": "garage",
+   "name": "Garage",
+   "short": "Garage",
+   "hue": "#8fa7bf",
+   "apps": [
+    "garage"
+   ],
+   "needs": 1
+  },
+  {
+   "id": "plants_animals",
+   "name": "Plants and Animals",
+   "short": "Plants & Animals",
+   "hue": "#35d4ff",
+   "apps": [
+    "greenhouse"
+   ],
+   "needs": 0
+  },
+  {
+   "id": "kitchen",
+   "name": "Kitchen",
+   "short": "Kitchen",
+   "hue": "#e9d4a8",
+   "apps": [
+    "kitchen"
+   ],
+   "needs": 1
+  },
+  {
+   "id": "health",
+   "name": "Health and Fitness",
+   "short": "Health & Fitness",
+   "hue": "#ff8a3d",
+   "apps": [
+    "workout",
+    "kitchen"
+   ],
+   "needs": 0
+  },
+  {
+   "id": "recreation",
+   "name": "Recreation",
+   "short": "Recreation",
+   "hue": "#9b6bff",
+   "apps": [
+    "expeditions",
+    "maps",
+    "navigation",
+    "memories",
+    "music"
+   ],
+   "needs": 0
+  },
+  {
+   "id": "security",
+   "name": "Security",
+   "short": "Security",
+   "hue": "#c0c8d4",
+   "apps": [
+    "field_kit"
+   ],
+   "needs": 0
+  },
+  {
+   "id": "system",
+   "name": "Settings and Diagnostics",
+   "short": "Settings",
+   "hue": "#dfe9f2",
+   "apps": [
+    "diagnostics"
+   ],
+   "needs": 0
+  },
+  {
+   "id": "finances",
+   "name": "Finances",
+   "short": "Finances",
+   "hue": "#3f7bff",
+   "apps": [
+    "budget",
+    "real_estate",
+    "inbox"
+   ],
+   "needs": 0
+  },
+  {
+   "id": "business",
+   "name": "Business",
+   "short": "Business",
+   "hue": "#7f95ff",
+   "apps": [
+    "workshop",
+    "real_estate"
+   ],
+   "needs": 0
+  },
+  {
+   "id": "personal",
+   "name": "Personal",
+   "short": "Personal",
+   "hue": "#ff8ad8",
+   "apps": [
+    "calendar",
+    "notes",
+    "relationships",
+    "observations"
+   ],
+   "needs": 0
+  },
+  {
+   "id": "learning",
+   "name": "Learning",
+   "short": "Learning",
+   "hue": "#6a5cff",
+   "apps": [
+    "classroom",
+    "skills"
+   ],
+   "needs": 0
+  },
+  {
+   "id": "missions",
+   "name": "Missions",
+   "short": "Missions",
+   "hue": "#c86bff",
+   "apps": [
+    "missions",
+    "skills",
+    "character"
+   ],
+   "needs": 0
+  },
+  {
+   "id": "projects",
+   "name": "Projects",
+   "short": "Projects",
+   "hue": "#b9a8ff",
+   "apps": [
+    "workshop",
+    "lab"
+   ],
+   "needs": 0
+  },
+  {
+   "id": "communications",
+   "name": "Communications",
+   "short": "Communications",
+   "hue": "#6fc6ff",
+   "apps": [
+    "inbox"
+   ],
+   "needs": 0
+  }
+ ],
+ "accent": {
+  "accent": "#35d4ff",
+  "rgb": "53, 212, 255",
+  "soft": "#aeeeff",
+  "deep": "#1d748c"
+ }
 }
