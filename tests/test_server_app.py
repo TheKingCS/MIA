@@ -55,9 +55,9 @@ def context(tmp_path, monkeypatch):
     data_dir = tmp_path / "data"
     monkeypatch.setattr(config_manager_module, "_CONFIG_FILE", tmp_path / "config.json")
     # 2026-09-28: Core also loads what "remind me why" reads.
-    import core.budget_manager, core.energy_manager, core.intent_manager, core.kitchen_manager, core.project_manager, core.real_estate_manager, core.why_graph
+    import core.budget_manager, core.energy_manager, core.intent_manager, core.kitchen_manager, core.project_manager, core.real_estate_manager, core.security_log, core.why_graph
     for _module in (core.budget_manager, core.energy_manager, core.intent_manager, core.kitchen_manager,
-                    core.project_manager, core.real_estate_manager, core.why_graph):
+                    core.project_manager, core.real_estate_manager, core.security_log, core.why_graph):
         _original = _module._DATA_DIR
         for _attr, _value in list(vars(_module).items()):
             if isinstance(_value, Path) and (_value == _original or _original in _value.parents):
@@ -822,3 +822,36 @@ def test_connect_apps_lists_sources_and_previews_a_rental_calendar_before_anythi
     assert preview["count"] == 2 and preview["adds"][0] == "Check-in · Lake Cabin on 2026-11-20"
     assert len(context.calendar.all_events()) == before
     assert client.post("/api/connect/preview", headers=auth, json={"source": "rental_calendar", "text": ics}).status_code == 400
+
+
+def test_a_new_device_and_repeated_wrong_passwords_alert_the_owner_and_nothing_secret_is_logged(client, context):
+    """The security log (core/security_log.py): the first sign-in from a device alerts, the second doesn't; wrong
+    passwords are logged, and once they cause a wait the owner is told once; no password reaches the log."""
+    import core.sign_in_guard as guard
+    from core.personal_data import view_for
+
+    who = _profile_id(context)
+    phone = {"user-agent": "Mozilla/5.0 (Linux; Android 14) Chrome/120"}
+    assert client.post("/api/login", headers=phone, json={"profile_id": who, "password": "hunter2"}).status_code == 200
+    assert client.post("/api/login", headers=phone, json={"profile_id": who, "password": "hunter2"}).status_code == 200
+    notes = view_for(context, who).notifications
+    titles = lambda: [n.title for n in notes.list_all()]  # noqa: E731
+    assert titles().count("New sign-in to MIA") == 1
+    for _ in range(guard.FREE_TRIES + 1):
+        client.post("/api/login", headers=phone, json={"profile_id": who, "password": "wrong-guess-77"})
+    assert titles().count("Wrong passwords on your MIA account") == 1
+    events = context.security_log.for_person(who)
+    kinds = [e["kind"] for e in events]
+    assert "sign_in_failed" in kinds and "waiting" in kinds and kinds.count("sign_in") == 2
+    assert "hunter2" not in context.security_log.path.read_text(encoding="utf-8")
+    assert "wrong-guess-77" not in context.security_log.path.read_text(encoding="utf-8")
+
+
+def test_sign_out_everywhere_ends_every_other_session_and_shows_on_the_log(client, context):
+    """This session stays; the others end; the page shows the event."""
+    phone, laptop = _signed_in(client, context), _signed_in(client, context)
+    assert client.get("/api/security/log", headers=phone).json()["other_sessions"] == 1
+    assert client.post("/api/security/sign-out-everywhere", headers=phone).json() == {"ended": 1}
+    assert client.get("/api/settings", headers=laptop).status_code == 401
+    events = client.get("/api/security/log", headers=phone).json()["events"]
+    assert events[0]["kind"] == "signed_out_everywhere" and events[0]["what"] == "Signed out everywhere"

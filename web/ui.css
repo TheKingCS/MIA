@@ -1703,3 +1703,7 @@ body.mod-maps .hero { display: none; }
 .cn-preview { display: grid; gap: 8px; }
 .cn-sentence { margin: 0; font-weight: 600; }
 .cn-rows { margin: 0; padding-left: 18px; font-size: var(--text-sm); color: var(--text-dim); }
+
+/* ---------------------------------------------------------------- Sign-ins (core/security_log.py)
+   A wrong password, a wait, a password change or a linked phone: an amber edge, "needs you" (DEC-0014). */
+.row.si-warn { border-left: 2px solid var(--attention); padding-left: 10px; }

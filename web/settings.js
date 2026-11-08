@@ -235,6 +235,8 @@
         el("div", { class: "acct-actions" }, el("a", { class: "btn btn-ghost", href: "notifications.html" }, "Notifications"))),
       section("Recent Changes", el("p", { class: "dim" }, "What MIA changed lately, with Undo, and the last two weeks' history."),
         el("div", { class: "acct-actions" }, el("a", { class: "btn btn-ghost", href: "changes.html" }, "Recent Changes"))),
+      section("Sign-ins and Security", el("p", { class: "dim" }, "Every sign-in to your account and from which device, wrong passwords, and a way to sign out everywhere."),
+        el("div", { class: "acct-actions" }, el("a", { class: "btn btn-ghost", href: "signins.html" }, "Sign-ins and Security"))),
       section("Connect Apps", el("p", { class: "dim" }, "Bring in data from your other apps: a calendar, contacts, a bank statement, a rental's calendar link. You see it before anything changes."),
         el("div", { class: "acct-actions" }, el("a", { class: "btn btn-ghost", href: "connect.html" }, "Connect Apps"))),
       section("Apps", el("p", { class: "dim" }, "Choose which apps you see, and your favorites."),
