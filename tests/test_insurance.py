@@ -20,6 +20,7 @@ CAR_COVER = "Bodily injury: 100,000/300,000\nProperty damage: 100,000\nCollision
 
 @pytest.fixture
 def world(tmp_path, monkeypatch):
+    """A world with an insurance book and the action center."""
     from core.actions import ActionCenter
 
     w = build_world(tmp_path, monkeypatch)
@@ -29,6 +30,7 @@ def world(tmp_path, monkeypatch):
 
 
 def _car(w, **more):
+    """A car policy renewing soon, with any field overridden."""
     values = dict(premium=600.0, every="6 Months", renews="2026-11-20", deductible=500.0, coverage=CAR_COVER,
                   last_premium=520.0)
     values.update(more)
@@ -131,6 +133,7 @@ def test_actions_request_choose_switch(world):
 
 
 def test_the_page(world):
+    """The Insurance page sums the policies, flags renewals and offers the quote form."""
     _car(world)
     page = insurance_page(world, TODAY)
     assert page["available"] and page["summary"]["policies"] == 1 and page["summary"]["per_year"] == 1200
@@ -139,6 +142,7 @@ def test_the_page(world):
 
 
 def test_grown_ups_only(world):
+    """Insurance isn't a child's app."""
     from core.child_accounts import CHILD_APPS
 
     assert "insurance" not in CHILD_APPS

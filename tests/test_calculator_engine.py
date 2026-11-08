@@ -13,17 +13,21 @@ from core.calculator_engine import CalculatorEngine, CalculatorPlugin
 
 
 class _FakeCalculator(CalculatorPlugin):
+    """A calculator plugin with an id, a name and a category, and no widget."""
     def __init__(self, calculator_id: str, display_name: str, category: str = "General"):
+        """Keeps its id, name and category, and a description from its name."""
         self.calculator_id = calculator_id
         self.display_name = display_name
         self.category = category
         self.description = f"{display_name} description"
 
     def build_widget(self):
+        """No widget."""
         return None
 
 
 def test_register_and_get():
+    """A registered calculator is found by its id."""
     engine = CalculatorEngine()
     calc = _FakeCalculator("ohms_law", "Ohm's Law")
     engine.register(calc)

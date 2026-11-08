@@ -13,6 +13,7 @@ from tests.engine_world import build_world
 
 
 def test_pure_logic():
+    """A series id is made from the place and measure, a reading is checked against its range, and a batch's figures are worked out."""
     assert series_id("Tank  A", "ph") == "grow:tank a:ph"
     assert (check_range(7.6, 6.8, 7.2), check_range(6.5, 6.8, None), check_range(7.0, 6.8, 7.2)) == ("high", "low", "")
     b = Batch(batch_id="b", crop="Lettuce", planted="2026-09-01", count=10, lost=2,
@@ -23,6 +24,7 @@ def test_pure_logic():
 
 @pytest.fixture
 def lab(tmp_path, monkeypatch):
+    """A world with a grow lab, a data logger and the action center."""
     w = build_world(tmp_path, monkeypatch)
     w.grow_lab = GrowLab(w, data_dir=w.home_dir)
     w.data_logger = DataLoggerManager(w, data_dir=w.home_dir)
@@ -31,6 +33,7 @@ def lab(tmp_path, monkeypatch):
 
 
 def do(w, kind, **params):
+    """Proposes and approves an action; the proposal."""
     p = w.actions.propose(w, kind, params)
     w.actions.approve(w, p.proposal_id)
     return p
@@ -78,6 +81,7 @@ def test_growing_measuring_and_comparing(lab):
 
 
 def test_alerts_and_undo(lab):
+    """A reading out of range is an alert, and an added batch is undone."""
     from core.web_grow import grow_page
 
     w = lab

@@ -17,12 +17,14 @@ from tests.engine_world import build_world
 
 
 def test_suggested_price():
+    """A suggested price is materials, labour and overhead with the margin on top, rounded up."""
     assert suggested_price(85, 6, 25, 20, 20) == 306  # (85 + 150 + 20) × 1.2 = 306
     assert suggested_price(10.01, 0, 0, 0, 0) == 11 and suggested_price(0, 0, 0, 0, 50) == 0
 
 
 @pytest.fixture
 def shop(tmp_path, monkeypatch):
+    """A world with materials, products, jobs, the ledger, craft recipes, the business book and the action center."""
     w = build_world(tmp_path, monkeypatch)
     here = w.home_dir
     w.materials, w.products = MaterialManager(w, data_dir=here), ProductManager(w, data_dir=here)
@@ -33,6 +35,7 @@ def shop(tmp_path, monkeypatch):
 
 
 def do(w, kind, **params):
+    """Proposes and approves an action; the proposal."""
     p = w.actions.propose(w, kind, params)
     w.actions.approve(w, p.proposal_id)
     return p

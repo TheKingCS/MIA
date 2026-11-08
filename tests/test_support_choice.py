@@ -18,6 +18,7 @@ from core.talk_it_out import pre_turn
 
 @pytest.fixture
 def ctx(tmp_path, monkeypatch):
+    """A context with only a config on a temporary file."""
     monkeypatch.setattr(config_module, "_CONFIG_FILE", tmp_path / "config.json")
     return SimpleNamespace(config=ConfigManager())
 
@@ -27,6 +28,7 @@ def ctx(tmp_path, monkeypatch):
     "Same thing every single day", "I'm fed up with all of it", "I can't take this anymore",
 ])
 def test_heavy(text):
+    """These sound heavy enough to ask what kind of support is wanted."""
     assert sounds_heavy(text)
 
 
@@ -35,10 +37,12 @@ def test_heavy(text):
     "How do I fix a flat tire?", "Add milk to the grocery list",
 ])
 def test_not_heavy(text):
+    """These don't."""
     assert not sounds_heavy(text)
 
 
 def test_answers():
+    """The person's answer is read as listen, plan, perspective or company, and a habit forms from repeated picks."""
     assert interpret_answer("Just listen") == LISTEN
     assert interpret_answer("the second one") == PLAN
     assert interpret_answer("help me figure it out I guess") == PLAN

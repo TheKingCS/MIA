@@ -36,6 +36,7 @@ _MODULES = [budget_module, business_use_module, data_logger_module, maintenance_
 
 @pytest.fixture
 def ctx(tmp_path, monkeypatch):
+    """A context whose stores' files all point at a temporary folder: money, the logger, maintenance, projects, real estate, business use, and the desktop's tools."""
     for module in _MODULES:
         original = module._DATA_DIR
         for attr, value in list(vars(module).items()):
@@ -59,6 +60,7 @@ def say(ctx, action, **arguments):
 
 
 def mower_with_costs(ctx):
+    """A riding mower bought for $2,400, with upkeep this year and last."""
     mower = ctx.maintenance.add_asset("Riding Mower", category="Power Equipment", purchase_date="2025-04-10", purchase_price=2400)
     ctx.budget.add_expense(2400, "Tools & Equipment", "Bought mower", date="2025-04-10", asset_id=mower.asset_id, asset_purchase=True)
     ctx.budget.add_expense(35, "Maintenance", "Oil change", date="2026-05-01", asset_id=mower.asset_id)
@@ -151,6 +153,7 @@ def test_entity_from_the_property_and_explicit_business(ctx, monkeypatch):
 
 
 def test_html_worksheet(ctx):
+    """The business-use worksheet is HTML with the asset and year, the client's name escaped, and the disclaimer."""
     mower = mower_with_costs(ctx)
     ctx.business_use.log_use(mower.asset_id, 5, use_date="2026-05-10", client="<Johnson> lawn")
     html = build_worksheet_html(build_worksheet(ctx, mower, 2026), "2026-09-28 10:00")
@@ -207,6 +210,7 @@ def test_get_business_use_tool(ctx):
 
 
 def truck_with_costs(ctx):
+    """A pickup truck with this year's gas and brakes."""
     truck = ctx.maintenance.add_asset("Pickup Truck", category="Vehicle", purchase_date="2024-03-01", purchase_price=30000)
     ctx.budget.add_expense(400, "Transportation", "Gas", date="2026-06-01", asset_id=truck.asset_id)
     ctx.budget.add_expense(600, "Maintenance", "Brakes", date="2026-07-01", asset_id=truck.asset_id)

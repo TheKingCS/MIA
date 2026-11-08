@@ -42,7 +42,10 @@ the Theme Studio's **Mix Two**, **sound sets** and the **glasses taking the them
 Greenhouse's **What's Next** in the canvas look (DEC-0144), the flat Nexus showing Muse's portal pictures, the room
 lowering its resolution when slow (NEXUS_PLAN M4), the chosen portal's rim held back off its picture (H-0099), two
 stale tests fixed (Good News freshness by the episode's day; Talk's mic test), and 65 test helpers documented.
-Every page passed the demo-mode error sweep (95 pages). K-0120 to K-0125.
+Every page passed the demo-mode error sweep (95 pages). K-0120 to K-0126. Later the same night: every other
+area became a **room of its apps** in the Spatial look (Nexus M5's first pass, core/web_environments.room), **compound
+maintenance triggers** on the task form (DEC-0131), and the canvas's Built page gained **Built: New Overnight** (ten
+phone shots of tonight's screens, above New Tonight).
 
 **New 2026-11-08 (latest): capability reminders — "did you know you could go do X right now?" (DEC-0143).** Zac asked
 for MIA to remind him, now and then, of what he's already capable of doing right now — a subtle, affirming redirect

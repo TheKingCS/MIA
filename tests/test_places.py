@@ -14,6 +14,7 @@ from tests.engine_world import build_world
 
 @pytest.fixture
 def world(tmp_path, monkeypatch):
+    """A world with places, the world map and the action center."""
     context = build_world(tmp_path, monkeypatch)
     context.actions = ActionCenter()
     context.places = Places(context, data_dir=context.my_dir)
@@ -22,6 +23,7 @@ def world(tmp_path, monkeypatch):
 
 
 def do(world, kind, **params):
+    """Proposes and approves an action, failing the test if it didn't run; the proposal and result."""
     proposal = world.actions.propose(world, kind, params)
     done = world.actions.approve(world, proposal.proposal_id)
     assert done.status == "executed", done.result
@@ -29,6 +31,7 @@ def do(world, kind, **params):
 
 
 def test_distance():
+    """The distance between two points about a tenth of a kilometre apart is right."""
     assert 105 < distance_m(40.0, -105.0, 40.001, -105.0) < 117
 
 
@@ -55,6 +58,7 @@ def test_add_watch_and_arrive(world):
 
 
 def test_just_remind_me():
+    """Arriving at a place with a note just says the note."""
     from core.places import Place
 
     a = arrival(Place("x", "Library", 0, 0, note="Return the books"))

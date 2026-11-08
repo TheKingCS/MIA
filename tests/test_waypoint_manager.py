@@ -29,6 +29,7 @@ PARIS = (48.8566, 2.3522)
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the waypoints file at a temporary folder."""
     data_dir = tmp_path / "data"
     waypoints_file = data_dir / "waypoints.json"
     monkeypatch.setattr(waypoint_manager_module, "_DATA_DIR", data_dir)
@@ -37,6 +38,7 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _make_manager() -> WaypointManager:
+    """A waypoint manager on a fresh context."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     return WaypointManager(context)
 
@@ -56,6 +58,7 @@ def test_distance_matches_known_real_world_value_london_to_paris():
 
 
 def test_distance_is_symmetric():
+    """The distance is the same both ways."""
     forward = haversine_distance_km(*LONDON, *PARIS)
     backward = haversine_distance_km(*PARIS, *LONDON)
     assert forward == pytest.approx(backward, abs=0.01)
@@ -153,6 +156,7 @@ def test_add_waypoint_category_persists_across_a_fresh_load(isolated_paths):
 
 
 def test_update_waypoint_category(isolated_paths):
+    """A waypoint's category is changed."""
     manager = _make_manager()
     waypoint = manager.add_waypoint(name="X", latitude=0.0, longitude=0.0)
     manager.update_waypoint(waypoint.waypoint_id, category="Water Source")

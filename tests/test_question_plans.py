@@ -17,6 +17,7 @@ TODAY = date(2026, 10, 30)
 
 @pytest.fixture
 def life(shop, monkeypatch):  # noqa: F811
+    """The shop's world with the desktop's tools, and no embedding model (plans match by their own words)."""
     from tests.assistant_registry import build_desktop_registry
 
     shop.assistant_actions = build_desktop_registry()
@@ -25,10 +26,13 @@ def life(shop, monkeypatch):  # noqa: F811
 
 
 class _Model:
+    """A model that always says the same thing and remembers what it was asked."""
     def __init__(self, said):
+        """Keeps what it will say; asked nothing yet."""
         self.said, self.asked = said, []
 
     def chat_with_tools(self, messages, tools):
+        """Remembers the messages and answers with its line, calling no tool."""
         self.asked.append(messages)
         return ChatReply(content=self.said, tool_calls=[])
 

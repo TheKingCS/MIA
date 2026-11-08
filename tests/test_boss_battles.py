@@ -14,6 +14,7 @@ from tests.engine_world import build_world
 
 @pytest.fixture
 def world(tmp_path, monkeypatch):
+    """A world with a boss book and the action center."""
     context = build_world(tmp_path, monkeypatch)
     context.actions = ActionCenter()
     context.boss_book = BossBook(context, data_dir=tmp_path / "me")
@@ -21,6 +22,7 @@ def world(tmp_path, monkeypatch):
 
 
 def do(world, kind, **params):
+    """Proposes and approves an action, failing the test if it didn't run; the proposal and result."""
     proposal = world.actions.propose(world, kind, params)
     done = world.actions.approve(world, proposal.proposal_id)
     assert done.status == "executed", done.result
@@ -28,6 +30,7 @@ def do(world, kind, **params):
 
 
 def test_pure_bits():
+    """A boss's phase follows its health, and the months to beat it follow the loan math."""
     assert [phase(p) for p in (100, 60, 30, 5, 0)] == ["Full Strength", "Wounded", "Staggering", "Last Stand", "Defeated"]
     assert months_to_defeat(1200, 0, 100) == 12 and months_to_defeat(0, 20, 50) == 0
     assert months_to_defeat(10000, 24, 150) is None  # $200/month interest beats a $150 hit

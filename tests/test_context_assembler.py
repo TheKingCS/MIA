@@ -42,6 +42,7 @@ TODAY = date(2026, 9, 14)
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the config, profiles, skills, insights, missions, maintenance, projects and recurring missions files at a temporary folder."""
     data_dir = tmp_path / "data"
     monkeypatch.setattr(config_manager_module, "_CONFIG_FILE", tmp_path / "config.json")
     monkeypatch.setattr(profile_manager_module, "_DATA_PROFILES_DIR", tmp_path / "profiles")
@@ -64,11 +65,13 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _write_skill_definitions(data_dir, skills: list[dict]) -> None:
+    """Writes the skill definitions file."""
     data_dir.mkdir(parents=True, exist_ok=True)
     (data_dir / "skill_definitions.json").write_text(json.dumps({"skills": skills}))
 
 
 def _full_context(data_dir) -> AppContext:
+    """A context with every store the life-state snapshot reads."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     context.profiles = ProfileManager(context)
     context.skills = SkillManager(context)
@@ -244,6 +247,7 @@ def test_system_signals_excludes_resolved_insights(isolated_paths):
 # ------------------------------------------------------------------
 
 def test_overdue_maintenance_count(isolated_paths):
+    """The snapshot counts only the overdue maintenance task."""
     context = _full_context(isolated_paths)
     asset = context.maintenance.add_asset("Mower", category="Garage")
     context.maintenance.add_task(

@@ -17,6 +17,7 @@ from tests.engine_world import build_world
 
 @pytest.fixture
 def world(tmp_path, monkeypatch):
+    """A world with a quest book and the action center."""
     context = build_world(tmp_path, monkeypatch)
     context.actions = ActionCenter()
     context.quest_book = QuestBook(context, data_dir=context.my_dir)
@@ -24,6 +25,7 @@ def world(tmp_path, monkeypatch):
 
 
 def do(world, kind, **params):
+    """Proposes and approves an action, failing the test if it didn't run; the proposal and result."""
     proposal = world.actions.propose(world, kind, params)
     done = world.actions.approve(world, proposal.proposal_id)
     assert done.status == "executed", done.result
@@ -39,6 +41,7 @@ def test_seasons_follow_the_hemisphere():
 
 
 def test_parsing_your_own():
+    """A questline typed by hand is read into chapters and objectives, with counts."""
     assert parse_objective("Work out|3") == ("Work out", 3.0) and parse_objective("Plant") == ("Plant", 1.0)
     chapters = parse_chapters("1. prep the beds: clear them; add compost\n\nPlant\n- Harvest: pick, share")
     assert [c["title"] for c in chapters] == ["Prep The Beds", "Plant", "Harvest"]
@@ -116,6 +119,7 @@ def test_season_note_once_there_is_something(world):
 
 
 def test_child_can_play(world):
+    """Starting, adding and removing quests are a child's actions too."""
     from core.actions import ACTION_TYPES
 
     assert all(ACTION_TYPES[k].child_ok for k in ("quest.start", "quest.add", "quest.remove"))
