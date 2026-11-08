@@ -9,7 +9,8 @@ moving.
 
 Facts in code, the model only phrases — the same rule the rest of MIA follows. `on_hand(context)` gathers the
 real abilities on his table (for the daily check in `core/application.py` and the My Directions screen): a learning path he's a step from advancing (`core/paths.py`), a project he
-started and parked (`core/project_manager.py`). This module wraps one in a warm, low-pressure frame. Empty in, empty
+started and parked (`core/project_manager.py`), a plan whose materials are all on the shelf, a recipe he has
+everything for, and the homestead's next doable step. This module wraps one in a warm, low-pressure frame. Empty in, empty
 out — a reminder never fires without a true thing behind it — and the communication gate paces it, so it stays a
 gentle redirect and never a push.
 """
@@ -54,7 +55,9 @@ def a_reminder(abilities: Sequence[Tuple[str, str]], roll: float) -> str:
 
 def on_hand(context) -> list:
     """The real, right-now abilities a reminder can draw from: a started learning path with an open next step
-    (core/paths.py), and a project begun but not finished (core/project_manager.py). Each is a (verb phrase, honest
+    (core/paths.py), a project begun but not finished (core/project_manager.py), a built-in plan whose materials are
+    all on the shelf (core/plan_library.py), a recipe with everything in the pantry (the kitchen), and the homestead's
+    next doable step for someone already homesteading (core/development_engine.py). Each is a (verb phrase, honest
     reason) pair; every source is read defensively, so a missing one simply contributes nothing. Used by the daily
     check (core/application.py) and the My Directions screen (core/web_directions.py)."""
     out = []
@@ -78,4 +81,33 @@ def on_hand(context) -> list:
                     out.append((f"get back to your {p.name} project", f"it's been sitting at “{p.status}.”"))
     except Exception:
         log.exception("Capability reminder: reading projects failed — skipped.")
+    try:  # a built-in plan whose materials are all on the shelf (core/plan_library.py, DEC-0118)
+        library = getattr(context, "plans", None)
+        stock = getattr(context, "materials", None)
+        if library is not None and stock is not None and stock.all_materials():
+            from core.plan_library import shopping_list
+
+            for plan in library.built_in():
+                materials = plan.get("materials") or {}
+                if materials.get("items") and not shopping_list(context, materials)["to_buy"]:
+                    out.append((f"build the {plan['title'].lower()}", "Everything it needs is already on your shelf."))
+    except Exception:
+        log.exception("Capability reminder: reading the plans failed — skipped.")
+    try:  # a recipe they have everything for (the kitchen's own match against the pantry)
+        kitchen = getattr(context, "kitchen", None)
+        if kitchen is not None:
+            ready = [r for r, missing in kitchen.recipes_makeable_now() if not missing and not getattr(r, "locked", False)]
+            if ready:
+                out.append((f"make {ready[0].name}", "You've got everything for it in the pantry."))
+    except Exception:
+        log.exception("Capability reminder: reading the kitchen failed — skipped.")
+    try:  # the homestead's next doable step (core/development_engine.py, DEC-0144), for someone already homesteading
+        from core.development_engine import plan as homestead_plan
+
+        p = homestead_plan(context)
+        if p["have"] and p.get("next") and p["next"]["kind"] == "do":
+            why = p["next"]["reason"].split(" — ", 1)[-1]
+            out.append((f"start the {p['next']['name'].lower()}", f"It's the most useful next step on the homestead: {why}"))
+    except Exception:
+        log.exception("Capability reminder: reading the homestead plan failed — skipped.")
     return out
