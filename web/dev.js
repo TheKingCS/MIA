@@ -407,6 +407,25 @@
   }
 
   let chatAtBottom = true, chatSeen = false;
+  // Disagreements still open (core/disagreements.py, T-0022, DEC-0071 point 3): decisions, designs and tasks in
+  // review, Zac's first, each with who raised it, what they said, the answer, whose move it is and, when it's Zac's,
+  // the command that settles it (settling stays at the keyboard, like approving).
+  function disagreementsPanel(p) {
+    const list = p.disagreements || [];
+    if (!list.length) return "";
+    const yours = list.filter((d) => d.status === "zac").length;
+    return el("section", { class: "dev-col dev-disagree", "aria-label": "Open disagreements" },
+      el("h2", {}, "Open disagreements", el("span", { class: "n" }, yours ? yours + " yours" : String(list.length))),
+      el("p", {}, "A disagreement is answered, never dropped. When they still disagree after an answer, it's yours to decide."),
+      el("ul", { class: "dev-agents" }, list.map((d) => el("li", { class: d.status === "zac" ? "yours" : "" },
+        el("span", {}, d.subject + " · " + d.kind),
+        el("span", { class: "dev-chip " + (d.status === "zac" ? "attn" : "") }, d.status === "zac" ? "your call" : d.status === "answered" ? "answered" : "open"),
+        el("span", { class: "sub" }, (d.raised_by.length ? d.raised_by.join(", ") + ": " : "") + (d.why[d.why.length - 1] || ""),
+          d.answer ? el("span", { class: "dev-answer" }, " Answer: " + d.answer) : "",
+          el("span", { class: "dim" }, " " + d.next + (d.at ? " · " + when(d.at) : "")),
+          d.command ? el("code", { class: "dev-cmd" }, d.command) : "")))));
+  }
+
   function render() {
     const p = data;
     const panel = $("panel");
@@ -435,6 +454,7 @@
         el("h2", {}, name, el("span", { class: "n" }, p.board[k].length)), el("p", {}, about),
         p.board[k].length ? shown(k, p.board[k]).map(card) : el("p", { class: "empty" }, k === "yours" ? "Nothing needs you." : "None."),
         more(k, p.board[k])))),
+      disagreementsPanel(p),
       chosen ? detail(chosen) : "",
       el("div", { class: "dev-grid2" }, council(p),
         el("section", { class: "dev-col" }, el("h2", {}, "Who's on the team"),
