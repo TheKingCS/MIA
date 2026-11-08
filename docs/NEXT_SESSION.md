@@ -1114,10 +1114,23 @@ it, and went with Claude's recommendations. The plan, in order:
 ## 3. Ideas parked for later (need their own planning pass)
 
 - **MIA on Zac's Amazon Echo** (Zac, 2026-11-08: "connect to my amazon echo later over wifi or something and wipe it
-  and put MIA on it"). Echos run locked, signed firmware, so wiping one and installing MIA usually isn't possible
-  (and voids it). What can work: the Echo as a Bluetooth speaker and microphone for MIA on the PC or phone; or a MIA
-  speaker of her own on a Raspberry Pi with a mic array (the Pi step, DEC-0015). An Alexa skill would send speech to
-  Amazon's cloud, against local-first. Needs its own look at the exact Echo model first.
+  and put MIA on it"). Device identified 2026-11-08: a **1st-gen Echo Show** (the 7" screen model, 2017; "Snow" is
+  the white colour), Fire OS 5.5.6.9, serial G000 MW04 7422 0PPK. Findings:
+  - **Wiping it / custom ROM is not realistic for this model.** The bootloader is locked and signed. The sideload
+    exploits that exist (XDA "Checkers") are for the *Echo Show 5 1st gen*, a different, later device — not the
+    original Echo Show. Trying firmware tools meant for another model risks bricking it.
+  - **Stock sideload is blocked too.** The 1st-gen Echo Show has a hidden developer menu (tap the serial in Device
+    Options), but community reports say it has no ADB option and no "unknown sources" toggle, so you can't even
+    install an APK the normal way.
+  - **Its browser is too old for MIA's web UI.** Fire OS 5 ships Amazon Silk on an Android 5.1 engine; MIA's front
+    end (modern JS/CSS) won't render on it, so a browser-kiosk pointed at the PC won't work here.
+  - **What does work, ranked:** (1) pair it as a **Bluetooth speaker** for MIA on the PC/phone so she speaks through
+    it (simple, reversible, no risk; its far-field mic likely won't come back to MIA, only the speaker); (2) retire
+    it and give MIA her own voice on the **Raspberry Pi** with a mic array — the clean local-first path (DEC-0015
+    step 4). An Alexa skill is out: it sends speech to Amazon's cloud, against local-first.
+  - **Can't be done from a cloud session** — needs Zac at the device. Next hands-on step if he still wants to try the
+    on-device check: in Device Options, confirm the model number on the base and the exact build, and whether the dev
+    menu shows any ADB/unknown-sources option at all before anything else.
 
 
 
