@@ -1527,3 +1527,15 @@ body.mod-maps .hero { display: none; }
 .nt-why summary::-webkit-details-marker { display: none; }
 .nt-why p { margin: 6px 0 0; font-size: var(--text-sm); max-width: 520px; }
 .nt-say { margin-top: 10px; font-size: var(--text-sm); }
+/* Diagnostics: the hardware list (core/diagnostics.hardware) */
+.dx-hw { margin-top: var(--gap); }
+.dx-hw-row { display: grid; grid-template-columns: minmax(90px, 1fr) minmax(0, 1.2fr) minmax(0, 1.4fr); gap: 10px; align-items: baseline;
+  min-height: 40px; padding: 6px 0; border-top: 1px solid var(--line); font-size: var(--text-sm); }
+.dx-hw-name { color: var(--text-dim); }
+.dx-hw-value { font-family: var(--font-mono); overflow-wrap: anywhere; }
+.dx-hw-row .dim { font-size: 12px; }
+@media (max-width: 560px) {
+  .dx-hw-row { grid-template-columns: 96px minmax(0, 1fr); row-gap: 2px; }
+  .dx-hw-row .dim { grid-column: 2; }
+  .dx-hw-value { overflow-wrap: break-word; }
+}

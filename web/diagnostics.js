@@ -32,6 +32,10 @@
       el("div", { class: "dx-tiles" }, tile("ok", "Passed", passed), tile("look", "Look At", look), tile("unread", "Unread", unread)),
       el("section", { class: "glass dx-list", "aria-labelledby": "dx-checks" }, el("h2", { id: "dx-checks", class: "dx-label" }, "Check-Ups"),
         ...data.checks.map(row)),
+      (data.hardware || []).length ? el("section", { class: "glass dx-list dx-hw", "aria-labelledby": "dx-hw" },
+        el("h2", { id: "dx-hw", class: "dx-label" }, "This PC"),
+        ...data.hardware.map((h) => el("div", { class: "dx-hw-row" }, el("span", { class: "dx-hw-name" }, h.name),
+          el("span", { class: "dx-hw-value" }, h.value), el("span", { class: "dim" }, h.note)))) : null,
       el("p", { class: "dim dx-foot" }, "Looks only. Nothing is probed or changed. Anything it couldn't read is never counted as a pass. "
         + "You can also ask her: \"check my PC\", \"check the network\"."),
       el("button", { type: "button", class: "btn btn-ghost", onclick: async () => paint(await MIA.diagnostics()) }, "Run Again"),

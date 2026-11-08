@@ -132,9 +132,43 @@ def run(context, procedure, inspect=None) -> dict:
     return {"title": spec["title"], "lines": lines, **result}
 
 
+def hardware(facts: dict) -> list[dict]:
+    """Pure logic. The hardware list for the Diagnostics screen, from one inspection's facts: the computer, its
+    processor, memory, each drive of a gigabyte or more (size, free, how full), each network adapter with an address,
+    when it started and its Python. A part the inspection couldn't read is left out, never guessed."""
+    rows = []
+
+    def add(name, value, note=""):
+        """One row, only when there's something to say."""
+        if value not in (None, ""):
+            rows.append({"name": name, "value": str(value), "note": note})
+
+    add("Computer", facts.get("computer.name"), facts.get("os.machine", ""))
+    cores, threads = facts.get("cpu.cores_physical"), facts.get("cpu.threads")
+    add("Processor", facts.get("cpu.model"), " · ".join(x for x in (f"{cores} cores" if cores else "",
+                                                                        f"{threads} threads" if threads else "") if x))
+    if facts.get("memory.total_gb") is not None:
+        use = facts.get("memory.use_percent")
+        add("Memory", f"{facts['memory.total_gb']:g} GB", f"{use:g}% in use" if isinstance(use, (int, float)) else "")
+    drives = sorted({k[len("disk."):-len(".size_gb")] for k in facts if k.startswith("disk.") and k.endswith(".size_gb")})
+    for drive in drives:
+        size = facts.get(f"disk.{drive}.size_gb")
+        if not isinstance(size, (int, float)) or size < 1:
+            continue  # tiny or virtual mounts aren't drives anyone looks after
+        free, use = facts.get(f"disk.{drive}.free_gb"), facts.get(f"disk.{drive}.use_percent")
+        add("Drive " + ("/" if drive == "root" else drive), f"{size:g} GB",
+            " · ".join(x for x in (f"{free:g} GB free" if isinstance(free, (int, float)) else "",
+                                    f"{use:g}% full" if isinstance(use, (int, float)) else "") if x))
+    for key in sorted(k for k in facts if k.startswith("network.") and k.endswith(".ipv4")):
+        add("Network " + key[len("network."):-len(".ipv4")], facts[key])
+    add("Started", str(facts.get("os.booted") or "").replace("T", " "))
+    add("Python", facts.get("python.version"))
+    return rows
+
+
 def screen(context, inspect=None) -> dict:
     """The Diagnostics web screen (web/diagnostics.html, the PC's owner's): every built-in check-up over one
-    passive inspection."""
+    passive inspection, and the hardware list it read (hardware)."""
     if inspect is None:
         from core.inspection import inspect
     try:
@@ -151,7 +185,10 @@ def screen(context, inspect=None) -> dict:
                     "unknown": []}
         checks.append({"id": pid, "title": done["title"], "ok": not done["failed"], "passed": done["passed"],
                        "failed": done["failed"], "unknown": sorted(set(done["unknown"]))})
-    return {"checks": checks, "error": ""}
+    facts = {}
+    for e in report.evidence:
+        facts.setdefault(e.fact, e.value)
+    return {"checks": checks, "error": "", "hardware": hardware(facts)}
 
 
 _ASK = (("network", ("network", "internet connection", "wifi", "wi-fi", "connection")),

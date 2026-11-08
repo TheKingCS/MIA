@@ -66,3 +66,15 @@ def test_the_screen_runs_every_check_up_over_one_inspection():
     assert calls == ["this_computer"] and set(found) == set(diagnostics.PROCEDURES)
     assert not found["pc_ready"]["ok"] and "Drive C has 10 GB free" in found["pc_ready"]["failed"][0]
     assert "cpu.use_percent" in found["pc_ready"]["unknown"]
+
+
+def test_the_hardware_list_says_only_what_was_read():
+    rows = d.hardware({"computer.name": "shop-pc", "os.machine": "x86_64", "cpu.model": "Ryzen 7", "cpu.cores_physical": 8,
+                       "cpu.threads": 16, "memory.total_gb": 31.9, "memory.use_percent": 40.0, "disk.C.size_gb": 953.9,
+                       "disk.C.free_gb": 412.0, "disk.C.use_percent": 56.8, "disk./snap.size_gb": 0.1,
+                       "network.Wi-Fi.ipv4": "192.168.1.20", "python.version": "3.12.4"})
+    by = {r["name"]: r for r in rows}
+    assert by["Processor"] == {"name": "Processor", "value": "Ryzen 7", "note": "8 cores · 16 threads"}
+    assert by["Drive C"]["note"] == "412 GB free · 56.8% full" and "Drive /snap" not in by  # a tiny mount isn't a drive
+    assert by["Memory"]["value"] == "31.9 GB" and by["Network Wi-Fi"]["value"] == "192.168.1.20" and "Started" not in by
+    assert d.hardware({}) == []
