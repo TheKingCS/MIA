@@ -148,6 +148,9 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       `C:\Users\zacrh\DevTools\imagegen\series_reference.png`.
 
 ### At the PC
+- [ ] **Start MIA's own search engine (SearXNG)** so she can look things up online when you ask (DEC-0053, your
+      pick 2026-10-31; `core/online_lookup.py` built 2026-11-08, T-0017): Docker Desktop, then the one command and
+      the JSON setting in `docs/ONLINE_LOOKUP.md`. Only search words leave the PC; no account, no tracking.
 - [ ] **Cut your area's vector map** (built 2026-11-06 with your OK): `.venv\Scripts\python -m tools.offline_map
       cut home --around-waypoints 10` (every waypoint, 10 km around; or `--bbox west,south,east,north`). It
       tells Protomaps' map server which area, nothing else; a few MB per town. Then Maps on the web opens on it.

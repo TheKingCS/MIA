@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1303 files, 282,926 lines; 1303 files describe themselves; 15,927 of 16,021 classes and functions are documented.
+1305 files, 283,201 lines; 1305 files describe themselves; 15,943 of 16,037 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-486 files, 134,161 lines; 7,181 of 7,267 classes and functions documented
+487 files, 134,339 lines; 7,190 of 7,276 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -304,6 +304,7 @@
 - `core/ocr.py`: Reading text out of photos and scanned pages (2026-09-28), so a phone photo of a paper receipt or a scanned manual/textbook works in the document inbox (core/inbox_manager.py) and the textbook tutor (core/textbook_manager.py).
 - `core/offline_maps.py`: Vector offline maps (build plan step 14; Zac's OK for the outside code, 2026-11-06): an area of OpenStreetMap cut from the Protomaps daily world build into one small file (PMTiles), kept on this PC in `data/maps/`, and drawn by MapLibre on the web's Maps page (`web/vendor/`). Unlike the topo tiles (
 - `core/onboarding.py`: The one-time, first-run welcome message injected into a brand-new user's very first conversation — docs/VISION.md's "interactive first-time onboarding... MIA teaches herself through real conversation and real tasks, not docs/slides." See gui/home_dashboard.py's `__init__` for how this gets injected:
+- `core/online_lookup.py`: Looking things up online, when asked (DEC-0053; T-0017; Zac, 2026-10-31: "offer-then-search; SearXNG on this computer").
 - `core/online_watch.py`: Offline awareness follow-ups (2026-09-28), on top of core/connectivity.py:
 - `core/operating_actions.py`: The Operating Journal (core/operating_journal.py, DEC-0097) through the action contract (core/actions.py): `operating.add` (a line of how they mean to operate), `operating.remove`, and `operating.rate` (a self-rated line, 1 to 5, for this week). The journal writes through atomic_write_text, so "undo
 - `core/operating_journal.py`: The Operating Journal (DEC-0097, build plan step 11; Zac, 2026-11-06: "a template that is essentially a journal entry for how I want to operate, and how I do operate so that MIA can learn my goals as well as my actual routine").
@@ -772,7 +773,7 @@
 
 ## tests/: the test suite: what each part must do
 
-446 files, 75,045 lines; 6,459 of 6,467 classes and functions documented
+447 files, 75,142 lines; 6,466 of 6,474 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1030,6 +1031,7 @@
 - `tests/test_offline_maps.py`: Vector offline maps (core/offline_maps.py): names, the box around waypoints, a map file's header, the cut.
 - `tests/test_ohms_law.py`: Unit tests for Ohm's law solve() (core/toolbox_calcs.py; modules.toolbox.calculators.ohms_law re-exports it).
 - `tests/test_onboarding.py`: Unit tests for core.onboarding's pure functions — see gui/home_dashboard.py's _inject_first_run_welcome() for how this feeds a brand-new user's very first conversation. Same shape as tests/test_startup_briefing.py.
+- `tests/test_online_lookup.py`: Looking things up online, when asked (core/online_lookup.py, DEC-0053, T-0017): only the search words leave the computer, only to the person's own SearXNG, never when offline, off or on a child's account, and every result is said with its source and date as content from the web.
 - `tests/test_online_watch.py`: Offline awareness follow-ups (core/online_watch.py): noticing a settled change of connection, telling the owner through the communication gate, and "remind me when I'm back online".
 - `tests/test_operating_journal.py`: The Operating Journal (DEC-0097, core/operating_journal.py): lines in the person's words, each read by code for what the records can check; self-rated otherwise; how they did as plain numbers by week (and each line's meter), never a judgment; talked to with "add to my operating journal" and "rate ..
 - `tests/test_orb_presence.py`: MIA's floating desktop orb (gui/orb_presence.py, Zac 2026-11-08): a frameless, transparent, always-on-top window that reuses the presence orb with no label, bobs where it stands, and wakes her (emits `activated`) on Enter or a plain click but not a drag.
