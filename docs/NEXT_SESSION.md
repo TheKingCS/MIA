@@ -973,7 +973,9 @@ person's own Building Materials and Tools & Equipment targets, what's left of th
 sessions, the saga's moments); (12) DEC-0057's status per capability; (13) DEC-0142's self-knowledge in how-to answers
 about MIA. **(11) and (12) built.** **Claimed (engine), core only:** (14) deeper homestead chains in
 `core/development_engine.py`, the same rules as the seed-starting chain: a coop, then a feed bin and a small laying flock
-in spring, eggs before selling them; a compost bin's first finished compost as made seed mix, months later. Ready for a voice tool (parity session): "what isn't working?" / "what's
+in spring, eggs before selling them; a compost bin's first finished compost as made seed mix, months later. **(14) built.** **(15) claimed (engine):** preserving the harvest (a canning setup, a first batch
+put up, selling preserves only after a cottage-food rules check, eggs too) and a greenhouse's level, drained site before
+the frame. Ready for a voice tool (parity session): "what isn't working?" / "what's
 broken?" -> `core.capabilities.status_summary(context, here)`.
 
 **Who builds what (2026-11-07 night, after Power and Recent Changes were each built twice at once):** screens
