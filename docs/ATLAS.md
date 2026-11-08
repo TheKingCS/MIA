@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1136 files, 254,200 lines; 1136 files describe themselves; 13,884 of 14,557 classes and functions are documented.
+1139 files, 254,633 lines; 1139 files describe themselves; 13,910 of 14,585 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-416 files, 118,642 lines; 6,280 of 6,369 classes and functions documented
+418 files, 118,964 lines; 6,302 of 6,391 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -54,6 +54,7 @@
 - `core/assistant_textbook_actions.py`: Assistant tools for the textbook tutor (core/textbook_manager.py): what books MIA has, a quick "where does the book talk about X" lookup, and making a Classroom course from a book. Studying and quizzing themselves are conversation modes (core/textbook_study.py: "let's study the wiring book", "quiz m
 - `core/assistant_today_actions.py`: "What's on today?" (core/today.py, 2026-10-01): everything that needs the person today, across every app, in one answer.
 - `core/assistant_toolbox_actions.py`: The Toolbox by voice, for what the web Toolbox added (DEC-0125: full use both ways). "How many board feet in ten 2x6s, 8 feet long", "how much concrete for a 10 by 12 pad, 4 inches thick", "turn off my wake up alarm". Each tool uses the same core math (core/toolbox_calcs.py) or the same action kind 
+- `core/assistant_trip_route_actions.py`: A trip's route and checkpoints by voice (DEC-0125), the same three action kinds the Expeditions page uses (core/trip_route.py), so "undo that" takes each back:
 - `core/assistant_turn.py`: One Assistant turn — user text in, the things MIA should say back out — shared by every voice surface: the headless Core loop (`core/voice_loop.py`) and the phone voice endpoint (`server/app.py`). Pulled out of `VoiceLoopController._handle_turn()` unchanged in behavior, so both surfaces answer, act,
 - `core/assistant_undo_actions.py`: "Undo that" and "what did you just change?" (core/undo_log.py), plus "why did you tell me that?" and "stop telling me about ..." (core/message_reasons.py, core/communication_gate.py), and "is everything set up?" (core/system_check.py). 2026-10-01.
 - `core/assistant_waypoint_actions.py`: Waypoints by voice, for what Navigation's page added (DEC-0125: full use both ways). "Rename the spring waypoint to Upper Spring", "mark the old gate as a hazard", "note on the spring: dry in August": the same `waypoint.edit` action kind as the page's Edit (core/waypoint_actions.py), so "undo that" 
@@ -366,6 +367,7 @@
 - `core/training_actions.py`: The live workout session's changes (DEC-0055, core/training_session.py) as action kinds on the contract in core/actions.py, so the Workout screen, the glasses and voice all move the one session the same way: start today's training, a set done (with how it was counted), skip the rest, skip an exercis
 - `core/training_session.py`: The live workout session (DEC-0055, docs/ACTIVE_TRAINING_PLAN.md): one per person, shared by every surface (the PC, the phone, the glasses, voice), moving set by set through today's training.
 - `core/trip_manager.py`: Backs the Expeditions module (modules/expeditions/module.py) — docs/ROADMAP.md milestone 12.1, Expedition Mode. A Trip is one outing — a hike, paddle, ride, fishing trip, etc. (see `ACTIVITY_TYPES`) — always belonging to a core.expedition_manager.Expedition via the required `expedition_id`. It ties 
+- `core/trip_route.py`: A trip's route and checkpoints on every device (DEC-0125; docs/WEB_PARITY.md Expeditions "not yet: route, splits"). The desktop's trip dialog plans a route from saved waypoints and logs "arrived here" at each one (core/trip_manager.py: `waypoint_ids`, `record_split`, `leg_summaries`); the web and vo
 - `core/tts_worker.py`: Runs `VoiceManager.synthesize()` + `.play()` off the GUI thread — docs/ROADMAP.md milestone 5.3. Same reasoning as `core/chat_worker.py`: `play()`'s `sd.wait()` blocks for the full duration of the spoken reply, which scales with reply length and would freeze the GUI thread for that whole time otherw
 - `core/turn_trace.py`: One line per Assistant turn: how MIA got to what she said (DEC-0067, choice 4: native traces before Langfuse; phase 2 of docs/PERSONALITY_AND_ECOSYSTEM_AUDIT.md). The route that answered (a fixed reply, a plain-word command, a question plan, the model), what was asked and said, the tools offered and
 - `core/undo_log.py`: "Undo that" (2026-10-01, accounts stage 5): when MIA changes something for you (adds an expense, checks off a chore, logs a reading) and got it wrong, you can take it back.
@@ -696,7 +698,7 @@
 
 ## tests/: the test suite: what each part must do
 
-376 files, 67,694 lines; 5,359 of 5,943 classes and functions documented
+377 files, 67,775 lines; 5,363 of 5,949 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1020,6 +1022,7 @@
 - `tests/test_trip_detail_dialog.py`: Unit tests for gui.trip_detail_dialog's pure functions, same style as tests/test_navigation_module.py (no Qt event loop, no fixtures).
 - `tests/test_trip_manager.py`: Unit tests for core.trip_manager. Isolates _DATA_DIR/_TRIPS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_waypoint_manager.py's isolated_paths). planned_route_distance_km() is checked against the same known real-world distance test_waypoint_manager.py already uses (New York <-> *(5 undocumented)*
 - `tests/test_trip_map_view.py`: Unit tests for gui.trip_map_view's pure functions (project_to_scene_xy, compute_bounds), same style as tests/test_navigation_module.py — no Qt event loop, no QGraphicsScene/View instantiated.
+- `tests/test_trip_route.py`: A trip's route and checkpoints on the web and by voice (core/trip_route.py, core/assistant_trip_route_actions.py): stops from saved waypoints, "arrived" logged now, the legs walked, an out-and-back route, and undo. *(2 undocumented)*
 - `tests/test_turn_trace.py`: Turn traces (DEC-0067, core/turn_trace.py): one line per turn, how it was answered and how long it took; never a private turn, never a password. *(1 undocumented)*
 - `tests/test_unit_converter.py`: Unit tests for the unit converter's convert() (core/unit_conversion.py; modules.toolbox.calculators.unit_converter re-exports it).
 - `tests/test_update_manager.py`: Unit tests for core.update_manager. Isolates _PROJECT_ROOT into a tmp_path scratch area (same monkeypatch pattern as test_backup_manager.py) so these tests never touch the real project files. Git-commit tests `git init` a throwaway repo in tmp_path — never the real project repo — with a local (not g *(2 undocumented)*
@@ -1077,7 +1080,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-80 files, 14,469 lines
+80 files, 14,499 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
@@ -1099,7 +1102,7 @@
 - `web/diagnostics.js`: diagnostics.js — the PC's check-ups (claude, 2026-11-06, T-0040). Renders MIA.diagnostics() (core/diagnostics.py): each built-in check-up over one passive inspection (nothing is probed or changed), what passed, what to look at, and what couldn't be read (never counted as a pass). The PC's owner's pa
 - `web/dungeon.js`: dungeon.js — The Dungeon (claude, 2026-10-27, DEC-0046). Renders MIA.dungeon() (core/web_dungeon.py) in tabs: Today (clear today's run and say what made it hard mode, the overtime line, planned runs, make a hard day a quest), Loot (this week earned and projected, the month, the year at this pace, ba
 - `web/equipment.js`: equipment.js — Garage and Greenhouse (claude, 2026-10-06, DEC-0017; Maintenance and Property folded in, Zac 2026-10-16). The page's <body data-scope> picks the screen; tabs Assets, Past Due, Due Today, Due Soon; everything comes from MIA.equipment(scope). Tasks are marked done, assets and tasks adde
-- `web/expeditions.js`: expeditions.js — the Expeditions screen (claude, 2026-10-16; Zac: the app only opened a chat). Renders MIA.expeditions() (core/web_more.py): expeditions happening now, coming up and past; one opens to its trips, each with Start / Finish, its packing list (tap to pack) and its notes. Every change is 
+- `web/expeditions.js`: expeditions.js — the Expeditions screen (claude, 2026-10-16; Zac: the app only opened a chat). Renders MIA.expeditions() (core/web_more.py): expeditions happening now, coming up and past; one opens to its trips, each with Start / Finish, its packing list (tap to pack), its notes, and its route: stop
 - `web/field-kit.js`: field-kit.js — the Field Kit (claude, 2026-11-07, DEC-0125; the design canvas's Field Kit, DEC-0113). Renders MIA.fieldKit() (core/web_field_kit.py) in three tabs: Devices (what's plugged into the computer), Network (a hash's kind and a subnet, worked out in core by MIA.fieldKitCheck as you type) an
 - `web/files.js`: files.js — the Files screen (claude, 2026-10-16; Zac: the app only opened a chat). Renders MIA.files(path) (core/web_more.py, core/my_files.py): your own MIA files folder, with folders, Upload (from this phone or computer), Open (a picture, PDF, song or text shows here; anything else downloads), Ren
 - `web/flock.js`: flock.js — the Chickens screen (claude, 2026-10-21, DEC-0037). Renders MIA.flock() (core/web_flock.py): per flock, eggs today and this week, the lay rate, loose eggs, feed cost per dozen, two weeks of eggs, cartons on hand and the log. Log Eggs is one tap per count (the tap is the approval; Undo in 

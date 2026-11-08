@@ -47,6 +47,50 @@
             "start_date": "2026-10-25",
             "end_date": null,
             "notes": ""
+          },
+          "route": {
+            "stops": [
+              {
+                "id": "w1",
+                "name": "Boat ramp",
+                "reached": true
+              },
+              {
+                "id": "w2",
+                "name": "Heron island",
+                "reached": true
+              },
+              {
+                "id": "w3",
+                "name": "North cove",
+                "reached": false
+              }
+            ],
+            "planned_km": 6.4,
+            "next": {
+              "id": "w3",
+              "name": "North cove"
+            },
+            "legs": [
+              {
+                "from": "Boat ramp",
+                "to": "Heron island",
+                "km": 2.35,
+                "took": "42 min",
+                "pace": "3.4 km/h"
+              }
+            ],
+            "walked_km": 2.4,
+            "checkpoints": [
+              {
+                "name": "Boat ramp",
+                "at": "2026-10-25T07:10:00"
+              },
+              {
+                "name": "Heron island",
+                "at": "2026-10-25T07:52:00"
+              }
+            ]
           }
         }
       ],
@@ -195,5 +239,23 @@
         }
       ]
     }
-  }
+  },
+  "waypoints": [
+    {
+      "id": "w1",
+      "name": "Boat ramp"
+    },
+    {
+      "id": "w2",
+      "name": "Heron island"
+    },
+    {
+      "id": "w3",
+      "name": "North cove"
+    },
+    {
+      "id": "w4",
+      "name": "Old dam"
+    }
+  ]
 }

@@ -175,14 +175,17 @@ def workshop_page(context, today: Optional[date] = None) -> dict:
 
 def expeditions_page(context, today: Optional[date] = None) -> dict:
     """The data the Expeditions screen shows, assembled here (the web only draws it); {"available": False} when expeditions or trips aren't here. Each expedition with when it is
-    (now, upcoming, past), days away, its media and its trips (gear packed, distance, photos, journal notes), the
+    (now, upcoming, past), days away, its media and its trips (gear packed, distance, photos, journal notes, the route
+    and checkpoints: core/trip_route.route_card), the
     packing and distance across them and what has to happen first (`_trip_heads_up`); current ones first, then past
-    ones newest first; counts and forms.
+    ones newest first; counts, forms and the saved waypoints a stop is picked from.
     """
     today = today or date.today()
     expeditions, trips = getattr(context, "expeditions", None), getattr(context, "trips", None)
     if expeditions is None or trips is None:
         return {"available": False}
+    from core.trip_route import route_card, waypoint_choices
+
     journal = getattr(context, "journal", None)
     iso = today.isoformat()
 
@@ -197,6 +200,7 @@ def expeditions_page(context, today: Optional[date] = None) -> dict:
                 "gear": [{"index": i, "label": g.label, "packed": g.packed} for i, g in enumerate(t.gear)],
                 "packed": sum(1 for g in t.gear if g.packed), "distance_km": round(distance, 1) if distance else None,
                 "photos": len(t.photo_filenames), "journal": [{"id": e.entry_id, "title": e.title} for e in notes],
+                "route": route_card(context, t),
                 "values": {"name": t.name, "activity_type": t.activity_type, "start_date": t.start_date,
                            "end_date": t.end_date, "notes": t.notes}}
 
@@ -238,6 +242,7 @@ def expeditions_page(context, today: Optional[date] = None) -> dict:
                    "now": sum(1 for c in cards if c["when"] == "now"),
                    "trips": sum(len(c["trips"]) for c in cards)},
         "forms": {k: v for k, v in _forms().items() if k in ("expedition", "trip")},
+        "waypoints": waypoint_choices(context),
     }
 
 
