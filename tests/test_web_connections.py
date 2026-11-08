@@ -1,5 +1,6 @@
-"""Connections on the web and by voice (DEC-0146): "don't bring that up" settles a connection as declined and keeps
-its thing quiet past the cooldown, until it's allowed again."""
+"""Connections on the web and by voice (DEC-0146): what each ties into and what she found about it first, and "don't
+bring that up", which settles a connection as declined and keeps its thing quiet past the cooldown, until it's allowed
+again."""
 
 from datetime import datetime, timedelta
 from types import SimpleNamespace
