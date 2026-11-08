@@ -52,7 +52,12 @@ forest for the Plants portal", `portal.picture`, `set_portal_picture`; the Nexus
 `play_world_turn`, the story from the engine's `turns_in`), **Connections' "What She Found First"** (the engine's
 research, on the page and by voice), and every remaining test helper documented except the budget and Plaid files
 (waiting on Zac's Plaid work). K-0137, K-0138. All 96 pages pass the demo sweep on desktop and phone, none wider than
-the phone.
+the phone. Afternoon (Zac still away), screens for each engine piece as it landed: the Greenhouse's **What's Next**
+shows "step 1 of N on the way to…", the whole path and the checks behind it, and where the budget came from;
+**About MIA** shows how her apps are doing on this device (DEC-0057; Diagnostics' and Settings' stale "no web screen
+yet" limits corrected); **Diagnostics** shows her own repository's findings (T-0020); the **development board** shows
+open disagreements (T-0022, "your call" in amber) and her evolution timeline (T-0023); **Look It Up Online**
+(web/lookup.html, DEC-0053/T-0017; no "Say:" line until the parity session's voice tool exists). K-0148.
 
 **New 2026-11-08 (latest): capability reminders — "did you know you could go do X right now?" (DEC-0143).** Zac asked
 for MIA to remind him, now and then, of what he's already capable of doing right now — a subtle, affirming redirect
