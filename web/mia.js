@@ -349,6 +349,7 @@
     // The demo can't calculate, so it answers with the example's own result.
     toolbox: () => read("/api/toolbox", "toolbox"),
     why: () => read("/api/why", "why"),
+    projects: () => read("/api/projects", "projects"),
     toolboxCalc: (id, values) => demo
       ? read("", "toolbox").then((t) => Object.assign({ demo: true }, (t.demo_answers || {})[id] || { error: "The demo can't calculate." }))
       : call("GET", "/api/toolbox/calc?" + new URLSearchParams(Object.assign({ id }, values)).toString()),

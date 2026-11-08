@@ -436,7 +436,9 @@
     $("tabs").replaceChildren(...TABS.map(([id, l]) => el("button", { type: "button", role: "tab", "aria-selected": String(id === tab),
       onclick: () => { tab = id; history.replaceState(null, "", "#" + id); draw(); } }, l)));
     const view = VIEWS[tab]();
-    $("panel").replaceChildren(...[].concat(view));
+    // Projects (the greenhouse, the fence: your own builds with a budget and tasks) have their own page.
+    $("panel").replaceChildren(...[].concat(view), el("p", { class: "ws-projects-link" },
+      el("a", { class: "btn btn-ghost", href: "projects.html" }, "Your Projects ›")));
   }
 
   MIAShell.start(async () => {

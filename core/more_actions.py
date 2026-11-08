@@ -121,6 +121,17 @@ RECORDS["inventory"] = Record("inventory", "item", "item_id", "get_item", "add_i
                                   Field("notes", "Notes", "textarea"),
                               ))
 
+# A project (core/project_manager.py): a build or job of the person's own, on the Projects page (core/web_projects.py);
+# its budget is project.budget and its tasks task.* there.
+RECORDS["project"] = Record("project", "project", "project_id", "get_project", "add_project", "update_project",
+                            "delete_project", store="projects", fields=(
+                                Field("name", "Name", "text", True),
+                                Field("status", "Status", "choice", options=("Planning", "Active", "On Hold", "Complete"),
+                                      default="Planning"),
+                                Field("due_date", "Due", "date", say="due"),
+                                Field("description", "What it is", "textarea", say="description"),
+                            ))
+
 # A trip belongs to an expedition (chosen on the page).
 TRIP = Record("trip", "trip", "trip_id", "get_trip", "add_trip", "update_trip", "delete_trip", store="trips", fields=(
     Field("name", "Name", "text", True),
