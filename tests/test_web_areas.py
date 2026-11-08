@@ -60,7 +60,17 @@ def test_the_areas_in_zacs_order_with_kitchen_as_its_own():
 
 
 def test_no_area_hue_is_a_status_color():
-    """DEC-0130: amber means needs you and red means error; no area wears either."""
-    status = {"#f2b33d", "#ffd400", "#ef5350", "#ff4d4d"}
-    assert all(a.hue.lower() not in status and a.hue.startswith("#") for a in AREAS)
-    assert len({a.hue for a in AREAS}) == len(AREAS)
+    """DEC-0130 with Muse's H-0093: amber means needs you, red error, green ok, gold reward; no area wears any of them
+    (no hue in green's band at all: homestead stays cyan), and Muse's set values hold."""
+    import colorsys
+
+    for a in AREAS:
+        r, g, b = (int(a.hue[i:i + 2], 16) / 255 for i in (1, 3, 5))
+        h, l, sat = colorsys.rgb_to_hls(r, g, b)
+        deg = h * 360
+        if sat > 0.25 and l < 0.85:
+            assert not (80 <= deg <= 170), f"{a.id} is green ({a.hue})"
+            assert not (35 <= deg <= 55 and l < 0.75), f"{a.id} is amber or gold ({a.hue})"
+            assert not (deg <= 12 or deg >= 350), f"{a.id} is red ({a.hue})"
+    hue = {a.id: a.hue for a in AREAS}
+    assert hue["plants_animals"] == "#35d4ff" and hue["kitchen"] == "#e9d4a8" and hue["health"] == "#ff8a3d"

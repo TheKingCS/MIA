@@ -30,5 +30,5 @@ def test_going_to_an_area_by_its_name_or_an_everyday_name():
 def test_the_screen_has_portals_in_order_with_hues_and_the_hud(monkeypatch):
     monkeypatch.setattr(surfaces, "_visible", lambda context, app: True)
     page = nexus(SimpleNamespace())
-    assert page["portals"][0]["id"] == "home" and page["portals"][1]["hue"] == "#e8792f"
+    assert page["portals"][0]["id"] == "home" and page["portals"][1]["hue"] == "#8fa7bf"
     assert {"level", "missions"} <= set(page["hud"]) and page["day"] == "Nothing needs you today"

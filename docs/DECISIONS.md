@@ -2046,8 +2046,10 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
      level, XP, missions). The Dashboard's day is one step in.
   2. **Portals:** DEC-0129's fifteen areas **plus Kitchen** (its own portal as well as inside Home and Health).
   3. **Area colors amend DEC-0023:** each area has a hue for its portal's frame, its light and its environment's
-     ambient glow only. Buttons, selection and focus stay cyan; amber and red keep their meanings (needs you, errors
-     and destructive) and are never an area's hue.
+     ambient glow only. Buttons, selection and focus stay cyan; amber, red, green and gold keep their meanings (needs
+     you, errors and destructive, ok, reward) and are never an area's hue. Where Muse set an atmosphere (H-0093) the
+     area uses it: Kitchen cream, Health and Fitness the Workout orange, Garage the Workshop steel, Plants and
+     Animals stays cyan (homestead, never green). The rest are Claude's picks for Muse to refine.
   4. **Style:** the 90s/2000s underground and liquid-morphing feel lives in motion (portals forming, environments
      flowing in) and the Nexus's backdrop (vapor, texture); panels and text stay Stark-clean and legible.
   5. Built as shared components (`web/spatial.css`, `web/spatial.js`), 2.5D first, every device at its own depth,

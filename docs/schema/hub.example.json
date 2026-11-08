@@ -171,7 +171,7 @@
           "ask": "What is this?"
         }
       ],
-      "hue": "#e8792f",
+      "hue": "#8fa7bf",
       "environment": {
         "kind": "garage",
         "available": true,
@@ -353,7 +353,7 @@
           "page": "people.html?only=pets"
         }
       ],
-      "hue": "#2fd27e",
+      "hue": "#35d4ff",
       "environment": null
     },
     "health": {
@@ -379,7 +379,7 @@
           "ask": "What can I make with what's in the pantry?"
         }
       ],
-      "hue": "#ff4f8b",
+      "hue": "#ff8a3d",
       "environment": null
     },
     "recreation": {
@@ -492,7 +492,7 @@
           "ask": "What devices are connected?"
         }
       ],
-      "hue": "#5be0c8",
+      "hue": "#c0c8d4",
       "environment": null
     },
     "browser": {
@@ -686,7 +686,7 @@
           "page": "showoff.html"
         }
       ],
-      "hue": "#e8d29a",
+      "hue": "#7f95ff",
       "environment": null
     },
     "personal": {
@@ -879,7 +879,7 @@
           "page": "chronicle.html"
         }
       ],
-      "hue": "#b8f04a",
+      "hue": "#c86bff",
       "environment": null
     },
     "projects": {
@@ -912,7 +912,7 @@
           "ask": "Start a temperature experiment."
         }
       ],
-      "hue": "#9dffd9",
+      "hue": "#b9a8ff",
       "environment": null
     },
     "communications": {
@@ -952,7 +952,7 @@
           "ask": "What's waiting in my inbox?"
         }
       ],
-      "hue": "#8fb3ff",
+      "hue": "#6fc6ff",
       "environment": null
     }
   },
