@@ -978,7 +978,14 @@ put up, selling preserves only after a cottage-food rules check, eggs too) and a
 the frame. **(15) built.** **(16) claimed (engine): T-0020**, a read-only repository subject for
 `core/inspection.py`: docs checked against the repo (files a doc names that aren't there, decisions marked built whose
 files are missing), findings as tasks. Ready for a voice tool (parity session): "what isn't working?" / "what's
-broken?" -> `core.capabilities.status_summary(context, here)`.
+broken?" -> `core.capabilities.status_summary(context, here)`. **(16) built**, with T-0021, T-0022, T-0025 and T-0023
+(engine, 2026-11-08 afternoon, core only). **Ready for the design session's screens on the development dashboard
+(`web/dev.js`, data `/api/dev`):** `disagreements` (each {subject, kind decision/design/task, status open/answered/zac,
+raised_by, why, answer, next, command}, Zac's first: core/disagreements.py) and `evolution` ({months: each {month,
+decisions, commits, tasks_done, capabilities, tools, screens, bugs_found, bugs_fixed, merged, undone, new_parts,
+benchmarks {kind: {answered, from_code}}}, milestones, totals}: core/dev_evolution.py, DEC-0071's timeline).
+`python -m tools.work history <words>` now also searches decisions, commits, failures and experiments
+(core/dev_history.py), and every agent's briefing carries what the history says about its task's files.
 
 **Who builds what (2026-11-07 night, after Power and Recent Changes were each built twice at once):** screens
 (web pages, the canvas's look, the review's missing screens: Waiting For You, a plan's page, the Browser in the
