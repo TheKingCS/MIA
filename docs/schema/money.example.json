@@ -604,7 +604,12 @@
       "from_bill": false,
       "business": "Rentals LLC",
       "business_id": "ent1",
-      "auto": false
+      "auto": false,
+      "lines": [
+        "HVAC filter 16x25 \u00d73 \u00b7 $54.00",
+        "Foil tape \u00b7 $9.98",
+        "Shop towels \u00b7 $21.02"
+      ]
     },
     {
       "id": "beaef58486",
@@ -625,7 +630,8 @@
       "from_bill": true,
       "business": "",
       "business_id": "",
-      "auto": false
+      "auto": false,
+      "lines": []
     }
   ],
   "recent_days": 90,

@@ -1581,3 +1581,8 @@ body.mod-maps .hero { display: none; }
 .tb-item-count .btn { min-width: 44px; min-height: 44px; }
 .tb-qty { font-family: var(--font-mono); min-width: 2.5ch; text-align: center; }
 .tb-item .row-buttons { grid-column: 1 / -1; }
+
+/* Money: a filed receipt's lines under its expense (core/web_money.receipt_lines, 2026-11-07). */
+.receipt-lines { margin-top: 6px; font-size: 14px; color: var(--text-dim); }
+.receipt-lines summary { cursor: pointer; min-height: 32px; display: flex; align-items: center; }
+.receipt-lines ul { margin: 4px 0 0; padding-left: 18px; }

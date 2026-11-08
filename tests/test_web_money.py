@@ -3,7 +3,7 @@ DEC-0017 (2026-10-06): Money on the web does everything the PC app's
 Budget screen does. The page's data (core/web_money.py) and every change
 as an action kind (core/money_actions.py): add, edit, delete bills,
 income sources, income, expenses and debts; pay a debt; set budgets;
-sort a bank charge to a business (expense.business).
+sort a bank charge to a business (expense.business); a receipt's lines.
 Each one proposed, approved, recorded and undoable; none for a child.
 """
 
@@ -190,3 +190,19 @@ def test_sorting_a_bank_charge_to_a_business_from_the_screen(world):
     assert next(e for e in money_page(world, TODAY)["expenses"] if e["id"] == newest)["business"] == ""
     with pytest.raises(ActionError, match="isn't one of yours"):
         world.actions.propose(world, "expense.business", {"entry_id": newest, "entity_id": "nope"})
+
+
+def test_a_filed_receipts_lines_show_under_its_expense_and_are_read_back_by_voice(world):
+    from core.assistant_homestead_actions import _action_get_receipt
+    from core.web_money import receipt_lines
+
+    assert receipt_lines([]) == [] and receipt_lines([{"description": "Deck screws", "amount": 18.4, "quantity": 2}]) \
+        == ["Deck screws ×2 · $18.40"]
+    assert _action_get_receipt(world, {}).startswith("None of your expenses has a receipt")
+    world.budget.add_expense(48.4, "Supplies", "LOWES #1234", TODAY.isoformat(), payee="Lowe's", items=[
+        {"description": "Deck screws", "amount": 18.4, "quantity": 2}, {"description": "Tarp", "amount": 30.0}])
+    row = next(e for e in money_page(world, TODAY)["expenses"] if e["payee"] == "Lowe's")
+    assert row["lines"] == ["Deck screws ×2 · $18.40", "Tarp · $30.00"]
+    assert _action_get_receipt(world, {"store": "lowes"}) == \
+        f"Lowe's on {TODAY.isoformat()}, $48.40: Deck screws ×2 · $18.40; Tarp · $30.00."
+    assert _action_get_receipt(world, {"store": "Walmart"}).startswith("I don't have a receipt from Walmart")

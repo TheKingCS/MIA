@@ -41,9 +41,9 @@
   const editBtn = (key, row) => btn("Edit", "btn-ghost", () => edit(key, row));
   const delBtn = (key, row) => btn("Delete", "btn-ghost danger", () => del(key, row));
 
-  function row(title, sub, amount, cls, actions) {
+  function row(title, sub, amount, cls, actions, more) {
     return el("div", { class: "row money-row " + (cls || "") },
-      el("div", {}, el("div", { class: "row-title" }, title), sub ? el("div", { class: "row-sub" }, sub) : null),
+      el("div", {}, el("div", { class: "row-title" }, title), sub ? el("div", { class: "row-sub" }, sub) : null, more || null),
       el("div", { class: "row-meta" }, amount != null ? el("span", { class: "money-amount" }, amount) : null, actions));
   }
   function section(title, addLabel, onAdd, children, empty) {
@@ -191,7 +191,9 @@
       rows.map((e) => row(e.description || e.payee || e.category,
         [day(e.date), e.category, e.payee && e.description ? e.payee : null, e.from_bank ? "from the bank" : null,
           e.from_bill ? "a bill" : null, e.business ? e.business + (e.auto ? " (sorted by MIA)" : "") : null].filter(Boolean).join(" · "),
-        fmt(e.amount), "", buttons(biz() ? btn("Business", "btn-ghost", () => pickBusiness(e)) : null, editBtn("expense", e), delBtn("expense", e)))),
+        fmt(e.amount), "", buttons(biz() ? btn("Business", "btn-ghost", () => pickBusiness(e)) : null, editBtn("expense", e), delBtn("expense", e)),
+        e.lines && e.lines.length ? el("details", { class: "receipt-lines" }, el("summary", {}, e.lines.length + (e.lines.length === 1 ? " item" : " items") + " on the receipt"),
+          el("ul", {}, e.lines.map((l) => el("li", {}, l)))) : null)),
       words ? "Nothing matches." : "No expenses logged yet.");
     sec.insertBefore(finder, sec.children[1]);
     return [review(), sec].filter(Boolean);

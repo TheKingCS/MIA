@@ -9,7 +9,8 @@ Budget screen shows, assembled here so `web/` holds no logic. Served as
 Tabs, as on the PC: Overview (this month, the monthly plan, net worth
 and its line over the last six months (core/net_worth_history.py),
 spending by category), Bills, Income (sources and what came in),
-Expenses, Debts (payoff order and why, under avalanche / snowball /
+Expenses (each with its business, and a filed receipt's lines:
+`receipt_lines`; the bank charges waiting for a business: `_business`), Debts (payoff order and why, under avalanche / snowball /
 hybrid), Budgets (monthly targets), Trends (the last six months) and
 Bank (connection status only; connecting and syncing need the vault
 passphrase, so they stay on the PC).
@@ -71,7 +72,7 @@ def _r(value) -> float:
 
 
 def money_page(context, today: Optional[date] = None, strategy: str = "hybrid") -> dict:
-    """The Money screen's data: the same finances summary Life State serves, this month's spending by category (largest first), bills, income, debts ranked by the chosen payoff strategy, and the rest of the budget's records, each with its form values and its one-tap action (Mark paid...), and net worth with its change this month and its line (`_net_worth_line`, which keeps today's point); each expense says its business, and `business` holds the charges waiting to be sorted (`_business`). Not available without a budget."""
+    """The Money screen's data: the same finances summary Life State serves, this month's spending by category (largest first), bills, income, debts ranked by the chosen payoff strategy, and the rest of the budget's records, each with its form values and its one-tap action (Mark paid...), and net worth with its change this month and its line (`_net_worth_line`, which keeps today's point); each expense says its business and its receipt's lines (`receipt_lines`), and `business` holds the charges waiting to be sorted (`_business`). Not available without a budget."""
     from core.budget_manager import (DEBT_PAYOFF_STRATEGIES, days_until_bill_due, days_until_income_due,
                                      days_until_promo_expires, next_bill_due_date, next_income_due_date, rank_debts)
     from core.context_assembler import _finances
@@ -130,7 +131,7 @@ def money_page(context, today: Optional[date] = None, strategy: str = "hybrid") 
     page["expenses"] = recent(budget.all_expenses(), "expense",
                               lambda e: {"payee": e.payee, "from_bill": bool(e.bill_id),
                                          "business": names.get(e.entity_id, ""), "business_id": e.entity_id,
-                                         "auto": e.entity_auto})
+                                         "auto": e.entity_auto, "lines": receipt_lines(e.items)})
     page["business"] = _business(context, names, today)
     page["recent_days"] = RECENT_DAYS
 
@@ -174,6 +175,20 @@ def money_page(context, today: Optional[date] = None, strategy: str = "hybrid") 
     page["bank"] = _bank(context)
     page["net_worth"] = _net_worth_line(context, page["summary"], today)
     return page
+
+
+def receipt_lines(items: list) -> list[str]:
+    """What a filed receipt's lines say (core/inbox_classify.receipt_items: description, amount, quantity), each as
+    "Deck screws ×2 · $18.40" in the person's currency; [] for an expense without them."""
+    from core.region import money
+
+    out = []
+    for item in items or []:
+        qty = item.get("quantity")
+        text = str(item.get("description") or "an item") + (f" ×{qty:g}" if isinstance(qty, (int, float)) and qty not in (0, 1) else "")
+        amount = item.get("amount")
+        out.append(text + (f" · {money(float(amount))}" if isinstance(amount, (int, float)) else ""))
+    return out
 
 
 def _business(context, names: dict, today: date) -> dict:
