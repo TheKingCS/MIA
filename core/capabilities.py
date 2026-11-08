@@ -23,7 +23,14 @@ Phase 2B, docs/INTELLIGENCE_AUDIT.md). Never a hand-written brochure:
   words (`GIST`), the other curated part: "what can you do?" answered in
   a breath, not 42 descriptions. A test fails when an app is in no area.
 
-`capability_map()` gathers it; `overview()` and `can_i()` say it.
+- **Specialties** (`specialty_list()`, Zac 2026-11-08): what she's trained
+  for and built to do (aquaponics greenhouse scientist, specialists, Night
+  School, teacher, builder, planner, experimenter, game master, model
+  maker, browser, painter), each line read from the module that makes it
+  true and left out when that module or its data isn't there.
+
+`capability_map()` gathers it; `overview()`, `introduction()`,
+`specialties()` and `can_i()` say it.
 """
 
 from __future__ import annotations
@@ -233,9 +240,172 @@ def introduction(context) -> str:
         "I suggest, you decide: nothing changes unless you say so, and I can undo what I did." +
         ("" if child else " I never send an email or spend a cent on my own."),
         "What's yours stays yours: no one else sees it unless you share a household.",
-        "Ask me what I can do, or just tell me what you're working on.",
+        "Ask me what I can do or what I'm trained for, or just tell me what you're working on.",
     ]
     return " ".join(lines)
+
+
+def _join(names: list) -> str:
+    """Pure logic. "a, b and c" (or "a and b", or "a")."""
+    names = [str(n) for n in names if n]
+    return names[0] if len(names) == 1 else ", ".join(names[:-1]) + " and " + names[-1] if names else ""
+
+
+def _soft(name: str) -> str:
+    """Pure logic. A name mid-sentence: each word lowercased except acronyms ("Software and AI engineering" to
+    "software and AI engineering")."""
+    return " ".join(w if len(w) > 1 and w.isupper() else w.lower() for w in str(name).split())
+
+
+def _first_person(directive: str) -> str:
+    """Pure logic. The first sentence of a directive written to her ("Build yourself into a top-tier AI."), in her own
+    voice ("build myself into a top-tier AI")."""
+    first = re.split(r"(?<=[.!?])\s", directive.strip(), maxsplit=1)[0].rstrip(".!? ")
+    first = re.sub(r"\byourself\b", "myself", first, flags=re.I)
+    first = re.sub(r"\byour\b", "my", first, flags=re.I)
+    return first[:1].lower() + first[1:] if first else ""
+
+
+def specialty_list(context=None) -> list[tuple[str, str]]:
+    """What MIA is trained for and built to do (Zac, 2026-11-08: she should know "all the cool things about her
+    programming"), each a (title, line) read from the code that makes it true, never a brochure (DEC-0041). A
+    specialty whose code or data isn't there is left out, so she never claims what she can't do; the person's own
+    numbers (batches growing, experiments running) join when they exist."""
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parent.parent
+    out: list[tuple[str, str]] = []
+
+    def grow() -> str:
+        """The grow lab (DEC-0030 D), and MIA Homestead when it's part of her (DEC-0145)."""
+        from core import grow_lab
+
+        measures = _join([label if label.isupper() or label == "pH" else label.lower()
+                          for label, _ in grow_lab.MEASURES.values()])
+        line = ("I run a greenhouse, aquaponics tanks and grow beds like a scientist: every planting is a batch with "
+                "its yield and losses, experiments put batches side by side until you write the conclusion, and the "
+                f"water is read against safe ranges you set ({measures}). I warn; I never run a pump on my own.")
+        lab = getattr(context, "grow_lab", None)
+        if lab is not None:
+            growing = sum(b.status == "Growing" for b in lab.batches)
+            running = sum(e.status == "Running" for e in lab.experiments)
+            if growing or running:
+                line += f" Right now: {growing} batch{'es' if growing != 1 else ''} growing, " \
+                        f"{running} experiment{'s' if running != 1 else ''} running."
+        home = root / "homestead"
+        if (home / "drivers" / "simulator.py").exists():
+            line += (" And MIA Homestead is part of me: a whole greenhouse and aquaponics control system, built and "
+                     "proven in a simulator first" + (", with safety firmware of its own." if (home / "firmware").exists()
+                                                       else "."))
+        return line
+
+    def specialists() -> str:
+        """The knowledge workers (DEC-0109)."""
+        from core.specialists import SPECIALISTS
+
+        return (f"I keep {len(SPECIALISTS)} specialists, each with a workbook of sourced notes I study at night: "
+                f"{_join([_soft(s.name) for s in SPECIALISTS])}. You can ask any of them a question.")
+
+    def night_school() -> str:
+        """Her curriculum (DEC-0107) and standing aim (DEC-0100)."""
+        from core.curriculum import TRACKS
+        from core.night_school import settings
+
+        line = (f"Every night I go to Night School: {len(TRACKS)} tracks of computing, from "
+                f"{_soft(TRACKS[0].name)} to {_soft(TRACKS[-1].name)}, a lesson at a time.")
+        aim = _first_person(str(settings().get("directive") or ""))
+        return line + (f" My standing aim: to {aim}." if aim else "")
+
+    def teacher() -> str:
+        """Learning paths (DEC-0112)."""
+        from core import paths
+
+        paths._builtins()
+        built = [f"{_soft(p.name)} ({len(p.stages)} stages)" for p in paths.PROGRAMS.values()]
+        return ("I teach anything you want to get good at as a learning path: stages, lessons, your practice logged, "
+                "weekly homework, and checks I verify from your own records" +
+                (f". Built in so far: {_join(built)}." if built else "."))
+
+    def builder() -> str:
+        """Plans with material and cut lists worked out in code (DEC-0118)."""
+        from core.plan_library import BUILT_IN
+
+        some = [_soft(p["title"]) for p in BUILT_IN[:4]]
+        return (f"I'm a builder's helper: {len(BUILT_IN)} plans I size to you, like {_join(some)}, with the "
+                "materials and cuts worked out in code, never guessed, and a cut list for anything of your own.")
+
+    def planner() -> str:
+        """The development engine (DEC-0144)."""
+        from core.development_engine import homestead_catalog
+
+        return (f"I plan a homestead from what you actually have: I weigh {len(homestead_catalog())} projects by cost, "
+                "payoff and what each one unlocks, and name the one move worth making next.")
+
+    def experimenter() -> str:
+        """How she tests and improves herself: answer-style A/B (DEC-0138) and the improvement loops (DEC-0094)."""
+        from core.loops import LOOPS
+        from core.response_style import DIMENSIONS
+
+        return (f"I'm built to experiment: I try two ways of answering you across {len(DIMENSIONS)} things "
+                f"({_join(list(DIMENSIONS))}) and keep what you pick, I compare grow batches to learn what really "
+                f"works, and {len(LOOPS)} improvement loops measure me and open work when I slip.")
+
+    def game_master() -> str:
+        """Living Worlds (DEC-0134) and the Dungeon (DEC-0046)."""
+        import core.dungeon_master  # noqa: F401 - present means she can run a world
+        import core.work_dungeon  # noqa: F401
+
+        return ("I'm a game master: I run living fantasy worlds as their Dungeon Master (you act, I narrate, the dice "
+                "decide, and nothing there ever touches your real life), and I turn your work week into a dungeon "
+                "you clear for loot.")
+
+    def model_maker() -> str:
+        """Her model forge (DEC-0106)."""
+        from core.model_forge import cards
+
+        made = cards()
+        if made:
+            names = _join([str(c.get("name", "")) for c in made])
+            return (f"I train small models of my own on my own records: {len(made)} so far ({names}), each measured "
+                    "honestly and kept with a card saying what it is.")
+        return "I can train small models of my own on my own records, each measured honestly and kept with a card."
+
+    def browser() -> str:
+        """Her browser (DEC-0117)."""
+        import core.browser  # noqa: F401
+
+        return ("I have a web browser of my own, without your sign-ins: I read, search and follow links myself, and "
+                "anything that commits waits for your OK.")
+
+    def painter() -> str:
+        """Painting (DEC-0140): said as ready only when the engine is running."""
+        from core.art_studio import status
+
+        if status(context)["engine"]["available"]:
+            return "I paint on your PC's own graphics card: describe a scene and I'll make it, even a page's background."
+        return ("I can paint pictures, like a scene for a page's background, on your PC's own graphics card once its "
+                "art engine is set up.")
+
+    for title, fn in (("Aquaponics greenhouse scientist and manager", grow), ("Specialists", specialists),
+                      ("Night School", night_school), ("Teacher", teacher), ("Builder", builder),
+                      ("Homestead planner", planner), ("Experimenter", experimenter), ("Game master", game_master),
+                      ("Model maker", model_maker), ("Browser", browser), ("Painter", painter)):
+        try:
+            line = fn()
+        except Exception:  # noqa: BLE001 - a specialty that can't be read is left out, never claimed
+            line = ""
+        if line:
+            out.append((title, line))
+    return out
+
+
+def specialties(context) -> str:
+    """Plain words: what MIA is trained for and built to do, for "what are you trained for?", from
+    `specialty_list` (so the answer is instant and true)."""
+    rows = specialty_list(context)
+    if not rows:
+        return "I can't read my own specialties right now. Ask me what I can do instead."
+    return "Here's what I'm trained for and built to do.\n" + "\n".join(f"{title}: {line}" for title, line in rows)
 
 
 _WORD = re.compile(r"[a-z0-9']+")

@@ -5,7 +5,31 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-11-08 (late evening)*
+*Last updated: 2026-11-08 (night)*
+
+**⏸ New 2026-11-08 (night): homestead merged into MIA, waiting on Zac's push OK (DEC-0145).** `mia-homestead` is
+subtree-merged as `homestead/` with all 94 commits, byte-identical to GitHub, on branch `homestead-merge` in the
+worktree `C:\Users\zacrh\MIA-merge-homestead` (+ `pytest.ini`, `testpaths = tests`, so the two `core` packages never
+collide; CLAUDE.md section). The safety check held back pushing another repo's history onto master without Zac's
+explicit yes. On his yes: `git merge homestead-merge`, push, remove the worktree, then update
+`core/homestead_manager.py`'s docstring (still names the sibling repo) and regenerate the atlas. Its scenarios: 242 of
+245 on Windows (the 3 are rsync).
+
+**New 2026-11-08 (night): the Development Intelligence Engine, Phase 1 (DEC-0144, approved).** `core/development_engine.py`:
+a development profile from real state, compounding-value scoring, `next_step`; homestead catalog; the
+Zero-to-Something benchmark is `tests/test_development_engine.py`. Next: "what should I do next on the homestead?"
+as a tool and a screen control, then Phase 2 (development edges on `links.py`, real homestead state once merged).
+
+**New 2026-11-08 (night): connections (DEC-0146).** "The magic is in the connections": `core/connections.py` ties a
+remark to an open project, goal, mission or set-aside idea at least a week old (through the link graph, or a shared
+word), holds it 2h, raises it once in the everyday conversation if it fits; loops `connections.landed` and
+`connections.unlinked` (kind pairs her graph doesn't connect yet, opens a task). Next: research before raising one,
+and a "don't bring that up" tool + screen control.
+
+**New 2026-11-08 (night): she knows her specialties.** `capabilities.specialty_list()` + the `get_specialties` tool
+("what are you trained for?"): aquaponics greenhouse scientist and manager (grow lab, and MIA Homestead once merged),
+her specialists, Night School and its aim, teacher, builder, homestead planner, experimenter, game master, model
+maker, browser, painter, each read from its module, left out if missing.
 
 **New 2026-11-08 (latest): capability reminders — "did you know you could go do X right now?" (DEC-0143).** Zac asked
 for MIA to remind him, now and then, of what he's already capable of doing right now — a subtle, affirming redirect

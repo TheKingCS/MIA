@@ -24,6 +24,8 @@ CORPUS: list[tuple[str, str]] = [
     ("What can you do?", "what_can_you_do"),
     ("What are you capable of?", "what_can_you_do"),
     ("Can you tell me about yourself?", "get_introduction"),
+    ("What are you trained for?", "get_specialties"),
+    ("What are your specialties?", "get_specialties"),
     ("Can you track my chickens?", "get_capability"),
     ("What did we decide about eggs?", "get_mia_docs"),
     ("Ask your radio specialist how far a Meshtastic node reaches", "ask_specialist"),

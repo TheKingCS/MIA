@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1268 files, 274,725 lines; 1268 files describe themselves; 14,946 of 15,646 classes and functions are documented.
+1269 files, 275,009 lines; 1269 files describe themselves; 14,962 of 15,662 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-471 files, 129,754 lines; 6,955 of 7,041 classes and functions documented
+471 files, 129,944 lines; 6,961 of 7,047 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -757,7 +757,7 @@
 
 ## tests/: the test suite: what each part must do
 
-433 files, 72,553 lines; 5,708 of 6,322 classes and functions documented
+434 files, 72,647 lines; 5,718 of 6,332 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1093,6 +1093,7 @@
 - `tests/test_sound.py`: Sound (DEC-0028 #11): the engine says which win it was and MIA's line for it; the person's settings say whether to play and speak. *(1 undocumented)*
 - `tests/test_source_hygiene.py`: No control characters in the source (2026-11-06): a `\b` in a regex that became a real backspace on its way through a shell still compiles, and then silently never matches.
 - `tests/test_specialists.py`: MIA's specialists (core/specialists.py, DEC-0109): their charters name real skills, tracks and loops; a workbook keeps only sourced notes; a person confirms or withdraws; study hall takes them in turn; and the answer always says where a note came from and whether it's confirmed.
+- `tests/test_specialties.py`: What MIA is trained for and built to do (core/capabilities.py `specialty_list`, Zac 2026-11-08): every line read from the code that makes it true, numbers included; a specialty whose source is missing is left out instead of claimed; painting is only "ready" when its engine runs; the person's own gro
 - `tests/test_starter_actions.py`: Starter sets from the web's Settings (core/starter_actions.py, DEC-0125): each set with its parts on the page, and starter.add adding a set, or the parts ticked, as one action whose Undo takes it all back. *(1 undocumented)*
 - `tests/test_starter_templates.py`: Starter sets (core/starter_templates.py), 2026-10-01: the usual chores, routines, upkeep schedules and a workout for a kind of life, added in one undoable step, never twice. *(2 undocumented)*
 - `tests/test_startup_briefing.py`: Unit tests for core.startup_briefing's pure functions — see gui/home_dashboard.py for how these feed the launch-greeting banner.
