@@ -125,6 +125,14 @@
    "status": "none",
    "why": "the person's own cards as they give them; MIA reminds before expiry and never reads or uses the numbers"
   },
+  "action:art": {
+   "status": "none",
+   "why": "deleting a picture MIA painted is the person's own choice (DEC-0138); nothing of MIA's to improve"
+  },
+  "store:art": {
+   "status": "none",
+   "why": "the pictures MIA painted on request and what from (DEC-0138); what she paints is the person's taste, and a failed painting is told at once"
+  },
   "action:theme": {
    "status": "none",
    "why": "a theme the person made or removed is their own taste (DEC-0136); nothing of MIA's to improve"

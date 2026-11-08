@@ -108,6 +108,7 @@ from core.life_notes import LifeNotes
 from core.gps_tracks import GpsTracks
 from core.health_manager import HealthStore
 from core.id_wallet import IdWallet
+from core.art_studio import ArtStore
 from core.turn_trace import TurnTraces
 from core.saga import SagaMoments
 from core.creations import Creations
@@ -177,6 +178,7 @@ PERSONAL_STORES: tuple[tuple[str, type], ...] = (
     ("gps_tracks", GpsTracks),  # walks, rides and drives from GPX: where they went is theirs (DEC-0099)
     ("health", HealthStore),  # sleep, visits, medications and records, sealed at rest (DEC-0129)
     ("id_wallet", IdWallet),  # IDs, passports, insurance cards, registrations, sealed with their photos
+    ("art", ArtStore),  # pictures MIA painted for them, and what from (DEC-0138)
     ("quest_book", QuestBook),
     ("world_map", WorldMap),
     ("memory_vault", MemoryVault),

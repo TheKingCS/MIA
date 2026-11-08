@@ -2230,3 +2230,26 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Open: confirm "generalize + isolate, don't build a new layer"; second domain to prove reuse (homestead vs projects);
   timing of the scenario engine.
 - Related: DEC-0134, DEC-0094/0101, DEC-0112, DEC-0092, DEC-0126
+
+### DEC-0138: MIA paints, on the PC's own graphics card, and uses what she paints
+- Status: ACCEPTED
+- Decided by: Zac, 2026-11-08 06:47 ("She should also be able to be prompted to generate art assets and use them in her
+  program, like if you wanted the background to show a fantasy castle/village scene").
+- Decision:
+  1. **Local first:** MIA paints through ComfyUI on the PC (RX 7900 XTX, ROCm on Windows; setup in
+     `docs/ART_ENGINE.md`), reached only at `art.engine_url` (127.0.0.1:8188 by default). Nothing is sent to a cloud
+     service (DEC-0053: one only once Zac approves that service).
+  2. **Her style, code-held rules:** the prompt is built in code around the person's words for the use (a backdrop:
+     a wide atmospheric environment; a portal: a framed scene), always without text, logos or people. She refuses
+     sexual content, gore and a real person's likeness (`core/art_studio.problem`).
+  3. **Kept as theirs:** each picture goes in the person's own folder (`art.json`, `art/<id>.png`; a personal store)
+     with what it was painted from; deleting is an action (`art.delete`), the file kept aside so undo works.
+  4. **Used in MIA:** a picture can be a theme's **backdrop** (DEC-0136): behind every page, faded where you read, and
+     on the 3D room's far wall. Asked for by voice as the background ("paint me a fantasy castle village for my
+     background"), it goes up by itself when it's done, on the person's own copy of their theme, undoable. In the
+     Theme Studio: paint, pick one of yours, set its strength.
+  5. **One worker thread per painting**, scoped to `core/art_studio.py` (CLAUDE.md): it only talks to the engine and
+     writes a staging file; finished paintings are taken in on the main thread (`settle`, when the shell is read).
+- Next uses (not built): portal pictures painted by MIA (`use: "portal"` is ready in core), a generated place's
+  backdrop (DEC-0132), sound and more asset kinds.
+- Related: DEC-0136, DEC-0130, DEC-0053, DEC-0132, DEC-0002

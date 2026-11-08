@@ -391,12 +391,15 @@ def _places(context) -> list:
 
 def _display(context) -> dict:
     """The person's look: {"style": "auto" | "spatial" | "cards" (core/display_style.py, DEC-0135), "theme": their
-    theme as cleaned data (core/themes.py, DEC-0136)}."""
+    theme as cleaned data (core/themes.py, DEC-0136), "painting": how many of their paintings are still going
+    (core/art_studio.py, DEC-0138)}."""
     from core.display_style import style_of
     from core.themes import DEFAULT_THEME, THEMES, as_data, clean_theme, for_shell
 
+    from core.art_studio import active
+
     try:
-        return {"style": style_of(context), "theme": for_shell(context)}
+        return {"style": style_of(context), "theme": for_shell(context), "painting": active(context)}
     except Exception:
         log.exception("Shell: display style failed")
         return {"style": "auto", "theme": clean_theme(as_data(THEMES[DEFAULT_THEME]))}

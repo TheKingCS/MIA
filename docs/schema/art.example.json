@@ -1,0 +1,13 @@
+{
+  "engine": {
+    "available": false,
+    "line": "No image engine at http://127.0.0.1:8188. Start ComfyUI on this PC (docs/ART_ENGINE.md).",
+    "setup": "docs/ART_ENGINE.md"
+  },
+  "items": [],
+  "jobs": [],
+  "uses": [
+    "backdrop",
+    "portal"
+  ]
+}

@@ -122,7 +122,8 @@ def test_tasks_routines_and_income(world):
 
 
 def test_a_child_can_only_take_child_actions(world):
-    """A child's account proposes only child-safe kinds: their own apps, settings and look (themes, DEC-0136)."""
+    """A child's account proposes only child-safe kinds: their own apps, settings and look (themes and pictures,
+    DEC-0136, DEC-0138)."""
     kid = world.profiles.create_profile("Ari", make_active=False)
     make_child(world, kid.profile_id, [world.me.profile_id])
     world.profiles.set_active_profile(kid.profile_id)
@@ -141,8 +142,8 @@ def test_a_child_can_only_take_child_actions(world):
                            "mission.", "objective.", "pathway.", "character.", "fitness.", "plan.")
     # Children also keep their own Journal and Music playlists (2026-10-16).
     # ...and their own Reward Shop and boss fights (DEC-0028), their own Operating Journal (DEC-0097) and their games (DEC-0098).
-    # ...and their own look: themes they make in the Theme Studio are theirs, like their settings (DEC-0136).
-    assert {k for k in child_ok if not k.startswith(kitchen_and_workout + ("firstboot.", "journal.", "operating.", "play.", "playlist.", "shop", "boss.", "person.", "pet.", "memory.", "batch.", "grow.", "quest.", "map.", "raid.", "party.", "place.", "life_note.", "subject.", "course.", "lesson.", "waypoint.", "starter.", "textbook.", "mission_idea.", "theme."))} == {"task.done", "routine.log", "app.visibility",
+    # ...and their own look: themes they make in the Theme Studio, and pictures MIA painted for them (DEC-0136, DEC-0138).
+    assert {k for k in child_ok if not k.startswith(kitchen_and_workout + ("firstboot.", "journal.", "operating.", "play.", "playlist.", "shop", "boss.", "person.", "pet.", "memory.", "batch.", "grow.", "quest.", "map.", "raid.", "party.", "place.", "life_note.", "subject.", "course.", "lesson.", "waypoint.", "starter.", "textbook.", "mission_idea.", "theme.", "art."))} == {"task.done", "routine.log", "app.visibility",
                                                                                  "app.favorite", "profile.edit",
                                                                                  "setting.set", "communication.resume",
                                                                                  "loop.checkin_done",  # their own weekly debrief (DEC-0047)

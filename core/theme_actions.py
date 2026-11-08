@@ -127,17 +127,20 @@ MAX_FILE = 20_000  # characters: a theme file is a few kilobytes
 
 def export(theme: dict) -> dict:
     """Pure logic. A theme as the file the Studio downloads: its format mark, name, line, the theme it's built on,
-    its Studio choices, and the tokens, material and room it makes (for a MIA without the Studio's arithmetic)."""
+    its Studio choices (without its backdrop, a picture in this person's own folder), and the tokens, material and
+    room it makes (for a MIA without the Studio's arithmetic)."""
     from core.themes import choices_of
 
+    picks = {**choices_of(theme), "backdrop": ""}  # a backdrop is a picture in this person's own folder: not in the file
     return {"format": FORMAT, "name": theme.get("name", ""), "line": theme.get("line", ""), "id": theme.get("id", ""),
-            "choices": choices_of(theme), "tokens": dict(theme.get("tokens") or {}),
+            "choices": picks, "tokens": dict(theme.get("tokens") or {}),
             "material": theme.get("material", "solid"), "room": dict(theme.get("room") or {})}
 
 
 def _imported(context, params) -> dict:
-    """The theme a file holds, checked and rebuilt as one of this person's own (a new id and a name not yet taken);
-    ActionError for a file that isn't a MIA theme or doesn't pass the checks."""
+    """The theme a file holds, checked and rebuilt as one of this person's own (a new id and a name not yet taken, and
+    no backdrop: someone else's picture isn't in their folder); ActionError for a file that isn't a MIA theme or
+    doesn't pass the checks."""
     import json
 
     from core.themes import MAX_CUSTOM, THEMES, as_data, build_theme, choices_of, clean_theme, custom_themes, own_id
@@ -162,7 +165,8 @@ def _imported(context, params) -> dict:
         name, n = f"{base_name} {n}", n + 1
     try:
         cleaned = clean_theme({**raw, "id": "imported", "name": name})
-        picks = raw["choices"] if isinstance(raw.get("choices"), dict) else choices_of(cleaned)
+        picks = dict(raw["choices"]) if isinstance(raw.get("choices"), dict) else choices_of(cleaned)
+        picks["backdrop"] = ""  # someone else's picture isn't in this person's folder
         theme = build_theme(picks, cleaned, own_id(name, {t["id"] for t in mine}), name)
     except (ValueError, TypeError, KeyError) as problem:
         raise ActionError(f"MIA can't use that theme: {problem}") from None
