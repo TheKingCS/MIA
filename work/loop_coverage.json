@@ -236,6 +236,10 @@
   "action:direction": {
    "status": "none",
    "why": "a direction is the person's own value in their own words (DEC-0141); the nudges it feeds are watched by checks.dismissed"
+  },
+  "action:style": {
+   "status": "none",
+   "why": "a pick or a choice of how to be answered is the person's own taste (DEC-0138); the style it teaches is the loop (response_style learns from every pick)"
   }
  }
 }

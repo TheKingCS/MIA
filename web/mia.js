@@ -224,6 +224,9 @@
     designTheme: (description) => demo ? demoOnly() : call("POST", "/api/themes/design", { description }),
     art: () => read("/api/art", "art"),  // MIA's paintings (DEC-0140)
     directions: () => read("/api/directions", "directions"),  // My Directions (DEC-0141)
+    answers: () => read("/api/answers", "answers"),  // How MIA Answers (DEC-0138)
+    // After a reply in Talk, now and then: the same answer a second way to pick from ({} when none; never in the demo).
+    compareAnswer: (reply, isPrivate) => demo ? Promise.resolve({}) : call("POST", "/api/talk/compare", { reply, private: !!isPrivate }),
     paint: (description, use, apply) => demo ? demoOnly() : call("POST", "/api/art/paint", { description, use: use || "backdrop", apply: !!apply }),
     // The ID wallet (core/id_wallet.py): numbers travel only in these calls, never in an action.
     wallet: () => read("/api/wallet", "wallet"),

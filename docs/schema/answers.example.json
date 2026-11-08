@@ -1,0 +1,108 @@
+{
+ "available": true,
+ "dimensions": [
+  {
+   "id": "length",
+   "name": "How long",
+   "preferred": "brief",
+   "picks": 4,
+   "settled": 0.5,
+   "word": "Leaning",
+   "options": [
+    {
+     "value": "standard",
+     "label": "Standard",
+     "count": 1
+    },
+    {
+     "value": "brief",
+     "label": "Brief",
+     "count": 3
+    },
+    {
+     "value": "detailed",
+     "label": "Detailed",
+     "count": 0
+    }
+   ]
+  },
+  {
+   "id": "format",
+   "name": "How it's laid out",
+   "preferred": "bulleted",
+   "picks": 2,
+   "settled": 1.0,
+   "word": "Leaning",
+   "options": [
+    {
+     "value": "mixed",
+     "label": "A line, then bullets",
+     "count": 0
+    },
+    {
+     "value": "prose",
+     "label": "Prose",
+     "count": 0
+    },
+    {
+     "value": "bulleted",
+     "label": "Bullet points",
+     "count": 2
+    }
+   ]
+  },
+  {
+   "id": "tone",
+   "name": "Tone",
+   "preferred": "warm",
+   "picks": 0,
+   "settled": 0.0,
+   "word": "Not learned yet",
+   "options": [
+    {
+     "value": "warm",
+     "label": "Warm",
+     "count": 0
+    },
+    {
+     "value": "neutral",
+     "label": "Neutral",
+     "count": 0
+    },
+    {
+     "value": "direct",
+     "label": "Direct",
+     "count": 0
+    }
+   ]
+  },
+  {
+   "id": "lead",
+   "name": "What comes first",
+   "preferred": "answer_first",
+   "picks": 1,
+   "settled": 1.0,
+   "word": "Leaning",
+   "options": [
+    {
+     "value": "answer_first",
+     "label": "The answer first",
+     "count": 1
+    },
+    {
+     "value": "context_first",
+     "label": "The context first",
+     "count": 0
+    }
+   ]
+  }
+ ],
+ "picks": 7,
+ "compare": true,
+ "instruction": "Answer: keep it short — a sentence or two; laid out as bullet points; lead with the answer, then the why.",
+ "next": {
+  "dimension": "tone",
+  "a": "warm",
+  "b": "neutral"
+ }
+}

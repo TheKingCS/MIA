@@ -98,6 +98,7 @@ TYPES = {
     "safety_escalation": "safety alerts",
     "direction_set": "directions set",
     "direction_dropped": "directions let go",
+    "style_pick": "answer styles picked",
 }
 # Kept for audit, never shown in a feed (wins, "what happened?").
 AUDIT_ONLY = frozenset({"safety_escalation"})

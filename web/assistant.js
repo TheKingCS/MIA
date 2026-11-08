@@ -50,6 +50,7 @@
       const used = usedLine(turn);
       if (used) reply.after(used);
       reply.parentElement.append(MIAShell.notRight(text, turn.reply_text));  // the Fix-It Log (DEC-0049)
+      if (turn.comparable) MIAShell.twoWays(turn.reply_text, reply.parentElement, reply.parentElement.parentElement);  // DEC-0138
       MIAShell.refresh();
       orb("idle", "Ready");
     } catch (e) {

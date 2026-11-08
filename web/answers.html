@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>How MIA Answers — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="themes.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
+  <link rel="stylesheet" href="ui.css">
+</head>
+<body data-app="answers" data-icon="assistant" class="mod-answers" data-say="Keep your answers short.">
+  <!--
+    How MIA Answers (DEC-0138): what she's learned about how you like to be answered (how long, laid out how, the
+    tone, what comes first), each changed outright with a tap; whether she offers an answer two ways now and then.
+    MIA.answers() (core/answer_compare.py). Built by claude on the shared frame, 2026-11-08.
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <header class="hero">
+        <h1>How MIA Answers</h1>
+        <p class="tagline" id="ans-sub"></p>
+      </header>
+      <div id="panel"></div>
+    </main>
+  </div>
+  <script src="mia.js?v=17"></script>
+  <script src="icons.js"></script>
+  <script src="sound.js"></script>
+  <script src="places-watch.js"></script>
+  <script src="shell.js"></script>
+  <script src="answers.js"></script>
+</body>
+</html>

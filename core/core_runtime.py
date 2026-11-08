@@ -91,6 +91,7 @@ from core.voice_manager import VoiceManager
 from core.waypoint_manager import WAYPOINT_CATEGORIES, WaypointManager
 from core.assistant_why_actions import register_why_actions
 from core.assistant_direction_actions import register_direction_actions
+from core.assistant_answer_style_actions import register_answer_style_actions
 from core.assistant_self_actions import register_capability_actions, register_self_actions
 from core.assistant_cooking_actions import register_cooking_actions
 from core.assistant_household_actions import register_household_actions
@@ -303,6 +304,7 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     register_journal_actions(registry)
     register_why_actions(registry)
     register_direction_actions(registry)  # My Directions by voice (DEC-0141)
+    register_answer_style_actions(registry)  # how MIA answers, by voice (DEC-0138)
     register_self_actions(registry)  # "what model are you?" from the runtime
     register_capability_actions(registry)  # what MIA can do, how she's built (DEC-0041)
     register_goods_actions(registry)  # eggs, goods, freedom, deadlines by voice

@@ -38,6 +38,14 @@ asks MIA to design a theme from a description (`ThemeDesignRequest`, POST
 /api/themes/design, core/theme_design.py): nothing is kept there; saving is
 an action.
 
+**My Directions and How MIA Answers** (2026-11-08): `/api/directions`
+(core/web_directions.py, DEC-0141) and `/api/answers` (core/answer_compare.py,
+DEC-0138) are read here; changes are direction.* and style.* actions. Now and
+then after a reply, `/api/talk/compare` (`CompareRequest`) has the model say it
+a second way, outside the turn lock, and code checks no number changed; a
+reply in a private conversation is never compared (each turn says whether it
+may be: `comparable`).
+
 **MIA's browser, live** (2026-11-07): `/api/browser/frame` (a picture of
 her browser now) and `/api/browser/input` (the person's click, typing, key
 or scroll, `BrowserInputRequest`) skip the turn lock so the live view stays
@@ -323,6 +331,13 @@ class ArtRequest(BaseModel):
     description: str = Field(..., max_length=400)
     use: str = "backdrop"
     apply: bool = False
+
+
+class CompareRequest(BaseModel):
+    """A reply MIA just gave in Talk, for "this way or that way?" (core/answer_compare.py, DEC-0138); private turns
+    are never compared."""
+    reply: str = Field(..., max_length=6000)
+    private: bool = False
 
 
 class ThemeDesignRequest(BaseModel):
@@ -911,6 +926,12 @@ def create_app(context: AppContext) -> FastAPI:
             if manager is not None and manager.get_conversation(conversation.conversation_id) is conversation:
                 manager.save()
 
+    def _private_conversation(conversation) -> bool:
+        """Whether this conversation is off the record, the private journal, a private turn or a personal mode."""
+        from core.life_notes import _private
+
+        return _private(conversation)
+
     def respond(profile_id: str, transcript: str, background: BackgroundTasks, hearing: Optional[float] = None,
                 surface: str = "phone") -> dict:
         # The phone user's own view: their conversations, memories, journal
@@ -954,6 +975,9 @@ def create_app(context: AppContext) -> FastAPI:
             "used": turn.used,
             "open": turn.open,
             "level": getattr(context.llm, "level", "") if context.llm is not None and turn.llm_available else "",
+            # Whether this reply may be offered a second way (DEC-0138): never after the safety floor or a fixed reply,
+            # never in a private or personal conversation (the same line Kept draws, core/life_notes._private).
+            "comparable": turn.llm_available and turn.route != "fixed" and not _private_conversation(conversation),
         }
 
     def transcribe_bytes(audio: bytes) -> Optional[str]:
@@ -2483,6 +2507,34 @@ def create_app(context: AppContext) -> FastAPI:
 
         result = design(body.description)
         return {**result, "summary": summary(result)}
+
+    @app.get("/api/answers")
+    def web_answers(profile_id: str = Depends(require_profile_id)) -> dict:
+        """How MIA Answers (core/answer_compare.screen, DEC-0138): what she's learned about how the person likes to be
+        answered; changes are style.* actions."""
+        from core.answer_compare import screen
+
+        with app.state.turn_lock:
+            return screen(view_for(context, profile_id))
+
+    @app.post("/api/talk/compare")
+    def web_talk_compare(body: CompareRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Now and then after a reply: the same answer a second way, for the person to pick (DEC-0138). {} when no offer
+        fits. The model rephrases outside the turn lock; code checks no fact changed before it's shown."""
+        from core.answer_compare import keep, plan, restyle
+
+        view = view_for(context, profile_id)
+        with app.state.turn_lock:
+            private = body.private or _private_conversation(conversation_for(profile_id, view))
+            experiment = plan(view, body.reply, private=private)
+        if not experiment or context.llm is None or not context.llm.is_available():
+            return {}
+        other = restyle(lambda prompt: context.llm.generate(prompt, timeout=45), body.reply,
+                        experiment["dimension"], experiment["b"])
+        if not other:
+            return {}
+        with app.state.turn_lock:
+            return keep(view, experiment, body.reply, other) or {}
 
     @app.get("/api/nexus")
     def web_nexus(profile_id: str = Depends(require_profile_id)) -> dict:

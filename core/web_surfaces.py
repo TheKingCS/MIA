@@ -205,7 +205,7 @@ APPS: tuple[App, ...] = (
     App("module_browser", "Apps", "🧩", "Everything MIA can do.", "apps.html",
         "View, enable/disable, install, and rescan modules.", KNOW, ()),
     App("settings", "Settings", "⚙", "Make MIA yours.", None,
-        "Configure MIA — theme, user info, module options.", KNOW, ("accessibility", "apps", "starters", "humor", "backup"),
+        "Configure MIA — theme, user info, module options.", KNOW, ("accessibility", "apps", "starters", "humor", "backup", "answer_style"),
         "Make the text bigger."),
 )
 APPS_BY_ID = {a.module_id: a for a in APPS}
