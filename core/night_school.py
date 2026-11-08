@@ -696,7 +696,8 @@ def night(now: Optional[datetime] = None, *, ask: Optional[Callable[[str, str], 
         try:
             found = self_audit.weekly(tasks_dir=tasks_dir, log=log)
             record["audit"] = {"code": found["code"]["findings"], "connections": found["connections"]["findings"],
-                               "connected": found["connections"]["share"], "tasks": found["tasks"]}
+                               "connected": found["connections"]["share"],
+                               "docs": found.get("docs", {}).get("findings", 0), "tasks": found["tasks"]}
         except Exception as problem:
             record["notes"].append(f"the weekly self-audit didn't finish: {str(problem)[:120]}")
 
@@ -814,7 +815,11 @@ def describe(record: dict) -> str:
     if record.get("audit"):
         a = record["audit"]
         lines.append(f"  Self-audit: {a['code']} places to improve, {a['connections']} connections to make "
-                     f"({a['connected']:.0%} connected)" + (f"; opened {', '.join(a['tasks'])}" if a["tasks"] else ""))
+                     f"({a['connected']:.0%} connected)" + (f", {a['docs']} places her docs disagree with her repository"
+                                                            if a.get("docs") else "")
+                     + (f"; opened {', '.join(a['tasks'])}" if a["tasks"] else ""))
+    if record.get("history"):
+        lines.append(f"  Development history: {record['history']} new records")
     if record.get("benchmarks"):
         lines.append(f"  Benchmarks: {record['benchmarks'][-200:]}")
     for f in record.get("loops", []):

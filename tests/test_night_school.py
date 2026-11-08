@@ -248,3 +248,14 @@ def test_a_standing_directive_steers_the_night(tmp_path):
     msg = night_school.SYLLABUS_PROMPT.format(protected="x", focus="f", directive=s["directive"],
                                               assessment="a", card="c", notes="n", count=1, skills="s")
     assert "Become top-tier" in msg
+
+
+def test_the_nights_summary_says_the_docs_audit_and_the_history():
+    """The weekly audit's docs count (core/inspection.py repository subject) and the history's new records are said."""
+    text = ns.describe({"at": "2026-11-09T01:30:00", "focus": "routing", "lessons": [], "notes": [], "history": 12,
+                        "audit": {"code": 3, "connections": 2, "connected": 0.5, "docs": 1, "tasks": ["T-0060"]}})
+    assert "1 places her docs disagree with her repository; opened T-0060" in text
+    assert "Development history: 12 new records" in text
+    quiet = ns.describe({"at": "2026-11-09", "focus": "x", "lessons": [], "notes": [],
+                         "audit": {"code": 0, "connections": 0, "connected": 1.0, "tasks": []}})
+    assert "docs disagree" not in quiet and "Development history" not in quiet
