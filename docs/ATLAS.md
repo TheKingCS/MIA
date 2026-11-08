@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1150 files, 256,725 lines; 1150 files describe themselves; 13,998 of 14,679 classes and functions are documented.
+1150 files, 256,765 lines; 1150 files describe themselves; 14,000 of 14,681 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-423 files, 120,174 lines; 6,374 of 6,463 classes and functions documented
+423 files, 120,196 lines; 6,375 of 6,464 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -703,7 +703,7 @@
 
 ## tests/: the test suite: what each part must do
 
-381 files, 68,230 lines; 5,379 of 5,971 classes and functions documented
+381 files, 68,248 lines; 5,380 of 5,972 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1060,7 +1060,7 @@
 - `tests/test_web_notifications.py`: Notifications on the web (core/web_notifications.py, DEC-0125): newest first, a tone for each level (amber for a warning, red only for an error), why MIA sent the ones she sent on her own, Mark All Read and Dismiss as actions, and the same by voice (core/assistant_notification_actions.py). *(1 undocumented)*
 - `tests/test_web_power.py`: Power on the web (DEC-0125, the design canvas's Power, DEC-0113: core/web_power.py and core/power_actions.py): energy sources with their latest reading per meter, a meter for a percent (amber when low), when it was logged, and every change as an action; the device's battery when it has one. *(1 undocumented)*
 - `tests/test_web_progress.py`: DEC-0017/0018 (2026-10-06), H-0013: Missions, Skills and Character on the web. The pages (core/web_progress.py) and every change as an action kind (core/mission_actions.py), each proposed, approved, recorded and undoable, with rewards going to the person who approved it.
-- `tests/test_web_projects.py`: Projects on the web (core/web_projects.py, DEC-0125: they were voice-only): each project with its money, reason and tasks, underway first; started, edited, budgeted, finished and deleted, and tasks added, ticked, reopened and taken off, all as actions the voice tools agree with. *(1 undocumented)*
+- `tests/test_web_projects.py`: Projects on the web (core/web_projects.py, DEC-0125: they were voice-only): each project with its money, reason and tasks, underway first; started, edited, budgeted, finished and deleted, and tasks added, ticked, reopened and taken off, all as actions the voice tools agree with; and the glasses' Pro *(1 undocumented)*
 - `tests/test_web_push.py`: Unit tests for core.web_push. The actual push-service HTTP call (pywebpush.webpush) is mocked throughout — this is the standard, correct way to test Web Push code without a real browser/push service (see core/web_push.py's own docstring and the Mobile Phase 1 plan). *(5 undocumented)*
 - `tests/test_web_screens.py`: DEC-0017/0018 (2026-10-06): Kitchen, Workout and Real Estate on the web. The pages (core/web_screens.py) and every change as an action kind (core/kitchen_actions.py, core/workout_actions.py, core/estate_actions.py), each proposed, approved, recorded and undoable; a recipe's amounts scaled to the ser
 - `tests/test_web_surfaces.py`: DEC-0017 (2026-10-06): the web shell and Home dashboard, assembled in core/web_surfaces.py so web/ holds no logic. The sidebar is the person's own (child-safe, tucked-away apps hidden), Home is the concept's dashboard: greeting, Today's Focus with each item's action and kind, Upcoming, the status st *(4 undocumented)*

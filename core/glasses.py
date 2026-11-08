@@ -968,6 +968,27 @@ def _trail(context, today):
     return _panel("On The Trail · " + trip.name, lines, empty)
 
 
+def _project_tasks(context, today):
+    """Panel: the open tasks of the projects underway (core/web_projects.py), soonest due first, each with Done
+    (task.done) and its project and due day; up to five, the rest counted."""
+    projects, tasks = getattr(context, "projects", None), getattr(context, "tasks", None)
+    if projects is None or tasks is None:
+        return _panel("Project Tasks", [], "Projects aren't available here.")
+    lines = []
+    for p in projects.all_projects():
+        if p.status == "Complete":
+            continue
+        for t in tasks.tasks_for_project(p.project_id):
+            if t.done:
+                continue
+            late = bool(t.due_date) and t.due_date < today.isoformat()
+            lines.append((t.due_date or "9999", _line(t.title, p.name + (f" · by {t.due_date[5:]}" if t.due_date else ""),
+                                                     "attention" if late else "",
+                                                     {"kind": "task.done", "label": "Done", "params": {"task_id": t.task_id}})))
+    lines.sort(key=lambda pair: pair[0])
+    return _panel("Project Tasks", [line for _, line in lines], "No open tasks. Add some on the Projects page.")
+
+
 def _household_chores(context, today):
     """Panel: the active household routines with this period's progress, each undone one offering Done
     (routine.log), those still to do first (a menu item's readout; lines with an allowed action can be approved from the glasses).
@@ -1069,6 +1090,7 @@ PANELS: dict[str, tuple[tuple[str, str, Panel], ...]] = {
     "relationships": (("birthdays", "Next Birthdays", _people_birthdays),),
     "inbox": (("waiting", "Waiting To File", _inbox_waiting),),
     "expeditions": (("trail", "On The Trail", _trail),),
+    "workshop": (("tasks", "Project Tasks", _project_tasks),),
 }
 
 # Questions an app's menu hands MIA, as if said aloud (she answers with

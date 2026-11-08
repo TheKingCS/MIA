@@ -1,6 +1,6 @@
 """Projects on the web (core/web_projects.py, DEC-0125: they were voice-only): each project with its money, reason
 and tasks, underway first; started, edited, budgeted, finished and deleted, and tasks added, ticked, reopened and taken
-off, all as actions the voice tools agree with."""
+off, all as actions the voice tools agree with; and the glasses' Project Tasks panel."""
 
 from __future__ import annotations
 
@@ -63,3 +63,21 @@ def test_a_project_with_its_budget_spending_and_tasks(world):
     assert projects_page(world)["projects"][0]["status"] == "Complete"
     with pytest.raises(ActionError, match="negative"):
         world.actions.propose(world, "project.budget", {"project_id": green["id"], "budget": "-5"})
+
+
+def test_the_glasses_list_open_project_tasks_with_done(world):
+    from datetime import timedelta
+
+    from core.glasses import GLASSES_KINDS, _project_tasks
+
+    assert _project_tasks(world, date.today())["empty"].startswith("No open tasks")
+    do(world, "project.add", name="Greenhouse", status="Active")
+    green = projects_page(world)["projects"][0]
+    late = (date.today() - timedelta(days=2)).isoformat()
+    do(world, "task.add", project_id=green["id"], title="Frame the door", due_date=late)
+    do(world, "task.add", project_id=green["id"], title="Pull the poly")
+    panel = _project_tasks(world, date.today())
+    first = panel["lines"][0]
+    assert (first["text"], first["tone"], first["action"]["kind"]) == ("Frame the door", "attention", "task.done")
+    assert first["detail"].startswith("Greenhouse · by ") and "task.done" in GLASSES_KINDS
+    assert [line["text"] for line in panel["lines"]] == ["Frame the door", "Pull the poly"]
