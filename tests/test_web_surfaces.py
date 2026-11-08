@@ -22,6 +22,7 @@ TODAY = date.today()
 
 @pytest.fixture
 def world(tmp_path, monkeypatch):
+    """A world with an electric bill a day late and the action center."""
     context = build_world(tmp_path, monkeypatch)
     context.actions = ActionCenter()
     context.budget.add_bill("Electric", 120.0, (TODAY - timedelta(days=1)).isoformat(), recurrence="monthly")
@@ -29,6 +30,7 @@ def world(tmp_path, monkeypatch):
 
 
 def test_pure_bits():
+    """Dates, greetings, plurals and tool labels read right, and every app id is unique."""
     assert date_text(date(2026, 9, 16)) == "Wed, Sep 16, 2026"
     assert greeting(7, "Robin") == "Good morning, Robin"
     assert greeting(13, "Robin") == "Good afternoon, Robin"
@@ -67,6 +69,7 @@ def test_a_child_sees_only_child_apps(world):
 
 
 def test_the_dashboard(world):
+    """The Dashboard greets, puts the late bill in focus with its action, and offers the quick actions."""
     page = dashboard(world, datetime.combine(TODAY, datetime.min.time()).replace(hour=9))
     assert page["greeting"] == "Good morning, Robin"
     [bill] = [f for f in page["focus"] if f["title"] == "Pay Electric"]
@@ -76,6 +79,7 @@ def test_the_dashboard(world):
 
 
 def test_the_endpoints(world):
+    """The shell and Dashboard need a sign-in and then serve the person's own."""
     from fastapi.testclient import TestClient
 
     import server.app as server_app

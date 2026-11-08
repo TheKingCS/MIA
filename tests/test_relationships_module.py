@@ -20,10 +20,12 @@ from modules.relationships.module import (
 
 
 def _person(name="Jamie", relationship="", birthday="") -> Person:
+    """A person with a name, relationship and birthday."""
     return Person(person_id="p1", name=name, relationship=relationship, birthday=birthday)
 
 
 def _pet(name="Rex", species="", birthday="") -> Pet:
+    """A pet with a name, species and birthday."""
     return Pet(pet_id="x1", name=name, species=species, birthday=birthday)
 
 
@@ -36,10 +38,12 @@ def test_birthday_tag_empty_when_unset():
 
 
 def test_birthday_tag_today():
+    """A birthday today is tagged so."""
     assert _birthday_tag("1990-09-10", date(2026, 9, 10)) == "[BIRTHDAY TODAY]  "
 
 
 def test_birthday_tag_upcoming():
+    """A birthday a week off is tagged with the days to go."""
     assert _birthday_tag("1990-09-17", date(2026, 9, 10)) == "[BIRTHDAY IN 7d]  "
 
 

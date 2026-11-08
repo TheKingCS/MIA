@@ -49,6 +49,7 @@ from core.workout_manager import WorkoutManager
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the config and every store the rewards read at a temporary folder."""
     data_dir = tmp_path / "data"
     monkeypatch.setattr(config_manager_module, "_CONFIG_FILE", tmp_path / "config.json")
     monkeypatch.setattr(maintenance_manager_module, "_DATA_DIR", data_dir)
@@ -73,6 +74,7 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _make_context() -> AppContext:
+    """A context with every store the rewards watch, and the rewards manager."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     context.profiles = ProfileManager(context)
     context.maintenance = MaintenanceManager(context)
@@ -138,6 +140,7 @@ def test_is_attributed_to_non_matching_owner():
 
 
 def _reading(value, profile_id=None, timestamp="2026-01-01T00:00:00") -> Reading:
+    """One reading for a series, by a person at a time."""
     return Reading(reading_id="r", series_id="s", value=value, timestamp=timestamp, profile_id=profile_id)
 
 
@@ -894,6 +897,7 @@ def test_stat_id_for_tier_unknown_reward_id_returns_none():
 # ------------------------------------------------------------------
 
 def _mowing_tiers():
+    """The mowing challenge chain's tiers."""
     return next(chain.tiers for chain in CHALLENGE_CHAINS if chain.chain_id == "mowing")
 
 

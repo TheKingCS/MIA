@@ -49,6 +49,7 @@ TODAY = date(2026, 9, 14)
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the config, profiles, skills and insights files at a temporary folder."""
     data_dir = tmp_path / "data"
     monkeypatch.setattr(config_manager_module, "_CONFIG_FILE", tmp_path / "config.json")
     monkeypatch.setattr(profile_manager_module, "_DATA_PROFILES_DIR", tmp_path / "profiles")
@@ -63,6 +64,7 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _make_context(skills: list[dict]) -> AppContext:
+    """A context with these skill definitions, profiles, skills and insights."""
     skill_manager_module._DATA_DIR.mkdir(parents=True, exist_ok=True)
     skill_manager_module._SKILL_DEFINITIONS_FILE.write_text(json.dumps({"skills": skills}))
     context = AppContext(config=ConfigManager(), events=EventBus())
@@ -73,6 +75,7 @@ def _make_context(skills: list[dict]) -> AppContext:
 
 
 def _homestead_maker_context() -> AppContext:
+    """A context with two homestead skills and a maker one."""
     return _make_context([
         {"skill_id": "gardening", "name": "Gardening", "category": "Homestead"},
         {"skill_id": "canning", "name": "Canning", "category": "Homestead"},
@@ -81,6 +84,7 @@ def _homestead_maker_context() -> AppContext:
 
 
 def _profile(**overrides) -> Profile:
+    """A profile interested in the homestead, with any field overridden."""
     defaults = dict(profile_id="p1", name="Alex", created_at="2026-08-01T10:00:00", interests=["Homestead"])
     defaults.update(overrides)
     return Profile(**defaults)

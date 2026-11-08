@@ -60,6 +60,7 @@ from core.music_manager import MusicManager
 
 
 def _write_tagged_wav(path: Path, seconds: float, title: str, artist: str) -> None:
+    """Writes a tone as a WAV with a title and artist, dated a minute back so the scan takes it."""
     path.parent.mkdir(parents=True, exist_ok=True)
     frame_count = int(44100 * seconds)
     with wave.open(str(path), "wb") as w:
@@ -82,6 +83,7 @@ def _write_tagged_wav(path: Path, seconds: float, title: str, artist: str) -> No
 
 
 def _pump(seconds: float) -> None:
+    """Lets Qt run its events for a while."""
     deadline = time.monotonic() + seconds
     while time.monotonic() < deadline:
         QCoreApplication.processEvents()
@@ -89,6 +91,7 @@ def _pump(seconds: float) -> None:
 
 
 def main() -> int:
+    """Scans a tone into the library, plays, pauses and checks the position holds; 1 on any failure."""
     app = QApplication.instance() or QApplication([])
 
     context = AppContext(config=ConfigManager(), events=EventBus())

@@ -20,14 +20,17 @@ def make(tmp_path, monkeypatch):
 
 
 def mission(world):
+    """The welcome mission."""
     return next(m for m in world.missions.all_missions() if m.name == welcome.MISSION)
 
 
 def done(world):
+    """Which of the welcome mission's four objectives are done."""
     return [world.missions.is_objective_complete(mission(world).mission_id, i) for i in range(4)]
 
 
 def through_home(world):
+    """Begins the welcome and goes through the Home tour."""
     world_now = welcome.choose(world, "begin")
     for _ in welcome.HOME_TOUR:
         world_now = welcome.choose(world, "next")
@@ -157,6 +160,7 @@ def test_an_intro_only_says_what_exists(tmp_path, monkeypatch):
 
 
 def test_through_the_server(tmp_path, monkeypatch):
+    """The welcome runs through the server and the glasses' voice too."""
     from fastapi.testclient import TestClient
 
     import server.app as server_app

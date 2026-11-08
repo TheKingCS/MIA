@@ -7,10 +7,13 @@ from core.response_composer import BUDGET, GLASSES, PC, PHONE, compose, first_se
 
 
 class Model:
+    """A model that always says the same thing and remembers each prompt and timeout."""
     def __init__(self, said):
+        """Keeps what it will say; asked nothing yet."""
         self.said, self.asked = said, []
 
     def generate(self, prompt, timeout=None):
+        """Remembers the prompt and answers with its line."""
         self.asked.append((prompt, timeout))
         return self.said
 
@@ -68,5 +71,6 @@ def test_one_long_sentence_is_kept_whole_not_cut():
 
 
 def test_grounded_numbers():
+    """A rephrasing is grounded only when its numbers are the facts'."""
     assert grounded("Rent is 1,200 on the 3rd.", "Rent of 1,200 is due on the 3rd.")
     assert not grounded("Rent is 1,500.", "Rent of 1,200 is due.")

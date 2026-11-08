@@ -16,6 +16,7 @@ JPEG = b"\xff\xd8\xff\xe0" + b"0" * 100 + b"\xff\xd9"
 
 @pytest.fixture
 def world(tmp_path, monkeypatch):
+    """A world with the security book and the action center."""
     context = build_world(tmp_path, monkeypatch)
     context.actions = ActionCenter()
     context.security = SecurityBook(context, data_dir=context.home_dir)
@@ -23,6 +24,7 @@ def world(tmp_path, monkeypatch):
 
 
 def test_home_network_only():
+    """Only addresses on the home network are allowed, and a typed address is cleaned to host and port."""
     for ok in ("192.168.1.40", "10.0.0.5", "172.16.3.4", "100.101.102.103", "169.254.1.2"):
         assert on_home_network(ok), ok
     for bad in ("8.8.8.8", "127.0.0.1", "localhost", "0.0.0.0", "", "evil.example.com", "a b"):
@@ -31,6 +33,7 @@ def test_home_network_only():
 
 
 def test_addresses_per_brand():
+    """Each camera brand's picture and stream addresses are built, with the sign-in escaped."""
     assert picture_url("Amcrest / Dahua", "192.168.1.9") == "http://192.168.1.9/cgi-bin/snapshot.cgi?channel=1"
     assert "user=ad%20min&password=p%40ss" in picture_url("Reolink", "192.168.1.9", user="ad min", password="p@ss")
     assert picture_url("Tapo", "192.168.1.9") is None
@@ -87,6 +90,7 @@ def test_a_stream_camera_without_ffmpeg_says_so(world, monkeypatch):
 
 
 def test_grown_ups_only(world):
+    """Security isn't a child's app, and its removing and picture actions aren't a child's."""
     from core.child_accounts import CHILD_APPS
 
     assert "security" not in CHILD_APPS

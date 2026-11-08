@@ -23,10 +23,12 @@ from modules.budget.module import (
 
 
 def _bill(due_date="2026-09-07", recurrence=None, last_paid_date=None, amount=120.0):
+    """An electric bill, with its due date, repeat and amount."""
     return Bill(bill_id="b1", name="Electric", amount=amount, category="Utilities", due_date=due_date, recurrence=recurrence, last_paid_date=last_paid_date)
 
 
 def _income_source(next_date="2026-09-07", recurrence=None, last_received_date=None, expected_amount=2400.0):
+    """A paycheck as an income source."""
     return IncomeSource(
         source_id="s1",
         name="Paycheck",
@@ -39,6 +41,7 @@ def _income_source(next_date="2026-09-07", recurrence=None, last_received_date=N
 
 
 def _debt(balance=5000.0, interest_rate=24.99, promo_apr=None, promo_expires_date=None):
+    """A credit card debt, with an optional promo rate."""
     return Debt(
         debt_id="d1", name="Chase Freedom", balance=balance, interest_rate=interest_rate,
         minimum_payment=100.0, debt_type="Credit Card", promo_apr=promo_apr, promo_expires_date=promo_expires_date,
