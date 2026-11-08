@@ -71,6 +71,7 @@ CONNECT = Page("connect", "Connect Apps", "settings", "Your accounts, linked.", 
 ABOUT = Page("about", "About MIA", "assistant", "What she is, what she's for, what she knows.", "about.html")
 ANSWERS = Page("answers", "How MIA Answers", "assistant", "How long, laid out how, the tone: your way.", "answers.html")
 STUDIO = Page("studio", "Theme Studio", "settings", "Make MIA look like you: themes, colours, light.", "studio.html")
+LOOKUP = Page("lookup", "Look It Up Online", "search", "Search the web through your own search engine.", "lookup.html")
 PORTALS = Page("portals", "Portal Pictures", "apps", "Put your own paintings in the Nexus portals.", "portals.html")
 PROFILE = Page("profile", "Profile", "character", "You, and how MIA knows you.", "profile.html")
 YOURDATA = Page("yourdata", "Your Data", "files", "What MIA keeps, and taking it out.", "yourdata.html")
@@ -110,7 +111,7 @@ AREAS: tuple[Area, ...] = (
          ("calendar", "notes", "life_notes", "operating_journal", "vault", "relationships", WHY, DIRECTIONS, CONNECTIONS, "observations",
           CHECKIN, "files", "good_news"), hue="#ff8ad8"),
     Area("learning", "Learning", "classroom", "Study, the library and skills.",
-         ("classroom", "knowledge", GUITAR, "skills"), hue="#6a5cff"),
+         ("classroom", "knowledge", LOOKUP, GUITAR, "skills"), hue="#6a5cff"),
     Area("missions", "Missions", "missions", "Quests, levels and rewards.",
          ("missions", "skills", "character", "reward_shop", PARTY, CHRONICLE), hue="#c86bff"),
     Area("projects", "Projects", "workshop", "Things you're building.", (PROJECTS, "workshop", "lab"), hue="#b9a8ff"),

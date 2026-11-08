@@ -2086,3 +2086,19 @@ a.comms-row:hover .row-title { color: var(--accent); }
 .dx-repo-group { display: grid; gap: 4px; margin-top: 8px; }
 .dx-repo-title { margin: 0; font-size: 13px; font-weight: 600; }
 .dx-repo-items { margin: 0; padding-left: 18px; font-size: 13px; color: var(--text-dim); display: grid; gap: 2px; overflow-wrap: anywhere; }
+
+/* Look It Up Online (web/lookup.js, DEC-0053). */
+.lk-box { display: grid; gap: 10px; padding: 16px 18px; margin-bottom: var(--gap); }
+.lk-row { display: flex; gap: 8px; }
+.lk-row input { flex: 1; width: 0; min-width: 0; min-height: 44px; padding: 0 12px; border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong); background: var(--surface-raised); color: var(--text); font: inherit; }
+.lk-row input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.lk-rules, .lk-problem, .lk-sent, .lk-note { margin: 0; font-size: 13px; }
+.lk-problem { color: var(--attention); }
+.lk-results { display: grid; gap: 10px; }
+.lk-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.lk-item { display: grid; gap: 4px; padding: 12px 14px; }
+.lk-item p { margin: 0; }
+.lk-title { font-weight: 600; color: var(--accent-soft); overflow-wrap: anywhere; }
+.lk-src { font-size: 12px; }
+.lk-snip { font-size: 14px; line-height: 1.5; }

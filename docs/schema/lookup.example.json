@@ -1,0 +1,8 @@
+{
+ "allowed": true,
+ "why": "",
+ "engine": "http://127.0.0.1:8888",
+ "own_engine": true,
+ "setup": "docs/ONLINE_LOOKUP.md",
+ "rules": "Only your search words leave this computer, never your records; emails, long numbers and anything after \"password\" are taken out first. It searches through your own search engine, with no account and no tracking, and nothing it finds is saved as a fact about you."
+}
