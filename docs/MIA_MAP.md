@@ -4,19 +4,19 @@
 
 ## At a glance
 
-- **Architecture** — 717 Python files across 462 core, 93 modules, 123 gui, 2 server, 37 tools (strict one-way layering; see docs/ARCHITECTURE.md).
-- **Decisions** — 137 logged (docs/DECISIONS.md); the why behind every part.
+- **Architecture** — 716 Python files across 462 core, 93 modules, 123 gui, 2 server, 36 tools (strict one-way layering; see docs/ARCHITECTURE.md).
+- **Decisions** — 139 logged (docs/DECISIONS.md); the why behind every part.
 - **Capabilities** — ~180 Assistant tools (docs/ASSISTANT_CAPABILITIES.md).
 - **Improvement loops** — 90 active, 1 processes decided to need none (docs/LOOPS.md).
-- **Knowledge she's written** — 118 dev entries (work/knowledge/).
-- **Night-school learnings** — 3 nights studied.
-- **What she keeps** — 39 personal + 41 household stores, 21 sealed at rest.
+- **Knowledge she's written** — 119 dev entries (work/knowledge/).
+- **Night-school learnings** — 0 nights studied.
+- **What she keeps** — 40 personal + 41 household stores, 21 sealed at rest.
 - **How you shape her** — 4 answer-style dimensions she learns from your picks (DEC-0138).
 
 ## Decisions — why MIA is built the way she is
 
-**ACCEPTED** (4): DEC-0129, DEC-0130, DEC-0135, DEC-0136
-**APPROVED** (116): DEC-0003, DEC-0008, DEC-0010, DEC-0012, DEC-0013, DEC-0014, DEC-0015, DEC-0016, DEC-0017, DEC-0018, DEC-0019, DEC-0020, DEC-0021, DEC-0022, DEC-0023, DEC-0024, DEC-0025, DEC-0026, DEC-0027, DEC-0028, DEC-0029, DEC-0030, DEC-0031, DEC-0032, DEC-0033, DEC-0034, DEC-0035, DEC-0036, DEC-0037, DEC-0038, DEC-0039, DEC-0040, DEC-0041, DEC-0042, DEC-0043, DEC-0045, DEC-0046, DEC-0047, DEC-0048, DEC-0049, DEC-0050, DEC-0051, DEC-0052, DEC-0053, DEC-0054, DEC-0055, DEC-0056, DEC-0057, DEC-0058, DEC-0059, DEC-0060, DEC-0061, DEC-0062, DEC-0063, DEC-0064, DEC-0065, DEC-0066, DEC-0067, DEC-0068, DEC-0069, DEC-0070, DEC-0071, DEC-0072, DEC-0073, DEC-0074, DEC-0075, DEC-0076, DEC-0077, DEC-0078, DEC-0079, DEC-0080, DEC-0081, DEC-0082, DEC-0083, DEC-0084, DEC-0085, DEC-0086, DEC-0087, DEC-0088, DEC-0089, DEC-0090, DEC-0091, DEC-0092, DEC-0093, DEC-0094, DEC-0095, DEC-0096, DEC-0097, DEC-0098, DEC-0099, DEC-0100, DEC-0101, DEC-0104, DEC-0105, DEC-0106, DEC-0107, DEC-0108, DEC-0109, DEC-0110, DEC-0111, DEC-0112, DEC-0113, DEC-0115, DEC-0116, DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0121, DEC-0122, DEC-0124, DEC-0125, DEC-0126, DEC-0131, DEC-0134, DEC-0138
+**ACCEPTED** (5): DEC-0129, DEC-0130, DEC-0135, DEC-0136, DEC-0140
+**APPROVED** (117): DEC-0003, DEC-0008, DEC-0010, DEC-0012, DEC-0013, DEC-0014, DEC-0015, DEC-0016, DEC-0017, DEC-0018, DEC-0019, DEC-0020, DEC-0021, DEC-0022, DEC-0023, DEC-0024, DEC-0025, DEC-0026, DEC-0027, DEC-0028, DEC-0029, DEC-0030, DEC-0031, DEC-0032, DEC-0033, DEC-0034, DEC-0035, DEC-0036, DEC-0037, DEC-0038, DEC-0039, DEC-0040, DEC-0041, DEC-0042, DEC-0043, DEC-0045, DEC-0046, DEC-0047, DEC-0048, DEC-0049, DEC-0050, DEC-0051, DEC-0052, DEC-0053, DEC-0054, DEC-0055, DEC-0056, DEC-0057, DEC-0058, DEC-0059, DEC-0060, DEC-0061, DEC-0062, DEC-0063, DEC-0064, DEC-0065, DEC-0066, DEC-0067, DEC-0068, DEC-0069, DEC-0070, DEC-0071, DEC-0072, DEC-0073, DEC-0074, DEC-0075, DEC-0076, DEC-0077, DEC-0078, DEC-0079, DEC-0080, DEC-0081, DEC-0082, DEC-0083, DEC-0084, DEC-0085, DEC-0086, DEC-0087, DEC-0088, DEC-0089, DEC-0090, DEC-0091, DEC-0092, DEC-0093, DEC-0094, DEC-0095, DEC-0096, DEC-0097, DEC-0098, DEC-0099, DEC-0100, DEC-0101, DEC-0104, DEC-0105, DEC-0106, DEC-0107, DEC-0108, DEC-0109, DEC-0110, DEC-0111, DEC-0112, DEC-0113, DEC-0115, DEC-0116, DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0121, DEC-0122, DEC-0124, DEC-0125, DEC-0126, DEC-0131, DEC-0134, DEC-0138, DEC-0139
 **Approach** (1): DEC-0137
 **IMPLEMENTED** (7): DEC-0002, DEC-0004, DEC-0005, DEC-0006, DEC-0007, DEC-0009, DEC-0011
 **IMPLEMENTED;** (1): DEC-0001
@@ -162,18 +162,20 @@
 - **DEC-0136** [ACCEPTED] — Themes on top of the two looks, as data
 - **DEC-0137** [Approach] — Living Systems Framework — generalize the existing foundation, don't rebuild it
 - **DEC-0138** [APPROVED] — "Do you prefer this response, or this one?" — learning the person's answer style
+- **DEC-0139** [APPROVED] — One map of everything that makes MIA (docs/MIA_MAP.md)
+- **DEC-0140** [ACCEPTED] — MIA paints, on the PC's own graphics card, and uses what she paints
 
 </details>
 
 ## How she improves
 
 - **90 improvement loops** watch her processes (docs/LOOPS.md, DEC-0094/0101) — Observe → Measure → Evaluate → Improve → Verify.
-- **Night school** (DEC-0100) — 3 nights spent studying how to build herself; what went right and wrong is written back as knowledge.
-- **Dev-knowledge** — 118 entries 21 lesson, 13 debugging, 14 decision, 8 method, 4 test-procedure, 2 failed-experiment, 55 implementation, 1 security-finding.
+- **Night school** (DEC-0100) — 0 nights spent studying how to build herself; what went right and wrong is written back as knowledge.
+- **Dev-knowledge** — 119 entries 21 lesson, 13 debugging, 14 decision, 8 method, 4 test-procedure, 2 failed-experiment, 56 implementation, 1 security-finding.
 
 ## What she keeps, and how it's protected
 
-- 39 personal stores (each person's own) and 41 household stores.
+- 40 personal stores (each person's own) and 41 household stores.
 - 21 of them are **sealed at rest** (DEC-0126) — encrypted on disk, the real/fictional boundary kept separate (DEC-0137).
 
 ## How you shape her

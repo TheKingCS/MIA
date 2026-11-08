@@ -151,7 +151,10 @@ FONTS: dict[str, tuple[str, str]] = {
 # Stark's values, which live in web/tokens.css rather than in its (empty) token list.
 STARK_CHOICES = {"accent": "#35d4ff", "background": "#05070a", "panel": "#0c1016", "text": "#e6eef6",
                  "line": "#96b6d4", "radius": 6, "font": "system", "material": "solid",
-                 "fire": 1.0, "bloom": 1.0, "mist": 1.0, "scan": 0.0, "grain": 0.0, "palette": []}
+                 "fire": 1.0, "bloom": 1.0, "mist": 1.0, "scan": 0.0, "grain": 0.0, "palette": [],
+                 # DEC-0140: a picture MIA painted, behind every page and on the room's far wall, and how strongly
+                 "backdrop": "", "backdrop_strength": 0.6}
+_ART_ID = re.compile(r"^[a-f0-9]{12}$")
 # Hues that mean something (DEC-0014): an accent near them would read as a warning, an error or "done".
 MEANING_HUES = (("amber, which means something needs you", 39), ("red, which means an error", 2),
                 ("green, which means done", 151), ("gold, which means a reward", 45))
@@ -208,7 +211,8 @@ def accent_problem(hex_colour: str) -> Optional[str]:
 
 
 def choices_of(theme: dict) -> dict:
-    """Pure logic. A theme as the Studio's choices: its saved ones, else read back from its tokens over Stark's."""
+    """Pure logic. A theme as the Studio's choices: its saved ones, else read back from its tokens, room and backdrop
+    picture over Stark's."""
     if theme.get("choices"):
         return {**STARK_CHOICES, **theme["choices"]}
     tokens, room = theme.get("tokens") or {}, theme.get("room") or {}
@@ -231,13 +235,16 @@ def choices_of(theme: dict) -> dict:
             "line": rgb_token("--rgb-line", STARK_CHOICES["line"]),
             "radius": int(float(radius)) if radius.replace(".", "", 1).isdigit() else 6,
             "font": font, "material": theme.get("material") or "solid",
-            **{k: room[k] for k in ROOM_LEVELS if k in room}, "palette": list(room.get("palette") or [])}
+            **{k: room[k] for k in ROOM_LEVELS if k in room}, "palette": list(room.get("palette") or []),
+            "backdrop": (theme.get("backdrop") or {}).get("art", ""),
+            "backdrop_strength": (theme.get("backdrop") or {}).get("strength", 0.6)}
 
 
 def build_theme(choices: dict, base: Optional[dict] = None, theme_id: str = "", name: str = "") -> dict:
     """Pure logic. A whole theme (cleaned) from the Studio's choices, on top of a base theme's other tokens (its
-    backdrop, label spacing, motion). Raises ValueError when a colour isn't #rrggbb, the accent would read as a
-    meaning colour, or the text and background are under 4.5:1."""
+    backdrop gradient, label spacing, motion), with the backdrop picture the choices name (DEC-0140). Raises ValueError
+    when a colour isn't #rrggbb, the accent would read as a meaning colour, or the text and background are under
+    4.5:1."""
     c = {**STARK_CHOICES, **{k: v for k, v in (choices or {}).items() if v is not None}}
     for key in ("accent", "background", "panel", "text", "line"):
         if not _HEX.match(str(c[key])):
@@ -271,9 +278,17 @@ def build_theme(choices: dict, base: Optional[dict] = None, theme_id: str = "", 
         room.pop("palette", None)
     data = clean_theme({"id": theme_id or base.get("id") or "my_theme", "name": name or base.get("name") or "My theme",
                         "line": base.get("line", ""), "tokens": tokens, "material": c["material"], "room": room})
+    art = str(c.get("backdrop") or "")
+    if _ART_ID.match(art):
+        try:
+            strength = max(0.1, min(1.0, float(c.get("backdrop_strength", 0.6))))
+        except (TypeError, ValueError):
+            strength = 0.6
+        data["backdrop"] = {"art": art, "strength": strength}
     data["choices"] = {k: c[k] for k in STARK_CHOICES}
     data["choices"]["radius"] = radius
     data["choices"]["palette"] = palette
+    data["choices"]["backdrop"] = art if _ART_ID.match(art) else ""
     return data
 
 
@@ -281,7 +296,8 @@ def clean_theme(data: dict) -> dict:
     """Pure logic. A theme's data as the page may use it: {id, name, line, tokens, material, room}, keeping only the
     tokens and room settings a theme may change, dropping any value that could break out of CSS (url(), braces,
     semicolons, angle brackets, backslashes) or runs long, clamping the room's levels, and keeping only #rrggbb
-    colours in the room. Raises ValueError without an id or name."""
+    colours in the room; a backdrop picture is kept only as a picture id with its strength (DEC-0140). Raises
+    ValueError without an id or name."""
     theme_id = str(data.get("id") or "").strip()
     name = str(data.get("name") or "").strip()
     if not re.fullmatch(r"[a-z0-9_]{1,32}", theme_id) or not name:
@@ -306,8 +322,16 @@ def clean_theme(data: dict) -> dict:
             except (TypeError, ValueError):
                 pass
     material = data.get("material") if data.get("material") in MATERIALS else "solid"
-    return {"id": theme_id, "name": name[:40], "line": str(data.get("line") or "")[:160], "tokens": tokens,
-            "material": material, "room": room}
+    out = {"id": theme_id, "name": name[:40], "line": str(data.get("line") or "")[:160], "tokens": tokens,
+           "material": material, "room": room}
+    backdrop = data.get("backdrop") if isinstance(data.get("backdrop"), dict) else {}
+    if _ART_ID.match(str(backdrop.get("art", ""))):  # one of the person's pictures, by id (core/art_studio.py)
+        try:
+            strength = max(0.1, min(1.0, float(backdrop.get("strength", 0.6))))
+        except (TypeError, ValueError):
+            strength = 0.6
+        out["backdrop"] = {"art": backdrop["art"], "strength": strength}
+    return out
 
 
 def as_data(theme: Theme) -> dict:

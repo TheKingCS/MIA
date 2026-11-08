@@ -7,7 +7,7 @@
 .st-theme small { font-size: var(--label-size); letter-spacing: var(--label-track); text-transform: uppercase; color: var(--text-faint); }
 .st-swatch { width: 14px; height: 14px; border-radius: 50%; }
 .st-grid { display: grid; grid-template-columns: minmax(280px, 380px) minmax(0, 1fr); gap: var(--gap); align-items: start; }
-.st-controls { display: grid; gap: 10px; padding: 18px; position: sticky; top: 12px; }
+.st-controls { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 18px; position: sticky; top: 12px; min-width: 0; }
 .st-controls .pw-label { margin: 8px 0 0; }
 .st-colours { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
 .st-colour { display: grid; justify-items: center; gap: 4px; font-size: var(--text-xs); color: var(--text-dim); cursor: pointer; }
@@ -43,9 +43,18 @@
 }
 .st-describe { display: grid; gap: 10px; padding: 16px 18px; margin-bottom: var(--gap); }
 .st-describe .pw-label { margin: 0; }
-.st-describe-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+.st-describe-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; }
+.st-describe-row input { min-width: 0; }
+.st-backdrop { display: grid; gap: 10px; min-width: 0; }
 .st-describe-row input { min-height: 44px; padding: 0 12px; border-radius: var(--radius-sm); border: 1px solid var(--line-strong);
   background: rgba(var(--rgb-panel-2), 0.9); color: var(--text); font: inherit; }
 .st-designed { margin: 0; font-size: var(--text-sm); color: var(--text-dim); }
 .st-import { position: relative; overflow: hidden; cursor: pointer; }
 .st-import input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.st-arts { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; }
+.st-art { aspect-ratio: 16 / 9; padding: 0; overflow: hidden; border-radius: var(--radius-sm); border: 1px solid var(--line-strong);
+  background: rgba(var(--rgb-panel-2), 0.9); cursor: pointer; }
+.st-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.st-art.on { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(var(--rgb-accent), 0.5); }
+.st-none { display: grid; place-items: center; height: 100%; font-size: var(--text-xs); color: var(--text-dim); }
+.st-jobs { display: grid; gap: 6px; }

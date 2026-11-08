@@ -23,7 +23,9 @@
         "mist": 1.0,
         "scan": 0.0,
         "grain": 0.0,
-        "palette": []
+        "palette": [],
+        "backdrop": "",
+        "backdrop_strength": 0.6
       },
       "file": {
         "format": "mia-theme/1",
@@ -44,7 +46,9 @@
           "mist": 1.0,
           "scan": 0.0,
           "grain": 0.0,
-          "palette": []
+          "palette": [],
+          "backdrop": "",
+          "backdrop_strength": 0.6
         },
         "tokens": {},
         "material": "solid",
@@ -116,7 +120,9 @@
           "#ff8ad8",
           "#5cf2ff",
           "#c86bff"
-        ]
+        ],
+        "backdrop": "",
+        "backdrop_strength": 0.6
       },
       "file": {
         "format": "mia-theme/1",
@@ -144,7 +150,9 @@
             "#ff8ad8",
             "#5cf2ff",
             "#c86bff"
-          ]
+          ],
+          "backdrop": "",
+          "backdrop_strength": 0.6
         },
         "tokens": {
           "--rgb-bg": "8, 4, 18",
@@ -250,7 +258,9 @@
           "#2e9bff",
           "#7a2eff",
           "#00e5ff"
-        ]
+        ],
+        "backdrop": "",
+        "backdrop_strength": 0.6
       },
       "file": {
         "format": "mia-theme/1",
@@ -276,7 +286,9 @@
             "#2e9bff",
             "#7a2eff",
             "#00e5ff"
-          ]
+          ],
+          "backdrop": "",
+          "backdrop_strength": 0.6
         },
         "tokens": {
           "--rgb-bg": "6, 3, 12",
@@ -380,7 +392,9 @@
           "#96d6ff",
           "#c8b4ff",
           "#dfe9f2"
-        ]
+        ],
+        "backdrop": "",
+        "backdrop_strength": 0.6
       },
       "file": {
         "format": "mia-theme/1",
@@ -405,7 +419,9 @@
             "#96d6ff",
             "#c8b4ff",
             "#dfe9f2"
-          ]
+          ],
+          "backdrop": "",
+          "backdrop_strength": 0.6
         },
         "tokens": {
           "--rgb-bg": "9, 13, 19",

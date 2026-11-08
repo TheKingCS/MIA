@@ -79,5 +79,9 @@
         "daily_budget": 5,
         "min_spacing_minutes": 90,
         "repeat_days": 7
+    },
+    "art": {
+        "engine_url": "http://127.0.0.1:8188",
+        "checkpoint": ""
     }
 }

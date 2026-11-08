@@ -22,7 +22,8 @@
  *     opt.shape       "oval" (portals, the default) or "bay" (an area's room: a wide door frame, as the Garage's bays)
  *     opt.fire        how much fire rises off the frames (1 the default; an area's room burns lower)
  *     opt.theme       the theme's room light (core/themes.py: accent, back_top/back_bottom, palette, fire, bloom,
- *                     mist, scan, grain); Stark's when absent
+ *                     mist, scan, grain); Stark's when absent; `backdrop` (a URL or a promise of one) and
+ *                     `backdrop_strength` hang a painting MIA made on the far wall (DEC-0140)
  *     opt.art(p)      a promise of the picture's url (default p.art); opt.needsGlow: a pedestal glows amber when
  *                     something in its item needs you; opt.arrive / opt.arriveHue: you came in through a portal
  *   The same room draws an area's own space (hub.js: the Garage's bays round her), so going through feels like one place.
@@ -217,9 +218,19 @@
   // The chamber behind: dark, its wall's seams lit faintly, and vapor drifting in the areas' colours.
   const FS_BACK = HEAD + NOISE + `
     in vec2 vUv; out vec4 o; uniform float uT, uYaw; uniform vec3 uHues[6]; uniform vec3 uAccent, uTop, uBottom;
+    uniform sampler2D uArt; uniform float uArtOn, uArtAspect, uAspect;
     void main(){
       vec2 uv = vUv;
       vec3 col = mix(uBottom, uTop, smoothstep(0.1, 0.75, uv.y));
+      if (uArtOn > 0.0){  // a painting on the far wall (DEC-0140): covers the view above the floor, drifting as it turns
+        vec2 a = uv - 0.5;
+        float k = uAspect / uArtAspect;
+        a.x *= k > 1.0 ? 1.0 : k; a.y *= k > 1.0 ? 1.0 / k : 1.0;
+        vec2 at = a * 0.86 + 0.5 + vec2(uYaw * 0.015, 0.06);
+        vec3 art = texture(uArt, vec2(at.x, 1.0 - at.y)).rgb;
+        float wall = smoothstep(0.30, 0.55, uv.y);
+        col = mix(col, art * 0.85, uArtOn * wall);
+      }
       float x = uv.x * 16.0 + uYaw * 2.5;
       float seam = exp(-abs(fract(x) - 0.5) * 50.0) * smoothstep(0.38, 0.6, uv.y) * smoothstep(1.0, 0.7, uv.y);
       col += uAccent * seam * 0.06;
@@ -417,6 +428,25 @@
     const backTop = look.back_top ? rgb(look.back_top) : [0.008, 0.018, 0.035];
     const backBottom = look.back_bottom ? rgb(look.back_bottom) : [0, 0, 0.004];
     const level = (k, d) => (typeof look[k] === "number" ? look[k] : d);
+    // The theme's painting for the far wall (opt.theme.backdrop: a URL or a promise of one, MIAShell.roomLight).
+    let artTex = null, artReady = false, artAspect = 16 / 9;
+    Promise.resolve(look.backdrop || null).then((url) => {
+      if (!url) return;
+      const img = new Image();
+      img.onload = () => {
+        if (gl.isContextLost()) return;
+        artTex = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, artTex);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+        gl.generateMipmap(gl.TEXTURE_2D);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        artAspect = img.width / img.height;
+        artReady = true;
+      };
+      img.src = url;
+    }).catch(() => {});
 
     // Render targets: the scene at full size, bloom at half and a quarter.
     function target(w, h) {
@@ -537,6 +567,9 @@
       for (let k = 0; k < 6; k++) sixHues.push(...(palette.length ? palette[k % palette.length] : hues[(Math.round(rot) + k * 3 + n * 4) % n]));
       gl.uniform3fv(P.back.u("uHues[0]"), sixHues); gl.uniform3fv(P.back.u("uAccent"), accent);
       gl.uniform3fv(P.back.u("uTop"), backTop); gl.uniform3fv(P.back.u("uBottom"), backBottom);
+      gl.uniform1f(P.back.u("uArtOn"), artReady ? level("backdrop_strength", 0.6) : 0);
+      gl.uniform1f(P.back.u("uArtAspect"), artAspect); gl.uniform1f(P.back.u("uAspect"), cssW / cssH);
+      if (artReady) { gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, artTex); gl.uniform1i(P.back.u("uArt"), 0); }
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
       gl.enable(gl.BLEND);

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1251 files, 271,745 lines; 1251 files describe themselves; 14,758 of 15,456 classes and functions are documented.
+1254 files, 272,718 lines; 1254 files describe themselves; 14,812 of 15,510 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-462 files, 127,695 lines; 6,839 of 6,925 classes and functions documented
+464 files, 128,335 lines; 6,879 of 6,965 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -20,9 +20,11 @@
 - `core/app_context.py`: Defines AppContext: a small bundle of shared services (config, logger factory, event bus) that gets handed to every module and every GUI component.
 - `core/app_intro.py`: What MIA says when she introduces an app (slice 5 of docs/GLASSES_FIRST_BOOT_PLAN.md), in two halves:
 - `core/application.py`: MIAApplication: the orchestrator that boots the system.
+- `core/art_studio.py`: MIA paints (DEC-0140, Zac 2026-11-08: "She should also be able to be prompted to generate art assets and use them in her program, like if you wanted the background to show a fantasy castle/village scene"). A description becomes a picture on the PC's own graphics card, through a local image engine (C
 - `core/asset_parts.py`: Parts per asset (2026-11-07; the asset page's "parts aren't tracked per asset yet", PLANNED since 2026-10-06): the oil filters, blades, belts and fluids a vehicle, tool or appliance uses, from the household's own inventory, workshop materials and parts bins.
 - `core/assistant_accessibility_actions.py`: "Make the text bigger", "turn on high contrast", "read this screen to me" (core/accessibility.py, 2026-10-01), and "switch to the cards look" (core/display_style.py, DEC-0135), "make it cyberpunk" (core/themes.py, DEC-0136). Each changes only the speaker's own look.
 - `core/assistant_actions.py`: The Assistant's tool-use/action-execution registry — docs/ROADMAP.md milestone 5.5. Lets the LLM actually DO things in MIA (open a module, add an alarm, a note, an inventory item), not just answer questions, via Ollama's structured tool-calling API (core/llm_manager.py's `chat_with_tools()`).
+- `core/assistant_art_actions.py`: MIA paints by voice (DEC-0140, core/art_studio.py): "paint me a fantasy castle village for my background", "use the castle one as my background", "take the background down", "delete the castle picture". Painting runs on the PC's own graphics card and takes a minute or so; a background asked for this
 - `core/assistant_asset_part_actions.py`: Parts per asset by voice (DEC-0125; the screen is the asset page's Parts tab, core/asset_parts.py): "the mower uses the 10W-30 oil", "what parts does the truck take?", "the truck doesn't use that filter anymore". Names are matched to real records in code; the add and remove are the same actions the 
 - `core/assistant_backup_actions.py`: Backups by voice (DEC-0125), read only: "when did I last back up?" says how long since the last backup in the backups folder and where they go (core/web_backups.py). Making one is on Settings (a passphrase is typed, never said aloud); restoring is on the PC.
 - `core/assistant_browser_actions.py`: MIA's browser by voice and chat (DEC-0117): open a page or search, read it, click, type, go back, close; learn a task the person shows her, do it again, list what she's learned. Every step goes through core/browser.py, which sorts it with core/browser_safety.py: a step that commits is held as the ac
@@ -473,7 +475,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 3,672 lines; 41 of 41 classes and functions documented
+2 files, 3,719 lines; 42 of 42 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -748,7 +750,7 @@
 
 ## tests/: the test suite: what each part must do
 
-425 files, 71,797 lines; 5,637 of 6,249 classes and functions documented
+426 files, 71,965 lines; 5,650 of 6,262 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -769,6 +771,7 @@
 - `tests/test_alarm_tool.py`: Unit test for modules.toolbox.tools.alarm_tool.format_alarm_row — pure formatting logic, no Qt event loop needed.
 - `tests/test_answer_ratings.py`: Rating her answers (DEC-0067, core/answer_ratings.py): a 👍 is kept as a rating, a 👎 is kept and still reaches the Fix-It Log, and each person's ratings are their own. *(2 undocumented)*
 - `tests/test_application_daily_occasions.py`: Unit tests for core.application.MIAApplication._check_daily_occasions() and its per-check exception isolation (2026-09-14 stabilization pass). *(1 undocumented)*
+- `tests/test_art_studio.py`: MIA paints (DEC-0140, core/art_studio.py): a description becomes a picture on the PC's own image engine (ComfyUI), kept in the person's folder, and can go up as their theme's backdrop. Tested against a stand-in ComfyUI on a local port: the same HTTP calls, a tiny PNG back.
 - `tests/test_asset_parts.py`: Parts per asset (core/asset_parts.py and its voice tools): the parts an asset uses are stated links to the household's inventory and materials, listed with what's on hand, out and low first; adding and removing go through the same actions the asset page uses.
 - `tests/test_asset_photo.py`: An asset's photo (Q-0014, 2026-11-07): kept in the household's own folder under a name of its own, shown on its page and Garage card through a link that changes with the file, and never served from outside that folder.
 - `tests/test_assistant_action_gating.py`: Regression tests tying modules.assistant.module.looks_like_action_request() to the REAL trigger_phrases registered in core.application's _register_assistant_actions() (milestone 5.7-5.9) — not a hand-copied keyword list. Two real gaps were found only by live-model testing and are pinned here so they
@@ -1178,7 +1181,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-94 files, 17,378 lines
+94 files, 17,496 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game

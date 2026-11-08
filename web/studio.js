@@ -7,6 +7,8 @@
  * that count: an accent that reads as a warning colour, or text too faint to read. The checks here only say so early.
  * Describe One asks MIA to design a theme (MIA.designTheme, core/theme_design.py) and loads it here to tweak; Export
  * downloads what's on screen as a mia-theme/1 file; Import proposes `theme.import`, which core reads and checks.
+ * Backdrop: MIA paints a picture on the PC's graphics card (MIA.paint, core/art_studio.py, DEC-0140); pick one of
+ * your paintings (or none) and how strongly it shows; it's part of the theme you save.
  */
 (function () {
   "use strict";
@@ -14,6 +16,7 @@
   const $ = (id) => document.getElementById(id);
   let data = null, base = null, picks = null, own = null, room = null, roomTimer = 0, savedName = "";
   let described = "", designNote = "", designedName = "";  // MIA's last design, kept while you tweak it
+  let art = null, painting = "", artTimer = 0;  // MIA's paintings (core/art_studio.status) and what you asked her to paint
 
   // ------------------------------------------------------------ colour arithmetic (mirrors core/themes.py)
   const rgbOf = (h) => { const n = parseInt(h.slice(1, 7), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
@@ -67,13 +70,14 @@
     return out;
   }
   function preview() {
-    const theme = { id: base.id, name: "Preview", tokens: tokensFrom(picks, base), material: picks.material, room: roomFrom(picks, base) };
+    const theme = { id: base.id, name: "Preview", tokens: tokensFrom(picks, base), material: picks.material, room: roomFrom(picks, base),
+      backdrop: picks.backdrop ? { art: picks.backdrop, strength: picks.backdrop_strength || 0.6 } : null };
     MIAShell.previewTheme(theme);
     const issues = problems();
     $("st-issues").replaceChildren(...issues.map((p) => el("p", { class: "st-issue" }, p)));
     $("st-save").disabled = $("st-use").disabled = issues.length > 0;
     clearTimeout(roomTimer);
-    roomTimer = setTimeout(() => mountRoom(theme.room), 250);
+    roomTimer = setTimeout(() => mountRoom(MIAShell.roomLight(theme)), 250);
   }
   function mountRoom(light) {
     const canvas = $("st-room");
@@ -114,7 +118,7 @@
 
   function start(theme) {
     base = theme;
-    picks = Object.assign({}, theme.choices, { palette: (theme.choices.palette || []).slice() });
+    picks = Object.assign({ backdrop: "", backdrop_strength: 0.6 }, theme.choices, { palette: (theme.choices.palette || []).slice() });
     own = theme.own ? theme.id : null;
     designNote = ""; designedName = "";
     paint();
@@ -132,6 +136,53 @@
       designNote = made.summary; designedName = made.name;
       paint();
     } catch (e) { MIAShell.say(e.message); }
+  }
+
+  // ------------------------------------------------------------ paintings (DEC-0140, core/art_studio.py)
+  async function paintIt() {
+    painting = $("st-paint").value.trim();
+    if (!painting) return;
+    try { await MIA.paint(painting, "backdrop", false); await refreshArt(); }
+    catch (e) { MIAShell.say(e.message); }
+  }
+  async function refreshArt() {
+    try { art = await MIA.art(); } catch (e) { art = art || null; }
+    const going = art && art.jobs.some((j) => j.status === "painting");
+    clearTimeout(artTimer);
+    if (going) artTimer = setTimeout(refreshArt, 3000);
+    const done = art && art.jobs.find((j) => j.status === "done" && j.description === painting);
+    if (done) { picks.backdrop = done.art_id; painting = ""; }  // what you just painted goes straight onto the preview
+    redrawBackdrop();
+    if (done) preview();
+  }
+  // Only the Backdrop section redraws while a painting is going: the rest (and the little room) stays put.
+  function redrawBackdrop() {
+    const box = $("st-backdrop");
+    if (box) box.replaceChildren(...backdropSection().filter(Boolean)); else paint();
+  }
+  function backdropSection() {
+    const items = (art && art.items) || [];
+    const tile = (id, label, imgPath) => {
+      const pic = imgPath ? el("img", { alt: "", loading: "lazy" }) : el("span", { class: "st-none" }, "None");
+      if (imgPath) MIA.image(imgPath).then((u) => { if (u) pic.src = u; });
+      return el("button", { type: "button", class: "st-art" + ((picks.backdrop || "") === id ? " on" : ""), title: label,
+        "aria-label": label, "aria-pressed": String((picks.backdrop || "") === id), onclick: () => { picks.backdrop = id; redrawBackdrop(); preview(); } }, pic);
+    };
+    const engine = art && art.engine;
+    const jobs = ((art && art.jobs) || []).filter((j) => j.status === "painting" || j.status === "failed");
+    return [
+      el("h2", { class: "pw-label" }, "Backdrop"),
+      el("p", { class: "st-designed" }, engine ? (engine.available ? engine.line + " Describe a place and MIA paints it."
+        : engine.line) : "Paintings need MIA running on your PC."),
+      el("div", { class: "st-describe-row" },
+        el("input", { id: "st-paint", type: "text", maxlength: "400", value: painting, placeholder: "A fantasy castle village at dusk",
+          "aria-label": "What should MIA paint?", onkeydown: (e) => { if (e.key === "Enter") paintIt(); } }),
+        el("button", { type: "button", class: "btn btn-ghost", onclick: paintIt, disabled: engine && !engine.available ? true : null }, "Paint It")),
+      jobs.length ? el("div", { class: "st-jobs", role: "status" }, jobs.map((j) => el("p", { class: j.status === "failed" ? "st-issue" : "st-designed" },
+        j.status === "failed" ? j.error : "Painting " + j.description + "… " + j.seconds + "s"))) : null,
+      el("div", { class: "st-arts" }, tile("", "No backdrop", null), ...items.filter((i) => i.use === "backdrop").map((i) => tile(i.id, i.description, i.image))),
+      picks.backdrop ? slider("backdrop_strength", "Strength", 0.1, 1, 0.05) : null,
+    ];
   }
 
   // A theme as a file (core/theme_actions.export's shape): what's on screen now, so a tweak can be shared unsaved.
@@ -191,6 +242,7 @@
           el("h2", { class: "pw-label" }, "The Room"),
           ...Object.keys(data.levels).map((k) => slider(k, LEVEL_NAMES[k] || k, data.levels[k][0], data.levels[k][1], 0.05)),
           palette(),
+          el("div", { id: "st-backdrop", class: "st-backdrop" }, ...backdropSection()),
           el("h2", { class: "pw-label" }, "Keep It"),
           el("label", { class: "st-select" }, el("span", {}, "Name"), el("input", { id: "st-name", type: "text", maxlength: "40", value: name })),
           el("div", { id: "st-issues", role: "status" }),
@@ -226,7 +278,8 @@
   }
 
   MIAShell.start(async () => {
-    data = await MIA.themes();
+    [data, art] = await Promise.all([MIA.themes(), MIA.art().catch(() => null)]);
+    if (art && art.jobs.some((j) => j.status === "painting")) artTimer = setTimeout(refreshArt, 3000);
     const wanted = (savedName && data.themes.find((t) => t.name === savedName)) || data.themes.find((t) => t.id === data.current) || data.themes[0];
     savedName = "";
     start(wanted);

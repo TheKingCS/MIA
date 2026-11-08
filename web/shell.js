@@ -40,10 +40,40 @@
     root.dataset.theme = theme.id;
     root.dataset.material = theme.material || "solid";
     themeNow = theme;
+    backdrop(theme.backdrop);
     if (previewOnly) return;  // the Theme Studio trying a look on: not kept for the next page
     try { localStorage.setItem(THEME_CACHE, JSON.stringify(theme)); } catch (e) { /* fine: it applies when the shell comes */ }
   }
   try { applyTheme(JSON.parse(localStorage.getItem(THEME_CACHE) || "null")); } catch (e) { /* no cached theme */ }
+  // A picture MIA painted behind every page (DEC-0140): its own fixed layer, faded where you read (themes.css).
+  let backdropArt = "";
+  function backdrop(b) {
+    const art = (b && b.art) || "";
+    let layer = document.querySelector(".theme-art");
+    if (!art) { if (layer) layer.remove(); backdropArt = ""; return; }
+    if (!layer) {
+      layer = document.createElement("div");
+      layer.className = "theme-art";
+      layer.setAttribute("aria-hidden", "true");
+      (document.body || document.documentElement).prepend(layer);
+    }
+    layer.style.setProperty("--art-strength", String(b.strength || 0.6));
+    if (art === backdropArt) return;
+    backdropArt = art;
+    const show = () => window.MIA && MIA.image && MIA.image("/api/art/" + art + "/image").then((url) => {
+      if (url && backdropArt === art) layer.style.backgroundImage = "url(\"" + url + "\")";
+    });
+    if (window.MIA) show(); else addEventListener("DOMContentLoaded", show);
+  }
+  // The painting's address for a 3D room (a promise of a page-local URL), or null.
+  function backdropUrl(b) {
+    const art = b && b.art;
+    return art && window.MIA && MIA.image ? MIA.image("/api/art/" + art + "/image") : null;
+  }
+  function roomLight(t) {  // a theme's light for web/nexus3d.js, with its painting on the far wall
+    t = t || theme();
+    return Object.assign({}, t.room || {}, t.backdrop ? { backdrop: backdropUrl(t.backdrop), backdrop_strength: t.backdrop.strength } : {});
+  }
   function theme() { return themeNow || { id: "stark", name: "Stark", tokens: {}, material: "solid", room: {} }; }
 
   const $ = (sel, root) => (root || document).querySelector(sel);
@@ -853,7 +883,7 @@
         el("small", { class: "buff-left" }, b.lasts))));
   }
 
-  window.MIAShell = { look, theme, previewTheme: (t) => applyTheme(t, true), start, act, say, el, refresh, frame, form, search: openSearch, levelCard, conditionBar, buffChips, showDraft, confirm: confirmBox, talk: toggleTalk,
+  window.MIAShell = { look, theme, roomLight, previewTheme: (t) => applyTheme(t, true), start, act, say, el, refresh, frame, form, search: openSearch, levelCard, conditionBar, buffChips, showDraft, confirm: confirmBox, talk: toggleTalk,
     notRight, voiceRecorder, playReply };
 
   // <script src="shell.js" data-frame="garage">: frame an existing page as soon

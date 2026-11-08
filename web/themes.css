@@ -51,3 +51,14 @@
   mask-image: radial-gradient(ellipse 46% 52% at 56% 52%, transparent 35%, #000 100%);
 }
 @media (prefers-reduced-data: reduce) { :root[data-theme="y2k"] body::after { display: none; } }
+
+/* A picture MIA painted, behind every page (DEC-0140; web/shell.js puts it on its own layer). Strong at the edges,
+   faded and darkened in the middle where you read, so text never sits on a busy picture. */
+.theme-art {
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: center / cover no-repeat; opacity: var(--art-strength, 0.6); transform: translateZ(0);
+  -webkit-mask-image: radial-gradient(ellipse 50% 55% at 56% 52%, rgba(0, 0, 0, 0.25) 30%, #000 100%);
+  mask-image: radial-gradient(ellipse 50% 55% at 56% 52%, rgba(0, 0, 0, 0.25) 30%, #000 100%);
+}
+:root[data-contrast="high"] .theme-art { display: none; }
+@media (prefers-reduced-data: reduce) { .theme-art { display: none; } }
