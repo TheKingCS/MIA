@@ -11,7 +11,8 @@ lab_page() gives the series as chips (each with its latest reading, how
 long ago and how many), and the chosen one in full: its readings newest
 first, a few plain numbers (latest, lowest, highest, average, the change
 since the first) and the points for its chart. Series written by other
-apps (Power's energy sources, Garage's asset meters) are listed apart
+apps (Power's energy sources, Garage's asset meters and upkeep tasks'
+sensor and meter readings) are listed apart
 under the name they have there, read only, with a link to that app.
 
 Logging and deleting readings are the actions `lab_reading.add` and
@@ -30,7 +31,10 @@ from core.web_power import ago
 log = get_logger(__name__)
 
 CHART_POINTS = 60  # the chart shows the newest readings, up to this many
-_OTHER_APPS = (("energy_source_", "Power", "power.html"), ("maintenance_asset_", "Garage", "garage.html"))
+# Other apps' series, read only here: (id prefix, app, page). The asset meters' prefix comes before an upkeep task's
+# ("maintenance_<task id>", a sensor or meter task's readings), which it also starts with.
+_OTHER_APPS = (("energy_source_", "Power", "power.html"), ("maintenance_asset_", "Garage", "garage.html"),
+               ("maintenance_", "Garage", "garage.html"))
 
 
 def resolve_series(series_ids: list, requested: str) -> str:
@@ -89,11 +93,20 @@ def chart(readings: list) -> dict:
 
 
 def _name(context, series_id: str) -> str:
-    """A series' name for the screen: the Lab's own as stored; another app's as "Propane tank · Level"."""
+    """A series' name for the screen: the Lab's own as stored; another app's as "Propane tank · Level"; an upkeep
+    task's readings as "Furnace · Filter pressure" (its asset and task)."""
     owner = owner_of(series_id)
     if owner is None:
         return series_id
     rest = series_id[len(owner[0]):]
+    if owner[0] == "maintenance_":
+        book = getattr(context, "maintenance", None)
+        try:
+            task = book.get_task(rest) if book is not None else None
+            asset = book.get_asset(task.asset_id) if task is not None else None
+        except Exception:
+            task = asset = None
+        return f"{getattr(asset, 'name', None) or 'Removed'} · {getattr(task, 'title', None) or 'Reading'}"
     record_id, _, meter = rest.partition("_")
     try:
         if owner[1] == "Power":
