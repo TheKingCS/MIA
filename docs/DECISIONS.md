@@ -2320,3 +2320,26 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   shelf, his own words), the direction nudge preferring a seed over the canned line. Facts in code, the model only
   phrases; nothing personal hard-coded; only fires for a direction he actually set.
 - Related: DEC-0141 (directions), the communication gate (`core/communication_gate.py`), DEC-0112 (learning paths)
+
+### DEC-0144: Development Intelligence & the Convergence — a thin strategic coordinator, not a rebuild
+- Status: PROPOSED (claude, 2026-11-08), awaiting Zac. Extends the approved DEC-0137. Nothing built.
+- From: ChatGPT's two handoffs, pasted by Zac 2026-11-08 — "Real-World Development Intelligence" (Homestead/Business
+  Architect) and "The Convergence" (unified progression + living campaign). Both ask, in their own section 11, to
+  inspect the architecture and propose before building, reusing MIA's mission/progression/memory/campaign systems.
+- Finding (`docs/DEVELOPMENT_INTELLIGENCE_PROPOSAL.md`): these are a sharper restatement of DEC-0137's Living Systems
+  Framework, which Zac already approved (generalize + isolate, don't rebuild; `docs/LIVING_SYSTEMS_ASSESSMENT.md`
+  found ~80% exists). MIA already has the Mission/Execution system (`mission_manager`, `questlines`), Progression
+  (`leveling`, `skill_manager`, `achievements`), the Project Architect (`project_manager`, `plan_library`,
+  `build_calcs`), the campaign spine (`intent_manager`, `why_graph`, `life_events`+`links`), a real-life Dungeon
+  Master (`work_dungeon` DEC-0046, `questlines`, `living_worlds`), and the Two-Layer Reality Model already enforced
+  (`core/environment.py`, DEC-0137). The genuinely-new work is a **Development Intelligence Engine** (development
+  profile → compounding-value prioritizer → logical-next-step), a **cross-domain dependency/opportunity graph** (new
+  edge kinds on `links.py`), a thin **unified Campaign** view over `intents`, and later a **Business** domain. All
+  advisory/`simulated` — nothing commits a real change except through `actions.py` with the person's approval.
+- Proposed first slice: `core/development_engine.py` (read-only advisor over existing state) + development edges on
+  `links.py` + a Zero-to-Something **benchmark as a test** (the docs' §10/§12 acceptance test, executable). No new
+  progression/mission/memory/campaign engine.
+- Open for Zac: (1) approve + start Phase 1 (read-only engine + benchmark); (2) which domain proves reuse first —
+  claude recommends **Zac's workshop/producer projects** over a generic homestead (DEC-0119; homestead is partly the
+  sibling `mia-homestead` repo); (3) timing vs. the device fabric (DEC-0128) and filling MIA with his life.
+- Related: DEC-0137, DEC-0134, DEC-0046, DEC-0112, DEC-0118, DEC-0109, DEC-0143
