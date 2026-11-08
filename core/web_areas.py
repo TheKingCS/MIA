@@ -61,6 +61,7 @@ WORLD = Page("worldmap", "World Map", "memories", "Everywhere you've been.", "wo
 CHECKIN = Page("checkin", "Sunday Check-In", "calendar", "The week, looked back on.", "checkin.html")
 PARTY = Page("party", "Party", "missions", "Raids and quests.", "party.html")
 CHRONICLE = Page("chronicle", "The Chronicle", "character", "Your story, told back.", "chronicle.html")
+WALLET = Page("id_wallet", "ID Wallet", "passwords", "IDs, passports, insurance cards and registrations.", "wallet.html")
 SIGNINS = Page("signins", "Sign-Ins", "passwords", "Who signed in, from where.", "signins.html")
 CONNECT = Page("connect", "Connect Apps", "settings", "Your accounts, linked.", "connect.html")
 PROFILE = Page("profile", "Profile", "character", "You, and how MIA knows you.", "profile.html")
@@ -89,7 +90,7 @@ AREAS: tuple[Area, ...] = (
     Area("recreation", "Recreation", "expeditions", "Trips, maps, music and play.",
          ("expeditions", "maps", "navigation", "memories", WORLD, PLACES, "music", "play"), hue="#9b6bff"),
     Area("security", "Security", "security", "Cameras, passwords and sign-ins.",
-         ("security", "passwords", SIGNINS, "field_kit"), hue="#5be0c8"),
+         ("security", WALLET, "passwords", SIGNINS, "field_kit"), hue="#5be0c8"),
     Area("browser", "Browser", "search", "She browses. You approve.", ("browser",), hue="#bfefff"),
     Area("system", "Settings and Diagnostics", "settings", "Make MIA yours, and see how she's doing.",
          ("settings", "diagnostics", "issues", CONNECT, PROFILE, YOURDATA, CHANGES, "module_browser"), hue="#dfe9f2"),

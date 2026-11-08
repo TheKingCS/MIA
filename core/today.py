@@ -265,9 +265,25 @@ def _health(context, today: date):
         yield TodayItem(when, d["title"], detail, "", "health", d["id"], "\U0001FA7A" if d["what"] == "visit" else "\U0001F48A")
 
 
+def _wallet(context, today: date):
+    """Today's wallet: a card to renew (expired, or within the wallet's renewal window). Its name only, never a
+    number."""
+    wallet = getattr(context, "id_wallet", None)
+    if wallet is None:
+        return
+    for d in wallet.due(today):
+        if d["days"] < 0:
+            yield TodayItem(OVERDUE, d["title"], _late(-d["days"]), "", "id_wallet", d["id"], "\U0001FAAA")
+        elif d["days"] <= SOON_DAYS:
+            yield TodayItem(TODAY if d["days"] == 0 else SOON, d["title"], "today" if d["days"] == 0 else _days(d["days"]),
+                            "", "id_wallet", d["id"], "\U0001FAAA")
+        else:
+            yield TodayItem(WAITING, d["title"], _days(d["days"]) + ": time to renew", "", "id_wallet", d["id"], "\U0001FAAA")
+
+
 _SOURCES = (("calendar", _calendar), ("alarms", _alarms), ("bills", _bills), ("maintenance", _maintenance),
             ("tasks", _tasks), ("birthdays", _birthdays), ("pantry", _pantry), ("waiting", _waiting),
-            ("health", _health))
+            ("health", _health), ("wallet", _wallet))
 
 
 def today_items(context, today: Optional[date] = None) -> list[TodayItem]:

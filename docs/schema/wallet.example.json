@@ -1,0 +1,68 @@
+{
+  "cards": [
+    {
+      "id": "c1",
+      "kind": "Driver's license",
+      "name": "Texas driver's license",
+      "issued_by": "Texas DPS",
+      "number": "•••• 9012",
+      "has_number": true,
+      "issued": "2021-12-03",
+      "expires": "2026-12-03",
+      "notes": "",
+      "photos": {
+        "front": true
+      },
+      "added": "2026-11-08",
+      "expiry": {
+        "days": 25,
+        "state": "soon"
+      }
+    },
+    {
+      "id": "c2",
+      "kind": "Auto insurance",
+      "name": "Truck insurance card",
+      "issued_by": "",
+      "number": "•••• 3381",
+      "has_number": true,
+      "issued": "2026-06-01",
+      "expires": "2027-06-01",
+      "notes": "",
+      "photos": {},
+      "added": "2026-11-08",
+      "expiry": {
+        "days": 205,
+        "state": "ok"
+      }
+    },
+    {
+      "id": "c3",
+      "kind": "Passport",
+      "name": "US passport",
+      "issued_by": "U.S. Department of State",
+      "number": "•••• 4417",
+      "has_number": true,
+      "issued": "2019-04-10",
+      "expires": "2029-04-09",
+      "notes": "",
+      "photos": {},
+      "added": "2026-11-08",
+      "expiry": {
+        "days": 883,
+        "state": "ok"
+      }
+    }
+  ],
+  "kinds": [
+    "Driver's license",
+    "State ID",
+    "Passport",
+    "Passport card",
+    "Health insurance",
+    "Auto insurance",
+    "Vehicle registration",
+    "Other"
+  ],
+  "note": "A copy here is a backup and a quick reference, not the ID itself. For a legal ID on your phone, use your state's official mobile ID if it has one; many states accept proof of insurance on a phone."
+}

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>ID Wallet — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
+  <link rel="stylesheet" href="ui.css">
+</head>
+<body data-say="Show my driver's license." data-app="id_wallet" class="mod-wallet">
+  <!--
+    The ID wallet (Zac 2026-11-08): IDs, passports, insurance cards, registrations. The person's own, sealed at rest
+    with their photos (core/id_wallet.py). Numbers travel only in /api/wallet calls, never in an action. A card's Show
+    view (?show=<id>) is what "show my license" opens. Formatting only (claude).
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <header class="hero">
+        <h1>ID Wallet</h1>
+        <p class="tagline">IDs, passports, insurance cards and registrations. Encrypted, yours alone.</p>
+      </header>
+      <div id="panel"></div>
+    </main>
+  </div>
+  <script src="mia.js?v=17"></script>
+  <script src="icons.js"></script>
+  <script src="sound.js"></script>
+  <script src="places-watch.js"></script>
+  <script src="shell.js"></script>
+  <script src="wallet.js"></script>
+</body>
+</html>

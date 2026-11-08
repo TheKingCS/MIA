@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1219 files, 265,706 lines; 1219 files describe themselves; 14,482 of 15,169 classes and functions are documented.
+1222 files, 266,247 lines; 1222 files describe themselves; 14,510 of 15,197 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-450 files, 124,940 lines; 6,672 of 6,758 classes and functions documented
+451 files, 125,202 lines; 6,692 of 6,778 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -207,6 +207,7 @@
 - `core/homestead_manager.py`: Watched-folder ingestion for MIA Home's summarized-state snapshots from sibling automation projects — the first (and so far only) source is MIA Homestead's greenhouse/aquaponics system (`~/Projects/mia-homestead`, a separate repo), which exports via its own `viewer/export_home_snapshot.py`. See that
 - `core/household_manager.py`: Households (2026-10-01, docs/ROADMAP.md "People and ownership"): MIA is built for anyone, so nothing is shared between people unless they choose it. Every new account starts in a household of its own. Two people share the household things (calendar, kitchen, budget, maintenance, builds, inventory, t
 - `core/household_routines.py`: The Household's web screen (web/household.html; the design canvas's Household, DEC-0113): the household's routines (recurring-mission templates in the "Household" category: laundry, dishes, the trash), each with its current occurrence (today's, or this week's for a weekly one), how far along it is a
+- `core/id_wallet.py`: The ID wallet (DEC-0129 follow-up, Zac 2026-11-08 00:25: "IDs and passports securely and safely stored and legally used or pulled up... same with insurance cards, registrations"). In Security.
 - `core/imports.py`: Bring your life with you (2026-10-01): a new person shouldn't start from an empty MIA. Three common exports from other apps:
 - `core/inbox_actions.py`: The Inbox screen's changes (Zac, 2026-10-16), on the action contract in core/actions.py:
 - `core/inbox_classify.py`: Pure logic behind the document inbox (core/inbox_manager.py, 2026-09-28): given a document's text, what is it, whose is it, and what does it say that MIA can file.
@@ -461,7 +462,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 3,560 lines; 39 of 39 classes and functions documented
+2 files, 3,646 lines; 40 of 40 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -732,7 +733,7 @@
 
 ## tests/: the test suite: what each part must do
 
-412 files, 70,507 lines; 5,551 of 6,152 classes and functions documented
+413 files, 70,596 lines; 5,558 of 6,159 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -886,6 +887,7 @@
 - `tests/test_homestead_manager.py`: Unit tests for core.homestead_manager — mirrors tests/test_finance_manager.py's structure exactly (same isolated tmp_path watched folder, same _FakeConfig pattern), since core.homestead_manager is a deliberate sibling of core.finance_manager, not a shared abstraction (see that module's own docstring *(4 undocumented)*
 - `tests/test_household_module.py`: Unit tests for modules.household.module's pure functions, same style as tests/test_greenhouse_module.py (no Qt event loop, no fixtures). *(2 undocumented)*
 - `tests/test_household_routines.py`: The Household's web screen (core/household_routines.py, the design canvas's Household): the household's routines, each with its current occurrence, how far along, and its streak in words; paused ones apart; and routines added, paused and resumed as actions (core/routine_actions.py) and by voice (cor
+- `tests/test_id_wallet.py`: The ID wallet (core/id_wallet.py): cards kept with their numbers and photos sealed at rest, numbers masked in lists and never in what MIA says or in an action, expiry reminders on Today, and "show my license" opening the card.
 - `tests/test_imports.py`: Imports from other apps (core/imports.py), 2026-10-01: calendars (.ics), contacts (.vcf) and bank statements (.csv). *(1 undocumented)*
 - `tests/test_inbox.py`: Document inbox: classification (core/inbox_classify.py), intake and filing (core/inbox_manager.py), email checking (core/inbox_mail.py), the voice tools, the phone upload endpoint and the Inbox screen.
 - `tests/test_inbox_goes_to.py`: Inbox (DEC-0113): each item says in one line where filing it would put it (core/web_inbox.goes_to). Pure logic, so it runs without Qt.
@@ -1149,7 +1151,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-91 files, 16,014 lines
+92 files, 16,118 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
@@ -1236,6 +1238,7 @@
 - `web/sync.js`: sync.js — User Sync on the phone (claude, 2026-11-02). Renders MIA.userSync() (core/user_sync.py): the question, a box to type the answer, the chips to approve, and the phone's permissions, asked through window.MIAPhonePermissions (Permissions.kt) and reported back. The steps and words are all the e
 - `web/toolbox.js`: toolbox.js — the Toolbox (claude, 2026-11-07, DEC-0125; the design canvas's Toolbox, DEC-0113). Renders MIA.toolbox() (core/web_toolbox.py): the open calculator (its boxes, and the answer core works out as you type, MIA.toolboxCalc), the list of calculators, alarms (set, on/off, delete: core/toolbox
 - `web/vault.js`: vault.js — Memory Vault (claude, 2026-10-18, DEC-0030 phase E). Renders MIA.vault() (core/memory_vault.py) in tabs: Photos (one month at a time, by day, with what happened that day and the trip it was on; each tile says whether it's safe on the home computer), Free Up Space (photos the PC holds, exa
+- `web/wallet.js`: wallet.js — the ID wallet (claude, 2026-11-08). Lists MIA.wallet() (core/id_wallet.listing: numbers masked, soonest to expire first), adds and edits cards through MIA.walletSave (their own endpoint: a number never goes through an action), keeps photos of each side (sealed on the PC), removes a card 
 - `web/welcome.js`: welcome.js — Home (DEC-0018, claude; the canvas's Home, DEC-0113). Renders MIA.dashboard() and the frame's shell data: the date and greeting, the status strip, MIA's one finding, the focus rows (each with its kind; ticking runs the item's action: confirm, undo), what's upcoming, the level; and on a 
 - `web/why.js`: why.js — My Why (claude, 2026-11-07; DEC-0125: the why chain was voice-only). Renders MIA.why() (core/web_why.py): each chain of reasons as links from what you do up to what it's all for, the reason in your own words, the facts behind each from your records, done links marked; then what changed and 
 - `web/workout.js`: workout.js — the Workout screen (claude, 2026-10-06, DEC-0017/0018). Renders MIA.workout() (core/web_screens.py): log a session right on the page (an exercise, reps, sets, weight, how long, notes), the latest entry, today's daily mission and streak, exercises, history, progress and Personal Bests (l
