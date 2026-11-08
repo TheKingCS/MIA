@@ -1,0 +1,13 @@
+# MIA Homestead — Physical Location
+#
+# Used only by core/weather_awareness.py, for frost/heat-wave forecast
+# checks against a real weather API (Open-Meteo — free, no API key,
+# no account, matching this project's no-vendor-dependency stance).
+# Nothing else in this system reads this file.
+#
+# Leave both fields null (as they are now) and weather checks simply
+# don't run — honestly skipped, never guessed. Set them to your real
+# greenhouse coordinates (decimal degrees) to turn weather awareness on.
+
+latitude: null
+longitude: null

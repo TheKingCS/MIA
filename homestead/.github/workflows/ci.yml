@@ -1,0 +1,45 @@
+name: CI
+
+# Mirrors CLAUDE.md's own "Before you touch anything" setup exactly —
+# keep the two in sync if that section changes. Tests against 3.10 (the
+# project's stated floor) and 3.12 (the verified dev environment).
+#
+# live_model_check.py (the golden-set test against a real local Ollama
+# model) is deliberately NOT run here — it needs a live model server,
+# which isn't something a hosted CI runner has. self_audit.py and
+# scenarios.py are the two gates that can run anywhere and don't
+# depend on network/model state.
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Build database from schema
+        run: python3 -c "import sqlite3; sqlite3.connect('mia_homestead.db').executescript(open('schema/mia_homestead_schema.sql').read())"
+
+      - name: Seed demo cell
+        run: python3 drivers/simulator.py --db mia_homestead.db --setup
+
+      - name: Run scenario regression suite
+        run: python3 scenarios/scenarios.py
+
+      - name: Run self-audit
+        run: python3 core/self_audit.py

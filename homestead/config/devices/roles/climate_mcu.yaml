@@ -1,0 +1,73 @@
+# MIA Homestead — Device Role: Climate MCU
+# This file IS the setup instructions. Edit this, not code, when the
+# physical setup changes (a new port, a different mounting spot, etc).
+
+role: climate_mcu
+display_name: "Climate Controller"
+description: >
+  Controls the exhaust fan and heater for a greenhouse cell/zone, and
+  carries the air temp + humidity sensor feeding modules.climate_control.
+  Grow light and CO2 injection (channels 3-4 below) are optional
+  add-ons — not required for the base heater/fan loop to work, and not
+  in any tier's hardware BOM yet (docs/HARDWARE_BOM_FULL_TIERS.md).
+
+port_label: "PORT 5 — CLIMATE"
+mount_location: "Mount centrally in Cell A, away from direct spray/splash, with the DHT22 probe at plant-canopy height."
+default_cell_id: 1
+
+controls:
+  - actuator_type: heater
+    actuator_name: greenhouse_heater
+    safe_default_state: "off"
+    relay_channel: 1
+    wiring_rationale: >
+      Off by default — a heater stuck on is a real fire/scorch hazard,
+      the same category of danger dosing pumps present stuck open. Falls
+      back to off the instant the MCU loses the Pi, same as every
+      dosing_pump role.
+  - actuator_type: fan
+    actuator_name: greenhouse_exhaust_fan
+    safe_default_state: "on"
+    relay_channel: 2
+    wiring_rationale: >
+      On by default — a fan stuck on is not dangerous (worst case,
+      over-ventilated), the same non-hazard category as aeration/
+      circulation always defaulting on. Venting is the safer guess than
+      sealing the greenhouse when the MCU can't hear from the Pi.
+  - actuator_type: grow_light
+    actuator_name: greenhouse_grow_light
+    safe_default_state: "off"
+    relay_channel: 3
+    wiring_rationale: >
+      Off by default — no hazard either way (same non-hazard class as
+      fan), but nothing gained running it blind if the MCU loses the
+      Pi, so off is the conservative no-op. Optional channel — only
+      wire this if the grow-light add-on is actually installed.
+  - actuator_type: co2_valve
+    actuator_name: greenhouse_co2_injector
+    safe_default_state: "off"
+    relay_channel: 4
+    wiring_rationale: >
+      Off by default, and NEVER pulsed by the MCU's own fallback logic
+      even briefly — CO2 injection only ever happens under live Pi
+      control with a real, current, safe CO2 reading behind it (see
+      modules/climate_control.py's own docstring on why this one is
+      treated more conservatively than heater/fan/light). Optional
+      channel — only wire this if the CO2 enrichment add-on is
+      actually installed.
+
+setup_instructions: |
+  1. Find the MCU labeled "CLIMATE" in the parts bin (orange label).
+  2. Plug it into PORT 5 on the Pi expansion hub.
+  3. Mount it centrally in Cell A, away from any direct water spray.
+  4. Mount the DHT22 temp/humidity probe at plant-canopy height, out of
+     direct sun (a probe in direct sun reads high and won't reflect
+     real air temp).
+  5. Power it on — MIA Homestead detects it automatically within a
+     few seconds.
+  6. Once detected, the system confirms pairing on its own. If it
+     doesn't pair within a minute, double-check the connection.
+  7. Optional: if you've bought the grow-light and/or CO2 enrichment
+     add-ons, wire them to channels 3 and 4 and mount the matching lux/
+     CO2 sensors alongside the DHT22 probe. Nothing else changes — the
+     system detects and uses them automatically once wired.

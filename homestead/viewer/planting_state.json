@@ -1,0 +1,131 @@
+{
+  "cells": [
+    {
+      "id": 1,
+      "name": "Cell A",
+      "beds": [
+        {
+          "name": "Bed A1",
+          "sqft": 100.0,
+          "media_type": "expanded clay",
+          "size_ft": {
+            "w": 4,
+            "l": 25
+          },
+          "estimated_size": false,
+          "plantings": [
+            {
+              "id": 1,
+              "status": "active",
+              "species": "Lettuce",
+              "organism_type": "plant",
+              "variety": "Buttercrunch",
+              "quantity_planted": 24,
+              "planted_date": "2026-09-01 05:34:34",
+              "target_plant_date": null,
+              "expected_harvest_date": "2026-10-05",
+              "days_to_maturity": 45,
+              "notes": null
+            },
+            {
+              "id": 2,
+              "status": "active",
+              "species": "Basil",
+              "organism_type": "plant",
+              "variety": "Genovese",
+              "quantity_planted": 10,
+              "planted_date": "2026-09-01 05:37:44",
+              "target_plant_date": "2026-09-20",
+              "expected_harvest_date": null,
+              "days_to_maturity": 60,
+              "notes": null
+            },
+            {
+              "id": 3,
+              "status": "planned",
+              "species": "Kale",
+              "organism_type": "plant",
+              "variety": null,
+              "quantity_planted": null,
+              "planted_date": null,
+              "target_plant_date": "2026-10-10",
+              "expected_harvest_date": null,
+              "days_to_maturity": 60,
+              "notes": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Pilot Bucket",
+      "beds": [
+        {
+          "name": "Pilot Tray",
+          "sqft": 1.5,
+          "media_type": "net pots",
+          "size_ft": {
+            "w": 1,
+            "l": 1.5
+          },
+          "estimated_size": false,
+          "plantings": []
+        }
+      ]
+    }
+  ],
+  "species": [
+    {
+      "id": 1,
+      "common_name": "Lettuce",
+      "organism_type": "plant"
+    },
+    {
+      "id": 2,
+      "common_name": "Basil",
+      "organism_type": "plant"
+    },
+    {
+      "id": 3,
+      "common_name": "Tilapia",
+      "organism_type": "fish"
+    },
+    {
+      "id": 4,
+      "common_name": "Kale",
+      "organism_type": "plant"
+    },
+    {
+      "id": 5,
+      "common_name": "Spinach",
+      "organism_type": "plant"
+    },
+    {
+      "id": 6,
+      "common_name": "Swiss Chard",
+      "organism_type": "plant"
+    },
+    {
+      "id": 7,
+      "common_name": "Strawberry",
+      "organism_type": "plant"
+    },
+    {
+      "id": 8,
+      "common_name": "Cucumber",
+      "organism_type": "plant"
+    },
+    {
+      "id": 9,
+      "common_name": "Channel Catfish",
+      "organism_type": "fish"
+    },
+    {
+      "id": 10,
+      "common_name": "Rainbow Trout",
+      "organism_type": "fish"
+    }
+  ],
+  "generated_at": "2026-09-01 22:57:20"
+}

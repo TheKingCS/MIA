@@ -1,0 +1,139 @@
+"""
+MIA Homestead — Module Registry
+v0.1
+
+Central registry that discovers, loads, and runs all active modules
+(aquaponics cells, power monitors, future add-ons like poultry or
+irrigation zones) without the core loop needing to know about any
+specific module's implementation.
+
+Adding a new subsystem later = write a class implementing
+MiaHomesteadModule, add one entry to config/modules.yaml. Nothing
+else in the codebase changes. This is the mechanism that makes the
+"modular, add onto later" requirement real rather than aspirational.
+"""
+
+import importlib
+import logging
+import sqlite3
+from dataclasses import dataclass
+from pathlib import Path
+
+import yaml
+
+from contracts.mia_homestead_contract import MiaHomesteadModule
+from core.action_log import log_action
+
+logger = logging.getLogger("mia_homestead.registry")
+
+
+@dataclass
+class ModuleConfig:
+    module_id: str
+    enabled: bool
+    class_path: str          # e.g. "modules.aquaponics_cell.AquaponicsCell"
+    cell_id: int
+    params: dict
+
+
+class ModuleRegistry:
+    """
+    Loads module definitions from a YAML config, instantiates each
+    enabled module, and runs their control cycles in sequence.
+
+    A module that fails to load or crashes during a cycle does NOT
+    take down the others — isolation between modules is a safety
+    property, not just a nicety (a bug in the poultry module someday
+    should never be able to stop the aquaponics dosing loop).
+    """
+
+    def __init__(self, config_path: str, db_path: str, notifier=None, force_read_fn=None):
+        self.config_path = Path(config_path)
+        # Real bug found live 2026-09-02: main.py and drivers/simulator.py
+        # --run are two independent processes both writing the same
+        # SQLite file on their own 5-second interval, with SQLite's
+        # default rollback-journal mode (locks the WHOLE file during a
+        # write) and default 5-second busy_timeout. The simulator lost
+        # that race and crashed outright on "database is locked" after
+        # ~2 days of continuous operation, leaving the entire sensor feed
+        # dead with nothing restarting it until a human noticed.
+        # journal_mode=WAL is a database-file-level setting (persists for
+        # every future connection from any process, not just this one) —
+        # readers no longer block a writer or vice versa, which is the
+        # actual fix for two always-on daemons sharing one file. The
+        # longer busy_timeout is defense in depth for the genuine
+        # writer-vs-writer case WAL doesn't eliminate (both daemons
+        # committing in the same instant) — this connection is a
+        # long-running daemon, not a one-shot CLI tool, so waiting a few
+        # seconds for a lock is free; crashing is not.
+        self.db_conn = sqlite3.connect(db_path, timeout=30.0)
+        self.db_conn.execute("PRAGMA journal_mode=WAL")
+        self.notifier = notifier
+        # force_read_fn(sensor_id) -> bool: optional, forwarded to every
+        # module so its recovery ladder can request an immediate fresh
+        # read from whatever driver is live. None when there's no
+        # in-process driver — see main.py's own comment on this.
+        self.force_read_fn = force_read_fn
+        self.modules: dict[str, MiaHomesteadModule] = {}
+
+    def load(self) -> None:
+        raw = yaml.safe_load(self.config_path.read_text())
+        for entry in raw.get("modules", []):
+            cfg = ModuleConfig(
+                module_id=entry["id"],
+                enabled=entry.get("enabled", True),
+                class_path=entry["class"],
+                cell_id=entry["cell_id"],
+                params=entry.get("params", {}),
+            )
+            if not cfg.enabled:
+                logger.info("Skipping disabled module: %s", cfg.module_id)
+                continue
+            try:
+                self._instantiate(cfg)
+            except Exception:
+                logger.exception(
+                    "Failed to load module %s — continuing without it. "
+                    "Other modules are unaffected.", cfg.module_id
+                )
+
+    def _instantiate(self, cfg: ModuleConfig) -> None:
+        module_path, class_name = cfg.class_path.rsplit(".", 1)
+        mod = importlib.import_module(module_path)
+        cls = getattr(mod, class_name)
+        instance = cls(
+            module_id=cfg.module_id,
+            cell_id=cfg.cell_id,
+            db_conn=self.db_conn,
+            notifier=self.notifier,
+            force_read_fn=self.force_read_fn,
+            recovery_log_fn=lambda action, rationale, mid=cfg.module_id:
+                log_action(self.db_conn, mid, action, rationale),
+            **cfg.params,
+        )
+        self.modules[cfg.module_id] = instance
+        logger.info("Loaded module: %s (%s)", cfg.module_id, cfg.class_path)
+
+    def run_all_cycles(self) -> dict[str, list]:
+        """
+        Runs one control cycle per loaded module. Returns commands per
+        module_id. A single module raising does not stop the others —
+        it's logged and alerted, then skipped for this cycle.
+        """
+        results = {}
+        for module_id, module in self.modules.items():
+            try:
+                results[module_id] = module.run_cycle()
+            except Exception:
+                logger.exception(
+                    "Module %s raised during run_cycle — skipping this "
+                    "cycle for this module only.", module_id
+                )
+                results[module_id] = []
+        return results
+
+    def reload(self) -> None:
+        """Hot-reload config without restarting the whole node — lets you
+        add/disable a module without interrupting other running modules."""
+        self.modules.clear()
+        self.load()

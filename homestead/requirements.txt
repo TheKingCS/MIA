@@ -1,0 +1,22 @@
+pyyaml>=6.0
+
+# The assistant's default (GreenhouseAssistant, local via Ollama) needs
+# nothing beyond pyyaml above — no cloud SDK required. anthropic is only
+# needed for AnthropicGreenhouseAssistant, an explicit cloud opt-in kept
+# for bake-off comparison — see docs/OFFLINE_ASSISTANT_PLAN.md.
+# anthropic>=0.40.0
+
+# Real hardware drivers (uncomment once actual sensors are connected —
+# not needed for simulation-only work):
+# smbus2>=0.4.3      # I2C, for Atlas Scientific EZO circuits on Raspberry Pi
+# pyserial>=3.5       # UART — drivers/mcu_serial.py's real Pi<->Safety MCU
+#                     # transport (docs/MCU_PROTOCOL.md), and/or EZO circuits
+#                     # in UART mode instead of I2C. Both open_port()/
+#                     # list_available_ports() degrade gracefully (log +
+#                     # return None/[]) if this isn't installed — never a
+#                     # hard crash, but real hardware pairing needs it.
+
+# Spoken daily briefing (core/voice_briefing.py, config/voice.yaml —
+# uncomment once you've set a real voice_model_path; degrades to an
+# honest no-op without it):
+# piper-tts>=1.7.0

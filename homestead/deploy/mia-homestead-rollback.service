@@ -1,0 +1,42 @@
+[Unit]
+Description=MIA Homestead emergency auto-rollback (crash-loop trigger)
+# This is the layer core/deploy_manager.py's app-level watch (started via
+# core/deploy_cli.py --start-watch after a deploy) cannot cover on its
+# own: if the process won't even start, there's no live Python watching
+# alerts to make that judgment -- systemd is the thing that notices instead.
+#
+# Real correction from actually testing this (2026-08-31), not assumed:
+# OnFailure= fires on EVERY failed run of the main service, including
+# ones Restart=on-failure is about to retry on its own -- NOT only once
+# StartLimitBurst is finally exhausted, which was the original (wrong)
+# assumption here. Confirmed directly against a disposable test service:
+# two transient crashes still eligible for retry each triggered
+# OnFailure=, and only the third, genuinely-rate-limited failure should
+# actually roll back. The guard below (`systemctl --user is-failed`,
+# which only reports true once the unit has stopped being auto-restarted)
+# is what makes this fire on a real crash LOOP specifically, not on the
+# first ordinary blip Restart=on-failure would have recovered from
+# unaided. Without it, one transient crash would trigger a rollback for
+# no real reason.
+#
+# Second real correction from the same test session: reset-failed +
+# start must NOT be unconditional ExecStartPost= directives -- those
+# run after ANY successful ExecStart=, including the guard's early
+# `exit 0` skip. That combination produced a real, observed runaway
+# loop: skip (correct) -> ExecStartPost force-restarts the main service
+# anyway -> it crashes again immediately -> OnFailure fires again ->
+# skip -> force-restart... 13 cycles in ~16s in testing, completely
+# bypassing Restart=on-failure/RestartSec's own pacing, and nothing
+# about the loop was self-limiting. Fixed by folding reset-failed+start
+# into the SAME conditional shell command, so they only run after an
+# actual rollback, never after a guard skip.
+
+[Service]
+Type=oneshot
+WorkingDirectory=__MIA_HOMESTEAD_ROOT__
+ExecStart=/bin/bash -c '\
+  systemctl --user is-failed mia-homestead.service >/dev/null 2>&1 || exit 0; \
+  __MIA_HOMESTEAD_ROOT__/.venv/bin/python core/deploy_cli.py --db mia_homestead.db --emergency-rollback || exit 1; \
+  systemctl --user reset-failed mia-homestead.service; \
+  systemctl --user start mia-homestead.service \
+'

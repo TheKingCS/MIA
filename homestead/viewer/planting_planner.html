@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MIA Homestead — Planting Planner</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --bg: #0A0E13;
+    --panel: rgba(16, 22, 29, 0.9);
+    --panel-solid: #10161D;
+    --grid: #1C2733;
+    --line: #2A3B4A;
+    --text: #C4D3DC;
+    --text-dim: #5C7180;
+    --text-faint: #3A4B58;
+    --ok: #4FD1C5;
+    --warning: #E8A33D;
+    --critical: #E85D5D;
+    --accent: #4FD1C5;
+    --planned: #B5A6E8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--text); }
+  body {
+    font-family: 'IBM Plex Mono', ui-monospace, 'SF Mono', Consolas, monospace;
+    padding: 28px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.4;
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+
+  a { color: var(--ok); }
+  a:hover { color: #7BE0D6; }
+
+  .header { margin-bottom: 22px; }
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+  h1 { font-size: 20px; font-weight: 600; letter-spacing: 0.02em; margin-top: 4px; }
+  h1 span { color: var(--accent); }
+  .sub { font-size: 12px; color: var(--text-dim); margin-top: 8px; max-width: 640px; }
+
+  .legend {
+    display: flex; gap: 18px; flex-wrap: wrap;
+    margin-top: 16px; font-size: 11px; color: var(--text-dim);
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-swatch { width: 12px; height: 12px; border-radius: 2px; flex: none; }
+
+  .cell-section { margin-top: 34px; }
+  .cell-title {
+    font-size: 14px; font-weight: 600; color: var(--text);
+    display: flex; align-items: baseline; gap: 10px;
+    padding-bottom: 10px; border-bottom: 1px solid var(--grid);
+    margin-bottom: 18px;
+  }
+  .cell-title .n { color: var(--text-dim); font-weight: 400; font-size: 11px; }
+
+  .bed-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+  }
+
+  .bed-card {
+    background: var(--panel-solid);
+    border: 1px solid var(--grid);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .bed-plot {
+    position: relative;
+    background:
+      repeating-linear-gradient(135deg, rgba(79,209,197,0.05) 0 6px, transparent 6px 12px),
+      var(--panel);
+    border-bottom: 1px solid var(--grid);
+    display: flex; align-items: flex-end;
+    padding: 10px 12px;
+  }
+  .bed-plot.media-dwc { background:
+      repeating-linear-gradient(135deg, rgba(92,158,232,0.07) 0 6px, transparent 6px 12px),
+      var(--panel); }
+
+  .bed-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .bed-dims { font-size: 10.5px; color: var(--text-dim); margin-top: 2px; }
+  .bed-meta { margin-left: auto; text-align: right; }
+  .bed-media {
+    font-size: 9.5px; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--text-faint);
+  }
+  .bed-est { font-size: 9px; color: var(--text-faint); font-style: italic; margin-top: 2px; }
+
+  .plantings { padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+
+  .empty-bed {
+    font-size: 11.5px; color: var(--text-faint); font-style: italic;
+    padding: 4px 2px;
+  }
+
+  .planting-card {
+    background: rgba(16, 22, 29, 0.6);
+    border-left: 3px solid var(--line);
+    border-radius: 2px;
+    padding: 8px 10px;
+  }
+  .planting-card.status-planned { border-left-style: dashed; border-left-color: var(--planned); }
+  .planting-card.status-active { border-left-color: var(--ok); }
+  .planting-card.status-harvested { border-left-color: var(--text-faint); opacity: 0.6; }
+  .planting-card.status-failed { border-left-color: var(--critical); opacity: 0.7; }
+
+  .planting-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .planting-species { font-size: 12.5px; font-weight: 600; color: var(--text); }
+  .planting-variety { font-size: 10.5px; color: var(--text-dim); font-weight: 400; }
+
+  .status-badge {
+    font-size: 9px; letter-spacing: 0.07em; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 2px; white-space: nowrap; flex: none;
+  }
+  .status-badge.status-planned { color: var(--planned); background: rgba(181,166,232,0.12); border: 1px solid rgba(181,166,232,0.35); }
+  .status-badge.status-active { color: var(--ok); background: rgba(79,209,197,0.1); border: 1px solid rgba(79,209,197,0.35); }
+  .status-badge.status-harvested { color: var(--text-dim); background: rgba(92,113,128,0.1); border: 1px solid var(--line); }
+  .status-badge.status-failed { color: var(--critical); background: rgba(232,93,93,0.1); border: 1px solid rgba(232,93,93,0.35); }
+
+  .planting-detail { font-size: 10.5px; color: var(--text-dim); margin-top: 5px; }
+  .planting-detail + .planting-detail { margin-top: 3px; }
+
+  .progress-track {
+    margin-top: 7px; height: 4px; border-radius: 2px;
+    background: var(--grid); overflow: hidden;
+  }
+  .progress-fill { height: 100%; background: var(--ok); }
+
+  #load-error {
+    display: none; margin-top: 40px; color: var(--text-dim);
+    font-size: 12px; text-align: center;
+  }
+  #app { display: none; }
+</style>
+</head>
+<body>
+
+<div id="mh-nav-mount"></div>
+
+<div id="app">
+  <div class="header">
+    <div class="eyebrow">Grow Bed Planning</div>
+    <h1>Planting <span>Planner</span></h1>
+    <p class="sub">Every real grow bed, to scale, with what's planned and what's actually
+      growing laid out side by side. Read-only — plans are staged by the assistant
+      (<code>plan_planting</code>) and converted once real (<code>convert_planting_to_active</code>),
+      the same propose-then-real pattern the rest of this system uses.</p>
+    <div class="legend">
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--planned); opacity:0.5; border:1px dashed var(--planned)"></span> Planned</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--ok)"></span> Active</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--text-faint)"></span> Harvested</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--critical)"></span> Failed</div>
+    </div>
+  </div>
+
+  <div id="cells"></div>
+</div>
+
+<div id="load-error">Couldn't load planting_state.json — run <code>python viewer/export_planting_state.py</code> or start main.py.</div>
+
+<script src="nav.js"></script>
+<script>
+const PX_PER_FT = 13;
+const MIN_PLOT_H = 70;
+
+function daysBetween(a, b) {
+  return Math.round((new Date(b) - new Date(a)) / 86400000);
+}
+
+function fmtDate(s) {
+  if (!s) return null;
+  return s.split(" ")[0].split("T")[0];
+}
+
+function plantingCard(p) {
+  const card = document.createElement("div");
+  card.className = `planting-card status-${p.status}`;
+
+  const top = document.createElement("div");
+  top.className = "planting-top";
+  const nameWrap = document.createElement("div");
+  nameWrap.className = "planting-species";
+  nameWrap.textContent = p.species + (p.variety ? " " : "");
+  if (p.variety) {
+    const v = document.createElement("span");
+    v.className = "planting-variety";
+    v.textContent = p.variety;
+    nameWrap.appendChild(v);
+  }
+  top.appendChild(nameWrap);
+  const badge = document.createElement("span");
+  badge.className = `status-badge status-${p.status}`;
+  badge.textContent = p.status;
+  top.appendChild(badge);
+  card.appendChild(top);
+
+  const details = [];
+  if (p.status === "planned") {
+    details.push(p.target_plant_date
+      ? `target: ${fmtDate(p.target_plant_date)}`
+      : "no target date set");
+  } else if (p.status === "active") {
+    if (p.planted_date) details.push(`planted ${fmtDate(p.planted_date)}`);
+    if (p.expected_harvest_date) details.push(`expected harvest ${fmtDate(p.expected_harvest_date)}`);
+  } else {
+    if (p.planted_date) details.push(`planted ${fmtDate(p.planted_date)}`);
+  }
+  if (p.quantity_planted) details.push(`qty ${p.quantity_planted}`);
+
+  for (const d of details) {
+    const el = document.createElement("div");
+    el.className = "planting-detail";
+    el.textContent = d;
+    card.appendChild(el);
+  }
+
+  if (p.status === "active" && p.planted_date && p.days_to_maturity) {
+    const elapsed = daysBetween(p.planted_date, new Date().toISOString());
+    const pct = Math.max(0, Math.min(100, Math.round((elapsed / p.days_to_maturity) * 100)));
+    const track = document.createElement("div");
+    track.className = "progress-track";
+    const fill = document.createElement("div");
+    fill.className = "progress-fill";
+    fill.style.width = pct + "%";
+    track.appendChild(fill);
+    card.appendChild(track);
+    const label = document.createElement("div");
+    label.className = "planting-detail";
+    label.textContent = `day ${elapsed} of ~${p.days_to_maturity} to maturity`;
+    card.appendChild(label);
+  }
+
+  if (p.notes) {
+    const n = document.createElement("div");
+    n.className = "planting-detail";
+    n.style.fontStyle = "italic";
+    n.textContent = p.notes;
+    card.appendChild(n);
+  }
+
+  return card;
+}
+
+function bedCard(bed) {
+  const card = document.createElement("div");
+  card.className = "bed-card";
+
+  const plot = document.createElement("div");
+  const mediaClass = (bed.media_type || "").toLowerCase().includes("dwc") ? " media-dwc" : "";
+  plot.className = "bed-plot" + mediaClass;
+  const h = Math.max(MIN_PLOT_H, Math.round((bed.size_ft.l || 4) * PX_PER_FT * 0.35));
+  plot.style.minHeight = h + "px";
+
+  const nameBlock = document.createElement("div");
+  const name = document.createElement("div");
+  name.className = "bed-name";
+  name.textContent = bed.name;
+  nameBlock.appendChild(name);
+  const dims = document.createElement("div");
+  dims.className = "bed-dims";
+  dims.textContent = `${bed.size_ft.w}' × ${bed.size_ft.l}' — ${bed.sqft} sq ft`;
+  nameBlock.appendChild(dims);
+  plot.appendChild(nameBlock);
+
+  const metaBlock = document.createElement("div");
+  metaBlock.className = "bed-meta";
+  const media = document.createElement("div");
+  media.className = "bed-media";
+  media.textContent = bed.media_type || "—";
+  metaBlock.appendChild(media);
+  if (bed.estimated_size) {
+    const est = document.createElement("div");
+    est.className = "bed-est";
+    est.textContent = "size estimated";
+    metaBlock.appendChild(est);
+  }
+  plot.appendChild(metaBlock);
+
+  card.appendChild(plot);
+
+  const plantingsWrap = document.createElement("div");
+  plantingsWrap.className = "plantings";
+  if (bed.plantings.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "empty-bed";
+    empty.textContent = "— nothing planned, this bed is open —";
+    plantingsWrap.appendChild(empty);
+  } else {
+    const order = { planned: 0, active: 1, harvested: 2, failed: 3 };
+    const sorted = [...bed.plantings].sort((a, b) => order[a.status] - order[b.status]);
+    for (const p of sorted) plantingsWrap.appendChild(plantingCard(p));
+  }
+  card.appendChild(plantingsWrap);
+
+  return card;
+}
+
+function render(data) {
+  const cellsEl = document.getElementById("cells");
+  for (const cell of data.cells) {
+    const section = document.createElement("div");
+    section.className = "cell-section";
+
+    const title = document.createElement("div");
+    title.className = "cell-title";
+    title.innerHTML = `${cell.name} <span class="n">${cell.beds.length} bed${cell.beds.length === 1 ? "" : "s"}</span>`;
+    section.appendChild(title);
+
+    const grid = document.createElement("div");
+    grid.className = "bed-grid";
+    for (const bed of cell.beds) grid.appendChild(bedCard(bed));
+    section.appendChild(grid);
+
+    cellsEl.appendChild(section);
+  }
+}
+
+fetch("planting_state.json")
+  .then(r => { if (!r.ok) throw new Error("not found"); return r.json(); })
+  .then(data => {
+    document.getElementById("app").style.display = "block";
+    render(data);
+  })
+  .catch(() => {
+    document.getElementById("load-error").style.display = "block";
+  });
+</script>
+
+</body>
+</html>

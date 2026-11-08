@@ -1,0 +1,21 @@
+[Unit]
+Description=MIA Homestead control loop
+# StartLimitBurst failures within StartLimitIntervalSec = systemd stops
+# retrying and considers this unit genuinely "failed" (a real crash loop,
+# not one transient blip Restart=on-failure already recovers from on its
+# own) -- that's the ONLY moment OnFailure= fires. See
+# core/deploy_manager.py's module docstring and
+# mia-homestead-rollback.service for what runs at that point.
+StartLimitIntervalSec=300
+StartLimitBurst=3
+OnFailure=mia-homestead-rollback.service
+
+[Service]
+Type=simple
+WorkingDirectory=__MIA_HOMESTEAD_ROOT__
+ExecStart=__MIA_HOMESTEAD_ROOT__/.venv/bin/python main.py --db mia_homestead.db
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

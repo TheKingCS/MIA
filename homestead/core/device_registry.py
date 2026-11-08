@@ -1,0 +1,331 @@
+"""
+MIA Homestead — Device Registry
+v0.1
+
+Every physical MCU role (watering, fertilizer dosing, pH dosing, etc)
+has a human-readable YAML file under config/devices/roles/ that IS the
+setup instructions — port to plug into, where to mount it, what it
+controls. This is deliberately not code: adding or changing a role
+means editing a YAML file, not touching Python.
+
+The pairing flow (real version, once MCU firmware exists):
+1. MCU boots, sends an "announce" message over the Pi<->MCU link with
+   its own hardware_id and (if pre-flashed) a requested_role label.
+2. If requested_role matches a known role and that role isn't already
+   claimed by a different device, auto-pair — no human needed.
+3. If the role is missing, unknown, or already claimed by another
+   device, it sits in the unpaired queue until a human (or the
+   assistant, on a human's behalf) resolves it with pair_device().
+
+This file's `announce_device()` is the entry point either way — it's
+called the same way whether the trigger is real firmware sending a
+message or main.py polling a pairing table. See MCU_PROTOCOL.md for the
+wire-level "announce" message this maps to.
+"""
+
+import logging
+import sqlite3
+from pathlib import Path
+
+import yaml
+
+from contracts.capability import Describable
+
+logger = logging.getLogger("mia_homestead.device_registry")
+
+ROLES_DIR = Path(__file__).parent.parent / "config" / "devices" / "roles"
+
+
+class DeviceRegistry(Describable):
+    def __init__(self, db_conn: sqlite3.Connection, notifier=None):
+        self.db = db_conn
+        self.notifier = notifier
+        self.roles = self._load_roles()
+
+    def _load_roles(self) -> dict:
+        roles = {}
+        for path in ROLES_DIR.glob("*.yaml"):
+            data = yaml.safe_load(path.read_text())
+            roles[data["role"]] = data
+        return roles
+
+    def list_roles(self) -> list[dict]:
+        return [
+            {"role": r["role"], "display_name": r["display_name"], "description": r["description"]}
+            for r in self.roles.values()
+        ]
+
+    def get_setup_instructions(self, role: str) -> str:
+        r = self.roles.get(role)
+        if not r:
+            available = ", ".join(self.roles.keys())
+            return f"No role called '{role}'. Available roles: {available}"
+        return (
+            f"=== {r['display_name']} ===\n"
+            f"{r['description'].strip()}\n\n"
+            f"{r['setup_instructions'].strip()}"
+        )
+
+    # ---------- Announce / pairing ----------
+
+    def announce_device(self, hardware_id: str, requested_role: str = None) -> dict:
+        """Called when a device shows up — via listen_for_announce()
+        below reading a real announce message off a real MCU link
+        (drivers/mcu_serial.py, added 2026-09-02), or directly for a
+        manual test/CLI call, same either way. Auto-pairs if the
+        requested role is known and unclaimed; otherwise queues it for
+        human resolution."""
+        existing = self.db.execute(
+            "SELECT id, role, status FROM device_registrations WHERE hardware_id = ?",
+            (hardware_id,),
+        ).fetchone()
+
+        if existing:
+            self.db.execute(
+                "UPDATE device_registrations SET last_seen = datetime('now') WHERE hardware_id = ?",
+                (hardware_id,),
+            )
+            self.db.commit()
+            return {"hardware_id": hardware_id, "status": existing[2], "role": existing[1]}
+
+        if requested_role and requested_role in self.roles:
+            role_claimed = self.db.execute(
+                "SELECT id FROM device_registrations WHERE role = ? AND status = 'paired'",
+                (requested_role,),
+            ).fetchone()
+            if not role_claimed:
+                return self._pair(hardware_id, requested_role)
+
+        # Unknown role, missing role, or role already claimed by another
+        # device — needs a human to sort out.
+        self.db.execute(
+            "INSERT INTO device_registrations (hardware_id, role, status) VALUES (?, ?, 'needs_attention')",
+            (hardware_id, requested_role),
+        )
+        self.db.commit()
+        logger.warning(
+            "New device %s needs attention (requested_role=%s) — check unpaired devices",
+            hardware_id, requested_role,
+        )
+        if self.notifier:
+            self.notifier.dispatch(
+                "warning",
+                f"New device plugged in (id: {hardware_id[:8]}...) needs a role assigned. "
+                f"Requested: {requested_role or 'none specified'}.",
+                source="device_registry",
+            )
+        return {"hardware_id": hardware_id, "status": "needs_attention", "role": requested_role}
+
+    def listen_for_announce(self, link) -> dict | None:
+        """Reads one message off a real (or fake, for tests)
+        drivers.mcu_serial.MCULink; if it's an announce message,
+        routes it through announce_device() — the same real pairing
+        logic above, now actually reachable from a real wire message
+        instead of only a manual call. If that auto-pairs the device,
+        sends pair_confirm back over the SAME link that just
+        announced, closing the handshake for real (the payload
+        build_pair_confirm_payload() below has always constructed
+        correctly, per that method's own docstring, "the moment a
+        transport layer is built" — this is that moment). Returns
+        announce_device()'s result if an announce was heard, None
+        otherwise (nothing waiting, or a non-announce message — ack/
+        status from an already-paired device passes through silently
+        here; that's polled elsewhere, this is specifically for
+        hearing a NEW device)."""
+        msg = link.read_message()
+        if msg is None or msg.get("type") != "announce":
+            return None
+        hardware_id = msg.get("hardware_id")
+        if not hardware_id:
+            logger.warning("Received an announce message with no hardware_id — ignoring: %s", msg)
+            return None
+        result = self.announce_device(hardware_id, requested_role=msg.get("requested_role"))
+        if result.get("status") == "paired":
+            payload = self.build_pair_confirm_payload(result["role"], result["cell_id"])
+            link.send_pair_confirm(payload["role"], payload["cell_id"], payload["controls"])
+        return result
+
+    def pair_device(self, hardware_id: str, role: str, cell_id: int = None) -> dict:
+        """Manual/assistant-driven pairing — for a device already sitting
+        in needs_attention, or forcing a specific role assignment."""
+        if role not in self.roles:
+            raise ValueError(f"Unknown role '{role}'. Available: {list(self.roles.keys())}")
+        existing = self.db.execute(
+            "SELECT id FROM device_registrations WHERE hardware_id = ?", (hardware_id,)
+        ).fetchone()
+        if existing:
+            return self._pair(hardware_id, role, cell_id, update=True)
+        return self._pair(hardware_id, role, cell_id, update=False)
+
+    def _pair(self, hardware_id: str, role: str, cell_id: int = None, update: bool = False) -> dict:
+        role_def = self.roles[role]
+        target_cell = cell_id if cell_id is not None else role_def.get("default_cell_id")
+
+        if update:
+            self.db.execute(
+                "UPDATE device_registrations SET role = ?, cell_id = ?, status = 'paired', "
+                "paired_at = datetime('now'), last_seen = datetime('now') WHERE hardware_id = ?",
+                (role, target_cell, hardware_id),
+            )
+        else:
+            self.db.execute(
+                "INSERT INTO device_registrations (hardware_id, role, cell_id, status, paired_at) "
+                "VALUES (?, ?, ?, 'paired', datetime('now'))",
+                (hardware_id, role, target_cell),
+            )
+        self.db.commit()
+
+        self._ensure_actuators_exist(role_def, target_cell)
+
+        logger.info("Paired device %s as role '%s' (cell %s)", hardware_id, role, target_cell)
+        if self.notifier:
+            self.notifier.dispatch(
+                "info",
+                f"Device {hardware_id[:8]}... paired as {role_def['display_name']}",
+                source="device_registry",
+            )
+        return {"hardware_id": hardware_id, "status": "paired", "role": role, "cell_id": target_cell}
+
+    def _ensure_actuators_exist(self, role_def: dict, cell_id: int) -> None:
+        """Once a device is paired, make sure the actuators it's supposed
+        to control actually exist in the DB — so the control modules
+        have something to command the moment the MCU is live."""
+        for control in role_def.get("controls", []):
+            existing = self.db.execute(
+                "SELECT id FROM actuators WHERE cell_id = ? AND name = ?",
+                (cell_id, control["actuator_name"]),
+            ).fetchone()
+            if not existing:
+                self.db.execute(
+                    "INSERT INTO actuators (cell_id, type, name, safe_default_state) VALUES (?, ?, ?, ?)",
+                    (cell_id, control["actuator_type"], control["actuator_name"], control["safe_default_state"]),
+                )
+        self.db.commit()
+
+    def build_pair_confirm_payload(self, role: str, cell_id: int) -> dict:
+        """Constructs the real pair_confirm message body (see
+        docs/MCU_PROTOCOL.md) for a role/cell — controls carries each
+        actuator's REAL DB id alongside its name, not just the name, so
+        firmware's findActuatorSlotById() can do a real lookup instead
+        of assuming the Pi's actuator_id happens to equal a fixed slot
+        index (real bug, fixed 2026-08-31 — see
+        firmware/safety_mcu/README.md). Reuses the same actuators
+        _ensure_actuators_exist() already creates/looks up, so this is
+        always the real, current DB state, never invented ids.
+
+        Constructs the payload only — does NOT send it (listen_for_
+        announce() above does, over a real MCULink, the moment a device
+        auto-pairs). This still exists as its own method so the id-
+        mapping logic is independently callable/testable — e.g. the
+        assistant, or a human re-confirming an already-paired device
+        without a fresh announce message."""
+        if role not in self.roles:
+            raise ValueError(f"Unknown role '{role}'. Available: {list(self.roles.keys())}")
+        role_def = self.roles[role]
+
+        controls = []
+        for control in role_def.get("controls", []):
+            row = self.db.execute(
+                "SELECT id FROM actuators WHERE cell_id = ? AND name = ?",
+                (cell_id, control["actuator_name"]),
+            ).fetchone()
+            if row is None:
+                raise ValueError(
+                    f"Actuator '{control['actuator_name']}' for role '{role}' cell {cell_id} "
+                    f"doesn't exist yet — pair the device first (creates it) before building "
+                    f"this payload."
+                )
+            controls.append({"actuator_id": row[0], "name": control["actuator_name"]})
+
+        return {"type": "pair_confirm", "role": role, "cell_id": cell_id, "controls": controls}
+
+    def list_unpaired(self) -> list[dict]:
+        rows = self.db.execute(
+            "SELECT hardware_id, role, first_seen FROM device_registrations WHERE status = 'needs_attention'"
+        ).fetchall()
+        return [{"hardware_id": r[0], "requested_role": r[1], "first_seen": r[2]} for r in rows]
+
+    def list_paired(self) -> list[dict]:
+        self.db.row_factory = sqlite3.Row
+        rows = self.db.execute(
+            "SELECT * FROM device_registrations WHERE status = 'paired'"
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+    def describe_capabilities(self):
+        from contracts.capability import Capability
+        return Capability(
+            module_id="device_registry",
+            display_name="Device Registry (Plug-and-Play MCUs)",
+            purpose=(
+                "Recognizes and pairs physical MCU controllers by role "
+                "(watering, fertilizer dosing, pH dosing, etc), driven by "
+                "human-readable config files rather than code. Auto-pairs "
+                "when a device announces a known, unclaimed role; queues "
+                "anything ambiguous for a human to resolve."
+            ),
+            data_produced=["paired device list", "unpaired/needs-attention device list"],
+            actions_possible=[
+                "pair a device to a role", "give plain-language setup instructions for a role",
+                "auto-create the actuators a newly paired device controls",
+                "build the real pair_confirm wire payload for a role/cell, carrying each "
+                "actuator's real DB id (not a placeholder/index) so firmware can map "
+                "actuator_id to the correct physical pin",
+            ],
+            limits_and_safety=(
+                "Never auto-pairs an ambiguous or role-conflicting device — "
+                "always defers to a human. Pairing doesn't grant a device "
+                "any control authority beyond what the safety MCU/dosing "
+                "limits already allow."
+            ),
+            example_questions=[
+                "How do I set up the watering MCU?",
+                "Is there a device waiting to be paired?",
+                "What's plugged in right now?",
+            ],
+            verification_evidence=[
+                "Live manual test 2026-08-26: confirmed a device announcing a known unclaimed "
+                "role auto-pairs and its actuators get created automatically; confirmed an "
+                "ambiguous/unlabeled device correctly queues for a human instead of guessing",
+                "scenarios.py::scenario_pair_confirm_payload_real_ids (2026-08-31): deliberately "
+                "inserted actuators out of order (7 padding rows before the real ones) and "
+                "confirmed build_pair_confirm_payload() returns the REAL DB actuator ids (>3, "
+                "not a coincidental 0/1 match) — proves the fix to firmware's "
+                "findActuatorSlotById() (formerly an index-assumption placeholder, see "
+                "firmware/safety_mcu/README.md) is fed correct data, not just correct in theory. "
+                "Real serial transmission of this payload remains untested — no MCU hardware "
+                "exists yet to send it to.",
+            ],
+        )
+
+    def describe_hardware_requirements(self) -> list:
+        from contracts.capability import HardwareRequirement
+        # Aggregate the MCUs implied by every defined role — this is the
+        # one service where hardware needs are defined by config files
+        # rather than hardcoded, so pull from the loaded roles directly.
+        return [
+            HardwareRequirement(
+                item=f"MCU ({r['display_name']})", category="mcu", quantity=1,
+                purpose=f"Controls: {', '.join(c['actuator_name'] for c in r.get('controls', []))}",
+                est_unit_cost=20.0,
+                notes=f"Port: {r.get('port_label', '?')}. ~$20 for an Adafruit ESP32 board — verify "
+                      f"current price before ordering, see docs/HARDWARE_BOM_CURRENT.md. "
+                      f"See config/devices/roles/{role_id}.yaml",
+            )
+            for role_id, r in self.roles.items()
+        ] + [
+            HardwareRequirement(
+                item="4-channel relay module (5V, optocoupler-isolated)", category="actuator",
+                quantity=len(self.roles), purpose="switches 12V pump/valve loads from ESP32 GPIO — "
+                "a GPIO pin cannot directly drive a pump, this is the missing link",
+                est_unit_cost=8.0,
+                notes="One per MCU role. Optocoupler isolation matters — protects the ESP32 "
+                      "from voltage spikes on the pump side. ~$6-9 each, verified current pricing.",
+            ),
+            HardwareRequirement(
+                item="12V DC power supply (2-3A)", category="power", quantity=1,
+                purpose="powers the dosing pumps and irrigation valve — separate from the Pi's own power",
+                est_unit_cost=12.0,
+                notes="Size amperage to your actual pump count/draw once chosen.",
+            ),
+        ]
