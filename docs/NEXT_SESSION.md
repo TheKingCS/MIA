@@ -919,6 +919,14 @@ Settings → Sign-ins and Security): the security log, new-device and wrong-pass
 **Claimed by the parity session (2026-11-08): the Your Data page** (web/yourdata.html, core/your_data.py,
 Settings → Your Data): what MIA keeps about you, store by store (how many, sealed or not), what she read for your
 recent answers, and export / delete account on the web (only in the Qt Settings until now; docs/SECURITY.md step 8).
+**Claimed by the engine session (2026-11-08 overnight, Zac asleep), core logic only:** (1) more sources for the
+capability reminders (DEC-0143: a built-in plan whose materials are on the shelf, a skill with its tools owned) in
+`core/capability_reminders.py`; (2) DEC-0137's next step, real-life surfaces reading `environment == real` only
+(`core/presence.py`, the Life State); (3) knowledge entries (DEC-0105) for the engine's 2026-11-08 builds; (4)
+derived link kinds `connections.unlinked` points at (`core/links.py`). Screens and voice for these stay the design
+and parity sessions'. Note for the design session: the Greenhouse's **What's Next** tab (`web/grow.js`,
+`web/equipment.js`, data `grow_page()["next"]`, DEC-0144) went in before I saw "Who builds what"; restyle or redo it
+freely. `get_homestead_next_step` is its voice twin.
 
 **Who builds what (2026-11-07 night, after Power and Recent Changes were each built twice at once):** screens
 (web pages, the canvas's look, the review's missing screens: Waiting For You, a plan's page, the Browser in the
