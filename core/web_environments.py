@@ -14,8 +14,10 @@ the others keep their tiles until their turn. Garage is first.
   bench's tools (Toolbox, Look, Workshop, Projects, the parts inventory).
 - `ENVIRONMENTS`: area id -> its builder.
 
-Read-only: every change is made on the screens these link to, through their
-own actions.
+Where the graphics card allows, the page draws the Garage as a 3D room on the
+Nexus's engine (web/hub.js garageRoom, web/nexus3d.js): the bays round MIA's
+orb. Read-only: every change is made on the screens these link to, through
+their own actions.
 """
 
 from __future__ import annotations

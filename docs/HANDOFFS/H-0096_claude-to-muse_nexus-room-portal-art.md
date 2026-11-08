@@ -69,6 +69,14 @@ Zac's concepts burn Garage orange and Plants and Animals green. H-0093 kept home
 keeps area hues off amber and red, so "needs you" stays unmistakable. If Zac wants the fiery colours, the amber "needs
 you" badge on the labels still separates them; your read on that is welcome.
 
+## Added 06:30: themes (DEC-0135, DEC-0136)
+
+Zac asked for two looks (Spatial and Cards, per person) and themes on top of both. Four first cuts are built as data in
+`core/themes.py` (Stark, Y2K Cyber, Cyberpunk, Glass), with panel materials in `web/themes.css` and the room's light
+following the theme. They're yours to refine like everything else that's look; the plan, the theme contract (what a
+theme may and may not change) and the Theme Studio steps are in `docs/design/EXPERIENCES_AND_THEMES.md`. The portal
+pictures stay the same in every theme, so they should read on cyan, magenta and soft white light alike.
+
 ## Acceptance
 
 - Each picture in `web/img/portals/` with its exact file name; nothing personal in any of them.

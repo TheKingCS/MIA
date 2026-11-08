@@ -100,7 +100,9 @@ APPS: tuple[App, ...] = (
         "Daily and weekly household routines — laundry, dishes, chores.", HOME, ("household",),
         "I did the dishes."),
     App("workout", "Workout", "🏋", "Stronger body. Clearer mind.", "workout.html",
-        "Exercises, guided sessions, and progress.", LIFE, ("workout",), "Log a 30 minute workout."),
+        # "health" (2026-11-08): sleep, visits, medications and records (core/assistant_health_actions.py) live on
+        # the Health page in the same area, which isn't an app of its own
+        "Exercises, guided sessions, and progress.", LIFE, ("workout", "health"), "Log a 30 minute workout."),
     App("real_estate", "Real Estate", "🏘", "Cash flow. Equity. Freedom.", "real-estate.html",
         "Property values, equity, rental income, and linked maintenance.", MONEY, ("real_estate", "inventory"),
         "How are my rentals doing this month?"),
@@ -297,7 +299,7 @@ def shell(context, today: Optional[date] = None) -> dict:
     """The shared frame's data (/api/shell): the person and their level, the date, the apps they can open on the web
     (each with its life area and its ask, shown as "Say: …" on its screen), the sidebar's areas with their hubs
     (DEC-0129, core/web_areas.py), their favorites, the ones still on the PC only, the screens MIA made, the owner's
-    pages, sound, and places.
+    pages, sound, places, and the person's display style (DEC-0135: spatial or cards).
     """
     from core.child_accounts import is_child
 
@@ -323,6 +325,8 @@ def shell(context, today: Optional[date] = None) -> dict:
         "weather": {"status": "PLANNED", "text": None},
         "sound": _sound(context),
         "places": _places(context),
+        # DEC-0135: the person's look; the page decides "auto" itself (only it knows it's on a phone)
+        "display": _display(context),
     }
 
 
@@ -383,6 +387,19 @@ def _places(context) -> list:
     except Exception:
         log.exception("Shell: places failed")
         return []
+
+
+def _display(context) -> dict:
+    """The person's look: {"style": "auto" | "spatial" | "cards" (core/display_style.py, DEC-0135), "theme": their
+    theme as cleaned data (core/themes.py, DEC-0136)}."""
+    from core.display_style import style_of
+    from core.themes import DEFAULT_THEME, THEMES, as_data, clean_theme, for_shell
+
+    try:
+        return {"style": style_of(context), "theme": for_shell(context)}
+    except Exception:
+        log.exception("Shell: display style failed")
+        return {"style": "auto", "theme": clean_theme(as_data(THEMES[DEFAULT_THEME]))}
 
 
 def _sound(context) -> dict:

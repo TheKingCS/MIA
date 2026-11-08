@@ -19,6 +19,13 @@
  *     opt.onOrb()     the orb was clicked
  *     opt.onDrag(d)   the ring was dragged d portals (fractional while dragging); opt.onDrop(i) where it settled
  *     opt.labels      a box for the portals' name labels (page text, placed over the scene each frame)
+ *     opt.shape       "oval" (portals, the default) or "bay" (an area's room: a wide door frame, as the Garage's bays)
+ *     opt.fire        how much fire rises off the frames (1 the default; an area's room burns lower)
+ *     opt.theme       the theme's room light (core/themes.py: accent, back_top/back_bottom, palette, fire, bloom,
+ *                     mist, scan, grain); Stark's when absent
+ *     opt.art(p)      a promise of the picture's url (default p.art); opt.needsGlow: a pedestal glows amber when
+ *                     something in its item needs you; opt.arrive / opt.arriveHue: you came in through a portal
+ *   The same room draws an area's own space (hub.js: the Garage's bays round her), so going through feels like one place.
  *   Portal art: each portal's `art` (web/img/portals/<area id>.jpg, Muse, H-0096); until one is there, a placeholder
  *   in its colour with its icon.
  * Each frame: background → the floor's reflection → the floor → motes → portals behind her → her beam and orb →
@@ -89,14 +96,17 @@
   const FS_PORTAL = HEAD + NOISE + `
     in vec2 vP; out vec4 o;
     uniform sampler2D uArt; uniform vec3 uHue, uHue2; uniform vec2 uHalf;
-    uniform float uT, uFocus, uVis, uSeed, uGain, uMirror;
+    uniform float uT, uFocus, uVis, uSeed, uGain, uMirror, uShape, uFire;
     void main(){
-      vec2 ab = vec2(0.66, 1.0);
-      vec2 q = vP - vec2(0.0, -0.18);
-      float e = length(q / ab);
-      float d = (e - 1.0) * 0.66;
+      // the frame: an oval (a portal) or a wide rounded door (a garage bay)
+      vec2 ab = uShape < 0.5 ? vec2(0.66, 1.0) : vec2(1.15, 0.8);
+      vec2 q = vP - vec2(0.0, uShape < 0.5 ? -0.18 : -0.12);
+      float e, d;
+      if (uShape < 0.5){ e = length(q / ab); d = (e - 1.0) * 0.66; }
+      else { vec2 k = abs(q) - ab + 0.14; d = length(max(k, 0.0)) + min(max(k.x, k.y), 0.0) - 0.14;
+             e = max(abs(q.x) / ab.x, abs(q.y) / ab.y); }
       vec3 col = vec3(0.0); float a = 0.0;
-      if (e < 1.0){
+      if (d < 0.0){
         vec2 uv = q / ab * 0.5 + 0.5;
         float sw = 0.010 * sin(uT * 0.7 + uv.y * 6.0 + uSeed);
         vec3 art = texture(uArt, vec2(uv.x + sw, 1.0 - uv.y)).rgb;
@@ -106,7 +116,7 @@
       }
       float rim = exp(-abs(d) * 42.0), halo = exp(-abs(d) * 7.0);
       col += (uHue * 1.3 + vec3(0.25) * rim) * rim * (0.8 + 1.0 * uFocus) + uHue * halo * (0.18 + 0.2 * uFocus);
-      if (e > 0.88){
+      if (d > -0.08){
         vec2 sp = vec2(vP.x * 1.9 + uSeed, vP.y * 1.25 - uT * 0.6);
         vec2 warp = vec2(fbm(sp + vec2(0.0, uT * 0.25)), fbm(sp + vec2(5.2, 1.3) - uT * 0.12));
         float n = fbm(sp * 1.5 + warp * 1.8);
@@ -114,7 +124,7 @@
         float reach = 0.42 + 0.42 * smoothstep(-0.8, 1.4, vP.y);
         float m = smoothstep(reach, 0.0, out_) * smoothstep(0.30, 0.78, n);
         vec3 fire = mix(uHue2, uHue, smoothstep(0.0, 0.45, out_ + (n - 0.5) * 0.3));
-        col += fire * pow(m, 1.5) * (0.75 + 0.75 * uFocus) + vec3(1.0) * pow(m, 6.0) * 0.12;
+        col += (fire * pow(m, 1.5) * (0.75 + 0.75 * uFocus) + vec3(1.0) * pow(m, 6.0) * 0.12) * uFire;
       }
       float edge = smoothstep(1.0, 0.82, abs(vP.x) / uHalf.x) * smoothstep(1.0, 0.86, abs(vP.y) / uHalf.y);
       float fade = uMirror < 0.0 ? smoothstep(1.0, -1.0, vP.y / uHalf.y) : 1.0;
@@ -206,10 +216,10 @@
 
   // The chamber behind: dark, its wall's seams lit faintly, and vapor drifting in the areas' colours.
   const FS_BACK = HEAD + NOISE + `
-    in vec2 vUv; out vec4 o; uniform float uT, uYaw; uniform vec3 uHues[6]; uniform vec3 uAccent;
+    in vec2 vUv; out vec4 o; uniform float uT, uYaw; uniform vec3 uHues[6]; uniform vec3 uAccent, uTop, uBottom;
     void main(){
       vec2 uv = vUv;
-      vec3 col = mix(vec3(0.0, 0.0, 0.004), vec3(0.008, 0.018, 0.035), smoothstep(0.1, 0.75, uv.y));
+      vec3 col = mix(uBottom, uTop, smoothstep(0.1, 0.75, uv.y));
       float x = uv.x * 16.0 + uYaw * 2.5;
       float seam = exp(-abs(fract(x) - 0.5) * 50.0) * smoothstep(0.38, 0.6, uv.y) * smoothstep(1.0, 0.7, uv.y);
       col += uAccent * seam * 0.06;
@@ -227,12 +237,12 @@
 
   // Low mist rolling across the front of the room.
   const FS_MIST = HEAD + NOISE + `
-    in vec2 vUv; out vec4 o; uniform float uT; uniform vec3 uHue, uAccent;
+    in vec2 vUv; out vec4 o; uniform float uT, uGain; uniform vec3 uHue, uAccent;
     void main(){
       float n = fbm(vUv * vec2(4.0, 3.0) + vec2(uT * 0.03, -uT * 0.015));
       float n2 = fbm(vUv * vec2(7.0, 4.0) - vec2(uT * 0.05, 0.0));
       float low = smoothstep(0.42, 0.0, vUv.y);
-      vec3 col = mix(uAccent, uHue, 0.5 + 0.5 * sin(vUv.x * 3.0 + uT * 0.1)) * pow(n * n2 * 2.2, 2.0) * low * 0.35;
+      vec3 col = mix(uAccent, uHue, 0.5 + 0.5 * sin(vUv.x * 3.0 + uT * 0.1)) * pow(n * n2 * 2.2, 2.0) * low * 0.35 * uGain;
       o = vec4(col, 0.0);
     }`;
 
@@ -261,13 +271,14 @@
       c += (texture(uSrc, vUv + uDir * 1.385).rgb + texture(uSrc, vUv - uDir * 1.385).rgb) * 0.316;
       c += (texture(uSrc, vUv + uDir * 3.231).rgb + texture(uSrc, vUv - uDir * 3.231).rgb) * 0.070;
       o = vec4(c, 1.0); }`;
-  const FS_FINAL = HEAD + NOISE + `in vec2 vUv; out vec4 o; uniform sampler2D uScene, uB1, uB2; uniform float uT, uFlash; uniform vec3 uFlashHue;
+  const FS_FINAL = HEAD + NOISE + `in vec2 vUv; out vec4 o; uniform sampler2D uScene, uB1, uB2; uniform float uT, uFlash, uBloom, uScan, uGrain; uniform vec3 uFlashHue;
     vec3 aces(vec3 x){ return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0); }
     void main(){
-      vec3 c = texture(uScene, vUv).rgb + texture(uB1, vUv).rgb * 0.55 + texture(uB2, vUv).rgb * 0.8;
+      vec3 c = texture(uScene, vUv).rgb + (texture(uB1, vUv).rgb * 0.55 + texture(uB2, vUv).rgb * 0.8) * uBloom;
       c = aces(c * 0.95);
       vec2 v = vUv - 0.5; c *= 1.0 - dot(v, v) * 0.9;
-      c += (hash(vUv * 900.0 + uT) - 0.5) * 0.018;
+      c *= 1.0 - uScan * 0.22 * step(0.5, fract(gl_FragCoord.y * 0.5));  // a theme's scanlines
+      c += (hash(vUv * 900.0 + uT) - 0.5) * (0.018 + 0.06 * uGrain);
       c = mix(c, uFlashHue, uFlash);
       o = vec4(c, 1.0);
     }`;
@@ -290,25 +301,37 @@
     return { p, u };
   }
 
-  function placeholder(portal) {  // the portal's art until Muse's arrives: its colour, deep, with its icon
+  // Art is fitted to the frame's shape (cover, centred) before it goes to the card: an oval portal is 2:3, a bay 3:2.
+  const ART = { oval: [384, 576], bay: [576, 384] };
+  function cover(img, shape) {
+    const [w, h] = ART[shape] || ART.oval;
     const c = document.createElement("canvas");
-    c.width = 384; c.height = 576;
+    c.width = w; c.height = h;
+    const k = Math.max(w / img.width, h / img.height);
+    c.getContext("2d").drawImage(img, (w - img.width * k) / 2, (h - img.height * k) / 2, img.width * k, img.height * k);
+    return c;
+  }
+
+  function placeholder(portal, shape) {  // the art until a picture arrives: its colour, deep, with its icon
+    const [W0, H0] = ART[shape] || ART.oval;
+    const c = document.createElement("canvas");
+    c.width = W0; c.height = H0;
     const x = c.getContext("2d");
     const [r, g, b] = rgb(portal.hue).map((v) => Math.round(v * 255));
-    const grad = x.createRadialGradient(192, 330, 10, 192, 300, 340);
+    const grad = x.createRadialGradient(W0 / 2, H0 * 0.57, 10, W0 / 2, H0 * 0.52, Math.max(W0, H0) * 0.6);
     grad.addColorStop(0, `rgba(${r},${g},${b},0.55)`);
     grad.addColorStop(0.45, `rgba(${r >> 2},${g >> 2},${b >> 2},0.9)`);
     grad.addColorStop(1, "#000");
-    x.fillStyle = grad; x.fillRect(0, 0, 384, 576);
+    x.fillStyle = grad; x.fillRect(0, 0, W0, H0);
     for (let i = 0; i < 90; i++) {  // a little starfield of light so the glass isn't flat
       x.fillStyle = `rgba(${r},${g},${b},${Math.random() * 0.5})`;
-      x.fillRect(Math.random() * 384, Math.random() * 576, 1.5, 1.5);
+      x.fillRect(Math.random() * W0, Math.random() * H0, 1.5, 1.5);
     }
     return c;
   }
 
   function drawIcon(canvas, portal, done) {
-    const svg = window.MIAIcons && MIAIcons.svg(portal.icon);
+    const svg = window.MIAIcons && MIAIcons.svg(portal.icon || "mia");
     if (!svg) { done(); return; }
     svg.setAttribute("width", "200"); svg.setAttribute("height", "200");
     if (!svg.getAttribute("xmlns")) svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
@@ -317,7 +340,7 @@
     img.onload = () => {
       const x = canvas.getContext("2d");
       x.globalAlpha = 0.85; x.shadowColor = portal.hue; x.shadowBlur = 30;
-      x.drawImage(img, 92, 206, 200, 200);
+      x.drawImage(img, canvas.width / 2 - 100, canvas.height * 0.55 - 100, 200, 200);
       done();
     };
     img.onerror = done;
@@ -357,8 +380,11 @@
     gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
     gl.bindVertexArray(null);
 
-    // Each portal's art: the placeholder at once, Muse's picture when it loads.
+    // Each portal's art: the placeholder at once, its picture when it loads.
     const n = portals.length;
+    const SHAPE = opt.shape === "bay" ? "bay" : "oval";
+    const FIRE = (opt.fire == null ? 1 : opt.fire) * (opt.theme && typeof opt.theme.fire === "number" ? opt.theme.fire : 1);
+    const AMBER = rgb("#f2b33d");
     const textures = portals.map((p) => {
       const t = gl.createTexture();
       const upload = (src) => {
@@ -369,19 +395,28 @@
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
       };
-      const ph = placeholder(p);
+      const ph = placeholder(p, SHAPE);
       upload(ph);
       drawIcon(ph, p, () => upload(ph));
-      if (p.art) {  // core says which areas have Muse's picture (core/web_nexus.portal_art)
+      Promise.resolve(opt.art ? opt.art(p) : p.art).then((url) => {  // only pictures core says are there
+        if (!url) return;
         const img = new Image();
-        img.onload = () => upload(img);
-        img.src = p.art;
-      }
+        img.onload = () => upload(cover(img, SHAPE));
+        img.src = url;
+      }).catch(() => {});
       return t;
     });
     const hues = portals.map((p) => rgb(p.hue));
     const hue2 = hues.map((h, i) => mix3(h, hues[(i + 1) % n], 0.55));
-    const accent = rgb("#35d4ff");
+    // The theme's light (DEC-0136, core/themes.py room): MIA's accent, the chamber's colours, a palette for the
+    // vapor and mist, and how strong the fire, bloom, mist, scanlines and grain are. Portal frames keep their area's
+    // hue whatever the theme (DEC-0130).
+    const look = opt.theme || {};
+    const accent = rgb(look.accent || "#35d4ff");
+    const palette = (look.palette || []).map(rgb);
+    const backTop = look.back_top ? rgb(look.back_top) : [0.008, 0.018, 0.035];
+    const backBottom = look.back_bottom ? rgb(look.back_bottom) : [0, 0, 0.004];
+    const level = (k, d) => (typeof look[k] === "number" ? look[k] : d);
 
     // Render targets: the scene at full size, bloom at half and a quarter.
     function target(w, h) {
@@ -433,6 +468,10 @@
     let rot = opt.start || 0, goal = rot, dragging = false;
     let pointer = [0, 0], drift = [0, 0];
     let flying = null;  // {i, href, t0}
+    // Coming in through a portal: the light fades and the camera eases back out of it. Timed from the end of the first
+    // frame, since the first one builds the shaders and can take a while.
+    let arrive = 0;
+    const arrived = () => (!opt.arrive ? 1 : arrive ? Math.min(1, (performance.now() - arrive) / 1400) : 0);
     let pulse = 0;
     let raf = 0, t0 = performance.now(), last = t0;
     const rects = new Array(n).fill(null);
@@ -453,6 +492,9 @@
         const k = Math.max(0, Math.min(1, (performance.now() - flying.t0) / 750)), e = k * k * k;
         const tgt = [0, 1.55, -R + 0.2];
         eye = mix3(eye, tgt, e); at = mix3(at, [0, 1.55, -R - 3], e);
+      } else if (arrived() < 1) {
+        const e = 1 - Math.pow(1 - arrived(), 3);
+        eye = mix3([0, 1.7, -R * 0.4], eye, e); at = mix3([0, 1.6, -R - 3], at, e);
       }
       return mul(perspective(fov, aspect, 0.1, 80), lookAt(eye, at, [0, 1, 0]));
     }
@@ -492,8 +534,9 @@
       gl.useProgram(P.back.p);
       gl.uniform1f(P.back.u("uT"), t); gl.uniform1f(P.back.u("uYaw"), rot * STEP);
       const sixHues = [];
-      for (let k = 0; k < 6; k++) sixHues.push(...hues[(Math.round(rot) + k * 3 + n * 4) % n]);
+      for (let k = 0; k < 6; k++) sixHues.push(...(palette.length ? palette[k % palette.length] : hues[(Math.round(rot) + k * 3 + n * 4) % n]));
       gl.uniform3fv(P.back.u("uHues[0]"), sixHues); gl.uniform3fv(P.back.u("uAccent"), accent);
+      gl.uniform3fv(P.back.u("uTop"), backTop); gl.uniform3fv(P.back.u("uBottom"), backBottom);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
       gl.enable(gl.BLEND);
@@ -504,13 +547,14 @@
         .sort((a, b) => states[a].pos[2] - states[b].pos[2]);  // far (more negative z) first
 
       const drawPortal = (i, mirror, gain) => {
-        const s = states[i], sc = 1 + FOCUS_GROW * s.focus, half = [1.2 * sc, 1.62 * sc];
+        const s = states[i], sc = 1 + FOCUS_GROW * s.focus, half = SHAPE === "bay" ? [1.55 * sc, 1.25 * sc] : [1.2 * sc, 1.62 * sc];
         const u = P.portal.u;
         gl.uniform3f(u("uBase"), s.pos[0], s.pos[1], s.pos[2]);
         gl.uniform3fv(u("uRight"), right); gl.uniform2fv(u("uHalf"), half); gl.uniform1f(u("uMirror"), mirror);
         gl.uniform3fv(u("uHue"), hues[i]); gl.uniform3fv(u("uHue2"), hue2[i]);
         gl.uniform1f(u("uFocus"), s.focus); gl.uniform1f(u("uVis"), s.vis); gl.uniform1f(u("uSeed"), i * 7.31);
         gl.uniform1f(u("uGain"), gain); gl.uniform1f(u("uT"), t);
+        gl.uniform1f(u("uShape"), SHAPE === "bay" ? 1 : 0); gl.uniform1f(u("uFire"), FIRE);
         gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, textures[i]); gl.uniform1i(u("uArt"), 0);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
         if (mirror > 0) rects[i] = rectOf([s.pos[0], s.pos[1], s.pos[2]], half, right, s);
@@ -546,7 +590,7 @@
       const ped = [], pedHue = [];
       for (let i = 0; i < 16; i++) {
         const s = states[i];
-        if (s) { ped.push(s.pos[0], s.pos[2], s.vis, s.focus); pedHue.push(...hues[i]); } else { ped.push(0, 0, 0, 0); pedHue.push(0, 0, 0); }
+        if (s) { ped.push(s.pos[0], s.pos[2], s.vis, s.focus); pedHue.push(...(opt.needsGlow && portals[i].needs ? AMBER : hues[i])); } else { ped.push(0, 0, 0, 0); pedHue.push(0, 0, 0); }
       }
       gl.uniform4fv(P.floor.u("uPed[0]"), ped); gl.uniform3fv(P.floor.u("uPedHue[0]"), pedHue);
       gl.uniform1i(P.floor.u("uN"), Math.min(16, n)); gl.uniform2f(P.floor.u("uOrb"), ORB[0], ORB[2]);
@@ -573,7 +617,11 @@
       // mist
       gl.useProgram(P.mist.p);
       gl.uniform1f(P.mist.u("uT"), t); gl.uniform3fv(P.mist.u("uAccent"), accent);
-      gl.uniform3fv(P.mist.u("uHue"), hues[((Math.round(rot) % n) + n) % n]);
+      const pk = t / 6, pf = pk - Math.floor(pk);  // the mist drifts from one palette colour to the next
+      gl.uniform3fv(P.mist.u("uHue"), palette.length
+        ? mix3(palette[Math.floor(pk) % palette.length], palette[(Math.floor(pk) + 1) % palette.length], pf)
+        : hues[((Math.round(rot) % n) + n) % n]);
+      gl.uniform1f(P.mist.u("uGain"), level("mist", 1));
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       gl.disable(gl.BLEND);
 
@@ -592,8 +640,10 @@
       pass(P.final, null, (u) => {
         tex(0, T.scene, u, "uScene"); tex(1, T.a1, u, "uB1"); tex(2, T.a2, u, "uB2");
         gl.uniform1f(u("uT"), t);
-        const k = flying ? Math.max(0, Math.min(1, ((performance.now() - flying.t0) / 750 - 0.55) / 0.45)) : 0;
-        gl.uniform1f(u("uFlash"), k * 0.9); gl.uniform3fv(u("uFlashHue"), flying ? hues[flying.i] : accent);
+        gl.uniform1f(u("uBloom"), level("bloom", 1)); gl.uniform1f(u("uScan"), level("scan", 0)); gl.uniform1f(u("uGrain"), level("grain", 0));
+        const k = flying ? Math.max(0, Math.min(1, ((performance.now() - flying.t0) / 750 - 0.55) / 0.45))
+          : Math.max(0, 1 - arrived() * 2);
+        gl.uniform1f(u("uFlash"), k * 0.9); gl.uniform3fv(u("uFlashHue"), flying ? hues[flying.i] : opt.arriveHue ? rgb(opt.arriveHue) : accent);
       });
 
       // labels and the orb's spot for the page
@@ -602,20 +652,21 @@
       labels.forEach((l, i) => {
         if (!l) return;
         const s = states[i], sc = 1 + FOCUS_GROW * s.focus;
-        const pt = project(VP, [s.pos[0], s.pos[1] + 3.24 * sc + 0.12, s.pos[2]], cssW, cssH);
+        const pt = project(VP, [s.pos[0], s.pos[1] + (SHAPE === "bay" ? 2.1 : 3.24) * sc + 0.12, s.pos[2]], cssW, cssH);
         const show = s.vis > 0.05 && pt[3] && (aspect >= 1 || Math.abs(s.d) < 1.5);
         l.style.opacity = show ? String(Math.min(1, s.vis) * (flying ? 0 : 1)) : "0";
         if (show) l.style.transform = "translate(" + pt[0].toFixed(1) + "px," + pt[1].toFixed(1) + "px) translate(-50%,-100%) scale(" + (0.85 + 0.25 * s.focus).toFixed(3) + ")";
         l.classList.toggle("on", s.focus > 0.5);
       });
 
+      if (opt.arrive && !arrive) arrive = performance.now();
       if (flying && performance.now() - flying.t0 > 760) { location.href = flying.href; return; }
       if (document.visibilityState === "visible") raf = requestAnimationFrame(frame);
     }
 
     function rectOf(base, half, right, s) {
       const corners = [[-1, 0], [1, 0], [-1, 2], [1, 2]].map(([sx, sy]) =>
-        project(VP, [base[0] + right[0] * half[0] * sx * 0.75, base[1] + half[1] * sy, base[2] + right[2] * half[0] * sx * 0.75], cssW, cssH));
+        project(VP, [base[0] + right[0] * half[0] * sx * 0.78, base[1] + half[1] * sy, base[2] + right[2] * half[0] * sx * 0.78], cssW, cssH));
       if (corners.some((c) => !c[3])) return null;
       const xs = corners.map((c) => c[0]), ys = corners.map((c) => c[1]);
       return { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys), z: corners[0][2], s };
@@ -662,9 +713,16 @@
       focus(i) { goal = i + n * Math.round((rot - i) / n); },      // the nearest way round
       enter(i, href) { this.focus(i); flying = { i, href, t0: performance.now() + 200 }; },
       orbAt() { return orbRect; },
-      stop() { cancelAnimationFrame(raf); raf = 0; document.removeEventListener("visibilitychange", wake); },
+      stop() {  // for a re-render: no more frames, and the graphics card's memory handed back
+        cancelAnimationFrame(raf); raf = 0; flying = null;
+        document.removeEventListener("visibilitychange", wake); removeEventListener("resize", wake);
+        const lose = gl.getExtension("WEBGL_lose_context");
+        if (lose) lose.loseContext();
+        labels.forEach((l) => l && l.remove());
+      },
     };
   }
 
   window.MIANexus3D = { supported, mount };
+  window.MIARoom = window.MIANexus3D;  // the same engine for an area's own room
 })();

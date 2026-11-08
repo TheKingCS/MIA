@@ -1148,5 +1148,16 @@
         }
       ]
     }
-  ]
+  ],
+  "display": {
+    "style": "auto",
+    "theme": {
+      "id": "stark",
+      "name": "Stark",
+      "line": "Cyan holographic engineering: graphite panels, fine lines, one electric accent.",
+      "tokens": {},
+      "material": "solid",
+      "room": {}
+    }
+  }
 }

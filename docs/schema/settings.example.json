@@ -1,6 +1,61 @@
 {
   "groups": [
     {
+      "title": "Look",
+      "settings": [
+        {
+          "key": "display.style",
+          "label": "Display style",
+          "kind": "choice",
+          "help": "Spatial opens on the Nexus, each area a room. Cards opens on the Dashboard, each area's apps as cards. By device: spatial on the computer, cards on the phone. Or tell MIA: \"switch to the cards look\".",
+          "value": "auto",
+          "low": 0,
+          "high": 0,
+          "options": [
+            {
+              "value": "auto",
+              "label": "By device"
+            },
+            {
+              "value": "spatial",
+              "label": "Spatial"
+            },
+            {
+              "value": "cards",
+              "label": "Cards"
+            }
+          ]
+        },
+        {
+          "key": "display.theme",
+          "label": "Theme",
+          "kind": "choice",
+          "help": "Colours, type, materials and light, in either look. Or tell MIA: \"switch to the Y2K theme\".",
+          "value": "stark",
+          "low": 0,
+          "high": 0,
+          "options": [
+            {
+              "value": "stark",
+              "label": "Stark"
+            },
+            {
+              "value": "y2k",
+              "label": "Y2K Cyber"
+            },
+            {
+              "value": "cyberpunk",
+              "label": "Cyberpunk"
+            },
+            {
+              "value": "glass",
+              "label": "Glass"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "title": "When MIA speaks up",
       "settings": [
         {
@@ -123,19 +178,19 @@
             },
             {
               "value": "GBP",
-              "label": "GBP \u00a3"
+              "label": "GBP £"
             },
             {
               "value": "EUR",
-              "label": "EUR \u20ac"
+              "label": "EUR €"
             },
             {
               "value": "INR",
-              "label": "INR \u20b9"
+              "label": "INR ₹"
             },
             {
               "value": "JPY",
-              "label": "JPY \u00a5"
+              "label": "JPY ¥"
             },
             {
               "value": "MXN",
@@ -163,7 +218,7 @@
             },
             {
               "value": "PHP",
-              "label": "PHP \u20b1"
+              "label": "PHP ₱"
             },
             {
               "value": "BRL",

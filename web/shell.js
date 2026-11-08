@@ -22,6 +22,29 @@
 (function () {
   "use strict";
 
+  // ---------------------------------------------------------------- the theme (DEC-0136, core/themes.py)
+  // A theme is data: tokens set on the page (every stylesheet follows), a material (themes.css) and the room's light
+  // (web/nexus3d.js). It comes with the shell on every page; the last one is kept on this device so the next page
+  // opens already themed, before the shell arrives. Meaning colours aren't tokens a theme can set (core checks).
+  const THEME_CACHE = "mia.theme";
+  let themeApplied = [];
+  let themeNow = null;
+  function applyTheme(theme) {
+    if (!theme || !theme.id) return;
+    const root = document.documentElement;
+    themeApplied.forEach((k) => root.style.removeProperty(k));
+    themeApplied = [];
+    Object.entries(theme.tokens || {}).forEach(([k, v]) => {
+      if (k.startsWith("--")) { root.style.setProperty(k, v); themeApplied.push(k); }
+    });
+    root.dataset.theme = theme.id;
+    root.dataset.material = theme.material || "solid";
+    themeNow = theme;
+    try { localStorage.setItem(THEME_CACHE, JSON.stringify(theme)); } catch (e) { /* fine: it applies when the shell comes */ }
+  }
+  try { applyTheme(JSON.parse(localStorage.getItem(THEME_CACHE) || "null")); } catch (e) { /* no cached theme */ }
+  function theme() { return themeNow || { id: "stark", name: "Stark", tokens: {}, material: "solid", room: {} }; }
+
   const $ = (sel, root) => (root || document).querySelector(sel);
 
   function el(tag, attrs, ...children) {
@@ -248,9 +271,16 @@
       el("span", { class: "ico", "aria-hidden": "true" }, icon(a.id, icon(a.icon, a.icon))), el("span", { class: "label" }, a.name));
     const byId = Object.fromEntries(shell.apps.map((a) => [a.id, a]));
     const out = [];
-    // The Nexus first (DEC-0130), then Today (the Dashboard, DEC-0129), Start Here and Apps.
-    out.push(link({ id: "nexus", name: "Nexus", icon: "mia", page: "nexus.html" }));
-    if (byId.web_home) out.push(link({ ...byId.web_home, name: "Today", page: "index.html?today=1" }));
+    // Spatial (DEC-0135): the Nexus first (DEC-0130), then Today (the Dashboard, DEC-0129). Cards: Home (the
+    // Dashboard) first, the Nexus after it. Then Start Here and Apps.
+    const nexus = link({ id: "nexus", name: "Nexus", icon: "mia", page: "nexus.html" });
+    if (look() === "cards") {
+      if (byId.web_home) out.push(link({ ...byId.web_home, name: "Home", page: "index.html" }));
+      out.push(nexus);
+    } else {
+      out.push(nexus);
+      if (byId.web_home) out.push(link({ ...byId.web_home, name: "Today", page: "index.html?today=1" }));
+    }
     out.push(el("a", { class: "nav side-start", href: "start.html", "aria-current": here === "start" ? "page" : null },
       el("span", { class: "ico", "aria-hidden": "true" }, "?"), el("span", { class: "label" }, "Start Here")));
     const pinned = (shell.favorites || []).map((id) => byId[id]).filter((a) => a && a.id !== "web_home");
@@ -285,8 +315,19 @@
       : null;
   }
 
+  // The person's look (DEC-0135, core/display_style.py): "spatial" (the Nexus and rooms) or "cards" (the Dashboard
+  // and cards). "auto" is decided here, since only the page knows it's on a phone.
+  const onPhone = () => !!(window.matchMedia && matchMedia("(max-width: 760px)").matches);
+  function look() {
+    const style = (shellData && shellData.display && shellData.display.style) || "auto";
+    return style === "spatial" || style === "cards" ? style : onPhone() ? "cards" : "spatial";
+  }
+
   function renderNav(shell) {
     shellData = shell;
+    if (shell.display && shell.display.theme) applyTheme(shell.display.theme);
+    document.body.classList.toggle("look-spatial", look() === "spatial");
+    document.body.classList.toggle("look-cards", look() === "cards");
     if (window.MIASound) MIASound.configure(shell.sound);
     if (window.MIAPlaces) MIAPlaces.configure(shell.places);  // location quests, checked on this device
     const layout = $(".layout");
@@ -314,9 +355,10 @@
     const here = document.body.dataset.app || "web_home";
     const tab = (href, id, glyph, emoji, label) => el("a", { href, "aria-current": here === id ? "page" : null },
       el("span", { class: "ico", "aria-hidden": "true" }, icon(glyph, emoji)), label);
+    const cards = look() === "cards";  // DEC-0135: the cards look's first tab is Home, the spatial look's the Nexus
     bar.replaceChildren(
-      tab("nexus.html", "nexus", "home", "🏠", "Nexus"),
-      tab("index.html?today=1", "web_home", "calendar", "📅", "Today"),
+      cards ? tab("index.html", "web_home", "home", "🏠", "Home") : tab("nexus.html", "nexus", "home", "🏠", "Nexus"),
+      cards ? tab("nexus.html", "nexus", "mia", "◎", "Nexus") : tab("index.html?today=1", "web_home", "calendar", "📅", "Today"),
       tab("apps.html", "module_browser", "apps", "▦", "Apps"),
       el("button", { type: "button", class: "bottom-search", onclick: () => openSearch() },
         el("span", { class: "ico", "aria-hidden": "true" }, icon("search", "⌕")), "Search"));
@@ -810,7 +852,7 @@
         el("small", { class: "buff-left" }, b.lasts))));
   }
 
-  window.MIAShell = { start, act, say, el, refresh, frame, form, search: openSearch, levelCard, conditionBar, buffChips, showDraft, confirm: confirmBox, talk: toggleTalk,
+  window.MIAShell = { look, theme, start, act, say, el, refresh, frame, form, search: openSearch, levelCard, conditionBar, buffChips, showDraft, confirm: confirmBox, talk: toggleTalk,
     notRight, voiceRecorder, playReply };
 
   // <script src="shell.js" data-frame="garage">: frame an existing page as soon
