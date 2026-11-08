@@ -5,8 +5,9 @@ core.assistant_world_actions
 Living Worlds by voice (DEC-0134 Phase 1, DEC-0125's both-ways rule; the screen is web/worlds.html): "what worlds do
 I have?", "make a world called Emberfall, a fantasy frontier", "start a campaign in Emberfall called The Salt Road",
 "set a quest in The Salt Road: find the lost cartographer", "I finished the cartographer quest", "pause The Salt
-Road". Each runs the same world.* action as the screen (core/web_worlds.py), so it's undoable, and everything stays
-fiction (no real XP, fictional events). Playing a turn with MIA as Dungeon Master is Phase 2 and waits on Zac.
+Road", and playing (DEC-0134 Phase 2): "in The Salt Road, I search the cartographer's desk". Each runs the same
+world.* action as the screen (core/web_worlds.py), so it's undoable, and everything stays fiction (no real XP,
+fictional events).
 """
 
 from __future__ import annotations
@@ -94,8 +95,20 @@ def _action_campaign_status(context, arguments: dict) -> str:
     return _run(context, "world.campaign_status", {"campaign_id": campaign.campaign_id, "status": status})
 
 
+def _action_play(context, arguments: dict) -> str:
+    """Tool play_world_turn: one turn in a campaign in play (the last played when none is named), MIA as Dungeon
+    Master; says the narration and what changed."""
+    from core.web_worlds import find_campaign
+
+    campaign = find_campaign(context, arguments.get("campaign"))
+    if campaign is None:
+        return "Which campaign? Say its name, or start one first."
+    return _run(context, "world.turn", {"campaign_id": campaign.campaign_id, "action": arguments.get("action", "")})
+
+
 def register_world_actions(registry: AssistantActionRegistry) -> None:
-    """Registers Living Worlds' tools: list, make a world, start a campaign, set and finish quests, campaign status."""
+    """Registers Living Worlds' tools: list, make a world, start a campaign, set and finish quests, campaign status,
+    and play a turn."""
     registry.register(AssistantAction(
         name="list_worlds", domain="worlds",
         description="List the user's fictional Living Worlds: each world with its campaigns and their open quests.",
@@ -150,4 +163,15 @@ def register_world_actions(registry: AssistantActionRegistry) -> None:
             "status": {"type": "string", "description": "pause, resume or end."}}, "required": ["campaign", "status"]},
         handler=_action_campaign_status,
         trigger_phrases=("pause the campaign", "resume the campaign", "end the campaign", "pick the campaign back up"),
+    ))
+    registry.register(AssistantAction(
+        name="play_world_turn", domain="worlds",
+        description="Play one turn in the user's Living Worlds campaign (the last played if none is named): what their "
+                    "character does. MIA narrates as Dungeon Master; dice decide contested actions. Fiction only.",
+        parameters={"type": "object", "properties": {
+            "action": {"type": "string", "description": "what the character does, in the user's words."},
+            "campaign": {"type": "string", "description": "optional: the campaign's name."}}, "required": ["action"]},
+        handler=_action_play,
+        trigger_phrases=("in my campaign i", "in the campaign i", "dungeon master", "take my turn",
+                         "next turn in"),
     ))

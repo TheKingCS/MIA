@@ -119,6 +119,28 @@
     "by": "You",
     "done_at": "2026-11-08"
    }
+  ],
+  "story": [
+   {
+    "said": "I ask the ferryman where the cartographer was last seen",
+    "lines": [
+     "The ferryman spits into the brown water. \"Salt flats, three days back. Took the old survey road, alone, with a lantern and more maps than sense.\""
+    ]
+   },
+   {
+    "said": "I pick the lock on the survey office door",
+    "lines": [
+     "The lock gives with a dry click. Inside, dust, a cold stove, and a map pinned flat under a knife.",
+     "Gained: a half-finished map of the flats"
+    ]
+   },
+   {
+    "said": "I try to read the faded notes in the margin",
+    "lines": [
+     "The ink has bled into the paper; you make out a date and the word \"well\", nothing more.",
+     "Tried, but the dice said no: learn skill"
+    ]
+   }
   ]
  },
  "forms": {
@@ -213,5 +235,5 @@
    ]
   }
  },
- "phase_note": "Playing a turn with MIA as your Dungeon Master is the next phase. It's built and waiting on the go-ahead; until then, keep your worlds, characters and quests here."
+ "phase_note": "Say what your character does; MIA narrates, and the dice decide anything contested. It's all fiction: nothing here touches your real life or your real XP."
 }

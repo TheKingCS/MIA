@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1292 files, 279,504 lines; 1292 files describe themselves; 15,752 of 15,846 classes and functions are documented.
+1292 files, 279,710 lines; 1292 files describe themselves; 15,762 of 15,856 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-481 files, 132,086 lines; 7,090 of 7,176 classes and functions documented
+481 files, 132,176 lines; 7,096 of 7,182 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -470,7 +470,7 @@
 - `core/web_trails.py`: Trail Maps on the web (web/trails.html, DEC-0017 parity with the Qt Maps module's Trail Maps tab): the official park and trail map PDFs kept on this MIA (core/trail_map_library.py), by state, each opening in the browser's own PDF viewer. Added by sending a PDF from the device (`/api/trail-maps/uploa
 - `core/web_voice.py`: MIA's voice from the web's Settings and by voice (DEC-0125: the voice, the AI voice effect and the volume were on the desktop's Settings only). Device-wide, like the model: one voice for this computer, so only its owner changes it.
 - `core/web_why.py`: "My Why" on the web (DEC-0125: the why chain was voice-only; "Remember Why", docs/COGNITIVE_EXTENSION_PROPOSAL.md slice B). The person's reasons as chains ("Factory work → Pay off debt → Control over my time"), each link with the reason in their own words, whether it's done (and why), and the facts 
-- `core/web_worlds.py`: Living Worlds on the web (web/worlds.html, DEC-0134 Phase 1, approved): the person's fictional universes, the campaigns in each, their central character and its version in each world, and each campaign's quests, over the living_worlds store (core/living_worlds.py). Everything here is fiction: tagged
+- `core/web_worlds.py`: Living Worlds on the web (web/worlds.html, DEC-0134 Phases 1 and 2, approved): the person's fictional universes, the campaigns in each, their central character and its version in each world, and each campaign's quests, over the living_worlds store (core/living_worlds.py). Everything here is fiction:
 - `core/weekly_checkin.py`: The Sunday check-in (DEC-0047 rule 5; Zac, 2026-10-27): Sunday morning, a recap of the week just past and the layout of the week ahead.
 - `core/welcome.py`: What comes after User Sync (slice 5 of docs/GLASSES_FIRST_BOOT_PLAN.md): the first mission, the tour of Home, the app menu with its optional tours, and the moment MIA hands over.
 - `core/whimsy.py`: A little grounded inspiration toward the slow, made, hand-crafted life — the whimsy and art Zac asked MIA to keep alive (2026-11-08: "slow down, draw, create, think about forest creatures, make stuff, dream, do", and his shift from consumer to producer). The standing directions (`core/direction.py`)
@@ -766,7 +766,7 @@
 
 ## tests/: the test suite: what each part must do
 
-441 files, 73,953 lines; 6,376 of 6,384 classes and functions documented
+441 files, 74,018 lines; 6,380 of 6,388 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1187,7 +1187,7 @@
 - `tests/test_web_trails.py`: Trail Maps on the web: the screen by state, adding a PDF (and refusing what isn't one), and taking one out so Undo can bring it back whole.
 - `tests/test_web_voice.py`: MIA's voice from Settings and by voice (core/web_voice.py, core/assistant_voice_choice_actions.py): the voices installed, switching one, the AI voice effect and the volume; only the PC's owner changes them.
 - `tests/test_web_why.py`: My Why on the web (core/web_why.py): the chains of reasons with their facts, and linking, unlinking and achieving goals as why.* actions, the same goals the voice tools keep (DEC-0125).
-- `tests/test_web_worlds.py`: Living Worlds on the web (DEC-0134 Phase 1): the screen, its world.* actions and the voice tools, all fiction.
+- `tests/test_web_worlds.py`: Living Worlds on the web (DEC-0134 Phases 1 and 2): the screen, its world.* actions (playing a turn too) and the voice tools, all fiction.
 - `tests/test_welcome.py`: What comes after User Sync (core/welcome.py, core/app_intro.py).
 - `tests/test_what_i_used.py`: What I Used (DEC-0029, ALICE pick 1): a turn gets the memories that match what was asked, returns them with the reply, and each can be fixed or forgotten (and the forgetting undone).
 - `tests/test_whimsy.py`: The grounded little inspiration MIA offers toward the slow, made life (core/whimsy.py, 2026-11-08). A seed is composed from real things — the season, the workshop shelf, the person's own standing directions — never improvised; it only grows from a direction the person actually set; a material seed n
@@ -1212,7 +1212,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-101 files, 18,389 lines
+101 files, 18,440 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), and what she knows about you, linking to where it's kept. Read onl
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she
@@ -1313,7 +1313,7 @@
 - `web/workout.js`: workout.js — the Workout screen (claude, 2026-10-06, DEC-0017/0018). Renders MIA.workout() (core/web_screens.py): log a session right on the page (an exercise, reps, sets, weight, how long, notes), the latest entry, today's daily mission and streak, exercises, history, progress and Personal Bests (l
 - `web/workshop.js`: workshop.js — the Workshop screen (claude, 2026-10-16; Zac: the app only opened a chat). Renders MIA.workshop() (core/web_more.py) in tabs: Recipes and Builds (crafting recipes, DEC-0030: what a recipe needs and what's short, the shopping list, Bought It, Start Build, steps, Finish, photos, Sold It 
 - `web/worldmap.js`: worldmap.js — the World Map with fog of war (claude, 2026-10-17, DEC-0028). Renders MIA.worldmap() (core/world_map.py): the cleared tiles over the fog on a canvas, pins (photos where they were taken, places you reached, "?" for waypoints nobody has reached yet), how much ground that is, and the achi
-- `web/worlds.js`: worlds.js — Living Worlds (claude, 2026-11-08, DEC-0134 Phase 1). Renders MIA.worlds(campaign) (core/web_worlds.py): your character and who they are in each world; the worlds, each with its campaigns; one campaign opened with the character's version in it (stats, skills, what they carry) and its que
+- `web/worlds.js`: worlds.js — Living Worlds (claude, 2026-11-08, DEC-0134 Phases 1 and 2). Renders MIA.worlds(campaign) (core/web_worlds.py): your character and who they are in each world; the worlds, each with its campaigns; one campaign opened with the character's version in it (stats, skills, what they carry) and 
 - `web/yourdata.js`: yourdata.js — Your Data (claude, 2026-11-08; docs/SECURITY.md step 8). Renders MIA.yourData() (core/your_data.py): the person's own files and their household's shared ones, each with what it is, how many records, its size and whether it's sealed on disk (DEC-0126); her latest answers with the tools 
 
 ## android-phone/: the Android app that carries MIA's engine and the glasses' link

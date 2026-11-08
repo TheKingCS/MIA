@@ -2,18 +2,18 @@
 core.web_worlds
 =================
 
-Living Worlds on the web (web/worlds.html, DEC-0134 Phase 1, approved): the person's fictional universes, the
+Living Worlds on the web (web/worlds.html, DEC-0134 Phases 1 and 2, approved): the person's fictional universes, the
 campaigns in each, their central character and its version in each world, and each campaign's quests, over the
 living_worlds store (core/living_worlds.py). Everything here is fiction: tagged fictional, never real XP, never real
 life (DEC-0137).
 
 Phase 1 is making and keeping: every creation goes through the action system (so it's approved and undoable), and a
-campaign can be paused, resumed or ended. Playing a turn with MIA as the Dungeon Master is Phase 2
-(core/dungeon_master.py is built but waits on Zac's go-ahead for Phase 2), so the screen says so rather than offering
-it.
+campaign can be paused, resumed or ended. Phase 2 is playing: `world.turn` plays one turn in a campaign in play with
+MIA as the Dungeon Master (core/dungeon_master.take_turn: the model proposes, the dice and code decide), so a turn is
+undoable like any other change ("take that back").
 
 Actions: `world.universe_add`, `world.campaign_add`, `world.character_add`, `world.version_add`, `world.quest_add`,
-`world.quest_done`, `world.campaign_status`. `screen(context, campaign_id)` is what `/api/worlds` serves: the worlds
+`world.quest_done`, `world.campaign_status`, `world.turn`. `screen(context, campaign_id)` is what `/api/worlds` serves: the worlds
 with their campaigns, the character with its versions, and one campaign opened (the one asked for, or the last played).
 """
 
@@ -44,8 +44,8 @@ FORMS = {
         {"name": "objective", "label": "What finishing it means", "type": "textarea"}]},
 }
 STATUS_WORDS = {"active": "In play", "paused": "Paused", "ended": "Ended"}
-PHASE_NOTE = ("Playing a turn with MIA as your Dungeon Master is the next phase. It's built and waiting on the "
-              "go-ahead; until then, keep your worlds, characters and quests here.")
+PHASE_NOTE = ("Say what your character does; MIA narrates, and the dice decide anything contested. It's all fiction: "
+              "nothing here touches your real life or your real XP.")
 
 
 def _book(context):
@@ -62,9 +62,27 @@ def _campaign_row(book, c) -> dict:
             "open": sum(q.status == "open" for q in quests), "done": sum(q.status == "done" for q in quests)}
 
 
+def _story(book, c) -> list[dict]:
+    """The campaign's story so far, oldest first, as [{said, lines}] (what the player did, then the narration and what
+    changed): from the book's turn history once it keeps one (the engine's DEC-0134 turn history), else [] and the
+    page shows the turns played since it opened."""
+    turns = getattr(book, "turns_in", None)
+    if turns is None:
+        return []
+    try:
+        out = []
+        for t in turns(c.campaign_id):
+            get = t.get if isinstance(t, dict) else (lambda k, d=None, t=t: getattr(t, k, d))
+            lines = [get("narration", "") or ""] + list(get("committed", []) or [])
+            out.append({"said": get("action", "") or "", "lines": [line for line in lines if line]})
+        return out[-30:]
+    except Exception:  # noqa: BLE001 - a history that can't be read leaves the page's own
+        return []
+
+
 def _opened(book, c) -> dict:
-    """One campaign opened: its world, its row, the character versions in it (attributes, skills, things carried) and
-    its quests, open first."""
+    """One campaign opened: its world, its row, the character versions in it (attributes, skills, things carried),
+    its quests (open first) and its story so far."""
     u = book.get_universe(c.universe_id)
     quests = sorted(book.quests_in(c.campaign_id), key=lambda q: (q.status != "open", q.created_at))
     return {**_campaign_row(book, c), "universe": {"id": c.universe_id, "name": u.name if u else "",
@@ -74,7 +92,8 @@ def _opened(book, c) -> dict:
                          "skills": list(v.skills), "inventory": list(v.inventory)} for v in book.versions_in(c.campaign_id)],
             "quests": [{"id": q.quest_id, "name": q.name, "objective": q.objective, "status": q.status,
                         "by": "MIA" if q.assigned_by == "dm" else "You", "done_at": (q.completed_at or "")[:10]}
-                       for q in quests]}
+                       for q in quests],
+            "story": _story(book, c)}
 
 
 def screen(context, campaign_id: str = "") -> dict:
@@ -252,6 +271,50 @@ def _status(context, params) -> str:
     return f"{c.name}: {STATUS_WORDS[status].lower()}."
 
 
+def _turn_parts(context, params):
+    """The campaign, the player's version in it and what they do, checked: ActionError when the campaign isn't in play,
+    the character isn't in it, or nothing was said."""
+    book = _need_book(context)
+    c = _need(book.get_campaign, params.get("campaign_id"), "campaign")
+    if c.status != "active":
+        raise ActionError(f"{c.name} is {STATUS_WORDS.get(c.status, c.status).lower()}; pick it back up to play.")
+    versions = book.versions_in(c.campaign_id)
+    wanted = str(params.get("version_id") or "")
+    version = next((v for v in versions if v.version_id == wanted), None) if wanted else (versions[0] if versions else None)
+    if version is None:
+        raise ActionError(f"Bring your character into {c.name} first.")
+    return book, c, version, _text(params, "action", 500, "What do you do?")
+
+
+def _describe_turn(context, params) -> str:
+    """The approval sentence for `world.turn`."""
+    _book_, c, version, action = _turn_parts(context, params)
+    return f"{version.name}, in {c.name}: {action}"
+
+
+def turn_lines(result) -> list[str]:
+    """Pure logic. A played turn as lines: the narration (or why there's none), what changed, and what was tried but
+    failed its roll."""
+    lines = [result.narration or "MIA has no model running to narrate this turn, so nothing happened yet."]
+    lines += list(result.committed)
+    if result.failed:
+        lines.append("Tried, but the dice said no: " + ", ".join(f.split(" (")[0].replace("_", " ") for f in result.failed))
+    return lines
+
+
+def _turn(context, params) -> str:
+    """Does `world.turn`: one turn with MIA as the Dungeon Master (the model proposes, code validates and commits);
+    returns the narration and what changed, one per line."""
+    from core.dungeon_master import model_proposer, take_turn
+
+    book, c, version, action = _turn_parts(context, params)
+    try:
+        result = take_turn(book, c.campaign_id, version.version_id, action, model_proposer(context))
+    except ValueError as problem:
+        raise ActionError(str(problem)) from None
+    return "\n".join(turn_lines(result))
+
+
 WORLD_ACTIONS = {a.kind: a for a in (
     ActionType("world.universe_add", "Make a World", {"name": "its name", "genre": "optional", "premise": "optional",
                                                       "rules": "optional: tone and house rules"},
@@ -270,6 +333,9 @@ WORLD_ACTIONS = {a.kind: a for a in (
                child_ok=True),
     ActionType("world.campaign_status", "Status", {"campaign_id": "the campaign", "status": "active, paused or ended"},
                _describe_status, _status, child_ok=True),
+    ActionType("world.turn", "Do It", {"campaign_id": "the campaign", "action": "what your character does",
+                                       "version_id": "optional: which version of your character"},
+               _describe_turn, _turn, child_ok=True),
 )}
 ACTION_TYPES.update(WORLD_ACTIONS)
 

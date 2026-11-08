@@ -1,11 +1,15 @@
 /*
- * worlds.js — Living Worlds (claude, 2026-11-08, DEC-0134 Phase 1).
+ * worlds.js — Living Worlds (claude, 2026-11-08, DEC-0134 Phases 1 and 2).
  * Renders MIA.worlds(campaign) (core/web_worlds.py): your character and who they
  * are in each world; the worlds, each with its campaigns; one campaign opened with
  * the character's version in it (stats, skills, what they carry) and its quests.
  * Making a world, a campaign, your character, their version in a campaign, a quest,
  * finishing one, and pausing / resuming / ending a campaign are world.* actions,
- * so each is approved and undoable. All fiction: no real XP. No logic here.
+ * so each is approved and undoable. Playing (Phase 2): in a campaign in play, say what
+ * your character does and world.turn plays it with MIA as Dungeon Master (the model
+ * proposes, the dice and code decide); the story so far is the campaign's own history
+ * (core/web_worlds._story) plus the turns played since the page opened, kept for this
+ * tab. All fiction: no real XP. No logic here.
  */
 (function () {
   "use strict";
@@ -15,6 +19,50 @@
   const day = (iso) => iso ? new Date(iso + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "";
   let current = new URLSearchParams(location.search).get("campaign") || "";
   let forms = {};
+  let playing = "";  // the campaign a turn is being played in right now
+  const STORE = "mia.worlds.story";
+  const story = (() => { try { return JSON.parse(sessionStorage.getItem(STORE) || "{}"); } catch (e) { return {}; } })();
+  const keep = () => { try { sessionStorage.setItem(STORE, JSON.stringify(story)); } catch (e) { /* fine: this tab only */ } };
+
+  async function play(c) {
+    const box = $("lw-do");
+    const said = box ? box.value.trim() : "";
+    if (!said || playing) return;
+    playing = c.id;
+    paint(last);
+    const done = await MIAShell.act({ kind: "world.turn", params: { campaign_id: c.id, action: said } }, { quick: true });
+    playing = "";
+    if (done && done.status === "executed") {
+      (story[c.id] = story[c.id] || []).push({ said, lines: String(done.result || "").split("\n").filter(Boolean) });
+      story[c.id] = story[c.id].slice(-30);
+      keep();
+    }
+    paint(last);
+    const again = $("lw-do");
+    if (again) { if (!(done && done.status === "executed")) again.value = said; again.focus(); }
+  }
+
+  function storyPanel(data, c) {
+    const told = (c.story || []).concat((story[c.id] || []).filter((t) => !(c.story || []).some((s) => s.said === t.said && s.lines[0] === t.lines[0])));
+    const me = c.players[0];
+    if (c.status !== "active" || !me) return null;
+    const turns = told.slice(-12).map((t) => el("div", { class: "lw-turn" },
+      el("p", { class: "lw-said" }, el("span", { class: "dim" }, me.name + " · "), t.said),
+      t.lines[0] ? el("p", { class: "lw-told" }, t.lines[0]) : null,
+      t.lines.length > 1 ? el("div", { class: "lw-chips lw-changed" }, ...t.lines.slice(1).map((line) =>
+        el("span", { class: "lw-chip" + (/^Tried/.test(line) ? " missed" : "") }, line))) : null));
+    const busy = playing === c.id;
+    return el("div", { class: "lw-story" },
+      el("p", { class: "pw-label" }, told.length ? "The Story So Far" : "Your First Turn"),
+      turns.length ? el("div", { class: "lw-turns", role: "log", "aria-live": "polite" }, ...turns)
+        : el("p", { class: "dim" }, "Say what " + me.name + " does, and MIA tells you what happens."),
+      busy ? el("p", { class: "dim lw-thinking", role: "status" }, "MIA is telling what happens…") : null,
+      el("div", { class: "lw-do-row" },
+        el("input", { id: "lw-do", type: "text", maxlength: "500", placeholder: "I search the cartographer's desk",
+          "aria-label": "What does " + me.name + " do?", disabled: busy ? "" : null,
+          onkeydown: (e) => { if (e.key === "Enter") play(c); } }),
+        el("button", { type: "button", class: "btn btn-primary", onclick: () => play(c), disabled: busy ? "" : null }, "Do It")));
+  }
 
   async function make(kind, title, actionKind, extra) {
     const v = await form(title, forms[kind].fields, {});
@@ -91,6 +139,7 @@
           el("h2", { class: "lw-campaign-name" }, c.name)),
         el("span", { class: "lw-state " + c.status }, c.status_word)),
       c.summary ? el("p", { class: "lw-premise" }, c.summary) : null,
+      storyPanel(data, c),
       el("div", { class: "lw-campaign-cols" },
         el("div", { class: "lw-col" },
           el("p", { class: "pw-label" }, "Who Plays"),
@@ -113,7 +162,9 @@
         c.status !== "ended" ? button("End It", () => status("ended"), "btn-quiet") : null));
   }
 
+  let last = null;
   function paint(data) {
+    last = data;
     if (!data.available) {
       $("lw-sub").textContent = "Living Worlds isn't set up on this MIA yet.";
       $("panel").replaceChildren();
@@ -132,7 +183,7 @@
         button("Make a World", () => make("universe", "Make a World", "world.universe_add"), data.worlds.length ? "btn-ghost" : "btn-green")),
       data.worlds.length ? el("section", { class: "lw-worlds" }, ...data.worlds.map(worldCard)) : null,
       el("p", { class: "dim lw-say" }, "Say \"what worlds do I have?\", \"make a world called…\", \"start a campaign in…\", " +
-        "\"set a quest: find the lost cartographer\" or \"pause the campaign\" any time."),
+        "\"set a quest: find the lost cartographer\", \"in my campaign I pick the lock\" or \"pause the campaign\" any time."),
     ].filter(Boolean));
   }
 
