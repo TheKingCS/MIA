@@ -2194,3 +2194,23 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   5. The Theme Studio comes in steps (preview and tweak, make and share with import and export, MIA designs one from a
      description, sound sets): `docs/design/EXPERIENCES_AND_THEMES.md` section 5.
 - Related: DEC-0135, DEC-0023, DEC-0130, DEC-0017, DEC-0014, DEC-0125
+
+### DEC-0137: Living Systems Framework — generalize the existing foundation, don't rebuild it
+- Status: PROPOSED
+- Proposed by: claude, 2026-11-08, from ChatGPT's "MIA — Living Systems Framework" handoff (a universal
+  context/state/simulation/progression/intelligence foundation unifying Living Worlds and the real-world domains).
+- Assessment (`docs/LIVING_SYSTEMS_ASSESSMENT.md`): MIA already implements ~80% of the proposed framework as working
+  systems — context_assembler (memory/Life State), life_events (event/timeline), the store pattern + links (entities/
+  relationships), mission_manager/pathway_manager/paths (goals/progression/learning), loops/benchmarks/corrections
+  (continuous improvement, the doc's §9), and actions.py/safety_floor/communication_gate (validation — "reasoning is
+  not authority", already enforced). So the recommendation is NOT a new universal abstraction layer or microservices
+  (the handoff itself warns against those), but: (A) name the existing shared foundation and add the one genuinely
+  missing guarantee — an explicit `environment` tag (real|fictional|simulated) on events/XP/scenario output, with a
+  test that no fictional/simulated record reaches a real store or the real XP ledger (the §7 isolation requirement);
+  (B) prove cross-domain reuse with Living Worlds + one real domain (homestead or projects) on the same primitives;
+  (C) a small scenario/what-if engine over the existing calculators (build_calcs, finance, maintenance projection),
+  everything tagged `simulated`, never auto-committed; (D) planning/orchestration only where a concrete need appears.
+  Generalizes DEC-0134 (Living Worlds), doesn't replace it.
+- Open: confirm "generalize + isolate, don't build a new layer"; second domain to prove reuse (homestead vs projects);
+  timing of the scenario engine.
+- Related: DEC-0134, DEC-0094/0101, DEC-0112, DEC-0092, DEC-0126
