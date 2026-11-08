@@ -49,6 +49,10 @@
    "status": "none",
    "why": "undo.last puts back the newest change, as \"undo that\" does; undoing MIA's own change already counts as a correction (core/corrections.py)"
   },
+  "action:why": {
+   "status": "none",
+   "why": "the person's own reasons, linked, unlinked or marked achieved by hand on My Why (DEC-0125); MIA never invents a reason, so there's nothing of hers to improve"
+  },
   "check:birthday": {
    "status": "none",
    "why": "a greeting once a year: there is nothing in how it lands to learn from"

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1140 files, 255,512 lines; 1140 files describe themselves; 13,947 of 14,622 classes and functions are documented.
+1143 files, 255,783 lines; 1143 files describe themselves; 13,957 of 14,634 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-419 files, 119,498 lines; 6,329 of 6,418 classes and functions documented
+420 files, 119,642 lines; 6,338 of 6,427 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -411,6 +411,7 @@
 - `core/web_screens.py`: Kitchen, Workout and Real Estate on the web (2026-10-06, DEC-0017/0018): everything the PC app's screens show, assembled here so `web/` holds no logic. Served as `/api/kitchen` (and one recipe, `/api/kitchen/recipe/{id}`, its amounts scaled to `?servings=` by scale_factor and scaled_amount), `/api/w
 - `core/web_surfaces.py`: What the web front end's shell and Home show (2026-10-06, DEC-0017: the web becomes all of MIA, function first, in the concept's look). Assembled here, in code, so `web/` holds no logic (DEC-0013): which apps a person sees, their level and XP, the greeting, Today's Focus, the upcoming list and the a
 - `core/web_toolbox.py`: The Toolbox's web screen (DEC-0113 canvas Toolbox, DEC-0125: the Toolbox had no phone screen). Three parts:
+- `core/web_why.py`: "My Why" on the web (DEC-0125: the why chain was voice-only; "Remember Why", docs/COGNITIVE_EXTENSION_PROPOSAL.md slice B). The person's reasons as chains ("Factory work → Pay off debt → Control over my time"), each link with the reason in their own words, whether it's done (and why), and the facts 
 - `core/weekly_checkin.py`: The Sunday check-in (DEC-0047 rule 5; Zac, 2026-10-27): Sunday morning, a recap of the week just past and the layout of the week ahead.
 - `core/welcome.py`: What comes after User Sync (slice 5 of docs/GLASSES_FIRST_BOOT_PLAN.md): the first mission, the tour of Home, the app menu with its optional tours, and the moment MIA hands over.
 - `core/why_graph.py`: "Remember Why", slice B of docs/COGNITIVE_EXTENSION_PROPOSAL.md: the owner's reasons as a chain, with live evidence from their own records, assembled in code so the model can only phrase it, never invent it.
@@ -430,7 +431,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 2,894 lines; 34 of 34 classes and functions documented
+2 files, 2,903 lines; 34 of 34 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -699,7 +700,7 @@
 
 ## tests/: the test suite: what each part must do
 
-377 files, 67,990 lines; 5,373 of 5,959 classes and functions documented
+378 files, 68,044 lines; 5,374 of 5,962 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1059,6 +1060,7 @@
 - `tests/test_web_screens.py`: DEC-0017/0018 (2026-10-06): Kitchen, Workout and Real Estate on the web. The pages (core/web_screens.py) and every change as an action kind (core/kitchen_actions.py, core/workout_actions.py, core/estate_actions.py), each proposed, approved, recorded and undoable; a recipe's amounts scaled to the ser
 - `tests/test_web_surfaces.py`: DEC-0017 (2026-10-06): the web shell and Home dashboard, assembled in core/web_surfaces.py so web/ holds no logic. The sidebar is the person's own (child-safe, tucked-away apps hidden), Home is the concept's dashboard: greeting, Today's Focus with each item's action and kind, Upcoming, the status st *(4 undocumented)*
 - `tests/test_web_toolbox.py`: The Toolbox on the web (DEC-0125, the design canvas's Toolbox, DEC-0113: core/web_toolbox.py, core/toolbox_calcs.py, core/toolbox_actions.py and core/assistant_toolbox_actions.py): every calculator worked out in core, alarms set, switched and deleted as actions, the inventory kept as actions, and th *(1 undocumented)*
+- `tests/test_web_why.py`: My Why on the web (core/web_why.py): the chains of reasons with their facts, and linking, unlinking and achieving goals as why.* actions, the same goals the voice tools keep (DEC-0125). *(2 undocumented)*
 - `tests/test_welcome.py`: What comes after User Sync (core/welcome.py, core/app_intro.py). *(4 undocumented)*
 - `tests/test_what_i_used.py`: What I Used (DEC-0029, ALICE pick 1): a turn gets the memories that match what was asked, returns them with the reply, and each can be fixed or forgotten (and the forgetting undone).
 - `tests/test_why_graph.py`: Slice B, "Remember Why": the reason chain on Intents, the evidence builder (core/why_graph.py), the tools (core/assistant_why_actions.py), and the Perspective path. Checks facts and structure, never wording.
@@ -1081,7 +1083,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-80 files, 14,627 lines
+81 files, 14,691 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
@@ -1160,6 +1162,7 @@
 - `web/toolbox.js`: toolbox.js — the Toolbox (claude, 2026-11-07, DEC-0125; the design canvas's Toolbox, DEC-0113). Renders MIA.toolbox() (core/web_toolbox.py): the open calculator (its boxes, and the answer core works out as you type, MIA.toolboxCalc), the list of calculators, alarms (set, on/off, delete: core/toolbox
 - `web/vault.js`: vault.js — Memory Vault (claude, 2026-10-18, DEC-0030 phase E). Renders MIA.vault() (core/memory_vault.py) in tabs: Photos (one month at a time, by day, with what happened that day and the trip it was on; each tile says whether it's safe on the home computer), Free Up Space (photos the PC holds, exa
 - `web/welcome.js`: welcome.js — Home (DEC-0018, claude; the canvas's Home, DEC-0113). Renders MIA.dashboard() and the frame's shell data: the date and greeting, the status strip, MIA's one finding, the focus rows (each with its kind; ticking runs the item's action: confirm, undo), what's upcoming, the level; and on a 
+- `web/why.js`: why.js — My Why (claude, 2026-11-07; DEC-0125: the why chain was voice-only). Renders MIA.why() (core/web_why.py): each chain of reasons as links from what you do up to what it's all for, the reason in your own words, the facts behind each from your records, done links marked; then what changed and 
 - `web/workout.js`: workout.js — the Workout screen (claude, 2026-10-06, DEC-0017/0018). Renders MIA.workout() (core/web_screens.py): log a session right on the page (an exercise, reps, sets, weight, how long, notes), the latest entry, today's daily mission and streak, exercises, history, progress and Personal Bests (l
 - `web/workshop.js`: workshop.js — the Workshop screen (claude, 2026-10-16; Zac: the app only opened a chat). Renders MIA.workshop() (core/web_more.py) in tabs: Recipes and Builds (crafting recipes, DEC-0030: what a recipe needs and what's short, the shopping list, Bought It, Start Build, steps, Finish, photos, Sold It 
 - `web/worldmap.js`: worldmap.js — the World Map with fog of war (claude, 2026-10-17, DEC-0028). Renders MIA.worldmap() (core/world_map.py): the cleared tiles over the fog on a canvas, pins (photos where they were taken, places you reached, "?" for waypoints nobody has reached yet), how much ground that is, and the achi

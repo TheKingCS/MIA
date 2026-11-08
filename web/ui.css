@@ -1597,3 +1597,16 @@ body.mod-maps .hero { display: none; }
 .mm-stop { fill: var(--bg, #0a1014); stroke: var(--accent); stroke-width: .6; }
 .mm-start { fill: var(--accent); }
 .mm-label { fill: var(--text-dim); font-size: 4px; font-family: var(--font-sans, inherit); }
+
+/* My Why (core/web_why.py, 2026-11-07): a chain from what you do up to what it's for, one link above the next. */
+.why-chain { padding: 18px; margin-bottom: 16px; }
+.why-links { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; }
+.why-link { position: relative; padding: 4px 0 14px 22px; border-left: 2px solid rgba(var(--rgb-accent), .35); margin-left: 6px; }
+.why-link:last-child { border-left-color: transparent; padding-bottom: 0; }
+.why-link::before { content: ""; position: absolute; left: -7px; top: 6px; width: 12px; height: 12px; border-radius: 50%;
+  background: var(--bg); border: 2px solid var(--accent); }
+.why-link.done::before { background: var(--ok, var(--accent)); border-color: var(--ok, var(--accent)); }
+.why-name { display: flex; gap: 10px; align-items: center; font-weight: 600; font-size: 17px; }
+.why-reason { margin: 4px 0; font-style: italic; color: var(--text); }
+.why-facts { margin: 6px 0; padding-left: 18px; color: var(--text-dim); font-size: 14px; }
+.why-wins li { color: var(--text); }

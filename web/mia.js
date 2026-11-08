@@ -348,6 +348,7 @@
     // The Toolbox (core/web_toolbox.py, DEC-0125): calculators, alarms, tools; a calculator is worked out in core.
     // The demo can't calculate, so it answers with the example's own result.
     toolbox: () => read("/api/toolbox", "toolbox"),
+    why: () => read("/api/why", "why"),
     toolboxCalc: (id, values) => demo
       ? read("", "toolbox").then((t) => Object.assign({ demo: true }, (t.demo_answers || {})[id] || { error: "The demo can't calculate." }))
       : call("GET", "/api/toolbox/calc?" + new URLSearchParams(Object.assign({ id }, values)).toString()),

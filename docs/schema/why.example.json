@@ -1,0 +1,20 @@
+{
+  "available": true,
+  "chains": [
+    [
+      {"id": "g1", "name": "Factory work", "reason": "It pays the most for now", "done": false, "done_because": "",
+       "evidence": ["Income in the last 30 days: $4,180.00."]},
+      {"id": "g2", "name": "Pay off debt", "reason": "So nothing is owed when the land comes", "done": false,
+       "done_because": "", "evidence": ["Debt now: $12,400.00 across 2 debts."]},
+      {"id": "g3", "name": "Control over my time", "reason": "", "done": false, "done_because": "",
+       "evidence": ["Project 'Greenhouse': Active."]}
+    ]
+  ],
+  "changes": ["Debt is down $3,100.00 since June."],
+  "wins": ["Completed the mission 'Six weeks of training'.", "Finished the project 'Chicken run'."],
+  "goals": [
+    {"id": "g3", "name": "Control over my time", "serves": "", "achieved": false},
+    {"id": "g1", "name": "Factory work", "serves": "g2", "achieved": false},
+    {"id": "g2", "name": "Pay off debt", "serves": "g3", "achieved": false}
+  ]
+}

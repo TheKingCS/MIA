@@ -878,6 +878,15 @@ def create_app(context: AppContext) -> FastAPI:
 
     # Screens for the Operating Journal (DEC-0097), games played (DEC-0098) and Good News Radio (DEC-0096): read
     # here, assembled in core; every change goes through /api/actions like any screen's (DEC-0017).
+    # My Why (core/web_why.py): the person's chains of reasons with the facts behind each; changes are why.* actions.
+    @app.get("/api/why")
+    def why_screen(profile_id: str = Depends(require_profile_id)) -> dict:
+        """The why chains for this person's page (reading never records a checkpoint)."""
+        from core.web_why import why_page
+
+        with app.state.turn_lock:
+            return why_page(view_for(context, profile_id))
+
     @app.get("/api/operating-journal")
     def operating_journal_screen(profile_id: str = Depends(require_profile_id)) -> dict:
         from core.operating_journal import screen
