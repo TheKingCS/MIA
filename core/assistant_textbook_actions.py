@@ -85,8 +85,26 @@ def _action_make_textbook_course(context: AppContext, arguments: dict) -> str:
     return f"Made a Classroom course for {book.title}: {len(book.chapters)} lesson{'s' if len(book.chapters) != 1 else ''}, one per chapter."
 
 
+def _action_remove_textbook(context: AppContext, arguments: dict) -> str:
+    """Tool remove_textbook: removes a book from the library for good (the Classroom page's `textbook.remove`; its
+    course stays). Only a book named clearly goes."""
+    from core.actions import ACTION_TYPES, ActionError
+
+    library = _library(context)
+    words = str(arguments.get("book") or "").strip()
+    book = library.find_book(words) if library is not None and words else None
+    if book is None:
+        return "Which book? Say its name." if library is not None else "Textbooks aren't on this MIA."
+    params = {"book_id": book.book_id}
+    try:
+        ACTION_TYPES["textbook.remove"].describe(context, params)
+        return ACTION_TYPES["textbook.remove"].execute(context, params)
+    except ActionError as problem:
+        return str(problem)
+
+
 def register_textbook_actions(registry: AssistantActionRegistry) -> None:
-    """Registers the textbook tools: list_textbooks, search_textbook and make_textbook_course."""
+    """Registers the textbook tools: list_textbooks, search_textbook, make_textbook_course and remove_textbook."""
     registry.register(AssistantAction(
         name="list_textbooks", domain="textbooks",
         description="List the textbooks the user has added to MIA.",
@@ -111,4 +129,12 @@ def register_textbook_actions(registry: AssistantActionRegistry) -> None:
         parameters={"type": "object", "properties": {"book": {**_S, "description": "Which book."}}, "required": []},
         handler=_action_make_textbook_course,
         trigger_phrases=("course from", "course out of", "make a course", "turn my textbook", "turn the book"),
+    ))
+    registry.register(AssistantAction(
+        name="remove_textbook", domain="textbooks",
+        description="Remove one of the user's textbooks from MIA's library for good (its Classroom course stays).",
+        parameters={"type": "object", "properties": {"book": {**_S, "description": "Which book, by name."}},
+                    "required": ["book"]},
+        handler=_action_remove_textbook,
+        trigger_phrases=("remove the textbook", "delete the textbook", "remove my textbook", "get rid of the book"),
     ))

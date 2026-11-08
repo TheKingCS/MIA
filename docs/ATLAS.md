@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1146 files, 256,323 lines; 1146 files describe themselves; 13,983 of 14,661 classes and functions are documented.
+1148 files, 256,604 lines; 1148 files describe themselves; 13,993 of 14,673 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-421 files, 119,968 lines; 6,361 of 6,450 classes and functions documented
+422 files, 120,107 lines; 6,370 of 6,459 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -411,6 +411,7 @@
 - `core/web_push.py`: Sends Web Push messages via pywebpush (VAPID-signed, per the standard Web Push protocol) and owns this device's VAPID keypair — generated once on first use and persisted to data/vapid_keys.json, never regenerated after that (regenerating it would silently invalidate every subscription a browser has 
 - `core/web_screens.py`: Kitchen, Workout and Real Estate on the web (2026-10-06, DEC-0017/0018): everything the PC app's screens show, assembled here so `web/` holds no logic. Served as `/api/kitchen` (and one recipe, `/api/kitchen/recipe/{id}`, its amounts scaled to `?servings=` by scale_factor and scaled_amount), `/api/w
 - `core/web_surfaces.py`: What the web front end's shell and Home show (2026-10-06, DEC-0017: the web becomes all of MIA, function first, in the concept's look). Assembled here, in code, so `web/` holds no logic (DEC-0013): which apps a person sees, their level and XP, the greeting, Today's Focus, the upcoming list and the a
+- `core/web_textbooks.py`: The Classroom's textbooks on the web (DEC-0125: the textbook tutor's library was on the desktop and by voice only). Three parts:
 - `core/web_toolbox.py`: The Toolbox's web screen (DEC-0113 canvas Toolbox, DEC-0125: the Toolbox had no phone screen). Three parts:
 - `core/web_why.py`: "My Why" on the web (DEC-0125: the why chain was voice-only; "Remember Why", docs/COGNITIVE_EXTENSION_PROPOSAL.md slice B). The person's reasons as chains ("Factory work → Pay off debt → Control over my time"), each link with the reason in their own words, whether it's done (and why), and the facts 
 - `core/weekly_checkin.py`: The Sunday check-in (DEC-0047 rule 5; Zac, 2026-10-27): Sunday morning, a recap of the week just past and the layout of the week ahead.
@@ -432,7 +433,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 2,912 lines; 34 of 34 classes and functions documented
+2 files, 2,948 lines; 34 of 34 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -701,7 +702,7 @@
 
 ## tests/: the test suite: what each part must do
 
-379 files, 68,132 lines; 5,377 of 5,966 classes and functions documented
+380 files, 68,194 lines; 5,378 of 5,969 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1061,6 +1062,7 @@
 - `tests/test_web_push.py`: Unit tests for core.web_push. The actual push-service HTTP call (pywebpush.webpush) is mocked throughout — this is the standard, correct way to test Web Push code without a real browser/push service (see core/web_push.py's own docstring and the Mobile Phase 1 plan). *(5 undocumented)*
 - `tests/test_web_screens.py`: DEC-0017/0018 (2026-10-06): Kitchen, Workout and Real Estate on the web. The pages (core/web_screens.py) and every change as an action kind (core/kitchen_actions.py, core/workout_actions.py, core/estate_actions.py), each proposed, approved, recorded and undoable; a recipe's amounts scaled to the ser
 - `tests/test_web_surfaces.py`: DEC-0017 (2026-10-06): the web shell and Home dashboard, assembled in core/web_surfaces.py so web/ holds no logic. The sidebar is the person's own (child-safe, tucked-away apps hidden), Home is the concept's dashboard: greeting, Today's Focus with each item's action and kind, Upcoming, the status st *(4 undocumented)*
+- `tests/test_web_textbooks.py`: The Classroom's textbooks on the web (core/web_textbooks.py, DEC-0125): each book with its chapters on the Classroom page, a search inside them, a course made from one and a book removed, as actions the voice tools agree with. *(2 undocumented)*
 - `tests/test_web_toolbox.py`: The Toolbox on the web (DEC-0125, the design canvas's Toolbox, DEC-0113: core/web_toolbox.py, core/toolbox_calcs.py, core/toolbox_actions.py and core/assistant_toolbox_actions.py): every calculator worked out in core, alarms set, switched and deleted as actions, the inventory kept as actions, and th *(1 undocumented)*
 - `tests/test_web_why.py`: My Why on the web (core/web_why.py): the chains of reasons with their facts, and linking, unlinking and achieving goals as why.* actions, the same goals the voice tools keep (DEC-0125). *(2 undocumented)*
 - `tests/test_welcome.py`: What comes after User Sync (core/welcome.py, core/app_intro.py). *(4 undocumented)*
@@ -1085,7 +1087,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-82 files, 14,808 lines
+82 files, 14,852 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game

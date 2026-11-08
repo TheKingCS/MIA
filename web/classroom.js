@@ -92,7 +92,46 @@
       el("h2", { class: "cl-label cl-subjects-label" }, "Subjects"),
       data.subjects.length ? el("div", { class: "cl-subjects" }, data.subjects.map(subjectRow))
         : el("p", { class: "empty" }, "Your own study: subjects, the courses in each and their lessons. Tick a lesson when it's done."),
-      el("div", { class: "row-buttons" }, button("Add a subject", () => add("subject", {}, "A new subject"))));
+      el("div", { class: "row-buttons" }, button("Add a subject", () => add("subject", {}, "A new subject"))),
+      textbooks(data.textbooks));
+  }
+
+  // Textbooks (core/web_textbooks.py): your books with their chapters, a search inside them, Make A Course (one lesson
+  // per chapter) and Remove, as textbook.course / textbook.remove; Add A Book uploads a PDF or text file. By voice:
+  // "what does my welding book say about porosity?", "let's study" a book.
+  let found = null;
+  function textbooks(t) {
+    if (!t || !t.available) return null;
+    const pick = el("input", { type: "file", accept: ".pdf,.txt,.md", hidden: true, onchange: async () => {
+      const file = pick.files[0];
+      if (!file) return;
+      try { MIAShell.say("Reading " + file.name + "…"); await MIA.upload("/api/classroom/textbook", file); paint(await MIA.classroom()); }
+      catch (e) { MIAShell.say(e.message); }
+    } });
+    const ask = el("input", { type: "search", class: "money-find", placeholder: "Look something up in your books…",
+      "aria-label": "Search your textbooks", value: found ? found.query : "" });
+    const results = el("div", { class: "tb-hits" }, found ? (found.hits.length ? found.hits.map((h) => el("article", { class: "tb-hit" },
+      el("span", { class: "pw-label" }, h.book + " · page " + h.page + (h.chapter ? " · " + h.chapter : "")),
+      el("p", {}, h.text))) : [el("p", { class: "dim" }, "Nothing in your books about that.")]) : []);
+    const book = (b) => el("div", { class: "sync-row council-msg" },
+      el("div", {}, el("p", { class: "council-text" }, b.title),
+        el("p", { class: "dim" }, b.reading ? "Still reading the scan…" : b.error ? "Couldn't read it: " + b.error
+          : [b.pages + " pages", b.chapters.length + (b.chapters.length === 1 ? " chapter" : " chapters"), b.course ? "course: " + b.course : null].filter(Boolean).join(" · ")),
+        b.chapters.length > 1 ? el("details", {}, el("summary", {}, "Chapters"),
+          el("ol", {}, b.chapters.map((c) => el("li", {}, c.title + " · p. " + c.page)))) : null),
+      el("div", { class: "row-buttons" },
+        !b.course && !b.reading ? button("Make a course", () => MIAShell.act({ kind: "textbook.course", params: { book_id: b.id } }), "btn-amber") : null,
+        button("Remove", () => MIAShell.act({ kind: "textbook.remove", params: { book_id: b.id } }))));
+    return el("section", { class: "glass money-section cl-books" },
+      el("h2", { class: "cl-label" }, "Textbooks"),
+      t.books.length ? [el("form", { class: "tb-search", onsubmit: async (ev) => {
+        ev.preventDefault();
+        found = ask.value.trim() ? await MIA.textbookSearch(ask.value.trim()) : null;
+        paint(last);
+      } }, ask, el("button", { type: "submit", class: "btn btn-ghost btn-small" }, "Look Up")), results,
+        el("div", { class: "sync-rows" }, t.books.map(book))]
+        : el("p", { class: "dim" }, "Add a textbook (a PDF or a text file) and MIA reads it: ask what it says, study it chapter by chapter, or make it a course."),
+      el("div", { class: "row-buttons" }, button("Add a book", () => pick.click()), pick));
   }
 
   MIAShell.start(async () => { paint(await MIA.classroom()); }, { refreshOnChange: true });

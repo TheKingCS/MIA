@@ -368,6 +368,7 @@ import core.trip_route  # noqa: E402,F401  (a trip's route and checkpoints, from
 import core.plan_actions  # noqa: E402,F401  (a plan's page: keep a size, start a project, let a kept plan go)
 import core.web_why  # noqa: E402,F401  (My Why: link, unlink and achieve goals)
 import core.web_projects  # noqa: E402,F401  (Projects: a budget, and tasks added, reopened, deleted)
+import core.web_textbooks  # noqa: E402,F401  (Classroom textbooks: a course from one, removing one)
 from core.offline_maps import _register as _register_map_areas  # noqa: E402  (vector map areas from the Maps page)
 
 _register_map_areas()

@@ -1629,3 +1629,11 @@ body.mod-maps .hero { display: none; }
 .pj-figures strong { display: block; font-family: var(--font-mono); font-size: 17px; }
 .pj-over { color: var(--attention); }
 .meter-attention .meter-fill { background: var(--attention); }
+
+/* Classroom: textbooks, and what they say (core/web_textbooks.py, 2026-11-07). */
+.cl-books { margin-top: 18px; }
+.tb-search { display: flex; gap: 8px; align-items: center; margin: 8px 0; }
+.tb-search input { flex: 1; }
+.tb-hits { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+.tb-hit { padding: 10px 12px; border-radius: 10px; background: rgba(var(--rgb-accent), .05); border: 1px solid rgba(var(--rgb-accent), .14); }
+.tb-hit p { margin: 4px 0 0; line-height: 1.5; }

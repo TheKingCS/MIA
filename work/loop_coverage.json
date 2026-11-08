@@ -49,6 +49,10 @@
    "status": "none",
    "why": "their own settings: nothing MIA chose, so nothing of hers to correct"
   },
+  "action:textbook": {
+   "status": "none",
+   "why": "a course made from a book, or a book removed, by the person on the Classroom page or by voice (DEC-0125); the tutor's answers have their own loops"
+  },
   "action:undo": {
    "status": "none",
    "why": "undo.last puts back the newest change, as \"undo that\" does; undoing MIA's own change already counts as a correction (core/corrections.py)"

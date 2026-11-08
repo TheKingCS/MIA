@@ -50,7 +50,7 @@ def test_what_it_refuses(person):
     with pytest.raises(ActionError):
         person.actions.propose(person, "course.add", {"subject_id": "nope", "name": "X"}, proposed_by="person")
     assert screen(SimpleNamespace(classroom=None)) == {"available": False, "subjects": [], "continue": None,
-                                                       "skills": []}
+                                                       "skills": [], "textbooks": {"available": False, "books": []}}
 
 
 def test_continue_is_the_course_you_last_finished_a_lesson_in():

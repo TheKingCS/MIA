@@ -271,7 +271,9 @@
       continue: { subject: "Welding", course_id: "c1", course: "MIG basics", done: 2, total: 3, lessons: [
         { id: "l2", name: "Bead on plate", done: true, done_at: "2026-10-27", xp: 30 },
         { id: "l3", name: "Butt joints", done: false, done_at: "", xp: 30 }] },
-      skills: [{ id: "welding", name: "Welding" }, { id: "metalwork", name: "Metalwork" }] })
+      skills: [{ id: "welding", name: "Welding" }, { id: "metalwork", name: "Metalwork" }],
+      textbooks: { available: true, books: [{ id: "b1", title: "Welding Fundamentals", pages: 312, added: "2026-10-12", reading: false, error: "",
+        course: "", chapters: [{ title: "Chapter 1: Safety", page: 9 }, { title: "Chapter 6: Gas Metal Arc Welding", page: 101 }] }] } })
       : call("GET", "/api/classroom"),
     knowledge: (q = "") => demo ? Promise.resolve({ available: true, root: "reference_library", packs: [
       { id: "wikipedia_en_medicine", title: "Wikipedia: Medicine", description: "Medical articles, offline", articles: 52000 }],
@@ -350,6 +352,9 @@
     toolbox: () => read("/api/toolbox", "toolbox"),
     why: () => read("/api/why", "why"),
     projects: () => read("/api/projects", "projects"),
+    textbookSearch: (q, book) => demo ? Promise.resolve({ query: q, hits: q ? [{ book_id: "b1", book: "Welding Fundamentals", page: 112,
+      chapter: "Chapter 6: Gas Metal Arc Welding", text: "Hold the gun at a 10 to 15 degree push angle. Too steep an angle traps gas and leaves porosity in the bead…" }] : [] })
+      : call("GET", "/api/classroom/textbooks/search?q=" + encodeURIComponent(q) + (book ? "&book=" + encodeURIComponent(book) : "")),
     toolboxCalc: (id, values) => demo
       ? read("", "toolbox").then((t) => Object.assign({ demo: true }, (t.demo_answers || {})[id] || { error: "The demo can't calculate." }))
       : call("GET", "/api/toolbox/calc?" + new URLSearchParams(Object.assign({ id }, values)).toString()),

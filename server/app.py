@@ -1113,6 +1113,42 @@ def create_app(context: AppContext) -> FastAPI:
         with app.state.turn_lock:
             return screen(view_for(context, profile_id))
 
+    # The Classroom's textbooks (core/web_textbooks.py): where the books talk about something, and adding a book (a PDF
+    # or text file sent as a raw body with X-Filename, read and indexed by TextbookManager.add_book).
+    @app.get("/api/classroom/textbooks/search")
+    def textbook_search(q: str = "", book: str = "", profile_id: str = Depends(require_profile_id)) -> dict:
+        """Passages from the person's textbooks that match the words."""
+        from core.web_textbooks import search
+
+        with app.state.turn_lock:
+            return search(view_for(context, profile_id), q[:200], book)
+
+    @app.post("/api/classroom/textbook")
+    async def textbook_upload(request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Adds a textbook from an uploaded PDF or text file; says why when it can't be read."""
+        view = view_for(context, profile_id)
+        library = getattr(view, "textbooks", None)
+        if library is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Textbooks aren't on this MIA.")
+        data = await request.body()
+        if not data:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "No file received.")
+        if len(data) > 200 * 1024 * 1024:
+            raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "That book is over 200 MB.")
+        name = Path(unquote(request.headers.get("x-filename", "book.pdf"))).name.strip() or "book.pdf"
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / name
+            source.write_bytes(data)
+            def add():
+                with app.state.turn_lock:
+                    return library.add_book(source)
+
+            try:
+                book = await run_in_threadpool(add)
+            except ValueError as problem:
+                raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
+        return {"id": book.book_id, "title": book.title, "reading": book.reading}
+
     @app.get("/api/life-notes")
     def life_notes_screen(profile_id: str = Depends(require_profile_id)) -> dict:
         from core.life_notes import screen  # promises, decisions, ideas, goals set aside (DEC-0054)
