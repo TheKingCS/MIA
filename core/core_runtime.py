@@ -278,8 +278,8 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
 def _register_core_assistant_actions(context: AppContext) -> None:
     """Registers Core's curated Assistant action subset — see this module's docstring. It includes the read tools
     for Character, Skills, the Reward Shop, Insurance, Kept, the Operating Journal, Play and Files, the Security
-    cameras, the energy sources read and logged, and fixing groceries, recipes, the meal plan, bills and expenses
-    (DEC-0125), so the phone can ask about them too, cook mode's tools
+    cameras, the energy sources read and logged, and fixing groceries, recipes, the meal plan, bills and expenses,
+    and playlists (DEC-0125), so the phone can ask about them too, cook mode's tools
     (core/assistant_cooking_actions.py), the Toolbox's (board feet, concrete, alarms on or off:
     core/assistant_toolbox_actions.py), the Lab's delete_lab_reading (core/assistant_lab_actions.py) and the
     Household's pause_household_routine (core/assistant_household_actions.py), change_waypoint
@@ -314,6 +314,9 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     from core.assistant_correction_actions import register_correction_actions
 
     register_correction_actions(registry)  # fixing groceries, recipes, bills by voice (DEC-0125)
+    from core.assistant_playlist_actions import register_playlist_actions
+
+    register_playlist_actions(registry)  # playlists by voice, where there's a music library (DEC-0125)
     register_records_actions(registry)  # Insurance, Kept, Operating Journal, Play, Files by voice (DEC-0125)
     from core.assistant_energy_actions import register_energy_actions
 

@@ -75,6 +75,7 @@ from core.assistant_humor_actions import register_humor_actions
 from core.assistant_progress_actions import register_progress_actions
 from core.assistant_camera_actions import register_camera_actions
 from core.assistant_correction_actions import register_correction_actions
+from core.assistant_playlist_actions import register_playlist_actions
 from core.assistant_records_actions import register_records_actions
 from core.assistant_plan_actions import register_plan_actions
 from core.plan_library import PlanLibrary
@@ -1587,6 +1588,7 @@ class MIAApplication:
         register_progress_actions(self.context.assistant_actions)  # Character, Skills, Reward Shop (DEC-0125)
         register_camera_actions(self.context.assistant_actions)  # the Security cameras by voice (DEC-0125)
         register_correction_actions(self.context.assistant_actions)  # fixing groceries, recipes, bills by voice (DEC-0125)
+        register_playlist_actions(self.context.assistant_actions)  # making and changing playlists by voice (DEC-0125)
         register_records_actions(self.context.assistant_actions)  # Insurance, Kept, Operating, Play, Files (DEC-0125)
         from core.vault_captions import register_vault_caption_actions
 

@@ -672,6 +672,13 @@ GOLDEN_CASES = [
     ("bill: new amount", "The electric bill is now $130 a month", "change_bill"),
     ("bill: cancelled", "I cancelled Netflix, delete the bill", "delete_bill"),
     ("expense: logged by mistake", "Delete the expense for the pizza, I logged it by mistake", "delete_expense"),
+    # Playlists by voice (DEC-0125, 2026-11-08).
+    ("playlists: which", "What playlists do I have?", "list_playlists"),
+    ("playlists: make one", "Make a playlist called Shop Music", "make_playlist"),
+    ("playlists: add this song", "Add this song to the Shop Music playlist", "add_to_playlist"),
+    ("playlists: take a song off", "Take Slow River off my Garage playlist", "remove_from_playlist"),
+    ("playlists: rename", "Rename the playlist Shop Music to Garage Music", "rename_playlist"),
+    ("playlists: delete", "Delete the playlist called Old Stuff", "delete_playlist"),
 ]
 
 
