@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1291 files, 279,373 lines; 1291 files describe themselves; 15,746 of 15,840 classes and functions are documented.
+1292 files, 279,504 lines; 1292 files describe themselves; 15,752 of 15,846 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-481 files, 132,036 lines; 7,090 of 7,176 classes and functions documented
+481 files, 132,086 lines; 7,090 of 7,176 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -766,7 +766,7 @@
 
 ## tests/: the test suite: what each part must do
 
-440 files, 73,872 lines; 6,370 of 6,378 classes and functions documented
+441 files, 73,953 lines; 6,376 of 6,384 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -861,6 +861,7 @@
 - `tests/test_data_recovery.py`: Unit tests for core.data_recovery.notify_data_corruption.
 - `tests/test_debt_math.py`: The payoff arithmetic behind "when will my debts be paid off?" and "what if I put an extra $200 toward it?" (core/debt_math.py).
 - `tests/test_dependency_audit.py`: Known vulnerabilities in MIA's packages (docs/SECURITY.md step 5): OSV's answer is read into one finding per package and advisory with the fixing version (tools/dependency_audit.py); the weekly check is due after a week; findings are said once, plainly, and none means nothing is said (core/dependenc
+- `tests/test_derived_links.py`: The ties the stores' own fields already say, made into derived links (core/links.py, 2026-11-08, for core/connections.py's `connections.unlinked`): a mission is part of its project and trip, a skill builds on its prerequisites, a trip is part of its expedition, a job uses its workshop recipe, a reci
 - `tests/test_dev_checks.py`: The development checks that need a real run (core/dev_checks.py, build plan step 2): the committed code's suite against the known failures, reverts per merge, and the dependency audit; the loops that read them are heavy, so the app's own check never runs them.
 - `tests/test_dev_knowledge.py`: The Development Knowledge Vault (DEC-0073, core/dev_knowledge.py): what the team learned, each entry tied to where it came from, MIA's own notes kept as derived until someone confirms them, and given to agents before they work.
 - `tests/test_dev_lab.py`: MIA's development lab (DEC-0058, core/dev_lab.py): a proposal is written in an isolated worktree, checked against rules the lab can't touch and against the suite at the start, and reaches the running copy only on approval, reverting itself if it breaks something there.

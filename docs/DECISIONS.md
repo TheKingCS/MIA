@@ -2150,6 +2150,12 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   **Wired 2026-11-08 (claude, design session):** in PERSONAL_STORES, with a screen (`web/worlds.html`, core/web_worlds.py:
   worlds, campaigns, the character and its versions, quests, created through `world.*` actions) and voice tools
   (core/assistant_world_actions.py). Playing a turn (core/dungeon_master.py) is not exposed: it waits on Phase 2's approval.
+  **Phase 2 APPROVED (Zac, 2026-11-08, when it was offered: "Lets build it and continue") + its core built** (claude,
+  engine, commit 62b12952): `core/dungeon_master.py` — `take_turn` (the model proposes narration and typed intents,
+  `validate` rolls d20 + the version's edge against each contested intent's check, `commit` writes only what passed),
+  `model_proposer` on the local model with narration-only fallback, every turn a fictional life event, never real XP;
+  `tests/test_dungeon_master.py`. This record wasn't updated when it was built (corrected 2026-11-08 overnight), so
+  playing a turn is unblocked: its screen and voice tool are the design and parity sessions' to build on `take_turn`.
 - Proposed by: claude, 2026-11-08, from Zac's "MIA — Living Worlds" handoff (the Convergence multiverse saga).
 - Proposal (`docs/LIVING_WORLDS_PROPOSAL.md`): a major subsystem turning MIA into a persistent-world DM, world
   simulator and experiential-learning guide, with an overarching cross-universe narrative (the Convergence) and a
@@ -2412,5 +2418,11 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Not yet: researching a new possibility before raising it (Night School or her browser). **"Don't bring that up"
   built 2026-11-08 (claude, design session):** `ConnectionBook.decline`/`allow` and a quiet list `_recent` respects;
   the Connections page in Personal (web/connections.html, core/web_connections.py: `connection.decline`,
-  `connection.allow`) and the voice tools dont_bring_that_up and list_connections.
+  `connection.allow`) and the voice tools dont_bring_that_up and list_connections. **Derived links (claude, engine,
+  2026-11-08 overnight):** ties the stores' own fields already say are now in the graph (`core/links.py`: a mission
+  PART_OF its project and trip, a skill BUILDS_ON its prerequisites, a trip PART_OF its expedition, a job USES its
+  workshop recipe, a recipe USES the materials its lines name, a policy RELATED_TO its asset, a project RELATED_TO the
+  skills it trains), so a remark about a skill or a trip ties through the graph to the project or mission behind it.
+  USES and BUILDS_ON are new relations, never the waiting words, so the Life State's "what waits on what" stays the
+  person's own stated dependencies.
 - Related: DEC-0054 (notes from conversation), DEC-0108 (interconnection audit), DEC-0094/0101 (loops), DEC-0126

@@ -22,7 +22,17 @@ the same refs core/life_events.py uses). Two sources:
   asset, a property, bill or debt PART_OF a business, a project or an
   intent SUPPORTS an intent (core/why_graph.py), a property's upkeep
   record RELATED_TO the property, a completed mission
-  EVIDENCE_FOR each skill it trained. Status: DERIVED.
+  EVIDENCE_FOR each skill it trained; and (2026-11-08, the ties
+  core/connections.py's `connections.unlinked` loop looks for) a
+  mission PART_OF its project or trip, a skill BUILDS_ON its
+  prerequisites, a trip PART_OF its expedition, a production job
+  USES its workshop recipe, a product RELATED_TO the job that made
+  it, a workshop recipe RELATED_TO its product and USES each
+  workshop material its lines name (matched as core/craft_recipes.py
+  matches them), an insurance policy RELATED_TO the asset it covers, a
+  project RELATED_TO each skill it trains. None of these use the
+  waiting words (REQUIRES, DEPENDS_ON, BLOCKED_BY): those are the
+  person's own "what waits on what" in the Life State. Status: DERIVED.
 
 Pure logic where possible; the stores are only read.
 """
@@ -58,6 +68,8 @@ RELATIONS = {
     "EVIDENCE_FOR": "is evidence for",
     "SUPPORTS": "supports",
     "RELATED_TO": "is related to",
+    "USES": "uses",  # a workshop recipe and its materials, a job and its recipe: needs, not waits
+    "BUILDS_ON": "builds on",  # a skill and the skills it starts from
 }
 
 # What people say -> the relation.
@@ -317,6 +329,44 @@ def derived_links(context) -> list[Link]:
         if getattr(mission, "status", "") == "completed":
             for weight in getattr(mission, "skill_rewards", None) or []:
                 add(ref_of("mission", mission), "EVIDENCE_FOR", f"skill:{weight.skill_id}")
+    # 2026-11-08: ties the stores' own fields already say, which the graph didn't make (core/connections.py's
+    # connections.unlinked loop counts the ones still missing). A mission's task_id is left out: it doesn't say which
+    # kind of task it means. Never the waiting words: those are the person's stated dependencies (the Life State's
+    # "what waits on what"), and a skill tree or a recipe's materials would bury them.
+    for mission in _records(context, KINDS["mission"]):
+        for attr, kind in (("project_id", "project"), ("trip_id", "trip")):
+            if getattr(mission, attr, None):
+                add(ref_of("mission", mission), "PART_OF", f"{kind}:{getattr(mission, attr)}")
+    for skill in _records(context, KINDS["skill"]):
+        for needed in getattr(skill, "prerequisite_skill_ids", None) or []:
+            add(ref_of("skill", skill), "BUILDS_ON", f"skill:{needed}")
+    for trip in _records(context, KINDS["trip"]):
+        if getattr(trip, "expedition_id", None):
+            add(ref_of("trip", trip), "PART_OF", f"expedition:{trip.expedition_id}")
+    for job in _records(context, KINDS["job"]):
+        if getattr(job, "recipe_id", None):
+            add(ref_of("job", job), "USES", f"craft_recipe:{job.recipe_id}")
+    for product in _records(context, KINDS["product"]):
+        if getattr(product, "job_id", None):
+            add(ref_of("product", product), "RELATED_TO", f"job:{product.job_id}")
+    for policy in _records(context, KINDS["policy"]):
+        if getattr(policy, "asset_id", None):
+            add(ref_of("policy", policy), "RELATED_TO", f"asset:{policy.asset_id}")
+    for project in _records(context, KINDS["project"]):
+        for weight in getattr(project, "skill_weights", None) or []:
+            add(ref_of("project", project), "RELATED_TO", f"skill:{weight.skill_id}")
+    recipes = _records(context, KINDS["craft_recipe"])
+    if recipes:
+        from core.craft_recipes import key
+
+        stock = {key(m.name): m for m in _records(context, KINDS["material"])}
+        for recipe in recipes:
+            if getattr(recipe, "product_id", None):
+                add(ref_of("craft_recipe", recipe), "RELATED_TO", f"product:{recipe.product_id}")
+            for line in getattr(recipe, "lines", None) or []:
+                material = stock.get(key(line.name))
+                if material is not None:
+                    add(ref_of("craft_recipe", recipe), "USES", ref_of("material", material))
     return found
 
 
