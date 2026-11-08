@@ -4,8 +4,9 @@ tests.test_web_guide
 
 Start Here (core/web_guide.py) stays true: every "Try saying" phrase
 reaches one of MIA's tools (or is one of the few handled in code), every
-page it opens exists, and the sidebar's data carries the life areas and
-favorites the grouped sidebar draws.
+page it opens exists, the sidebar's data carries the life areas and
+favorites the grouped sidebar draws, and Fill In Your Life offers only the
+empty apps, each line reaching its app's add tool.
 """
 
 from __future__ import annotations
@@ -50,3 +51,32 @@ def test_the_sidebar_is_grouped(tmp_path, monkeypatch):
     assert data["groups"] == list(GROUPS) and isinstance(data["favorites"], list)
     browser = next(a for a in data["apps"] if a["id"] == "browser")
     assert browser["group"] in GROUPS
+
+
+def test_each_app_to_fill_opens_a_real_page_and_its_line_reaches_its_add_tool():
+    """Fill In Your Life (2026-11-07): every page exists, and every sentence offered reaches a tool that adds to that
+    app (its name starts add_ or log_)."""
+    from pathlib import Path
+
+    from core.parity import desktop_registry
+    from core.web_guide import FILL
+
+    web = Path(__file__).resolve().parent.parent / "web"
+    registry = desktop_registry()
+    for app, title, empty, say, page in FILL:
+        assert (web / page).exists(), page
+        for line in say:
+            names = [a.name for a in registry.matching_actions(line)]
+            assert any(n.startswith(("add_", "log_")) for n in names), (app, line, names)
+
+
+def test_only_the_empty_apps_are_offered_to_fill():
+    """An app with something in it drops off the list; a store that isn't here isn't offered."""
+    from types import SimpleNamespace
+
+    from core.web_guide import to_fill
+
+    context = SimpleNamespace(budget=SimpleNamespace(all_bills=lambda: ["electric"], all_income_sources=lambda: []),
+                              kitchen=SimpleNamespace(all_recipes=lambda: []))
+    assert [a["app"] for a in to_fill(context)] == ["kitchen"]
+    assert to_fill(None) == []
