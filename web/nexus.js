@@ -62,7 +62,8 @@
     box.style.setProperty("--hue", p.hue);
     box.replaceChildren(head, el("p", { class: "n3-card-line" }, p.line),
       el("p", { class: "n3-card-needs" + (p.needs ? " attn" : "") }, needsText(p)),
-      el("button", { type: "button", class: "btn n3-enter", onclick: go }, "Enter ", el("span", { "aria-hidden": "true" }, "›")));
+      el("button", { type: "button", class: "btn n3-enter", onclick: go }, "Enter ", el("span", { "aria-hidden": "true" }, "›")),
+      el("a", { class: "n3-card-pic", tabindex: "-1", href: "portals.html?area=" + encodeURIComponent(p.id) }, "Change its picture"));  // the card is for the eye; Settings › Portal Pictures is the keyboard way
   }
 
   MIAShell.start(async () => {
