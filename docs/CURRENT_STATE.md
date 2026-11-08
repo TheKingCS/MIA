@@ -2,7 +2,22 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-11-07 (the canvas build, DEC-0113, overnight), by claude.*
+session. Last updated: 2026-11-08 (late evening, the engine side), by claude.*
+
+**2026-11-08 (Claude, cloud session, with Zac): MIA knows herself, plays, holds your directions, and inspires the
+made life.** A run of engine-side builds, all on master: **self-knowledge (DEC-0142)** — she describes herself from
+facts (the system map, her Night School focus, what she's learned about you), never guessed; **Living Worlds Phase 2
+(DEC-0134)** — the playable DM turn loop where the model proposes and code validates (dice) and commits, fictional
+events only; **standing directions (DEC-0141)** — the values you're steering by (consumer→producer, the café/workshop/
+tavern aesthetic, whimsy & tranquility) ride in her every-turn context and lean her suggestions, with a gentle
+proactive nudge through the gate; **Night School self-direction (DEC-0100)** — her standing directive is now "build
+yourself into a top-tier AI," and she works it each night. Newest: **whimsy seeds (core/whimsy.py)** — those
+directions become a concrete daily invitation composed from real facts (the season, the workshop shelf, your own
+words): *"sketch the falling leaves out the window, no plan, just the line"*; *"you've got walnut scrap on the shelf —
+what wants to be made from it this week?"* The loop-coverage and generated-catalog debt from all of it is closed; the
+suite's only failures on master are the design session's two web-frame tests. Your profile holds (plain, to seal under
+MIA's own key on restart) your café memories and three directions. See `docs/NEXT_SESSION.md`.
+
 
 **2026-11-07 (Claude, cloud session, with Zac): every screen in the canvas's look (DEC-0113, approved).** The design canvas (66 artboards across PC, Phone and Glasses) and `docs/design/MIA_DESIGN_STANDARDS.md` are the reference, handed to MIA (H-0092). On branch `claude/design-standards`, every app that has a web page now matches its artboard: Home, Talk, the sidebar, Workout (today, live set, rest, done), Kitchen and cook mode (`core/cooking_session.py`), Missions, Freedom, Skills, Money (net worth line: `core/net_worth_history.py`), Garage and the asset page, the Dungeon, Compliance, Insurance, Real Estate, Workshop, Orders, Inbox, Calendar, Journal, People, Classroom, Guitar and every learning path, Memory Vault, Operating Journal, Play, Observations, Expeditions, Maps (route card), Navigation, World Map, Knowledge, Music, Files, Passwords, Good News Radio, Look, Settings, Profile (no household: DEC-0119), Fix-It and Diagnostics. Each choice a screen shows (a status word, the next step, where a filing goes, which course to continue) is made in core and tested; the web only draws (`web/ui.css` holds the shared pieces). Then, overnight: **every app has a web page** except Diagnostics (an owner page) and Settings: Power, the Toolbox (Ohm's law, unit converter, board feet, concrete, worked out in core as you type; alarms), the Lab (series, a chart, readings) and the Field Kit (devices, hash and subnet checks, scripts to read; acting on the computer stays on the PC). The glasses' Home shows her state and the one line that matters now (amber when something needs you), with a hero for the live workout and a Cooking Now panel. Recipes scale to any number of servings in kitchen fractions; Workout's Progress has week-by-week bars; Maps fills the page with floating controls. Later in the night: Household (add, pause and resume routines, on the page and by voice), Chickens, the Greenhouse (a Today tab with each planting's honest stage), Character, Reward Shop, Kept, Memories, Security, the Sunday Check-in, the Chronicle, Apps and Sign In were brought to their artboards too; only Party is left (it's built around other people, so DEC-0119 leaves it as is). `tools/cloud_tests.py` lets the Qt-importing checks run in the cloud. New pages: Recent Changes (undo history with Undo) and Notifications (with why each was sent), both from Settings; Diagnostics gained This PC and Recent Problems from MIA's log; Navigation can edit a waypoint; a rental shows its depreciation. New voice tools: board feet, concrete, alarms on or off, delete a Lab reading. Everything is merged to master; the full suite has no new failures (the ones left need PySide6, fastapi or libzim, missing in the cloud). See `docs/NEXT_SESSION.md` "Canvas build".
 

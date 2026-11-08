@@ -5,7 +5,23 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-11-08 (evening)*
+*Last updated: 2026-11-08 (late evening)*
+
+**New 2026-11-08 (late evening): whimsy seeds — MIA inspires the slow, made life.** Zac asked (twice, warmly) for MIA
+to inspire the whimsy and artsy in his life — slowness, drawing, making, forest creatures, dreaming — alongside his
+consumer→producer shift. `core/whimsy.py` turns his standing directions (DEC-0141) into a concrete little **seed** he
+can act on today, composed from real facts (the season, what's on the workshop shelf via `core/material_manager.py`,
+his directions in his own words) — never improvised, nothing personal hard-coded. The direction nudge
+(`core/application.py._check_direction_nudge`) now prefers a seed over the plain canned line, still paced by the
+communication gate. Tested (`tests/test_whimsy.py`, 6). Sample autumn seeds read like: *"Ten quiet minutes with a
+pencil — sketch the falling leaves out the window, no plan, just the line."* / *"You've got walnut scrap on the shelf
+— what little thing wants to be made from it this week?"* It only fires for directions he actually set. Extends
+DEC-0141; no new decision needed. **Also closed this session:** the loop-coverage + generated-catalog debt from the
+self-knowledge/Living-Worlds/directions builds (LOOPS.md, EVENTS.md, ATLAS.md, doc_baseline.json, loop_coverage.json
+all current; `check:system_map`, `store:direction`, `store:response_style` decided). **Note:** two tests fail on
+master that are the design session's, not core — `test_good_news` and `test_web_home_voice` (both expect strings in
+`web/shell.js` / good-news the web frame hasn't got yet). Left for that session.
+
 
 **⏸ RESUME HERE (2026-11-08, saved mid-thread): MIA's device fabric.** The live thread when Zac paused was his wish
 for MIA to recognize, talk to, secure, and install herself onto his technology. Written up as **DEC-0128**
