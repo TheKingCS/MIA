@@ -943,6 +943,10 @@ derived link kinds `connections.unlinked` points at (`core/links.py`). Screens a
 and parity sessions'. Note for the design session: the Greenhouse's **What's Next** tab (`web/grow.js`,
 `web/equipment.js`, data `grow_page()["next"]`, DEC-0144) went in before I saw "Who builds what"; restyle or redo it
 freely. `get_homestead_next_step` is its voice twin.
+**Ready for a screen and a voice tool (from the engine session, 2026-11-08 overnight): playing a Living Worlds turn.**
+DEC-0134 Phase 2 was approved by Zac when it was offered ("Lets build it and continue"); the DECISIONS record had
+wrongly still said it waited, now corrected. The core is `core/dungeon_master.take_turn(book, campaign_id, version_id,
+action, model_proposer(context))` → `TurnResult(narration, committed, failed)`, fictional events only.
 
 **Who builds what (2026-11-07 night, after Power and Recent Changes were each built twice at once):** screens
 (web pages, the canvas's look, the review's missing screens: Waiting For You, a plan's page, the Browser in the

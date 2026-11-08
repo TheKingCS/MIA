@@ -2150,6 +2150,12 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   **Wired 2026-11-08 (claude, design session):** in PERSONAL_STORES, with a screen (`web/worlds.html`, core/web_worlds.py:
   worlds, campaigns, the character and its versions, quests, created through `world.*` actions) and voice tools
   (core/assistant_world_actions.py). Playing a turn (core/dungeon_master.py) is not exposed: it waits on Phase 2's approval.
+  **Phase 2 APPROVED (Zac, 2026-11-08, when it was offered: "Lets build it and continue") + its core built** (claude,
+  engine, commit 62b12952): `core/dungeon_master.py` — `take_turn` (the model proposes narration and typed intents,
+  `validate` rolls d20 + the version's edge against each contested intent's check, `commit` writes only what passed),
+  `model_proposer` on the local model with narration-only fallback, every turn a fictional life event, never real XP;
+  `tests/test_dungeon_master.py`. This record wasn't updated when it was built (corrected 2026-11-08 overnight), so
+  playing a turn is unblocked: its screen and voice tool are the design and parity sessions' to build on `take_turn`.
 - Proposed by: claude, 2026-11-08, from Zac's "MIA — Living Worlds" handoff (the Convergence multiverse saga).
 - Proposal (`docs/LIVING_WORLDS_PROPOSAL.md`): a major subsystem turning MIA into a persistent-world DM, world
   simulator and experiential-learning guide, with an overarching cross-universe narrative (the Convergence) and a
