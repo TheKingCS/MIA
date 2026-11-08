@@ -116,7 +116,9 @@
         a = 1.0;
       }
       float rim = exp(-abs(d) * 42.0), halo = exp(-abs(d) * 7.0);
-      col += (uHue * 1.3 + vec3(0.25) * rim) * rim * (0.8 + 1.0 * uFocus) + uHue * halo * (0.18 + 0.2 * uFocus);
+      // the rim and halo: brighter on the chosen portal, but held back enough that its light doesn't wash the picture
+      // pale at the top edge (Zac's room note, H-0099)
+      col += (uHue * 1.3 + vec3(0.25) * rim) * rim * (0.8 + 0.6 * uFocus) + uHue * halo * (0.16 + 0.12 * uFocus);
       if (d > -0.08){
         vec2 sp = vec2(vP.x * 1.9 + uSeed, vP.y * 1.25 - uT * 0.6);
         vec2 warp = vec2(fbm(sp + vec2(0.0, uT * 0.25)), fbm(sp + vec2(5.2, 1.3) - uT * 0.12));
@@ -124,8 +126,9 @@
         float out_ = max(d, 0.0);
         float reach = 0.42 + 0.42 * smoothstep(-0.8, 1.4, vP.y);
         float m = smoothstep(reach, 0.0, out_) * smoothstep(0.30, 0.78, n);
+        m *= mix(0.3, 1.0, smoothstep(-0.08, 0.05, d));  // fire licks the frame, not the picture inside it
         vec3 fire = mix(uHue2, uHue, smoothstep(0.0, 0.45, out_ + (n - 0.5) * 0.3));
-        col += (fire * pow(m, 1.5) * (0.75 + 0.75 * uFocus) + vec3(1.0) * pow(m, 6.0) * 0.12) * uFire;
+        col += (fire * pow(m, 1.5) * (0.75 + 0.45 * uFocus) + vec3(1.0) * pow(m, 6.0) * 0.08) * uFire;
       }
       float edge = smoothstep(1.0, 0.82, abs(vP.x) / uHalf.x) * smoothstep(1.0, 0.86, abs(vP.y) / uHalf.y);
       float fade = uMirror < 0.0 ? smoothstep(1.0, -1.0, vP.y / uHalf.y) : 1.0;
