@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1226 files, 266,948 lines; 1226 files describe themselves; 14,550 of 15,240 classes and functions are documented.
+1228 files, 267,230 lines; 1228 files describe themselves; 14,561 of 15,253 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -696,7 +696,7 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-34 files, 3,449 lines; 108 of 108 classes and functions documented
+35 files, 3,636 lines; 114 of 114 classes and functions documented
 
 - `tools/audit.py`: MIA's self-audit from the command line (DEC-0108; core/self_audit.py, core/practices.py).
 - `tools/bench_audit.py`: What MIA's routing does today with each Intelligence Benchmark question (tests/intelligence_bench.py, docs/INTELLIGENCE_BENCHMARK.md): a question plan (core/question_plans.py: lookups by code, one answer), answered by code (a direct lookup), offered which tools, or left to the model with no tools at
@@ -713,6 +713,7 @@
 - `tools/gaps.py`: The PC owner's capability gaps (core/capability_gaps.py, build plan step 9): what MIA was asked and couldn't do, grouped, with what each would take. The requests are the person's own words, so they're read here, on this PC, and never copied into the repo.
 - `tools/glasses_art.py`: MIA's orb as pictures for the real glasses (DEC-0061).
 - `tools/good_news.py`: Good News Radio on this PC (DEC-0096, core/good_news.py).
+- `tools/import_life_data.py`: Import Zac's private life-data pack (data/_import/muse_assets.json, built by Muse from his memory, Gmail and manufacturer schedules) into MIA's Garage — the maintenance assets and their service schedules — through the real MaintenanceManager so every write is undoable (core/undo_log.py).
 - `tools/intelligence_check.py`: Zac's Intelligence Benchmark, asked for real: every question in tests/intelligence_bench.py through the same steps a turn takes (a question plan, a lookup answered by code, or the model with the tool loop), on this computer's model and the person's real records. Read-only: lookups run, but a change 
 - `tools/lab.py`: MIA's development lab from the command line (DEC-0058, core/dev_lab.py).
 - `tools/make_food_table.py`: Builds data/foods.tsv, MIA's built-in food table (DEC-0020), from the USDA's FoodData Central "SR Legacy" download: about 7,800 everyday foods, public domain (CC0, https://fdc.nal.usda.gov). Kept per 100 g: calories, protein, fat, carbohydrate, fiber, sugars, sodium; plus each food's household measu
@@ -735,7 +736,7 @@
 
 ## tests/: the test suite: what each part must do
 
-415 files, 70,837 lines; 5,575 of 6,179 classes and functions documented
+416 files, 70,932 lines; 5,580 of 6,186 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -890,6 +891,7 @@
 - `tests/test_household_module.py`: Unit tests for modules.household.module's pure functions, same style as tests/test_greenhouse_module.py (no Qt event loop, no fixtures). *(2 undocumented)*
 - `tests/test_household_routines.py`: The Household's web screen (core/household_routines.py, the design canvas's Household): the household's routines, each with its current occurrence, how far along, and its streak in words; paused ones apart; and routines added, paused and resumed as actions (core/routine_actions.py) and by voice (cor
 - `tests/test_id_wallet.py`: The ID wallet (core/id_wallet.py): cards kept with their numbers and photos sealed at rest, numbers masked in lists and never in what MIA says or in an action, expiry reminders on Today, and "show my license" opening the card.
+- `tests/test_import_life_data.py`: Importing Zac's private life-data pack into the Garage (tools/import_life_data.py): a compound hours/miles-OR-time line becomes one meter task with a calendar fallback (DEC-0131); the Ridgeline timing belt is flagged high and never given a fabricated baseline; the import is idempotent (an existing a *(2 undocumented)*
 - `tests/test_imports.py`: Imports from other apps (core/imports.py), 2026-10-01: calendars (.ics), contacts (.vcf) and bank statements (.csv). *(1 undocumented)*
 - `tests/test_inbox.py`: Document inbox: classification (core/inbox_classify.py), intake and filing (core/inbox_manager.py), email checking (core/inbox_mail.py), the voice tools, the phone upload endpoint and the Inbox screen.
 - `tests/test_inbox_goes_to.py`: Inbox (DEC-0113): each item says in one line where filing it would put it (core/web_inbox.goes_to). Pure logic, so it runs without Qt.
