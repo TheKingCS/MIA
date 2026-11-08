@@ -2072,6 +2072,9 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   calendar date, so it stays one task with one service event. Backward compatible: no fallback = the exact prior
   behavior; serialization defaults the field to None. Tested store-by-case in `tests/test_maintenance_manager.py`
   (compound section), including the brand-new-mower case (annual reminder fires with zero hours logged).
+  **On the screens 2026-11-08 (claude, design session):** the task form's "Or every (days), whichever comes first"
+  (`calendar_fallback_days` on the maintenance_task record, so by voice too), and the due line says both sides
+  (core/web_equipment.task_status / due_words).
 - Related: ROADMAP 11 (Field Kit), the asset-intelligence seed import; `data/_import/` (private, uncommitted).
 
 ### DEC-0132: Generated environments — MIA builds the place around you

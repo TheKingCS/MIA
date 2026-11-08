@@ -255,3 +255,22 @@ def test_a_reading_tile_gets_a_trend_from_its_second_reading_on():
     shown = trend("maintenance_x", two)
     assert shown["series"] == "maintenance_x" and [p["y"] for p in shown["chart"]["points"]] == [0.0, 1.0]
     assert trend("", two) == {}
+
+
+def test_a_compound_task_says_both_sides_and_is_due_by_whichever_comes_first(world):
+    """DEC-0131 on the screens: "every 50 hours or a year" is set from the task form and its due line says both."""
+    from core.maintenance_manager import MaintenanceManager  # noqa: F401  (the store the form writes through)
+
+    run(world, "maintenance_task.add", asset_id=world.mower.asset_id, title="Oil and filter", trigger_type="runtime",
+        meter_unit="h", meter_interval="50", calendar_fallback_days="365",
+        last_completed=(TODAY - timedelta(days=30)).isoformat())
+    task = next(t for t in world.maintenance.tasks_for_asset(world.mower.asset_id) if t.title == "Oil and filter")
+    assert task.calendar_fallback_days == 365
+    world.maintenance.mark_complete(task.task_id, meter_value=10)
+    world.maintenance.update_task(task.task_id, last_completed=(TODAY - timedelta(days=30)).isoformat())
+    run(world, "maintenance.reading", task_id=task.task_id, value="30")
+    row = next(t for t in asset_page(world, world.mower.asset_id, TODAY)["tasks"] if t["title"] == "Oil and filter")
+    assert row["due"].startswith("Due in 30 h or by ") and row["values"]["calendar_fallback_days"] == 365
+    world.maintenance.update_task(task.task_id, last_completed=(TODAY - timedelta(days=400)).isoformat())
+    row = next(t for t in asset_page(world, world.mower.asset_id, TODAY)["tasks"] if t["title"] == "Oil and filter")
+    assert row["due"] == "Past due 35 days" and row["needs_attention"]

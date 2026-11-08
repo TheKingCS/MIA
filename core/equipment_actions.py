@@ -50,6 +50,8 @@ RECORDS: dict[str, Record] = {r.key: r for r in (
                Field("interval_days", "Every (days)", "int", say="every (days)"),
                Field("meter_unit", "Meter unit", "text", say="unit"),
                Field("meter_interval", "Every (meter units)", "amount", say="every"),
+               # DEC-0131: a meter task may also come due by the calendar, whichever is first ("50 hours or a year")
+               Field("calendar_fallback_days", "Or every (days), whichever comes first", "int", say="or every (days)"),
                Field("threshold_value", "Due at reading", "number", say="due at"),
                Field("threshold_direction", "Due when the reading is", "choice", options=("below", "above"),
                      default="below", say="due when", quiet_default=True),
