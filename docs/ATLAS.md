@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1301 files, 282,523 lines; 1301 files describe themselves; 15,907 of 16,001 classes and functions are documented.
+1301 files, 282,700 lines; 1301 files describe themselves; 15,918 of 16,012 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-485 files, 133,895 lines; 7,166 of 7,252 classes and functions documented
+485 files, 134,009 lines; 7,174 of 7,260 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -771,7 +771,7 @@
 
 ## tests/: the test suite: what each part must do
 
-445 files, 74,928 lines; 6,454 of 6,462 classes and functions documented
+445 files, 74,991 lines; 6,457 of 6,465 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -869,8 +869,8 @@
 - `tests/test_derived_links.py`: The ties the stores' own fields already say, made into derived links (core/links.py, 2026-11-08, for core/connections.py's `connections.unlinked`): a mission is part of its project and trip, a skill builds on its prerequisites, a trip is part of its expedition, a job uses its workshop recipe, a reci
 - `tests/test_dev_checks.py`: The development checks that need a real run (core/dev_checks.py, build plan step 2): the committed code's suite against the known failures, reverts per merge, and the dependency audit; the loops that read them are heavy, so the app's own check never runs them.
 - `tests/test_dev_history.py`: The shared development history (core/dev_history.py, T-0021, DEC-0071 point 2): decisions, commits, failures and experiments read from their records, each kept once (again on a change of status), git asked only for what's new, nothing the person said carried in, and an agent's briefing read from the
-- `tests/test_dev_knowledge.py`: The Development Knowledge Vault (DEC-0073, core/dev_knowledge.py): what the team learned, each entry tied to where it came from, MIA's own notes kept as derived until someone confirms them, and given to agents before they work.
-- `tests/test_dev_lab.py`: MIA's development lab (DEC-0058, core/dev_lab.py): a proposal is written in an isolated worktree, checked against rules the lab can't touch and against the suite at the start, and reaches the running copy only on approval, reverting itself if it breaks something there.
+- `tests/test_dev_knowledge.py`: The Development Knowledge Vault (DEC-0073, core/dev_knowledge.py): what the team learned, each entry tied to where it came from, MIA's own notes kept as derived until someone confirms them, and given to agents before they work; the retrospective's record carries the lab coder's method.
+- `tests/test_dev_lab.py`: MIA's development lab (DEC-0058, core/dev_lab.py): a proposal is written in an isolated worktree, checked against rules the lab can't touch and against the suite at the start, and reaches the running copy only on approval, reverting itself if it breaks something there. A coder's steps are kept as it
 - `tests/test_dev_ledger.py`: The independence ledger (DEC-0075, core/dev_ledger.py): computed from the history, scored by a lower confidence bound, stages proposed by the evidence and confirmed by Zac, never above what the evidence supports now.
 - `tests/test_dev_map.py`: MIA's architecture map (DEC-0078, core/dev_map.py): read from the code with ast, nothing run; the layering rule checked; docs that describe how things are checked against the files.
 - `tests/test_dev_store.py`: The development history on this PC (DEC-0077, core/dev_store.py): kept whole, kept small, found without loading it.

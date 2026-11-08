@@ -229,7 +229,8 @@ The record:
 def _record(task, events: list[dict]) -> tuple[str, list[str]]:
     """A finished task's record for the retrospective, and the sources it may cite: the task, its files and body,
     then every step of its history (cut to fit), with the reviews, resolutions, commits and lab proposals named in
-    it as refs.
+    it as refs; and the lab coder's steps when its proposal kept a trace (core/dev_lab.py, T-0025), so the method
+    can be written up from what was done.
     """
     refs = [f"task:{task.id}"] + [f"dec:{d}" for d in getattr(task, "decisions", [])]
     lines = [f"Task {task.id}: {task.title}", f"Files: {', '.join(task.files)}", (task.body or "")[:2500], "", "History:"]
@@ -244,6 +245,14 @@ def _record(task, events: list[dict]) -> tuple[str, list[str]]:
         lab = re.search(r"lab ([0-9]{8}-[0-9a-f]+)", detail)
         if lab:
             refs.append(f"lab:{lab.group(1)}")
+    branch = getattr(task, "branch", "") or ""
+    if branch.startswith("lab/"):
+        from core import dev_lab
+
+        method = dev_lab.trace_summary(branch[len("lab/"):])
+        if method:
+            lines += ["", "Method:", method]
+            refs.append(f"lab:{branch[len('lab/'):]}")
     return "\n".join(lines)[:9000], sorted(set(refs))
 
 

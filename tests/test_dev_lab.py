@@ -1,7 +1,8 @@
 """MIA's development lab (DEC-0058, core/dev_lab.py): a proposal is written
 in an isolated worktree, checked against rules the lab can't touch and
 against the suite at the start, and reaches the running copy only on
-approval, reverting itself if it breaks something there."""
+approval, reverting itself if it breaks something there. A coder's steps
+are kept as its method trace: tools and targets only."""
 
 import subprocess
 from pathlib import Path
@@ -159,3 +160,51 @@ def test_a_suite_run_that_crashed_is_run_once_more():
     assert not both_bad["finished"]  # twice: it stands as not finished
     ok = lab.run_suite(Path("."), once=lambda cwd: lab.suite_result("9 passed in 3.1s"))
     assert ok["summary"] == "9 passed in 3.1s"
+
+
+def test_a_coders_stream_becomes_steps_with_tools_and_targets_only():
+    """Each tool the coder used and on what (a lab path made relative, a command's first words), never the content
+    it wrote; what it said at the end; lines that aren't JSON are skipped."""
+    import json
+
+    cwd = Path("C:/lab/20261108-abc")
+    stream = "\n".join([
+        "not json",
+        json.dumps({"type": "assistant", "message": {"content": [
+            {"type": "text", "text": "Looking."},
+            {"type": "tool_use", "name": "Read", "input": {"file_path": "C:\\lab\\20261108-abc\\core\\thing.py"}},
+            {"type": "tool_use", "name": "Grep", "input": {"pattern": "VALUE", "path": "core"}}]}}),
+        json.dumps({"type": "assistant", "message": {"content": [
+            {"type": "tool_use", "name": "Edit", "input": {"file_path": "C:/lab/20261108-abc/core/thing.py",
+                                                          "old_string": "SECRET OLD", "new_string": "SECRET NEW"}},
+            {"type": "tool_use", "name": "Bash", "input": {"command": "python -m pytest -q tests/test_thing.py -x --tb=short"}}]}}),
+        json.dumps({"type": "result", "result": "Changed VALUE to 2."})])
+    said, steps = lab.trace_steps(stream, cwd)
+    assert said == "Changed VALUE to 2."
+    assert steps == [{"tool": "Read", "target": "core/thing.py"}, {"tool": "Grep", "target": "core"},
+                     {"tool": "Edit", "target": "core/thing.py"},
+                     {"tool": "Bash", "target": "python -m pytest -q tests/test_thing.py -x"}]
+    assert "SECRET" not in json.dumps(steps)
+
+
+def test_a_coders_steps_are_kept_beside_its_proposal_and_summed_up(repo):
+    """A coder that says its steps has them kept per attempt; the summary says a repeated step once with a count; a
+    plain-string coder keeps no trace."""
+    p = lab.create("Make VALUE 2", "VALUE should be 2", "", "change core/thing.py")
+
+    def coder(task, cwd, python):
+        """Writes the change and says what it did, step by step."""
+        (Path(cwd) / "core" / "thing.py").write_text("VALUE = 2\n")
+        return lab.CoderSaid("Done.", [{"tool": "Read", "target": "core/thing.py"},
+                                       {"tool": "Read", "target": "core/thing.py"},
+                                       {"tool": "Edit", "target": "core/thing.py"}])
+
+    p = lab.write(p.proposal_id, coder=coder)
+    assert p.coder_said == "Done." and [a["attempt"] for a in lab.trace(p.proposal_id)] == ["first"]
+    assert (repo / "data" / "lab" / "traces" / f"{p.proposal_id}.json").exists()
+    assert lab.trace_summary(p.proposal_id) == (f"The coder's steps (lab {p.proposal_id}, first try): "
+                                                "Read core/thing.py x2; Edit core/thing.py")
+    q = lab.create("Another", "x", "", "y")
+    lab.write(q.proposal_id, coder=lambda t, cwd, py: "I looked.")
+    assert lab.trace(q.proposal_id) == [] and lab.trace_summary(q.proposal_id) == ""
+    assert lab.trace("../../etc") == []

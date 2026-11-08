@@ -26,7 +26,10 @@ reaches the running MIA only when Zac approves.
   again, and a new failure reverts the merge by itself (`git revert`,
   history kept). MIA restarts to load it.
 
-Proposals are kept on this device (`data/lab/proposals.json`).
+Proposals are kept on this device (`data/lab/proposals.json`), and beside
+them each coder attempt's method trace (`data/lab/traces/<id>.json`, T-0025):
+the tools it used and on what, in order, never what it wrote; the
+retrospective (core/dev_knowledge.py) writes method entries from it.
 `quiet_job_flags()` is how MIA starts her background jobs on Windows so
 nothing they run ever flashes a window on the desktop.
 """
@@ -245,30 +248,32 @@ def quiet_job_flags() -> int:
 
 
 def run_claude(task: str, cwd: Path, python: str) -> str:
-    """Claude Code, headless, in the lab folder: files there and the test suite only."""
+    """Claude Code, headless, in the lab folder: files there and the test suite only. Its stream of steps is read for
+    the method trace (T-0025): what it says comes back as a CoderSaid carrying the tools it used and on what."""
     claude = shutil.which("claude")
     if claude is None:
         raise RuntimeError("Claude Code isn't installed on this computer.")
-    args = [claude, "-p", task, "--permission-mode", "acceptEdits", "--output-format", "json",
+    args = [claude, "-p", task, "--permission-mode", "acceptEdits", "--output-format", "stream-json", "--verbose",
             "--allowedTools", "Read", "Edit", "Write", "Glob", "Grep", f"Bash({python} -m pytest:*)",
             "--disallowedTools", "WebFetch", "WebSearch", "Bash(git push:*)"]
     out = subprocess.run(args, cwd=str(cwd), capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=CODER_TIMEOUT,
                          creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
-    try:
-        return str(json.loads(out.stdout).get("result") or "").strip()
-    except ValueError:
-        return (out.stdout or out.stderr or "").strip()[-2000:]
+    said, steps = trace_steps(out.stdout or "", cwd)
+    return CoderSaid(said or (out.stderr or out.stdout or "").strip()[-2000:], steps)
 
 
 def write(proposal_id: str, coder: Optional[Callable] = None, again: str = "") -> Proposal:
     """Claude Code writes the change in the lab; the lab commits it. With `again` (what went wrong the first time,
-    e.g. the failing test's output), a written proposal gets one more try on top of the first."""
+    e.g. the failing test's output), a written proposal gets one more try on top of the first. A coder that says what
+    steps it took (a CoderSaid) has them kept as the proposal's trace (data/lab/traces)."""
     p = get(proposal_id)
     if p.status not in (DRAFTED, NOT_READY) + ((WRITTEN,) if again else ()):
         raise ValueError(f"That proposal is {p.status}.")
     lab = folder(p)
     task = coder_task(p, _python()) + (f"\n\nYour change is already in the files. {again}" if again else "")
     said = (coder or run_claude)(task, lab, _python())
+    if getattr(said, "steps", None):
+        save_trace(p.proposal_id, said.steps, "second" if again else "first")
     p.coder_said = (f"{p.coder_said}\n\nSecond try: " if again else "") + str(said or "")[:2000]
     _git("add", "-A", cwd=lab)
     if not _git("status", "--porcelain", cwd=lab):
@@ -279,6 +284,106 @@ def write(proposal_id: str, coder: Optional[Callable] = None, again: str = "") -
     _git("commit", "-m", f"lab: {p.title}\n\n{p.problem}", cwd=lab, author=LAB_AUTHOR)
     p.status, p.note = WRITTEN, ""
     return _put(p)
+
+
+# ------------------------------------------------------------------ method traces (T-0025, DEC-0073)
+
+MAX_STEPS = 200  # per attempt
+_TARGETS = ("file_path", "notebook_path", "path", "pattern", "glob")
+_PROPOSAL_ID = re.compile(r"^[0-9]{8}-[0-9a-f]+$")
+
+
+class CoderSaid(str):
+    """What a coder said, carrying the steps it took (`steps`: [{tool, target}]) when it can tell them. A plain str
+    from a coder still works: it just has no trace."""
+
+    steps: list = []
+
+    def __new__(cls, said: str, steps: Optional[list] = None) -> "CoderSaid":
+        """The words, and the steps beside them."""
+        made = super().__new__(cls, said)
+        made.steps = list(steps or [])
+        return made
+
+
+def _step(tool: str, given: dict, cwd: Optional[Path] = None) -> dict:
+    """Pure logic. One step as its tool and target only, never content: the file or pattern it read, searched or
+    edited (relative to the lab folder), or a command's first six words."""
+    if tool == "Bash":
+        target = " ".join(str(given.get("command", "")).split()[:6])
+    else:
+        target = next((str(given[k]) for k in _TARGETS if given.get(k)), "")
+        if cwd is not None and target:
+            here = str(cwd).replace("\\", "/").rstrip("/") + "/"
+            flat = target.replace("\\", "/")
+            target = flat[len(here):] if flat.lower().startswith(here.lower()) else flat
+    return {"tool": str(tool)[:40], "target": target[:200]}
+
+
+def trace_steps(stream: str, cwd: Optional[Path] = None) -> tuple[str, list[dict]]:
+    """Pure logic. Claude Code's stream-json output to (what it said at the end, the steps it took): each tool it
+    used and on what, in order, at most MAX_STEPS."""
+    said, steps = "", []
+    for line in (stream or "").splitlines():
+        try:
+            msg = json.loads(line)
+        except ValueError:
+            continue
+        if not isinstance(msg, dict):
+            continue
+        if msg.get("type") == "result":
+            said = str(msg.get("result") or "").strip()
+        if msg.get("type") != "assistant":
+            continue
+        for block in (msg.get("message") or {}).get("content") or []:
+            if isinstance(block, dict) and block.get("type") == "tool_use":
+                steps.append(_step(str(block.get("name", "")), block.get("input") or {}, cwd))
+    return said, steps[:MAX_STEPS]
+
+
+def _traces() -> Path:
+    """Where the traces are kept: data/lab/traces, beside the proposals."""
+    return _STORE.parent / "traces"
+
+
+def trace(proposal_id: str) -> list[dict]:
+    """A proposal's kept attempts, oldest first: [{at, attempt, steps}]; [] when there's none."""
+    if not _PROPOSAL_ID.match(proposal_id or ""):
+        return []
+    try:
+        return json.loads((_traces() / f"{proposal_id}.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+
+
+def save_trace(proposal_id: str, steps: list[dict], attempt: str) -> None:
+    """Keeps one attempt's steps next to the proposal (data/lab/traces/<id>.json), added to those before."""
+    if not _PROPOSAL_ID.match(proposal_id or ""):
+        return
+    kept = trace(proposal_id) + [{"at": datetime.now().isoformat(timespec="seconds"), "attempt": attempt,
+                                  "steps": [{"tool": s.get("tool", ""), "target": s.get("target", "")}
+                                            for s in steps[:MAX_STEPS]]}]
+    _traces().mkdir(parents=True, exist_ok=True)
+    (_traces() / f"{proposal_id}.json").write_text(json.dumps(kept, indent=1), encoding="utf-8")
+
+
+def trace_summary(proposal_id: str, limit: int = 40) -> str:
+    """Pure logic over the kept trace. A proposal's method in a few lines, for the retrospective: each attempt's
+    steps in order, a run of the same tool on the same target said once with how many times; "" without a trace."""
+    lines = []
+    for a in trace(proposal_id):
+        said: list[str] = []
+        for s in a.get("steps", [])[:limit * 3]:
+            step = f"{s.get('tool', '')} {s.get('target', '')}".strip()
+            if said and said[-1].split(" x")[0] == step:
+                count = int(said[-1].rsplit(" x", 1)[1]) + 1 if " x" in said[-1] else 2
+                said[-1] = f"{step} x{count}"
+            else:
+                said.append(step)
+        if said:
+            lines.append(f"The coder's steps (lab {proposal_id}, {a.get('attempt', '')} try): "
+                         + "; ".join(said[:limit]) + ("; ..." if len(said) > limit else ""))
+    return "\n".join(lines)
 
 
 def _suite_once(cwd: Path) -> dict:

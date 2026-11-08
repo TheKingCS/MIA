@@ -1,6 +1,7 @@
 """The Development Knowledge Vault (DEC-0073, core/dev_knowledge.py): what the
 team learned, each entry tied to where it came from, MIA's own notes kept as
-derived until someone confirms them, and given to agents before they work."""
+derived until someone confirms them, and given to agents before they work; the retrospective's record
+carries the lab coder's method."""
 
 import json
 from types import SimpleNamespace
@@ -118,3 +119,16 @@ def test_the_loop_counts_only_what_she_wrote_since_the_guards(monkeypatch):
     assert (reading.value, reading.n) == (0.2, 5)
     monkeypatch.setattr(dev_knowledge, "entries", lambda folder=None: old)
     assert {l.id: l for l in loops.LOOPS}["dev.knowledge"].measure(None) is None
+
+
+def test_the_retrospective_record_carries_the_lab_coders_method(monkeypatch):
+    """A task worked in the lab gets its coder's steps in the record, and the lab proposal as a source it may cite."""
+    from core import dev_lab
+
+    monkeypatch.setattr(dev_lab, "trace_summary", lambda pid: f"The coder's steps (lab {pid}, first try): Read a.py")
+    task = SimpleNamespace(id="T-0019", title="A fix", files=["a.py"], body="", decisions=[],
+                           branch="lab/20261108-abc")
+    record, refs = dk._record(task, [])
+    assert "Method:" in record and "Read a.py" in record and "lab:20261108-abc" in refs
+    record, refs = dk._record(SimpleNamespace(**{**vars(task), "branch": ""}), [])
+    assert "Method:" not in record and not any(r.startswith("lab:") for r in refs)
