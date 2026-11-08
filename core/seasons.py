@@ -20,7 +20,7 @@ month / last year** are the whole closed period against the one before. The
 question plan `seasons` (core/question_plans.py) puts these lines on a fact
 sheet and the model only phrases them. Each closed month and year is kept
 (`close_past()`, the daily check) in the person's own folder
-(`seasons.json`), which the Chronicle's yearly edition grows from.
+(`seasons.json`, sealed on disk: DEC-0126), which the Chronicle's yearly edition grows from.
 
 A child account never sees the money lines (core/child_accounts.py).
 """
@@ -32,6 +32,7 @@ from datetime import date, timedelta
 from pathlib import Path
 from typing import Optional
 
+from core.at_rest import open_text, seal
 from core.atomic_write import atomic_write_text
 
 FILE_NAME = "seasons.json"
@@ -219,18 +220,19 @@ def _folder(context) -> Optional[Path]:
 
 
 def kept(context) -> dict:
-    """Every season kept so far (seasons.json), by its key; none when it's missing or unreadable."""
+    """Every season kept so far (seasons.json, sealed: DEC-0126), by its key; none when it's missing or unreadable
+    (a sealed one that won't open is copied aside first, so a later save can't lose it)."""
     folder = _folder(context)
     if folder is None:
         return {}
     try:
-        return json.loads((folder / FILE_NAME).read_text(encoding="utf-8"))
+        return json.loads(open_text(folder / FILE_NAME))
     except (OSError, ValueError):
         return {}
 
 
 def close_past(context, today: Optional[date] = None) -> list[str]:
-    """Keep last month (and, in January, last year) once each. Returns the keys kept now."""
+    """Keep last month (and, in January, last year) once each, sealed. Returns the keys kept now."""
     folder = _folder(context)
     if folder is None:
         return []
@@ -245,5 +247,7 @@ def close_past(context, today: Optional[date] = None) -> list[str]:
         added.append(key)
     if added:
         folder.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(folder / FILE_NAME, json.dumps(found, indent=1, ensure_ascii=False))
+        # sealed here (DEC-0126): its lines are worked out from the sealed memories and history; not a SEALED name,
+        # since no store loads it
+        atomic_write_text(folder / FILE_NAME, seal(json.dumps(found, indent=1, ensure_ascii=False)))
     return added

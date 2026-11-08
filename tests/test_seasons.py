@@ -58,3 +58,18 @@ def test_closed_months_are_kept_once(tmp_path, monkeypatch):
     assert seasons.close_past(person, TODAY) == ["2026-10", "2025"]
     assert seasons.close_past(person, TODAY) == []  # once each
     assert seasons.kept(person)["2026-10"]["lines"] == ["last month line"] and calls == ["last month", "last year"]
+
+
+def test_the_kept_seasons_are_sealed_on_disk_and_read_back(tmp_path, monkeypatch):
+    """DEC-0126: the seasons are worked out from the sealed memories and history, so the kept file is sealed too; a
+    plain file from before still reads."""
+    from core import at_rest
+
+    monkeypatch.setattr(seasons, "season", lambda context, kind, today=None: (kind, ["Started guitar with Sam"]))
+    person = SimpleNamespace(failures=SimpleNamespace(data_dir=tmp_path))
+    (tmp_path / seasons.FILE_NAME).write_text('{"2026-09": {"label": "September", "lines": [], "kept": "x"}}',
+                                              encoding="utf-8")
+    seasons.close_past(person, TODAY)
+    raw = (tmp_path / seasons.FILE_NAME).read_text(encoding="utf-8")
+    assert at_rest.is_sealed(raw) and "Sam" not in raw
+    assert set(seasons.kept(person)) == {"2026-09", "2026-10", "2025"}
