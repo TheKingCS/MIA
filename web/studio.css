@@ -41,3 +41,11 @@
   .st-preview { order: -1; }
   .st-room { height: 220px; }
 }
+.st-describe { display: grid; gap: 10px; padding: 16px 18px; margin-bottom: var(--gap); }
+.st-describe .pw-label { margin: 0; }
+.st-describe-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+.st-describe-row input { min-height: 44px; padding: 0 12px; border-radius: var(--radius-sm); border: 1px solid var(--line-strong);
+  background: rgba(var(--rgb-panel-2), 0.9); color: var(--text); font: inherit; }
+.st-designed { margin: 0; font-size: var(--text-sm); color: var(--text-dim); }
+.st-import { position: relative; overflow: hidden; cursor: pointer; }
+.st-import input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }

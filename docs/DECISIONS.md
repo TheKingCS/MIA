@@ -2055,6 +2055,9 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   5. Built as shared components (`web/spatial.css`, `web/spatial.js`), 2.5D first, every device at its own depth,
      reduced motion respected. Muse refines the art direction.
 - Plan and milestones: `docs/design/NEXUS_PLAN.md`.
+- Confirmed by Zac, 2026-11-08 06:31 ("go with your recommendations"): the area hues stay as above even though his
+  concept images burned Garage orange and Plants and Animals green; the warmth lives in the portal pictures (Muse,
+  H-0097), and amber stays the one "needs you" signal.
 - Related: DEC-0023 (amended: area hues), DEC-0014, DEC-0017, DEC-0129
 
 ### DEC-0131: Compound maintenance triggers (meter OR calendar, whichever comes first)
@@ -2196,6 +2199,9 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   6. Zac, 05:48: the four starter themes yes; Y2K's loud graffiti yes (behind panels, faded where you read). The
      Theme Studio's step 2 (preview, tweak, save your own) is built; an accent that reads as a meaning colour or
      text under 4.5:1 contrast is refused in core.
+  7. Zac, 06:31 ("all of the above"): Theme Studio steps 3 and 4 built: export and import as `mia-theme/1` files
+     (`theme.import` through the same checks), and MIA designing a theme from a description, read in code
+     (`core/theme_design.py`; `design_theme` by voice).
 - Related: DEC-0135, DEC-0023, DEC-0130, DEC-0017, DEC-0014, DEC-0125
 
 ### DEC-0137: Living Systems Framework — generalize the existing foundation, don't rebuild it

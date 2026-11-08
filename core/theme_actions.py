@@ -13,6 +13,13 @@ action system so each change is approved and undoable:
   as a warning colour and text that would be hard to read.
 - `theme.delete`: one of your own themes; if it's the one in use, MIA goes
   back to Stark.
+- `theme.import`: a theme from a file (the Studio's export, or someone
+  else's): read through the same checks as everything else (only allowed
+  tokens, nothing that can break out of CSS, no warning-coloured accent,
+  readable text), rebuilt from its choices, kept as one of yours.
+
+`export(theme)` (pure) is the file the Studio downloads: the theme's
+choices, its tokens and room, and a format mark, so another MIA can read it.
 
 Built-in themes can't be changed or deleted (save a copy instead). Your
 themes are yours alone (person_settings `display.custom_themes`).
@@ -114,11 +121,81 @@ def _delete(context, params) -> str:
     return f"Deleted {found['name']}." + (" Back to Stark." if in_use else "")
 
 
+FORMAT = "mia-theme/1"
+MAX_FILE = 20_000  # characters: a theme file is a few kilobytes
+
+
+def export(theme: dict) -> dict:
+    """Pure logic. A theme as the file the Studio downloads: its format mark, name, line, the theme it's built on,
+    its Studio choices, and the tokens, material and room it makes (for a MIA without the Studio's arithmetic)."""
+    from core.themes import choices_of
+
+    return {"format": FORMAT, "name": theme.get("name", ""), "line": theme.get("line", ""), "id": theme.get("id", ""),
+            "choices": choices_of(theme), "tokens": dict(theme.get("tokens") or {}),
+            "material": theme.get("material", "solid"), "room": dict(theme.get("room") or {})}
+
+
+def _imported(context, params) -> dict:
+    """The theme a file holds, checked and rebuilt as one of this person's own (a new id and a name not yet taken);
+    ActionError for a file that isn't a MIA theme or doesn't pass the checks."""
+    import json
+
+    from core.themes import MAX_CUSTOM, THEMES, as_data, build_theme, choices_of, clean_theme, custom_themes, own_id
+
+    raw = params.get("file")
+    if isinstance(raw, str):
+        if len(raw) > MAX_FILE:
+            raise ActionError("That file is too big to be a theme.")
+        try:
+            raw = json.loads(raw)
+        except ValueError:
+            raise ActionError("That file isn't a theme MIA can read.") from None
+    if not isinstance(raw, dict) or raw.get("format") != FORMAT:
+        raise ActionError("That file isn't a MIA theme.")
+    mine = custom_themes(context)
+    if len(mine) >= MAX_CUSTOM:
+        raise ActionError(f"You have {MAX_CUSTOM} themes of your own. Delete one first.")
+    name = " ".join(str(raw.get("name") or "Imported theme").split())[:40]
+    taken = {t["name"].lower() for t in mine} | {t.name.lower() for t in THEMES.values()}
+    base_name, n = name, 2
+    while name.lower() in taken:
+        name, n = f"{base_name} {n}", n + 1
+    try:
+        cleaned = clean_theme({**raw, "id": "imported", "name": name})
+        picks = raw["choices"] if isinstance(raw.get("choices"), dict) else choices_of(cleaned)
+        theme = build_theme(picks, cleaned, own_id(name, {t["id"] for t in mine}), name)
+    except (ValueError, TypeError, KeyError) as problem:
+        raise ActionError(f"MIA can't use that theme: {problem}") from None
+    theme["line"] = str(raw.get("line") or "")[:160]
+    return theme
+
+
+def _describe_import(context, params) -> str:
+    """The sentence the approval card shows for `theme.import` (Propose); raises ActionError when it can't be done."""
+    return f"Import the theme {_imported(context, params)['name']}" + (" and use it" if params.get("use") else "")
+
+
+def _import(context, params) -> str:
+    """Does `theme.import` once approved: the file's theme kept among theirs, used if asked."""
+    from core import person_settings
+    from core.themes import CUSTOM_KEY, KEY
+
+    theme = _imported(context, params)
+    kept = [t for t in (person_settings.get(context, CUSTOM_KEY, []) or []) if isinstance(t, dict)]
+    person_settings.put(context, CUSTOM_KEY, kept + [theme])
+    if params.get("use"):
+        person_settings.put(context, KEY, theme["id"])
+    context.events.publish("display.changed")
+    return f"Imported {theme['name']}." + (" It's in use." if params.get("use") else " It's in your themes.")
+
+
 THEME_ACTIONS: dict[str, ActionType] = {a.kind: a for a in (
     ActionType("theme.save", "Save theme", {"name": "its name", "choices": "the Studio's choices",
                                             "base": "optional: the theme it started from", "id": "optional: yours, to update",
                                             "use": "optional: use it now"},
                _describe_save, _save, child_ok=True),
     ActionType("theme.delete", "Delete", {"id": "one of your themes"}, _describe_delete, _delete, child_ok=True),
+    ActionType("theme.import", "Import", {"file": "the theme file (mia-theme/1)", "use": "optional: use it now"},
+               _describe_import, _import, child_ok=True),
 )}
 ACTION_TYPES.update(THEME_ACTIONS)

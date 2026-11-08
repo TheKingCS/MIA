@@ -90,9 +90,9 @@ All four are first cuts by Claude for Muse to refine (DEC-0017).
 1. **Pick** (built now): experience and theme in Settings' Look section and by voice; switching is live.
 2. **Preview and tweak** (built 2026-11-08 07:15, `web/studio.html`, Settings and Diagnostics → Theme Studio): the Studio page shows a sample of both experiences in a theme; sliders and colour pickers for
    the allowed tokens and room settings; saved as the person's own theme (data, in their folder).
-3. **Make and share:** new themes from scratch or by mixing parts of two; import and export as a small JSON file
+3. **Make and share** (import and export built 2026-11-08 07:45; mixing two themes' parts still to come): new themes from scratch or by mixing parts of two; import and export as a small JSON file
    (checked against the same allowlist, so an imported theme can't hide warnings or inject anything).
-4. **MIA designs one:** "make me a theme like a rainy Tokyo night" becomes a proposed theme (tokens and room
+4. **MIA designs one** (built 2026-11-08 07:45): "make me a theme like a rainy Tokyo night" becomes a proposed theme (tokens and room
    settings chosen by code from MIA's description), previewed before it's kept.
 5. **Sound sets:** a theme may bring its own chimes (web/sound.js), opt-in.
 
@@ -115,9 +115,25 @@ All four are first cuts by Claude for Muse to refine (DEC-0017).
   Settings' Theme list and answer to their names by voice ("use Lavender"); "make the accent purple" and "make it
   glass" make your own version (`tweak_theme`); "delete my theme Lavender" (`delete_theme`).
 
-## 8. Open for Zac
+## 8. Steps 3 and 4 as built (Zac, 06:31: "all of the above")
 
-1. Theme Studio step 3 (import and export) or step 4 (MIA designs a theme from a description) next?
+- **Export** downloads what's on screen as a small `mia-theme/1` file (its choices, tokens, material and room).
+  **Import** proposes `theme.import`: core reads the file, refuses anything that isn't a MIA theme or is too big,
+  cleans its tokens through the same allowlist, rebuilds it from its choices (so the accent and contrast checks run
+  again), gives it a name not yet taken, and keeps it as one of yours.
+- **Describe One** (and `design_theme` by voice): `core/theme_design.py` reads the words in code, so the same words
+  always make the same theme. Places and moods pick the base (a neon city: Cyberpunk; 2000s, rave: Y2K; calm, ocean,
+  snow: Glass) and the field colours (ocean, forest, sunset, space, snow, rain, night); colour words pick the accent
+  (cool ones only); moods set the room (calm, wild, misty, retro, film) and the panels, font and corners. She says
+  what each word did, and what she couldn't use: a warm accent goes into the pictures and the fire instead, and MIA's
+  themes stay dark for now. In the Studio the design loads to tweak before anything is kept; by voice it's saved and
+  put on, and "undo" takes it back.
+
+## 9. Still to come
+
+- Mixing parts of two themes (one's colours, another's room).
+- Sound sets (step 5): a theme's own chimes, opt-in.
+- The glasses taking a theme's accent.
 
 1. The four starter themes and their names, or others first?
 2. Should the Y2K theme be allowed a loud graffiti texture in the backdrop (it's behind panels, never under text)?

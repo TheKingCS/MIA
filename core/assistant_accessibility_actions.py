@@ -138,6 +138,29 @@ def _action_tweak_theme(context, arguments: dict) -> str:
         return str(problem)
 
 
+def _action_design_theme(context, arguments: dict) -> str:
+    """Tool design_theme: MIA designs a theme from the person's description (core/theme_design.design: the words are
+    read in code), saves it as one of theirs through theme.save (so it's checked and undoable) and puts it on."""
+    from core.actions import ActionError
+    from core.theme_actions import _save
+    from core.theme_design import design, summary
+    from core.themes import all_themes
+
+    description = str(arguments.get("description") or "").strip()
+    if not description:
+        return "Describe it: a place, a mood or colours. \"A rainy Tokyo night\", \"calm ocean glass\"."
+    result = design(description)
+    taken = {t["name"].lower() for t in all_themes(context).values()}
+    name, n = result["name"], 2
+    while name.lower() in taken:
+        name, n = f"{result['name']} {n}", n + 1
+    try:
+        _save(context, {"name": name, "choices": result["choices"], "base": result["base"], "use": True})
+    except ActionError as problem:
+        return str(problem)
+    return summary({**result, "name": name}) + " It's on now; say \"undo\" or open the Theme Studio to tweak it."
+
+
 def _action_delete_theme(context, arguments: dict) -> str:
     """Tool delete_theme: one of the person's own themes, by name (built-in ones stay)."""
     from core.actions import ActionError
@@ -164,7 +187,7 @@ def _action_read_screen(context, arguments: dict) -> str:
 
 def register_accessibility_actions(registry: AssistantActionRegistry) -> None:
     """Registers the accessibility tools: set_text_size, set_high_contrast, set_display_style, set_theme,
-    tweak_theme, delete_theme and read_screen."""
+    tweak_theme, design_theme, delete_theme and read_screen."""
     registry.register(AssistantAction(
         name="set_text_size", domain="accessibility",
         description="Make the text on screen bigger or smaller for the user (normal, larger, largest, huge).",
@@ -227,6 +250,17 @@ def register_accessibility_actions(registry: AssistantActionRegistry) -> None:
         handler=_action_tweak_theme,
         trigger_phrases=("accent color", "accent colour", "make it more", "theme but", "my own theme", "tweak the theme",
                          "change the accent"),
+    ))
+    registry.register(AssistantAction(
+        name="design_theme", domain="accessibility",
+        description="Design a new theme for the user from their description (a place, a mood, colours: 'a rainy "
+                    "Tokyo night', 'calm ocean glass', 'loud 2000s rave'), save it as theirs and use it.",
+        parameters={"type": "object", "properties": {
+            "description": {"type": "string", "description": "the user's description of the look they want."},
+        }, "required": ["description"]},
+        handler=_action_design_theme,
+        trigger_phrases=("design a theme", "design me a theme", "make me a theme", "make a theme", "theme like",
+                         "create a theme", "new theme like"),
     ))
     registry.register(AssistantAction(
         name="delete_theme", domain="accessibility",

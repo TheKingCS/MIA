@@ -31,7 +31,10 @@ models (`MailSetupRequest`, `MailUnlockRequest`), handed straight to
 core/inbox_mail.py's encrypted vault: never an action (whose parameters
 are kept), never logged. The ID wallet's cards (`/api/wallet`, `WalletCard`,
 2026-11-08) are the same: a card's number goes only through its own
-request to core/id_wallet.py, sealed at rest; lists mask it.
+request to core/id_wallet.py, sealed at rest; lists mask it. The Theme Studio
+asks MIA to design a theme from a description (`ThemeDesignRequest`, POST
+/api/themes/design, core/theme_design.py): nothing is kept there; saving is
+an action.
 
 **MIA's browser, live** (2026-11-07): `/api/browser/frame` (a picture of
 her browser now) and `/api/browser/input` (the person's click, typing, key
@@ -312,6 +315,11 @@ class PasswordChange(BaseModel):
     new: str
 
 
+class ThemeDesignRequest(BaseModel):
+    """A description for MIA to design a theme from (core/theme_design.design): nothing is kept, the Studio previews it."""
+    description: str = Field(..., max_length=300)
+
+
 class WalletCard(BaseModel):
     """A card in the ID wallet, added or changed from its own screen: never an action, so its number never sits in a
     proposal, the history or the undo log (core/id_wallet.py)."""
@@ -418,7 +426,7 @@ SECURITY_HEADERS = {
 
 
 def create_app(context: AppContext) -> FastAPI:
-    """MIA's web server (FastAPI) for the phone, the glasses and the desktop's web view: sign-in sessions by bearer token (or a linked phone's device key), the access switch that turns away forwarded requests when phone access is off, every /api route (each runs on the signed-in person's own view, view_for), and the web front end served fresh at /web/. Your Data (/api/your-data, export and delete) and the sealed-files recovery key sit beside the security log here; the Theme Studio reads /api/themes (DEC-0136)."""
+    """MIA's web server (FastAPI) for the phone, the glasses and the desktop's web view: sign-in sessions by bearer token (or a linked phone's device key), the access switch that turns away forwarded requests when phone access is off, every /api route (each runs on the signed-in person's own view, view_for), and the web front end served fresh at /web/. Your Data (/api/your-data, export and delete) and the sealed-files recovery key sit beside the security log here; the Theme Studio reads /api/themes and asks /api/themes/design (DEC-0136)."""
     app = FastAPI(title="MIA Mobile API")
     app.state.context = context
     app.state.sessions: dict[str, str] = {}  # token -> profile_id
@@ -2410,6 +2418,15 @@ def create_app(context: AppContext) -> FastAPI:
 
         with app.state.turn_lock:
             return studio(view_for(context, profile_id))
+
+    @app.post("/api/themes/design")
+    def web_theme_design(body: ThemeDesignRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        """MIA designs a theme from a description (core/theme_design.design, DEC-0136): its name, base, choices, what
+        she understood and what she couldn't use, plus her one-line summary. Nothing is kept; saving is theme.save."""
+        from core.theme_design import design, summary
+
+        result = design(body.description)
+        return {**result, "summary": summary(result)}
 
     @app.get("/api/nexus")
     def web_nexus(profile_id: str = Depends(require_profile_id)) -> dict:
