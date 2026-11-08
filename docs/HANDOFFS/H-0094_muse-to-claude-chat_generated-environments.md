@@ -30,12 +30,22 @@ Honest staging note (from muse's read of AETHER's own how-it-works post): today'
 - MIA inside a generated place: host, bartender, ambient presence, or the place itself being hers? What keeps a virtual bar she runs *MIA* and not a game lobby — and what does the Highest Self doctrine (DEC-0114, if approved) say about how she carries herself in a social space?
 - Generated environments for a purpose vs for escape: MIA's principles say she helps a person live their life, not become their life. Where is the line she should hold by design?
 
+## Zac's addition, same conversation — the scene dresses people too
+
+Minutes after approving the write-up, Zac extended it: live-edit the *people* in a generated place, not just the place. Mustaches and filters applied live; Zac and his friends dressed digitally for a style or a theme — the bar has a theme night, everyone in it is styled to match. Two technical forms, honestly separated:
+
+- **Remote friends (their presence/avatar in the scene):** styling is a rendering choice on their presence — outfits, accessories, filters. This rides with Tier 2; the scene's theme can propose a look for everyone in it.
+- **Co-located people (seen through passthrough/glasses):** overlaying a mustache or a costume on a real body in front of you needs live person tracking and anchoring — a Tier 3 capability on headsets, and the natural Orion-glasses form later.
+
+Consent rule (extends the people-are-not-props constraint below): you dress *yourself* freely; a theme can *propose* a look for everyone present, but each person's own look applies with their own go-ahead. MIA never restyles another person in a shared scene uninvited — the host proposes, each guest accepts their own outfit.
+
 ## The proposal (draft DEC-0132)
 
 1. **Environment generation is a named MIA capability**: speak, and MIA generates the environment around you. Generation is an engine capability, never a surface fork — the PC builds; Quest is the dive surface; the Nexus is where generated places live as destinations (portals); glasses get the glance layer and, on Orion-class hardware later, generated overlays in real space.
 2. **Tier 1 — she builds it, you step in (near-term).** Spoken request → MIA composes/builds a scene on the PC from a room scan or from a Nexus environment brief (minutes, honestly labeled) → step in on Quest. First scenes are places with jobs: walk the walipini before digging it, stand in a workshop layout before buying lumber, a focus room, a bar's first rough cut. Generated places persist in the Nexus and can be re-entered and revised by voice.
-3. **Tier 2 — shared generated places.** Friends present in the same generated scene, each from their own perspective: the virtual bar at home, alone with MIA hosting or with friends cut in; meeting people in virtual places. Everyone present is there by their own opt-in (constraints below). MIA hosts: she keeps the scene coherent across viewers, runs the ambience, and is a presence in it.
-4. **Tier 3 — real-time generation (frontier, no dates).** Speak and the room re-renders around you live; objects and characters persist across transformations; generation latency and hardware (Orion-class glasses) decide when this tier opens. Named as the north star so Tiers 1–2 build toward it instead of painting into a corner.
+3. **Tier 2 — shared generated places.** Friends present in the same generated scene, each from their own perspective: the virtual bar at home, alone with MIA hosting or with friends cut in; meeting people in virtual places. Everyone present is there by their own opt-in (constraints below). MIA hosts: she keeps the scene coherent across viewers, runs the ambience, and is a presence in it. The scene dresses its people too: filters, accessories and themed outfits applied to each person's presence, per the consent rule above.
+4. **Live-editing co-located people** — overlays on real bodies in passthrough (a mustache on the friend across the table, costumes at a real party) — is Tier 3 with the morphing work: it needs the person-tracking and anchoring that only the frontier tier carries.
+5. **Tier 3 — real-time generation (frontier, no dates).** Speak and the room re-renders around you live; objects and characters persist across transformations; generation latency and hardware (Orion-class glasses) decide when this tier opens. Named as the north star so Tiers 1–2 build toward it instead of painting into a corner.
 
 ## Constraints
 
