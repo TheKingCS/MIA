@@ -77,6 +77,7 @@ SEALED = frozenset({
     "browser_routines.json",  # tasks they showed MIA in her browser
     "living_worlds.json",  # their universes, campaigns and characters (DEC-0134)
     "response_styles.json",  # how they like MIA to answer (DEC-0138)
+    "directions.json",  # the standing values they steer by (DEC-0141)
 })
 # Every store reading a SEALED file uses open_text and catches ValueError (UnreadableFile is one) with OSError, so a
 # file that won't open is copied aside and the store starts empty instead of MIA failing to start. Not yet: the

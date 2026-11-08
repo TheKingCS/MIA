@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1254 files, 272,743 lines; 1254 files describe themselves; 14,813 of 15,511 classes and functions are documented.
+1256 files, 272,932 lines; 1256 files describe themselves; 14,829 of 15,528 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-464 files, 128,342 lines; 6,879 of 6,965 classes and functions documented
+465 files, 128,480 lines; 6,891 of 6,977 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -151,6 +151,7 @@
 - `core/device_help_manager.py`: Retrieval-grounded "what does this do / how do I use this device" answers — docs/ROADMAP.md milestone 5.4. This is explicitly **stage 1 ("Read & explain")** of the Self-Modification / Dev Mode staged plan in docs/ROADMAP.md: read-only retrieval over `docs/user_help/*.md` and module metadata, never a
 - `core/device_profile.py`: MIA runs as one codebase across two editions — docs/ROADMAP.md milestone 13.1: **Core** (the Pi 5 + AI HAT+ 2, resource-constrained, a field data-gathering tool) and **Home** (a desktop workstation, more storage/resources), distinguished only by `config.system.device_profile`.
 - `core/diagnostics.py`: Diagnostic procedures (ACAF step 4, T-0040; `docs/ACAF_REVIEW.md` section 6): a check-up written as a spec, not code, over what inspection's PASSIVE methods already read (core/inspection.py: the OS, CPU and memory, the drives, the network, the firewall, the AI runtime, MIA's own health). Nothing her
+- `core/direction.py`: The standing directions a person is steering their life by — the values they've asked MIA to hold in mind and gently encourage (Zac, 2026-11-08: his shift "from consumer to producer" — make and restore before buying, 3D print, upcycle, thrift and design his own clothes, grow and cook his own natural
 - `core/discovery_manager.py`: Discovery — the AI-generated counterpart to Mission Pathways (core/pathway_manager.py, hand-authored) and the first real piece of the "Personal Capability & Progression Engine" the user described after Pathways shipped. Deliberately the smallest possible closed loop, not the full vision (cross-tree 
 - `core/display_style.py`: Which look MIA's screens use (DEC-0135, Zac 2026-11-08: "selectable themes that change which variant of display you get: the spatial portal design or the organized cards design"). Each person's own choice (person_settings `display.style`), changed in Settings or by voice ("switch to the cards look")
 - `core/doc_freshness.py`: Documentation that keeps up with the code (DEC-0110; Zac, 2026-11-07: "when anything is changed it needs to be reflected in that file's documentation as well"). DEC-0104 makes sure every definition *has* a docstring; this checks that a docstring is still *true* after its code changes.
@@ -750,7 +751,7 @@
 
 ## tests/: the test suite: what each part must do
 
-426 files, 71,983 lines; 5,651 of 6,263 classes and functions documented
+427 files, 72,034 lines; 5,655 of 6,268 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -854,6 +855,7 @@
 - `tests/test_device_profile.py`: Unit tests for core.device_profile. Isolates ConfigManager's _CONFIG_FILE (same pattern as test_assistant_action_handlers.py's own fixture) — without this, `ConfigManager()` here loads the real config/config.json, and `test_defaults_to_core_when_unset` silently starts asserting against whatever this *(1 undocumented)*
 - `tests/test_diagnostics.py`: Diagnostic procedures (ACAF step 4, T-0040, core/diagnostics.py): check-ups written as specs over what inspection's PASSIVE methods read; checked before they run, so they can only read and compare; what couldn't be read said as such; the hardware list, only what was read; the log's newest problems,  *(1 undocumented)*
 - `tests/test_diagnostics_log_viewer.py`: Unit tests for the pure tail/filter helpers backing the Diagnostics module's log viewer (modules.diagnostics.module.tail_lines filter_lines). The QWidget-building side of get_widget() needs a live Qt event loop and is exercised manually instead — see docs/testing/2.6_system_logs_viewer.md. *(1 undocumented)*
+- `tests/test_direction.py`: The standing directions MIA holds and encourages (core/direction.py, DEC-0141): a direction is set, persisted (sealed, DEC-0126), and turns up in the context block she carries every turn — framed to lean her suggestions that way, never to preach; turning one off removes it. *(1 undocumented)*
 - `tests/test_discovery_manager.py`: Unit tests for core.discovery_manager. Isolates _DATA_DIR/file constants for discovery_manager, skill_manager, mission_manager, project_manager, and intent_manager into a shared tmp_path scratch area, same monkeypatch pattern as tests/test_pathway_manager.py. *(4 undocumented)*
 - `tests/test_discovery_tool.py`: Unit tests for modules.toolbox.tools.discovery_tool's pure format_proposal_card_text(), same style as tests/test_pathway_tool.py (no Qt event loop, no fixtures). *(1 undocumented)*
 - `tests/test_display_style.py`: Display styles (DEC-0135, core/display_style.py): each person picks the spatial look (the Nexus and rooms), the cards look (the Dashboard and cards), or spatial on the computer and cards on the phone; in Settings, by voice, and handed to every page through the shell.

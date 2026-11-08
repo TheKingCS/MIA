@@ -2279,3 +2279,17 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Next uses (not built): portal pictures painted by MIA (`use: "portal"` is ready in core), a generated place's
   backdrop (DEC-0132), sound and more asset kinds.
 - Related: DEC-0136, DEC-0130, DEC-0053, DEC-0132, DEC-0002
+
+### DEC-0141: Standing directions — values MIA holds and gently encourages
+- Status: APPROVED + built (Zac, 2026-11-08: "MIA should be aware of my goal to go from consumer to producer and
+  encourage me to produce — make stuff myself, clean up and restore before buying new, 3D print, upcycle, thrift and
+  design my own clothes, produce my own natural foods and eliminate processed, produce in every way possible").
+- Decision (`core/direction.py`): a person can set standing **directions** — the values they're steering their life by.
+  Each is a title, the value in their words, and how MIA should encourage it. A `DirectionBook` (sealed personal store,
+  DEC-0126) holds them; `context_block()` puts the active ones into "what you know about this user" on every chat turn
+  (`build_user_context_block`), framed so MIA leans her suggestions that way when it genuinely fits — the make/restore/
+  upcycle angle before buying, the from-scratch natural-food version — but never preachy and never at the cost of the
+  quick answer they asked for. The directions live only in the person's own profile; none are hard-coded. Zac's first
+  direction (consumer → producer) is set in his profile. Built + tested; a proactive periodic nudge through the gate is
+  an easy follow-up.
+- Related: DEC-0054 (life notes), DEC-0067 (what she remembers), DEC-0137 (environment), DEC-0126 (sealing)

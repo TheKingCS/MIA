@@ -508,11 +508,17 @@ def build_user_context_block(context, prompt: str = "") -> str:
     for memory in turn_memories(context, prompt):
         facts.append(memory.text)
 
+    # The person's standing directions — the values they've asked MIA to hold in mind and encourage (DEC-0141).
+    directions = getattr(context, "direction", None)
+    steer = directions.context_block() if directions is not None else ""
+
     lead = f"{child_note}\n" if child_note else ""
     if not facts:
-        return lead + "You don't know much about this user yet — a great opportunity to ask and learn."
-    bullet_list = "\n".join(f"- {fact}" for fact in facts)
-    return f"{lead}What you know about this user so far:\n{bullet_list}"
+        base = lead + "You don't know much about this user yet — a great opportunity to ask and learn."
+    else:
+        bullet_list = "\n".join(f"- {fact}" for fact in facts)
+        base = f"{lead}What you know about this user so far:\n{bullet_list}"
+    return base + (f"\n\n{steer}" if steer else "")
 
 
 def format_birthday(iso_date: str) -> str:

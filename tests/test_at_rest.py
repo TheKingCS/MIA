@@ -194,6 +194,7 @@ SEALED_STORES = [
     ("core.browser_routines", "BrowserRoutines", "browser_routines.json"),
     ("core.living_worlds", "LivingWorldsBook", "living_worlds.json"),
     ("core.response_style", "StyleBook", "response_styles.json"),
+    ("core.direction", "DirectionBook", "directions.json"),
 ]
 
 
