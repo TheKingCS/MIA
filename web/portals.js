@@ -12,6 +12,7 @@
   const button = (label, onclick, cls) => el("button", { type: "button", class: "btn " + (cls || "btn-ghost") + " btn-small", onclick }, label);
   const SOURCE = { yours: "Your painting", original: "The original", none: "No picture yet" };
   let data = null, open = "", mode = "", timer = 0, note = "";
+  const asked = new URLSearchParams(location.search).get("area") || "";  // from the Nexus card: that portal first
 
   // A picture into an element's background: a page path at once, one of yours through your sign-in (MIA.image).
   function show(node, path) {
@@ -93,7 +94,17 @@
     if (data.jobs.some((j) => j.status === "painting")) timer = setTimeout(refresh, 5000);  // a painting takes a minute or so
   }
 
-  async function refresh() { data = await MIA.portals(); paint(); }
+  let scrolled = false;
+  async function refresh() {
+    data = await MIA.portals();
+    if (asked && !scrolled && data.areas.some((a) => a.id === asked)) { open = asked; mode = "choose"; }
+    paint();
+    if (asked && !scrolled) {
+      scrolled = true;
+      const card = document.querySelector(".pp-card.open");
+      if (card) card.scrollIntoView({ block: "center" });
+    }
+  }
 
   MIAShell.start(refresh, { refreshOnChange: true });
 })();

@@ -2159,6 +2159,10 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   The story so far (2026-11-08 overnight): each turn is kept in its campaign (`LivingWorldsBook.record_turn`/`turns_in`:
   what was done, what was narrated, what changed, what failed; the newest 200), and the last 5 go back to the DM each turn
   (`state["recent_turns"]`) so the story stays continuous.
+  **Playing built 2026-11-08 overnight (claude, design session):** the action `world.turn` (core/web_worlds.py: a
+  campaign in play, the character's version in it, what they do; runs `take_turn` with `model_proposer`, undoable),
+  The Story So Far and "What do you do?" in the opened campaign on `web/worlds.html`, and the voice tool
+  `play_world_turn` ("in my campaign I pick the lock"). The page's story is the book's turn history (`_story` reads `book.turns_in`).
 - Proposed by: claude, 2026-11-08, from Zac's "MIA — Living Worlds" handoff (the Convergence multiverse saga).
 - Proposal (`docs/LIVING_WORLDS_PROPOSAL.md`): a major subsystem turning MIA into a persistent-world DM, world
   simulator and experiential-learning guide, with an overarching cross-universe narrative (the Convergence) and a

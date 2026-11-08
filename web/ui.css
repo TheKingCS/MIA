@@ -2031,3 +2031,21 @@ a.comms-row:hover .row-title { color: var(--accent); }
 .pp-thumb-img { display: block; width: 100%; height: 100%; background-size: cover; background-position: center; }
 .pp-say { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
 .pp-say p { margin: 0; }
+
+/* Living Worlds, playing (web/worlds.js, DEC-0134 Phase 2): the story so far and what you do next. */
+.lw-story { display: grid; gap: 10px; padding: 14px 16px; border-radius: var(--radius-sm); background: rgba(var(--rgb-panel-3), 0.6);
+  border: 1px solid rgba(var(--rgb-accent), 0.18); }
+.lw-story > .pw-label { margin: 0; }
+.lw-turns { display: grid; gap: 12px; max-height: 420px; overflow-y: auto; padding-right: 4px; }
+.lw-turn { display: grid; gap: 6px; }
+.lw-turn p { margin: 0; }
+.lw-said { font-size: 13px; color: var(--text-dim); }
+.lw-told { font-size: 15px; line-height: 1.55; padding-left: 12px; border-left: 2px solid rgba(var(--rgb-accent), 0.5); }
+.lw-changed { padding-left: 12px; }
+.lw-chip.missed { border-color: var(--line-strong); font-style: italic; }
+.lw-thinking { margin: 0; font-size: 13px; }
+.lw-do-row { display: flex; gap: 8px; }
+.lw-do-row input { flex: 1; width: 0; min-width: 0; min-height: 44px; padding: 0 12px; border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong); background: var(--surface-raised); color: var(--text); font: inherit; }
+.lw-do-row input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.lw-story { min-width: 0; }
