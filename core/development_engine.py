@@ -47,11 +47,14 @@ PROFESSIONAL = "A qualified professional should verify this before you build or 
 # Selling waits for proof it can be made well and a place to sell it (Zac, 2026-11-08: no selling plant starts before
 # the shelf, the cups and a first batch). These tags say which is which; a test holds every revenue candidate to them.
 OUTLET_TAGS = frozenset({"sales_outlet"})
-PROOF_TAGS = frozenset({"grown_seedlings", "eggs", "something_to_sell"})  # made well, before anyone pays
+PROOF_TAGS = frozenset({"grown_seedlings", "eggs", "preserves", "something_to_sell"})  # made well, before anyone pays
+# Selling food made at home needs the state's cottage-food rules checked first (what may be sold, labels, permits):
+# every food sale requires this tag, and a test holds it.
+FOOD_SALE_TAG = "food_sale_ok"
 STEP_PENALTY = 2.0  # each extra step on a path is a little less certain
 # Needs that mean one particular thing, so a finished step that needed one says it exists: a laying flock means a coop
 # and a feed bin. "Water" isn't one: a greenhouse watered by a hose doesn't mean a rain barrel.
-IMPLIED_TAGS = frozenset({"coop", "feed_storage"})
+IMPLIED_TAGS = frozenset({"coop", "feed_storage", "greenhouse_site", "canning"})
 HOUR_VALUE = 15.0  # a rough worth of an hour, so work counts against a project the way money does (soft, not a wage)
 
 
@@ -267,15 +270,26 @@ def path_to(goal: Candidate, profile: DevelopmentProfile, catalog: Sequence[Cand
     return steps if visit(goal, frozenset({goal.id})) else None
 
 
-def _path_score(goal: Candidate, steps: list, catalog: Sequence[Candidate], done) -> float:
+def _months_until(season: tuple, month: int) -> int:
+    """Pure logic. Months from `month` until a step's season opens (0 in season, or with no season)."""
+    if not season or month in season:
+        return 0
+    return min((m - month) % 12 for m in season)
+
+
+def _path_score(goal: Candidate, steps: list, catalog: Sequence[Candidate], done, month: int = 0) -> float:
     """Pure logic. How worthwhile a whole path is, on the same soft scale as `score`: the goal's monthly value and what
     it unlocks, plus what each step produces on the way, against the path's cost, work and the goal's risk, and a
-    little less for every extra step (a far goal is less certain). A one-step path scores as its candidate does."""
+    little less for every extra step (a far goal is less certain). And a payoff that can't come for months is worth
+    less than one now: the value is discounted by the longest wait for a step's season on the path (in September,
+    preserves already put up beat seedling starts that can't sell until spring). A one-step path in season scores as
+    its candidate does."""
     value = goal.benefit + compounding_value(goal, catalog, done=frozenset(done)) + sum(
         s.benefit for s in steps if s is not goal)
     cost = sum(s.entry_cost + s.recurring_cost * 6 for s in steps)
     labour = sum(s.labour_hours for s in steps)
-    return _worth(value, cost, labour) - goal.risk * 20 - STEP_PENALTY * (len(steps) - 1)
+    wait = max((_months_until(s.season, month) for s in steps), default=0) if month else 0
+    return _worth(value, cost, labour) / (1 + wait / 6) - goal.risk * 20 - STEP_PENALTY * (len(steps) - 1)
 
 
 def _months(season: tuple) -> str:
@@ -353,7 +367,7 @@ def next_step(profile: DevelopmentProfile, catalog: Sequence[Candidate], done=fr
         first = score(steps[0], profile, catalog, done)
         if not (first["available"] and first["affordable"] and first["in_season"]):
             continue
-        weight = _path_score(goal, steps, catalog, done)
+        weight = _path_score(goal, steps, catalog, done, profile.month)
         if best is None or weight > best[0]:
             best = (weight, goal, steps, first)
         # What a step leads toward: the goal it starts the path to that itself produces the most,
@@ -412,8 +426,10 @@ def homestead_catalog() -> list:
     the greenhouse); the greenhouse is dear but scalable. Selling seedling starts sits at the end of a real chain:
     seed cups (toilet-paper rolls, made, before bought trays), a seed-starting shelf (scrap, before a bought one), seed
     mix, a first batch as proof, then a stand, so the plan reaches it through the infrastructure it needs. The flock
-    the same way: a coop and a feed bin, hens in spring, eggs before selling eggs; and a compost bin's first finished
-    compost becomes made seed mix months later. Grounded in plans MIA already knows
+    the same way: a coop and a feed bin, hens in spring, eggs before selling eggs; a compost bin's first finished
+    compost becomes made seed mix months later; preserving needs a harvest, the gear and a first batch; any food sold
+    (eggs, preserves) waits for the state's cottage-food rules to be checked; and a greenhouse waits for a level,
+    drained site. Grounded in plans MIA already knows
     (`core/plan_library.py`), each with the words that mark it already done in the person's records (`_EVIDENCE`,
     read by `done_from_records`). Costs are rough starting figures, not quotes."""
     catalog = [
@@ -445,16 +461,38 @@ def homestead_catalog() -> list:
                   unlocks=("compost_bin", "egg_sales"), season=(3, 4, 5, 6), risk=0.3,
                   note="Four to six pullets in spring; daily care, feed and water every day."),
         Candidate("egg_sales", "Sell extra eggs", entry_cost=15, benefit=30, labour_hours=2,
-                  requires=frozenset({"eggs", "sales_outlet"}), scalable=True, risk=0.2, sector="business",
+                  requires=frozenset({"eggs", "sales_outlet", "food_sale_ok"}), scalable=True, risk=0.2,
+                  sector="business",
                   note="Once the flock lays more than you eat: cartons, a fair price, the same stand."),
+        # Preserving: something to put up, the gear, a first batch, and the rules checked before any jar is sold.
+        Candidate("canning_setup", "A water-bath canning setup", entry_cost=40, benefit=5, labour_hours=1,
+                  requires=frozenset({"beds"}), provides=frozenset({"canning"}), unlocks=("pantry_stock",),
+                  season=(6, 7, 8, 9), risk=0.1,
+                  note="A deep pot with a rack, jars, a jar lifter: for high-acid food (jams, pickles, tomatoes with acid)."),
+        Candidate("pantry_stock", "Put up a first batch of preserves", entry_cost=15, benefit=15, labour_hours=4,
+                  requires=frozenset({"canning"}), provides=frozenset({"preserves", "something_to_sell"}),
+                  unlocks=("preserve_sales",), season=(7, 8, 9, 10), risk=0.15,
+                  note="Follow a tested recipe (the USDA's or Ball's) exactly; low-acid food needs a pressure canner."),
+        Candidate("cottage_food_check", "Check your state's cottage-food rules", entry_cost=0, benefit=0, labour_hours=1,
+                  requires=frozenset({"something_to_sell"}), provides=frozenset({"food_sale_ok"}),
+                  unlocks=("preserve_sales", "egg_sales"), risk=0.0,
+                  note="What may be sold from a home kitchen, how it's labelled, where, and whether a permit or a "
+                       "food-handler card is needed. Rules differ by state."),
+        Candidate("preserve_sales", "Sell jams and pickles", entry_cost=20, benefit=15, labour_hours=3,
+                  requires=frozenset({"preserves", "sales_outlet", "food_sale_ok"}), scalable=True, risk=0.25,
+                  sector="business", note="Labels as the rules ask; start with what sold best at the table."),
         # Compost matures: months after the bin, its sieved compost is seed mix you made.
         Candidate("finished_compost", "Turn and sieve the first finished compost", entry_cost=0, benefit=6,
                   labour_hours=4, made=True, slow=True, requires=frozenset({"compost"}),
                   provides=frozenset({"seed_mix", "rich_soil"}),
                   unlocks=("first_seedlings",), risk=0.1,
                   note="A few months after the bin starts: turned, cured and sieved, it's the seed mix and the beds' food."),
+        Candidate("greenhouse_site", "Level and drain the greenhouse site", entry_cost=30, benefit=0, labour_hours=8,
+                  made=True, provides=frozenset({"greenhouse_site"}), unlocks=("greenhouse",), risk=0.1,
+                  note="A level, drained pad facing south, gravel under it: the frame waits for the ground."),
         Candidate("greenhouse", "Greenhouse", entry_cost=800, recurring_cost=10, benefit=90, labour_hours=40, made=True,
-                  requires=frozenset({"water"}), provides=frozenset({"year_round"}), unlocks=("plant_sales",),
+                  requires=frozenset({"water", "greenhouse_site"}), provides=frozenset({"year_round"}),
+                  unlocks=("plant_sales",),
                   scalable=True, risk=0.35, needs_professional=True,
                   note="Year-round growing and a path to selling plants; the big step, so it waits."),
         # Seed starting: the infrastructure selling starts needs before anyone pays for one (Zac, 2026-11-08).
@@ -558,6 +596,7 @@ _EVIDENCE = {
     "chickens": ("coop",),
     "flock": ("flock", "hens", "laying"),
     "feed_bin": ("feed bin",),
+    "canning_setup": ("canner", "canning pot", "canning"),
     "greenhouse": ("greenhouse", "walipini", "hoop house", "polytunnel"),
     "seed_cups": ("seed cup",),
     "cell_trays": ("seed tray", "cell tray", "seedling tray", "plug tray"),

@@ -2401,6 +2401,11 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   finished compost as made seed mix, slow, so a path takes it only when nothing quicker meets the need. Compounding
   value is now a step's share of the work to reach what it unlocks (a $25 bin isn't credited with a flock that also
   needs a $300 coop), and seasonal income is spread over the year (selling starts: spring only).
+  **And the year (same night):** preserving (a canning setup in harvest season, a first batch put up), food sold only
+  after the state's cottage-food rules are checked, and that check only once there's something to sell; a greenhouse
+  waits for a level, drained site. A path's value is discounted by the months until its seasonal steps can happen, so
+  summer says preserve the harvest, winter says build the seed shelf, and September with jars on hand says check the
+  rules and sell them rather than starting toward spring seedlings.
 - From: ChatGPT's two handoffs, pasted by Zac 2026-11-08 — "Real-World Development Intelligence" (Homestead/Business
   Architect) and "The Convergence" (unified progression + living campaign). Both ask, in their own section 11, to
   inspect the architecture and propose before building, reusing MIA's mission/progression/memory/campaign systems.

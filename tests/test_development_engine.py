@@ -12,7 +12,8 @@ the payoff (selling starts only through cups, a shelf, a first batch and a stand
 waiting while cheap foundations remain, the checks with each step, and the catalog rules that hold it. And the budget
 read from their own build targets when they don't give one. The flock and the compost by the same rules (a coop and
 a feed bin before hens, eggs before selling them; slow compost only when nothing quicker), a step's share of the work
-it unlocks, and what a flock in the records says exists. The rest are
+it unlocks, and what a flock in the records says exists. The year: preserving in summer, spring prepared in winter,
+food sold only after the cottage-food rules, a payoff months away worth less than one now. The rest are
 unit tests on
 the scoring, the dependency gate, compounding value and the defensive profile reader.
 """
@@ -102,7 +103,7 @@ def test_the_plan_adapts_as_projects_get_done():
 
 def test_a_bigger_budget_brings_the_greenhouse_into_reach():
     cat = de.homestead_catalog()
-    flush = DevelopmentProfile(budget=2000, month=6, have=frozenset({"water"}))  # water already on hand
+    flush = DevelopmentProfile(budget=2000, month=6, have=frozenset({"water", "greenhouse_site"}))  # water and a site
     g = de.score(next(c for c in cat if c.id == "greenhouse"), flush, cat)
     assert g["affordable"] and g["available"]
 
@@ -139,7 +140,8 @@ def test_what_they_already_have_is_read_from_their_records_and_left_out():
                           grow_lab=SimpleNamespace(systems=["Raised bed 1"]))
     p = de.plan(ctx, month=6)
     have = {h["name"]: h["found_in"] for h in p["have"]}
-    assert have == {"Greenhouse": "your assets", "Raised garden bed": "your grow lab"}
+    assert have == {"Greenhouse": "your assets", "Raised garden bed": "your grow lab",
+                    "Level and drain the greenhouse site": "needed for greenhouse"}  # a greenhouse stands on its site
     assert not {o["id"] for o in p["options"]} & {"greenhouse", "raised_bed"}
     assert p["environment"] == SIMULATED
 
@@ -185,8 +187,9 @@ _FOUNDATIONS = frozenset({"raised_bed", "rain_barrel", "compost_bin"})
 
 def test_selling_starts_is_reached_through_the_infrastructure_never_jumped_to():
     """Zac's example: with beds in and nothing else, the next step is never selling starts; it's the first piece of
-    seed-starting infrastructure, said as step 1 of the path that ends in selling."""
-    step = de.next_step(DevelopmentProfile(month=7), de.homestead_catalog(), _FOUNDATIONS)
+    seed-starting infrastructure, said as step 1 of the path that ends in selling. (In March: in summer the better move
+    is preserving the harvest, and that's tested too.)"""
+    step = de.next_step(DevelopmentProfile(month=3), de.homestead_catalog(), _FOUNDATIONS)
     assert step["recommend"]["id"] == "seed_cups" and step["goal"]["id"] == "plant_sales"
     ids = [s["id"] for s in step["path"]]
     assert ids[-1] == "plant_sales" and ids.index("first_seedlings") < ids.index("sales_stand")
@@ -198,7 +201,7 @@ def test_made_and_upcycled_come_before_bought():
     ids = [s.id for s in de.path_to(goal, DevelopmentProfile(month=7), de.homestead_catalog(), _FOUNDATIONS)]
     assert "seed_cups" in ids and "cell_trays" not in ids
     assert "seedling_shelf" in ids and "wire_shelf" not in ids
-    checks = de.next_step(DevelopmentProfile(month=7), de.homestead_catalog(), _FOUNDATIONS)["checks"]
+    checks = de.next_step(DevelopmentProfile(month=3), de.homestead_catalog(), _FOUNDATIONS)["checks"]
     assert any(c["check"] == "made_first" and c["ok"] for c in checks)
 
 
@@ -215,8 +218,8 @@ def test_each_recommendation_carries_its_checks():
     checks = {c["check"]: c for c in step["checks"]}
     assert checks["ready"]["ok"] and checks["season"]["ok"] and checks["start_small"]["ok"]
     assert checks["budget"]["ok"] is None  # no budget given: said, not judged
-    early = de.next_step(DevelopmentProfile(month=7), de.homestead_catalog(), _FOUNDATIONS)["checks"]
-    assert any(c["check"] == "timing" and "February to April" in c["line"] for c in early)
+    early = de.next_step(DevelopmentProfile(month=2), de.homestead_catalog(), _FOUNDATIONS)["checks"]
+    assert any(c["check"] == "timing" and "March to May" in c["line"] for c in early)
 
 
 def test_the_catalog_never_lets_selling_skip_proof_or_a_place_to_sell():
@@ -316,3 +319,29 @@ def test_a_flock_means_a_coop_and_a_feed_bin_but_water_means_no_rain_barrel():
     assert have["Chicken coop and run"] == "needed for start a small laying flock"
     assert have["A rodent-proof feed bin"] == "needed for start a small laying flock"
     assert "Rain-barrel water collection" not in have  # a greenhouse's water could come from a hose
+
+
+
+# --- the year: preserving in summer, food sold only after the rules (2026-11-08) ---
+
+def test_in_summer_the_harvest_is_preserved_and_in_winter_spring_is_prepared():
+    cat = de.homestead_catalog()
+    assert de.next_step(DevelopmentProfile(month=7), cat, _FOUNDATIONS)["recommend"]["id"] == "canning_setup"
+    assert de.next_step(DevelopmentProfile(month=3), cat, _FOUNDATIONS)["recommend"]["id"] == "seed_cups"
+
+
+def test_food_is_sold_only_after_the_cottage_food_rules_are_checked_and_only_once_there_is_food():
+    cat = de.homestead_catalog()
+    for c in cat:
+        if c.sector == "business" and c.id in ("egg_sales", "preserve_sales"):
+            assert de.FOOD_SALE_TAG in c.requires, c.id
+        if de.FOOD_SALE_TAG in c.provides:
+            assert c.requires & de.PROOF_TAGS, c.id  # the check comes once there's something to sell
+    jars = _FOUNDATIONS | {"canning_setup", "pantry_stock", "sales_stand"}
+    step = de.next_step(DevelopmentProfile(month=9), cat, jars)
+    assert step["recommend"]["id"] == "cottage_food_check" and step["goal"]["id"] == "preserve_sales"
+
+
+def test_a_payoff_months_away_is_worth_less_than_one_now():
+    """In September, preserves already put up beat seedling starts that can't sell until spring."""
+    assert de._months_until((3, 4, 5), 9) == 6 and de._months_until((3, 4, 5), 4) == 0 and de._months_until((), 1) == 0
