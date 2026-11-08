@@ -48,6 +48,10 @@ pytest tests/test_module_manager.py::test_name # single test
 # Develop/test a single module in isolation (no splash/wizard/menu)
 python tests/run_module.py --list
 python tests/run_module.py <module_id>          # e.g. notes
+
+# In a cloud session without the PC's libraries (PySide6, pyserial...):
+# stand-ins for the missing ones, so Qt-importing tests (parity, voice routing) still run
+python -m tools.cloud_tests tests/test_parity.py
 ```
 
 There is no lint/format command configured in this repo yet.

@@ -28,7 +28,8 @@
             "pct": 20,
             "tone": "attention"
           },
-          "count": 4
+          "count": 4,
+          "series": "energy_source_g1_Level"
         }
       ]
     },
@@ -55,7 +56,8 @@
             "pct": 62,
             "tone": "ok"
           },
-          "count": 6
+          "count": 6,
+          "series": "energy_source_p1_Level"
         }
       ]
     },
@@ -79,7 +81,8 @@
           "when": "3 h ago",
           "at": "2026-11-07T16:00:00",
           "meter": null,
-          "count": 30
+          "count": 30,
+          "series": "energy_source_s1_kWh today"
         }
       ]
     }

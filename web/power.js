@@ -39,7 +39,8 @@
         el("span", { class: "pw-src-read" + (main && main.meter && main.meter.tone === "attention" ? " low" : "") }, main ? main.text : "No reading yet")),
       main && main.meter ? el("div", { class: "meter" }, el("div", { class: "meter-fill " + main.meter.tone, style: "width:" + main.meter.pct + "%" })) : null,
       ...s.meters.slice(1).map((m) => el("div", { class: "pw-src-more" }, el("span", {}, m.name), el("span", {}, m.text + " · " + m.when))),
-      el("div", { class: "pw-src-foot" }, el("span", { class: "dim" }, main ? "Logged " + main.when : s.type),
+      el("div", { class: "pw-src-foot" }, el("span", { class: "dim" }, main ? "Logged " + main.when : s.type,
+        main && main.count > 1 ? el("a", { class: "pw-hist", href: "lab.html#" + encodeURIComponent(main.series) }, " · History ›") : null),
         el("div", { class: "row-buttons" }, btn("Log Reading", "btn-ghost btn-small", () => logReading(s)),
           btn("Change", "btn-ghost btn-small", () => editSource(s)),
           btn("Remove", "btn-ghost btn-small", () => act({ kind: "energy_source.delete", params: { source_id: s.id } })))));

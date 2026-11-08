@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1127 files, 253,246 lines; 1127 files describe themselves; 13,838 of 14,510 classes and functions are documented.
+1128 files, 253,267 lines; 1128 files describe themselves; 13,842 of 14,514 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-412 files, 118,131 lines; 6,253 of 6,342 classes and functions documented
+412 files, 118,062 lines; 6,249 of 6,338 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -655,12 +655,13 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-31 files, 3,181 lines; 91 of 91 classes and functions documented
+32 files, 3,265 lines; 99 of 99 classes and functions documented
 
 - `tools/audit.py`: MIA's self-audit from the command line (DEC-0108; core/self_audit.py, core/practices.py).
 - `tools/bench_audit.py`: What MIA's routing does today with each Intelligence Benchmark question (tests/intelligence_bench.py, docs/INTELLIGENCE_BENCHMARK.md): a question plan (core/question_plans.py: lookups by code, one answer), answered by code (a direct lookup), offered which tools, or left to the model with no tools at
 - `tools/chronicle_issue.py`: The Chronicles' weekly issue (core/chronicle_issue.py, build plan step 17).
 - `tools/chronicle_panels.py`: Draws an issue's panels with the local image model (T-0036: SD-Turbo as ONNX on the GPU through DirectML). It runs in the image model's own environment, kept apart from MIA's (`C:\Users\zacrh\DevTools\imagegen\.venv`), so it imports nothing from MIA:
+- `tools/cloud_tests.py`: Runs the test suite in a place without the PC's libraries (a cloud session: no PySide6, pyserial, mutagen, libzim...). Each library on STUBBED that can't be imported is replaced by an empty stand-in before pytest starts, so tests that only import a Qt module on the way (the parity checks, the voice 
 - `tools/conversation_check.py`: The golden conversation corpus, asked for real (DEC-0067; P5 of docs/PERSONALITY_AND_ECOSYSTEM_AUDIT.md): greetings, jokes, frustration, disagreement and the rest, through the same steps a turn takes, on this computer's model, for each device she answers on. Read-only like tools/intelligence_check.p
 - `tools/dev_window.py`: The development board in its own window (Zac, 2026-11-03: "I want this in a window that makes it all easy to view and understand the workflow and what is going on, what is building, who is building it"). The same board as `web/dev.html` inside MIA (core/work_dashboard.py), without MIA running or a s
 - `tools/docs.py`: Working down the documentation backlog (DEC-0104, core/code_atlas.py): see what a file still lacks, write the docstrings (by reading the code: what it does, and how when that isn't plain), and put them in place.
@@ -691,7 +692,7 @@
 
 ## tests/: the test suite: what each part must do
 
-374 files, 67,479 lines; 5,348 of 5,931 classes and functions documented
+374 files, 67,484 lines; 5,348 of 5,931 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1070,7 +1071,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-78 files, 14,343 lines
+78 files, 14,344 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game

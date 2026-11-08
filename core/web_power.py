@@ -10,7 +10,8 @@ Two parts:
 - **Energy sources**: each source the person tracks by hand
   (core/energy_manager.py) with its latest reading on each meter, how long
   ago that was, and, for a reading in percent, a meter to fill and its tone
-  (amber under LOW_PERCENT: it needs you soon).
+  (amber under LOW_PERCENT: it needs you soon), and its series id so the
+  page can open its history chart in the Lab.
 
 Readings are entered by hand; no sensors are connected yet. Changes are the
 actions in core/power_actions.py. The web only draws.
@@ -78,7 +79,7 @@ def _battery(context) -> dict:
 
 def power_page(context, now: Optional[datetime] = None) -> dict:
     """The Power screen's data: the battery, and each energy source with its latest reading per meter (value, unit,
-    when, a meter for percent readings), most needing attention first; the forms."""
+    when, a meter for percent readings, its Lab series for the history chart), most needing attention first; the forms."""
     from core.power_actions import forms
 
     now = now or datetime.now()
@@ -98,7 +99,9 @@ def power_page(context, now: Optional[datetime] = None) -> dict:
             meters.append({"name": name, "value": last.value, "unit": last.unit or "",
                            "text": reading_text(last.value, last.unit or ""),
                            "when": ago(at, now), "at": str(last.timestamp)[:19], "meter": meter_of(last.value, last.unit or ""),
-                           "count": len(readings)})
+                           "count": len(readings),
+                           # its history is charted in the Lab (core/web_lab.py lists Power's series read only)
+                           "series": energy._energy_source_series_id(s.source_id, name)})
         low = min((m["meter"]["pct"] for m in meters if m["meter"]), default=101)
         sources.append({"id": s.source_id, "name": s.name, "type": s.source_type, "notes": s.notes, "meters": meters,
                         "needs_you": low < LOW_PERCENT,
