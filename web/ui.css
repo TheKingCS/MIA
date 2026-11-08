@@ -1720,3 +1720,24 @@ body.mod-maps .hero { display: none; }
 .stat-spark { width: 100%; height: 32px; }
 .stat-spark polyline { fill: none; stroke: var(--accent); stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
 .stat-range { font-size: 12px; color: var(--text-faint); }
+
+/* The sidebar's areas and their hubs (DEC-0129, core/web_areas.py), 2026-11-08. */
+.side-areas-head { display: block; margin: 12px 0 4px; }
+.side-area.open { color: var(--text); }
+.side-area-apps { display: grid; margin: 0 0 6px 30px; border-left: 1px solid rgba(var(--rgb-accent), .2); }
+.nav.nav-sub { padding: 6px 10px; font-size: 13px; min-height: 0; }
+.hub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.hub-tile { display: grid; grid-template-columns: 40px 1fr; gap: 4px 12px; align-items: start; padding: 14px; color: inherit; text-decoration: none; min-height: 72px; }
+.hub-tile:hover, .hub-tile:focus-visible { border-color: rgba(var(--rgb-accent), .5); }
+.hub-tile .hub-ico { grid-row: span 2; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 4px;
+  border: 1px solid rgba(var(--rgb-accent), .4); background: rgba(var(--rgb-accent), .08); color: var(--accent); }
+.hub-tile .hub-name { font-weight: 600; }
+.hub-tile .hub-line { font-size: 13px; color: var(--text-dim); }
+.hub-areas { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 18px; }
+.hub-areas .btn { text-transform: none; }
+.apps-area-link { display: inline-block; text-decoration: none; }
+.apps-area-link:hover { color: var(--accent); }
+/* Communications (DEC-0129). */
+a.comms-row { color: inherit; text-decoration: none; }
+a.comms-row:hover .row-title { color: var(--accent); }
+.comms-note { font-size: 13px; color: var(--text-dim); }

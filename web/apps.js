@@ -98,15 +98,26 @@
       const all = data.groups.flatMap((g) => g.apps).filter((a) => a.id !== "module_browser");
       const byId = Object.fromEntries(all.map((a) => [a.id, a]));
       const favs = data.favorites.map((id) => byId[id]).filter((a) => a && matches(a, words));
-      const groups = data.groups.map((g) => [g.name, g.apps.filter((a) => a.id !== "module_browser" && a.shown && matches(a, words))])
-        .filter(([, apps]) => apps.length);
-      shown = favs.length + groups.reduce((n, [, apps]) => n + apps.length, 0);
+      // The areas (DEC-0129): each heading opens its hub; an app in two areas is listed under both. Pages that aren't
+      // apps of their own (Projects, Pets...) are plain rows. Older engines without areas keep the life groups.
+      const pageRow = (m) => el("a", { class: "apps-row", href: m.page }, el("span", { class: "apps-row-icon", "aria-hidden": "true" },
+        (window.MIAIcons && (MIAIcons.svg(m.id) || MIAIcons.svg(m.icon))) || "•"), el("span", { class: "apps-row-name" }, m.name),
+        el("span", { class: "apps-row-tag" }, m.tagline || ""));
+      const pageMatch = (m) => !words || words.split(/\s+/).every((w) => (m.name + " " + (m.tagline || "")).toLowerCase().includes(w));
+      const groups = areas.length
+        ? areas.map((ar) => [ar, ar.members.filter((m) => m.id !== "module_browser").map((m) => byId[m.id]
+            ? (byId[m.id].shown && matches(byId[m.id], words) ? row(byId[m.id]) : null) : (pageMatch(m) ? pageRow(m) : null)).filter(Boolean)])
+          .filter(([, rows]) => rows.length)
+        : data.groups.map((g) => [{ name: g.name }, g.apps.filter((a) => a.id !== "module_browser" && a.shown && matches(a, words)).map(row)])
+          .filter(([, rows]) => rows.length);
+      shown = favs.length + groups.reduce((n, [, rows]) => n + rows.length, 0);
       $("groups").replaceChildren(...[
         favs.length || !words ? el("section", { class: "apps-favs" }, el("p", { class: "pw-label" }, "Favorites · Also Your Glasses Cards"),
           favs.length ? el("div", { class: "tile-grid" }, favs.map(tile))
             : el("p", { class: "dim" }, "Tap the ☆ on any app to keep it here and on your glasses.")) : null,
-        ...groups.map(([name, apps]) => el("section", { class: "apps-area" }, el("p", { class: "pw-label" }, name),
-          el("div", { class: "glass apps-list" }, apps.map(row)))),
+        ...groups.map(([ar, rows]) => el("section", { class: "apps-area" },
+          ar.page ? el("a", { class: "pw-label apps-area-link", href: ar.page }, ar.name + " ›") : el("p", { class: "pw-label" }, ar.name),
+          el("div", { class: "glass apps-list" }, rows))),
       ].filter(Boolean));
       $("nothing").hidden = shown > 0;
       $("no-favorites").hidden = true;
@@ -125,8 +136,10 @@
     $("nothing").hidden = shown > 0;
   }
 
+  let areas = [];
   async function render() {
     data = await MIA.apps();
+    try { areas = (await MIA.shell()).areas || []; } catch (e) { areas = []; }
     const c = data.counts;
     $("strip").replaceChildren(
       el("div", { class: "cell ok" }, el("span", { class: "n" }, c.apps), el("span", { class: "t" }, "apps")),

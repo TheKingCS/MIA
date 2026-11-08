@@ -11,8 +11,8 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 (web/start.html, core/web_guide.py: a test keeps its phrases routed to tools); the sidebar grouped by life area;
 her browser lives inside MIA (hidden Edge, live frames on the Browser page, the person clicks and types on the picture,
 teaching records it; `browser.own_window` for the old window). The audit (Claude Doc
-https://claude.ai/artifact/56xyaTxEQThT1vrYh484Ay) proposes seven areas, eight hubs and four screen tiers, waiting on
-Zac; its step 1 (the areas in the sidebar, Today with a Waiting for you queue) is next once approved. Real use so far
+https://claude.ai/artifact/56xyaTxEQThT1vrYh484Ay) proposed seven areas; **superseded by DEC-0129** (Zac, 2026-11-08):
+the Dashboard and fifteen areas with hub screens, built in core/web_areas.py. Real use so far
 is light (33 messages, most apps never opened): the organization is the priority.
 
 **New 2026-11-07 (late night): the desktop opens on the web (DEC-0124); only Zac's words go out of the browser

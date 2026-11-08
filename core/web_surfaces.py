@@ -291,8 +291,9 @@ def greeting(hour: int, name: Optional[str]) -> str:
 
 def shell(context, today: Optional[date] = None) -> dict:
     """The shared frame's data (/api/shell): the person and their level, the date, the apps they can open on the web
-    (each with its life area, for the grouped sidebar, and its ask, shown as "Say: …" on its screen), the areas in order and their favorites, the ones still on the
-    PC only, the screens MIA made, the owner's pages, sound, and places.
+    (each with its life area and its ask, shown as "Say: …" on its screen), the sidebar's areas with their hubs
+    (DEC-0129, core/web_areas.py), their favorites, the ones still on the PC only, the screens MIA made, the owner's
+    pages, sound, and places.
     """
     from core.child_accounts import is_child
 
@@ -309,6 +310,8 @@ def shell(context, today: Optional[date] = None) -> dict:
                   "group": a.group, "ask": a.ask} for a in apps if a.page],
         # The sidebar's order (2026-11-07): Start Here and the favorites, then each life area under its heading.
         "groups": list(GROUPS),
+        # DEC-0129 (2026-11-08): the sidebar's areas, each with its hub and the apps and pages in it (core/web_areas.py).
+        "areas": _areas(context),
         "favorites": _favorites(context),
         "on_pc_only": [a.name for a in apps if not a.page],
         "made": _made(context),
@@ -317,6 +320,17 @@ def shell(context, today: Optional[date] = None) -> dict:
         "sound": _sound(context),
         "places": _places(context),
     }
+
+
+def _areas(context) -> list:
+    """The sidebar's areas (core/web_areas.sidebar), [] if they can't be put together."""
+    try:
+        from core.web_areas import sidebar
+
+        return sidebar(context)
+    except Exception:
+        log.exception("Shell: areas failed")
+        return []
 
 
 def _favorites(context) -> list:

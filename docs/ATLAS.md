@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1203 files, 263,568 lines; 1203 files describe themselves; 14,375 of 15,062 classes and functions are documented.
+1209 files, 264,130 lines; 1209 files describe themselves; 14,403 of 15,090 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-444 files, 123,639 lines; 6,593 of 6,679 classes and functions documented
+446 files, 123,941 lines; 6,609 of 6,695 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -405,10 +405,12 @@
 - `core/waypoint_actions.py`: Waypoints (core/waypoint_manager.py) through the action contract (core/actions.py), for the web's Maps and Navigation pages: `waypoint.add` (a name and where: from a tap on the map, or typed), `waypoint.edit` (its name, kind and notes; where it is stays) and `waypoint.delete`. The store writes throu
 - `core/waypoint_manager.py`: Backs the Navigation module's waypoint list (modules/navigation/module.py) — docs/ROADMAP.md milestone 10.1. Same persisted-JSON pattern as core/inventory_manager.py: data/waypoints.json, a dataclass with to_dict/from_dict, a manager class wrapping load/save.
 - `core/web_account.py`: The web's Profile and Settings screens (2026-10-07, Zac: the gear's Profile and Settings). Profile is who you are: name, email, country, what MIA helps with, household, password and recovery code. Settings is how MIA behaves for you: the person's own settings from the PC app's Settings (core/person_
+- `core/web_areas.py`: MIA's areas and their hubs (DEC-0129, Zac 2026-11-08): the sidebar is the Dashboard and then fifteen areas (Home, Garage, Plants and Animals, Health and Fitness, Recreation, Security, Browser, Settings and Diagnostics, Finances, Business, Personal, Learning, Missions, Projects, Communications). Each
 - `core/web_backups.py`: Backups from the web's Settings (DEC-0125: Backup & Restore was on the desktop's Settings only). For the PC's owner (the first account) only, since a backup holds everyone's data on this MIA.
 - `core/web_browser.py`: The Browser screen's data (DEC-0117, 2026-11-07): MIA's own browser as the person sees it on the web, so held steps and taught tasks aren't only reachable by talking to her.
 - `core/web_business.py`: The Orders & Quotes screen (DEC-0030 phase C): orders (what's owed, the build's progress, and where each is on the stage rail with the step that moves it on: `order_stage`, DEC-0113), quotes (with what the price is made of), customers, and the portfolio of finished builds. Put together here from cor
 - `core/web_changes.py`: Recent Changes on the web (the screens review's missing "Recent changes Undo history", docs/design/CORE_SCREENS_REVIEW.md section 3; DEC-0125: "undo that" and "what did you just change?" were voice-only). Two parts:
+- `core/web_comms.py`: Communications (DEC-0129, Zac 2026-11-08): one screen for what was spread over four: the email drafts MIA wrote (she only drafts; an email goes when the person presses Send, core/mail_send.py), the mailbox MIA reads for receipts (core/inbox_mail.py), what MIA said on her own today and what she held 
 - `core/web_compliance.py`: The Compliance screen (DEC-0040): every obligation, sorted the way deadlines are read: **Overdue**, **Next 30 days**, **Later**, **To check** (unverified, or undated), and **Done**. Each says when it's really due (moved off a weekend or holiday, an extension to file kept apart from the money's date)
 - `core/web_craft.py`: The Workshop's Recipes and Builds tabs (DEC-0030 phase B): put together here from core/craft_recipes.py, Materials, Jobs, Products and the Ledger, so the web only formats. Part of `workshop_page()`. The Goods tab (DEC-0036: homestead goods on hand, batch by batch, the market day and labels) is `good
 - `core/web_dungeon.py`: The Dungeon screen (DEC-0046, core/work_dungeon.py), put together here so the web only formats, and the same numbers MIA says in Talk and in Game Master mode: today's run, this week's loot (earned, projected, the boss bonus) and its runs (cleared out of all, for the canvas's week meter), the month a
@@ -455,7 +457,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 3,525 lines; 39 of 39 classes and functions documented
+2 files, 3,544 lines; 39 of 39 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -726,7 +728,7 @@
 
 ## tests/: the test suite: what each part must do
 
-407 files, 70,205 lines; 5,523 of 6,124 classes and functions documented
+409 files, 70,317 lines; 5,535 of 6,136 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1088,8 +1090,10 @@
 - `tests/test_waypoint_actions.py`: Waypoints from the web (core/waypoint_actions.py): added from a tap on the map, taken out from Navigation. *(3 undocumented)*
 - `tests/test_waypoint_manager.py`: Unit tests for core.waypoint_manager. haversine_distance_km() initial_bearing_degrees() are checked against real, well-known distances/bearings (New York <-> Los Angeles, London <-> Paris) rather than only synthetic values, so a sign error or unit mistake can't accidentally cancel out and still pass *(4 undocumented)*
 - `tests/test_waypoint_map_canvas.py`: Unit tests for gui.widgets.waypoint_map_canvas's project_waypoints() — pure math, no Qt/QWidget instantiation needed. See that module's own docstring for why this is a schematic layout, not a real map projection.
+- `tests/test_web_areas.py`: MIA's areas and hubs (DEC-0129, core/web_areas.py): every app has an area, shared apps sit in each of their hubs, every page an area links to exists, and a hub lists only what the person can open.
 - `tests/test_web_backups.py`: Backups from the web's Settings (core/web_backups.py) and by voice (core/assistant_backup_actions.py): the PC owner's backups folder, the newest backups, Back Up Now with or without a passphrase, and the status said aloud.
 - `tests/test_web_changes.py`: Recent Changes on the web (core/web_changes.py, DEC-0125): what MIA can put back, newest first, in the history's own words; the fortnight's history by day with undone ones marked; and Undo as the action undo.last, which never leaves a change of its own behind.
+- `tests/test_web_comms.py`: Communications (DEC-0129, core/web_comms.py): people to catch up with (longest first, only those you can write to), and the message limit and breaks as undoable actions on the real communication gate.
 - `tests/test_web_equipment.py`: DEC-0017 (2026-10-06): Garage, Property, Greenhouse and Maintenance on the web, and one page per asset (Zac's mower concept): the data (core/web_equipment.py) and every change as an action kind (core/equipment_actions.py, maintenance.done with a meter value); and the design canvas's Garage card and  *(5 undocumented)*
 - `tests/test_web_field_kit.py`: The Field Kit on the web (DEC-0125, the design canvas's Field Kit, DEC-0113: core/web_field_kit.py): what's plugged into the computer, a hash's kind and a subnet worked out in core, and the script library to read and copy; doing things to the computer stays on the PC.
 - `tests/test_web_fitness.py`: The fitness screens' data (core/web_fitness.py, DEC-0020): today, the weight line, missions and "is it working?" in one plain sentence, the meal-plan week, and the endpoints. Placeholder values. *(3 undocumented)*
@@ -1138,7 +1142,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-86 files, 15,514 lines
+88 files, 15,643 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
@@ -1153,6 +1157,7 @@
 - `web/checkin.js`: checkin.js — the Sunday check-in (claude, 2026-10-27, DEC-0047 rule 5). Renders MIA.checkin() (core/weekly_checkin.py): last week (the story, the loop's honest score, loot, what MIA noticed, quests finished) and the week ahead, day by day (runs with projected loot, rhythms, calendar events), quests 
 - `web/chronicle.js`: chronicle.js — The Chronicle (claude, 2026-10-17, DEC-0028). Renders MIA.chronicle() (core/chronicle.py): this week's chapter, the weeks before it, and the yearly editions. Laid out as the design canvas's Chronicle (DEC-0113): the newest chapter as prose, earlier ones to open. Read only; formatting 
 - `web/classroom.js`: classroom.js — the Classroom (claude, 2026-11-06). Renders MIA.classroom() (core/classroom_manager.py): the course to continue (the design canvas's card, DEC-0113), then each subject, its courses and their lessons, how far along each is. Adding, ticking a lesson done (its skill XP credited once) and
+- `web/communications.js`: communications.js — Communications (DEC-0129, claude, 2026-11-08). Renders MIA.communications() (core/web_comms.comms_page): email drafts (opened in the frame's draft view: Send only when you press it), the mailbox, what MIA said on her own today and held back, her daily limit (comms.limit), the kin
 - `web/compliance.js`: compliance.js — the Compliance screen (claude, 2026-10-21, DEC-0040). Renders MIA.compliance() (core/web_compliance.py): Overdue, Next 30 Days, Later, To Check and Done. Every change proposes an action (core/obligation_actions.py): add, edit, verify (the only way an obligation becomes verified), whe
 - `web/connect.js`: connect.js — Connect Apps (claude, 2026-11-08). Renders MIA.connect() (core/connectors.py): each source MIA can import from. A file (calendar, contacts, bank statement) or a rental's calendar link is previewed first (MIA.connectPreview: what's new, what's already here, what couldn't be read), and on
 - `web/cook.js`: cook.js — cook mode (claude, 2026-11-07, DEC-0113: the design canvas's Kitchen · Cook Mode). The recipe being cooked takes the whole screen, on the Kitchen page and on a recipe's page alike: one step in large type, what this step uses, the step's own timer to start, every timer running (they keep go
@@ -1172,6 +1177,7 @@
 - `web/guitar.js`: guitar.js — a learning path (claude, 2026-11-07, DEC-0111, DEC-0112): guitar by default, any path with ?path=<id>. Renders MIA.guitar() (core/guitar.py): the stage, this week against the plan, the streak, the bests, what to work on next, and each open check. A check MIA hears gets a Record button: a
 - `web/home.js`: home.js — MIA's Home (muse, 2026-10-05).
 - `web/household.js`: household.js — the household's routines (claude, 2026-11-06; the design canvas's Household, DEC-0113, 2026-11-07). Renders MIA.household() (core/household_routines.py): Done Today with its meter, then a card per routine (what it is, daily or this week, its streak in words) with Did It, or Done; what
+- `web/hub.js`: hub.js — an area's hub (DEC-0129, claude, 2026-11-08). Renders MIA.hub(area) (core/web_areas.hub): the area's apps and pages as tiles, each opening its own page, then the other areas to jump to. Which apps are in which area is decided in core; this only lays them out.
 - `web/icons.js`: icons.js — MIA's interface icons (claude, 2026-10-15, DEC-0023). One line-icon set for the frame (navigation, the bottom bar, header badges, app tiles): 24-unit grid, 1.6 stroke, round joins, drawn in currentColor so the theme colors them. Content keeps its own icons (a mission's or a skill's emoji 
 - `web/inbox.js`: inbox.js — the Inbox screen (claude, 2026-10-16; Zac: "build the inbox for sending stuff to MIA"). Send To MIA: a photo, a file or a note (and from any app, the phone's Share menu). Waiting: what MIA read in each one and where she proposes it goes; File It opens the proposal to check (what it's for,
 - `web/insurance.js`: insurance.js — the insurance check-up (claude, 2026-10-19, DEC-0034). Renders MIA.insurance() (core/insurance.py) in tabs: My Policies (each policy, what it costs a year, what's worth a look), Shop It (what an agent asks for, the quote request MIA drafts, the quotes side by side against what you hav
