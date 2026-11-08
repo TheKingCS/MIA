@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1301 files, 282,720 lines; 1301 files describe themselves; 15,918 of 16,012 classes and functions are documented.
+1303 files, 282,926 lines; 1303 files describe themselves; 15,927 of 16,021 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-485 files, 134,009 lines; 7,174 of 7,260 classes and functions documented
+486 files, 134,161 lines; 7,181 of 7,267 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -148,6 +148,7 @@
 - `core/debt_math.py`: Pure logic (DEC-0052, the "debts" question plan): when each debt is paid off at the current payments, the interest it costs, and what an extra amount a month changes. MIA never asks the model to do this arithmetic.
 - `core/dependency_audit.py`: The weekly check for known vulnerabilities in the packages MIA runs on (docs/SECURITY.md step 5). The check itself is tools/dependency_audit.py (it asks OSV over the internet, a few seconds' work); this is the part MIA's daily checks use: whether a check is `due` (none in the last CHECK_DAYS), `laun
 - `core/dev_checks.py`: The development checks that need a real run (build plan step 2, DEC-0094): the measures behind the loops `dev.suite`, `dev.suite_time`, `dev.reverts`, `dev.vulnerable` and `dev.outdated` in core/loops.py.
+- `core/dev_evolution.py`: MIA's Development Evolution Timeline (T-0023, DEC-0071's "Future" item): how she has grown, month by month, built from the shared history and not kept as a record of its own. Everything is counted from what's already recorded; nothing here is written or guessed.
 - `core/dev_history.py`: One shared development history (T-0021, DEC-0071 point 2; DEC-0068): the activity log already holds tasks, claims, reviews and resolves; this adds what happened around them, so every agent reads the same history before starting.
 - `core/dev_knowledge.py`: The Development Knowledge Vault (DEC-0073; `docs/DEVELOPMENTAL_INDEPENDENCE_REVIEW.md` section 4.1): what the team learned building MIA, kept so MIA and every agent can use it, and so MIA can one day do the work without them.
 - `core/dev_lab.py`: MIA's development lab (DEC-0058; the ROADMAP's self-modification stages 2 and 3; docs/INSPECTION_AND_SELF_PLAN.md section 6). MIA proposes an improvement; the change is written and tested in an isolated copy; it reaches the running MIA only when Zac approves.
@@ -771,7 +772,7 @@
 
 ## tests/: the test suite: what each part must do
 
-445 files, 74,991 lines; 6,457 of 6,465 classes and functions documented
+446 files, 75,045 lines; 6,459 of 6,467 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -868,6 +869,7 @@
 - `tests/test_dependency_audit.py`: Known vulnerabilities in MIA's packages (docs/SECURITY.md step 5): OSV's answer is read into one finding per package and advisory with the fixing version (tools/dependency_audit.py); the weekly check is due after a week; findings are said once, plainly, and none means nothing is said (core/dependenc
 - `tests/test_derived_links.py`: The ties the stores' own fields already say, made into derived links (core/links.py, 2026-11-08, for core/connections.py's `connections.unlinked`): a mission is part of its project and trip, a skill builds on its prerequisites, a trip is part of its expedition, a job uses its workshop recipe, a reci
 - `tests/test_dev_checks.py`: The development checks that need a real run (core/dev_checks.py, build plan step 2): the committed code's suite against the known failures, reverts per merge, and the dependency audit; the loops that read them are heavy, so the app's own check never runs them.
+- `tests/test_dev_evolution.py`: MIA's Development Evolution Timeline (core/dev_evolution.py, T-0023): counted month by month from the shared history, the activity log and the benchmark runs, never kept on its own.
 - `tests/test_dev_history.py`: The shared development history (core/dev_history.py, T-0021, DEC-0071 point 2): decisions, commits, failures and experiments read from their records, each kept once (again on a change of status), git asked only for what's new, nothing the person said carried in, and an agent's briefing read from the
 - `tests/test_dev_knowledge.py`: The Development Knowledge Vault (DEC-0073, core/dev_knowledge.py): what the team learned, each entry tied to where it came from, MIA's own notes kept as derived until someone confirms them, and given to agents before they work; the retrospective's record carries the lab coder's method.
 - `tests/test_dev_lab.py`: MIA's development lab (DEC-0058, core/dev_lab.py): a proposal is written in an isolated worktree, checked against rules the lab can't touch and against the suite at the start, and reaches the running copy only on approval, reverting itself if it breaks something there. A coder's steps are kept as it

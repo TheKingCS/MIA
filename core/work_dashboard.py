@@ -195,6 +195,17 @@ def _reviews(task_id: str, events: list[dict]) -> list[dict]:
     return out
 
 
+def _evolution(log) -> dict:
+    """MIA's Development Evolution Timeline (core/dev_evolution.py, T-0023): month by month from the shared history,
+    the activity log and the benchmark runs. Empty when it can't be read."""
+    from core import dev_evolution
+
+    try:
+        return dev_evolution.timeline(log=log)
+    except (OSError, ValueError):
+        return {"months": [], "milestones": [], "totals": {}}
+
+
 def _disagreements(log, tasks_dir) -> list[dict]:
     """Every disagreement still open (core/disagreements.py, DEC-0071 point 3): decisions, designs and tasks in
     review, Zac's first. [] when it can't be read."""
@@ -251,7 +262,7 @@ def allowed(context, profile_id: str) -> bool:
 
 
 def page(context, query: str = "", tasks_dir=tasks_mod.TASKS_DIR, log=activity.ACTIVITY) -> dict:
-    """The work dashboard's data: every task (filtered by the query) with its loop steps done, its reviews and agents, the disagreements still open, and the activity log; a broken agent registry still shows the work. Not available without a tasks folder."""
+    """The work dashboard's data: every task (filtered by the query) with its loop steps done, its reviews and agents, the disagreements still open, the evolution timeline, and the activity log; a broken agent registry still shows the work. Not available without a tasks folder."""
     if not tasks_dir.exists():
         return {"available": False}
     tasks = tasks_mod.load(tasks_dir)
@@ -327,6 +338,7 @@ def page(context, query: str = "", tasks_dir=tasks_mod.TASKS_DIR, log=activity.A
         "loops": _loops(),
         "night": _night(),
         "disagreements": _disagreements(log, tasks_dir),
+        "evolution": _evolution(log),
         "available": True,
         "summary": {s: sum(1 for r in rows if r["status"] == s) for s in ("ready", "claimed", "review", "blocked", "done")},
         "queue": [r for r in open_rows if r["status"] == "review"],

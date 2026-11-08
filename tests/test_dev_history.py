@@ -33,18 +33,20 @@ def _log(*commits):
 
 
 def test_a_commit_log_becomes_records_with_their_task_and_files_oldest_first():
-    """A multi-line body doesn't break the split; the task is found in the subject or the body."""
-    text = _log(("bbbbbbbbbb", "Second", "Line one\nT-0021: line two", ["core/b.py"]),
-                ("aaaaaaaaaa", "T-0020: first", "", ["core/a.py", "tests/test_a.py"]))
+    """A multi-line body doesn't break the split; the task is found in the subject or the body; added files are
+    told from changed ones, and a rename counts as its new name."""
+    text = _log(("bbbbbbbbbb", "Second", "Line one\nT-0021: line two", ["M\tcore/b.py", "R090\tcore/o.py\tcore/n.py"]),
+                ("aaaaaaaaaa", "T-0020: first", "", ["A\tcore/a.py", "M\ttests/test_a.py"]))
     found = dh.parse_log(text)
     assert [c["ref"] for c in found] == ["aaaaaaaa", "bbbbbbbb"]
     assert found[0]["task"] == "T-0020" and found[0]["files"] == ["core/a.py", "tests/test_a.py"]
+    assert found[0]["added"] == ["core/a.py"] and found[1]["files"] == ["core/b.py", "core/n.py"]
     assert found[1]["task"] == "T-0021" and found[1]["who"] == "Claude"
 
 
 def test_sync_keeps_each_record_once_and_asks_git_only_for_whats_new(tmp_path):
     """Decisions and commits are added once; a decision's new status is added again; the second sync asks git for the
-    commits after the last one kept."""
+    commits after the last one kept; a record keeps when it happened as `on`."""
     root, store = _root(tmp_path), DevStore(tmp_path / "history")
     asked = []
 
@@ -64,7 +66,8 @@ def test_sync_keeps_each_record_once_and_asks_git_only_for_whats_new(tmp_path):
     assert dh.sync(root, store, git=lambda *a: "", lab=False) == 1  # DEC-0002 approved is history too
     kinds = [(r["kind"], r["ref"], r.get("status", "")) for r in store.records()]
     assert ("decision", "DEC-0002", "APPROVED") in kinds and ("commit", "cccccccc", "") in kinds
-    assert next(r for r in store.records() if r["ref"] == "DEC-0001")["at"] == "2026-11-03"
+    kept = next(r for r in store.records() if r["ref"] == "DEC-0001")
+    assert kept["on"] == "2026-11-03" and dh.when(kept) == "2026-11-03" and kept["at"] > "2026-11-03"
 
 
 def test_failures_carry_the_codes_words_never_what_the_person_said():

@@ -10,8 +10,9 @@ starting.
 - **Decisions** (`decisions()`): each one in docs/DECISIONS.md, with its
   status, recorded again when its status changes.
 - **Code changes** (`commits()`): each commit, with its author name (never
-  an email), its subject, the files it touched and the task it names
-  (`T-0021` in the subject or body).
+  an email), its subject, the files it touched and those it added (what
+  the evolution timeline counts as new parts, core/dev_evolution.py), and
+  the task it names (`T-0021` in the subject or body).
 - **Failures** (`failures()`): the Fix-It Log's issues by kind and count,
   in the code's own words (`title_for`), never what the person said, so
   nothing personal enters the device-level record; recorded again when an
@@ -21,7 +22,9 @@ starting.
   the rest.
 
 `sync()` adds whatever is new to `data/dev/history` (a DevStore: append
-only, never rewritten), each record once by its signature. `search()` is
+only, never rewritten), each record once by its signature; a record's `at`
+is when it was kept and `on` when it happened (a commit's date, a
+decision's approval), so the store stays in time order (`when()`). `search()` is
 the one search over all of it with the council's chat and the activity
 log (`core.council.index()`). `briefing(task)` is what an agent reads
 before starting a task: the decisions it cites and the recent commits and
@@ -42,7 +45,7 @@ from core.dev_store import DEV_DATA, DevStore
 ROOT = Path(__file__).resolve().parent.parent
 HISTORY = DEV_DATA / "history"
 KINDS = ("decision", "commit", "failure", "experiment")
-COMMITS_FIRST = 400  # commits read the first time (then only the new ones)
+COMMITS_FIRST = 5000  # commits read the first time, all of them so far (then only the new ones)
 BRIEF_COMMITS = 5
 _TASK = re.compile(r"\bT-\d{4}\b")
 _SEP = "\x1f"
@@ -52,6 +55,11 @@ _END = "\x1e"
 def _store(folder: Optional[Path] = None) -> DevStore:
     """The history's append-only store (data/dev/history unless told)."""
     return DevStore(Path(folder) if folder else HISTORY)
+
+
+def when(record: dict) -> str:
+    """Pure logic. When a history record happened: its `on` (the event's own date), else when it was kept."""
+    return str(record.get("on") or record.get("at") or "")
 
 
 def _sig(record: dict) -> str:
@@ -94,29 +102,38 @@ def _git(root: Path, *args: str) -> str:
 
 def parse_log(text: str) -> list[dict]:
     """Pure logic. `git log` output in commits()'s format (each commit opens with _END, its fields end with _SEP,
-    then the files it touched) to records, oldest first: {kind, ref (8 characters), at, who, title, task, files}."""
+    then the files it touched, each "status<TAB>path" as --name-status gives them, a rename's new path last) to
+    records, oldest first: {kind, ref (8 characters), at, who, title, task, files, added (the files it added)}."""
     out = []
     for chunk in text.split(_END):
         parts = chunk.split(_SEP)
         if len(parts) < 6:
             continue
         sha, at, who, subject, body = (x.strip() for x in parts[:5])
-        files = [line.strip() for line in parts[5].splitlines() if line.strip()]
+        files, added = [], []
+        for line in parts[5].splitlines():
+            status, _, path = line.strip().partition("\t")
+            path = path.rpartition("\t")[2] if path else status  # a bare name (no status) is a file too
+            if not path:
+                continue
+            files.append(path)
+            if status == "A":
+                added.append(path)
         task = _TASK.search(f"{subject}\n{body}")
         out.append({"kind": "commit", "ref": sha[:8], "at": at, "who": who, "title": subject[:200],
-                    "task": task.group(0) if task else "", "files": files[:40]})
+                    "task": task.group(0) if task else "", "files": files[:40], "added": added[:40]})
     return out[::-1]
 
 
 def commits(root: Path = ROOT, since: str = "", git: Optional[Callable[..., str]] = None) -> list[dict]:
     """The commits after `since` (a commit; "" or one git no longer knows gives the latest COMMITS_FIRST), oldest
-    first. `git(root, *args)` is git itself unless given."""
+    first, each with the files it touched and added (--name-status). `git(root, *args)` is git itself unless given."""
     git = git or _git
     fmt = f"--format={_END}%H{_SEP}%aI{_SEP}%an{_SEP}%s{_SEP}%b{_SEP}"
     if since and not git(root, "rev-parse", "--verify", "--quiet", f"{since}^{{commit}}").strip():
         since = ""
     span = f"{since}..HEAD" if since else f"-{COMMITS_FIRST}"
-    return parse_log(git(root, "log", "--no-merges", "--name-only", fmt, span))
+    return parse_log(git(root, "log", "--no-merges", "--name-status", fmt, span))
 
 
 def failures(context) -> list[dict]:
@@ -149,8 +166,8 @@ def experiments() -> list[dict]:
 def sync(root: Path = ROOT, store: Optional[DevStore] = None, context=None,
          git: Optional[Callable[..., str]] = None, lab: bool = True) -> int:
     """Adds what's new since last time to the history: decisions, commits, the Fix-It Log's issues (when `context` has
-    one), the lab's experiments (unless `lab` is False). Each record once, by its signature. Returns how many were
-    added."""
+    one), the lab's experiments (unless `lab` is False). Each record once, by its signature, its own date kept as `on`.
+    Returns how many were added."""
     store = store or _store()
     seen, last_commit = set(), ""
     for r in store.records():
@@ -167,7 +184,10 @@ def sync(root: Path = ROOT, store: Optional[DevStore] = None, context=None,
         if sig in seen:
             continue
         seen.add(sig)
-        store.append(record)
+        kept = {k: v for k, v in record.items() if k != "at"}
+        if record.get("at"):
+            kept["on"] = record["at"]  # the store's `at` is now, so its segments stay in time order
+        store.append(kept)
         added += 1
     return added
 
@@ -203,10 +223,10 @@ def briefing(task, store: Optional[DevStore] = None) -> str:
         return ""
     rows = list(latest.values())
     decided = [r for r in rows if r["kind"] == "decision"]
-    changed = sorted((r for r in rows if r["kind"] == "commit"), key=lambda r: str(r.get("at", "")))[-BRIEF_COMMITS:]
+    changed = sorted((r for r in rows if r["kind"] == "commit"), key=when)[-BRIEF_COMMITS:]
     tried = [r for r in rows if r["kind"] == "experiment"][-BRIEF_COMMITS:]
     lines = [f"- {r['ref']} ({r.get('status') or 'no status'}): {r['title']}" for r in decided]
-    lines += [f"- commit {r['ref']} {str(r.get('at', ''))[:10]} {r.get('who', '')}: {r['title']}" for r in changed]
+    lines += [f"- commit {r['ref']} {when(r)[:10]} {r.get('who', '')}: {r['title']}" for r in changed]
     lines += [f"- lab {r['ref']} ({r.get('status', '')}): {r['title']}" for r in tried]
     return "From the development history (core/dev_history.py):\n" + "\n".join(lines)
 

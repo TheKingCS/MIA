@@ -157,7 +157,7 @@ def main(argv=None) -> int:
                 if hits:
                     print("\nDecided, changed, failed, tried:")
                 for h in hits:
-                    print(f"{str(h.get('at', ''))[:10]}  {h['kind']:10} {h['ref']:10} {h.get('title', '')}")
+                    print(f"{dev_history.when(h)[:10]}  {h['kind']:10} {h['ref']:10} {h.get('title', '')}")
             return 0
         if args.command == "agents":
             from core.work_agents import load as load_agents
