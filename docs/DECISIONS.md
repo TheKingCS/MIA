@@ -2135,7 +2135,12 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0128 (device fabric), DEC-0126, DEC-0127; core/connectors.py, core/inbox_classify.py, core/actions.py
 
 ### DEC-0134: Living Worlds & The Convergence (interactive RPG / world-sim / experiential learning)
-- Status: PROPOSED
+- Status: APPROVED for Phase 1 (Zac, 2026-11-08: "approve Living Worlds Phase 1 and start building the world/character
+  data models"); later phases still proposed. **Phase 1 built 2026-11-08** (`core/living_worlds.py`): the data models
+  — Universe, Campaign, Character and per-universe CharacterVersion — created and persisted through a sealed personal
+  store (`living_worlds.json`, DEC-0126), with save/resume, id validation, independent per-version growth, and a
+  life-event on every create. The model writes nothing (only code does). Not yet wired into PERSONAL_STORES/the app
+  or the DM turn loop — that's the next step. Tested in `tests/test_living_worlds.py`.
 - Proposed by: claude, 2026-11-08, from Zac's "MIA — Living Worlds" handoff (the Convergence multiverse saga).
 - Proposal (`docs/LIVING_WORLDS_PROPOSAL.md`): a major subsystem turning MIA into a persistent-world DM, world
   simulator and experiential-learning guide, with an overarching cross-universe narrative (the Convergence) and a
