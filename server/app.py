@@ -2160,6 +2160,16 @@ def create_app(context: AppContext) -> FastAPI:
 
         return _screen(profile_id, "greenhouse", grow_page)  # the Greenhouse's growing tabs
 
+    @app.get("/api/homestead/next")
+    def web_homestead_next(budget: Optional[float] = None, profile_id: str = Depends(require_profile_id)) -> dict:
+        """The Greenhouse's What's Next weighed with a budget (core/development_engine.plan, DEC-0144): advice only."""
+        from core.development_engine import plan
+
+        if budget is not None and not (0 <= budget <= 10_000_000):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "A budget from 0 up.")
+        with app.state.turn_lock:
+            return plan(view_for(context, profile_id), budget)
+
     @app.get("/api/showoff")
     def web_showoff(profile_id: str = Depends(require_profile_id)) -> dict:
         """Show-off mode's tour (DEC-0031): built from a filtered copy of the

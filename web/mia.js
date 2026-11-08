@@ -568,6 +568,9 @@
       : call("GET", "/api/workshop/receipt_match?recipe_id=" + encodeURIComponent(recipeId) + "&receipt=" + encodeURIComponent(receipt)),
     showoff: () => read("/api/showoff", "showoff"),
     grow: () => read("/api/grow", "grow"),
+    // What to build next on the homestead, weighed with a budget (DEC-0144); in the demo, the grow example's plan.
+    homesteadNext: (budget) => demo ? read("", "grow").then((g) => g.next)
+      : call("GET", "/api/homestead/next" + (budget != null && budget !== "" ? "?budget=" + encodeURIComponent(budget) : "")),
     chronicle: () => read("/api/chronicle", "chronicle"),
     worldmap: () => read("/api/worldmap", "worldmap"),
     party: () => read("/api/party", "party"),
