@@ -4,9 +4,21 @@
 agents or I need to do and I will address those later"). Claude adds to it as work needs someone, and strikes an
 item when it's done. Newest first within each person. Read with `docs/NEXT_SESSION.md`.*
 
-*Last updated: 2026-11-07*
+*Last updated: 2026-11-08*
 
 ## Zac
+
+### Restart MIA to activate this session's work (2026-11-08)
+- [ ] **Restart MIA once.** It turns on everything from the 2026-11-08 engine session and the encryption at rest
+      (DEC-0126): your three **standing directions** (consumer→producer, the café/workshop/tavern aesthetic, whimsy &
+      tranquility) and the **whimsy seeds** that grow from them; **self-knowledge** (ask her "what are you?" / "what
+      do you know about me?"); **Living Worlds** play; and the **Garage + properties** already imported from the life
+      pack (seven assets with their maintenance tasks, three properties — all in your profile, nothing committed to
+      the repo). Your memories and directions are written plain so MIA seals them under her own key on first run;
+      then do the "Save MIA's recovery key" step below.
+- [ ] **Commit the DEC-0133 files from your PC.** The new `email_*` modules under `core/`, the `watch_email` tool and
+      their two tests are built and passing locally, but a cloud session can't commit them (the safety classifier
+      holds them back). `git status` on your PC lists them as untracked — `git add` those five and commit.
 
 ### When you're ready
 - [ ] **Fill MIA with your life (Zac, 2026-11-07, "later"):** a guided session at your PC, app by app, so she's
