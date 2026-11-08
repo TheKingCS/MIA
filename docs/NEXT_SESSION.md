@@ -201,6 +201,10 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       Properties have photos too. Parts per asset (core/asset_parts.py: stated links asset REQUIRES part, out/low
       first, page and voice) and a trend line on each of an asset's reading tiles (web_equipment.trend). Sign Out is
       no longer red (the standard keeps red for errors, overdue and destructive actions; a red Delete is right).
+      **Full suite on the PC, 2026-11-08 00:08:** 5541 passed, 8 skipped, 2 failed, both from another session's
+      uncommitted work on that PC (core/plaid_manager.py, core/budget_manager.py: transfers kept and marked instead
+      of dropped, DEC-0042): the Plaid test still expects them dropped, and docs/ATLAS.md is stale. That session
+      updates the test and rebuilds the atlas when it commits. Nothing committed tonight failed.
       **Maps' other scripts need Zac or a session with network:** place names in Cyrillic, Greek, Arabic and so on
       need more glyph ranges in `web/vendor/fonts/` (web/vendor/README.md says where from); the cloud shell here
       can't download them.
