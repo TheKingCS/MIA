@@ -10,6 +10,8 @@ sandbox with no real browser/phone). pywebpush.webpush is mocked in
 the push-test cases, same as tests/test_web_push.py. Also the inbox's
 email endpoints (they answer plainly without a mailbox, and need a
 signed-in person), and a startup sound to hear before choosing it.
+No secret used in sign-in, two-step or a password change reaches a log
+line (docs/SECURITY.md step 6).
 
 Builds a real AppContext via core.core_runtime.build_core_context(),
 same fixture pattern as tests/test_core_runtime.py — proving
@@ -882,3 +884,31 @@ def test_two_step_sign_in_turns_on_with_a_code_then_asks_for_one_at_sign_in(clie
     phone = {"Authorization": f"Bearer {good.json()['token']}"}
     assert client.post("/api/account/two-step/off", headers=phone, json={"password": "hunter2", "code": code()}).json() == {"on": False}
     assert client.post("/api/login", json={"profile_id": who, "password": "hunter2"}).status_code == 200
+
+
+def test_signing_in_and_changing_secrets_logs_none_of_them(client, context):
+    """No secret reaches a log (docs/SECURITY.md step 6): passwords right and wrong, the two-step key, the recovery
+    code and the session token stay out of every log line."""
+    import logging
+
+    from tests.test_no_secrets_in_logs import Keep
+
+    keep, root = Keep(), logging.getLogger()
+    old_level = root.level
+    root.addHandler(keep)
+    root.setLevel(logging.DEBUG)
+    try:
+        who = _profile_id(context)
+        client.post("/api/login", json={"profile_id": who, "password": "Wr0ng-Guess-Pass"})
+        token = client.post("/api/login", json={"profile_id": who, "password": "hunter2"}).json()["token"]
+        auth = {"Authorization": f"Bearer {token}"}
+        key = client.post("/api/account/two-step/start", headers=auth, json={"password": "hunter2"}).json()["key"]
+        code = client.post("/api/account/recovery-code", headers=auth, json={"password": "hunter2"}).json()["recovery_code"]
+        client.post("/api/account/password", headers=auth, json={"current": "hunter2", "new": "N3w-Secret-Pass"})
+    finally:
+        root.removeHandler(keep)
+        root.setLevel(old_level)
+    everything = "\n".join(keep.lines)
+    assert keep.lines, "nothing was logged at all: the check saw nothing"
+    for secret in ("hunter2", "Wr0ng-Guess-Pass", "N3w-Secret-Pass", token, key.replace(" ", ""), code):
+        assert secret not in everything, "a secret reached the log"

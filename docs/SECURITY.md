@@ -68,9 +68,15 @@ most likely first:
    isn't the PC itself (and for linking a phone); on only once a code is confirmed; a used code never works twice;
    wrong codes count toward the wait; the recovery code still gets you in and turns it off. Still to add: a QR code
    for setup (no QR library yet; the key and an otpauth link work today).
-5. **Dependency checks**: `pip-audit` and the Android build's dependency report on a schedule, findings to the Fix-It
-   Log.
-6. **Logs kept clean by test**: a test that fails if a password, token or card number pattern could reach a log line.
+5. ~~**Dependency checks.**~~ **Done 2026-11-08** for Python (`tools/dependency_audit.py`, `core/dependency_audit.py`):
+   every installed package and version is checked against OSV (the database pip-audit uses) once a week in a process
+   of its own; findings come through the communication gate with the version that fixes each one. Only package names
+   and versions leave the PC. Run it any time: `python -m tools.dependency_audit`. Still to do: the Android build's
+   dependency report.
+6. ~~**Logs kept clean by test.**~~ **Done 2026-11-08** (`tests/test_no_secrets_in_logs.py`): every logging call in
+   MIA is read as code and fails the suite if it passes a value named like a secret; and a run through sign-in, a wrong
+   password, two-step setup, a new recovery code and a password change checks that none of those secrets appears in
+   any log line (`tests/test_server_app.py`).
 7. **Modules signed or reviewed** before they install; until then, only modules written here.
 8. **"Beyond"**: a Privacy page showing exactly what MIA holds about you and what she read to answer each question
    (from What I Used and the traces), export and delete-everything that are real and tested, and a yearly review of

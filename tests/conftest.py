@@ -142,12 +142,13 @@ import core.council as council_module  # noqa: E402
 import core.council_voices as council_voices_module  # noqa: E402
 import core.dev_store as dev_store_module  # noqa: E402
 import core.dev_usage as dev_usage_module  # noqa: E402
+import core.dependency_audit as dependency_audit_module  # noqa: E402
 import core.loops as loops_module  # noqa: E402
 import core.night_school as night_school_module  # noqa: E402
 
 _TEST_DEV_DIR = Path(tempfile.mkdtemp(prefix="mia_test_dev_"))
 for _module in (dev_store_module, benchmarks_module, council_module, council_voices_module, dev_usage_module, loops_module,
-                night_school_module):
+                night_school_module, dependency_audit_module):
     _module.DEV_DATA = _TEST_DEV_DIR
 council_voices_module.SAMPLES = _TEST_DEV_DIR / "voices"
 import core.phone_link as phone_link_module  # noqa: E402

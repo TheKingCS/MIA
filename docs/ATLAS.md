@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1193 files, 262,038 lines; 1193 files describe themselves; 14,293 of 14,980 classes and functions are documented.
+1197 files, 262,446 lines; 1197 files describe themselves; 14,318 of 15,005 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-441 files, 123,029 lines; 6,553 of 6,639 classes and functions documented
+442 files, 123,132 lines; 6,560 of 6,646 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -135,6 +135,7 @@
 - `core/data_logger_manager.py`: The Data Logger + Charts shared service — docs/ROADMAP.md milestone 8.1, the "Data Logger + Charts" row of the shared core services table (used by Multimeter logging, soil moisture, power usage, Lab experiments/calibration, sensor testing, vehicle diagnostics).
 - `core/data_recovery.py`: One shared helper for the visible half of data-corruption recovery. Every core/*_manager.py's own `_load()` already falls back to an empty state on a malformed JSON file (correct — the app must never fail to boot or fail to open a screen over one bad file) and logs the failure. But a log line nobody
 - `core/debt_math.py`: Pure logic (DEC-0052, the "debts" question plan): when each debt is paid off at the current payments, the interest it costs, and what an extra amount a month changes. MIA never asks the model to do this arithmetic.
+- `core/dependency_audit.py`: The weekly check for known vulnerabilities in the packages MIA runs on (docs/SECURITY.md step 5). The check itself is tools/dependency_audit.py (it asks OSV over the internet, a few seconds' work); this is the part MIA's daily checks use: whether a check is `due` (none in the last CHECK_DAYS), `laun
 - `core/dev_checks.py`: The development checks that need a real run (build plan step 2, DEC-0094): the measures behind the loops `dev.suite`, `dev.suite_time`, `dev.reverts`, `dev.vulnerable` and `dev.outdated` in core/loops.py.
 - `core/dev_knowledge.py`: The Development Knowledge Vault (DEC-0073; `docs/DEVELOPMENTAL_INDEPENDENCE_REVIEW.md` section 4.1): what the team learned building MIA, kept so MIA and every agent can use it, and so MIA can one day do the work without them.
 - `core/dev_lab.py`: MIA's development lab (DEC-0058; the ROADMAP's self-modification stages 2 and 3; docs/INSPECTION_AND_SELF_PLAN.md section 6). MIA proposes an improvement; the change is written and tested in an isolated copy; it reaches the running MIA only when Zac approves.
@@ -684,7 +685,7 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-32 files, 3,267 lines; 99 of 99 classes and functions documented
+33 files, 3,380 lines; 106 of 106 classes and functions documented
 
 - `tools/audit.py`: MIA's self-audit from the command line (DEC-0108; core/self_audit.py, core/practices.py).
 - `tools/bench_audit.py`: What MIA's routing does today with each Intelligence Benchmark question (tests/intelligence_bench.py, docs/INTELLIGENCE_BENCHMARK.md): a question plan (core/question_plans.py: lookups by code, one answer), answered by code (a direct lookup), offered which tools, or left to the model with no tools at
@@ -692,6 +693,7 @@
 - `tools/chronicle_panels.py`: Draws an issue's panels with the local image model (T-0036: SD-Turbo as ONNX on the GPU through DirectML). It runs in the image model's own environment, kept apart from MIA's (`C:\Users\zacrh\DevTools\imagegen\.venv`), so it imports nothing from MIA:
 - `tools/cloud_tests.py`: Runs the test suite in a place without the PC's libraries (a cloud session: no PySide6, pyserial, mutagen, libzim...). Each library on STUBBED that can't be imported is replaced by an empty stand-in before pytest starts, so tests that only import a Qt module on the way (the parity checks, the voice 
 - `tools/conversation_check.py`: The golden conversation corpus, asked for real (DEC-0067; P5 of docs/PERSONALITY_AND_ECOSYSTEM_AUDIT.md): greetings, jokes, frustration, disagreement and the rest, through the same steps a turn takes, on this computer's model, for each device she answers on. Read-only like tools/intelligence_check.p
+- `tools/dependency_audit.py`: Known vulnerabilities in the packages MIA runs on (docs/SECURITY.md step 5). Lists every Python package installed where MIA runs (name and version) and asks OSV (https://osv.dev, the open vulnerability database Google runs; the same data pip-audit uses) which have published advisories, then says eac
 - `tools/dev_window.py`: The development board in its own window (Zac, 2026-11-03: "I want this in a window that makes it all easy to view and understand the workflow and what is going on, what is building, who is building it"). The same board as `web/dev.html` inside MIA (core/work_dashboard.py), without MIA running or a s
 - `tools/docs.py`: Working down the documentation backlog (DEC-0104, core/code_atlas.py): see what a file still lacks, write the docstrings (by reading the code: what it does, and how when that isn't plain), and put them in place.
 - `tools/dump_assistant_capabilities.py`: Regenerates `docs/ASSISTANT_CAPABILITIES.md`'s tool-registry table directly from the real, live `AssistantActionRegistry` (`core/application.py`'s `_register_assistant_actions()`) — never hand-typed, so this can't silently drift the way a hand-maintained list would (this project has hit that exact s
@@ -721,7 +723,7 @@
 
 ## tests/: the test suite: what each part must do
 
-403 files, 69,683 lines; 5,491 of 6,092 classes and functions documented
+405 files, 69,875 lines; 5,502 of 6,103 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -810,6 +812,7 @@
 - `tests/test_data_logger_manager.py`: Unit tests for core.data_logger_manager. Isolates _DATA_DIR/_READINGS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_inventory_manager.py's isolated_paths). *(2 undocumented)*
 - `tests/test_data_recovery.py`: Unit tests for core.data_recovery.notify_data_corruption. *(4 undocumented)*
 - `tests/test_debt_math.py`: The payoff arithmetic behind "when will my debts be paid off?" and "what if I put an extra $200 toward it?" (core/debt_math.py). *(1 undocumented)*
+- `tests/test_dependency_audit.py`: Known vulnerabilities in MIA's packages (docs/SECURITY.md step 5): OSV's answer is read into one finding per package and advisory with the fixing version (tools/dependency_audit.py); the weekly check is due after a week; findings are said once, plainly, and none means nothing is said (core/dependenc
 - `tests/test_dev_checks.py`: The development checks that need a real run (core/dev_checks.py, build plan step 2): the committed code's suite against the known failures, reverts per merge, and the dependency audit; the loops that read them are heavy, so the app's own check never runs them. *(1 undocumented)*
 - `tests/test_dev_knowledge.py`: The Development Knowledge Vault (DEC-0073, core/dev_knowledge.py): what the team learned, each entry tied to where it came from, MIA's own notes kept as derived until someone confirms them, and given to agents before they work.
 - `tests/test_dev_lab.py`: MIA's development lab (DEC-0058, core/dev_lab.py): a proposal is written in an isolated worktree, checked against rules the lab can't touch and against the suite at the start, and reaches the running copy only on approval, reverting itself if it breaks something there. *(3 undocumented)*
@@ -899,7 +902,7 @@
 - `tests/test_ledger_manager.py`: Unit tests for core.ledger_manager. Isolates _DATA_DIR/_REVENUE_FILE _EXPENSES_FILE into a tmp_path scratch area, same monkeypatch pattern as test_component_manager.py's isolated_paths. record_sale() also needs core.product_manager isolated in the same tmp_path, same "combined-manager fixture" patte *(2 undocumented)*
 - `tests/test_leveling.py`: Profile levels and prestige (core/leveling.py): the XP each level needs, progress within a level and a prestige cycle, when someone may prestige, and each prestige tier's colour.
 - `tests/test_life_areas.py`: The life state's `areas` section (core/life_areas.py): each area reads its store live, says PLANNED without one, never breaks the life state when one fails, keeps a child out of the money areas, and every area names a store MIA really has.
-- `tests/test_life_events.py`: Life events (core/life_events.py), Engine Phase 1 step 1, 2026-10-05: the append-only history beside the stores. What happened, who did it and how, in the folder the data lives in. *(4 undocumented)*
+- `tests/test_life_events.py`: Life events (core/life_events.py), Engine Phase 1 step 1, 2026-10-05: the append-only history beside the stores. What happened, who did it and how, in the folder the data lives in. A decorated method that answers False changed nothing and records nothing. *(4 undocumented)*
 - `tests/test_life_notes.py`: DEC-0054 (T-0018): what someone says they'll do, decide, want to try and set aside, spotted in code, kept only on their yes, and answered by the recall plan. *(3 undocumented)*
 - `tests/test_life_state_v2.py`: Life State v2 (core/context_assembler.py), Engine Phase 1 step 3, 2026-10-05: the whole picture as data, computed from the stores, the life-event history and the links. No hand-written prose in the path. *(2 undocumented)*
 - `tests/test_links.py`: How things relate (core/links.py), Engine Phase 1 step 2, 2026-10-05: stated links between real records, links the stores already imply, and what waits on what. *(2 undocumented)*
@@ -947,6 +950,7 @@
 - `tests/test_net_worth_history.py`: Tests for core/net_worth_history.py: one net worth point a day, the change this month, and the Overview's line.
 - `tests/test_night_school.py`: Night School (DEC-0100, core/night_school.py): she chooses what to study, her teacher sets exercises with a test that fails first, code grades her, the teacher's lesson comes back the next time, practice never merges, and her picks are scored against her teacher's before she's trusted to choose.
 - `tests/test_no_control_characters.py`: No stray control characters in MIA's code or docs. A shell heredoc turns a regex's \b into a backspace byte, and the pattern then silently matches nothing (it happened in 2026-11 twice: the turn traces' patterns, and the check that keeps passwords out of what MIA remembers by voice).
+- `tests/test_no_secrets_in_logs.py`: No secret reaches a log (docs/SECURITY.md step 6). Two checks:
 - `tests/test_notes_module.py`: Unit test for modules.notes.module.format_entry_row — pure formatting logic, no Qt event loop needed (importing the module only defines widget classes; nothing here instantiates one).
 - `tests/test_notification_manager.py`: Unit tests for core.notification_manager — previously untested (a real, pre-existing gap, not something this file tries to backfill in full). Added now specifically to cover notify()'s new "notifications.enabled" gate (2026-07-15 "ForMIA" design handoff's Quick Bus widget) — the first real, non-cosm *(3 undocumented)*
 - `tests/test_obligations.py`: Tax and compliance obligations (DEC-0040): deadlines moved off weekends and holidays, an extension to file never moving the money's date, reminders once each, unverified never shown as confirmed, repeats, and the one next step each Compliance row offers (DEC-0113). *(2 undocumented)*
