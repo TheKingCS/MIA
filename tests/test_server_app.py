@@ -11,7 +11,8 @@ the push-test cases, same as tests/test_web_push.py. Also the inbox's
 email endpoints (they answer plainly without a mailbox, and need a
 signed-in person), and a startup sound to hear before choosing it.
 No secret used in sign-in, two-step or a password change reaches a log
-line (docs/SECURITY.md step 6).
+line (docs/SECURITY.md step 6). The recovery key for sealed files is shown
+only on the PC itself, with the password, and logged (DEC-0126).
 
 Builds a real AppContext via core.core_runtime.build_core_context(),
 same fixture pattern as tests/test_core_runtime.py — proving
@@ -912,3 +913,23 @@ def test_signing_in_and_changing_secrets_logs_none_of_them(client, context):
     assert keep.lines, "nothing was logged at all: the check saw nothing"
     for secret in ("hunter2", "Wr0ng-Guess-Pass", "N3w-Secret-Pass", token, key.replace(" ", ""), code):
         assert secret not in everything, "a secret reached the log"
+
+
+def test_the_recovery_key_is_shown_only_on_this_pc_with_the_password_and_is_logged(context):
+    """From another device (or forwarded through Tailscale): refused. On the PC: a wrong password refused, the right
+    one gives the key (DEC-0126), and the security log says it was shown; the page reports sealing on."""
+    from core import at_rest
+
+    away = TestClient(server_app_module.create_app(context))
+    auth = _signed_in(away, context)
+    assert away.post("/api/security/recovery-key", headers=auth, json={"password": "hunter2"}).status_code == 403
+    here = TestClient(server_app_module.create_app(context), client=("127.0.0.1", 50000))
+    auth = _signed_in(here, context)
+    forwarded = dict(auth, **{"X-Forwarded-For": "100.64.0.7"})
+    assert here.post("/api/security/recovery-key", headers=forwarded, json={"password": "hunter2"}).status_code == 403
+    assert here.post("/api/security/recovery-key", headers=auth, json={"password": "nope"}).status_code == 400
+    shown = here.post("/api/security/recovery-key", headers=auth, json={"password": "hunter2"}).json()
+    assert shown == {"key": at_rest.recovery_key()}
+    page = here.get("/api/security/log", headers=auth).json()
+    assert page["on_this_pc"] and page["at_rest"]["sealing"] and page["events"][0]["kind"] == "data_key_shown"
+    assert not away.get("/api/security/log", headers=_signed_in(away, context)).json()["on_this_pc"]

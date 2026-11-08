@@ -2439,14 +2439,42 @@ def create_app(context: AppContext) -> FastAPI:
         return {"on": False}
 
     @app.get("/api/security/log")
-    def security_screen(profile_id: str = Depends(require_profile_id),
+    def security_screen(request: Request, profile_id: str = Depends(require_profile_id),
                         credentials: Optional[HTTPAuthorizationCredentials] = Depends(_bearer_scheme)) -> dict:
         book = getattr(context, "security_log", None)
         this = credentials.credentials if credentials is not None else ""
         others = sum(1 for t, pid in app.state.sessions.items() if pid == profile_id and t != this
                      and t in app.state.session_started)
+        from core import at_rest
+
+        sealed = at_rest.status()
         return {"available": book is not None, "events": book.for_person(profile_id) if book is not None else [],
-                "other_sessions": others, "two_step": bool(_two_step_secret(profile_id))}
+                "other_sessions": others, "two_step": bool(_two_step_secret(profile_id)),
+                "at_rest": {"sealing": sealed["sealing"], "protection": sealed["protection"], "why_not": sealed["why_not"],
+                            "files": len(sealed["files"])}, "on_this_pc": _on_this_pc(request)}
+
+    def _on_this_pc(request: Request) -> bool:
+        """Whether a request was made on this PC itself: from its own address, not forwarded (Tailscale) from another
+        device."""
+        host = request.client.host if request.client else ""
+        return not request.headers.get("x-forwarded-for") and host in ("127.0.0.1", "::1", "localhost")
+
+    @app.post("/api/security/recovery-key")
+    def recovery_key(body: TwoStepRequest, request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
+        """The recovery key for MIA's sealed files (DEC-0126, core/at_rest.py), to keep in a password manager: asked
+        for with the password, only on this PC itself, and written to the security log."""
+        from core import at_rest
+
+        if not _on_this_pc(request):
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "The recovery key is only shown on the computer itself.")
+        if not _checked(request, profile_id, lambda: context.profiles.verify_password(profile_id, body.password)):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "That password isn't right.")
+        try:
+            key = at_rest.recovery_key()
+        except ValueError as problem:
+            raise HTTPException(status.HTTP_409_CONFLICT, f"There's no recovery key: {problem}.") from None
+        _security("data_key_shown", profile_id, request)
+        return {"key": key}
 
     @app.post("/api/security/sign-out-everywhere")
     def sign_out_everywhere(request: Request, profile_id: str = Depends(require_profile_id),

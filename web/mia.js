@@ -340,12 +340,15 @@
       { id: "o3", text: "No phone at dinner.", section: "rules", how: "yours to rate, 1 to 5, each week", self_rated: true, score: { pct: 80, text: "4 / 5 last week" } }] })
       : call("GET", "/api/operating-journal"),
     // Sign-ins and Security (core/security_log.py): this account's sign-ins and changes, and sign out everywhere.
-    securityLog: () => demo ? Promise.resolve({ available: true, other_sessions: 1, two_step: false, events: [
+    securityLog: () => demo ? Promise.resolve({ available: true, other_sessions: 1, two_step: false, on_this_pc: true,
+      at_rest: { sealing: true, protection: "dpapi", why_not: "", files: 10 }, events: [
       { at: "2026-11-08T08:12:00", kind: "sign_in", what: "Signed in", device: "Android phone · 100.64.0.7", detail: "" },
       { at: "2026-11-07T22:40:00", kind: "sign_in_failed", what: "Wrong password", device: "Edge on Windows · 100.64.0.9", detail: "" },
       { at: "2026-11-07T19:03:00", kind: "sign_in", what: "Signed in", device: "Edge on Windows · 100.64.0.9", detail: "a new device" }] })
       : call("GET", "/api/security/log"),
     signOutEverywhere: () => demo ? demoOnly() : call("POST", "/api/security/sign-out-everywhere"),
+    // Sealed files (core/at_rest.py, DEC-0126): the recovery key, with the password, on the PC itself only.
+    recoveryKey: (password) => demo ? demoOnly() : call("POST", "/api/security/recovery-key", { password }),
     // Connect Apps (core/connectors.py): the sources to import from, and an import's preview before it's approved.
     connect: () => demo ? Promise.resolve({ connectors: [
       { id: "file", name: "A file from another app", how: "Choose the file you downloaded", lands: "Calendar, People & Pets, or Money",

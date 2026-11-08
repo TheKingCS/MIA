@@ -3,7 +3,8 @@
  * account's events newest first (what happened, from which device, when; a new device and wrong passwords marked),
  * how many other devices are signed in, Sign Out Everywhere (MIA.signOutEverywhere: every other session ends,
  * this one stays), and two-step sign-in turned on (password, then the key for the authenticator app and a code from
- * it) or off (password and a code; core/two_step.py). Formatting only.
+ * it) or off (password and a code; core/two_step.py), and whether MIA's most private files are sealed on disk with
+ * the recovery key shown behind the password, on the PC only (core/at_rest.py, DEC-0126). Formatting only.
  */
 (function () {
   "use strict";
@@ -58,6 +59,29 @@
     return box;
   }
 
+  // Sealed files (core/at_rest.py): the key opens only for this Windows account; the recovery key opens them anywhere.
+  function sealed(page) {
+    const s = page.at_rest || {};
+    const box = el("section", { class: "glass money-section", "aria-label": "Your files on this computer" });
+    const show = async () => {
+      const v = await MIAShell.form("Show the Recovery Key", [{ name: "password", label: "Your password", type: "password", required: true, options: [], default: null }], {});
+      if (!v) return;
+      let got;
+      try { got = await MIA.recoveryKey(v.password); } catch (e) { say(e.message); return; }
+      box.replaceChildren(el("h2", {}, "Your Recovery Key"),
+        el("p", { class: "ts-key" }, got.key),
+        el("p", {}, "Put this in your password manager now, not in a file on this computer. With it, your files open on a new computer or after Windows is reinstalled; without it, they can't."),
+        el("div", { class: "acct-actions" }, el("button", { type: "button", class: "btn btn-ghost", onclick: async () => draw(await MIA.securityLog()) }, "Done")));
+    };
+    box.append(el("h2", {}, "Your Files on This Computer"),
+      el("p", {}, s.sealing ? "Encrypted. Your conversations, memories, notes, people, finances and other private records are sealed on disk; only your Windows account on this computer opens them."
+        : "Not encrypted" + (s.why_not ? ": " + s.why_not : "") + "."),
+      page.on_this_pc && s.sealing
+        ? el("div", { class: "acct-actions" }, el("button", { type: "button", class: "btn btn-ghost", onclick: show }, "Show the Recovery Key"))
+        : el("p", { class: "dim" }, s.sealing ? "The recovery key is shown on the computer itself." : ""));
+    return box;
+  }
+
   function draw(page) {
     if (!page.available) { $("panel").replaceChildren(el("p", { class: "empty" }, "The security log isn't on this MIA.")); return; }
     $("panel").replaceChildren(
@@ -67,6 +91,7 @@
         el("p", { class: "dim" }, "If you see a sign-in you don't recognize, change your password: that signs every other device out too."),
         el("button", { type: "button", class: "btn btn-ghost", onclick: everywhere }, "Sign Out Everywhere")),
       twoStep(page),
+      sealed(page),
       el("section", { class: "glass money-section", "aria-label": "Your security log" },
         el("h2", {}, "Your Security Log"),
         page.events.length ? el("div", { class: "rows" }, page.events.map((e) => el("div", { class: "row" + (WARN.has(e.kind) ? " si-warn" : "") },
