@@ -15,6 +15,7 @@ from core.web_why import why_page
 
 @pytest.fixture
 def me(tmp_path, monkeypatch):
+    """A stand-in person with intents in a temporary folder and an action center, and none of the other stores."""
     monkeypatch.setattr(actions, "_who", lambda context: "p1")
     ctx = SimpleNamespace(config=None, undo=None, events=None, actions=ActionCenter(), budget=None, real_estate=None,
                           projects=None, missions=None, user_memories=None, finance=None)
@@ -23,6 +24,7 @@ def me(tmp_path, monkeypatch):
 
 
 def act(ctx, kind, **params):
+    """Proposes an action as the person and approves it; returns both."""
     proposal = ctx.actions.propose(ctx, kind, params, proposed_by="person")
     return proposal, ctx.actions.approve(ctx, proposal.proposal_id)
 

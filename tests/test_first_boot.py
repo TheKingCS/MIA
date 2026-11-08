@@ -36,6 +36,7 @@ def test_picks_up_where_it_stopped(tmp_path, monkeypatch):
 
 
 def test_skipping_is_remembered(tmp_path, monkeypatch):
+    """Skipping the first start finishes it and remembers which steps were skipped."""
     world = build_world(tmp_path, monkeypatch)
     first_boot.advance(world, "awakening")
     now = first_boot.skip(world)

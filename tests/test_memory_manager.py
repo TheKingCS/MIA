@@ -31,6 +31,7 @@ from core.waypoint_manager import WaypointManager
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points expeditions, trips, waypoints and the journal at a temporary folder."""
     data_dir = tmp_path / "data"
     monkeypatch.setattr(expedition_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(expedition_manager_module, "_EXPEDITIONS_FILE", data_dir / "expeditions.json")
@@ -43,6 +44,7 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _make_context() -> AppContext:
+    """A context with waypoints, expeditions, trips, the journal and memories."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     context.waypoints = WaypointManager(context)
     context.expeditions = ExpeditionManager(context)

@@ -11,6 +11,7 @@ from core import work_tasks as tasks_mod
 
 @pytest.fixture
 def place(tmp_path):
+    """Two tasks (one in review, one done) in a temporary folder, and an activity log beside them."""
     folder, log = tmp_path / "tasks", tmp_path / "activity.jsonl"
     tasks_mod.save(tasks_mod.Task(id="T-0019", title="OCR tests", files=["tests/test_ocr.py"], status="review"), folder)
     tasks_mod.save(tasks_mod.Task(id="T-0020", title="Inspection", files=["core/inspection.py"], status="done"), folder)

@@ -17,6 +17,7 @@ from tests.engine_world import build_world
 
 @pytest.fixture
 def world(tmp_path, monkeypatch):
+    """The test household with an action center and projects and tasks in their own folder."""
     context = build_world(tmp_path, monkeypatch)
     context.actions = ActionCenter()
     context.projects = ProjectManager(context, data_dir=tmp_path / "pj")

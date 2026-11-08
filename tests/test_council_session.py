@@ -10,6 +10,7 @@ from core.dev_store import DevStore
 
 @pytest.fixture
 def meeting(tmp_path, monkeypatch):
+    """A council meeting on a temporary store with MIA, Claude and Codex present and only Zac allowed; yields the store and the runs it started."""
     store = DevStore(tmp_path / "council")
     monkeypatch.setattr(council, "_store", lambda: store)
     monkeypatch.setattr(council, "REPO_LOG", tmp_path / "council.jsonl")
@@ -23,6 +24,7 @@ def meeting(tmp_path, monkeypatch):
 
 
 def say(text, runs, who="zac"):
+    """Says something in the meeting as Zac (or whoever), keeping what it asks to run."""
     return cs.hear(None, who, text, run=lambda pid, message: runs.append(message))
 
 

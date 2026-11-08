@@ -22,6 +22,7 @@ from core.profile_manager import ProfileManager
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the inventory and its usage log (and profiles) at a temporary folder; returns the folder and the items file."""
     data_dir = tmp_path / "data"
     items_file = data_dir / "inventory_items.json"
     monkeypatch.setattr(inventory_manager_module, "_DATA_DIR", data_dir)
@@ -32,6 +33,7 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _make_manager() -> InventoryManager:
+    """An inventory manager on a fresh config and event bus."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     return InventoryManager(context)
 

@@ -14,6 +14,7 @@ TODAY = date(2026, 10, 30)  # a Friday
 
 @pytest.fixture
 def life(shop):  # noqa: F811
+    """The test household, as it is."""
     return shop
 
 

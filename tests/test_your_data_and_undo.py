@@ -35,6 +35,7 @@ from core.undo_log import UndoLog
 
 @pytest.fixture
 def home(tmp_path, monkeypatch):
+    """Two people (the first signed in) with households, the undo log, a shared calendar and personal data; returns them with the folders."""
     shared = tmp_path / "shared"
     shared.mkdir()
     monkeypatch.setattr(config_module, "_CONFIG_FILE", tmp_path / "config.json")
@@ -104,6 +105,7 @@ def test_delete_without_erase_archives(home):
 
 
 def _registry():
+    """Two calendar tools: one that adds an event, one that only reads."""
     registry = AssistantActionRegistry()
     registry.register(AssistantAction(
         name="add_calendar_event", domain="calendar", description="", parameters={},
@@ -211,6 +213,7 @@ def test_setup_checks_and_summary(home):
 
 
 def test_setup_check_window(home):
+    """The setup check window lists each check with how to fix it."""
     from PySide6.QtWidgets import QApplication
 
     from gui.setup_check_dialog import SetupCheckDialog

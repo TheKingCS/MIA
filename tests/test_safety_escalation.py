@@ -29,15 +29,18 @@ class _Inbox:
     """A guardian's notifications, as the real NotificationManager is called."""
 
     def __init__(self):
+        """Starts with nothing sent."""
         self.sent = []
 
     def notify(self, title, message, level="info", source="system", always=False):
+        """Keeps the note as sent."""
         self.sent.append((title, message, level, source, always))
         return object()
 
 
 @pytest.fixture
 def family(tmp_path, monkeypatch):
+    """The test household with a child account looked after by both adults, each adult's notifications kept by a stand-in inbox."""
     monkeypatch.setattr(safety_escalation, "_last_alert", {})
     world = build_world(tmp_path, monkeypatch)
     kid = world.profiles.create_profile("Ari", make_active=False)

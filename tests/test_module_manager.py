@@ -47,6 +47,7 @@ EXPECTED_MODULE_IDS = {
 
 
 def _build_manager() -> ModuleManager:
+    """A module manager that has discovered every module in modules/."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     manager = ModuleManager(context)
     manager.discover()

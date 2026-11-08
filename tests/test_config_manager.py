@@ -58,6 +58,7 @@ def test_set_and_save_persists_to_disk(isolated_config):
 
 
 def test_mark_setup_complete(isolated_config):
+    """A fresh config is a first run until setup is marked complete."""
     manager = ConfigManager()
     assert manager.is_first_run is True
     manager.mark_setup_complete()

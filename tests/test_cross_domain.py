@@ -18,6 +18,7 @@ BY_ID = {l.id: l for l in loops.LOOPS}
 
 @pytest.fixture
 def life(shop, monkeypatch):  # noqa: F811
+    """The test household with the desktop's tools, and the meaning search turned off."""
     from tests.assistant_registry import build_desktop_registry
 
     shop.assistant_actions = build_desktop_registry()

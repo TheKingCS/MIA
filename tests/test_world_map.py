@@ -16,6 +16,7 @@ from tests.engine_world import build_world
 
 @pytest.fixture
 def world(tmp_path, monkeypatch):
+    """The test household with an action center, the world map in the person's folder and the outdoor stores in the household's."""
     context = build_world(tmp_path, monkeypatch)
     context.actions = ActionCenter()
     context.world_map = WorldMap(context, data_dir=context.my_dir)
@@ -30,6 +31,7 @@ def world(tmp_path, monkeypatch):
 
 
 def do(world, kind, **params):
+    """Proposes an action and approves it, checking it ran; returns both."""
     proposal = world.actions.propose(world, kind, params)
     done = world.actions.approve(world, proposal.proposal_id)
     assert done.status == "executed", done.result
@@ -60,6 +62,7 @@ def jpeg_with_gps(lat, lon):
 
 
 def test_pure_bits():
+    """A photo's GPS, the points along a line, the tiles explored and the regions they make, and the ranks earned."""
     lat, lon = exif_gps(jpeg_with_gps(47.6062, -122.3321))
     assert abs(lat - 47.6062) < 1e-3 and abs(lon + 122.3321) < 1e-3
     assert exif_gps(b"not a jpeg") is None and exif_gps(b"\xff\xd8\xff\xd9") is None

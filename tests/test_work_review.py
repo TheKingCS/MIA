@@ -33,6 +33,7 @@ def waiting(tmp_path, monkeypatch):
 
 
 def _review(waiting, role, said):
+    """Reviews T-0001 in the given role, the reviewer answering with `said`."""
     folder, log, registry, _ = waiting
     return rv.review("T-0001", role, registry, ask=lambda provider, prompt: said, diff=lambda pid: "+ fixed x",
                      folder=folder, log=log)

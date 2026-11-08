@@ -11,6 +11,7 @@ from tests.engine_world import build_world
 
 
 def _world(tmp_path, monkeypatch):
+    """The test household with notifications in the person's folder."""
     from core.notification_manager import NotificationManager
 
     world = build_world(tmp_path, monkeypatch)
@@ -19,6 +20,7 @@ def _world(tmp_path, monkeypatch):
 
 
 def test_split_title():
+    """A notification's title splits into its icon and a title-cased name (a sparkle when it has no icon)."""
     assert _split_title("🎉 Mission complete!") == ("🎉", "Mission Complete")
     assert _split_title("Budget check-in") == ("✦", "Budget Check-in")
 

@@ -20,11 +20,13 @@ from core.safety_floor import safety_reply
 
 @pytest.fixture(autouse=True)
 def dollars_after(monkeypatch):
+    """Puts the currency symbol back to dollars after each test, so no test's currency leaks into another."""
     monkeypatch.setattr(region, "_symbol", "$")  # never leak a test's currency into others
 
 
 @pytest.fixture
 def people(tmp_path, monkeypatch):
+    """Two people (the first signed in) and the second one's view; returns the context and that view."""
     monkeypatch.setattr(config_module, "_CONFIG_FILE", tmp_path / "config.json")
     monkeypatch.setattr(profile_module, "_DATA_PROFILES_DIR", tmp_path / "profiles")
     context = AppContext(config=ConfigManager(), events=EventBus())

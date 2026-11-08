@@ -14,6 +14,7 @@ from modules.household.module import format_checklist_line, household_progress, 
 
 
 def _template(recurrence="daily", category="Household"):
+    """A recurring laundry template (daily by default)."""
     return RecurringMissionTemplate(
         template_id="t1",
         name="Laundry",
@@ -29,6 +30,7 @@ def _template(recurrence="daily", category="Household"):
 
 
 def _mission(status="active", progress=1.0, target=3.0):
+    """One week's laundry mission with its tally objective."""
     mission = Mission(mission_id="m1", name="Laundry — Week 1", icon="\U0001F9FA", summary="", status=status)
     mission.objectives.append(Objective(description="Do 3 loads of laundry", metric_type="tally", target=target, progress=progress))
     return mission

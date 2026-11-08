@@ -23,6 +23,7 @@ REFERENCE = {
 
 
 def test_the_reference_points():
+    """Known latitudes and longitudes become their known MGRS grid references."""
     for (lat, lon), want in REFERENCE.items():
         assert g.to_mgrs(lat, lon) == want
 
@@ -46,6 +47,7 @@ def test_what_isnt_a_reference():
 
 
 def waypoint(wid="w1", name="Spring & well", lat=38.8895, lon=-77.0353, notes="Fresh <cold> water"):
+    """A waypoint (a water source by default) with the fields the map exports read."""
     return SimpleNamespace(waypoint_id=wid, name=name, latitude=lat, longitude=lon, notes=notes, category="Water Source")
 
 

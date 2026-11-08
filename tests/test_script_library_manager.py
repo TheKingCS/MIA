@@ -23,6 +23,7 @@ from core.script_library_manager import ScriptLibraryManager
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the script library at a temporary folder; returns the folder and the file."""
     data_dir = tmp_path / "data"
     scripts_file = data_dir / "scripts.json"
     monkeypatch.setattr(script_library_manager_module, "_DATA_DIR", data_dir)
@@ -31,6 +32,7 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _make_manager() -> ScriptLibraryManager:
+    """A script library on a fresh config and event bus."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     return ScriptLibraryManager(context)
 

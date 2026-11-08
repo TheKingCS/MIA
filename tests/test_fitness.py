@@ -21,6 +21,7 @@ MON = date(2026, 10, 12)  # a Monday
 
 @pytest.fixture
 def fit(tmp_path, monkeypatch):
+    """A fitness store for one person on a temporary config and folder."""
     monkeypatch.setattr(config_module, "_CONFIG_FILE", tmp_path / "config.json")
     context = SimpleNamespace(config=ConfigManager())
     return fm.FitnessManager(context, data_dir=tmp_path / "robin")
@@ -107,6 +108,7 @@ def test_everything_is_kept_and_read_back(fit, tmp_path):
 
 
 def test_fitness_is_personal():
+    """Fitness is a personal store: each person's is their own."""
     from core.personal_data import PERSONAL_STORES
 
     assert ("fitness", fm.FitnessManager) in PERSONAL_STORES

@@ -21,6 +21,7 @@ from core.web_toolbox import calc, calculators, toolbox_page
 
 @pytest.fixture
 def home(tmp_path):
+    """A context with alarms in a temporary folder."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     context.alarms = AlarmManager(context, data_dir=tmp_path / "data")
     return context

@@ -62,6 +62,7 @@ def test_format_skill_level_up():
 
 
 def test_format_skill_unlocked():
+    """A newly unlocked skill's note has its title and names the skill."""
     title, message = format_skill_unlocked("CAD / 3D Design")
     assert title == "\U0001F513 New skill unlocked!"
     assert message == "You've unlocked CAD / 3D Design — take a look."

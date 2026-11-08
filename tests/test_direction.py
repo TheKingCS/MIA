@@ -15,6 +15,7 @@ from core.direction import DirectionBook
 
 @pytest.fixture
 def book(tmp_path):
+    """An empty directions book in a temporary folder."""
     return DirectionBook(data_dir=tmp_path)
 
 

@@ -21,6 +21,7 @@ def test_what_kind_of_looking():
 
 @pytest.fixture
 def person(tmp_path):
+    """A stand-in person with a failure log folder and no config."""
     return SimpleNamespace(failures=SimpleNamespace(data_dir=tmp_path), config=None)
 
 

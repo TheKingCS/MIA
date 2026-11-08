@@ -31,6 +31,7 @@ from core.workout_manager import (
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points workouts, the config and the skill files at a temporary folder; returns it."""
     data_dir = tmp_path / "data"
     monkeypatch.setattr(workout_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(workout_manager_module, "_EXERCISES_FILE", data_dir / "workout_exercises.json")
@@ -55,12 +56,14 @@ def _make_context() -> AppContext:
 
 
 def _make_manager(context: AppContext) -> WorkoutManager:
+    """A workout manager, set on the context."""
     manager = WorkoutManager(context)
     context.workout = manager
     return manager
 
 
 def _session(session_id="s1", date="2026-09-10", sets_logged=None) -> WorkoutSession:
+    """A workout session on that day with the sets given."""
     return WorkoutSession(session_id=session_id, date=date, sets_logged=sets_logged or [])
 
 

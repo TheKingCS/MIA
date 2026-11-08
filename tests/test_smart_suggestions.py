@@ -22,10 +22,12 @@ from core.smart_suggestions import (
 
 
 def _pantry_item(name="Milk", expiration_date="") -> PantryItem:
+    """A pantry item with its name and expiry."""
     return PantryItem(item_id="p1", name=name, expiration_date=expiration_date)
 
 
 def _person(name="Jamie", birthday="", gift_ideas="") -> Person:
+    """A person with their name, birthday and gift ideas."""
     return Person(person_id="p1", name=name, birthday=birthday, gift_ideas=gift_ideas)
 
 

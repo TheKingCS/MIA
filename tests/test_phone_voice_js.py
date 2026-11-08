@@ -30,6 +30,7 @@ pytestmark = pytest.mark.skipif(_NODE is None, reason="Node.js not installed")
 
 
 def _run(scenario: str) -> dict:
+    """Runs one scenario of the phone's voice code in Node and returns what it reported."""
     out = subprocess.run([_NODE, str(_HARNESS), scenario], capture_output=True, text=True, check=True, timeout=30)
     return json.loads(out.stdout)
 

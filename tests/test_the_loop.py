@@ -11,6 +11,7 @@ from tests.test_crafting import do, shop  # noqa: F401  (the fixture)
 
 @pytest.fixture
 def life(shop):  # noqa: F811
+    """The test household with the dungeon, the loop and notifications in the person's folder."""
     from core.notification_manager import NotificationManager
     from core.the_loop import LoopBook
     from core.work_dungeon import DungeonBook

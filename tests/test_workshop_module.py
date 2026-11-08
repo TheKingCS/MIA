@@ -31,6 +31,7 @@ from modules.workshop.module import (
 
 
 def test_formats_full_details():
+    """A component's row reads its name, category, value, package, quantity and where it's kept."""
     component = Component(
         component_id="abc123",
         name="Resistor",
@@ -139,6 +140,7 @@ def test_format_material_row_no_unit_falls_back_to_word_unit():
 # ----------------------------------------------------------------------
 
 def test_format_job_row():
+    """A job's row reads its name, status and labour hours."""
     job = Job(job_id="j1", name="Engrave 20 coasters", status="In Progress", labor_hours=2.5)
     assert format_job_row(job) == "Engrave 20 coasters  [In Progress]  —  2.5 labor hrs"
 
@@ -183,5 +185,6 @@ def test_format_revenue_row_without_description():
 
 
 def test_format_expense_row():
+    """An expense's row reads its date, amount, category and what it was."""
     entry = ExpenseEntry(entry_id="e1", amount=45.0, category="Materials", description="Plywood restock", date="2026-07-16")
     assert format_expense_row(entry) == "2026-07-16  —  $45.00  [Materials]  —  Plywood restock"

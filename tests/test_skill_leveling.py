@@ -65,6 +65,7 @@ def test_capability_status_level_4_and_above_is_demonstrated():
 
 
 def _skill(skill_id, tier=1, prereqs=None):
+    """A skill definition at the given tier with its prerequisites."""
     return SkillDefinition(skill_id=skill_id, name=skill_id, category="Test", tier=tier, prerequisite_skill_ids=prereqs or [])
 
 

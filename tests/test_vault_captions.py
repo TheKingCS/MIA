@@ -9,6 +9,7 @@ from core.memory_vault import VaultShelf
 
 
 def _shelf(tmp_path):
+    """A vault shelf with two photos and a clip, each with its time taken."""
     (tmp_path / "files").mkdir()
     index = {}
     for n, (name, at) in enumerate((("creek.jpg", "2026-10-01T09:00:00"), ("truck.jpg", "2026-10-03T09:00:00"),

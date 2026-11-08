@@ -16,6 +16,7 @@ from core.ocr import OcrQueue, read_result
 
 @pytest.fixture
 def phone(tmp_path, monkeypatch):
+    """The phone's household linked to a stand-in home PC that reads text, transcribes and speaks (and can be switched off), with no reader of its own; keeps the PC calls made."""
     from tests.engine_world import build_world
 
     world = build_world(tmp_path, monkeypatch)

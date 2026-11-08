@@ -10,6 +10,7 @@ from tests.engine_world import build_world
 
 
 def test_the_check_itself():
+    """The guilt check finds guilt words (failed, behind) and none in a kind line."""
     assert guilt_in("You failed to log a workout and you're behind.") == ["failed", "behind"]
     assert guilt_in("A quiet week. Rest counts too.") == []
 

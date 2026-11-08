@@ -19,6 +19,7 @@ from core.assistant_chat import looks_like_how_to_question, looks_like_teaching_
 
 
 def build_desktop_registry() -> AssistantActionRegistry:
+    """The desktop's full tool registry, built the way MIAApplication registers it at boot (without starting the app)."""
     from core.app_context import AppContext
     from core.application import MIAApplication
     from core.config_manager import ConfigManager
@@ -32,6 +33,7 @@ def build_desktop_registry() -> AssistantActionRegistry:
 
 
 def _named(*names):
+    """Stand-ins with only a `name`, one per name given."""
     return [SimpleNamespace(name=n) for n in names]
 
 

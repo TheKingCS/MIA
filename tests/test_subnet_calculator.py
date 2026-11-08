@@ -15,6 +15,7 @@ from core.subnet_calculator import calculate_subnet
 
 
 def test_standard_slash_24():
+    """A /24: its network, broadcast, mask, size, usable hosts and the first and last of them."""
     info = calculate_subnet("192.168.1.0/24")
     assert info.network_address == "192.168.1.0"
     assert info.broadcast_address == "192.168.1.255"
@@ -49,12 +50,14 @@ def test_non_strict_accepts_host_bits_set():
 
 
 def test_slash_16():
+    """A /16 holds 65,536 addresses, 65,534 usable."""
     info = calculate_subnet("172.16.0.0/16")
     assert info.total_addresses == 65536
     assert info.usable_host_count == 65534
 
 
 def test_ipv6_network():
+    """An IPv6 network reads its address and prefix."""
     info = calculate_subnet("2001:db8::/64")
     assert info.network_address == "2001:db8::"
     assert info.prefix_length == 64

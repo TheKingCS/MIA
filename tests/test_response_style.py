@@ -15,6 +15,7 @@ from core.response_style import DEFAULTS, DIMENSIONS, StyleBook
 
 @pytest.fixture
 def book(tmp_path):
+    """An empty answer-style book in a temporary folder."""
     return StyleBook(data_dir=tmp_path)
 
 

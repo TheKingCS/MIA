@@ -15,6 +15,7 @@ from modules.toolbox.tools.discovery_tool import format_proposal_card_text
 
 
 def _proposal(**overrides) -> MissionProposal:
+    """A mission proposal (build a grow tower, with carpentry and framing XP), changed by any overrides given."""
     defaults = dict(
         proposal_id="prop1",
         profile_id="p1",

@@ -17,6 +17,7 @@ BY_ID = {l.id: l for l in loops.LOOPS}
 
 @pytest.fixture
 def person(tmp_path, monkeypatch):
+    """A stand-in person: a failure log in a temporary folder, an action center, and every request's app allowed."""
     from core import actions
 
     monkeypatch.setattr(actions, "_who", lambda context: "p1")

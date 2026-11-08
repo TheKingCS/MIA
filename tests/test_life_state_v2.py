@@ -25,6 +25,7 @@ TODAY = date.today()
 
 @pytest.fixture
 def world(tmp_path, monkeypatch):
+    """The test household."""
     return build_world(tmp_path, monkeypatch)
 
 
@@ -38,6 +39,7 @@ def test_every_section_says_what_it_is_and_where_from(world):
 
 
 def test_monthly_equivalents():
+    """Weekly, yearly and biweekly amounts become what they come to a month; no frequency is nothing."""
     assert monthly_equivalent(500, "weekly") == 2166.67 and monthly_equivalent(1200, "yearly") == 100.0
     assert monthly_equivalent(100, "biweekly") == 216.67 and monthly_equivalent(50, None) == 0.0
 

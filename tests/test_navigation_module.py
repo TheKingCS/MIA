@@ -21,6 +21,7 @@ NEW_YORK = (40.7128, -74.0060)
 
 
 def test_format_waypoint_row():
+    """A waypoint's row reads its name and its position to four places."""
     waypoint = Waypoint(waypoint_id="abc123", name="Base Camp", latitude=40.12349, longitude=-105.6789)
     assert format_waypoint_row(waypoint) == "Base Camp  (40.1235, -105.6789)"
 

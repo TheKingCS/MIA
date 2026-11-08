@@ -11,6 +11,7 @@ import core.inspection as ins
 
 
 def ev(fact, value, method, source, confidence=ins.PROBABLE):
+    """One piece of evidence (probable unless told otherwise)."""
     return ins.Evidence(fact, value, method, source, confidence)
 
 
@@ -76,6 +77,7 @@ def test_the_words_pick_the_subject():
 
 
 def test_asking_reaches_it():
+    """Asking MIA to inspect herself or this computer reaches the inspection tool; asking which model she runs still reaches the model tool."""
     from tests.assistant_registry import build_desktop_registry
 
     r = build_desktop_registry()

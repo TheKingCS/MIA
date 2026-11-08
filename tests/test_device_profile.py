@@ -27,6 +27,7 @@ from core.event_bus import EventBus
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the config at a temporary file."""
     monkeypatch.setattr(config_manager_module, "_CONFIG_FILE", tmp_path / "config.json")
 
 

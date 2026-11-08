@@ -110,6 +110,7 @@ def test_a_recovery_code_resets_a_forgotten_password(device):
 
 
 def test_pure_helpers():
+    """An email address must look like one, and recovery codes are unique and never use the easily confused characters 0, 1, O, I or L."""
     assert looks_like_email("a.b+c@mail.example.org") and not looks_like_email("a@b") and not looks_like_email("")
     codes = {new_recovery_code() for _ in range(50)}
     assert len(codes) == 50 and not any(ch in "".join(codes) for ch in "01OIL")
@@ -233,6 +234,7 @@ def test_workouts_are_personal_and_the_owner_claims_old_ones(device):
 
 @pytest.fixture
 def qapp():
+    """The one Qt application the screen tests share."""
     from PySide6.QtWidgets import QApplication
 
     return QApplication.instance() or QApplication([])

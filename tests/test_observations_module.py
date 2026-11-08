@@ -17,6 +17,7 @@ from modules.observations.module import (
 
 
 def _insight(insight_id, source_type, created_at, status="open") -> Insight:
+    """An overdue insight from the given source, made at the given time."""
     return Insight(
         insight_id=insight_id, source_type=source_type, source_id="s1", kind="overdue",
         title="Title", message="Message", status=status, created_at=created_at,

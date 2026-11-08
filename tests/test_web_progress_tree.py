@@ -6,6 +6,7 @@ from core.web_progress import TREE_BOX_W, TREE_COL, skill_tree
 
 
 def row(sid, name, category, tier, requires=(), xp=0, unlocked=True):
+    """One skill as the progress tree reads it."""
     return {"id": sid, "name": name, "category": category, "tier": tier, "requires": list(requires), "total_xp": xp,
             "unlocked": unlocked}
 

@@ -10,6 +10,7 @@ BY_ID = {l.id: l for l in loops.LOOPS}
 
 
 def row(qid, route="plan: money_left", warnings=(), note="", seconds=3.0, **kw):
+    """One benchmark result row: the question's id, its route, warnings, note and time, with a fixed answer."""
     return {"id": qid, "route": route, "warnings": list(warnings), "note": note, "seconds": seconds,
             "answer": "You have 412 left this month.", **kw}
 
@@ -49,6 +50,7 @@ def test_the_loops_read_the_latest_two_runs(tmp_path, monkeypatch):
 
 
 def test_weekly(tmp_path):
+    """The benchmarks are due when never run, not again for a week after a run, and due once the week is up."""
     store = DevStore(tmp_path)
     assert benchmarks.due(store=store)
     benchmarks.keep("intelligence", [], store=store)

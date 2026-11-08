@@ -39,6 +39,7 @@ from core.workout_manager import WorkoutManager
 
 
 def build_world(tmp_path, monkeypatch) -> AppContext:
+    """A small household on temporary folders: two people (Robin signed in, Sam not), the household stores in one folder, Robin's personal stores in theirs, the device's in a third, plus the undo log, life events and links."""
     home = tmp_path / "household"
     device = tmp_path / "device"
     monkeypatch.setattr(config_module, "_CONFIG_FILE", tmp_path / "config.json")

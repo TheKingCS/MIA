@@ -27,11 +27,13 @@ DAY = date.today()
 
 
 def iso(days: int = 0) -> str:
+    """The day `days` after DAY, as an ISO date."""
     return (DAY + timedelta(days=days)).isoformat()
 
 
 @pytest.fixture
 def ctx(tmp_path, monkeypatch):
+    """A context with every store Today reads (calendar, alarms, budget, maintenance, tasks, kitchen, relationships, email drafts) in one temporary folder."""
     monkeypatch.setattr(config_module, "_CONFIG_FILE", tmp_path / "config.json")
     context = AppContext(config=ConfigManager(), events=EventBus())
     folder = tmp_path / "data"
@@ -43,6 +45,7 @@ def ctx(tmp_path, monkeypatch):
 
 
 def test_an_empty_day():
+    """With nothing to read, today has nothing in it and says so kindly."""
     ctx = SimpleNamespace()
     assert today_items(ctx) == [] and describe([]) == "Nothing needs you today. Enjoy it."
 

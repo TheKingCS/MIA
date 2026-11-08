@@ -82,6 +82,7 @@ from gui.theme_manager import get_theme_stylesheet  # noqa: E402
 
 
 def main() -> int:
+    """Runs one module on its own (no splash, wizard or menu): wires the same core services boot does, loads the module and shows its widget in a window; --list prints every module id found."""
     parser = argparse.ArgumentParser(description="Run a single MIA module in isolation.")
     parser.add_argument("module_id", nargs="?", help="The module_id to load, e.g. 'notes'")
     parser.add_argument("--list", action="store_true", help="List all discovered module ids and exit.")

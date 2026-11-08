@@ -66,6 +66,7 @@ def test_format_objective_row_fractional_hours():
 
 
 def test_format_rewards_line():
+    """A mission's rewards read money, then XP."""
     assert format_rewards_line(25, 160) == "$25    160 XP"
 
 
@@ -126,6 +127,7 @@ def test_format_objective_assignee_suffix_shared_is_empty():
 
 
 def test_format_participants_line():
+    """A mission's party lists who's in it."""
     assert format_participants_line(["Zac", "Faith"]) == "Party: Zac, Faith"
 
 

@@ -18,6 +18,7 @@ PS = {"models": [{"name": "qwen2.5:14b", "size": 15_300_000_000, "size_vram": 15
 
 @pytest.fixture
 def fake_ollama(monkeypatch):
+    """A stand-in Ollama answering show, ps and version, and nothing else."""
     def get(url, payload=None, timeout=3.0):
         if url.endswith("/api/show"):
             return SHOW

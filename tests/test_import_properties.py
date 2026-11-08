@@ -30,11 +30,13 @@ PACK = {"properties": [
 
 @pytest.fixture
 def manager(tmp_path):
+    """A real estate store in a temporary folder."""
     return RealEstateManager(AppContext(config=ConfigManager(), events=EventBus()), data_dir=tmp_path)
 
 
 @pytest.fixture
 def pack_file(tmp_path):
+    """The properties pack written to a temporary file."""
     p = tmp_path / "pack.json"
     p.write_text(json.dumps(PACK), encoding="utf-8")
     return p

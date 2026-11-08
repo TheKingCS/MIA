@@ -26,6 +26,7 @@ _SAMPLE_RATE = 16000
 
 
 def _tone(seconds: float = 0.5, freq: float = 220.0, amplitude: int = 20000) -> np.ndarray:
+    """A sine tone as 16-bit samples."""
     t = np.arange(int(_SAMPLE_RATE * seconds)) / _SAMPLE_RATE
     return (amplitude * np.sin(2 * np.pi * freq * t)).astype(np.int16)
 

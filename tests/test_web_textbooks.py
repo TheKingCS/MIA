@@ -27,6 +27,7 @@ Hold the gun at a 10 to 15 degree push angle. Too steep an angle traps gas and l
 
 @pytest.fixture
 def shop(tmp_path, monkeypatch):
+    """A stand-in person with Classroom, a textbook library holding one welding book, and an action center."""
     monkeypatch.setattr(textbook_module, "_DEFAULT_ROOT", tmp_path / "books")
     monkeypatch.setattr(actions, "_who", lambda context: "p1")
     ctx = SimpleNamespace(config=None, undo=None, events=None, actions=ActionCenter(), skills=None)
@@ -39,6 +40,7 @@ def shop(tmp_path, monkeypatch):
 
 
 def act(ctx, kind, **params):
+    """Proposes an action as the person and approves it; returns both."""
     proposal = ctx.actions.propose(ctx, kind, params, proposed_by="person")
     return proposal, ctx.actions.approve(ctx, proposal.proposal_id)
 

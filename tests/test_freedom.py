@@ -15,6 +15,7 @@ TODAY = date(2026, 10, 21)
 
 
 def test_the_plan_math():
+    """The freedom plan: the gap, the cushion, the goal and what's left, the date it's reached and the two levers; no date when needs aren't set or savings aren't growing; ready when the homestead covers the month."""
     i = Inputs(needs=3000, homestead=500, saved=10000, pace=1000, cushion_months=6, builds_left=8000)
     p = plan(i, TODAY)
     assert (p["gap"], p["cushion"], p["goal"], p["left"]) == (2500, 15000, 23000, 13000)

@@ -12,6 +12,7 @@ READY = {"mia", "claude", "codex", "qwen", "chatgpt"}
 
 @pytest.fixture
 def chat(tmp_path, monkeypatch):
+    """The council on a temporary store and log, with a fixed answer from MIA's own docs and no remembered summaries."""
     store, repo = DevStore(tmp_path / "council"), tmp_path / "council.jsonl"
     monkeypatch.setattr(council, "_store", lambda: store)
     monkeypatch.setattr(council, "REPO_LOG", repo)
@@ -34,6 +35,7 @@ def scripted(answers: dict):
 
 
 def run(store, text, ask, ready=READY, summarize=lambda p: "They agree on the cache; codex wants a test."):
+    """Posts Zac's message and runs the floor over it with the given members ready; returns what ran and the root post."""
     root = council.post("zac", text, store=store, plan=floor.plan(text, sorted(ready)))
     return floor.run(root, ask=ask, summarize=summarize, ready=ready, store=store), root
 

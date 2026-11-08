@@ -20,6 +20,7 @@ from core.profile_manager import ProfileManager
 
 @pytest.fixture
 def home(tmp_path, monkeypatch):
+    """Two people (the first signed in), a shared folder, and personal data watching for sign-ins; returns the context, both people, the shared folder and the temporary folder."""
     monkeypatch.setattr(config_module, "_CONFIG_FILE", tmp_path / "config.json")
     context = AppContext(config=ConfigManager(), events=EventBus())
     context.profiles = ProfileManager(context)

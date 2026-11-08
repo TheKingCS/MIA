@@ -9,6 +9,7 @@ from tests.engine_world import build_world
 
 
 def test_the_trigger():
+    """Asking her to show off or for demo mode starts it; a show that was great doesn't."""
     assert wants_show_off("MIA, show off for my friends")
     assert wants_show_off("can you do demo mode") and wants_show_off("Showoff!")
     assert not wants_show_off("what's on my calendar") and not wants_show_off("the show was great")

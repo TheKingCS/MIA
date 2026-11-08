@@ -27,6 +27,7 @@ def test_the_suite_runs_once_per_commit(monkeypatch):
 
 
 def test_reverts_per_merge():
+    """Reverts per merge counts the last month's approvals only: merged and reverted ones, which tasks were reverted, and no rate without any."""
     now = datetime(2026, 11, 6, tzinfo=timezone.utc)
     events = [{"at": "2026-11-03T21:40:20+00:00", "action": "approve", "task": "T-0019", "detail": "reverted: It broke"},
               {"at": "2026-11-06T01:44:37+00:00", "action": "approve", "task": "T-0019", "detail": "merged cfcd4f6"},

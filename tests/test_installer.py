@@ -35,6 +35,7 @@ def test_install_sh_is_valid_and_its_dry_run_changes_nothing(tmp_path):
 
 
 def test_windows_installer_files():
+    """The Windows installer: a batch file with Windows line endings that runs the PowerShell script, which installs Python, Ollama and Tesseract, the requirements, and makes the shortcut with MIA's icon."""
     bat = (ROOT / "install.bat").read_bytes()
     assert b"\r\n" in bat and b"install.ps1" in bat and b"ExecutionPolicy Bypass" in bat
     ps1 = (ROOT / "install.ps1").read_text()

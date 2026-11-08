@@ -36,12 +36,14 @@ PACK = {
 
 @pytest.fixture
 def manager(tmp_path):
+    """A maintenance store in a temporary folder."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     return MaintenanceManager(context, data_dir=tmp_path)
 
 
 @pytest.fixture
 def pack_file(tmp_path):
+    """The life-data pack written to a temporary file."""
     p = tmp_path / "pack.json"
     p.write_text(json.dumps(PACK), encoding="utf-8")
     return p

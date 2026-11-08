@@ -27,6 +27,7 @@ from core.profile_manager import ProfileManager
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points revenue, expenses, products and profiles at a temporary folder; returns it."""
     data_dir = tmp_path / "data"
     monkeypatch.setattr(ledger_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(ledger_manager_module, "_REVENUE_FILE", data_dir / "revenue.json")
@@ -39,6 +40,7 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _make_context() -> AppContext:
+    """A context with products and the ledger."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     context.products = ProductManager(context)
     context.ledger = LedgerManager(context)

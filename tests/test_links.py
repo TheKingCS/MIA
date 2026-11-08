@@ -19,6 +19,7 @@ from tests.engine_world import build_world
 
 @pytest.fixture
 def world(tmp_path, monkeypatch):
+    """The test household with two properties, a land loan and two projects to link."""
     context = build_world(tmp_path, monkeypatch)
     context.lot = context.real_estate.add_property("Vacant lot", property_type="Land")
     context.rental = context.real_estate.add_property("Rental A")
@@ -29,6 +30,7 @@ def world(tmp_path, monkeypatch):
 
 
 def test_relation_words():
+    """Everyday words become link relations (depends on, pays for, blocked by, supports); others aren't one."""
     assert relation_from("depends on") == "DEPENDS_ON" and relation_from("pays for") == "FUNDS"
     assert relation_from("blocked_by") == "BLOCKED_BY" and relation_from("supports") == "SUPPORTS"
     assert relation_from("whatever") is None

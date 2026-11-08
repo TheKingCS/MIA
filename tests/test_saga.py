@@ -11,6 +11,7 @@ from core import saga
 
 
 def task(tid, title, decisions=()):
+    """A task with its id, title and decisions."""
     return SimpleNamespace(id=tid, title=title, decisions=list(decisions))
 
 

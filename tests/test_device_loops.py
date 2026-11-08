@@ -112,6 +112,7 @@ def test_which_check_is_dismissed_most():
 
 
 def test_recurring_missions_missed():
+    """The recurring-missions loop counts the past days' occurrences not done (not today's, not old ones, not one-offs) and names the one most often missed."""
     today = datetime.now(timezone.utc).date()
     day = lambda n: (today - timedelta(days=n)).isoformat()
     m = lambda name, n, status, tid="t1": SimpleNamespace(name=name, occurrence_key=day(n), status=status,

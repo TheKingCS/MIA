@@ -9,6 +9,7 @@ TODAY = date(2026, 9, 28)
 
 
 def test_stages():
+    """A warranty is in its last month, its last week, or not worth a word (far off, already over, or no real date)."""
     assert warranty_stage("2026-12-01", TODAY) is None  # far off
     assert warranty_stage("2026-10-27", TODAY) == ("month", 29)
     assert warranty_stage("2026-10-03", TODAY) == ("week", 5)
@@ -17,6 +18,7 @@ def test_stages():
 
 
 def test_message():
+    """The warranty note names the thing, the day it ends and how soon, and suggests getting it looked at while covered."""
     assert warranty_message("Riding Mower", "2026-10-27", 29) == (
         "The Riding Mower's warranty ends Oct 27 (in 29 days). If anything's been acting up, now's the time "
         "to get it looked at while it's covered.")
@@ -34,6 +36,7 @@ def test_each_stage_is_said_once():
 
 
 def test_the_daily_check(tmp_path, monkeypatch):
+    """The daily check offers a warranty note once, not again the same day."""
     import core.config_manager as config_module
     from core.application import MIAApplication
     from core.config_manager import ConfigManager

@@ -21,6 +21,7 @@ SECRET = "sk-planted-fake-secret-0000"
 
 @pytest.fixture
 def team(tmp_path):
+    """A task folder and log, a stand-in lab whose approval merges, and the agent registry; returns them and the prompts seen."""
     folder, log = tmp_path / "tasks", tmp_path / "activity.jsonl"
     lab = FakeLab()
     lab.MERGED = "merged"
@@ -93,6 +94,7 @@ def test_an_interrupted_task_is_recovered(team):
 
 
 def test_overlapping_work_waits(team):
+    """A task touching a file another task is still working on waits, naming that task."""
     folder, log, lab, registry, _ = team
     tasks_mod.save(tasks_mod.Task(id="T-0001", title="One", files=["core/x.py"], body="x"), folder)
     tasks_mod.save(tasks_mod.Task(id="T-0002", title="Two", files=["core/x.py"], body="x"), folder)

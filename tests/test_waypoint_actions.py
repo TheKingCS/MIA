@@ -11,6 +11,7 @@ from core.waypoint_manager import WaypointManager
 
 @pytest.fixture
 def person(tmp_path, monkeypatch):
+    """A stand-in person with waypoints and an action center."""
     monkeypatch.setattr(actions, "_who", lambda context: "p1")
     ctx = SimpleNamespace(config=None, undo=None, events=None, actions=ActionCenter())
     ctx.waypoints = WaypointManager(ctx, data_dir=tmp_path)
@@ -18,6 +19,7 @@ def person(tmp_path, monkeypatch):
 
 
 def act(ctx, kind, **params):
+    """Proposes an action as the person, approves it and returns what happened."""
     return ctx.actions.approve(ctx, ctx.actions.propose(ctx, kind, params, proposed_by="person").proposal_id).result
 
 
@@ -32,5 +34,6 @@ def test_a_waypoint_added_where_the_map_was_tapped_and_taken_out(person):
 @pytest.mark.parametrize("params", [{"name": "X", "lat": "abc", "lon": "1"}, {"name": "X", "lat": "91", "lon": "0"},
                                     {"name": " ", "lat": "1", "lon": "1"}])
 def test_what_it_refuses(person, params):
+    """Each of these waypoints is refused before it's proposed."""
     with pytest.raises(ActionError):
         person.actions.propose(person, "waypoint.add", params, proposed_by="person")

@@ -54,4 +54,5 @@ def test_sorted_collection_orders_by_rarity_then_name():
 
 
 def test_sorted_collection_empty():
+    """An empty collection sorts to an empty list."""
     assert sorted_collection([], []) == []

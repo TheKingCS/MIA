@@ -5,6 +5,7 @@ from tests.engine_world import build_world
 
 
 def _world(tmp_path, monkeypatch):
+    """The test household with no model and turn traces in a temporary folder."""
     from core.turn_trace import TurnTraces
 
     w = build_world(tmp_path, monkeypatch)

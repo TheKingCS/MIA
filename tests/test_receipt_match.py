@@ -22,6 +22,7 @@ def test_store_names_match_recipe_materials():
 
 
 def test_prefill():
+    """A store receipt fills a recipe's materials (each quantity and cost), and lists what it couldn't match."""
     recipe = CraftRecipe(recipe_id="r", name="Bench", materials="6 board 2x4 8ft\n1 sheet Plywood 3/4\n24 pcs Pocket screws\nWood glue")
     p = prefill(recipe, LOWES)
     assert p["values"] == {"q_0": 6, "c_0": 23.88, "q_1": 1.0, "c_1": 54.98, "q_2": 1, "c_2": 7.98}

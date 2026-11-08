@@ -9,6 +9,7 @@ from tests.test_crafting import do, shop  # noqa: F401  (the fixture)
 
 @pytest.fixture
 def mia(shop):  # noqa: F811
+    """The test household with a failure log and answer ratings in the person's folder."""
     from core.answer_ratings import AnswerRatings
     from core.failure_log import FailureLog
 
@@ -18,6 +19,7 @@ def mia(shop):  # noqa: F811
 
 
 def _rate(world, **params):
+    """Rates an answer through the answer.rate action, as the screen does: describe, then execute."""
     from core.actions import ACTION_TYPES
 
     kind = ACTION_TYPES["answer.rate"]
