@@ -512,8 +512,9 @@ def night(now: Optional[datetime] = None, *, ask: Optional[Callable[[str, str], 
     """One night of school, as far as the window, the budget and her teacher allow: her progress, what she'd
     study, the focus, her teacher's exercises (one for her curriculum, DEC-0107, chosen from and recorded on her own
     learning paths, DEC-0112), her lessons graded by code, a shadow
-    attempt at real work, study hall for one specialist (DEC-0109), loops drafted, the weekly benchmarks and the
-    weekly self-audit (DEC-0108). Returns the night's record."""
+    attempt at real work, study hall for one specialist (DEC-0109), loops drafted, the weekly benchmarks, the
+    weekly self-audit (DEC-0108) and the shared development history brought up to date (core/dev_history.py,
+    T-0021). Returns the night's record."""
     from core import dev_ledger, loop_coverage, loops
     from core import work_tasks
     from core.dev_lab import PROTECTED
@@ -698,6 +699,15 @@ def night(now: Optional[datetime] = None, *, ask: Optional[Callable[[str, str], 
                                "connected": found["connections"]["share"], "tasks": found["tasks"]}
         except Exception as problem:
             record["notes"].append(f"the weekly self-audit didn't finish: {str(problem)[:120]}")
+
+    # 7c. The shared development history (core/dev_history.py, T-0021): what was decided, changed, tried tonight
+    if cfg.get("history", True) and not STOP_FILE.exists():
+        from core import dev_history
+
+        try:  # beside the night's own record (data/dev/history), so a test's night keeps to its own folder
+            record["history"] = dev_history.sync(store=DevStore(store.folder.parent / "history"))
+        except Exception as problem:
+            record["notes"].append(f"the development history didn't update: {str(problem)[:120]}")
 
     # 8. The report
     record["teacher_calls"] = calls

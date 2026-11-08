@@ -98,6 +98,12 @@ usage_tracker_module._USAGE_FILE = _TEST_USAGE_DIR / "module_usage.json"
 # active profile, so MIA started as "Faith". The session shares one temp
 # config instead (the same thing CI has always had: no config.json at the
 # start); the versioned defaults stay the real ones.
+# The shared development history (core/dev_history.py, T-0021): agents' briefings read it, so a test reads an
+# empty temp one, never the PC's.
+import core.dev_history as dev_history_module  # noqa: E402
+
+dev_history_module.HISTORY = Path(tempfile.mkdtemp(prefix="mia_test_history_"))
+
 _TEST_CONFIG_DIR = Path(tempfile.mkdtemp(prefix="mia_test_config_"))
 config_manager_module._CONFIG_DIR = _TEST_CONFIG_DIR
 config_manager_module._CONFIG_FILE = _TEST_CONFIG_DIR / "config.json"

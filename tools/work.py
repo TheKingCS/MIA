@@ -43,7 +43,9 @@ def _line(task: w.Task, tasks: dict) -> str:
 
 
 def main(argv=None) -> int:
-    """The work-queue command line: list (ready, all, by owner), show, new, claim and the rest of a task's steps. Returns the exit code."""
+    """The work-queue command line: list (ready, all, by owner), show, new, claim and the rest of a task's steps;
+    history searches the activity log and, given words alone, the shared history too (core/dev_history.py). Returns
+    the exit code."""
     parser = argparse.ArgumentParser(prog="tools.work")
     sub = parser.add_subparsers(dest="command", required=True)
     ls = sub.add_parser("list")
@@ -130,6 +132,15 @@ def main(argv=None) -> int:
         if args.command == "history":
             for e in activity.search(args.text, args.task, args.who):
                 print(f"{e['at']}  {e['who']:8} {e['action']:7} {e['task']:7} {e['detail']}")
+            if args.text and not (args.task or args.who):  # and the shared history (core/dev_history.py, T-0021)
+                from core import dev_history
+
+                dev_history.sync()
+                hits = dev_history.search(args.text, kinds=dev_history.KINDS)
+                if hits:
+                    print("\nDecided, changed, failed, tried:")
+                for h in hits:
+                    print(f"{str(h.get('at', ''))[:10]}  {h['kind']:10} {h['ref']:10} {h.get('title', '')}")
             return 0
         if args.command == "agents":
             from core.work_agents import load as load_agents

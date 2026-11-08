@@ -198,12 +198,15 @@ def thread(thread_id: str, store: Optional[DevStore] = None) -> list[dict]:
 
 
 def index(repo: Optional[Path] = None, store: Optional[DevStore] = None) -> DevIndex:
-    """The one search over the chat and the whole development history."""
+    """The one search over the chat and the whole development history: the activity log, and beside the chat the
+    shared history (decisions, commits, failures, experiments: core/dev_history.py, T-0021) and the benchmark runs."""
     from core import work_activity
 
     store = store or _store()
     sync(repo, store)  # the repo copy's messages are in the PC's, so it's searched once
-    return DevIndex(store.folder.parent / "index.sqlite", stores={"council": store},
+    home = store.folder.parent
+    return DevIndex(home / "index.sqlite", stores={"council": store, "history": DevStore(home / "history"),
+                                                   "benchmarks": DevStore(home / "benchmarks")},
                     files={"activity": work_activity.ACTIVITY})
 
 

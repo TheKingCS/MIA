@@ -160,13 +160,25 @@ def for_task(task, folder: Path = KNOWLEDGE, limit: int = PER_TASK, min_hits: in
 
 
 def briefing(task, folder: Path = KNOWLEDGE) -> str:
-    """for_task() as text for an agent's instructions; "" when there's nothing."""
+    """for_task() as text for an agent's instructions, then what the shared development history says about the task
+    (core/dev_history.py briefing: the decisions it cites, recent commits and experiments on its files); "" when
+    there's nothing."""
+    from core import dev_history
+
     found = for_task(task, folder)
-    if not found:
-        return ""
-    lines = [f"- [{e['kind']}, {e.get('status', 'derived')}] {e['title']}: {' '.join(e['body'].split())[:400]} "
-             f"({e['id']}; from {', '.join(e.get('from') or [])})" for e in found]
-    return ("What the team learned before that bears on this (confirmed entries from work/knowledge):\n" + "\n".join(lines))
+    parts = []
+    if found:
+        lines = [f"- [{e['kind']}, {e.get('status', 'derived')}] {e['title']}: {' '.join(e['body'].split())[:400]} "
+                 f"({e['id']}; from {', '.join(e.get('from') or [])})" for e in found]
+        parts.append("What the team learned before that bears on this (confirmed entries from work/knowledge):\n"
+                     + "\n".join(lines))
+    try:
+        history = dev_history.briefing(task)
+    except (OSError, ValueError):
+        history = ""
+    if history:
+        parts.append(history)
+    return "\n\n".join(parts)
 
 
 # ------------------------------------------------------------------ the retrospective
