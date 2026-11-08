@@ -1672,3 +1672,13 @@ body.mod-maps .hero { display: none; }
 .kn-pictures figure { margin: 0; }
 .kn-pictures img { width: 100%; height: auto; border-radius: 8px; background: rgba(var(--rgb-accent), .05); }
 .kn-pictures figcaption { font-size: 13px; margin-top: 4px; }
+
+/* ---------------------------------------------------------------- Connect Apps (core/connectors.py)
+   Each source a card: how, where it lands, then its picker and the preview of what an import would add. */
+.cn-source { display: grid; gap: 10px; }
+.cn-fields { display: grid; gap: 8px; }
+.cn-pick { position: relative; overflow: hidden; width: fit-content; }
+.cn-pick input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.cn-preview { display: grid; gap: 8px; }
+.cn-sentence { margin: 0; font-weight: 600; }
+.cn-rows { margin: 0; padding-left: 18px; font-size: var(--text-sm); color: var(--text-dim); }

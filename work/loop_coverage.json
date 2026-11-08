@@ -17,6 +17,14 @@
    "status": "none",
    "why": "removing a camera they added is their own choice; the feed itself is a device, not a decision of hers"
   },
+  "action:capture": {
+   "status": "none",
+   "why": "the person keeps or leaves out a recording (DEC-0125); a kept one is a journal entry, which has its own loop"
+  },
+  "action:connect": {
+   "status": "none",
+   "why": "each import is the person's own ask, previewed and approved; a refused or failed one counts in actions.failed, and every import is undoable"
+  },
   "action:energy": {
    "status": "none",
    "why": "readings and sources entered by hand (Power, DEC-0125): measurements, not her choices; nothing of MIA's to improve"
@@ -37,6 +45,10 @@
    "status": "none",
    "why": "where a product is listed, entered by hand on the Workshop page or said (DEC-0125): the person's record, not MIA's choice; nothing of hers to improve"
   },
+  "action:mission_idea": {
+   "status": "none",
+   "why": "the person's yes or no on an idea MIA made (DEC-0125); the mission it becomes has the missions loop, and a set-aside idea is kept as history"
+  },
   "action:notification": {
    "status": "none",
    "why": "reading and dismissing notifications by hand; a dismissal already teaches the communication gate (its gate.* loops)"
@@ -48,14 +60,6 @@
   "action:setting": {
    "status": "none",
    "why": "their own settings: nothing MIA chose, so nothing of hers to correct"
-  },
-  "action:mission_idea": {
-   "status": "none",
-   "why": "the person's yes or no on an idea MIA made (DEC-0125); the mission it becomes has the missions loop, and a set-aside idea is kept as history"
-  },
-  "action:capture": {
-   "status": "none",
-   "why": "the person keeps or leaves out a recording (DEC-0125); a kept one is a journal entry, which has its own loop"
   },
   "action:starter": {
    "status": "none",

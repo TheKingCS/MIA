@@ -33,6 +33,11 @@ TOPICS = (
             "from any phone app) land in the Inbox; emailed ones file themselves, stocking the pantry or marking the "
             "oil change done, and each has an Undo. Set up your email in the Inbox's Email section.",
      "say": ["What bills are due this week?", "Undo the Kroger receipt"], "page": "inbox.html"},
+    {"id": "connect", "title": "Bring in your other apps", "icon": "apps",
+     "how": "Connect Apps (in Settings) imports a calendar, contacts or a bank statement you downloaded, and a rental's "
+            "calendar link from Airbnb, VRBO or Hostaway as check-ins and check-outs. You see what's new before anything "
+            "changes, and each import has an Undo. More apps are coming: Hostaway, OwnerRez, Google Sheets, QuickBooks.",
+     "say": ["Undo that"], "page": "connect.html"},
     {"id": "kitchen", "title": "Food and the pantry", "icon": "kitchen",
      "how": "Kitchen keeps recipes, the pantry and the grocery list; grocery receipts fill the pantry for you.",
      "say": ["What's in the pantry?", "Add milk to the grocery list", "What can I make for dinner?"],

@@ -334,6 +334,15 @@
       { id: "o2", text: "Train on the days the plan says.", section: "week", how: "checked against your workouts each week", self_rated: false, score: { pct: 75, text: "3 of 4 weeks" } },
       { id: "o3", text: "No phone at dinner.", section: "rules", how: "yours to rate, 1 to 5, each week", self_rated: true, score: { pct: 80, text: "4 / 5 last week" } }] })
       : call("GET", "/api/operating-journal"),
+    // Connect Apps (core/connectors.py): the sources to import from, and an import's preview before it's approved.
+    connect: () => demo ? Promise.resolve({ connectors: [
+      { id: "file", name: "A file from another app", how: "Choose the file you downloaded", lands: "Calendar, People & Pets, or Money",
+        examples: ["Google Calendar or Outlook (.ics)", "phone or Google contacts (.vcf)", "your bank's \"download transactions\" (.csv)"] },
+      { id: "rental_calendar", name: "A rental's calendar link", how: "Paste the listing's private calendar link (.ics)",
+        lands: "Calendar: a check-in and a check-out for each booked stay", examples: ["Airbnb", "VRBO", "Hostaway", "OwnerRez"] }],
+      properties: ["Maple Duplex", "Oak Street House"], coming: ["Hostaway and OwnerRez (a key from their settings)", "Google Sheets", "QuickBooks"] })
+      : call("GET", "/api/connect"),
+    connectPreview: (body) => demo ? demoOnly() : call("POST", "/api/connect/preview", body),
     // Power (core/web_power.py, DEC-0125): the battery and the energy sources tracked by hand.
     power: () => read("/api/power", "power"),
     // The Lab (core/web_lab.py, DEC-0125): the Data Logger's series, and one in full (?series=).

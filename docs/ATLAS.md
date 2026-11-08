@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1176 files, 259,538 lines; 1176 files describe themselves; 14,180 of 14,867 classes and functions are documented.
+1179 files, 260,106 lines; 1179 files describe themselves; 14,208 of 14,895 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-435 files, 121,927 lines; 6,482 of 6,568 classes and functions documented
+436 files, 122,281 lines; 6,505 of 6,591 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -106,6 +106,7 @@
 - `core/component_manager.py`: Backs the Component DB (modules/workshop/module.py) — docs/ROADMAP.md milestone 8.3. Same persisted-JSON pattern as core/inventory_manager.py: data/components.json, a dataclass with to_dict/from_dict, a manager class wrapping load/save.
 - `core/config_manager.py`: Handles reading, writing, and defaulting MIA's configuration.
 - `core/connectivity.py`: What MIA can do with and without the internet, and whether she has it right now — so if the connection drops she keeps acting sensibly instead of promising things she can't deliver.
+- `core/connectors.py`: Bringing data in from other apps (Zac, 2026-11-08: "make MIA able to connect to any app with relevant data and be able to import data upon user request and approval"; the audit and plan: https://claude.ai/artifact/H8gYSX2rvneRMp5mgA4qFa). Every source works the same way: the person asks, MIA reads i
 - `core/context_assembler.py`: The "Life State" layer — a real service answering "what's going on in this person's life right now," synthesized live from every domain manager already in AppContext. This exact shape was discussed and agreed on 2026-09-11 (see mia_system_vision's own dated entry: a context_assembler.py query layer 
 - `core/conversation_manager.py`: Persistent Assistant conversations — 2026-07-14 aesthetic pass part 5 (docs/ROADMAP.md), at the user's explicit request for a ChatGPT-like experience: named conversation threads you can review, continue, or delete, rather than the stateless one-message-at-a-time exchanges the Assistant used before t
 - `core/conversation_modes.py`: How MIA should talk right now — slice A ("Talk it out") of docs/COGNITIVE_EXTENSION_PROPOSAL.md. Pure logic: the mode vocabulary, the explicit phrases that switch modes, and the one short tone line each mode adds to the system prompt.
@@ -446,7 +447,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 3,147 lines; 37 of 37 classes and functions documented
+2 files, 3,183 lines; 37 of 37 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -715,7 +716,7 @@
 
 ## tests/: the test suite: what each part must do
 
-395 files, 69,136 lines; 5,450 of 6,051 classes and functions documented
+396 files, 69,234 lines; 5,455 of 6,056 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -778,6 +779,7 @@
 - `tests/test_component_manager.py`: Unit tests for core.component_manager. Isolates _DATA_DIR/_COMPONENTS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_inventory_manager.py's isolated_paths). *(3 undocumented)*
 - `tests/test_config_manager.py`: Unit tests for core.config_manager.ConfigManager. *(1 undocumented)*
 - `tests/test_connectivity.py`: core.connectivity: the online/offline monitor (with an injected fake connect function and clock, so no real network and no real waiting), the system-prompt text, and the get_connectivity_status action.
+- `tests/test_connectors.py`: Bringing data in from other apps (core/connectors.py): a rental calendar keeps only the booked dates (never the guest's details), blocked days aren't stays, links reach only the public internet over https, a preview counts what's new and what's already here, and an approved import lands as one chang
 - `tests/test_context_assembler.py`: Unit/integration tests for core.context_assembler — the "Life State" synthesis layer. Isolates every underlying manager's own data files into a tmp_path scratch area, same monkeypatch pattern as test_skill_patterns.py's own isolated_paths, extended to cover the extra managers assemble_life_state() r *(4 undocumented)*
 - `tests/test_conversation_card.py`: Unit test for gui.widgets.conversation_card's pure formatting helper — no Qt event loop needed. The card widget itself (click-to-select, delete button, selected-state property toggling) needs a real Qt event loop to exercise meaningfully, so that was verified with a manual headless smoke test instea
 - `tests/test_conversation_manager.py`: Unit tests for core.conversation_manager. Isolates _DATA_DIR _CONVERSATIONS_FILE into a tmp_path scratch area, same monkeypatch pattern as test_mission_manager.py's isolated_paths. Also isolates config_manager's _CONFIG_FILE, since set_active_conversation_id() calls context.config.save() — the exact *(5 undocumented)*
@@ -1115,7 +1117,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-82 files, 14,825 lines
+83 files, 14,905 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
@@ -1131,6 +1133,7 @@
 - `web/chronicle.js`: chronicle.js — The Chronicle (claude, 2026-10-17, DEC-0028). Renders MIA.chronicle() (core/chronicle.py): this week's chapter, the weeks before it, and the yearly editions. Laid out as the design canvas's Chronicle (DEC-0113): the newest chapter as prose, earlier ones to open. Read only; formatting 
 - `web/classroom.js`: classroom.js — the Classroom (claude, 2026-11-06). Renders MIA.classroom() (core/classroom_manager.py): the course to continue (the design canvas's card, DEC-0113), then each subject, its courses and their lessons, how far along each is. Adding, ticking a lesson done (its skill XP credited once) and
 - `web/compliance.js`: compliance.js — the Compliance screen (claude, 2026-10-21, DEC-0040). Renders MIA.compliance() (core/web_compliance.py): Overdue, Next 30 Days, Later, To Check and Done. Every change proposes an action (core/obligation_actions.py): add, edit, verify (the only way an obligation becomes verified), whe
+- `web/connect.js`: connect.js — Connect Apps (claude, 2026-11-08). Renders MIA.connect() (core/connectors.py): each source MIA can import from. A file (calendar, contacts, bank statement) or a rental's calendar link is previewed first (MIA.connectPreview: what's new, what's already here, what couldn't be read), and on
 - `web/cook.js`: cook.js — cook mode (claude, 2026-11-07, DEC-0113: the design canvas's Kitchen · Cook Mode). The recipe being cooked takes the whole screen, on the Kitchen page and on a recipe's page alike: one step in large type, what this step uses, the step's own timer to start, every timer running (they keep go
 - `web/council.js`: council.js — the council from the phone (claude, 2026-11-06, build plan step 16). Renders MIA.council() (core/council.py through server/app.py): the latest messages, who's here and ready, and a box to write to them. Only the PC's owner gets an answer; anyone else sees why. Formatting only.
 - `web/dev.js`: dev.js: the development board (claude, 2026-11-03, DEC-0068/0070). Zac: "a window that makes it all easy to view and understand the workflow and what is going on, what is building, who is building it." Renders MIA.dev() (core/work_dashboard.py) as the flow, Up Next to Done, each card opening to its 
