@@ -152,7 +152,7 @@ computer, the phone, the Meta Display glasses (soon), then Pi devices
 | Web front end (`web/`, served at `/web/`; desktop "Home (preview)") | REAL foundation: engine client, tokens, a working Home scaffold. Muse's real Home next |
 | Action API (`/api/actions`) and live updates (`/api/live`) | REAL, built 2026-10-05 |
 | Muse's desktop design artifact | Design surface, SIMULATED. Superseded by `web/` for real screens |
-| Meta Display glasses | Web App (DEC-0016) REAL in the preview (`web/glasses.html`): boots to her orb, swipe through your pinned (favorite) app cards, select one for its quick action menu (H-0041/H-0042/H-0045, DEC-0024, `core/glasses.py`); a change is approved with a second select. Zac's Display arrives around Nov 16; on-device test (Funnel, revocable link) after |
+| Meta Display glasses | Web App (DEC-0016) REAL in the preview (`web/glasses.html`): boots to her orb, swipe through your pinned (favorite) app cards, select one for its quick action menu; a Nexus card opens the areas as a flat ring of names (DEC-0130), each area's apps one select in (H-0041/H-0042/H-0045, DEC-0024, `core/glasses.py`); a change is approved with a second select. Zac's Display arrives around Nov 16; on-device test (Funnel, revocable link) after |
 | Raspberry Pi devices | Supported but parked: priority 4 (DEC-0015) |
 | MIA's reasoning over Life State ("opportunities") | PLANNED (Phase 2) |
 | Collaboration hub (these files) | REAL, started 2026-10-05 (DEC-0010) |

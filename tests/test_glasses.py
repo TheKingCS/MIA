@@ -3,7 +3,8 @@ The glasses' app cards and quick action menus (Zac 2026-10-16, H-0041
 Phase 2; core/glasses.py): the person's own apps as cards, each with a
 menu; a panel's lines carry only glasses-safe actions, and money stays
 readouts; a change goes Propose -> Approve like everywhere else. Every ask
-reaches one of its app's own tools (DEC-0125).
+reaches one of its app's own tools (DEC-0125). The Nexus's areas come with
+them (DEC-0130).
 """
 
 import json
@@ -298,3 +299,19 @@ def test_good_news_on_the_glasses_is_heard_by_its_quick_command():
     from core.good_news import _ASK
 
     assert all(_ASK.match(say) for say in ASKS["good_news"])
+
+
+def test_the_nexus_on_the_glasses_lists_areas_with_their_glasses_apps_and_needs(world):
+    """DEC-0130 (NEXUS_PLAN M4): the glasses get the areas in order, each with only apps that are on the glasses, its
+    hue, and what needs you there; an area with none of the glasses' apps is left out."""
+    from core.web_areas import AREAS
+
+    data = glasses_apps(world, TODAY)
+    on_glasses = {a["id"] for a in data["apps"] + data["others"]}
+    areas = data["areas"]
+    assert areas and [r["id"] for r in areas] == [a.id for a in AREAS if any(r["id"] == a.id for r in areas)]
+    for r in areas:
+        assert r["apps"] and set(r["apps"]) <= on_glasses and r["hue"].startswith("#") and r["needs"] >= 0
+    garage = next(r for r in areas if r["id"] == "garage")
+    assert "garage" in garage["apps"]
+    assert "browser" not in {r["id"] for r in areas} or "browser" in on_glasses

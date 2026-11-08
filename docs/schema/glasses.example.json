@@ -1152,5 +1152,174 @@
     "objective.tick",
     "routine.log",
     "task.done"
+  ],
+  "areas": [
+    {
+      "id": "home",
+      "name": "Home",
+      "short": "Home",
+      "hue": "#35d4ff",
+      "apps": [
+        "household",
+        "kitchen",
+        "power"
+      ],
+      "needs": 0
+    },
+    {
+      "id": "garage",
+      "name": "Garage",
+      "short": "Garage",
+      "hue": "#8fa7bf",
+      "apps": [
+        "garage"
+      ],
+      "needs": 1
+    },
+    {
+      "id": "plants_animals",
+      "name": "Plants and Animals",
+      "short": "Plants & Animals",
+      "hue": "#35d4ff",
+      "apps": [
+        "greenhouse"
+      ],
+      "needs": 0
+    },
+    {
+      "id": "kitchen",
+      "name": "Kitchen",
+      "short": "Kitchen",
+      "hue": "#e9d4a8",
+      "apps": [
+        "kitchen"
+      ],
+      "needs": 1
+    },
+    {
+      "id": "health",
+      "name": "Health and Fitness",
+      "short": "Health & Fitness",
+      "hue": "#ff8a3d",
+      "apps": [
+        "workout",
+        "kitchen"
+      ],
+      "needs": 0
+    },
+    {
+      "id": "recreation",
+      "name": "Recreation",
+      "short": "Recreation",
+      "hue": "#9b6bff",
+      "apps": [
+        "expeditions",
+        "maps",
+        "navigation",
+        "memories",
+        "music"
+      ],
+      "needs": 0
+    },
+    {
+      "id": "security",
+      "name": "Security",
+      "short": "Security",
+      "hue": "#c0c8d4",
+      "apps": [
+        "field_kit"
+      ],
+      "needs": 0
+    },
+    {
+      "id": "system",
+      "name": "Settings and Diagnostics",
+      "short": "Settings",
+      "hue": "#dfe9f2",
+      "apps": [
+        "diagnostics"
+      ],
+      "needs": 0
+    },
+    {
+      "id": "finances",
+      "name": "Finances",
+      "short": "Finances",
+      "hue": "#3f7bff",
+      "apps": [
+        "budget",
+        "real_estate",
+        "inbox"
+      ],
+      "needs": 0
+    },
+    {
+      "id": "business",
+      "name": "Business",
+      "short": "Business",
+      "hue": "#7f95ff",
+      "apps": [
+        "workshop",
+        "real_estate"
+      ],
+      "needs": 0
+    },
+    {
+      "id": "personal",
+      "name": "Personal",
+      "short": "Personal",
+      "hue": "#ff8ad8",
+      "apps": [
+        "calendar",
+        "notes",
+        "relationships",
+        "observations"
+      ],
+      "needs": 0
+    },
+    {
+      "id": "learning",
+      "name": "Learning",
+      "short": "Learning",
+      "hue": "#6a5cff",
+      "apps": [
+        "classroom",
+        "skills"
+      ],
+      "needs": 0
+    },
+    {
+      "id": "missions",
+      "name": "Missions",
+      "short": "Missions",
+      "hue": "#c86bff",
+      "apps": [
+        "missions",
+        "skills",
+        "character"
+      ],
+      "needs": 0
+    },
+    {
+      "id": "projects",
+      "name": "Projects",
+      "short": "Projects",
+      "hue": "#b9a8ff",
+      "apps": [
+        "workshop",
+        "lab"
+      ],
+      "needs": 0
+    },
+    {
+      "id": "communications",
+      "name": "Communications",
+      "short": "Communications",
+      "hue": "#6fc6ff",
+      "apps": [
+        "inbox"
+      ],
+      "needs": 0
+    }
   ]
 }

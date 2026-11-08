@@ -499,3 +499,20 @@ body.hud-on #stage::before { display: none; }  /* truly clear: black is see-thro
   display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
 .t-hero.cook .c-timers { margin: 6px 0 0; display: flex; gap: 18px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 22px; color: var(--accent); }
 .t-hero.cook .c-timers .done { color: var(--attention); }
+
+/* The Nexus on the glasses (DEC-0130, NEXUS_PLAN M4): the areas as a flat ring of names on black, each lit faintly in
+   its own hue (the frame and glow only); the chosen one bright, its name large in the middle. No particles or depth:
+   the display shows light and black is see-through. "Needs you" stays amber. */
+.nexus-ring .n-ring { position: relative; flex: 1; min-height: 400px; margin: 0; }
+.nexus-ring .n-name { position: absolute; transform: translate(-50%, -50%); max-width: 150px; padding: 3px 7px;
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; text-align: center;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--accent-soft);
+  border: 1px solid color-mix(in srgb, var(--hue, var(--accent)) 35%, transparent); border-radius: 999px; }
+.nexus-ring .n-name.needs::after { content: ""; display: inline-block; width: 5px; height: 5px; margin-left: 5px;
+  border-radius: 50%; background: var(--attention); vertical-align: middle; }
+.nexus-ring .n-name.on { color: var(--ink); border-color: var(--hue, var(--accent));
+  box-shadow: 0 0 12px color-mix(in srgb, var(--hue, var(--accent)) 55%, transparent); }
+.nexus-ring .n-mid { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 56%; text-align: center; }
+.nexus-ring .n-big { margin: 0 0 6px; font-weight: 300; font-size: 26px; color: var(--ink);
+  text-shadow: 0 0 16px color-mix(in srgb, var(--hue, var(--accent)) 70%, transparent); }
+@media (prefers-reduced-motion: reduce) { .nexus-ring .n-name { transition: none; } }

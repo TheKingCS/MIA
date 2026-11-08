@@ -77,8 +77,10 @@ Follows its section 10: inspect, map, find what's reused, plan milestones, then 
 the liquid style in motion and backdrop). M1 and M2 built: `web/spatial.css`, `web/spatial.js` (vapor, ring, enter),
 `web/nexus.html` with `core/web_nexus.py`, the Nexus opening first, "take me to the garage" by voice. M3 built
 02:15: the Garage environment (`core/web_environments.py`; hub.html draws it): bays with depth, needs-you, parts
-running low across assets, the bench, lit in copper. Next: Zac's review of M3, then the glasses' flat ring (M4), then
-the other environments one at a time.*
+running low across assets, the bench, lit in copper. M4's glasses part built 04:40: a Nexus card first among the glasses' cards opens the areas as a
+flat ring of names on black (`web/glasses.js` nexusRing; `core/glasses.glasses_areas`), each lit faintly in its hue with
+an amber dot where something needs you; stepping in shows only that area's apps; ▼ goes back to the ring, then out. Next:
+Zac's review of M3 and the glasses' ring on the real display, then the other environments one at a time.*
 
 | # | What | Done when |
 |---|---|---|
