@@ -1124,6 +1124,14 @@ def create_app(context: AppContext) -> FastAPI:
         with app.state.turn_lock:
             return lab_page(view_for(context, profile_id), series[:200])
 
+    @app.get("/api/changes")
+    def changes_screen(profile_id: str = Depends(require_profile_id)) -> dict:
+        """Recent Changes (core/web_changes.py): what MIA can put back, and the last fortnight's history."""
+        from core.web_changes import changes_page
+
+        with app.state.turn_lock:
+            return changes_page(view_for(context, profile_id))
+
     @app.get("/api/field-kit")
     def field_kit_screen(profile_id: str = Depends(require_profile_id)) -> dict:
         """The Field Kit (core/web_field_kit.py): devices plugged in, the network checks and the script library."""

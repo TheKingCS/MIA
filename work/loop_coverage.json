@@ -41,6 +41,10 @@
    "status": "none",
    "why": "their own settings: nothing MIA chose, so nothing of hers to correct"
   },
+  "action:undo": {
+   "status": "none",
+   "why": "undo.last puts back the newest change, as \"undo that\" does; undoing MIA's own change already counts as a correction (core/corrections.py)"
+  },
   "check:birthday": {
    "status": "none",
    "why": "a greeting once a year: there is nothing in how it lands to learn from"

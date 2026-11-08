@@ -1,0 +1,65 @@
+{
+  "undoable": [
+    {
+      "what": "Logged 6 eggs",
+      "when": "6:12 PM",
+      "by": "You",
+      "newest": true
+    },
+    {
+      "what": "Added Trash to the road",
+      "when": "5:40 PM",
+      "by": "You",
+      "newest": false
+    },
+    {
+      "what": "Filed the hardware store receipt",
+      "when": "2:05 PM",
+      "by": "MIA",
+      "newest": false
+    }
+  ],
+  "history": [
+    {
+      "day": "Today",
+      "events": [
+        {
+          "what": "Logged 6 eggs",
+          "when": "6:12 PM",
+          "undone": false,
+          "by_mia": false
+        },
+        {
+          "what": "Added a routine: Trash to the road",
+          "when": "5:40 PM",
+          "undone": false,
+          "by_mia": false
+        },
+        {
+          "what": "Filed a receipt: hardware store",
+          "when": "2:05 PM",
+          "undone": false,
+          "by_mia": true
+        }
+      ]
+    },
+    {
+      "day": "Yesterday",
+      "events": [
+        {
+          "what": "Workout: Leg Day, 42 min",
+          "when": "7:30 AM",
+          "undone": false,
+          "by_mia": false
+        },
+        {
+          "what": "Paid the electric bill",
+          "when": "9:10 AM",
+          "undone": true,
+          "by_mia": false
+        }
+      ]
+    }
+  ],
+  "history_days": 14
+}
