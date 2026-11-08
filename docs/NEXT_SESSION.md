@@ -769,6 +769,11 @@ every step below in order, from a blank machine, with Windows notes.
 
 *History since 2026-11-03: open work is in `work/tasks/`.*
 
+**Who builds what (2026-11-07 night, after Power and Recent Changes were each built twice at once):** screens
+(web pages, the canvas's look, the review's missing screens: Waiting For You, a plan's page, the Browser in the
+canvas look) are the canvas-build session's. The parity session keeps to voice tools, routing, glasses asks and
+`core/parity.py`. Claim a screen in this file before starting it.
+
 **Parity (DEC-0125) is nearly whole (2026-11-07 night).** Voice 50 of 50 apps but Passwords (on purpose), phone
 50, glasses 46: the only open gap is Look on the glasses (the glasses' own camera). Stage 1 of
 `docs/DEVELOPMENT_PLAN.md` is done (Talk's mic, humor in Settings, the four phone pages with the canvas session,
