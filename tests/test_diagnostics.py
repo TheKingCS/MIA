@@ -1,5 +1,6 @@
 """Diagnostic procedures (ACAF step 4, T-0040, core/diagnostics.py): check-ups written as specs over what inspection's
-PASSIVE methods read; checked before they run, so they can only read and compare; what couldn't be read said as such; the hardware list, only what was read; the log's newest problems, on the page and read out."""
+PASSIVE methods read; checked before they run, so they can only read and compare; what couldn't be read said as such; the hardware list, only what was read; the log's newest problems, on the page and read out; and where her docs disagree
+with her own repository, grouped."""
 
 from types import SimpleNamespace
 
@@ -51,6 +52,7 @@ def test_asked_for_by_name(monkeypatch):
 
 
 def test_the_screen_runs_every_check_up_over_one_inspection():
+    """Every check-up runs over one inspection of this computer; her repository is inspected beside it, once."""
     from types import SimpleNamespace
 
     from core import diagnostics
@@ -64,7 +66,7 @@ def test_the_screen_runs_every_check_up_over_one_inspection():
         return SimpleNamespace(evidence=facts)
 
     found = {c["id"]: c for c in diagnostics.screen(None, inspect=inspect)["checks"]}
-    assert calls == ["this_computer"] and set(found) == set(diagnostics.PROCEDURES)
+    assert calls == ["this_computer", "repository"] and set(found) == set(diagnostics.PROCEDURES)  # the PC once
     assert not found["pc_ready"]["ok"] and "Drive C has 10 GB free" in found["pc_ready"]["failed"][0]
     assert "cpu.use_percent" in found["pc_ready"]["unknown"]
 
@@ -100,3 +102,22 @@ def test_the_log_is_read_out_when_asked():
     assert said == ("2 recent problems in my log, 1 of them errors. Newest first: the phone couldn't sync (server.app, 18:02); "
                     "no steps (core.kitchen, 18:01).")
     assert "in my log" in d.reply(None, "any errors in your log?")
+
+
+def test_her_repository_shows_where_her_docs_disagree_with_it_grouped():
+    from types import SimpleNamespace
+
+    from core.diagnostics import repository_view
+    from core.inspection import Evidence, Gap
+
+    ev = lambda fact, value: Evidence(fact, value, "repository", "the repository")  # noqa: E731
+    report = SimpleNamespace(evidence=[ev("repository.findings", 2),
+                                       ev("repository.doc_paths_missing", ["docs/X.md names core/gone.py"]),
+                                       ev("repository.built_files_missing", []),
+                                       ev("repository.requirements_missing", ["requirements.txt lists astral"])], gaps=[])
+    view = repository_view(report)
+    assert view["available"] and view["findings"] == 2
+    assert [g["title"] for g in view["groups"]] == ["Files Her Docs Name That Aren't There", "Listed Requirements Not Installed"]
+    missing = repository_view(SimpleNamespace(evidence=[], gaps=[Gap("Her repository", "not a development install")]))
+    assert missing == {"available": False, "why": "not a development install", "findings": 0, "groups": []}
+    assert repository_view(None)["available"] is False

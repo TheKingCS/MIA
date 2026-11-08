@@ -21,7 +21,9 @@ pass).
 to the same check. `hardware()` turns the same inspection's facts into the
 screen's hardware list (This PC), saying only what was read; and
 `recent_problems()` reads the newest warnings and errors from MIA's own log
-("any errors in your log?" reads them out: `log_words`).
+("any errors in your log?" reads them out: `log_words`). `repository_view()`
+puts the inspection of her own repository (T-0020: where her docs disagree
+with it) on the same screen, grouped.
 """
 
 from __future__ import annotations
@@ -197,9 +199,30 @@ def recent_problems(log_file: Optional[Path] = None, limit: int = 30, read_bytes
     return list(reversed(found))[:limit]
 
 
+REPO_GROUPS = (("repository.doc_paths_missing", "Files Her Docs Name That Aren't There"),
+               ("repository.built_files_missing", "Built (Say the Decisions) But Missing"),
+               ("repository.requirements_missing", "Listed Requirements Not Installed"))
+
+
+def repository_view(report) -> dict:
+    """Pure logic. Her own repository's read-only inspection (core/inspection.py's `repository` subject, T-0020) as the
+    page shows it: how many places her docs disagree with it, grouped (each group only when it has any), or why it
+    couldn't be read (not a development install)."""
+    if report is None:
+        return {"available": False, "why": "", "findings": 0, "groups": []}
+    facts = {e.fact: e.value for e in report.evidence}
+    if "repository.findings" not in facts:
+        why = next((g.why for g in getattr(report, "gaps", []) if getattr(g, "why", "")), "")
+        return {"available": False, "why": why, "findings": 0, "groups": []}
+    groups = [{"title": title, "items": [str(x) for x in facts.get(fact) or []]} for fact, title in REPO_GROUPS]
+    return {"available": True, "why": "", "findings": int(facts["repository.findings"] or 0),
+            "groups": [g for g in groups if g["items"]]}
+
+
 def screen(context, inspect=None) -> dict:
     """The Diagnostics web screen (web/diagnostics.html, the PC's owner's): every built-in check-up over one
-    passive inspection, the hardware list it read (hardware), and the log's newest problems (recent_problems)."""
+    passive inspection, the hardware list it read (hardware), the log's newest problems (recent_problems), and where
+    her docs disagree with her own repository (repository_view)."""
     if inspect is None:
         from core.inspection import inspect
     try:
@@ -219,7 +242,11 @@ def screen(context, inspect=None) -> dict:
     facts = {}
     for e in report.evidence:
         facts.setdefault(e.fact, e.value)
-    return {"checks": checks, "error": "", "hardware": hardware(facts), "problems": recent_problems()}
+    try:
+        repo = repository_view(inspect(context, "repository"))
+    except Exception:  # noqa: BLE001 - her repository is a side panel; the PC's check-up stands without it
+        repo = repository_view(None)
+    return {"checks": checks, "error": "", "hardware": hardware(facts), "problems": recent_problems(), "repository": repo}
 
 
 _ASK = (("network", ("network", "internet connection", "wifi", "wi-fi", "connection")),

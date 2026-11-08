@@ -21,6 +21,18 @@
         c.failed.length && c.unknown.length ? el("span", { class: "dx-note" }, "Couldn't read: " + c.unknown.join(", ")) : null),
       el("span", { class: "sr-only" }, state === "ok" ? "passed" : state === "look" ? "to look at" : "couldn't read all of it"));
   }
+  // Her own repository (T-0020): where her docs disagree with it, grouped; read only, like the rest of the page.
+  function repoPanel(r) {
+    if (!r || !r.available) return null;
+    return el("details", { class: "glass dx-list dx-repo", open: r.findings ? "" : null },
+      el("summary", { class: "dx-label" }, "Her Own Repository · " + (r.findings ? r.findings + " to look at" : "matches her docs")),
+      ...(r.groups.length ? r.groups.map((g) => el("div", { class: "dx-repo-group" },
+        el("p", { class: "dx-repo-title" }, g.title + " · " + g.items.length),
+        el("ul", { class: "dx-repo-items" }, ...g.items.slice(0, 12).map((x) => el("li", {}, x))),
+        g.items.length > 12 ? el("p", { class: "dim" }, (g.items.length - 12) + " more") : null))
+        : [el("p", { class: "dim" }, "Every file her docs name is there, and every requirement is installed.")]));
+  }
+
   function paint(data) {
     const sum = (f) => data.checks.reduce((n, c) => n + f(c), 0);
     const passed = sum((c) => c.passed), look = sum((c) => c.failed.length), unread = sum((c) => c.unknown.length);
@@ -41,6 +53,7 @@
           el("span", { class: "dx-dot " + (p.level === "error" ? "bad" : "look"), "aria-hidden": "true" }),
           el("div", {}, el("div", { class: "dx-log-text" }, p.text), el("div", { class: "dim" }, p.when + " · " + p.where))))
           : [el("p", { class: "dim" }, "No warnings or errors lately.")])),
+      repoPanel(data.repository),
       el("p", { class: "dim dx-foot" }, "Looks only. Nothing is probed or changed. Anything it couldn't read is never counted as a pass. "
         + "You can also ask her: \"check my PC\", \"check the network\"."),
       el("button", { type: "button", class: "btn btn-ghost", onclick: async () => paint(await MIA.diagnostics()) }, "Run Again"),
