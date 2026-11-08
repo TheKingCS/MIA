@@ -1961,3 +1961,18 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   order of stores.
 - Related: DEC-0035 (the password vault), DEC-0125
 
+### DEC-0127: MIA becomes a product, sold by subscription, local-first
+- Status: PROPOSED
+- Proposed by: zac, 2026-11-08 ("We should plan for what it would take to get this polished and built to standards so
+  that it is ready for selling... something that connects to a users phone and pc and doesn't store any of their
+  data anywhere else... a paywall for access on a monthly subscription"; "Her files should be safe so that someone
+  couldn't just bypass the paywall or copy her")
+- Proposal (the plan: https://claude.ai/artifact/CXMdLtnXhy4XzUMAW4aLLR): MIA is sold as a monthly subscription that
+  keeps each customer's data only on their own PC and phone; we run only billing (a payment provider), a tiny
+  license check, and static downloads. Licenses are signed and checked offline with a grace period and a device
+  limit; release builds are compiled, signed and self-checked; updates and new connectors need a valid license.
+  Reverses DEC-0119 (MIA for Zac alone): Zac's own copy stays his.
+- Open: price and trial; platforms at launch; bank linking (a small Plaid server, or CSV only); Tailscale or a relay
+  away from home; the payment provider; a trademark search on the name.
+- Related: DEC-0115, DEC-0119 (reversed if approved), DEC-0126, docs/SECURITY.md
+
