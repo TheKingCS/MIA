@@ -18,6 +18,7 @@ MASTER = "correct horse battery staple"
 
 @pytest.fixture(autouse=True)
 def quick(monkeypatch):
+    """Makes the vault's key stretching cheap for the tests and forgets any open vault or failed tries."""
     monkeypatch.setattr(pv, "SCRYPT", {"n": 2 ** 10, "r": 8, "p": 1})  # the real cost is slow on purpose
     pv._open.clear()
     pv._tries.clear()
@@ -25,10 +26,12 @@ def quick(monkeypatch):
 
 @pytest.fixture
 def vault(tmp_path):
+    """A password vault in a temporary folder."""
     return PasswordVault(None, data_dir=tmp_path)
 
 
 def test_made_opened_locked(vault, tmp_path):
+    """A vault is set up with a recovery code, keeps nothing readable on disk, locks, and opens only with the right password."""
     with pytest.raises(VaultError):
         vault.setup("short")
     code = vault.setup(MASTER)
@@ -107,6 +110,7 @@ def test_a_browser_export_comes_in_once(vault):
 
 
 def test_strength():
+    """Password strength scores short and common passwords low and long ones high."""
     assert strength("") == 0 and strength("abc12") == 0 and strength("password") == 1
     assert strength("Tr0ub4dor&3xyz!") >= 3 and strength("correct horse battery staple") >= 3
 
@@ -176,6 +180,7 @@ def test_the_endpoints_and_never_a_password_where_it_shouldnt_be(tmp_path, monke
 
 
 def test_grown_ups_only():
+    """Passwords aren't a child's app and have no assistant tools."""
     from core.child_accounts import CHILD_APPS
     from core.web_surfaces import APPS_BY_ID
 

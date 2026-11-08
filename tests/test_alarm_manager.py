@@ -29,16 +29,19 @@ from core.event_bus import EventBus
 
 
 class _FakeNotifications:
+    """Notifications that are only remembered, so a test can see what was raised."""
     def __init__(self) -> None:
         """None raised yet."""
         self.calls: list[dict] = []
 
     def notify(self, title: str, message: str, level: str = "info", source: str = "system") -> None:
+        """Remembers a notification."""
         self.calls.append({"title": title, "message": message, "level": level, "source": source})
 
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the alarms file at a temporary folder."""
     data_dir = tmp_path / "data"
     alarms_file = data_dir / "alarms.json"
     monkeypatch.setattr(alarm_manager_module, "_DATA_DIR", data_dir)
@@ -47,6 +50,7 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _make_manager() -> tuple[AlarmManager, _FakeNotifications]:
+    """An alarm manager and its pretend notifications."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     context.notifications = _FakeNotifications()
     return AlarmManager(context), context.notifications

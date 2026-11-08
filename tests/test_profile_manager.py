@@ -24,10 +24,12 @@ from core.profile_manager import ProfileManager
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the config at a temporary file."""
     monkeypatch.setattr(config_manager_module, "_CONFIG_FILE", tmp_path / "config.json")
 
 
 def _make_manager() -> ProfileManager:
+    """A profile manager on a fresh context."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     return ProfileManager(context)
 
@@ -54,6 +56,7 @@ def test_new_profile_has_no_birthday_by_default(isolated_paths):
 
 
 def test_set_birthday(isolated_paths):
+    """A birthday is set and kept."""
     manager = _make_manager()
     profile = manager.create_profile(name="Alex")
     assert manager.set_birthday(profile.profile_id, "1990-03-03") is True
@@ -86,6 +89,7 @@ def test_get_active_profile_includes_birthday(isolated_paths):
 
 
 def test_add_xp_accumulates(isolated_paths):
+    """XP adds up and is kept."""
     manager = _make_manager()
     profile = manager.create_profile(name="Alex")
     assert manager.add_xp(profile.profile_id, 100) == 100
@@ -101,6 +105,7 @@ def test_add_xp_unknown_profile_returns_none(isolated_paths):
 
 
 def test_add_credits_accumulates(isolated_paths):
+    """Credits add up and are kept."""
     manager = _make_manager()
     profile = manager.create_profile(name="Alex")
     assert manager.add_credits(profile.profile_id, 25) == 25

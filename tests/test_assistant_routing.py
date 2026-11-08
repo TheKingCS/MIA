@@ -23,6 +23,7 @@ from tests.assistant_routing_corpus import CORPUS, INFO, NO_TOOLS
 
 @pytest.fixture(scope="module")
 def registry():
+    """The desktop's full tool registry."""
     return build_desktop_registry()
 
 
@@ -101,6 +102,7 @@ def test_resolve_by_name_exact_only_for_destructive_use():
     ("Tomato Bed", "tomato"), ("Blueberry Bushes", "blueberry"), ("Chainsaw", "chainsaw"), ("", ""),
 ])
 def test_head_word(name, head):
+    """A name's head word is the one that names the thing."""
     assert head_word(name) == head
 
 
@@ -117,6 +119,7 @@ def test_head_word(name, head):
     ("10 pounds of flour", (10.0, "pounds", "flour")),
 ])
 def test_parse_quantity_phrase(text, expected):
+    """A quantity phrase is read as its number and what it counts."""
     assert parse_quantity_phrase(text) == expected
 
 
@@ -124,6 +127,7 @@ def test_parse_quantity_phrase(text, expected):
 
 
 def _registry_with(domain="garage"):
+    """A registry with one do-nothing tool in the given domain."""
     registry = AssistantActionRegistry()
     registry.register(AssistantAction(
         name="noop", domain=domain, description="", parameters={}, handler=lambda c, a: "", trigger_phrases=("zzz",),

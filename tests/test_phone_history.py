@@ -80,16 +80,20 @@ def test_tools_that_change_things_announce_it():
 
 
 class _Module(ModuleBase):
+    """A module that counts how often it was asked to refresh."""
     module_id = "fake"
 
     def __init__(self, context):
+        """Not refreshed yet."""
         super().__init__(context)
         self.refreshed = 0
 
     def get_widget(self):
+        """Any object stands in for its widget."""
         return object()
 
     def _refresh(self):
+        """Counts a refresh."""
         self.refreshed += 1
 
 
@@ -135,6 +139,7 @@ def test_a_failing_refresh_never_takes_the_window_down():
 
 @pytest.fixture
 def phone(context, tmp_path, monkeypatch):  # noqa: F811  (context is the imported fixture)
+    """The phone's server signed in as Alice, with her own conversations, a pretend voice and model, and the calls handed to the desktop's thread."""
     monkeypatch.setattr(conversation_module, "_DATA_DIR", tmp_path / "data")
     monkeypatch.setattr(conversation_module, "_CONVERSATIONS_FILE", tmp_path / "data" / "conversations.json")
     context.conversations = ConversationManager(context)

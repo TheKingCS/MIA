@@ -107,6 +107,7 @@ config_manager_module._CONFIG_FILE = _TEST_CONFIG_DIR / "config.json"
 # real network connection whenever a test builds a full context. Tests
 # that exercise the monitor inject their own connect function.
 def _no_network(*_args, **_kwargs):
+    """Stands in for network calls in tests: always refuses."""
     raise OSError("network disabled in tests")
 
 
@@ -177,6 +178,7 @@ _REAL_CONFIG_FILE = Path(__file__).resolve().parent.parent / "config" / "config.
 
 
 def _data_snapshot() -> dict[str, float]:
+    """The modification times of everything in the real data folder, the real config and the work record, to catch a test writing there."""
     snapshot = {}
     if _REAL_DATA_DIR.exists():
         snapshot = {
@@ -193,10 +195,12 @@ def _data_snapshot() -> dict[str, float]:
 
 
 def pytest_sessionstart(session):
+    """Takes the snapshot before any test runs."""
     session.config._mia_data_snapshot = _data_snapshot()
 
 
 def pytest_sessionfinish(session, exitstatus):
+    """Fails the run when a test wrote into the real data folder, config or work record, naming what changed."""
     before = getattr(session.config, "_mia_data_snapshot", None)
     if before is None:
         return

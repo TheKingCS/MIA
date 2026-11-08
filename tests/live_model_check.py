@@ -737,6 +737,7 @@ _LIST_LINE = re.compile(r"^\s*(?:\d+[.)]|[-*•])\s", re.MULTILINE)
 
 
 def _check_personal_reply(reply, expected, max_words, lists_ok) -> tuple[bool, str]:
+    """Whether a personal-mode reply is right: the expected tool (or none), short enough, and listening rather than listing advice."""
     called = [tc.name for tc in reply.tool_calls] if reply and reply.tool_calls else []
     if expected is not None:
         return called == [expected], f"expected [{expected}], got {called}"
@@ -752,6 +753,7 @@ def _check_personal_reply(reply, expected, max_words, lists_ok) -> tuple[bool, s
 
 
 def _build_context() -> AppContext:
+    """A context with every store the golden cases use, on temporary data, and the real model."""
     config = ConfigManager()
     events = EventBus()
     context = AppContext(config=config, events=events)
@@ -825,6 +827,7 @@ def _build_context() -> AppContext:
 
 
 def _seed_fixtures(context: AppContext) -> None:
+    """Fills the stores with the records the golden cases ask about."""
     context.alarms.add_alarm(label="Wake Up", time="07:00")
     context.journal.add_entry(title="Groceries", body="buy milk and eggs")
     context.inventory.add_item(name="M3 bolts", quantity=25)
@@ -902,6 +905,7 @@ def _arguments_match(arguments: dict, expected: dict) -> tuple[bool, str]:
 
 
 def main() -> int:
+    """Runs every golden case against the live model and reports which tool it called; 1 when any fail."""
     context = _build_context()
     _seed_fixtures(context)
 

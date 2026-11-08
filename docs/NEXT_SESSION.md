@@ -31,6 +31,19 @@ and a "don't bring that up" tool + screen control.
 her specialists, Night School and its aim, teacher, builder, homestead planner, experimenter, game master, model
 maker, browser, painter, each read from its module, left out if missing.
 
+**New 2026-11-08 (overnight, design session, Zac asleep): screens for everything decided.** Built, each with its
+actions, voice tools, demo data and tests: **My Directions** (web/directions.html, DEC-0141/0143: directions, today's
+seed, one thing within reach), **How MIA Answers** and Talk's **"this one or this one?"** (web/answers.html,
+core/answer_compare.py, DEC-0138: the model rephrases her own reply, code checks no number changed; at most once a day,
+never private), **Living Worlds Phase 1** (web/worlds.html, DEC-0134: now a personal store; play waits on Phase 2),
+**About MIA** (web/about.html, DEC-0142), **Connections** with "don't bring that up" (web/connections.html, DEC-0146),
+**Trail Maps** (web/trails.html) and the chat page's **History** (past conversations: read, pick back up, delete),
+the Theme Studio's **Mix Two**, **sound sets** and the **glasses taking the theme accent** (DEC-0136), the
+Greenhouse's **What's Next** in the canvas look (DEC-0144), the flat Nexus showing Muse's portal pictures, the room
+lowering its resolution when slow (NEXUS_PLAN M4), the chosen portal's rim held back off its picture (H-0099), two
+stale tests fixed (Good News freshness by the episode's day; Talk's mic test), and 65 test helpers documented.
+Every page passed the demo-mode error sweep (95 pages). K-0120 to K-0125.
+
 **New 2026-11-08 (latest): capability reminders — "did you know you could go do X right now?" (DEC-0143).** Zac asked
 for MIA to remind him, now and then, of what he's already capable of doing right now — a subtle, affirming redirect
 that meets him where he is and gets him on track, never a new task or a value to live up to. `core/capability_reminders.py`

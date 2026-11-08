@@ -29,10 +29,12 @@ from modules.garage.module import (
 
 
 def _vehicle(category="Vehicle"):
+    """A pickup truck asset (or another category)."""
     return MaintenanceAsset(asset_id="a1", name="2019 Ford F-150", category=category)
 
 
 def _calendar_task(interval_days=30, last_completed=None):
+    """An oil change every so many days."""
     return MaintenanceTask(
         task_id="t1", asset_id="a1", title="Oil change",
         trigger_type="calendar", interval_days=interval_days, last_completed=last_completed,
@@ -40,6 +42,7 @@ def _calendar_task(interval_days=30, last_completed=None):
 
 
 def _meter_task(meter_interval=5000.0, last_completed_meter_value=40000.0):
+    """A tire rotation every so many miles, last done at a given reading."""
     return MaintenanceTask(
         task_id="t2", asset_id="a1", title="Tire rotation", trigger_type="mileage",
         meter_unit="miles", meter_interval=meter_interval, last_completed_meter_value=last_completed_meter_value,
@@ -48,6 +51,7 @@ def _meter_task(meter_interval=5000.0, last_completed_meter_value=40000.0):
 
 
 def _sensor_task(threshold_value=11.5, threshold_direction="below"):
+    """A battery check that's due when the voltage reading crosses a threshold."""
     return MaintenanceTask(
         task_id="t3", asset_id="a1", title="Check battery", trigger_type="sensor",
         meter_unit="V", threshold_value=threshold_value, threshold_direction=threshold_direction,
@@ -55,6 +59,7 @@ def _sensor_task(threshold_value=11.5, threshold_direction="below"):
 
 
 def _reading(value, task_id="t2"):
+    """One reading for a task's series."""
     return Reading(reading_id="r", series_id=f"maintenance_{task_id}", value=value, unit="", note="", timestamp="2026-09-01T00:00:00")
 
 

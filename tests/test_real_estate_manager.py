@@ -38,6 +38,7 @@ from core.real_estate_manager import (
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the properties and money files at a temporary folder."""
     data_dir = tmp_path / "data"
     monkeypatch.setattr(real_estate_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(real_estate_manager_module, "_PROPERTIES_FILE", data_dir / "properties.json")
@@ -49,12 +50,14 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _make_context() -> AppContext:
+    """A context with a budget manager, which rent and property expenses go into."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     context.budget = BudgetManager(context)
     return context
 
 
 def _make_manager(context: AppContext) -> RealEstateManager:
+    """A real estate manager, put on the context as context.real_estate."""
     manager = RealEstateManager(context)
     context.real_estate = manager
     return manager
@@ -80,6 +83,7 @@ def test_property_from_dict_backward_compatible_defaults_depreciation_fields():
 # ------------------------------------------------------------------
 
 def _rental(**overrides) -> Property:
+    """A rental property bought in 2020, with any field overridden."""
     defaults = dict(
         property_id="p1", name="123 Main St", property_type="Rental",
         purchase_price=275000.0, land_value=0.0,
@@ -348,6 +352,7 @@ def test_cap_rate_none_for_unknown_property(isolated_paths):
 # ------------------------------------------------------------------
 
 def _financed(**overrides) -> Property:
+    """A rental with a small one-year loan, with any field overridden."""
     defaults = dict(
         property_id="p1", name="123 Main St", property_type="Rental",
         purchase_date="2020-01-01",

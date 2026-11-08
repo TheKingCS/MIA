@@ -13,6 +13,7 @@ BY_ID = {l.id: l for l in loops.LOOPS}
 
 
 def ago(**kw) -> str:
+    """An ISO time that long before now."""
     return (datetime.now() - timedelta(**kw)).isoformat(timespec="seconds")
 
 
@@ -32,6 +33,7 @@ def test_a_failed_or_declined_action_is_kept_by_its_kind_only(tmp_path):
 
 
 def test_the_action_loops(tmp_path):
+    """The action loops count failed and declined actions, and the answers loop counts only rephrasings."""
     book = FailureLog(None, data_dir=tmp_path)
     book.record("action_failed", tool="bill.pay", surface="actions")
     book.record("declined", tool="task.done", surface="actions")
@@ -46,10 +48,12 @@ def test_the_action_loops(tmp_path):
 
 
 def draft(status, days=1):
+    """An email draft with a status, made that many days ago."""
     return SimpleNamespace(status=status, created_at=ago(days=days))
 
 
 def test_the_email_loops():
+    """The email loops measure the share of drafts thrown away and the drafts left open too long."""
     drafts = [draft("sent"), draft("discarded"), draft("discarded"), draft("sent"), draft("discarded"),
               draft("draft", days=10), draft("draft"), draft("sent", days=60)]
     store = SimpleNamespace(drafts=lambda: drafts, open_drafts=lambda: [d for d in drafts if d.status == "draft"])
@@ -61,6 +65,7 @@ def test_the_email_loops():
 
 
 def test_the_gate_loops():
+    """The gate loops measure dismissed messages (urgent ones not counted) and ones dropped for waiting too long."""
     log = [{"at": ago(days=1), "action": "act", "urgency": "normal", "dismissed_at": ago(hours=20)},
            {"at": ago(days=1), "action": "act", "urgency": "normal"},
            {"at": ago(days=2), "action": "act", "urgency": "urgent", "dismissed_at": ago(days=2)},

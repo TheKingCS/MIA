@@ -37,6 +37,7 @@ from core.skill_manager import SkillManager
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the kitchen, missions, config and skills files at a temporary folder."""
     data_dir = tmp_path / "data"
     monkeypatch.setattr(kitchen_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(kitchen_manager_module, "_RECIPES_FILE", data_dir / "kitchen_recipes.json")
@@ -66,16 +67,19 @@ def _make_context() -> AppContext:
 
 
 def _make_manager(context: AppContext) -> KitchenManager:
+    """A kitchen manager, put on the context as context.kitchen."""
     manager = KitchenManager(context)
     context.kitchen = manager
     return manager
 
 
 def _recipe(recipe_id="r1", ingredients=None) -> Recipe:
+    """A chili recipe with the given ingredients."""
     return Recipe(recipe_id=recipe_id, name="Weeknight Chili", ingredients=ingredients or [])
 
 
 def _pantry_item(name="Ground Beef", quantity=2.0, unit="lbs", expiration_date="") -> PantryItem:
+    """One pantry item (ground beef by default)."""
     return PantryItem(item_id="p1", name=name, quantity=quantity, unit=unit, expiration_date=expiration_date)
 
 
@@ -692,6 +696,7 @@ def test_recipes_makeable_now_uses_current_recipes_and_pantry(isolated_paths):
 # ------------------------------------------------------------------
 
 class _FakeNotifications:
+    """Notifications that are only remembered, so a test can see what was raised."""
     def __init__(self):
         """None raised yet."""
         self.calls: list[dict] = []

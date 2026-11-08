@@ -21,6 +21,7 @@ def _property(
     name="123 Main St", current_value=280000.0, mortgage_balance=150000.0, noi=12000.0, cap_rate=0.0429,
     annual_depreciation=8000.0,
 ):
+    """A rental property's figures as the report takes them (value, mortgage, equity, NOI, cap rate, depreciation)."""
     return {
         "name": name,
         "type": "Rental",
@@ -34,6 +35,7 @@ def _property(
 
 
 def _build(**overrides):
+    """The business report's HTML for a month of sample numbers, with any argument overridden."""
     args = dict(
         range_label="This Month",
         start_date="2026-09-01",
@@ -192,6 +194,7 @@ def test_category_to_schedule_e_line_unmapped_falls_to_other():
 # ------------------------------------------------------------------
 
 def _schedule_e_property(name="123 Main St", rents_received=24000.0, expenses_by_category=None, depreciation=8181.82):
+    """One property's Schedule E figures: rents received, expenses by category, depreciation."""
     return {
         "name": name,
         "rents_received": rents_received,
@@ -293,6 +296,7 @@ def test_payees_section_mentions_not_tax_advice():
 # ------------------------------------------------------------------
 
 def _holding(institution_name="Fidelity", security_name="Apple Inc.", ticker_symbol="AAPL", quantity=10.0, value=1750.0):
+    """One investment holding as the report lists it."""
     return {
         "institution_name": institution_name,
         "security_name": security_name,
@@ -349,6 +353,7 @@ def test_investments_section_shows_dash_for_missing_quantity():
 # ------------------------------------------------------------------
 
 def _entity_comparison(label="Sunrise Rentals LLC", income_total=8000.0, expenses_total=3000.0, property_equity_total=130000.0):
+    """One business entity's totals for the side-by-side comparison."""
     return {
         "label": label, "income_total": income_total, "expenses_total": expenses_total,
         "property_equity_total": property_equity_total,

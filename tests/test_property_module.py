@@ -31,10 +31,12 @@ from modules.property.module import (
 
 
 def _house(category="Property"):
+    """The main house as an asset (or another category)."""
     return MaintenanceAsset(asset_id="a1", name="Main House", category=category)
 
 
 def _calendar_task(interval_days=90, last_completed=None):
+    """An HVAC filter change every so many days."""
     return MaintenanceTask(
         task_id="t1", asset_id="a1", title="Replace HVAC filter",
         trigger_type="calendar", interval_days=interval_days, last_completed=last_completed,
@@ -42,6 +44,7 @@ def _calendar_task(interval_days=90, last_completed=None):
 
 
 def _meter_task(meter_interval=200.0, last_completed_meter_value=0.0):
+    """A water heater service by its running hours."""
     return MaintenanceTask(
         task_id="t2", asset_id="a1", title="Service water heater", trigger_type="runtime",
         meter_unit="engine hours", meter_interval=meter_interval, last_completed_meter_value=last_completed_meter_value,
@@ -50,6 +53,7 @@ def _meter_task(meter_interval=200.0, last_completed_meter_value=0.0):
 
 
 def _sensor_task(threshold_value=30.0, threshold_direction="above"):
+    """A radon check due when the reading goes above a threshold."""
     return MaintenanceTask(
         task_id="t3", asset_id="a1", title="Check radon level", trigger_type="sensor",
         meter_unit="pCi/L", threshold_value=threshold_value, threshold_direction=threshold_direction,
@@ -57,6 +61,7 @@ def _sensor_task(threshold_value=30.0, threshold_direction="above"):
 
 
 def _reading(value, task_id="t2"):
+    """One reading for a task's series."""
     return Reading(reading_id="r", series_id=f"maintenance_{task_id}", value=value, unit="", note="", timestamp="2026-09-01T00:00:00")
 
 

@@ -23,11 +23,13 @@ _APPS = ["dashboard", "assistant", "budget", "kitchen", "lab", "classroom", "gre
 
 
 def _modules(ids=_APPS):
+    """Pretend modules with the given ids and readable names."""
     return [SimpleNamespace(module_id=i, display_name=i.replace("_", " ").title()) for i in ids]
 
 
 @pytest.fixture
 def people(tmp_path, monkeypatch):
+    """Two people on temporary files (Zac signed in, Sam not) and a module manager with the test apps."""
     monkeypatch.setattr(config_module, "_CONFIG_FILE", tmp_path / "config.json")
     monkeypatch.setattr(profile_module, "_DATA_PROFILES_DIR", tmp_path / "profiles")
     context = AppContext(config=ConfigManager(), events=EventBus())
@@ -71,6 +73,7 @@ def test_arrange_puts_featured_first_and_leaves_hidden_out():
 
 
 def test_interests_and_wording():
+    """Interests map to focus groups, a recommendation reads in plain words, and a focus is found from what's said."""
     assert interests_for(["land", "health", "money"], ["Body", "Homestead", "Mind", "Outdoor"]) == ["Body", "Homestead", "Outdoor"]
     text = describe(recommend(["school"]), {"classroom": "Classroom", "notes": "Notes", "lab": "The Lab",
                                            "assistant": "Assistant"})
@@ -100,6 +103,7 @@ def test_each_person_has_their_own_apps_screen(people):
 
 
 def test_assistant_tools(people):
+    """The focus and app-visibility tools set a focus, hide and show an app, keep Settings, and ask when unsure."""
     context, _, _ = people
     assert "Business" in _action_set_app_focus(context, {"focus": "my business"})
     assert focus_presets.current(context)[0] == "business"
@@ -117,6 +121,7 @@ def test_assistant_tools(people):
 
 @pytest.fixture
 def qapp():
+    """The one Qt application the widget tests need."""
     from PySide6.QtWidgets import QApplication
 
     return QApplication.instance() or QApplication([])

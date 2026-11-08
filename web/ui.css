@@ -1970,3 +1970,34 @@ a.comms-row:hover .row-title { color: var(--accent); }
 .cn-quiet { display: grid; gap: 6px; padding: 10px 14px; margin-bottom: var(--gap); }
 .cn-quiet-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .cn-say { font-size: var(--text-sm); }
+
+/* The Greenhouse's What's Next (DEC-0144, web/grow.js): the next move as one card, the budget, the options. */
+.gn-move { display: grid; gap: 10px; padding: 18px 20px; margin-bottom: var(--gap); border-top: 2px solid rgba(var(--rgb-accent), 0.55); }
+.gn-move > .pw-label, .gn-move p { margin: 0; }
+.gn-name { margin: 0; font-size: 22px; }
+.gn-why { font-size: 15px; line-height: 1.5; }
+.gn-chain { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.gn-node { font-size: 12px; padding: 3px 10px; border-radius: var(--radius-pill); border: 1px solid rgba(var(--rgb-accent), 0.35); color: var(--text-dim); }
+.gn-node.on { color: var(--text); border-color: rgba(var(--rgb-accent), 0.8); background: rgba(var(--rgb-accent), 0.1); }
+.gn-arrow { color: rgb(var(--rgb-accent)); font-size: 13px; }
+.gn-figs { display: flex; flex-wrap: wrap; gap: 10px; }
+.gn-fig { display: grid; gap: 2px; padding: 8px 12px; min-width: 110px; border-radius: var(--radius-sm); background: var(--surface-raised); font-size: 12px; }
+.gn-n { font-size: 18px; font-weight: 700; color: rgb(var(--rgb-accent)); }
+.gn-move .row-buttons { margin: 2px 0 0; }
+.gn-budget { display: grid; gap: 6px; padding: 12px 16px; margin-bottom: calc(var(--gap) + 4px); }
+.gn-budget p { margin: 0; }
+.gn-budget-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.gn-budget-row input { width: 9em; min-height: 36px; padding: 0 10px; border-radius: var(--radius-sm); border: 1px solid rgba(var(--rgb-line), 0.7);
+  background: transparent; color: var(--text); font: inherit; }
+.gn-have, .gn-note { font-size: 13px; }
+.gn-label { margin: 0 0 8px; }
+.gn-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 10px; margin-bottom: var(--gap); }
+.gn-opt { display: grid; gap: 6px; padding: 14px 16px; align-content: start; }
+.gn-opt.on { border-color: rgba(var(--rgb-accent), 0.6); }
+.gn-opt p { margin: 0; }
+.gn-opt-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.gn-opt-head h3 { margin: 0; font-size: 15px; }
+.gn-tag { flex: none; font-size: 11px; color: var(--text-dim); text-align: right; }
+.gn-tag.ready { color: rgb(var(--rgb-accent)); letter-spacing: 0.08em; text-transform: uppercase; }
+.gn-opt-note, .gn-opt-opens { font-size: 12.5px; }
+.gn-opt-figs { font-size: 13px; }

@@ -26,6 +26,7 @@ from core.pathway_manager import PathwayManager
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the missions and pathways files at a temporary folder."""
     data_dir = tmp_path / "data"
     monkeypatch.setattr(mission_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(mission_manager_module, "_MISSIONS_FILE", data_dir / "missions.json")
@@ -36,6 +37,7 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _write_pathways(data_dir, pathways: list[dict]) -> None:
+    """Writes the pathway definitions file."""
     data_dir.mkdir(parents=True, exist_ok=True)
     (data_dir / "mission_pathways.json").write_text(json.dumps({"pathways": pathways}))
 
@@ -52,18 +54,21 @@ _TWO_STEP_PATHWAY = {
 
 
 def _make_context() -> AppContext:
+    """A context with a mission manager."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     context.missions = MissionManager(context)
     return context
 
 
 def _make_manager(context: AppContext) -> PathwayManager:
+    """A pathway manager, put on the context as context.pathways."""
     manager = PathwayManager(context)
     context.pathways = manager
     return manager
 
 
 class _FakeNotifications:
+    """Notifications that are only remembered, so a test can see what was raised."""
     def __init__(self):
         """None raised yet."""
         self.calls: list[dict] = []

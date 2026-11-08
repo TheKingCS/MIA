@@ -22,6 +22,7 @@ TODAY = date.today()
 
 @pytest.fixture
 def world(tmp_path, monkeypatch):
+    """A world with an electric bill two days late."""
     context = build_world(tmp_path, monkeypatch)
     context.actions = ActionCenter()
     context.bill = context.budget.add_bill("Electric", 120.0, (TODAY - timedelta(days=2)).isoformat(),
@@ -30,11 +31,13 @@ def world(tmp_path, monkeypatch):
 
 
 def run(world, kind, **params):
+    """Proposes and approves an action; the proposal and the result."""
     proposal = world.actions.propose(world, kind, params)
     return proposal, world.actions.approve(world, proposal.proposal_id)
 
 
 def test_pure_bits():
+    """Due dates read in words, and six month starts are counted back."""
     assert [due_words(d) for d in (None, 0, 1, 3, -1, -5)] == [
         "nothing more due", "today", "tomorrow", "in 3 days", "1 day late", "5 days late"]
     starts = month_starts(date(2026, 3, 15), 6)
@@ -50,6 +53,7 @@ def test_every_kind_is_registered_and_has_a_form():
 
 
 def test_the_page(world):
+    """The Money page shows bills, income, expenses, debts in payoff order, targets, trends and the monthly plan."""
     world.budget.add_income_source("Pay", 1500.0, TODAY.isoformat(), recurrence="biweekly")
     world.budget.add_expense(35.5, "Groceries", "Food", TODAY.isoformat())
     world.budget.add_debt("Card", 2000.0, 24.99, 50.0)
@@ -140,6 +144,7 @@ def test_not_for_a_child(world):
 
 
 def test_the_endpoint(world):
+    """The Money endpoint serves the page to a signed-in adult and refuses a child."""
     from fastapi.testclient import TestClient
 
     import server.app as server_app

@@ -25,6 +25,7 @@ from core.event_bus import EventBus
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the conversation store and the config at a temporary folder."""
     data_dir = tmp_path / "data"
     monkeypatch.setattr(conversation_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(conversation_manager_module, "_CONVERSATIONS_FILE", data_dir / "conversations.json")
@@ -32,6 +33,7 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _make_manager() -> ConversationManager:
+    """A conversation manager on a fresh context."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     return ConversationManager(context)
 
@@ -78,6 +80,7 @@ def test_add_message_unknown_conversation_returns_none(isolated_paths):
 
 
 def test_set_title(isolated_paths):
+    """A conversation's title is changed and kept."""
     manager = _make_manager()
     conversation = manager.create_conversation()
     updated = manager.set_title(conversation.conversation_id, "Hiking Plans")
@@ -86,6 +89,7 @@ def test_set_title(isolated_paths):
 
 
 def test_delete_conversation(isolated_paths):
+    """A deleted conversation is gone."""
     manager = _make_manager()
     conversation = manager.create_conversation()
     manager.delete_conversation(conversation.conversation_id)
@@ -93,6 +97,7 @@ def test_delete_conversation(isolated_paths):
 
 
 def test_delete_is_idempotent(isolated_paths):
+    """Deleting a conversation that isn't there does nothing and doesn't raise."""
     manager = _make_manager()
     manager.delete_conversation("does-not-exist")  # must not raise
 

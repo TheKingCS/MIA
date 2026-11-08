@@ -22,6 +22,7 @@ from core.backup_manager import create_backup, is_backup_encrypted, restore_back
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """A config and a data folder (with a profile's file) in a temporary folder for the backup to read."""
     config_file = tmp_path / "config" / "config.json"
     config_file.parent.mkdir(parents=True)
     config_file.write_text(json.dumps({"user": {"name": "Alex"}}))
@@ -167,14 +168,17 @@ class _FakeConfig:
     """Fakes just what backup_manager.py actually uses — ConfigManager.get()."""
 
     def __init__(self, values: dict) -> None:
+        """Keeps the values."""
         self._values = values
 
     def get(self, key: str, default=None):
+        """A value, or the default."""
         return self._values.get(key, default)
 
 
 @pytest.fixture
 def external_content_paths(tmp_path, monkeypatch):
+    """The folders kept outside data/ (trip photos, trail maps, captures, snapshots, documents) in a temporary folder."""
     dirs = {
         "trip_photos": tmp_path / "trip_photos",
         "trail_maps": tmp_path / "trail_maps",

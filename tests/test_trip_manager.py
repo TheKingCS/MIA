@@ -34,6 +34,7 @@ LOS_ANGELES = (34.0522, -118.2437)
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the trips and waypoints files at a temporary folder (waypoints too: they once leaked into the real data)."""
     data_dir = tmp_path / "data"
     trips_file = data_dir / "trips.json"
     monkeypatch.setattr(trip_manager_module, "_DATA_DIR", data_dir)
@@ -53,12 +54,14 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _make_context() -> AppContext:
+    """A context with a waypoint manager, for the route and distance tests."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     context.waypoints = WaypointManager(context)
     return context
 
 
 def _make_manager(context: AppContext | None = None) -> TripManager:
+    """A trip manager on the given context, or a fresh one."""
     return TripManager(context or _make_context())
 
 
@@ -319,6 +322,7 @@ def test_add_gear_item_from_inventory_and_custom(isolated_paths):
 
 
 def test_toggle_gear_packed(isolated_paths):
+    """A gear item's packed mark turns on and off."""
     manager = _make_manager()
     trip = manager.add_trip(expedition_id="exp1", name="X")
     manager.add_gear_item(trip.trip_id, label="Tent")
@@ -338,6 +342,7 @@ def test_toggle_gear_packed_out_of_range_raises(isolated_paths):
 
 
 def test_remove_gear_item(isolated_paths):
+    """A gear item is taken off the list."""
     manager = _make_manager()
     trip = manager.add_trip(expedition_id="exp1", name="X")
     manager.add_gear_item(trip.trip_id, label="Tent")
