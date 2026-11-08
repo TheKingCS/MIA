@@ -12,7 +12,10 @@ only, all pushed: the deep What's Next (DEC-0144, every chain); T-0020 repositor
 audit; T-0021 the shared development history (`core/dev_history.py`, `data/dev/history`, every commit); T-0022
 disagreements (`core/disagreements.py`); T-0023 the evolution timeline (`core/dev_evolution.py`); T-0025 the lab's
 method traces (checked against a real headless Claude Code run); T-0017's core (`core/online_lookup.py`); the Fix-It
-Log sealed at rest (DEC-0126). CURRENT_STATE has the summary; knowledge K-0139 to K-0149. **For the parity session:**
+Log sealed at rest (DEC-0126), then the history sealed a line at a time, the fix report and the kept seasons
+sealed, `tools.data_key seal --history`; creations, art and the world map in the history (no details); What's
+Next never re-suggesting what's on hand, and checking the food rules before a food stand. CURRENT_STATE has the
+summary; knowledge K-0139 to K-0153. **For the parity session:**
 voice tools for online lookup (`online_lookup.search` / `said`, offer line `OFFER`), "what isn't working?"
 (`capabilities.status_summary`). **For the design session:** `/api/dev` `disagreements` and `evolution` (shapes in
 section 2's engine claims). **For the next engine session:** `life_events.jsonl` is now sealed a line at a time
@@ -25,7 +28,7 @@ fresh start in spring gets "build a compost bin" rather than a raised bed (a bed
 "now or wait a year" bonus was tried and reverted (K-0153: strong enough to fix it, it beat jars ready to sell).
 T-0052 (create_app's length) only when no one else is in
 `server/app.py`; T-0017 stays open for its voice tool and Zac's SearXNG. **Zac:** start SearXNG (WAITING_ON), the
-homestead push, DEC-0147's choices, the iOS path.
+history's older lines (seal them or not), the homestead push, DEC-0147's choices, the iOS path, restart MIA.
 
 **⏸ New 2026-11-08 (night): homestead merged into MIA, waiting on Zac's push OK (DEC-0145).** `mia-homestead` is
 subtree-merged as `homestead/` with all 94 commits, byte-identical to GitHub, on branch `homestead-merge` in the
