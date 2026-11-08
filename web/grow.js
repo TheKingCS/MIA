@@ -161,11 +161,14 @@
       : el("p", { class: "empty" }, "No harvests yet.")),
     next: () => {
       // What to build next on the homestead (core/development_engine.py, DEC-0144), in the canvas's look: one Next
-      // Move card (why, what it opens, cost and payback, Start It as a project), your budget weighed in, what's
-      // already yours, then the options as cards. Advice only: the one change here is a project you approve.
+      // Move card (why, what it opens, cost and payback, Start It as a project; when it's the first step toward a bigger
+      // goal, "step 1 of N on the way to…" with the whole path, made or upcycled before bought, and the checks behind it:
+      // ✓ met, ! needs you, · worth knowing), your budget weighed in, what's already yours, then the options as cards.
+      // Advice only: the one change here is a project you approve.
       const n = nextPlan || page.next;
       if (!n || !n.next) return section("What's Next", null, el("p", { class: "empty" }, "No homestead projects to weigh yet."));
       const pick = n.options.find((o) => o.id === n.next.id) || {};
+      const longPath = (n.next.path || []).length > 1;
       const budget = el("input", { type: "number", min: "0", step: "10", inputmode: "decimal", placeholder: "Any", value: n.budget != null ? String(n.budget) : "",
         "aria-label": "What you can spend" });
       const weigh = async () => {
@@ -176,13 +179,23 @@
       return [
         el("section", { class: "glass gn-move" },
           el("p", { class: "pw-label" }, n.next.kind === "do" ? "Your Next Move" : "Next, When It's Time"),
+          (n.next.path || []).length > 1 && n.next.goal ? el("p", { class: "gn-step" },
+            "Step 1 of " + n.next.path.length + " on the way to ", el("b", {}, n.next.goal.name)) : null,
           el("h2", { class: "gn-name" }, n.next.name),
-          el("p", { class: "gn-why" }, n.next.reason),
-          pick.unlocks && pick.unlocks.length ? el("div", { class: "gn-chain", "aria-label": "What it opens" },
+          el("p", { class: "gn-why" }, longPath ? n.next.reason.split(" It's step 1 of")[0] : n.next.reason),  // the list says the rest
+          (n.next.path || []).length > 1 ? el("ol", { class: "gn-path", "aria-label": "The whole path" }, ...n.next.path.map((s, i) =>
+            el("li", { class: "gn-path-step" + (i === 0 ? " on" : "") },
+              el("span", { class: "gn-path-name" }, s.name),
+              el("span", { class: "dim gn-path-meta" }, (s.cost || "") + (s.made ? (s.cost ? " · " : "") + "make it" : ""))))) : null,
+          (n.next.checks || []).length ? el("ul", { class: "gn-checks", "aria-label": "Why this step, checked" }, ...n.next.checks.map((c) =>
+            el("li", { class: "gn-check " + (c.ok === true ? "ok" : c.ok === false ? "attn" : "info") },
+              el("span", { class: "gn-check-mark", "aria-hidden": "true" }, c.ok === true ? "✓" : c.ok === false ? "!" : "·"),
+              el("span", {}, (c.ok === false ? "Needs you: " : "") + c.line)))) : null,
+          !longPath && pick.unlocks && pick.unlocks.length ? el("div", { class: "gn-chain", "aria-label": "What it opens" },
             el("span", { class: "gn-node on" }, n.next.name), ...pick.unlocks.flatMap((u) => [el("span", { class: "gn-arrow", "aria-hidden": "true" }, "→"), el("span", { class: "gn-node" }, u)])) : null,
           el("div", { class: "gn-figs" },
             pick.cost ? el("div", { class: "gn-fig" }, el("span", { class: "gn-n" }, pick.cost), el("span", { class: "dim" }, "to start")) : null,
-            pick.payoff_months != null ? el("div", { class: "gn-fig" }, el("span", { class: "gn-n" }, "~" + pick.payoff_months + " mo"), el("span", { class: "dim" }, "pays itself back")) : null,
+            pick.payoff_months ? el("div", { class: "gn-fig" }, el("span", { class: "gn-n" }, "~" + pick.payoff_months + " mo"), el("span", { class: "dim" }, "pays itself back")) : null,
             pick.needs_professional ? el("div", { class: "gn-fig" }, el("span", { class: "gn-n" }, "Pro"), el("span", { class: "dim" }, "have one check it")) : null),
           el("div", { class: "row-buttons" }, btn("Start It as a Project", "btn-green", () => start(pick.id ? pick : n.next)))),
         el("section", { class: "glass gn-budget" },
@@ -194,7 +207,7 @@
         el("div", { class: "gn-options" }, ...n.options.map((o) => el("article", { class: "glass gn-opt" + (o.id === n.next.id ? " on" : "") },
           el("div", { class: "gn-opt-head" }, el("h3", {}, o.name), el("span", { class: "gn-tag" + (o.ready ? " ready" : "") }, o.ready ? "Ready" : o.why_not)),
           o.note ? el("p", { class: "dim gn-opt-note" }, o.note) : null,
-          el("p", { class: "gn-opt-figs" }, o.cost + (o.payoff_months != null ? " · pays back in ~" + o.payoff_months + " mo" : "") +
+          el("p", { class: "gn-opt-figs" }, o.cost + (o.payoff_months ? " · pays back in ~" + o.payoff_months + " mo" : "") +
             (o.needs_professional ? " · have a pro check it" : "")),
           o.unlocks.length ? el("p", { class: "dim gn-opt-opens" }, "Opens " + o.unlocks.join(", ")) : null))),
       ];

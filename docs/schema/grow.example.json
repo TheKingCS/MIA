@@ -582,16 +582,132 @@
  },
  "next": {
   "environment": "simulated",
-  "budget": null,
-  "month": 11,
+  "budget": 20,
+  "month": 3,
   "have": [],
   "next": {
    "kind": "do",
-   "id": "compost_bin",
-   "name": "Three-bay compost bin",
-   "reason": "Three-bay compost bin — it opens the door to 2 more projects; it starts producing value, paying for itself in about 2.5 months; about $30 to start."
+   "id": "seed_cups",
+   "name": "Toilet-paper-roll seed cups",
+   "reason": "Toilet-paper-roll seed cups — it opens the door to 1 more project; it starts producing value. It's step 1 of 6 on the way to “Sell seedling starts”: toilet-paper-roll seed cups → seed-starting mix → seed-starting shelf → start a first batch of seedlings → a roadside stand or market table → sell seedling starts.",
+   "goal": {
+    "id": "plant_sales",
+    "name": "Sell seedling starts"
+   },
+   "path": [
+    {
+     "id": "seed_cups",
+     "name": "Toilet-paper-roll seed cups",
+     "cost": "$0",
+     "made": true
+    },
+    {
+     "id": "seed_mix",
+     "name": "Seed-starting mix",
+     "cost": "$10",
+     "made": false
+    },
+    {
+     "id": "seedling_shelf",
+     "name": "Seed-starting shelf",
+     "cost": "$25",
+     "made": true
+    },
+    {
+     "id": "first_seedlings",
+     "name": "Start a first batch of seedlings",
+     "cost": "$5",
+     "made": false
+    },
+    {
+     "id": "sales_stand",
+     "name": "A roadside stand or market table",
+     "cost": "$20",
+     "made": true
+    },
+    {
+     "id": "plant_sales",
+     "name": "Sell seedling starts",
+     "cost": "$10",
+     "made": false
+    }
+   ],
+   "checks": [
+    {
+     "check": "ready",
+     "ok": true,
+     "line": "Everything it needs is already in place."
+    },
+    {
+     "check": "season",
+     "ok": true,
+     "line": "A good time to do it."
+    },
+    {
+     "check": "budget",
+     "ok": false,
+     "line": "About $70 for the whole path, more than the $20 you have; this step is $0."
+    },
+    {
+     "check": "made_first",
+     "ok": true,
+     "line": "Made, not bought: toilet-paper-roll seed cups rather than plastic seed-cell trays ($15)."
+    },
+    {
+     "check": "made_first",
+     "ok": true,
+     "line": "Made, not bought: seed-starting shelf rather than a bought wire shelf for seedlings ($40)."
+    },
+    {
+     "check": "start_small",
+     "ok": true,
+     "line": "Selling waits for proof you can make it well (a first batch) and a place to sell it, then starts small."
+    }
+   ]
   },
   "options": [
+   {
+    "id": "seed_cups",
+    "name": "Toilet-paper-roll seed cups",
+    "entry_cost": 0,
+    "cost": "$0",
+    "payoff_months": 0.0,
+    "unlocks": [
+     "Start a first batch of seedlings"
+    ],
+    "ready": true,
+    "why_not": "",
+    "needs_professional": false,
+    "note": "Save the rolls, cut and fold the bottoms; they go into the ground with the plant."
+   },
+   {
+    "id": "seed_mix",
+    "name": "Seed-starting mix",
+    "entry_cost": 10,
+    "cost": "$10",
+    "payoff_months": 10.0,
+    "unlocks": [
+     "Start a first batch of seedlings"
+    ],
+    "ready": true,
+    "why_not": "",
+    "needs_professional": false,
+    "note": "Fine and clean; your own sieved compost can stand in once the bin has matured, months from now."
+   },
+   {
+    "id": "cell_trays",
+    "name": "Plastic seed-cell trays",
+    "entry_cost": 15,
+    "cost": "$15",
+    "payoff_months": 7.5,
+    "unlocks": [
+     "Start a first batch of seedlings"
+    ],
+    "ready": true,
+    "why_not": "",
+    "needs_professional": false,
+    "note": "Reusable for years, but bought."
+   },
    {
     "id": "compost_bin",
     "name": "Three-bay compost bin",
@@ -602,8 +718,8 @@
      "Raised garden bed",
      "Greenhouse"
     ],
-    "ready": true,
-    "why_not": "",
+    "ready": false,
+    "why_not": "about $30, more than the $20 you said you have",
     "needs_professional": false,
     "note": "Pallets are often free; turns scraps into the soil everything else needs."
    },
@@ -617,65 +733,26 @@
      "Drip irrigation",
      "Greenhouse"
     ],
-    "ready": true,
-    "why_not": "",
+    "ready": false,
+    "why_not": "about $40, more than the $20 you said you have",
     "needs_professional": false,
     "note": "A barrel, a diverter and a screen — the cheapest thing that unlocks the most."
    },
    {
-    "id": "chickens",
-    "name": "Chicken coop and run",
-    "entry_cost": 300,
-    "cost": "$300",
-    "payoff_months": 7.5,
+    "id": "first_seedlings",
+    "name": "Start a first batch of seedlings",
+    "entry_cost": 5,
+    "cost": "$5",
+    "payoff_months": 0.6,
     "unlocks": [
-     "Three-bay compost bin"
-    ],
-    "ready": true,
-    "why_not": "",
-    "needs_professional": false,
-    "note": "Eggs and manure for the compost; ongoing feed cost and daily chores."
-   },
-   {
-    "id": "raised_bed",
-    "name": "Raised garden bed",
-    "entry_cost": 60,
-    "cost": "$60",
-    "payoff_months": 2.4,
-    "unlocks": [
-     "Cold frame",
-     "Sell seedlings and produce"
+     "Raised garden bed",
+     "A roadside stand or market table",
+     "Sell seedling starts"
     ],
     "ready": false,
-    "why_not": "best begun March to May",
+    "why_not": "needs seed cups and seed mix and seedling space first",
     "needs_professional": false,
-    "note": "Better with compost under it; the first real food."
-   },
-   {
-    "id": "greenhouse",
-    "name": "Greenhouse",
-    "entry_cost": 800,
-    "cost": "$800",
-    "payoff_months": 8.9,
-    "unlocks": [
-     "Sell seedlings and produce"
-    ],
-    "ready": false,
-    "why_not": "needs water first",
-    "needs_professional": true,
-    "note": "Year-round growing and a path to selling plants; the big step, so it waits."
-   },
-   {
-    "id": "plant_sales",
-    "name": "Sell seedlings and produce",
-    "entry_cost": 40,
-    "cost": "$40",
-    "payoff_months": 0.7,
-    "unlocks": [],
-    "ready": false,
-    "why_not": "needs beds first",
-    "needs_professional": false,
-    "note": "Where the homestead starts paying back — the bridge to a small business."
+    "note": "A dozen or two of something easy (tomatoes, peppers, herbs): proof you grow them well first."
    }
   ],
   "note": "Costs are rough starting figures, not quotes. Tell me your budget and I'll weigh it in."

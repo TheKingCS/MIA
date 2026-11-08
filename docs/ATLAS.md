@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1297 files, 280,739 lines; 1297 files describe themselves; 15,817 of 15,911 classes and functions are documented.
+1292 files, 280,192 lines; 1292 files describe themselves; 15,784 of 15,878 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-483 files, 132,834 lines; 7,125 of 7,211 classes and functions documented
+481 files, 132,478 lines; 7,104 of 7,190 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -167,8 +167,6 @@
 - `core/dungeon_actions.py`: The Dungeon's actions (DEC-0046, core/work_dungeon.py) on the action contract: proposed in plain words with the loot they bring, approved, run, undoable.
 - `core/dungeon_master.py`: Living Worlds Phase 2 (DEC-0134): a playable turn. The player says what they do; the **model proposes** narrative and the state changes it implies; **authoritative code validates and commits** them; MIA narrates the committed result. This is the spec's hardest rule (§9.1) made real — the language mo
 - `core/email_drafts.py`: Email drafts (2026-10-01, accounts stage 3): the Assistant can write an email for you, and you choose what happens to it: **Send** (only when you press Send, from your own address, core/mail_send.py), **Copy** it, or open it in your mail app** (a mailto: link). MIA never sends anything by herself; n
-- `core/email_extract.py`: Turn an email into the real-world facts hiding in it — the engine behind DEC-0133 (MIA watches your email). A message (sender, subject, body, date, id) goes to `extract()`, which returns a list of `EmailFact`s: a purchase MIA could add to the Garage, a service she could log, a bill, a warranty expir
-- `core/email_inbox.py`: The read-only transport for DEC-0133: fetch the owner's recent messages over IMAP so `core.email_extract` can pull facts from them. Read-only in the strict sense — the mailbox is opened with `readonly=True` and only FETCH is ever issued, never STORE, COPY or EXPUNGE, so MIA can read the inbox but ca
 - `core/energy_manager.py`: Manual energy/utility source tracking — 2026-09-09, the last of four "Field Manual" brainstorm items the user picked this session. Original seed: "Solar, generator, propane are currently just Maintenance usage logs by convention — could be a real Power/Energy expansion once real monitoring hardware 
 - `core/environment.py`: The real-vs-fictional boundary (DEC-0137): *shared intelligence, not shared authority.* MIA reuses the same primitives — entities, events, goals, progression — across real domains (missions, the garage, the homestead) and fictional ones (Living Worlds). This module is the one guarantee that keeps th
 - `core/equipment_actions.py`: Every change the Garage, Property, Greenhouse and Maintenance screens can make (2026-10-06, DEC-0017), as action kinds on the contract in core/actions.py, from one table (core/record_actions.py): assets (add, edit, delete), maintenance tasks (add, edit, delete), and logging a reading, on a task's me
@@ -727,7 +725,7 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-37 files, 3,823 lines; 119 of 119 classes and functions documented
+36 files, 3,746 lines; 118 of 118 classes and functions documented
 
 - `tools/audit.py`: MIA's self-audit from the command line (DEC-0108; core/self_audit.py, core/practices.py).
 - `tools/bench_audit.py`: What MIA's routing does today with each Intelligence Benchmark question (tests/intelligence_bench.py, docs/INTELLIGENCE_BENCHMARK.md): a question plan (core/question_plans.py: lookups by code, one answer), answered by code (a direct lookup), offered which tools, or left to the model with no tools at
@@ -762,14 +760,13 @@
 - `tools/tracks.py`: Tracks from GPX files (core/gps_tracks.py, DEC-0099), into the signed-in person's own folder.
 - `tools/user_sync_check.py`: A User Sync topic doesn't ship until it passes this (docs/GLASSES_FIRST_BOOT_PLAN.md): the sample answers in `data/user_sync_cases.json`, each with the chips they must produce, run through the real extraction with the real model on this computer's Ollama. Nothing else may come out: an extra chip is 
 - `tools/vault_captions.py`: Describes the photos this PC keeps for the phone, so they can be found by what's in them (core/vault_captions.py). MIA's daily check starts `run` between 2 and 5 at night.
-- `tools/watch_email.py`: See what MIA would find in your inbox (DEC-0133), without changing anything. Reads your recent mail read-only and prints the facts `core.email_extract` pulls out — purchases, services, bills, warranties — so you can judge the extraction before any of it becomes a record. It writes nothing and stores
 - `tools/web_check.py`: The device check for the new web front end (Phase 2, DEC-0013: prove the slice on the real devices before any broad migration; per DEC-0015 that's Zac's new computer first, then the phone; Pi devices later). Run it on any computer MIA runs on. Opens the web Home (`web/`, in demo mode with the placeh
 - `tools/weekly_bench.py`: The weekly benchmarks, graded and kept (build plan step 5, core/benchmarks.py): Zac's Intelligence Benchmark (tools/intelligence_check.py), the golden conversation corpus on the glasses and the phone (tools/conversation_check.py) and the routing audit (tools/bench_audit.py). Read-only like those: lo
 - `tools/work.py`: The team's development tasks from the command line (DEC-0068; the records are `work/tasks/`, the rules `core/work_tasks.py`). Commit the task files with the work, like any other change.
 
 ## tests/: the test suite: what each part must do
 
-443 files, 74,302 lines; 6,405 of 6,413 classes and functions documented
+441 files, 74,175 lines; 6,394 of 6,402 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -886,8 +883,6 @@
 - `tests/test_documentation.py`: Documentation for everything MIA is made of (DEC-0104, core/code_atlas.py): every file says what it is; new code arrives documented; nothing already documented slips back; docs/ATLAS.md is current.
 - `tests/test_dungeon_master.py`: Living Worlds Phase 2 (core/dungeon_master.py, DEC-0134): a playable turn where the model proposes and code validates/commits. The model's intents only change state when they pass their check; a quest, item or skill is committed to the store; the turn records a fictional event (DEC-0137), never real
 - `tests/test_email_drafts.py`: Email drafts (core/email_drafts.py, core/mail_send.py, core/assistant_email_actions.py), 2026-10-01: MIA writes, the person sends (only by pressing Send), copies, or opens their mail app.
-- `tests/test_email_extract.py`: Pulling real-world facts out of email (core/email_extract.py, DEC-0133): an order confirmation becomes a purchase, an auto-care receipt a service, a utility email a bill with its due date, a protection-plan notice a warranty reminder — each secret-free. A card or account number in a message never su
-- `tests/test_email_inbox.py`: Parsing raw messages into the shape the extractor wants (core/email_inbox.py, DEC-0133): the decoded sender and subject, and the text/plain body in preference to HTML. Pure — no IMAP server (fetch_recent is the thin live wrapper around this).
 - `tests/test_energy_manager.py`: Unit tests for core.energy_manager. Isolates _DATA_DIR _ENERGY_SOURCES_FILE (and core.data_logger_manager's own data file, since readings are real DataLogger entries this manager passes through), same monkeypatch pattern as tests/test_data_logger_manager .py's isolated_paths.
 - `tests/test_environment.py`: The real-vs-fictional boundary (core/environment.py + life_events, DEC-0137): `require_real` guards a real-authority sink (fictional/simulated raises DomainLeak); unknown/None normalises to real so nothing is fiction by accident; and a life event carries its environment, so a real-life view can filt
 - `tests/test_event_bus.py`: Unit tests for core.event_bus.EventBus.
@@ -1217,7 +1212,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-101 files, 18,450 lines
+101 files, 18,463 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), and what she knows about you, linking to where it's kept. Read onl
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she
