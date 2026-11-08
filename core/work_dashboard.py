@@ -195,6 +195,17 @@ def _reviews(task_id: str, events: list[dict]) -> list[dict]:
     return out
 
 
+def _disagreements(log, tasks_dir) -> list[dict]:
+    """Every disagreement still open (core/disagreements.py, DEC-0071 point 3): decisions, designs and tasks in
+    review, Zac's first. [] when it can't be read."""
+    from core import disagreements
+
+    try:
+        return disagreements.open_disagreements(log, tasks_dir)
+    except (OSError, ValueError):
+        return []
+
+
 def review_state(task, log, needed: int) -> dict:
     """Where a task in review stands, and whose move it is, in words."""
     from core import work_review as rv
@@ -240,7 +251,7 @@ def allowed(context, profile_id: str) -> bool:
 
 
 def page(context, query: str = "", tasks_dir=tasks_mod.TASKS_DIR, log=activity.ACTIVITY) -> dict:
-    """The work dashboard's data: every task (filtered by the query) with its loop steps done, its reviews and agents, and the activity log; a broken agent registry still shows the work. Not available without a tasks folder."""
+    """The work dashboard's data: every task (filtered by the query) with its loop steps done, its reviews and agents, the disagreements still open, and the activity log; a broken agent registry still shows the work. Not available without a tasks folder."""
     if not tasks_dir.exists():
         return {"available": False}
     tasks = tasks_mod.load(tasks_dir)
@@ -315,6 +326,7 @@ def page(context, query: str = "", tasks_dir=tasks_mod.TASKS_DIR, log=activity.A
         "architecture": _architecture(),
         "loops": _loops(),
         "night": _night(),
+        "disagreements": _disagreements(log, tasks_dir),
         "available": True,
         "summary": {s: sum(1 for r in rows if r["status"] == s) for s in ("ready", "claimed", "review", "blocked", "done")},
         "queue": [r for r in open_rows if r["status"] == "review"],

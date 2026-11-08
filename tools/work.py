@@ -20,6 +20,10 @@ work, like any other change.
     .venv\\Scripts\\python -m tools.work history --task T-0001
     .venv\\Scripts\\python -m tools.work resume T-0001              (where an interrupted task got to)
     .venv\\Scripts\\python -m tools.work resolve T-0001 --by claude --how "why" --lesson "what the reviewer should check"
+    .venv\\Scripts\\python -m tools.work object DEC-0071 --by codex --why "what's wrong with it"   (or docs/X.md)
+    .venv\\Scripts\\python -m tools.work answer DEC-0071 --by claude --how "what changed, or why not"
+    .venv\\Scripts\\python -m tools.work settle DEC-0071 --how "what Zac decided"   (Zac, at the keyboard)
+    .venv\\Scripts\\python -m tools.work disagreements                       (every one still open)
 
 Every change is recorded in work/activity.jsonl (core/work_activity.py).
 """
@@ -44,6 +48,7 @@ def _line(task: w.Task, tasks: dict) -> str:
 
 def main(argv=None) -> int:
     """The work-queue command line: list (ready, all, by owner), show, new, claim and the rest of a task's steps;
+    object, answer, settle and disagreements for a decision or design argued over (core/disagreements.py);
     history searches the activity log and, given words alone, the shared history too (core/dev_history.py). Returns
     the exit code."""
     parser = argparse.ArgumentParser(prog="tools.work")
@@ -91,6 +96,18 @@ def main(argv=None) -> int:
     rs.add_argument("--by", required=True)
     rs.add_argument("--how", required=True)
     rs.add_argument("--lesson", default="", help="what the reviewer should check next time, if it was wrong")
+    ob = sub.add_parser("object", help="object to a decision (DEC-0071) or a design (docs/X.md): DEC-0071 point 3")
+    ob.add_argument("subject")
+    ob.add_argument("--by", required=True)
+    ob.add_argument("--why", required=True)
+    an = sub.add_parser("answer", help="answer the objections to a decision or design: what changed, or why not")
+    an.add_argument("subject")
+    an.add_argument("--by", required=True)
+    an.add_argument("--how", required=True)
+    st = sub.add_parser("settle", help="Zac only, at the keyboard: decide a disagreement that stands")
+    st.add_argument("subject")
+    st.add_argument("--how", required=True)
+    sub.add_parser("disagreements", help="every disagreement still open, and whose move it is")
     lr = sub.add_parser("learn", help="MIA writes what a finished task taught (work/knowledge, DEC-0073)")
     lr.add_argument("ids", nargs="*", help="task ids; none means every finished task not yet written up")
     sub.add_parser("knowledge", help="what the team has learned, newest last")
@@ -161,6 +178,25 @@ def main(argv=None) -> int:
                 print(f"Stopped: {problem}", file=sys.stderr)
                 return 1
             print(_line(w.load()[args.id.upper()], w.load()), f"(stopped at {stopped}: waiting for review and Zac)")
+            return 0
+        if args.command in ("object", "answer", "settle", "disagreements"):
+            from core import disagreements as dis
+
+            try:
+                if args.command == "object":
+                    s = dis.object_to(args.subject, args.by, args.why)
+                elif args.command == "answer":
+                    s = dis.answer(args.subject, args.by, args.how)
+                elif args.command == "settle":
+                    s = dis.settle(args.subject, args.how, confirm=input)
+                else:
+                    for r in dis.open_disagreements():
+                        print(f"{r['subject']:28} {r['status']:9} {', '.join(r['raised_by']) or '-':20} {r['next']}")
+                    return 0
+            except dis.DisagreementError as problem:
+                print(f"Stopped: {problem}", file=sys.stderr)
+                return 1
+            print(f"{s['subject']}: {s['status']}, kept in the history.")
             return 0
         if args.command == "resolve":
             from core import work_review
