@@ -29,7 +29,7 @@ def test_sundays_to_the_owner_only(monkeypatch):
     import core.person_settings as ps
 
     monkeypatch.setattr(loops, "_has_repo", lambda: True)
-    monkeypatch.setattr(self_report, "report", lambda now=None: "Better: dev.vulnerable.")
+    monkeypatch.setattr(self_report, "report", lambda now=None, context=None: "Better: dev.vulnerable.")
     sunday, monday = datetime(2026, 11, 8, 18), datetime(2026, 11, 9, 18)
     context = SimpleNamespace(profiles=profiles(("kid", "2026-10-02"), ("zac", "2026-10-01")))
     monkeypatch.setattr(ps, "person_id", lambda c: "zac")

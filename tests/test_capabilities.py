@@ -1,6 +1,7 @@
 """What MIA can do and how she's built (DEC-0041): the capability map from
 the code, "can you…?" answered from it (or "not that I can find", never a
-guess), and MIA's own docs searched with the file each answer came from."""
+guess), MIA's own docs searched with the file each answer came from, and a status per capability (DEC-0057:
+a boundary by design isn't partial, what broke is inferred, a planned piece is never said as working)."""
 
 from types import SimpleNamespace
 
@@ -161,3 +162,51 @@ def test_an_app_with_a_web_page_never_says_it_has_none():
 
     wrong = [a.module_id for a in APPS if a.page and "no web screen" in LIMITS.get(a.module_id, "").lower()]
     assert not wrong, wrong
+
+
+# --- a status per capability (DEC-0057) ------------------------------------
+
+def _status(monkeypatch, gaps=None, failures=()):
+    """Every capability's status with these parity gaps and these page errors this week, as {id: row}."""
+    from core import capabilities
+
+    monkeypatch.setattr(capabilities, "_parity_gaps", lambda: dict(gaps or {}))
+    log = SimpleNamespace(events=lambda days=7: [{"kind": "page_error", "page": p} for p in failures])
+    return {r["id"]: r for r in capabilities.capability_status(SimpleNamespace(failures=log), "pc")}, capabilities
+
+
+def test_a_boundary_by_design_is_not_partial_but_a_missing_piece_is(monkeypatch):
+    rows, _ = _status(monkeypatch)
+    assert rows["compliance"]["status"] == "implemented" and "never files" in rows["compliance"]["limit"]
+    assert rows["dungeon"]["status"] == "partial" and "yet" in rows["dungeon"]["why"]
+
+
+def test_what_broke_this_week_is_malfunctioning_and_said_as_inferred(monkeypatch):
+    rows, _ = _status(monkeypatch, failures=["kitchen", "kitchen"])
+    assert rows["kitchen"]["status"] == "malfunctioning" and rows["kitchen"]["evidence"] == "inferred"
+    assert rows["kitchen"]["why"] == "it broke 2 times this week"
+
+
+def test_a_planned_piece_is_never_said_as_working(monkeypatch):
+    rows, capabilities = _status(monkeypatch, gaps={"sight:glasses": {"status": "todo", "why": "the glasses' camera"},
+                                                     "passwords:voice": {"status": "none", "why": "never by voice"}})
+    assert rows["sight:glasses"]["status"] == "planned" and rows["sight"]["status"] == "partial"
+    assert rows["passwords"]["status"] != "planned"  # decided against isn't planned
+    said = capabilities.status_summary(SimpleNamespace(), "pc")
+    assert "Planned, not built yet: Look on the glasses" in said
+
+
+def test_a_pc_app_or_one_decided_against_is_unavailable_on_another_device(monkeypatch):
+    from core import capabilities
+
+    monkeypatch.setattr(capabilities, "_parity_gaps", lambda: {"passwords:voice": {"status": "none", "why": "never by voice"}})
+    by_voice = {r["id"]: r for r in capabilities.capability_status(SimpleNamespace(), "voice")}
+    assert by_voice["passwords"]["status"] == "unavailable here" and by_voice["passwords"]["why"] == "never by voice"
+
+
+def test_the_weekly_report_ends_with_the_state_of_her_apps(monkeypatch):
+    from core import self_report
+
+    _status(monkeypatch)
+    line = self_report._apps_line(SimpleNamespace())
+    assert line.startswith("My apps: ") and " working, " in line and line.endswith("planned.")

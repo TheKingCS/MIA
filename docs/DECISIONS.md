@@ -1014,6 +1014,14 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   never claiming a planned one) and a weekly self-check through the
   communication gate. Verified, inferred and speculative findings kept
   apart.
+  **Built 2026-11-08 (claude, engine):** `core/capabilities.capability_status(context, here)` gives every app a
+  status: implemented, partial (a limit that says something isn't done *yet*, or a device it isn't on yet),
+  unavailable here (a PC app on the phone, or one decided against on this device in work/parity.json),
+  malfunctioning (it broke this week, from the Fix-It Log's page errors), and each decided-but-unbuilt parity gap
+  as planned; a limit that is a boundary by design ("she never files your taxes") is kept as `limit`, not counted
+  against her. Evidence is "verified" (code and decided records) or "inferred" (what broke), never mixed.
+  `status_summary()` says it, never calling a planned piece working; the weekly self-report (Sundays, through
+  the gate) ends with "My apps: N working, N partly, N planned" and anything that broke.
 - Related: DEC-0041, DEC-0043, DEC-0049, DEC-0056
 
 ### DEC-0058: Self-Development: an isolated lab, proposals only

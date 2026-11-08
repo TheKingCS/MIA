@@ -46,8 +46,9 @@ def changes(history: dict[str, list[dict]], since: str) -> tuple[list[str], list
     return sorted(better), sorted(worse)
 
 
-def report(now: Optional[datetime] = None) -> Optional[str]:
-    """This week, in a few plain lines. None when there's nothing to say."""
+def report(now: Optional[datetime] = None, context=None) -> Optional[str]:
+    """This week, in a few plain lines. None when there's nothing to say. With a context, it ends with the state of her
+    apps (DEC-0057's weekly self-check): how many are working, partly working or planned, and any that broke."""
     from core import loops, night_school, work_tasks
 
     since = _ago(7, now)
@@ -80,7 +81,28 @@ def report(now: Optional[datetime] = None) -> Optional[str]:
                      f"(python -m tools.chronicle_issue show {waiting[-1]['id']}).")
     if week:
         lines.append(f"Night School: {len(week)} night{'s' if len(week) != 1 else ''}, {passed} of {len(lessons)} lessons passed.")
+    if context is not None:
+        state = _apps_line(context)
+        if state:
+            lines.append(state)
     return " ".join(lines) if lines else None
+
+
+def _apps_line(context) -> str:
+    """One line on her apps from core/capabilities.capability_status (DEC-0057): working, partly, planned, and the
+    ones that broke this week (inferred from the Fix-It Log, said as such). "" when it can't be read."""
+    try:
+        from core.capabilities import capability_status
+
+        rows = capability_status(context, "pc")
+    except Exception:  # noqa: BLE001 - the report still goes without it
+        return ""
+    if not rows:
+        return ""
+    count = lambda s: sum(r["status"] == s for r in rows)  # noqa: E731
+    line = f"My apps: {count('implemented')} working, {count('partial')} partly, {count('planned')} planned."
+    broke = [r["name"] for r in rows if r["status"] == "malfunctioning"]
+    return line + (f" Broke this week: {', '.join(broke)}." if broke else "")
 
 
 def _owner(context) -> Optional[str]:
@@ -91,7 +113,8 @@ def _owner(context) -> Optional[str]:
 
 
 def offer(context, now: Optional[datetime] = None) -> list:
-    """On Sundays, for the PC's owner: the week's report as one Candidate for the gate."""
+    """On Sundays, for the PC's owner: the week's report, ending with the state of her apps (DEC-0057), as one
+    Candidate for the gate."""
     from core import loops
     from core.communication_gate import Candidate
     from core.person_settings import person_id
@@ -101,7 +124,7 @@ def offer(context, now: Optional[datetime] = None) -> list:
         return []
     if person_id(context) != _owner(context):
         return []
-    said = report()
+    said = report(context=context)
     if not said:
         return []
     week = now.date().isoformat()

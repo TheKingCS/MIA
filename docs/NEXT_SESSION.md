@@ -971,7 +971,8 @@ person's own Building Materials and Tools & Equipment targets, what's left of th
 **Claimed by the engine session (2026-11-08), core only:** (11) DEC-0126's remaining personal stores sealed
 (game stores, classroom, ratings, creations, record sets, online reminders, art, the loop, training and cooking
 sessions, the saga's moments); (12) DEC-0057's status per capability; (13) DEC-0142's self-knowledge in how-to answers
-about MIA.
+about MIA. **(11) and (12) built.** Ready for a voice tool (parity session): "what isn't working?" / "what's
+broken?" -> `core.capabilities.status_summary(context, here)`.
 
 **Who builds what (2026-11-07 night, after Power and Recent Changes were each built twice at once):** screens
 (web pages, the canvas's look, the review's missing screens: Waiting For You, a plan's page, the Browser in the

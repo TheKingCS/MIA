@@ -29,8 +29,13 @@ Phase 2B, docs/INTELLIGENCE_AUDIT.md). Never a hand-written brochure:
   maker, browser, painter), each line read from the module that makes it
   true and left out when that module or its data isn't there.
 
+- **A status per capability** (`capability_status()`, DEC-0057):
+  implemented, partial (something not done *yet*), unavailable here,
+  malfunctioning (it broke this week, inferred), or planned (a parity
+  gap decided and not built), never a planned one said as working.
+
 `capability_map()` gathers it; `overview()`, `introduction()`,
-`specialties()` and `can_i()` say it.
+`specialties()`, `status_summary()` and `can_i()` say it.
 """
 
 from __future__ import annotations
@@ -479,3 +484,104 @@ def can_i(context, thing: str) -> str:
 def find_app(context, app_id: str) -> Optional[dict]:
     """One app's entry in the capability map, by id, or None."""
     return next((a for a in capability_map(context) if a["id"] == app_id), None)
+
+
+# ------------------------------------------------------------------ a status per capability (DEC-0057)
+
+STATUSES = ("implemented", "partial", "planned", "unavailable here", "malfunctioning")
+DEVICES = ("pc", "phone", "glasses", "voice")
+
+
+def _parity_gaps() -> dict:
+    """The decided parity gaps (work/parity.json, DEC-0125): "app:device" -> {status, why}; {} when it can't be read."""
+    import json
+    from pathlib import Path
+
+    try:
+        raw = json.loads((Path(__file__).resolve().parent.parent / "work" / "parity.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return {k: v for k, v in (raw.get("gaps") or {}).items() if isinstance(v, dict)}
+
+
+def _broken(context, days: int = 7) -> dict:
+    """How often each page or app broke in the last `days` (the Fix-It Log's page errors): name -> count."""
+    log = getattr(context, "failures", None)
+    counts: dict = {}
+    try:
+        for e in (log.events(days=days) if log is not None else []):
+            if e.get("kind") == "page_error" and e.get("page"):
+                counts[e["page"]] = counts.get(e["page"], 0) + 1
+    except Exception:  # noqa: BLE001 - a log that won't read just reports nothing broken
+        return {}
+    return counts
+
+
+def _missing_yet(limit: str) -> bool:
+    """Pure logic. Whether an app's limit names something not built *yet* (a real gap), rather than a boundary by
+    design ("she never files, pays or signs"), which isn't a shortfall."""
+    return bool(re.search(r"\byet\b", limit or "", re.I))
+
+
+def capability_status(context=None, here: str = "pc") -> list[dict]:
+    """A status for every capability (DEC-0057), never claiming a planned one: each app as implemented, partial (its
+    limits, or a device it isn't on yet), unavailable here (a PC app on the phone, or one decided against on this
+    device), or malfunctioning (it broke this week); and each decided-but-unbuilt piece (a parity gap to do) as
+    planned. A limit that's a boundary by design ("she never files your taxes") isn't partial: it's kept as `limit`.
+    Every row is {id, name, status, evidence, why, limit}: evidence is "verified" (from the code and the decided
+    records) or "inferred" (from what broke). `here` is "pc", "phone", "glasses" or "voice"."""
+    from core.web_surfaces import APPS
+
+    pages = {a.module_id: a.page or "" for a in APPS}
+    gaps = _parity_gaps()
+    broken = _broken(context)
+    names = {}
+    out = []
+    for row in capability_map(context):
+        if row["where"] == "retired":
+            continue
+        app_id = row["id"]
+        names[app_id] = row["name"]
+        times = broken.get(app_id, 0) + (broken.get(pages.get(app_id, ""), 0) if pages.get(app_id) else 0)
+        todo = [k.split(":", 1)[1] for k, v in gaps.items() if k.split(":", 1)[0] == app_id and v.get("status") == "todo"]
+        not_here = gaps.get(f"{app_id}:{here}", {}).get("status") == "none"
+        if times:
+            status, evidence, why = "malfunctioning", "inferred", f"it broke {times} time{'s' if times != 1 else ''} this week"
+        elif not_here or (here in ("phone", "glasses") and row["where"] == "desktop"):
+            status, evidence = "unavailable here", "verified"
+            why = gaps.get(f"{app_id}:{here}", {}).get("why") or "it runs on the PC: open it there"
+        elif todo or _missing_yet(row["limits"]):
+            status, evidence = "partial", "verified"
+            why = row["limits"] if _missing_yet(row["limits"]) else f"not on the {', '.join(todo)} yet"
+        else:
+            status, evidence, why = "implemented", "verified", "built and working"
+        out.append({"id": app_id, "name": row["name"], "status": status, "evidence": evidence, "why": why,
+                    "limit": row["limits"]})  # a boundary by design ("never files taxes") is said, not counted against
+    for key, gap in sorted(gaps.items()):
+        app_id, device = key.split(":", 1)
+        if gap.get("status") == "todo" and app_id in names:
+            out.append({"id": key, "name": f"{names[app_id]} on the {device}", "status": "planned", "evidence": "verified",
+                        "why": str(gap.get("why") or "decided, not built yet")})
+    return out
+
+
+def status_summary(context=None, here: str = "pc") -> str:
+    """Plain words for "what isn't working?": counts by status, what broke (inferred, said as such), and what's partial
+    or only planned, so a planned capability is never said as working."""
+    rows = capability_status(context, here)
+    if not rows:
+        return "I can't read my own capabilities right now."
+    count = {s: sum(r["status"] == s for r in rows) for s in STATUSES}
+    lines = [f"{count['implemented']} of my apps are fully working"
+             + (f", {count['partial']} partly" if count["partial"] else "")
+             + (f", {count['unavailable here']} not available here" if count["unavailable here"] else "") + "."]
+    broke = [r for r in rows if r["status"] == "malfunctioning"]
+    if broke:
+        lines.append("From what broke this week, these look unwell: "
+                     + "; ".join(f"{r['name']} ({r['why']})" for r in broke) + ".")
+    else:
+        lines.append("Nothing broke this week.")
+    planned = [r["name"] for r in rows if r["status"] == "planned"]
+    if planned:
+        lines.append("Planned, not built yet: " + ", ".join(planned) + ".")
+    return " ".join(lines)
