@@ -2094,7 +2094,13 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
      live; objects and characters persist across transformations; live overlays on co-located real
      people (the mustache on the friend across the table). Generation latency and Orion-class hardware
      decide when this tier opens; Tiers 1–2 build toward it.
-  5. **Guardrails.** DEC-0002 holds absolutely: room scans/geometry of Zac's home stay local, never in
+  5. **Guardrails — light by design (Zac, 2026-11-08).** Restrictions stay light so the simulation stays
+     general-purpose: MIA bans no genre or theme — any kind of game or environment can be simulated,
+     combat, horror and mature worlds included. The control is **warnings before use**: every generated
+     place carries content descriptors shown before entry (violence, mature themes, horror, flashing /
+     photosensitivity, public or social), the host sets who may enter, and entering is always the
+     person's informed choice — a rating at the door, not a ban list. What remains is not content
+     restriction but protection: DEC-0002 holds absolutely: room scans/geometry of Zac's home stay local, never in
      this repo; public demos use a sample persona's room. Cloud generation is opt-in per service
      (DEC-0053 pattern); local GPU generation is the default. People are not props: no real person's
      likeness generated into a scene uninvited; no recording a shared space without everyone knowing.
