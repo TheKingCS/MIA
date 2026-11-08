@@ -59,3 +59,11 @@ def test_dont_bring_that_up_by_voice_takes_the_one_just_raised(ctx):
     ctx.connections.settle("How's the chicken coop?", NOW + timedelta(hours=3))
     assert "won't tie things" in reg._actions["dont_bring_that_up"].handler(ctx, {})
     assert "asked me not to bring up: Chicken coop" in reg._actions["list_connections"].handler(ctx, {})
+
+
+def test_what_she_found_first_shows_with_where_it_came_from(tmp_path):
+    context = SimpleNamespace(connections=ConnectionBook(data_dir=tmp_path))
+    found = [{"line": "you've got hardware cloth on the shelf", "source": "the workshop"}, {"source": "no line, dropped"}]
+    context.connections.consider(_found(), "the chicken feed is in", NOW, research=lambda f: found)
+    [c] = wcn.screen(context)["waiting"]
+    assert c["found"] == [{"line": "you've got hardware cloth on the shelf", "source": "the workshop"}]

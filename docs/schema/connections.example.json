@@ -12,7 +12,17 @@
    "since": "2026-10-14",
    "how": "through the hardware cloth",
    "state": "open",
-   "state_word": "Waiting"
+   "state_word": "Waiting",
+   "found": [
+    {
+     "line": "there's a plan for it on the plans shelf, Chicken Run (a covered run for six to ten hens)",
+     "source": "the plans shelf"
+    },
+    {
+     "line": "you've got 1/2 inch hardware cloth on the shelf",
+     "source": "the workshop"
+    }
+   ]
   }
  ],
  "recent": [
@@ -27,7 +37,8 @@
    "since": "2026-10-03",
    "how": "both about walnut",
    "state": "mentioned",
-   "state_word": "Brought up"
+   "state_word": "Brought up",
+   "found": []
   },
   {
    "id": "k3",
@@ -40,7 +51,8 @@
    "since": "2026-09-20",
    "how": "through the mower",
    "state": "declined",
-   "state_word": "Not to be raised"
+   "state_word": "Not to be raised",
+   "found": []
   }
  ],
  "quiet": [

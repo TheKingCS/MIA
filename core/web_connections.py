@@ -35,12 +35,15 @@ def _book(context):
 
 
 def _row(c: dict) -> dict:
-    """One connection as the page shows it: what was said, what it ties into, how, its state in words."""
+    """One connection as the page shows it: what was said, what it ties into, how, what she found about it first in her
+    own sources (each line with where it came from), its state in words."""
     how = (f"through the {c['through']}" if c.get("via") == "link" and c.get("through")
            else ("both about " + ", ".join(c.get("shared") or [])) if c.get("shared") else "")
     return {"id": c["id"], "ref": c["ref"], "said": c.get("said", ""), "noticed": (c.get("noticed_at") or "")[:10],
             "name": c.get("name", ""), "kind": KIND_WORDS.get(c.get("kind", ""), c.get("kind", "")),
             "status": c.get("status", ""), "since": (c.get("since") or "")[:10], "how": how,
+            "found": [{"line": str(f.get("line", "")), "source": str(f.get("source", ""))}
+                      for f in (c.get("found") or []) if isinstance(f, dict) and f.get("line")],
             "state": c.get("state", ""), "state_word": STATE_WORDS.get(c.get("state", ""), c.get("state", ""))}
 
 

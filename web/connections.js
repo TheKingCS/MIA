@@ -2,7 +2,8 @@
  * connections.js — Connections (claude, 2026-11-08, DEC-0146).
  * Renders MIA.connections() (core/web_connections.py): the ties MIA is holding
  * (what you said, when, the project, goal or idea from weeks ago it ties into, and
- * how), what became of the recent ones, and the things she's been asked never to
+ * how, and what she found about it first in her own offline sources, each with where it
+ * came from), what became of the recent ones, and the things she's been asked never to
  * tie into. Don't Bring It Up and Allow Again are connection.* actions, undoable.
  */
 (function () {
@@ -19,6 +20,10 @@
       el("p", { class: "cn-target" }, el("span", { class: "dim" }, "ties into your " + c.kind + " "), el("b", {}, c.name),
         c.since ? el("span", { class: "dim" }, ", started " + day(c.since) + (c.status ? ", still " + c.status : "")) : null),
       c.how ? el("p", { class: "dim cn-how" }, c.how) : null,
+      (c.found || []).length ? el("div", { class: "cn-found" },
+        el("p", { class: "pw-label" }, "What She Found First"),
+        ...c.found.map((f) => el("p", { class: "cn-found-line" }, f.line[0].toUpperCase() + f.line.slice(1) + ".",
+          el("span", { class: "dim" }, "  · " + f.source)))) : null,
       el("div", { class: "cn-foot" },
         el("span", { class: "cn-state " + c.state }, c.state_word),
         c.state !== "declined" ? button("Don't Bring It Up", () => MIAShell.act({ kind: "connection.decline", params: { connection_id: c.id } }), "btn-quiet") : null));

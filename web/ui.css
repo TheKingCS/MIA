@@ -2049,3 +2049,6 @@ a.comms-row:hover .row-title { color: var(--accent); }
   border: 1px solid var(--line-strong); background: var(--surface-raised); color: var(--text); font: inherit; }
 .lw-do-row input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .lw-story { min-width: 0; }
+.cn-found { display: grid; gap: 4px; padding: 8px 12px; border-radius: var(--radius-sm); background: rgba(var(--rgb-accent), 0.05); }
+.cn-found .pw-label { margin: 0; }
+.cn-found-line { margin: 0; font-size: 13.5px; line-height: 1.45; }

@@ -29,13 +29,16 @@ def _action_decline(context, arguments: dict) -> str:
 
 
 def _action_list(context, arguments: dict) -> str:
-    """Tool list_connections: the ties MIA is holding, and the things she's been asked not to raise."""
+    """Tool list_connections: the ties MIA is holding (with what she found about each first), and the things she's been
+    asked not to raise."""
     from core.web_connections import screen
 
     page = screen(context)
     if not page.get("available"):
         return "I'm not keeping connections on this MIA."
-    parts = [f"you said “{c['said']}”, which ties into your {c['kind']} “{c['name']}”" for c in page["waiting"]]
+    parts = [f"you said “{c['said']}”, which ties into your {c['kind']} “{c['name']}”"
+             + ("" if not c.get("found") else " (I found: " + "; ".join(f["line"] for f in c["found"]) + ")")
+             for c in page["waiting"]]
     out = ("I'm holding " + "; ".join(parts) + ".") if parts else "I'm not holding any connections right now."
     if page["quiet"]:
         out += " You asked me not to bring up: " + ", ".join(q["name"] for q in page["quiet"]) + "."
