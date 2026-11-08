@@ -795,6 +795,12 @@ every step below in order, from a blank machine, with Windows notes.
 
 *History since 2026-11-03: open work is in `work/tasks/`.*
 
+**Connecting apps (Zac, 2026-11-08):** the audit and plan are in the doc
+https://claude.ai/artifact/H8gYSX2rvneRMp5mgA4qFa: one connector framework on `core/imports.py` and
+`core/record_import.py` (read-only, preview, approve, one Undo, keys in the encrypted vault); no-sign-in sources
+first (Airbnb calendar links and CSV, the TurboTax PDF, Sheets as CSV), then Hostaway and OwnerRez keys, then
+Google and QuickBooks OAuth. Waits on Zac's order and on disk encryption / DEC-0126 before tax data.
+
 **Who builds what (2026-11-07 night, after Power and Recent Changes were each built twice at once):** screens
 (web pages, the canvas's look, the review's missing screens: Waiting For You, a plan's page, the Browser in the
 canvas look) are the canvas-build session's. The parity session keeps to voice tools, routing, glasses asks and
