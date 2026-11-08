@@ -290,6 +290,13 @@ class PasswordChange(BaseModel):
     new: str
 
 
+class VoiceChoice(BaseModel):
+    """MIA's voice from Settings: the voice, the AI voice effect and the volume (percent), each only when changed."""
+    voice_id: Optional[str] = None
+    effect: Optional[bool] = None
+    volume: Optional[int] = None
+
+
 class BackupMake(BaseModel):
     """A backup made from the web: its passphrase, when it should be encrypted (never kept)."""
     passphrase: str = ""
@@ -839,6 +846,27 @@ def create_app(context: AppContext) -> FastAPI:
 
         if not _is_first_account(context, profile_id):
             raise HTTPException(status.HTTP_403_FORBIDDEN, f"{what} is the PC owner's.")
+
+    # MIA's voice (core/web_voice.py), device-wide, so the PC owner's: the voices installed, and changing one.
+    @app.get("/api/settings/voice")
+    def voice_settings(profile_id: str = Depends(require_profile_id)) -> dict:
+        """The voices on this computer and the one speaking now."""
+        from core.web_voice import voice_page
+
+        _owner_only(profile_id, "MIA's voice")
+        return voice_page(context)
+
+    @app.post("/api/settings/voice")
+    def voice_choose(body: VoiceChoice, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Changes the voice, its effect or its volume (not an action: the voice engine is swapped in memory)."""
+        from core.web_voice import choose
+
+        _owner_only(profile_id, "MIA's voice")
+        with app.state.turn_lock:
+            done = choose(context, body.voice_id, body.effect, body.volume)
+        if "error" in done:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, done["error"])
+        return done
 
     # Backups (core/web_backups.py), for the PC's owner: the newest ones, and Back Up Now (not an action: a passphrase
     # never sits in a proposal or the undo log). Restoring stays on the PC.

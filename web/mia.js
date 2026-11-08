@@ -355,6 +355,10 @@
     backups: () => demo ? Promise.resolve({ folder: "C:\\Users\\you\\MIA Backups", count: 3, last: "12 days ago", days: 12,
       backups: [{ name: "mia_backup_2026-10-26_2130.miabackup", size: "48.2 MB", when: "Oct 26, 2026 21:30", locked: true }] })
       : call("GET", "/api/backups"),
+    voiceChoice: () => demo ? Promise.resolve({ available: true, current: "kokoro:af_heart", effect: true, volume: 100, voices: [
+      { id: "kokoro:af_heart", name: "Heart (American)", engine: "kokoro" }, { id: "kokoro:bf_emma", name: "Emma (British)", engine: "kokoro" },
+      { id: "en_US-amy-medium", name: "Amy", engine: "piper" }] }) : call("GET", "/api/settings/voice"),
+    chooseVoice: (change) => demo ? demoOnly() : call("POST", "/api/settings/voice", change),
     backupNow: (passphrase) => demo ? demoOnly() : call("POST", "/api/backups", { passphrase: passphrase || "" }),
     textbookSearch: (q, book) => demo ? Promise.resolve({ query: q, hits: q ? [{ book_id: "b1", book: "Welding Fundamentals", page: 112,
       chapter: "Chapter 6: Gas Metal Arc Welding", text: "Hold the gun at a 10 to 15 degree push angle. Too steep an angle traps gas and leaves porosity in the bead…" }] : [] })

@@ -233,6 +233,7 @@
   "tests/test_web_surfaces.py": 4,
   "tests/test_web_textbooks.py": 2,
   "tests/test_web_toolbox.py": 1,
+  "tests/test_web_voice.py": 6,
   "tests/test_web_why.py": 2,
   "tests/test_welcome.py": 4,
   "tests/test_work_activity.py": 1,

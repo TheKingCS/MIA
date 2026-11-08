@@ -1649,3 +1649,8 @@ body.mod-maps .hero { display: none; }
 .bk-list li { display: flex; justify-content: space-between; gap: 10px; }
 .bk-make { flex-wrap: wrap; align-items: center; }
 .bk-make input { flex: 1; min-width: 180px; min-height: 44px; }
+
+/* Settings: MIA's voice (core/web_voice.py, 2026-11-07). */
+.vc-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; flex-wrap: wrap; }
+.vc-row select { min-height: 44px; flex: 1; max-width: 60%; }
+.vc-row input[type=range] { flex: 1; }

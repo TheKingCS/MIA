@@ -96,6 +96,7 @@ from core.assistant_toolbox_actions import register_toolbox_actions
 from core.assistant_waypoint_actions import register_waypoint_actions
 from core.assistant_trip_route_actions import register_trip_route_actions
 from core.assistant_backup_actions import register_backup_actions
+from core.assistant_voice_choice_actions import register_voice_choice_actions
 from core.assistant_goods_actions import register_goods_actions
 from core.assistant_dungeon_actions import register_checkin_actions, register_dungeon_actions, register_loop_actions
 from core.failure_actions import register_failure_actions
@@ -1580,6 +1581,7 @@ class MIAApplication:
         register_waypoint_actions(self.context.assistant_actions)  # rename a waypoint, its kind and notes (DEC-0125)
         register_trip_route_actions(self.context.assistant_actions)  # a trip's route and checkpoints by voice (DEC-0125)
         register_backup_actions(self.context.assistant_actions)  # when MIA was last backed up (DEC-0125)
+        register_voice_choice_actions(self.context.assistant_actions)  # MIA's own voice, effect and volume (DEC-0125)
         register_notification_actions(self.context.assistant_actions)  # read out and mark notifications read (DEC-0125)
         register_dungeon_actions(self.context.assistant_actions)  # the Dungeon: shifts, loot, quests (DEC-0046)
         register_loop_actions(self.context.assistant_actions)  # the loop: when things happen (DEC-0047)
