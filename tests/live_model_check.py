@@ -661,6 +661,17 @@ GOLDEN_CASES = [
     ("expeditions: next trip", "What's my next trip?", "list_trips"),
     ("power: the battery", "How's the battery?", "get_power_status"),
     ("maintenance: vehicles", "What upkeep is due on my vehicles?", "list_maintenance_tasks"),
+    # Fixing and planning by voice what the screens change (DEC-0125, 2026-11-08): 10/10 on this PC's model.
+    ("groceries: take one off", "Take milk off the grocery list", "remove_grocery_item"),
+    ("groceries: clear checked", "Clear the checked items off the grocery list", "clear_checked_groceries"),
+    ("pantry: remove for good", "Remove the flour from the pantry, we stopped buying it", "remove_pantry_item"),
+    ("pantry: run out is a quantity", "We are out of flour", "update_pantry_item"),
+    ("recipe: rate", "Rate the venison chili 5 stars", "rate_recipe"),
+    ("recipe: favorite", "Make the venison chili a favorite", "favorite_recipe"),
+    ("meal plan: a day's dinner", "Plan the venison chili for dinner Tuesday", "plan_meal"),
+    ("bill: new amount", "The electric bill is now $130 a month", "change_bill"),
+    ("bill: cancelled", "I cancelled Netflix, delete the bill", "delete_bill"),
+    ("expense: logged by mistake", "Delete the expense for the pizza, I logged it by mistake", "delete_expense"),
 ]
 
 

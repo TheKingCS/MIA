@@ -187,6 +187,8 @@ every push). Anything that needs the PC waits.
 
 ## Recent changes (newest first)
 
+- 2026-11-08 · claude · **Fixing and planning by voice (DEC-0125).** Measured the screens' 332 action kinds against voice (by the store methods each calls): 158 had a voice twin. New tools for the everyday ones that didn't, each through its screen's own action (undoable): take something off the grocery list, clear what's checked, remove a pantry item, rate or star a recipe, plan a meal for a day, change or delete a bill, delete an expense. 10/10 on the PC's model; golden set 231/244 overall (the 11 older misses unchanged; one, "that trip to the store", was a keyword of mine and is fixed).
+
 
 - 2026-11-07 (late) · claude · **Fill In Your Life on Start Here.** The apps still empty for the signed-in person (bills, vehicles, calendar, recipes, people, workouts, chickens, rentals, insurance, energy, trips), each with the first thing to say (each reaches that app's add tool, tested) or its page; counted live, nothing shown about what's in them. For Zac's fill-in session. The audit doc's "Where it stands" is current (voice 49/50, phone 50, glasses 46).
 

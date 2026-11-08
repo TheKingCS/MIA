@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1136 files, 254,104 lines; 1136 files describe themselves; 13,880 of 14,553 classes and functions are documented.
+1138 files, 254,486 lines; 1138 files describe themselves; 13,907 of 14,580 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-416 files, 118,623 lines; 6,278 of 6,367 classes and functions documented
+417 files, 118,871 lines; 6,294 of 6,383 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -27,6 +27,7 @@
 - `core/assistant_chat.py`: The pure, non-Qt logic for one Assistant chat turn — moved here from `modules/assistant/module.py` (2026-07-14 aesthetic pass part 4, docs/ROADMAP.md) once the sidebar chat in `gui/character_panel.py` needed the exact same request-building and tool-call-safety logic as the full-screen Assistant modu
 - `core/assistant_comm_actions.py`: Assistant tools for the communication gate (core/communication_gate.py, Cognitive Extension slice C): asking what MIA chose not to say, and changing how often she speaks up on her own.
 - `core/assistant_cooking_actions.py`: Cook mode by voice (DEC-0113 cook mode, DEC-0125: full use both ways). With flour on your hands: "start cooking the chili", "next step", "go back", "what step am I on", "go to step 4", "set a rice timer for 18 minutes", "stop the rice timer", "I made it", "stop cooking". Each tool runs the same acti
+- `core/assistant_correction_actions.py`: Fixing and planning by voice what the screens already let you change (DEC-0125: every action has a voice twin; 2026-11-08). Measuring the screens' 332 action kinds against her tools showed everyday ones with no voice twin: taking something off the grocery list, clearing what's checked off, a pantry 
 - `core/assistant_domain_actions.py`: Assistant actions added by the 2026-09-27 conversational audit (docs/ASSISTANT_AUDIT.md), so what the owner *says* updates the right records: kitchen (recipes, meals, grocery list, pantry), debts and budget targets, asset details and notes (including greenhouse/garden plants, which are Maintenance a
 - `core/assistant_dungeon_actions.py`: The Dungeon by voice (DEC-0046): "How much loot this week?", "I worked 9 hours, we were unstocked", "I picked up an overtime shift Saturday", "Make it a quest". Each runs the same code as the screen (the action kinds in core/dungeon_actions.py, the numbers in core/web_dungeon.py), so the loot matche
 - `core/assistant_email_actions.py`: The Assistant writes emails (2026-10-01, accounts stage 3, core/email_drafts.py). `draft_email` only ever makes a draft: the person sends it by pressing Send (desktop or phone), copies it, or opens it in their mail app. There is deliberately no tool that sends.
@@ -696,7 +697,7 @@
 
 ## tests/: the test suite: what each part must do
 
-376 files, 67,647 lines; 5,357 of 5,941 classes and functions documented
+377 files, 67,781 lines; 5,368 of 5,952 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1028,6 +1029,7 @@
 - `tests/test_user_memory_manager.py`: Unit tests for core.user_memory_manager. is_duplicate_memory() is tested directly (pure, deterministic). UserMemoryManager is tested against a tmp_path scratch area, same monkeypatch pattern as test_mission_manager.py's isolated_paths.
 - `tests/test_user_sync.py`: User Sync, Meals (core/user_sync.py): what the code decides, with a stand-in model. tools/user_sync_check.py runs the same steps on the real one.
 - `tests/test_vault_captions.py`: Finding a photo again (core/vault_captions.py): the photos this PC keeps for the phone, each described in one sentence by the local vision model (never who anyone is), kept beside the photo, and searched by what's in them. *(1 undocumented)*
+- `tests/test_voice_corrections.py`: Fixing and planning by voice (DEC-0125, core/assistant_correction_actions.py): each tool finds the record from the words said and runs the screen's own action kind (undoable); unclear names are asked about and change nothing.
 - `tests/test_voice_effects.py`: Unit tests for core.voice_effects' pure-numpy DSP functions. These test shape/dtype/range invariants (no clipping, no silent volume change, correct dtype) — not perceived audio quality, which no automated test can judge; see that module's docstring. *(1 undocumented)*
 - `tests/test_voice_manager.py`: Unit tests for core.voice_manager's VoiceManager delegation and graceful-degradation logic. Uses fake STT/TTS backends (same shape as test_llm_manager.py's mocked urlopen) rather than loading the real Vosk/Piper models, so this suite stays fast and independent of voice_models/ being present. The rea
 - `tests/test_voice_parity_tools.py`: The tools that made Character, Skills, the Reward Shop, Insurance, Kept, the Operating Journal, Play, Files and the Memory Vault usable by voice (DEC-0125): each answers from its screen's own data, and buying a reward goes through the shop's own action.
