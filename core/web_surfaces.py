@@ -16,7 +16,8 @@ the upcoming list and the at-a-glance cards.
   greeting and date, the status strip (`home_strip`), the one thing MIA
   noticed across apps (`_top_finding`, from core/findings.py), Today's
   Focus and Upcoming with each row's kind (`due_kind`), quick actions and
-  at-a-glance cards. Served as `/api/dashboard`; `web/index.html` shows it.
+  at-a-glance cards (Life State's, net worth on Money's, then Observations
+  and the Inbox: `glance_counts`). Served as `/api/dashboard`; `web/index.html` shows it.
 - `apps_page(context)`: every app, grouped, with what MIA can do in each.
   Served as `/api/apps`.
 
@@ -380,7 +381,7 @@ def plural(n: int, word: str, many: str = "") -> str:
 
 
 def _glance(state: dict) -> list[dict]:
-    """Pure logic. The at-a-glance cards, from Life State v2."""
+    """Pure logic. The at-a-glance cards, from Life State v2 (Money with its net worth when it's known)."""
     from core.region import money
 
     cards = []

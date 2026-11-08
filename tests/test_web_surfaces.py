@@ -4,7 +4,7 @@ core/web_surfaces.py so web/ holds no logic. The sidebar is the
 person's own (child-safe, tucked-away apps hidden), Home is the
 concept's dashboard: greeting, Today's Focus with each item's action and
 kind, Upcoming, the status strip, glance cards (DEC-0113 for the last two
-additions).
+additions; net worth, Observations and the Inbox among them since 2026-11-07).
 """
 
 from datetime import date, datetime, timedelta
