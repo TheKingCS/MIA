@@ -193,6 +193,7 @@ SEALED_STORES = [
     ("core.paths", "PathBook", "paths.json"),
     ("core.browser_routines", "BrowserRoutines", "browser_routines.json"),
     ("core.living_worlds", "LivingWorldsBook", "living_worlds.json"),
+    ("core.response_style", "StyleBook", "response_styles.json"),
 ]
 
 

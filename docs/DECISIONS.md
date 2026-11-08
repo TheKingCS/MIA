@@ -2224,3 +2224,16 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Open: confirm "generalize + isolate, don't build a new layer"; second domain to prove reuse (homestead vs projects);
   timing of the scenario engine.
 - Related: DEC-0134, DEC-0094/0101, DEC-0112, DEC-0092, DEC-0126
+
+### DEC-0138: "Do you prefer this response, or this one?" — learning the person's answer style
+- Status: APPROVED + built (Zac, 2026-11-08: "MIA needs a do-you-prefer-this-response-or-this-one function to better
+  train how I prefer her to respond... experiment with different communication styles and info layouts and adjust").
+- Decision (`core/response_style.py`): now and then MIA offers the same answer two ways, differing on one style
+  dimension — **length** (brief/standard/detailed), **format** (prose/bulleted/mixed), **tone** (warm/neutral/direct),
+  **lead** (answer-first/context-first). The person picks; `StyleBook` records it (sealed personal store), derives the
+  preferred value per dimension and how settled each is (`confidence`), chooses the least-settled dimension to A/B
+  next (`next_experiment`), and emits a plain-words `style_instruction` for the phrasing layer. Facts never change —
+  only phrasing/layout ("the model phrases, code decides"). Events are real (DEC-0137). Built + tested; the surface
+  (rendering the two variants and the A/B choice) and feeding `style_instruction` into the model prompt are the
+  wiring step.
+- Related: DEC-0067 (answer ratings 👍👎), DEC-0137 (environment), DEC-0126 (sealed at rest); core/person_settings.py

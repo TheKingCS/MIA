@@ -337,11 +337,13 @@ def reversed_ids(events: Iterable["LifeEvent"]) -> set[str]:
 
 
 def events_for(context, since: Optional[str] = None, until: Optional[str] = None,
-               types: Optional[Iterable[str]] = None, ref: Optional[str] = None) -> list[LifeEvent]:
+               types: Optional[Iterable[str]] = None, ref: Optional[str] = None,
+               environment: Optional[str] = REAL) -> list[LifeEvent]:
     """The person's history: their household's log plus their own,
     newest first. A household event someone else made stays in (it's
     the household's), a personal one is only ever in its owner's log.
-    `since`/`until` are ISO dates (inclusive)."""
+    `since`/`until` are ISO dates (inclusive). `environment` keeps the real-life history to real events by default
+    (DEC-0137), so a Living Worlds campaign's events never surface on the real dashboard; pass None for every domain."""
     wanted = set(types) if types else None
     from core.child_accounts import is_child
 
@@ -364,6 +366,8 @@ def events_for(context, since: Optional[str] = None, until: Optional[str] = None
             if wanted is not None and event.type not in wanted or child and event.type in MONEY_TYPES:
                 continue
             if ref and ref not in event.refs:
+                continue
+            if environment is not None and event.environment != environment:
                 continue
             seen.add(event.event_id)
             found.append((event.at, position, event))
