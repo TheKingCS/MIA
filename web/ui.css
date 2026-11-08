@@ -1374,3 +1374,16 @@ body.mod-maps .hero { display: none; }
 .row-more[open] summary { color: var(--text); }
 .row-more-menu { position: absolute; right: 0; top: 42px; z-index: 5; display: grid; gap: 6px; padding: 6px; border-radius: var(--radius-sm);
   background: rgb(var(--rgb-panel)); border: 1px solid var(--line-strong); }
+
+/* ---------------------------------------------------------------- Kept (DEC-0113 canvas; web/kept.js) */
+.kp-group { display: grid; gap: 8px; margin-bottom: calc(var(--gap) + 4px); }
+.kp-group > .pw-label { margin: 0; }
+.kp-note { display: grid; gap: 8px; padding: 12px 14px; }
+.kp-note.done .kp-line { color: var(--text-dim); }
+.kp-line { margin: 0; font-size: 15px; }
+.kp-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.kp-foot .dim { font-size: 12px; }
+.kp-foot .row-buttons { margin: 0; }
+.kp-how { font-size: var(--text-sm); }
+.btn-quiet { background: transparent; border-color: transparent; color: var(--text-dim); }
+.btn-quiet:hover { color: var(--text); }
