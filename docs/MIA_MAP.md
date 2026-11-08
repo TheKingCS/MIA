@@ -10,7 +10,7 @@
 - **Improvement loops** — 92 active, 1 processes decided to need none (docs/LOOPS.md).
 - **Knowledge she's written** — 139 dev entries (work/knowledge/).
 - **Night-school learnings** — 0 nights studied.
-- **What she keeps** — 44 personal + 41 household stores, 23 sealed at rest.
+- **What she keeps** — 44 personal + 41 household stores, 47 sealed at rest.
 - **How you shape her** — 4 answer-style dimensions she learns from your picks (DEC-0138).
 
 ## Decisions — why MIA is built the way she is
@@ -183,7 +183,7 @@
 ## What she keeps, and how it's protected
 
 - 44 personal stores (each person's own) and 41 household stores.
-- 23 of them are **sealed at rest** (DEC-0126) — encrypted on disk, the real/fictional boundary kept separate (DEC-0137).
+- 47 of them are **sealed at rest** (DEC-0126) — encrypted on disk, the real/fictional boundary kept separate (DEC-0137).
 
 ## How you shape her
 

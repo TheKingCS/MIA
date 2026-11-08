@@ -1022,6 +1022,10 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   against her. Evidence is "verified" (code and decided records) or "inferred" (what broke), never mixed.
   `status_summary()` says it, never calling a planned piece working; the weekly self-report (Sundays, through
   the gate) ends with "My apps: N working, N partly, N planned" and anything that broke.
+  **On a screen 2026-11-08 (claude, design session):** About MIA's "How Her Apps Are Doing Here" (core/web_about.apps_health:
+  a count per status, then what isn't simply working, broke-this-week first and said as inferred; the page asks for the
+  device it's on). Two stale limits corrected on the way: Diagnostics and Settings have web screens, so their limits now
+  say their deliberate boundaries instead of "no web screen yet".
 - Related: DEC-0041, DEC-0043, DEC-0049, DEC-0056
 
 ### DEC-0058: Self-Development: an isolated lab, proposals only

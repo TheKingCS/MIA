@@ -6,8 +6,10 @@ About MIA (web/about.html, DEC-0142): what MIA can honestly say about herself, o
 and never from the model: what she is and her real scale (the system map, DEC-0139: files of code, tools, improvement
 loops, decisions on record, what's sealed on disk, what she's learned while building), what she's working on (her
 Night School directive), what she's trained for (core/capabilities.specialty_list: each specialty read from the code
-that makes it true), and what she knows about the person (their directions, how many memories, whether she's learning
-how they like answers), with links to where each is kept.
+that makes it true), how her apps are doing on this device (core/capabilities.capability_status, DEC-0057: working,
+partly, planned, not here, or broke this week, never a planned one said as working), and what she knows about the
+person (their directions, how many memories, whether she's learning how they like answers), with links to where each is
+kept.
 
 Read only: nothing here changes anything. By voice the same facts answer "what are you?", "what are you trained for?"
 and "what do you know about me?" (core/assistant_self_actions.py).
@@ -38,8 +40,26 @@ def numbers(scale: dict) -> list[dict]:
     return [{"label": label, "value": value, "note": note} for label, value, note in tiles if value]
 
 
-def screen(context) -> dict:
-    """About MIA: who she is, her scale, her focus, her specialties, and what she knows about the person."""
+HERE = ("pc", "phone", "glasses")
+STATUS_WORDS = {"implemented": "Working", "partial": "Partly", "planned": "Planned", "unavailable here": "Not Here",
+                "malfunctioning": "Broke This Week"}
+
+
+def apps_health(rows: list[dict]) -> dict:
+    """Pure logic. capability_status's rows as the page shows them: a count per status in words (working first, only
+    those with any), and the rows that aren't simply working, broken first, each {name, status, word, why, evidence}."""
+    order = ["malfunctioning", "partial", "planned", "unavailable here"]
+    counts = [{"status": s, "word": STATUS_WORDS[s], "n": sum(r["status"] == s for r in rows)}
+              for s in ["implemented"] + order]
+    notes = sorted((r for r in rows if r["status"] in order), key=lambda r: (order.index(r["status"]), r["name"]))
+    return {"counts": [c for c in counts if c["n"]],
+            "notes": [{"name": r["name"], "status": r["status"], "word": STATUS_WORDS[r["status"]], "why": r.get("why", ""),
+                       "evidence": r.get("evidence", "")} for r in notes]}
+
+
+def screen(context, here: str = "pc") -> dict:
+    """About MIA: who she is, her scale, her focus, her specialties, how her apps are doing on this device (`here`:
+    pc, phone or glasses), and what she knows about the person."""
     from core import capabilities, self_knowledge, system_map
 
     scale = _safe(system_map.assemble, {})
@@ -54,6 +74,7 @@ def screen(context) -> dict:
         "numbers": numbers(scale),
         "focus": _safe(self_knowledge.my_focus, ""),
         "specialties": [{"title": t, "line": line} for t, line in _safe(lambda: capabilities.specialty_list(context), [])],
+        "apps": apps_health(_safe(lambda: capabilities.capability_status(context, here if here in HERE else "pc"), [])),
         "you": {
             "line": _safe(lambda: self_knowledge.what_i_know_about_you(context), ""),
             "directions": directions,
