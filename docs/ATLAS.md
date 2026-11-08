@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1181 files, 260,274 lines; 1181 files describe themselves; 14,215 of 14,902 classes and functions are documented.
+1184 files, 260,692 lines; 1184 files describe themselves; 14,226 of 14,913 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-437 files, 122,311 lines; 6,505 of 6,591 classes and functions documented
+437 files, 122,355 lines; 6,508 of 6,594 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -448,7 +448,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 3,192 lines; 37 of 37 classes and functions documented
+2 files, 3,227 lines; 37 of 37 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -717,7 +717,7 @@
 
 ## tests/: the test suite: what each part must do
 
-397 files, 69,287 lines; 5,462 of 6,063 classes and functions documented
+399 files, 69,383 lines; 5,470 of 6,071 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -738,6 +738,7 @@
 - `tests/test_alarm_tool.py`: Unit test for modules.toolbox.tools.alarm_tool.format_alarm_row — pure formatting logic, no Qt event loop needed.
 - `tests/test_answer_ratings.py`: Rating her answers (DEC-0067, core/answer_ratings.py): a 👍 is kept as a rating, a 👎 is kept and still reaches the Fix-It Log, and each person's ratings are their own. *(2 undocumented)*
 - `tests/test_application_daily_occasions.py`: Unit tests for core.application.MIAApplication._check_daily_occasions() and its per-check exception isolation (2026-09-14 stabilization pass). *(1 undocumented)*
+- `tests/test_asset_photo.py`: An asset's photo (Q-0014, 2026-11-07): kept in the household's own folder under a name of its own, shown on its page and Garage card through a link that changes with the file, and never served from outside that folder.
 - `tests/test_assistant_action_gating.py`: Regression tests tying modules.assistant.module.looks_like_action_request() to the REAL trigger_phrases registered in core.application's _register_assistant_actions() (milestone 5.7-5.9) — not a hand-copied keyword list. Two real gaps were found only by live-model testing and are pinned here so they
 - `tests/test_assistant_action_handlers.py`: Unit tests for core.application.MIAApplication's assistant action handlers (_action_*) — milestone 5.7's read/list actions, plus regression coverage for the pre-existing write actions that had no direct unit test before (only exercised via test_llm_manager.py's chat_with_tools mocks and manual/live-
 - `tests/test_assistant_actions.py`: Unit tests for core.assistant_actions.AssistantActionRegistry. No LLM or Ollama involved — these test the registry's own execute() to_ollama_tools() logic directly with fake handlers. *(2 undocumented)*
@@ -1091,6 +1092,7 @@
 - `tests/test_web_proposals.py`: Mission ideas and field recordings on the web and by voice (core/web_proposals.py, core/assistant_proposal_actions.py), on the real Discovery and Lite capture managers with their files in a temporary folder.
 - `tests/test_web_push.py`: Unit tests for core.web_push. The actual push-service HTTP call (pywebpush.webpush) is mocked throughout — this is the standard, correct way to test Web Push code without a real browser/push service (see core/web_push.py's own docstring and the Mobile Phase 1 plan). *(5 undocumented)*
 - `tests/test_web_screens.py`: DEC-0017/0018 (2026-10-06): Kitchen, Workout and Real Estate on the web. The pages (core/web_screens.py) and every change as an action kind (core/kitchen_actions.py, core/workout_actions.py, core/estate_actions.py), each proposed, approved, recorded and undoable; a recipe's amounts scaled to the ser
+- `tests/test_web_scripts.py`: The web pages' own scripts (2026-11-07): every script a page loads is there, and the shared modules pages depend on still define what they promise. A security change once replaced the Grow Lab module (grow.js) with a one-line redirect, which sent every asset page to the Greenhouse; this catches that
 - `tests/test_web_search.py`: Search for the web's Ctrl+K (core/web_search.py): how names are ranked, and that results come from the person's own records with the page each opens.
 - `tests/test_web_surfaces.py`: DEC-0017 (2026-10-06): the web shell and Home dashboard, assembled in core/web_surfaces.py so web/ holds no logic. The sidebar is the person's own (child-safe, tucked-away apps hidden), Home is the concept's dashboard: greeting, Today's Focus with each item's action and kind, Upcoming, the status st *(4 undocumented)*
 - `tests/test_web_textbooks.py`: The Classroom's textbooks on the web (core/web_textbooks.py, DEC-0125): each book with its chapters on the Classroom page, a search inside them, a course made from one and a book removed, as actions the voice tools agree with. *(2 undocumented)*
@@ -1119,7 +1121,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-83 files, 14,981 lines
+84 files, 15,224 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
@@ -1148,7 +1150,8 @@
 - `web/flock.js`: flock.js — the Chickens screen (claude, 2026-10-21, DEC-0037). Renders MIA.flock() (core/web_flock.py): per flock, eggs today and this week, the lay rate, loose eggs, feed cost per dozen, two weeks of eggs, cartons on hand and the log. Log Eggs is one tap per count (the tap is the approval; Undo in 
 - `web/freedom.js`: freedom.js — the Freedom screen (claude, 2026-10-21, DEC-0038). Renders MIA.freedom() (core/freedom.py): the estimated day and how far along the fund is, progress today / this week / this month, what a shift buys, how the fund adds up (each number with where it came from and what it is: Fact, Calcul
 - `web/glasses.js`: MIA on Display glasses (DEC-0016; Muse's composition H-0041/H-0043; Zac's layout, 2026-10-16; pins DEC-0024).
-- `web/grow.js`: grow.js — the old Grow page now lives in the Greenhouse (its Growing tab); this sends you there, keeping the part of the page asked for. Its own file because MIA's pages run no inline script (Content-Security-Policy, docs/SECURITY.md).
+- `web/grow-redirect.js`: grow-redirect.js — the old Grow page now lives in the Greenhouse (its Growing tab); this sends you there, keeping the part of the page asked for. Its own file because MIA's pages run no inline script (and not grow.js, which is the Grow Lab module the Greenhouse and asset pages load) (Content-Securit
+- `web/grow.js`: grow.js — the Grow Lab (claude, 2026-10-17, DEC-0030 phase D). Renders MIA.grow() (core/web_grow.py), as tabs of the Greenhouse (Zac, 2026-10-17: "Isn't Grow Lab essentially what the Greenhouse app is"): equipment.js shows them beside the greenhouse's equipment through window.MIAGrow. Tabs: Growing 
 - `web/guitar.js`: guitar.js — a learning path (claude, 2026-11-07, DEC-0111, DEC-0112): guitar by default, any path with ?path=<id>. Renders MIA.guitar() (core/guitar.py): the stage, this week against the plan, the streak, the bests, what to work on next, and each open check. A check MIA hears gets a Record button: a
 - `web/home.js`: home.js — MIA's Home (muse, 2026-10-05).
 - `web/household.js`: household.js — the household's routines (claude, 2026-11-06; the design canvas's Household, DEC-0113, 2026-11-07). Renders MIA.household() (core/household_routines.py): Done Today with its meter, then a card per routine (what it is, daily or this week, its streak in words) with Did It, or Done; what

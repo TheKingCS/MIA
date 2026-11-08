@@ -195,6 +195,9 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       Then search on the web: Ctrl+K or "/" on every page, or Search in the sidebar and the phone's bar (apps, then
       every kind of record through links.KINDS, core/web_search.py, then the library and Ask MIA). The skills tree
       shrinks to fit a phone and says when it scrolls. The Built page on the canvas has the three newest screens.
+      Assets have photos (page and Garage card). **Fixed:** the security change (d795fb4) had overwritten the Grow Lab
+      module `web/grow.js` with grow.html's redirect, so every asset page and the Greenhouse's Growing tab broke; the
+      module is back and the redirect is `grow-redirect.js`. tests/test_web_scripts.py now catches that kind of overwrite.
       **Maps' other scripts need Zac or a session with network:** place names in Cyrillic, Greek, Arabic and so on
       need more glyph ranges in `web/vendor/fonts/` (web/vendor/README.md says where from); the cloud shell here
       can't download them.
@@ -973,7 +976,8 @@ working screen on the frame, for Muse to restyle:
 4. ~~Kitchen, Workout, Real Estate~~ **done 2026-10-06** (Zac asked for
    them next; still to do: recipe ratings and photos, rest timer and
    guided sessions, depreciation and selling a property).
-5. Photo fields for assets, recipes and properties (Q-0014, Muse said yes),
+5. Photo fields for assets, recipes and properties (Q-0014, Muse said yes; recipes 2026-10-16, assets 2026-11-07,
+   properties still to do),
    stored in each person's data folder, never `web/img/` (that's the public repo).
 6. Calendar, Notes, Inbox, full Assistant chat; then the rest of the 59 rows.
 Ctrl+K search on the web: built 2026-11-07 (core/web_search.py).

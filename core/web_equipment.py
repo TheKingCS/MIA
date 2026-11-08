@@ -19,7 +19,9 @@ core/equipment_actions.py and `maintenance.done`.
   when it's due in the Garage card's plain words (`due_words`: "Due
   tomorrow", "Due in 188 mi", "Jan"; DEC-0113), and each asset's card
   carries its latest meter reading (`meter_reading`).
-- **An asset's page:** details, quick stats (meters), current tasks,
+- **Photos** (2026-11-07): `asset_photo_url` is where a card or page
+  fetches an asset's photo (`/api/garage/asset/<id>/photo`).
+- **An asset's page:** its photo, details, quick stats (meters), current tasks,
   related missions, documents, cost of ownership (with this year's
   upkeep and the latest spending), and its history from the life events
   log. Parts aren't tracked per asset yet (PLANNED).
@@ -254,14 +256,22 @@ def _asset_meter(context, asset) -> Optional[str]:
     return meter_reading(context, [t for t in maintenance.all_tasks() if t.asset_id == asset.asset_id])
 
 
+def asset_photo_url(context, asset) -> str:
+    """Where a screen fetches the asset's photo ("" for none); the link changes with the file, so a new photo is never
+    shown stale."""
+    maintenance = getattr(context, "maintenance", None)
+    path = maintenance.asset_photo_path(asset.asset_id) if maintenance is not None else None
+    return f"/api/garage/asset/{asset.asset_id}/photo?v={path.name}" if path else ""
+
+
 def _asset_card(context, asset, rows: list, today: date) -> dict:
-    """One asset's card: its details, owner, its latest meter reading, how many tasks need attention, its next
+    """One asset's card: its details, owner, photo, its latest meter reading, how many tasks need attention, its next
     three tasks, its quick stats, warranty, scope and condition bar.
     """
     current = sorted((r for r in rows if not r["quick_stat"]), key=_order)
     return {"id": asset.asset_id, "name": asset.name, "category": asset.category,
             "make_model": " ".join(p for p in (asset.manufacturer, asset.model) if p), "owner": _owner(context, asset),
-            "meter": _asset_meter(context, asset),
+            "photo": asset_photo_url(context, asset), "meter": _asset_meter(context, asset),
             "overdue": sum(r["needs_attention"] for r in rows), "tasks": current[:3], "task_count": len(current),
             "quick_stats": [{"title": r["title"], "text": r["text"]} for r in rows if r["quick_stat"]],
             "warranty_until": asset.warranty_until or None,
@@ -324,7 +334,7 @@ def _upkeep_this_year(context, asset, today: date, recent: int = 5) -> dict:
 
 
 def asset_page(context, asset_id: str, today: Optional[date] = None) -> Optional[dict]:
-    """One asset's page: its details, notes, tasks and what needs attention, its condition, quick stats and
+    """One asset's page: its photo, details, notes, tasks and what needs attention, its condition, quick stats and
     meter readings, the missions about it, its documents, what it has cost (with a budget: this year's upkeep and the
     latest spending too), and its history (undone changes left out); None when it's gone.
     """
@@ -340,7 +350,7 @@ def asset_page(context, asset_id: str, today: Optional[date] = None) -> Optional
     data = asdict(asset)
     page = {"id": asset.asset_id, "name": asset.name, "category": asset.category, "scope": scope_of(asset.category),
             "scope_name": SCOPES[scope_of(asset.category)]["name"], "scope_page": SCOPE_PAGES[scope_of(asset.category)],
-            "owner": _owner(context, asset),
+            "owner": _owner(context, asset), "photo": asset_photo_url(context, asset),
             "details": [{"label": label, "value": value} for label, value in (
                 ("Make", asset.manufacturer), ("Model", asset.model), ("Serial number", asset.serial_number),
                 ("Bought on", asset.purchase_date), ("Warranty until", asset.warranty_until),
