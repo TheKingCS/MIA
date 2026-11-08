@@ -170,6 +170,18 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       `plan.project` / `plan.delete`; forget_plan), and the Toolbox's inventory (`inventory.*`). The canvas has a
       **Built** page: full-length screenshots of every built screen, row by row like the Phone page (retake them
       with the demo server and `builtshots.js`-style Playwright full-page shots when screens change).
+      Still later: two new pages, **My Why** (`web/why.html`, from Profile: the why chain with reasons and facts,
+      `why.link/unlink/achieve`) and **Projects** (`web/projects.html`, from the Workshop: builds with budget, spent,
+      reason and tasks, `project.*`, `task.add/reopen/delete`); Classroom textbooks (Look Up inside them, Add a book,
+      Make a course, Remove; remove_textbook) and a lesson's skill (`lesson.skill`, set_lesson_skill); Workshop
+      listings (`listing.add/remove`; list_product, unlist_product); a receipt's items under its expense
+      (get_receipt); a trip's log with its weather from the trip; Memories draws each trip's route map (placed in
+      core); the Lab names an upkeep task's sensor readings and the asset page links to the chart; Settings offers
+      starter sets (`starter.add`, one Undo). The Built page was retaken with a "New Tonight" row.
+      Left on WEB_PARITY on purpose: voice/phone access/backup/updates in Settings (device config: an undo can't put
+      back a running voice engine), Knowledge pack install/delete (deleting is for good), Modules device-wide,
+      the Lab's live sensors (none connected), Skills' drawn lines, Maps' other scripts, Home's spoken briefing
+      (Zac: no quick buttons; "what's on today?" answers by voice), the private journal (passphrase on the PC), links.
 - [x] Glasses (the canvas's GlassesHome and GlassesTraining): Home shows her state (Ready, Listening, Thinking,
       Needs You), the one line that matters now (`core/glasses.priority`, amber orb from `priority_tone`), the latest
       card for ten minutes, and a dot per card; gold once when something is earned. The live workout panel leads with
