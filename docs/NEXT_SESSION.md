@@ -178,6 +178,11 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       (get_receipt); a trip's log with its weather from the trip; Memories draws each trip's route map (placed in
       core); the Lab names an upkeep task's sensor readings and the asset page links to the chart; Settings offers
       starter sets (`starter.add`, one Undo). The Built page was retaken with a "New Tonight" row.
+      Then: Settings has Backups (owner only, Back Up Now with an optional passphrase: `/api/backups`, never an
+      action; get_backup_status) and MIA's Voice (owner only: the voice, AI effect, volume; `/api/settings/voice`;
+      list_mia_voices, set_mia_voice); Knowledge can delete a pack (owner, name typed); the glasses gained panels for
+      Workshop (Project Tasks, Done), Classroom (Continue, Done), and readouts for Observations, the Lab, Power, the
+      Journal and Memories. The Built page's shots predate these Settings sections.
       Left on WEB_PARITY on purpose: voice/phone access/backup/updates in Settings (device config: an undo can't put
       back a running voice engine), Knowledge pack install/delete (deleting is for good), Modules device-wide,
       the Lab's live sensors (none connected), Skills' drawn lines, Maps' other scripts, Home's spoken briefing
