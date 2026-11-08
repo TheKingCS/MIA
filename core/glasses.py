@@ -988,6 +988,49 @@ def _classroom_continue(context, today):
     return _panel(f"{course['course']} · {course['done']} of {course['total']}", lines, "Every lesson is done.")
 
 
+def _noticed(context, today):
+    """Panel: what MIA noticed (core/observations_web.py), Needs You first in amber, each with its next step; a
+    readout (settling one happens where it lives)."""
+    from core.observations_web import screen
+
+    page = screen(context, today)
+    found = sorted(page.get("findings") or [], key=lambda f: f.get("kind") != "Needs You")
+    lines = [_line(f["title"], f.get("next") or "", "attention" if f.get("kind") == "Needs You" else "") for f in found]
+    lines += [_line(i["title"], i.get("next") or g["source"]) for g in page.get("insights") or [] for i in g["items"]]
+    return _panel("What MIA Noticed", lines, "Nothing noticed lately. All quiet.")
+
+
+def _lab_latest(context, today):
+    """Panel: each series' latest reading in the Lab (its own and other apps'), newest first; a readout."""
+    from core.web_lab import lab_page
+
+    page = lab_page(context)
+    if not page.get("available"):
+        return _panel("Latest Readings", [], "The Lab isn't available here.")
+    rows = sorted((page.get("series") or []) + (page.get("other_series") or []), key=lambda r: r.get("at") or "", reverse=True)
+    return _panel("Latest Readings", [_line(r["name"], f"{r['latest']} · {r['when']}") for r in rows],
+                  "No readings yet. Log one in the Lab.")
+
+
+def _power_levels(context, today):
+    """Panel: the battery, then each energy source's meters (amber when low), from core/web_power.py; a readout."""
+    from core.web_power import power_page
+
+    page = power_page(context)
+    lines = []
+    battery = page.get("battery") or {}
+    if battery.get("available"):
+        left = battery.get("minutes_left")
+        detail = f"{battery['percent']}%" + (" · plugged in" if battery.get("plugged_in") else
+                                             f" · {left // 60} h {left % 60} min left" if left else "")
+        lines.append(_line("Battery", detail, "attention" if (battery.get("meter") or {}).get("tone") == "attention" else ""))
+    for source in page.get("sources") or []:
+        for m in source.get("meters") or []:
+            lines.append(_line(f"{source['name']} · {m['name']}", f"{m['text']} · {m['when']}",
+                               "attention" if (m.get("meter") or {}).get("tone") == "attention" else ""))
+    return _panel("Power", lines, "No battery or energy sources here yet.")
+
+
 def _project_tasks(context, today):
     """Panel: the open tasks of the projects underway (core/web_projects.py), soonest due first, each with Done
     (task.done) and its project and due day; up to five, the rest counted."""
@@ -1112,6 +1155,9 @@ PANELS: dict[str, tuple[tuple[str, str, Panel], ...]] = {
     "expeditions": (("trail", "On The Trail", _trail),),
     "workshop": (("tasks", "Project Tasks", _project_tasks),),
     "classroom": (("continue", "Continue", _classroom_continue),),
+    "observations": (("noticed", "What MIA Noticed", _noticed),),
+    "lab": (("latest", "Latest Readings", _lab_latest),),
+    "power": (("levels", "Levels", _power_levels),),
 }
 
 # Questions an app's menu hands MIA, as if said aloud (she answers with
