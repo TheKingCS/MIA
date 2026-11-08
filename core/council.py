@@ -210,6 +210,18 @@ def index(repo: Optional[Path] = None, store: Optional[DevStore] = None) -> DevI
                     files={"activity": work_activity.ACTIVITY})
 
 
+def _history_line(h: dict) -> str:
+    """Pure logic. One development-history hit as a line: when it happened, who, and its words: a chat message's
+    text, an activity's detail, or a decision's, commit's, failure's or experiment's kind, ref and title
+    (core/dev_history.py), with the task it names."""
+    from core.dev_history import when
+
+    words = h.get("text") or h.get("detail") or ""
+    if h.get("kind") in ("decision", "commit", "failure", "experiment"):
+        words = f"{h['kind']} {h.get('ref', '')}: {h.get('title', '')}" + (f" ({h['status']})" if h.get("status") else "")
+    return (f"- {when(h)[:10]} {h.get('who', '')}: {str(words)[:240]}" + (f" ({h['task']})" if h.get("task") else ""))
+
+
 def mia_answers(question: str, exclude: str = "", repo: Optional[Path] = None,
                 store: Optional[DevStore] = None) -> str:
     """MIA from her own documents and the development history: retrieved, never guessed."""
@@ -239,9 +251,7 @@ def mia_answers(question: str, exclude: str = "", repo: Optional[Path] = None,
         parts.append("From what the team learned:\n" + "\n".join(
             f"- {e['title']} ({e['id']}, {e.get('status', 'derived')})" for e in known))
     if hits:
-        parts.append("From the development history:\n" + "\n".join(
-            f"- {h.get('at', '')[:10]} {h.get('who', '')}: {(h.get('text') or h.get('detail') or '')[:240]}"
-            + (f" ({h['task']})" if h.get("task") else "") for h in hits))
+        parts.append("From the development history:\n" + "\n".join(_history_line(h) for h in hits))
     return "\n\n".join(parts) or ("Nothing in my documents or the development history covers that well, so I "
                                    "won't guess. Ask a member who can read the code.")
 

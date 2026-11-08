@@ -149,3 +149,17 @@ def test_members_voices_sampled_kept_and_chosen(tmp_path, monkeypatch):
     assert saved["voice"] == "kokoro:am_onyx" and saved["voice_chosen_by"] == "zac"
     with pytest.raises(cv.VoiceError, match="No council member"):
         cv.choose("_about", "am_onyx", registry=registry)
+
+
+def test_a_history_hit_reads_in_words_whatever_kind_it_is():
+    """A decision or commit from the shared history (core/dev_history.py) says its kind, ref and title, dated when it
+    happened; an activity line says its detail; a chat message its text."""
+    from core.council import _history_line
+
+    assert _history_line({"kind": "decision", "ref": "DEC-0056", "title": "Universal Inspection", "status": "APPROVED",
+                          "on": "2026-10-30", "at": "2026-11-08T12:00:00", "who": ""}) == \
+        "- 2026-10-30 : decision DEC-0056: Universal Inspection (APPROVED)"
+    assert _history_line({"kind": "commit", "ref": "abc12345", "title": "Fix it", "on": "2026-11-06", "who": "Claude",
+                          "task": "T-0020"}) == "- 2026-11-06 Claude: commit abc12345: Fix it (T-0020)"
+    assert _history_line({"at": "2026-11-07T01:00:00", "who": "zac", "detail": "approved"}) == "- 2026-11-07 zac: approved"
+    assert _history_line({"at": "2026-11-07", "who": "codex", "text": "I think so"}) == "- 2026-11-07 codex: I think so"
