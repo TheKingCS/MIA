@@ -164,7 +164,7 @@ def test_the_workout(world):
 
 
 def test_real_estate(world):
-    """A rental's card shows its status, rent, equity, this month's money and the upkeep needing attention; deleting it says its money stays in Money."""
+    """A rental's card shows its status, rent, equity, this month's money, the upkeep needing attention and its depreciation once it has a price; deleting it says its money stays in Money."""
     proposal, _ = run(world, "property.add", name="Maple House", property_type="Rental", status="Rented",
                       location="Town, ST", monthly_rent="1200", current_value="200000", mortgage_balance="150000")
     assert proposal.summary.startswith("Add the property Maple House: kind Rental, status Rented, in Town, ST, rent $1,200.00")
@@ -182,6 +182,11 @@ def test_real_estate(world):
     assert card["income_month"] == 1200.0 and card["expenses_month"] == 80.0
     assert [t["title"] for t in card["tasks"]] == ["HVAC filter"] and card["tasks"][0]["needs_attention"]
     assert page["totals"]["attention"] == 1
+    assert card["depreciation"] is None  # no purchase price yet: nothing to depreciate
+    world.real_estate.update_property(house.property_id, purchase_price=330000.0, land_value=55000.0,
+                                      purchase_date="2024-11-07")
+    dep = estate_page(world, TODAY)["properties"][0]["depreciation"]
+    assert dep["year"] == 10000.0 and 19000 < dep["so_far"] < 21000  # 275,000 over 27.5 years, two years in
     with pytest.raises(ActionError, match="already tracked"):
         world.actions.propose(world, "property.track_upkeep", {"property_id": house.property_id})
 

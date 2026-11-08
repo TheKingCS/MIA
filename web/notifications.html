@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Notifications — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
+  <link rel="stylesheet" href="ui.css">
+</head>
+<body data-app="notifications" class="mod-notifications">
+  <!--
+    Notifications (DEC-0125; the screens review's missing notifications): newest first, each with its tone and why MIA
+    sent it when she sent it on her own; Mark All Read and Dismiss. MIA.notifications() (core/web_notifications.py).
+    Formatting only (claude, 2026-11-07).
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <header class="hero">
+        <h1><span aria-hidden="true" id="hero-icon"></span> Notifications</h1>
+        <p class="tagline" id="nt-sub"></p>
+      </header>
+      <div class="ptabs" role="tablist" id="tabs" hidden></div>
+      <header hidden>
+      </header>
+      <div id="panel"></div>
+    </main>
+  </div>
+  <script src="mia.js?v=17"></script>
+  <script src="icons.js"></script>
+  <script src="sound.js"></script>
+  <script src="places-watch.js"></script>
+  <script src="shell.js"></script>
+  <script src="notifications.js"></script>
+</body>
+</html>

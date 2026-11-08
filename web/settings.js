@@ -169,6 +169,8 @@
       glassesSection(),
       section("My Places", el("p", { class: "dim" }, "Places where arriving opens something: your workout at the gym, your grocery list at the store."),
         el("div", { class: "acct-actions" }, el("a", { class: "btn btn-ghost", href: "places.html" }, "My Places"))),
+      section("Notifications", el("p", { class: "dim" }, "Everything MIA has told you, and why she sent the ones she sent on her own."),
+        el("div", { class: "acct-actions" }, el("a", { class: "btn btn-ghost", href: "notifications.html" }, "Notifications"))),
       section("Recent Changes", el("p", { class: "dim" }, "What MIA changed lately, with Undo, and the last two weeks' history."),
         el("div", { class: "acct-actions" }, el("a", { class: "btn btn-ghost", href: "changes.html" }, "Recent Changes"))),
       section("Apps", el("p", { class: "dim" }, "Choose which apps you see, and your favorites."),

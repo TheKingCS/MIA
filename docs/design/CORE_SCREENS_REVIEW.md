@@ -36,7 +36,7 @@ missing screens (Browser, Start Here, Waiting For You, a plan's page, Recent cha
 - **Browser** (DEC-0117): the live view, the steps waiting for your OK, teaching a task.
 - **Start Here** (the guide) and the **Waiting For You** queue the audit proposes for Today.
 - **A plan's page**: the material list, cut list and shopping list (Knowledge only shows the Plans Shelf tab).
-- ~~**Recent changes / Undo history**~~: built 2026-11-07 (`web/changes.html`, from Settings). Notifications still to do.
+- ~~**Recent changes / Undo history**~~: built 2026-11-07 (`web/changes.html`, from Settings). Notifications built too (`web/notifications.html`, from Settings, with why each was sent).
 - **Glasses**: 2 screens (Home, Active Training) against 21 glasses gaps in docs/PARITY.md. Each app needs its
   glasses card and its "ask" (DEC-0125).
 

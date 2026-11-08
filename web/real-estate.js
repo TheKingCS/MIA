@@ -98,6 +98,8 @@
       p.owed || p.income_month || p.expenses_month ? el("p", { class: "dim prop-more" }, [p.owed ? "Owed " + fmt(p.owed) : null,
         p.income_month || p.expenses_month ? "This month +" + fmt(p.income_month) + " / -" + fmt(p.expenses_month) : null]
         .filter(Boolean).join(" · ")) : null,
+      p.depreciation ? el("p", { class: "dim prop-more" }, "Depreciation " + fmt(p.depreciation.year) + " a year · " + fmt(p.depreciation.so_far)
+        + " so far (straight-line estimate, not a tax figure)") : null,
       attention.length ? el("p", { class: "attention-line" }, "Needs you: " + attention.map((t) => t.title + " (" + (t.due || t.text).toLowerCase() + ")").join(", ")) : null,
       buttons(
         btn("Record Rent", "btn-ghost", () => rent(p)),

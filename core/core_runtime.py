@@ -94,6 +94,7 @@ from core.assistant_self_actions import register_capability_actions, register_se
 from core.assistant_cooking_actions import register_cooking_actions
 from core.assistant_household_actions import register_household_actions
 from core.assistant_lab_actions import register_lab_actions
+from core.assistant_notification_actions import register_notification_actions
 from core.assistant_toolbox_actions import register_toolbox_actions
 from core.assistant_waypoint_actions import register_waypoint_actions
 from core.assistant_goods_actions import register_goods_actions
@@ -280,8 +281,8 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     cameras, and the energy sources read and logged (DEC-0125), so the phone can ask about them too, cook mode's tools
     (core/assistant_cooking_actions.py), the Toolbox's (board feet, concrete, alarms on or off:
     core/assistant_toolbox_actions.py), the Lab's delete_lab_reading (core/assistant_lab_actions.py) and the
-    Household's pause_household_routine (core/assistant_household_actions.py) and change_waypoint
-    (core/assistant_waypoint_actions.py)."""
+    Household's pause_household_routine (core/assistant_household_actions.py), change_waypoint
+    (core/assistant_waypoint_actions.py) and the notification tools (core/assistant_notification_actions.py)."""
     registry = context.assistant_actions
     registry.register(connectivity_action())
     register_journal_actions(registry)
@@ -294,6 +295,7 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     register_lab_actions(registry)  # the Lab: delete a reading by voice (DEC-0125)
     register_household_actions(registry)  # pause or resume a routine by voice (DEC-0125)
     register_waypoint_actions(registry)  # rename a waypoint, its kind and notes (DEC-0125)
+    register_notification_actions(registry)  # read out and mark notifications read (DEC-0125)
     register_dungeon_actions(registry)  # the Dungeon: shifts, loot, quests (DEC-0046)
     register_loop_actions(registry)  # the loop: when things happen (DEC-0047)
     register_checkin_actions(registry)  # the Sunday check-in (DEC-0047)

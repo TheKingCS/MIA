@@ -33,6 +33,10 @@
    "status": "none",
    "why": "readings entered by hand in the Lab (DEC-0125): measurements, not her choices; nothing of MIA's to improve"
   },
+  "action:notification": {
+   "status": "none",
+   "why": "reading and dismissing notifications by hand; a dismissal already teaches the communication gate (its gate.* loops)"
+  },
   "action:profile": {
    "status": "none",
    "why": "their own settings: nothing MIA chose, so nothing of hers to correct"

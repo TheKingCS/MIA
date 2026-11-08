@@ -18,12 +18,17 @@ answers in plain lines, with what couldn't be read said as such (never as a
 pass).
 
 `PROCEDURES` are the built-in ones; MIA can make more as specs (ACAF), held
-to the same check.
+to the same check. `hardware()` turns the same inspection's facts into the
+screen's hardware list (This PC), saying only what was read; and
+`recent_problems()` reads the newest warnings and errors from MIA's own log
+("any errors in your log?" reads them out: `log_words`).
 """
 
 from __future__ import annotations
 
 import fnmatch
+import re
+from pathlib import Path
 from typing import Optional
 
 OPS = {"<": lambda a, b: a < b, "<=": lambda a, b: a <= b, ">": lambda a, b: a > b, ">=": lambda a, b: a >= b,
@@ -132,9 +137,69 @@ def run(context, procedure, inspect=None) -> dict:
     return {"title": spec["title"], "lines": lines, **result}
 
 
+def hardware(facts: dict) -> list[dict]:
+    """Pure logic. The hardware list for the Diagnostics screen, from one inspection's facts: the computer, its
+    processor, memory, each drive of a gigabyte or more (size, free, how full), each network adapter with an address,
+    when it started and its Python. A part the inspection couldn't read is left out, never guessed."""
+    rows = []
+
+    def add(name, value, note=""):
+        """One row, only when there's something to say."""
+        if value not in (None, ""):
+            rows.append({"name": name, "value": str(value), "note": note})
+
+    add("Computer", facts.get("computer.name"), facts.get("os.machine", ""))
+    cores, threads = facts.get("cpu.cores_physical"), facts.get("cpu.threads")
+    add("Processor", facts.get("cpu.model"), " · ".join(x for x in (f"{cores} cores" if cores else "",
+                                                                        f"{threads} threads" if threads else "") if x))
+    if facts.get("memory.total_gb") is not None:
+        use = facts.get("memory.use_percent")
+        add("Memory", f"{facts['memory.total_gb']:g} GB", f"{use:g}% in use" if isinstance(use, (int, float)) else "")
+    drives = sorted({k[len("disk."):-len(".size_gb")] for k in facts if k.startswith("disk.") and k.endswith(".size_gb")})
+    for drive in drives:
+        size = facts.get(f"disk.{drive}.size_gb")
+        if not isinstance(size, (int, float)) or size < 1:
+            continue  # tiny or virtual mounts aren't drives anyone looks after
+        free, use = facts.get(f"disk.{drive}.free_gb"), facts.get(f"disk.{drive}.use_percent")
+        add("Drive " + ("/" if drive == "root" else drive), f"{size:g} GB",
+            " · ".join(x for x in (f"{free:g} GB free" if isinstance(free, (int, float)) else "",
+                                    f"{use:g}% full" if isinstance(use, (int, float)) else "") if x))
+    for key in sorted(k for k in facts if k.startswith("network.") and k.endswith(".ipv4")):
+        add("Network " + key[len("network."):-len(".ipv4")], facts[key])
+    add("Started", str(facts.get("os.booted") or "").replace("T", " "))
+    add("Python", facts.get("python.version"))
+    return rows
+
+
+_LOG_LINE = re.compile(r"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) \[(WARNING|ERROR|CRITICAL)\s*\] ([\w.]+): (.*)$")
+
+
+def recent_problems(log_file: Optional[Path] = None, limit: int = 30, read_bytes: int = 400_000) -> list[dict]:
+    """The newest warnings and errors in MIA's log (logs/mia.log, core/logger.py), newest first: when, how bad
+    (warning or error), which part of MIA said it (without the "mia." prefix) and what, cut at 300 characters. Only
+    the end of the file is read; [] when there's no log."""
+    if log_file is None:
+        from core.logger import _LOG_FILE as log_file
+    try:
+        with open(log_file, "rb") as f:
+            f.seek(0, 2)
+            size = f.tell()
+            f.seek(max(0, size - read_bytes))
+            text = f.read().decode("utf-8", errors="replace")
+    except OSError:
+        return []
+    found = []
+    for line in text.splitlines():
+        m = _LOG_LINE.match(line)
+        if m:
+            found.append({"when": m.group(1), "level": "warning" if m.group(2) == "WARNING" else "error",
+                          "where": m.group(3).removeprefix("mia."), "text": m.group(4)[:300]})
+    return list(reversed(found))[:limit]
+
+
 def screen(context, inspect=None) -> dict:
     """The Diagnostics web screen (web/diagnostics.html, the PC's owner's): every built-in check-up over one
-    passive inspection."""
+    passive inspection, the hardware list it read (hardware), and the log's newest problems (recent_problems)."""
     if inspect is None:
         from core.inspection import inspect
     try:
@@ -151,7 +216,10 @@ def screen(context, inspect=None) -> dict:
                     "unknown": []}
         checks.append({"id": pid, "title": done["title"], "ok": not done["failed"], "passed": done["passed"],
                        "failed": done["failed"], "unknown": sorted(set(done["unknown"]))})
-    return {"checks": checks, "error": ""}
+    facts = {}
+    for e in report.evidence:
+        facts.setdefault(e.fact, e.value)
+    return {"checks": checks, "error": "", "hardware": hardware(facts), "problems": recent_problems()}
 
 
 _ASK = (("network", ("network", "internet connection", "wifi", "wi-fi", "connection")),
@@ -160,9 +228,26 @@ _ASK = (("network", ("network", "internet connection", "wifi", "wi-fi", "connect
                       "is my pc", "is the pc")))
 
 
+_LOG_ASK = ("errors in your log", "errors in the log", "problems in your log", "problems in the log", "check your log",
+            "check the log", "any errors lately", "anything in your log")
+
+
+def log_words(problems: list[dict]) -> str:
+    """Pure logic. The log's newest problems said aloud: how many, and the newest three."""
+    if not problems:
+        return "No warnings or errors in my log lately."
+    errors = sum(1 for p in problems if p["level"] == "error")
+    head = (f"{len(problems)} recent problem{'s' if len(problems) != 1 else ''} in my log"
+            + (f", {errors} of them errors" if errors else ", all warnings") + ". Newest first: ")
+    return head + "; ".join(f"{p['text']} ({p['where']}, {p['when'][11:16]})" for p in problems[:3]) + "."
+
+
 def reply(context, text: str) -> Optional[str]:
-    """"check my PC", "check the network", "is there room for a big download?": the check-up, in plain lines."""
+    """"check my PC", "check the network", "is there room for a big download?": the check-up, in plain lines; "any
+    errors in your log?": the log's newest problems (log_words)."""
     low = " ".join(str(text or "").lower().split())
+    if any(w in low for w in _LOG_ASK):
+        return log_words(recent_problems())
     if not any(w in low for w in ("check", "diagnos", "room for", "is my pc", "is the pc")):
         return None
     for key, words in _ASK:

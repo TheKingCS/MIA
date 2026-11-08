@@ -303,7 +303,11 @@
     diagnostics: () => demo ? Promise.resolve({ error: "", checks: [
       { id: "pc_ready", title: "Is the PC ready for MIA?", ok: true, passed: 5, failed: [], unknown: [] },
       { id: "network", title: "The network", ok: false, passed: 2, failed: ["The wired connection is running at 100 Mb/s, under a gigabit."], unknown: [] },
-      { id: "big_download", title: "Room for a big download", ok: true, passed: 2, failed: [], unknown: ["disk.D.free_gb"] }] })
+      { id: "big_download", title: "Room for a big download", ok: true, passed: 2, failed: [], unknown: ["disk.D.free_gb"] }],
+      hardware: [{ name: "Computer", value: "shop-pc", note: "x86_64" }, { name: "Processor", value: "AMD Ryzen 7 7700", note: "8 cores · 16 threads" },
+        { name: "Memory", value: "32 GB", note: "38% in use" }, { name: "Drive C", value: "953.9 GB", note: "412 GB free · 56.8% full" },
+        { name: "Network Wi-Fi", value: "192.168.1.20", note: "" }, { name: "Python", value: "3.12.4", note: "" }],
+      problems: [{ when: "2026-11-07 18:02:00", level: "warning", where: "core.music_manager", text: "A song in the library couldn't be read; it was skipped." }] })
       : call("GET", "/api/diagnostics"),
     lifeNotes: () => demo ? Promise.resolve({ kinds: [
       { kind: "commitment", title: "Promises", notes: [
@@ -323,6 +327,8 @@
     power: () => read("/api/power", "power"),
     // The Lab (core/web_lab.py, DEC-0125): the Data Logger's series, and one in full (?series=).
     lab: (series = "") => read("/api/lab?series=" + encodeURIComponent(series), "lab"),
+    // Notifications (core/web_notifications.py): newest first, with why MIA sent each one she sent on her own.
+    notifications: () => read("/api/notifications", "notifications"),
     // Recent Changes (core/web_changes.py): what can be undone, and the fortnight's history.
     changes: () => read("/api/changes", "changes"),
     // The Field Kit (core/web_field_kit.py, DEC-0125): devices, network checks (worked out in core), scripts.

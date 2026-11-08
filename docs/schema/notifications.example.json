@@ -1,0 +1,36 @@
+{
+  "available": true,
+  "unread": 2,
+  "items": [
+    {
+      "id": "n1",
+      "title": "The mower blade is due",
+      "message": "Garage: due tomorrow. Sharpen or swap it.",
+      "tone": "attention",
+      "source": "maintenance",
+      "when": "5:02 PM",
+      "read": false,
+      "why": "I told you \"The mower blade is due\" because something you look after is due soon. If you'd rather not hear about upkeep, say \"stop telling me about upkeep\" and I'll take a break from it."
+    },
+    {
+      "id": "n2",
+      "title": "Leg day tomorrow",
+      "message": "Back squat, 4 x 8.",
+      "tone": "",
+      "source": "workout",
+      "when": "4:30 PM",
+      "read": false,
+      "why": ""
+    },
+    {
+      "id": "n3",
+      "title": "Backup finished",
+      "message": "Everything's saved.",
+      "tone": "ok",
+      "source": "system",
+      "when": "yesterday 2:00 AM",
+      "read": true,
+      "why": ""
+    }
+  ]
+}

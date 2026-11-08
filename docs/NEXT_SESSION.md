@@ -144,6 +144,11 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       as a list with its star; Manage stays one tap away).
       Sign In (her breathing orb, the wordmark, labelled boxes, one bright Sign In; recovery is on the PC).
       Recent Changes (new, from Settings: what MIA can put back with Undo as `undo.last`, and the fortnight's history).
+      Notifications (new, from Settings: newest first, why MIA sent each one she sent on her own, Mark All Read,
+      Dismiss; and by voice).
+      Also: Diagnostics shows This PC (the hardware list) and Recent Problems from MIA's log ("any errors in your
+      log?" by voice); Navigation can change a waypoint (`waypoint.edit`, change_waypoint); Power's History › opens a
+      meter's chart in the Lab.
       Household (Done Today with its meter, a card per routine with its streak in words and Did It, paused ones
       apart; Add a Routine / Pause / Resume as `routine.add/pause/resume`, and by voice).
       Power has its web page (`core/web_power.py`, `/api/power`, `web/power.html`; energy sources and the battery),
