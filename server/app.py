@@ -2508,6 +2508,15 @@ def create_app(context: AppContext) -> FastAPI:
         result = design(body.description)
         return {**result, "summary": summary(result)}
 
+    @app.get("/api/about")
+    def web_about(profile_id: str = Depends(require_profile_id)) -> dict:
+        """About MIA (core/web_about.screen, DEC-0142): what she is, her scale, her focus, her specialties and what she
+        knows about the person, every line from the facts; read only."""
+        from core.web_about import screen
+
+        with app.state.turn_lock:
+            return screen(view_for(context, profile_id))
+
     @app.get("/api/worlds")
     def web_worlds(campaign: str = "", profile_id: str = Depends(require_profile_id)) -> dict:
         """Living Worlds (core/web_worlds.screen, DEC-0134): the person's fictional worlds, campaigns, character and

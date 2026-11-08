@@ -1894,3 +1894,28 @@ a.comms-row:hover .row-title { color: var(--accent); }
 .lw-run-meta { font-size: 12px; }
 .lw-world .row-buttons { margin: 0; }
 .lw-say { font-size: var(--text-sm); }
+
+/* About MIA (DEC-0142, web/about.html): her line beside a small orb, the scale as tiles, specialties as cards. */
+.ab-intro { display: flex; gap: 20px; align-items: center; padding: 20px 22px; margin-bottom: var(--gap); }
+.ab-orb { flex: none; width: 64px; height: 64px; border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, rgba(var(--rgb-accent), 0.95), rgba(var(--rgb-accent), 0.35) 45%, rgba(var(--rgb-accent), 0) 72%);
+  box-shadow: 0 0 32px rgba(var(--rgb-accent), 0.45); animation: ab-breathe 4.5s ease-in-out infinite; }
+@keyframes ab-breathe { 50% { transform: scale(1.06); box-shadow: 0 0 44px rgba(var(--rgb-accent), 0.6); } }
+@media (prefers-reduced-motion: reduce) { .ab-orb { animation: none; } }
+.ab-line { margin: 0; font-size: 16px; line-height: 1.55; }
+.ab-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 10px; margin-bottom: var(--gap); }
+.ab-tile { display: grid; gap: 2px; padding: 12px 14px; }
+.ab-n { font-size: 26px; font-weight: 700; color: rgb(var(--rgb-accent)); }
+.ab-label { font-size: 13px; font-weight: 600; }
+.ab-note { font-size: 11px; }
+.ab-focus, .ab-you { display: grid; gap: 6px; padding: 14px 16px; margin-bottom: var(--gap); }
+.ab-focus > .pw-label, .ab-you > .pw-label, .ab-focus-line, .ab-you-line { margin: 0; }
+.ab-focus-line, .ab-you-line { font-size: 15px; line-height: 1.5; }
+.ab-you .row-buttons { margin: 4px 0 0; }
+.ab-specs { margin-bottom: var(--gap); }
+.ab-specs > .pw-label { margin: 0 0 8px; }
+.ab-spec-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 10px; }
+.ab-spec { display: grid; gap: 6px; padding: 14px 16px; align-content: start; }
+.ab-spec-title { margin: 0; font-size: 15px; }
+.ab-spec-line { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--text-dim); }
+.ab-say { font-size: var(--text-sm); }
