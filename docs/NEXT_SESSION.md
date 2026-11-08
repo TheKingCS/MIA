@@ -20,7 +20,10 @@ section 2's engine claims). **For the next engine session:** `life_events.jsonl`
 decision; appends only, never rewritten; lines from before today stay plain (Zac's call in WAITING_ON). Anything
 reading the history must go through `at_rest.open_text` (tests too). The fix report is sealed too: read it with
 `python -m tools.fix_report`. When the phone gets its Keystore sealing, its sync base copies (`data/.sync/`,
-`SyncState.set_base`) hold each synced file's opened content and must be sealed with it. T-0052 (create_app's length) only when no one else is in
+`SyncState.set_base`) hold each synced file's opened content and must be sealed with it. What's Next, still open: a
+fresh start in spring gets "build a compost bin" rather than a raised bed (a bed missed in spring costs a season); a
+"now or wait a year" bonus was tried and reverted (K-0153: strong enough to fix it, it beat jars ready to sell).
+T-0052 (create_app's length) only when no one else is in
 `server/app.py`; T-0017 stays open for its voice tool and Zac's SearXNG. **Zac:** start SearXNG (WAITING_ON), the
 homestead push, DEC-0147's choices, the iOS path.
 
