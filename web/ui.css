@@ -1471,3 +1471,18 @@ body.mod-maps .hero { display: none; }
 .apps-row-tag { font-size: 12px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .apps-row .tile-star { position: static; }
 @media (max-width: 520px) { .apps-row { grid-template-columns: 28px minmax(0, 1fr) 40px; } .apps-row-tag { display: none; } }
+
+/* ---------------------------------------------------------------- Sign In (DEC-0113 canvas; web/shell.js signInForm) */
+.sign-in.sign-in-canvas { max-width: 340px; margin: 12vh auto 0; padding: 0 16px; display: grid; gap: 14px; text-align: left; }
+.si-brand { display: grid; justify-items: center; gap: 8px; margin-bottom: 14px; text-align: center; }
+.si-orb { width: 120px; height: 120px; border-radius: 50%; animation: si-breathe 5s ease-in-out infinite;
+  background: radial-gradient(circle at 50% 45%, #e9fbff 0%, #a6ecff 14%, var(--accent) 34%, rgba(11, 134, 173, 0.55) 60%, rgba(11, 134, 173, 0) 72%); }
+@keyframes si-breathe { 0%, 100% { transform: scale(1); opacity: 0.92; } 50% { transform: scale(1.05); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .si-orb { animation: none; } }
+.si-word { font-family: var(--font-mono); font-size: 28px; letter-spacing: 0.3em; padding-left: 0.3em; }
+.si-brand p { margin: 0; color: var(--text-dim); }
+.si-field { display: grid; gap: 6px; }
+.si-field span { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); }
+.sign-in.sign-in-canvas input { width: 100%; box-sizing: border-box; }
+.si-go { min-height: 52px; font-size: 16px; margin-top: 4px; }
+.si-note { margin: 0; text-align: center; font-size: 12px; color: var(--text-dim); }

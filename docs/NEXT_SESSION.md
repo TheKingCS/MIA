@@ -142,6 +142,7 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       The Chronicle (the newest chapter as prose with its highlights as tags; Earlier Chapters to open).
       Apps (find always at hand, favorites as tiles labelled as your glasses cards too, then every app by life area
       as a list with its star; Manage stays one tap away).
+      Sign In (her breathing orb, the wordmark, labelled boxes, one bright Sign In; recovery is on the PC).
       Household (Done Today with its meter, a card per routine with its streak in words and Did It, paused ones
       apart; Add a Routine / Pause / Resume as `routine.add/pause/resume`, and by voice).
       Power has its web page (`core/web_power.py`, `/api/power`, `web/power.html`; energy sources and the battery),
