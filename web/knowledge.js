@@ -25,6 +25,18 @@
         }, []).map((p) => el("p", {}, p.join(" ")))));
   }
 
+  // A pack's row: its title and size, and Delete (the PC owner's; the file is gone for good, so its name is typed to
+  // confirm, as on the desktop: /api/knowledge/pack/delete, not an action).
+  function packRow(p) {
+    return el("div", { class: "sync-row" },
+      el("div", {}, el("p", { class: "council-text" }, p.title), el("p", { class: "dim" }, p.articles.toLocaleString() + " articles" + (p.description ? " · " + p.description : ""))),
+      el("button", { type: "button", class: "btn btn-ghost btn-small", onclick: async () => {
+        const v = await MIAShell.form("Delete " + p.title + "?", [{ name: "confirm", label: "It's deleted for good. Type its name to confirm: " + p.title, type: "text", required: true }], {});
+        if (!v) return;
+        try { MIAShell.say((await MIA.deletePack(p.id, v.confirm)).message); draw(); } catch (e) { MIAShell.say(e.message); }
+      } }, "Delete"));
+  }
+
   // The plans shelf: plans, blueprints and material lists (core/plan_library.py).
   // A plan's page (core/plan_library.detail): at your size when it has a calculator, its materials, cuts, tools and
   // steps, what to buy against the workshop's stock, and Keep This Size / Start A Project / Let It Go (plan.*).
@@ -102,8 +114,8 @@
     if (tab === "plans") { $("panel").replaceChildren(plansSection(shelf) || el("p", { class: "empty" }, "The plans shelf isn't on this MIA.")); return; }
     if (tab === "packs") {
       $("panel").replaceChildren(el("section", { class: "glass money-section" }, el("h2", {}, "Packs"),
-        data.packs.length ? el("ul", {}, data.packs.map((p) => el("li", {}, p.title + " · " + p.articles.toLocaleString() + " articles")))
-          : el("p", {}, "Copy .zim files (Wikipedia, iFixit, medical and survival guides from kiwix.org) into " + (data.root || "the library folder") + ".")));
+        data.packs.length ? el("div", { class: "sync-rows" }, data.packs.map(packRow)) : null,
+        el("p", { class: "dim" }, "To add a pack, copy its .zim file (Wikipedia, iFixit, medical and survival guides from kiwix.org) into " + (data.root || "the library folder") + " on the PC; it shows here next time.")));
       return;
     }
     const input = el("input", { type: "search", class: "input kn-search", placeholder: "Search the library", value: query, "aria-label": "Search the library" });

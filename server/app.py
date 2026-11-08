@@ -297,6 +297,12 @@ class VoiceChoice(BaseModel):
     volume: Optional[int] = None
 
 
+class PackDelete(BaseModel):
+    """Deleting a Knowledge pack: its id, and its title typed to confirm (it's gone for good)."""
+    id: str
+    confirm: str = ""
+
+
 class BackupMake(BaseModel):
     """A backup made from the web: its passphrase, when it should be encrypted (never kept)."""
     passphrase: str = ""
@@ -977,6 +983,20 @@ def create_app(context: AppContext) -> FastAPI:
                      for p in library.list_packs()]
             hits = library.search_titles(q.strip()[:200]) if q.strip() else []
         return {"available": True, "packs": packs, "hits": hits, "root": str(library.root_path)}
+
+    @app.post("/api/knowledge/pack/delete")
+    def knowledge_pack_delete(body: PackDelete, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Deletes a pack's file for good, for the PC's owner, once its title is typed to confirm (as the desktop asks).
+        Not an action: undo can't bring a deleted pack back."""
+        from core.reference_library_manager import delete_confirmed
+
+        _owner_only(profile_id, "Deleting a pack")
+        with app.state.turn_lock:
+            passed, message = delete_confirmed(getattr(context, "reference_library", None), body.id, body.confirm)
+        if not passed:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, message)
+        log.info("Knowledge pack deleted from the web: %s", body.id)
+        return {"deleted": body.id, "message": message}
 
     # MIA's browser (core/web_browser.py, DEC-0117): what it's on, the steps waiting for the person, the taught tasks,
     # and a waiting step's screenshot (only from her own shots folder).
