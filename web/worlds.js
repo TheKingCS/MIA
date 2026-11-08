@@ -43,9 +43,11 @@
       t.lines.length > 1 ? el("div", { class: "lw-chips lw-changed" }, ...t.lines.slice(1).map((line) =>
         el("span", { class: "lw-chip" + (/^Tried/.test(line) ? " missed" : "") }, line))) : null));
     const busy = playing === c.id;
+    const log = turns.length ? el("div", { class: "lw-turns", role: "log", "aria-live": "polite" }, ...turns) : null;
+    if (log) requestAnimationFrame(() => { log.scrollTop = log.scrollHeight; });  // the latest turn in view
     return el("div", { class: "lw-story" },
       el("p", { class: "pw-label" }, told.length ? "The Story So Far" : "Your First Turn"),
-      turns.length ? el("div", { class: "lw-turns", role: "log", "aria-live": "polite" }, ...turns)
+      log ? log
         : el("p", { class: "dim" }, "Say what " + me.name + " does, and MIA tells you what happens."),
       busy ? el("p", { class: "dim lw-thinking", role: "status" }, "MIA is telling what happens…") : null,
       el("div", { class: "lw-do-row" },
