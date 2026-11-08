@@ -6,7 +6,8 @@ Unit tests for core.llm_manager. No real Ollama server involved —
 urllib.request.urlopen is monkeypatched to a fake so these exercise the
 manager/backend's success and graceful-degradation paths in isolation,
 same fake-dependency approach as test_reference_library_manager.py's
-_FakeConfig.
+_FakeConfig. And (T-0054) a local Ollama that isn't running is started once, quietly, and the turn retried, never
+again inside the cooldown, never when switched off or for a server elsewhere; no test starts a real process.
 """
 
 from __future__ import annotations
@@ -334,3 +335,82 @@ def test_ollama_never_goes_through_localhost():
     """On Windows that name costs 2 seconds a call, on every call."""
     backend = OllamaBackend("http://localhost:11434/", "a-model", "5m")
     assert backend._base_url == "http://127.0.0.1:11434"
+
+
+# --- T-0054: Ollama not running on the PC is started once, quietly, and the turn retried ---
+
+class _DownThenUp:
+    """An Ollama backend that's down until `woken`, then answers."""
+
+    def __init__(self):
+        """A real OllamaBackend at the default local address, whose calls these fakes replace."""
+        from core.llm_manager import OllamaBackend
+
+        self.real = OllamaBackend("http://localhost:11434", "llama3.2:3b", keep_alive="5m")
+        self.woken = False
+        self.calls = 0
+
+    def generate(self, prompt, timeout):
+        """Answers only once woken."""
+        from core.llm_manager import LLMUnavailableError
+
+        self.calls += 1
+        if not self.woken:
+            raise LLMUnavailableError("connection refused")
+        return "hello"
+
+    def is_available(self, timeout):
+        """Up once woken."""
+        return self.woken
+
+
+def _manager(monkeypatch, backend, started, start_ok=True, setting=True):
+    """An LLMManager over a fake Ollama backend, with `ollama serve` faked: `started` collects each start."""
+    from types import SimpleNamespace
+
+    from core import llm_manager as lm
+
+    def fake_start():
+        started.append(1)
+        backend.woken = start_ok
+        return True
+
+    monkeypatch.setattr(lm, "_start_ollama", fake_start)
+    monkeypatch.setattr(lm, "OllamaBackend", type(backend.real))  # keep isinstance honest
+    config = SimpleNamespace(get=lambda key, default=None: setting if key == "llm.start_ollama" else default)
+    manager = lm.LLMManager.__new__(lm.LLMManager)
+    manager.context = SimpleNamespace(config=config)
+    manager._timeout = 5.0
+    manager.home = None
+    manager.home_reach = None
+    manager._last_wake = float("-inf")
+    manager._backend = backend.real
+    monkeypatch.setattr(backend.real, "generate", backend.generate)
+    monkeypatch.setattr(backend.real, "is_available", backend.is_available)
+    return manager
+
+
+def test_ollama_not_running_is_started_once_and_the_turn_answers(monkeypatch):
+    backend, started = _DownThenUp(), []
+    manager = _manager(monkeypatch, backend, started)
+    assert manager.generate("hi") == "hello"
+    assert started == [1] and backend.calls == 2  # tried, started Ollama, tried again
+
+
+def test_it_is_not_started_again_and_again(monkeypatch):
+    import core.llm_manager as lm
+
+    backend, started = _DownThenUp(), []
+    manager = _manager(monkeypatch, backend, started, start_ok=False)
+    monkeypatch.setattr(lm, "WAKE_WAIT", 0.2)
+    assert manager.generate("hi") is None and manager.generate("hi again") is None
+    assert started == [1]  # inside the cooldown: not started a second time
+
+
+def test_switched_off_or_a_server_elsewhere_is_never_started(monkeypatch):
+    from core.llm_manager import _is_this_machine
+
+    backend, started = _DownThenUp(), []
+    manager = _manager(monkeypatch, backend, started, setting=False)
+    assert manager.generate("hi") is None and started == []
+    assert _is_this_machine("http://127.0.0.1:11434") and not _is_this_machine("http://192.168.1.20:11434")

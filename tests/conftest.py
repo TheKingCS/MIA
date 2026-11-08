@@ -113,6 +113,13 @@ def _no_network(*_args, **_kwargs):
 
 connectivity_module._default_connect = _no_network
 
+# 2026-11-08 (T-0054): a turn whose local model doesn't answer starts `ollama serve` on the PC
+# (core/llm_manager._wake_local). No test may start a real process: here it never starts anything, and the tests
+# of the wake itself fake it.
+import core.llm_manager as llm_manager_module  # noqa: E402
+
+llm_manager_module._start_ollama = lambda: False
+
 
 # 2026-09-27: the real data/ folder was found holding test-written usage
 # logs and a skill XP log (entries from ordinary `pytest` runs). Not every

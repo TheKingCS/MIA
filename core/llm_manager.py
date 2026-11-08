@@ -84,6 +84,11 @@ are, and its own default is 2048 or 4096 depending on the version. A
 request asking for a different size than the loaded model has makes
 Ollama reload it, so set `llm.num_ctx` to what the server loads with
 (the home computer: 32768) and leave it.
+
+**When Ollama isn't running** (2026-11-08, T-0054: the answers.model_down loop saw turns fail
+because the PC's model server wasn't up): `LLMManager._ask` starts `ollama serve` with no window,
+waits up to WAKE_WAIT seconds and tries the turn once more. Only for Ollama on this machine, at most
+once every WAKE_COOLDOWN seconds, and never when `llm.start_ollama` is false.
 """
 
 from __future__ import annotations
@@ -91,6 +96,7 @@ from __future__ import annotations
 import json
 import urllib.error
 import urllib.request
+from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Optional, Protocol
 
@@ -362,11 +368,13 @@ class LLMManager:
 
     def __init__(self, context: AppContext) -> None:
         """The Assistant's model: the configured backend and timeout, plus, when the phone is linked, the home
-        computer's model, tried first (DEC-0022); `level` says which answered last.
+        computer's model, tried first (DEC-0022); `level` says which answered last; and when Ollama was last
+        started for a turn (`_wake_local`).
         """
         self.context = context
         self._timeout = float(context.config.get("llm.timeout_seconds", _DEFAULT_TIMEOUT_SECONDS))
         self._backend: LLMBackend = make_backend(context.config)
+        self._last_wake = float("-inf")  # when Ollama was last started for a turn (_wake_local)
         # DEC-0022 level 2 (core/home_link.py): the home computer's model,
         # tried first when linked and reachable; the backend above answers
         # when it isn't. `level` says which one answered last.
@@ -396,7 +404,8 @@ class LLMManager:
     def _ask(self, call):
         """Run `call(backend)` on the home computer when it's there, else
         here; a home computer that stops answering mid-conversation hands
-        the turn to this device's model."""
+        the turn to this device's model. When this device's model doesn't
+        answer, `_wake_local` may start Ollama and the call is tried once more."""
         from core.home_link import HOME_PC
 
         if self.home is not None and self.home_reach.up():
@@ -407,9 +416,43 @@ class LLMManager:
             except LLMUnavailableError as exc:
                 log.info("Home computer didn't answer (%s); using this device's model.", exc)
                 self.home_reach.down()
-        result = call(self._backend)
+        try:
+            result = call(self._backend)
+        except LLMUnavailableError:
+            # T-0054 (the answers.model_down loop): on the PC the model server is Ollama, and when it isn't running
+            # every turn failed. Start it once, quietly, and try the turn again.
+            if not self._wake_local():
+                raise
+            result = call(self._backend)
         self.level = self._local_level()
         return result
+
+    def _wake_local(self) -> bool:
+        """When the local model is Ollama on this machine and isn't answering: start `ollama serve` with no window
+        (core.dev_lab.quiet_job_flags) and wait up to WAKE_WAIT seconds for it to answer. At most once every
+        WAKE_COOLDOWN seconds, never for another kind of server (the phone's), and off when `llm.start_ollama` is
+        false. True when the model answers afterwards."""
+        import time
+
+        backend = self._backend
+        if not isinstance(backend, OllamaBackend) or not _is_this_machine(getattr(backend, "_base_url", "")):
+            return False
+        if not self.context.config.get("llm.start_ollama", True):
+            return False
+        now = time.monotonic()
+        if now - self._last_wake < WAKE_COOLDOWN:
+            return False
+        self._last_wake = now
+        if not _start_ollama():
+            return False
+        deadline = now + WAKE_WAIT
+        while time.monotonic() < deadline:
+            if backend.is_available(timeout=1.0):
+                log.info("Ollama wasn't running; started it and the model answered.")
+                return True
+            time.sleep(0.5)
+        log.warning("Started Ollama, but the model didn't answer within %s seconds.", WAKE_WAIT)
+        return False
 
     @property
     def backend(self) -> "LLMBackend":
@@ -452,6 +495,39 @@ class LLMManager:
                 log.warning("Assistant unavailable on retry: %s", exc)
                 return None
         return reply
+
+
+WAKE_WAIT = 15.0  # seconds to wait for a just-started Ollama to answer
+WAKE_COOLDOWN = 120.0  # never start it more often than this, so a broken install isn't hammered
+
+
+def _is_this_machine(base_url: str) -> bool:
+    """Pure logic. Whether a model server's address is this computer (so starting it here could help)."""
+    from urllib.parse import urlparse
+
+    return (urlparse(base_url).hostname or "") in ("127.0.0.1", "localhost", "::1")
+
+
+def _start_ollama() -> bool:
+    """Starts `ollama serve` in the background with no window; False when Ollama isn't installed or won't start."""
+    import os
+    import shutil
+    import subprocess
+
+    from core.dev_lab import quiet_job_flags
+
+    exe = shutil.which("ollama") or next((str(p) for p in (
+        Path(os.environ.get("LOCALAPPDATA", "")) / "Programs" / "Ollama" / "ollama.exe",) if p.is_file()), None)
+    if not exe:
+        log.info("The model isn't answering and Ollama isn't installed here to start.")
+        return False
+    try:
+        subprocess.Popen([exe, "serve"], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                         stderr=subprocess.DEVNULL, creationflags=quiet_job_flags(), close_fds=True)
+    except OSError:
+        log.exception("Couldn't start Ollama.")
+        return False
+    return True
 
 
 def _looks_like_malformed_tool_call(content: str) -> bool:
