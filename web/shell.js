@@ -281,6 +281,7 @@
   }
 
   function renderNav(shell) {
+    shellData = shell;
     if (window.MIASound) MIASound.configure(shell.sound);
     if (window.MIAPlaces) MIAPlaces.configure(shell.places);  // location quests, checked on this device
     const layout = $(".layout");
@@ -294,6 +295,8 @@
       side.replaceChildren(
         el("a", { class: "brand", href: "index.html" }, el("span", { class: "brand-mark brand-reactor", "aria-hidden": "true" }),
           el("span", {}, "MIA", el("small", {}, "Your Life. In Sync."))),
+        el("button", { type: "button", class: "side-search", onclick: () => openSearch(), "aria-keyshortcuts": "Control+K" },
+          el("span", {}, "Search"), el("kbd", {}, "Ctrl K")),
         ...sideLinks(shell),
         el("div", { class: "side-foot" }, levelBlock(shell.person), more(shell)));
     }
@@ -308,7 +311,9 @@
       el("span", { class: "ico", "aria-hidden": "true" }, icon(glyph, emoji)), label);
     bar.replaceChildren(
       tab("index.html", "web_home", "home", "🏠", "Home"),
-      tab("apps.html", "module_browser", "apps", "▦", "Apps"));
+      tab("apps.html", "module_browser", "apps", "▦", "Apps"),
+      el("button", { type: "button", class: "bottom-search", onclick: () => openSearch() },
+        el("span", { class: "ico", "aria-hidden": "true" }, icon("search", "⌕")), "Search"));
   }
 
   // ---------------------------------------------------------------- MIA, everywhere
@@ -664,6 +669,61 @@
   }
 
   /** The frame alone (sidebar + MIA) for a page that runs its own render and sign-in. */
+  // ---------------------------------------------------------------- Search (Ctrl+K, "/")
+  // Apps are matched here (the frame has the person's apps); records come from core/web_search.py (/api/search),
+  // each opening its own page. The last rows always offer the library (knowledge.html?q=) and asking MIA.
+  let shellData = null;
+  let searchBox = null;
+  function appMatches(q) {
+    const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+    return ((shellData && shellData.apps) || []).filter((a) => {
+      const hay = (a.name + " " + (a.tagline || "")).toLowerCase();
+      return words.every((w) => hay.includes(w));
+    }).sort((a, b) => Number(!a.name.toLowerCase().startsWith(words[0])) - Number(!b.name.toLowerCase().startsWith(words[0]))).slice(0, 5);
+  }
+  function openSearch() {
+    if (searchBox) { searchBox.showModal(); searchBox.querySelector("input").select(); return; }
+    const input = el("input", { type: "search", class: "search-input", placeholder: "Search apps, things and notes…",
+      "aria-label": "Search", autocomplete: "off", role: "combobox", "aria-controls": "mia-search-list", "aria-expanded": "true" });
+    const list = el("ul", { id: "mia-search-list", class: "search-list", role: "listbox", "aria-label": "Results" });
+    let seq = 0, active = 0;
+    const row = (title, detail, href, glyph) => el("li", { role: "option" },
+      el("a", { href }, el("span", { class: "sr-ico", "aria-hidden": "true" }, glyph), el("span", { class: "sr-title" }, title),
+        detail ? el("span", { class: "sr-detail" }, detail) : null));
+    const mark = () => [...list.children].forEach((li, i) => li.setAttribute("aria-selected", String(i === active)));
+    async function run() {
+      const q = input.value.trim(), mine = ++seq;
+      if (!q) { list.replaceChildren(el("li", { class: "sr-hint" }, "Type to search. Enter opens the first result.")); return; }
+      const apps = appMatches(q).map((a) => row(a.name, "App", a.page, "▦"));
+      const tail = [row("Search the library for \u201c" + q + "\u201d", "Knowledge, offline", "knowledge.html?q=" + encodeURIComponent(q), "📚"),
+        row("Ask MIA: \u201c" + q + "\u201d", "Talk", "assistant.html?ask=" + encodeURIComponent(q), "💬")];
+      list.replaceChildren(...apps, ...tail); active = 0; mark();
+      let found = [];
+      try { found = (await MIA.search(q)).results || []; } catch (e) { found = []; }
+      if (mine !== seq) return;  // a newer search has started
+      list.replaceChildren(...apps, ...found.map((r) => row(r.title, r.detail, r.href, "•")), ...tail); active = 0; mark();
+    }
+    input.addEventListener("input", run);
+    input.addEventListener("keydown", (e) => {
+      const n = list.children.length;
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        e.preventDefault(); active = (active + (e.key === "ArrowDown" ? 1 : n - 1)) % Math.max(n, 1); mark();
+        const li = list.children[active]; if (li) li.scrollIntoView({ block: "nearest" });
+      } else if (e.key === "Enter") {
+        e.preventDefault(); const a = list.children[active] && list.children[active].querySelector("a"); if (a) location.href = a.href;
+      }
+    });
+    searchBox = el("dialog", { class: "confirm search-dialog", "aria-label": "Search", onclick: (e) => { if (e.target === searchBox) searchBox.close(); } },
+      el("div", { class: "search-panel" }, input, list));
+    document.body.append(searchBox);
+    searchBox.showModal(); run();
+  }
+  document.addEventListener("keydown", (e) => {
+    const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable;
+    if ((e.key === "k" || e.key === "K") && (e.ctrlKey || e.metaKey)) { e.preventDefault(); openSearch(); }
+    else if (e.key === "/" && !typing && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); openSearch(); }
+  });
+
   async function frame() {
     try { renderNav(await MIA.shell()); } catch (e) { return; }
     if (talkHere) mountTalk();
@@ -715,7 +775,7 @@
         el("small", { class: "buff-left" }, b.lasts))));
   }
 
-  window.MIAShell = { start, act, say, el, refresh, frame, form, levelCard, conditionBar, buffChips, showDraft, confirm: confirmBox, talk: toggleTalk,
+  window.MIAShell = { start, act, say, el, refresh, frame, form, search: openSearch, levelCard, conditionBar, buffChips, showDraft, confirm: confirmBox, talk: toggleTalk,
     notRight, voiceRecorder, playReply };
 
   // <script src="shell.js" data-frame="garage">: frame an existing page as soon

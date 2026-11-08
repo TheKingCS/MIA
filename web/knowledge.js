@@ -10,7 +10,7 @@
   "use strict";
   const { el } = MIAShell;
   const $ = (id) => document.getElementById(id);
-  let query = "";
+  let query = new URLSearchParams(location.search).get("q") || "";  // ?q= from the frame's search (Ctrl+K)
 
   async function read(hit) {
     const a = await MIA.knowledgeArticle(hit.pack_id, hit.path);

@@ -192,6 +192,9 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       Knowledge articles (`article_images`, `/api/knowledge/picture` serves images only); the Qt Toolbox's last two
       tools on the web: MIA's Idea on Missions (Discovery: Suggest One, Accept, Set Aside) and From the Field on the
       Journal (MIA Lite recordings: Keep It, Leave It Out, Check For New), with voice tools (core/web_proposals.py).
+      Then search on the web: Ctrl+K or "/" on every page, or Search in the sidebar and the phone's bar (apps, then
+      every kind of record through links.KINDS, core/web_search.py, then the library and Ask MIA). The skills tree
+      shrinks to fit a phone and says when it scrolls. The Built page on the canvas has the three newest screens.
       **Maps' other scripts need Zac or a session with network:** place names in Cyrillic, Greek, Arabic and so on
       need more glyph ranges in `web/vendor/fonts/` (web/vendor/README.md says where from); the cloud shell here
       can't download them.
@@ -976,7 +979,7 @@ working screen on the frame, for Muse to restyle:
 5. Photo fields for assets, recipes and properties (Q-0014, Muse said yes),
    stored in each person's data folder, never `web/img/` (that's the public repo).
 6. Calendar, Notes, Inbox, full Assistant chat; then the rest of the 59 rows.
-Ctrl+K search on the web is also still missing (Shell row).
+Ctrl+K search on the web: built 2026-11-07 (core/web_search.py).
 
 **Direction (2026-10-01):** keep perfecting MIA for personal use, but
 built for any person or household, not just you. The youth/school

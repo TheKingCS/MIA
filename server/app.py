@@ -2143,6 +2143,15 @@ def create_app(context: AppContext) -> FastAPI:
 
         return _screen(profile_id, "missions", missions_page)
 
+    @app.get("/api/search")
+    def web_search(q: str = "", profile_id: str = Depends(require_profile_id)) -> dict:
+        """Search across the person's records, for the frame's Ctrl+K (core/web_search.py)."""
+        from core.web_search import search
+
+        view = view_for(context, profile_id)
+        with app.state.turn_lock:
+            return search(view, q)
+
     @app.post("/api/missions/idea")
     async def web_mission_idea(profile_id: str = Depends(require_profile_id)) -> dict:
         """Asks the model for a mission idea (core/web_proposals.suggest); it waits for the person's yes or no."""

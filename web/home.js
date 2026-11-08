@@ -221,6 +221,7 @@
   /* Getting to know you (core/user_sync.py): the way in on the phone and here. */
   async function renderSync() {
     const link = $("sync-link");
+    if (!link) return;  // the page dropped the link (canvas Home); nothing to show or hide
     try {
       const now = await MIA.userSync();
       link.hidden = !now || now.done;

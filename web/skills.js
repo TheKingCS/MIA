@@ -117,7 +117,8 @@
     if (!t || !t.nodes.length) return null;
     const pad = 6;
     const pic = svg("svg", { viewBox: -pad + " " + -pad + " " + (t.w + 2 * pad) + " " + (t.h + 2 * pad), class: "sk-tree", role: "img",
-      width: t.w + 2 * pad, height: t.h + 2 * pad,
+      // Shrinks to fit a phone (to 75% of full size, still readable); a wider tree scrolls sideways past that.
+      style: "max-width:" + (t.w + 2 * pad) + "px;min-width:" + Math.round(0.75 * (t.w + 2 * pad)) + "px",
       "aria-label": "Skill tree: " + t.edges.map((e) => t.nodes.find((n) => n.id === e.from).name + " opens " + t.nodes.find((n) => n.id === e.to).name).join("; ") });
     t.edges.forEach((e) => {
       const mid = (e.x1 + e.x2) / 2;
@@ -131,7 +132,17 @@
       g.append(label);
       pic.append(g);
     });
-    return el("div", { class: "sk-tree-wrap" }, pic);
+    // When the tree runs past the screen, the right edge fades and a line says so, until it's scrolled to the end.
+    const hint = el("p", { class: "dim sk-tree-hint", hidden: true }, "Scroll sideways for the rest of the tree →");
+    const wrap = el("div", { class: "sk-tree-wrap" }, pic);
+    const edge = () => {
+      const more = wrap.scrollWidth - wrap.clientWidth - wrap.scrollLeft > 4;
+      wrap.classList.toggle("more", more);
+      hint.hidden = wrap.scrollWidth <= wrap.clientWidth + 4;
+    };
+    wrap.addEventListener("scroll", edge, { passive: true });
+    requestAnimationFrame(edge);
+    return el("div", {}, hint, wrap);
   }
 
   function draw() {

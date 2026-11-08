@@ -1,0 +1,11 @@
+{
+  "query": "",
+  "results": [
+    {"title": "F-150", "kind": "asset", "detail": "Vehicle, tool or appliance", "href": "asset.html?id=demo-truck"},
+    {"title": "Chicken Coop", "kind": "project", "detail": "Project · active", "href": "projects.html"},
+    {"title": "Chili", "kind": "recipe", "detail": "Recipe · Dinner", "href": "recipe.html?id=demo-chili"},
+    {"title": "Creek Bend", "kind": "waypoint", "detail": "Waypoint", "href": "navigation.html"},
+    {"title": "Electric", "kind": "bill", "detail": "Bill · Utilities", "href": "money.html"},
+    {"title": "First frost", "kind": "journal_entry", "detail": "Journal entry", "href": "journal.html"}
+  ]
+}
