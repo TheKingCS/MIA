@@ -2316,6 +2316,14 @@ def create_app(context: AppContext) -> FastAPI:
 
         return _screen(profile_id, "missions", missions_page)
 
+    @app.get("/api/nexus")
+    def web_nexus(profile_id: str = Depends(require_profile_id)) -> dict:
+        """The Nexus (core/web_nexus.nexus, DEC-0130): portals with what needs you in each, and the HUD."""
+        from core.web_nexus import nexus
+
+        with app.state.turn_lock:
+            return nexus(view_for(context, profile_id))
+
     @app.get("/api/health")
     def web_health(profile_id: str = Depends(require_profile_id)) -> dict:
         """The Health page (core/health_actions.health_page, DEC-0129): the person's own, sealed at rest."""

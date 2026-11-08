@@ -140,7 +140,7 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     # own words asked for, and before the model, which the safety floor
     # never waits on.
     """One turn, in order: mode switches and the safety floor (before anything is stored or the model asked), then
-    show-off, "look at this" (opens Look with the camera), plain-word commands, question plans and direct lookups (none in a personal conversation), then the
+    show-off, "look at this" (opens Look with the camera), "take me to the garage" (an area's hub, DEC-0130), plain-word commands, question plans and direct lookups (none in a personal conversation), then the
     model with the tools offered for what was said.
     """
     prepared = pre_turn(context, conversation, prompt)
@@ -166,6 +166,13 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
 
             add_message(conversation, "assistant", LOOK_REPLY)
             return AssistantTurn(replies=[LOOK_REPLY], open=f"look.html?camera=1&ask={quote(looking)}", route="look")
+        from core.web_nexus import wants_area
+
+        going = wants_area(prompt)  # "take me to the garage" (DEC-0130): the area's hub opens at once
+        if going is not None:
+            said = f"Opening {going[1]}."
+            add_message(conversation, "assistant", said)
+            return AssistantTurn(replies=[said], open=going[0], route="area")
         from core.quick_commands import handle
 
         quick = handle(context, prompt)

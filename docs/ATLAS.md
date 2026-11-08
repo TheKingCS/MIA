@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1215 files, 265,327 lines; 1215 files describe themselves; 14,473 of 15,160 classes and functions are documented.
+1219 files, 265,706 lines; 1219 files describe themselves; 14,482 of 15,169 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-449 files, 124,816 lines; 6,667 of 6,753 classes and functions documented
+450 files, 124,940 lines; 6,672 of 6,758 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -408,7 +408,7 @@
 - `core/waypoint_actions.py`: Waypoints (core/waypoint_manager.py) through the action contract (core/actions.py), for the web's Maps and Navigation pages: `waypoint.add` (a name and where: from a tap on the map, or typed), `waypoint.edit` (its name, kind and notes; where it is stays) and `waypoint.delete`. The store writes throu
 - `core/waypoint_manager.py`: Backs the Navigation module's waypoint list (modules/navigation/module.py) — docs/ROADMAP.md milestone 10.1. Same persisted-JSON pattern as core/inventory_manager.py: data/waypoints.json, a dataclass with to_dict/from_dict, a manager class wrapping load/save.
 - `core/web_account.py`: The web's Profile and Settings screens (2026-10-07, Zac: the gear's Profile and Settings). Profile is who you are: name, email, country, what MIA helps with, household, password and recovery code. Settings is how MIA behaves for you: the person's own settings from the PC app's Settings (core/person_
-- `core/web_areas.py`: MIA's areas and their hubs (DEC-0129, Zac 2026-11-08): the sidebar is the Dashboard and then fifteen areas (Home, Garage, Plants and Animals, Health and Fitness, Recreation, Security, Browser, Settings and Diagnostics, Finances, Business, Personal, Learning, Missions, Projects, Communications). Each
+- `core/web_areas.py`: MIA's areas and their hubs (DEC-0129, Zac 2026-11-08; Kitchen added as its own area by DEC-0130): the sidebar is the Dashboard and then the areas (Home, Garage, Plants and Animals, Health and Fitness, Recreation, Security, Browser, Settings and Diagnostics, Finances, Business, Personal, Learning, Mi
 - `core/web_backups.py`: Backups from the web's Settings (DEC-0125: Backup & Restore was on the desktop's Settings only). For the PC's owner (the first account) only, since a backup holds everyone's data on this MIA.
 - `core/web_browser.py`: The Browser screen's data (DEC-0117, 2026-11-07): MIA's own browser as the person sees it on the web, so held steps and taught tasks aren't only reachable by talking to her.
 - `core/web_business.py`: The Orders & Quotes screen (DEC-0030 phase C): orders (what's owed, the build's progress, and where each is on the stage rail with the step that moves it on: `order_stage`, DEC-0113), quotes (with what the price is made of), customers, and the portfolio of finished builds. Put together here from cor
@@ -427,6 +427,7 @@
 - `core/web_lab.py`: The Lab's web screen (DEC-0113 canvas Lab, DEC-0125: the Lab had no phone screen). The Lab is the home of the Data Logger (core/data_logger_manager.py): readings kept in named series ("Soil moisture", "Tank pH", "Shop temp"), one value each with a unit, a note and when.
 - `core/web_money.py`: The Money screen's data (2026-10-06, DEC-0017): everything the PC app's Budget screen shows, assembled here so `web/` holds no logic. Served as `/api/money`; changes go through the action kinds in core/money_actions.py.
 - `core/web_more.py`: The Journal, Workshop, Expeditions, Music, Files and People screens on the web (Zac, 2026-10-16: on the phone they "are empty right now and just bring up a chat with MIA"). Each assembler reads its stores and returns what its screen shows; every change is an action in core/more_actions.py.
+- `core/web_nexus.py`: The Nexus (DEC-0130, Zac 2026-11-08): MIA's spatial home. A chamber of portals, one per area (core/web_areas.AREAS), around MIA's orb, with the HUD across the top. This module is what the page shows; `web/nexus.html` and `web/spatial.js` only draw it.
 - `core/web_notifications.py`: Notifications on the web (the screens review's missing notifications, docs/design/CORE_SCREENS_REVIEW.md section 3; DEC-0125). Each notification (core/notification_manager.py), newest first: its title and message, a tone for its level (amber for a warning, red only for a real error: DEC-0014), where
 - `core/web_power.py`: Power's web screen (DEC-0113 canvas, DEC-0125: Power had no phone screen). Two parts:
 - `core/web_progress.py`: Missions, Skills and Character on the web (2026-10-06, DEC-0017/0018, answering H-0013): everything the PC app's screens show, assembled here so `web/` holds no logic. Served as `/api/missions`, `/api/skills` and `/api/character`; changes are the action kinds in core/mission_actions.py.
@@ -460,7 +461,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 3,552 lines; 39 of 39 classes and functions documented
+2 files, 3,560 lines; 39 of 39 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -731,7 +732,7 @@
 
 ## tests/: the test suite: what each part must do
 
-411 files, 70,465 lines; 5,547 of 6,148 classes and functions documented
+412 files, 70,507 lines; 5,551 of 6,152 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1094,7 +1095,7 @@
 - `tests/test_waypoint_actions.py`: Waypoints from the web (core/waypoint_actions.py): added from a tap on the map, taken out from Navigation. *(3 undocumented)*
 - `tests/test_waypoint_manager.py`: Unit tests for core.waypoint_manager. haversine_distance_km() initial_bearing_degrees() are checked against real, well-known distances/bearings (New York <-> Los Angeles, London <-> Paris) rather than only synthetic values, so a sign error or unit mistake can't accidentally cancel out and still pass *(4 undocumented)*
 - `tests/test_waypoint_map_canvas.py`: Unit tests for gui.widgets.waypoint_map_canvas's project_waypoints() — pure math, no Qt/QWidget instantiation needed. See that module's own docstring for why this is a schematic layout, not a real map projection.
-- `tests/test_web_areas.py`: MIA's areas and hubs (DEC-0129, core/web_areas.py): every app has an area, shared apps sit in each of their hubs, every page an area links to exists, and a hub lists only what the person can open.
+- `tests/test_web_areas.py`: MIA's areas and hubs (DEC-0129, core/web_areas.py; Kitchen and the area hues from DEC-0130): every app has an area, shared apps sit in each of their hubs, every page an area links to exists, a hub lists only what the person can open, and no area's hue is a status color.
 - `tests/test_web_backups.py`: Backups from the web's Settings (core/web_backups.py) and by voice (core/assistant_backup_actions.py): the PC owner's backups folder, the newest backups, Back Up Now with or without a passphrase, and the status said aloud.
 - `tests/test_web_changes.py`: Recent Changes on the web (core/web_changes.py, DEC-0125): what MIA can put back, newest first, in the history's own words; the fortnight's history by day with undone ones marked; and Undo as the action undo.last, which never leaves a change of its own behind.
 - `tests/test_web_comms.py`: Communications (DEC-0129, core/web_comms.py): people to catch up with (longest first, only those you can write to), and the message limit and breaks as undoable actions on the real communication gate.
@@ -1108,6 +1109,7 @@
 - `tests/test_web_lab.py`: The Lab on the web (DEC-0125, the design canvas's Lab, DEC-0113: core/web_lab.py, core/lab_reading_actions.py and core/assistant_lab_actions.py): the Data Logger's series as chips, one in full with plain numbers and a chart placed by core, readings logged and deleted as actions, other apps' series r *(1 undocumented)*
 - `tests/test_web_money.py`: DEC-0017 (2026-10-06): Money on the web does everything the PC app's Budget screen does. The page's data (core/web_money.py) and every change as an action kind (core/money_actions.py): add, edit, delete bills, income sources, income, expenses and debts; pay a debt; set budgets; sort a bank charge to *(5 undocumented)*
 - `tests/test_web_more.py`: The Journal, Workshop, Expeditions (with what has to happen before a trip), Music, Files and People screens (Zac, 2026-10-16: on the phone they "are empty right now and just bring up a chat with MIA"): core/web_more.py builds each page, core/more_actions.py makes every change through Propose → Appro
+- `tests/test_web_nexus.py`: The Nexus (DEC-0130, core/web_nexus.py): what needs you in each portal, going to an area by voice, and the screen's data in sidebar order with each area's hue.
 - `tests/test_web_notifications.py`: Notifications on the web (core/web_notifications.py, DEC-0125): newest first, a tone for each level (amber for a warning, red only for an error), why MIA sent the ones she sent on her own, Mark All Read and Dismiss as actions, and the same by voice (core/assistant_notification_actions.py). *(1 undocumented)*
 - `tests/test_web_power.py`: Power on the web (DEC-0125, the design canvas's Power, DEC-0113: core/web_power.py and core/power_actions.py): energy sources with their latest reading per meter, a meter for a percent (amber when low), when it was logged, and every change as an action; the device's battery when it has one. *(1 undocumented)*
 - `tests/test_web_progress.py`: DEC-0017/0018 (2026-10-06), H-0013: Missions, Skills and Character on the web. The pages (core/web_progress.py) and every change as an action kind (core/mission_actions.py), each proposed, approved, recorded and undoable, with rewards going to the person who approved it.
@@ -1147,7 +1149,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-89 files, 15,809 lines
+91 files, 16,014 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
@@ -1205,6 +1207,7 @@
 - `web/music.js`: music.js — the Music screen (claude, 2026-10-16; Zac: the app only opened a chat). Renders MIA.music() (core/web_more.py): Songs (search), Playlists and Artists. A song plays right here, in the browser, streamed from MIA (/api/music/track/<id>/audio, fetched with this tab's sign-in); the next one in
 - `web/navigation.js`: navigation.js — Navigation (claude, 2026-11-06). Renders MIA.navigation(start, end) (core/navigation_web.py): the waypoints with their grid references, the distance and bearing between two on a compass (the design canvas, DEC-0113), and the sun and moon at the first. Read only; a waypoint is added b
 - `web/news.js`: news.js — Good News Radio (claude, 2026-11-07, DEC-0096). Renders MIA.news() (core/good_news.py): today's stories, how each is known (confirmed by two outlets, from the source itself, or one outlet), its caveats and its links, and each personality's script. Formatting only; the look is muse's.
+- `web/nexus.js`: nexus.js — the Nexus (DEC-0130, claude, 2026-11-08). Draws MIA.nexus() (core/web_nexus.nexus): a portal per area on MIASpatial.ring, each in its hue and glowing amber with a count when something inside needs you; the HUD (Today, Browser, Settings, Search, MIA; you, your level and XP); the vapor in t
 - `web/notifications.js`: notifications.js — Notifications (claude, 2026-11-07, DEC-0125). Renders MIA.notifications() (core/web_notifications.py): each notification newest first, unread ones lit, amber for a warning and red only for a real error; "Why?" opens why MIA sent one she sent on her own. Mark All Read and Dismiss a
 - `web/observations.js`: observations.js — what MIA noticed (claude, 2026-11-06). Renders MIA.observations() (core/observations_web.py): findings across apps (each with why and one next step) and the open insights by where they came from. Read only: each is resolved where it lives. Formatting only; the look is muse's.
 - `web/operating.js`: operating.js — the Operating Journal (claude, 2026-11-07, DEC-0097). Renders MIA.operatingJournal() (core/operating_journal.py): each line, how it's checked, and its meter with how it's going, in plain numbers (DEC-0113). Adding, rating and taking a line out go through actions (operating.add / .rate
@@ -1228,6 +1231,7 @@
 - `web/signins.js`: signins.js — Sign-ins and Security (claude, 2026-11-08). Renders MIA.securityLog() (core/security_log.py): this account's events newest first (what happened, from which device, when; a new device and wrong passwords marked), how many other devices are signed in, Sign Out Everywhere (MIA.signOutEvery
 - `web/skills.js`: skills.js — the Skills screen (claude, 2026-10-06, DEC-0017/0018, H-0013). Renders MIA.skills() (core/web_progress.py): the skill tree by category (your interests first), each skill's level, XP and capability, what a locked one needs, the next honest step, each skill's pathways (Start), challenge ch
 - `web/sound.js`: sound.js — MIA's sounds (claude, 2026-10-17, DEC-0028 #11). Short tones made in the browser (Web Audio: no sound files to download, works offline): a chime for an objective, a quest-complete arpeggio for a mission, a fanfare for a level. MIA's voice line (from the engine's reward.say, core/actions.v
+- `web/spatial.js`: spatial.js — MIA's spatial components (DEC-0130, claude, 2026-11-08). MIASpatial.vapor(canvas, hues)  smoky RGB light drifting on black: a few big soft lights in the areas' hues, drawn small and blurred by CSS (cheap), paused when hidden, still under reduced motion. Returns a stop function. MIASpati
 - `web/start.js`: start.js — Start Here (claude, 2026-11-07). Renders MIA.guide() (core/web_guide.py): what she does, grouped by what you want to get done; each with how it works, "Try saying" buttons that open Talk with the words typed in (press Enter to send), and the page to open; the apps still empty, to fill in;
 - `web/sync.js`: sync.js — User Sync on the phone (claude, 2026-11-02). Renders MIA.userSync() (core/user_sync.py): the question, a box to type the answer, the chips to approve, and the phone's permissions, asked through window.MIAPhonePermissions (Permissions.kt) and reported back. The steps and words are all the e
 - `web/toolbox.js`: toolbox.js — the Toolbox (claude, 2026-11-07, DEC-0125; the design canvas's Toolbox, DEC-0113). Renders MIA.toolbox() (core/web_toolbox.py): the open calculator (its boxes, and the answer core works out as you type, MIA.toolboxCalc), the list of calculators, alarms (set, on/off, delete: core/toolbox

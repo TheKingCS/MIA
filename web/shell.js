@@ -245,11 +245,12 @@
   function sideLinks(shell) {
     const here = document.body.dataset.app || "web_home";
     const link = (a) => el("a", { class: "nav", href: a.page, "aria-current": a.id === here ? "page" : null },
-      el("span", { class: "ico", "aria-hidden": "true" }, icon(a.id, a.icon)), el("span", { class: "label" }, a.name));
+      el("span", { class: "ico", "aria-hidden": "true" }, icon(a.id, icon(a.icon, a.icon))), el("span", { class: "label" }, a.name));
     const byId = Object.fromEntries(shell.apps.map((a) => [a.id, a]));
     const out = [];
-    // The Dashboard first, then Start Here and Apps (DEC-0129).
-    if (byId.web_home) out.push(link({ ...byId.web_home, name: "Dashboard" }));
+    // The Nexus first (DEC-0130), then Today (the Dashboard, DEC-0129), Start Here and Apps.
+    out.push(link({ id: "nexus", name: "Nexus", icon: "mia", page: "nexus.html" }));
+    if (byId.web_home) out.push(link({ ...byId.web_home, name: "Today", page: "index.html?today=1" }));
     out.push(el("a", { class: "nav side-start", href: "start.html", "aria-current": here === "start" ? "page" : null },
       el("span", { class: "ico", "aria-hidden": "true" }, "?"), el("span", { class: "label" }, "Start Here")));
     const pinned = (shell.favorites || []).map((id) => byId[id]).filter((a) => a && a.id !== "web_home");
@@ -314,7 +315,8 @@
     const tab = (href, id, glyph, emoji, label) => el("a", { href, "aria-current": here === id ? "page" : null },
       el("span", { class: "ico", "aria-hidden": "true" }, icon(glyph, emoji)), label);
     bar.replaceChildren(
-      tab("index.html", "web_home", "home", "🏠", "Home"),
+      tab("nexus.html", "nexus", "home", "🏠", "Nexus"),
+      tab("index.html?today=1", "web_home", "calendar", "📅", "Today"),
       tab("apps.html", "module_browser", "apps", "▦", "Apps"),
       el("button", { type: "button", class: "bottom-search", onclick: () => openSearch() },
         el("span", { class: "ico", "aria-hidden": "true" }, icon("search", "⌕")), "Search"));

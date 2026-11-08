@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Nexus — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
+  <link rel="stylesheet" href="ui.css">
+  <link rel="stylesheet" href="spatial.css">
+</head>
+<body data-say="Take me to the garage." data-app="nexus" class="mod-nexus nexus-page">
+  <!--
+    The Nexus (DEC-0130, Zac 2026-11-08): MIA's spatial home. Portals on a turning ring around her orb, one per area
+    (core/web_areas.py), each glowing when something inside needs you (core/web_nexus.py); the HUD along the top; RGB
+    vapor behind. MIA.nexus() reads /api/nexus; web/spatial.js moves the light. Formatting only (claude).
+  -->
+  <div class="nexus" id="app" hidden>
+    <canvas class="nexus-vapor" id="vapor" aria-hidden="true"></canvas>
+    <div class="nexus-grain" aria-hidden="true"></div>
+    <header class="nexus-hud">
+      <a class="nexus-brand" href="nexus.html" aria-label="MIA, the Nexus"><span class="brand-mark brand-reactor" aria-hidden="true"></span>MIA</a>
+      <nav class="nexus-nav" id="hud-nav" aria-label="Quick"></nav>
+      <a class="nexus-me" id="me" href="character.html" aria-label="Your character"></a>
+    </header>
+    <main class="nexus-chamber" aria-label="The Nexus">
+      <div class="nexus-beam" aria-hidden="true"></div>
+      <div class="nexus-platform" aria-hidden="true"></div>
+      <div class="nexus-ring" id="ring" role="list" aria-label="Areas, turn with the arrow keys"></div>
+      <button type="button" class="nexus-orb" id="orb" aria-label="Talk to MIA"></button>
+    </main>
+    <footer class="nexus-foot">
+      <button type="button" class="nexus-turn" id="prev" aria-label="Turn left">‹</button>
+      <div class="nexus-here" aria-live="polite"><strong id="here-name"></strong><span id="here-line"></span></div>
+      <button type="button" class="nexus-turn" id="next" aria-label="Turn right">›</button>
+    </footer>
+  </div>
+  <script src="mia.js?v=17"></script>
+  <script src="icons.js"></script>
+  <script src="sound.js"></script>
+  <script src="places-watch.js"></script>
+  <script src="shell.js"></script>
+  <script src="spatial.js"></script>
+  <script src="nexus.js"></script>
+</body>
+</html>

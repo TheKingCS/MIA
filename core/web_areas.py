@@ -2,8 +2,8 @@
 core.web_areas
 ================
 
-MIA's areas and their hubs (DEC-0129, Zac 2026-11-08): the sidebar is the
-Dashboard and then fifteen areas (Home, Garage, Plants and Animals, Health
+MIA's areas and their hubs (DEC-0129, Zac 2026-11-08; Kitchen added as its
+own area by DEC-0130): the sidebar is the Dashboard and then the areas (Home, Garage, Plants and Animals, Health
 and Fitness, Recreation, Security, Browser, Settings and Diagnostics,
 Finances, Business, Personal, Learning, Missions, Projects,
 Communications). Each area has a hub screen (hub.html?area=<id>) with its
@@ -41,13 +41,15 @@ class Page:
 
 @dataclass(frozen=True)
 class Area:
-    """One area: its id, name, icon (from web/icons.js), a line about it, and its members in order (app module ids
-    or Pages)."""
+    """One area: its id, name, icon (from web/icons.js), a line about it, its members in order (app module ids or
+    Pages), and its hue (DEC-0130: the portal's frame, light and ambient glow only; never amber or red, which mean
+    "needs you" and "error")."""
     id: str
     name: str
     icon: str
     tagline: str
     members: tuple[Union[str, Page], ...]
+    hue: str = "#35d4ff"
 
 
 PROJECTS = Page("projects", "Projects", "workshop", "Plans, budgets and the tasks in them.", "projects.html")
@@ -77,33 +79,34 @@ SHOWOFF = Page("showoff", "Show Off", "workshop", "What you've made, to share.",
 
 AREAS: tuple[Area, ...] = (
     Area("home", "Home", "household", "The house, the kitchen and what keeps it running.",
-         ("household", "kitchen", HOME_UPKEEP, "power")),
+         ("household", "kitchen", HOME_UPKEEP, "power"), hue="#35d4ff"),
     Area("garage", "Garage", "garage", "Vehicles, tools and the work on them.",
-         ("garage", "toolbox", "sight")),
+         ("garage", "toolbox", "sight"), hue="#e8792f"),
     Area("plants_animals", "Plants and Animals", "greenhouse", "What grows and who you feed.",
-         ("greenhouse", "flock", PETS)),
-    Area("health", "Health and Fitness", "workout", "Training, food and how you feel.", (HEALTH, "workout", "kitchen")),
+         ("greenhouse", "flock", PETS), hue="#2fd27e"),
+    Area("kitchen", "Kitchen", "kitchen", "Meals, recipes and the pantry.", ("kitchen",), hue="#ffd5a8"),
+    Area("health", "Health and Fitness", "workout", "Training, food and how you feel.", (HEALTH, "workout", "kitchen"), hue="#ff4f8b"),
     Area("recreation", "Recreation", "expeditions", "Trips, maps, music and play.",
-         ("expeditions", "maps", "navigation", "memories", WORLD, PLACES, "music", "play")),
+         ("expeditions", "maps", "navigation", "memories", WORLD, PLACES, "music", "play"), hue="#9b6bff"),
     Area("security", "Security", "security", "Cameras, passwords and sign-ins.",
-         ("security", "passwords", SIGNINS, "field_kit")),
-    Area("browser", "Browser", "search", "She browses. You approve.", ("browser",)),
+         ("security", "passwords", SIGNINS, "field_kit"), hue="#5be0c8"),
+    Area("browser", "Browser", "search", "She browses. You approve.", ("browser",), hue="#bfefff"),
     Area("system", "Settings and Diagnostics", "settings", "Make MIA yours, and see how she's doing.",
-         ("settings", "diagnostics", "issues", CONNECT, PROFILE, YOURDATA, CHANGES, "module_browser")),
+         ("settings", "diagnostics", "issues", CONNECT, PROFILE, YOURDATA, CHANGES, "module_browser"), hue="#dfe9f2"),
     Area("finances", "Finances", "budget", "Money in, money out, and the way out.",
-         ("budget", "freedom", "dungeon", "insurance", "real_estate", "compliance", "inbox")),
+         ("budget", "freedom", "dungeon", "insurance", "real_estate", "compliance", "inbox"), hue="#3f7bff"),
     Area("business", "Business", "business", "Customers, products and the paperwork.",
-         ("business", "workshop", "real_estate", "compliance", LABELS, SHOWOFF)),
+         ("business", "workshop", "real_estate", "compliance", LABELS, SHOWOFF), hue="#e8d29a"),
     Area("personal", "Personal", "notes", "Your days, your people, your words.",
          ("calendar", "notes", "life_notes", "operating_journal", "vault", "relationships", WHY, "observations",
-          CHECKIN, "files", "good_news")),
+          CHECKIN, "files", "good_news"), hue="#ff8ad8"),
     Area("learning", "Learning", "classroom", "Study, the library and skills.",
-         ("classroom", "knowledge", GUITAR, "skills")),
+         ("classroom", "knowledge", GUITAR, "skills"), hue="#6a5cff"),
     Area("missions", "Missions", "missions", "Quests, levels and rewards.",
-         ("missions", "skills", "character", "reward_shop", PARTY, CHRONICLE)),
-    Area("projects", "Projects", "workshop", "Things you're building.", (PROJECTS, "workshop", "lab")),
+         ("missions", "skills", "character", "reward_shop", PARTY, CHRONICLE), hue="#b8f04a"),
+    Area("projects", "Projects", "workshop", "Things you're building.", (PROJECTS, "workshop", "lab"), hue="#9dffd9"),
     Area("communications", "Communications", "inbox", "Email, MIA's messages and people.",
-         (COMMS, "assistant", NOTIFS, "inbox")),
+         (COMMS, "assistant", NOTIFS, "inbox"), hue="#8fb3ff"),
 )
 AREAS_BY_ID = {a.id: a for a in AREAS}
 
