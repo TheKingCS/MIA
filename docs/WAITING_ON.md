@@ -14,6 +14,10 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       (undoable, kept in your profile, never committed). Best first: Plaid for Money, then Garage, Calendar,
       Workout, Kitchen, Chickens, Freedom, People. Say "let's fill in MIA" to start.
 
+### Selling MIA (2026-11-08, https://claude.ai/artifact/CXMdLtnXhy4XzUMAW4aLLR)
+- [ ] **DEC-0127:** approve MIA becoming a product (reverses DEC-0119), then the price, launch platforms, bank
+      linking, Tailscale or a relay, the payment provider, and a trademark search on "MIA". The plan's last section.
+
 ### Connecting your apps (2026-11-08, https://claude.ai/artifact/H8gYSX2rvneRMp5mgA4qFa)
 - [ ] **Which apps first** (Google Sheets, QuickBooks, TurboTax, OwnerRez, Hostaway, Airbnb...), one-time imports or
       some on a schedule, and which is the source of truth for rental income. Read the audit doc's plan.
