@@ -195,14 +195,14 @@ class ConversationManager:
 
     def _load(self) -> None:
         """Reads the conversations; a damaged file is logged, reported (notify_data_corruption) and starts empty. The file is sealed on disk (DEC-0126); open_text reads it sealed or plain, and one that won't open is
-        copied aside first."""
+        copied aside first and counts as damaged (never stopping MIA from starting)."""
         if not self._conversations_file.exists():
             self._conversations = []
             return
         try:
             raw = json.loads(open_text(self._conversations_file))
             self._conversations = [Conversation.from_dict(d) for d in raw]
-        except (json.JSONDecodeError, OSError):
+        except (ValueError, OSError):  # ValueError: bad JSON, or a sealed file that won't open (copied aside)
             log.exception("Failed to load conversations.json — starting with an empty list.")
             notify_data_corruption(self.context, "conversations.json")
             self._conversations = []

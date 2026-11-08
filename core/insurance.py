@@ -48,6 +48,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.logger import get_logger
 
@@ -167,13 +168,14 @@ class InsuranceBook:
 
     def _load(self) -> None:
         """Reads policies, quotes and the renewal heads-ups already given; an unreadable file is logged and starts with
-        no policies.
+        no policies. The file is sealed on disk (DEC-0126): open_text reads it
+        sealed or plain, and one that won't open is copied aside and counts as damaged.
         """
         self.policies, self.quotes, self.noted = [], [], []
         if not self._file.exists():
             return
         try:
-            data = json.loads(self._file.read_text(encoding="utf-8"))
+            data = json.loads(open_text(self._file))
             self.policies = [Policy(**_clean(Policy, p)) for p in data.get("policies") or []]
             self.quotes = [Quote(**_clean(Quote, q)) for q in data.get("quotes") or []]
             self.noted = [str(n) for n in data.get("noted") or []]

@@ -4,7 +4,8 @@ tests.test_at_rest
 
 MIA's most private files sealed at rest (DEC-0126, core/at_rest.py): a sealed name is written as an AES-256-GCM
 envelope and read back, any other file stays plain; a plain file still reads (each store moves at its next save); a
-file that won't open is copied aside before the error, so a store starting empty can't lose it; a changed file is
+file that won't open is copied aside before the error, so a store starting empty can't lose it (and every sealed
+store starts empty rather than stopping MIA; every file naming a sealed file reads it with open_text); a changed file is
 refused; a recovery key brings a key back; sync and export carry the real content; and, on Windows, the key is
 protected by DPAPI and only opens for this Windows user.
 """
@@ -169,3 +170,57 @@ def test_a_key_file_that_won_t_open_is_never_replaced(tmp_path):
     atomic_write_text(path, "[]")
     assert path.read_text(encoding="utf-8") == "[]" and not at_rest.status()["sealing"]
     assert at_rest.key_file().read_text(encoding="utf-8") == before
+
+
+SEALED_STORES = [
+    ("core.conversation_manager", "ConversationManager", "conversations.json"),
+    ("core.journal_manager", "JournalManager", "journal_entries.json"),
+    ("core.user_memory_manager", "UserMemoryManager", "user_memories.json"),
+    ("core.life_notes", "LifeNotes", "life_notes.json"),
+    ("core.relationships_manager", "RelationshipsManager", "relationships_people.json"),
+    ("core.relationships_manager", "RelationshipsManager", "relationships_pets.json"),
+    ("core.finance_manager", "FinanceManager", "financial_snapshots.json"),
+    ("core.insurance", "InsuranceBook", "insurance.json"),
+    ("core.gps_tracks", "GpsTracks", "gps_tracks.json"),
+    ("core.operating_journal", "OperatingJournal", "operating_journal.json"),
+]
+
+
+def test_every_sealed_name_has_its_store_here():
+    """SEALED and this list agree, so each sealed file's store is tested below."""
+    assert {name for _, _, name in SEALED_STORES} == set(at_rest.SEALED)
+
+
+@pytest.mark.parametrize("module, cls, name", SEALED_STORES)
+def test_a_sealed_store_whose_file_won_t_open_starts_empty_and_keeps_a_copy(tmp_path, module, cls, name):
+    """Sealed under a key that's gone: the store loads (MIA still starts), and the file's copy is set aside."""
+    import importlib
+
+    at_rest.use_key(bytes(32))
+    atomic_write_text(tmp_path / name, "[]")
+    before = (tmp_path / name).read_bytes()
+    at_rest.use_key(KEY)
+    store_class = getattr(importlib.import_module(module), cls)
+    store_class(MagicMock(), data_dir=tmp_path)
+    [aside] = tmp_path.glob(name + ".unreadable-*")
+    assert aside.read_bytes() == before
+
+
+def test_every_file_that_names_a_sealed_file_reads_it_with_open_text():
+    """A core, server or tools file with a sealed name in it and a read_text or json.load must use open_text (or be one
+    of the few that only list names), so no reader is left behind when a name joins SEALED."""
+    from pathlib import Path
+
+    root = Path(at_rest.__file__).resolve().parent.parent
+    lists_only = {"core/at_rest.py", "core/personal_data.py", "core/sync.py", "core/account_data.py",
+                  "core/conversation_modes.py", "core/talk_it_out.py"}
+    missing = []
+    for folder in ("core", "server", "tools", "modules", "gui"):
+        for path in (root / folder).rglob("*.py"):
+            rel = path.relative_to(root).as_posix()
+            text = path.read_text(encoding="utf-8")
+            if rel in lists_only or not any(f'"{n}"' in text for n in at_rest.SEALED):
+                continue
+            if ("read_text" in text or "json.load(" in text) and "open_text" not in text:
+                missing.append(rel)
+    assert not missing, missing

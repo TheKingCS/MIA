@@ -53,7 +53,8 @@ most likely first:
    otherwise Windows 11 Pro's BitLocker (an upgrade) or VeraCrypt (free). The biggest single step, and it covers
    everything at once. ⏸
 2. **MIA encrypts her own data at rest (DEC-0126, approved; stage 1 done 2026-11-08).** `core/at_rest.py` seals
-   conversations, memories, notes and life notes now; `python -m tools.data_key` shows the state, `recovery` the key
+   conversations, memories, notes, life notes, people and pets, finances, insurance, GPS tracks and the operating
+   journal now (the budget's files next, after the Plaid work); `python -m tools.data_key` shows the state, `recovery` the key
    to keep in a password manager. The plan: every store's file encrypted with AES-256-GCM under
    one data key; the data key protected by Windows DPAPI (tied to the person's Windows sign-in, so nothing to type
    at start) on the PC and by the Android Keystore on the phone, with an optional MIA passphrase for "beyond".

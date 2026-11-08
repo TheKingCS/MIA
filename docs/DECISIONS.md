@@ -1964,8 +1964,11 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   AES-256-GCM in `atomic_write_text`, read both ways by `at_rest.open_text`; the key protected by DPAPI in
   data/.keys/; a recovery key (`python -m tools.data_key recovery`) for another Windows account or PC; a file that
   won't open is copied aside before its store can start empty; sync and the account export carry the real content.
-  The private journal and the password vault were already encrypted with their own passphrases. Next: money,
-  people, the rest of PERSONAL_STORES; the phone's Keystore.
+  The private journal and the password vault were already encrypted with their own passphrases.
+- Built, stage 2 (2026-11-08): people and pets, financial snapshots, insurance, GPS tracks and the operating journal;
+  every sealed store tested to start empty (copy kept) rather than stop MIA when its file won't open, which caught
+  three stage-1 stores that would have. Next: the budget's files (after the Plaid work in budget_manager.py), the rest
+  of PERSONAL_STORES, the phone's Keystore.
 - Related: DEC-0035 (the password vault), DEC-0125
 
 ### DEC-0127: MIA becomes a product, sold by subscription, local-first

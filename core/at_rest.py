@@ -57,7 +57,17 @@ SEALED = frozenset({
     "user_memories.json",  # what she remembers about the person
     "journal_entries.json",  # their notes
     "life_notes.json",  # promises, decisions, ideas set aside
+    # stage 2 (2026-11-08): people, money, where they've been, how they live
+    "relationships_people.json",  # the people in their life, birthdays, notes
+    "relationships_pets.json",
+    "financial_snapshots.json",  # net worth, accounts, balances
+    "insurance.json",  # policies, numbers, coverage
+    "gps_tracks.json",  # walks, rides and drives
+    "operating_journal.json",  # how they mean to operate, and how they do
 })
+# Every store reading a SEALED file uses open_text and catches ValueError (UnreadableFile is one) with OSError, so a
+# file that won't open is copied aside and the store starts empty instead of MIA failing to start. Not yet: the
+# budget's files (bills, income, expenses, debts) wait on the Plaid work in core/budget_manager.py.
 
 _lock = threading.Lock()
 _keys: Optional[dict] = None  # kid -> key, opened once
