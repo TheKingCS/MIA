@@ -817,6 +817,9 @@ Google and QuickBooks OAuth. Waits on Zac's order and on disk encryption / DEC-0
 **Claimed by the parity session (2026-11-08): the Connect Apps page** (web/connect.html, core/connectors.py): file
 imports on the web (calendar, contacts, bank CSV; only in the Qt Settings until now) and calendar links (Airbnb,
 VRBO, Hostaway) as check-ins and check-outs, previewed and approved.
+**Claimed by the parity session (2026-11-08): the Sign-ins page** (web/signins.html, core/security_log.py,
+Settings → Sign-ins and Security): the security log, new-device and wrong-password alerts, sign out everywhere
+(docs/SECURITY.md step 3).
 
 **Who builds what (2026-11-07 night, after Power and Recent Changes were each built twice at once):** screens
 (web pages, the canvas's look, the review's missing screens: Waiting For You, a plan's page, the Browser in the
