@@ -8,13 +8,16 @@ session. Last updated: 2026-11-08 (overnight, the design side), by claude.*
 new pieces each got their screen, actions and voice tools: **My Directions** (your values in your words, today's seed,
 one thing within reach), **How MIA Answers** and, now and then in Talk, **the same answer two ways** to pick from (the
 model rephrases her own reply; code checks no number changed; never in a private conversation), **Living Worlds**
-(your worlds, campaigns, character and quests; playing a turn waits on Phase 2), **About MIA**, and **Connections**
-with "don't bring that up". The web also gained **Trail Maps**, the chat's **History**, the Theme Studio's **Mix Two**
+(your worlds, campaigns, character and quests, and now **playing**: "What do you do?" with MIA as Dungeon Master and
+the story so far), **About MIA**, and **Connections** with "don't bring that up" and what she found first. The web also gained **Trail Maps**, the chat's **History**, the Theme Studio's **Mix Two**
 and **chimes per theme**, the **glasses taking your theme's accent**, the Greenhouse's **What's Next** in the canvas
 look, **compound maintenance triggers** on the task form ("50 hours or a year"), and, in the Spatial look, **every
 area as a room of its apps** round MIA's orb. The Nexus shows Muse's second batch of portal pictures (the flat Nexus
 too), keeps the chosen portal's light off its picture, and lowers its resolution on a slow machine. The canvas's Built
-page has a "New Overnight" row. Two stale tests fixed; 190 test helpers documented. See `docs/NEXT_SESSION.md`.
+page has a "New Overnight" row. Later the same morning: **Portal Pictures** (your own painting in any Nexus portal,
+painted for it on the PC or chosen from yours; the Nexus card links to it). Two stale tests fixed; every test helper is
+documented except the budget and Plaid files (waiting on the PC's Plaid work); all 96 pages pass the demo sweep on
+desktop and phone. See `docs/NEXT_SESSION.md`.
 
 **2026-11-08 (Claude, cloud session, with Zac): MIA knows herself, plays, holds your directions, and inspires the
 made life.** A run of engine-side builds, all on master: **self-knowledge (DEC-0142)** — she describes herself from
