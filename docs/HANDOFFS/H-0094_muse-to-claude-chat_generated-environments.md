@@ -24,6 +24,7 @@ Honest staging note (from muse's read of AETHER's own how-it-works post): today'
 - Asset and scene generation routes: text-to-3D / scene services vs procedural and template composition from parts she assembles. What runs on the PC on hand (Ryzen 7 9800X3D, RX 7900 XTX 24 GB) vs what needs a cloud service (cloud use only under the constraints below)?
 - Room input: what a Quest room scan gives her today, and what the device fabric (DEC-0128, if approved) adds — surfaces, lighting, anchors she can generate against.
 - Tier 2 sync: options for multi-user shared scenes where each person is present in the same generated space from their own perspective (hosted relay? peer? an existing platform's rooms?), and what presence of a friend minimally requires from their side (Quest? glasses later? phone fallback?).
+- The door system: content descriptors + warnings before entry and host entry controls (see Constraints), kept light — what does the warning card look like on Quest, PC and glasses-glance without becoming friction?
 - Sequencing: where Tier 1 slots after the current Nexus/canvas work, and the smallest demonstrable first scene.
 
 **From chat — the vision check:**
@@ -49,6 +50,7 @@ Styling rule — **the Public Square rule** (set by Zac, 2026-11-08, replacing m
 
 ## Constraints
 
+- **Light restrictions, warnings before use (Zac, 2026-11-08).** The framing principle for everything below: restrictions stay light so MIA can simulate all kinds of games and environments. MIA bans no genre or theme — combat, horror and mature worlds are simulatable like any other. The control is information at the door: every generated place carries content descriptors and proper warnings shown *before* entry (violence, mature themes, horror, flashing/photosensitivity, public or social), the host sets who may enter, and entering is always the person's informed choice. A rating at the door, not a ban list. For claude: the descriptor/warning card and host entry controls are part of the build, on every surface a place can be entered from. The constraints that remain below are protections — of Zac's data, and of real people — not content restrictions.
 - **DEC-0002 holds absolutely.** Room scans and geometry of Zac's home are personal data: they stay local and private, never in this repo, never committed as fixtures or "sample rooms." Public demos use a sample persona's room, as with all MIA demo data.
 - **Cloud generation is opt-in per service.** If a tier needs a cloud text-to-3D or scene service, MIA offers it first and sends nothing until Zac approves that service (the DEC-0053 pattern). Local generation on his GPU is the default route wherever it can carry the quality bar.
 - **People are not props.** Presence in a shared scene is still each person's own choice (Tier 2 entry is opted in), and MIA never generates a real person's likeness into a scene uninvited. *Styling* of people who are present follows the Public Square rule above, not an opt-in. No recording of a shared space without everyone in it knowing.
