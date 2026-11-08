@@ -38,8 +38,11 @@ Evolution Timeline** (T-0023), month by month since July: 131 decisions, 488 cor
 up online** (T-0017, DEC-0053): only search words leave the PC, only through your own SearXNG, which is your step at
 the PC (`docs/ONLINE_LOOKUP.md`). Also: the Woodworking Studio proposal (DEC-0147, your choices in WAITING_ON),
 Ollama woken and retried when it doesn't answer, Living Worlds keeping the story so far, what she knows about herself
-in her how-to answers, more stores sealed at rest, including the Fix-It Log. Suite: 5,864 pass; the one failure is the
-Plaid work in progress on the PC. See `docs/NEXT_SESSION.md`.
+in her how-to answers, more stores sealed at rest, including the Fix-It Log. **A security gap closed:** her history
+was repeating, in plain text, the names your sealed stores keep (people, places, policies, goals); each new history
+line is now sealed as it's written (lines from before today stay plain until you choose a one-time rewrite:
+WAITING_ON). What MIA makes, her paintings and the world map now reach your history too, with no details. Suite:
+5,868 pass; the one failure is the Plaid work in progress on the PC. See `docs/NEXT_SESSION.md`.
 
 **2026-11-08 (Claude, cloud session, with Zac): MIA knows herself, plays, holds your directions, and inspires the
 made life.** A run of engine-side builds, all on master: **self-knowledge (DEC-0142)** — she describes herself from
@@ -251,6 +254,10 @@ every push). Anything that needs the PC waits.
   disagreements`); `core/dev_evolution.py` (the month-by-month timeline); the lab's coder traces (`data/lab/traces`).
   `/api/dev` carries `disagreements` and `evolution`. Plus `core/online_lookup.py` (DEC-0053) and the Fix-It Log sealed
   at rest (DEC-0126). Knowledge K-0142 to K-0149.
+- 2026-11-08 · claude (engine) · **The history sealed a line at a time (DEC-0126).** `at_rest.LINE_SEALED`
+  (`life_events.jsonl`): `seal_line` on append, `open_lines` on read (plain lines from before still read; one that won't
+  open is kept and skipped), sync merges sealed line by line. Found by scanning sealed stores for named history lines.
+  Creations, art and the world map record life events (DEC-0108's top findings), naming no details. K-0150, K-0151.
 - 2026-11-08 · claude (engine) · **Deep next steps (DEC-0144).** `core/development_engine.py`: `path_to`, `_worth`,
   `readiness`, made-before-bought, effort-share compounding, seasonal-wait discount, the seed, flock, compost,
   preserving and greenhouse-site chains, the budget from your own targets. K-0139 to K-0141.
