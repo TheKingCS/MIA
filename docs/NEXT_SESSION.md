@@ -5,7 +5,19 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-11-07 (afternoon)*
+*Last updated: 2026-11-08 (evening)*
+
+**⏸ RESUME HERE (2026-11-08, saved mid-thread): MIA's device fabric.** The live thread when Zac paused was his wish
+for MIA to recognize, talk to, secure, and install herself onto his technology. Written up as **DEC-0128**
+(`docs/DEVICE_FABRIC_PROPOSAL.md`), awaiting his approval (WAITING_ON → "MIA across your technology"). Key reframe:
+interop comes from protocols + credentials he holds, **not exploits** (the Echo proved it). On approval, the
+read-only defensive half (network discovery → identify + CVEs → home-network audit → a Field Kit screen) can start
+with no further decision; the offensive/active-testing half is gated to his own authorized devices (browser-commit
+model). Also offered and not yet built: **panel mode** — a full-screen kiosk view of the web UI (clock, due items,
+Talk) for a wall display, the Pi, or a cheap tablet. Everything from this session (security steps 2/5/6/8, Your Data,
+the Echo verdict) is committed and pushed.
+
+*Earlier: 2026-11-07 (afternoon)*
 
 **New 2026-11-07 (latest): Start Here, a grouped sidebar, the live browser, and the audit.** Start Here
 (web/start.html, core/web_guide.py: a test keeps its phrases routed to tools); the sidebar grouped by life area;
