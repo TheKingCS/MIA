@@ -120,13 +120,14 @@ class Creations:
 
     def mark_published(self, creation_id: str, version: int, set_id: str) -> dict:
         """Records a version as published (with the record set it shows), its title taken from that version, and says
-        so in the person's history (a life event: what MIA made for them reaches the Chronicle)."""
+        so in the person's history (a life event: what MIA made for them reaches the Chronicle). The line carries the
+        creation's id, never its title: creations.json is sealed (DEC-0126) and the history isn't yet."""
         found = self.get(creation_id)
         found.update(status=PUBLISHED, version=version, set_id=set_id or found["set_id"],
                      title=found["versions"][version - 1]["spec"].get("title", found["title"]))
         found["published_versions"].append(version)
         self._save()
-        life_events.record(self, "creation_published", f"Published something MIA made: {found['title'] or found['id']}",
+        life_events.record(self, "creation_published", "Published something MIA made for you",
                            payload={"id": found["id"], "version": version})
         return found
 
@@ -185,10 +186,9 @@ class Creations:
         self._save()
 
     def retire(self, creation_id: str) -> dict:
-        """Takes a creation out of the sidebar; it's kept, and the history says so."""
+        """Takes a creation out of the sidebar; it's kept, and the history says so (by id, never its title)."""
         found = self.get(creation_id)
         found["status"] = RETIRED
         self._save()
-        life_events.record(self, "creation_retired", f"Put away something MIA made: {found['title'] or found['id']}",
-                           payload={"id": found["id"]})
+        life_events.record(self, "creation_retired", "Put away something MIA made for you", payload={"id": found["id"]})
         return found

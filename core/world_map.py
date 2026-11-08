@@ -30,6 +30,7 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Optional
 
+from core import life_events
 from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
@@ -217,19 +218,24 @@ class WorldMap:
                                                   "first_seen": self.first_seen}, indent=2, ensure_ascii=False))
 
     def check_in(self, lat: float, lon: float, label: str = "") -> CheckIn:
-        """Records an "I'm here" (position kept to six decimals)."""
+        """Records an "I'm here" (position kept to six decimals), and a line in the person's history that says only
+        that they checked in: never where (the map is sealed, DEC-0126; the history isn't yet)."""
         c = CheckIn(round(lat, 6), round(lon, 6), datetime.now().isoformat(timespec="seconds"), label)
         self.checkins.append(c)
         self._save()
+        life_events.record(self, "map_checked_in", "Checked in on the world map")  # never where: world_map.json is sealed
         return c
 
     def see(self, tiles: dict[str, str]) -> list[str]:
-        """Remember the day each tile was first cleared; returns the new ones."""
+        """Remember the day each tile was first cleared, with a line in the history saying how many (never which);
+        returns the new ones."""
         new = [k for k in tiles if k not in self.first_seen]
         for k in new:
             self.first_seen[k] = tiles[k]
         if new:
             self._save()
+            life_events.record(self, "map_ground_cleared", f"Cleared new ground on the world map: {len(new)} "
+                               f"new tile{'s' if len(new) != 1 else ''}", payload={"tiles": len(new)})
         return new
 
 

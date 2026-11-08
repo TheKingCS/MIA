@@ -117,3 +117,19 @@ def test_the_next_achievement_is_the_closest_one_not_earned():
             {"name": "Two regions", "earned": False, "need": 2, "have": 1}]
     assert (next_rank(rows)["name"], next_rank(rows)["pct"]) == ("Wanderer", 76)
     assert next_rank(rows[:1]) is None
+
+
+def test_the_history_hears_a_check_in_and_new_ground_but_never_where(tmp_path):
+    """A check-in and newly cleared tiles are lines in the person's history; the coordinates, the tiles and the
+    check-in's name stay in the sealed map (DEC-0126)."""
+    import json
+
+    book = WorldMap(None, data_dir=tmp_path)
+    book.check_in(35.123456, -90.654321, "the old mill")
+    assert book.see({"t1": "2026-11-08", "t2": "2026-11-08"}) == ["t1", "t2"]
+    assert book.see({"t1": "2026-11-08"}) == []  # nothing new: no line
+    text = (tmp_path / "life_events.jsonl").read_text(encoding="utf-8")
+    lines = [json.loads(x) for x in text.splitlines() if x]
+    assert [e["summary"] for e in lines] == ["Checked in on the world map",
+                                             "Cleared new ground on the world map: 2 new tiles"]
+    assert "35.12" not in text and "mill" not in text and "t1" not in text
