@@ -390,6 +390,9 @@ class MIAApplication:
         from core.security_cams import SecurityBook
 
         self.context.security = SecurityBook(self.context)  # cameras (DEC-0033)
+        from core.security_log import SecurityLog
+
+        self.context.security_log = SecurityLog()  # who signed in from where (docs/SECURITY.md step 3)
         from core.insurance import InsuranceBook
 
         self.context.insurance = InsuranceBook(self.context)  # the insurance check-up (DEC-0034)

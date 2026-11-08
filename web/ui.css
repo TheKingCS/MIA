@@ -1704,6 +1704,9 @@ body.mod-maps .hero { display: none; }
 .cn-sentence { margin: 0; font-weight: 600; }
 .cn-rows { margin: 0; padding-left: 18px; font-size: var(--text-sm); color: var(--text-dim); }
 
+/* ---------------------------------------------------------------- Sign-ins (core/security_log.py)
+   A wrong password, a wait, a password change or a linked phone: an amber edge, "needs you" (DEC-0014). */
+.row.si-warn { border-left: 2px solid var(--attention); padding-left: 10px; }
 /* An asset's photo (2026-11-07, Q-0014): on its page under the title, and across the top of its Garage card. */
 .asset-photo { margin: 0 0 16px; }
 .asset-photo img { display: block; width: 100%; max-height: 320px; object-fit: cover; border-radius: var(--radius); border: 1px solid var(--glass-line); }

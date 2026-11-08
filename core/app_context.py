@@ -51,6 +51,7 @@ if TYPE_CHECKING:
     from core.device_help_manager import DeviceHelpManager
     from core.discovery_manager import DiscoveryManager
     from core.energy_manager import EnergyManager
+    from core.security_log import SecurityLog
     from core.expedition_manager import ExpeditionManager
     from core.finance_manager import FinanceManager
     from core.homestead_manager import HomesteadManager
@@ -183,6 +184,9 @@ class AppContext:
     power: Optional["PowerManager"] = field(default=None, repr=False)
     data_logger: Optional["DataLoggerManager"] = field(default=None, repr=False)
     energy: Optional["EnergyManager"] = field(default=None, repr=False)
+    # The security log (core/security_log.py, docs/SECURITY.md step 3): sign-ins, wrong passwords, account changes;
+    # append-only, never in the undo log.
+    security_log: Optional["SecurityLog"] = field(default=None, repr=False)
     components: Optional["ComponentManager"] = field(default=None, repr=False)
     materials: Optional["MaterialManager"] = field(default=None, repr=False)
     jobs: Optional["JobManager"] = field(default=None, repr=False)

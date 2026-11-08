@@ -400,6 +400,7 @@ def create_app(context: AppContext) -> FastAPI:
 
     app.state.guard = SignInGuard()
     app.state.session_started: dict[str, float] = {}  # sessions signed in from another device, by token
+    app.state.warned: set = set()  # accounts already told about repeated wrong passwords (core/security_log.py)
 
     @app.middleware("http")
     async def phone_access_switch(request: Request, call_next):
@@ -436,6 +437,7 @@ def create_app(context: AppContext) -> FastAPI:
         if profile_id is not None and session_expired(app.state.session_started.get(token),
                                                       app.state.last_seen.get(token), time.time()):
             _end_session(token)  # unused too long, or too old: sign in again
+            _security("session_ended", profile_id)
             profile_id = None
         if profile_id is None:
             profile_id = _linked_device(token)
@@ -459,12 +461,47 @@ def create_app(context: AppContext) -> FastAPI:
         app.state.session_started[token] = now
         return token
 
+    def _signed_in(profile_id: str, request: Request) -> None:
+        """Logs a sign-in, and tells the account's owner when it came from a device it hasn't used before."""
+        book = getattr(context, "security_log", None)
+        device = _device(request)
+        new = book is not None and not book.known_device(profile_id, device)
+        _security("sign_in", profile_id, request, "a new device" if new else "")
+        if new:
+            from core.security_log import alert
+
+            alert(context, profile_id, "New sign-in to MIA",
+                  f"Your account signed in from {device}. If this was you, there's nothing to do. If it wasn't, "
+                  "change your password: that signs every other device out.")
+
     def _guard_keys(request: Request, who: str) -> list[str]:
         """What a password try counts against: the account named, and the device it came from (the first forwarded
         address when it came in through Tailscale, else the connection's)."""
         forwarded = (request.headers.get("x-forwarded-for") or "").split(",")[0].strip()
         device = forwarded or (request.client.host if request.client else "")
         return [f"who:{(who or '').strip().lower()}", f"from:{device}"]
+
+    def _device(request: Optional[Request]) -> str:
+        """The device a request came from, in words and its address (core/security_log.device_of)."""
+        from core.security_log import device_of
+
+        if request is None:
+            return ""
+        forwarded = (request.headers.get("x-forwarded-for") or "").split(",")[0].strip()
+        return device_of(request.headers.get("user-agent", ""), forwarded or (request.client.host if request.client else ""))
+
+    def _security(kind: str, profile_id: Optional[str], request: Optional[Request] = None, detail: str = "") -> dict:
+        """Writes one event to the security log (when this MIA has one); never fails the request it's about."""
+        book = getattr(context, "security_log", None)
+        return book.record(kind, profile_id, _device(request), detail) if book is not None else {}
+
+    def _account_of(who: str) -> Optional[str]:
+        """The profile a sign-in name points to, or None (a name that matches no account)."""
+        try:
+            found = context.profiles.find_for_sign_in(who)
+        except Exception:
+            found = None
+        return found.profile_id if found is not None else None
 
     def _checked(request: Request, who: str, check) -> bool:
         """Runs a password check under the sign-in guard: refused with 429 while a wait is running, the failure
@@ -478,10 +515,20 @@ def create_app(context: AppContext) -> FastAPI:
         ok = check()
         if ok:
             app.state.guard.succeeded(keys[:1])
-        else:
-            app.state.guard.failed(keys)
-            log.warning("Sign-in refused for '%s' (wrong password).", (who or "").strip().lower()[:60])
-        return ok
+            return True
+        app.state.guard.failed(keys)
+        log.warning("Sign-in refused for '%s' (wrong password).", (who or "").strip().lower()[:60])
+        account = _account_of(who) or (who if who in app.state.sessions.values() else None)
+        _security("sign_in_failed", account, request, "" if account else f"name tried: {(who or '')[:24]}")
+        if account and app.state.guard.wait_left(keys) and account not in app.state.warned:
+            from core.security_log import alert
+
+            app.state.warned.add(account)  # once per run of waits; cleared by the next right password
+            _security("waiting", account, request)
+            alert(context, account, "Wrong passwords on your MIA account",
+                  f"Several wrong passwords were tried for your account from {_device(request)}. MIA is making them wait. "
+                  "If this wasn't you, change your password.")
+        return False
 
     def _linked_device(key: str) -> Optional[str]:
         """A phone linked to this computer (DEC-0022, core/home_link.py)
@@ -509,6 +556,8 @@ def create_app(context: AppContext) -> FastAPI:
         if credentials is not None:
             profile_id = app.state.sessions.get(credentials.credentials)
             _end_session(credentials.credentials)
+            if profile_id:
+                _security("signed_out", profile_id)
             if profile_id and context.config.get("phone.signed_in_profile_id") == profile_id:
                 _remember(None)
         return {"signed_out": True}
@@ -559,6 +608,8 @@ def create_app(context: AppContext) -> FastAPI:
             )
         token = _new_session(profile.profile_id)
         _remember(profile.profile_id)
+        app.state.warned.discard(profile.profile_id)
+        _signed_in(profile.profile_id, request)
         log.info("Mobile login for profile '%s'.", profile.profile_id)
         return {"token": token, "profile_id": profile.profile_id, "name": profile.name}
 
@@ -581,6 +632,12 @@ def create_app(context: AppContext) -> FastAPI:
         context.config.set("home_link.devices", devices)
         context.config.save()
         log.info("A phone linked to this computer for '%s'.", profile.profile_id)
+        _security("phone_linked", profile.profile_id, request)
+        from core.security_log import alert
+
+        alert(context, profile.profile_id, "A phone linked to MIA",
+              f"A phone ({_device(request)}) linked to MIA on this computer with your password. If it wasn't you, change "
+              "your password and unlink it in Settings.")
         return {"key": key, "profile_id": profile.profile_id, "name": profile.name}
 
     @app.post("/api/model/unlink")
@@ -2272,6 +2329,12 @@ def create_app(context: AppContext) -> FastAPI:
         for token in [t for t, pid in list(app.state.sessions.items()) if pid == profile_id and t != this]:
             _end_session(token)
         log.info("Password changed from the web for profile '%s'; its other sessions ended.", profile_id)
+        _security("password_changed", profile_id, request)
+        from core.security_log import alert
+
+        alert(context, profile_id, "Your MIA password changed",
+              f"Your password was changed from {_device(request)}, and every other device was signed out. If this "
+              "wasn't you, use your recovery code to set a new one.")
         return {"changed": True}
 
     @app.post("/api/account/recovery-code")
@@ -2281,7 +2344,32 @@ def create_app(context: AppContext) -> FastAPI:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "That password isn't right.")
         with app.state.turn_lock:
             code = context.profiles.issue_recovery_code(profile_id)
+        _security("recovery_code", profile_id, request)
         return {"recovery_code": code}
+
+    # The Sign-ins page (core/security_log.py, docs/SECURITY.md step 3): this account's security events, how many
+    # devices are signed in, and "sign out everywhere".
+    @app.get("/api/security/log")
+    def security_screen(profile_id: str = Depends(require_profile_id),
+                        credentials: Optional[HTTPAuthorizationCredentials] = Depends(_bearer_scheme)) -> dict:
+        book = getattr(context, "security_log", None)
+        this = credentials.credentials if credentials is not None else ""
+        others = sum(1 for t, pid in app.state.sessions.items() if pid == profile_id and t != this
+                     and t in app.state.session_started)
+        return {"available": book is not None, "events": book.for_person(profile_id) if book is not None else [],
+                "other_sessions": others}
+
+    @app.post("/api/security/sign-out-everywhere")
+    def sign_out_everywhere(request: Request, profile_id: str = Depends(require_profile_id),
+                            credentials: Optional[HTTPAuthorizationCredentials] = Depends(_bearer_scheme)) -> dict:
+        """Ends every other session of this account (this one stays); linked phones are unlinked in Settings."""
+        this = credentials.credentials if credentials is not None else ""
+        ended = [t for t, pid in list(app.state.sessions.items()) if pid == profile_id and t != this
+                 and t in app.state.session_started]
+        for token in ended:
+            _end_session(token)
+        _security("signed_out_everywhere", profile_id, request, f"{len(ended)} other session{'s' if len(ended) != 1 else ''}")
+        return {"ended": len(ended)}
 
     def _models(profile_id: str):
         from core.child_accounts import ASK_A_PARENT, is_child

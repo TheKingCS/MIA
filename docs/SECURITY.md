@@ -33,6 +33,7 @@ most likely first:
 | Secrets never by voice | Passwords, PINs, codes and card numbers are never spoken, heard, shown on the glasses or remembered by voice (DEC-0125) | `core/assistant_more_twins_actions.py` |
 | MIA can't act unasked | Email is only drafted (Send is a person's press); bank data is read-only; her browser holds anything that commits for a person's OK and never types into a password field; unprompted messages pass a gate; every change is undoable | `core/email_drafts.py`, `core/browser_safety.py`, `core/communication_gate.py`, `core/undo_log.py` |
 | Reach | Files only inside the person's own MIA folder; cameras only on the home network; each person's data in their own folder, shared only by joining a household with approval | `core/my_files.py`, `core/security_cams.py`, `core/personal_data.py` |
+| Security log | Every sign-in with its device, wrong passwords, account changes; alerts on a new device and repeated wrong passwords; Sign Out Everywhere | `core/security_log.py` |
 | Code hygiene | A test keeps control characters out of code (a mangled `\b` once silently disabled a check) | `tests/test_no_control_characters.py` |
 
 ## 3. Honest gaps
@@ -43,7 +44,6 @@ most likely first:
 - **Add-on modules aren't sandboxed**: an installed module runs with full access.
 - **Some features talk to outside services by nature**: Plaid (the bank), the email provider, websites her browser
   visits, public news feeds, and the owner-only developer council (cloud AI accounts).
-- **No record yet of who signed in from where**, and no alert on a new device.
 - **Dependencies aren't checked for known vulnerabilities** automatically.
 
 ## 4. The plan (in order)
@@ -57,9 +57,11 @@ most likely first:
    Done in the one place every store already writes through (`core/atomic_write.py`) plus a matching read, store by
    store, the most private first (journal, conversations, memories, money, people). A copied `data/` folder, a
    backup or a synced file is then unreadable on its own. ⏸
-3. **A security log and alerts.** Every sign-in, failed try, new device, phone link, password change and export,
-   kept in the person's own folder; a notification on a sign-in from a device not seen before, and on repeated wrong
-   passwords. Shown on a Security page with "sign out everywhere".
+3. ~~**A security log and alerts.**~~ **Done 2026-11-08** (`core/security_log.py`, Settings → Sign-ins and
+   Security): every sign-in with its device, wrong passwords, waits, ended sessions, password and recovery code
+   changes and phone links, append-only and outside the undo log; an alert on a sign-in from a new device, on
+   repeated wrong passwords, a password change and a linked phone; Sign Out Everywhere. Still to add: exports and
+   imports in the log.
 4. **Two-step sign-in for remote access** (a code from an authenticator app) for any sign-in that isn't the PC itself.
 5. **Dependency checks**: `pip-audit` and the Android build's dependency report on a schedule, findings to the Fix-It
    Log.

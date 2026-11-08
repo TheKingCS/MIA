@@ -168,6 +168,9 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
     from core.security_cams import SecurityBook
 
     context.security = SecurityBook(context)
+    from core.security_log import SecurityLog
+
+    context.security_log = SecurityLog()  # who signed in from where (docs/SECURITY.md step 3)
     from core.insurance import InsuranceBook
 
     context.insurance = InsuranceBook(context)

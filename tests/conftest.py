@@ -125,6 +125,12 @@ for _module in (inventory_manager_module, component_manager_module, material_man
 skill_manager_module._SKILL_XP_LOG_FILE = _TEST_RUNTIME_DIR / "skill_xp_log.json"
 skill_manager_module._SKILL_PROGRESS_FILE = _TEST_RUNTIME_DIR / "skill_progress.json"
 
+# 2026-11-08: the security log (core/security_log.py) is written by every sign-in a server test makes; it defaults to
+# this session's temp dir so no test's sign-ins land in the real data/ (a test that wants its own folder says so).
+import core.security_log as security_log_module  # noqa: E402
+
+security_log_module._DATA_DIR = _TEST_RUNTIME_DIR
+
 # 2026-11-06: tests that run MIA's daily checks (test_communication_gate)
 # ran the PC's improvement loops for real: readings into data/dev/ and a
 # task opened in work/tasks/ (T-0049). The development platform's records

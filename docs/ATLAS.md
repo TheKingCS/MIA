@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1188 files, 261,239 lines; 1188 files describe themselves; 14,256 of 14,943 classes and functions are documented.
+1191 files, 261,599 lines; 1191 files describe themselves; 14,270 of 14,957 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-439 files, 122,677 lines; 6,528 of 6,614 classes and functions documented
+440 files, 122,822 lines; 6,537 of 6,623 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -345,6 +345,7 @@
 - `core/secrets_manager.py`: Passphrase-based symmetric encryption for anything MIA needs to keep confidential at rest — introduced for encrypted Backup/Restore (core/backup_manager.py), but deliberately generic rather than backup-specific, so a future module with a real secret to protect (wifi credentials, radio configs, an AP
 - `core/security_actions.py`: Security's changes (DEC-0033, core/security_cams.py) on the action contract in core/actions.py: remove a camera (undoable), save the picture a camera shows now, delete a saved picture. Adding or changing a camera goes through `/api/security/camera` instead, so its password is never in an action's re
 - `core/security_cams.py`: Security (DEC-0033; Zac, 2026-10-18: "an app for Security or Smart Home where I can monitor camera feeds"): your cameras, watched from MIA, with no cloud in between. The smart-home half (lights, locks, thermostat) comes later through a local Home Assistant (docs/ROADMAP.md).
+- `core/security_log.py`: Who signed in, from where, and what changed about an account (docs/SECURITY.md step 3; Zac, 2026-11-08: "fortify our security measures to industry standards and beyond"). One line per event in `security_log.jsonl` on this device: sign-ins (and whether the device was new), wrong passwords, the waits 
 - `core/self_audit.py`: MIA audits herself every week (DEC-0108; Zac, 2026-11-07: "a regular process of auditing her own code and files and searching for ways to improve or beef up whatever she is doing, make it more efficient, more well designed" and "a regular audit for seeing how any of her existing infrastructure can b
 - `core/self_docs.py`: MIA about her own design, from her own documents (DEC-0041; the intelligence spec's Phase 2C/3, docs/INTELLIGENCE_AUDIT.md): "how does the freedom estimate work?", "why can't the phone connect banks?", "what did we decide about eggs?", answered with the passage and the file it came from, never from 
 - `core/self_report.py`: MIA's weekly self-report (build plan step 6, DEC-0094): once a week, to the PC's owner, through the communication gate: what got better, what's slipping, what she's working on, and how Night School went. Assembled in code from her own records (the loops' history, Night School, the benchmarks, the ta
@@ -450,7 +451,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 3,262 lines; 37 of 37 classes and functions documented
+2 files, 3,350 lines; 37 of 37 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -719,7 +720,7 @@
 
 ## tests/: the test suite: what each part must do
 
-401 files, 69,517 lines; 5,480 of 6,081 classes and functions documented
+402 files, 69,596 lines; 5,485 of 6,086 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1019,6 +1020,7 @@
 - `tests/test_seasons.py`: Seasons of memory (build plan step 10, core/seasons.py): a month or a year against the one before, worked out in code from the person's history and memories, phrased by the model from the sheet; each closed month and year kept once in their folder; no money lines for a child. *(2 undocumented)*
 - `tests/test_secrets_manager.py`: Unit tests for core.secrets_manager.encrypt_bytes / decrypt_bytes.
 - `tests/test_security_cams.py`: Security (DEC-0033): cameras on the home network only, logins kept apart and never shown, frames from a picture address or an RTSP stream, saved pictures, grown-ups only. *(4 undocumented)*
+- `tests/test_security_log.py`: The security log (core/security_log.py, docs/SECURITY.md step 3): devices said in words, events kept per account newest first, never a password; a sign-in from a new device and repeated wrong passwords alert the account's owner; and "sign out everywhere" ends every other session.
 - `tests/test_self_audit.py`: MIA's weekly self-audit (core/self_audit.py) and her best-practices series (core/practices.py), DEC-0108: what the code audit finds, what the interconnection audit finds and leaves out by design, the weekly run's report and tasks, and the series written from the principles and the vault.
 - `tests/test_self_report.py`: MIA's weekly self-report and the standing mission (build plan step 6): what got better and what's slipping, from the loops' own history; Sundays, to the PC's owner only, through the gate; the "Keep MIA healthy" mission works the loops' tasks. *(1 undocumented)*
 - `tests/test_server_app.py`: Unit tests for server.app — exercised via FastAPI's TestClient, a real in-process HTTP client that needs no running server, no real network, and no HTTPS (see the Mobile Phase 1 plan's verification section for why this is a legitimate, complete way to verify this code from a sandbox with no real bro
@@ -1125,7 +1127,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-84 files, 15,280 lines
+85 files, 15,328 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
@@ -1200,6 +1202,7 @@
 - `web/shell.js`: shell.js — the frame every MIA web screen shares (claude, 2026-10-06, DEC-0017).
 - `web/shop.js`: shop.js — the Reward Shop (claude, 2026-10-17, DEC-0028). Renders MIA.shop() (core/game_layer.py): credits earned / spent / left, the rewards you set (ready to buy first, then how far off the rest are), ideas to start with, and what you've bought. Buy proposes shop.buy; undo gives the credits back. 
 - `web/showoff.js`: showoff.js — show-off mode (claude, 2026-10-17, DEC-0031). Renders MIA.showoff() (core/show_off.py) as a narrated tour, one card at a time: Back / Next / Stop, arrow keys, and MIA reading each card aloud when Voice is on (the browser's own speech; nothing leaves the device). The data was filtered in
+- `web/signins.js`: signins.js — Sign-ins and Security (claude, 2026-11-08). Renders MIA.securityLog() (core/security_log.py): this account's events newest first (what happened, from which device, when; a new device and wrong passwords marked), how many other devices are signed in, and Sign Out Everywhere (MIA.signOutE
 - `web/skills.js`: skills.js — the Skills screen (claude, 2026-10-06, DEC-0017/0018, H-0013). Renders MIA.skills() (core/web_progress.py): the skill tree by category (your interests first), each skill's level, XP and capability, what a locked one needs, the next honest step, each skill's pathways (Start), challenge ch
 - `web/sound.js`: sound.js — MIA's sounds (claude, 2026-10-17, DEC-0028 #11). Short tones made in the browser (Web Audio: no sound files to download, works offline): a chime for an objective, a quest-complete arpeggio for a mission, a fanfare for a level. MIA's voice line (from the engine's reward.say, core/actions.v
 - `web/start.js`: start.js — Start Here (claude, 2026-11-07). Renders MIA.guide() (core/web_guide.py): what she does, grouped by what you want to get done; each with how it works, "Try saying" buttons that open Talk with the words typed in (press Enter to send), and the page to open; the apps still empty, to fill in;

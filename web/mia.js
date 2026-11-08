@@ -334,6 +334,13 @@
       { id: "o2", text: "Train on the days the plan says.", section: "week", how: "checked against your workouts each week", self_rated: false, score: { pct: 75, text: "3 of 4 weeks" } },
       { id: "o3", text: "No phone at dinner.", section: "rules", how: "yours to rate, 1 to 5, each week", self_rated: true, score: { pct: 80, text: "4 / 5 last week" } }] })
       : call("GET", "/api/operating-journal"),
+    // Sign-ins and Security (core/security_log.py): this account's sign-ins and changes, and sign out everywhere.
+    securityLog: () => demo ? Promise.resolve({ available: true, other_sessions: 1, events: [
+      { at: "2026-11-08T08:12:00", kind: "sign_in", what: "Signed in", device: "Android phone · 100.64.0.7", detail: "" },
+      { at: "2026-11-07T22:40:00", kind: "sign_in_failed", what: "Wrong password", device: "Edge on Windows · 100.64.0.9", detail: "" },
+      { at: "2026-11-07T19:03:00", kind: "sign_in", what: "Signed in", device: "Edge on Windows · 100.64.0.9", detail: "a new device" }] })
+      : call("GET", "/api/security/log"),
+    signOutEverywhere: () => demo ? demoOnly() : call("POST", "/api/security/sign-out-everywhere"),
     // Connect Apps (core/connectors.py): the sources to import from, and an import's preview before it's approved.
     connect: () => demo ? Promise.resolve({ connectors: [
       { id: "file", name: "A file from another app", how: "Choose the file you downloaded", lands: "Calendar, People & Pets, or Money",
