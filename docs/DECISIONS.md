@@ -2117,3 +2117,19 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Open (Zac's calls, in H-0094): approve direction/tiering; Tier 1's first scene; local-only vs one
   approved cloud generation service; Tier 2 friends-only as drafted.
 - Related: DEC-0130, DEC-0128, DEC-0123, DEC-0127, DEC-0119, DEC-0114, DEC-0002, DEC-0053, DEC-0014; H-0094
+
+### DEC-0133: MIA watches your email (and later payments) to fill records from life
+- Status: PROPOSED (Zac approved in principle 2026-11-08 "I approve"; greenlight the scope/privacy before wiring)
+- Proposed by: claude, 2026-11-08, from Zac ("why I want MIA able to watch my emails and payment info... to get info
+  like that"), after Muse built the life-data pack by hand from his Gmail.
+- Proposal (`docs/EMAIL_WATCH_PROPOSAL.md`): a read-only Gmail connector (OAuth `gmail.readonly`) polled on a
+  schedule; code-defined extractors turn order confirmations, service receipts, bills, warranties and deadlines into
+  typed proposals through `core/actions.py` (model parses, code decides, nothing applied without approval). Reuses
+  core/connectors.py, core/inbox_classify.py, the maintenance/finance/real-estate managers. Privacy model is the
+  point: read-only (never send/delete), local-first (raw bodies never stored — only extracted facts + message-id;
+  parsing on the local model, nothing to the cloud), the OAuth token sealed at rest (DEC-0126), secrets stripped and
+  never logged, opt-in/revocable per source, every fact a logged, undoable proposal. Payments come through Plaid, not
+  by scraping card/account numbers from email.
+- Open: gmail.readonly vs metadata scope; keep only facts vs optionally file receipts; which extractors first (orders
+  + service receipts highest value); polling cadence; later providers.
+- Related: DEC-0128 (device fabric), DEC-0126, DEC-0127; core/connectors.py, core/inbox_classify.py, core/actions.py
