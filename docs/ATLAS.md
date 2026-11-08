@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1210 files, 264,291 lines; 1210 files describe themselves; 14,410 of 15,097 classes and functions are documented.
+1210 files, 264,332 lines; 1210 files describe themselves; 14,410 of 15,097 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -728,7 +728,7 @@
 
 ## tests/: the test suite: what each part must do
 
-410 files, 70,363 lines; 5,539 of 6,140 classes and functions documented
+410 files, 70,365 lines; 5,539 of 6,140 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1143,7 +1143,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-88 files, 15,670 lines
+88 files, 15,709 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
@@ -1205,7 +1205,7 @@
 - `web/operating.js`: operating.js — the Operating Journal (claude, 2026-11-07, DEC-0097). Renders MIA.operatingJournal() (core/operating_journal.py): each line, how it's checked, and its meter with how it's going, in plain numbers (DEC-0113). Adding, rating and taking a line out go through actions (operating.add / .rate
 - `web/party.js`: party.js — Party and guild (claude, 2026-10-17, DEC-0028). Renders MIA.party() (core/party.py): raids going (everyone's jobs, who has what, +1 on your own), raids to start with who's in, your own raid, and the household leaderboard (opt-in: only people who joined it, wins this week, never money). Ev
 - `web/passwords.js`: passwords.js — Passwords (claude, 2026-10-20, DEC-0035). Renders MIA.passwords() (core/password_vault.py): make the vault (a master password, then the recovery code shown once), unlock it (or use the recovery code and set a new master password), and the logins: search, Show and Copy (a password come
-- `web/people.js`: people.js — People & Pets (claude, 2026-10-17). Renders MIA.people() (core/web_more.py) in tabs: Birthdays (the next 60 days, with gift ideas), People (who they are, favorites, gift ideas, when you last caught up) and Pets. Changes are actions: person.*, pet.*, person.caught_up ("Caught Up Today"). 
+- `web/people.js`: people.js — People, and Pets on people.html?only=pets (DEC-0129) (claude, 2026-10-17). Renders MIA.people() (core/web_more.py) in tabs: Birthdays (the next 60 days, with gift ideas), People (who they are, favorites, gift ideas, when you last caught up) and Pets. Changes are actions: person.*, pet.*,
 - `web/places-watch.js`: places-watch.js — location quests (claude, 2026-10-17, DEC-0028 #13). When the person switched them on (Settings → Location quests), MIA.shell() lists their places; while MIA is open this watches the device's position and compares it here, on the device. Nothing about where you are is sent anywhere.
 - `web/places.js`: places.js — My Places (claude, 2026-10-17, DEC-0028 #13). Renders MIA.places() (core/places.py): each place, what arriving there does, Add Place (where you are now, or typed in), Remove, and the switch that lets this device notice when you arrive (Settings → Location quests). Formatting only; the wa
 - `web/plan.js`: plan.js — My plan (claude, 2026-10-14, DEC-0020, Muse's H-0028): one screen, reached from both Kitchen and Workout. Goals, the training week (which days, and what each training day is), skills to practice, meals and preferences, milestones. Renders MIA.fitness() (plan, plan_text); every save is a fi

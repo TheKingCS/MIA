@@ -53,7 +53,7 @@ class Area:
 PROJECTS = Page("projects", "Projects", "workshop", "Plans, budgets and the tasks in them.", "projects.html")
 WHY = Page("why", "My Why", "character", "What it's all for.", "why.html")
 GUITAR = Page("guitar", "Guitar", "classroom", "A learning path, stage by stage.", "guitar.html")
-PETS = Page("pets", "Pets", "relationships", "Feeding, vet visits and care.", "people.html?only=pets")
+PETS = Page("pets", "Pets", "relationships", "Your animals, their care and vet visits.", "people.html?only=pets")
 PLACES = Page("places", "My Places", "maps", "Places you go, and quests there.", "places.html")
 WORLD = Page("worldmap", "World Map", "memories", "Everywhere you've been.", "worldmap.html")
 CHECKIN = Page("checkin", "Sunday Check-In", "calendar", "The week, looked back on.", "checkin.html")
@@ -67,18 +67,18 @@ CHANGES = Page("changes", "Recent Changes", "issues", "What changed, with Undo."
 NOTIFS = Page("notifications", "Notifications", "inbox", "What MIA told you.", "notifications.html")
 COMMS = Page("communications", "Communications", "inbox", "Email, MIA's messages and people to reach.",
              "communications.html")
-HOME_UPKEEP = Page("upkeep_home", "Home Upkeep", "maintenance", "The house's maintenance.",
-                   "maintenance.html?area=home")
-GARAGE_UPKEEP = Page("upkeep_garage", "Vehicle Upkeep", "maintenance", "Vehicles' and tools' maintenance.",
-                     "maintenance.html?area=garage")
+# Maintenance by area (Zac, 2026-10-16: buildings and appliances live in Real Estate, vehicles and tools in Garage):
+# the house's upkeep is Real Estate's Home & Appliances tab; vehicles' upkeep is the Garage app itself.
+HOME_UPKEEP = Page("upkeep_home", "Home Upkeep", "maintenance", "The house and its appliances, cared for.",
+                   "real-estate.html#home")
 LABELS = Page("labels", "Labels", "workshop", "Print labels for what you make.", "label.html")
 SHOWOFF = Page("showoff", "Show Off", "workshop", "What you've made, to share.", "showoff.html")
 
 AREAS: tuple[Area, ...] = (
     Area("home", "Home", "household", "The house, the kitchen and what keeps it running.",
-         ("household", "kitchen", "property", HOME_UPKEEP, "power")),
+         ("household", "kitchen", HOME_UPKEEP, "power")),
     Area("garage", "Garage", "garage", "Vehicles, tools and the work on them.",
-         ("garage", GARAGE_UPKEEP, "toolbox", "sight")),
+         ("garage", "toolbox", "sight")),
     Area("plants_animals", "Plants and Animals", "greenhouse", "What grows and who you feed.",
          ("greenhouse", "flock", PETS)),
     Area("health", "Health and Fitness", "workout", "Training, food and how you feel.", ("workout", "kitchen")),

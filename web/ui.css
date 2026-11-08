@@ -1753,3 +1753,6 @@ a.comms-row:hover .row-title { color: var(--accent); }
 .life-thumbs img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; background: rgba(var(--rgb-accent), .06); }
 @media (max-width: 520px) { .life-thumbs { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .life-card .dim { color: var(--text-dim); font-size: 14px; }
+/* Look from the chat (DEC-0129). */
+.talk-photo { display: grid; gap: 6px; }
+.talk-photo img { max-width: 220px; max-height: 220px; border-radius: 8px; object-fit: cover; }

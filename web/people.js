@@ -1,5 +1,5 @@
 /*
- * people.js — People & Pets (claude, 2026-10-17). Renders MIA.people()
+ * people.js — People, and Pets on people.html?only=pets (DEC-0129) (claude, 2026-10-17). Renders MIA.people()
  * (core/web_more.py) in tabs: Birthdays (the next 60 days, with gift
  * ideas), People (who they are, favorites, gift ideas, when you last
  * caught up) and Pets. Changes are actions: person.*, pet.*,
@@ -10,9 +10,12 @@
   const { el, act, form } = MIAShell;
   const $ = (id) => document.getElementById(id);
   // Birthdays first, as the design canvas has it (DEC-0113).
-  const TABS = [["birthdays", "Birthdays"], ["people", "People"], ["pets", "Pets"]];
+  // DEC-0129 (2026-11-08): Pets moved to Plants and Animals. people.html is people and birthdays; people.html?only=pets
+  // is the Pets page (same store, same actions, its own title).
+  const PETS_ONLY = new URLSearchParams(location.search).get("only") === "pets";
+  const TABS = PETS_ONLY ? [["pets", "Pets"]] : [["birthdays", "Birthdays"], ["people", "People"]];
   let page = null;
-  let tab = TABS.some(([t]) => t === location.hash.slice(1)) ? location.hash.slice(1) : "birthdays";
+  let tab = PETS_ONLY ? "pets" : TABS.some(([t]) => t === location.hash.slice(1)) ? location.hash.slice(1) : "birthdays";
 
   const btn = (label, cls, onclick) => el("button", { type: "button", class: "btn " + cls, onclick }, label);
   const buttons = (...list) => el("div", { class: "row-buttons" }, list.filter(Boolean));
@@ -87,10 +90,22 @@
 
   function draw() {
     const c = page.counts;
+    if (PETS_ONLY) {
+      document.title = "Pets — MIA";
+      document.body.dataset.app = "pets";
+      $("hero-name").textContent = "Pets";
+      $("hero-icon").textContent = "🐾";
+      $("hero-tagline").textContent = "Your animals, their care and vet visits.";
+      $("strip").replaceChildren(el("div", { class: "cell ok" }, el("span", { class: "n" }, c.pets), el("span", { class: "t" }, "Pets")));
+      $("tabs").hidden = true;
+      $("panel").replaceChildren(VIEWS.pets());
+      return;
+    }
+    $("hero-name").textContent = "People";
     $("strip").replaceChildren(
       el("div", { class: "cell ok" }, el("span", { class: "n" }, c.people), el("span", { class: "t" }, "People")),
       el("div", { class: "cell soon" }, el("span", { class: "n" }, c.birthdays), el("span", { class: "t" }, "Birthdays Soon")),
-      el("div", { class: "cell ok" }, el("span", { class: "n" }, c.pets), el("span", { class: "t" }, "Pets")));
+      el("div", { class: "cell ok" }, el("a", { href: "people.html?only=pets", class: "n" }, c.pets), el("span", { class: "t" }, "Pets ›")));
     $("tabs").hidden = false;
     $("tabs").replaceChildren(...TABS.map(([id, l]) => el("button", { type: "button", role: "tab", "aria-selected": String(id === tab),
       onclick: () => { tab = id; history.replaceState(null, "", "#" + id); draw(); } }, l)));
@@ -100,7 +115,7 @@
   MIAShell.start(async () => {
     page = await MIA.people();
     if (!page.available) {
-      $("panel").replaceChildren(el("p", { class: "empty" }, "People & Pets isn't set up on this MIA."));
+      $("panel").replaceChildren(el("p", { class: "empty" }, (PETS_ONLY ? "Pets aren't" : "People isn't") + " set up on this MIA."));
       return;
     }
     draw();

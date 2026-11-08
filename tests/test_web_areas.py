@@ -17,7 +17,9 @@ WEB = Path(__file__).resolve().parent.parent / "web"
 
 def test_every_web_app_is_in_an_area_except_the_dashboard():
     placed = {m for a in AREAS for m in a.members if isinstance(m, str)}
-    missing = {app.module_id for app in surfaces.APPS if app.page} - placed - {"web_home", "dashboard", "maintenance"}
+    # Property and Maintenance are redirects now (to Real Estate and Garage): Home Upkeep stands in for them.
+    missing = {app.module_id for app in surfaces.APPS if app.page} - placed - {"web_home", "dashboard", "maintenance",
+                                                                               "property"}
     assert missing == set()
 
 
@@ -35,7 +37,7 @@ def test_every_member_is_a_known_app_or_a_page_that_exists():
     for area in AREAS:
         for m in area.members:
             if isinstance(m, Page):
-                assert (WEB / m.page.split("?")[0]).is_file(), m.page
+                assert (WEB / m.page.split("?")[0].split("#")[0]).is_file(), m.page
             else:
                 assert m in surfaces.APPS_BY_ID, m
 

@@ -430,6 +430,29 @@
         mic.setAttribute("aria-label", "Done speaking");
       } });
     mic.append(icon("mic", "🎙"));
+    // Look, from the chat (DEC-0129: "you access Look through the same screen as having a chat"): a photo from the
+    // camera or the files, asked about with what's typed (or "What is this?"), answered by the PC's vision model
+    // (core/sight.py, /api/sight). The photo shows in this chat only; it isn't kept.
+    const look = el("button", { type: "button", class: "btn btn-ghost chat-mic talk-look", "aria-label": "Look: show MIA a photo",
+      title: "Show MIA something (a photo, from the camera or your files)", onclick: () => {
+        const pick = el("input", { type: "file", hidden: true, accept: "image/*", capture: "environment" });
+        pick.addEventListener("change", async () => {
+          const file = pick.files && pick.files[0];
+          pick.remove();
+          if (!file) return;
+          const question = input.value.trim() || "What is this?";
+          input.value = "";
+          const url = URL.createObjectURL(file);
+          log.append(el("div", { class: "bubble me talk-photo" }, el("img", { src: url, alt: "Your photo" }), el("span", {}, question)));
+          await answer(question, async () => {
+            const got = await MIA.upload("/api/sight", file, { "X-Question": encodeURIComponent(question) });
+            return { reply_text: got.said || "I couldn't make that out." };
+          });
+        });
+        document.body.append(pick);
+        pick.click();
+      } });
+    look.append(icon("sight", "👁"));
     const panel = el("aside", { class: "talk-panel glass glow", id: "talk-panel", hidden: true, "aria-label": "Talk to MIA" },
       el("div", { class: "talk-head" }, el("span", { class: "mia-line" }, el("span", { class: "mia-dot" }), "MIA"),
         el("span", { class: "row-buttons" },
@@ -445,7 +468,7 @@
         input.value = "";
         log.append(el("p", { class: "bubble me" }, text));
         await answer(text, () => MIA.talk(text));
-      } }, input, mic, el("button", { class: "btn btn-amber", type: "submit" }, "Send")));
+      } }, input, look, mic, el("button", { class: "btn btn-amber", type: "submit" }, "Send")));
     const orb = el("button", { type: "button", id: "mia-orb", class: "mia-orb-button", "aria-label": "Talk to MIA",
       onclick: () => toggleTalk() }, el("span", { class: "mia-orb-core", "aria-hidden": "true" }));
     document.body.append(panel, orb);

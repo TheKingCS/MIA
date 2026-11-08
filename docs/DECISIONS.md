@@ -2021,7 +2021,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   Business), Workshop (Business and Projects), Kitchen with its meal plans (Home and Health and Fitness, 00:27).
 - Placements Zac named: Toolbox and Look in Garage (Look is also a button in the chat with MIA), Files in Personal,
   Good News Radio in Personal and as a Dashboard card, Music in Recreation. Pets move out of People into Plants and
-  Animals; Maintenance shows the house's upkeep in Home and the vehicles' in Garage.
+  Animals; Maintenance shows the house's upkeep in Home (Home Upkeep: Real Estate's Home & Appliances tab, where buildings and appliances have lived since 2026-10-16) and the vehicles' in Garage (the Garage app is their upkeep).
 - The Dashboard gains now playing, today's good news, recent pictures and the current or next trip. Communications
   becomes one screen (email drafts and mailbox, MIA's messages and her held-back ones, the message limit, people).
 - Health and Fitness gains sleep, doctor and dentist visits, medications and supplements, and health records (Zac,

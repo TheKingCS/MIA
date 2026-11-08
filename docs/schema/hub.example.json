@@ -21,19 +21,11 @@
       "ask": "What can I make with what's in the pantry?"
     },
     {
-      "id": "property",
-      "name": "Property",
-      "icon": "🏠",
-      "tagline": "The house, the appliances, the tools.",
-      "page": "property.html",
-      "ask": "Do I have any furnace filters left?"
-    },
-    {
       "id": "upkeep_home",
       "name": "Home Upkeep",
       "icon": "maintenance",
-      "tagline": "The house's maintenance.",
-      "page": "maintenance.html?area=home"
+      "tagline": "The house and its appliances, cared for.",
+      "page": "real-estate.html#home"
     },
     {
       "id": "power",
@@ -130,19 +122,11 @@
           "ask": "What can I make with what's in the pantry?"
         },
         {
-          "id": "property",
-          "name": "Property",
-          "icon": "🏠",
-          "tagline": "The house, the appliances, the tools.",
-          "page": "property.html",
-          "ask": "Do I have any furnace filters left?"
-        },
-        {
           "id": "upkeep_home",
           "name": "Home Upkeep",
           "icon": "maintenance",
-          "tagline": "The house's maintenance.",
-          "page": "maintenance.html?area=home"
+          "tagline": "The house and its appliances, cared for.",
+          "page": "real-estate.html#home"
         },
         {
           "id": "power",
@@ -167,13 +151,6 @@
           "tagline": "Keep it running. Keep it ready.",
           "page": "garage.html",
           "ask": "What upkeep is due on my vehicles?"
-        },
-        {
-          "id": "upkeep_garage",
-          "name": "Vehicle Upkeep",
-          "icon": "maintenance",
-          "tagline": "Vehicles' and tools' maintenance.",
-          "page": "maintenance.html?area=garage"
         },
         {
           "id": "toolbox",
@@ -219,7 +196,7 @@
           "id": "pets",
           "name": "Pets",
           "icon": "relationships",
-          "tagline": "Feeding, vet visits and care.",
+          "tagline": "Your animals, their care and vet visits.",
           "page": "people.html?only=pets"
         }
       ]
@@ -237,6 +214,14 @@
           "tagline": "Stronger body. Clearer mind.",
           "page": "workout.html",
           "ask": "Log a 30 minute workout."
+        },
+        {
+          "id": "kitchen",
+          "name": "Kitchen",
+          "icon": "🍳",
+          "tagline": "Good food. Good mood.",
+          "page": "kitchen.html",
+          "ask": "What can I make with what's in the pantry?"
         }
       ]
     },
@@ -583,7 +568,7 @@
         },
         {
           "id": "relationships",
-          "name": "People & Pets",
+          "name": "People",
           "icon": "👥",
           "tagline": "The ones who matter.",
           "page": "people.html",
