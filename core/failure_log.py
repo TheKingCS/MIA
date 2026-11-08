@@ -546,7 +546,11 @@ def test_hint(issue: dict) -> str:
 
 def write_report(context) -> Optional[Path]:
     """The fix report as fix_report.md in the person's own folder (data/,
-    never the repo), when there's anything in it."""
+    never the repo), when there's anything in it. Sealed like the log it
+    copies its examples from (DEC-0126): read it with
+    `python -m tools.fix_report`."""
+    from core.at_rest import seal
+
     book = _log(context)
     if book is None:
         return None
@@ -555,5 +559,5 @@ def write_report(context) -> Optional[Path]:
         return None
     path = book.data_dir / "fix_report.md"
     book.data_dir.mkdir(parents=True, exist_ok=True)
-    path.write_text(text + "\n", encoding="utf-8")
+    atomic_write_text(path, seal(text + "\n"))  # not a SEALED name (no store loads it), so sealed here
     return path

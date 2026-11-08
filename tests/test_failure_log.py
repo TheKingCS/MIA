@@ -134,8 +134,11 @@ def test_issues_fixed_come_back_if_it_happens_again_and_the_report(mia):
     page = failures_page(w)
     assert page["summary"]["open"] == 2 and "Test to write first" in page["report"]
     path = write_report(w)
-    assert path.name == "fix_report.md" and "The log shift tool broke" in path.read_text(encoding="utf-8")
-    assert "came back after a fix" in path.read_text(encoding="utf-8")
+    from core import at_rest
+
+    assert path.name == "fix_report.md" and at_rest.is_sealed(path.read_text(encoding="utf-8"))  # DEC-0126
+    assert "The log shift tool broke" in at_rest.open_text(path)
+    assert "came back after a fix" in at_rest.open_text(path)
 
 
 def test_the_log_by_voice(mia):
@@ -164,3 +167,20 @@ def test_a_rating_said_out_loud(mia, tmp_path):
     assert [(r["rating"], r["surface"]) for r in kept][-2:] == [("up", "glasses"), ("down", "glasses")]
     assert w.failures.events()[-1]["kind"] == "thumbs_down"
     assert observe_prompt(w, c, "that's right, now add milk") is None  # a whole message only
+
+
+def test_the_fix_report_command_opens_each_persons_sealed_report(tmp_path):
+    """tools.fix_report prints every person's report, sealed or plain, or one person's; a report that won't open
+    says so instead of stopping."""
+    from core import at_rest
+    from core.atomic_write import atomic_write_text
+    from tools import fix_report
+
+    for who, text in (("p1", at_rest.seal("# MIA fix report\none")), ("p2", "# MIA fix report\ntwo"),
+                      ("p3", at_rest.PREFIX + "deadbeef:bm90IGEgcmVhbCBvbmU=")):
+        (tmp_path / "data" / "profiles" / who).mkdir(parents=True)
+        atomic_write_text(tmp_path / "data" / "profiles" / who / "fix_report.md", text)
+    found = dict(fix_report.reports(root=tmp_path))
+    assert found["p1"].endswith("one") and found["p2"].endswith("two") and "won't open" in found["p3"]
+    assert [n for n, _ in fix_report.reports("p2", root=tmp_path)] == ["p2"]
+

@@ -1052,8 +1052,8 @@ uncommitted. 6,863 of 13,808 documented on 2026-11-07: every core/, server/ and 
 Build order (Zac said begin, 2026-10-27): 1) the Loop ✅ built
 (`core/the_loop.py`), 2) the Sunday check-in ✅ built
 (`core/weekly_checkin.py`). 3) the **Fix-It Log** ✅ built (DEC-0049, `docs/FAILURE_LOG.md`).
-**Claude on the PC, every session: read `data/profiles/<id>/fix_report.md`
-(or Apps → Fix-It Log) first, turn the worst open issues into failing
+**Claude on the PC, every session: read the fix report first
+(`python -m tools.fix_report`: it's sealed on disk since 2026-11-08; or Apps → Fix-It Log), turn the worst open issues into failing
 tests and bench cases, fix, mark fixed.** **2026-10-27, Zac + Chat's direction:
 the Brain, the Body, the Relationship.** The audit and the order are in
 `docs/BODY_AND_RELATIONSHIP_PLAN.md` (section 8), with four questions

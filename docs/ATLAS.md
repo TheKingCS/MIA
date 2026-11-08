@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1308 files, 283,698 lines; 1308 files describe themselves; 15,965 of 16,059 classes and functions are documented.
+1309 files, 283,776 lines; 1309 files describe themselves; 15,968 of 16,062 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-488 files, 134,521 lines; 7,199 of 7,285 classes and functions documented
+488 files, 134,525 lines; 7,199 of 7,285 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -732,7 +732,7 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-37 files, 3,870 lines; 119 of 119 classes and functions documented
+38 files, 3,924 lines; 121 of 121 classes and functions documented
 
 - `tools/audit.py`: MIA's self-audit from the command line (DEC-0108; core/self_audit.py, core/practices.py).
 - `tools/bench_audit.py`: What MIA's routing does today with each Intelligence Benchmark question (tests/intelligence_bench.py, docs/INTELLIGENCE_BENCHMARK.md): a question plan (core/question_plans.py: lookups by code, one answer), answered by code (a direct lookup), offered which tools, or left to the model with no tools at
@@ -746,6 +746,7 @@
 - `tools/docs.py`: Working down the documentation backlog (DEC-0104, core/code_atlas.py): see what a file still lacks, write the docstrings (by reading the code: what it does, and how when that isn't plain), and put them in place.
 - `tools/dump_assistant_capabilities.py`: Regenerates `docs/ASSISTANT_CAPABILITIES.md`'s tool-registry table directly from the real, live `AssistantActionRegistry` (`core/application.py`'s `_register_assistant_actions()`) — never hand-typed, so this can't silently drift the way a hand-maintained list would (this project has hit that exact s
 - `tools/export_state.py`: Print (or save) a person's Life State v2 as JSON, computed from their data (core/context_assembler.py), checked against the published schema (docs/schema/life_state.schema.json). Engine Phase 1, 2026-10-05.
+- `tools/fix_report.py`: The Fix-It Log's daily report (core/failure_log.py, DEC-0049), for Claude on the PC: each person's open issues, worst first, with examples and the test to write first. The report is sealed on disk like the log it comes from (DEC-0126), so it's read through this, never opened as a file:
 - `tools/gaps.py`: The PC owner's capability gaps (core/capability_gaps.py, build plan step 9): what MIA was asked and couldn't do, grouped, with what each would take. The requests are the person's own words, so they're read here, on this PC, and never copied into the repo.
 - `tools/glasses_art.py`: MIA's orb as pictures for the real glasses (DEC-0061).
 - `tools/good_news.py`: Good News Radio on this PC (DEC-0096, core/good_news.py).
@@ -774,7 +775,7 @@
 
 ## tests/: the test suite: what each part must do
 
-448 files, 75,350 lines; 6,478 of 6,486 classes and functions documented
+448 files, 75,370 lines; 6,479 of 6,487 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven

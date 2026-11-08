@@ -40,7 +40,8 @@ then recency. A fixed issue that happens again opens again by itself.
 2. **She asks before changing settings.** (For now, these show up as
    issues; automatic proposals come later.)
 3. **She never changes her own code.** The fix report (Apps → Fix-It
-   Log, and `fix_report.md` in the person's folder once a day) lists the
+   Log, and `fix_report.md` in the person's folder once a day, sealed on
+   disk: `python -m tools.fix_report` prints it) lists the
    open issues with examples and **the test to write first**. Claude, on
    the PC: read it, turn each issue into a failing test (routing cases in
    `tests/test_assistant_routing.py`, bench cases in
