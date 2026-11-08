@@ -262,7 +262,7 @@
       { id: "s1", name: "Welding", category: "Trade skills", done: 2, total: 4, courses: [
         { id: "c1", name: "MIG basics", done: 2, total: 3, lessons: [
           { id: "l1", name: "Safety and setup", done: true, done_at: "2026-10-20", xp: 30 },
-          { id: "l2", name: "Bead on plate", done: true, done_at: "2026-10-27", xp: 30 },
+          { id: "l2", name: "Bead on plate", done: true, done_at: "2026-10-27", xp: 30, notes: "Push angle 10 to 15 degrees.\nListen for the bacon sizzle." },
           { id: "l3", name: "Butt joints", done: false, done_at: "", xp: 30 }] },
         { id: "c2", name: "Stick welding", done: 0, total: 1, lessons: [{ id: "l4", name: "Striking an arc", done: false, done_at: "", xp: 30 }] }] }],
       continue: { subject: "Welding", course_id: "c1", course: "MIG basics", done: 2, total: 3, lessons: [

@@ -4,7 +4,7 @@
  * (the design canvas's card, DEC-0113), then each subject, its courses and
  * their lessons, how far along each is. Adding, ticking a lesson
  * done (its skill XP credited once) and taking things out go through actions
- * (subject.*, course.*, lesson.*), so undo takes them back. Formatting only;
+ * (subject.*, course.*, lesson.*, a lesson's notes through lesson.notes), so undo takes them back. Formatting only;
  * the look is muse's.
  */
 (function () {
@@ -18,11 +18,19 @@
     if (values) MIAShell.act({ kind: kind + ".add", params: { ...params, name: values.name } });
   }
 
+  // A lesson's notes (what you learned), edited whole and saved through lesson.notes; by voice, "add to my notes for…".
+  async function notes(l) {
+    const values = await MIAShell.form("Notes · " + l.name, [{ name: "notes", label: "What you learned", type: "textarea" }], { notes: l.notes || "" });
+    if (values) MIAShell.act({ kind: "lesson.notes", params: { lesson_id: l.id, notes: values.notes || "" } }, { quick: true });
+  }
+
   function lesson(l) {
     return el("div", { class: "sync-row council-msg" },
       el("div", {}, el("p", { class: "council-text" }, (l.done ? "✓ " : "") + l.name),
-        l.done ? el("p", { class: "dim" }, "Done " + l.done_at) : null),
+        l.done ? el("p", { class: "dim" }, "Done " + l.done_at) : null,
+        l.notes ? el("p", { class: "cl-notes" }, l.notes) : null),
       el("div", { class: "row-buttons" },
+        button(l.notes ? "Notes" : "Add notes", () => notes(l)),
         button(l.done ? "Not done" : "Done", () => MIAShell.act({ kind: "lesson.done", params: { lesson_id: l.id, done: l.done ? "no" : "yes" } },
           { quick: true }), l.done ? "btn-ghost" : "btn-amber"),
         button("Take out", () => MIAShell.act({ kind: "lesson.delete", params: { lesson_id: l.id } }))));

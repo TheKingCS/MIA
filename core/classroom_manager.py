@@ -461,7 +461,7 @@ def continue_course(subjects: list) -> dict | None:
 
 def screen(context) -> dict:
     """The Classroom's web screen (web/classroom.html): each subject, its courses and their lessons (with the skill XP
-    each is worth), how far along each is, and the course to continue (`continue_course`)."""
+    each is worth and their notes), how far along each is, and the course to continue (`continue_course`)."""
     room = getattr(context, "classroom", None)
     subjects = []
     for s in (room.all_subjects() if room is not None else []):
@@ -471,7 +471,7 @@ def screen(context) -> dict:
             courses.append({"id": c.course_id, "name": c.name, "done": sum(1 for l in lessons if l.completed),
                             "total": len(lessons),
                             "lessons": [{"id": l.lesson_id, "name": l.name, "done": l.completed,
-                                         "done_at": (l.completed_at or "")[:10],
+                                         "done_at": (l.completed_at or "")[:10], "notes": l.notes,
                                          "xp": sum(int(w.xp or 0) for w in l.skill_rewards)} for l in lessons]})
         done, total = room.subject_completion(s.subject_id)
         subjects.append({"id": s.subject_id, "name": s.name, "category": s.category, "done": done, "total": total,

@@ -4,7 +4,8 @@ core.classroom_actions
 
 The Classroom (core/classroom_manager.py, the person's own study) through
 the action contract (core/actions.py), for its web screen: a subject, a
-course and a lesson added, a lesson marked done (its skill XP credited once,
+course and a lesson added, a lesson's notes written (lesson.notes, as "add
+to my notes for..." does by voice), a lesson marked done (its skill XP credited once,
 as on the desktop) or not done, and any of them taken out. The stores write
 through atomic_write_text, so "undo that" takes each back. Children study
 too: all child-safe.
@@ -77,6 +78,14 @@ def _lesson_done(context, params) -> str:
     return f"{lesson.name}: done." if done else f"{lesson.name}: not done yet."
 
 
+def _lesson_notes(context, params) -> str:
+    """lesson.notes: a lesson's notes replaced with the text given (the screen edits the whole note; empty clears it)."""
+    lesson = _lesson(context, params)
+    text = str(params.get("notes") or "").strip()
+    _need(context, "classroom").update_lesson(lesson.lesson_id, notes=text)
+    return f"Saved your notes for {lesson.name}." if text else f"Cleared your notes for {lesson.name}."
+
+
 def _delete(kind: str, finder, remover):
     """Make the execute function for subject.delete, course.delete or lesson.delete: find the record with `finder`
     and remove it with the manager's `remover` method (deleting a subject or course takes what's under it too).
@@ -105,6 +114,8 @@ CLASSROOM_ACTIONS = {a.kind: a for a in (
                lambda c, p: f"Mark {_lesson(c, p).name} " + ("not done" if str(p.get("done", "yes")).lower() in
                                                              ("no", "false", "0") else "done"),
                _lesson_done, child_ok=True),
+    ActionType("lesson.notes", "Save the notes", {"lesson_id": "the lesson", "notes": "what you learned"},
+               lambda c, p: f"Save your notes for {_lesson(c, p).name}", _lesson_notes, child_ok=True),
     ActionType("lesson.delete", "Take it out", {"lesson_id": "the lesson"},
                lambda c, p: f"Take the lesson {_lesson(c, p).name} out",
                _delete("lesson", _lesson, "delete_lesson"), child_ok=True),

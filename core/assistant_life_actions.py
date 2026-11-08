@@ -507,6 +507,18 @@ def _action_add_lesson_notes(context: AppContext, arguments: dict) -> str:
     return f"Added to your {lesson.name} notes."
 
 
+def _action_get_lesson_notes(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `get_lesson_notes`: reads back a lesson's notes (what the Classroom screen shows under it).
+    Returns the sentence to say back; an unclear or ambiguous name is asked about."""
+    lesson, error = resolve_by_name(_all_lessons(context), str(arguments.get("lesson", "")), lambda l: l.name, "lesson")
+    if error:
+        return error
+    lines = [line.strip() for line in lesson.notes.splitlines() if line.strip()]
+    if not lines:
+        return f"There are no notes on {lesson.name} yet."
+    return f"Your notes for {lesson.name}: " + " / ".join(lines)
+
+
 def _action_get_learning_progress(context: AppContext, arguments: dict) -> str:
     """Assistant tool `get_learning_progress`: each subject's lessons done and the next one to do (or one subject's). Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
     subjects = context.classroom.all_subjects()
@@ -689,6 +701,12 @@ def register_life_actions(registry: AssistantActionRegistry) -> None:
         parameters=_obj({"lesson": _s("The lesson."), "notes": _s("What to add.")}, ["lesson", "notes"]),
         handler=_action_add_lesson_notes,
         trigger_phrases=("add to my notes for", "lesson notes", "i learned that"),
+    ))
+    registry.register(AssistantAction(
+        name="get_lesson_notes", domain="classroom", description="Read back the notes on a Classroom lesson.",
+        parameters=_obj({"lesson": _s("The lesson, in the user's words.")}, ["lesson"]),
+        handler=_action_get_lesson_notes,
+        trigger_phrases=("my notes for", "my notes on", "read my lesson notes", "what did i learn in"),
     ))
     registry.register(AssistantAction(
         name="get_learning_progress", domain="classroom", description="Progress through Classroom subjects and what's next.",

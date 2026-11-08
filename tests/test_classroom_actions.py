@@ -1,5 +1,6 @@
 """The Classroom's web screen (core/classroom_manager.screen, with the course to continue: DEC-0113) and its actions
-(core/classroom_actions.py)."""
+(core/classroom_actions.py), and a lesson's notes both ways: lesson.notes on the screen, add_lesson_notes and
+get_lesson_notes by voice."""
 
 from types import SimpleNamespace
 
@@ -65,3 +66,23 @@ def test_continue_is_the_course_you_last_finished_a_lesson_in():
     assert (got["course"], got["subject"], got["done"], got["total"]) == ("Basic circuits", "Electronics", 2, 4)
     assert [l["name"] for l in got["lessons"]] == ["Meters", "Series", "Schematics"]  # the last done, then what's next
     assert continue_course([{"name": "Math", "courses": [finished]}]) is None  # nothing left
+
+
+def test_a_lessons_notes_are_shown_saved_from_the_screen_and_read_back_by_voice(person):
+    from core.assistant_life_actions import _action_add_lesson_notes, _action_get_lesson_notes
+
+    act(person, "subject.add", name="Welding")
+    act(person, "course.add", subject_id=screen(person)["subjects"][0]["id"], name="MIG basics")
+    act(person, "lesson.add", course_id=screen(person)["subjects"][0]["courses"][0]["id"], name="Bead on plate")
+    lesson = screen(person)["subjects"][0]["courses"][0]["lessons"][0]
+    assert lesson["notes"] == ""
+    assert act(person, "lesson.notes", lesson_id=lesson["id"], notes="Push angle 10 degrees") == \
+        "Saved your notes for Bead on plate."
+    assert _action_add_lesson_notes(person, {"lesson": "bead on plate", "notes": "Listen for the sizzle"}) == \
+        "Added to your Bead on plate notes."
+    shown = screen(person)["subjects"][0]["courses"][0]["lessons"][0]["notes"]
+    assert shown.splitlines() == ["Push angle 10 degrees", "Listen for the sizzle"]
+    assert _action_get_lesson_notes(person, {"lesson": "bead"}) == \
+        "Your notes for Bead on plate: Push angle 10 degrees / Listen for the sizzle"
+    assert act(person, "lesson.notes", lesson_id=lesson["id"], notes="  ") == "Cleared your notes for Bead on plate."
+    assert _action_get_lesson_notes(person, {"lesson": "bead"}) == "There are no notes on Bead on plate yet."
