@@ -2131,3 +2131,22 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Open: gmail.readonly vs metadata scope; keep only facts vs optionally file receipts; which extractors first (orders
   + service receipts highest value); polling cadence; later providers.
 - Related: DEC-0128 (device fabric), DEC-0126, DEC-0127; core/connectors.py, core/inbox_classify.py, core/actions.py
+
+### DEC-0134: Living Worlds & The Convergence (interactive RPG / world-sim / experiential learning)
+- Status: PROPOSED
+- Proposed by: claude, 2026-11-08, from Zac's "MIA — Living Worlds" handoff (the Convergence multiverse saga).
+- Proposal (`docs/LIVING_WORLDS_PROPOSAL.md`): a major subsystem turning MIA into a persistent-world DM, world
+  simulator and experiential-learning guide, with an overarching cross-universe narrative (the Convergence) and a
+  user-defined "Highest Self". Assessment finding: ~60% reuses/extends existing MIA infrastructure — the hardest rule
+  (narrative model proposes, authoritative code validates/commits) is already MIA's core pattern (core/actions.py;
+  "model phrases, code decides"); the game layer (DEC-0028: world_map, party/guild, missions), learning paths
+  (DEC-0112), Chronicle Archive (DEC-0084), typed links, life_events event log and the store/seal pattern all map
+  directly. Genuinely new: a provider-agnostic generative-artwork engine (local SDXL on Zac's RX 7900 XTX), the
+  world-simulation loop, and the Convergence orchestration. Phased (8 phases); recommended first step is Phase 1
+  (core data models as new stores + save/resume + character/world creation through the actions gate), small and fully
+  testable. Privacy: local-first, opt-in reflection, never diagnoses (safety_floor stance), facts kept distinct from
+  fictional mechanics.
+- Open: near-term goal (recommend a playable solo DM, Phases 1-2, before the multiverse and art); rules system
+  (custom vs SRD-like); local vs hosted image generation; how much autonomous sim compute is acceptable locally;
+  multiplayer scope vs DEC-0119 (Zac-alone).
+- Related: DEC-0028, DEC-0084, DEC-0112, DEC-0091, DEC-0126, DEC-0130
