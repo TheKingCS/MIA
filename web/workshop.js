@@ -332,6 +332,21 @@
       [chip(m.revenue_text, "chip-ok")], el("span", { class: "dim" }, "profit " + m.profit_text)))));
   }
 
+  // Where a product is listed (Etsy, a web store, local...): each with its price and status, a link when it has one,
+  // and × to take it off (listing.add / listing.remove; by voice, "list the walnut bowl on Etsy for $40").
+  async function addListing(p) {
+    const v = await form("List " + p.name, page.forms.listing.fields, {});
+    if (v) act({ kind: "listing.add", params: Object.assign({ product_id: p.id }, v) });
+  }
+  function listings(p) {
+    if (!p.listings.length) return null;
+    return el("ul", { class: "ws-listings", "aria-label": "Where " + p.name + " is listed" }, p.listings.map((l) => el("li", {},
+      l.url ? el("a", { href: l.url, target: "_blank", rel: "noopener" }, l.platform) : el("span", {}, l.platform),
+      el("span", { class: "dim" }, [l.price, l.status !== "Active" ? l.status : null].filter(Boolean).join(" · ")),
+      el("button", { type: "button", class: "btn btn-ghost btn-small", "aria-label": "Take " + p.name + " off " + l.platform,
+        onclick: () => act({ kind: "listing.remove", params: { product_id: p.id, listing_id: l.id } }) }, "×"))));
+  }
+
   const VIEWS = {
     recipes: () => section("Recipes", buttons(btn("Add Recipe", "btn-amber", () => add("craft_recipe", "Add A Recipe")),
       btn("From A Starter", "btn-ghost btn-small", fromStarter)),
@@ -380,12 +395,13 @@
         m.low ? " overdue" : "")))
         : el("p", { class: "empty" }, "No materials yet. Add what you build with: plywood, filament, screws.")),
     products: () => section("Products", btn("Add Product", "btn-amber", () => add("product", "Add Product")),
-      page.products.length ? el("div", { class: "rows" }, page.products.map((p) => row(p.name,
-        [n(p.stock) + " in stock", p.price, p.listings.length ? p.listings.map((l) => l.platform + " " + l.price).join(", ") : null]
-          .filter(Boolean).join(" · "),
+      page.products.length ? el("div", { class: "rows" }, page.products.map((p) => el("div", { class: "ws-product" }, row(p.name,
+        [n(p.stock) + " in stock", p.price].filter(Boolean).join(" · "),
         p.stock <= 0 ? [chip("Out", "chip-bad")] : [],
         buttons(btn("Sell", "btn-green btn-small", () => sell(p)), btn("+ / −", "btn-ghost btn-small", () => adjust("product", p, "Change " + p.name + " stock")),
-          btn("Edit", "btn-ghost btn-small", () => edit("product", p)), btn("Delete", "btn-ghost btn-small", () => del("product", p))))))
+          btn("List It", "btn-ghost btn-small", () => addListing(p)),
+          btn("Edit", "btn-ghost btn-small", () => edit("product", p)), btn("Delete", "btn-ghost btn-small", () => del("product", p)))),
+        listings(p))))
         : el("p", { class: "empty" }, "No products yet. Add what you make to sell.")),
     parts: () => section("Parts", btn("Add Part", "btn-amber", () => add("component", "Add Part")),
       page.parts.length ? el("div", { class: "rows" }, page.parts.map((c) => row(c.name,

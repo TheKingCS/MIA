@@ -33,6 +33,10 @@
    "status": "none",
    "why": "readings entered by hand in the Lab (DEC-0125): measurements, not her choices; nothing of MIA's to improve"
   },
+  "action:listing": {
+   "status": "none",
+   "why": "where a product is listed, entered by hand on the Workshop page or said (DEC-0125): the person's record, not MIA's choice; nothing of hers to improve"
+  },
   "action:notification": {
    "status": "none",
    "why": "reading and dismissing notifications by hand; a dismissal already teaches the communication gate (its gate.* loops)"

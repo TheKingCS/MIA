@@ -148,12 +148,18 @@ SHOP_EXPENSE = Record("shop_expense", "shop cost", "entry_id", "get_expense", "a
 
 
 def forms() -> dict:
-    """Every form these screens open (JSON-ready)."""
+    """Every form these screens open (JSON-ready), a product's listing among them."""
     out = {key: record_form(r) for key, r in RECORDS.items()}
     out["trip"] = record_form(TRIP)
     out["sale"] = record_form(SALE)
     out["shop_expense"] = record_form(SHOP_EXPENSE)
     out["journal"] = {"noun": "entry", "id_param": "entry_id", "fields": [field_dict(f) for f in JOURNAL_FIELDS]}
+    out["listing"] = {"noun": "listing", "id_param": "product_id", "fields": [
+        field_dict(Field("platform", "Where (Etsy, web store, local...)", "text", True)),
+        field_dict(Field("price", "Price there", "money", default=0.0)),
+        field_dict(Field("status", "Status", "choice", options=("Active", "Inactive", "Sold Out"), default="Active")),
+        field_dict(Field("url", "Link (optional)", "text")),
+    ]}
     out["product_sale"] = {"noun": "sale", "id_param": "product_id", "fields": [
         field_dict(Field("quantity", "How many", "amount", True, default=1)),
         field_dict(Field("amount", "Total paid", "money", True)),
@@ -401,6 +407,71 @@ def _money_record_add(record: Record, method: str):
         _call(getattr(_need(context, "ledger"), method), **values)
         return f"Added the {record.noun}."
     return execute
+
+
+def _listing_product(context, params):
+    """The product a listing change is for; ActionError when it's gone."""
+    product = _need(context, "products").get_product(str(params.get("product_id") or ""))
+    if product is None:
+        raise ActionError("That product isn't there anymore.")
+    return product
+
+
+def _listing_values(params) -> tuple[str, float, str, str]:
+    """(platform, price, status, link) for a new listing, checked: a platform is needed, the price is 0 or more, the
+    status one of the product store's."""
+    from core.product_manager import LISTING_STATUSES
+
+    platform = " ".join(str(params.get("platform") or "").split())
+    if not platform:
+        raise ActionError("Where is it listed? (Etsy, a web store, local...)")
+    price = _number({"price": params.get("price") or 0}, "price", "Price")
+    if price < 0:
+        raise ActionError("Price can't be negative.")
+    status = str(params.get("status") or "Active").strip().title()
+    if status not in LISTING_STATUSES:
+        raise ActionError("Status: " + ", ".join(LISTING_STATUSES) + ".")
+    return platform, price, status, str(params.get("url") or "").strip()
+
+
+def _listing_add_describe(context, params) -> str:
+    """The approval sentence for listing.add: "List Walnut bowl on Etsy at $40.00"."""
+    from core.region import money
+
+    product = _listing_product(context, params)
+    platform, price, status, _ = _listing_values(params)
+    return f"List {product.name} on {platform}" + (f" at {money(price)}" if price else "") + \
+        (f" ({status.lower()})" if status != "Active" else "")
+
+
+def _listing_add(context, params) -> str:
+    """Does listing.add."""
+    product = _listing_product(context, params)
+    platform, price, status, url = _listing_values(params)
+    context.products.add_listing(product.product_id, platform=platform, price=price, status=status, url=url)
+    return f"{product.name} is listed on {platform}."
+
+
+def _listing_of(context, params):
+    """(the product, the listing the params name); ActionError when either is gone."""
+    product = _listing_product(context, params)
+    listing = next((li for li in product.listings if li.listing_id == str(params.get("listing_id") or "")), None)
+    if listing is None:
+        raise ActionError("That listing isn't there anymore.")
+    return product, listing
+
+
+def _listing_remove_describe(context, params) -> str:
+    """The approval sentence for listing.remove: "Take Walnut bowl off Etsy"."""
+    product, listing = _listing_of(context, params)
+    return f"Take {product.name} off {listing.platform}"
+
+
+def _listing_remove(context, params) -> str:
+    """Does listing.remove: the listing comes off the product (the product stays)."""
+    product, listing = _listing_of(context, params)
+    context.products.remove_listing(product.product_id, listing.listing_id)
+    return f"Took {product.name} off {listing.platform}."
 
 
 def _sell_describe(context, params) -> str:
@@ -816,7 +887,7 @@ def _say(text: str):
 def _register() -> None:
     """Adds every action kind this module defines to ACTION_TYPES: the record kinds from the shared table
     (core/record_actions.py), the adjust kinds (parts, materials, products, the inventory), and the hand-written ones
-    above. Runs once, when
+    above (listings among them). Runs once, when
     this module is imported (core/actions.py imports it).
     """
     kinds = []
@@ -847,6 +918,11 @@ def _register() -> None:
         ActionType("sale.add", "Add Sale", {f.name: f.label for f in SALE.fields}, _money_record_describe(SALE),
                    _money_record_add(SALE, "add_revenue")),
         ActionType("sale.delete", "Delete", {"entry_id": "the sale"}, *sale_delete),
+        ActionType("listing.add", "Add Listing", {"product_id": "the product", "platform": "where it's listed",
+                                                  "price": "its price there", "status": "Active, Inactive or Sold Out",
+                                                  "url": "a link (optional)"}, _listing_add_describe, _listing_add),
+        ActionType("listing.remove", "Remove", {"product_id": "the product", "listing_id": "the listing"},
+                   _listing_remove_describe, _listing_remove),
         ActionType("product.sell", "Sell", {"product_id": "the product", "quantity": "how many", "amount": "total paid",
                                             "date": "optional"}, _sell_describe, _sell),
         ActionType("shop_expense.add", "Add Cost", {f.name: f.label for f in SHOP_EXPENSE.fields},

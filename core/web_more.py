@@ -90,7 +90,7 @@ def journal_page(context, today: Optional[date] = None) -> dict:
 
 def workshop_page(context, today: Optional[date] = None) -> dict:
     """The data the Workshop screen shows, assembled here (the web only draws it); {"available": False} when none of its stores is here. Parts, materials (low ones first), products and
-    their listings, jobs (not recipe builds) with their costs, the shop's money and totals, counts, the picks and
+    their listings (each with its id, price, status and link, to take off), jobs (not recipe builds) with their costs, the shop's money and totals, counts, the picks and
     forms, and the recipes, builds, receipts, best earner and goods (with what to sell first) from web_craft.
     """
     from core.region import money
@@ -115,7 +115,8 @@ def workshop_page(context, today: Optional[date] = None) -> dict:
         materials.sort(key=lambda m: (not m["low"], m["name"].lower()))
     products = [{"id": p.product_id, "name": p.name, "price": money(p.base_price) if p.base_price else "",
                  "stock": p.quantity_in_stock, "description": p.description,
-                 "listings": [{"platform": li.platform, "price": money(li.price), "status": li.status} for li in p.listings],
+                 "listings": [{"id": li.listing_id, "platform": li.platform, "price": money(li.price) if li.price else "",
+                               "status": li.status, "url": li.url} for li in p.listings],
                  "values": {f: getattr(p, f) for f in ("name", "base_price", "quantity_in_stock", "description", "notes")}}
                 for p in sorted(stores["products"].all_products(), key=lambda p: p.name.lower())] if stores["products"] else []
     from core.web_craft import craft_section, goods_section
@@ -163,7 +164,8 @@ def workshop_page(context, today: Optional[date] = None) -> dict:
         "picks": {"materials": [{"id": m["id"], "name": m["name"]} for m in materials],
                   "products": [{"id": p["id"], "name": p["name"]} for p in products]},
         "forms": {**{k: v for k, v in _forms().items() if k in ("component", "material", "product", "job", "sale",
-                                                                "shop_expense", "product_sale")}, **craft["forms"]},
+                                                                "shop_expense", "product_sale", "listing")},
+                  **craft["forms"]},
         "recipes": craft["recipes"], "builds": craft["builds"], "receipts": craft["receipts"],
         "best_earner": craft.get("best_earner"),
         **goods,

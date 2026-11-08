@@ -609,6 +609,43 @@ def _action_adjust_product_stock(context: AppContext, arguments: dict) -> str:
     return f"{verb} {abs(delta):g} {product.name}. {updated.quantity_in_stock:g} in stock."
 
 
+def _run_action(context, kind: str, params: dict) -> str:
+    """Runs an action kind as its screen would (its describe checks it first); a refusal is said back."""
+    from core.actions import ACTION_TYPES, ActionError
+
+    try:
+        ACTION_TYPES[kind].describe(context, params)
+        return ACTION_TYPES[kind].execute(context, params)
+    except ActionError as problem:
+        return str(problem)
+
+
+def _action_list_product(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `list_product`: lists a product somewhere (Etsy, a web store, local) at a price, the Workshop
+    screen's `listing.add`. Returns the sentence to say back; an unclear name is asked about, nothing changes."""
+    product, error = resolve_by_name(context.products.all_products(), str(arguments.get("name", "")), lambda p: p.name, "product")
+    if error:
+        return error
+    return _run_action(context, "listing.add", {"product_id": product.product_id, "platform": arguments.get("platform"),
+                                                "price": arguments.get("price") or 0,
+                                                "status": arguments.get("status") or "Active"})
+
+
+def _action_unlist_product(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `unlist_product`: takes a product off a platform it's listed on (`listing.remove`). Returns the
+    sentence to say back; an unclear name or a platform it isn't on is said, nothing changes."""
+    product, error = resolve_by_name(context.products.all_products(), str(arguments.get("name", "")), lambda p: p.name, "product")
+    if error:
+        return error
+    where = str(arguments.get("platform") or "").strip().lower()
+    listing = next((li for li in product.listings if li.platform.lower() == where), None) or \
+        next((li for li in product.listings if where and where in li.platform.lower()), None)
+    if listing is None:
+        on = ", ".join(li.platform for li in product.listings)
+        return f"{product.name} isn't listed there." + (f" It's on {on}." if on else " It isn't listed anywhere.")
+    return _run_action(context, "listing.remove", {"product_id": product.product_id, "listing_id": listing.listing_id})
+
+
 # ---------------------------------------------------------------------------
 # Registration
 # ---------------------------------------------------------------------------
@@ -883,5 +920,20 @@ def register_domain_actions(registry: AssistantActionRegistry) -> None:
         handler=_action_adjust_product_stock,
         trigger_phrases=("made more", "in stock", "more cutting boards"),
     ))
-    registry.register_domain_keywords("products", ("product", "products", "in stock"))
+    registry.register(AssistantAction(
+        name="list_product", domain="products",
+        description="List a product for sale somewhere (Etsy, a web store, local) at a price.",
+        parameters=_obj({"name": _s("The product."), "platform": _s("Where, e.g. 'Etsy'."), "price": _n("Its price there."),
+                         "status": _s("Active (default), Inactive or Sold Out.")}, ["name", "platform"]),
+        handler=_action_list_product,
+        trigger_phrases=("list it on", "listed on", "on etsy for", "for sale on", "add a listing"),
+    ))
+    registry.register(AssistantAction(
+        name="unlist_product", domain="products",
+        description="Take a product's listing off a platform (the product itself stays).",
+        parameters=_obj({"name": _s("The product."), "platform": _s("Where it's listed.")}, ["name", "platform"]),
+        handler=_action_unlist_product,
+        trigger_phrases=("unlist", "off etsy", "remove the listing", "take the listing down"),
+    ))
+    registry.register_domain_keywords("products", ("product", "products", "in stock", "listing", "etsy"))
     registry.register_entity_names("products", lambda ctx: [p.name for p in ctx.products.all_products()] if ctx.products else [])
