@@ -2360,6 +2360,14 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   tests). Development edges on `links.py` were left for Phase 2: candidates carry their own requires/provides/unlocks
   graph, which was enough to prove prioritisation, so the stored graph waits until real projects are linked.
   Next: "what should I do next on the homestead?" as a tool and a screen control (DEC-0125), then Phase 2.
+  **Deep next steps (Zac, 2026-11-08: "processes built in that ensure the steps it recommends are truly the best next
+  steps... going straight to selling plant starts without any kind of building the infrastructure... wouldn't be a good
+  idea"):** `next_step` now looks ahead — each goal's whole path (`path_to`, made or upcycled before bought), weighed
+  value against money and hours (`_worth`, so an unknown budget never makes an $800 build look cheap), and the first step
+  of the best path recommended with its path and checks (`readiness`). The catalog gained the seed-starting chain
+  (toilet-roll cups / bought trays, a scrap shelf / a bought one, seed mix, a first batch as proof, a stand built after
+  the proof), and tests hold the rules: revenue needs proof and an outlet, an outlet needs proof, every need has a way to
+  get it, every candidate has a path. `plan()` carries `next.goal`, `next.path`, `next.checks` for the What's Next screen.
 - From: ChatGPT's two handoffs, pasted by Zac 2026-11-08 — "Real-World Development Intelligence" (Homestead/Business
   Architect) and "The Convergence" (unified progression + living campaign). Both ask, in their own section 11, to
   inspect the architecture and propose before building, reusing MIA's mission/progression/memory/campaign systems.

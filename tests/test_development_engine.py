@@ -7,7 +7,10 @@ The strategic layer (core/development_engine.py, DEC-0144). The heart of it is t
 should get a plan that assesses the start honestly, prioritises low-cost/high-unlock projects, respects dependencies
 and season, and names a sensible logical next step — never "build the greenhouse first." Then the plan as the
 Greenhouse page and the get_homestead_next_step tool show it: what they already have read from their records, why
-each option isn't ready, a budget only from money words. The rest are unit tests on
+each option isn't ready, a budget only from money words. Then the deep next steps: the infrastructure before
+the payoff (selling starts only through cups, a shelf, a first batch and a stand), made before bought, a big build
+waiting while cheap foundations remain, the checks with each step, and the catalog rules that hold it. The rest are
+unit tests on
 the scoring, the dependency gate, compounding value and the defensive profile reader.
 """
 
@@ -139,10 +142,13 @@ def test_what_they_already_have_is_read_from_their_records_and_left_out():
 
 
 def test_each_option_says_why_it_is_not_ready_yet():
-    rows = {o["id"]: o for o in de.plan(SimpleNamespace(), budget=100, month=1)["options"]}
-    assert rows["raised_bed"]["why_not"] == "best begun March to May"
-    assert rows["chickens"]["why_not"].startswith("about $300, more than the $100")
-    assert "needs" in rows.get("plant_sales", {"why_not": "needs beds first"})["why_not"]
+    cat = de.homestead_catalog()
+    prof = DevelopmentProfile(budget=100, month=1)
+    by_id = {c.id: c for c in cat}
+    why = {r["id"]: de._why_not(r, prof, by_id) for r in de.ranked(prof, cat)}
+    assert why["raised_bed"] == "best begun March to May"
+    assert why["chickens"].startswith("about $300, more than the $100")
+    assert why["plant_sales"] == "needs grown seedlings and sales outlet first"
 
 
 def test_the_spoken_plan_names_the_move_and_asks_for_a_budget_when_none_was_given():
@@ -167,3 +173,66 @@ def test_the_greenhouse_page_carries_the_plan(tmp_path):
     ctx.grow_lab = GrowLab(ctx, data_dir=tmp_path)
     page = grow_page(ctx)
     assert page["next"]["next"]["name"] and page["next"]["options"]
+
+
+# --- deep next steps: the infrastructure before the payoff (Zac, 2026-11-08) ---
+
+_FOUNDATIONS = frozenset({"raised_bed", "rain_barrel", "compost_bin"})
+
+
+def test_selling_starts_is_reached_through_the_infrastructure_never_jumped_to():
+    """Zac's example: with beds in and nothing else, the next step is never selling starts; it's the first piece of
+    seed-starting infrastructure, said as step 1 of the path that ends in selling."""
+    step = de.next_step(DevelopmentProfile(month=7), de.homestead_catalog(), _FOUNDATIONS)
+    assert step["recommend"]["id"] == "seed_cups" and step["goal"]["id"] == "plant_sales"
+    ids = [s["id"] for s in step["path"]]
+    assert ids[-1] == "plant_sales" and ids.index("first_seedlings") < ids.index("sales_stand")
+    assert {"seed_cups", "seedling_shelf", "seed_mix"} <= set(ids)
+
+
+def test_made_and_upcycled_come_before_bought():
+    goal = next(c for c in de.homestead_catalog() if c.id == "plant_sales")
+    ids = [s.id for s in de.path_to(goal, DevelopmentProfile(month=7), de.homestead_catalog(), _FOUNDATIONS)]
+    assert "seed_cups" in ids and "cell_trays" not in ids
+    assert "seedling_shelf" in ids and "wire_shelf" not in ids
+    checks = de.next_step(DevelopmentProfile(month=7), de.homestead_catalog(), _FOUNDATIONS)["checks"]
+    assert any(c["check"] == "made_first" and c["ok"] for c in checks)
+
+
+def test_a_big_build_waits_while_cheap_foundations_remain_even_without_a_budget():
+    """An unknown budget never makes an $800 greenhouse look cheap: value is weighed against money and hours."""
+    step = de.next_step(DevelopmentProfile(month=7), de.homestead_catalog(), _FOUNDATIONS)
+    assert step["recommend"]["id"] != "greenhouse"
+
+
+def test_each_recommendation_carries_its_checks():
+    seedlings = _FOUNDATIONS | {"seed_cups", "seedling_shelf", "seed_mix", "first_seedlings", "sales_stand"}
+    step = de.next_step(DevelopmentProfile(month=4), de.homestead_catalog(), seedlings)
+    assert step["recommend"]["id"] == "plant_sales"
+    checks = {c["check"]: c for c in step["checks"]}
+    assert checks["ready"]["ok"] and checks["season"]["ok"] and checks["start_small"]["ok"]
+    assert checks["budget"]["ok"] is None  # no budget given: said, not judged
+    early = de.next_step(DevelopmentProfile(month=7), de.homestead_catalog(), _FOUNDATIONS)["checks"]
+    assert any(c["check"] == "timing" and "February to April" in c["line"] for c in early)
+
+
+def test_the_catalog_never_lets_selling_skip_proof_or_a_place_to_sell():
+    """The rules behind the advice, held for every candidate: a revenue step needs proof and an outlet; an outlet is
+    built only after proof; everything needed has a way to get it; every candidate has a path from scratch."""
+    cat = de.homestead_catalog()
+    provided = set().union(*(c.provides for c in cat))
+    for c in cat:
+        if c.sector == "business":
+            assert c.requires & de.PROOF_TAGS and c.requires & de.OUTLET_TAGS, c.id
+        if c.provides & de.OUTLET_TAGS:
+            assert c.requires & de.PROOF_TAGS, c.id
+        assert c.requires <= provided, c.id
+        assert de.path_to(c, DevelopmentProfile(month=4), cat) is not None, c.id
+
+
+def test_proof_and_supplies_are_read_from_their_records():
+    ctx = SimpleNamespace(grow_lab=SimpleNamespace(systems=[], batches=[SimpleNamespace(crop="Tomato")]),
+                          materials=SimpleNamespace(all_materials=lambda: [SimpleNamespace(name="Potting mix")]))
+    have = {h["name"]: h["found_in"] for h in de.plan(ctx, month=4)["have"]}
+    assert have["Start a first batch of seedlings"] == "your grow lab"
+    assert have["Seed-starting mix"] == "your workshop shelf"

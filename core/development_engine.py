@@ -18,8 +18,14 @@ the model improvising dollars.
    and season, and — the point of the whole thing — **compounding value**: what a project *unlocks*. Compost isn't
    worth building for compost; it's worth building because it unlocks soil, the raised bed's yield and the
    greenhouse. Estimates stay honestly estimates, never fake-precise predictions.
-3. `next_step(profile, catalog, done)` — the single highest-value *available* move (affordable, unblocked, in
-   season), with its reasoning; or, when nothing is doable yet, the cheapest prerequisite or the gap to close.
+3. `next_step(profile, catalog, done)` — it looks ahead (Zac, 2026-11-08: "deep and smart about what to suggest").
+   Every goal gets its whole path (`path_to`: what it needs, recursively, made or upcycled before bought), each path
+   is weighed as a whole, value against the money *and* hours it takes (`_worth`), and the first step of the best one
+   is the recommendation, said as "step 1 of 6 on the way to …" with the checks behind it (`readiness`: in place, in
+   season, the rest lined up, the budget, made first, selling only after proof and a place to sell, a professional's
+   look). So selling starts is reached through toilet-roll cups, a shelf, a first batch and a stand, never jumped to;
+   and an $800 build waits while cheap foundations remain. When no path can start now: a seasonal wait, a savings
+   target, or the prerequisite to clear first.
 
 The homestead catalog here (`homestead_catalog`) is the first proving domain; the same engine takes any domain's
 candidate list (workshop, business…), which is the cross-domain reuse DEC-0137 approved. Everything is pure and
@@ -37,6 +43,20 @@ from core.region import money
 # A safety-critical candidate carries this: MIA guides, it never certifies. Structural, electrical, legal and
 # financial decisions get a "qualified professional should verify" marker, surfaced in the reasoning.
 PROFESSIONAL = "A qualified professional should verify this before you build or commit."
+
+# Selling waits for proof it can be made well and a place to sell it (Zac, 2026-11-08: no selling plant starts before
+# the shelf, the cups and a first batch). These tags say which is which; a test holds every revenue candidate to them.
+OUTLET_TAGS = frozenset({"sales_outlet"})
+PROOF_TAGS = frozenset({"grown_seedlings"})
+STEP_PENALTY = 2.0  # each extra step on a path is a little less certain
+HOUR_VALUE = 15.0  # a rough worth of an hour, so work counts against a project the way money does (soft, not a wage)
+
+
+def _worth(value: float, cost: float, labour: float) -> float:
+    """Pure logic. Value judged against everything it takes: monthly value (with what it unlocks) over the money and
+    the hours it costs. A free afternoon that opens doors beats an $800 build until the foundations are in; an unknown
+    budget never makes a big step look cheap."""
+    return value * 10 / (1 + (cost + labour * HOUR_VALUE) / 100)
 
 
 @dataclass
@@ -56,7 +76,8 @@ class DevelopmentProfile:
 @dataclass
 class Candidate:
     """One project MIA could recommend. `requires`/`provides` are capability tags that form the dependency graph;
-    `unlocks` names the candidates this one makes possible or much better (its compounding value)."""
+    `unlocks` names the candidates this one makes possible or much better (its compounding value); `made` marks one
+    made by hand or upcycled, chosen over a bought one that provides the same."""
 
     id: str
     name: str
@@ -72,6 +93,7 @@ class Candidate:
     season: tuple = ()  # months it's best begun; () means any time
     scalable: bool = False
     needs_professional: bool = False  # safety-critical: structural, electrical, legal, financial
+    made: bool = False  # made by hand or upcycled rather than bought: preferred when both would do (DEC-0141)
     note: str = ""
     evidence: tuple = ()  # words that mark it already done in the person's records ("greenhouse", "coop")
 
@@ -122,7 +144,8 @@ def compounding_value(candidate: Candidate, catalog: Sequence[Candidate], discou
 def score(candidate: Candidate, profile: DevelopmentProfile, catalog: Sequence[Candidate], done=frozenset()) -> dict:
     """A transparent score for ranking, plus the honest facts behind it. The gates (affordable, unblocked, in season)
     dominate, so an out-of-reach project always sinks below a doable one; among doable ones, monthly benefit and
-    compounding value win and cost, labour and risk weigh against. The number is an ordering aid on a soft scale,
+    compounding value are weighed against the money and hours it takes (`_worth`), less its risk. The number is an
+    ordering aid on a soft scale,
     never a dollar prediction. An unknown budget (None) isn't a gate: the cost is said, not judged against $0."""
     ok, missing = available(candidate, profile, catalog, done)
     affordable = profile.budget is None or candidate.entry_cost <= profile.budget
@@ -130,7 +153,7 @@ def score(candidate: Candidate, profile: DevelopmentProfile, catalog: Sequence[C
     cv = compounding_value(candidate, catalog, done=frozenset(done))
     value = candidate.benefit + cv
     cost = candidate.entry_cost + candidate.recurring_cost * 6  # a 6-month running horizon
-    raw = value * 10 - cost * 0.05 - candidate.labour_hours * 0.5 - candidate.risk * 20
+    raw = _worth(value, cost, candidate.labour_hours) - candidate.risk * 20
     if not affordable:
         raw -= 1000
     if not ok:
@@ -176,17 +199,147 @@ def _reason(s: dict) -> str:
     return f"{s['name']} — {why}.{pro}"
 
 
+def path_to(goal: Candidate, profile: DevelopmentProfile, catalog: Sequence[Candidate], done=frozenset()) -> Optional[list]:
+    """The ordered steps that make `goal` doable from here, ending with the goal itself (Zac, 2026-11-08: "going
+    straight to selling plant starts without any kind of building the infrastructure to manage that wouldn't be a good
+    idea"). For each thing it still needs, the candidate that provides it: made or upcycled first (his producer
+    direction, DEC-0141), then cheapest, then least work, with that candidate's own needs before it. None when
+    something on the way has no way to get it. Pure logic."""
+    done = frozenset(done)
+    have = _have_after(profile, catalog, done)
+    steps: list = []
+
+    def provide(tag: str, seen: frozenset) -> bool:
+        """Whether `tag` is on hand, or some candidate (and its own needs) can be added to the path to provide it."""
+        if tag in have:
+            return True
+        options = sorted((c for c in catalog if tag in c.provides and c.id not in done and c.id not in seen),
+                         key=lambda c: (not c.made, c.entry_cost, c.labour_hours))
+        return any(visit(c, seen | {c.id}) for c in options)
+
+    def visit(c: Candidate, seen: frozenset) -> bool:
+        """Adds `c` after everything it needs; on a dead end, puts the path back as it was."""
+        kept_steps, kept_have = list(steps), set(have)
+        for tag in sorted(c.requires):
+            if not provide(tag, seen):
+                steps[:] = kept_steps
+                have.clear()
+                have.update(kept_have)
+                return False
+        if c not in steps:
+            steps.append(c)
+            have.update(c.provides)
+        return True
+
+    return steps if visit(goal, frozenset({goal.id})) else None
+
+
+def _path_score(goal: Candidate, steps: list, catalog: Sequence[Candidate], done) -> float:
+    """Pure logic. How worthwhile a whole path is, on the same soft scale as `score`: the goal's monthly value and what
+    it unlocks, plus what each step produces on the way, against the path's cost, work and the goal's risk, and a
+    little less for every extra step (a far goal is less certain). A one-step path scores as its candidate does."""
+    value = goal.benefit + compounding_value(goal, catalog, done=frozenset(done)) + sum(
+        s.benefit for s in steps if s is not goal)
+    cost = sum(s.entry_cost + s.recurring_cost * 6 for s in steps)
+    labour = sum(s.labour_hours for s in steps)
+    return _worth(value, cost, labour) - goal.risk * 20 - STEP_PENALTY * (len(steps) - 1)
+
+
+def _months(season: tuple) -> str:
+    """Pure logic. "March to May" for a season's months."""
+    return f"{_MONTHS[season[0] - 1]} to {_MONTHS[season[-1] - 1]}" if season else ""
+
+
+def readiness(first: Candidate, goal: Candidate, steps: list, profile: DevelopmentProfile,
+              catalog: Sequence[Candidate], done=frozenset()) -> list:
+    """The checks behind a recommendation, shown with it so the reasoning is open: everything it needs is in place,
+    it's the right season (and when the rest of the path's steps come due), the cost against the budget, made before
+    bought, selling only after proof and a place to sell, and a professional's look for anything structural. Each is
+    {"check", "ok", "line"}; ok is None when it's only information. Pure logic."""
+    done = frozenset(done)
+    out = [{"check": "ready", "ok": True, "line": "Everything it needs is already in place."}]
+    in_season = (not first.season) or profile.month in first.season
+    out.append({"check": "season", "ok": in_season,
+                "line": "A good time to do it." if in_season else f"Best begun {_months(first.season)}."})
+    later = [s for s in steps[1:] if s.season and profile.month not in s.season]
+    if later:
+        out.append({"check": "timing", "ok": None, "line": "Line up the rest: " + "; ".join(
+            f"{s.name.lower()} is best begun {_months(s.season)}" for s in later) + "."})
+    total = sum(s.entry_cost for s in steps)
+    if profile.budget is None:
+        out.append({"check": "budget", "ok": None,
+                    "line": f"About {money(first.entry_cost, ',.0f')} for this step, about {money(total, ',.0f')} "
+                            "for the whole path; tell me your budget and I'll weigh it."})
+    else:
+        out.append({"check": "budget", "ok": total <= profile.budget,
+                    "line": f"About {money(total, ',.0f')} for the whole path, "
+                            + ("within" if total <= profile.budget else "more than")
+                            + f" the {money(profile.budget, ',.0f')} you have; this step is "
+                              f"{money(first.entry_cost, ',.0f')}."})
+    for step in steps:
+        rivals = [c for c in catalog if c is not step and c.id not in done and c.provides & step.provides]
+        bought = [c for c in rivals if not c.made]
+        if step.made and bought:
+            out.append({"check": "made_first", "ok": True,
+                        "line": f"Made, not bought: {step.name.lower()} rather than {bought[0].name.lower()} "
+                                f"({money(bought[0].entry_cost, ',.0f')})."})
+        elif not step.made and any(c.made for c in rivals):
+            maker = next(c for c in rivals if c.made)
+            out.append({"check": "made_first", "ok": False,
+                        "line": f"{maker.name} could be made instead of buying {step.name.lower()}."})
+    if goal.sector == "business":
+        proof, outlet = goal.requires & PROOF_TAGS, goal.requires & OUTLET_TAGS
+        out.append({"check": "start_small", "ok": bool(proof and outlet),
+                    "line": "Selling waits for proof you can make it well (a first batch) and a place to sell it, "
+                            "then starts small."})
+    if any(s.needs_professional for s in steps):
+        out.append({"check": "professional", "ok": None, "line": PROFESSIONAL})
+    return out
+
+
 def next_step(profile: DevelopmentProfile, catalog: Sequence[Candidate], done=frozenset()) -> Optional[dict]:
-    """The single logical next move, with its reasoning — or None when the catalog is empty. Prefers a doable project
-    (affordable, unblocked, in season); failing that, names a seasonal wait, a savings target, or the prerequisite to
-    clear first, so the answer is always grounded in the real starting position."""
+    """The single logical next move, with its reasoning, or None when the catalog is empty. It looks ahead: every goal
+    gets its whole path (`path_to`), each path is weighed as a whole (`_path_score`), and the first step of the best
+    one whose first step can be done now is the recommendation, with the path and the checks behind it
+    (`readiness`). So a goal that needs infrastructure first (selling starts needs cups, a shelf, a first batch and a
+    stand) is reached through that infrastructure, never jumped to. When no path can start now, it names a seasonal
+    wait, a savings target, or the prerequisite to clear first."""
+    done = frozenset(done)
     rows = ranked(profile, catalog, done)
     if not rows:
         return None
-    doable = [s for s in rows if s["available"] and s["affordable"] and s["in_season"]]
-    if doable:
-        best = doable[0]
-        return {"kind": "do", "recommend": best, "reason": _reason(best)}
+    best = None
+    leads: dict = {}  # first step's id -> the best longer path it starts, to say what a step leads toward
+    for goal in catalog:
+        if goal.id in done:
+            continue
+        steps = path_to(goal, profile, catalog, done)
+        if not steps:
+            continue
+        first = score(steps[0], profile, catalog, done)
+        if not (first["available"] and first["affordable"] and first["in_season"]):
+            continue
+        weight = _path_score(goal, steps, catalog, done)
+        if best is None or weight > best[0]:
+            best = (weight, goal, steps, first)
+        # What a step leads toward: the goal it starts the path to that itself produces the most,
+        # the longer path on a tie, so a free first step is said as the start of selling starts, not just the batch.
+        aim = (goal.benefit, len(steps))  # what the goal itself produces, not what it unlocks (that counts its steps)
+        if len(steps) > 1 and (steps[0].id not in leads or aim > leads[steps[0].id][0]):
+            leads[steps[0].id] = (aim, goal, steps)
+    if best is not None:
+        _, goal, steps, first = best
+        if len(steps) == 1 and first["id"] in leads:  # a step worth doing on its own that's also the start of more
+            _, goal, steps = leads[first["id"]]
+        reason = _reason(first)
+        if len(steps) > 1:
+            reason += (f" It's step 1 of {len(steps)} on the way to \u201c{goal.name}\u201d: "
+                       + " \u2192 ".join(s.name.lower() for s in steps) + ".")
+        return {"kind": "do", "recommend": first, "reason": reason, "goal": {"id": goal.id, "name": goal.name},
+                "path": [{"id": s.id, "name": s.name, "cost": money(s.entry_cost, ",.0f"), "made": s.made}
+                         for s in steps],
+                "checks": readiness(next(c for c in catalog if c.id == first["id"]), goal, steps, profile, catalog,
+                                    done)}
     # Nothing is doable right now — explain the nearest path to a doable one.
     off_season = [s for s in rows if s["available"] and s["affordable"] and not s["in_season"]]
     if off_season:
@@ -222,35 +375,66 @@ def next_step(profile: DevelopmentProfile, catalog: Sequence[Candidate], done=fr
 def homestead_catalog() -> list:
     """The first proving domain (Zac, 2026-11-08): realistic, low-to-higher-cost homestead projects whose dependencies
     and unlocks exercise compounding value — compost and water are cheap and foundational (they unlock the beds and
-    the greenhouse); the greenhouse is dear but scalable and opens plant sales. Grounded in plans MIA already knows
+    the greenhouse); the greenhouse is dear but scalable. Selling seedling starts sits at the end of a real chain:
+    seed cups (toilet-paper rolls, made, before bought trays), a seed-starting shelf (scrap, before a bought one), seed
+    mix, a first batch as proof, then a stand, so the plan reaches it through the infrastructure it needs. Grounded in plans MIA already knows
     (`core/plan_library.py`), each with the words that mark it already done in the person's records (`_EVIDENCE`,
     read by `done_from_records`). Costs are rough starting figures, not quotes."""
     catalog = [
         Candidate("rain_barrel", "Rain-barrel water collection", entry_cost=40, benefit=8, labour_hours=4,
                   provides=frozenset({"water"}), unlocks=("drip_irrigation", "greenhouse"), risk=0.1,
                   note="A barrel, a diverter and a screen — the cheapest thing that unlocks the most."),
-        Candidate("compost_bin", "Three-bay compost bin", entry_cost=30, benefit=12, labour_hours=6,
+        Candidate("compost_bin", "Three-bay compost bin", entry_cost=30, benefit=12, labour_hours=6, made=True,
                   provides=frozenset({"compost", "soil"}), unlocks=("raised_bed", "greenhouse"), risk=0.1,
                   note="Pallets are often free; turns scraps into the soil everything else needs."),
-        Candidate("raised_bed", "Raised garden bed", entry_cost=60, benefit=25, labour_hours=8,
-                  provides=frozenset({"beds"}), unlocks=("cold_frame", "plant_sales"), season=(3, 4, 5), risk=0.15,
+        Candidate("raised_bed", "Raised garden bed", entry_cost=60, benefit=25, labour_hours=8, made=True,
+                  provides=frozenset({"beds"}), unlocks=("cold_frame",), season=(3, 4, 5), risk=0.15,
                   note="Better with compost under it; the first real food."),
         Candidate("drip_irrigation", "Drip irrigation", entry_cost=80, benefit=10, labour_hours=5,
                   requires=frozenset({"water"}), provides=frozenset({"irrigation"}), risk=0.15,
                   note="Needs a water source first; saves labour and water across every bed."),
-        Candidate("cold_frame", "Cold frame", entry_cost=50, benefit=15, labour_hours=6,
+        Candidate("cold_frame", "Cold frame", entry_cost=50, benefit=15, labour_hours=6, made=True,
                   requires=frozenset({"beds"}), provides=frozenset({"season_extension"}), season=(9, 10, 11), risk=0.15,
                   note="Extends the growing season at both ends."),
         Candidate("chickens", "Chicken coop and run", entry_cost=300, recurring_cost=25, benefit=40, labour_hours=20,
-                  provides=frozenset({"manure", "eggs"}), unlocks=("compost_bin",), risk=0.3, needs_professional=False,
+                  made=True, provides=frozenset({"manure", "eggs"}), unlocks=("compost_bin",), risk=0.3,
                   note="Eggs and manure for the compost; ongoing feed cost and daily chores."),
-        Candidate("greenhouse", "Greenhouse", entry_cost=800, recurring_cost=10, benefit=90, labour_hours=40,
+        Candidate("greenhouse", "Greenhouse", entry_cost=800, recurring_cost=10, benefit=90, labour_hours=40, made=True,
                   requires=frozenset({"water"}), provides=frozenset({"year_round"}), unlocks=("plant_sales",),
                   scalable=True, risk=0.35, needs_professional=True,
                   note="Year-round growing and a path to selling plants; the big step, so it waits."),
-        Candidate("plant_sales", "Sell seedlings and produce", entry_cost=40, benefit=60, labour_hours=6,
-                  requires=frozenset({"beds"}), scalable=True, risk=0.4, sector="business",
-                  note="Where the homestead starts paying back — the bridge to a small business."),
+        # Seed starting: the infrastructure selling starts needs before anyone pays for one (Zac, 2026-11-08).
+        Candidate("seed_cups", "Toilet-paper-roll seed cups", entry_cost=0, benefit=2, labour_hours=1, made=True,
+                  provides=frozenset({"seed_cups"}), unlocks=("first_seedlings",), risk=0.05,
+                  note="Save the rolls, cut and fold the bottoms; they go into the ground with the plant."),
+        Candidate("cell_trays", "Plastic seed-cell trays", entry_cost=15, benefit=2, labour_hours=0.2,
+                  provides=frozenset({"seed_cups"}), unlocks=("first_seedlings",), risk=0.05,
+                  note="Reusable for years, but bought."),
+        Candidate("seedling_shelf", "Seed-starting shelf", entry_cost=25, benefit=3, labour_hours=4, made=True,
+                  provides=frozenset({"seedling_space"}), unlocks=("first_seedlings", "grow_light"), risk=0.1,
+                  note="A simple rack from scrap lumber by your sunniest window; the shelving plan sizes it."),
+        Candidate("wire_shelf", "A bought wire shelf for seedlings", entry_cost=40, benefit=3, labour_hours=0.5,
+                  provides=frozenset({"seedling_space"}), unlocks=("first_seedlings", "grow_light"), risk=0.1,
+                  note="Quick, but bought."),
+        Candidate("seed_mix", "Seed-starting mix", entry_cost=10, benefit=1, labour_hours=0.2,
+                  provides=frozenset({"seed_mix"}), unlocks=("first_seedlings",), risk=0.05,
+                  note="Fine and clean; your own sieved compost can stand in once the bin has matured, months from now."),
+        Candidate("grow_light", "Shop-light grow lights", entry_cost=40, benefit=6, labour_hours=1,
+                  requires=frozenset({"seedling_space"}), provides=frozenset({"seedling_light"}), risk=0.1,
+                  note="Stockier starts than a window alone; hang it a few inches over the tops."),
+        Candidate("first_seedlings", "Start a first batch of seedlings", entry_cost=5, benefit=8, labour_hours=3,
+                  requires=frozenset({"seed_cups", "seedling_space", "seed_mix"}),
+                  provides=frozenset({"grown_seedlings"}), unlocks=("raised_bed", "sales_stand", "plant_sales"),
+                  season=(2, 3, 4), risk=0.2,
+                  note="A dozen or two of something easy (tomatoes, peppers, herbs): proof you grow them well first."),
+        Candidate("sales_stand", "A roadside stand or market table", entry_cost=20, benefit=0, labour_hours=4,
+                  made=True, requires=frozenset({"grown_seedlings"}), provides=frozenset({"sales_outlet"}),
+                  unlocks=("plant_sales",), risk=0.1,
+                  note="Pallets and a sign, or a table at the local market, built once there's something to sell."),
+        Candidate("plant_sales", "Sell seedling starts", entry_cost=10, benefit=60, labour_hours=3,
+                  requires=frozenset({"grown_seedlings", "sales_outlet"}), season=(3, 4, 5), scalable=True, risk=0.4,
+                  sector="business",
+                  note="Start small: a few flats of what grew best, priced by the pot. Where the homestead pays back."),
     ]
     for c in catalog:
         c.evidence = _EVIDENCE.get(c.id, ())
@@ -293,6 +477,14 @@ _EVIDENCE = {
     "cold_frame": ("cold frame",),
     "chickens": ("coop", "chicken", "flock"),
     "greenhouse": ("greenhouse", "walipini", "hoop house", "polytunnel"),
+    "seed_cups": ("seed cup",),
+    "cell_trays": ("seed tray", "cell tray", "seedling tray", "plug tray"),
+    "seedling_shelf": ("seed shelf", "seedling shelf", "seed-starting shelf", "seed starting shelf", "grow rack",
+                       "grow shelf"),
+    "seed_mix": ("seed starting mix", "seed-starting mix", "potting mix"),
+    "grow_light": ("grow light", "shop light"),
+    "first_seedlings": ("grown batch",),  # any batch in the grow lab: proof they grow things
+    "sales_stand": ("farm stand", "roadside stand", "market table", "market booth", "produce stand"),
 }
 _FINISHED = frozenset({"done", "complete", "completed", "finished"})
 _MONTHS = ("January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
@@ -301,7 +493,8 @@ _MONTHS = ("January", "February", "March", "April", "May", "June", "July", "Augu
 
 def done_from_records(context, catalog: Sequence[Candidate]) -> dict:
     """Which candidates the person already has, read from their own records: an asset (the Garage or Greenhouse), a
-    finished project, a tank or bed in the grow lab, a flock, each matched by the candidate's `evidence` words.
+    finished project, a tank or bed in the grow lab (and any batch grown there, the proof selling waits for), a flock,
+    a material on the workshop shelf, each matched by the candidate's `evidence` words.
     {candidate id: where it was found}. A source that won't read just contributes nothing."""
     from core import links
 
@@ -323,6 +516,11 @@ def done_from_records(context, catalog: Sequence[Candidate]) -> dict:
     lab = getattr(context, "grow_lab", None)
     if lab is not None:
         names += [(str(n).lower(), "your grow lab") for n in getattr(lab, "systems", [])]
+        if getattr(lab, "batches", None):
+            names.append(("grown batch", "your grow lab"))  # they've grown a batch: the proof selling waits for
+    stock = getattr(context, "materials", None)
+    if stock is not None:
+        names += [(str(m.name).lower(), "your workshop shelf") for m in _safe(stock.all_materials)]
     names += [(f"{getattr(f, 'name', '')} flock".lower(), "your flock") for f in _safe(lambda: links.records(context, "flock"))]
     done = {}
     for c in catalog:
@@ -348,7 +546,8 @@ def _why_not(row: dict, profile: DevelopmentProfile, by_id: dict) -> str:
 def plan(context, budget: Optional[float] = None, catalog: Optional[Sequence[Candidate]] = None,
          month: Optional[int] = None) -> dict:
     """The homestead plan as a screen and a tool both show it (DEC-0125): what the person already has (from their
-    records), the logical next step with its reasoning, and the best few options with why each isn't ready yet.
+    records), the logical next step with its reasoning, the goal it leads toward, the whole path and the checks behind
+    it (`next.goal`, `next.path`, `next.checks`), and the best few options with why each isn't ready yet.
     Advisory and `simulated`: nothing here changes anything."""
     catalog = list(catalog) if catalog is not None else homestead_catalog()
     profile = development_profile(context, budget)
@@ -367,21 +566,28 @@ def plan(context, budget: Optional[float] = None, catalog: Optional[Sequence[Can
     return {"environment": SIMULATED, "budget": budget, "month": profile.month,
             "have": [{"name": by_id[i].name, "found_in": where} for i, where in have.items()],
             "next": ({"kind": step["kind"], "id": step["recommend"]["id"], "name": step["recommend"]["name"],
-                      "reason": step["reason"]} if step else None),
+                      "reason": step["reason"], "goal": step.get("goal"), "path": step.get("path", []),
+                      "checks": step.get("checks", [])} if step else None),
             "options": options,
             "note": "Costs are rough starting figures, not quotes. Tell me your budget and I'll weigh it in."}
 
 
 def describe(p: dict) -> str:
-    """Plain words for the tool: the next step and why, what's already done, and what comes after."""
+    """Plain words for the tool: the next step and why (with its path, when it's the start of one), what's already
+    done, what comes after when there's no path, the checks that aren't met yet or need lining up, and a budget ask."""
     if not p.get("next"):
         return "I don't have homestead projects to weigh yet."
     lines = [f"Next on the homestead: {p['next']['reason']}"]
     if p["have"]:
         lines.append("Already yours, from your records: " + ", ".join(f"{h['name'].lower()} ({h['found_in']})" for h in p["have"]) + ".")
-    after = [o["name"].lower() for o in p["options"] if o["id"] != p["next"]["id"]][:3]
-    if after:
-        lines.append("After that: " + ", ".join(after) + ".")
+    path = p["next"].get("path") or []
+    if len(path) <= 1:  # the path already says what follows; otherwise the best other options
+        after = [o["name"].lower() for o in p["options"] if o["id"] != p["next"]["id"]][:3]
+        if after:
+            lines.append("After that: " + ", ".join(after) + ".")
+    unmet = [c["line"] for c in p["next"].get("checks", []) if c["ok"] is False or c["check"] == "timing"]
+    if unmet:
+        lines.append(" ".join(unmet))
     if p["budget"] is None:
         lines.append("Tell me your budget and I'll weigh it in.")
     return " ".join(lines)

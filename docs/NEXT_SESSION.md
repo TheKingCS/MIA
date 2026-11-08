@@ -962,7 +962,9 @@ what's on the shelf), said with it (`core/connections.py`).
 **Claimed by the engine session (2026-11-08, Zac's ask), core only:** (7) deep next-step reasoning in
 `core/development_engine.py`: a seed-starting chain (toilet-roll cups, a seed shelf, a first batch as proof, a stand),
 path-to-goal look-ahead, readiness checks shown with each recommendation, made-first; `plan()` gains `path` and
-`checks` for the What's Next screen. (8) The Woodworking Studio audit and proposal (docs only, no build).
+`checks` for the What's Next screen. (8) The Woodworking Studio audit and proposal (docs only, no build). **(7) built:** for the
+design session, `grow_page()["next"]["next"]` now also has `goal` ({id, name}), `path` (each step {id, name, cost,
+made}) and `checks` (each {check, ok, line}; ok None is information): What's Next can show "step 1 of 6 on the way to …".
 
 **Who builds what (2026-11-07 night, after Power and Recent Changes were each built twice at once):** screens
 (web pages, the canvas's look, the review's missing screens: Waiting For You, a plan's page, the Browser in the
