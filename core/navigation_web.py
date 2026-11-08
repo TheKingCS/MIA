@@ -47,14 +47,17 @@ def sky(lat: float, lon: float, day: date) -> dict:
 def screen(context, from_id: str = "", to_id: str = "", day: Optional[date] = None) -> dict:
     """Navigation's page data: the waypoints by name with their grids; the route (km, miles, bearing, compass
     point) from `from_id` to `to_id` when both are given and differ; the sky (sunrise, sunset, moon) at `from_id`, else
-    at the first waypoint, on `day`.
+    at the first waypoint, on `day`; each waypoint's notes and form values, and the Edit form.
     """
     day = day or date.today()
     book = getattr(context, "waypoints", None)
     points = sorted(book.all_waypoints(), key=lambda w: w.name.lower()) if book is not None else []
+    from core.waypoint_actions import forms
+
     shown = [{"id": w.waypoint_id, "name": w.name, "category": w.category, "lat": round(w.latitude, 5),
-              "lon": round(w.longitude, 5), "grid": _grid(w.latitude, w.longitude)} for w in points]
-    out = {"waypoints": shown, "route": None, "sky": None, "day": day.isoformat()}
+              "lon": round(w.longitude, 5), "grid": _grid(w.latitude, w.longitude), "notes": w.notes,
+              "values": {"name": w.name, "category": w.category, "notes": w.notes}} for w in points]
+    out = {"waypoints": shown, "route": None, "sky": None, "day": day.isoformat(), "forms": forms()}
     if book is not None and from_id and to_id and from_id != to_id:
         found = book.distance_and_bearing(from_id, to_id)
         if found is not None:

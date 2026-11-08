@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1128 files, 253,267 lines; 1128 files describe themselves; 13,842 of 14,514 classes and functions are documented.
+1129 files, 253,404 lines; 1129 files describe themselves; 13,849 of 14,521 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-412 files, 118,062 lines; 6,249 of 6,338 classes and functions documented
+413 files, 118,168 lines; 6,255 of 6,344 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -55,6 +55,7 @@
 - `core/assistant_toolbox_actions.py`: The Toolbox by voice, for what the web Toolbox added (DEC-0125: full use both ways). "How many board feet in ten 2x6s, 8 feet long", "how much concrete for a 10 by 12 pad, 4 inches thick", "turn off my wake up alarm". Each tool uses the same core math (core/toolbox_calcs.py) or the same action kind 
 - `core/assistant_turn.py`: One Assistant turn — user text in, the things MIA should say back out — shared by every voice surface: the headless Core loop (`core/voice_loop.py`) and the phone voice endpoint (`server/app.py`). Pulled out of `VoiceLoopController._handle_turn()` unchanged in behavior, so both surfaces answer, act,
 - `core/assistant_undo_actions.py`: "Undo that" and "what did you just change?" (core/undo_log.py), plus "why did you tell me that?" and "stop telling me about ..." (core/message_reasons.py, core/communication_gate.py), and "is everything set up?" (core/system_check.py). 2026-10-01.
+- `core/assistant_waypoint_actions.py`: Waypoints by voice, for what Navigation's page added (DEC-0125: full use both ways). "Rename the spring waypoint to Upper Spring", "mark the old gate as a hazard", "note on the spring: dry in August": the same `waypoint.edit` action kind as the page's Edit (core/waypoint_actions.py), so "undo that" 
 - `core/assistant_why_actions.py`: Assistant tools for the owner's chain of reasons, slice B ("Remember Why") of docs/COGNITIVE_EXTENSION_PROPOSAL.md. The chain lives on Intents (core/intent_manager.py: `serves_intent_id`, `reason`); the evidence is computed by core/why_graph.py.
 - `core/atomic_write.py`: One shared helper for crash-safe file writes. Every core/*_manager.py persists its state as JSON via a direct `path.write_text(...)` call — which is NOT atomic: a crash, power loss, or disk-full condition mid write can leave that file truncated or corrupted, permanently losing everything in it. A re
 - `core/avatar_manager.py`: Companion-avatar camera source for the Home Dashboard's Companion Avatar widget (gui/home_dashboard.py, gui/widgets/avatar_camera_widget.py). Built for VMagicMirror (https://malaybaku.github.io/VMagicMirror/), a separately-running, Windows-only Unity/VRM avatar app the user has been running alongsid
@@ -380,7 +381,7 @@
 - `core/voice_manager.py`: The Voice interface's STT/TTS core service — docs/ROADMAP.md milestone 5.3. Defines backend-agnostic `STTBackend`/`TTSBackend` interfaces (same shape as `core/llm_manager.py`'s `LLMBackend`), with one concrete implementation each:
 - `core/volume_manager.py`: System volume control for the Home Dashboard's volume widget (gui/home_dashboard.py). Same backend-agnostic shape as core/power_manager.py (`PowerBackend`/`PsutilBatteryBackend`) and core/llm_manager.py's `LLMBackend`: one `VolumeBackend` Protocol, one concrete implementation, `AmixerVolumeBackend`,
 - `core/warranty_watch.py`: A heads-up before a warranty runs out (2026-09-28). Machines got a "Warranty until" date (MaintenanceAsset.warranty_until), typed in or filled from a filed warranty/manual (core/inbox_classify.py). About a month before, and again a week before, MIA mentions it through the communication gate, so anyt
-- `core/waypoint_actions.py`: Waypoints (core/waypoint_manager.py) through the action contract (core/actions.py), for the web's Maps and Navigation pages: `waypoint.add` (a name and where: from a tap on the map, or typed) and `waypoint.delete`. The store writes through atomic_write_text, so "undo that" takes either back. Maps ar
+- `core/waypoint_actions.py`: Waypoints (core/waypoint_manager.py) through the action contract (core/actions.py), for the web's Maps and Navigation pages: `waypoint.add` (a name and where: from a tap on the map, or typed), `waypoint.edit` (its name, kind and notes; where it is stays) and `waypoint.delete`. The store writes throu
 - `core/waypoint_manager.py`: Backs the Navigation module's waypoint list (modules/navigation/module.py) — docs/ROADMAP.md milestone 10.1. Same persisted-JSON pattern as core/inventory_manager.py: data/waypoints.json, a dataclass with to_dict/from_dict, a manager class wrapping load/save.
 - `core/web_account.py`: The web's Profile and Settings screens (2026-10-07, Zac: the gear's Profile and Settings). Profile is who you are: name, email, country, what MIA helps with, household, password and recovery code. Settings is how MIA behaves for you: the person's own settings from the PC app's Settings (core/person_
 - `core/web_browser.py`: The Browser screen's data (DEC-0117, 2026-11-07): MIA's own browser as the person sees it on the web, so held steps and taught tasks aren't only reachable by talking to her.
@@ -692,7 +693,7 @@
 
 ## tests/: the test suite: what each part must do
 
-374 files, 67,484 lines; 5,348 of 5,931 classes and functions documented
+374 files, 67,510 lines; 5,349 of 5,932 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -907,7 +908,7 @@
 - `tests/test_music_module.py`: Unit tests for modules.music.module's pure formatting functions — no Qt event loop needed, same shape as tests/test_power_module.py.
 - `tests/test_named_tool.py`: The tool a message names in its own words (2026-10-19, the PC model's misses): AssistantActionRegistry.named_action() and core/assistant_chat.settle_on_named_tool(). Pure logic, no model. *(4 undocumented)*
 - `tests/test_navigation_module.py`: Unit tests for modules.navigation.module's pure functions. format_sun_moon_summary() is tested against real coordinates (not mocked) since astral itself is the "real dependency" here (offline, deterministic, no network) — same reasoning as test_system_health.py mocking psutil but this module having  *(1 undocumented)*
-- `tests/test_navigation_web.py`: Navigation's web screen (core/navigation_web.py): waypoints with grid references, distance and bearing, the sun and the moon.
+- `tests/test_navigation_web.py`: Navigation's web screen (core/navigation_web.py): waypoints with grid references, distance and bearing, the sun and the moon; and a waypoint changed with waypoint.edit, on the page and by voice.
 - `tests/test_net_worth_history.py`: Tests for core/net_worth_history.py: one net worth point a day, the change this month, and the Overview's line.
 - `tests/test_night_school.py`: Night School (DEC-0100, core/night_school.py): she chooses what to study, her teacher sets exercises with a test that fails first, code grades her, the teacher's lesson comes back the next time, practice never merges, and her picks are scored against her teacher's before she's trusted to choose.
 - `tests/test_notes_module.py`: Unit test for modules.notes.module.format_entry_row — pure formatting logic, no Qt event loop needed (importing the module only defines widget classes; nothing here instantiates one).
@@ -1071,7 +1072,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-78 files, 14,344 lines
+78 files, 14,349 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
