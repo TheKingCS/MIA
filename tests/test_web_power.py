@@ -51,6 +51,7 @@ def test_readings_read_plainly_and_a_percent_is_a_meter():
 
 
 def test_a_source_is_added_read_and_shown_low_first(home):
+    """Added, read, the low one first with an amber meter, its history in the Lab under Power's name, removed."""
     run(home, "energy_source.add", name="Propane tank", source_type="Propane")
     run(home, "energy_source.add", name="Generator fuel", source_type="Generator")
     propane, generator = sorted(home.energy.all_energy_sources(), key=lambda s: s.name, reverse=True)
@@ -61,6 +62,10 @@ def test_a_source_is_added_read_and_shown_low_first(home):
     assert [s["name"] for s in page["sources"]] == ["Generator fuel", "Propane tank"]  # the low one needs you first
     gen = page["sources"][0]
     assert gen["needs_you"] and gen["meters"][0]["text"] == "20%" and gen["meters"][0]["meter"]["tone"] == "attention"
+    from core.web_lab import lab_page  # its history opens in the Lab, under Power's name
+
+    history = lab_page(home, series=gen["meters"][0]["series"])["chosen"]
+    assert (history["name"], history["app"]) == ("Generator fuel · Level", "Power")
     with pytest.raises(ActionError):
         run(home, "energy.reading", source_id=propane.source_id, value="lots")
     run(home, "energy_source.delete", source_id=generator.source_id)
