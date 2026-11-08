@@ -44,6 +44,11 @@
         "count": 12,
         "cost": 0.0,
         "notes": ""
+      },
+      "stage": {
+        "n": 3,
+        "label": "Picking",
+        "line": "Picking now · 6 heads so far"
       }
     },
     {
@@ -79,6 +84,11 @@
         "count": 12,
         "cost": 0.0,
         "notes": ""
+      },
+      "stage": {
+        "n": 2,
+        "label": "Growing",
+        "line": "Day 38"
       }
     },
     {
@@ -114,6 +124,11 @@
         "count": 8,
         "cost": 0.0,
         "notes": ""
+      },
+      "stage": {
+        "n": 1,
+        "label": "Sprouting",
+        "line": "Day 20"
       }
     }
   ],

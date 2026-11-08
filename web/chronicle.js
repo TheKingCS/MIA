@@ -1,7 +1,9 @@
 /*
  * chronicle.js — The Chronicle (claude, 2026-10-17, DEC-0028). Renders
  * MIA.chronicle() (core/chronicle.py): this week's chapter, the weeks
- * before it, and the yearly editions. Read only; formatting only.
+ * before it, and the yearly editions. Laid out as the design canvas's
+ * Chronicle (DEC-0113): the newest chapter as prose, earlier ones to open.
+ * Read only; formatting only.
  */
 (function () {
   "use strict";
@@ -31,14 +33,31 @@
         })(), "📷 " + c.photos.count + (c.photos.count === 1 ? " photo" : " photos")) : null);
   }
 
+  // The design canvas (DEC-0113): the newest chapter told as prose (its label, its name, the story in two
+  // paragraphs, its highlights as tags), then Earlier Chapters, each opening to its full story.
+  function lead(c) {
+    const half = Math.ceil(c.story.length / 2);
+    return el("article", { class: "chron-lead" },
+      el("span", { class: "pw-label" }, "The Chronicle · " + c.title + " · " + c.dates + (c.so_far && c.kind === "week" ? " · so far" : "")),
+      el("h2", {}, c.name),
+      el("p", {}, c.story.slice(0, half).join(" ")), c.story.length > 1 ? el("p", {}, c.story.slice(half).join(" ")) : null,
+      c.highlights.length ? el("div", { class: "chron-tags" }, ...c.highlights.slice(0, 6).map((h) => el("span", { class: "chron-tag" }, h))) : null,
+      c.months && c.months.length ? chapter(Object.assign({}, c, { story: [], highlights: [], photos: null, name: "Month by month" }), false) : null,
+      c.photos && c.photos.count ? chapter(Object.assign({}, c, { story: [], highlights: [], months: [], name: "Photos" }), false) : null);
+  }
+
   function draw() {
     $("tabs").hidden = false;
     $("tabs").replaceChildren(...TABS.map(([id, l]) => el("button", { type: "button", role: "tab", "aria-selected": String(id === tab),
       onclick: () => { tab = id; history.replaceState(null, "", "#" + id); draw(); } }, l)));
     const list = tab === "years" ? page.years : [page.this_week, ...page.weeks];
-    $("panel").replaceChildren(...list.map((c, i) => chapter(c, i === 0)),
+    const [first, ...rest] = list;
+    $("panel").replaceChildren(...[first ? lead(first) : null,
+      rest.length ? el("p", { class: "pw-label chron-earlier" }, "Earlier Chapters") : null,
+      ...rest.map((c) => el("details", { class: "glass chron-row" },
+        el("summary", {}, el("span", {}, c.name), el("span", { class: "dim" }, c.title)), chapter(c, false))),
       el("p", { class: "dim" }, tab === "years" ? "The yearly edition grows all year and is finished on Dec 31."
-        : "A new chapter is ready every Sunday. A quiet week is a quiet week, never a failure."));
+        : "A new chapter is ready every Sunday. A quiet week is a quiet week, never a failure.")].filter(Boolean));
   }
 
   MIAShell.start(async () => {

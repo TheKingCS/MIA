@@ -27,37 +27,47 @@
     if (v) act({ kind: "shop_reward.edit", params: Object.assign({ reward_id: r.id }, v) });
   }
 
-  function card(r) {
-    return el("article", { class: "glass shop-card" + (r.affordable ? " ready" : "") + (r.available ? "" : " claimed") },
-      el("div", { class: "shop-head" },
-        el("span", { class: "shop-icon", "aria-hidden": "true" }, r.icon),
-        el("div", { class: "shop-title" }, el("h3", {}, r.name), r.note ? el("p", { class: "dim" }, r.note) : null),
-        el("span", { class: "shop-cost" }, n(r.cost), el("small", {}, " cr"))),
-      r.available && !r.affordable ? el("div", { class: "shop-progress" },
-        el("div", { class: "bar" }, el("div", { class: "bar-fill", style: "width:" + r.percent + "%" })),
-        el("span", { class: "dim" }, n(r.to_go) + " to go")) : null,
-      el("div", { class: "shop-foot" },
-        el("span", { class: "dim" }, r.available ? (r.bought ? "Bought " + r.bought + "×" : r.repeatable ? "Any time" : "Just once")
-          : "Claimed"),
-        buttons(r.affordable ? btn("Buy", "btn-green", () => act({ kind: "shop.buy", params: { reward_id: r.id } })) : null,
-          btn("Edit", "btn-ghost btn-small", () => edit(r)),
-          btn("Delete", "btn-ghost btn-small", () => act({ kind: "shop_reward.delete", params: { reward_id: r.id } })))));
+  // ⋯ for Edit and Delete, so each card leads with what it's for (the canvas, DEC-0113).
+  const more = (r) => el("details", { class: "row-more" }, el("summary", { "aria-label": "More for " + r.name }, "⋯"),
+    el("div", { class: "row-more-menu" }, btn("Edit", "btn-ghost btn-small", () => edit(r)),
+      btn("Delete", "btn-ghost btn-small", () => act({ kind: "shop_reward.delete", params: { reward_id: r.id } }))));
+
+  function readyRow(r) {
+    return el("div", { class: "glass sh-ready" },
+      el("div", { class: "sh-main" }, el("span", { class: "sh-name" }, r.name), el("span", { class: "sh-cost" }, n(r.cost) + " credits"
+        + (r.bought ? " · bought " + r.bought + "×" : r.repeatable ? "" : " · just once"))),
+      btn("Buy", "btn-green sh-buy", () => act({ kind: "shop.buy", params: { reward_id: r.id } })), more(r));
+  }
+  function savingCard(r) {
+    return el("div", { class: "glass sh-saving" },
+      el("div", { class: "sh-top" }, el("span", { class: "sh-name" }, r.name), el("span", { class: "sh-cost" }, n(r.cost)), more(r)),
+      el("div", { class: "meter" }, el("div", { class: "meter-fill", style: "width:" + r.percent + "%" })),
+      el("span", { class: "dim" }, n(r.to_go) + " more credits"));
   }
 
   function draw() {
     const c = page.credits;
-    $("strip").replaceChildren(
-      el("div", { class: "cell ok" }, el("span", { class: "n" }, n(c.left)), el("span", { class: "t" }, "Credits To Spend")),
-      el("div", { class: "cell soon" }, el("span", { class: "n" }, page.counts.ready), el("span", { class: "t" }, "Ready To Buy")),
-      el("div", { class: "cell ok" }, el("span", { class: "n" }, n(c.earned)), el("span", { class: "t" }, "Earned All Time")));
+    $("strip").hidden = true;
+    const ready = page.rewards.filter((r) => r.available && r.affordable);
+    const saving = page.rewards.filter((r) => r.available && !r.affordable);
+    const claimed = page.rewards.filter((r) => !r.available);
     $("panel").replaceChildren(...[
-      section("Your Rewards", btn("Add Reward", "btn-amber", () => add()),
-        page.rewards.length ? el("div", { class: "shop-grid" }, page.rewards.map(card))
-          : el("p", { class: "empty" }, "Your shop is empty. Add the rewards you'd love to earn: a treat, a night off, new gear.")),
+      el("div", { class: "sh-tiles" },
+        el("div", { class: "glass sh-tile" }, el("span", { class: "pw-label" }, "Earned"), el("strong", {}, n(c.earned))),
+        el("div", { class: "glass sh-tile" }, el("span", { class: "pw-label" }, "Spent"), el("strong", {}, n(c.spent))),
+        el("div", { class: "glass sh-tile left" }, el("span", { class: "pw-label" }, "Left"), el("strong", {}, n(c.left)))),
+      ready.length ? el("p", { class: "pw-label sh-label" }, "Ready to Buy") : null,
+      ...ready.map(readyRow),
+      saving.length ? el("p", { class: "pw-label sh-label" }, "Saving Toward") : null,
+      ...saving.map(savingCard),
+      !page.rewards.length ? el("p", { class: "empty" }, "Your shop is empty. Add the rewards you'd love to earn: a treat, a night off, new gear.") : null,
+      btn("Add a Reward", "btn-ghost sh-add", () => add()),
       page.ideas.length ? section("Ideas", null, el("p", { class: "dim" }, "Tap one to add it, then make it yours."),
         el("div", { class: "chip-row" }, page.ideas.map((i) =>
           el("button", { type: "button", class: "chip chip-button", onclick: () => add({ name: i.name, cost: i.cost, icon: i.icon }) },
             i.icon + " " + i.name + " · " + n(i.cost))))) : null,
+      claimed.length ? section("Claimed", null, el("div", { class: "rows" }, claimed.map((r) => el("div", { class: "row money-row" },
+        el("div", { class: "row-title" }, r.icon + " " + r.name), more(r))))) : null,
       page.bought.length ? section("Bought", null, el("div", { class: "rows" }, page.bought.map((b) => el("div", { class: "row money-row" },
         el("div", {}, el("div", { class: "row-title" }, b.icon + " " + b.name), el("div", { class: "row-sub" }, day(b.when))),
         el("span", { class: "chip" }, "−" + n(b.cost) + " cr"))))) : null,

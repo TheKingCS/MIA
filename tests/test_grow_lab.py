@@ -1,6 +1,6 @@
 """The grow lab (DEC-0030 phase D): batches, harvests and losses, readings
 against the person's own ranges (only ever a warning), experiments that
-compare batches, all undoable."""
+compare batches, all undoable; and a planting's stage from what's known."""
 
 from datetime import date
 
@@ -118,3 +118,13 @@ def test_an_out_of_range_reading_becomes_one_note(lab):
 
     a, b = (Candidate(topic="grow_alert", title=title, message=message, fingerprint=fingerprint) for _ in range(2))
     assert a.key() == b.key()  # the gate drops the repeat
+
+
+def test_a_plantings_stage_goes_by_what_is_known_never_a_guessed_harvest_date():
+    from core.web_grow import growth_stage
+
+    assert growth_stage("Growing", 3, 0) == {"n": 0, "label": "Planted", "line": "Day 3"}
+    assert growth_stage("Growing", 10, 0)["label"] == "Sprouting" and growth_stage("Growing", 40, 0)["n"] == 2
+    assert growth_stage("Growing", 60, 2, 3.5, "lb") == {"n": 3, "label": "Picking", "line": "Picking now · 3.5 lb so far"}
+    assert growth_stage("Done", 90, 3, 9, "lb")["line"] == "9 lb in all" and growth_stage("Lost", 20, 0)["line"] == "Lost"
+    assert growth_stage("Growing", None, 0) == {"n": 0, "label": "Planted", "line": "Planted"}

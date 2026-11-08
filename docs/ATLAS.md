@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1127 files, 253,087 lines; 1127 files describe themselves; 13,836 of 14,508 classes and functions are documented.
+1127 files, 253,246 lines; 1127 files describe themselves; 13,838 of 14,510 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-412 files, 118,108 lines; 6,252 of 6,341 classes and functions documented
+412 files, 118,131 lines; 6,253 of 6,342 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -691,7 +691,7 @@
 
 ## tests/: the test suite: what each part must do
 
-374 files, 67,469 lines; 5,347 of 5,930 classes and functions documented
+374 files, 67,479 lines; 5,348 of 5,931 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -826,7 +826,7 @@
 - `tests/test_goods_voice.py`: Saying it to MIA (core/assistant_goods_actions.py): eggs, goods on hand, a sale, deadlines and freedom, through the same code as their screens.
 - `tests/test_gps_tracks.py`: Tracks (build plan step 14, core/gps_tracks.py): a GPX walk read in code: distance, climb past GPS jitter, moving time, start and end grids; kept in the person's folder; a line in the TAK package. *(1 undocumented)*
 - `tests/test_greenhouse_module.py`: Unit tests for modules.greenhouse.module's pure functions, same style as tests/test_garage_module.py/tests/test_property_module.py (no Qt event loop, no fixtures). *(4 undocumented)*
-- `tests/test_grow_lab.py`: The grow lab (DEC-0030 phase D): batches, harvests and losses, readings against the person's own ranges (only ever a warning), experiments that compare batches, all undoable. *(4 undocumented)*
+- `tests/test_grow_lab.py`: The grow lab (DEC-0030 phase D): batches, harvests and losses, readings against the person's own ranges (only ever a warning), experiments that compare batches, all undoable; and a planting's stage from what's known. *(4 undocumented)*
 - `tests/test_guitar.py`: Guitar, the first program on MIA's learning paths (core/guitar.py, core/guitar_ear.py, DEC-0111): her ear hears notes and chords right (and wrong ones as wrong), the program is sound (every shape makes its chord's notes), and the path runs end to end by voice: start, practise, checks counted, said a
 - `tests/test_hash_identifier.py`: Unit tests for core.hash_identifier — pure pattern-matching logic, no external dependency, real hashes used as test fixtures (not mocks). *(1 undocumented)*
 - `tests/test_heavy_jobs.py`: Heavy jobs on the home computer (core/heavy_jobs.py): a device without Tesseract, a speech model or a voice sends the job to the linked PC; the PC unreachable means the old answer, and it isn't asked again for a while. *(1 undocumented)*
@@ -1070,9 +1070,9 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-78 files, 14,217 lines
+78 files, 14,343 lines
 
-- `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent.
+- `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
 - `web/arcade/progress.js`: Lens Arcade — universal progression. One XP/level/achievement profile shared across every game. Games include this file, then call: ArcadeProgress.award('snake', 'newbest', 50) The module persists to localStorage, handles the daily streak, unlocks achievements, and shows gold toast notifications by 
 - `web/asset.js`: asset.js — one asset's page (claude, 2026-10-06, DEC-0017). Renders MIA.asset(id). Done, readings, tasks, the asset itself and its documents all change through equipment actions (confirm, undo); files go through MIA.upload / MIA.download.
@@ -1082,7 +1082,7 @@
 - `web/calendar.js`: calendar.js — the Calendar screen (claude, 2026-10-16). Renders MIA.calendar(month) (core/calendar_view.py) as the design canvas's one page (DEC-0113): Past Due and Due Today with their actions, Due Soon as short lines, and the month with its dots beside them. Each item says what it is and offers it
 - `web/character.js`: character.js — the Character screen (claude, 2026-10-06, DEC-0017/0018, H-0013). Renders MIA.character() (core/web_progress.py): the person's level and prestige, lifetime stats, everything they've unlocked (highest rarity first) and the tally by rarity, prestige emblems, top skills and latest missio
 - `web/checkin.js`: checkin.js — the Sunday check-in (claude, 2026-10-27, DEC-0047 rule 5). Renders MIA.checkin() (core/weekly_checkin.py): last week (the story, the loop's honest score, loot, what MIA noticed, quests finished) and the week ahead, day by day (runs with projected loot, rhythms, calendar events), quests 
-- `web/chronicle.js`: chronicle.js — The Chronicle (claude, 2026-10-17, DEC-0028). Renders MIA.chronicle() (core/chronicle.py): this week's chapter, the weeks before it, and the yearly editions. Read only; formatting only.
+- `web/chronicle.js`: chronicle.js — The Chronicle (claude, 2026-10-17, DEC-0028). Renders MIA.chronicle() (core/chronicle.py): this week's chapter, the weeks before it, and the yearly editions. Laid out as the design canvas's Chronicle (DEC-0113): the newest chapter as prose, earlier ones to open. Read only; formatting 
 - `web/classroom.js`: classroom.js — the Classroom (claude, 2026-11-06). Renders MIA.classroom() (core/classroom_manager.py): the course to continue (the design canvas's card, DEC-0113), then each subject, its courses and their lessons, how far along each is. Adding, ticking a lesson done (its skill XP credited once) and
 - `web/compliance.js`: compliance.js — the Compliance screen (claude, 2026-10-21, DEC-0040). Renders MIA.compliance() (core/web_compliance.py): Overdue, Next 30 Days, Later, To Check and Done. Every change proposes an action (core/obligation_actions.py): add, edit, verify (the only way an obligation becomes verified), whe
 - `web/cook.js`: cook.js — cook mode (claude, 2026-11-07, DEC-0113: the design canvas's Kitchen · Cook Mode). The recipe being cooked takes the whole screen, on the Kitchen page and on a recipe's page alike: one step in large type, what this step uses, the step's own timer to start, every timer running (they keep go
@@ -1106,7 +1106,7 @@
 - `web/insurance.js`: insurance.js — the insurance check-up (claude, 2026-10-19, DEC-0034). Renders MIA.insurance() (core/insurance.py) in tabs: My Policies (each policy, what it costs a year, what's worth a look), Shop It (what an agent asks for, the quote request MIA drafts, the quotes side by side against what you hav
 - `web/issues.js`: issues.js — the Fix-It Log (claude, 2026-10-27, DEC-0049). Renders MIA.failures() (core/failure_actions.py): open issues first, worst first, each with what happened (the latest examples) and Mark Fixed / Ignore; what MIA learned you mean, with Forget; Report A Problem; and the fix report, ready for 
 - `web/journal.js`: journal.js — the Journal screen (claude, 2026-10-16; Zac: the app only opened a chat). Renders MIA.journal() (core/web_more.py): entries newest first, search, tags; an entry opens to read in full with Edit and Delete. Write Entry proposes journal.add. Talk It Out opens the chat to journal with MIA (
-- `web/kept.js`: kept.js — Kept (claude, 2026-11-06, DEC-0054). Renders MIA.lifeNotes() (core/life_notes.py): the promises, decisions, ideas and goals set aside the person asked MIA to keep. Done and Forget go through actions (life_note.done / .forget), so undo takes them back. Formatting only; the look is muse's.
+- `web/kept.js`: kept.js — Kept (claude, 2026-11-06, DEC-0054). Renders MIA.lifeNotes() (core/life_notes.py): the promises, decisions, ideas and goals set aside the person asked MIA to keep. Done and Forget go through actions (life_note.done / .forget), so undo takes them back. Formatting only; laid out as the desig
 - `web/kitchen.js`: kitchen.js — the Kitchen screen (claude, 2026-10-06, DEC-0017/0018). Renders MIA.kitchen() (core/web_screens.py): recipes (with what's missing and which mission unlocks a locked one), the pantry, the grocery list, the meal log and suggestions. Every button proposes a kitchen action (core/kitchen_act
 - `web/knowledge.js`: knowledge.js — the offline reference library (claude, 2026-11-06). Renders MIA.knowledge(q) (core/reference_library_manager.py): the installed packs, a search across all of them, and an article read as plain text (MIA.knowledgeArticle), and the plans shelf (MIA.knowledgePlans, core/plan_library.py):
 - `web/lab.js`: lab.js — The Lab (claude, 2026-11-07, DEC-0125; the design canvas's Lab, DEC-0113). Renders MIA.lab() (core/web_lab.py): the series as chips, the chosen one's chart (points placed by core, 0..1), its plain numbers and readings newest first, and Add a Reading. Other apps' series (Power, Garage) are l

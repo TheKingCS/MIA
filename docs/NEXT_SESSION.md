@@ -128,6 +128,21 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       Diagnostics (Passed / Look At / Unread tiles, a dotted row per check-up, Run Again).
       Chickens (Log Today's Eggs first: four big one-tap counts; This Week / Lay Rate / Feed per Dozen; two weeks of eggs
       with today lit; Cartons on Hand with Carton Them; feed, birds and the log below).
+      Greenhouse (a Today tab first: Needs You with upkeep due and readings out of range, then each planting with
+      its stage meter from `core/web_grow.growth_stage`, which goes by days planted and harvests, never a guessed date).
+      Character (the portrait card with level, prestige and the XP meter; Stats as the six attributes with meters;
+      Collection by rarity; Top Skills; buffs, the Chronicle and the rest below).
+      Reward Shop (Earned / Spent / Left tiles; Ready to Buy with Buy; Saving Toward with a meter and credits to go;
+      Edit and Delete under ⋯).
+      Kept (a label per kind, a card per note with when, Done and Forget).
+      Memories (On This Day card; a card per trip with Time / Distance / Pace, a journal line, places and photos).
+      Security (a two-column wall of camera pictures, each with its state dot and name on the picture).
+      Sunday Check-in (the week in a sentence, Runs / Loot / Quests, MIA Noticed, the week ahead a line a day,
+      Debrief Done; the full week folds below).
+      The Chronicle (the newest chapter as prose with its highlights as tags; Earlier Chapters to open).
+      Apps (find always at hand, favorites as tiles labelled as your glasses cards too, then every app by life area
+      as a list with its star; Manage stays one tap away).
+      Sign In (her breathing orb, the wordmark, labelled boxes, one bright Sign In; recovery is on the PC).
       Household (Done Today with its meter, a card per routine with its streak in words and Did It, paused ones
       apart; Add a Routine / Pause / Resume as `routine.add/pause/resume`, and by voice).
       Power has its web page (`core/web_power.py`, `/api/power`, `web/power.html`; energy sources and the battery),

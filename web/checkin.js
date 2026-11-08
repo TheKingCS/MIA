@@ -4,7 +4,8 @@
  * loop's honest score, loot, what MIA noticed, quests finished) and the
  * week ahead, day by day (runs with projected loot, rhythms, calendar
  * events), quests in progress and the next dungeon. "Debrief Done" is the
- * one action (loop.checkin_done). Formatting only.
+ * one action (loop.checkin_done). Laid out as the design canvas's Check-in
+ * (DEC-0113): the summary first, the full week folded below. Formatting only.
  */
 (function () {
   "use strict";
@@ -54,19 +55,35 @@
       el("p", {}, A.next_dungeon.progress_pct + "% unlocked · " + A.next_dungeon.left_text + " to go"), bar(A.next_dungeon.progress_pct)) : null];
   }
 
-  MIAShell.start(async () => {
-    const c = await MIA.checkin();
-    $("hero-name").textContent = c.title;
+  // The design canvas (DEC-0113): the week in a sentence first, three figures, what MIA noticed, the week ahead one
+  // line a day, and Debrief Done; the full week's detail folds below.
+  function summary(c) {
     const L = c.last;
     const runs = L.loop.find((r) => r.kind === "work");
-    $("strip").replaceChildren(
-      el("div", { class: "cell ok" }, el("span", { class: "n" }, runs ? runs.cleared + "/" + runs.scheduled : "—"), el("span", { class: "t" }, "Runs Cleared")),
-      el("div", { class: "cell ok" }, el("span", { class: "n" }, (L.loot && L.loot.loot_text) || "—"), el("span", { class: "t" }, "Last Week's Loot")),
-      el("div", { class: "cell ok" }, el("span", { class: "n" }, c.ahead.projected_text || "—"), el("span", { class: "t" }, "This Week")));
-    $("panel").replaceChildren(last(c), ...ahead(c).filter(Boolean),
-      el("div", { class: "row-buttons ci-done" }, c.done
-        ? el("p", { class: "dim" }, "✓ Debrief done for this week.")
-        : el("button", { type: "button", class: "btn btn-amber", onclick: () => act({ kind: "loop.checkin_done", params: {} }) },
-          "Debrief Done · +" + c.xp + " XP")));
+    return [
+      el("header", { class: "ci-top" }, el("span", { class: "pw-label" }, c.title + " · " + L.span),
+        el("h2", {}, L.chapter), L.story.length ? el("p", {}, L.story.slice(0, 2).join(" ")) : null),
+      el("div", { class: "sh-tiles" },
+        el("div", { class: "glass sh-tile" }, el("span", { class: "pw-label" }, "Runs"), el("strong", {}, runs ? runs.cleared + " / " + runs.scheduled : "—")),
+        el("div", { class: "glass sh-tile" }, el("span", { class: "pw-label" }, "Loot"), el("strong", { class: "money" }, (L.loot && L.loot.loot_text) || "—")),
+        el("div", { class: "glass sh-tile" }, el("span", { class: "pw-label" }, "Quests"), el("strong", {}, String(L.quests.length)))),
+      L.noticed.length ? el("section", { class: "glass ci-noticed-card", "aria-label": "What MIA noticed" }, el("span", { class: "pw-label" }, "MIA Noticed"),
+        ...L.noticed.slice(0, 3).map((n) => el("p", {}, n))) : null,
+      el("section", { class: "glass ci-ahead", "aria-label": "The week ahead" }, el("p", { class: "pw-label" }, "The Week Ahead" + (c.ahead.projected_text ? " · " + c.ahead.projected_text + " projected" : "")),
+        ...c.ahead.days.map((d) => el("div", { class: "ci-ahead-row" + (d.today ? " today" : "") },
+          el("span", { class: "ci-ahead-day" }, d.today ? "Today" : d.label.split(",")[0]),
+          el("span", { class: "ci-ahead-what" }, d.items.length ? d.items.map((x) => x.text).join(", ") : "A free day"),
+          el("span", { class: "ci-ahead-extra" }, d.items.map((x) => x.loot_text || "").filter(Boolean).join(" ") || (d.items[0] && d.items[0].time) || "")))),
+      c.done ? el("p", { class: "dim ci-done-note" }, "✓ Debrief done for this week.")
+        : el("button", { type: "button", class: "btn btn-green ci-debrief", onclick: () => act({ kind: "loop.checkin_done", params: {} }) },
+          "Debrief Done · +" + c.xp + " XP"),
+    ].filter(Boolean);
+  }
+
+  MIAShell.start(async () => {
+    const c = await MIA.checkin();
+    $("strip").hidden = true;
+    $("panel").replaceChildren(...summary(c),
+      el("details", { class: "ci-more" }, el("summary", {}, "The whole week"), last(c), ...ahead(c).filter(Boolean)));
   });
 })();

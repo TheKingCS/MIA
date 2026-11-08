@@ -1,6 +1,8 @@
 /*
  * apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps();
  * filtering is only matching the words typed against what the engine sent.
+ * Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles
+ * (your glasses cards too), then every app by life area as a list.
  */
 (function () {
   "use strict";
@@ -28,6 +30,15 @@
     el("span", { class: "tile-icon", "aria-hidden": "true" }, (window.MIAIcons && MIAIcons.svg(app.id)) || app.icon),
     el("span", { class: "tile-name" }, app.name),
     el("span", { class: "tile-tag" }, app.on_web ? app.tagline : (MIA.desktop ? "Open on this PC" : "Ask MIA")));
+  }
+
+  // A row in a life area's list (the design canvas's Apps, DEC-0113): icon, name, what it is, the star.
+  function row(app) {
+    return el("a", { class: "apps-row" + (app.on_web ? "" : " pc"), href: app.on_web ? app.page : pcHref(app), "data-id": app.id },
+      el("span", { class: "apps-row-icon", "aria-hidden": "true" }, (window.MIAIcons && MIAIcons.svg(app.id)) || app.icon),
+      el("span", { class: "apps-row-name" }, app.name),
+      el("span", { class: "apps-row-tag" }, app.on_web ? app.tagline : (MIA.desktop ? "Open on this PC" : "Ask MIA")),
+      star(app));
   }
 
   function card(app) {
@@ -79,23 +90,29 @@
       onclick: () => { view = id; history.replaceState(null, "", id === "favorites" ? "#favorites" : location.pathname); draw(); },
     }, label)));
     if (mode === "tiles") {
-      // The grid doesn't list Apps itself (you're on it).
+      // The design canvas (DEC-0113): find always at hand, your favorites as tiles (they're your glasses cards too),
+      // then every app by life area as a list. Apps itself isn't listed (you're on it).
+      $("views").hidden = true;
+      $("tools").hidden = false;
+      $("tabs").hidden = true;
       const all = data.groups.flatMap((g) => g.apps).filter((a) => a.id !== "module_browser");
-      let apps;
-      if (view === "favorites") {
-        // In the order you starred them.
-        const byId = Object.fromEntries(all.map((a) => [a.id, a]));
-        apps = data.favorites.map((id) => byId[id]).filter((a) => a && matches(a, words));
-      } else {
-        // The ones on the web first (the concept's grid), then the rest, reachable by asking MIA.
-        apps = all.filter((a) => a.shown && matches(a, words)).sort((x, y) => (y.on_web ? 1 : 0) - (x.on_web ? 1 : 0));
-      }
-      shown = apps.length;
-      $("groups").replaceChildren(el("div", { class: "tile-grid" }, apps.map(tile)));
-      $("nothing").hidden = shown > 0 || (view === "favorites" && !words);
-      $("no-favorites").hidden = !(view === "favorites" && !data.favorites.length && !words);
+      const byId = Object.fromEntries(all.map((a) => [a.id, a]));
+      const favs = data.favorites.map((id) => byId[id]).filter((a) => a && matches(a, words));
+      const groups = data.groups.map((g) => [g.name, g.apps.filter((a) => a.id !== "module_browser" && a.shown && matches(a, words))])
+        .filter(([, apps]) => apps.length);
+      shown = favs.length + groups.reduce((n, [, apps]) => n + apps.length, 0);
+      $("groups").replaceChildren(...[
+        favs.length || !words ? el("section", { class: "apps-favs" }, el("p", { class: "pw-label" }, "Favorites · Also Your Glasses Cards"),
+          favs.length ? el("div", { class: "tile-grid" }, favs.map(tile))
+            : el("p", { class: "dim" }, "Tap the ☆ on any app to keep it here and on your glasses.")) : null,
+        ...groups.map(([name, apps]) => el("section", { class: "apps-area" }, el("p", { class: "pw-label" }, name),
+          el("div", { class: "glass apps-list" }, apps.map(row)))),
+      ].filter(Boolean));
+      $("nothing").hidden = shown > 0;
+      $("no-favorites").hidden = true;
       return;
     }
+    $("tabs").hidden = false;
     $("no-favorites").hidden = true;
     $("groups").replaceChildren(...data.groups.map((g) => {
       const apps = g.apps.filter((a) => matches(a, words));

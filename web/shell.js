@@ -552,12 +552,16 @@
   function signInForm(then) {
     let form = $("#sign-in");
     if (!form) {
-      form = el("form", { class: "sign-in", id: "sign-in", "aria-label": "Sign in to MIA" },
-        el("p", {}, "Sign in to MIA"),
-        el("input", { id: "who", autocomplete: "username", placeholder: "Email", required: true, "aria-label": "Email" }),
-        el("input", { id: "password", type: "password", autocomplete: "current-password", placeholder: "Password",
-          required: true, "aria-label": "Password" }),
-        el("button", { class: "btn btn-amber", type: "submit" }, "Sign in"));
+      // The design canvas's Sign In (DEC-0113): her orb, the wordmark, labelled boxes, one bright button.
+      form = el("form", { class: "sign-in sign-in-canvas", id: "sign-in", "aria-label": "Sign in to MIA" },
+        el("div", { class: "si-brand" }, el("span", { class: "si-orb", "aria-hidden": "true" }), el("span", { class: "si-word" }, "MIA"),
+          el("p", {}, "Sign in to your own MIA.")),
+        el("label", { class: "si-field", for: "who" }, el("span", {}, "Email"),
+          el("input", { id: "who", type: "email", autocomplete: "username", placeholder: "you@example.com", required: true })),
+        el("label", { class: "si-field", for: "password" }, el("span", {}, "Password"),
+          el("input", { id: "password", type: "password", autocomplete: "current-password", required: true })),
+        el("button", { class: "btn btn-green si-go", type: "submit" }, "Sign In"),
+        el("p", { class: "si-note" }, "Forgot it? Your recovery code resets it on the PC."));
       document.body.prepend(form);
     }
     form.hidden = false;

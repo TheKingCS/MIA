@@ -195,7 +195,8 @@ wraps, it shrinks).
 ## 13. The core screens (Zac's canvas, 2026-11-07)
 
 These are the screens needed for MIA to be usable day to day, drawn on the canvas in the built look. Each lists its
-data and the actions its buttons propose. They're **concepts** under DEC-0113: build them only after Zac approves.
+data and the actions its buttons propose. DEC-0113 is approved (amended: this canvas is the reference for every
+screen), and the screens are built to it.
 
 **PC page**
 - **Home · Desktop:** greeting and date; status strip (Tracked, Needs You, Next Up); a pinned finding; Today's
@@ -256,14 +257,15 @@ Each app may add one secondary color for **its own data and its header motif onl
 and selected everywhere; meaning colors keep their meanings; atmosphere never colors a button, a state or the orb.
 The canvas shows them as a Tweaks swatch (switch to cyan to see the approved DEC-0023 look):
 
-| Token | Proposed value | Watch out for |
+| Token | Value (set, H-0093) | Watch out for |
 |---|---|---|
-| `--mod-workout` | warm orange #ff8a3d | Must stay clearly apart from `--bad` red |
-| `--mod-kitchen` | amber-cream #e9d4a8 | Must stay paler than `--attention` amber |
-| `--mod-workshop` | steel blue-gray #8fa7bf | Must not read as disabled text |
-| `--mod-homestead` | leaf green | Too close to `--ok` green as drafted: Muse to resolve before approval |
+| `--atmo-workout` | warm orange #ff8a3d | Stays clearly apart from `--bad` red |
+| `--atmo-kitchen` | amber-cream #e9d4a8 | Stays paler than `--attention` amber |
+| `--atmo-workshop` | steel blue-gray #8fa7bf | Motif and data only, never interactive text or labels, so it can't read as disabled |
+| homestead | none: homestead apps stay cyan | A leaf green can't sit far enough from `--ok`; a homestead color needs a fresh decision |
 
-Values are Muse's to set; these are the canvas's placeholders.
+Muse set these values in H-0093 from the canvas; `web/tokens.css` carries them, and high contrast forces `--atmo`
+back to cyan.
 
 ## 15. Designing a new screen yourself
 
@@ -297,9 +299,9 @@ When you design or change a screen (or propose one for Zac):
 
 ## 16. Open decisions (Zac's)
 
-From DEC-0113, still proposed: per-app atmosphere; dark only with high contrast; the image pipeline (repository
-library and ChatGPT by hand first); concept round one before any visual change is built. From the canvas: whether
-cook mode lives on the PC/tablet page or the phone page; the homestead atmosphere color.
+DEC-0113 is approved and amended (2026-11-07): the canvas is the reference, the concept round is skipped, and the
+atmosphere values are set (§14, H-0093; homestead stays cyan). Still Zac's: whether cook mode lives on the PC/tablet
+page or the phone page (it is built in Kitchen for now).
 
 ## 17. Where to look
 

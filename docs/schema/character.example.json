@@ -165,5 +165,152 @@
       "This was a week of sweat.",
       "You trained 10 times."
     ]
-  }
+  },
+  "attributes": [
+    {
+      "key": "strength",
+      "name": "Strength",
+      "icon": "💪",
+      "value": 9,
+      "max": 20,
+      "about": [
+        "strength",
+        "calisthenics",
+        "athleticism"
+      ],
+      "training": 4,
+      "recent": 5,
+      "from": [
+        "Strength Lv 4",
+        "3 workouts"
+      ],
+      "watch": [],
+      "buffs": []
+    },
+    {
+      "key": "stamina",
+      "name": "Stamina",
+      "icon": "🫀",
+      "value": 7,
+      "max": 20,
+      "about": [
+        "endurance",
+        "mobility",
+        "hiking",
+        "kayaking",
+        "camping"
+      ],
+      "training": 3,
+      "recent": 4,
+      "from": [
+        "2 runs"
+      ],
+      "watch": [],
+      "buffs": []
+    },
+    {
+      "key": "vitality",
+      "name": "Vitality",
+      "icon": "🌿",
+      "value": 6,
+      "max": 20,
+      "about": [
+        "recovery",
+        "nutrition"
+      ],
+      "training": 2,
+      "recent": 4,
+      "from": [
+        "5 home-cooked meals"
+      ],
+      "watch": [],
+      "buffs": []
+    },
+    {
+      "key": "wisdom",
+      "name": "Wisdom",
+      "icon": "📘",
+      "value": 8,
+      "max": 20,
+      "about": [
+        "learning",
+        "focus",
+        "problem_solving",
+        "mathematics",
+        "programming",
+        "engineering",
+        "research",
+        "memory"
+      ],
+      "training": 5,
+      "recent": 3,
+      "from": [
+        "Cooking Lv 2",
+        "2 lessons"
+      ],
+      "watch": [],
+      "buffs": []
+    },
+    {
+      "key": "charisma",
+      "name": "Charisma",
+      "icon": "🤝",
+      "value": 4,
+      "max": 20,
+      "about": [
+        "communication",
+        "leadership",
+        "hospitality",
+        "teamwork",
+        "teaching"
+      ],
+      "training": 1,
+      "recent": 3,
+      "from": [
+        "1 catch-up"
+      ],
+      "watch": [],
+      "buffs": []
+    },
+    {
+      "key": "craft",
+      "name": "Craft",
+      "icon": "🛠",
+      "value": 10,
+      "max": 20,
+      "about": [
+        "3d_printing",
+        "cad",
+        "mechanical_design",
+        "prototyping",
+        "fabrication",
+        "woodworking",
+        "metalworking",
+        "electronics",
+        "soldering",
+        "laser_engraving",
+        "repair",
+        "carpentry",
+        "plumbing",
+        "concrete",
+        "hvac",
+        "drywall",
+        "electrical_wiring",
+        "framing",
+        "cooking",
+        "photography",
+        "videography",
+        "music",
+        "storytelling",
+        "content_creation"
+      ],
+      "training": 6,
+      "recent": 4,
+      "from": [
+        "3 builds logged"
+      ],
+      "watch": [],
+      "buffs": []
+    }
+  ]
 }
