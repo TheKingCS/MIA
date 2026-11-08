@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1305 files, 283,230 lines; 1305 files describe themselves; 15,943 of 16,037 classes and functions are documented.
+1303 files, 282,834 lines; 1303 files describe themselves; 15,917 of 16,011 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-487 files, 134,339 lines; 7,190 of 7,276 classes and functions documented
+486 files, 134,026 lines; 7,171 of 7,257 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -170,8 +170,6 @@
 - `core/dungeon_actions.py`: The Dungeon's actions (DEC-0046, core/work_dungeon.py) on the action contract: proposed in plain words with the loot they bring, approved, run, undoable.
 - `core/dungeon_master.py`: Living Worlds Phase 2 (DEC-0134): a playable turn. The player says what they do; the **model proposes** narrative and the state changes it implies; **authoritative code validates and commits** them; MIA narrates the committed result. This is the spec's hardest rule (§9.1) made real — the language mo
 - `core/email_drafts.py`: Email drafts (2026-10-01, accounts stage 3): the Assistant can write an email for you, and you choose what happens to it: **Send** (only when you press Send, from your own address, core/mail_send.py), **Copy** it, or open it in your mail app** (a mailto: link). MIA never sends anything by herself; n
-- `core/email_extract.py`: Turn an email into the real-world facts hiding in it — the engine behind DEC-0133 (MIA watches your email). A message (sender, subject, body, date, id) goes to `extract()`, which returns a list of `EmailFact`s: a purchase MIA could add to the Garage, a service she could log, a bill, a warranty expir
-- `core/email_inbox.py`: The read-only transport for DEC-0133: fetch the owner's recent messages over IMAP so `core.email_extract` can pull facts from them. Read-only in the strict sense — the mailbox is opened with `readonly=True` and only FETCH is ever issued, never STORE, COPY or EXPUNGE, so MIA can read the inbox but ca
 - `core/energy_manager.py`: Manual energy/utility source tracking — 2026-09-09, the last of four "Field Manual" brainstorm items the user picked this session. Original seed: "Solar, generator, propane are currently just Maintenance usage logs by convention — could be a real Power/Energy expansion once real monitoring hardware 
 - `core/environment.py`: The real-vs-fictional boundary (DEC-0137): *shared intelligence, not shared authority.* MIA reuses the same primitives — entities, events, goals, progression — across real domains (missions, the garage, the homestead) and fictional ones (Living Worlds). This module is the one guarantee that keeps th
 - `core/equipment_actions.py`: Every change the Garage, Property, Greenhouse and Maintenance screens can make (2026-10-06, DEC-0017), as action kinds on the contract in core/actions.py, from one table (core/record_actions.py): assets (add, edit, delete), maintenance tasks (add, edit, delete), and logging a reading, on a task's me
@@ -459,6 +457,7 @@
 - `core/web_guide.py`: "Start Here" (Zac, 2026-11-07: "I don't see the browser on MIA or really understand how to use much of anything we have built"): what MIA does, in plain words, grouped by what a person wants to get done, each with the words to say to her (a "Try saying" button opens Talk with them typed in) and the 
 - `core/web_inbox.py`: The Inbox on the web and the phone (Zac, 2026-10-16: "Can you build the inbox for sending stuff to MIA?"). The document inbox itself is core/inbox_manager.py: a file sent in (from the phone's Share menu, the Upload button, a dropped file, or email) becomes an item with MIA's reading of it (a receipt
 - `core/web_lab.py`: The Lab's web screen (DEC-0113 canvas Lab, DEC-0125: the Lab had no phone screen). The Lab is the home of the Data Logger (core/data_logger_manager.py): readings kept in named series ("Soil moisture", "Tank pH", "Shop temp"), one value each with a unit, a note and when.
+- `core/web_lookup.py`: Look It Up Online on the web (web/lookup.html; DEC-0053, T-0017's screen control; core/online_lookup.py is the engine). Typing words and pressing Search is the person asking, so the search runs then: only the scrubbed words leave the computer, through their own SearXNG, and the page shows exactly wh
 - `core/web_money.py`: The Money screen's data (2026-10-06, DEC-0017): everything the PC app's Budget screen shows, assembled here so `web/` holds no logic. Served as `/api/money`; changes go through the action kinds in core/money_actions.py.
 - `core/web_more.py`: The Journal, Workshop, Expeditions, Music, Files and People screens on the web (Zac, 2026-10-16: on the phone they "are empty right now and just bring up a chat with MIA"). Each assembler reads its stores and returns what its screen shows; every change is an action in core/more_actions.py.
 - `core/web_nexus.py`: The Nexus (DEC-0130, Zac 2026-11-08): MIA's spatial home. A chamber of portals, one per area (core/web_areas.AREAS), around MIA's orb, with the HUD across the top. This module is what the page shows; `web/nexus.html` and `web/spatial.js` only draw it.
@@ -498,7 +497,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 3,951 lines; 46 of 46 classes and functions documented
+2 files, 3,973 lines; 47 of 47 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -731,7 +730,7 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-37 files, 3,870 lines; 119 of 119 classes and functions documented
+36 files, 3,793 lines; 118 of 118 classes and functions documented
 
 - `tools/audit.py`: MIA's self-audit from the command line (DEC-0108; core/self_audit.py, core/practices.py).
 - `tools/bench_audit.py`: What MIA's routing does today with each Intelligence Benchmark question (tests/intelligence_bench.py, docs/INTELLIGENCE_BENCHMARK.md): a question plan (core/question_plans.py: lookups by code, one answer), answered by code (a direct lookup), offered which tools, or left to the model with no tools at
@@ -766,14 +765,13 @@
 - `tools/tracks.py`: Tracks from GPX files (core/gps_tracks.py, DEC-0099), into the signed-in person's own folder.
 - `tools/user_sync_check.py`: A User Sync topic doesn't ship until it passes this (docs/GLASSES_FIRST_BOOT_PLAN.md): the sample answers in `data/user_sync_cases.json`, each with the chips they must produce, run through the real extraction with the real model on this computer's Ollama. Nothing else may come out: an extra chip is 
 - `tools/vault_captions.py`: Describes the photos this PC keeps for the phone, so they can be found by what's in them (core/vault_captions.py). MIA's daily check starts `run` between 2 and 5 at night.
-- `tools/watch_email.py`: See what MIA would find in your inbox (DEC-0133), without changing anything. Reads your recent mail read-only and prints the facts `core.email_extract` pulls out — purchases, services, bills, warranties — so you can judge the extraction before any of it becomes a record. It writes nothing and stores
 - `tools/web_check.py`: The device check for the new web front end (Phase 2, DEC-0013: prove the slice on the real devices before any broad migration; per DEC-0015 that's Zac's new computer first, then the phone; Pi devices later). Run it on any computer MIA runs on. Opens the web Home (`web/`, in demo mode with the placeh
 - `tools/weekly_bench.py`: The weekly benchmarks, graded and kept (build plan step 5, core/benchmarks.py): Zac's Intelligence Benchmark (tools/intelligence_check.py), the golden conversation corpus on the glasses and the phone (tools/conversation_check.py) and the routing audit (tools/bench_audit.py). Read-only like those: lo
 - `tools/work.py`: The team's development tasks from the command line (DEC-0068; the records are `work/tasks/`, the rules `core/work_tasks.py`). Commit the task files with the work, like any other change.
 
 ## tests/: the test suite: what each part must do
 
-447 files, 75,142 lines; 6,466 of 6,474 classes and functions documented
+446 files, 75,058 lines; 6,459 of 6,467 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -893,8 +891,6 @@
 - `tests/test_documentation.py`: Documentation for everything MIA is made of (DEC-0104, core/code_atlas.py): every file says what it is; new code arrives documented; nothing already documented slips back; docs/ATLAS.md is current.
 - `tests/test_dungeon_master.py`: Living Worlds Phase 2 (core/dungeon_master.py, DEC-0134): a playable turn where the model proposes and code validates/commits. The model's intents only change state when they pass their check; a quest, item or skill is committed to the store; the turn records a fictional event (DEC-0137), never real
 - `tests/test_email_drafts.py`: Email drafts (core/email_drafts.py, core/mail_send.py, core/assistant_email_actions.py), 2026-10-01: MIA writes, the person sends (only by pressing Send), copies, or opens their mail app.
-- `tests/test_email_extract.py`: Pulling real-world facts out of email (core/email_extract.py, DEC-0133): an order confirmation becomes a purchase, an auto-care receipt a service, a utility email a bill with its due date, a protection-plan notice a warranty reminder — each secret-free. A card or account number in a message never su
-- `tests/test_email_inbox.py`: Parsing raw messages into the shape the extractor wants (core/email_inbox.py, DEC-0133): the decoded sender and subject, and the text/plain body in preference to HTML. Pure — no IMAP server (fetch_recent is the thin live wrapper around this).
 - `tests/test_energy_manager.py`: Unit tests for core.energy_manager. Isolates _DATA_DIR _ENERGY_SOURCES_FILE (and core.data_logger_manager's own data file, since readings are real DataLogger entries this manager passes through), same monkeypatch pattern as tests/test_data_logger_manager .py's isolated_paths.
 - `tests/test_environment.py`: The real-vs-fictional boundary (core/environment.py + life_events, DEC-0137): `require_real` guards a real-authority sink (fictional/simulated raises DomainLeak); unknown/None normalises to real so nothing is fiction by accident; and a life event carries its environment, so a real-life view can filt
 - `tests/test_event_bus.py`: Unit tests for core.event_bus.EventBus.
@@ -1180,6 +1176,7 @@
 - `tests/test_web_home_voice.py`: Talking to MIA on the PC (DEC-0125): the desktop window lets her own page use the microphone for Talk's mic, and nothing else: no other site, no camera. Talk's mic and the shared recorder live in web/shell.js.
 - `tests/test_web_inbox.py`: The Inbox screen on the web and the phone (Zac, 2026-10-16: "build the inbox for sending stuff to MIA"): core/web_inbox.py shows what's waiting (reading the folder first, so the phone needs no timer), and core/inbox_actions.py files, dismisses and sends notes through Propose → Approve.
 - `tests/test_web_lab.py`: The Lab on the web (DEC-0125, the design canvas's Lab, DEC-0113: core/web_lab.py, core/lab_reading_actions.py and core/assistant_lab_actions.py): the Data Logger's series as chips, one in full with plain numbers and a chart placed by core, readings logged and deleted as actions, other apps' series r
+- `tests/test_web_lookup.py`: Look It Up Online on the web (DEC-0053, T-0017): the page says whether a lookup may run and the rules; a search the person asks for sends only the scrubbed words and shows what was sent; a problem is said, never thrown.
 - `tests/test_web_money.py`: DEC-0017 (2026-10-06): Money on the web does everything the PC app's Budget screen does. The page's data (core/web_money.py) and every change as an action kind (core/money_actions.py): add, edit, delete bills, income sources, income, expenses and debts; pay a debt; set budgets; sort a bank charge to
 - `tests/test_web_more.py`: The Journal, Workshop, Expeditions (with what has to happen before a trip), Music, Files and People screens (Zac, 2026-10-16: on the phone they "are empty right now and just bring up a chat with MIA"): core/web_more.py builds each page, core/more_actions.py makes every change through Propose → Appro
 - `tests/test_web_nexus.py`: The Nexus (DEC-0130, core/web_nexus.py): what needs you in each portal, going to an area by voice, and the screen's data in sidebar order with each area's hue; a portal's picture only once it exists (H-0096); the Nexus and an area's room share one 3D engine.
@@ -1225,7 +1222,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-101 files, 18,548 lines
+102 files, 18,604 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she
@@ -1277,6 +1274,7 @@
 - `web/lab.js`: lab.js — The Lab (claude, 2026-11-07, DEC-0125; the design canvas's Lab, DEC-0113). Renders MIA.lab() (core/web_lab.py): the series as chips, the chosen one's chart (points placed by core, 0..1), its plain numbers and readings newest first, and Add a Reading. Other apps' series (Power, Garage) are l
 - `web/label.js`: label.js — printable labels for a homestead good (DEC-0036). Reads MIA.workshop()'s goods: ?recipe=<id> (today's date) or &job=<batch> (that batch's made date). Formatting only; the words are the person's own.
 - `web/look.js`: look.js — Look: show MIA something (claude, 2026-11-07, build plan step 15). A photo (the camera, or one you have) and a question ("what is this?", "read this label", "inspect this part"), answered on MIA's PC by her local vision model (core/sight.py, POST /api/sight). The photo isn't kept. She neve
+- `web/lookup.js`: lookup.js — Look It Up Online (claude, 2026-11-08, DEC-0053 / T-0017). Renders MIA.lookup() (core/web_lookup.screen): whether a lookup is allowed now and the rules; Search runs MIA.lookupSearch(words) (core/web_lookup.look): what was actually sent (the scrubbed words), then each result with its site
 - `web/made.js`: made.js: every screen MIA makes (claude, 2026-11-04, DEC-0088 to DEC-0091). Draws a creation's blocks as core assembled them (core/creation_spec.py): stats, chart, table, list, cards, meter, timeline, form, note. Only MIA's own classes and tokens, no styling of its own, so whatever she makes looks l
 - `web/maps.js`: maps.js — Maps (claude, 2026-11-06). Two kinds of map. Vector areas (core/offline_maps.py, cut from OpenStreetMap into data/maps/, anywhere in the world, sharp at every zoom) are drawn by MapLibre from web/vendor/, read in byte ranges with this tab's sign-in; the topo map below needs no library. Ren
 - `web/memories.js`: memories.js — Memories (claude, 2026-11-06). Renders MIA.memories() (core/memories_web.py): "On this day", then a recap per expedition, newest first: how long, distance and pace by activity, the places visited, the journal's highlights, the photo count (the photos are on the Expeditions page), and w

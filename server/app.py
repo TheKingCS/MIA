@@ -349,6 +349,11 @@ class CompareRequest(BaseModel):
     private: bool = False
 
 
+class LookupRequest(BaseModel):
+    """Words to look up online (core/web_lookup.look, DEC-0053): pressing Search is the person asking."""
+    words: str = Field(..., max_length=300)
+
+
 class TrailLinkRequest(BaseModel):
     """A trail map PDF to download from a direct link (core/web_trails.add_link): the park, its state, the link."""
     park: str = Field(..., max_length=80)
@@ -480,7 +485,7 @@ SECURITY_HEADERS = {
 
 
 def create_app(context: AppContext) -> FastAPI:
-    """MIA's web server (FastAPI) for the phone, the glasses and the desktop's web view: sign-in sessions by bearer token (or a linked phone's device key), the access switch that turns away forwarded requests when phone access is off, every /api route (each runs on the signed-in person's own view, view_for), and the web front end served fresh at /web/. Your Data (/api/your-data, export and delete) and the sealed-files recovery key sit beside the security log here; the Theme Studio reads /api/themes and asks /api/themes/design (DEC-0136); MIA paints through /api/art (DEC-0140), and Portal Pictures is /api/portals."""
+    """MIA's web server (FastAPI) for the phone, the glasses and the desktop's web view: sign-in sessions by bearer token (or a linked phone's device key), the access switch that turns away forwarded requests when phone access is off, every /api route (each runs on the signed-in person's own view, view_for), and the web front end served fresh at /web/. Your Data (/api/your-data, export and delete) and the sealed-files recovery key sit beside the security log here; the Theme Studio reads /api/themes and asks /api/themes/design (DEC-0136); MIA paints through /api/art (DEC-0140), Portal Pictures is /api/portals, and Look It Up Online is /api/lookup (DEC-0053)."""
     app = FastAPI(title="MIA Mobile API")
     app.state.context = context
     app.state.sessions: dict[str, str] = {}  # token -> profile_id
@@ -2555,6 +2560,23 @@ def create_app(context: AppContext) -> FastAPI:
 
         result = design(body.description)
         return {**result, "summary": summary(result)}
+
+    @app.get("/api/lookup")
+    def web_lookup(profile_id: str = Depends(require_profile_id)) -> dict:
+        """Look It Up Online before a search (core/web_lookup.screen, DEC-0053): allowed now or why not, the engine,
+        the rules."""
+        from core.web_lookup import screen
+
+        with app.state.turn_lock:
+            return screen(view_for(context, profile_id))
+
+    @app.post("/api/lookup")
+    def web_lookup_search(body: LookupRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        """One online search the person asked for (core/web_lookup.look): only the scrubbed words leave the computer,
+        through their own SearXNG. The search runs outside the turn lock (it waits on the network)."""
+        from core.web_lookup import look
+
+        return look(view_for(context, profile_id), body.words)
 
     @app.get("/api/connections")
     def web_connections(profile_id: str = Depends(require_profile_id)) -> dict:

@@ -1,0 +1,20 @@
+{
+ "query": "when to plant garlic zone 6",
+ "at": "2026-11-08T14:10",
+ "results": [
+  {
+   "title": "Growing Garlic in the Home Garden",
+   "url": "https://extension.example.edu/garlic",
+   "source": "extension.example.edu",
+   "snippet": "In most of zone 6, plant cloves in mid to late October, a few weeks before the ground freezes, 2 inches deep and 6 inches apart.",
+   "published": "2024-09-12"
+  },
+  {
+   "title": "Fall-planted garlic: a quick guide",
+   "url": "https://www.example-gardens.org/fall-garlic",
+   "source": "example-gardens.org",
+   "snippet": "Mulch after planting; harvest the next summer when the lower leaves brown.",
+   "published": ""
+  }
+ ]
+}
