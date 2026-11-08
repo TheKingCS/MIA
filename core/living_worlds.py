@@ -13,6 +13,8 @@ The model never writes here — only code does, the same rule the rest of MIA fo
 particular universe; a version's growth in one world never touches another's (the spec's §4.1). Relationships are by
 id for now; the cross-world link graph (`core/links.py`) and the Convergence arrive in Phase 4. A campaign can carry
 fictional **quests** (DEC-0137) — the same assign-and-track shape as a real Mission, but tagged fictional and XP-free.
+And each campaign keeps **the story so far** (`record_turn`/`turns_in`): every turn played (core/dungeon_master.py),
+the newest TURNS_KEPT, so the DM keeps continuity and a play screen can show it.
 
 One personal store (`living_worlds.json` in the person's own folder), written through `atomic_write_text` (undoable)
 and sealed at rest (DEC-0126). Every create records a `life_events` entry — the spec's event log (§11.2).
@@ -38,6 +40,7 @@ log = get_logger(__name__)
 _DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 _FILE = "living_worlds.json"
 CAMPAIGN_STATUSES = ("active", "paused", "ended")
+TURNS_KEPT = 200  # the story so far is kept to this many turns per campaign, oldest let go first
 
 
 def _id() -> str:
@@ -194,6 +197,7 @@ class LivingWorldsBook:
         self.characters: list[Character] = []
         self.versions: list[CharacterVersion] = []
         self.quests: list[Quest] = []
+        self.turns: list[dict] = []  # the story so far: each turn played (core/dungeon_master.py), oldest first
         self._load()
 
     def _load(self) -> None:
@@ -211,6 +215,7 @@ class LivingWorldsBook:
         self.characters = [Character.from_dict(d) for d in raw.get("characters", [])]
         self.versions = [CharacterVersion.from_dict(d) for d in raw.get("versions", [])]
         self.quests = [Quest.from_dict(d) for d in raw.get("quests", [])]
+        self.turns = [dict(t) for t in raw.get("turns", []) if isinstance(t, dict)]
 
     def _save(self) -> None:
         """Writes everything atomically (so undo can restore it), sealed at rest."""
@@ -221,6 +226,7 @@ class LivingWorldsBook:
             "characters": [c.to_dict() for c in self.characters],
             "versions": [v.to_dict() for v in self.versions],
             "quests": [q.to_dict() for q in self.quests],
+            "turns": self.turns,
         }, indent=1, ensure_ascii=False))
 
     # ------------------------------------------------------------------ create
@@ -304,6 +310,29 @@ class LivingWorldsBook:
     def quests_in(self, campaign_id: str) -> list[Quest]:
         """The quests set in one campaign."""
         return [q for q in self.quests if q.campaign_id == campaign_id]
+
+    def record_turn(self, campaign_id: str, version_id: str, action: str, narration: str, committed=(),
+                    failed=()) -> dict:
+        """Keeps one played turn in its campaign's story: what the player did, what the DM narrated, what changed and
+        what was tried but failed (the newest TURNS_KEPT per campaign). Fictional, like everything here. ValueError
+        for a campaign that isn't this person's."""
+        if self.get_campaign(campaign_id) is None:
+            raise ValueError("No such campaign.")
+        turn = {"turn_id": _id(), "campaign_id": campaign_id, "version_id": version_id,
+                "action": str(action or "")[:500], "narration": str(narration or "")[:2000],
+                "committed": [str(c) for c in committed], "failed": [str(f) for f in failed], "at": _now()}
+        self.turns.append(turn)
+        mine = [t for t in self.turns if t["campaign_id"] == campaign_id]
+        if len(mine) > TURNS_KEPT:
+            gone = {t["turn_id"] for t in mine[:len(mine) - TURNS_KEPT]}
+            self.turns = [t for t in self.turns if t["turn_id"] not in gone]
+        self._save()
+        return turn
+
+    def turns_in(self, campaign_id: str, limit: Optional[int] = None) -> list[dict]:
+        """A campaign's story so far, oldest first; the last `limit` turns when given."""
+        mine = [t for t in self.turns if t["campaign_id"] == campaign_id]
+        return mine[-limit:] if limit else mine
 
     # ------------------------------------------------------------------ read
 

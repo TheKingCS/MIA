@@ -2156,6 +2156,9 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   `model_proposer` on the local model with narration-only fallback, every turn a fictional life event, never real XP;
   `tests/test_dungeon_master.py`. This record wasn't updated when it was built (corrected 2026-11-08 overnight), so
   playing a turn is unblocked: its screen and voice tool are the design and parity sessions' to build on `take_turn`.
+  The story so far (2026-11-08 overnight): each turn is kept in its campaign (`LivingWorldsBook.record_turn`/`turns_in`:
+  what was done, what was narrated, what changed, what failed; the newest 200), and the last 5 go back to the DM each turn
+  (`state["recent_turns"]`) so the story stays continuous.
 - Proposed by: claude, 2026-11-08, from Zac's "MIA — Living Worlds" handoff (the Convergence multiverse saga).
 - Proposal (`docs/LIVING_WORLDS_PROPOSAL.md`): a major subsystem turning MIA into a persistent-world DM, world
   simulator and experiential-learning guide, with an overarching cross-universe narrative (the Convergence) and a

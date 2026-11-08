@@ -4,8 +4,8 @@ tests.test_dungeon_master
 
 Living Worlds Phase 2 (core/dungeon_master.py, DEC-0134): a playable turn where the model proposes and code
 validates/commits. The model's intents only change state when they pass their check; a quest, item or skill is
-committed to the store; the turn records a fictional event (DEC-0137), never real XP; and the model can never write
-state itself.
+committed to the store; the turn records a fictional event (DEC-0137), never real XP; the model can never write
+state itself; and each turn is kept as the story so far, the last few fed back to the DM for continuity.
 """
 
 import json
@@ -91,3 +91,33 @@ def test_the_model_reply_parser_extracts_intents_or_falls_back_to_narration():
     plain = _parse("just a sentence, no json")
     assert plain["narration"] == "just a sentence, no json" and plain["intents"] == []
     assert _parse("{bad json") ["intents"] == []
+
+
+def test_each_turn_is_kept_as_the_story_so_far_and_fed_back_for_continuity(game):
+    book, c, v, _ = game
+    seen = []
+
+    def propose(state, action):
+        seen.append(state["recent_turns"])
+        return {"narration": f"You {action}.", "intents": [{"kind": "gain_item", "params": {"item": "torch"}}]}
+
+    take_turn(book, c.campaign_id, v.version_id, "light the torch", propose, roll=lambda: 0.5)
+    take_turn(book, c.campaign_id, v.version_id, "walk on", propose, roll=lambda: 0.5)
+    assert seen[0] == [] and seen[1] == [{"action": "light the torch", "narration": "You light the torch."}]
+    story = book.turns_in(c.campaign_id)
+    assert [t["action"] for t in story] == ["light the torch", "walk on"] and story[0]["committed"] == ["Gained: torch"]
+    assert [t["action"] for t in LivingWorldsBook(data_dir=book.data_dir).turns_in(c.campaign_id)] == \
+        ["light the torch", "walk on"]  # survives a restart
+
+
+def test_the_story_keeps_only_the_newest_turns(game, monkeypatch):
+    import core.living_worlds as lw
+
+    book, c, v, _ = game
+    monkeypatch.setattr(lw, "TURNS_KEPT", 3)
+    for i in range(5):
+        book.record_turn(c.campaign_id, v.version_id, f"step {i}", "")
+    assert [t["action"] for t in book.turns_in(c.campaign_id)] == ["step 2", "step 3", "step 4"]
+    assert [t["action"] for t in book.turns_in(c.campaign_id, limit=1)] == ["step 4"]
+    with pytest.raises(ValueError):
+        book.record_turn("nope", v.version_id, "x", "")

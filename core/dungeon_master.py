@@ -8,14 +8,15 @@ This is the spec's hardest rule (§9.1) made real — the language model is neve
 same propose→validate→commit split the rest of MIA runs on (`core/actions.py`).
 
 A turn (`take_turn`):
-1. Gather the campaign, the character version and its open quests (`core/living_worlds.py`).
+1. Gather the campaign, the character version, its open quests and the last few turns (`core/living_worlds.py`).
 2. **Propose** (`propose`): from the state and the player's action, a proposal of narration + typed `Intent`s — a
    quest done, an item gained or lost, a skill learned, or just narration. The model fills this in live; a test passes
    a stub, so the whole loop is deterministic and model-free under test.
 3. **Validate** each intent (`validate`): an intent with a difficulty `check` has to beat a d20-style roll plus the
    version's edge; one without just goes through. The model can *suggest* the hero picks the lock; the dice decide.
-4. **Commit** the ones that passed (`commit`) to the living_worlds store, and record a *fictional* life event
-   (DEC-0137) — never a real one, never real XP.
+4. **Commit** the ones that passed (`commit`) to the living_worlds store, keep the turn in the campaign's story
+   (`record_turn`: the last RECENT_TURNS go back to the DM next turn, for continuity, and a play screen can show it),
+   and record a *fictional* life event (DEC-0137) — never a real one, never real XP.
 5. Return what happened: the narration, what changed, and what was attempted but failed.
 
 Everything here is fictional: `require_real` would reject any of it reaching real state, and the events are tagged
@@ -32,6 +33,7 @@ from core import life_events
 from core.environment import FICTIONAL
 
 INTENT_KINDS = ("complete_quest", "gain_item", "lose_item", "learn_skill", "narrate")
+RECENT_TURNS = 5  # how many of the last turns the DM sees, for continuity
 
 
 @dataclass
@@ -121,7 +123,8 @@ def commit(book, version, intent: Intent) -> Optional[str]:
 def take_turn(book, campaign_id: str, version_id: str, action: str, propose: Callable,
               roll: Callable[[], float] = random.random) -> TurnResult:
     """Play one turn. `propose(state, action) -> {"narration": str, "intents": [dicts]}` is the model (a stub in
-    tests). ValueError when the campaign or version isn't this person's."""
+    tests); it sees the last RECENT_TURNS of the story, and this turn joins the story when it's done. ValueError when
+    the campaign or version isn't this person's."""
     campaign = book.get_campaign(campaign_id)
     version = book.get_version(version_id)
     if campaign is None or version is None:
@@ -132,6 +135,9 @@ def take_turn(book, campaign_id: str, version_id: str, action: str, propose: Cal
         "campaign": campaign.to_dict(),
         "version": version.to_dict(),
         "open_quests": [q.to_dict() for q in book.quests_in(campaign_id) if q.status == "open"],
+        # The story so far, for continuity: the last few turns (what was done, what happened).
+        "recent_turns": [{"action": t["action"], "narration": t["narration"]}
+                         for t in (book.turns_in(campaign_id, RECENT_TURNS) if hasattr(book, "turns_in") else [])],
     }
     proposal = propose(state, action) or {}
     intents = [Intent.from_dict(d) for d in (proposal.get("intents") or [])]
@@ -149,6 +155,8 @@ def take_turn(book, campaign_id: str, version_id: str, action: str, propose: Cal
             committed.append(done)
 
     narration = str(proposal.get("narration") or "").strip()
+    if hasattr(book, "record_turn"):
+        book.record_turn(campaign_id, version_id, action, narration, committed, failed)  # the story so far
     life_events.record(book, "campaign_turn", (narration[:80] or f"A turn in {campaign.name}"),
                        [f"campaign:{campaign_id}", f"version:{version_id}"], environment=FICTIONAL)
     return TurnResult(narration=narration, committed=committed, failed=failed)
@@ -157,7 +165,8 @@ def take_turn(book, campaign_id: str, version_id: str, action: str, propose: Cal
 import json as _json
 import re as _re
 
-_DM_PROMPT = """You are the Dungeon Master of a living world. Keep it vivid but grounded in the state.
+_DM_PROMPT = """You are the Dungeon Master of a living world. Keep it vivid but grounded in the state, and continue the story
+so far (recent_turns: what the player did and what happened).
 
 World state (JSON): {state}
 
@@ -193,7 +202,7 @@ def model_proposer(context) -> Callable:
         if llm is None or not hasattr(llm, "generate"):
             return {"narration": "", "intents": []}
         try:
-            reply = llm.generate(_DM_PROMPT.format(state=_json.dumps(state)[:4000], action=str(action)[:500]))
+            reply = llm.generate(_DM_PROMPT.format(state=_json.dumps(state)[:6000], action=str(action)[:500]))
         except Exception:  # noqa: BLE001 - a model hiccup must not break the turn
             return {"narration": "", "intents": []}
         return _parse(reply)
