@@ -165,8 +165,8 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       notes (`lesson.notes`; get_lesson_notes), Money's business tags (`expense.business`: each charge's business,
       "Which business?" for bank charges waiting, MIA's guess in amber), a trip's route and checkpoints
       (`core/trip_route.py`: stops from saved waypoints, Arrived, legs with distance, time and pace, out and back
-      allowed; add_route_stop, log_arrival, get_trip_route; the glasses' On The Trail panel), Home's glance gained
-      net worth and Observations and Inbox cards, a plan's page in Knowledge (your size, what to buy, `plan.keep` /
+      allowed; add_route_stop, log_arrival, get_trip_route; the glasses' On The Trail panel), the glance (the
+      glasses' app tiles) gained net worth and Observations and Inbox tiles, a plan's page in Knowledge (your size, what to buy, `plan.keep` /
       `plan.project` / `plan.delete`; forget_plan), and the Toolbox's inventory (`inventory.*`). The canvas has a
       **Built** page: full-length screenshots of every built screen, row by row like the Phone page (retake them
       with the demo server and `builtshots.js`-style Playwright full-page shots when screens change).
