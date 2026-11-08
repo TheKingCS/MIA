@@ -134,3 +134,8 @@
 .dev-saga .src { font-size: var(--text-xs); margin-top: 4px; font-family: var(--font-mono); }
 .dev-saga .dev-chip { cursor: pointer; background: none; font: inherit; font-size: var(--text-xs); }
 .dev-night { white-space: pre-wrap; font: inherit; font-size: var(--text-sm); color: var(--text-dim); margin: 0 0 var(--space-2, 8px); }
+.dev-evolution { margin-top: 12px; }
+.dev-evo-totals { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.dev-evo-total { display: grid; padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--line-strong); min-width: 90px; }
+.dev-evo-total b { font-size: 20px; color: rgb(var(--rgb-accent)); }
+.dev-evo-months .sub { display: grid; gap: 4px; }

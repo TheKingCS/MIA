@@ -407,6 +407,34 @@
   }
 
   let chatAtBottom = true, chatSeen = false;
+  // Her Development Evolution Timeline (core/dev_evolution.py, T-0023, DEC-0071): totals, then month by month what
+  // was decided, committed, finished and made (capabilities, tools, screens), bugs found and fixed, lab work merged or
+  // undone, and the latest approved decisions as milestones. Counted from the shared history; formatting only here.
+  function evolutionPanel(p) {
+    const ev = p.evolution;
+    if (!ev || !(ev.months || []).length) return "";
+    const t = ev.totals || {};
+    const LABELS = [["decisions", "Decisions"], ["commits", "Commits"], ["tasks_done", "Tasks done"], ["capabilities", "Capabilities"],
+      ["tools", "Tools"], ["screens", "Screens"], ["bugs_found", "Bugs found"], ["bugs_fixed", "Bugs fixed"], ["merged", "Lab merged"], ["undone", "Undone"]];
+    const top = Math.max(1, ...ev.months.map((m) => m.commits + m.tasks_done));
+    return el("section", { class: "dev-col dev-evolution", "aria-label": "Her evolution" },
+      el("h2", {}, "Her evolution", el("span", { class: "n" }, ev.months.length + (ev.months.length === 1 ? " month" : " months"))),
+      el("p", {}, "How she's grown, counted from the shared history: never estimated."),
+      el("div", { class: "dev-evo-totals" }, LABELS.filter(([k]) => t[k]).map(([k, label]) =>
+        el("div", { class: "dev-evo-total" }, el("b", {}, String(t[k])), el("span", { class: "dim" }, label)))),
+      el("ul", { class: "dev-agents dev-evo-months" }, ev.months.slice().reverse().map((m) => {
+        const bar = barOf(Math.round(100 * (m.commits + m.tasks_done) / top));
+        return el("li", {},
+          el("span", {}, new Date(m.month + "-15T12:00:00").toLocaleDateString(undefined, { month: "long", year: "numeric" })),
+          el("span", { class: "dim" }, LABELS.filter(([k]) => m[k]).map(([k, label]) => m[k] + " " + label.toLowerCase()).join(" · ") || "quiet"),
+          el("span", { class: "sub" }, bar,
+            m.new_parts.length ? el("span", { class: "dim" }, " New: " + m.new_parts.slice(0, 6).join(", ") + (m.new_parts.length > 6 ? "…" : "")) : ""));
+      })),
+      (ev.milestones || []).length ? [el("h2", { class: "gap" }, "Milestones"),
+        el("ul", { class: "dev-agents" }, ev.milestones.slice().reverse().map((ms) =>
+          el("li", {}, el("span", {}, ms.ref + " · " + ms.title), el("span", { class: "dim" }, when(ms.at)))))] : "");
+  }
+
   // Disagreements still open (core/disagreements.py, T-0022, DEC-0071 point 3): decisions, designs and tasks in
   // review, Zac's first, each with who raised it, what they said, the answer, whose move it is and, when it's Zac's,
   // the command that settles it (settling stays at the keyboard, like approving).
@@ -467,6 +495,7 @@
       el("div", { class: "dev-grid2" }, missions(p), voices(p)),
       el("div", { class: "dev-grid2" }, independence(p), knowledge(p)),
       el("div", { class: "dev-grid2" }, nightPanel(p), loopsPanel(p)),
+      evolutionPanel(p),
       architecture(p),
       chronicles(p),
       el("section", { class: "dev-col dev-history" }, el("h2", {}, "Everything that happened"), search,
