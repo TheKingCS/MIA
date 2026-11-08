@@ -1,5 +1,6 @@
 """A trip's route and checkpoints on the web and by voice (core/trip_route.py, core/assistant_trip_route_actions.py):
-stops from saved waypoints, "arrived" logged now, the legs walked, an out-and-back route, and undo."""
+stops from saved waypoints, "arrived" logged now, the legs walked, an out-and-back route, undo, and the glasses' On The
+Trail panel."""
 
 from datetime import datetime
 from types import SimpleNamespace
@@ -79,3 +80,22 @@ def test_by_voice_the_trip_underway_is_the_one_meant(trail):
     assert _arrived(trail, {"waypoint": "the boat ramp"}) == "Arrived at Boat ramp. The clock's running from here."
     assert _route(trail, {}) == "Morning paddle: Boat ramp (reached), Heron island, 2.2 km planned. Next: Heron island."
     assert _arrived(trail, {"waypoint": "the old dam"}).startswith("I don't have a waypoint called")
+
+
+def test_the_glasses_show_the_trail_and_arrive_with_one_press(trail):
+    from core.glasses import GLASSES_KINDS, _trail
+
+    assert _trail(trail, None)["empty"] == "No trip underway. Start one in Expeditions."
+    t = trail.trip.trip_id
+    trail.trips.update_trip(t, status="active")
+    for point in (trail.ramp, trail.island):
+        act(trail, "trip.route_add", trip_id=t, waypoint_id=point.waypoint_id)
+    panel = _trail(trail, None)
+    assert panel["title"] == "On The Trail · Morning paddle"
+    first = panel["lines"][0]
+    assert (first["text"], first["action"]["kind"]) == ("Boat ramp", "trip.arrived") and "trip.arrived" in GLASSES_KINDS
+    assert [line["text"] for line in panel["lines"][1:]] == ["Heron island"]
+    act(trail, "trip.arrived", **first["action"]["params"])
+    trail.trips.record_split(t, trail.island.waypoint_id)
+    done = _trail(trail, None)
+    assert done["lines"][0]["text"] == "Boat ramp to Heron island" and done["lines"][1]["detail"].endswith("of 2.2")

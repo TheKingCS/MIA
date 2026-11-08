@@ -59,6 +59,8 @@ GLASSES_KINDS = frozenset({
     "training.finish",
     # cook mode (DEC-0113): the step, a named timer the step offers, "I made this"; stopping without logging is by voice
     "cooking.next", "cooking.back", "cooking.timer", "cooking.timer_cancel", "cooking.made",
+    # a trip underway (core/trip_route.py): "Arrived" at the next stop, logged now
+    "trip.arrived",
 })
 
 # Apps the glasses don't show as cards: the orb *is* Home and Talk; the
@@ -937,6 +939,35 @@ def calendar_status(context, today: date) -> dict:
     return {"line": " · ".join(b for b in bits if b), "tone": "attention" if late else "calm"}
 
 
+def _trail(context, today):
+    """Panel: the trip underway's route (core/trip_route.route_card): the next stop first, offering Arrived
+    (trip.arrived, logged now), then the stops after it, the last leg walked and the distance so far. One trip at a
+    time; with none underway it says how to start one."""
+    from core.trip_route import route_card
+
+    trips = getattr(context, "trips", None)
+    underway = [t for t in trips.all_trips() if t.status == "active"] if trips is not None else []
+    if not underway:
+        return _panel("On The Trail", [], "No trip underway. Start one in Expeditions.")
+    trip = underway[0]
+    card = route_card(context, trip)
+    lines = []
+    if card["next"]:
+        lines.append(_line(card["next"]["name"], "next stop", "", {"kind": "trip.arrived", "label": "Arrived",
+                                                                  "params": {"trip_id": trip.trip_id,
+                                                                             "waypoint_id": card["next"]["id"]}}))
+    if card["legs"]:
+        leg = card["legs"][-1]
+        lines.append(_line(f"{leg['from']} to {leg['to']}", " · ".join(x for x in (f"{leg['km']} km", leg["took"], leg["pace"]) if x), "ok"))
+    if card["walked_km"]:
+        lines.append(_line("So far", f"{card['walked_km']} km" + (f" of {card['planned_km']}" if card["planned_km"] else "")))
+    nxt = next((i for i, s in enumerate(card["stops"]) if card["next"] and s["id"] == card["next"]["id"] and not s["reached"]), None)
+    later = card["stops"][nxt + 1:] if nxt is not None else []
+    lines += [_line(s["name"], "later") for s in later]
+    empty = "Every stop is reached." if card["stops"] else f"{trip.name} has no route. Add stops in Expeditions."
+    return _panel("On The Trail · " + trip.name, lines, empty)
+
+
 def _household_chores(context, today):
     """Panel: the active household routines with this period's progress, each undone one offering Done
     (routine.log), those still to do first (a menu item's readout; lines with an allowed action can be approved from the glasses).
@@ -1037,6 +1068,7 @@ PANELS: dict[str, tuple[tuple[str, str, Panel], ...]] = {
     "household": (("chores", "Chores Due", _household_chores),),
     "relationships": (("birthdays", "Next Birthdays", _people_birthdays),),
     "inbox": (("waiting", "Waiting To File", _inbox_waiting),),
+    "expeditions": (("trail", "On The Trail", _trail),),
 }
 
 # Questions an app's menu hands MIA, as if said aloud (she answers with
@@ -1051,7 +1083,7 @@ ASKS: dict[str, tuple[str, ...]] = {
     "notes": ("What were my last notes?",),
     "classroom": ("How is my learning progress?",),
     "inbox": ("What is waiting in my inbox?",),
-    "expeditions": ("What's my next trip?", "What gear do I need for my next trip?"),
+    "expeditions": ("What's left on my route?", "What's my next trip?", "What gear do I need for my next trip?"),
     "memories": ("What was my last trip like?",),
     "maps": ("Which trail maps do I have?",),
     "navigation": ("How far is my nearest waypoint?", "When is sunset today?"),
