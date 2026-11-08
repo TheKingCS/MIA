@@ -93,7 +93,10 @@ cards); by device is the default, spatial on the computer and cards on the phone
 the real PC, then the other areas' rooms one at a time. 2026-11-08 overnight, M4's passes: under reduced motion the flat
 Nexus and the Garage's flat bays show (no canvas, no running animations), and the flat portals now hold Muse's pictures
 too; the room lowers its resolution when frames run slow (judged over 1.5 s, down to half, back up when it can) with
-the bloom's reach kept the same on screen; the chosen portal's rim and fire are held back off its picture (H-0099).*
+the bloom's reach kept the same on screen; the chosen portal's rim and fire are held back off its picture (H-0099). M5's first pass the same night: every other area is a room of its apps in the Spatial look
+(core/web_environments.room, web/hub.js areaRoom): its apps and pages as portals in the area's hue round her orb, each
+glowing amber when something in it is due today, the chosen one's card, What Needs You as a panel, Tiles › for the
+grid. Each area's own space (like the Garage's bays) can replace its room one at a time after Zac's look.*
 
 | # | What | Done when |
 |---|---|---|

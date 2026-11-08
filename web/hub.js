@@ -3,7 +3,8 @@
  * Renders MIA.hub(area) (core/web_areas.hub): the area's apps and pages as tiles, each opening its own page, then the
  * other areas to jump to. Which apps are in which area is decided in core; this only lays them out. An area with its own
  * space (core/web_environments.py) draws that instead; the Garage's is a 3D room on the Nexus's engine where the
- * graphics card allows (garageRoom), its flat layout otherwise.
+ * graphics card allows (garageRoom), its flat layout otherwise. Every other area is a room of its apps in the Spatial
+ * look (areaRoom), its tiles otherwise.
  */
 (function () {
   "use strict";
@@ -144,11 +145,84 @@
     return true;
   }
 
+  // ------------------------------------------------------------ any other area as a room (DEC-0130 M5, first pass)
+  // Its apps and pages stand round MIA's orb as portals in the area's hue (core/web_environments.room), each glowing
+  // amber when something in it needs you today; the chosen one's card opens it, and What Needs You is a panel. Only in
+  // the Spatial look where the graphics card allows; otherwise (and with ?flat) the area's tiles show as before.
+  function doorCard(box, d, hue) {
+    box.replaceChildren(
+      el("div", { class: "n3-card-head", style: "--hue:" + hue }, el("span", { class: "n3-card-ico", "aria-hidden": "true" }, ico(d.id, d.icon)),
+        el("h2", {}, d.name)),
+      el("p", { class: "n3-card-line" }, d.tagline || ""),
+      el("p", { class: "n3-card-needs" + (d.needs ? " attn" : "") }, d.needs ? d.needs + (d.needs === 1 ? " needs you today" : " need you today") : "Nothing due today"),
+      el("a", { class: "btn n3-enter", href: d.page }, "Open ", el("span", { "aria-hidden": "true" }, "›")));
+  }
+
+  function areaRoom(h, env) {
+    const front = room && room.ring ? room.ring.front : 0;
+    if (room) { room.scene.stop(); room.nodes.forEach((x) => x.remove()); room = null; document.body.classList.remove("room-3d"); }
+    if (!(window.MIARoom && MIARoom.supported()) || /[?&]flat\b/.test(location.search) || !env.available || !env.doors.length) return false;
+    if (!MIAShell.look || MIAShell.look() !== "spatial") return false;  // the cards look keeps the area's tiles (DEC-0135)
+    const doors = env.doors;
+    const links = doors.map((d) => el("a", { href: d.page, role: "listitem",
+      "aria-label": d.name + (d.needs ? ", " + d.needs + " need you" : "") + ". " + (d.tagline || "") }, d.name));
+    const list = el("div", { class: "room-links", role: "list", "aria-label": h.name + ", turn with the arrow keys" }, ...links);
+    const canvas = el("canvas", { class: "n3-canvas", "aria-hidden": "true" });
+    const labels = el("div", { class: "n3-labels", "aria-hidden": "true" });
+    const card = el("aside", { class: "n3-card room-card", style: "--hue:" + h.hue });
+    let arriveHue = null;
+    try { arriveHue = sessionStorage.getItem("mia.arrive"); sessionStorage.removeItem("mia.arrive"); } catch (e) { /* fine */ }
+    // the portal's icon by name (an app's own line icon, else the page's; an app's emoji isn't one)
+    const iconName = (d) => (window.MIAIcons && MIAIcons.svg(d.id) ? d.id : window.MIAIcons && MIAIcons.svg(d.icon) ? d.icon : "mia");
+    const items = doors.map((d) => ({ id: d.id, name: d.name, hue: h.hue, needs: d.needs || 0, icon: iconName(d) }));
+    let ring = null;
+    const scene = MIARoom.mount(canvas, items, {
+      start: Math.min(front, items.length - 1), theme: MIAShell.roomLight(), fire: 0.55, labels, needsGlow: true, arrive: !!arriveHue, arriveHue,
+      onPick: (i) => (ring && i === ring.front ? (location.href = doors[i].page) : ring && ring.go(i)),
+      onOrb: () => MIAShell.talk(true),
+      onDrop: (i) => ring && ring.go(i),
+    });
+    if (!scene) return false;
+    document.body.classList.add("room-3d");
+    const waiting = env.needs.length;
+    const side = el("div", { class: "room-side" },
+      el("section", { class: "holo env-needs", "aria-label": "Needs you" },
+        el("h2", { class: "pw-label" }, waiting ? "Needs You" : "Nothing Needs You"),
+        waiting ? el("div", { class: "rows" }, env.needs.map((n) => el("a", { class: "env-need", href: n.page || "#" },
+          el("strong", {}, n.title), el("span", {}, n.text))))
+          : el("p", { class: "dim" }, "Nothing here is due today.")));
+    const head = el("header", { class: "room-head" },
+      el("a", { class: "btn btn-ghost btn-small", href: "nexus.html" }, "‹ Nexus"),
+      el("div", {}, el("h1", {}, h.name), el("p", { class: "tagline" }, doors.length + " apps · " + (waiting ? waiting + " need you" : "nothing needs you"))),
+      el("a", { class: "btn btn-ghost btn-small", href: "hub.html?area=" + encodeURIComponent(h.id) + "&flat" }, "Tiles ›"));
+    const ui = el("div", { class: "room-ui" }, head, el("div", { class: "room-spacer" }), card, side, list);
+    document.body.append(canvas, labels, ui);
+    ring = MIASpatial.ring(list, links, {
+      start: Math.min(front, links.length - 1),
+      onTurn: (i) => { scene.focus(i); doorCard(card, doors[i], h.hue); },
+      onEnter: (node, i) => { location.href = doors[i].page; },
+    });
+    room = { scene, ring, nodes: [canvas, labels, ui] };
+    if (!keysOn) {
+      keysOn = true;
+      document.addEventListener("keydown", (e) => {
+        if (!room || e.defaultPrevented || e.target.closest && e.target.closest(".room-links, dialog, .talk, [role=dialog]")) return;
+        if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+        if (e.key === "ArrowRight") { e.preventDefault(); room.ring.turn(1); }
+        if (e.key === "ArrowLeft") { e.preventDefault(); room.ring.turn(-1); }
+      });
+    }
+    return true;
+  }
+
   function paint(h) {
     document.title = h.name + " — MIA";
     $("hub-name").textContent = h.name;
     $("hub-sub").textContent = h.tagline;
     document.body.style.setProperty("--hue", h.hue || "");
+    if (h.environment && h.environment.kind === "room") {  // every other area: a room of its apps, or its tiles
+      if (areaRoom(h, h.environment)) return;
+    }
     const env = h.environment && ENVIRONMENTS[h.environment.kind];
     if (env) {
       document.body.classList.add("env", "env-" + h.environment.kind);

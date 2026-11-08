@@ -81,9 +81,11 @@ def _readings(context, task) -> list:
 
 def task_status(task, readings: list, today: date) -> dict:
     """Pure logic (given readings). A task's urgency and its status line,
-    in the PC app's words."""
-    from core.maintenance_manager import (days_until_due, is_meter_task_due, is_sensor_task_due,
-                                          meter_used_since_last, predicted_due_date, task_urgency)
+    in the PC app's words; a meter task that also comes due by the calendar (DEC-0131) says that side too, and
+    is due when either is."""
+    from core.maintenance_manager import (calendar_fallback_days_until, calendar_fallback_due_date, days_until_due,
+                                          is_meter_task_due, is_sensor_task_due, meter_used_since_last,
+                                          predicted_due_date, task_urgency)
 
     urgency = task_urgency(task, readings, today)
     days = None
@@ -114,6 +116,14 @@ def task_status(task, readings: list, today: date) -> dict:
             left = (task.meter_interval or 0.0) - used
             text = f"overdue {-left:g} {unit}".strip() if left <= 0 else f"{used:g}/{task.meter_interval:g} {unit}".strip()
             attention = is_meter_task_due(task, readings)
+        # DEC-0131: "every 50 hours or a year, whichever comes first": the calendar side, said beside the meter's
+        by = calendar_fallback_days_until(task, today) if not quick else None
+        if by is not None:
+            days = by
+            if by <= 0:
+                text, attention = (f"overdue {-by}d (by the calendar)" if by < 0 else "due today (by the calendar)"), True
+            else:
+                text = f"{text} · or by {calendar_fallback_due_date(task):%b} {calendar_fallback_due_date(task).day}"
     else:
         if latest is None:
             text, attention = "no readings logged", False
@@ -145,9 +155,10 @@ def task_status(task, readings: list, today: date) -> dict:
 def due_words(task, status: dict, readings: list, today: date) -> str:
     """Pure logic (given readings). When a task is due, in the words the Garage card shows (the design canvas,
     DEC-0113): "Due tomorrow", "Due in 5 days", "Jan" (further than a month: the month it falls in), "Due in 188 mi"
-    (a meter task, by what's left), "Past due 3 days" / "Past due 20 h". Plain, never scolding (DEC-0014). "" for
+    (a meter task, by what's left; "or by Mar 4" when it also comes due by the calendar, DEC-0131), "Past due 3 days" /
+    "Past due 20 h". Plain, never scolding (DEC-0014). "" for
     a quick stat; the status text (never done, no readings logged...) when there's no due point to give."""
-    from core.maintenance_manager import meter_used_since_last, next_due_date
+    from core.maintenance_manager import calendar_fallback_days_until, meter_used_since_last, next_due_date
 
     if status.get("quick_stat"):
         return ""
@@ -163,11 +174,30 @@ def due_words(task, status: dict, readings: list, today: date) -> str:
             return f"Due in {days} days"
         due = next_due_date(task)
         return due.strftime("%b") if due.year == today.year else due.strftime("%b %Y")
+    by = calendar_fallback_days_until(task, today) if task.is_meter_task else None  # DEC-0131's calendar side
+    if by is not None and by <= 0:
+        return "Due today" if by == 0 else f"Past due {-by} day{'s' if by != -1 else ''}"
     if task.is_meter_task and task.meter_interval and task.last_completed_meter_value is not None and readings:
         left = task.meter_interval - (meter_used_since_last(task, readings) or 0.0)
         amount = f"{abs(left):,.0f} {unit}".strip()
-        return f"Past due {amount}" if left <= 0 else f"Due in {amount}"
+        if left <= 0:
+            return f"Past due {amount}"
+        return f"Due in {amount}" + (f" or {_when(by, today)}" if by is not None else "")
+    if by is not None:
+        return f"Due {_when(by, today)}"
     return (status.get("text") or "").capitalize()
+
+
+def _when(days: int, today: date) -> str:
+    """Pure logic. A day so many days off in a due line's words: "tomorrow", "in 5 days", or "by Mar 4"."""
+    if days == 1:
+        return "tomorrow"
+    if days <= 31:
+        return f"in {days} days"
+    from datetime import timedelta
+
+    due = today + timedelta(days=days)
+    return f"by {due:%b} {due.day}"
 
 
 def meter_reading(context, tasks: list) -> Optional[str]:

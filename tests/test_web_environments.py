@@ -4,7 +4,8 @@ tests.test_web_environments
 
 An area's own space (DEC-0130 M3, core/web_environments.py): the Garage environment's bays come from the Garage's own
 assets (never the house's), most overdue first; the parts running low are gathered across them, each once with what
-uses it; the hub carries the environment for the Garage and none for areas still on tiles.
+uses it; the hub carries the Garage's own space, and every other area a room of its apps (each door with what waits in
+it today), which the page draws only in the Spatial look.
 """
 
 from datetime import date, timedelta
@@ -57,8 +58,26 @@ def test_low_parts_are_gathered_once_with_what_uses_them(shop):
     assert oil["name"] == "10W-30 oil" and oil["state"] == "low" and sorted(oil["used_by"]) == ["Mower", "Truck"]
 
 
-def test_the_hub_carries_the_garage_space_and_tiles_elsewhere(shop, monkeypatch):
+def test_the_hub_carries_the_garage_space_and_a_room_of_apps_elsewhere(shop, monkeypatch):
     ctx, _, _ = shop
     monkeypatch.setattr(surfaces, "_visible", lambda context, app: True)
     assert hub(ctx, "garage")["environment"]["kind"] == "garage"
-    assert hub(ctx, "finances")["environment"] is None
+    room = hub(ctx, "finances")["environment"]
+    assert room["kind"] == "room" and room["available"] and room["doors"][0]["id"] == "budget"
+    assert all(d["needs"] == 0 for d in room["doors"]) and room["needs"] == []
+
+
+def test_a_rooms_doors_count_todays_items_in_their_app(shop, monkeypatch):
+    import core.web_nexus as nexus
+    from core.web_environments import room
+
+    ctx, _, _ = shop
+    monkeypatch.setattr(surfaces, "_visible", lambda context, app: True)
+    monkeypatch.setattr(nexus, "_today", lambda context, today: [
+        {"when": "overdue", "title": "Electric", "detail": "2 days late", "module_id": "budget"},
+        {"when": "soon", "title": "Water", "detail": "in 3 days", "module_id": "budget"},
+        {"when": "today", "title": "Walk", "detail": "", "module_id": "workout"}])
+    found = room(ctx, "finances")
+    money = next(d for d in found["doors"] if d["id"] == "budget")
+    assert money["needs"] == 1 and [n["title"] for n in found["needs"]] == ["Electric"]
+    assert found["needs"][0]["page"] == money["page"] and room(ctx, "nowhere") is None
