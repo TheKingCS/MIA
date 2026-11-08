@@ -365,7 +365,8 @@ class ConnectionBook:
 def research(context, target: dict) -> list:
     """What MIA can find about a thing in her own offline sources before she raises it (DEC-0146, "researches a new
     possibility"): a plan on the plans shelf whose title shares two of its words (all of a one-word name), the best sourced note in her specialists'
-    workbooks (said as not yet confirmed when it isn't), and what's on the workshop shelf that it names. At most two,
+    workbooks (said as not yet confirmed when it isn't), an article about it in her offline reference library when
+    packs are installed, and what's on the workshop shelf that it names. At most two,
     each {"line", "source"}; [] when nothing fits. Never the network and never invented: each line says where it came
     from, and a source that won't read is skipped."""
     words = _words(target.get("name", ""))
@@ -398,6 +399,18 @@ def research(context, target: dict) -> list:
                                     f"{unconfirmed}", "source": str(sources[0])[:120]})
     except Exception:  # noqa: BLE001 - see above
         log.exception("Couldn't search the specialists' notes for a connection.")
+    library = getattr(context, "reference_library", None)
+    if library is not None and len(out) < 2 and hasattr(library, "search_all_packs"):
+        try:  # her offline reference library (Wikipedia, iFixit... packs), when any are installed
+            if library.list_packs():
+                hit = next((h for h in library.search_all_packs(target["name"], limit=2)
+                            if _words(h.article_title) & words), None)  # an article about it, not a passing mention
+                if hit is not None:
+                    first = re.split(r"(?<=[.!?])\s", hit.snippet.strip(), maxsplit=1)[0][:220]
+                    out.append({"line": f"your {hit.pack_title} library has \u201c{hit.article_title}\u201d: {first}",
+                                "source": hit.pack_title})
+        except Exception:  # noqa: BLE001 - see above
+            log.exception("Couldn't search the reference library for a connection.")
     stock = getattr(context, "materials", None)
     if stock is not None and hasattr(stock, "all_materials"):
         try:

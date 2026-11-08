@@ -2442,7 +2442,8 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   person's own stated dependencies. **Research before raising one (claude, engine, 2026-11-08 overnight):** a kept
   connection carries what MIA found about it in her own offline sources (`connections.research`): a plan on the plans
   shelf only when it really is one (two shared words, or all of a one-word name), the best sourced note in her
-  specialists' workbooks with its source (said "not yet confirmed" when it isn't), and what's on the workshop shelf
+  specialists' workbooks with its source (said "not yet confirmed" when it isn't), an article about it in her offline
+  reference library when packs are installed (its title must name the thing), and what's on the workshop shelf
   that it names; at most two, never the network, said with the connection so she brings something new with it.
 - Related: DEC-0054 (notes from conversation), DEC-0108 (interconnection audit), DEC-0094/0101 (loops), DEC-0126
 

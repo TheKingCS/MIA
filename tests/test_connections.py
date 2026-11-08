@@ -6,7 +6,8 @@ The magic is in the connections (core/connections.py, Zac 2026-11-08): a remark 
 weeks ago is noticed, held, raised once in a later conversation if it fits, then let go. These check the two ways a
 tie is found (the link graph, shared words), the guards (a week old at least, never the thing named outright, never a
 private turn), the store's life (held back, mentioned, expired, not raised twice, sealed), the two loops, and the
-research she does before raising one (a real plan for it, a sourced note said unconfirmed when it is, the shelf).
+research she does before raising one (a real plan for it, a sourced note said unconfirmed when it is, an article in
+her offline library, the shelf).
 """
 
 from datetime import datetime, timedelta
@@ -185,3 +186,18 @@ def test_what_she_found_comes_up_with_the_connection(book):
     assert "What you found in your own sources, if it helps: there's a plan for it" in block and "(the plans shelf)" in block
     broken = ConnectionBook(data_dir=book.data_dir / "b")
     assert broken.consider(_found(), "chicken feed", NOW, research=lambda f: 1 / 0)  # research failing never loses it
+
+
+def test_an_article_in_her_offline_library_joins_when_packs_are_installed(monkeypatch):
+    from core import specialists
+
+    monkeypatch.setattr(specialists, "search", lambda q, limit=1: [])
+    hit = SimpleNamespace(pack_title="Wikipedia", article_title="Chicken coop",
+                          snippet="A chicken coop is a building where chickens are kept. It has roosts.")
+    off_topic = SimpleNamespace(pack_title="Wikipedia", article_title="Poultry farming", snippet="Farming poultry.")
+    lib = SimpleNamespace(list_packs=lambda: ["wiki"], search_all_packs=lambda q, limit=2: [off_topic, hit])
+    found = cx.research(SimpleNamespace(reference_library=lib), {"name": "Chicken coop"})
+    assert found == [{"line": "your Wikipedia library has \u201cChicken coop\u201d: A chicken coop is a building where "
+                              "chickens are kept.", "source": "Wikipedia"}]
+    empty = SimpleNamespace(list_packs=lambda: [], search_all_packs=lambda q, limit=2: [hit])
+    assert cx.research(SimpleNamespace(reference_library=empty), {"name": "Chicken coop"}) == []  # no packs: no search
