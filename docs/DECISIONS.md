@@ -2144,6 +2144,9 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   store (`living_worlds.json`, DEC-0126), with save/resume, id validation, independent per-version growth, and a
   life-event on every create. The model writes nothing (only code does). Not yet wired into PERSONAL_STORES/the app
   or the DM turn loop — that's the next step. Tested in `tests/test_living_worlds.py`.
+  **Wired 2026-11-08 (claude, design session):** in PERSONAL_STORES, with a screen (`web/worlds.html`, core/web_worlds.py:
+  worlds, campaigns, the character and its versions, quests, created through `world.*` actions) and voice tools
+  (core/assistant_world_actions.py). Playing a turn (core/dungeon_master.py) is not exposed: it waits on Phase 2's approval.
 - Proposed by: claude, 2026-11-08, from Zac's "MIA — Living Worlds" handoff (the Convergence multiverse saga).
 - Proposal (`docs/LIVING_WORLDS_PROPOSAL.md`): a major subsystem turning MIA into a persistent-world DM, world
   simulator and experiential-learning guide, with an overarching cross-universe narrative (the Convergence) and a

@@ -68,6 +68,8 @@ from core.journal_reflection import journal_reflection_action, reflection_due, r
 from core.warranty_watch import due_notices, warranty_message
 from core.assistant_why_actions import register_why_actions
 from core.assistant_direction_actions import register_direction_actions
+from core.assistant_answer_style_actions import register_answer_style_actions
+from core.assistant_world_actions import register_world_actions
 from core.assistant_comm_actions import register_communication_actions
 from core.assistant_email_actions import register_email_actions
 from core.assistant_focus_actions import register_focus_actions
@@ -1716,6 +1718,8 @@ class MIAApplication:
         register_plan_actions(self.context.assistant_actions)  # plans, blueprints and material lists
         register_accessibility_actions(self.context.assistant_actions)
         register_direction_actions(self.context.assistant_actions)  # My Directions by voice (DEC-0141)
+        register_answer_style_actions(self.context.assistant_actions)  # how MIA answers, by voice (DEC-0138)
+        register_world_actions(self.context.assistant_actions)  # Living Worlds by voice (DEC-0134)
         register_starter_actions(self.context.assistant_actions)
         register_life_event_actions(self.context.assistant_actions)
         register_link_actions(self.context.assistant_actions)

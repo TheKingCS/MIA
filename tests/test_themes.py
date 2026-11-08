@@ -2,7 +2,8 @@
 Themes (DEC-0136, core/themes.py): a theme is data checked against what a theme may change, so no theme can restyle
 a warning or inject anything; each person picks theirs in Settings or by voice, and every page gets it with the shell.
 The Theme Studio builds a theme from a few choices, refuses warning-coloured accents and unreadable text, and saves,
-uses and deletes a person's own themes; themes go out and come back as files, and MIA designs one from a description.
+uses and deletes a person's own themes; themes go out and come back as files, MIA designs one from a description, two
+themes mix by parts, a theme may bring its own chimes, and the glasses take its accent lifted for the lens.
 """
 
 import time
@@ -252,3 +253,39 @@ def test_mia_designs_and_puts_on_a_theme_by_voice(ctx):
     assert theme_of(ctx) == custom_themes(ctx)[0]["id"] and for_shell(ctx)["tokens"]["--accent"] == "#2aa8ff"
     assert "Calm Ocean Glass 2" in _action_design_theme(ctx, {"description": "calm ocean glass"})
     assert "Describe it" in _action_design_theme(ctx, {"description": ""})
+
+
+def test_mixing_takes_only_the_named_parts_from_the_second_theme(ctx):
+    """Theme Studio step 3: Stark with Cyberpunk's room keeps Stark's colours and takes the room's levels."""
+    from core.themes import all_themes, choices_of, combine
+
+    themes = all_themes(ctx)
+    made = combine(ctx, "stark", "cyberpunk", ["room"])
+    stark, cyber = choices_of(themes["stark"]), choices_of(themes["cyberpunk"])
+    assert made["base"] == "stark" and made["problem"] == "" and "Stark" in made["name"]
+    assert made["choices"]["accent"] == stark["accent"] and made["choices"]["fire"] == cyber["fire"]
+    with pytest.raises(ValueError):
+        combine(ctx, "stark", "nope", ["room"])
+    with pytest.raises(ValueError):
+        combine(ctx, "stark", "glass", [])
+
+
+def test_a_theme_keeps_only_a_known_sound_set_and_files_carry_it(ctx):
+    """Step 5: a theme's chimes are one of SOUND_SETS; anything else falls back to classic."""
+    from core.theme_actions import export
+    from core.themes import STARK_CHOICES, build_theme, clean_theme
+
+    made = build_theme({**STARK_CHOICES, "sound": "synth"}, None, "my_synth", "Synth")
+    assert made["sound"] == "synth" and made["choices"]["sound"] == "synth"
+    assert export(made)["choices"]["sound"] == "synth"
+    assert clean_theme({"id": "x", "name": "X", "sound": "../../evil"})["sound"] == "classic"
+
+
+def test_the_words_name_the_parts_and_the_glasses_get_a_bright_accent(ctx):
+    """Mixing by voice reads the parts in code; the lens gets the accent lifted until it reads on black."""
+    from core.themes import contrast, glasses_accent, parts_from
+
+    assert parts_from("its colours and the room") == ["colours", "room"]
+    assert parts_from("the sounds and the backdrop") == ["sound", "backdrop"]
+    lens = glasses_accent(ctx)
+    assert contrast(lens["accent"], "#000000") >= 9 and lens["rgb"].count(",") == 2

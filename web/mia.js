@@ -222,8 +222,14 @@
     nexus: () => read("/api/nexus", "nexus"),
     themes: () => read("/api/themes", "themes"),  // the Theme Studio (DEC-0136)
     designTheme: (description) => demo ? demoOnly() : call("POST", "/api/themes/design", { description }),
+    mixThemes: (first, second, parts) => demo ? demoOnly() : call("POST", "/api/themes/mix", { first, second, parts }),  // Mix Two
     art: () => read("/api/art", "art"),  // MIA's paintings (DEC-0140)
     directions: () => read("/api/directions", "directions"),  // My Directions (DEC-0141)
+    answers: () => read("/api/answers", "answers"),  // How MIA Answers (DEC-0138)
+    about: () => read("/api/about", "about"),  // About MIA (DEC-0142)
+    worlds: (campaign) => read("/api/worlds" + (campaign ? "?campaign=" + encodeURIComponent(campaign) : ""), "worlds"),  // Living Worlds (DEC-0134)
+    // After a reply in Talk, now and then: the same answer a second way to pick from ({} when none; never in the demo).
+    compareAnswer: (reply, isPrivate) => demo ? Promise.resolve({}) : call("POST", "/api/talk/compare", { reply, private: !!isPrivate }),
     paint: (description, use, apply) => demo ? demoOnly() : call("POST", "/api/art/paint", { description, use: use || "backdrop", apply: !!apply }),
     // The ID wallet (core/id_wallet.py): numbers travel only in these calls, never in an action.
     wallet: () => read("/api/wallet", "wallet"),

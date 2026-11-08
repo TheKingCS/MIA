@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1273 files, 275,860 lines; 1273 files describe themselves; 15,016 of 15,714 classes and functions are documented.
+1284 files, 277,652 lines; 1284 files describe themselves; 15,106 of 15,804 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-473 files, 130,541 lines; 7,000 of 7,086 classes and functions documented
+478 files, 131,618 lines; 7,068 of 7,154 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -16,6 +16,7 @@
 - `core/actions.py`: The action contract (2026-10-05, Phase 2 foundation, DEC-0013): how any surface (the web Home, the phone, the glasses, later MIA herself) changes something in a person's life. Always in five steps:
 - `core/activity_log_manager.py`: The Activity/Memory Log shared service — docs/ROADMAP.md milestone 9.1, the "Activity/Memory Log (system-wide event history via the event bus)" row of the shared core services table (used by the Memories section, "what did I do on Project X" queries, Diagnostics history).
 - `core/alarm_manager.py`: Backs the Alarm tool (modules/toolbox/tools/alarm_tool.py) — persisted to data/alarms.json, same durability pattern as core.calendar_manager.CalendarManager.
+- `core/answer_compare.py`: "Do you prefer this response, or this one?" (DEC-0138): the surface over core/response_style.py. Now and then, after a reply in Talk, MIA offers the same answer a second way that differs on one dimension of style (how long, how it's laid out, its tone, what comes first), the one she's least sure abo
 - `core/answer_ratings.py`: Zac's 👍 and 👎 on MIA's answers (DEC-0067's tuning, step 3): what she was asked, what she said, on which device, and how it landed. Personal: each person's own, in their folder (core/personal_data.py).
 - `core/app_context.py`: Defines AppContext: a small bundle of shared services (config, logger factory, event bus) that gets handed to every module and every GUI component.
 - `core/app_intro.py`: What MIA says when she introduces an app (slice 5 of docs/GLASSES_FIRST_BOOT_PLAN.md), in two halves:
@@ -24,6 +25,7 @@
 - `core/asset_parts.py`: Parts per asset (2026-11-07; the asset page's "parts aren't tracked per asset yet", PLANNED since 2026-10-06): the oil filters, blades, belts and fluids a vehicle, tool or appliance uses, from the household's own inventory, workshop materials and parts bins.
 - `core/assistant_accessibility_actions.py`: "Make the text bigger", "turn on high contrast", "read this screen to me" (core/accessibility.py, 2026-10-01), and "switch to the cards look" (core/display_style.py, DEC-0135), "make it cyberpunk" (core/themes.py, DEC-0136). Each changes only the speaker's own look.
 - `core/assistant_actions.py`: The Assistant's tool-use/action-execution registry — docs/ROADMAP.md milestone 5.5. Lets the LLM actually DO things in MIA (open a module, add an alarm, a note, an inventory item), not just answer questions, via Ollama's structured tool-calling API (core/llm_manager.py's `chat_with_tools()`).
+- `core/assistant_answer_style_actions.py`: How MIA answers, by voice (DEC-0138, DEC-0125's both-ways rule; the screen is web/answers.html): "keep your answers short", "use bullet points", "be more direct", "lead with the answer", "how do I like answers?", "forget how I like answers", "stop asking which I prefer". The person's words are mappe
 - `core/assistant_art_actions.py`: MIA paints by voice (DEC-0140, core/art_studio.py): "paint me a fantasy castle village for my background", "use the castle one as my background", "take the background down", "delete the castle picture". Painting runs on the PC's own graphics card and takes a minute or so; a background asked for this
 - `core/assistant_asset_part_actions.py`: Parts per asset by voice (DEC-0125; the screen is the asset page's Parts tab, core/asset_parts.py): "the mower uses the 10W-30 oil", "what parts does the truck take?", "the truck doesn't use that filter anymore". Names are matched to real records in code; the add and remove are the same actions the 
 - `core/assistant_backup_actions.py`: Backups by voice (DEC-0125), read only: "when did I last back up?" says how long since the last backup in the backups folder and where they go (core/web_backups.py). Making one is on Settings (a passphrase is typed, never said aloud); restoring is on the PC.
@@ -72,6 +74,7 @@
 - `core/assistant_voice_choice_actions.py`: MIA's own voice, by voice (DEC-0125; the same change as Settings' Voice, core/web_voice.py): "which voices do you have?", "switch to the British voice", "turn your voice effect off", "speak louder". Device-wide, so only the PC's owner changes it; anyone can ask which voices there are.
 - `core/assistant_waypoint_actions.py`: Waypoints by voice, for what Navigation's page added (DEC-0125: full use both ways). "Rename the spring waypoint to Upper Spring", "mark the old gate as a hazard", "note on the spring: dry in August": the same `waypoint.edit` action kind as the page's Edit (core/waypoint_actions.py), so "undo that" 
 - `core/assistant_why_actions.py`: Assistant tools for the owner's chain of reasons, slice B ("Remember Why") of docs/COGNITIVE_EXTENSION_PROPOSAL.md. The chain lives on Intents (core/intent_manager.py: `serves_intent_id`, `reason`); the evidence is computed by core/why_graph.py.
+- `core/assistant_world_actions.py`: Living Worlds by voice (DEC-0134 Phase 1, DEC-0125's both-ways rule; the screen is web/worlds.html): "what worlds do I have?", "make a world called Emberfall, a fantasy frontier", "start a campaign in Emberfall called The Salt Road", "set a quest in The Salt Road: find the lost cartographer", "I fin
 - `core/at_rest.py`: MIA encrypts her own data at rest (DEC-0126, docs/SECURITY.md step 2): the most private stores' files are sealed with AES-256-GCM under one data key, so a drive read on another computer (a stolen PC, a pulled disk, a backup copied off) shows nothing but noise.
 - `core/atomic_write.py`: One shared helper for crash-safe file writes. Every core/*_manager.py persists its state as JSON via a direct `path.write_text(...)` call — which is NOT atomic: a crash, power loss, or disk-full condition mid write can leave that file truncated or corrupted, permanently losing everything in it. A re
 - `core/avatar_manager.py`: Companion-avatar camera source for the Home Dashboard's Companion Avatar widget (gui/home_dashboard.py, gui/widgets/avatar_camera_widget.py). Built for VMagicMirror (https://malaybaku.github.io/VMagicMirror/), a separately-running, Windows-only Unity/VRM avatar app the user has been running alongsid
@@ -427,6 +430,7 @@
 - `core/warranty_watch.py`: A heads-up before a warranty runs out (2026-09-28). Machines got a "Warranty until" date (MaintenanceAsset.warranty_until), typed in or filled from a filed warranty/manual (core/inbox_classify.py). About a month before, and again a week before, MIA mentions it through the communication gate, so anyt
 - `core/waypoint_actions.py`: Waypoints (core/waypoint_manager.py) through the action contract (core/actions.py), for the web's Maps and Navigation pages: `waypoint.add` (a name and where: from a tap on the map, or typed), `waypoint.edit` (its name, kind and notes; where it is stays) and `waypoint.delete`. The store writes throu
 - `core/waypoint_manager.py`: Backs the Navigation module's waypoint list (modules/navigation/module.py) — docs/ROADMAP.md milestone 10.1. Same persisted-JSON pattern as core/inventory_manager.py: data/waypoints.json, a dataclass with to_dict/from_dict, a manager class wrapping load/save.
+- `core/web_about.py`: About MIA (web/about.html, DEC-0142): what MIA can honestly say about herself, on one page, every line from the facts and never from the model: what she is and her real scale (the system map, DEC-0139: files of code, tools, improvement loops, decisions on record, what's sealed on disk, what she's le
 - `core/web_account.py`: The web's Profile and Settings screens (2026-10-07, Zac: the gear's Profile and Settings). Profile is who you are: name, email, country, what MIA helps with, household, password and recovery code. Settings is how MIA behaves for you: the person's own settings from the PC app's Settings (core/person_
 - `core/web_areas.py`: MIA's areas and their hubs (DEC-0129, Zac 2026-11-08; Kitchen added as its own area by DEC-0130): the sidebar is the Dashboard and then the areas (Home, Garage, Plants and Animals, Health and Fitness, Recreation, Security, Browser, Settings and Diagnostics, Finances, Business, Personal, Learning, Mi
 - `core/web_backups.py`: Backups from the web's Settings (DEC-0125: Backup & Restore was on the desktop's Settings only). For the PC's owner (the first account) only, since a backup holds everyone's data on this MIA.
@@ -463,6 +467,7 @@
 - `core/web_toolbox.py`: The Toolbox's web screen (DEC-0113 canvas Toolbox, DEC-0125: the Toolbox had no phone screen). Three parts:
 - `core/web_voice.py`: MIA's voice from the web's Settings and by voice (DEC-0125: the voice, the AI voice effect and the volume were on the desktop's Settings only). Device-wide, like the model: one voice for this computer, so only its owner changes it.
 - `core/web_why.py`: "My Why" on the web (DEC-0125: the why chain was voice-only; "Remember Why", docs/COGNITIVE_EXTENSION_PROPOSAL.md slice B). The person's reasons as chains ("Factory work → Pay off debt → Control over my time"), each link with the reason in their own words, whether it's done (and why), and the facts 
+- `core/web_worlds.py`: Living Worlds on the web (web/worlds.html, DEC-0134 Phase 1, approved): the person's fictional universes, the campaigns in each, their central character and its version in each world, and each campaign's quests, over the living_worlds store (core/living_worlds.py). Everything here is fiction: tagged
 - `core/weekly_checkin.py`: The Sunday check-in (DEC-0047 rule 5; Zac, 2026-10-27): Sunday morning, a recap of the week just past and the layout of the week ahead.
 - `core/welcome.py`: What comes after User Sync (slice 5 of docs/GLASSES_FIRST_BOOT_PLAN.md): the first mission, the tour of Home, the app menu with its optional tours, and the moment MIA hands over.
 - `core/whimsy.py`: A little grounded inspiration toward the slow, made, hand-crafted life — the whimsy and art Zac asked MIA to keep alive (2026-11-08: "slow down, draw, create, think about forest creatures, make stuff, dream, do", and his shift from consumer to producer). The standing directions (`core/direction.py`)
@@ -484,7 +489,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 3,728 lines; 42 of 42 classes and functions documented
+2 files, 3,818 lines; 44 of 44 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -759,7 +764,7 @@
 
 ## tests/: the test suite: what each part must do
 
-435 files, 72,788 lines; 5,733 of 6,345 classes and functions documented
+438 files, 73,045 lines; 5,753 of 6,365 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -778,6 +783,7 @@
 - `tests/test_activity_log_manager.py`: Unit tests for core.activity_log_manager. Isolates _DATA_DIR _ACTIVITY_LOG_FILE into a tmp_path scratch area (same monkeypatch pattern as test_inventory_manager.py's isolated_paths).
 - `tests/test_alarm_manager.py`: Unit tests for core.alarm_manager. Isolates _DATA_DIR/_ALARMS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_calendar_manager.py's isolated_paths). check_due() takes `now` as a plain datetime rather than reading the real clock, so firing behavior is tested with fixed timestamps  *(4 undocumented)*
 - `tests/test_alarm_tool.py`: Unit test for modules.toolbox.tools.alarm_tool.format_alarm_row — pure formatting logic, no Qt event loop needed.
+- `tests/test_answer_compare.py`: How MIA answers (DEC-0138): offering an answer two ways, the facts checked, the picks and the screen, and the voice tools that run the same style.* actions.
 - `tests/test_answer_ratings.py`: Rating her answers (DEC-0067, core/answer_ratings.py): a 👍 is kept as a rating, a 👎 is kept and still reaches the Fix-It Log, and each person's ratings are their own. *(2 undocumented)*
 - `tests/test_application_daily_occasions.py`: Unit tests for core.application.MIAApplication._check_daily_occasions() and its per-check exception isolation (2026-09-14 stabilization pass). *(1 undocumented)*
 - `tests/test_art_studio.py`: MIA paints (DEC-0140, core/art_studio.py): a description becomes a picture on the PC's own image engine (ComfyUI), kept in the person's folder, and can go up as their theme's backdrop. Tested against a stand-in ComfyUI on a local port: the same HTTP calls, a tiny PNG back.
@@ -1142,6 +1148,7 @@
 - `tests/test_waypoint_actions.py`: Waypoints from the web (core/waypoint_actions.py): added from a tap on the map, taken out from Navigation. *(3 undocumented)*
 - `tests/test_waypoint_manager.py`: Unit tests for core.waypoint_manager. haversine_distance_km() initial_bearing_degrees() are checked against real, well-known distances/bearings (New York <-> Los Angeles, London <-> Paris) rather than only synthetic values, so a sign error or unit mistake can't accidentally cancel out and still pass *(4 undocumented)*
 - `tests/test_waypoint_map_canvas.py`: Unit tests for gui.widgets.waypoint_map_canvas's project_waypoints() — pure math, no Qt/QWidget instantiation needed. See that module's own docstring for why this is a schematic layout, not a real map projection.
+- `tests/test_web_about.py`: About MIA (DEC-0142): the page reads every line from the facts, and a missing source is a quiet gap.
 - `tests/test_web_areas.py`: MIA's areas and hubs (DEC-0129, core/web_areas.py; Kitchen and the area hues from DEC-0130): every app has an area, shared apps sit in each of their hubs, every page an area links to exists, a hub lists only what the person can open, and no area's hue is a status color.
 - `tests/test_web_backups.py`: Backups from the web's Settings (core/web_backups.py) and by voice (core/assistant_backup_actions.py): the PC owner's backups folder, the newest backups, Back Up Now with or without a passphrase, and the status said aloud.
 - `tests/test_web_changes.py`: Recent Changes on the web (core/web_changes.py, DEC-0125): what MIA can put back, newest first, in the history's own words; the fortnight's history by day with undone ones marked; and Undo as the action undo.last, which never leaves a change of its own behind.
@@ -1175,6 +1182,7 @@
 - `tests/test_web_toolbox.py`: The Toolbox on the web (DEC-0125, the design canvas's Toolbox, DEC-0113: core/web_toolbox.py, core/toolbox_calcs.py, core/toolbox_actions.py and core/assistant_toolbox_actions.py): every calculator worked out in core, alarms set, switched and deleted as actions, the inventory kept as actions, and th *(1 undocumented)*
 - `tests/test_web_voice.py`: MIA's voice from Settings and by voice (core/web_voice.py, core/assistant_voice_choice_actions.py): the voices installed, switching one, the AI voice effect and the volume; only the PC's owner changes them. *(6 undocumented)*
 - `tests/test_web_why.py`: My Why on the web (core/web_why.py): the chains of reasons with their facts, and linking, unlinking and achieving goals as why.* actions, the same goals the voice tools keep (DEC-0125). *(2 undocumented)*
+- `tests/test_web_worlds.py`: Living Worlds on the web (DEC-0134 Phase 1): the screen, its world.* actions and the voice tools, all fiction.
 - `tests/test_welcome.py`: What comes after User Sync (core/welcome.py, core/app_intro.py). *(4 undocumented)*
 - `tests/test_what_i_used.py`: What I Used (DEC-0029, ALICE pick 1): a turn gets the memories that match what was asked, returns them with the reply, and each can be fixed or forgotten (and the forgetting undone).
 - `tests/test_whimsy.py`: The grounded little inspiration MIA offers toward the slow, made life (core/whimsy.py, 2026-11-08). A seed is composed from real things — the season, the workshop shelf, the person's own standing directions — never improvised; it only grows from a direction the person actually set; a material seed n
@@ -1199,8 +1207,10 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-95 files, 17,600 lines
+98 files, 17,968 lines
 
+- `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), and what she knows about you, linking to where it's kept. Read onl
+- `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
 - `web/arcade/progress.js`: Lens Arcade — universal progression. One XP/level/achievement profile shared across every game. Games include this file, then call: ArcadeProgress.award('snake', 'newbest', 50) The module persists to localStorage, handles the daily streak, unlocks achievements, and shows gold toast notifications by 
@@ -1295,6 +1305,7 @@
 - `web/workout.js`: workout.js — the Workout screen (claude, 2026-10-06, DEC-0017/0018). Renders MIA.workout() (core/web_screens.py): log a session right on the page (an exercise, reps, sets, weight, how long, notes), the latest entry, today's daily mission and streak, exercises, history, progress and Personal Bests (l
 - `web/workshop.js`: workshop.js — the Workshop screen (claude, 2026-10-16; Zac: the app only opened a chat). Renders MIA.workshop() (core/web_more.py) in tabs: Recipes and Builds (crafting recipes, DEC-0030: what a recipe needs and what's short, the shopping list, Bought It, Start Build, steps, Finish, photos, Sold It 
 - `web/worldmap.js`: worldmap.js — the World Map with fog of war (claude, 2026-10-17, DEC-0028). Renders MIA.worldmap() (core/world_map.py): the cleared tiles over the fog on a canvas, pins (photos where they were taken, places you reached, "?" for waypoints nobody has reached yet), how much ground that is, and the achi
+- `web/worlds.js`: worlds.js — Living Worlds (claude, 2026-11-08, DEC-0134 Phase 1). Renders MIA.worlds(campaign) (core/web_worlds.py): your character and who they are in each world; the worlds, each with its campaigns; one campaign opened with the character's version in it (stats, skills, what they carry) and its que
 - `web/yourdata.js`: yourdata.js — Your Data (claude, 2026-11-08; docs/SECURITY.md step 8). Renders MIA.yourData() (core/your_data.py): the person's own files and their household's shared ones, each with what it is, how many records, its size and whether it's sealed on disk (DEC-0126); her latest answers with the tools 
 
 ## android-phone/: the Android app that carries MIA's engine and the glasses' link

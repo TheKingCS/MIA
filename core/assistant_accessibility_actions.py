@@ -118,6 +118,14 @@ def _action_tweak_theme(context, arguments: dict) -> str:
             return "Which colour? " + ", ".join(sorted(k for k in ACCENT_NAMES if k not in ("orange", "red", "green", "yellow", "gold"))) + "."
     if arguments.get("material") in MATERIALS:
         picks["material"] = arguments["material"]
+    sound = str(arguments.get("sound") or "").lower().strip()
+    if sound:
+        from core.themes import SOUND_SETS
+
+        named = next((k for k, label in SOUND_SETS.items() if k in sound or sound in label.lower()), "")
+        if not named:
+            return "Which chimes? " + ", ".join(label for label in SOUND_SETS.values()) + "."
+        picks["sound"] = named
     for key in ("radius", "fire", "bloom", "mist", "scan", "grain"):
         if arguments.get(key) is not None:
             picks[key] = arguments[key]
@@ -159,6 +167,42 @@ def _action_design_theme(context, arguments: dict) -> str:
     except ActionError as problem:
         return str(problem)
     return summary({**result, "name": name}) + " It's on now; say \"undo\" or open the Theme Studio to tweak it."
+
+
+def _action_mix_themes(context, arguments: dict) -> str:
+    """Tool mix_themes: one of the person's themes with chosen parts of another (core/themes.combine: colours, shape
+    and type, the room's light, sounds, the backdrop), saved as theirs through theme.save and put on; undo takes it
+    back. Says why when the mix can't be kept (an accent that reads as a warning, text that can't be read)."""
+    from core.actions import ActionError
+    from core.theme_actions import _save
+    from core.themes import all_themes, combine, parts_from, wants_theme
+
+    themes = all_themes(context)
+
+    def which(words):
+        said = str(words or "").lower().strip()
+        own = next((t for t in themes.values() if said and (t["name"].lower() == said or t["name"].lower() in said)), None)
+        return own["id"] if own else wants_theme(said)
+
+    first, second = which(arguments.get("first")), which(arguments.get("second"))
+    if not first or not second or first == second:
+        return "Which two themes? " + ", ".join(t["name"] for t in themes.values()) + "."
+    parts = parts_from(str(arguments.get("parts") or "")) or ["room"]
+    try:
+        made = combine(context, first, second, parts)
+    except ValueError as problem:
+        return str(problem)
+    if made["problem"]:
+        return "That mix can't be kept: " + made["problem"]
+    taken = {t["name"].lower() for t in themes.values()}
+    name, n = made["name"], 2
+    while name.lower() in taken:
+        name, n = f"{made['name']} {n}", n + 1
+    try:
+        _save(context, {"name": name, "choices": made["choices"], "base": made["base"], "use": True})
+    except ActionError as problem:
+        return str(problem)
+    return f"{name} is on: {themes[first]['name']} with {themes[second]['name']}'s {' and '.join(parts)}. \"Undo\" takes it back."
 
 
 def _action_delete_theme(context, arguments: dict) -> str:
@@ -249,10 +293,26 @@ def register_accessibility_actions(registry: AssistantActionRegistry) -> None:
             "bloom": {"type": "number", "description": "optional: the room's glow, 0 to 2."},
             "mist": {"type": "number", "description": "optional: the room's mist, 0 to 2.5."},
             "scan": {"type": "number", "description": "optional: scanlines, 0 to 1."},
+            "sound": {"type": "string", "description": "optional: the theme's chimes: classic, bubbly, synth, soft or quiet."},
         }, "required": []},
         handler=_action_tweak_theme,
         trigger_phrases=("accent color", "accent colour", "make it more", "theme but", "my own theme", "tweak the theme",
-                         "change the accent"),
+                         "change the accent", "theme chimes", "theme sounds", "bubbly sounds", "synth sounds"),
+    ))
+    registry.register(AssistantAction(
+        name="mix_themes", domain="accessibility",
+        description="Mix two of the user's themes: the first with chosen parts of the second (colours, shape and type, "
+                    "the room's light, sounds, the backdrop picture), saved as theirs and used. 'Stark with Cyberpunk's "
+                    "room', 'Glass but Y2K's colours'.",
+        parameters={"type": "object", "properties": {
+            "first": {"type": "string", "description": "the theme to start with."},
+            "second": {"type": "string", "description": "the theme to take parts from."},
+            "parts": {"type": "string", "description": "which parts: colours, shape, room, sounds, backdrop."},
+        }, "required": ["first", "second"]},
+        handler=_action_mix_themes,
+        trigger_phrases=("mix the themes", "mix two themes", "mix stark", "mix y2k", "mix glass", "mix cyberpunk",
+                         "with cyberpunk's", "with y2k's", "with glass's", "with stark's", "room from", "colours from",
+                         "colors from"),
     ))
     registry.register(AssistantAction(
         name="design_theme", domain="accessibility",

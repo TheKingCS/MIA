@@ -137,11 +137,22 @@ you read, gone under high contrast) and on the 3D room's far wall. The Studio's 
 yours, and sets the strength; by voice: "paint me a fantasy castle village for my background", "use the castle one",
 "take the background down". A theme file never carries a backdrop (the picture lives in your own folder).
 
-## 10. Still to come
+## 10. Mixing, sounds and the glasses (built 2026-11-08, overnight)
 
-- Mixing parts of two themes (one's colours, another's room).
-- Sound sets (step 5): a theme's own chimes, opt-in.
-- The glasses taking a theme's accent.
+- **Mix Two** (step 3's last part): the Studio picks a first theme, a second, and which parts come from the second
+  (colours, shape and type, the room's light, sounds, the backdrop picture). Core mixes them (`core/themes.combine`)
+  and says whether the mix can be kept before anything is saved (a warning-coloured accent or unreadable text can
+  come out of a mix too); it loads into the editor to tweak, then saves as any theme does. By voice, `mix_themes`
+  ("Stark with Cyberpunk's room") saves and uses it; undo takes it back.
+- **Sound sets** (step 5): a theme's chimes for wins are one of `core/themes.SOUND_SETS` (classic, bubbly, synth,
+  soft, quiet), picked in the Studio's Sounds with Hear It, or by voice (`tweak_theme` sound). Every theme starts on
+  classic, so nothing changes until someone picks one. `web/sound.js` voices the same tunes by the set.
+- **The glasses** take only the theme's accent (`core/themes.glasses_accent`), lifted until it reads on the lens
+  (contrast 9:1 against black); `web/glasses.css` now draws every cyan from `--rgb-accent`.
+
+## 11. Still to come
+
+- More rooms (areas beyond the Garage), after Zac's look on the PC.
 
 1. The four starter themes and their names, or others first?
 2. Should the Y2K theme be allowed a loud graffiti texture in the backdrop (it's behind panels, never under text)?

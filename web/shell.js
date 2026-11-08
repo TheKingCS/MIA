@@ -41,6 +41,7 @@
     root.dataset.material = theme.material || "solid";
     themeNow = theme;
     backdrop(theme.backdrop);
+    if (window.MIASound && MIASound.useSet) MIASound.useSet(theme.sound || "classic");  // the theme's chimes (opt-in)
     if (previewOnly) return;  // the Theme Studio trying a look on: not kept for the next page
     try { localStorage.setItem(THEME_CACHE, JSON.stringify(theme)); } catch (e) { /* fine: it applies when the shell comes */ }
   }
@@ -481,6 +482,7 @@
         // Which brain answered (DEC-0022): the home computer's model or this device's.
         if (turn.level) thinking.append(el("small", { class: "talk-level", title: "Answered by the model on " + turn.level.toLowerCase() }, turn.level));
         thinking.append(notRight(asked || turn.transcript || "", turn.reply_text));
+        if (turn.comparable) twoWays(turn.reply_text, thinking, log);  // now and then: "this way or that?" (DEC-0138)
         refresh();
       } catch (err) {
         thinking.textContent = err.message;
@@ -567,6 +569,34 @@
     };
     const box = el("span", { class: "talk-thumbs" }, up, down);
     return box;
+  }
+
+  /** Now and then after a reply (DEC-0138, core/answer_compare.py): the same answer a second way, one thing about its
+   * style changed (the engine picks what and checks no fact changed). The person picks one, or "Not now", or stops
+   * the offers. Nothing shows when the engine has no offer. */
+  async function twoWays(reply, after, log) {
+    let offer;
+    try { offer = await MIA.compareAnswer(reply); } catch (e) { return; }
+    if (!offer || !offer.ways || offer.ways.length !== 2) return;
+    const close = (text) => card.replaceWith(el("p", { class: "dim talk-note" }, text));
+    const pick = async (way, other) => {
+      if (await act({ kind: "style.pick", params: { chosen: way.value, rejected: other.value, dimension: offer.dimension,
+        offer_id: offer.id } }, { quick: true })) close("Noted. She'll lean toward " + way.label.toLowerCase() + ".");
+    };
+    const [one, two] = offer.ways;
+    const card = el("div", { class: "talk-compare", role: "group", "aria-label": offer.question },
+      el("p", { class: "talk-compare-q" }, offer.question, el("span", { class: "dim" }, " · " + offer.name)),
+      ...[[one, two], [two, one]].map(([way, other], i) => el("div", { class: "talk-way" },
+        el("p", { class: "talk-way-label" }, (i ? "B" : "A") + " · " + way.label),
+        el("p", { class: "talk-way-text" }, way.text),
+        el("button", { type: "button", class: "btn btn-ghost btn-small", onclick: () => pick(way, other) }, "This One"))),
+      el("div", { class: "talk-compare-foot" },
+        el("button", { type: "button", class: "btn btn-quiet btn-small", onclick: () => close("Another time.") }, "Not Now"),
+        el("button", { type: "button", class: "btn btn-quiet btn-small", onclick: async () => {
+          if (await act({ kind: "style.compare", params: { on: false } }, { quick: true })) close("She won't ask again. Settings → How MIA Answers turns it back on.");
+        } }, "Stop Asking")));
+    after.after(card);
+    log.scrollTop = log.scrollHeight;
   }
 
   // A page that breaks says so itself (the Fix-It Log), a few times per visit at most.
@@ -884,7 +914,7 @@
   }
 
   window.MIAShell = { look, theme, roomLight, previewTheme: (t) => applyTheme(t, true), start, act, say, el, refresh, frame, form, search: openSearch, levelCard, conditionBar, buffChips, showDraft, confirm: confirmBox, talk: toggleTalk,
-    notRight, voiceRecorder, playReply };
+    notRight, voiceRecorder, playReply, twoWays };
 
   // <script src="shell.js" data-frame="garage">: frame an existing page as soon
   // as someone is signed in (now, or when its own sign-in form succeeds).

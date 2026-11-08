@@ -1805,3 +1805,117 @@ a.comms-row:hover .row-title { color: var(--accent); }
 .dir-foot .dim { font-size: 12px; }
 .dir-foot .row-buttons { margin: 0; }
 .dir-say { font-size: var(--text-sm); margin-top: calc(var(--gap) + 4px); }
+
+/* "Two ways to say it" in Talk (DEC-0138, shell.js twoWays): the same answer twice, one style changed; pick one. */
+.talk-compare { display: grid; gap: 8px; margin: 8px 0 4px; padding: 10px 12px; border: 1px solid rgba(var(--rgb-accent), 0.28);
+  border-radius: var(--radius); background: rgba(var(--rgb-accent), 0.04); }
+.talk-compare-q { margin: 0; font-size: var(--text-sm); }
+.talk-way { display: grid; gap: 6px; padding: 8px 10px; border-radius: var(--radius-sm); background: var(--surface-raised); }
+.talk-way-label { margin: 0; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: rgb(var(--rgb-accent)); }
+.talk-way-text { margin: 0; white-space: pre-line; font-size: 14px; line-height: 1.45; }
+.talk-way .btn { justify-self: start; }
+.talk-compare-foot { display: flex; gap: 8px; justify-content: flex-end; }
+
+/* How MIA Answers (DEC-0138, web/answers.html): a card per part of how she answers, the options as a segmented row. */
+.ans-now { display: grid; gap: 6px; padding: 14px 16px; margin-bottom: var(--gap); border-left: 2px solid rgba(var(--rgb-accent), 0.55); }
+.ans-now > .pw-label, .ans-now-line { margin: 0; }
+.ans-now-line { font-size: 15px; }
+.ans-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: var(--gap); margin-bottom: var(--gap); }
+.ans-dim { display: grid; gap: 10px; padding: 14px 16px; align-content: start; }
+.ans-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.ans-name { margin: 0; font-size: 16px; }
+.ans-word { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); }
+.ans-word.on { color: rgb(var(--rgb-accent)); }
+.ans-options button { font-size: 13px; }
+.ans-bars { display: grid; gap: 4px; }
+.ans-bar { display: grid; grid-template-columns: minmax(0, 9em) 1fr 2em; gap: 8px; align-items: center; font-size: 12px; }
+.ans-track { height: 4px; border-radius: 2px; background: rgba(var(--rgb-line), 0.5); overflow: hidden; }
+.ans-fill { display: block; height: 100%; background: rgba(var(--rgb-accent), 0.8); }
+.ans-n { text-align: right; }
+.ans-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 14px 16px; margin-bottom: var(--gap); }
+.ans-row-title { margin: 0 0 4px; font-weight: 600; }
+.ans-row-note { margin: 0; font-size: 13px; }
+.ans-forget { margin-bottom: var(--gap); }
+.ans-say { font-size: var(--text-sm); }
+
+/* Living Worlds (DEC-0134, web/worlds.html): the character's card, an opened campaign, the worlds as cards. */
+.lw-hero-card { display: flex; gap: 18px; align-items: center; padding: 18px 20px; margin-bottom: var(--gap); }
+.lw-hero-card.lw-empty { display: grid; gap: 8px; justify-items: start; }
+.lw-hero-card .pw-label, .lw-hero-card p { margin: 0; }
+.lw-sigil { flex: none; width: 68px; height: 68px; border-radius: 50%; display: grid; place-items: center; font-size: 30px; font-weight: 700;
+  color: rgb(var(--rgb-accent)); border: 1px solid rgba(var(--rgb-accent), 0.5);
+  background: radial-gradient(circle at 50% 40%, rgba(var(--rgb-accent), 0.22), rgba(var(--rgb-accent), 0.02) 70%);
+  box-shadow: 0 0 24px rgba(var(--rgb-accent), 0.25); }
+.lw-hero-text { display: grid; gap: 4px; min-width: 0; }
+.lw-name { margin: 0; font-size: 22px; }
+.lw-note { margin: 0; font-size: 14px; line-height: 1.45; }
+.lw-versions { font-size: 13px; }
+.lw-campaign { display: grid; gap: 12px; padding: 18px 20px; margin-bottom: calc(var(--gap) + 4px); border-top: 2px solid rgba(var(--rgb-accent), 0.5); }
+.lw-campaign-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.lw-campaign-head .pw-label { margin: 0 0 2px; }
+.lw-campaign-name { margin: 0; font-size: 22px; }
+.lw-state { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); }
+.lw-state.active { color: rgb(var(--rgb-accent)); }
+.lw-campaign-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: var(--gap); }
+.lw-col { display: grid; gap: 8px; align-content: start; }
+.lw-col > .pw-label { margin: 0; }
+.lw-players { display: grid; gap: 10px; }
+.lw-player { display: grid; gap: 8px; padding: 12px 14px; border-radius: var(--radius-sm); background: var(--surface-raised); }
+.lw-player-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.lw-player-name { margin: 0; font-size: 16px; }
+.lw-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 6px; }
+.lw-stat { display: grid; justify-items: center; padding: 6px; border-radius: var(--radius-sm); border: 1px solid rgba(var(--rgb-line), 0.6); font-size: 11px; }
+.lw-stat-n { font-size: 18px; font-weight: 700; color: rgb(var(--rgb-accent)); }
+.lw-sub { margin: 2px 0 0; }
+.lw-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.lw-chip { font-size: 12px; padding: 2px 9px; border-radius: var(--radius-pill); border: 1px solid rgba(var(--rgb-accent), 0.35); color: var(--text-dim); }
+.lw-chip.item { border-style: dashed; }
+.lw-quests { display: grid; gap: 6px; }
+.lw-quest { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--surface-raised); }
+.lw-quest.done { opacity: 0.6; }
+.lw-quest p { margin: 0; }
+.lw-quest-name { font-weight: 600; }
+.lw-quest-obj, .lw-quest-by { font-size: 12px; }
+.lw-phase { font-size: 13px; margin: 0; }
+.lw-status { margin: 0; }
+.lw-worlds-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; }
+.lw-worlds-head .pw-label { margin: 0; }
+.lw-worlds { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: var(--gap); margin-bottom: var(--gap); }
+.lw-world { display: grid; gap: 10px; padding: 16px 18px; align-content: start; }
+.lw-world-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.lw-world-name { margin: 0; font-size: 18px; }
+.lw-premise { margin: 0; font-size: 14px; line-height: 1.45; }
+.lw-runs { display: grid; gap: 6px; }
+.lw-run { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 12px; text-align: left; cursor: pointer;
+  border-radius: var(--radius-sm); border: 1px solid rgba(var(--rgb-line), 0.6); background: transparent; color: var(--text); font: inherit; }
+.lw-run.on { border-color: rgba(var(--rgb-accent), 0.7); background: rgba(var(--rgb-accent), 0.06); }
+.lw-run.ended { opacity: 0.6; }
+.lw-run-name { font-weight: 600; }
+.lw-run-meta { font-size: 12px; }
+.lw-world .row-buttons { margin: 0; }
+.lw-say { font-size: var(--text-sm); }
+
+/* About MIA (DEC-0142, web/about.html): her line beside a small orb, the scale as tiles, specialties as cards. */
+.ab-intro { display: flex; gap: 20px; align-items: center; padding: 20px 22px; margin-bottom: var(--gap); }
+.ab-orb { flex: none; width: 64px; height: 64px; border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, rgba(var(--rgb-accent), 0.95), rgba(var(--rgb-accent), 0.35) 45%, rgba(var(--rgb-accent), 0) 72%);
+  box-shadow: 0 0 32px rgba(var(--rgb-accent), 0.45); animation: ab-breathe 4.5s ease-in-out infinite; }
+@keyframes ab-breathe { 50% { transform: scale(1.06); box-shadow: 0 0 44px rgba(var(--rgb-accent), 0.6); } }
+@media (prefers-reduced-motion: reduce) { .ab-orb { animation: none; } }
+.ab-line { margin: 0; font-size: 16px; line-height: 1.55; }
+.ab-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 10px; margin-bottom: var(--gap); }
+.ab-tile { display: grid; gap: 2px; padding: 12px 14px; }
+.ab-n { font-size: 26px; font-weight: 700; color: rgb(var(--rgb-accent)); }
+.ab-label { font-size: 13px; font-weight: 600; }
+.ab-note { font-size: 11px; }
+.ab-focus, .ab-you { display: grid; gap: 6px; padding: 14px 16px; margin-bottom: var(--gap); }
+.ab-focus > .pw-label, .ab-you > .pw-label, .ab-focus-line, .ab-you-line { margin: 0; }
+.ab-focus-line, .ab-you-line { font-size: 15px; line-height: 1.5; }
+.ab-you .row-buttons { margin: 4px 0 0; }
+.ab-specs { margin-bottom: var(--gap); }
+.ab-specs > .pw-label { margin: 0 0 8px; }
+.ab-spec-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 10px; }
+.ab-spec { display: grid; gap: 6px; padding: 14px 16px; align-content: start; }
+.ab-spec-title { margin: 0; font-size: 15px; }
+.ab-spec-line { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--text-dim); }
+.ab-say { font-size: var(--text-sm); }

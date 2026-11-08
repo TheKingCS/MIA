@@ -58,6 +58,7 @@ DIRECTIONS = Page("directions", "My Directions", "character", "What you're steer
 GUITAR = Page("guitar", "Guitar", "classroom", "A learning path, stage by stage.", "guitar.html")
 PETS = Page("pets", "Pets", "relationships", "Your animals, their care and vet visits.", "people.html?only=pets")
 PLACES = Page("places", "My Places", "maps", "Places you go, and quests there.", "places.html")
+WORLDS = Page("worlds", "Living Worlds", "character", "Your worlds, campaigns and character.", "worlds.html")
 WORLD = Page("worldmap", "World Map", "memories", "Everywhere you've been.", "worldmap.html")
 CHECKIN = Page("checkin", "Sunday Check-In", "calendar", "The week, looked back on.", "checkin.html")
 PARTY = Page("party", "Party", "missions", "Raids and quests.", "party.html")
@@ -65,6 +66,8 @@ CHRONICLE = Page("chronicle", "The Chronicle", "character", "Your story, told ba
 WALLET = Page("id_wallet", "ID Wallet", "passwords", "IDs, passports, insurance cards and registrations.", "wallet.html")
 SIGNINS = Page("signins", "Sign-Ins", "passwords", "Who signed in, from where.", "signins.html")
 CONNECT = Page("connect", "Connect Apps", "settings", "Your accounts, linked.", "connect.html")
+ABOUT = Page("about", "About MIA", "assistant", "What she is, what she's for, what she knows.", "about.html")
+ANSWERS = Page("answers", "How MIA Answers", "assistant", "How long, laid out how, the tone: your way.", "answers.html")
 STUDIO = Page("studio", "Theme Studio", "settings", "Make MIA look like you: themes, colours, light.", "studio.html")
 PROFILE = Page("profile", "Profile", "character", "You, and how MIA knows you.", "profile.html")
 YOURDATA = Page("yourdata", "Your Data", "files", "What MIA keeps, and taking it out.", "yourdata.html")
@@ -90,12 +93,12 @@ AREAS: tuple[Area, ...] = (
     Area("kitchen", "Kitchen", "kitchen", "Meals, recipes and the pantry.", ("kitchen",), hue="#e9d4a8"),
     Area("health", "Health and Fitness", "workout", "Training, food and how you feel.", (HEALTH, "workout", "kitchen"), hue="#ff8a3d"),
     Area("recreation", "Recreation", "expeditions", "Trips, maps, music and play.",
-         ("expeditions", "maps", "navigation", "memories", WORLD, PLACES, "music", "play"), hue="#9b6bff"),
+         ("expeditions", "maps", "navigation", "memories", WORLD, PLACES, "music", "play", WORLDS), hue="#9b6bff"),
     Area("security", "Security", "security", "Cameras, passwords and sign-ins.",
          ("security", WALLET, "passwords", SIGNINS, "field_kit"), hue="#c0c8d4"),
     Area("browser", "Browser", "search", "She browses. You approve.", ("browser",), hue="#bfefff"),
     Area("system", "Settings and Diagnostics", "settings", "Make MIA yours, and see how she's doing.",
-         ("settings", STUDIO, "diagnostics", "issues", CONNECT, PROFILE, YOURDATA, CHANGES, "module_browser"), hue="#dfe9f2"),
+         ("settings", STUDIO, ANSWERS, ABOUT, "diagnostics", "issues", CONNECT, PROFILE, YOURDATA, CHANGES, "module_browser"), hue="#dfe9f2"),
     Area("finances", "Finances", "budget", "Money in, money out, and the way out.",
          ("budget", "freedom", "dungeon", "insurance", "real_estate", "compliance", "inbox"), hue="#3f7bff"),
     Area("business", "Business", "business", "Customers, products and the paperwork.",

@@ -7,7 +7,7 @@ prefer this response, or this one?" — differing on one dimension of style (how
 whether it leads with the answer). The person picks; MIA records it and adjusts, so over time she settles into the way
 they like to be talked to. The facts never change — only the phrasing and layout (CLAUDE.md: "the model phrases").
 
-This module is the learning core: the per-person store of picks, the current preferred style it derives, how sure it
+This module is the learning core: the per-person store of picks (and `choose`, said outright, and `reset`), the current preferred style it derives, how sure it
 is on each dimension, which dimension to experiment on next, and a plain-words style instruction for the phrasing
 layer to follow. Generating the two variants (the model rendering the same facts two ways) and showing the A/B choice
 are the surface's job; this decides *what* to compare and *what was learned*.
@@ -126,6 +126,19 @@ class StyleBook:
         life_events.record(self, "style_pick", f"Prefers {chosen} over {rejected or 'the other'} ({dimension})",
                            [f"style:{dimension}"])
         return pick
+
+    def choose(self, dimension: str, value: str) -> Pick:
+        """The person says outright how they want a dimension ("keep it brief"): the earlier picks on it are dropped and
+        this one recorded, so it becomes the preference at once (ValueError for an unknown dimension or value)."""
+        if dimension not in DIMENSIONS or value not in DIMENSIONS[dimension]:
+            raise ValueError(f"Values for {dimension} are {DIMENSIONS.get(dimension, ())}.")
+        self.picks = [p for p in self.picks if p.dimension != dimension]
+        return self.record_pick(dimension, value)
+
+    def reset(self) -> None:
+        """Forget every pick: MIA answers in her normal style again (undo restores the file)."""
+        self.picks = []
+        self._save()
 
     # ------------------------------------------------------------------ what she learned
 

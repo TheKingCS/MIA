@@ -98,6 +98,14 @@ TYPES = {
     "safety_escalation": "safety alerts",
     "direction_set": "directions set",
     "direction_dropped": "directions let go",
+    "style_pick": "answer styles picked",
+    "universe_created": "worlds made (fictional)",
+    "campaign_created": "campaigns begun (fictional)",
+    "character_created": "characters made (fictional)",
+    "character_version_created": "character versions made (fictional)",
+    "quest_assigned": "fictional quests set",
+    "quest_completed": "fictional quests finished",
+    "campaign_turn": "turns played (fictional)",
 }
 # Kept for audit, never shown in a feed (wins, "what happened?").
 AUDIT_ONLY = frozenset({"safety_escalation"})

@@ -1456,7 +1456,19 @@ def glasses_apps(context, today: Optional[date] = None, mission_id: Optional[str
             "hint": "" if pinned else "Star your favorite apps to pin them here.",
             "kinds": sorted(GLASSES_KINDS),
             # DEC-0130 (NEXUS_PLAN M4): the Nexus on the glasses, a flat ring of areas, each with its apps here
-            "areas": glasses_areas(context, [c["id"] for c in pinned + others], today)}
+            "areas": glasses_areas(context, [c["id"] for c in pinned + others], today),
+            # DEC-0136: only a theme's accent travels to the lens (black is see-through), lifted to read on it
+            "accent": _accent(context)}
+
+
+def _accent(context) -> dict:
+    """The person's theme accent for the lens (core/themes.glasses_accent); Stark's cyan when it can't be read."""
+    try:
+        from core.themes import glasses_accent
+
+        return glasses_accent(context)
+    except Exception:  # noqa: BLE001 - the glasses keep their own cyan
+        return {}
 
 
 def short_name(name: str) -> str:

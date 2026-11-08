@@ -49,6 +49,9 @@ PERSONAL_SETTINGS = (
     "display.high_contrast",
     "display.theme",  # DEC-0136: Stark, Y2K Cyber, Cyberpunk, Glass (core/themes.py)
     "display.style",  # DEC-0135: spatial, cards, or spatial on the computer and cards on the phone (core/display_style.py)
+    "style.compare",  # DEC-0138: whether MIA now and then offers an answer two ways (core/answer_compare.py)
+    "style.last_offer",  # DEC-0138: the day she last offered two ways
+    "style.pending",  # DEC-0138: the two-ways offer waiting for a pick
     "system.last_season_note",
     "party.leaderboard",
     "sound.on",

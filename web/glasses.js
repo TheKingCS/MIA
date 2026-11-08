@@ -60,9 +60,20 @@
   let reward = null, rewardTimer = null;
   let mission = store.get("mia.glasses.mission") || "";
 
+  // The person's theme accent on the lens (DEC-0136): only the accent travels, lifted by core to read on it.
+  function tint(accent) {
+    if (!accent || !accent.rgb) return;
+    const root = document.documentElement.style;
+    root.setProperty("--accent", accent.accent);
+    root.setProperty("--rgb-accent", accent.rgb);
+    root.setProperty("--accent-soft", accent.soft);
+    root.setProperty("--accent-deep", accent.deep);
+  }
+
   async function load() {
     try { data = await MIA.glasses(mission); } catch (e) { data = data || { apps: [], others: [] }; }
     if (!data || !Array.isArray(data.apps)) data = { apps: [], others: [] };
+    tint(data.accent);
     paintHome();
     if (window.MIASound && !load.sound) {  // the person's sound settings, once
       load.sound = true;
