@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1203 files, 263,635 lines; 1203 files describe themselves; 14,379 of 15,066 classes and functions are documented.
+1203 files, 263,568 lines; 1203 files describe themselves; 14,375 of 15,062 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-444 files, 123,711 lines; 6,597 of 6,683 classes and functions documented
+444 files, 123,639 lines; 6,593 of 6,679 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1138,7 +1138,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-86 files, 15,509 lines
+86 files, 15,514 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
