@@ -2054,3 +2054,17 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
      reduced motion respected. Muse refines the art direction.
 - Plan and milestones: `docs/design/NEXUS_PLAN.md`.
 - Related: DEC-0023 (amended: area hues), DEC-0014, DEC-0017, DEC-0129
+
+### DEC-0131: Compound maintenance triggers (meter OR calendar, whichever comes first)
+- Status: APPROVED (Zac, 2026-11-08: "yes build compound triggers")
+- Proposed by: claude, from the John Deere Z315E seed import (docs handoff): manufacturer schedules read "every 50
+  hours OR annually, whichever comes first", but a MaintenanceTask had one trigger_type, which would force two
+  independent recurring tasks and risk duplicate service.
+- Decision (`core/maintenance_manager.py`): a meter task (runtime/mileage/cycles/condition) may carry an optional
+  `calendar_fallback_days`. It is then due when the meter interval OR that many days since last completion is
+  reached, whichever comes first (`calendar_fallback_due_date` / `calendar_fallback_days_until`; folded into
+  `task_urgency` and `next_occurrence_date`). One `mark_complete` already resets both the meter baseline and the
+  calendar date, so it stays one task with one service event. Backward compatible: no fallback = the exact prior
+  behavior; serialization defaults the field to None. Tested store-by-case in `tests/test_maintenance_manager.py`
+  (compound section), including the brand-new-mower case (annual reminder fires with zero hours logged).
+- Related: ROADMAP 11 (Field Kit), the asset-intelligence seed import; `data/_import/` (private, uncommitted).

@@ -194,9 +194,10 @@ class MaintenanceAsset:
 class MaintenanceTask:
     """One thing to do for an asset, due in one of three ways: by the calendar (every interval_days, or once), by a
     meter (so many miles, hours or cycles since it was last done, read from logged readings), or by a sensor reading
-    crossing a threshold. It also carries a priority, whether to put it on the calendar by itself when due, the
-    reading rewards count from (so a truck's existing miles aren't new achievement), and whether it's the asset's one
-    lifetime-usage meter.
+    crossing a threshold. A meter task may also carry a calendar fallback (`calendar_fallback_days`, DEC-0131) and be
+    due whichever comes first — "every 50 hours OR yearly" is one task and one completion, not two. It also carries a
+    priority, whether to put it on the calendar by itself when due, the reading rewards count from (so a truck's
+    existing miles aren't new achievement), and whether it's the asset's one lifetime-usage meter.
     """
     task_id: str
     asset_id: str
@@ -213,6 +214,12 @@ class MaintenanceTask:
     meter_unit: str = ""
     meter_interval: Optional[float] = None
     last_completed_meter_value: Optional[float] = None
+    # Compound trigger (DEC-0131): a meter task that is ALSO due by the
+    # calendar — "every N hours OR every M days, whichever comes first".
+    # None = no calendar fallback (a pure meter task, unchanged). One
+    # mark_complete resets both the meter baseline and the calendar date,
+    # so there is one task and one service event, never a duplicate.
+    calendar_fallback_days: Optional[int] = None
     # Threshold mechanism (sensor) — latest reading crossing a line.
     threshold_value: Optional[float] = None
     threshold_direction: str = "below"  # "below" or "above"
@@ -267,6 +274,7 @@ class MaintenanceTask:
             "meter_unit": self.meter_unit,
             "meter_interval": self.meter_interval,
             "last_completed_meter_value": self.last_completed_meter_value,
+            "calendar_fallback_days": self.calendar_fallback_days,
             "threshold_value": self.threshold_value,
             "threshold_direction": self.threshold_direction,
             "auto_schedule": self.auto_schedule,
@@ -291,6 +299,7 @@ class MaintenanceTask:
             meter_unit=data.get("meter_unit", ""),
             meter_interval=data.get("meter_interval"),
             last_completed_meter_value=data.get("last_completed_meter_value"),
+            calendar_fallback_days=data.get("calendar_fallback_days"),
             threshold_value=data.get("threshold_value"),
             threshold_direction=data.get("threshold_direction", "below"),
             auto_schedule=data.get("auto_schedule", False),
@@ -308,6 +317,11 @@ class MaintenanceTask:
     def is_meter_task(self) -> bool:
         """Whether it's due by a meter (runtime, mileage, cycles, condition)."""
         return self.trigger_type in METER_TRIGGER_TYPES
+
+    @property
+    def is_compound(self) -> bool:
+        """Whether it's a meter task with a calendar fallback too (DEC-0131): due whichever comes first."""
+        return self.is_meter_task and self.calendar_fallback_days is not None
 
     @property
     def is_sensor_task(self) -> bool:
@@ -346,6 +360,24 @@ def is_overdue(task: MaintenanceTask, today: date) -> bool:
     """Pure logic. Whether a calendar task's due date has passed."""
     remaining = days_until_due(task, today)
     return remaining is not None and remaining < 0
+
+
+def calendar_fallback_due_date(task: MaintenanceTask) -> Optional[date]:
+    """Pure logic. For a compound task (DEC-0131), the date its calendar fallback comes due (last completion +
+    calendar_fallback_days). None when there's no fallback or the task was never completed — no anchor to count from,
+    the same honesty as next_due_date()."""
+    if not task.calendar_fallback_days or not task.last_completed:
+        return None
+    last = date.fromisoformat(task.last_completed)
+    return date.fromordinal(last.toordinal() + task.calendar_fallback_days)
+
+
+def calendar_fallback_days_until(task: MaintenanceTask, today: date) -> Optional[int]:
+    """Negative = the calendar fallback is overdue by that many days. None when there's no fallback date."""
+    due = calendar_fallback_due_date(task)
+    if due is None:
+        return None
+    return (due - today).days
 
 
 # ----------------------------------------------------------------------
@@ -459,7 +491,9 @@ def task_urgency(task: MaintenanceTask, readings: list[Reading], today: date) ->
     types, for coloring a task row (never persisted). Reuses this
     module's own due-date primitives (is_overdue/days_until_due for
     calendar, is_meter_task_due/predicted_due_date for meter,
-    is_sensor_task_due for sensor) rather than re-deriving anything.
+    is_sensor_task_due for sensor) rather than re-deriving anything. A
+    compound task (meter + calendar_fallback_days, DEC-0131) is whichever
+    is more urgent of its two sides.
 
     Deliberately a separate function from core.maintenance_insights.py's
     own _task_flag(), even though the underlying math overlaps — that
@@ -481,16 +515,25 @@ def task_urgency(task: MaintenanceTask, readings: list[Reading], today: date) ->
         return "on_track"
 
     if task.is_meter_task:
-        if task.last_completed_meter_value is None or not readings:
-            return "unknown"
-        if is_meter_task_due(task, readings):
+        # Compound (DEC-0131): due when the meter OR the calendar fallback fires, whichever comes first. A pure meter
+        # task (no fallback) keeps its exact prior behavior, because fallback_remaining is then None.
+        fallback_remaining = calendar_fallback_days_until(task, today)
+        have_meter = task.last_completed_meter_value is not None and bool(readings)
+        if (have_meter and is_meter_task_due(task, readings)) or (
+            fallback_remaining is not None and fallback_remaining < 0
+        ):
             return "overdue"
-        projection = predicted_due_date(task, readings, today)
-        if projection is not None:
-            estimated_date, _caveat = projection
-            if (estimated_date - today).days <= _DUE_SOON_WITHIN_DAYS:
-                return "due_soon"
-        return "on_track"
+        meter_soon = False
+        if have_meter:
+            projection = predicted_due_date(task, readings, today)
+            if projection is not None and (projection[0] - today).days <= _DUE_SOON_WITHIN_DAYS:
+                meter_soon = True
+        fallback_soon = fallback_remaining is not None and 0 <= fallback_remaining <= _DUE_SOON_WITHIN_DAYS
+        if meter_soon or fallback_soon:
+            return "due_soon"
+        if have_meter or fallback_remaining is not None:
+            return "on_track"
+        return "unknown"
 
     # Sensor (threshold) task — no honest forward date exists (see
     # next_occurrence_date() below), so this only ever distinguishes
@@ -506,18 +549,28 @@ def next_occurrence_date(task: MaintenanceTask, readings: list[Reading], today: 
     None when no honest date exists (never a fabricated guess — same
     standard predicted_due_date() itself already holds to):
     calendar -> next_due_date(task); meter -> predicted_due_date()'s
-    estimate if available, else today if already due, else None;
-    sensor -> today if currently due, else None (a threshold crossing
-    has no forward trend to project).
+    estimate if available, else today if already due, else None; a
+    compound task (DEC-0131) -> the earlier of that and its calendar
+    fallback date, whichever comes first; sensor -> today if currently
+    due, else None (a threshold crossing has no forward trend to
+    project).
     """
     if task.trigger_type == "calendar":
         return next_due_date(task)
 
     if task.is_meter_task:
+        # The earliest real date from either side (whichever comes first, DEC-0131).
+        candidates: list[date] = []
         if is_meter_task_due(task, readings):
-            return today
-        projection = predicted_due_date(task, readings, today)
-        return projection[0] if projection is not None else None
+            candidates.append(today)
+        else:
+            projection = predicted_due_date(task, readings, today)
+            if projection is not None:
+                candidates.append(projection[0])
+        fallback = calendar_fallback_due_date(task)
+        if fallback is not None:
+            candidates.append(fallback)
+        return min(candidates) if candidates else None
 
     return today if is_sensor_task_due(task, readings) else None
 
@@ -747,6 +800,7 @@ class MaintenanceManager:
         trigger_type: str = "calendar",
         meter_unit: str = "",
         meter_interval: Optional[float] = None,
+        calendar_fallback_days: Optional[int] = None,
         threshold_value: Optional[float] = None,
         threshold_direction: str = "below",
         auto_schedule: bool = False,
@@ -754,7 +808,8 @@ class MaintenanceManager:
         reward_baseline_value: Optional[float] = None,
         tracks_lifetime_usage: bool = False,
     ) -> MaintenanceTask:
-        """Adds a task for an asset, due by calendar, meter or sensor."""
+        """Adds a task for an asset, due by calendar, meter or sensor. A meter task with calendar_fallback_days is
+        compound (DEC-0131): due by the meter OR that many days since last done, whichever comes first."""
         task = MaintenanceTask(
             task_id=uuid.uuid4().hex[:10],
             asset_id=asset_id,
@@ -766,6 +821,7 @@ class MaintenanceManager:
             trigger_type=trigger_type,
             meter_unit=meter_unit,
             meter_interval=meter_interval,
+            calendar_fallback_days=calendar_fallback_days,
             threshold_value=threshold_value,
             threshold_direction=threshold_direction,
             auto_schedule=auto_schedule,

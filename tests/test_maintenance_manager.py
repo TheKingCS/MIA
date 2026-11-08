@@ -1049,3 +1049,85 @@ def test_schedule_task_raises_for_unknown_task(isolated_paths):
     manager = _make_manager(context)
     with pytest.raises(ValueError):
         manager.schedule_task("no-such-id", "2026-03-01")
+
+
+# ------------------------------------------------------------------
+# Compound triggers (DEC-0131) — a meter task with a calendar fallback,
+# due whichever comes first, so there's one task and one service event.
+# ------------------------------------------------------------------
+
+_COMPOUND = dict(trigger_type="runtime", meter_unit="hours", meter_interval=50,
+                 calendar_fallback_days=365, last_completed="2025-01-01",
+                 last_completed_meter_value=100.0)
+
+
+def test_a_compound_task_is_overdue_by_the_calendar_before_the_meter():
+    """366 days since service but only 20 hours used: the annual fallback fires though the meter hasn't."""
+    task = _task(**_COMPOUND)
+    readings = [_reading(120.0, "2025-12-15T00:00:00")]  # 20h used, under the 50h interval
+    assert is_meter_task_due(task, readings) is False
+    assert task_urgency(task, readings, date(2026, 1, 2)) == "overdue"
+
+
+def test_a_compound_task_is_overdue_by_the_meter_before_the_calendar():
+    """60 hours used mid-year: the meter fires though the annual fallback hasn't."""
+    task = _task(**_COMPOUND)
+    readings = [_reading(160.0, "2025-06-01T00:00:00")]  # 60h used, over the 50h interval
+    assert task_urgency(task, readings, date(2025, 6, 2)) == "overdue"
+
+
+def test_a_compound_task_is_on_track_when_neither_trigger_has_fired():
+    task = _task(**_COMPOUND)
+    readings = [_reading(105.0, "2025-01-10T00:00:00"), _reading(108.0, "2025-02-01T00:00:00")]
+    assert task_urgency(task, readings, date(2025, 2, 2)) == "on_track"
+
+
+def test_a_compound_task_warns_by_the_calendar_with_no_meter_readings_at_all():
+    """The brand-new-mower case: no hours logged, yet the annual service still comes due on time."""
+    task = _task(trigger_type="runtime", meter_unit="hours", meter_interval=50,
+                 calendar_fallback_days=365, last_completed="2025-01-01", last_completed_meter_value=0.0)
+    assert task_urgency(task, [], date(2025, 12, 30)) == "due_soon"  # two days before the year is up
+    assert task_urgency(task, [], date(2026, 1, 2)) == "overdue"     # past it
+    assert task_urgency(task, [], date(2025, 6, 1)) == "on_track"    # mid-year, nothing due
+
+
+def test_whichever_comes_first_is_the_earlier_next_date():
+    """next_occurrence_date returns the earlier of the meter projection and the calendar fallback date."""
+    task = _task(**_COMPOUND)
+    slow = [_reading(101.0, "2025-01-10T00:00:00"), _reading(102.0, "2025-02-10T00:00:00")]  # barely used
+    assert next_occurrence_date(task, slow, date(2025, 3, 1)) == date(2026, 1, 1)  # the annual fallback
+    due_now = [_reading(200.0, "2025-06-01T00:00:00")]  # meter already past
+    assert next_occurrence_date(task, due_now, date(2025, 6, 2)) == date(2025, 6, 2)
+
+
+def test_a_pure_meter_task_is_unchanged_without_a_fallback():
+    """Backward compatibility: no calendar_fallback_days behaves exactly as before."""
+    task = _task(trigger_type="runtime", meter_unit="hours", meter_interval=50,
+                 last_completed="2025-01-01", last_completed_meter_value=100.0)
+    assert task.is_compound is False
+    assert task_urgency(task, [], date(2025, 6, 1)) == "unknown"  # no readings -> unknown, as before
+    assert task_urgency(task, [_reading(160.0, "2025-06-01T00:00:00")], date(2025, 6, 2)) == "overdue"
+
+
+def test_calendar_fallback_round_trips_and_marks_the_task_compound():
+    task = _task(**_COMPOUND)
+    assert task.is_compound is True
+    back = MaintenanceTask.from_dict(task.to_dict())
+    assert back.calendar_fallback_days == 365 and back.is_compound is True
+
+
+def test_a_compound_task_once_completed_is_on_track_again(isolated_paths):
+    """One mark_complete resets both the meter baseline and the calendar date — no duplicate task, no double service."""
+    context = _make_context()
+    manager = _make_manager(context)
+    asset = manager.add_asset("Mower", category="Lawn equipment")
+    task = manager.add_task(asset.asset_id, "Oil & filter", trigger_type="runtime", meter_unit="hours",
+                            meter_interval=50, calendar_fallback_days=365)
+    manager.update_task(task.task_id, last_completed="2025-01-01", last_completed_meter_value=0.0)
+    manager.log_reading(task.task_id, 12.0)  # barely used in a year
+    overdue = task_urgency(manager.get_task(task.task_id), manager.readings_for_task(task.task_id), date(2026, 2, 1))
+    assert overdue == "overdue"  # by the annual fallback
+    manager.mark_complete(task.task_id, completed_date="2026-02-01")
+    done = manager.get_task(task.task_id)
+    assert done.last_completed == "2026-02-01" and done.last_completed_meter_value == 12.0
+    assert task_urgency(done, manager.readings_for_task(task.task_id), date(2026, 2, 2)) == "on_track"
