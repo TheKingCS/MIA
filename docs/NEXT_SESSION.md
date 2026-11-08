@@ -965,6 +965,9 @@ path-to-goal look-ahead, readiness checks shown with each recommendation, made-f
 `checks` for the What's Next screen. (8) The Woodworking Studio audit and proposal (docs only, no build). **(7) built:** for the
 design session, `grow_page()["next"]["next"]` now also has `goal` ({id, name}), `path` (each step {id, name, cost,
 made}) and `checks` (each {check, ok, line}; ok None is information): What's Next can show "step 1 of 6 on the way to …".
+**Claimed by the engine session (2026-11-08), core only:** (9) the development profile's budget read from the
+person's own Building Materials and Tools & Equipment targets, what's left of them this month (read-only; never edits
+`core/budget_manager.py`); (10) connection research also searching the offline reference library when packs exist.
 
 **Who builds what (2026-11-07 night, after Power and Recent Changes were each built twice at once):** screens
 (web pages, the canvas's look, the review's missing screens: Waiting For You, a plan's page, the Browser in the
