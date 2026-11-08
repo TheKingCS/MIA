@@ -125,6 +125,10 @@
    "status": "none",
    "why": "the person's own cards as they give them; MIA reminds before expiry and never reads or uses the numbers"
   },
+  "action:theme": {
+   "status": "none",
+   "why": "a theme the person made or removed is their own taste (DEC-0136); nothing of MIA's to improve"
+  },
   "action:wallet": {
    "status": "none",
    "why": "taking a card out of the wallet is the person's own choice; nothing of MIA's to improve"

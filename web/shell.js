@@ -29,7 +29,7 @@
   const THEME_CACHE = "mia.theme";
   let themeApplied = [];
   let themeNow = null;
-  function applyTheme(theme) {
+  function applyTheme(theme, previewOnly) {
     if (!theme || !theme.id) return;
     const root = document.documentElement;
     themeApplied.forEach((k) => root.style.removeProperty(k));
@@ -40,6 +40,7 @@
     root.dataset.theme = theme.id;
     root.dataset.material = theme.material || "solid";
     themeNow = theme;
+    if (previewOnly) return;  // the Theme Studio trying a look on: not kept for the next page
     try { localStorage.setItem(THEME_CACHE, JSON.stringify(theme)); } catch (e) { /* fine: it applies when the shell comes */ }
   }
   try { applyTheme(JSON.parse(localStorage.getItem(THEME_CACHE) || "null")); } catch (e) { /* no cached theme */ }
@@ -852,7 +853,7 @@
         el("small", { class: "buff-left" }, b.lasts))));
   }
 
-  window.MIAShell = { look, theme, start, act, say, el, refresh, frame, form, search: openSearch, levelCard, conditionBar, buffChips, showDraft, confirm: confirmBox, talk: toggleTalk,
+  window.MIAShell = { look, theme, previewTheme: (t) => applyTheme(t, true), start, act, say, el, refresh, frame, form, search: openSearch, levelCard, conditionBar, buffChips, showDraft, confirm: confirmBox, talk: toggleTalk,
     notRight, voiceRecorder, playReply };
 
   // <script src="shell.js" data-frame="garage">: frame an existing page as soon

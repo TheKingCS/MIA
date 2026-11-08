@@ -116,8 +116,13 @@ SETTINGS: tuple[Setting, ...] = (
 SETTINGS_BY_KEY = {s.key: s for s in SETTINGS}
 
 
-def options_for(setting: Setting) -> tuple:
-    """A setting's choices (the currency list for region.currency)."""
+def options_for(setting: Setting, context=None) -> tuple:
+    """A setting's choices (the currency list for region.currency; for the theme, with a person, their own themes
+    from the Theme Studio after the built-in ones, core/themes.py)."""
+    if setting.key == "display.theme" and context is not None:
+        from core.themes import choices
+
+        return tuple(choices(context))
     return _currency_options() if setting.key == "region.currency" else setting.options
 
 
@@ -218,7 +223,8 @@ def profile_page(context) -> dict:
 
 
 def settings_page(context) -> dict:
-    """The Settings screen: the person's own settings, grouped, and the starter sets they can add."""
+    """The Settings screen: the person's own settings, grouped (the theme's choices include their own themes), and
+    the starter sets they can add."""
     from core.child_accounts import is_child
 
     child = bool(is_child(context))
@@ -229,7 +235,7 @@ def settings_page(context) -> dict:
         groups.setdefault(setting.group, []).append({
             "key": setting.key, "label": setting.label, "kind": setting.kind, "help": setting.help,
             "value": current_value(context, setting), "low": setting.low, "high": setting.high,
-            "options": [{"value": v, "label": label} for v, label in options_for(setting)],
+            "options": [{"value": v, "label": label} for v, label in options_for(setting, context)],
         })
     gate = getattr(context, "communication", None)
     breaks = []

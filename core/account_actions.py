@@ -117,7 +117,7 @@ def _edit_profile(context, params) -> str:
 
 def _setting(context, params):
     """The setting the params name and its cleaned new value; ActionError for a setting that isn't theirs, one a child
-    has to ask a parent about, or a value that won't do.
+    has to ask a parent about, or a value that won't do. The theme may also be one of the person's own (DEC-0136).
     """
     from core.child_accounts import ASK_A_PARENT, is_child
     from core.web_account import SETTINGS_BY_KEY, clean_setting
@@ -128,6 +128,13 @@ def _setting(context, params):
         raise ActionError("That isn't one of your settings.")
     if not setting.child_ok and is_child(context):
         raise ActionError(ASK_A_PARENT)
+    if setting.key == "display.theme":  # the person's own themes count too (core/themes.py)
+        from core.themes import all_themes
+
+        value = str(params.get("value") or "")
+        if value not in all_themes(context):
+            raise ActionError("Theme: pick one from the list.")
+        return setting, value
     try:
         return setting, clean_setting(setting.key, params.get("value"))
     except ValueError as problem:

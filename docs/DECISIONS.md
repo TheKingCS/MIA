@@ -2188,4 +2188,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
      device so pages open already themed.
   5. The Theme Studio comes in steps (preview and tweak, make and share with import and export, MIA designs one from a
      description, sound sets): `docs/design/EXPERIENCES_AND_THEMES.md` section 5.
+  6. Zac, 05:48: the four starter themes yes; Y2K's loud graffiti yes (behind panels, faded where you read). The
+     Theme Studio's step 2 (preview, tweak, save your own) is built; an accent that reads as a meaning colour or
+     text under 4.5:1 contrast is refused in core.
 - Related: DEC-0135, DEC-0023, DEC-0130, DEC-0017, DEC-0014, DEC-0125

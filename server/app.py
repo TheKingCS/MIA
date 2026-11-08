@@ -418,7 +418,7 @@ SECURITY_HEADERS = {
 
 
 def create_app(context: AppContext) -> FastAPI:
-    """MIA's web server (FastAPI) for the phone, the glasses and the desktop's web view: sign-in sessions by bearer token (or a linked phone's device key), the access switch that turns away forwarded requests when phone access is off, every /api route (each runs on the signed-in person's own view, view_for), and the web front end served fresh at /web/. Your Data (/api/your-data, export and delete) and the sealed-files recovery key sit beside the security log here."""
+    """MIA's web server (FastAPI) for the phone, the glasses and the desktop's web view: sign-in sessions by bearer token (or a linked phone's device key), the access switch that turns away forwarded requests when phone access is off, every /api route (each runs on the signed-in person's own view, view_for), and the web front end served fresh at /web/. Your Data (/api/your-data, export and delete) and the sealed-files recovery key sit beside the security log here; the Theme Studio reads /api/themes (DEC-0136)."""
     app = FastAPI(title="MIA Mobile API")
     app.state.context = context
     app.state.sessions: dict[str, str] = {}  # token -> profile_id
@@ -2401,6 +2401,15 @@ def create_app(context: AppContext) -> FastAPI:
             except (ValueError, KeyError) as problem:
                 raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem).strip("'")) from None
         return {"message": f"Saved the {side}."}
+
+    @app.get("/api/themes")
+    def web_themes(profile_id: str = Depends(require_profile_id)) -> dict:
+        """The Theme Studio (core/themes.studio, DEC-0136): every theme with its choices, the one in use, the fonts,
+        materials and the room's level ranges. Saving and deleting are actions (core/theme_actions.py)."""
+        from core.themes import studio
+
+        with app.state.turn_lock:
+            return studio(view_for(context, profile_id))
 
     @app.get("/api/nexus")
     def web_nexus(profile_id: str = Depends(require_profile_id)) -> dict:

@@ -88,7 +88,7 @@ All four are first cuts by Claude for Muse to refine (DEC-0017).
 ## 5. Theme Studio, in steps
 
 1. **Pick** (built now): experience and theme in Settings' Look section and by voice; switching is live.
-2. **Preview and tweak:** the Studio page shows a sample of both experiences in a theme; sliders and colour pickers for
+2. **Preview and tweak** (built 2026-11-08 07:15, `web/studio.html`, Settings and Diagnostics → Theme Studio): the Studio page shows a sample of both experiences in a theme; sliders and colour pickers for
    the allowed tokens and room settings; saved as the person's own theme (data, in their folder).
 3. **Make and share:** new themes from scratch or by mixing parts of two; import and export as a small JSON file
    (checked against the same allowlist, so an imported theme can't hide warnings or inject anything).
@@ -96,7 +96,28 @@ All four are first cuts by Claude for Muse to refine (DEC-0017).
    settings chosen by code from MIA's description), previewed before it's kept.
 5. **Sound sets:** a theme may bring its own chimes (web/sound.js), opt-in.
 
-## 6. Open for Zac
+## 6. Zac's answers (05:48)
+
+1. The four starter themes and names: yes.
+2. Y2K's loud graffiti: yes. Built as its own layer (`web/img/themes/y2k-graffiti.svg`): abstract tags, drips and
+   sparkles, loud at the edges and in the gaps, faded toward the middle where you read.
+3. Next: Claude's choice. Built step 2 of the Theme Studio.
+
+## 7. The Theme Studio as built (step 2)
+
+- Start from any theme (built-in or yours); tweak five colours (accent, background, panels, text, lines), corners, the
+  font (system stacks), the panels' material, and the room's fire, glow, mist, scanlines, grain and mist palette.
+- The whole Studio page is the preview, plus a little 3D room; nothing is kept until you save.
+- Core builds the tokens from those choices (`core/themes.build_theme`) and refuses an accent that would read as
+  amber, red, green or gold (within 20° of their hues, unless pale or grey) and text under 4.5:1 contrast; the page
+  says so as you pick and greys out Save.
+- Save, Save and Use, Delete are actions (`theme.save`, `theme.delete`: approved, undoable). Your themes appear in
+  Settings' Theme list and answer to their names by voice ("use Lavender"); "make the accent purple" and "make it
+  glass" make your own version (`tweak_theme`); "delete my theme Lavender" (`delete_theme`).
+
+## 8. Open for Zac
+
+1. Theme Studio step 3 (import and export) or step 4 (MIA designs a theme from a description) next?
 
 1. The four starter themes and their names, or others first?
 2. Should the Y2K theme be allowed a loud graffiti texture in the backdrop (it's behind panels, never under text)?

@@ -617,9 +617,10 @@
       // mist
       gl.useProgram(P.mist.p);
       gl.uniform1f(P.mist.u("uT"), t); gl.uniform3fv(P.mist.u("uAccent"), accent);
-      const pk = t / 6, pf = pk - Math.floor(pk);  // the mist drifts from one palette colour to the next
+      // the mist drifts from one palette colour to the next (t can be a hair below zero on the first frame)
+      const pk = Math.max(0, t) / 6, pf = pk - Math.floor(pk), pi = Math.floor(pk);
       gl.uniform3fv(P.mist.u("uHue"), palette.length
-        ? mix3(palette[Math.floor(pk) % palette.length], palette[(Math.floor(pk) + 1) % palette.length], pf)
+        ? mix3(palette[pi % palette.length], palette[(pi + 1) % palette.length], pf)
         : hues[((Math.round(rot) % n) + n) % n]);
       gl.uniform1f(P.mist.u("uGain"), level("mist", 1));
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
