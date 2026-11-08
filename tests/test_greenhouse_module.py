@@ -30,10 +30,12 @@ from modules.greenhouse.module import (
 
 
 def _plant_asset(category="Garden/Plant"):
+    """The greenhouse's aquaponics as an asset (or another category)."""
     return MaintenanceAsset(asset_id="a1", name="Greenhouse Aquaponics", category=category)
 
 
 def _calendar_task(interval_days=14, last_completed=None):
+    """Pruning the tomatoes every so many days."""
     return MaintenanceTask(
         task_id="t1", asset_id="a1", title="Prune tomatoes",
         trigger_type="calendar", interval_days=interval_days, last_completed=last_completed,
@@ -41,6 +43,7 @@ def _calendar_task(interval_days=14, last_completed=None):
 
 
 def _sensor_task(threshold_value=20.0, threshold_direction="below"):
+    """A fuel level that's due when the reading crosses a threshold."""
     return MaintenanceTask(
         task_id="t3", asset_id="a1", title="Fuel Level", trigger_type="sensor",
         meter_unit="%", threshold_value=threshold_value, threshold_direction=threshold_direction,
@@ -48,6 +51,7 @@ def _sensor_task(threshold_value=20.0, threshold_direction="below"):
 
 
 def _reading(value, task_id="t3"):
+    """One reading for a task's series."""
     return Reading(reading_id="r", series_id=f"maintenance_{task_id}", value=value, unit="", note="", timestamp="2026-09-01T00:00:00")
 
 

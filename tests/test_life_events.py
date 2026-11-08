@@ -22,10 +22,12 @@ from tests.engine_world import build_world
 
 @pytest.fixture
 def world(tmp_path, monkeypatch):
+    """A world on temporary files."""
     return build_world(tmp_path, monkeypatch)
 
 
 def _types(context, **kwargs):
+    """The types of the events found."""
     return [e.type for e in events_for(context, **kwargs)]
 
 
@@ -39,6 +41,7 @@ def test_record_and_read_back(world):
 
 
 def test_quiet_and_acting(world):
+    """Nothing is recorded while quiet, and an import is credited to the person it acts for."""
     with quiet():
         world.life_events.record("task_done", "hidden")
     with acting("import", world.other.profile_id):
@@ -68,6 +71,7 @@ def test_paying_a_bill_is_one_event_and_leaves_the_due_list(world):
 
 
 def test_money_events(world):
+    """Money changes are recorded, an imported charge marked as an import, and a debt payment with the new balance."""
     world.budget.add_expense(40.0, "Groceries", "Market")
     world.budget.add_expense(9.0, "Entertainment", "Stream", plaid_transaction_id="tx1")
     source = world.budget.add_income_source("Pay", 1000.0, date.today().isoformat())

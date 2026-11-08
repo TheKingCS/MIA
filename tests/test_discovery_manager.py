@@ -35,6 +35,7 @@ from core.skill_manager import SkillManager
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the discovery, skills, missions, projects, intents and classroom files at a temporary folder."""
     data_dir = tmp_path / "data"
     monkeypatch.setattr(discovery_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(discovery_manager_module, "_PROPOSALS_FILE", data_dir / "mission_proposals.json")
@@ -56,6 +57,7 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _write_skill_definitions(data_dir) -> None:
+    """Writes two construction skills, framing needing carpentry."""
     data_dir.mkdir(parents=True, exist_ok=True)
     (data_dir / "skill_definitions.json").write_text(json.dumps({
         "skills": [
@@ -67,6 +69,7 @@ def _write_skill_definitions(data_dir) -> None:
 
 
 def _make_context(with_projects_and_intents: bool = True) -> AppContext:
+    """A context with skills and missions, and projects and goals unless asked not to."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     context.skills = SkillManager(context)
     context.missions = MissionManager(context)
@@ -77,6 +80,7 @@ def _make_context(with_projects_and_intents: bool = True) -> AppContext:
 
 
 def _make_manager(context: AppContext) -> DiscoveryManager:
+    """A discovery manager, put on the context as context.discovery."""
     manager = DiscoveryManager(context)
     context.discovery = manager
     return manager

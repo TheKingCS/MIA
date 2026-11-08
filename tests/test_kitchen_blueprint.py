@@ -14,12 +14,14 @@ from tests.engine_world import build_world
 
 @pytest.fixture
 def world(tmp_path, monkeypatch):
+    """A world with the action center."""
     context = build_world(tmp_path, monkeypatch)
     context.actions = ActionCenter()
     return context
 
 
 def do(world, kind, **params):
+    """Proposes and approves an action, failing the test if it didn't run; the proposal and result."""
     proposal = world.actions.propose(world, kind, params)
     done = world.actions.approve(world, proposal.proposal_id)
     assert done.status == "executed", done.result
@@ -27,6 +29,7 @@ def do(world, kind, **params):
 
 
 def _chili(world):
+    """A chili recipe and a pantry with some of it."""
     k = world.kitchen
     recipe = k.add_recipe("Chili")
     k.update_recipe(recipe.recipe_id, ingredients=[
@@ -41,6 +44,7 @@ def _chili(world):
 
 
 def test_check_and_plan(world):
+    """Checking a recipe against the pantry says what's there, short or missing, and the plan says what it takes and what runs out."""
     recipe = _chili(world)
     rows = {r["name"]: r for r in check(recipe, world.kitchen.all_pantry_items(), 2)}
     assert rows["ground beef"]["need"] == 2 and rows["ground beef"]["have"] == 3 and rows["ground beef"]["state"] == "have"

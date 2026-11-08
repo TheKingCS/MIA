@@ -38,6 +38,7 @@ _HARNESS = Path(__file__).resolve().parent / "js" / "money_harness.js"
 
 @pytest.fixture
 def ctx(tmp_path, monkeypatch):
+    """A context whose money, logger, maintenance, projects and real estate files point at a temporary folder."""
     for module in _MODULES:
         original = module._DATA_DIR
         for attr, value in list(vars(module).items()):
@@ -54,6 +55,7 @@ def ctx(tmp_path, monkeypatch):
 
 
 def seed(ctx):
+    """A month of money: pay, groceries over target, bills, a paycheck coming, two debts (one bank-synced), a duplex, a greenhouse build and a chainsaw."""
     b = ctx.budget
     b.add_income(3000, "Salary", date="2026-09-12")
     b.add_expense(420, "Groceries", date="2026-09-10")
@@ -72,6 +74,7 @@ def seed(ctx):
 
 
 def test_summary_numbers(ctx):
+    """The phone's money summary has the month, bills due, income expected, targets, debts in payoff order, net worth, builds and tools."""
     seed(ctx)
     s = build_finance_summary(ctx, TODAY)
     assert s["available"] and s["as_of"] == "2026-09-28"
@@ -101,6 +104,7 @@ def test_net_worth_follows_the_home_widget_rule(ctx):
 
 
 def test_empty_and_unavailable(ctx):
+    """An empty MIA's summary has nothing to show, and one without money says it isn't available."""
     s = build_finance_summary(ctx, TODAY)
     assert s["net_worth"]["total"] is None and s["debts"]["ranked"] == [] and s["builds"] == []
     assert build_finance_summary(SimpleNamespace(budget=None), TODAY)["available"] is False

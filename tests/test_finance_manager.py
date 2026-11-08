@@ -26,6 +26,7 @@ from core.finance_manager import FinanceManager, FinancialSnapshot, parse_snapsh
 
 
 class _FakeConfig:
+    """A config that answers only from the overrides it was given."""
     def __init__(self, overrides: dict) -> None:
         """Keeps the overrides."""
         self._overrides = overrides
@@ -37,6 +38,7 @@ class _FakeConfig:
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the financial snapshots file at a temporary folder; the import folder to use."""
     data_dir = tmp_path / "data"
     snapshots_file = data_dir / "financial_snapshots.json"
     monkeypatch.setattr(finance_manager_module, "_DATA_DIR", data_dir)
@@ -46,6 +48,7 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _make_manager(import_dir) -> FinanceManager:
+    """A finance manager reading snapshots from the import folder."""
     from core.app_context import AppContext
 
     context = AppContext(config=_FakeConfig({"finance.snapshot_import_folder": str(import_dir)}), events=EventBus())
@@ -64,6 +67,7 @@ _VALID_SNAPSHOT = {
 # ----------------------------------------------------------------------
 
 def test_parse_valid_snapshot():
+    """A valid snapshot is read with its source, time and data, and stamped when imported."""
     snapshot = parse_snapshot_content(json.dumps(_VALID_SNAPSHOT))
     assert snapshot.source == "real_estate_portfolio"
     assert snapshot.generated_at == "2026-07-16T14:32:00.000Z"

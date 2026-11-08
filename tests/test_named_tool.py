@@ -12,6 +12,7 @@ from core.llm_manager import ChatReply, ToolCall
 
 
 def _registry() -> AssistantActionRegistry:
+    """A registry of a few tools with their phrases, required fields and subjects."""
     registry = AssistantActionRegistry()
 
     def add(name, phrases, required=(), destructive=False, subjects=()):
@@ -60,15 +61,18 @@ def test_only_offered_tools_count():
 
 
 def _tools(*names):
+    """The tool list a model call would be given for these names."""
     return [{"type": "function", "function": {"name": n, "parameters": {
         "type": "object", "properties": {}, "required": ["title"] if n == "add_note" else []}}} for n in names]
 
 
 def _reply(*calls, content=""):
+    """A model reply calling these tools."""
     return ChatReply(content=content, tool_calls=[ToolCall(name=n, arguments=a) for n, a in calls])
 
 
 def _never(messages, tools):
+    """A model that fails the test if it's asked again."""
     raise AssertionError("asked the model again")
 
 
