@@ -17,7 +17,9 @@ too), keeps the chosen portal's light off its picture, and lowers its resolution
 page has a "New Overnight" row. Later the same morning: **Portal Pictures** (your own painting in any Nexus portal,
 painted for it on the PC or chosen from yours; the Nexus card links to it). Two stale tests fixed; every test helper is
 documented except the budget and Plaid files (waiting on the PC's Plaid work); all 96 pages pass the demo sweep on
-desktop and phone. See `docs/NEXT_SESSION.md`.
+desktop and phone. In the afternoon each engine piece got its screen as it landed: What's Next's whole path and
+checks, About MIA's app health, Diagnostics' repository check, the development board's disagreements and evolution
+timeline, and **Look It Up Online** (searches through your own SearXNG once it's running). See `docs/NEXT_SESSION.md`.
 
 **2026-11-08 (Claude, cloud session, with Zac): MIA knows herself, plays, holds your directions, and inspires the
 made life.** A run of engine-side builds, all on master: **self-knowledge (DEC-0142)** — she describes herself from
