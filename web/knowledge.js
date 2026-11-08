@@ -22,7 +22,20 @@
           if (i % 4 === 0) paras.push([]);
           paras[paras.length - 1].push(s);
           return paras;
-        }, []).map((p) => el("p", {}, p.join(" ")))));
+        }, []).map((p) => el("p", {}, p.join(" "))),
+        pictures(hit.pack_id, a.images || [])));
+  }
+
+  // An article's pictures (core/reference_library_manager.article_images): fetched one by one from the pack (only
+  // images are served), shown in a strip under the text with their captions.
+  function pictures(pack, images) {
+    if (!images.length) return null;
+    return el("div", { class: "kn-pictures" }, images.map((im) => {
+      const img = el("img", { alt: im.alt || "", loading: "lazy" });
+      MIA.image("/api/knowledge/picture?pack=" + encodeURIComponent(pack) + "&path=" + encodeURIComponent(im.path))
+        .then((src) => { if (src) img.src = src; else img.closest("figure").remove(); });
+      return el("figure", {}, img, im.alt ? el("figcaption", { class: "dim" }, im.alt) : null);
+    }));
   }
 
   // A pack's row: its title and size, and Delete (the PC owner's; the file is gone for good, so its name is typed to

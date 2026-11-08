@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1172 files, 258,853 lines; 1172 files describe themselves; 14,134 of 14,821 classes and functions are documented.
+1173 files, 258,979 lines; 1173 files describe themselves; 14,143 of 14,830 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-433 files, 121,481 lines; 6,452 of 6,538 classes and functions documented
+433 files, 121,551 lines; 6,457 of 6,543 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -444,7 +444,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 3,109 lines; 37 of 37 classes and functions documented
+2 files, 3,121 lines; 37 of 37 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -713,7 +713,7 @@
 
 ## tests/: the test suite: what each part must do
 
-393 files, 68,996 lines; 5,434 of 6,035 classes and functions documented
+394 files, 69,027 lines; 5,438 of 6,039 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -882,6 +882,7 @@
 - `tests/test_kitchen_module.py`: Unit tests for modules.kitchen.module's pure row formatters — no Qt event loop needed, same shape as tests/test_budget_module.py. *(2 undocumented)*
 - `tests/test_knowledge_ids.py`: Every knowledge entry in work/knowledge/ has its own id: two sessions working at once can each write the next number, and a merge then brings both in (found 2026-11-07: seven pairs). Renumber the newer one when this fails.
 - `tests/test_knowledge_pack_delete.py`: Deleting a Knowledge pack from the web (core/reference_library_manager.delete_confirmed): only once its name is typed, as the desktop asks, because the file is gone for good.
+- `tests/test_knowledge_pictures.py`: Pictures in Knowledge articles (core/reference_library_manager.article_images): which <img> tags become pictures fetched from the pack, resolved against the article's own path.
 - `tests/test_lab_module.py`: Unit test for modules.lab.module.format_reading_row — pure formatting logic, no Qt event loop needed. Same shape as tests/test_notes_module.py's format_entry_row test. *(1 undocumented)*
 - `tests/test_learning_from_dismissals.py`: Learning from being ignored (core/communication_gate.py): closing MIA's messages of one kind with their X pauses that kind for a while; urgent ones never pause; the owner can bring a kind back. *(3 undocumented)*
 - `tests/test_ledger_manager.py`: Unit tests for core.ledger_manager. Isolates _DATA_DIR/_REVENUE_FILE _EXPENSES_FILE into a tmp_path scratch area, same monkeypatch pattern as test_component_manager.py's isolated_paths. record_sale() also needs core.product_manager isolated in the same tmp_path, same "combined-manager fixture" patte *(2 undocumented)*
@@ -1111,7 +1112,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-82 files, 14,764 lines
+82 files, 14,777 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game

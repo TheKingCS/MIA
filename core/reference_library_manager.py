@@ -25,6 +25,11 @@ Same defensive-discovery pattern as core/module_manager.py: a
 missing/corrupt `.zim` file is logged and skipped rather than crashing
 the app, since content packs are user-supplied files on a removable
 drive that can be absent, still copying, or damaged.
+
+For the web (DEC-0125), an article is read as plain text (`article_text`)
+with its pictures listed separately (`article_images`, pure: <img> tags
+resolved to entries in the same pack) and fetched one by one through
+`picture`, which serves images only.
 """
 
 from __future__ import annotations
@@ -134,6 +139,61 @@ class _HTMLTextExtractor(HTMLParser):
     def get_text(self) -> str:
         """The collected text, whitespace collapsed."""
         return " ".join(" ".join(self._parts).split())
+
+
+class _ImageFinder(HTMLParser):
+    """Collects an article's pictures: each <img>'s src and alt, with its width and height when given."""
+
+    def __init__(self) -> None:
+        """Starts with no pictures."""
+        super().__init__()
+        self.found: list[tuple[str, str, int, int]] = []
+
+    def handle_starttag(self, tag: str, attrs) -> None:
+        """An <img>: keeps its src, alt and size."""
+        if tag != "img":
+            return
+        a = dict(attrs)
+
+        def size(key: str) -> int:
+            try:
+                return int(str(a.get(key) or "0").rstrip("px"))
+            except ValueError:
+                return 0
+        self.found.append((a.get("src") or "", a.get("alt") or "", size("width"), size("height")))
+
+
+MIN_PICTURE = 60  # px: icons, flags and bullets in an article are smaller than this
+
+
+def article_images(html_bytes: bytes, entry_path: str, limit: int = 12) -> list[dict]:
+    """Pure logic. An article's pictures as entries in its own pack ({path, alt}), in page order: each src resolved
+    against the article's own path, leaving out web links, inline data, anything outside the pack and small icons;
+    each once; at most `limit`."""
+    import posixpath
+    from urllib.parse import unquote
+
+    finder = _ImageFinder()
+    try:
+        finder.feed(html_bytes.decode("utf-8", errors="replace"))
+    except Exception:
+        return []
+    base = posixpath.dirname(entry_path)
+    out, seen = [], set()
+    for src, alt, width, height in finder.found:
+        src = unquote(src.split("#")[0].split("?")[0])
+        if not src or ":" in src.split("/")[0] or src.startswith("//"):
+            continue  # http:, https:, data: and protocol-relative links aren't in the pack
+        if (width and width < MIN_PICTURE) or (height and height < MIN_PICTURE):
+            continue
+        path = posixpath.normpath(src.lstrip("/") if src.startswith("/") else posixpath.join(base, src))
+        if path.startswith("..") or path in seen:
+            continue
+        seen.add(path)
+        out.append({"path": path, "alt": alt.strip()})
+        if len(out) >= limit:
+            break
+    return out
 
 
 def _html_to_snippet(html_bytes: bytes, max_chars: int = _SNIPPET_MAX_CHARS) -> str:
@@ -442,7 +502,8 @@ class ReferenceLibraryManager:
         return out
 
     def article_text(self, pack_id: str, entry_path: str, max_chars: int = 20_000) -> Optional[dict]:
-        """An article as plain text, for reading on the web screen (no foreign HTML in MIA's page): {title, text}."""
+        """An article as plain text, for reading on the web screen (no foreign HTML in MIA's page), with its pictures as
+        entries in the pack to fetch one by one (`article_images`): {title, text, images}."""
         found = self.get_entry_content(pack_id, entry_path)
         if found is None:
             return None
@@ -454,7 +515,16 @@ class ReferenceLibraryManager:
             title = archive.get_entry_by_path(entry_path).title if archive is not None else entry_path
         except KeyError:
             title = entry_path
-        return {"title": title, "text": _html_to_snippet(content, max_chars=max_chars)}
+        return {"title": title, "text": _html_to_snippet(content, max_chars=max_chars),
+                "images": article_images(content, entry_path)}
+
+    def picture(self, pack_id: str, entry_path: str) -> Optional[tuple[bytes, str]]:
+        """One picture from a pack, for an article on the web: (bytes, mimetype) when the entry is an image, else None
+        (so this can't serve the pack's HTML or scripts into MIA's page)."""
+        found = self.get_entry_content(pack_id, entry_path)
+        if found is None or not str(found[1]).startswith("image/"):
+            return None
+        return found
 
     def search_all_packs(self, query: str, limit: int = 5) -> list[ReferenceSnippet]:
         """

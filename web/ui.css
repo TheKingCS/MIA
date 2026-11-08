@@ -1666,3 +1666,9 @@ body.mod-maps .hero { display: none; }
 .sk-node.outside rect { stroke-dasharray: 3 3; }
 .sk-node text { fill: var(--text); font-size: 13px; }
 .sk-node.locked text { fill: var(--text-dim); }
+
+/* Knowledge: an article's pictures (2026-11-07). */
+.kn-pictures { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-top: 14px; }
+.kn-pictures figure { margin: 0; }
+.kn-pictures img { width: 100%; height: auto; border-radius: 8px; background: rgba(var(--rgb-accent), .05); }
+.kn-pictures figcaption { font-size: 13px; margin-top: 4px; }
