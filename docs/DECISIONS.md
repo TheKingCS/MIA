@@ -2404,5 +2404,11 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Not yet: researching a new possibility before raising it (Night School or her browser). **"Don't bring that up"
   built 2026-11-08 (claude, design session):** `ConnectionBook.decline`/`allow` and a quiet list `_recent` respects;
   the Connections page in Personal (web/connections.html, core/web_connections.py: `connection.decline`,
-  `connection.allow`) and the voice tools dont_bring_that_up and list_connections.
+  `connection.allow`) and the voice tools dont_bring_that_up and list_connections. **Derived links (claude, engine,
+  2026-11-08 overnight):** ties the stores' own fields already say are now in the graph (`core/links.py`: a mission
+  PART_OF its project and trip, a skill BUILDS_ON its prerequisites, a trip PART_OF its expedition, a job USES its
+  workshop recipe, a recipe USES the materials its lines name, a policy RELATED_TO its asset, a project RELATED_TO the
+  skills it trains), so a remark about a skill or a trip ties through the graph to the project or mission behind it.
+  USES and BUILDS_ON are new relations, never the waiting words, so the Life State's "what waits on what" stays the
+  person's own stated dependencies.
 - Related: DEC-0054 (notes from conversation), DEC-0108 (interconnection audit), DEC-0094/0101 (loops), DEC-0126
