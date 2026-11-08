@@ -1691,6 +1691,7 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cam-status.ok { color: rgb(var(--rgb-ok)); }
 .cam-status.bad { color: rgb(var(--rgb-bad)); }
+.cam-status.warn { color: var(--attention); }
 .cam-caption { display: flex; justify-content: space-between; gap: 8px; font-size: var(--text-sm); }
 .cam-full { max-width: 96vw; }
 .cam-brands { margin: 0; padding-left: 18px; font-size: var(--text-sm); }

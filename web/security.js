@@ -51,10 +51,15 @@
           url = next;
           status.textContent = "Live";  // its dot is drawn by the stylesheet
           status.className = "cam-status ok";
+          status.removeAttribute("title");
+          status.removeAttribute("aria-label");
           answering.set(cam.id, true);
         } catch (e) {
-          status.textContent = e.message || "Offline";
-          status.className = "cam-status bad";
+          // The canvas's word (DEC-0113): "Can't Reach" in amber, needs you; the reason is on hover and for screen readers.
+          status.textContent = "Can't Reach";
+          status.title = e.message || "It didn't answer.";
+          status.setAttribute("aria-label", "Can't reach it: " + status.title);
+          status.className = "cam-status warn";
           answering.set(cam.id, false);
         }
       }
