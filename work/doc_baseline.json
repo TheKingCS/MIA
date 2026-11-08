@@ -224,6 +224,7 @@
   "tests/test_web_inbox.py": 3,
   "tests/test_web_lab.py": 1,
   "tests/test_web_money.py": 5,
+  "tests/test_web_notifications.py": 1,
   "tests/test_web_power.py": 1,
   "tests/test_web_push.py": 5,
   "tests/test_web_surfaces.py": 4,

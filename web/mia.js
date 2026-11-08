@@ -323,6 +323,8 @@
     power: () => read("/api/power", "power"),
     // The Lab (core/web_lab.py, DEC-0125): the Data Logger's series, and one in full (?series=).
     lab: (series = "") => read("/api/lab?series=" + encodeURIComponent(series), "lab"),
+    // Notifications (core/web_notifications.py): newest first, with why MIA sent each one she sent on her own.
+    notifications: () => read("/api/notifications", "notifications"),
     // Recent Changes (core/web_changes.py): what can be undone, and the fortnight's history.
     changes: () => read("/api/changes", "changes"),
     // The Field Kit (core/web_field_kit.py, DEC-0125): devices, network checks (worked out in core), scripts.

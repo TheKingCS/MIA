@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1132 files, 253,628 lines; 1132 files describe themselves; 13,858 of 14,530 classes and functions are documented.
+1136 files, 253,890 lines; 1136 files describe themselves; 13,870 of 14,543 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-414 files, 118,305 lines; 6,262 of 6,351 classes and functions documented
+416 files, 118,462 lines; 6,271 of 6,360 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -42,6 +42,7 @@
 - `core/assistant_life_event_actions.py`: "What did I get done this week?", "what changed this month?", "what bills did I pay?" (core/life_events.py, 2026-10-05). Facts from the log, counted in code; the model only phrases them.
 - `core/assistant_link_actions.py`: "The land loan funds the rental", "the greenhouse depends on selling the lot", "what depends on selling the lot?", "what's connected to the truck?" (core/links.py, 2026-10-05). Names are matched to real records in code; a link is only saved between things that exist. Undoable.
 - `core/assistant_lookup.py`: How Assistant actions find the user's own records from the words they actually say. People say "the truck" and "did the oil", not "Pickup Truck" and "Oil change", and the model can only pass on their words.
+- `core/assistant_notification_actions.py`: Notifications by voice (DEC-0125), for what the Notifications page shows: "what are my notifications?" (the unread ones, newest first) and "mark my notifications read" (the same `notification.read_all` action as the page's button). Why one was sent, and muting a kind, were already voice tools (core/
 - `core/assistant_ownership_actions.py`: "Whose truck is it?" and "the mower is mine" (core/ownership.py, 2026-10-01): owner marks on maintenance items (vehicles, tools, appliances).
 - `core/assistant_path_actions.py`: Learning paths by voice (DEC-0112; core/paths.py): any desire, the same loop. "I want to learn guitar" starts the guitar program; "I want to learn to weld", with no program for it, has MIA draft one (grounded in her specialists' notes) and describe it, and "start it" starts it. Then lessons, practic
 - `core/assistant_plan_actions.py`: The Library's plans by voice (core/plan_library.py): "do we have plans for a chicken coop?", "what do I need for a 10 by 12 shed?", "make me a cut list for a 4 by 8 raised bed", "what do I still need to buy for the fence?", "where can I get free barn plans?", "start the shed as a project". The numbe
@@ -400,6 +401,7 @@
 - `core/web_lab.py`: The Lab's web screen (DEC-0113 canvas Lab, DEC-0125: the Lab had no phone screen). The Lab is the home of the Data Logger (core/data_logger_manager.py): readings kept in named series ("Soil moisture", "Tank pH", "Shop temp"), one value each with a unit, a note and when.
 - `core/web_money.py`: The Money screen's data (2026-10-06, DEC-0017): everything the PC app's Budget screen shows, assembled here so `web/` holds no logic. Served as `/api/money`; changes go through the action kinds in core/money_actions.py.
 - `core/web_more.py`: The Journal, Workshop, Expeditions, Music, Files and People screens on the web (Zac, 2026-10-16: on the phone they "are empty right now and just bring up a chat with MIA"). Each assembler reads its stores and returns what its screen shows; every change is an action in core/more_actions.py.
+- `core/web_notifications.py`: Notifications on the web (the screens review's missing notifications, docs/design/CORE_SCREENS_REVIEW.md section 3; DEC-0125). Each notification (core/notification_manager.py), newest first: its title and message, a tone for its level (amber for a warning, red only for a real error: DEC-0014), where
 - `core/web_power.py`: Power's web screen (DEC-0113 canvas, DEC-0125: Power had no phone screen). Two parts:
 - `core/web_progress.py`: Missions, Skills and Character on the web (2026-10-06, DEC-0017/0018, answering H-0013): everything the PC app's screens show, assembled here so `web/` holds no logic. Served as `/api/missions`, `/api/skills` and `/api/character`; changes are the action kinds in core/mission_actions.py.
 - `core/web_push.py`: Sends Web Push messages via pywebpush (VAPID-signed, per the standard Web Push protocol) and owns this device's VAPID keypair — generated once on first use and persisted to data/vapid_keys.json, never regenerated after that (regenerating it would silently invalidate every subscription a browser has 
@@ -425,7 +427,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 2,884 lines; 34 of 34 classes and functions documented
+2 files, 2,892 lines; 34 of 34 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -694,7 +696,7 @@
 
 ## tests/: the test suite: what each part must do
 
-375 files, 67,552 lines; 5,351 of 5,934 classes and functions documented
+376 files, 67,609 lines; 5,354 of 5,938 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1046,6 +1048,7 @@
 - `tests/test_web_lab.py`: The Lab on the web (DEC-0125, the design canvas's Lab, DEC-0113: core/web_lab.py, core/lab_reading_actions.py and core/assistant_lab_actions.py): the Data Logger's series as chips, one in full with plain numbers and a chart placed by core, readings logged and deleted as actions, other apps' series r *(1 undocumented)*
 - `tests/test_web_money.py`: DEC-0017 (2026-10-06): Money on the web does everything the PC app's Budget screen does. The page's data (core/web_money.py) and every change as an action kind (core/money_actions.py): add, edit, delete bills, income sources, income, expenses and debts; pay a debt; set budgets. Each one proposed, ap *(5 undocumented)*
 - `tests/test_web_more.py`: The Journal, Workshop, Expeditions (with what has to happen before a trip), Music, Files and People screens (Zac, 2026-10-16: on the phone they "are empty right now and just bring up a chat with MIA"): core/web_more.py builds each page, core/more_actions.py makes every change through Propose → Appro
+- `tests/test_web_notifications.py`: Notifications on the web (core/web_notifications.py, DEC-0125): newest first, a tone for each level (amber for a warning, red only for an error), why MIA sent the ones she sent on her own, Mark All Read and Dismiss as actions, and the same by voice (core/assistant_notification_actions.py). *(1 undocumented)*
 - `tests/test_web_power.py`: Power on the web (DEC-0125, the design canvas's Power, DEC-0113: core/web_power.py and core/power_actions.py): energy sources with their latest reading per meter, a meter for a percent (amber when low), when it was logged, and every change as an action; the device's battery when it has one. *(1 undocumented)*
 - `tests/test_web_progress.py`: DEC-0017/0018 (2026-10-06), H-0013: Missions, Skills and Character on the web. The pages (core/web_progress.py) and every change as an action kind (core/mission_actions.py), each proposed, approved, recorded and undoable, with rewards going to the person who approved it.
 - `tests/test_web_push.py`: Unit tests for core.web_push. The actual push-service HTTP call (pywebpush.webpush) is mocked throughout — this is the standard, correct way to test Web Push code without a real browser/push service (see core/web_push.py's own docstring and the Mobile Phase 1 plan). *(5 undocumented)*
@@ -1074,7 +1077,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-79 files, 14,386 lines
+80 files, 14,426 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
@@ -1127,6 +1130,7 @@
 - `web/music.js`: music.js — the Music screen (claude, 2026-10-16; Zac: the app only opened a chat). Renders MIA.music() (core/web_more.py): Songs (search), Playlists and Artists. A song plays right here, in the browser, streamed from MIA (/api/music/track/<id>/audio, fetched with this tab's sign-in); the next one in
 - `web/navigation.js`: navigation.js — Navigation (claude, 2026-11-06). Renders MIA.navigation(start, end) (core/navigation_web.py): the waypoints with their grid references, the distance and bearing between two on a compass (the design canvas, DEC-0113), and the sun and moon at the first. Read only; a waypoint is added b
 - `web/news.js`: news.js — Good News Radio (claude, 2026-11-07, DEC-0096). Renders MIA.news() (core/good_news.py): today's stories, how each is known (confirmed by two outlets, from the source itself, or one outlet), its caveats and its links, and each personality's script. Formatting only; the look is muse's.
+- `web/notifications.js`: notifications.js — Notifications (claude, 2026-11-07, DEC-0125). Renders MIA.notifications() (core/web_notifications.py): each notification newest first, unread ones lit, amber for a warning and red only for a real error; "Why?" opens why MIA sent one she sent on her own. Mark All Read and Dismiss a
 - `web/observations.js`: observations.js — what MIA noticed (claude, 2026-11-06). Renders MIA.observations() (core/observations_web.py): findings across apps (each with why and one next step) and the open insights by where they came from. Read only: each is resolved where it lives. Formatting only; the look is muse's.
 - `web/operating.js`: operating.js — the Operating Journal (claude, 2026-11-07, DEC-0097). Renders MIA.operatingJournal() (core/operating_journal.py): each line, how it's checked, and its meter with how it's going, in plain numbers (DEC-0113). Adding, rating and taking a line out go through actions (operating.add / .rate
 - `web/party.js`: party.js — Party and guild (claude, 2026-10-17, DEC-0028). Renders MIA.party() (core/party.py): raids going (everyone's jobs, who has what, +1 on your own), raids to start with who's in, your own raid, and the household leaderboard (opt-in: only people who joined it, wins this week, never money). Ev

@@ -1124,6 +1124,14 @@ def create_app(context: AppContext) -> FastAPI:
         with app.state.turn_lock:
             return lab_page(view_for(context, profile_id), series[:200])
 
+    @app.get("/api/notifications")
+    def notifications_screen(profile_id: str = Depends(require_profile_id)) -> dict:
+        """Notifications (core/web_notifications.py): newest first, each with why MIA sent it when she did on her own."""
+        from core.web_notifications import notifications_page
+
+        with app.state.turn_lock:
+            return notifications_page(view_for(context, profile_id))
+
     @app.get("/api/changes")
     def changes_screen(profile_id: str = Depends(require_profile_id)) -> dict:
         """Recent Changes (core/web_changes.py): what MIA can put back, and the last fortnight's history."""
