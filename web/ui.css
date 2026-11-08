@@ -1455,3 +1455,19 @@ body.mod-maps .hero { display: none; }
 .chron-row > summary .dim { font-family: var(--font-mono); font-size: 12px; font-weight: 400; }
 .chron-row .chron { border: 0; background: none; box-shadow: none; padding: 0 0 12px; }
 .chron-row .chron h2 { display: none; }
+
+/* ---------------------------------------------------------------- Apps (DEC-0113 canvas; web/apps.js) */
+.apps-favs, .apps-area { display: grid; gap: 8px; margin-bottom: calc(var(--gap) + 4px); }
+.apps-favs > .pw-label, .apps-area > .pw-label { margin: 0; }
+.apps-list { display: grid; padding: 0 6px 0 12px; }
+.apps-row { display: grid; grid-template-columns: 28px minmax(0, 7fr) minmax(0, 9fr) 40px; gap: 10px; align-items: center; min-height: 52px;
+  border-top: 1px solid var(--line); color: var(--text); text-decoration: none; }
+.apps-row:first-child { border-top: 0; }
+.apps-row:hover .apps-row-name { color: var(--accent); }
+.apps-row-icon { color: var(--accent); display: grid; place-items: center; }
+.apps-row-icon svg { width: 20px; height: 20px; }
+.apps-row.pc .apps-row-icon { color: var(--text-dim); }
+.apps-row-name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.apps-row-tag { font-size: 12px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.apps-row .tile-star { position: static; }
+@media (max-width: 520px) { .apps-row { grid-template-columns: 28px minmax(0, 1fr) 40px; } .apps-row-tag { display: none; } }
