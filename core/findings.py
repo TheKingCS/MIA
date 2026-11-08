@@ -17,8 +17,9 @@ the communication gate (merged, rate-limited, repeats dropped). The
 rest show only when asked ("what have you noticed?", the "noticed"
 question plan) and on Home, quietly.
 
-Not built yet, for want of data (docs/INTELLIGENCE_BENCHMARK.md section
-5): a subscription nobody uses (nothing records use).
+A subscription not said to be in use for three months
+(`still_using_subscription`, core/subscriptions.py: the person's "still using
+it?" mark, DEC-0054) is shown when asked, never unprompted.
 
 Each rule is small and fails alone: one store failing never hides the
 others.
@@ -332,9 +333,26 @@ def cheaper_quote(context, today: date) -> list[Finding]:
     return out
 
 
+def still_using_subscription(context, today: date) -> list[Finding]:
+    """Subscriptions nobody has said they use in three months (core/subscriptions.py), dearest first; never
+    unprompted: what's worth keeping is the person's call."""
+    from core.subscriptions import CHECK_DAYS, unconfirmed
+
+    bills = unconfirmed(context, today)
+    if not bills:
+        return []
+    names = ", ".join(f"{b.name} ({_money(b.amount)})" for b in bills[:4])
+    return [Finding(f"still_using:{','.join(b.bill_id for b in bills[:4])}", "Still using these?",
+                    f"Subscriptions not checked in {CHECK_DAYS // 30} months: {names}.",
+                    "One you don't use is money every month for nothing; one you do just needs a yes.",
+                    [f"bill:{b.bill_id}" for b in bills[:4]],
+                    "Mark the ones you use as Still Using in Money (or say \"I still use it\"), and cancel the rest.",
+                    DERIVED, app="budget")]
+
+
 RULES: tuple[Callable, ...] = (bill_before_pay, upkeep_before_trip, deadline_in_packed_week, cheaper_quote,
                                goods_before_market, meal_missing_ingredient, overtime_and_training, goal_not_moving,
-                               build_over_budget)
+                               build_over_budget, still_using_subscription)
 
 
 def findings(context, today: Optional[date] = None) -> list[Finding]:

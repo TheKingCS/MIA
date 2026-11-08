@@ -136,9 +136,13 @@
 
   function bills() {
     return [section("Bills", "Add bill", () => add("bill", "Add a bill"), page.bills.map((b) => row(
-      b.name, [b.when, b.next_due ? "due " + day(b.next_due) : null, b.recurrence || "one time", b.category].filter(Boolean).join(" · "),
+      b.name, [b.when, b.next_due ? "due " + day(b.next_due) : null, b.recurrence || "one time", b.category,
+        b.subscription ? (b.still_using_on ? "in use, said " + day(b.still_using_on) : "subscription") : null].filter(Boolean).join(" · "),
       fmt(b.amount), tone(b.days),
-      buttons(b.action ? btn(b.action.label, "btn-green", () => act(b.action)) : null, editBtn("bill", b), delBtn("bill", b)))),
+      // DEC-0054's "still using it?" mark (core/subscriptions.py): a subscription's Still Using stamps today.
+      buttons(b.action ? btn(b.action.label, "btn-green", () => act(b.action)) : null,
+        b.subscription ? btn("Still Using", "btn-ghost", () => act({ kind: "bill.still_using", params: { bill_id: b.id } })) : null,
+        editBtn("bill", b), delBtn("bill", b)))),
     "No bills yet. Add one, or tell MIA: “my electric bill is $120 on the 15th”.")];
   }
 

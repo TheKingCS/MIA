@@ -370,6 +370,7 @@ import core.web_why  # noqa: E402,F401  (My Why: link, unlink and achieve goals)
 import core.web_projects  # noqa: E402,F401  (Projects: a budget, and tasks added, reopened, deleted)
 import core.web_textbooks  # noqa: E402,F401  (Classroom textbooks: a course from one, removing one)
 import core.starter_actions  # noqa: E402,F401  (starter sets from Settings)
+import core.subscriptions  # noqa: E402,F401  (the "still using it?" mark on a subscription, DEC-0054)
 from core.offline_maps import _register as _register_map_areas  # noqa: E402  (vector map areas from the Maps page)
 
 _register_map_areas()

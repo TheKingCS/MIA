@@ -1,7 +1,7 @@
 {
  "about": "core/code_atlas.py (DEC-0104): each file's undocumented classes and functions. It may only go down; a file not listed must be fully documented. Rewrite with python -m core.code_atlas baseline.",
  "undocumented": {
-  "core/budget_manager.py": 68,
+  "core/budget_manager.py": 65,
   "core/plaid_manager.py": 21,
   "tests/assistant_registry.py": 2,
   "tests/conftest.py": 4,
@@ -202,6 +202,7 @@
   "tests/test_state_export.py": 2,
   "tests/test_stopwatch_format.py": 3,
   "tests/test_subnet_calculator.py": 3,
+  "tests/test_subscriptions.py": 2,
   "tests/test_support_choice.py": 4,
   "tests/test_sync.py": 5,
   "tests/test_system_health.py": 2,
