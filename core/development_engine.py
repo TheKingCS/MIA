@@ -32,6 +32,7 @@ from dataclasses import dataclass, field
 from typing import Optional, Sequence
 
 from core.environment import SIMULATED
+from core.region import money
 
 # A safety-critical candidate carries this: MIA guides, it never certifies. Structural, electrical, legal and
 # financial decisions get a "qualified professional should verify" marker, surfaced in the reasoning.
@@ -43,7 +44,7 @@ class DevelopmentProfile:
     """The starting position a plan is built from — assembled from real state, never re-entered. A planning artifact,
     so it is `simulated`: it informs recommendations but is never a real-authority record."""
 
-    budget: float = 0.0
+    budget: Optional[float] = None  # None: not known yet, so costs are said plainly, never judged against $0
     hours_per_week: float = 0.0
     skills: frozenset = frozenset()
     have: frozenset = frozenset()  # capability tags on hand: tools, materials, assets, finished prerequisites
@@ -72,6 +73,7 @@ class Candidate:
     scalable: bool = False
     needs_professional: bool = False  # safety-critical: structural, electrical, legal, financial
     note: str = ""
+    evidence: tuple = ()  # words that mark it already done in the person's records ("greenhouse", "coop")
 
     def payoff_months(self) -> Optional[float]:
         """Rough months for the monthly benefit to repay the entry cost, or None when there's no benefit to repay."""
@@ -95,16 +97,18 @@ def available(candidate: Candidate, profile: DevelopmentProfile, catalog: Sequen
     return (not missing), sorted(missing)
 
 
-def compounding_value(candidate: Candidate, catalog: Sequence[Candidate], discount: float = 0.5, depth: int = 2) -> float:
+def compounding_value(candidate: Candidate, catalog: Sequence[Candidate], discount: float = 0.5, depth: int = 2,
+                      done=frozenset()) -> float:
     """The discounted monthly benefit of everything this candidate unlocks, out to `depth` hops — why a foundational
-    project (compost, water) outscores a leaf project of the same cost."""
+    project (compost, water) outscores a leaf project of the same cost. Something already `done` unlocks nothing new,
+    so it adds nothing."""
     by_id = {c.id: c for c in catalog}
     total = 0.0
     seen = set()
     frontier = [(uid, 1) for uid in candidate.unlocks]
     while frontier:
         uid, hop = frontier.pop()
-        if uid in seen or hop > depth:
+        if uid in seen or hop > depth or uid in done:
             continue
         seen.add(uid)
         nxt = by_id.get(uid)
@@ -119,11 +123,11 @@ def score(candidate: Candidate, profile: DevelopmentProfile, catalog: Sequence[C
     """A transparent score for ranking, plus the honest facts behind it. The gates (affordable, unblocked, in season)
     dominate, so an out-of-reach project always sinks below a doable one; among doable ones, monthly benefit and
     compounding value win and cost, labour and risk weigh against. The number is an ordering aid on a soft scale,
-    never a dollar prediction."""
+    never a dollar prediction. An unknown budget (None) isn't a gate: the cost is said, not judged against $0."""
     ok, missing = available(candidate, profile, catalog, done)
-    affordable = candidate.entry_cost <= profile.budget
+    affordable = profile.budget is None or candidate.entry_cost <= profile.budget
     in_season = (not candidate.season) or (profile.month in candidate.season)
-    cv = compounding_value(candidate, catalog)
+    cv = compounding_value(candidate, catalog, done=frozenset(done))
     value = candidate.benefit + cv
     cost = candidate.entry_cost + candidate.recurring_cost * 6  # a 6-month running horizon
     raw = value * 10 - cost * 0.05 - candidate.labour_hours * 0.5 - candidate.risk * 20
@@ -166,7 +170,7 @@ def _reason(s: dict) -> str:
         pay = f", paying for itself in about {s['payoff_months']} months" if s["payoff_months"] else ""
         bits.append(f"it starts producing value{pay}")
     if s["entry_cost"] > 0:
-        bits.append(f"about ${s['entry_cost']:.0f} to start")
+        bits.append(f"about {money(s['entry_cost'], ',.0f')} to start")
     why = "; ".join(bits) or "it's the most useful thing within reach right now"
     pro = f" {PROFESSIONAL}" if s["needs_professional"] else ""
     return f"{s['name']} — {why}.{pro}"
@@ -195,8 +199,9 @@ def next_step(profile: DevelopmentProfile, catalog: Sequence[Candidate], done=fr
         best = unaffordable[0]
         return {"kind": "save",
                 "recommend": best,
-                "reason": f"The highest-value move you're set up for is {best['name']}, about ${best['entry_cost']:.0f}"
-                          f" to start — a bit beyond today's budget. Worth saving toward."}
+                "reason": f"The highest-value move you're set up for is {best['name']}, about "
+                          f"{money(best['entry_cost'], ',.0f')} to start — a bit beyond today's budget. Worth saving "
+                          f"toward."}
     # Everything worthwhile is blocked by a missing prerequisite: recommend clearing one.
     blocked = [s for s in rows if not s["available"] and s["missing"]]
     if blocked:
@@ -218,8 +223,9 @@ def homestead_catalog() -> list:
     """The first proving domain (Zac, 2026-11-08): realistic, low-to-higher-cost homestead projects whose dependencies
     and unlocks exercise compounding value — compost and water are cheap and foundational (they unlock the beds and
     the greenhouse); the greenhouse is dear but scalable and opens plant sales. Grounded in plans MIA already knows
-    (`core/plan_library.py`). Costs are rough starting figures, not quotes."""
-    return [
+    (`core/plan_library.py`), each with the words that mark it already done in the person's records (`_EVIDENCE`,
+    read by `done_from_records`). Costs are rough starting figures, not quotes."""
+    catalog = [
         Candidate("rain_barrel", "Rain-barrel water collection", entry_cost=40, benefit=8, labour_hours=4,
                   provides=frozenset({"water"}), unlocks=("drip_irrigation", "greenhouse"), risk=0.1,
                   note="A barrel, a diverter and a screen — the cheapest thing that unlocks the most."),
@@ -246,11 +252,15 @@ def homestead_catalog() -> list:
                   requires=frozenset({"beds"}), scalable=True, risk=0.4, sector="business",
                   note="Where the homestead starts paying back — the bridge to a small business."),
     ]
+    for c in catalog:
+        c.evidence = _EVIDENCE.get(c.id, ())
+    return catalog
 
 
-def development_profile(context) -> DevelopmentProfile:
+def development_profile(context, budget: Optional[float] = None) -> DevelopmentProfile:
     """Assemble the starting position from state MIA already holds — budget, time, skills, what's on the shelf, the
-    season, the person's stated objectives — reading every source defensively so a missing store just leaves a gap
+    season, the person's stated objectives, and a budget when they give one (None: unknown, not $0) —
+    reading every source defensively so a missing store just leaves a gap
     rather than crashing the plan. Everything stays `simulated`; this never writes."""
     import datetime
 
@@ -263,7 +273,6 @@ def development_profile(context) -> DevelopmentProfile:
     have = set()
     skills = set()
     objectives = []
-    budget = 0.0
     if getattr(context, "materials", None) is not None:
         have |= {m.name.lower() for m in _safe(lambda: context.materials.all_materials(), [])}
     if getattr(context, "skills", None) is not None:
@@ -272,3 +281,107 @@ def development_profile(context) -> DevelopmentProfile:
         objectives = [i.name for i in _safe(lambda: context.intents.all_intents(), [])]
     return DevelopmentProfile(budget=budget, have=frozenset(have), skills=frozenset(skills),
                               month=datetime.date.today().month, objectives=tuple(objectives))
+
+
+# What marks each homestead project as already done in the person's records (an asset's name, a finished project, a
+# tank or bed in the grow lab, a flock): matched as words, so "Walipini greenhouse" counts as a greenhouse.
+_EVIDENCE = {
+    "rain_barrel": ("rain barrel", "rain catchment", "ibc tote", "water tank", "cistern"),
+    "compost_bin": ("compost",),
+    "raised_bed": ("raised bed", "garden bed", "grow bed"),
+    "drip_irrigation": ("drip",),
+    "cold_frame": ("cold frame",),
+    "chickens": ("coop", "chicken", "flock"),
+    "greenhouse": ("greenhouse", "walipini", "hoop house", "polytunnel"),
+}
+_FINISHED = frozenset({"done", "complete", "completed", "finished"})
+_MONTHS = ("January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
+           "November", "December")
+
+
+def done_from_records(context, catalog: Sequence[Candidate]) -> dict:
+    """Which candidates the person already has, read from their own records: an asset (the Garage or Greenhouse), a
+    finished project, a tank or bed in the grow lab, a flock, each matched by the candidate's `evidence` words.
+    {candidate id: where it was found}. A source that won't read just contributes nothing."""
+    from core import links
+
+    def _safe(fn) -> list:
+        """A store's list, or [] when it can't be read."""
+        try:
+            return list(fn())
+        except Exception:  # noqa: BLE001 - a missing store is a quiet gap
+            return []
+
+    names = []  # (lowercased name, where it was found)
+    maintenance = getattr(context, "maintenance", None)
+    if maintenance is not None:
+        names += [(str(a.name).lower(), "your assets") for a in _safe(maintenance.all_assets)]
+    projects = getattr(context, "projects", None)
+    if projects is not None:
+        names += [(str(x.name).lower(), "your finished projects") for x in _safe(projects.all_projects)
+                  if str(getattr(x, "status", "")).strip().lower() in _FINISHED]
+    lab = getattr(context, "grow_lab", None)
+    if lab is not None:
+        names += [(str(n).lower(), "your grow lab") for n in getattr(lab, "systems", [])]
+    names += [(f"{getattr(f, 'name', '')} flock".lower(), "your flock") for f in _safe(lambda: links.records(context, "flock"))]
+    done = {}
+    for c in catalog:
+        where = next((w for name, w in names for word in c.evidence if word in name), None)
+        if where:
+            done[c.id] = where
+    return done
+
+
+def _why_not(row: dict, profile: DevelopmentProfile, by_id: dict) -> str:
+    """Pure logic. Why an option isn't ready yet, in plain words ("" when it is)."""
+    if not row["available"]:
+        return "needs " + " and ".join(m.replace("_", " ") for m in row["missing"]) + " first"
+    if not row["affordable"]:
+        return (f"about {money(row['entry_cost'], ',.0f')}, more than the {money(profile.budget, ',.0f')} you said you "
+                "have")
+    if not row["in_season"]:
+        months = by_id[row["id"]].season
+        return f"best begun {_MONTHS[months[0] - 1]} to {_MONTHS[months[-1] - 1]}"
+    return ""
+
+
+def plan(context, budget: Optional[float] = None, catalog: Optional[Sequence[Candidate]] = None,
+         month: Optional[int] = None) -> dict:
+    """The homestead plan as a screen and a tool both show it (DEC-0125): what the person already has (from their
+    records), the logical next step with its reasoning, and the best few options with why each isn't ready yet.
+    Advisory and `simulated`: nothing here changes anything."""
+    catalog = list(catalog) if catalog is not None else homestead_catalog()
+    profile = development_profile(context, budget)
+    if month is not None:
+        profile.month = month
+    have = done_from_records(context, catalog)
+    by_id = {c.id: c for c in catalog}
+    step = next_step(profile, catalog, frozenset(have))
+    options = [{"id": r["id"], "name": r["name"], "entry_cost": r["entry_cost"],
+                "cost": money(r["entry_cost"], ",.0f"), "payoff_months": r["payoff_months"],
+                "unlocks": [by_id[u].name for u in r["unlocks"] if u in by_id and u not in have],
+                "ready": r["available"] and r["affordable"] and r["in_season"],
+                "why_not": _why_not(r, profile, by_id), "needs_professional": r["needs_professional"],
+                "note": by_id[r["id"]].note}
+               for r in ranked(profile, catalog, frozenset(have))[:6]]
+    return {"environment": SIMULATED, "budget": budget, "month": profile.month,
+            "have": [{"name": by_id[i].name, "found_in": where} for i, where in have.items()],
+            "next": ({"kind": step["kind"], "id": step["recommend"]["id"], "name": step["recommend"]["name"],
+                      "reason": step["reason"]} if step else None),
+            "options": options,
+            "note": "Costs are rough starting figures, not quotes. Tell me your budget and I'll weigh it in."}
+
+
+def describe(p: dict) -> str:
+    """Plain words for the tool: the next step and why, what's already done, and what comes after."""
+    if not p.get("next"):
+        return "I don't have homestead projects to weigh yet."
+    lines = [f"Next on the homestead: {p['next']['reason']}"]
+    if p["have"]:
+        lines.append("Already yours, from your records: " + ", ".join(f"{h['name'].lower()} ({h['found_in']})" for h in p["have"]) + ".")
+    after = [o["name"].lower() for o in p["options"] if o["id"] != p["next"]["id"]][:3]
+    if after:
+        lines.append("After that: " + ", ".join(after) + ".")
+    if p["budget"] is None:
+        lines.append("Tell me your budget and I'll weigh it in.")
+    return " ".join(lines)

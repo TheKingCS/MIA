@@ -26,6 +26,8 @@ CORPUS: list[tuple[str, str]] = [
     ("Can you tell me about yourself?", "get_introduction"),
     ("What are you trained for?", "get_specialties"),
     ("What are your specialties?", "get_specialties"),
+    ("What should I build next on the homestead?", "get_homestead_next_step"),
+    ("What should I build next with $300?", "get_homestead_next_step"),
     ("Can you track my chickens?", "get_capability"),
     ("What did we decide about eggs?", "get_mia_docs"),
     ("Ask your radio specialist how far a Meshtastic node reaches", "ask_specialist"),

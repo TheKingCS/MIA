@@ -18,6 +18,7 @@ exist here at all.
 
 from __future__ import annotations
 
+import re
 from typing import Optional
 
 from core.app_context import AppContext
@@ -359,6 +360,29 @@ def _action_get_business_use(context: AppContext, arguments: dict) -> str:
     return " ".join(summaries) + " The full worksheet is in Budget → Builds & Tools. It's records, not tax advice."
 
 
+def _action_homestead_next(context, arguments: dict) -> str:
+    """Tool get_homestead_next_step: the logical next homestead project and why (core/development_engine.py, DEC-0144),
+    weighing what the person already has; a budget when they say one. Advisory: it changes nothing."""
+    from core.development_engine import describe, plan
+
+    return describe(plan(context, _budget_from(arguments.get("budget"))))
+
+
+def _budget_from(said) -> Optional[float]:
+    """Pure logic. A budget from a number, or from the person's words when it comes with money around it ("$200",
+    "200 dollars", "a budget of 300"); None otherwise, so "the next 3 projects" never reads as a budget."""
+    if isinstance(said, (int, float)):
+        return float(said)
+    match = re.search(r"\$\s*([\d,]+(?:\.\d+)?)|([\d,]+(?:\.\d+)?)\s*(?:dollars|bucks)|budget\D{0,8}([\d,]+(?:\.\d+)?)",
+                      str(said or "").lower())
+    if not match:
+        return None
+    try:
+        return float(next(g for g in match.groups() if g).replace(",", ""))
+    except ValueError:
+        return None
+
+
 def register_homestead_actions(registry: AssistantActionRegistry) -> None:
     """Registers the build, tool and business-use tools, and get_receipt, with the Assistant's registry."""
     registry.register(AssistantAction(
@@ -470,6 +494,20 @@ def register_homestead_actions(registry: AssistantActionRegistry) -> None:
         }, "required": ["build", "amount"]},
         handler=_action_set_build_budget,
         trigger_phrases=("budget for the", "build budget"),
+    ))
+    registry.register(AssistantAction(
+        name="get_homestead_next_step", domain="development",
+        description=("The logical next project on the user's homestead and why (what it costs, what it pays back, what "
+                     "it unlocks), leaving out what they already have; weighs a budget when they give one. For 'what "
+                     "should I do next on the homestead', 'what should I build next', 'where do I start'."),
+        parameters={"type": "object", "properties": {
+            "budget": {**_S, "description": "What they have to spend, in their words ('$200'), only if they said."},
+        }, "required": []},
+        handler=_action_homestead_next, prompt_arg="budget",
+        trigger_phrases=("next on the homestead", "what should i build next", "what should we build next",
+                         "next homestead project", "homestead next",
+                         "what should i do next on the homestead", "what should i do next on the land",
+                         "what to build next", "start a homestead", "develop the property"),
     ))
     registry.register_domain_keywords("homestead_costs", ("lumber", "2x4s", "2x4", "rebar", "concrete"))
     registry.register_entity_names(

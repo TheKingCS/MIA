@@ -160,9 +160,9 @@
       today: greenhouseToday,
       assets: () => assetsView().concat(...BUCKETS.filter(([id]) => id !== "past_due" && page.tasks.some((r) => r.bucket === id)).map(([id]) => views[id]())),
       growing: grow.views.growing, water: grow.views.water,
-      experiments: grow.views.experiments, harvests: grow.views.harvests,
+      experiments: grow.views.experiments, harvests: grow.views.harvests, next: grow.views.next,
     };
-    const TABS = [["today", "Today"], ["assets", "Assets"], ["growing", "Growing"], ["water", "Water"], ["experiments", "Experiments"], ["harvests", "Harvests"]];
+    const TABS = [["today", "Today"], ["assets", "Assets"], ["growing", "Growing"], ["water", "Water"], ["experiments", "Experiments"], ["harvests", "Harvests"], ["next", "What's Next"]];
     if (!all[tab]) tab = "today";
     $("tabs").hidden = false;
     $("tabs").replaceChildren(...TABS.map(([id, l]) => el("button", { type: "button", role: "tab", "aria-selected": String(id === tab),
