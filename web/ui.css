@@ -1586,3 +1586,6 @@ body.mod-maps .hero { display: none; }
 .receipt-lines { margin-top: 6px; font-size: 14px; color: var(--text-dim); }
 .receipt-lines summary { cursor: pointer; min-height: 32px; display: flex; align-items: center; }
 .receipt-lines ul { margin: 4px 0 0; padding-left: 18px; }
+
+/* Expeditions: a trip's log with its weather (journal entries on the trip, 2026-11-07). */
+.trip-log { list-style: none; margin: 6px 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }

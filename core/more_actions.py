@@ -231,16 +231,33 @@ def _entry(context, params):
 
 
 def _journal_add_describe(context, params) -> str:
-    """The sentence the approval card shows for adding a journal entry (Propose); raises ActionError when it can't be done."""
+    """The sentence the approval card shows for adding a journal entry, naming the trip's log when it's one (Propose);
+    raises ActionError when it can't be done."""
     v = _journal_values(params, False)
-    return f"Add the journal entry \"{v['title']}\"" + (f" (tagged {', '.join(v['tags'])})" if v["tags"] else "")
+    trip = _journal_trip(context, params)
+    return (f"Add the journal entry \"{v['title']}\"" + (f" to the {trip.name} log" if trip else "")
+            + (f" (tagged {', '.join(v['tags'])})" if v["tags"] else ""))
+
+
+def _journal_trip(context, params):
+    """The trip a journal entry is a log of (`trip_id`, from a trip on the Expeditions page), None for a plain note;
+    ActionError when the trip named isn't there."""
+    trip_id = str(params.get("trip_id") or "").strip()
+    if not trip_id:
+        return None
+    trip = getattr(_need(context, "trips"), "get_trip")(trip_id)
+    if trip is None:
+        raise ActionError("That trip isn't here any more.")
+    return trip
 
 
 def _journal_add(context, params) -> str:
-    """Does adding the journal entry once it's approved, and says what happened."""
+    """Does adding the journal entry once it's approved (a trip's log when `trip_id` names one, with its weather in
+    conditions), and says what happened."""
     v = _journal_values(params, False)
-    _need(context, "journal").add_entry(**v)
-    return f"Saved \"{v['title']}\" in your journal."
+    trip = _journal_trip(context, params)
+    _need(context, "journal").add_entry(**v, trip_id=trip.trip_id if trip else None)
+    return f"Saved \"{v['title']}\" in your journal" + (f", on {trip.name}." if trip else ".")
 
 
 def _journal_changes(context, params):
@@ -818,7 +835,8 @@ def _register() -> None:
     sale_delete = _ledger_delete(SALE, "get_revenue", "delete_revenue")
     cost_delete = _ledger_delete(SHOP_EXPENSE, "get_expense", "delete_expense")
     kinds += [
-        ActionType("journal.add", "Add", {f.name: f.label for f in JOURNAL_FIELDS}, _journal_add_describe, _journal_add),
+        ActionType("journal.add", "Add", {**{f.name: f.label for f in JOURNAL_FIELDS}, "trip_id": "a trip (optional)"},
+                   _journal_add_describe, _journal_add),
         ActionType("journal.edit", "Edit", {"entry_id": "the entry", **{f.name: f.label for f in JOURNAL_FIELDS}},
                    _journal_edit_describe, _journal_edit),
         ActionType("journal.delete", "Delete", {"entry_id": "the entry"}, _journal_delete_describe, _journal_delete),

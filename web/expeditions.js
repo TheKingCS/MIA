@@ -133,6 +133,13 @@
         page.waypoints.length ? btn("Add A Stop", "btn-ghost", () => addStop(t)) : null));
   }
 
+  // A trip's log (a journal entry on the trip, journal.add with trip_id), its weather in conditions; by voice,
+  // "log on the paddle: windy, 12 degrees".
+  async function logTrip(t) {
+    const v = await form("Log " + t.name, page.forms.journal.fields.filter((f) => f.name !== "tags"), {});
+    if (v) act({ kind: "journal.add", params: Object.assign({ trip_id: t.id }, v) });
+  }
+
   function trip(t) {
     const [label, cls] = STATUS[t.status] || [t.status, ""];
     const input = el("input", { type: "text", placeholder: "Add to the packing list…", "aria-label": "Add to the packing list for " + t.name });
@@ -158,10 +165,14 @@
           onclick: () => act({ kind: "gear.remove", params: { trip_id: t.id, index: g.index } }) }, "✕"))))
         : el("p", { class: "dim" }, "Nothing on the list yet."),
       el("form", { class: "gear-add", onsubmit: addGear }, input, el("button", { type: "submit", class: "btn btn-ghost btn-small" }, "Add")),
-      t.journal.length ? el("p", { class: "dim" }, "Journal: ", ...t.journal.map((j, i) => [i ? ", " : "", el("a", { href: "journal.html" }, j.title)]).flat()) : null,
+      el("h4", {}, "Trip Log"),
+      t.journal.length ? el("ul", { class: "trip-log" }, t.journal.map((j) => el("li", {},
+        el("a", { href: "journal.html" }, j.title), j.conditions ? el("span", { class: "dim" }, " · " + j.conditions) : null)))
+        : el("p", { class: "dim" }, "Nothing logged yet. Note how it went and the weather."),
       buttons(
         t.status === "planned" ? btn("Start Trip", "btn-green", () => act({ kind: "trip.status", params: { trip_id: t.id, status: "active" } })) : null,
         t.status === "active" ? btn("Finish Trip", "btn-green", () => act({ kind: "trip.status", params: { trip_id: t.id, status: "completed" } })) : null,
+        btn("Log It", "btn-ghost", () => logTrip(t)),
         btn("Edit", "btn-ghost", () => editTrip(t)),
         btn("Delete", "btn-ghost", () => act({ kind: "trip.delete", params: { trip_id: t.id } }))));
   }

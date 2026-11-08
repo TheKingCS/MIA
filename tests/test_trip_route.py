@@ -1,6 +1,6 @@
 """A trip's route and checkpoints on the web and by voice (core/trip_route.py, core/assistant_trip_route_actions.py):
-stops from saved waypoints, "arrived" logged now, the legs walked, an out-and-back route, undo, and the glasses' On The
-Trail panel."""
+stops from saved waypoints, "arrived" logged now, the legs walked, an out-and-back route, undo, the glasses' On The
+Trail panel, and a trip's log with its weather."""
 
 from datetime import datetime
 from types import SimpleNamespace
@@ -99,3 +99,18 @@ def test_the_glasses_show_the_trail_and_arrive_with_one_press(trail):
     trail.trips.record_split(t, trail.island.waypoint_id)
     done = _trail(trail, None)
     assert done["lines"][0]["text"] == "Boat ramp to Heron island" and done["lines"][1]["detail"].endswith("of 2.2")
+
+
+def test_a_trip_log_with_its_weather_is_added_from_the_trip(trail, tmp_path):
+    from core.journal_manager import JournalManager
+
+    trail.journal = JournalManager(trail, data_dir=tmp_path)
+    t = trail.trip.trip_id
+    proposal, done = act(trail, "journal.add", trip_id=t, title="Fog lifted by eight", conditions="Calm, 9 C")
+    assert proposal.summary == "Add the journal entry \"Fog lifted by eight\" to the Morning paddle log"
+    assert done.result == "Saved \"Fog lifted by eight\" in your journal, on Morning paddle."
+    [entry] = trail.journal.entries_for_trip(t)
+    assert entry.conditions == "Calm, 9 C"
+    with pytest.raises(ActionError, match="trip isn't here"):
+        trail.actions.propose(trail, "journal.add", {"trip_id": "gone", "title": "x"})
+    assert act(trail, "journal.add", title="Plain note")[1].result == "Saved \"Plain note\" in your journal."

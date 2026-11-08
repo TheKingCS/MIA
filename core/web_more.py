@@ -178,7 +178,7 @@ def expeditions_page(context, today: Optional[date] = None) -> dict:
     (now, upcoming, past), days away, its media and its trips (gear packed, distance, photos, journal notes, the route
     and checkpoints: core/trip_route.route_card), the
     packing and distance across them and what has to happen first (`_trip_heads_up`); current ones first, then past
-    ones newest first; counts, forms and the saved waypoints a stop is picked from.
+    ones newest first; counts, forms (with the journal's, for a trip's log and its weather) and the saved waypoints a stop is picked from.
     """
     today = today or date.today()
     expeditions, trips = getattr(context, "expeditions", None), getattr(context, "trips", None)
@@ -199,7 +199,9 @@ def expeditions_page(context, today: Optional[date] = None) -> dict:
                 "start": t.start_date, "end": t.end_date, "notes": t.notes,
                 "gear": [{"index": i, "label": g.label, "packed": g.packed} for i, g in enumerate(t.gear)],
                 "packed": sum(1 for g in t.gear if g.packed), "distance_km": round(distance, 1) if distance else None,
-                "photos": len(t.photo_filenames), "journal": [{"id": e.entry_id, "title": e.title} for e in notes],
+                "photos": len(t.photo_filenames),
+                "journal": [{"id": e.entry_id, "title": e.title, "conditions": e.conditions,
+                             "when": (e.created_at or "")[:10]} for e in notes],
                 "route": route_card(context, t),
                 "values": {"name": t.name, "activity_type": t.activity_type, "start_date": t.start_date,
                            "end_date": t.end_date, "notes": t.notes}}
@@ -241,7 +243,7 @@ def expeditions_page(context, today: Optional[date] = None) -> dict:
         "counts": {"upcoming": sum(1 for c in cards if c["when"] == "upcoming"),
                    "now": sum(1 for c in cards if c["when"] == "now"),
                    "trips": sum(len(c["trips"]) for c in cards)},
-        "forms": {k: v for k, v in _forms().items() if k in ("expedition", "trip")},
+        "forms": {k: v for k, v in _forms().items() if k in ("expedition", "trip", "journal")},
         "waypoints": waypoint_choices(context),
     }
 

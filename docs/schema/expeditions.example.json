@@ -40,7 +40,14 @@
           "packed": 2,
           "distance_km": null,
           "photos": 0,
-          "journal": [],
+          "journal": [
+            {
+              "id": "j1",
+              "title": "Fog lifted by eight",
+              "conditions": "Calm, 9 \u00b0C, fog early",
+              "when": "2026-10-25"
+            }
+          ],
           "values": {
             "name": "Morning paddle",
             "activity_type": "Kayaking",
@@ -233,6 +240,44 @@
           "name": "notes",
           "label": "Notes",
           "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    },
+    "journal": {
+      "noun": "entry",
+      "id_param": "entry_id",
+      "fields": [
+        {
+          "name": "title",
+          "label": "Title",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "body",
+          "label": "Entry",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "tags",
+          "label": "Tags (comma separated)",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "conditions",
+          "label": "Weather / conditions",
+          "type": "text",
           "required": false,
           "options": [],
           "default": null
