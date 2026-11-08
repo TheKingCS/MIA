@@ -4,7 +4,8 @@ core.waypoint_actions
 
 Waypoints (core/waypoint_manager.py) through the action contract
 (core/actions.py), for the web's Maps and Navigation pages: `waypoint.add`
-(a name and where: from a tap on the map, or typed) and `waypoint.delete`.
+(a name and where: from a tap on the map, or typed), `waypoint.edit` (its
+name, kind and notes; where it is stays) and `waypoint.delete`.
 The store writes through atomic_write_text, so "undo that" takes either
 back. Maps are a child's too: both are child-safe.
 """
@@ -58,6 +59,45 @@ def _waypoint(context, params):
     return found
 
 
+def _edit_fields(params) -> dict:
+    """The fields `waypoint.edit` changes: its name, its kind (blank for one not in WAYPOINT_CATEGORIES) and notes."""
+    from core.waypoint_manager import WAYPOINT_CATEGORIES
+
+    category = str(params.get("category") or "")
+    return {"name": _name(params), "category": category if category in WAYPOINT_CATEGORIES else "",
+            "notes": " ".join(str(params.get("notes") or "").split())[:500]}
+
+
+def _describe_edit(context, params) -> str:
+    """waypoint.edit's sentence to approve: the old name and what changes."""
+    found = _waypoint(context, params)
+    new = _edit_fields(params)
+    changes = [f"call it {new['name']}"] if new["name"] != found.name else []
+    if new["category"] != found.category:
+        changes.append(f"kind {new['category'] or 'none'}")
+    if new["notes"] != found.notes:
+        changes.append("its notes")
+    return f"Change {found.name}: " + (", ".join(changes) or "nothing")
+
+
+def _edit(context, params) -> str:
+    """waypoint.edit: the waypoint's name, kind and notes as given; where it is stays."""
+    found = _waypoint(context, params)
+    updated = _need(context, "waypoints").update_waypoint(found.waypoint_id, **_edit_fields(params))
+    return f"Changed {updated.name}."
+
+
+def forms() -> dict:
+    """The waypoint form the Navigation page shows for Edit."""
+    from core.waypoint_manager import WAYPOINT_CATEGORIES
+
+    return {"waypoint": {"fields": [
+        {"name": "name", "label": "Name", "type": "text", "required": True, "options": [], "default": None},
+        {"name": "category", "label": "Kind", "type": "choice", "required": False, "options": [""] + list(WAYPOINT_CATEGORIES),
+         "default": ""},
+        {"name": "notes", "label": "Notes", "type": "textarea", "required": False, "options": [], "default": None}]}}
+
+
 def _delete(context, params) -> str:
     """waypoint.delete: take the waypoint out of the household's list."""
     found = _waypoint(context, params)
@@ -68,6 +108,8 @@ def _delete(context, params) -> str:
 WAYPOINT_ACTIONS = {a.kind: a for a in (
     ActionType("waypoint.add", "Add", {"name": "what to call it", "lat": "latitude", "lon": "longitude",
                                        "category": "a kind (optional)"}, _describe_add, _add, child_ok=True),
+    ActionType("waypoint.edit", "Change", {"waypoint_id": "the waypoint", "name": "its name", "category": "a kind",
+                                           "notes": "notes"}, _describe_edit, _edit, child_ok=True),
     ActionType("waypoint.delete", "Take it out", {"waypoint_id": "the waypoint"},
                lambda c, p: f"Take the waypoint {_waypoint(c, p).name} out", _delete, child_ok=True),
 )}

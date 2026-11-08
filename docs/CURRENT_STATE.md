@@ -187,7 +187,6 @@ every push). Anything that needs the PC waits.
 
 ## Recent changes (newest first)
 
-- 2026-11-07 (late) · claude · **Recent Changes page** (web/changes.html, Settings → What MIA Changed): what MIA changed for you lately, newest first, by you or by MIA, with Undo on the newest (the same as "undo that"). Closes one of the design review's missing screens.
 
 - 2026-11-07 (late) · claude · **Fill In Your Life on Start Here.** The apps still empty for the signed-in person (bills, vehicles, calendar, recipes, people, workouts, chickens, rentals, insurance, energy, trips), each with the first thing to say (each reaches that app's add tool, tested) or its page; counted live, nothing shown about what's in them. For Zac's fill-in session. The audit doc's "Where it stands" is current (voice 49/50, phone 50, glasses 46).
 

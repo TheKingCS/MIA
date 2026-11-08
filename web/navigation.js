@@ -45,8 +45,13 @@
         el("h2", { id: "nv-wps", class: "nv-label" }, "Waypoints"),
         ...pts.map((w) => el("div", { class: "nv-wp" },
           el("div", {}, el("div", {}, w.name + (w.category ? " · " + w.category : "")), el("div", { class: "nv-grid" }, w.grid || (w.lat + ", " + w.lon))),
-          el("button", { type: "button", class: "btn btn-ghost btn-small",
-            onclick: () => MIAShell.act({ kind: "waypoint.delete", params: { waypoint_id: w.id } }) }, "Take Out"))),
+          el("div", { class: "row-buttons" },
+            el("button", { type: "button", class: "btn btn-ghost btn-small", onclick: async () => {
+              const v = data.forms && await MIAShell.form("Change " + w.name, data.forms.waypoint.fields, w.values);
+              if (v) MIAShell.act({ kind: "waypoint.edit", params: Object.assign({ waypoint_id: w.id }, v) });
+            } }, "Edit"),
+            el("button", { type: "button", class: "btn btn-ghost btn-small",
+              onclick: () => MIAShell.act({ kind: "waypoint.delete", params: { waypoint_id: w.id } }) }, "Take Out")))),
         el("p", { class: "dim nv-hint" }, pts.length ? "Add one by voice: \"add a waypoint called Spring at …\", or tap the map in Maps."
           : "Tap the map (Maps) to add one, or tell MIA: \"add a waypoint called Spring at 18S UJ 23478 06483\".")),
       sky ? el("div", { class: "nv-sky" },

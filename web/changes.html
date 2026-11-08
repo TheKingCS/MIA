@@ -11,17 +11,21 @@
   <link rel="stylesheet" href="concept.css">
   <link rel="stylesheet" href="ui.css">
 </head>
-<body data-app="settings" data-icon="settings" class="mod-changes">
+<body data-app="changes" class="mod-changes">
   <!--
-    Recent changes: what MIA changed for you lately, newest first, and Undo on the newest (the same as "undo that").
-    MIA.changes() (core/web_changes.py). Formatting only (claude, 2026-11-07).
+    Recent Changes (DEC-0125; the screens review's missing undo history): what MIA can still put back, newest first,
+    with Undo on the newest, and the last fortnight's history by day. MIA.changes() (core/web_changes.py).
+    Formatting only (claude, 2026-11-07).
   -->
   <div class="layout" id="app" hidden>
     <nav class="side" aria-label="Apps"></nav>
     <main class="layout-main">
       <header class="hero">
-        <h1><span aria-hidden="true"></span> Recent Changes</h1>
-        <p class="tagline">What MIA changed for you lately</p>
+        <h1><span aria-hidden="true" id="hero-icon"></span> Recent Changes</h1>
+        <p class="tagline" id="ch-sub"></p>
+      </header>
+      <div class="ptabs" role="tablist" id="tabs" hidden></div>
+      <header hidden>
       </header>
       <div id="panel"></div>
     </main>

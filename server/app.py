@@ -929,22 +929,6 @@ def create_app(context: AppContext) -> FastAPI:
             out.writeframes(samples.tobytes())
         return Response(buffer.getvalue(), media_type="audio/wav", headers={"Cache-Control": "no-store"})
 
-    # Recent changes (core/web_changes.py): what MIA changed for this person lately, and Undo on the newest (the same
-    # as "undo that").
-    @app.get("/api/changes")
-    def changes_screen(profile_id: str = Depends(require_profile_id)) -> dict:
-        from core.web_changes import changes_page
-
-        with app.state.turn_lock:
-            return changes_page(view_for(context, profile_id))
-
-    @app.post("/api/changes/undo")
-    def changes_undo(profile_id: str = Depends(require_profile_id)) -> dict:
-        from core.web_changes import undo_latest
-
-        with app.state.turn_lock:
-            return {"message": undo_latest(view_for(context, profile_id))}
-
     # Start Here (core/web_guide.py): what MIA does and how, what's new, and which of this person's apps are still
     # empty (counted on their own view). Read only.
     @app.get("/api/guide")
@@ -1139,6 +1123,14 @@ def create_app(context: AppContext) -> FastAPI:
 
         with app.state.turn_lock:
             return lab_page(view_for(context, profile_id), series[:200])
+
+    @app.get("/api/changes")
+    def changes_screen(profile_id: str = Depends(require_profile_id)) -> dict:
+        """Recent Changes (core/web_changes.py): what MIA can put back, and the last fortnight's history."""
+        from core.web_changes import changes_page
+
+        with app.state.turn_lock:
+            return changes_page(view_for(context, profile_id))
 
     @app.get("/api/field-kit")
     def field_kit_screen(profile_id: str = Depends(require_profile_id)) -> dict:

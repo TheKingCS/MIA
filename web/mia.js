@@ -319,16 +319,12 @@
       { id: "o2", text: "Train on the days the plan says.", section: "week", how: "checked against your workouts each week", self_rated: false, score: { pct: 75, text: "3 of 4 weeks" } },
       { id: "o3", text: "No phone at dinner.", section: "rules", how: "yours to rate, 1 to 5, each week", self_rated: true, score: { pct: 80, text: "4 / 5 last week" } }] })
       : call("GET", "/api/operating-journal"),
-    // Recent changes (core/web_changes.py): what MIA changed lately, and Undo on the newest ("undo that").
-    changes: () => demo ? Promise.resolve({ available: true, changes: [
-      { what: "Inbox auto file", when: "8:12 AM", by: "MIA", latest: true },
-      { what: "Bill pay", when: "Nov 6, 6:40 PM", by: "You", latest: false },
-      { what: "Log eggs", when: "Nov 6, 7:05 AM", by: "You", latest: false }] }) : call("GET", "/api/changes"),
-    undoLatest: () => demo ? demoOnly() : call("POST", "/api/changes/undo"),
     // Power (core/web_power.py, DEC-0125): the battery and the energy sources tracked by hand.
     power: () => read("/api/power", "power"),
     // The Lab (core/web_lab.py, DEC-0125): the Data Logger's series, and one in full (?series=).
     lab: (series = "") => read("/api/lab?series=" + encodeURIComponent(series), "lab"),
+    // Recent Changes (core/web_changes.py): what can be undone, and the fortnight's history.
+    changes: () => read("/api/changes", "changes"),
     // The Field Kit (core/web_field_kit.py, DEC-0125): devices, network checks (worked out in core), scripts.
     fieldKit: () => read("/api/field-kit", "field_kit"),
     fieldKitCheck: (tool, value) => demo
