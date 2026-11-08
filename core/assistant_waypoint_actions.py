@@ -42,7 +42,7 @@ def register_waypoint_actions(registry) -> None:
 
     s = {"type": "string"}
     registry.register(AssistantAction(
-        name="change_waypoint", domain="navigation",
+        name="change_waypoint", domain="waypoints",
         description="Rename a waypoint, change its kind, or set its notes. Where it is stays the same.",
         parameters={"type": "object", "properties": {
             "name": {**s, "description": "The waypoint's name as they said it."},
