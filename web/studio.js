@@ -5,12 +5,15 @@
  * (web/nexus3d.js). Save proposes `theme.save` (core/theme_actions.py): core builds the tokens from the same choices
  * (core/themes.build_theme, the arithmetic mirrored in tokensFrom below for the live preview) and makes the checks
  * that count: an accent that reads as a warning colour, or text too faint to read. The checks here only say so early.
+ * Describe One asks MIA to design a theme (MIA.designTheme, core/theme_design.py) and loads it here to tweak; Export
+ * downloads what's on screen as a mia-theme/1 file; Import proposes `theme.import`, which core reads and checks.
  */
 (function () {
   "use strict";
   const { el } = MIAShell;
   const $ = (id) => document.getElementById(id);
   let data = null, base = null, picks = null, own = null, room = null, roomTimer = 0, savedName = "";
+  let described = "", designNote = "", designedName = "";  // MIA's last design, kept while you tweak it
 
   // ------------------------------------------------------------ colour arithmetic (mirrors core/themes.py)
   const rgbOf = (h) => { const n = parseInt(h.slice(1, 7), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
@@ -113,7 +116,42 @@
     base = theme;
     picks = Object.assign({}, theme.choices, { palette: (theme.choices.palette || []).slice() });
     own = theme.own ? theme.id : null;
+    designNote = ""; designedName = "";
     paint();
+  }
+
+  // MIA designs one (core/theme_design.design): it loads here to look at and tweak; nothing is kept until you save.
+  async function designIt() {
+    described = $("st-describe").value.trim();
+    if (!described) return;
+    try {
+      const made = await MIA.designTheme(described);
+      base = data.themes.find((t) => t.id === made.base) || data.themes[0];
+      picks = Object.assign({}, made.choices, { palette: (made.choices.palette || []).slice() });
+      own = null;
+      designNote = made.summary; designedName = made.name;
+      paint();
+    } catch (e) { MIAShell.say(e.message); }
+  }
+
+  // A theme as a file (core/theme_actions.export's shape): what's on screen now, so a tweak can be shared unsaved.
+  function exportIt() {
+    const name = $("st-name").value.trim() || base.name;
+    const file = { format: data.file_format, name, line: base.line || "", choices: picks, tokens: tokensFrom(picks, base),
+      material: picks.material, room: roomFrom(picks, base) };
+    const url = URL.createObjectURL(new Blob([JSON.stringify(file, null, 2)], { type: "application/json" }));
+    const a = el("a", { href: url, download: name.replace(/[^\w -]+/g, "").trim().replace(/\s+/g, "-").toLowerCase() + ".mia-theme.json" });
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }
+  function importIt(input) {
+    const f = input.files && input.files[0];
+    if (!f) return;
+    if (f.size > 20000) { MIAShell.say("That file is too big to be a theme."); return; }
+    f.text().then((text) => {
+      try { savedName = (JSON.parse(text).name || "").trim(); } catch (e) { savedName = ""; }
+      return MIAShell.act({ kind: "theme.import", params: { file: text } });  // core reads and checks it
+    }).finally(() => { input.value = ""; });
   }
 
   async function save(use) {
@@ -129,8 +167,17 @@
       "aria-pressed": String(t.id === base.id), onclick: () => start(t) },
       el("i", { class: "st-swatch", style: "background:" + t.choices.accent + ";box-shadow:0 0 10px " + t.choices.accent }),
       t.name, t.own ? el("small", {}, "yours") : null, t.id === data.current ? el("small", {}, "in use") : null));
-    const name = own ? base.name : "My " + base.name;
+    const name = designedName || (own ? base.name : "My " + base.name);
+    const describe = el("section", { class: "glass st-describe", "aria-label": "Describe a theme" },
+      el("h2", { class: "pw-label" }, "Describe One"),
+      el("div", { class: "st-describe-row" },
+        el("input", { id: "st-describe", type: "text", maxlength: "300", value: described,
+          placeholder: "A rainy Tokyo night. Calm ocean glass. Loud 2000s rave.", "aria-label": "Describe a theme",
+          onkeydown: (e) => { if (e.key === "Enter") designIt(); } }),
+        el("button", { type: "button", class: "btn", onclick: designIt }, "Design It")),
+      designNote ? el("p", { class: "st-designed", role: "status" }, designNote) : null);
     $("panel").replaceChildren(
+      describe,
       el("section", { class: "st-start", "aria-label": "Start from" }, el("h2", { class: "pw-label" }, "Start From"), el("div", { class: "chip-row" }, ...chips)),
       el("div", { class: "st-grid" },
         el("section", { class: "glass st-controls", "aria-label": "Tweak" },
@@ -151,7 +198,12 @@
             el("button", { id: "st-use", type: "button", class: "btn", onclick: () => save(true) }, "Save and Use"),
             el("button", { id: "st-save", type: "button", class: "btn btn-ghost", onclick: () => save(false) }, own ? "Save" : "Save as Mine"),
             el("button", { type: "button", class: "btn btn-ghost", onclick: () => start(base) }, "Start Over"),
-            own ? el("button", { type: "button", class: "btn btn-ghost st-delete", onclick: () => MIAShell.act({ kind: "theme.delete", params: { id: own } }) }, "Delete") : null)),
+            own ? el("button", { type: "button", class: "btn btn-ghost st-delete", onclick: () => MIAShell.act({ kind: "theme.delete", params: { id: own } }) }, "Delete") : null),
+          el("h2", { class: "pw-label" }, "Share It"),
+          el("div", { class: "st-actions" },
+            el("button", { type: "button", class: "btn btn-ghost", onclick: exportIt }, "Export"),
+            el("label", { class: "btn btn-ghost st-import" }, "Import",
+              el("input", { type: "file", accept: ".json,application/json", onchange: (e) => importIt(e.target) })))),
         el("section", { class: "st-preview", "aria-label": "Preview" },
           el("h2", { class: "pw-label" }, "Preview"),
           el("canvas", { id: "st-room", class: "st-room", "aria-hidden": "true" }),

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1248 files, 271,068 lines; 1248 files describe themselves; 14,728 of 15,426 classes and functions are documented.
+1249 files, 271,455 lines; 1249 files describe themselves; 14,740 of 15,438 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-460 files, 127,199 lines; 6,817 of 6,903 classes and functions documented
+461 files, 127,453 lines; 6,825 of 6,911 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -386,6 +386,7 @@
 - `core/textbook_study.py`: The study and quiz conversation modes of the textbook tutor (2026-09-28): which book and chapter a conversation is on, and the passages MIA answers from each turn. The library itself is core/textbook_manager.py; the tone lines are in core/conversation_modes.py (STUDY, QUIZ).
 - `core/the_loop.py`: The Loop (DEC-0047, step 1; Zac 2026-10-27): the normal week, run as the same grind every week, and MIA learning *when* it happens so she knows when to start each part and remind you.
 - `core/theme_actions.py`: What the Theme Studio changes (DEC-0136, web/studio.html), through the action system so each change is approved and undoable:
+- `core/theme_design.py`: MIA designs a theme from a description (DEC-0136, Theme Studio step 4; Zac 2026-11-08: "allow MIA to help design new themes from descriptions"): "a rainy Tokyo night", "calm ocean glass", "loud 2000s rave". The words are read in code, not by the model (MIA's facts are assembled in code), so the same
 - `core/themes.py`: MIA's themes (DEC-0136, Zac 2026-11-08: "One MIA. Multiple interface experiences. Unlimited visual possibilities."). A theme is data, not code: the design tokens it changes (colours, panels, type, shape, motion, an extra backdrop layer), the material its panels are made of, and the 3D room's light. 
 - `core/tile_fetch_worker.py`: Fetches individual missing basemap tiles off the GUI thread for gui/widgets/tile_map_view.py's live pan/zoom — same "network I/O never blocks a paint/input handler" reasoning as modules/field_kit/port_scan_worker.py's PortScanWorker, but shaped as a long-lived queue-processing thread rather than a o
 - `core/today.py`: "Today" (2026-10-01): one list of what needs you today, from every app, so nobody has to open eight screens to find out. Shown at the top of Home (gui/home_dashboard.py), on the phone (`/api/today`), and by the Assistant ("what's on today?").
@@ -471,7 +472,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 3,655 lines; 40 of 40 classes and functions documented
+2 files, 3,672 lines; 41 of 41 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -746,7 +747,7 @@
 
 ## tests/: the test suite: what each part must do
 
-424 files, 71,686 lines; 5,630 of 6,242 classes and functions documented
+424 files, 71,749 lines; 5,633 of 6,245 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1175,7 +1176,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-94 files, 17,325 lines
+94 files, 17,378 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game

@@ -359,14 +359,18 @@ def for_shell(context) -> dict:
 
 
 def studio(context) -> dict:
-    """The Theme Studio's screen: every theme with its Studio choices (built-in first, then theirs), the one in use,
-    the fonts, materials and the room's level ranges."""
+    """The Theme Studio's screen: every theme with its Studio choices and its export file (built-in first, then
+    theirs), the one in use, the fonts, materials, the room's level ranges, the file format, a few sample portals and
+    the checks' values."""
     themes = all_themes(context)
+    from core.theme_actions import export
+
     return {"current": theme_of(context),
-            "themes": [{**data, "own": theme_id not in THEMES, "choices": choices_of(data)} for theme_id, data in themes.items()],
+            "themes": [{**data, "own": theme_id not in THEMES, "choices": choices_of(data), "file": export(data)}
+                       for theme_id, data in themes.items()],
             "fonts": [{"id": k, "label": label, "stack": stack} for k, (label, stack) in FONTS.items()],
             "materials": list(MATERIALS), "levels": {k: list(v) for k, v in ROOM_LEVELS.items()},
-            "max_own": MAX_CUSTOM, "sample": _sample_portals(),
+            "max_own": MAX_CUSTOM, "sample": _sample_portals(), "file_format": "mia-theme/1",
             # the same checks build_theme makes, so the page can say so as you pick (core still decides on save)
             "meaning_hues": [{"meaning": m, "hue": h} for m, h in MEANING_HUES], "min_contrast": 4.5}
 

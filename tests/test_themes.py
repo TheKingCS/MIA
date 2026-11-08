@@ -2,7 +2,7 @@
 Themes (DEC-0136, core/themes.py): a theme is data checked against what a theme may change, so no theme can restyle
 a warning or inject anything; each person picks theirs in Settings or by voice, and every page gets it with the shell.
 The Theme Studio builds a theme from a few choices, refuses warning-coloured accents and unreadable text, and saves,
-uses and deletes a person's own themes.
+uses and deletes a person's own themes; themes go out and come back as files, and MIA designs one from a description.
 """
 
 import time
@@ -189,3 +189,66 @@ def test_the_studio_screen_lists_every_theme_with_what_it_needs(ctx):
     assert all(t["choices"]["accent"].startswith("#") and not t["own"] for t in page["themes"])
     assert {f["id"] for f in page["fonts"]} >= {"system", "y2k", "technical"} and page["materials"] == list(MATERIALS)
     assert len(page["sample"]) == 5 and page["min_contrast"] == 4.5
+
+
+def test_a_theme_goes_out_as_a_file_and_comes_back_in_through_the_same_checks(ctx):
+    """Export (core/theme_actions.export) and theme.import: a file the Studio exported comes back as one of yours,
+    rebuilt from its choices; a file that isn't a MIA theme, or whose accent would read as a warning, is refused."""
+    import json
+    from pathlib import Path
+
+    from core.actions import ActionError
+    from core.theme_actions import FORMAT, _describe_import, _import, export
+    from core.themes import custom_themes
+
+    out = export(as_data(THEMES["glass"]))
+    assert out["format"] == FORMAT and out["choices"]["accent"] == "#96d6ff" and out["tokens"]["--radius"] == "18px"
+    studio_file = (Path(__file__).parent / "fixtures" / "rainy-tokyo-night.mia-theme.json").read_text(encoding="utf-8")
+    assert _describe_import(ctx, {"file": studio_file, "use": True}) == "Import the theme Rainy Tokyo Night and use it"
+    assert "in use" in _import(ctx, {"file": studio_file, "use": True})
+    mine = custom_themes(ctx)
+    assert [t["name"] for t in mine] == ["Rainy Tokyo Night"] and theme_of(ctx) == mine[0]["id"]
+    assert mine[0]["material"] == "wire" and mine[0]["room"]["mist"] == 2.2
+    assert _describe_import(ctx, {"file": studio_file}) == "Import the theme Rainy Tokyo Night 2"  # names stay unique
+    for bad in ("not json", json.dumps({"name": "x"}), json.dumps({**json.loads(studio_file), "choices": {"accent": "#ff9a00"}}),
+                "x" * 30_000):
+        with pytest.raises(ActionError):
+            _describe_import(ctx, {"file": bad})
+    sneaky = {**json.loads(studio_file), "name": "Sneaky", "choices": None,
+              "tokens": {"--attention": "#00ff00", "--accent": "#3f7bff", "--bg": "#000; } body {"}}
+    _import(ctx, {"file": json.dumps(sneaky)})
+    kept = next(t for t in custom_themes(ctx) if t["name"] == "Sneaky")
+    assert "--attention" not in kept["tokens"] and kept["tokens"]["--accent"] == "#3f7bff" and "}" not in kept["tokens"]["--bg"]
+
+
+def test_mia_designs_a_theme_from_a_description_in_code():
+    """core/theme_design.design: places and moods pick the base and the room, colour words the accent; warm accents and
+    light themes are explained, not made; every design passes build_theme's checks."""
+    from core.theme_design import design, summary
+    from core.themes import build_theme
+
+    tokyo = design("a rainy Tokyo night")
+    assert tokyo["name"] == "Rainy Tokyo Night" and tokyo["base"] == "cyberpunk" and tokyo["choices"]["mist"] == 2.2
+    assert "rainy: rain, heavy mist" in tokyo["understood"] and "Cyberpunk" in summary(tokyo)
+    ocean = design("calm ocean glass")
+    assert ocean["base"] == "glass" and ocean["choices"]["accent"] == "#2aa8ff" and ocean["choices"]["fire"] == 0.4
+    assert design("purple space")["choices"]["accent"] == "#9b6bff"
+    sunset = design("an orange sunset")
+    assert sunset["choices"]["accent"] == "#ff8ad8" and "warning colour" in sunset["missed"][0]
+    assert "dark for now" in design("light mode pastel")["missed"][0]
+    assert design("zxqv")["base"] == "stark" and design("zxqv")["missed"]
+    for words in ("a rainy Tokyo night", "calm ocean glass", "loud 2000s rave", "cozy forest cabin, rounded",
+                  "hacker terminal", "winter snow", "retro arcade", "an orange sunset", "purple space", "zxqv"):
+        made = design(words)
+        build_theme(made["choices"], as_data(THEMES[made["base"]]), "my_x", made["name"])  # raises if it wouldn't pass
+
+
+def test_mia_designs_and_puts_on_a_theme_by_voice(ctx):
+    from core.assistant_accessibility_actions import _action_design_theme
+    from core.themes import custom_themes
+
+    said = _action_design_theme(ctx, {"description": "calm ocean glass"})
+    assert said.startswith("I made Calm Ocean Glass") and "undo" in said
+    assert theme_of(ctx) == custom_themes(ctx)[0]["id"] and for_shell(ctx)["tokens"]["--accent"] == "#2aa8ff"
+    assert "Calm Ocean Glass 2" in _action_design_theme(ctx, {"description": "calm ocean glass"})
+    assert "Describe it" in _action_design_theme(ctx, {"description": ""})
