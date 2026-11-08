@@ -1539,3 +1539,12 @@ body.mod-maps .hero { display: none; }
   .dx-hw-row .dim { grid-column: 2; }
   .dx-hw-value { overflow-wrap: break-word; }
 }
+/* Diagnostics: the log's newest problems (core/diagnostics.recent_problems) */
+.dx-log { margin-top: var(--gap); }
+.dx-log > summary { cursor: pointer; list-style: none; padding: 4px 0; }
+.dx-log > summary::-webkit-details-marker { display: none; }
+.dx-log-row { display: grid; grid-template-columns: 12px minmax(0, 1fr); gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); font-size: var(--text-sm); }
+.dx-log-row .dx-dot { margin-top: 6px; }
+.dx-log-text { overflow-wrap: anywhere; }
+.dx-log-row .dim { font-size: 12px; font-family: var(--font-mono); }
+.dx-dot.bad { background: var(--bad); }

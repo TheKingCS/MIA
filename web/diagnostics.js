@@ -36,6 +36,11 @@
         el("h2", { id: "dx-hw", class: "dx-label" }, "This PC"),
         ...data.hardware.map((h) => el("div", { class: "dx-hw-row" }, el("span", { class: "dx-hw-name" }, h.name),
           el("span", { class: "dx-hw-value" }, h.value), el("span", { class: "dim" }, h.note)))) : null,
+      el("details", { class: "glass dx-list dx-log" }, el("summary", { class: "dx-label" }, "Recent Problems In MIA's Log · " + (data.problems || []).length),
+        ...((data.problems || []).length ? data.problems.map((p) => el("div", { class: "dx-log-row " + p.level },
+          el("span", { class: "dx-dot " + (p.level === "error" ? "bad" : "look"), "aria-hidden": "true" }),
+          el("div", {}, el("div", { class: "dx-log-text" }, p.text), el("div", { class: "dim" }, p.when + " · " + p.where))))
+          : [el("p", { class: "dim" }, "No warnings or errors lately.")])),
       el("p", { class: "dim dx-foot" }, "Looks only. Nothing is probed or changed. Anything it couldn't read is never counted as a pass. "
         + "You can also ask her: \"check my PC\", \"check the network\"."),
       el("button", { type: "button", class: "btn btn-ghost", onclick: async () => paint(await MIA.diagnostics()) }, "Run Again"),

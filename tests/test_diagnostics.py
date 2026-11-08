@@ -1,5 +1,5 @@
 """Diagnostic procedures (ACAF step 4, T-0040, core/diagnostics.py): check-ups written as specs over what inspection's
-PASSIVE methods read; checked before they run, so they can only read and compare; what couldn't be read said as such; and the hardware list, only what was read."""
+PASSIVE methods read; checked before they run, so they can only read and compare; what couldn't be read said as such; the hardware list, only what was read; the log's newest problems."""
 
 from types import SimpleNamespace
 
@@ -78,3 +78,15 @@ def test_the_hardware_list_says_only_what_was_read():
     assert by["Drive C"]["note"] == "412 GB free · 56.8% full" and "Drive /snap" not in by  # a tiny mount isn't a drive
     assert by["Memory"]["value"] == "31.9 GB" and by["Network Wi-Fi"]["value"] == "192.168.1.20" and "Started" not in by
     assert d.hardware({}) == []
+
+
+def test_the_logs_newest_problems_come_first_and_info_is_left_out(tmp_path):
+    log = tmp_path / "mia.log"
+    log.write_text("2026-11-07 18:00:00 [INFO    ] mia.core.app: started\n"
+                   "2026-11-07 18:01:00 [WARNING ] mia.core.kitchen_manager: a recipe had no steps\n"
+                   "Traceback (most recent call last):\n"
+                   "2026-11-07 18:02:00 [ERROR   ] mia.server.app: the phone couldn't sync\n", encoding="utf-8")
+    problems = d.recent_problems(log)
+    assert [(p["level"], p["where"]) for p in problems] == [("error", "server.app"), ("warning", "core.kitchen_manager")]
+    assert problems[0] == {"when": "2026-11-07 18:02:00", "level": "error", "where": "server.app", "text": "the phone couldn't sync"}
+    assert d.recent_problems(tmp_path / "none.log") == []

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1136 files, 253,946 lines; 1136 files describe themselves; 13,872 of 14,545 classes and functions are documented.
+1136 files, 253,994 lines; 1136 files describe themselves; 13,874 of 14,547 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-416 files, 118,499 lines; 6,272 of 6,361 classes and functions documented
+416 files, 118,529 lines; 6,273 of 6,362 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -696,7 +696,7 @@
 
 ## tests/: the test suite: what each part must do
 
-376 files, 67,621 lines; 5,355 of 5,939 classes and functions documented
+376 files, 67,633 lines; 5,356 of 5,940 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -792,7 +792,7 @@
 - `tests/test_device_help_manager.py`: Unit tests for core.device_help_manager: the pure chunking/scoring logic (no filesystem), retrieval ranking (with pre-set chunks, bypassing the filesystem), and one test of the actual doc-loading path against a tmp_path fixture directory (monkeypatching `_DOCS_DIR`, same approach as test_voice_manag
 - `tests/test_device_loops.py`: Step 3's leftovers: turns traced by device, so glasses.voice can watch the glasses' turns; and a durable record of when a linked phone last reached the PC (core/phone_link.py), for phone.link. *(1 undocumented)*
 - `tests/test_device_profile.py`: Unit tests for core.device_profile. Isolates ConfigManager's _CONFIG_FILE (same pattern as test_assistant_action_handlers.py's own fixture) — without this, `ConfigManager()` here loads the real config/config.json, and `test_defaults_to_core_when_unset` silently starts asserting against whatever this *(1 undocumented)*
-- `tests/test_diagnostics.py`: Diagnostic procedures (ACAF step 4, T-0040, core/diagnostics.py): check-ups written as specs over what inspection's PASSIVE methods read; checked before they run, so they can only read and compare; what couldn't be read said as such. *(1 undocumented)*
+- `tests/test_diagnostics.py`: Diagnostic procedures (ACAF step 4, T-0040, core/diagnostics.py): check-ups written as specs over what inspection's PASSIVE methods read; checked before they run, so they can only read and compare; what couldn't be read said as such; the hardware list, only what was read; the log's newest problems. *(1 undocumented)*
 - `tests/test_diagnostics_log_viewer.py`: Unit tests for the pure tail/filter helpers backing the Diagnostics module's log viewer (modules.diagnostics.module.tail_lines filter_lines). The QWidget-building side of get_widget() needs a live Qt event loop and is exercised manually instead — see docs/testing/2.6_system_logs_viewer.md. *(1 undocumented)*
 - `tests/test_discovery_manager.py`: Unit tests for core.discovery_manager. Isolates _DATA_DIR/file constants for discovery_manager, skill_manager, mission_manager, project_manager, and intent_manager into a shared tmp_path scratch area, same monkeypatch pattern as tests/test_pathway_manager.py. *(4 undocumented)*
 - `tests/test_discovery_tool.py`: Unit tests for modules.toolbox.tools.discovery_tool's pure format_proposal_card_text(), same style as tests/test_pathway_tool.py (no Qt event loop, no fixtures). *(1 undocumented)*
@@ -1077,7 +1077,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-80 files, 14,433 lines
+80 files, 14,439 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game

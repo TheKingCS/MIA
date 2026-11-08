@@ -306,7 +306,8 @@
       { id: "big_download", title: "Room for a big download", ok: true, passed: 2, failed: [], unknown: ["disk.D.free_gb"] }],
       hardware: [{ name: "Computer", value: "shop-pc", note: "x86_64" }, { name: "Processor", value: "AMD Ryzen 7 7700", note: "8 cores · 16 threads" },
         { name: "Memory", value: "32 GB", note: "38% in use" }, { name: "Drive C", value: "953.9 GB", note: "412 GB free · 56.8% full" },
-        { name: "Network Wi-Fi", value: "192.168.1.20", note: "" }, { name: "Python", value: "3.12.4", note: "" }] })
+        { name: "Network Wi-Fi", value: "192.168.1.20", note: "" }, { name: "Python", value: "3.12.4", note: "" }],
+      problems: [{ when: "2026-11-07 18:02:00", level: "warning", where: "core.music_manager", text: "A song in the library couldn't be read; it was skipped." }] })
       : call("GET", "/api/diagnostics"),
     lifeNotes: () => demo ? Promise.resolve({ kinds: [
       { kind: "commitment", title: "Promises", notes: [

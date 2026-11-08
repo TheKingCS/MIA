@@ -19,12 +19,15 @@ pass).
 
 `PROCEDURES` are the built-in ones; MIA can make more as specs (ACAF), held
 to the same check. `hardware()` turns the same inspection's facts into the
-screen's hardware list (This PC), saying only what was read.
+screen's hardware list (This PC), saying only what was read; and
+`recent_problems()` reads the newest warnings and errors from MIA's own log.
 """
 
 from __future__ import annotations
 
 import fnmatch
+import re
+from pathlib import Path
 from typing import Optional
 
 OPS = {"<": lambda a, b: a < b, "<=": lambda a, b: a <= b, ">": lambda a, b: a > b, ">=": lambda a, b: a >= b,
@@ -167,9 +170,35 @@ def hardware(facts: dict) -> list[dict]:
     return rows
 
 
+_LOG_LINE = re.compile(r"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) \[(WARNING|ERROR|CRITICAL)\s*\] ([\w.]+): (.*)$")
+
+
+def recent_problems(log_file: Optional[Path] = None, limit: int = 30, read_bytes: int = 400_000) -> list[dict]:
+    """The newest warnings and errors in MIA's log (logs/mia.log, core/logger.py), newest first: when, how bad
+    (warning or error), which part of MIA said it (without the "mia." prefix) and what, cut at 300 characters. Only
+    the end of the file is read; [] when there's no log."""
+    if log_file is None:
+        from core.logger import _LOG_FILE as log_file
+    try:
+        with open(log_file, "rb") as f:
+            f.seek(0, 2)
+            size = f.tell()
+            f.seek(max(0, size - read_bytes))
+            text = f.read().decode("utf-8", errors="replace")
+    except OSError:
+        return []
+    found = []
+    for line in text.splitlines():
+        m = _LOG_LINE.match(line)
+        if m:
+            found.append({"when": m.group(1), "level": "warning" if m.group(2) == "WARNING" else "error",
+                          "where": m.group(3).removeprefix("mia."), "text": m.group(4)[:300]})
+    return list(reversed(found))[:limit]
+
+
 def screen(context, inspect=None) -> dict:
     """The Diagnostics web screen (web/diagnostics.html, the PC's owner's): every built-in check-up over one
-    passive inspection, and the hardware list it read (hardware)."""
+    passive inspection, the hardware list it read (hardware), and the log's newest problems (recent_problems)."""
     if inspect is None:
         from core.inspection import inspect
     try:
@@ -189,7 +218,7 @@ def screen(context, inspect=None) -> dict:
     facts = {}
     for e in report.evidence:
         facts.setdefault(e.fact, e.value)
-    return {"checks": checks, "error": "", "hardware": hardware(facts)}
+    return {"checks": checks, "error": "", "hardware": hardware(facts), "problems": recent_problems()}
 
 
 _ASK = (("network", ("network", "internet connection", "wifi", "wi-fi", "connection")),
