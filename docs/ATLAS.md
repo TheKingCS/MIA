@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1140 files, 254,716 lines; 1140 files describe themselves; 13,925 of 14,598 classes and functions are documented.
+1143 files, 254,959 lines; 1143 files describe themselves; 13,940 of 14,613 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-418 files, 119,020 lines; 6,304 of 6,393 classes and functions documented
+419 files, 119,151 lines; 6,310 of 6,399 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -43,6 +43,7 @@
 - `core/assistant_life_event_actions.py`: "What did I get done this week?", "what changed this month?", "what bills did I pay?" (core/life_events.py, 2026-10-05). Facts from the log, counted in code; the model only phrases them.
 - `core/assistant_link_actions.py`: "The land loan funds the rental", "the greenhouse depends on selling the lot", "what depends on selling the lot?", "what's connected to the truck?" (core/links.py, 2026-10-05). Names are matched to real records in code; a link is only saved between things that exist. Undoable.
 - `core/assistant_lookup.py`: How Assistant actions find the user's own records from the words they actually say. People say "the truck" and "did the oil", not "Pickup Truck" and "Oil change", and the model can only pass on their words.
+- `core/assistant_more_twins_actions.py`: More voice twins for what the screens change (DEC-0125, 2026-11-08), each through the screen's own action kind (core/assistant_correction_actions.py `_run`: the screen's checks and sentence, and "undo that"):
 - `core/assistant_notification_actions.py`: Notifications by voice (DEC-0125), for what the Notifications page shows: "what are my notifications?" (the unread ones, newest first) and "mark my notifications read" (the same `notification.read_all` action as the page's button). Why one was sent, and muting a kind, were already voice tools (core/
 - `core/assistant_ownership_actions.py`: "Whose truck is it?" and "the mower is mine" (core/ownership.py, 2026-10-01): owner marks on maintenance items (vehicles, tools, appliances).
 - `core/assistant_path_actions.py`: Learning paths by voice (DEC-0112; core/paths.py): any desire, the same loop. "I want to learn guitar" starts the guitar program; "I want to learn to weld", with no program for it, has MIA draft one (grounded in her specialists' notes) and describe it, and "start it" starts it. Then lessons, practic
@@ -698,7 +699,7 @@
 
 ## tests/: the test suite: what each part must do
 
-378 files, 67,860 lines; 5,376 of 5,960 classes and functions documented
+380 files, 67,972 lines; 5,385 of 5,969 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -916,6 +917,7 @@
 - `tests/test_navigation_web.py`: Navigation's web screen (core/navigation_web.py): waypoints with grid references, distance and bearing, the sun and the moon; and a waypoint changed with waypoint.edit, on the page and by voice.
 - `tests/test_net_worth_history.py`: Tests for core/net_worth_history.py: one net worth point a day, the change this month, and the Overview's line.
 - `tests/test_night_school.py`: Night School (DEC-0100, core/night_school.py): she chooses what to study, her teacher sets exercises with a test that fails first, code grades her, the teacher's lesson comes back the next time, practice never merges, and her picks are scored against her teacher's before she's trusted to choose.
+- `tests/test_no_control_characters.py`: No stray control characters in MIA's code or docs. A shell heredoc turns a regex's \b into a backspace byte, and the pattern then silently matches nothing (it happened in 2026-11 twice: the turn traces' patterns, and the check that keeps passwords out of what MIA remembers by voice).
 - `tests/test_notes_module.py`: Unit test for modules.notes.module.format_entry_row — pure formatting logic, no Qt event loop needed (importing the module only defines widget classes; nothing here instantiates one).
 - `tests/test_notification_manager.py`: Unit tests for core.notification_manager — previously untested (a real, pre-existing gap, not something this file tries to backfill in full). Added now specifically to cover notify()'s new "notifications.enabled" gate (2026-07-15 "ForMIA" design handoff's Quick Bus widget) — the first real, non-cosm *(3 undocumented)*
 - `tests/test_obligations.py`: Tax and compliance obligations (DEC-0040): deadlines moved off weekends and holidays, an extension to file never moving the money's date, reminders once each, unverified never shown as confirmed, repeats, and the one next step each Compliance row offers (DEC-0113). *(2 undocumented)*
@@ -1033,6 +1035,7 @@
 - `tests/test_voice_corrections.py`: Fixing and planning by voice (DEC-0125, core/assistant_correction_actions.py): each tool finds the record from the words said and runs the screen's own action kind (undoable); unclear names are asked about and change nothing.
 - `tests/test_voice_effects.py`: Unit tests for core.voice_effects' pure-numpy DSP functions. These test shape/dtype/range invariants (no clipping, no silent volume change, correct dtype) — not perceived audio quality, which no automated test can judge; see that module's docstring. *(1 undocumented)*
 - `tests/test_voice_manager.py`: Unit tests for core.voice_manager's VoiceManager delegation and graceful-degradation logic. Uses fake STT/TTS backends (same shape as test_llm_manager.py's mocked urlopen) rather than loading the real Vosk/Piper models, so this suite stays fast and independent of voice_models/ being present. The rea
+- `tests/test_voice_more_twins.py`: More voice twins (DEC-0125, core/assistant_more_twins_actions.py): remember that, an order paid (the rest owed when no amount is said), the last weigh-in deleted, a mission renamed, an operating journal line removed, each through its screen's own action.
 - `tests/test_voice_parity_tools.py`: The tools that made Character, Skills, the Reward Shop, Insurance, Kept, the Operating Journal, Play, Files and the Memory Vault usable by voice (DEC-0125): each answers from its screen's own data, and buying a reward goes through the shop's own action.
 - `tests/test_voice_playlists.py`: Playlists by voice (DEC-0125, core/assistant_playlist_actions.py): listed, made, a song added ("this song" is the one playing), taken off, renamed and deleted, each through the Music screen's own action.
 - `tests/test_volume_manager.py`: Unit tests for core.volume_manager. parse_amixer_output() is tested directly against captured-shape amixer text (pure, deterministic — no real amixer binary involved, same reasoning as test_power_manager.py mocking psutil). AmixerVolumeBackend/VolumeManager are tested against monkeypatched subproces *(3 undocumented)*

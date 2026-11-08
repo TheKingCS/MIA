@@ -679,6 +679,13 @@ GOLDEN_CASES = [
     ("playlists: take a song off", "Take Slow River off my Garage playlist", "remove_from_playlist"),
     ("playlists: rename", "Rename the playlist Shop Music to Garage Music", "rename_playlist"),
     ("playlists: delete", "Delete the playlist called Old Stuff", "delete_playlist"),
+    # More voice twins (DEC-0125, 2026-11-08): 6/6 on this PC's model.
+    ("memory: remember that", "Remember that my truck takes 5W-30 oil", "remember_this"),
+    ("memory: please remember", "Please remember the well pump is on the north breaker", "remember_this"),
+    ("orders: paid", "Customer A paid for the PCB order", "order_paid"),
+    ("weigh-in: delete the last", "Delete my last weigh-in, it was wrong", "delete_last_weigh_in"),
+    ("missions: rename", "Rename the mission Read the Tractor Manual to Learn Hydraulics", "rename_mission"),
+    ("operating journal: remove a line", "Take early mornings out of my operating journal", "remove_operating_line"),
 ]
 
 
