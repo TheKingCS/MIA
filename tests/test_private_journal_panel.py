@@ -27,6 +27,7 @@ def qapp():
 
 @pytest.fixture
 def ctx(tmp_path, monkeypatch, qapp):
+    """A context with conversations, memories and a private journal on temporary files (a smaller key, for speed)."""
     monkeypatch.setattr(config_module, "_CONFIG_FILE", tmp_path / "config.json")
     monkeypatch.setattr(conversation_module, "_DATA_DIR", tmp_path)
     monkeypatch.setattr(conversation_module, "_CONVERSATIONS_FILE", tmp_path / "conversations.json")
@@ -44,6 +45,7 @@ def ctx(tmp_path, monkeypatch, qapp):
 
 
 def _entry():
+    """A private journal entry with two exchanges."""
     return PrivateJournalEntry(
         entry_id="e1", title="Long shift <3", mood="drained", themes=["work"], summary="You talked about work.",
         exchanges=[JournalExchange("user", "It dragged."), JournalExchange("assistant", "That sounds long.")],
@@ -59,6 +61,7 @@ def test_formatting_escapes_and_labels():
 
 
 def test_panel_states(ctx):
+    """The panel shows set up, unlock and lock as the journal changes, and reads an entry once unlocked."""
     panel = PrivateJournalPanel(ctx)
     assert panel._setup_button.isVisibleTo(panel) and not panel._unlock_button.isVisibleTo(panel)
 

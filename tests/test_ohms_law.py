@@ -13,14 +13,17 @@ from core.toolbox_calcs import solve  # the math moved to core (the Qt calculato
 
 
 def test_solve_voltage():
+    """Voltage from current and resistance."""
     assert solve("voltage", None, current=2.0, resistance=5.0) == pytest.approx(10.0)
 
 
 def test_solve_current():
+    """Current from voltage and resistance."""
     assert solve("current", voltage=10.0, current=None, resistance=5.0) == pytest.approx(2.0)
 
 
 def test_solve_resistance():
+    """Resistance from voltage and current."""
     assert solve("resistance", voltage=10.0, current=2.0, resistance=None) == pytest.approx(5.0)
 
 

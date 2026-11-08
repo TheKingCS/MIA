@@ -25,6 +25,7 @@ from core.profile_manager import ProfileManager
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the materials, usage log and profiles at a temporary folder."""
     data_dir = tmp_path / "data"
     materials_file = data_dir / "materials.json"
     monkeypatch.setattr(material_manager_module, "_DATA_DIR", data_dir)
@@ -35,11 +36,13 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _make_manager() -> MaterialManager:
+    """A material manager on a fresh context."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     return MaterialManager(context)
 
 
 def _make_manager_with_profile(name: str) -> tuple[MaterialManager, AppContext]:
+    """A material manager with one person signed in."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     context.profiles = ProfileManager(context)
     context.profiles.create_profile(name=name)

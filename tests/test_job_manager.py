@@ -30,6 +30,7 @@ from core.profile_manager import ProfileManager
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the jobs, materials, products and profiles files at a temporary folder."""
     data_dir = tmp_path / "data"
     monkeypatch.setattr(job_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(job_manager_module, "_JOBS_FILE", data_dir / "jobs.json")
@@ -43,6 +44,7 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _make_context() -> AppContext:
+    """A context with materials, products and jobs."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     context.materials = MaterialManager(context)
     context.products = ProductManager(context)
@@ -75,6 +77,7 @@ def test_job_material_cost_skips_deleted_material():
 
 
 def test_job_labor_cost():
+    """A job's labour cost is its hours at the rate."""
     job = Job(job_id="j1", name="X", labor_hours=3)
     assert job_labor_cost(job, labor_rate_per_hour=20.0) == 60.0
 

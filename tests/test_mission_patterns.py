@@ -43,6 +43,7 @@ TODAY = date(2026, 9, 14)
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the config, missions, expeditions, trips, waypoints, insights and profiles at a temporary folder."""
     data_dir = tmp_path / "data"
     monkeypatch.setattr(config_manager_module, "_CONFIG_FILE", tmp_path / "config.json")
     monkeypatch.setattr(mission_manager_module, "_DATA_DIR", data_dir)
@@ -61,6 +62,7 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _make_context() -> AppContext:
+    """A context with the stores the mission patterns read, and profiles."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     context.waypoints = WaypointManager(context)
     context.expeditions = ExpeditionManager(context)
@@ -72,6 +74,7 @@ def _make_context() -> AppContext:
 
 
 def _mission(**overrides) -> Mission:
+    """A mission given up as too hard, with any field overridden."""
     defaults = dict(
         mission_id="m1", name="Master Angler", status="abandoned", profile_id="p1",
         created_at="2026-09-01T10:00:00", updated_at="2026-09-01T10:00:00", abandon_reason="too_hard",

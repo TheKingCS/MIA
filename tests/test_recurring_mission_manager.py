@@ -36,6 +36,7 @@ from core.recurring_mission_manager import (
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the missions, recurring templates and calendar files at a temporary folder."""
     data_dir = tmp_path / "data"
     monkeypatch.setattr(mission_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(mission_manager_module, "_MISSIONS_FILE", data_dir / "missions.json")
@@ -46,6 +47,7 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _make_context() -> AppContext:
+    """A context with missions, the calendar and recurring missions."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     context.missions = MissionManager(context)
     context.calendar = CalendarManager(context)
@@ -130,6 +132,7 @@ class RecurringMissionManagerTestTemplate:
     helper tests above."""
 
     def __init__(self, base_target, target_increment_per_week, start_date):
+        """Keeps the starting target, how much it grows a week, and the start date."""
         self.base_target = base_target
         self.target_increment_per_week = target_increment_per_week
         self.start_date = start_date

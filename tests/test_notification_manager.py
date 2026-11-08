@@ -26,6 +26,7 @@ from core.notification_manager import NotificationManager
 
 
 class _FakeConfig:
+    """A config that answers only from the overrides it was given."""
     def __init__(self, overrides: dict) -> None:
         """Keeps the overrides."""
         self._overrides = overrides
@@ -37,12 +38,14 @@ class _FakeConfig:
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the notifications file at a temporary folder."""
     data_dir = tmp_path / "data"
     monkeypatch.setattr(notification_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(notification_manager_module, "_NOTIFICATIONS_FILE", data_dir / "notifications.json")
 
 
 def _make_context(config_overrides: dict | None = None) -> AppContext:
+    """A context with notifications and any config overrides."""
     context = AppContext(config=_FakeConfig(config_overrides or {}), events=EventBus())
     context.notifications = NotificationManager(context)
     return context

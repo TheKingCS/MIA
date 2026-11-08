@@ -32,10 +32,12 @@ class ValidTestModule(ModuleBase):
 
 
 def _context() -> AppContext:
+    """A fresh context."""
     return AppContext(config=ConfigManager(), events=EventBus())
 
 
 def _write_module(tmp_path, source: str, with_init: bool = True, folder_name: str = "candidate"):
+    """Writes a candidate module folder with its module.py (and __init__.py unless told not to)."""
     folder = tmp_path / folder_name
     folder.mkdir()
     if with_init:
@@ -45,6 +47,7 @@ def _write_module(tmp_path, source: str, with_init: bool = True, folder_name: st
 
 
 def test_valid_module_passes(tmp_path):
+    """A valid module passes with its id and name."""
     folder = _write_module(tmp_path, VALID_MODULE_SOURCE)
     result = validate_module_folder(folder, existing_module_ids=set(), context=_context())
 
