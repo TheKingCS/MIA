@@ -189,6 +189,8 @@ every push). Anything that needs the PC waits.
 
 ## Recent changes (newest first)
 
+- 2026-11-08 · claude · **Two-step sign-in (docs/SECURITY.md step 4).** `core/two_step.py`: TOTP codes (RFC 6238, checked against its published values) from any authenticator app, asked after the password on every sign-in from another device and for linking a phone; turned on in Settings → Sign-ins and Security only once a code from the app is entered; a used code never works twice; wrong codes count toward the wait; the recovery code turns it off. The sign-in form shows a code box when asked. Alerts and log entries when it's turned on or off.
+
 - 2026-11-08 · claude · **Security log and alerts (docs/SECURITY.md step 3).** `core/security_log.py`: every sign-in with its device, wrong passwords, waits, ended sessions, password and recovery code changes, phone links; append-only, outside the undo log, never a password. Alerts (direct, like alarms) on a sign-in from a new device, repeated wrong passwords, a password change and a linked phone. Settings → Sign-ins and Security shows the log and Sign Out Everywhere. Tests keep the log out of the real data/.
 
 - 2026-11-08 · claude · **Connect Apps (core/connectors.py, web/connect.html; Settings → Connect Apps).** The first step of the app-connections plan: file imports (calendar, contacts, bank CSV) on the web and phone at last (only the Qt Settings had them), and a rental's calendar link (Airbnb, VRBO, Hostaway) as check-ins and check-outs. Previewed first (new, already here, unreadable), imported only on approval, one Undo. Only booked dates come in: the guest's reservation link and phone digits never do; links reach only the public internet over https, no redirects, and aren't kept.

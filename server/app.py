@@ -260,10 +260,12 @@ class CameraRequest(BaseModel):
 
 
 class HomeLinkRequest(BaseModel):
-    """Linking a phone to the home computer (core/home_link.py): its address, who is linking and their password."""
+    """Linking a phone to the home computer (core/home_link.py): its address, who is linking, their password, and the
+    authenticator's code when two-step sign-in is on there."""
     url: str
     who: str
     password: str
+    code: str = ""  # the authenticator's code, when two-step sign-in is on there
 
 
 class ModelChatRequest(BaseModel):
@@ -273,9 +275,19 @@ class ModelChatRequest(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    """Signing in to MIA: the profile and its password."""
+    """Signing in to MIA: the profile and its password, and the authenticator's code when two-step sign-in is on."""
     profile_id: str
     password: str = ""
+    code: str = ""
+
+
+class TwoStepRequest(BaseModel):
+    """Setting up or turning off two-step sign-in: the password, and a code from the authenticator app."""
+    password: str = ""
+    code: str = ""
+
+
+TWO_STEP_ASK = "Enter the 6-digit code from your authenticator app."
 
 
 class ModelStep(BaseModel):
@@ -401,6 +413,10 @@ def create_app(context: AppContext) -> FastAPI:
     app.state.guard = SignInGuard()
     app.state.session_started: dict[str, float] = {}  # sessions signed in from another device, by token
     app.state.warned: set = set()  # accounts already told about repeated wrong passwords (core/security_log.py)
+    from core.two_step import StepMemory
+
+    app.state.steps = StepMemory()  # codes already used, never accepted twice (core/two_step.py)
+    app.state.two_step_pending: dict[str, str] = {}  # a secret being set up, until its first code is entered
 
     @app.middleware("http")
     async def phone_access_switch(request: Request, call_next):
@@ -460,6 +476,26 @@ def create_app(context: AppContext) -> FastAPI:
         app.state.last_seen[token] = now
         app.state.session_started[token] = now
         return token
+
+    def _two_step_secret(profile_id: str) -> str:
+        """The account's two-step secret, "" when it's off (or this MIA's accounts don't have two-step)."""
+        read = getattr(context.profiles, "two_step_secret", None)
+        return read(profile_id) if read is not None else ""
+
+    def _second_step(request: Request, who: str, profile_id: str, code: str) -> None:
+        """After a right password: when the account has two-step sign-in on, the authenticator's code. No code asks for
+        one (401 with X-MIA-Two-Step: required, not counted as a wrong try); a wrong or used code counts like a wrong
+        password."""
+        secret = _two_step_secret(profile_id)
+        if not secret:
+            return
+        if not (code or "").strip():
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, TWO_STEP_ASK, headers={"X-MIA-Two-Step": "required"})
+        if not app.state.steps.accept(profile_id, secret, code):
+            app.state.guard.failed(_guard_keys(request, who))
+            _security("sign_in_failed", profile_id, request, "wrong code")
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "That code isn't right. Try the newest one.",
+                                headers={"X-MIA-Two-Step": "required"})
 
     def _signed_in(profile_id: str, request: Request) -> None:
         """Logs a sign-in, and tells the account's owner when it came from a device it hasn't used before."""
@@ -601,6 +637,7 @@ def create_app(context: AppContext) -> FastAPI:
         if not _checked(request, body.profile_id, lambda: profile is not None and
                         context.profiles.verify_password(profile.profile_id, body.password)):
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Incorrect profile or password.")
+        _second_step(request, body.profile_id, profile.profile_id, body.code)
         if not profile.has_password:
             raise HTTPException(
                 status.HTTP_403_FORBIDDEN,
@@ -625,6 +662,7 @@ def create_app(context: AppContext) -> FastAPI:
         if not _checked(request, body.profile_id, lambda: profile is not None and profile.has_password and
                         context.profiles.verify_password(profile.profile_id, body.password)):
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Incorrect profile or password.")
+        _second_step(request, body.profile_id, profile.profile_id, body.code)
         key = secrets.token_urlsafe(32)
         devices = dict(context.config.get("home_link.devices", {}) or {})
         devices[hashlib.sha256(key.encode()).hexdigest()] = {
@@ -660,7 +698,7 @@ def create_app(context: AppContext) -> FastAPI:
         if is_child(view_for(context, profile_id)):
             raise HTTPException(status.HTTP_403_FORBIDDEN, "Ask a parent to link the home computer.")
         try:
-            done = connect(context, body.url, body.who, body.password)
+            done = connect(context, body.url, body.who, body.password, body.code)
         except HomeLinkError as problem:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
         model = f" Talk will use {done['model']} there." if done["model"] else ""
@@ -2349,6 +2387,57 @@ def create_app(context: AppContext) -> FastAPI:
 
     # The Sign-ins page (core/security_log.py, docs/SECURITY.md step 3): this account's security events, how many
     # devices are signed in, and "sign out everywhere".
+    # Two-step sign-in (core/two_step.py): start (the password; a new secret, shown once, not on yet), confirm (a code
+    # from the app turns it on), off (the password and a current code).
+    @app.post("/api/account/two-step/start")
+    def two_step_start(body: TwoStepRequest, request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
+        from core import two_step
+
+        if not _checked(request, profile_id, lambda: context.profiles.verify_password(profile_id, body.password)):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "That password isn't right.")
+        secret = two_step.new_secret()
+        app.state.two_step_pending[profile_id] = secret
+        profile = context.profiles.get_profile(profile_id)
+        account = (getattr(profile, "email", "") or getattr(profile, "name", "") or "you") if profile else "you"
+        return {"key": two_step.grouped(secret), "link": two_step.otpauth_uri(secret, account)}
+
+    @app.post("/api/account/two-step/confirm")
+    def two_step_confirm(body: TwoStepRequest, request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.security_log import alert
+
+        secret = app.state.two_step_pending.get(profile_id, "")
+        if not secret:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Start setting it up first.")
+        if not app.state.steps.accept(profile_id, secret, body.code):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "That code isn't right. Check the key in the app, then try the newest code.")
+        with app.state.turn_lock:
+            context.profiles.set_two_step(profile_id, secret)
+        app.state.two_step_pending.pop(profile_id, None)
+        _security("two_step_on", profile_id, request)
+        alert(context, profile_id, "Two-step sign-in is on",
+              "Signing in from another device now asks for the code from your authenticator app. Lost the phone with "
+              "the app? Your recovery code still gets you in.")
+        return {"on": True}
+
+    @app.post("/api/account/two-step/off")
+    def two_step_off(body: TwoStepRequest, request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.security_log import alert
+
+        secret = _two_step_secret(profile_id)
+        if not secret:
+            return {"on": False}
+        if not _checked(request, profile_id, lambda: context.profiles.verify_password(profile_id, body.password)):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "That password isn't right.")
+        if not app.state.steps.accept(profile_id, secret, body.code):
+            app.state.guard.failed(_guard_keys(request, profile_id))
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "That code isn't right. Try the newest one.")
+        with app.state.turn_lock:
+            context.profiles.set_two_step(profile_id, None)
+        _security("two_step_off", profile_id, request)
+        alert(context, profile_id, "Two-step sign-in is off",
+              f"Two-step sign-in was turned off from {_device(request)}. If this wasn't you, change your password and turn it back on.")
+        return {"on": False}
+
     @app.get("/api/security/log")
     def security_screen(profile_id: str = Depends(require_profile_id),
                         credentials: Optional[HTTPAuthorizationCredentials] = Depends(_bearer_scheme)) -> dict:
@@ -2357,7 +2446,7 @@ def create_app(context: AppContext) -> FastAPI:
         others = sum(1 for t, pid in app.state.sessions.items() if pid == profile_id and t != this
                      and t in app.state.session_started)
         return {"available": book is not None, "events": book.for_person(profile_id) if book is not None else [],
-                "other_sessions": others}
+                "other_sessions": others, "two_step": bool(_two_step_secret(profile_id))}
 
     @app.post("/api/security/sign-out-everywhere")
     def sign_out_everywhere(request: Request, profile_id: str = Depends(require_profile_id),

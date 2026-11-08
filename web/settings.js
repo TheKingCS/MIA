@@ -92,9 +92,10 @@
       const v = await MIAShell.form("Link The Home Computer", [
         { name: "url", label: "The computer's address (e.g. 192.168.1.20:8765 or its Tailscale name)", type: "text", required: true, options: [], default: h.url || null },
         { name: "who", label: "Your name or email on MIA there", type: "text", required: true, options: [], default: h.who || null },
-        { name: "password", label: "Your password there", type: "password", required: true, options: [], default: null }], {});
+        { name: "password", label: "Your password there", type: "password", required: true, options: [], default: null },
+        { name: "code", label: "Code from your authenticator app (only if two-step sign-in is on there)", type: "text", required: false, options: [], default: null }], {});
       if (!v) return;
-      try { MIAShell.say((await MIA.homeConnect(v.url, v.who, v.password)).message); page = await MIA.settings(); draw(); }
+      try { MIAShell.say((await MIA.homeConnect(v.url, v.who, v.password, v.code)).message); page = await MIA.settings(); draw(); }
       catch (e) { MIAShell.say(e.message); }
     };
     const disconnect = async () => {

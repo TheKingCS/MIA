@@ -33,6 +33,7 @@ most likely first:
 | Secrets never by voice | Passwords, PINs, codes and card numbers are never spoken, heard, shown on the glasses or remembered by voice (DEC-0125) | `core/assistant_more_twins_actions.py` |
 | MIA can't act unasked | Email is only drafted (Send is a person's press); bank data is read-only; her browser holds anything that commits for a person's OK and never types into a password field; unprompted messages pass a gate; every change is undoable | `core/email_drafts.py`, `core/browser_safety.py`, `core/communication_gate.py`, `core/undo_log.py` |
 | Reach | Files only inside the person's own MIA folder; cameras only on the home network; each person's data in their own folder, shared only by joining a household with approval | `core/my_files.py`, `core/security_cams.py`, `core/personal_data.py` |
+| Two-step sign-in | An authenticator app's code after the password, from any device but the PC; codes never reused | `core/two_step.py` |
 | Security log | Every sign-in with its device, wrong passwords, account changes; alerts on a new device and repeated wrong passwords; Sign Out Everywhere | `core/security_log.py` |
 | Code hygiene | A test keeps control characters out of code (a mangled `\b` once silently disabled a check) | `tests/test_no_control_characters.py` |
 
@@ -62,7 +63,11 @@ most likely first:
    changes and phone links, append-only and outside the undo log; an alert on a sign-in from a new device, on
    repeated wrong passwords, a password change and a linked phone; Sign Out Everywhere. Still to add: exports and
    imports in the log.
-4. **Two-step sign-in for remote access** (a code from an authenticator app) for any sign-in that isn't the PC itself.
+4. ~~**Two-step sign-in for remote access.**~~ **Done 2026-11-08** (`core/two_step.py`, Settings → Sign-ins and
+   Security): TOTP (RFC 6238) codes from any authenticator app, asked after the password for every sign-in that
+   isn't the PC itself (and for linking a phone); on only once a code is confirmed; a used code never works twice;
+   wrong codes count toward the wait; the recovery code still gets you in and turns it off. Still to add: a QR code
+   for setup (no QR library yet; the key and an otpauth link work today).
 5. **Dependency checks**: `pip-audit` and the Android build's dependency report on a schedule, findings to the Fix-It
    Log.
 6. **Logs kept clean by test**: a test that fails if a password, token or card number pattern could reach a log line.

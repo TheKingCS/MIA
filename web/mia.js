@@ -158,13 +158,18 @@
 
   // The phone (and any browser): sign in with the person's email (or
   // name) and password, the same as the phone app (POST /api/login).
-  async function signIn(who, password) {
+  // Two-step sign-in (core/two_step.py): a 401 marked X-MIA-Two-Step asks for the authenticator's code (err.twoStep).
+  async function signIn(who, password, code) {
     const response = await fetch("/api/login", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ profile_id: who, password: password }),
+      body: JSON.stringify({ profile_id: who, password: password, code: code || "" }),
     });
     const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new MiaError(response.status, data.detail || "Couldn't sign in.");
+    if (!response.ok) {
+      const err = new MiaError(response.status, data.detail || "Couldn't sign in.");
+      err.twoStep = !!response.headers.get("X-MIA-Two-Step");
+      throw err;
+    }
     token = data.token;
     try { sessionStorage.setItem("mia.token", token); } catch (e) { /* this tab only */ }
     window.MIA.signedIn = true;
@@ -335,7 +340,7 @@
       { id: "o3", text: "No phone at dinner.", section: "rules", how: "yours to rate, 1 to 5, each week", self_rated: true, score: { pct: 80, text: "4 / 5 last week" } }] })
       : call("GET", "/api/operating-journal"),
     // Sign-ins and Security (core/security_log.py): this account's sign-ins and changes, and sign out everywhere.
-    securityLog: () => demo ? Promise.resolve({ available: true, other_sessions: 1, events: [
+    securityLog: () => demo ? Promise.resolve({ available: true, other_sessions: 1, two_step: false, events: [
       { at: "2026-11-08T08:12:00", kind: "sign_in", what: "Signed in", device: "Android phone · 100.64.0.7", detail: "" },
       { at: "2026-11-07T22:40:00", kind: "sign_in_failed", what: "Wrong password", device: "Edge on Windows · 100.64.0.9", detail: "" },
       { at: "2026-11-07T19:03:00", kind: "sign_in", what: "Signed in", device: "Edge on Windows · 100.64.0.9", detail: "a new device" }] })
@@ -565,7 +570,11 @@
     // One MIA everywhere (DEC-0029): the conversation Talk continues, and a fresh one.
     thread: (limit) => demo ? Promise.resolve({ messages: limit ? DEMO_THREAD : [] })
       : call("GET", "/api/talk/thread" + (limit ? "?limit=" + limit : "")),
-    homeConnect: (url, who, password) => demo ? demoOnly() : call("POST", "/api/home_pc/connect", { url, who, password }),
+    homeConnect: (url, who, password, code) => demo ? demoOnly() : call("POST", "/api/home_pc/connect", { url, who, password, code: code || "" }),
+    // Two-step sign-in (core/two_step.py): start (password: a key and a link), confirm (a code turns it on), off.
+    twoStepStart: (password) => demo ? demoOnly() : call("POST", "/api/account/two-step/start", { password }),
+    twoStepConfirm: (code) => demo ? demoOnly() : call("POST", "/api/account/two-step/confirm", { code }),
+    twoStepOff: (password, code) => demo ? demoOnly() : call("POST", "/api/account/two-step/off", { password, code }),
     homeDisconnect: () => demo ? demoOnly() : call("POST", "/api/home_pc/disconnect"),
     syncNow: () => demo ? demoOnly() : call("POST", "/api/sync/now"),
     newChat: () => demo ? Promise.resolve({ reset: true }) : call("POST", "/api/voice/reset"),

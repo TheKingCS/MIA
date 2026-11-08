@@ -1107,6 +1107,12 @@ it, and went with Claude's recommendations. The plan, in order:
 
 ## 3. Ideas parked for later (need their own planning pass)
 
+- **MIA on Zac's Amazon Echo** (Zac, 2026-11-08: "connect to my amazon echo later over wifi or something and wipe it
+  and put MIA on it"). Echos run locked, signed firmware, so wiping one and installing MIA usually isn't possible
+  (and voids it). What can work: the Echo as a Bluetooth speaker and microphone for MIA on the PC or phone; or a MIA
+  speaker of her own on a Raspberry Pi with a mic array (the Pi step, DEC-0015). An Alexa skill would send speech to
+  Amazon's cloud, against local-first. Needs its own look at the exact Echo model first.
+
 
 
 - **The ideas list: `docs/future/IDEAS.md`** (Zac, 2026-10-18): future

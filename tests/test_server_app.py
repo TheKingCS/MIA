@@ -855,3 +855,30 @@ def test_sign_out_everywhere_ends_every_other_session_and_shows_on_the_log(clien
     assert client.get("/api/settings", headers=laptop).status_code == 401
     events = client.get("/api/security/log", headers=phone).json()["events"]
     assert events[0]["kind"] == "signed_out_everywhere" and events[0]["what"] == "Signed out everywhere"
+
+
+def test_two_step_sign_in_turns_on_with_a_code_then_asks_for_one_at_sign_in(client, context, monkeypatch):
+    """Start (password) gives a key; a code from it turns it on; signing in then asks for a code (401 marked
+    X-MIA-Two-Step), takes a right one, refuses it used again; turning it off needs a current code."""
+    from core import two_step
+
+    who = _profile_id(context)
+    auth = _signed_in(client, context)
+    started = client.post("/api/account/two-step/start", headers=auth, json={"password": "hunter2"}).json()
+    secret = started["key"].replace(" ", "")
+    assert started["link"].startswith("otpauth://totp/")
+    clock = {"now": time.time()}  # the real time: a clock far ahead would end this session (unused too long)
+    monkeypatch.setattr(two_step.time, "time", lambda: clock["now"])
+    code = lambda: two_step.code_at(secret, two_step.step_of(clock["now"]))  # noqa: E731
+    assert client.post("/api/account/two-step/confirm", headers=auth, json={"code": "000000"}).status_code == 400
+    assert client.post("/api/account/two-step/confirm", headers=auth, json={"code": code()}).json() == {"on": True}
+    asked = client.post("/api/login", json={"profile_id": who, "password": "hunter2"})
+    assert asked.status_code == 401 and asked.headers.get("X-MIA-Two-Step") == "required"
+    clock["now"] += 30
+    good = client.post("/api/login", json={"profile_id": who, "password": "hunter2", "code": code()})
+    assert good.status_code == 200
+    assert client.post("/api/login", json={"profile_id": who, "password": "hunter2", "code": code()}).status_code == 401
+    clock["now"] += 30
+    phone = {"Authorization": f"Bearer {good.json()['token']}"}
+    assert client.post("/api/account/two-step/off", headers=phone, json={"password": "hunter2", "code": code()}).json() == {"on": False}
+    assert client.post("/api/login", json={"profile_id": who, "password": "hunter2"}).status_code == 200

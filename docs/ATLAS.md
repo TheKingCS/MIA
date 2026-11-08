@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1188 files, 261,267 lines; 1188 files describe themselves; 14,251 of 14,938 classes and functions are documented.
+1190 files, 261,634 lines; 1190 files describe themselves; 14,270 of 14,957 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-438 files, 122,614 lines; 6,524 of 6,610 classes and functions documented
+439 files, 122,749 lines; 6,536 of 6,622 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -383,6 +383,7 @@
 - `core/trip_route.py`: A trip's route and checkpoints on every device (DEC-0125; docs/WEB_PARITY.md Expeditions "not yet: route, splits"). The desktop's trip dialog plans a route from saved waypoints and logs "arrived here" at each one (core/trip_manager.py: `waypoint_ids`, `record_split`, `leg_summaries`); the web and vo
 - `core/tts_worker.py`: Runs `VoiceManager.synthesize()` + `.play()` off the GUI thread — docs/ROADMAP.md milestone 5.3. Same reasoning as `core/chat_worker.py`: `play()`'s `sd.wait()` blocks for the full duration of the spoken reply, which scales with reply length and would freeze the GUI thread for that whole time otherw
 - `core/turn_trace.py`: One line per Assistant turn: how MIA got to what she said (DEC-0067, choice 4: native traces before Langfuse; phase 2 of docs/PERSONALITY_AND_ECOSYSTEM_AUDIT.md). The route that answered (a fixed reply, a plain-word command, a question plan, the model), what was asked and said, the tools offered and
+- `core/two_step.py`: Two-step sign-in (docs/SECURITY.md step 4; Zac, 2026-11-08: "fortify our security measures to industry standards and beyond"): signing in from another device asks, after the password, for the 6-digit code an authenticator app shows (Google Authenticator, Microsoft Authenticator, Authy, a password ma
 - `core/undo_log.py`: "Undo that" (2026-10-01, accounts stage 5): when MIA changes something for you (adds an expense, checks off a chore, logs a reading) and got it wrong, you can take it back.
 - `core/unit_conversion.py`: The unit converter's tables and math (moved from modules/toolbox/calculators/unit_converter.py so the web Toolbox and the convert_units voice tool can use them without Qt; the module re-exports them). Thirteen categories (length, area, volume, weight, temperature, speed, pressure, energy, power, tim
 - `core/units.py`: Kitchen and shop units, and converting between them (DEC-0036). A recipe can say "500 g flour" while the flour is kept in pounds, or "1 cup honey" while the honey is kept in cups: an amount converts when both units measure the same thing (weight to weight, volume to volume, a count to a count). Weig
@@ -449,7 +450,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 3,350 lines; 37 of 37 classes and functions documented
+2 files, 3,439 lines; 38 of 38 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -718,7 +719,7 @@
 
 ## tests/: the test suite: what each part must do
 
-401 files, 69,511 lines; 5,479 of 6,080 classes and functions documented
+402 files, 69,598 lines; 5,485 of 6,086 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1056,6 +1057,7 @@
 - `tests/test_trip_map_view.py`: Unit tests for gui.trip_map_view's pure functions (project_to_scene_xy, compute_bounds), same style as tests/test_navigation_module.py — no Qt event loop, no QGraphicsScene/View instantiated.
 - `tests/test_trip_route.py`: A trip's route and checkpoints on the web and by voice (core/trip_route.py, core/assistant_trip_route_actions.py): stops from saved waypoints, "arrived" logged now, the legs walked, an out-and-back route, undo, the glasses' On The Trail panel, and a trip's log with its weather. *(2 undocumented)*
 - `tests/test_turn_trace.py`: Turn traces (DEC-0067, core/turn_trace.py): one line per turn, how it was answered and how long it took; never a private turn, never a password. *(1 undocumented)*
+- `tests/test_two_step.py`: Two-step sign-in (core/two_step.py, docs/SECURITY.md step 4): the codes are RFC 6238's, a clock a step off still works, a used code never works twice, and the authenticator link carries the secret and MIA's name.
 - `tests/test_unit_converter.py`: Unit tests for the unit converter's convert() (core/unit_conversion.py; modules.toolbox.calculators.unit_converter re-exports it).
 - `tests/test_update_manager.py`: Unit tests for core.update_manager. Isolates _PROJECT_ROOT into a tmp_path scratch area (same monkeypatch pattern as test_backup_manager.py) so these tests never touch the real project files. Git-commit tests `git init` a throwaway repo in tmp_path — never the real project repo — with a local (not g *(2 undocumented)*
 - `tests/test_usage_loops.py`: Build plan step 3, the remaining usage loops (core/loops.py): numbers she didn't look up, memories corrected soon after she kept them, the gate's daily limit and the kinds it put on a break, published screens a later change broke, and data files found corrupt. Each record keeps kinds and counts, nev *(1 undocumented)*
@@ -1124,7 +1126,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-85 files, 15,289 lines
+85 files, 15,345 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
@@ -1199,7 +1201,7 @@
 - `web/shell.js`: shell.js — the frame every MIA web screen shares (claude, 2026-10-06, DEC-0017).
 - `web/shop.js`: shop.js — the Reward Shop (claude, 2026-10-17, DEC-0028). Renders MIA.shop() (core/game_layer.py): credits earned / spent / left, the rewards you set (ready to buy first, then how far off the rest are), ideas to start with, and what you've bought. Buy proposes shop.buy; undo gives the credits back. 
 - `web/showoff.js`: showoff.js — show-off mode (claude, 2026-10-17, DEC-0031). Renders MIA.showoff() (core/show_off.py) as a narrated tour, one card at a time: Back / Next / Stop, arrow keys, and MIA reading each card aloud when Voice is on (the browser's own speech; nothing leaves the device). The data was filtered in
-- `web/signins.js`: signins.js — Sign-ins and Security (claude, 2026-11-08). Renders MIA.securityLog() (core/security_log.py): this account's events newest first (what happened, from which device, when; a new device and wrong passwords marked), how many other devices are signed in, and Sign Out Everywhere (MIA.signOutE
+- `web/signins.js`: signins.js — Sign-ins and Security (claude, 2026-11-08). Renders MIA.securityLog() (core/security_log.py): this account's events newest first (what happened, from which device, when; a new device and wrong passwords marked), how many other devices are signed in, Sign Out Everywhere (MIA.signOutEvery
 - `web/skills.js`: skills.js — the Skills screen (claude, 2026-10-06, DEC-0017/0018, H-0013). Renders MIA.skills() (core/web_progress.py): the skill tree by category (your interests first), each skill's level, XP and capability, what a locked one needs, the next honest step, each skill's pathways (Start), challenge ch
 - `web/sound.js`: sound.js — MIA's sounds (claude, 2026-10-17, DEC-0028 #11). Short tones made in the browser (Web Audio: no sound files to download, works offline): a chime for an objective, a quest-complete arpeggio for a mission, a fanfare for a level. MIA's voice line (from the engine's reward.say, core/actions.v
 - `web/start.js`: start.js — Start Here (claude, 2026-11-07). Renders MIA.guide() (core/web_guide.py): what she does, grouped by what you want to get done; each with how it works, "Try saying" buttons that open Talk with the words typed in (press Enter to send), and the page to open; the apps still empty, to fill in;
