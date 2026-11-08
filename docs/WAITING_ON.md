@@ -14,6 +14,13 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       (undoable, kept in your profile, never committed). Best first: Plaid for Money, then Garage, Calendar,
       Workout, Kitchen, Chickens, Freedom, People. Say "let's fill in MIA" to start.
 
+### Security (2026-11-08, docs/SECURITY.md)
+- [ ] **Encrypt this PC's drive.** It isn't encrypted (Windows 11 Home, checked 2026-11-08). Settings → Privacy &
+      security → Device encryption, if it's there; if not, Windows 11 Pro's BitLocker or VeraCrypt (free). The
+      biggest single protection for everything MIA keeps.
+- [ ] **Decide DEC-0126:** MIA encrypts her own data at rest (keys protected by Windows' own DPAPI, nothing to type
+      at start); with or without an extra MIA passphrase?
+
 ### Try it
 - [ ] **Talk to MIA on the PC (2026-11-07):** restart MIA, open Talk (the orb, bottom right), press the mic, say
       something, press it again. The first time, nothing should ask about the microphone (MIA's own page is allowed);

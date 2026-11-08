@@ -23,6 +23,8 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
+import time
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -760,3 +762,47 @@ def test_power_on_the_web_lists_sources_and_adds_one_through_an_action(client, c
     assert page["available"] and page["sources"] == [] and "energy_source" in page["forms"]
     assert _do(client, auth, "energy_source.add", {"name": "Propane tank", "source_type": "Propane"}).json()["status"] == "executed"
     assert [s["name"] for s in client.get("/api/power", headers=auth).json()["sources"]] == ["Propane tank"]
+
+
+def test_guessing_a_password_slows_down_and_the_right_one_still_works_after_the_wait(client, context, monkeypatch):
+    """Sign-in protection (core/sign_in_guard.py): five wrong tries cost nothing, the sixth must wait (429 with
+    Retry-After), and once the wait is over the right password signs in and clears the count."""
+    import core.sign_in_guard as guard
+
+    who = _profile_id(context)
+    for _ in range(guard.FREE_TRIES):
+        assert client.post("/api/login", json={"profile_id": who, "password": "nope"}).status_code == 401
+    blocked = client.post("/api/login", json={"profile_id": who, "password": "hunter2"})
+    assert blocked.status_code == 429 and int(blocked.headers["Retry-After"]) > 0
+    later = time.time() + guard.BASE_WAIT + 1
+    monkeypatch.setattr(guard.time, "time", lambda: later)
+    assert client.post("/api/login", json={"profile_id": who, "password": "hunter2"}).status_code == 200
+
+
+def test_a_session_from_another_device_ends_when_unused_too_long(client, context, monkeypatch):
+    """Sessions signed in from a phone end after IDLE_SECONDS unused (core/sign_in_guard.session_expired)."""
+    import core.sign_in_guard as guard
+
+    auth = _signed_in(client, context)
+    assert client.get("/api/settings", headers=auth).status_code == 200
+    later = time.time() + guard.IDLE_SECONDS + 60
+    monkeypatch.setattr(server_app_module.time, "time", lambda: later)
+    assert client.get("/api/settings", headers=auth).status_code == 401
+
+
+def test_changing_the_password_ends_the_account_s_other_sessions(client, context):
+    """A session signed in elsewhere doesn't outlive the old password; the one that changed it stays."""
+    phone, laptop = _signed_in(client, context), _signed_in(client, context)
+    changed = client.post("/api/account/password", headers=phone, json={"current": "hunter2", "new": "longer-pass-1"})
+    assert changed.status_code == 200
+    assert client.get("/api/settings", headers=phone).status_code == 200
+    assert client.get("/api/settings", headers=laptop).status_code == 401
+
+
+def test_every_response_carries_the_security_headers(client, context):
+    """Pages run only MIA's own scripts and can't be framed elsewhere; API answers aren't cached."""
+    auth = _signed_in(client, context)
+    answer = client.get("/api/settings", headers=auth)
+    assert "script-src 'self'" in answer.headers["Content-Security-Policy"]
+    assert answer.headers["X-Content-Type-Options"] == "nosniff" and answer.headers["Cache-Control"] == "no-store"
+    assert answer.headers["Referrer-Policy"] == "no-referrer"

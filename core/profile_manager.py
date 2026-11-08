@@ -51,14 +51,25 @@ from core.logger import get_logger
 log = get_logger(__name__)
 
 _DATA_PROFILES_DIR = Path(__file__).resolve().parent.parent / "data" / "profiles"
-_PBKDF2_ITERATIONS = 200_000
+# OWASP's 2023 figure for PBKDF2-HMAC-SHA256 (docs/SECURITY.md). Each stored hash keeps its own count
+# ("password_iterations", "recovery_iterations"); one without a count was made with the old 200,000, and a password is
+# re-hashed at today's count the next time it's given right.
+_PBKDF2_ITERATIONS = 600_000
+_LEGACY_ITERATIONS = 200_000
 
 
-def _hash_password(password: str) -> tuple[str, str]:
-    """Return (salt_hex, hash_hex) for a new password."""
+def _hash_password(password: str, iterations: Optional[int] = None) -> tuple[str, str]:
+    """Return (salt_hex, hash_hex) for a new password, at _PBKDF2_ITERATIONS unless told otherwise."""
     salt = os.urandom(16)
-    hashed = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, _PBKDF2_ITERATIONS)
+    hashed = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, iterations or _PBKDF2_ITERATIONS)
     return salt.hex(), hashed.hex()
+
+
+def _matches(secret: str, salt_hex: str, stored_hex: str, iterations: int) -> bool:
+    """Pure logic. Whether a password (or code) hashes to the stored hash at its own count, compared in constant
+    time."""
+    computed = hashlib.pbkdf2_hmac("sha256", secret.encode("utf-8"), bytes.fromhex(salt_hex or ""), iterations).hex()
+    return hmac.compare_digest(computed, stored_hex)
 
 
 @dataclass
@@ -268,6 +279,7 @@ class ProfileManager:
             salt_hex, hash_hex = _hash_password(password)
             record["password_salt"] = salt_hex
             record["password_hash"] = hash_hex
+            record["password_iterations"] = _PBKDF2_ITERATIONS
             profile.password_salt = salt_hex
             profile.password_hash = hash_hex
 
@@ -620,6 +632,7 @@ class ProfileManager:
         salt_hex, hash_hex = _hash_password(_canonical_code(code))
         record = dict(raw)
         record["recovery_salt"], record["recovery_hash"] = salt_hex, hash_hex
+        record["recovery_iterations"] = _PBKDF2_ITERATIONS
         config.set(f"profiles.{profile_id}", record)
         config.save()
         log.info("New recovery code issued for profile '%s'", profile_id)
@@ -631,13 +644,13 @@ class ProfileManager:
         return bool(profile and profile.recovery_hash)
 
     def check_recovery_code(self, profile_id: str, code: str) -> bool:
-        """Whether a recovery code is right: hashed with the profile's salt and compared in constant time."""
+        """Whether a recovery code is right: hashed with the profile's salt at its own count, compared in constant
+        time."""
         raw = self.context.config.get(f"profiles.{profile_id}")
         if raw is None or not raw.get("recovery_hash"):
             return False
-        salt = bytes.fromhex(raw.get("recovery_salt", ""))
-        computed = hashlib.pbkdf2_hmac("sha256", _canonical_code(code).encode("utf-8"), salt, _PBKDF2_ITERATIONS).hex()
-        return hmac.compare_digest(computed, raw["recovery_hash"])
+        return _matches(_canonical_code(code), raw.get("recovery_salt", ""), raw["recovery_hash"],
+                        int(raw.get("recovery_iterations") or _LEGACY_ITERATIONS))
 
     def reset_password_with_code(self, identifier: str, code: str, new_password: str) -> Optional[str]:
         """Forgot your password: the recovery code sets a new one. Returns a
@@ -670,9 +683,11 @@ class ProfileManager:
             salt_hex, hash_hex = _hash_password(password)
             record["password_salt"] = salt_hex
             record["password_hash"] = hash_hex
+            record["password_iterations"] = _PBKDF2_ITERATIONS
         else:
             record.pop("password_salt", None)
             record.pop("password_hash", None)
+            record.pop("password_iterations", None)
 
         config.set(f"profiles.{profile_id}", record)
         config.save()
@@ -682,10 +697,12 @@ class ProfileManager:
 
     def verify_password(self, profile_id: str, password: str) -> bool:
         """
-        Check `password` against the stored hash for `profile_id`.
-        Returns True if the profile has no password set at all (nothing
-        to verify against), False if the profile doesn't exist or the
-        password is wrong.
+        Check `password` against the stored hash for `profile_id`, at the
+        hash's own round count. Returns True if the profile has no password
+        set at all (nothing to verify against), False if the profile doesn't
+        exist or the password is wrong. A right password whose hash was made
+        with fewer rounds than _PBKDF2_ITERATIONS is re-hashed at today's
+        count (docs/SECURITY.md).
         """
         raw = self.context.config.get(f"profiles.{profile_id}")
         if raw is None:
@@ -695,9 +712,17 @@ class ProfileManager:
         if not stored_hash:
             return True  # no password set on this profile
 
-        salt = bytes.fromhex(raw.get("password_salt", ""))
-        computed = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, _PBKDF2_ITERATIONS).hex()
-        return hmac.compare_digest(computed, stored_hash)
+        iterations = int(raw.get("password_iterations") or _LEGACY_ITERATIONS)
+        if not _matches(password, raw.get("password_salt", ""), stored_hash, iterations):
+            return False
+        if iterations < _PBKDF2_ITERATIONS:  # made with fewer rounds: re-hash it now, while the password is known
+            record = dict(raw)
+            record["password_salt"], record["password_hash"] = _hash_password(password)
+            record["password_iterations"] = _PBKDF2_ITERATIONS
+            self.context.config.set(f"profiles.{profile_id}", record)
+            self.context.config.save()
+            log.info("Password hash for profile '%s' upgraded to %d rounds.", profile_id, _PBKDF2_ITERATIONS)
+        return True
 
     # ------------------------------------------------------------------
     # Deletion

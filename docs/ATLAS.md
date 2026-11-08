@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1165 files, 258,345 lines; 1165 files describe themselves; 14,095 of 14,782 classes and functions are documented.
+1167 files, 258,511 lines; 1167 files describe themselves; 14,116 of 14,803 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-430 files, 121,107 lines; 6,427 of 6,516 classes and functions documented
+431 files, 121,297 lines; 6,440 of 6,529 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -345,6 +345,7 @@
 - `core/self_report.py`: MIA's weekly self-report (build plan step 6, DEC-0094): once a week, to the PC's owner, through the communication gate: what got better, what's slipping, what she's working on, and how Night School went. Assembled in code from her own records (the loops' history, Night School, the benchmarks, the ta
 - `core/show_off.py`: Show-off mode (DEC-0031): "MIA, show off for my friends" starts a short narrated tour of what MIA can do, on the person's **real** profile, in front of other people. So the tour is built here, in code, from a filtered copy of the person's data, and the screens it shows are its own cards, never the r
 - `core/sight.py`: Sight (build plan step 15): a photo the person takes, with the glasses' camera, the phone or the PC, and a question about it, answered by a local vision model on this PC (Ollama, `sight.model`, Qwen2.5-VL 7B by default). Nothing leaves the PC.
+- `core/sign_in_guard.py`: Sign-in protection for MIA's server (2026-11-08, Zac: "fortify our security measures to industry standards and beyond"; docs/SECURITY.md). Two rules, both from OWASP's authentication and session guidance:
 - `core/skill_leveling.py`: Pure XP/Level math for a single Skill in "My Hero's Path" — same "derive it, don't persist a second copy that can drift" philosophy as core/leveling.py's profile-wide Level, but scaled down: a single skill's XP pool fills from a handful of small per-activity grants (core.gamification.grant_xp()'s sk
 - `core/skill_manager.py`: "My Hero's Path" — a skill-tree layer underneath core/gamification.py's existing XP system, added 2026-09-11 at the user's own explicit request to turn real activity across MIA's modules into RPG-style character progression, NOT a replacement for the profile-wide Level/Missions system already built 
 - `core/skill_patterns.py`: Pattern Insight slices 2, 3, and 4 — scoped directly with the user, not assumed (see core/mission_patterns.py's own docstring for slice 1, repeated Mission abandonment, and mia_system_vision's "Phase 6" framing this whole thread continues). Same observe -> insight -> recommend loop; all three slices
@@ -441,7 +442,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 3,030 lines; 37 of 37 classes and functions documented
+2 files, 3,109 lines; 37 of 37 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -710,7 +711,7 @@
 
 ## tests/: the test suite: what each part must do
 
-389 files, 68,768 lines; 5,420 of 6,018 classes and functions documented
+390 files, 68,875 lines; 5,428 of 6,026 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1009,6 +1010,7 @@
 - `tests/test_server_app.py`: Unit tests for server.app — exercised via FastAPI's TestClient, a real in-process HTTP client that needs no running server, no real network, and no HTTPS (see the Mobile Phase 1 plan's verification section for why this is a legitimate, complete way to verify this code from a sandbox with no real bro
 - `tests/test_show_off.py`: Show-off mode (DEC-0031): a tour of MIA on the real profile that never shows money, the journal, memories, health or other people. *(1 undocumented)*
 - `tests/test_sight.py`: Sight (build plan step 15, core/sight.py): a photo and a question, answered on the PC: reading tries Tesseract first (its words are exactly what's printed), the vision model's judgment is said as one, a person is never identified, and only the kind and timing of each look are kept. *(1 undocumented)*
+- `tests/test_sign_in_guard.py`: Sign-in protection (core/sign_in_guard.py, docs/SECURITY.md): the wait after wrong passwords doubles and is capped, old failures are forgotten, a success clears the account; sessions end when idle or old; and account passwords are hashed at OWASP's count, older hashes upgraded on the next right pass
 - `tests/test_skill_leveling.py`: Skill levels (core/skill_leveling.py): the XP each skill level needs, progress within it, what a level means you can do (its capability status), and the next honest step to take. *(1 undocumented)*
 - `tests/test_skill_manager.py`: Unit tests for core.skill_manager.SkillManager — isolates _DATA_DIR _SKILL_DEFINITIONS_FILE/_SKILL_PROGRESS_FILE into a tmp_path scratch area, same monkeypatch pattern as every other manager test file. Definitions are written directly to the isolated file per test (not the real seeded data/skill_def *(2 undocumented)*
 - `tests/test_skill_patterns.py`: Unit tests for core.skill_patterns — isolates _DATA_DIR for profile/skill/insight files into a tmp_path scratch area, same monkeypatch pattern as test_mission_patterns.py's own isolated_paths. *(4 undocumented)*
@@ -1104,7 +1106,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-82 files, 14,937 lines
+82 files, 14,727 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
@@ -1132,7 +1134,7 @@
 - `web/flock.js`: flock.js — the Chickens screen (claude, 2026-10-21, DEC-0037). Renders MIA.flock() (core/web_flock.py): per flock, eggs today and this week, the lay rate, loose eggs, feed cost per dozen, two weeks of eggs, cartons on hand and the log. Log Eggs is one tap per count (the tap is the approval; Undo in 
 - `web/freedom.js`: freedom.js — the Freedom screen (claude, 2026-10-21, DEC-0038). Renders MIA.freedom() (core/freedom.py): the estimated day and how far along the fund is, progress today / this week / this month, what a shift buys, how the fund adds up (each number with where it came from and what it is: Fact, Calcul
 - `web/glasses.js`: MIA on Display glasses (DEC-0016; Muse's composition H-0041/H-0043; Zac's layout, 2026-10-16; pins DEC-0024).
-- `web/grow.js`: grow.js — the Grow Lab (claude, 2026-10-17, DEC-0030 phase D). Renders MIA.grow() (core/web_grow.py), as tabs of the Greenhouse (Zac, 2026-10-17: "Isn't Grow Lab essentially what the Greenhouse app is"): equipment.js shows them beside the greenhouse's equipment through window.MIAGrow. Tabs: Growing 
+- `web/grow.js`: grow.js — the old Grow page now lives in the Greenhouse (its Growing tab); this sends you there, keeping the part of the page asked for. Its own file because MIA's pages run no inline script (Content-Security-Policy, docs/SECURITY.md).
 - `web/guitar.js`: guitar.js — a learning path (claude, 2026-11-07, DEC-0111, DEC-0112): guitar by default, any path with ?path=<id>. Renders MIA.guitar() (core/guitar.py): the stage, this week against the plan, the streak, the bests, what to work on next, and each open check. A check MIA hears gets a Record button: a
 - `web/home.js`: home.js — MIA's Home (muse, 2026-10-05).
 - `web/household.js`: household.js — the household's routines (claude, 2026-11-06; the design canvas's Household, DEC-0113, 2026-11-07). Renders MIA.household() (core/household_routines.py): Done Today with its meter, then a card per routine (what it is, daily or this week, its streak in words) with Did It, or Done; what

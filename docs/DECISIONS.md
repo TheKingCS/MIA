@@ -1945,3 +1945,19 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   grows. `docs/PARITY.md` is the table. The one exception (Zac, 2026-11-07: "yes keep passwords screen only"):
   passwords, PINs and card numbers are never spoken, heard or shown on the glasses; they stay on a screen.
 - Related: DEC-0017, DEC-0062, DEC-0124
+
+### DEC-0126: MIA encrypts her own data at rest
+- Status: PROPOSED
+- Proposed by: claude, 2026-11-08, from Zac's ask ("fortify our security measures to industry standards and beyond so
+  that users can safely trust this AI and the app having access to their most private data") and the check that this
+  PC's drive isn't encrypted (Windows 11 Home, BitLocker protection 0)
+- Proposal (`docs/SECURITY.md` section 4, step 2): every store's file encrypted with AES-256-GCM under one data key,
+  in the one place stores already write through (`core/atomic_write.py`) and a matching read; the data key protected
+  by Windows DPAPI on the PC (tied to the Windows sign-in: nothing to type at start) and the Android Keystore on the
+  phone, with an optional MIA passphrase on top. Moved store by store, the most private first (journal,
+  conversations, memories, money, people), each readable both ways until it's moved. Separately, Zac turns on disk
+  encryption (Device encryption, BitLocker with Windows Pro, or VeraCrypt).
+- Open: whether to add the optional passphrase (asked at each start, or only for the most private stores); the
+  order of stores.
+- Related: DEC-0035 (the password vault), DEC-0125
+
