@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1187 files, 261,126 lines; 1187 files describe themselves; 14,244 of 14,931 classes and functions are documented.
+1188 files, 261,267 lines; 1188 files describe themselves; 14,251 of 14,938 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-438 files, 122,574 lines; 6,521 of 6,607 classes and functions documented
+438 files, 122,614 lines; 6,524 of 6,610 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -449,7 +449,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 3,315 lines; 37 of 37 classes and functions documented
+2 files, 3,350 lines; 37 of 37 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -718,7 +718,7 @@
 
 ## tests/: the test suite: what each part must do
 
-400 files, 69,462 lines; 5,475 of 6,076 classes and functions documented
+401 files, 69,511 lines; 5,479 of 6,080 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -988,6 +988,7 @@
 - `tests/test_project_manager.py`: Unit tests for core.project_manager. Isolates _DATA_DIR/_PROJECTS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_expedition_manager.py's isolated_paths). *(2 undocumented)*
 - `tests/test_project_tool.py`: Unit tests for modules.toolbox.tools.project_tool's pure functions, same style as tests/test_expeditions_module.py (no Qt event loop, no fixtures).
 - `tests/test_property_module.py`: Unit tests for modules.property.module's pure functions — same style and, deliberately, near-identical cases to tests/test_garage_module.py, since the two modules share the same logic shape and differ only in which Maintenance categories they filter to. *(5 undocumented)*
+- `tests/test_property_photo.py`: A property's photo (Q-0014, 2026-11-07): kept in the household's own folder, linked with a name that changes with the file, and never served from outside that folder.
 - `tests/test_push_subscription_manager.py`: Unit tests for core.push_subscription_manager — same isolation pattern as tests/test_notification_manager.py (monkeypatch _DATA_DIR/_*_FILE into tmp_path, a minimal fake config since these tests never touch it). *(3 undocumented)*
 - `tests/test_question_plans.py`: Question plans (DEC-0052 step 2a, core/question_plans.py): the right plan for a question, lookups gathered by code onto a marked sheet, and an answer that never states a number MIA didn't look up. *(4 undocumented)*
 - `tests/test_questlines.py`: Questlines and seasons (DEC-0028): linked chapters, each one a mission; finishing a chapter opens the next with MIA's line for it; seasons follow the date and the hemisphere. *(4 undocumented)*
@@ -1123,7 +1124,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-85 files, 15,272 lines
+85 files, 15,289 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
