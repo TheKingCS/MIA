@@ -1765,3 +1765,19 @@ a.comms-row:hover .row-title { color: var(--accent); }
 .sleep-night .sleep-d { font-size: 11px; color: var(--text-faint); }
 .row.muted .row-title { color: var(--text-dim); }
 .health-note { font-size: 13px; margin-top: 8px; }
+/* The ID wallet (2026-11-08). */
+.wallet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; margin: 12px 0; }
+.wallet-card { padding: 16px; display: grid; gap: 10px; }
+.wallet-top { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
+.wallet-top h3 { margin: 0 0 4px; }
+.wallet-num { font-family: var(--font-mono); letter-spacing: .08em; margin: 6px 0 0; }
+.wallet-renew { color: var(--attention); }
+.wallet-note { font-size: 13px; }
+.wallet-show { width: min(560px, calc(100vw - 24px)); padding: 0; border: 1px solid rgba(var(--rgb-accent), .4); border-radius: 12px;
+  background: #05070a; color: var(--text); }
+.wallet-show::backdrop { background: rgba(0, 0, 0, .9); }
+.wallet-show-in { display: grid; gap: 10px; padding: 20px; text-align: center; }
+.wallet-show-in h2 { margin: 0; }
+.wallet-pics { display: grid; gap: 10px; }
+.wallet-pics img { width: 100%; border-radius: 10px; background: #fff; }
+.wallet-show-num { font-family: var(--font-mono); font-size: clamp(22px, 7vw, 34px); letter-spacing: .1em; margin: 6px 0; user-select: all; }

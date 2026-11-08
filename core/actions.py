@@ -375,6 +375,7 @@ import core.web_proposals  # noqa: E402,F401  (mission ideas and field captures:
 import core.asset_parts  # noqa: E402,F401  (the parts an asset uses, as stated links)
 import core.web_comms  # noqa: E402,F401  (Communications: the message limit and breaks, DEC-0129)
 import core.health_actions  # noqa: E402,F401  (Health: sleep, visits, medications, records, DEC-0129)
+import core.id_wallet  # noqa: E402,F401  (the ID wallet: taking a card out; numbers never go through an action)
 from core.offline_maps import _register as _register_map_areas  # noqa: E402  (vector map areas from the Maps page)
 
 _register_map_areas()

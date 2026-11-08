@@ -67,6 +67,7 @@ SEALED = frozenset({
     "turn_traces.jsonl",  # what they asked and what she said, turn by turn
     # 2026-11-08 (DEC-0129): health is sealed from its first save
     "health.json",  # sleep, doctor and dentist visits, medications, health records
+    "id_wallet.json",  # IDs, passports, insurance cards, registrations (their photos are sealed one by one)
     # stage 3 (2026-11-08): the rest of the private personal stores
     "intents.json",  # their reasons: why they do what they do
     "communication_log.json",  # what MIA chose to say to them, or hold back

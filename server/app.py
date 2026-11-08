@@ -29,7 +29,9 @@ logs everyone out, acceptable for a personal device's first pass).
 (`/api/inbox/email*`) take a password and passphrase in their own request
 models (`MailSetupRequest`, `MailUnlockRequest`), handed straight to
 core/inbox_mail.py's encrypted vault: never an action (whose parameters
-are kept), never logged.
+are kept), never logged. The ID wallet's cards (`/api/wallet`, `WalletCard`,
+2026-11-08) are the same: a card's number goes only through its own
+request to core/id_wallet.py, sealed at rest; lists mask it.
 
 **MIA's browser, live** (2026-11-07): `/api/browser/frame` (a picture of
 her browser now) and `/api/browser/input` (the person's click, typing, key
@@ -308,6 +310,18 @@ class PasswordChange(BaseModel):
     """Changing a person's MIA password: the current one and the new one."""
     current: str
     new: str
+
+
+class WalletCard(BaseModel):
+    """A card in the ID wallet, added or changed from its own screen: never an action, so its number never sits in a
+    proposal, the history or the undo log (core/id_wallet.py)."""
+    kind: Optional[str] = None
+    name: Optional[str] = None
+    issued_by: Optional[str] = None
+    number: Optional[str] = None
+    issued: Optional[str] = None
+    expires: Optional[str] = None
+    notes: Optional[str] = None
 
 
 class VoiceChoice(BaseModel):
@@ -2315,6 +2329,78 @@ def create_app(context: AppContext) -> FastAPI:
         from core.web_progress import missions_page
 
         return _screen(profile_id, "missions", missions_page)
+
+    # The ID wallet (core/id_wallet.py): the person's own cards. Lists mask the number; one card's own view shows it.
+    def wallet_of(profile_id: str):
+        """The signed-in person's wallet; 404 without one."""
+        wallet = getattr(view_for(context, profile_id), "id_wallet", None)
+        if wallet is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "The ID wallet isn't on this MIA.")
+        return wallet
+
+    @app.get("/api/wallet")
+    def wallet_list(profile_id: str = Depends(require_profile_id)) -> dict:
+        """The cards, numbers masked, soonest to expire first, with the kinds and the note on what a copy is."""
+        from core.id_wallet import KINDS, LEGAL_NOTE
+
+        with app.state.turn_lock:
+            return {"cards": wallet_of(profile_id).listing(), "kinds": list(KINDS), "note": LEGAL_NOTE}
+
+    @app.get("/api/wallet/{card_id}")
+    def wallet_card(card_id: str, profile_id: str = Depends(require_profile_id)) -> dict:
+        """One card in full, number included, for its Show view (never cached)."""
+        from fastapi.responses import JSONResponse
+
+        with app.state.turn_lock:
+            card = wallet_of(profile_id).get(card_id)
+        if card is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "That card isn't in your wallet.")
+        return JSONResponse(card, headers={"Cache-Control": "no-store"})
+
+    @app.post("/api/wallet")
+    def wallet_add(body: WalletCard, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Adds a card."""
+        with app.state.turn_lock:
+            try:
+                card = wallet_of(profile_id).add(**body.model_dump(exclude_none=True))
+            except ValueError as problem:
+                raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
+        return {"id": card["id"], "message": f"Added {card['name']} to your wallet."}
+
+    @app.put("/api/wallet/{card_id}")
+    def wallet_edit(card_id: str, body: WalletCard, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Changes a card's details."""
+        with app.state.turn_lock:
+            try:
+                card = wallet_of(profile_id).update(card_id, **body.model_dump(exclude_none=True))
+            except (ValueError, KeyError) as problem:
+                raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem).strip("'")) from None
+        return {"message": f"Saved {card['name']}."}
+
+    @app.get("/api/wallet/{card_id}/photo/{side}")
+    def wallet_photo(card_id: str, side: str, profile_id: str = Depends(require_profile_id)):
+        """One side's photo (sealed on disk, opened here; never cached)."""
+        from fastapi.responses import Response
+
+        with app.state.turn_lock:
+            found = wallet_of(profile_id).photo(card_id, side)
+        if found is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "No photo of that side.")
+        return Response(found[0], media_type=found[1], headers={"Cache-Control": "no-store"})
+
+    @app.post("/api/wallet/{card_id}/photo/{side}")
+    async def wallet_photo_set(card_id: str, side: str, request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Keeps a photo of one side (JPG, PNG or WebP, up to 10 MB), sealed."""
+        data = await request.body()
+        if len(data) > 10 * 1024 * 1024:
+            raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "That picture is over 10 MB.")
+        name = Path(unquote(request.headers.get("x-filename", "card.jpg"))).name.strip() or "card.jpg"
+        with app.state.turn_lock:
+            try:
+                wallet_of(profile_id).set_photo(card_id, side, data, name)
+            except (ValueError, KeyError) as problem:
+                raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem).strip("'")) from None
+        return {"message": f"Saved the {side}."}
 
     @app.get("/api/nexus")
     def web_nexus(profile_id: str = Depends(require_profile_id)) -> dict:

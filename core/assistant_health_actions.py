@@ -111,7 +111,7 @@ def _summary(context, a: dict) -> str:
 
 def register_health_actions(registry) -> None:
     """Registers log_sleep, add_health_visit, add_medication, took_medication, stop_medication, add_health_record and
-    get_health (domain health)."""
+    get_health (domain health), and get_wallet (the ID wallet's names and expiry dates, never a number)."""
     s, n, b = {"type": "string"}, {"type": "number"}, {"type": "boolean"}
     reg = lambda name, desc, props, req, handler, phrases: registry.register(AssistantAction(  # noqa: E731
         name=name, domain="health", description=desc,
@@ -142,3 +142,6 @@ def register_health_actions(registry) -> None:
     reg("get_health", "The user's own health records: the week's sleep, medications and doses today, visits coming "
         "up, or the records.", {"what": {**s, "description": "sleep, meds, visits, records or all."}}, [], _summary,
         ("how have i been sleeping", "what medications", "my health", "when is my next"))
+    reg("get_wallet", "The user's ID wallet: each card's name and when it expires (never a number). To show a card, "
+        "they say 'show my' and its name.", {}, [], lambda c, a: __import__("core.id_wallet", fromlist=["describe"]).describe(c),
+        ("my passport expire", "my license expire", "id wallet", "when does my"))

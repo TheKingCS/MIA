@@ -10,12 +10,14 @@
   <link rel="stylesheet" href="shell.css">
   <link rel="stylesheet" href="concept.css">
   <link rel="stylesheet" href="ui.css">
+  <link rel="stylesheet" href="spatial.css">
 </head>
 <body data-say="What's in this area?" data-app="hub" class="mod-hub">
   <!--
     An area's hub (DEC-0129, Zac 2026-11-08): the apps and pages in one area (core/web_areas.py), each opening its own
     page; an app in two areas is in both hubs. MIA.hub(area) reads /api/hub/<area>. Formatting only (claude).
   -->
+  <canvas class="env-vapor" id="vapor" aria-hidden="true" hidden></canvas>
   <div class="layout" id="app" hidden>
     <nav class="side" aria-label="Apps"></nav>
     <main class="layout-main">
@@ -31,6 +33,7 @@
   <script src="sound.js"></script>
   <script src="places-watch.js"></script>
   <script src="shell.js"></script>
+  <script src="spatial.js"></script>
   <script src="hub.js"></script>
 </body>
 </html>

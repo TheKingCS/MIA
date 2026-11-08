@@ -121,6 +121,14 @@
    "status": "none",
    "why": "it reports the loops: what it says is only as good as they are, and they are watched"
   },
+  "store:id_wallet": {
+   "status": "none",
+   "why": "the person's own cards as they give them; MIA reminds before expiry and never reads or uses the numbers"
+  },
+  "action:wallet": {
+   "status": "none",
+   "why": "taking a card out of the wallet is the person's own choice; nothing of MIA's to improve"
+  },
   "store:health": {
    "status": "none",
    "why": "the person's own health records as they give them (DEC-0129); MIA never grades or interprets them, so there's no work of hers to improve"
