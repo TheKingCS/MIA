@@ -20,6 +20,17 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       their two tests are built and passing locally, but a cloud session can't commit them (the safety classifier
       holds them back). `git status` on your PC lists them as untracked — `git add` those five and commit.
 
+### The new look: Nexus, rooms, themes and painting (2026-11-08, design session)
+- [ ] **Look at the 3D Nexus and the Garage room on the PC** (DEC-0130): open MIA, the Nexus opens first in the
+      Spatial look. Drag or use the arrows, go through the Garage portal. Tell Claude what feels off; the other
+      areas' rooms are built one at a time after your look.
+- [ ] **Pick your look** (DEC-0135/0136): Settings → Look: Spatial or Cards (by device by default), and a theme
+      (Stark, Y2K, Cyberpunk, Glass, or your own from the Theme Studio, in the System area).
+- [ ] **Install the image engine** (DEC-0140, `docs/ART_ENGINE.md`): ComfyUI and one SDXL model on the PC, then say
+      "paint me a fantasy castle village for my background". Only tested against a stand-in so far.
+- [ ] **Pull and run the full suite on the PC** after the design session's work (the cloud can't run the server
+      and Qt tests).
+
 ### When you're ready
 - [ ] **Fill MIA with your life (Zac, 2026-11-07, "later"):** a guided session at your PC, app by app, so she's
       as helpful as she can be. Claude asks before reading any folder; everything goes in through MIA's own actions
@@ -201,6 +212,11 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       lessons (`"mode": "self"` in `work/night_school.json`).
 
 ## Muse
+
+- [ ] **Portal art batches 2-4** (H-0096/H-0097): the remaining areas' portal pictures for `web/img/portals/`
+      (batch 1 is in and confirmed, H-0098). And a review of the Nexus room and the Garage room's look.
+- [ ] **Handoff numbers collided again:** two H-0098s (claude's batch-1 confirmation and Muse's walipini call).
+      Next free number: check `docs/HANDOFFS/README.md` before writing one.
 
 - [ ] **Experience Maturity (H-0088):** read the audit, the identity draft and the design-system spec; after round one,
       shortlist the concepts with Claude, set the values for the design system's proposals and the orb's seven
