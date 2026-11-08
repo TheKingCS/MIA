@@ -878,6 +878,12 @@ https://claude.ai/artifact/H8gYSX2rvneRMp5mgA4qFa: one connector framework on `c
 `core/record_import.py` (read-only, preview, approve, one Undo, keys in the encrypted vault); no-sign-in sources
 first (Airbnb calendar links and CSV, the TurboTax PDF, Sheets as CSV), then Hostaway and OwnerRez keys, then
 Google and QuickBooks OAuth. Waits on Zac's order and on disk encryption / DEC-0126 before tax data.
+**Claimed by the design session (2026-11-08 overnight, Zac asleep, "work on everything decided"): screens for
+the engine session's new pieces:** My Directions (DEC-0141/0143: web/directions.html, `direction.*` actions),
+How MIA Answers and Talk's "this one or this one?" (DEC-0138: `style.*`), Living Worlds Phase 1 (DEC-0134:
+web/worlds.html, creation through actions; play waits on Phase 2's approval), About MIA (DEC-0142); then the
+Theme Studio's mix and the glasses' accent, Trail Maps and the conversation history on the web. The engine
+session keeps core logic; ask in this file before building one of these twice.
 **Claimed by the parity session (2026-11-08): the Connect Apps page** (web/connect.html, core/connectors.py): file
 imports on the web (calendar, contacts, bank CSV; only in the Qt Settings until now) and calendar links (Airbnb,
 VRBO, Hostaway) as check-ins and check-outs, previewed and approved.
