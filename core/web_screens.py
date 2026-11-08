@@ -383,11 +383,12 @@ def property_badge(status: str, rent: float, income_month: float) -> dict:
 def estate_page(context, today: Optional[date] = None) -> dict:
     """The data the Real Estate screen shows, assembled here (the web only draws it): each property with its value, loan and payment, this month's income and
     expenses and the year's net operating income (with a budget), its upkeep tasks, the missions linked to it, and
-    the word on its card (`property_badge`: Rent Due, Rented...).
+    the word on its card (`property_badge`: Rent Due, Rented...), and for a rental or investment its straight-line
+    depreciation a year and so far (an estimate, not a tax figure).
     """
     from core import links as links_module
     from core.estate_actions import RECORDS, form_spec
-    from core.real_estate_manager import equity, has_loan_terms, monthly_payment
+    from core.real_estate_manager import accumulated_depreciation, annual_depreciation, equity, has_loan_terms, monthly_payment
     from core.region import currency_symbol_for
 
     today = today or date.today()
@@ -432,6 +433,9 @@ def estate_page(context, today: Optional[date] = None) -> dict:
             "asset_id": asset.asset_id if asset is not None else None, "tasks": tasks, "missions": related,
             "notes": p.notes, "values": _values(RECORDS["property"], p),
             "badge": property_badge(p.status, p.monthly_rent, income_month),
+            # straight-line, rentals and investments only (core/real_estate_manager.py): an estimate, not a tax figure
+            "depreciation": {"year": _r(annual_depreciation(p)), "so_far": _r(accumulated_depreciation(p, today))}
+            if annual_depreciation(p) > 0 else None,
         })
     page["properties"] = properties
     page["totals"] = {"count": len(properties), "equity": _r(sum(p["equity"] for p in properties)),
