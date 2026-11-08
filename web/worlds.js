@@ -8,8 +8,7 @@
  * so each is approved and undoable. Playing (Phase 2): in a campaign in play, say what
  * your character does and world.turn plays it with MIA as Dungeon Master (the model
  * proposes, the dice and code decide); the story so far is the campaign's own history
- * (core/web_worlds._story) plus the turns played since the page opened, kept for this
- * tab. All fiction: no real XP. No logic here.
+ * (core/web_worlds._story, from the book's turns). All fiction: no real XP. No logic here.
  */
 (function () {
   "use strict";
@@ -20,9 +19,6 @@
   let current = new URLSearchParams(location.search).get("campaign") || "";
   let forms = {};
   let playing = "";  // the campaign a turn is being played in right now
-  const STORE = "mia.worlds.story";
-  const story = (() => { try { return JSON.parse(sessionStorage.getItem(STORE) || "{}"); } catch (e) { return {}; } })();
-  const keep = () => { try { sessionStorage.setItem(STORE, JSON.stringify(story)); } catch (e) { /* fine: this tab only */ } };
 
   async function play(c) {
     const box = $("lw-do");
@@ -32,18 +28,13 @@
     paint(last);
     const done = await MIAShell.act({ kind: "world.turn", params: { campaign_id: c.id, action: said } }, { quick: true });
     playing = "";
-    if (done && done.status === "executed") {
-      (story[c.id] = story[c.id] || []).push({ said, lines: String(done.result || "").split("\n").filter(Boolean) });
-      story[c.id] = story[c.id].slice(-30);
-      keep();
-    }
-    paint(last);
+    paint(await MIA.worlds(current));  // the story now holds this turn (the book keeps it)
     const again = $("lw-do");
     if (again) { if (!(done && done.status === "executed")) again.value = said; again.focus(); }
   }
 
   function storyPanel(data, c) {
-    const told = (c.story || []).concat((story[c.id] || []).filter((t) => !(c.story || []).some((s) => s.said === t.said && s.lines[0] === t.lines[0])));
+    const told = c.story || [];
     const me = c.players[0];
     if (c.status !== "active" || !me) return null;
     const turns = told.slice(-12).map((t) => el("div", { class: "lw-turn" },

@@ -63,20 +63,17 @@ def _campaign_row(book, c) -> dict:
 
 
 def _story(book, c) -> list[dict]:
-    """The campaign's story so far, oldest first, as [{said, lines}] (what the player did, then the narration and what
-    changed): from the book's turn history once it keeps one (the engine's DEC-0134 turn history), else [] and the
-    page shows the turns played since it opened."""
-    turns = getattr(book, "turns_in", None)
-    if turns is None:
-        return []
+    """The campaign's story so far, oldest first, the last 30 turns as [{said, lines}]: what the player did, then the
+    narration, what changed and what the dice refused (turn_lines), from the book's turn history
+    (LivingWorldsBook.turns_in); [] when it can't be read."""
+    from core.dungeon_master import TurnResult
+
     try:
-        out = []
-        for t in turns(c.campaign_id):
-            get = t.get if isinstance(t, dict) else (lambda k, d=None, t=t: getattr(t, k, d))
-            lines = [get("narration", "") or ""] + list(get("committed", []) or [])
-            out.append({"said": get("action", "") or "", "lines": [line for line in lines if line]})
-        return out[-30:]
-    except Exception:  # noqa: BLE001 - a history that can't be read leaves the page's own
+        return [{"said": t.get("action", ""),
+                 "lines": turn_lines(TurnResult(t.get("narration", ""), list(t.get("committed") or []),
+                                                list(t.get("failed") or [])))}
+                for t in book.turns_in(c.campaign_id, 30)]
+    except Exception:  # noqa: BLE001 - a story that can't be read shows none rather than breaking the page
         return []
 
 

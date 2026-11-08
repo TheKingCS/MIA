@@ -116,7 +116,8 @@ def test_a_turn_is_played_with_the_model_proposing_and_the_code_deciding(person,
     version = person.living_worlds.versions_in(cid)[0]
     assert version.inventory == ["a half-finished map"] and person.living_worlds.get_quest(quest.quest_id).status == "open"
     page = ww.screen(person, cid)
-    assert page["campaign"]["players"][0]["inventory"] == ["a half-finished map"] and isinstance(page["campaign"]["story"], list)
+    assert page["campaign"]["players"][0]["inventory"] == ["a half-finished map"]
+    assert page["campaign"]["story"][-1] == {"said": "I pick the lock", "lines": said}  # the book keeps the story
 
 
 def test_a_turn_needs_a_campaign_in_play_a_character_in_it_and_something_done(person, monkeypatch):
