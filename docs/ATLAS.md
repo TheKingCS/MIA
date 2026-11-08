@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1136 files, 254,032 lines; 1136 files describe themselves; 13,876 of 14,549 classes and functions are documented.
+1136 files, 254,034 lines; 1136 files describe themselves; 13,876 of 14,549 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -659,7 +659,7 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-32 files, 3,265 lines; 99 of 99 classes and functions documented
+32 files, 3,267 lines; 99 of 99 classes and functions documented
 
 - `tools/audit.py`: MIA's self-audit from the command line (DEC-0108; core/self_audit.py, core/practices.py).
 - `tools/bench_audit.py`: What MIA's routing does today with each Intelligence Benchmark question (tests/intelligence_bench.py, docs/INTELLIGENCE_BENCHMARK.md): a question plan (core/question_plans.py: lookups by code, one answer), answered by code (a direct lookup), offered which tools, or left to the model with no tools at

@@ -8,8 +8,10 @@ can't be imported is replaced by an empty stand-in before pytest starts, so
 tests that only import a Qt module on the way (the parity checks, the voice
 tools' routing, the glasses asks) run instead of failing to import.
 
-    python -m tools.cloud_tests tests/test_parity.py tests/test_glasses.py
-    python -m tools.cloud_tests            # every test
+    python -m tools.cloud_tests tests/test_parity.py tests/test_glasses.py tests/test_web_surfaces.py
+
+Give it the files you need: over the whole suite the stand-ins pile up until
+the cloud machine runs out of memory (seen 2026-11-07).
 
 What a stand-in can't do still fails: anything that serves through FastAPI
 (the endpoint tests) or plays music. Those failures say the library is
