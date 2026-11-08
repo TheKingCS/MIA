@@ -2243,3 +2243,17 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   (rendering the two variants and the A/B choice) and feeding `style_instruction` into the model prompt are the
   wiring step.
 - Related: DEC-0067 (answer ratings 👍👎), DEC-0137 (environment), DEC-0126 (sealed at rest); core/person_settings.py
+
+### DEC-0139: One map of everything that makes MIA (docs/MIA_MAP.md)
+- Status: APPROVED + built (Zac, 2026-11-08: "everything she learns and does needs to be organized and categorized and
+  mapped into a distinguishable map of the total system architecture, capabilities, decisions, loops, user
+  preferences, etc… so MIA and everything that makes her is easy to understand").
+- Decision (`core/system_map.py`): one generated page, `docs/MIA_MAP.md`, that gathers the already-existing but
+  scattered sources into one categorized picture — architecture (the code atlas), decisions (docs/DECISIONS.md, by
+  status), capabilities (the Assistant tools), improvement loops (DEC-0094/0101, by area), the dev-knowledge she
+  writes as she's built, her night-school learnings (DEC-0100), what she keeps (personal/household stores and what's
+  sealed, DEC-0126), and how the person shapes her (the answer-style dimensions, DEC-0138). `assemble()` returns the
+  structured map (so MIA can answer "what are you made of?"), `render()`/`main()` write the page; every source is read
+  defensively so a broken one is a noted gap, never a crash. Regenerated on demand: `python -m core.system_map`.
+- Related: DEC-0104 (code atlas), DEC-0094/0101 (loops), DEC-0105 (dev knowledge), DEC-0100 (night school),
+  DEC-0126 (sealing), DEC-0137 (living-systems assessment), DEC-0138 (style preferences)
