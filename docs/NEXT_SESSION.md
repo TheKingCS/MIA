@@ -959,6 +959,10 @@ in the campaign (action, narration, what changed) and the last few fed to the DM
 `dungeon_master`), so a play screen can show the story so far; (6) DEC-0146's "research before raising one": a held
 connection carries what MIA found about it in her own offline sources (a built-in plan, a specialist's sourced note,
 what's on the shelf), said with it (`core/connections.py`).
+**Claimed by the engine session (2026-11-08, Zac's ask), core only:** (7) deep next-step reasoning in
+`core/development_engine.py`: a seed-starting chain (toilet-roll cups, a seed shelf, a first batch as proof, a stand),
+path-to-goal look-ahead, readiness checks shown with each recommendation, made-first; `plan()` gains `path` and
+`checks` for the What's Next screen. (8) The Woodworking Studio audit and proposal (docs only, no build).
 
 **Who builds what (2026-11-07 night, after Power and Recent Changes were each built twice at once):** screens
 (web pages, the canvas's look, the review's missing screens: Waiting For You, a plan's page, the Browser in the
