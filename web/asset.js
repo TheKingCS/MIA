@@ -225,6 +225,24 @@
     MIA.image(page.photo).then((url) => { if (url) box.replaceChildren(el("img", { src: url, alt: page.name })); else box.hidden = true; });
   }
 
+  // A reading tile's trend (core/web_equipment.trend: the Lab's chart points, from two readings on): a small line,
+  // low and high under it, opening the full chart in the Lab.
+  function spark(s) {
+    if (!s.chart || !s.chart.points.length) return null;
+    const NS = "http://www.w3.org/2000/svg", W = 120, H = 32;
+    const pic = document.createElementNS(NS, "svg");
+    pic.setAttribute("viewBox", "0 0 " + W + " " + H);
+    pic.setAttribute("class", "stat-spark");
+    pic.setAttribute("preserveAspectRatio", "none");
+    pic.setAttribute("role", "img");
+    pic.setAttribute("aria-label", s.title + " from " + s.chart.points[0].label + " to " + s.chart.points[s.chart.points.length - 1].label);
+    const line = document.createElementNS(NS, "polyline");
+    line.setAttribute("points", s.chart.points.map((p) => (p.x * W).toFixed(1) + "," + (H - 2 - p.y * (H - 4)).toFixed(1)).join(" "));
+    pic.append(line);
+    return el("a", { class: "stat-trend", href: "lab.html#" + encodeURIComponent(s.series), title: "Open the chart in the Lab" },
+      pic, el("span", { class: "stat-range" }, s.chart.low + " – " + s.chart.high));
+  }
+
   function draw() {
     document.body.dataset.app = page.scope;
     document.title = page.name + " — MIA";
@@ -246,6 +264,7 @@
     showPhoto();
     $("stats").replaceChildren(...page.quick_stats.map((s) => el("div", { class: "glass stat-tile" },
       el("span", { class: "stat-t" }, s.title), el("span", { class: "stat-n" }, s.text),
+      spark(s),
       btn("Log", "btn-ghost", () => s.task_id ? logTask(s.task_id, s.title) : logMeter(s.meter)))),
       // The canvas's strip (DEC-0113): its readings, then what upkeep cost this year and its condition.
       page.costs ? el("div", { class: "glass stat-tile" }, el("span", { class: "stat-t" }, "Spent this year"),

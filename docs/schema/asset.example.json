@@ -519,12 +519,91 @@
         {
             "title": "Engine hours",
             "text": "12.8 engine hours",
-            "task_id": "6486e3ff11"
+            "task_id": "6486e3ff11",
+            "chart": {
+                "points": [
+                    {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "label": "2.1 engine hours"
+                    },
+                    {
+                        "x": 0.1667,
+                        "y": 0.1776,
+                        "label": "4 engine hours"
+                    },
+                    {
+                        "x": 0.3333,
+                        "y": 0.2897,
+                        "label": "5.2 engine hours"
+                    },
+                    {
+                        "x": 0.5,
+                        "y": 0.5421,
+                        "label": "7.9 engine hours"
+                    },
+                    {
+                        "x": 0.6667,
+                        "y": 0.6916,
+                        "label": "9.5 engine hours"
+                    },
+                    {
+                        "x": 0.8333,
+                        "y": 0.8318,
+                        "label": "11 engine hours"
+                    },
+                    {
+                        "x": 1.0,
+                        "y": 1.0,
+                        "label": "12.8 engine hours"
+                    }
+                ],
+                "low": "2.1 engine hours",
+                "high": "12.8 engine hours"
+            },
+            "series": "maintenance_demo_hours"
         },
         {
             "title": "Fuel",
             "text": "72 %",
-            "meter": "Fuel"
+            "meter": "Fuel",
+            "chart": {
+                "points": [
+                    {
+                        "x": 0.0,
+                        "y": 1.0,
+                        "label": "100 %"
+                    },
+                    {
+                        "x": 0.2,
+                        "y": 0.75,
+                        "label": "85 %"
+                    },
+                    {
+                        "x": 0.4,
+                        "y": 0.3333,
+                        "label": "60 %"
+                    },
+                    {
+                        "x": 0.6,
+                        "y": 0.0,
+                        "label": "40 %"
+                    },
+                    {
+                        "x": 0.8,
+                        "y": 0.8333,
+                        "label": "90 %"
+                    },
+                    {
+                        "x": 1.0,
+                        "y": 0.5333,
+                        "label": "72 %"
+                    }
+                ],
+                "low": "40 %",
+                "high": "100 %"
+            },
+            "series": "maintenance_asset_demo_Fuel"
         }
     ],
     "missions": [],

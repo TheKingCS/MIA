@@ -4,7 +4,7 @@ the web, and one page per asset (Zac's mower concept): the data
 (core/web_equipment.py) and every change as an action kind
 (core/equipment_actions.py, maintenance.done with a meter value); and the
 design canvas's Garage card and asset page (DEC-0113): due words, the meter
-reading, this year's upkeep.
+reading, this year's upkeep; and each reading tile's trend (2026-11-07).
 """
 
 from datetime import date, timedelta
@@ -237,3 +237,16 @@ def test_the_asset_page_says_what_upkeep_cost_this_year_and_lately(world):
     assert costs["this_year"] == 12.5  # the purchase and last year's blades don't count
     assert [r["what"] for r in costs["recent"]] == ["Oil", "Blades"]
     assert costs["recent"][0] == {"date": TODAY.isoformat(), "what": "Oil", "amount": 12.5}
+
+
+def test_a_reading_tile_gets_a_trend_from_its_second_reading_on():
+    from types import SimpleNamespace as R
+
+    from core.web_equipment import trend
+
+    one = [R(value=3.0, unit="h", timestamp="2026-11-01")]
+    assert trend("maintenance_x", one) == {}
+    two = one + [R(value=5.0, unit="h", timestamp="2026-11-02")]
+    shown = trend("maintenance_x", two)
+    assert shown["series"] == "maintenance_x" and [p["y"] for p in shown["chart"]["points"]] == [0.0, 1.0]
+    assert trend("", two) == {}
