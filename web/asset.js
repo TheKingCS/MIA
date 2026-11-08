@@ -184,6 +184,27 @@
     return el("div", { class: "figure" }, el("span", { class: "figure-n" }, value), el("span", { class: "figure-t" }, label));
   }
 
+  // Its photo (2026-11-07, Q-0014): under the title, from the household's own folder (/api/garage/asset/<id>/photo);
+  // Add Photo or Change Photo takes one from the camera or the files. The earlier photo is kept on the PC.
+  const photoInput = el("input", { type: "file", accept: "image/jpeg,image/png,image/webp", hidden: true, onchange: async () => {
+    const file = photoInput.files[0];
+    photoInput.value = "";
+    if (!file) return;
+    try { MIAShell.say("Saving the photo…"); MIAShell.say((await MIA.upload("/api/garage/asset/" + encodeURIComponent(page.id) + "/photo", file)).message); MIAShell.refresh(); }
+    catch (e) { MIAShell.say(e.message); }
+  } });
+  function pickPhoto() { photoInput.click(); }
+  function showPhoto() {
+    let box = $("asset-photo");
+    if (!box) {
+      box = el("figure", { id: "asset-photo", class: "asset-photo" });
+      document.querySelector(".asset-hero").after(box, photoInput);
+    }
+    box.hidden = !page.photo;
+    if (!page.photo) { box.replaceChildren(); return; }
+    MIA.image(page.photo).then((url) => { if (url) box.replaceChildren(el("img", { src: url, alt: page.name })); else box.hidden = true; });
+  }
+
   function draw() {
     document.body.dataset.app = page.scope;
     document.title = page.name + " — MIA";
@@ -200,7 +221,9 @@
     $("hero-sub").textContent = [page.category, bought ? "Bought " + String(bought).slice(0, 4) : null,
       page.details.filter((d) => d.label === "Make" || d.label === "Model").map((d) => d.value).join(" ")]
       .filter(Boolean).join(" · ");
-    $("hero-buttons").replaceChildren(btn("Edit", "btn-ghost", editAsset), btn("Delete", "btn-ghost danger", deleteAsset));
+    $("hero-buttons").replaceChildren(btn("Edit", "btn-ghost", editAsset), btn(page.photo ? "Change Photo" : "Add Photo", "btn-ghost", pickPhoto),
+      btn("Delete", "btn-ghost danger", deleteAsset));
+    showPhoto();
     $("stats").replaceChildren(...page.quick_stats.map((s) => el("div", { class: "glass stat-tile" },
       el("span", { class: "stat-t" }, s.title), el("span", { class: "stat-n" }, s.text),
       btn("Log", "btn-ghost", () => s.task_id ? logTask(s.task_id, s.title) : logMeter(s.meter)))),

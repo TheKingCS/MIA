@@ -7,7 +7,9 @@ upkeep tracking for anything the user owns that needs it: vehicles,
 power equipment (mower, e-bike), appliances, the property itself, and
 tools. Same persisted-JSON pattern as core.journal_manager.JournalManager/
 core.calendar_manager.CalendarManager: data/maintenance.json, dataclasses
-with to_dict/from_dict, a manager class wrapping load/save.
+with to_dict/from_dict, a manager class wrapping load/save. An asset can
+have a photo (2026-11-07): `asset_photo_path` / `set_asset_photo`, kept in
+the household's asset_photos/ folder.
 
 No recurrence engine exists anywhere else in this app to reuse —
 core.calendar_manager.CalendarEvent is a one-shot dated event with no
@@ -116,7 +118,7 @@ DEFAULT_METER_UNITS = {
 @dataclass
 class MaintenanceAsset:
     """Something the household looks after: a vehicle, a tool, an appliance, the property, a plant. Its make, model,
-    serial, purchase date and price (0 when unknown), warranty end, documents filed under it, notes, and whose it is
+    serial, purchase date and price (0 when unknown), warranty end, documents filed under it, its photo, notes, and whose it is
     (None: the household's, counting toward everyone's stats; a profile id: only theirs, like one person's car).
     """
     asset_id: str
@@ -144,9 +146,11 @@ class MaintenanceAsset:
     # 2026-09-28: warranty end (ISO date, "" = unknown), filled in by hand
     # or from a filed warranty/manual (core/inbox_classify.detail_proposals).
     warranty_until: str = ""
+    # 2026-11-07 (Q-0014): its photo, a bare filename under the household's asset_photos/ ("" = none).
+    photo: str = ""
 
     def to_dict(self) -> dict:
-        """The record as the plain dict saved in maintenance.json."""
+        """The record as the plain dict saved in maintenance.json (its photo too, by file name)."""
         return {
             "asset_id": self.asset_id,
             "name": self.name,
@@ -161,11 +165,13 @@ class MaintenanceAsset:
             "owner_profile_id": self.owner_profile_id,
             "purchase_price": self.purchase_price,
             "warranty_until": self.warranty_until,
+            "photo": self.photo,
         }
 
     @staticmethod
     def from_dict(data: dict) -> "MaintenanceAsset":
-        """A record from its saved dict; a missing field takes its default, so older files load."""
+        """A record from its saved dict; a missing field (like a photo, on older files) takes its default, so older
+        files load."""
         return MaintenanceAsset(
             asset_id=data.get("asset_id", uuid.uuid4().hex[:10]),
             name=data.get("name", ""),
@@ -180,6 +186,7 @@ class MaintenanceAsset:
             owner_profile_id=data.get("owner_profile_id"),
             purchase_price=float(data.get("purchase_price", 0.0) or 0.0),
             warranty_until=data.get("warranty_until", "") or "",
+            photo=data.get("photo", "") or "",
         )
 
 
@@ -518,7 +525,8 @@ def next_occurrence_date(task: MaintenanceTask, readings: list[Reading], today: 
 class MaintenanceManager:
     """The household's maintenance store: assets and their tasks in maintenance.json (in the household's folder,
     data/ by default), written through atomic_write_text so undo can restore it. Readings live in the Data Logger,
-    in a series per task or per asset meter; documents in maintenance_documents/<asset_id>/.
+    in a series per task or per asset meter; documents in maintenance_documents/<asset_id>/; each asset's photo in
+    the household's asset_photos/ (2026-11-07).
     """
     def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
         # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
@@ -624,6 +632,34 @@ class MaintenanceManager:
             setattr(asset, key, value)
         self._save()
         return asset
+
+    PHOTO_TYPES = (".jpg", ".jpeg", ".png", ".webp")
+
+    def asset_photo_path(self, asset_id: str) -> Optional[Path]:
+        """The asset's photo in the household's asset_photos/ folder, or None when it has none or the file is gone
+        (only the stored name's last part is used, so it can't point outside the folder)."""
+        asset = self.get_asset(asset_id)
+        if asset is None or not asset.photo:
+            return None
+        path = self.data_dir / "asset_photos" / Path(asset.photo).name
+        return path if path.is_file() else None
+
+    def set_asset_photo(self, asset_id: str, source: Path) -> str:
+        """Copies a picture in as the asset's photo, named by its id and the time (the earlier file is kept, so
+        undoing the change shows it again); ValueError for an unknown asset or a file that isn't a JPG, PNG or WebP."""
+        asset = self.get_asset(asset_id)
+        if asset is None:
+            raise ValueError(f"No maintenance asset with id '{asset_id}'.")
+        ext = Path(source).suffix.lower()
+        if ext not in self.PHOTO_TYPES:
+            raise ValueError("A photo has to be a JPG, PNG or WebP picture.")
+        folder = self.data_dir / "asset_photos"
+        folder.mkdir(parents=True, exist_ok=True)
+        name = f"{asset.asset_id}-{datetime.now():%Y%m%d%H%M%S}{ext}"
+        shutil.copyfile(source, folder / name)
+        self.update_asset(asset_id, photo=name)
+        log.info("Photo set for asset '%s'", asset.name)
+        return name
 
     def delete_asset(self, asset_id: str, keep_documents: bool = False) -> None:
         """Also deletes every task for this asset — an asset going away

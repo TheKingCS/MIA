@@ -1913,6 +1913,41 @@ def create_app(context: AppContext) -> FastAPI:
                 raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
         return {"message": f"{recipe.name} has a photo now."}
 
+    # An asset's photo (2026-11-07, Q-0014): on its page and its Garage card; sent as a raw body like a recipe's.
+    @app.get("/api/garage/asset/{asset_id}/photo")
+    def asset_photo(asset_id: str, profile_id: str = Depends(require_profile_id)):
+        """The asset's photo file (404 when it has none)."""
+        from fastapi.responses import FileResponse
+
+        maintenance = getattr(view_for(context, profile_id), "maintenance", None)
+        path = maintenance.asset_photo_path(asset_id) if maintenance is not None else None
+        if path is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "No photo for that.")
+        return FileResponse(path, headers={"Cache-Control": "private, max-age=86400"})
+
+    @app.post("/api/garage/asset/{asset_id}/photo")
+    async def asset_photo_upload(asset_id: str, request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Sets the asset's photo from the picture sent (JPG, PNG or WebP, up to 10 MB)."""
+        maintenance = getattr(view_for(context, profile_id), "maintenance", None)
+        asset = maintenance.get_asset(asset_id) if maintenance is not None else None
+        if asset is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "There's nothing like that in the Garage.")
+        data = await request.body()
+        if not data:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "No picture received.")
+        if len(data) > 10 * 1024 * 1024:
+            raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "That picture is over 10 MB.")
+        name = Path(unquote(request.headers.get("x-filename", "photo.jpg"))).name.strip() or "photo.jpg"
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / name
+            source.write_bytes(data)
+            try:
+                with app.state.turn_lock:
+                    maintenance.set_asset_photo(asset_id, source)
+            except ValueError as problem:
+                raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
+        return {"message": f"{asset.name} has a photo now."}
+
     # Journal, Workshop, Expeditions, Music and Files (core/web_more.py,
     # Zac, 2026-10-16: on the phone they only opened a chat).
     @app.get("/api/journal")

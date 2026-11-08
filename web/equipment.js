@@ -56,7 +56,10 @@
   // The canvas's Garage card (DEC-0113): the machine and its meter, its condition, then its next tasks in plain due
   // words (amber when it needs you or is close, grey when it's a way off). The engine words them (web_equipment.due_words).
   function assetCard(a) {
+    const pic = a.photo ? el("img", { class: "asset-thumb", alt: "", loading: "lazy" }) : null;
+    if (pic) MIA.image(a.photo).then((url) => { if (url) pic.src = url; else pic.remove(); });
     return el("a", { class: "glass asset-card" + (a.overdue ? " attention" : ""), href: "asset.html?id=" + encodeURIComponent(a.id) },
+      pic,
       el("div", { class: "asset-head" },
         el("h3", {}, a.name),
         a.meter ? el("span", { class: "asset-meter" }, a.meter) : el("span", { class: "asset-kind" }, a.category)),
