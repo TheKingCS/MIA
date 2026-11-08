@@ -1993,6 +1993,10 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   lessons), answer ratings, creations, record sets, online reminders, art, the loop, training and cooking sessions and
   the Chronicles' moments. Still plain on purpose: the journal and passwords (own encryption), the `.jsonl` logs, and
   the saga's development records (Night School's, not the person's). Next: the `.jsonl` logs, the phone's Keystore.
+  (Looked at 2026-11-08: `failures.jsonl`, `memory_corrections.jsonl` and the person's `life_events.jsonl` append raw
+  lines, so sealing them needs a per-line sealed format, and the phone and the PC merge these logs line by line under
+  different keys (DPAPI on the PC). That's a design change to the history every view reads, so it waits for its own
+  careful pass; `memory_corrections.jsonl` holds only a category and an age, and is the least urgent.)
 - Related: DEC-0035 (the password vault), DEC-0125
 
 ### DEC-0127: MIA becomes a product, sold by subscription, local-first
