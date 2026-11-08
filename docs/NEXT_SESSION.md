@@ -1116,9 +1116,12 @@ it, and went with Claude's recommendations. The plan, in order:
 - **MIA on Zac's Amazon Echo** (Zac, 2026-11-08: "connect to my amazon echo later over wifi or something and wipe it
   and put MIA on it"). Device identified 2026-11-08: a **1st-gen Echo Show** (the 7" screen model, 2017; "Snow" is
   the white colour), Fire OS 5.5.6.9, serial G000 MW04 7422 0PPK. Findings:
-  - **Wiping it / custom ROM is not realistic for this model.** The bootloader is locked and signed. The sideload
-    exploits that exist (XDA "Checkers") are for the *Echo Show 5 1st gen*, a different, later device — not the
-    original Echo Show. Trying firmware tools meant for another model risks bricking it.
+  - **Model confirmed by Zac 2026-11-08: the 7" rectangular wedge = the original 2017 Echo Show, Intel Atom
+    x5-Z8350.** This is the dead-end chip. The only Echo unlock that exists (amonet, a MediaTek bootrom exploit) does
+    not touch Intel, and no root or custom ROM has ever been published for this model — the XDA request thread is
+    only speculation. Its locked, signed Intel bootloader means there's no exploit to run even if bricking is fine.
+  - **Wiping it / custom ROM is not realistic for this model.** The sideload exploits that exist (XDA "Checkers"/
+    "Crown", amonet) are for the MediaTek 2019 Echo Show 5/8, Echo Spot and Echo Dot 2nd gen — not this one.
   - **Stock sideload is blocked too.** The 1st-gen Echo Show has a hidden developer menu (tap the serial in Device
     Options), but community reports say it has no ADB option and no "unknown sources" toggle, so you can't even
     install an APK the normal way.
@@ -1128,9 +1131,13 @@ it, and went with Claude's recommendations. The plan, in order:
     it (simple, reversible, no risk; its far-field mic likely won't come back to MIA, only the speaker); (2) retire
     it and give MIA her own voice on the **Raspberry Pi** with a mic array — the clean local-first path (DEC-0015
     step 4). An Alexa skill is out: it sends speech to Amazon's cloud, against local-first.
-  - **Can't be done from a cloud session** — needs Zac at the device. Next hands-on step if he still wants to try the
-    on-device check: in Device Options, confirm the model number on the base and the exact build, and whether the dev
-    menu shows any ADB/unknown-sources option at all before anything else.
+  - **Three honest paths, Zac to pick (2026-11-08):** (A) use it as-is — pair it as a Bluetooth speaker so MIA speaks
+    through it (works today, output only, its far-field mic won't come back to MIA); (B) gut it — since Zac is fine
+    bricking it, harvest the 7" panel + speaker + shell and drive them with a Raspberry Pi running MIA's web UI (the
+    Echo becomes MIA's body; the salvaged LCD's driver board is the hard part); (C) buy the right chassis — a used
+    MediaTek Echo Show 5 or 8 (2019) for ~$30, then amonet → LineageOS → MIA kiosk is the reliable "wall MIA screen".
+  - **MIA-side work that helps B and C (and a cheap tablet):** a kiosk/panel view of the web UI — full-screen, big
+    clock, due items, Talk — that runs on whatever screen wins. Worth building regardless of the Echo's fate.
 
 
 
