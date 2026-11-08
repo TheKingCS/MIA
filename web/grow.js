@@ -201,6 +201,8 @@
         el("section", { class: "glass gn-budget" },
           el("label", { class: "gn-budget-row" }, el("span", {}, "What can you spend?"), budget,
             el("button", { type: "button", class: "btn btn-ghost btn-small", onclick: weigh }, "Weigh It")),
+          n.budget_from === "your build budget" ? el("p", { class: "dim gn-have" },
+            "That's what's left this month of your Building Materials and Tools & Equipment targets in Money. Type another amount to weigh that instead.") : null,
           n.have.length ? el("p", { class: "dim gn-have" }, "Already yours, from your records: " + n.have.map((h) => h.name + " (" + h.found_in + ")").join(", ") + ".") : null,
           el("p", { class: "dim gn-note" }, n.note + " Or ask: \u201cWhat should I build next with $300?\u201d")),
         el("p", { class: "pw-label gn-label" }, "Your Options"),

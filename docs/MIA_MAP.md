@@ -5,7 +5,7 @@
 ## At a glance
 
 - **Architecture** — 735 Python files across 481 core, 93 modules, 123 gui, 2 server, 36 tools (strict one-way layering; see docs/ARCHITECTURE.md).
-- **Decisions** — 145 logged (docs/DECISIONS.md); the why behind every part.
+- **Decisions** — 146 logged (docs/DECISIONS.md); the why behind every part.
 - **Capabilities** — ~180 Assistant tools (docs/ASSISTANT_CAPABILITIES.md).
 - **Improvement loops** — 92 active, 1 processes decided to need none (docs/LOOPS.md).
 - **Knowledge she's written** — 139 dev entries (work/knowledge/).
@@ -21,7 +21,7 @@
 **IMPLEMENTED** (7): DEC-0002, DEC-0004, DEC-0005, DEC-0006, DEC-0007, DEC-0009, DEC-0011
 **IMPLEMENTED;** (1): DEC-0001
 **PARTLY** (1): DEC-0044
-**PROPOSED** (7): DEC-0103, DEC-0114, DEC-0123, DEC-0127, DEC-0128, DEC-0132, DEC-0133
+**PROPOSED** (8): DEC-0103, DEC-0114, DEC-0123, DEC-0127, DEC-0128, DEC-0132, DEC-0133, DEC-0147
 
 <details><summary>Every decision</summary>
 
@@ -170,6 +170,7 @@
 - **DEC-0144** [APPROVED] — Development Intelligence & the Convergence — a thin strategic coordinator, not a rebuild
 - **DEC-0145** [APPROVED] — MIA Homestead becomes part of MIA (homestead/)
 - **DEC-0146** [APPROVED] — The magic is in the connections: MIA ties what you say to what you started
+- **DEC-0147** [PROPOSED] — The Woodworking Studio — one design of real parts, and one Make pattern for every craft
 
 </details>
 
