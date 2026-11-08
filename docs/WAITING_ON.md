@@ -28,6 +28,11 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       (Stark, Y2K, Cyberpunk, Glass, or your own from the Theme Studio, in the System area).
 - [ ] **Install the image engine** (DEC-0140, `docs/ART_ENGINE.md`): ComfyUI and one SDXL model on the PC, then say
       "paint me a fantasy castle village for my background". Only tested against a stand-in so far.
+- [ ] **Try Portal Pictures** once the image engine runs (DEC-0140): Settings → Portal Pictures, or the Nexus card's
+      "Change its picture"; Paint One for an area, or say "paint a misty forest for the Plants portal".
+- [ ] **Play a turn in Living Worlds** (DEC-0134 Phase 2): Recreation → Living Worlds, make a world, a campaign and
+      your character, then "What do you do?" (or say "in my campaign I search the cartographer's desk"). Tell Claude
+      how the narration reads on the local model.
 - [ ] **Pull and run the full suite on the PC** after the design session's work (the cloud can't run the server
       and Qt tests).
 

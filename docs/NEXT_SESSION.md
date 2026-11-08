@@ -45,7 +45,14 @@ stale tests fixed (Good News freshness by the episode's day; Talk's mic test), a
 Every page passed the demo-mode error sweep (95 pages). K-0120 to K-0126. Later the same night: every other
 area became a **room of its apps** in the Spatial look (Nexus M5's first pass, core/web_environments.room), **compound
 maintenance triggers** on the task form (DEC-0131), and the canvas's Built page gained **Built: New Overnight** (ten
-phone shots of tonight's screens, above New Tonight).
+phone shots of tonight's screens, above New Tonight). Still later (2026-11-08 morning, Zac asleep): **Portal Pictures**
+(web/portals.html, core/portal_pictures.py, DEC-0140: your own painting in any area's Nexus portal, "paint a misty
+forest for the Plants portal", `portal.picture`, `set_portal_picture`; the Nexus card's "Change its picture"),
+**playing Living Worlds** (DEC-0134 Phase 2: The Story So Far and "What do you do?" on web/worlds.html, `world.turn`,
+`play_world_turn`, the story from the engine's `turns_in`), **Connections' "What She Found First"** (the engine's
+research, on the page and by voice), and every remaining test helper documented except the budget and Plaid files
+(waiting on Zac's Plaid work). K-0137, K-0138. All 96 pages pass the demo sweep on desktop and phone, none wider than
+the phone.
 
 **New 2026-11-08 (latest): capability reminders — "did you know you could go do X right now?" (DEC-0143).** Zac asked
 for MIA to remind him, now and then, of what he's already capable of doing right now — a subtle, affirming redirect
