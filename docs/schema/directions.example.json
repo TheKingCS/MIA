@@ -1,0 +1,84 @@
+{
+ "available": true,
+ "directions": [
+  {
+   "id": "d1",
+   "title": "Make before buying",
+   "statement": "Make, mend or upcycle a thing before buying a new one.",
+   "encourage": "Offer the make or mend way when I'm about to buy.",
+   "nudges": [
+    "Anything you could mend instead of replacing this week?"
+   ],
+   "active": true,
+   "since": "2026-11-05",
+   "values": {
+    "title": "Make before buying",
+    "statement": "Make, mend or upcycle a thing before buying a new one.",
+    "encourage": "Offer the make or mend way when I'm about to buy.",
+    "nudges": "Anything you could mend instead of replacing this week?"
+   }
+  },
+  {
+   "id": "d2",
+   "title": "Slow afternoons",
+   "statement": "Leave room for drawing, walks and quiet making.",
+   "encourage": "Suggest an unhurried hour when the week is full.",
+   "nudges": [],
+   "active": true,
+   "since": "2026-11-06",
+   "values": {
+    "title": "Slow afternoons",
+    "statement": "Leave room for drawing, walks and quiet making.",
+    "encourage": "Suggest an unhurried hour when the week is full.",
+    "nudges": ""
+   }
+  },
+  {
+   "id": "d3",
+   "title": "Grow some of my food",
+   "statement": "Grow a little of what I eat, and cook it from scratch.",
+   "encourage": "",
+   "nudges": [],
+   "active": false,
+   "since": "2026-11-07",
+   "values": {
+    "title": "Grow some of my food",
+    "statement": "Grow a little of what I eat, and cook it from scratch.",
+    "encourage": "",
+    "nudges": ""
+   }
+  }
+ ],
+ "in_force": 2,
+ "seed": "Dream one small thing onto paper today — a creature, a shop sign, a corner of the world in your head.",
+ "right_now": "Did you know you could put some time into Guitar right now? You're on stage 2, Chords — the next step is ready when you are.",
+ "forms": {
+  "direction": {
+   "fields": [
+    {
+     "name": "title",
+     "label": "Its name",
+     "type": "text",
+     "required": true
+    },
+    {
+     "name": "statement",
+     "label": "In your own words",
+     "type": "textarea",
+     "required": true
+    },
+    {
+     "name": "encourage",
+     "label": "How MIA should encourage it",
+     "type": "textarea"
+    },
+    {
+     "name": "nudges",
+     "label": "Little nudges she can raise now and then, one per line",
+     "type": "textarea"
+    }
+   ]
+  }
+ },
+ "max": 12
+}

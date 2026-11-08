@@ -1495,6 +1495,15 @@ def create_app(context: AppContext) -> FastAPI:
         with app.state.turn_lock:
             return screen(view_for(context, profile_id))
 
+    @app.get("/api/directions")
+    def directions_screen(profile_id: str = Depends(require_profile_id)) -> dict:
+        """My Directions (core/web_directions.py, DEC-0141/0143): the person's standing directions, today's seed and one
+        thing within reach; changes go through direction.* actions."""
+        from core.web_directions import screen
+
+        with app.state.turn_lock:
+            return screen(view_for(context, profile_id))
+
     @app.get("/api/power")
     def power_screen(profile_id: str = Depends(require_profile_id)) -> dict:
         """Power (core/web_power.py): this device's battery and the energy sources tracked by hand."""

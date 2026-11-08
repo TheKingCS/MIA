@@ -67,6 +67,7 @@ from core.talk_it_out import register_journal_actions
 from core.journal_reflection import journal_reflection_action, reflection_due, reflection_notice
 from core.warranty_watch import due_notices, warranty_message
 from core.assistant_why_actions import register_why_actions
+from core.assistant_direction_actions import register_direction_actions
 from core.assistant_comm_actions import register_communication_actions
 from core.assistant_email_actions import register_email_actions
 from core.assistant_focus_actions import register_focus_actions
@@ -1193,32 +1194,11 @@ class MIAApplication:
         config.save()
 
     def _capabilities_on_hand(self) -> list:
-        """The real, right-now abilities a reminder can draw from (core/capability_reminders.py): a started learning
-        path with an open next step (core/paths.py), and a project begun but not finished (core/project_manager.py).
-        Each is a (verb phrase, honest reason) pair; every source is read defensively, so a missing one simply
-        contributes nothing."""
-        out = []
-        try:
-            from core import paths
+        """The real, right-now abilities a reminder can draw from: core/capability_reminders.on_hand (shared with the
+        My Directions screen)."""
+        from core import capability_reminders
 
-            book = paths.PathBook(context=self.context)
-            for path_id in book.started():
-                program = paths.program_of(self.context, path_id)
-                if program is not None and paths.open_checks(book, program):
-                    stage = paths.stage_of(book, program)
-                    out.append((f"put some time into {program.name}",
-                                f"You're on stage {stage.number}, {stage.name} — the next step is ready when you are."))
-        except Exception:
-            log.exception("Capability reminder: reading learning paths failed — skipped.")
-        try:
-            if getattr(self.context, "projects", None) is not None:
-                done = {"done", "complete", "completed", "finished", "archived", "sold", "cancelled", "canceled"}
-                for p in self.context.projects.all_projects():
-                    if (p.status or "").strip().lower() not in done:
-                        out.append((f"get back to your {p.name} project", f"it's been sitting at “{p.status}.”"))
-        except Exception:
-            log.exception("Capability reminder: reading projects failed — skipped.")
-        return out
+        return capability_reminders.on_hand(self.context)
 
     def _check_chronicle(self, now: datetime, today_iso: str) -> None:
         """Sundays: this week's chapter of the Chronicle is ready (DEC-0028)."""
@@ -1735,6 +1715,7 @@ class MIAApplication:
         register_vault_caption_actions(self.context.assistant_actions)  # "find my photos of the creek", on the PC too
         register_plan_actions(self.context.assistant_actions)  # plans, blueprints and material lists
         register_accessibility_actions(self.context.assistant_actions)
+        register_direction_actions(self.context.assistant_actions)  # My Directions by voice (DEC-0141)
         register_starter_actions(self.context.assistant_actions)
         register_life_event_actions(self.context.assistant_actions)
         register_link_actions(self.context.assistant_actions)

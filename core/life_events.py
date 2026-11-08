@@ -96,6 +96,8 @@ TYPES = {
     "insurance_switched": "insurance switched (money saved)",
     "dungeon_cleared": "dungeon runs cleared",
     "safety_escalation": "safety alerts",
+    "direction_set": "directions set",
+    "direction_dropped": "directions let go",
 }
 # Kept for audit, never shown in a feed (wins, "what happened?").
 AUDIT_ONLY = frozenset({"safety_escalation"})

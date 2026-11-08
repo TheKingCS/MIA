@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1266 files, 274,168 lines; 1266 files describe themselves; 14,904 of 15,604 classes and functions are documented.
+1265 files, 274,223 lines; 1265 files describe themselves; 14,912 of 15,610 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-470 files, 129,337 lines; 6,929 of 7,015 classes and functions documented
+470 files, 129,414 lines; 6,940 of 7,026 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -33,6 +33,7 @@
 - `core/assistant_comm_actions.py`: Assistant tools for the communication gate (core/communication_gate.py, Cognitive Extension slice C): asking what MIA chose not to say, and changing how often she speaks up on her own.
 - `core/assistant_cooking_actions.py`: Cook mode by voice (DEC-0113 cook mode, DEC-0125: full use both ways). With flour on your hands: "start cooking the chili", "next step", "go back", "what step am I on", "go to step 4", "set a rice timer for 18 minutes", "stop the rice timer", "I made it", "stop cooking". Each tool runs the same acti
 - `core/assistant_correction_actions.py`: Fixing and planning by voice what the screens already let you change (DEC-0125: every action has a voice twin; 2026-11-08). Measuring the screens' 332 action kinds against her tools showed everyday ones with no voice twin: taking something off the grocery list, clearing what's checked off, a pantry 
+- `core/assistant_direction_actions.py`: My Directions by voice (DEC-0141/0143, DEC-0125's both-ways rule; the screen is web/directions.html): "what are my directions?", "add a direction: grow my own food, cook from scratch", "pause the whimsy direction", "bring it back", "let go of that direction", and "give me something to make today" (t
 - `core/assistant_domain_actions.py`: Assistant actions added by the 2026-09-27 conversational audit (docs/ASSISTANT_AUDIT.md), so what the owner *says* updates the right records: kitchen (recipes, meals, grocery list, pantry), debts and budget targets, asset details and notes (including greenhouse/garden plants, which are Maintenance a
 - `core/assistant_dungeon_actions.py`: The Dungeon by voice (DEC-0046): "How much loot this week?", "I worked 9 hours, we were unstocked", "I picked up an overtime shift Saturday", "Make it a quest". Each runs the same code as the screen (the action kinds in core/dungeon_actions.py, the numbers in core/web_dungeon.py), so the loot matche
 - `core/assistant_email_actions.py`: The Assistant writes emails (2026-10-01, accounts stage 3, core/email_drafts.py). `draft_email` only ever makes a draft: the person sends it by pressing Send (desktop or phone), copies it, or opens it in their mail app. There is deliberately no tool that sends.
@@ -161,8 +162,6 @@
 - `core/dungeon_actions.py`: The Dungeon's actions (DEC-0046, core/work_dungeon.py) on the action contract: proposed in plain words with the loot they bring, approved, run, undoable.
 - `core/dungeon_master.py`: Living Worlds Phase 2 (DEC-0134): a playable turn. The player says what they do; the **model proposes** narrative and the state changes it implies; **authoritative code validates and commits** them; MIA narrates the committed result. This is the spec's hardest rule (§9.1) made real — the language mo
 - `core/email_drafts.py`: Email drafts (2026-10-01, accounts stage 3): the Assistant can write an email for you, and you choose what happens to it: **Send** (only when you press Send, from your own address, core/mail_send.py), **Copy** it, or open it in your mail app** (a mailto: link). MIA never sends anything by herself; n
-- `core/email_extract.py`: Turn an email into the real-world facts hiding in it — the engine behind DEC-0133 (MIA watches your email). A message (sender, subject, body, date, id) goes to `extract()`, which returns a list of `EmailFact`s: a purchase MIA could add to the Garage, a service she could log, a bill, a warranty expir
-- `core/email_inbox.py`: The read-only transport for DEC-0133: fetch the owner's recent messages over IMAP so `core.email_extract` can pull facts from them. Read-only in the strict sense — the mailbox is opened with `readonly=True` and only FETCH is ever issued, never STORE, COPY or EXPUNGE, so MIA can read the inbox but ca
 - `core/energy_manager.py`: Manual energy/utility source tracking — 2026-09-09, the last of four "Field Manual" brainstorm items the user picked this session. Original seed: "Solar, generator, propane are currently just Maintenance usage logs by convention — could be a real Power/Energy expansion once real monitoring hardware 
 - `core/environment.py`: The real-vs-fictional boundary (DEC-0137): *shared intelligence, not shared authority.* MIA reuses the same primitives — entities, events, goals, progression — across real domains (missions, the garage, the homestead) and fictional ones (Living Worlds). This module is the one guarantee that keeps th
 - `core/equipment_actions.py`: Every change the Garage, Property, Greenhouse and Maintenance screens can make (2026-10-06, DEC-0017), as action kinds on the contract in core/actions.py, from one table (core/record_actions.py): assets (add, edit, delete), maintenance tasks (add, edit, delete), and logging a reading, on a task's me
@@ -434,6 +433,7 @@
 - `core/web_comms.py`: Communications (DEC-0129, Zac 2026-11-08): one screen for what was spread over four: the email drafts MIA wrote (she only drafts; an email goes when the person presses Send, core/mail_send.py), the mailbox MIA reads for receipts (core/inbox_mail.py), what MIA said on her own today and what she held 
 - `core/web_compliance.py`: The Compliance screen (DEC-0040): every obligation, sorted the way deadlines are read: **Overdue**, **Next 30 days**, **Later**, **To check** (unverified, or undated), and **Done**. Each says when it's really due (moved off a weekend or holiday, an extension to file kept apart from the money's date)
 - `core/web_craft.py`: The Workshop's Recipes and Builds tabs (DEC-0030 phase B): put together here from core/craft_recipes.py, Materials, Jobs, Products and the Ledger, so the web only formats. Part of `workshop_page()`. The Goods tab (DEC-0036: homestead goods on hand, batch by batch, the market day and labels) is `good
+- `core/web_directions.py`: My Directions (web/directions.html, DEC-0141/0143): the standing directions the person is steering their life by, the values MIA holds in mind on every turn and gently encourages (core/direction.py). The screen shows each direction in the person's own words with how MIA encourages it and the short n
 - `core/web_dungeon.py`: The Dungeon screen (DEC-0046, core/work_dungeon.py), put together here so the web only formats, and the same numbers MIA says in Talk and in Game Master mode: today's run, this week's loot (earned, projected, the boss bonus) and its runs (cleared out of all, for the canvas's week meter), the month a
 - `core/web_environments.py`: An area's own environment (DEC-0130, NEXUS_PLAN M3): going through a portal lands in a space laid out for that part of life, not a grid of app tiles. The hub (core/web_areas.hub) carries `environment` for areas that have one; the others keep their tiles until their turn. Garage is first.
 - `core/web_equipment.py`: Garage, Property, Greenhouse and Maintenance on the web (2026-10-06, DEC-0017), and one page per asset in the shape of Zac's concept (the mower page): everything the PC app shows, assembled here so `web/` holds no logic. Served as `/api/equipment?scope=…` and `/api/assets/{asset_id}`; changes are th
@@ -481,7 +481,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 3,719 lines; 42 of 42 classes and functions documented
+2 files, 3,728 lines; 42 of 42 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -714,7 +714,7 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-37 files, 3,823 lines; 119 of 119 classes and functions documented
+36 files, 3,746 lines; 118 of 118 classes and functions documented
 
 - `tools/audit.py`: MIA's self-audit from the command line (DEC-0108; core/self_audit.py, core/practices.py).
 - `tools/bench_audit.py`: What MIA's routing does today with each Intelligence Benchmark question (tests/intelligence_bench.py, docs/INTELLIGENCE_BENCHMARK.md): a question plan (core/question_plans.py: lookups by code, one answer), answered by code (a direct lookup), offered which tools, or left to the model with no tools at
@@ -749,14 +749,13 @@
 - `tools/tracks.py`: Tracks from GPX files (core/gps_tracks.py, DEC-0099), into the signed-in person's own folder.
 - `tools/user_sync_check.py`: A User Sync topic doesn't ship until it passes this (docs/GLASSES_FIRST_BOOT_PLAN.md): the sample answers in `data/user_sync_cases.json`, each with the chips they must produce, run through the real extraction with the real model on this computer's Ollama. Nothing else may come out: an extra chip is 
 - `tools/vault_captions.py`: Describes the photos this PC keeps for the phone, so they can be found by what's in them (core/vault_captions.py). MIA's daily check starts `run` between 2 and 5 at night.
-- `tools/watch_email.py`: See what MIA would find in your inbox (DEC-0133), without changing anything. Reads your recent mail read-only and prints the facts `core.email_extract` pulls out — purchases, services, bills, warranties — so you can judge the extraction before any of it becomes a record. It writes nothing and stores
 - `tools/web_check.py`: The device check for the new web front end (Phase 2, DEC-0013: prove the slice on the real devices before any broad migration; per DEC-0015 that's Zac's new computer first, then the phone; Pi devices later). Run it on any computer MIA runs on. Opens the web Home (`web/`, in demo mode with the placeh
 - `tools/weekly_bench.py`: The weekly benchmarks, graded and kept (build plan step 5, core/benchmarks.py): Zac's Intelligence Benchmark (tools/intelligence_check.py), the golden conversation corpus on the glasses and the phone (tools/conversation_check.py) and the routing audit (tools/bench_audit.py). Read-only like those: lo
 - `tools/work.py`: The team's development tasks from the command line (DEC-0068; the records are `work/tasks/`, the rules `core/work_tasks.py`). Commit the task files with the work, like any other change.
 
 ## tests/: the test suite: what each part must do
 
-432 files, 72,413 lines; 5,692 of 6,306 classes and functions documented
+431 files, 72,374 lines; 5,690 of 6,302 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -870,8 +869,6 @@
 - `tests/test_documentation.py`: Documentation for everything MIA is made of (DEC-0104, core/code_atlas.py): every file says what it is; new code arrives documented; nothing already documented slips back; docs/ATLAS.md is current.
 - `tests/test_dungeon_master.py`: Living Worlds Phase 2 (core/dungeon_master.py, DEC-0134): a playable turn where the model proposes and code validates/commits. The model's intents only change state when they pass their check; a quest, item or skill is committed to the store; the turn records a fictional event (DEC-0137), never real *(1 undocumented)*
 - `tests/test_email_drafts.py`: Email drafts (core/email_drafts.py, core/mail_send.py, core/assistant_email_actions.py), 2026-10-01: MIA writes, the person sends (only by pressing Send), copies, or opens their mail app.
-- `tests/test_email_extract.py`: Pulling real-world facts out of email (core/email_extract.py, DEC-0133): an order confirmation becomes a purchase, an auto-care receipt a service, a utility email a bill with its due date, a protection-plan notice a warranty reminder — each secret-free. A card or account number in a message never su *(1 undocumented)*
-- `tests/test_email_inbox.py`: Parsing raw messages into the shape the extractor wants (core/email_inbox.py, DEC-0133): the decoded sender and subject, and the text/plain body in preference to HTML. Pure — no IMAP server (fetch_recent is the thin live wrapper around this). *(1 undocumented)*
 - `tests/test_energy_manager.py`: Unit tests for core.energy_manager. Isolates _DATA_DIR _ENERGY_SOURCES_FILE (and core.data_logger_manager's own data file, since readings are real DataLogger entries this manager passes through), same monkeypatch pattern as tests/test_data_logger_manager .py's isolated_paths. *(3 undocumented)*
 - `tests/test_environment.py`: The real-vs-fictional boundary (core/environment.py + life_events, DEC-0137): `require_real` guards a real-authority sink (fictional/simulated raises DomainLeak); unknown/None normalises to real so nothing is fiction by accident; and a life event carries its environment, so a real-life view can filt
 - `tests/test_event_bus.py`: Unit tests for core.event_bus.EventBus.
@@ -1141,6 +1138,7 @@
 - `tests/test_web_backups.py`: Backups from the web's Settings (core/web_backups.py) and by voice (core/assistant_backup_actions.py): the PC owner's backups folder, the newest backups, Back Up Now with or without a passphrase, and the status said aloud.
 - `tests/test_web_changes.py`: Recent Changes on the web (core/web_changes.py, DEC-0125): what MIA can put back, newest first, in the history's own words; the fortnight's history by day with undone ones marked; and Undo as the action undo.last, which never leaves a change of its own behind.
 - `tests/test_web_comms.py`: Communications (DEC-0129, core/web_comms.py): people to catch up with (longest first, only those you can write to), and the message limit and breaks as undoable actions on the real communication gate.
+- `tests/test_web_directions.py`: My Directions (DEC-0141/0143): the screen, its direction.* actions and the voice tools that run the same actions.
 - `tests/test_web_environments.py`: An area's own space (DEC-0130 M3, core/web_environments.py): the Garage environment's bays come from the Garage's own assets (never the house's), most overdue first; the parts running low are gathered across them, each once with what uses it; the hub carries the environment for the Garage and none f
 - `tests/test_web_equipment.py`: DEC-0017 (2026-10-06): Garage, Property, Greenhouse and Maintenance on the web, and one page per asset (Zac's mower concept): the data (core/web_equipment.py) and every change as an action kind (core/equipment_actions.py, maintenance.done with a meter value); and the design canvas's Garage card and  *(5 undocumented)*
 - `tests/test_web_field_kit.py`: The Field Kit on the web (DEC-0125, the design canvas's Field Kit, DEC-0113: core/web_field_kit.py): what's plugged into the computer, a hash's kind and a subnet worked out in core, and the script library to read and copy; doing things to the computer stays on the PC.
@@ -1193,7 +1191,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-94 files, 17,496 lines
+95 files, 17,581 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
@@ -1215,6 +1213,7 @@
 - `web/council.js`: council.js — the council from the phone (claude, 2026-11-06, build plan step 16). Renders MIA.council() (core/council.py through server/app.py): the latest messages, who's here and ready, and a box to write to them. Only the PC's owner gets an answer; anyone else sees why. Formatting only.
 - `web/dev.js`: dev.js: the development board (claude, 2026-11-03, DEC-0068/0070). Zac: "a window that makes it all easy to view and understand the workflow and what is going on, what is building, who is building it." Renders MIA.dev() (core/work_dashboard.py) as the flow, Up Next to Done, each card opening to its 
 - `web/diagnostics.js`: diagnostics.js — the PC's check-ups (claude, 2026-11-06, T-0040). Renders MIA.diagnostics() (core/diagnostics.py): each built-in check-up over one passive inspection (nothing is probed or changed), what passed, what to look at, and what couldn't be read (never counted as a pass). The PC's owner's pa
+- `web/directions.js`: directions.js — My Directions (claude, 2026-11-08, DEC-0141/0143). Renders MIA.directions() (core/web_directions.py): today's seed and one thing within reach (both from real state, never invented), then each standing direction in the person's own words, with how MIA encourages it and the little nudg
 - `web/dungeon.js`: dungeon.js — The Dungeon (claude, 2026-10-27, DEC-0046). Renders MIA.dungeon() (core/web_dungeon.py) in tabs: Today (clear today's run and say what made it hard mode, the overtime line, planned runs, make a hard day a quest), Loot (this week earned and projected, the month, the year at this pace, ba
 - `web/equipment.js`: equipment.js — Garage and Greenhouse (claude, 2026-10-06, DEC-0017; Maintenance and Property folded in, Zac 2026-10-16). The page's <body data-scope> picks the screen; tabs Assets, Past Due, Due Today, Due Soon; everything comes from MIA.equipment(scope). Tasks are marked done, assets and tasks adde
 - `web/expeditions.js`: expeditions.js — the Expeditions screen (claude, 2026-10-16; Zac: the app only opened a chat). Renders MIA.expeditions() (core/web_more.py): expeditions happening now, coming up and past; one opens to its trips, each with Start / Finish, its packing list (tap to pack), its notes, and its route: stop

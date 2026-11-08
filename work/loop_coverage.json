@@ -232,6 +232,10 @@
   "store:textbooks": {
    "status": "none",
    "why": "the books and chapters they added; the tutor keeps no quiz answers to grade, so there is nothing to measure until it records them"
+  },
+  "action:direction": {
+   "status": "none",
+   "why": "a direction is the person's own value in their own words (DEC-0141); the nudges it feeds are watched by checks.dismissed"
   }
  }
 }
