@@ -5,7 +5,9 @@ tests.test_development_engine
 The strategic layer (core/development_engine.py, DEC-0144). The heart of it is the **Zero-to-Something benchmark**
 (the handoffs' §10/§12 acceptance test, made executable): someone with a small budget, few tools and an objective
 should get a plan that assesses the start honestly, prioritises low-cost/high-unlock projects, respects dependencies
-and season, and names a sensible logical next step — never "build the greenhouse first." The rest are unit tests on
+and season, and names a sensible logical next step — never "build the greenhouse first." Then the plan as the
+Greenhouse page and the get_homestead_next_step tool show it: what they already have read from their records, why
+each option isn't ready, a budget only from money words. The rest are unit tests on
 the scoring, the dependency gate, compounding value and the defensive profile reader.
 """
 
@@ -116,3 +118,52 @@ def test_the_profile_reader_pulls_from_the_stores_it_finds():
     prof = de.development_profile(ctx)
     assert "cedar" in prof.have and "carpentry" in prof.skills
     assert "Homestead independence" in prof.objectives
+
+
+# --- the plan as the screen and the tool show it (DEC-0144, DEC-0125) ------
+
+def test_an_unknown_budget_is_never_treated_as_zero():
+    cat = de.homestead_catalog()
+    s = de.score(next(c for c in cat if c.id == "compost_bin"), DevelopmentProfile(month=4), cat)
+    assert DevelopmentProfile().budget is None and s["affordable"] is True
+
+
+def test_what_they_already_have_is_read_from_their_records_and_left_out():
+    ctx = SimpleNamespace(maintenance=SimpleNamespace(all_assets=lambda: [SimpleNamespace(name="Walipini Greenhouse")]),
+                          grow_lab=SimpleNamespace(systems=["Raised bed 1"]))
+    p = de.plan(ctx, month=6)
+    have = {h["name"]: h["found_in"] for h in p["have"]}
+    assert have == {"Greenhouse": "your assets", "Raised garden bed": "your grow lab"}
+    assert not {o["id"] for o in p["options"]} & {"greenhouse", "raised_bed"}
+    assert p["environment"] == SIMULATED
+
+
+def test_each_option_says_why_it_is_not_ready_yet():
+    rows = {o["id"]: o for o in de.plan(SimpleNamespace(), budget=100, month=1)["options"]}
+    assert rows["raised_bed"]["why_not"] == "best begun March to May"
+    assert rows["chickens"]["why_not"].startswith("about $300, more than the $100")
+    assert "needs" in rows.get("plant_sales", {"why_not": "needs beds first"})["why_not"]
+
+
+def test_the_spoken_plan_names_the_move_and_asks_for_a_budget_when_none_was_given():
+    said = de.describe(de.plan(SimpleNamespace(), month=4))
+    assert said.startswith("Next on the homestead: Three-bay compost bin")
+    assert said.endswith("Tell me your budget and I'll weigh it in.")
+    assert "budget" not in de.describe(de.plan(SimpleNamespace(), budget=200, month=4)).split("After that")[-1]
+
+
+def test_a_budget_is_read_from_money_words_only():
+    from core.assistant_homestead_actions import _budget_from
+
+    assert [_budget_from(x) for x in ("with $1,200", "300 bucks", "a budget of 150", "the next 3 projects", 45)] == \
+        [1200.0, 300.0, 150.0, None, 45.0]
+
+
+def test_the_greenhouse_page_carries_the_plan(tmp_path):
+    from core.grow_lab import GrowLab
+    from core.web_grow import grow_page
+
+    ctx = SimpleNamespace(maintenance=None, data_logger=None)
+    ctx.grow_lab = GrowLab(ctx, data_dir=tmp_path)
+    page = grow_page(ctx)
+    assert page["next"]["next"]["name"] and page["next"]["options"]

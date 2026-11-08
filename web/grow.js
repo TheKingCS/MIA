@@ -12,7 +12,8 @@
   "use strict";
   const { el, act, form } = MIAShell;
   const $ = (id) => document.getElementById(id);
-  const TABS = [["growing", "Growing"], ["water", "Water"], ["experiments", "Experiments"], ["harvests", "Harvests"]];
+  const TABS = [["growing", "Growing"], ["water", "Water"], ["experiments", "Experiments"], ["harvests", "Harvests"],
+    ["next", "What's Next"]];
   let page = null;
   let tab = TABS.some(([t]) => t === location.hash.slice(1)) ? location.hash.slice(1) : "growing";
 
@@ -158,6 +159,24 @@
     harvests: () => section("Harvests", null, page.harvests.length ? el("div", { class: "rows" }, page.harvests.map((h) =>
       el("div", { class: "row money-row" }, el("div", { class: "row-title" }, h.crop), chip(h.amount + (h.unit ? " " + h.unit : "")))))
       : el("p", { class: "empty" }, "No harvests yet.")),
+    next: () => {
+      // What to build next on the homestead (core/development_engine.py, DEC-0144); the same plan
+      // "what should I build next?" says by voice. Advice only: nothing here changes anything.
+      const n = page.next;
+      if (!n || !n.next) return section("What's Next", null, el("p", { class: "empty" }, "No homestead projects to weigh yet."));
+      return [section("What's Next", null,
+        el("p", {}, n.next.reason),
+        n.have.length ? el("p", { class: "dim" }, "Already yours, from your records: " +
+          n.have.map((h) => h.name + " (" + h.found_in + ")").join(", ") + ".") : null,
+        el("p", { class: "dim" }, n.note + " Or ask me: \u201cWhat should I build next with $300?\u201d")),
+      section("Your Options", null, el("div", { class: "rows" }, n.options.map((o) =>
+        el("div", { class: "row money-row" },
+          el("div", { class: "row-title" }, o.name,
+            o.unlocks.length ? el("span", { class: "dim" }, " \u00b7 opens " + o.unlocks.join(", ")) : null,
+            o.needs_professional ? el("span", { class: "dim" }, " \u00b7 have a pro check it") : null),
+          chip(o.ready ? "Ready" : o.why_not, o.ready ? "chip-ok" : "chip-soon"),
+          chip(o.cost + (o.payoff_months != null ? " \u00b7 pays back in ~" + o.payoff_months + " mo" : ""))))))];
+    },
   };
 
   function draw() {

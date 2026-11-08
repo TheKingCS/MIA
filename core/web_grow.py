@@ -24,6 +24,18 @@ GREENHOUSE_CATEGORIES = ("Garden/Plant",)
 STAGES = ("Planted", "Sprouting", "Growing", "Picking")
 
 
+def _next_on_the_homestead(context, today: date) -> Optional[dict]:
+    """The What's Next tab: the logical next homestead project and the best options after it, weighed against what
+    the person already has (core/development_engine.py, DEC-0144); the same plan the get_homestead_next_step tool
+    says. None when it can't be read, so the rest of the page still shows."""
+    from core.development_engine import plan
+
+    try:
+        return plan(context, month=today.month)
+    except Exception:  # noqa: BLE001 - advice is a nicety; the greenhouse page must still load
+        return None
+
+
 def growth_stage(status: str, days_growing, harvested: int, main_yield: float = 0.0, main_unit: str = "") -> dict:
     """Pure logic. Where a planting is, for the canvas's stage meter (DEC-0113 Greenhouse): its step on Planted →
     Sprouting → Growing → Picking (0 to 3) and a line about the harvest. It goes by what's known (days since planting
@@ -42,7 +54,7 @@ def growth_stage(status: str, days_growing, harvested: int, main_yield: float = 
 
 
 def grow_page(context, today: Optional[date] = None) -> dict:
-    """The Grow Lab screen's data: batches with their figures and stage (growth_stage), experiments, the logger's readings with each checked against its range, and the forms; costs only for an adult. Not available without the lab."""
+    """The Grow Lab screen's data: batches with their figures and stage (growth_stage), experiments, the logger's readings with each checked against its range, the forms, and what to build next on the homestead (`next`); costs and the plan only for an adult. Not available without the lab."""
     from core.child_accounts import is_child
     from core.grow_actions import BATCH, EXPERIMENT
     from core.grow_lab import MEASURES, batch_figures, check_range, series_id
@@ -133,6 +145,7 @@ def grow_page(context, today: Optional[date] = None) -> dict:
         batch_form["fields"] = [f for f in batch_form["fields"] if f["name"] != "cost"]
     return {"available": True, "as_of": today.isoformat(), "batches": batches, "systems": systems, "places": summary,
             "alerts": alerts, "experiments": experiments, "harvests": harvests,
+            "next": None if child else _next_on_the_homestead(context, today),
             "measures": [{"id": k, "label": v[0], "unit": v[1]} for k, v in MEASURES.items()],
             "counts": {"growing": sum(1 for b in batches if b["status"] == "Growing"), "alerts": len(alerts),
                        "experiments": sum(1 for e in experiments if e["status"] == "Running"), "places": len(places)},

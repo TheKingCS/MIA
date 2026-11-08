@@ -85,7 +85,7 @@ APPS: tuple[App, ...] = (
         "Your events, plus upkeep, bills, meals, training and birthdays, by day.", LIFE,
         ("calendar",), "What's on my calendar this week?"),
     App("greenhouse", "Greenhouse", "🌱", "Grow food. Grow freedom.", "greenhouse.html",
-        "At-a-glance status for garden, greenhouse, and aquaponics assets.", HOME, ("maintenance",),
+        "At-a-glance status for garden, greenhouse, and aquaponics assets.", HOME, ("maintenance", "development"),
         "What needs doing in the greenhouse?"),
     App("flock", "Chickens", "🐔", "Eggs, every day.", "flock.html",
         "Your flock: eggs collected, the lay rate, feed cost per dozen, and cartons for the stand (DEC-0037).", HOME,

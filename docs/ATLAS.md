@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1284 files, 277,440 lines; 1284 files describe themselves; 15,084 of 15,782 classes and functions are documented.
+1284 files, 277,676 lines; 1284 files describe themselves; 15,097 of 15,795 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-478 files, 131,334 lines; 7,056 of 7,142 classes and functions documented
+478 files, 131,498 lines; 7,063 of 7,149 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -763,7 +763,7 @@
 
 ## tests/: the test suite: what each part must do
 
-438 files, 72,965 lines; 5,742 of 6,354 classes and functions documented
+438 files, 73,018 lines; 5,748 of 6,360 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1206,7 +1206,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-99 files, 18,094 lines
+99 files, 18,113 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), and what she knows about you, linking to where it's kept. Read onl
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she
