@@ -908,6 +908,8 @@ How MIA Answers and Talk's "this one or this one?" (DEC-0138: `style.*`), Living
 web/worlds.html, creation through actions; play waits on Phase 2's approval), About MIA (DEC-0142); then the
 Theme Studio's mix and the glasses' accent, Trail Maps and the conversation history on the web. The engine
 session keeps core logic; ask in this file before building one of these twice.
+**Claimed by the design session (2026-11-08 overnight): DEC-0146's "don't bring that up"** (a Connections page in
+Personal and a voice tool; `ConnectionBook.decline`/`allow`, a quiet list the finder respects). Built 2026-11-08.
 **Claimed by the parity session (2026-11-08): the Connect Apps page** (web/connect.html, core/connectors.py): file
 imports on the web (calendar, contacts, bank CSV; only in the Qt Settings until now) and calendar links (Airbnb,
 VRBO, Hostaway) as check-ins and check-outs, previewed and approved.
