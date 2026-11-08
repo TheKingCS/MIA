@@ -109,7 +109,9 @@ def start_raid(context, name: str, icon: str, summary: str, objectives: list[str
 def _wins(context, people: list, since: date, until: date) -> dict[str, int]:
     """Wins this week per person: the household's history (stamped with
     who did it) plus each person's own (workouts and the like). Never
-    money, never what wasn't done."""
+    money, never what wasn't done, and never a fictional or simulated
+    event (DEC-0137): a quest won in a story isn't a real win."""
+    from core.environment import is_real
     from core.life_events import MONEY_TYPES, WINS, LifeEventLog
 
     counted: dict[str, int] = {p.profile_id: 0 for p in people}
@@ -131,7 +133,8 @@ def _wins(context, people: list, since: date, until: date) -> dict[str, int]:
         if log_ is None:
             continue
         for event in log_.all_events():
-            if event.event_id in seen or event.type not in wins or event.type in MONEY_TYPES:
+            if event.event_id in seen or event.type not in wins or event.type in MONEY_TYPES or not is_real(
+                    getattr(event, "environment", "real")):
                 continue
             if not (since.isoformat() <= event.day <= until.isoformat()):
                 continue
