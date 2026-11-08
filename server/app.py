@@ -32,7 +32,7 @@ core/inbox_mail.py's encrypted vault: never an action (whose parameters
 are kept), never logged. The ID wallet's cards (`/api/wallet`, `WalletCard`,
 2026-11-08) are the same: a card's number goes only through its own
 request to core/id_wallet.py, sealed at rest; lists mask it. MIA paints on this
-PC's graphics card (`ArtRequest`, /api/art, core/art_studio.py, DEC-0138) and
+PC's graphics card (`ArtRequest`, /api/art, core/art_studio.py, DEC-0140) and
 serves each person only their own pictures. The Theme Studio
 asks MIA to design a theme from a description (`ThemeDesignRequest`, POST
 /api/themes/design, core/theme_design.py): nothing is kept there; saving is
@@ -436,7 +436,7 @@ SECURITY_HEADERS = {
 
 
 def create_app(context: AppContext) -> FastAPI:
-    """MIA's web server (FastAPI) for the phone, the glasses and the desktop's web view: sign-in sessions by bearer token (or a linked phone's device key), the access switch that turns away forwarded requests when phone access is off, every /api route (each runs on the signed-in person's own view, view_for), and the web front end served fresh at /web/. Your Data (/api/your-data, export and delete) and the sealed-files recovery key sit beside the security log here; the Theme Studio reads /api/themes and asks /api/themes/design (DEC-0136); MIA paints through /api/art (DEC-0138)."""
+    """MIA's web server (FastAPI) for the phone, the glasses and the desktop's web view: sign-in sessions by bearer token (or a linked phone's device key), the access switch that turns away forwarded requests when phone access is off, every /api route (each runs on the signed-in person's own view, view_for), and the web front end served fresh at /web/. Your Data (/api/your-data, export and delete) and the sealed-files recovery key sit beside the security log here; the Theme Studio reads /api/themes and asks /api/themes/design (DEC-0136); MIA paints through /api/art (DEC-0140)."""
     app = FastAPI(title="MIA Mobile API")
     app.state.context = context
     app.state.sessions: dict[str, str] = {}  # token -> profile_id
@@ -1669,7 +1669,7 @@ def create_app(context: AppContext) -> FastAPI:
     @app.get("/api/shell")
     def web_shell(profile_id: str = Depends(require_profile_id)) -> dict:
         """The frame's data for every page (core/web_surfaces.shell); a painting that finished meanwhile is taken in
-        first (core/art_studio.settle, DEC-0138), so a new backdrop arrives with it."""
+        first (core/art_studio.settle, DEC-0140), so a new backdrop arrives with it."""
         from core.art_studio import settle
         from core.web_surfaces import shell
 
@@ -2436,7 +2436,7 @@ def create_app(context: AppContext) -> FastAPI:
 
     @app.get("/api/art")
     def web_art(profile_id: str = Depends(require_profile_id)) -> dict:
-        """MIA's paintings for this person (core/art_studio.status, DEC-0138): the image engine, their pictures and
+        """MIA's paintings for this person (core/art_studio.status, DEC-0140): the image engine, their pictures and
         the paintings still going (finished ones are taken in first)."""
         from core.art_studio import status as art_status
 

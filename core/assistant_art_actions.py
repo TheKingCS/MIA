@@ -2,7 +2,7 @@
 core.assistant_art_actions
 ============================
 
-MIA paints by voice (DEC-0138, core/art_studio.py): "paint me a fantasy
+MIA paints by voice (DEC-0140, core/art_studio.py): "paint me a fantasy
 castle village for my background", "use the castle one as my background",
 "take the background down", "delete the castle picture". Painting runs on the
 PC's own graphics card and takes a minute or so; a background asked for this

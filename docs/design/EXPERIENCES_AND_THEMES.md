@@ -129,7 +129,7 @@ All four are first cuts by Claude for Muse to refine (DEC-0017).
   themes stay dark for now. In the Studio the design loads to tweak before anything is kept; by voice it's saved and
   put on, and "undo" takes it back.
 
-## 9. Backdrops MIA paints (DEC-0138, built 2026-11-08 08:30)
+## 9. Backdrops MIA paints (DEC-0140, built 2026-11-08 08:30)
 
 A theme may carry a **backdrop**: one of the person's paintings (`core/art_studio.py`, painted locally through
 ComfyUI) and how strongly it shows. It sits on its own layer behind every page (faded and darkened in the middle where

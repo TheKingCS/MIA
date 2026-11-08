@@ -2231,7 +2231,33 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   timing of the scenario engine.
 - Related: DEC-0134, DEC-0094/0101, DEC-0112, DEC-0092, DEC-0126
 
-### DEC-0138: MIA paints, on the PC's own graphics card, and uses what she paints
+### DEC-0138: "Do you prefer this response, or this one?" — learning the person's answer style
+- Status: APPROVED + built (Zac, 2026-11-08: "MIA needs a do-you-prefer-this-response-or-this-one function to better
+  train how I prefer her to respond... experiment with different communication styles and info layouts and adjust").
+- Decision (`core/response_style.py`): now and then MIA offers the same answer two ways, differing on one style
+  dimension — **length** (brief/standard/detailed), **format** (prose/bulleted/mixed), **tone** (warm/neutral/direct),
+  **lead** (answer-first/context-first). The person picks; `StyleBook` records it (sealed personal store), derives the
+  preferred value per dimension and how settled each is (`confidence`), chooses the least-settled dimension to A/B
+  next (`next_experiment`), and emits a plain-words `style_instruction` for the phrasing layer. Facts never change —
+  only phrasing/layout ("the model phrases, code decides"). Events are real (DEC-0137). Built + tested; the surface
+  (rendering the two variants and the A/B choice) and feeding `style_instruction` into the model prompt are the
+  wiring step.
+- Related: DEC-0067 (answer ratings 👍👎), DEC-0137 (environment), DEC-0126 (sealed at rest); core/person_settings.py
+
+### DEC-0139: One map of everything that makes MIA (docs/MIA_MAP.md)
+- Status: APPROVED + built (Zac, 2026-11-08: "everything she learns and does needs to be organized and categorized and
+  mapped into a distinguishable map of the total system architecture, capabilities, decisions, loops, user
+  preferences, etc… so MIA and everything that makes her is easy to understand").
+- Decision (`core/system_map.py`): one generated page, `docs/MIA_MAP.md`, that gathers the already-existing but
+  scattered sources into one categorized picture — architecture (the code atlas), decisions (docs/DECISIONS.md, by
+  status), capabilities (the Assistant tools), improvement loops (DEC-0094/0101, by area), the dev-knowledge she
+  writes as she's built, her night-school learnings (DEC-0100), what she keeps (personal/household stores and what's
+  sealed, DEC-0126), and how the person shapes her (the answer-style dimensions, DEC-0138). `assemble()` returns the
+  structured map (so MIA can answer "what are you made of?"), `render()`/`main()` write the page; every source is read
+  defensively so a broken one is a noted gap, never a crash. Regenerated on demand: `python -m core.system_map`.
+- Related: DEC-0104 (code atlas), DEC-0094/0101 (loops), DEC-0105 (dev knowledge), DEC-0100 (night school),
+  DEC-0126 (sealing), DEC-0137 (living-systems assessment), DEC-0138 (style preferences)
+### DEC-0140: MIA paints, on the PC's own graphics card, and uses what she paints
 - Status: ACCEPTED
 - Decided by: Zac, 2026-11-08 06:47 ("She should also be able to be prompted to generate art assets and use them in her
   program, like if you wanted the background to show a fantasy castle/village scene").

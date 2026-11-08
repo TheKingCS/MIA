@@ -190,7 +190,7 @@ def register_accessibility_actions(registry: AssistantActionRegistry) -> None:
     tweak_theme, design_theme, delete_theme and read_screen, and the painting tools (core/assistant_art_actions.py)."""
     from core.assistant_art_actions import register_art_actions
 
-    register_art_actions(registry)  # MIA paints (DEC-0138): the look's pictures live with the look's tools
+    register_art_actions(registry)  # MIA paints (DEC-0140): the look's pictures live with the look's tools
     registry.register(AssistantAction(
         name="set_text_size", domain="accessibility",
         description="Make the text on screen bigger or smaller for the user (normal, larger, largest, huge).",

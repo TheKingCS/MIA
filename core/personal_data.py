@@ -178,7 +178,7 @@ PERSONAL_STORES: tuple[tuple[str, type], ...] = (
     ("gps_tracks", GpsTracks),  # walks, rides and drives from GPX: where they went is theirs (DEC-0099)
     ("health", HealthStore),  # sleep, visits, medications and records, sealed at rest (DEC-0129)
     ("id_wallet", IdWallet),  # IDs, passports, insurance cards, registrations, sealed with their photos
-    ("art", ArtStore),  # pictures MIA painted for them, and what from (DEC-0138)
+    ("art", ArtStore),  # pictures MIA painted for them, and what from (DEC-0140)
     ("quest_book", QuestBook),
     ("world_map", WorldMap),
     ("memory_vault", MemoryVault),

@@ -7,7 +7,7 @@
  * that count: an accent that reads as a warning colour, or text too faint to read. The checks here only say so early.
  * Describe One asks MIA to design a theme (MIA.designTheme, core/theme_design.py) and loads it here to tweak; Export
  * downloads what's on screen as a mia-theme/1 file; Import proposes `theme.import`, which core reads and checks.
- * Backdrop: MIA paints a picture on the PC's graphics card (MIA.paint, core/art_studio.py, DEC-0138); pick one of
+ * Backdrop: MIA paints a picture on the PC's graphics card (MIA.paint, core/art_studio.py, DEC-0140); pick one of
  * your paintings (or none) and how strongly it shows; it's part of the theme you save.
  */
 (function () {
@@ -138,7 +138,7 @@
     } catch (e) { MIAShell.say(e.message); }
   }
 
-  // ------------------------------------------------------------ paintings (DEC-0138, core/art_studio.py)
+  // ------------------------------------------------------------ paintings (DEC-0140, core/art_studio.py)
   async function paintIt() {
     painting = $("st-paint").value.trim();
     if (!painting) return;

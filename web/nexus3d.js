@@ -23,7 +23,7 @@
  *     opt.fire        how much fire rises off the frames (1 the default; an area's room burns lower)
  *     opt.theme       the theme's room light (core/themes.py: accent, back_top/back_bottom, palette, fire, bloom,
  *                     mist, scan, grain); Stark's when absent; `backdrop` (a URL or a promise of one) and
- *                     `backdrop_strength` hang a painting MIA made on the far wall (DEC-0138)
+ *                     `backdrop_strength` hang a painting MIA made on the far wall (DEC-0140)
  *     opt.art(p)      a promise of the picture's url (default p.art); opt.needsGlow: a pedestal glows amber when
  *                     something in its item needs you; opt.arrive / opt.arriveHue: you came in through a portal
  *   The same room draws an area's own space (hub.js: the Garage's bays round her), so going through feels like one place.
@@ -222,7 +222,7 @@
     void main(){
       vec2 uv = vUv;
       vec3 col = mix(uBottom, uTop, smoothstep(0.1, 0.75, uv.y));
-      if (uArtOn > 0.0){  // a painting on the far wall (DEC-0138): covers the view above the floor, drifting as it turns
+      if (uArtOn > 0.0){  // a painting on the far wall (DEC-0140): covers the view above the floor, drifting as it turns
         vec2 a = uv - 0.5;
         float k = uAspect / uArtAspect;
         a.x *= k > 1.0 ? 1.0 : k; a.y *= k > 1.0 ? 1.0 / k : 1.0;

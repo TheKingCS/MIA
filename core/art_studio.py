@@ -2,7 +2,7 @@
 core.art_studio
 =================
 
-MIA paints (DEC-0138, Zac 2026-11-08: "She should also be able to be
+MIA paints (DEC-0140, Zac 2026-11-08: "She should also be able to be
 prompted to generate art assets and use them in her program, like if you
 wanted the background to show a fantasy castle/village scene"). A
 description becomes a picture on the PC's own graphics card, through a local

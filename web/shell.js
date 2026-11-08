@@ -45,7 +45,7 @@
     try { localStorage.setItem(THEME_CACHE, JSON.stringify(theme)); } catch (e) { /* fine: it applies when the shell comes */ }
   }
   try { applyTheme(JSON.parse(localStorage.getItem(THEME_CACHE) || "null")); } catch (e) { /* no cached theme */ }
-  // A picture MIA painted behind every page (DEC-0138): its own fixed layer, faded where you read (themes.css).
+  // A picture MIA painted behind every page (DEC-0140): its own fixed layer, faded where you read (themes.css).
   let backdropArt = "";
   function backdrop(b) {
     const art = (b && b.art) || "";

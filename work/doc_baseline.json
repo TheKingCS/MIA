@@ -182,6 +182,7 @@
   "tests/test_relationships_module.py": 4,
   "tests/test_relay_offers.py": 1,
   "tests/test_response_composer.py": 4,
+  "tests/test_response_style.py": 1,
   "tests/test_reward_shop.py": 3,
   "tests/test_rewards_manager.py": 4,
   "tests/test_safety_escalation.py": 3,

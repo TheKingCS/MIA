@@ -377,7 +377,7 @@ import core.web_comms  # noqa: E402,F401  (Communications: the message limit and
 import core.health_actions  # noqa: E402,F401  (Health: sleep, visits, medications, records, DEC-0129)
 import core.id_wallet  # noqa: E402,F401  (the ID wallet: taking a card out; numbers never go through an action)
 import core.theme_actions  # noqa: E402,F401  (the Theme Studio: save or delete a theme of your own, DEC-0136)
-import core.art_studio  # noqa: E402  (pictures MIA painted: deleting one, DEC-0138)
+import core.art_studio  # noqa: E402  (pictures MIA painted: deleting one, DEC-0140)
 core.art_studio._register()
 from core.offline_maps import _register as _register_map_areas  # noqa: E402  (vector map areas from the Maps page)
 

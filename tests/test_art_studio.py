@@ -1,5 +1,5 @@
 """
-MIA paints (DEC-0138, core/art_studio.py): a description becomes a picture on the PC's own image engine (ComfyUI),
+MIA paints (DEC-0140, core/art_studio.py): a description becomes a picture on the PC's own image engine (ComfyUI),
 kept in the person's folder, and can go up as their theme's backdrop. Tested against a stand-in ComfyUI on a local
 port: the same HTTP calls, a tiny PNG back.
 """

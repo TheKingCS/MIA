@@ -52,7 +52,7 @@
 }
 @media (prefers-reduced-data: reduce) { :root[data-theme="y2k"] body::after { display: none; } }
 
-/* A picture MIA painted, behind every page (DEC-0138; web/shell.js puts it on its own layer). Strong at the edges,
+/* A picture MIA painted, behind every page (DEC-0140; web/shell.js puts it on its own layer). Strong at the edges,
    faded and darkened in the middle where you read, so text never sits on a busy picture. */
 .theme-art {
   position: fixed; inset: 0; z-index: -1; pointer-events: none;

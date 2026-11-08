@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1245 files, 271,613 lines; 1245 files describe themselves; 14,742 of 15,437 classes and functions are documented.
+1249 files, 272,111 lines; 1249 files describe themselves; 14,778 of 15,474 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-460 files, 127,566 lines; 6,830 of 6,916 classes and functions documented
+462 files, 127,943 lines; 6,856 of 6,942 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -20,11 +20,11 @@
 - `core/app_context.py`: Defines AppContext: a small bundle of shared services (config, logger factory, event bus) that gets handed to every module and every GUI component.
 - `core/app_intro.py`: What MIA says when she introduces an app (slice 5 of docs/GLASSES_FIRST_BOOT_PLAN.md), in two halves:
 - `core/application.py`: MIAApplication: the orchestrator that boots the system.
-- `core/art_studio.py`: MIA paints (DEC-0138, Zac 2026-11-08: "She should also be able to be prompted to generate art assets and use them in her program, like if you wanted the background to show a fantasy castle/village scene"). A description becomes a picture on the PC's own graphics card, through a local image engine (C
+- `core/art_studio.py`: MIA paints (DEC-0140, Zac 2026-11-08: "She should also be able to be prompted to generate art assets and use them in her program, like if you wanted the background to show a fantasy castle/village scene"). A description becomes a picture on the PC's own graphics card, through a local image engine (C
 - `core/asset_parts.py`: Parts per asset (2026-11-07; the asset page's "parts aren't tracked per asset yet", PLANNED since 2026-10-06): the oil filters, blades, belts and fluids a vehicle, tool or appliance uses, from the household's own inventory, workshop materials and parts bins.
 - `core/assistant_accessibility_actions.py`: "Make the text bigger", "turn on high contrast", "read this screen to me" (core/accessibility.py, 2026-10-01), and "switch to the cards look" (core/display_style.py, DEC-0135), "make it cyberpunk" (core/themes.py, DEC-0136). Each changes only the speaker's own look.
 - `core/assistant_actions.py`: The Assistant's tool-use/action-execution registry — docs/ROADMAP.md milestone 5.5. Lets the LLM actually DO things in MIA (open a module, add an alarm, a note, an inventory item), not just answer questions, via Ollama's structured tool-calling API (core/llm_manager.py's `chat_with_tools()`).
-- `core/assistant_art_actions.py`: MIA paints by voice (DEC-0138, core/art_studio.py): "paint me a fantasy castle village for my background", "use the castle one as my background", "take the background down", "delete the castle picture". Painting runs on the PC's own graphics card and takes a minute or so; a background asked for this
+- `core/assistant_art_actions.py`: MIA paints by voice (DEC-0140, core/art_studio.py): "paint me a fantasy castle village for my background", "use the castle one as my background", "take the background down", "delete the castle picture". Painting runs on the PC's own graphics card and takes a minute or so; a background asked for this
 - `core/assistant_asset_part_actions.py`: Parts per asset by voice (DEC-0125; the screen is the asset page's Parts tab, core/asset_parts.py): "the mower uses the 10W-30 oil", "what parts does the truck take?", "the truck doesn't use that filter anymore". Names are matched to real records in code; the add and remove are the same actions the 
 - `core/assistant_backup_actions.py`: Backups by voice (DEC-0125), read only: "when did I last back up?" says how long since the last backup in the backups folder and where they go (core/web_backups.py). Making one is on Settings (a passphrase is typed, never said aloud); restoring is on the PC.
 - `core/assistant_browser_actions.py`: MIA's browser by voice and chat (DEC-0117): open a page or search, read it, click, type, go back, close; learn a task the person shows her, do it again, list what she's learned. Every step goes through core/browser.py, which sorts it with core/browser_safety.py: a step that commits is held as the ac
@@ -342,6 +342,7 @@
 - `core/region.py`: Where a person lives (2026-10-01, accounts stage 4): MIA is built for anyone, so the safety floor's crisis lines and the money symbol follow the person's country instead of assuming the US.
 - `core/relationships_manager.py`: Relationship Profiles and Pet Profiles — docs/VISION.md's own "structured extensions of the same idea" as Memory Palace (core/user_memory_manager.py). One manager, two related dataclasses, same shape as core/kitchen_manager.py.
 - `core/response_composer.py`: How much MIA says, and how, on the device she's speaking through (DEC-0067; P2 of docs/PERSONALITY_AND_ECOSYSTEM_AUDIT.md). One identity, three surfaces:
+- `core/response_style.py`: Learning how the person likes MIA to answer (DEC-0138): now and then she offers the *same* answer two ways — "do you prefer this response, or this one?" — differing on one dimension of style (how long, how it's laid out, its tone, whether it leads with the answer). The person picks; MIA records it a
 - `core/reward_shop.py`: The Reward Shop (DEC-0028, the game layer's first piece; Zac 2026-10-17): spend the credits you earn on real rewards you set yourself ("new bike pedals = 3,000", "guilt-free gaming night = 500").
 - `core/rewards_manager.py`: Rewards — real lifetime stats (mower hours, workout hours, missions completed, ...) unlocking real cosmetic/emblem rewards at thresholds, the "Call of Duty headshots/kills/bloodthirstys" motivational-stats system the user asked for (2026-09-14), alongside a character customization vision (a hat unlo
 - `core/routine_actions.py`: The Household's routines changed from the screen (DEC-0113 canvas Household, DEC-0125: routines could only be added by voice). `routine.add` sets one up (core/household_routines.add_routine, the same as the add_household_routine voice tool); `routine.pause` stops it making new missions while keeping
@@ -378,6 +379,7 @@
 - `core/sync.py`: Two-way sync between the phone and the home computer (DEC-0022, the step after the link; Zac, 2026-10-18). A change on either one shows up on the other: missions, the kitchen, money, the journal, quests, everything that lives in MIA's data files, and the XP and credits you earned.
 - `core/system_check.py`: "Is everything set up?" (2026-10-01, accounts stage 5): one list that says what works on this device, what's missing, and exactly what to do about each, so a new person (or a new Raspberry Pi) doesn't have to guess why voice or photos of receipts don't work.
 - `core/system_health.py`: Point-in-time system health readings (CPU/RAM/disk/network/temperature) via `psutil` — originally lived in modules/diagnostics/module.py (v0.7 milestone 7.1) as that module's "own exclusive concern", deliberately not promoted to core/ at the time since nothing else needed it. Moved here when milesto
+- `core/system_map.py`: One map of everything that makes MIA (Zac, 2026-11-08: "everything she learns and does needs to be organized and categorized and mapped into a distinguishable map of the total system architecture, capabilities, decisions, loops, user preferences, etc… so MIA and everything that makes her is easy to 
 - `core/tak.py`: MIA's places in the open, civilian standards a TAK app speaks (build plan step 14, DEC-0099): Cursor on Target events and KML, packed as a TAK data package (a zip with a `MANIFEST/manifest.xml`) that ATAK-CIV, iTAK and WinTAK import, so the person's waypoints show on their TAK map with MIA's names, 
 - `core/talk_it_out.py`: Slice A of docs/COGNITIVE_EXTENSION_PROPOSAL.md, "Talk it out": the glue every chat surface (Home's chat bar, the character panel, the Assistant module, the phone, the headless voice loop) calls around one turn, so they all behave the same way.
 - `core/task_manager.py`: A single Task under a core.project_manager.Project — one concrete to-do item, checked off when done. Same persisted-JSON pattern as core/trip_manager.py, minus that module's photo/journal/gear extensions, which don't apply to a plain task list.
@@ -745,7 +747,7 @@
 
 ## tests/: the test suite: what each part must do
 
-422 files, 71,706 lines; 5,630 of 6,239 classes and functions documented
+424 files, 71,827 lines; 5,640 of 6,250 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -766,7 +768,7 @@
 - `tests/test_alarm_tool.py`: Unit test for modules.toolbox.tools.alarm_tool.format_alarm_row — pure formatting logic, no Qt event loop needed.
 - `tests/test_answer_ratings.py`: Rating her answers (DEC-0067, core/answer_ratings.py): a 👍 is kept as a rating, a 👎 is kept and still reaches the Fix-It Log, and each person's ratings are their own. *(2 undocumented)*
 - `tests/test_application_daily_occasions.py`: Unit tests for core.application.MIAApplication._check_daily_occasions() and its per-check exception isolation (2026-09-14 stabilization pass). *(1 undocumented)*
-- `tests/test_art_studio.py`: MIA paints (DEC-0138, core/art_studio.py): a description becomes a picture on the PC's own image engine (ComfyUI), kept in the person's folder, and can go up as their theme's backdrop. Tested against a stand-in ComfyUI on a local port: the same HTTP calls, a tiny PNG back.
+- `tests/test_art_studio.py`: MIA paints (DEC-0140, core/art_studio.py): a description becomes a picture on the PC's own image engine (ComfyUI), kept in the person's folder, and can go up as their theme's backdrop. Tested against a stand-in ComfyUI on a local port: the same HTTP calls, a tiny PNG back.
 - `tests/test_asset_parts.py`: Parts per asset (core/asset_parts.py and its voice tools): the parts an asset uses are stated links to the household's inventory and materials, listed with what's on hand, out and low first; adding and removing go through the same actions the asset page uses.
 - `tests/test_asset_photo.py`: An asset's photo (Q-0014, 2026-11-07): kept in the household's own folder under a name of its own, shown on its page and Garage card through a link that changes with the file, and never served from outside that folder.
 - `tests/test_assistant_action_gating.py`: Regression tests tying modules.assistant.module.looks_like_action_request() to the REAL trigger_phrases registered in core.application's _register_assistant_actions() (milestone 5.7-5.9) — not a hand-copied keyword list. Two real gaps were found only by live-model testing and are pinned here so they
@@ -1046,6 +1048,7 @@
 - `tests/test_relationships_module.py`: Unit tests for modules.relationships.module's pure row formatters — no Qt widget construction, same shape as tests/test_kitchen_module.py's own formatter tests. *(4 undocumented)*
 - `tests/test_relay_offers.py`: What the phone will offer the glasses through the relay (DEC-0064). Relay.kt holds the list; these keep it inside what the glasses may do at all. *(1 undocumented)*
 - `tests/test_response_composer.py`: The response composer (core/response_composer.py, DEC-0067): what she says on each device, composed for it, never a sentence cut in half. *(4 undocumented)*
+- `tests/test_response_style.py`: Learning how the person likes MIA to answer (core/response_style.py, DEC-0138): a recorded A/B pick moves the preferred value; confidence rises as picks agree; the next experiment targets the least-settled dimension; the style instruction only names dimensions that have a pick; and it all persists ( *(1 undocumented)*
 - `tests/test_reward_shop.py`: The Reward Shop (DEC-0028, Zac 2026-10-17): spend credits on rewards you set. Each person's own shop; spending never lowers the lifetime credits or the level; undo gives the credits back. *(3 undocumented)*
 - `tests/test_rewards_manager.py`: Unit tests for core.rewards_manager. Isolates every real manager's own file constants into a tmp_path scratch area, same monkeypatch pattern as tests/test_kitchen_manager.py's own isolated_paths. *(4 undocumented)*
 - `tests/test_safety_escalation.py`: Q-0002 (approved 2026-10-05, H-0011): when a child triggers the safety floor, the child gets the safety reply and is told plainly that a parent will be told; each guardian gets a minimal, direct alert (who and when, never what was written); it's recorded for audit in the child's and the guardians' o *(3 undocumented)*
@@ -1082,6 +1085,7 @@
 - `tests/test_support_choice.py`: MIA asks which kind of support when it isn't clear (core/support_choice.py, wired through core/talk_it_out.pre_turn). *(4 undocumented)*
 - `tests/test_sync.py`: Two-way sync between the phone and the home computer (core/sync.py): the merge rules, one full sync against a computer that answers like MIA on the PC does, and the PC's own endpoints. *(5 undocumented)*
 - `tests/test_system_health.py`: Unit tests for core.system_health (moved here from modules.diagnostics.module in milestone 5.7 — see that module's own docstring and core/system_health.py's docstring for why). format_system_health() is tested with hand-built snapshots (pure, deterministic). read_system_health()/_read_cpu_temperatur *(2 undocumented)*
+- `tests/test_system_map.py`: The one map of everything that makes MIA (core/system_map.py, DEC-0139): it assembles every category from the real sources (decisions, loops, knowledge, learnings, stores, preferences, architecture, capabilities), renders a navigable page, and a broken source becomes a noted gap rather than a crash.
 - `tests/test_talk_it_out.py`: Slice A, "Talk it out" (core/talk_it_out.py) end to end through core/assistant_turn.run_assistant_turn with a fake model: modes, privacy of what's written to disk, the safety floor, journaling, and the journal tools. Asserts facts and structure, never generated wording.
 - `tests/test_task_manager.py`: Unit tests for core.task_manager. Isolates _DATA_DIR/_TASKS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_trip_manager.py's isolated_paths). *(2 undocumented)*
 - `tests/test_textbook_tutor.py`: Textbook tutor: document text extraction (core/document_text.py), the library and its index (core/textbook_manager.py), study and quiz turns (core/textbook_study.py), the tools, and the Classroom page. A small real PDF is generated per test with Qt's own PDF writer.

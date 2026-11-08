@@ -1,4 +1,4 @@
-# MIA's image engine: ComfyUI on the PC (DEC-0138)
+# MIA's image engine: ComfyUI on the PC (DEC-0140)
 
 MIA paints backdrops and portal pictures on the PC's own graphics card (the RX 7900 XTX), through **ComfyUI**, a free
 local image engine. MIA only talks to it on this computer (`http://127.0.0.1:8188`); nothing is sent anywhere else.

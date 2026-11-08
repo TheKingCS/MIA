@@ -222,7 +222,7 @@
     nexus: () => read("/api/nexus", "nexus"),
     themes: () => read("/api/themes", "themes"),  // the Theme Studio (DEC-0136)
     designTheme: (description) => demo ? demoOnly() : call("POST", "/api/themes/design", { description }),
-    art: () => read("/api/art", "art"),  // MIA's paintings (DEC-0138)
+    art: () => read("/api/art", "art"),  // MIA's paintings (DEC-0140)
     paint: (description, use, apply) => demo ? demoOnly() : call("POST", "/api/art/paint", { description, use: use || "backdrop", apply: !!apply }),
     // The ID wallet (core/id_wallet.py): numbers travel only in these calls, never in an action.
     wallet: () => read("/api/wallet", "wallet"),

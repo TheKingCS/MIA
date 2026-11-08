@@ -43,3 +43,19 @@ def test_a_life_event_carries_its_environment_and_a_real_view_excludes_fiction(t
     # a real-life timeline keeps to environment == "real" and never shows the campaign event
     real_only = [e for e in lines if e.get("environment") == "real"]
     assert [e["summary"] for e in real_only] == ["Paid the water bill"]
+
+
+def test_events_for_keeps_the_real_life_history_to_real_events(tmp_path):
+    """The real dashboard (events_for) defaults to real-only, so a campaign's events never surface there; None asks
+    for every domain (DEC-0137)."""
+    from types import SimpleNamespace
+
+    from core import life_events
+    from core.life_events import LifeEventLog
+
+    log = LifeEventLog(data_dir=tmp_path)
+    life_events.record(log, "bill_paid", "Paid the water bill")
+    life_events.record(log, "quest_completed", "Slew the dragon", environment="fictional")
+    ctx = SimpleNamespace(life_events=log, personal_life_events=None, budget=None, config=None)
+    assert [e.summary for e in life_events.events_for(ctx)] == ["Paid the water bill"]
+    assert {e.summary for e in life_events.events_for(ctx, environment=None)} == {"Paid the water bill", "Slew the dragon"}

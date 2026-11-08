@@ -152,7 +152,7 @@ FONTS: dict[str, tuple[str, str]] = {
 STARK_CHOICES = {"accent": "#35d4ff", "background": "#05070a", "panel": "#0c1016", "text": "#e6eef6",
                  "line": "#96b6d4", "radius": 6, "font": "system", "material": "solid",
                  "fire": 1.0, "bloom": 1.0, "mist": 1.0, "scan": 0.0, "grain": 0.0, "palette": [],
-                 # DEC-0138: a picture MIA painted, behind every page and on the room's far wall, and how strongly
+                 # DEC-0140: a picture MIA painted, behind every page and on the room's far wall, and how strongly
                  "backdrop": "", "backdrop_strength": 0.6}
 _ART_ID = re.compile(r"^[a-f0-9]{12}$")
 # Hues that mean something (DEC-0014): an accent near them would read as a warning, an error or "done".
@@ -242,7 +242,7 @@ def choices_of(theme: dict) -> dict:
 
 def build_theme(choices: dict, base: Optional[dict] = None, theme_id: str = "", name: str = "") -> dict:
     """Pure logic. A whole theme (cleaned) from the Studio's choices, on top of a base theme's other tokens (its
-    backdrop gradient, label spacing, motion), with the backdrop picture the choices name (DEC-0138). Raises ValueError
+    backdrop gradient, label spacing, motion), with the backdrop picture the choices name (DEC-0140). Raises ValueError
     when a colour isn't #rrggbb, the accent would read as a meaning colour, or the text and background are under
     4.5:1."""
     c = {**STARK_CHOICES, **{k: v for k, v in (choices or {}).items() if v is not None}}
@@ -296,7 +296,7 @@ def clean_theme(data: dict) -> dict:
     """Pure logic. A theme's data as the page may use it: {id, name, line, tokens, material, room}, keeping only the
     tokens and room settings a theme may change, dropping any value that could break out of CSS (url(), braces,
     semicolons, angle brackets, backslashes) or runs long, clamping the room's levels, and keeping only #rrggbb
-    colours in the room; a backdrop picture is kept only as a picture id with its strength (DEC-0138). Raises
+    colours in the room; a backdrop picture is kept only as a picture id with its strength (DEC-0140). Raises
     ValueError without an id or name."""
     theme_id = str(data.get("id") or "").strip()
     name = str(data.get("name") or "").strip()
