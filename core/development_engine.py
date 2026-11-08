@@ -25,7 +25,8 @@ the model improvising dollars.
    season, the rest lined up, the budget, made first, selling only after proof and a place to sell, a professional's
    look). So selling starts is reached through toilet-roll cups, a shelf, a first batch and a stand, never jumped to;
    and an $800 build waits while cheap foundations remain. When no path can start now: a seasonal wait, a savings
-   target, or the prerequisite to clear first.
+   target, or the prerequisite to clear first. What's already on hand is never recommended again (`met`: a project
+   whose every provided tag is had counts as done, so compost going means no compost bin).
 
 The homestead catalog here (`homestead_catalog`) is the first proving domain; the same engine takes any domain's
 candidate list (workshop, business…), which is the cross-domain reuse DEC-0137 approved. Everything is pure and
@@ -121,6 +122,15 @@ def _have_after(profile: DevelopmentProfile, catalog: Sequence[Candidate], done:
     return have
 
 
+def met(profile: DevelopmentProfile, catalog: Sequence[Candidate], done=frozenset()) -> frozenset:
+    """Pure logic. What's done, plus every project whose whole purpose is already on hand: each tag it provides is had
+    (a compost pile going means no compost bin to build; seed cups on hand mean neither the toilet-roll cups nor the
+    bought trays). A project that only earns (sales) provides nothing, so it's never met this way."""
+    done = frozenset(done)
+    have = _have_after(profile, catalog, done)
+    return done | {c.id for c in catalog if c.provides and set(c.provides) <= have}
+
+
 def available(candidate: Candidate, profile: DevelopmentProfile, catalog: Sequence[Candidate], done=frozenset()) -> tuple:
     """Whether a candidate's prerequisites are met, and which tags are missing if not (its dependency gate)."""
     missing = set(candidate.requires) - _have_after(profile, catalog, frozenset(done))
@@ -213,8 +223,8 @@ def score(candidate: Candidate, profile: DevelopmentProfile, catalog: Sequence[C
 
 
 def ranked(profile: DevelopmentProfile, catalog: Sequence[Candidate], done=frozenset()) -> list:
-    """Every not-yet-done candidate, scored, best first."""
-    done = frozenset(done)
+    """Every candidate not yet done or already met (`met`), scored, best first."""
+    done = met(profile, catalog, done)
     return sorted((score(c, profile, catalog, done) for c in catalog if c.id not in done),
                   key=lambda s: s["score"], reverse=True)
 
@@ -351,8 +361,9 @@ def next_step(profile: DevelopmentProfile, catalog: Sequence[Candidate], done=fr
     (`readiness`), said as the start of the most productive goal that step begins. So a goal that needs
     infrastructure first (selling starts needs cups, a shelf, a first batch and a stand) is reached through that
     infrastructure, never jumped to. When no path can start now, it names a seasonal
-    wait, a savings target, or the prerequisite to clear first."""
-    done = frozenset(done)
+    wait, a savings target, or the prerequisite to clear first. A project already met by what's on hand (`met`)
+    counts as done."""
+    done = met(profile, catalog, done)  # what's on hand already counts as done: it's never recommended again
     rows = ranked(profile, catalog, done)
     if not rows:
         return None

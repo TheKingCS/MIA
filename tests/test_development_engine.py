@@ -12,7 +12,7 @@ the payoff (selling starts only through cups, a shelf, a first batch and a stand
 waiting while cheap foundations remain, the checks with each step, and the catalog rules that hold it. And the budget
 read from their own build targets when they don't give one. The flock and the compost by the same rules (a coop and
 a feed bin before hens, eggs before selling them; slow compost only when nothing quicker), a step's share of the work
-it unlocks, and what a flock in the records says exists. The year: preserving in summer, spring prepared in winter,
+it unlocks, and what a flock in the records says exists; what's on hand is never recommended again. The year: preserving in summer, spring prepared in winter,
 food sold only after the cottage-food rules, a payoff months away worth less than one now. The rest are
 unit tests on
 the scoring, the dependency gate, compounding value and the defensive profile reader.
@@ -345,3 +345,18 @@ def test_food_is_sold_only_after_the_cottage_food_rules_are_checked_and_only_onc
 def test_a_payoff_months_away_is_worth_less_than_one_now():
     """In September, preserves already put up beat seedling starts that can't sell until spring."""
     assert de._months_until((3, 4, 5), 9) == 6 and de._months_until((3, 4, 5), 4) == 0 and de._months_until((), 1) == 0
+
+
+def test_what_is_already_on_hand_is_never_recommended_again():
+    """A project whose whole purpose is on hand is met: compost going means no compost bin to build, seed cups on hand
+    mean neither cups nor trays; a sale, which provides nothing, is never met this way. With beds and compost going,
+    winter points at water before drip irrigation and summer at canning the harvest."""
+    catalog = de.homestead_catalog()
+    have = frozenset({"beds", "compost", "soil", "seed_cups"})
+    met = de.met(de.DevelopmentProfile(have=have), catalog)
+    assert {"compost_bin", "raised_bed", "seed_cups", "cell_trays"} <= met
+    assert not {"plant_sales", "egg_sales", "preserve_sales", "finished_compost"} & met
+    winter = de.next_step(de.DevelopmentProfile(month=1, hours_per_week=6, budget=200.0, have=have), catalog)
+    summer = de.next_step(de.DevelopmentProfile(month=7, hours_per_week=6, budget=200.0, have=have), catalog)
+    assert winter["recommend"]["id"] != "compost_bin" and summer["recommend"]["id"] == "canning_setup"
+    assert all(s["id"] not in met for s in winter["path"] + summer["path"])
