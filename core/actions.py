@@ -376,6 +376,7 @@ from core.offline_maps import _register as _register_map_areas  # noqa: E402  (v
 
 _register_map_areas()
 import core.map_share_actions  # noqa: E402,F401  (places on TAK apps on this network, DEC-0099)  (your own calendar events)
+import core.connectors  # noqa: E402,F401  (importing from other apps: files, rental calendar links)
 import core.more_actions  # noqa: E402,F401  (Journal, Workshop, Expeditions, Music, Files)
 import core.inbox_actions  # noqa: E402,F401  (the Inbox: file, dismiss, send a note)
 import core.game_actions  # noqa: E402,F401  (the game layer: Reward Shop, DEC-0028)

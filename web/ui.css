@@ -1694,3 +1694,12 @@ body.mod-maps .hero { display: none; }
 .sr-ico { text-align: center; opacity: .8; }
 .sr-detail { font-size: 13px; opacity: .65; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 40vw; }
 .sr-hint { padding: 12px; opacity: .65; font-size: 14px; }
+/* ---------------------------------------------------------------- Connect Apps (core/connectors.py)
+   Each source a card: how, where it lands, then its picker and the preview of what an import would add. */
+.cn-source { display: grid; gap: 10px; }
+.cn-fields { display: grid; gap: 8px; }
+.cn-pick { position: relative; overflow: hidden; width: fit-content; }
+.cn-pick input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.cn-preview { display: grid; gap: 8px; }
+.cn-sentence { margin: 0; font-weight: 600; }
+.cn-rows { margin: 0; padding-left: 18px; font-size: var(--text-sm); color: var(--text-dim); }

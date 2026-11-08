@@ -806,3 +806,19 @@ def test_every_response_carries_the_security_headers(client, context):
     assert "script-src 'self'" in answer.headers["Content-Security-Policy"]
     assert answer.headers["X-Content-Type-Options"] == "nosniff" and answer.headers["Cache-Control"] == "no-store"
     assert answer.headers["Referrer-Policy"] == "no-referrer"
+
+
+def test_connect_apps_lists_sources_and_previews_a_rental_calendar_before_anything_changes(client, context):
+    """Connect Apps (core/connectors.py): the page lists the sources; a preview reads, changes nothing, and refuses a
+    preview with no property."""
+    auth = _signed_in(client, context)
+    page = client.get("/api/connect", headers=auth).json()
+    assert [c["id"] for c in page["connectors"]] == ["file", "rental_calendar"]
+    ics = ("BEGIN:VCALENDAR\nBEGIN:VEVENT\nDTSTART;VALUE=DATE:20261120\nDTEND;VALUE=DATE:20261123\nSUMMARY:Reserved\n"
+           "END:VEVENT\nEND:VCALENDAR\n")
+    before = len(context.calendar.all_events())
+    preview = client.post("/api/connect/preview", headers=auth,
+                          json={"source": "rental_calendar", "text": ics, "property": "Lake Cabin"}).json()
+    assert preview["count"] == 2 and preview["adds"][0] == "Check-in · Lake Cabin on 2026-11-20"
+    assert len(context.calendar.all_events()) == before
+    assert client.post("/api/connect/preview", headers=auth, json={"source": "rental_calendar", "text": ics}).status_code == 400

@@ -1117,6 +1117,42 @@ def create_app(context: AppContext) -> FastAPI:
 
     # Start Here (core/web_guide.py): what MIA does and how, what's new, and which of this person's apps are still
     # empty (counted on their own view). Read only.
+    # Connect Apps (core/connectors.py): the sources MIA can import from, and a preview of one import before it's
+    # approved (the import itself is an action: connect.file, connect.rental_calendar).
+    @app.get("/api/connect")
+    def connect_screen(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.connectors import connect_page
+
+        with app.state.turn_lock:
+            return connect_page(view_for(context, profile_id))
+
+    @app.post("/api/connect/preview")
+    def connect_preview(body: dict, profile_id: str = Depends(require_profile_id)) -> dict:
+        """What an import would add, before it's approved: a file (name + text) or a rental calendar link (url +
+        property). The link is read here (outside the turn lock: a slow site never holds MIA up) and not kept."""
+        from core import connectors
+
+        source = str(body.get("source") or "")
+        try:
+            if source == "rental_calendar":
+                place = " ".join(str(body.get("property") or "").split())
+                if not place:
+                    raise ValueError("Which property is this calendar for?")
+                text = str(body.get("text") or "") or connectors.fetch_link(str(body.get("url") or ""))
+                with app.state.turn_lock:
+                    preview, _new = connectors.rental_preview(view_for(context, profile_id), text, place)
+                return {"kind": "rental_calendar", **preview.as_dict(),
+                        "sentence": preview.sentence("check-ins and check-outs")}
+            if source == "file":
+                with app.state.turn_lock:
+                    kind, preview = connectors.file_preview(view_for(context, profile_id), str(body.get("name") or ""),
+                                                            str(body.get("text") or ""))
+                return {"kind": kind, **preview.as_dict(), "sentence": preview.sentence(
+                    {"calendar": "calendar events", "contacts": "people", "bank": "transactions"}[kind])}
+        except ValueError as problem:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Choose a file or a calendar link.")
+
     @app.get("/api/guide")
     def guide_page(profile_id: str = Depends(require_profile_id)) -> dict:
         from core.web_guide import guide

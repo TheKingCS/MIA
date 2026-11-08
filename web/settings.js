@@ -235,6 +235,8 @@
         el("div", { class: "acct-actions" }, el("a", { class: "btn btn-ghost", href: "notifications.html" }, "Notifications"))),
       section("Recent Changes", el("p", { class: "dim" }, "What MIA changed lately, with Undo, and the last two weeks' history."),
         el("div", { class: "acct-actions" }, el("a", { class: "btn btn-ghost", href: "changes.html" }, "Recent Changes"))),
+      section("Connect Apps", el("p", { class: "dim" }, "Bring in data from your other apps: a calendar, contacts, a bank statement, a rental's calendar link. You see it before anything changes."),
+        el("div", { class: "acct-actions" }, el("a", { class: "btn btn-ghost", href: "connect.html" }, "Connect Apps"))),
       section("Apps", el("p", { class: "dim" }, "Choose which apps you see, and your favorites."),
         el("div", { class: "acct-actions" }, el("a", { class: "btn btn-ghost", href: "apps.html#manage" }, "Choose apps"))),
       section("Account", el("div", { class: "acct-actions" },
