@@ -209,8 +209,9 @@ def bucket_of(days: Optional[int], urgency: str = "") -> Optional[str]:
 
 
 def _task_row(context, task, asset, today: date) -> dict:
-    """One maintenance task for the screens: its status (due, overdue, its bucket, the due words the Garage card shows), its form values, and its
-    Done action (asking for the meter reading on a meter task); a quick stat has no action.
+    """One maintenance task for the screens: its status (due, overdue, its bucket, the due words the Garage card shows), its form values, its
+    readings' series in the Lab once there are two to chart (`series`), and its Done action (asking for the meter
+    reading on a meter task); a quick stat has no action.
     """
     from core.equipment_actions import RECORDS
 
@@ -223,6 +224,7 @@ def _task_row(context, task, asset, today: date) -> dict:
             "asset": asset.name if asset is not None else None, "trigger": task.trigger_type, "unit": task.meter_unit,
             "priority": task.priority, "last_completed": task.last_completed, "interval_days": task.interval_days,
             "meter_interval": task.meter_interval, **status, "values": values,
+            "series": task.series_id if len(readings) > 1 else None,
             "bucket": bucket_of(status.get("days"), status.get("urgency") or "") if not status["quick_stat"] else None,
             "action": None if status["quick_stat"] else
             {"kind": "maintenance.done", "label": "Done", "params": {"task_id": task.task_id},

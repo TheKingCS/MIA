@@ -290,5 +290,5 @@ class ProjectManager:
         return None
 
     def all_projects(self) -> list[Project]:
-        """Every project, soonest due first (those with no due date last)."""
-        return sorted(self._projects, key=lambda p: (p.due_date == "", p.due_date))
+        """Every project, soonest due first (those with no due date last; a missing one, saved as None, too)."""
+        return sorted(self._projects, key=lambda p: (not p.due_date, p.due_date or ""))

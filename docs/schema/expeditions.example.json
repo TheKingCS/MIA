@@ -40,13 +40,64 @@
           "packed": 2,
           "distance_km": null,
           "photos": 0,
-          "journal": [],
+          "journal": [
+            {
+              "id": "j1",
+              "title": "Fog lifted by eight",
+              "conditions": "Calm, 9 \u00b0C, fog early",
+              "when": "2026-10-25"
+            }
+          ],
           "values": {
             "name": "Morning paddle",
             "activity_type": "Kayaking",
             "start_date": "2026-10-25",
             "end_date": null,
             "notes": ""
+          },
+          "route": {
+            "stops": [
+              {
+                "id": "w1",
+                "name": "Boat ramp",
+                "reached": true
+              },
+              {
+                "id": "w2",
+                "name": "Heron island",
+                "reached": true
+              },
+              {
+                "id": "w3",
+                "name": "North cove",
+                "reached": false
+              }
+            ],
+            "planned_km": 6.4,
+            "next": {
+              "id": "w3",
+              "name": "North cove"
+            },
+            "legs": [
+              {
+                "from": "Boat ramp",
+                "to": "Heron island",
+                "km": 2.35,
+                "took": "42 min",
+                "pace": "3.4 km/h"
+              }
+            ],
+            "walked_km": 2.4,
+            "checkpoints": [
+              {
+                "name": "Boat ramp",
+                "at": "2026-10-25T07:10:00"
+              },
+              {
+                "name": "Heron island",
+                "at": "2026-10-25T07:52:00"
+              }
+            ]
           }
         }
       ],
@@ -194,6 +245,62 @@
           "default": null
         }
       ]
+    },
+    "journal": {
+      "noun": "entry",
+      "id_param": "entry_id",
+      "fields": [
+        {
+          "name": "title",
+          "label": "Title",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "body",
+          "label": "Entry",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "tags",
+          "label": "Tags (comma separated)",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "conditions",
+          "label": "Weather / conditions",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
     }
-  }
+  },
+  "waypoints": [
+    {
+      "id": "w1",
+      "name": "Boat ramp"
+    },
+    {
+      "id": "w2",
+      "name": "Heron island"
+    },
+    {
+      "id": "w3",
+      "name": "North cove"
+    },
+    {
+      "id": "w4",
+      "name": "Old dam"
+    }
+  ]
 }

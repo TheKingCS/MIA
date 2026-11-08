@@ -601,7 +601,15 @@
         "notes": ""
       },
       "payee": "",
-      "from_bill": false
+      "from_bill": false,
+      "business": "Rentals LLC",
+      "business_id": "ent1",
+      "auto": false,
+      "lines": [
+        "HVAC filter 16x25 \u00d73 \u00b7 $54.00",
+        "Foil tape \u00b7 $9.98",
+        "Shop towels \u00b7 $21.02"
+      ]
     },
     {
       "id": "beaef58486",
@@ -619,7 +627,11 @@
         "notes": ""
       },
       "payee": "",
-      "from_bill": true
+      "from_bill": true,
+      "business": "",
+      "business_id": "",
+      "auto": false,
+      "lines": []
     }
   ],
   "recent_days": 90,
@@ -741,5 +753,43 @@
         "total": 232000.0
       }
     ]
+  },
+  "business": {
+    "choices": [
+      {
+        "id": "ent1",
+        "name": "Rentals LLC"
+      },
+      {
+        "id": "ent2",
+        "name": "Lawn Care"
+      },
+      {
+        "id": "personal",
+        "name": "Personal"
+      }
+    ],
+    "review": [
+      {
+        "id": "x1",
+        "date": "2026-10-05",
+        "amount": 42.1,
+        "payee": "Shell",
+        "guess": {
+          "id": "ent2",
+          "name": "Lawn Care",
+          "why": "you've put Shell charges under Lawn Care 3 times"
+        }
+      },
+      {
+        "id": "x2",
+        "date": "2026-10-04",
+        "amount": 18.5,
+        "payee": "Walmart",
+        "guess": null
+      }
+    ],
+    "waiting": 2,
+    "auto": 1
   }
 }

@@ -158,6 +158,65 @@
     return box;
   }
 
+  // Starter sets (core/starter_actions.py): the usual chores, upkeep and routines for a kind of life, each part ticked
+  // or left out; starter.add adds them as one change that Undo takes back. By voice: "add the homestead starter set".
+  function starterSets() {
+    if (!page.starters || !page.starters.length) return "";
+    return section("Starter Sets", el("p", { class: "dim" }, "Fill MIA in with the usual for a kind of life. Leave out any part you don't need; nothing already here is added twice."),
+      ...page.starters.map((s) => {
+        const boxes = s.parts.map((p) => el("label", { class: "st-part" }, el("input", { type: "checkbox", value: p.id, checked: true }), el("span", {}, p.label)));
+        return el("details", { class: "st-set" }, el("summary", {}, el("strong", {}, s.name), el("span", { class: "dim" }, " · " + s.description)),
+          el("div", { class: "st-parts" }, boxes),
+          el("button", { type: "button", class: "btn btn-ghost btn-small", onclick: () => {
+            const parts = boxes.map((b) => b.firstChild).filter((b) => b.checked).map((b) => b.value);
+            if (!parts.length) { MIAShell.say("Tick at least one part."); return; }
+            act({ kind: "starter.add", params: { starter_id: s.id, parts: parts.join(",") } });
+          } }, "Add " + s.name));
+      }));
+  }
+
+  // MIA's voice (core/web_voice.py), for the PC's owner: the voices installed, the AI voice effect (Piper voices) and
+  // the volume. Changed at once (device-wide; pick the old one again to go back). By voice: "switch to the British voice".
+  let voices = null;
+  async function chooseVoice(change) {
+    try { MIAShell.say((await MIA.chooseVoice(change)).said); voices = await MIA.voiceChoice(); draw(); }
+    catch (e) { MIAShell.say(e.message); }
+  }
+  function voiceSection() {
+    if (!voices || !voices.available) return "";
+    if (!voices.voices.length) return section("MIA's Voice", el("p", { class: "dim" }, "No voices are installed on this computer yet."));
+    const pick = el("select", { "aria-label": "MIA's voice", onchange: () => chooseVoice({ voice_id: pick.value }) },
+      voices.voices.map((v) => el("option", { value: v.id, selected: v.id === voices.current ? true : null }, v.name)));
+    const effect = el("input", { type: "checkbox", role: "switch", checked: voices.effect ? true : null, "aria-label": "AI voice effect" });
+    effect.addEventListener("change", () => chooseVoice({ effect: effect.checked }));
+    const vol = el("input", { type: "range", min: "0", max: "150", step: "5", value: String(voices.volume), "aria-label": "MIA's volume" });
+    const shown = el("span", { class: "dim" }, voices.volume + "%");
+    vol.addEventListener("input", () => { shown.textContent = vol.value + "%"; });
+    vol.addEventListener("change", () => chooseVoice({ volume: Number(vol.value) }));
+    return section("MIA's Voice",
+      el("label", { class: "vc-row" }, el("span", {}, "Voice"), pick),
+      el("label", { class: "vc-row" }, el("span", {}, "AI voice effect (Piper voices)"), el("span", { class: "switch" }, effect, el("span", { "aria-hidden": "true" }))),
+      el("label", { class: "vc-row" }, el("span", {}, "Volume"), vol, shown));
+  }
+
+  // Backups (core/web_backups.py), for the PC's owner: how long since the last one, the newest few, and Back Up Now
+  // with an optional passphrase (sent once, never kept). Restoring is on the PC. By voice: "when did I last back up?"
+  let backups = null;
+  function backupSection() {
+    if (!backups) return "";
+    const pass = el("input", { type: "password", autocomplete: "new-password", placeholder: "Passphrase (optional, 8+)", "aria-label": "Backup passphrase" });
+    return section("Backups",
+      el("p", { class: "dim" }, backups.count ? "Last backup " + backups.last + ". Saved in " + backups.folder + "." : "No backups yet. They're saved in " + backups.folder + "."),
+      backups.backups.length ? el("ul", { class: "bk-list" }, backups.backups.map((b) => el("li", {},
+        el("span", {}, b.when), el("span", { class: "dim" }, b.size + (b.locked ? " · passphrase" : ""))))) : null,
+      el("div", { class: "acct-actions bk-make" }, pass, el("button", { type: "button", class: "btn btn-amber", onclick: async (ev) => {
+        ev.target.disabled = true;
+        try { const done = await MIA.backupNow(pass.value); pass.value = ""; MIAShell.say("Backed up: " + done.made); backups = await MIA.backups(); draw(); }
+        catch (e) { MIAShell.say(e.message); ev.target.disabled = false; }
+      } }, "Back Up Now")),
+      el("p", { class: "dim" }, "With a passphrase the backup is encrypted; keep it somewhere safe, it can't be recovered. Restoring is on the PC."));
+  }
+
   function draw() {
     $("panel").replaceChildren(
       ...page.groups.map((g) => group(g.title, ...g.settings.map(setting), g.title === "Sound" ? soundCheck() : null)),
@@ -167,6 +226,9 @@
         el("p", { class: "dim" }, "Download a small AI model, run it on this phone, and see how fast and how right it is. Talk uses it once it's running."),
         el("div", { class: "acct-actions" }, el("a", { class: "btn btn-ghost", href: "model-test.html" }, "Model test"))) : "",
       glassesSection(),
+      voiceSection(),
+      starterSets(),
+      backupSection(),
       section("My Places", el("p", { class: "dim" }, "Places where arriving opens something: your workout at the gym, your grocery list at the store."),
         el("div", { class: "acct-actions" }, el("a", { class: "btn btn-ghost", href: "places.html" }, "My Places"))),
       section("Notifications", el("p", { class: "dim" }, "Everything MIA has told you, and why she sent the ones she sent on her own."),
@@ -182,6 +244,8 @@
 
   MIAShell.start(async () => {
     page = await MIA.settings();
+    try { backups = await MIA.backups(); } catch (e) { backups = null; }  // the PC owner's only
+    try { voices = await MIA.voiceChoice(); } catch (e) { voices = null; }  // the PC owner's only
     draw();
   });
 })();

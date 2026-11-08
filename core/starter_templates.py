@@ -294,8 +294,11 @@ _STORE_FOR = {Routine: "recurring_missions", Upkeep: "maintenance", Workout: "wo
 
 
 def apply(context, starter_id: str, part_ids: Optional[Iterable[str]] = None,
-          today: Optional[date] = None) -> StarterResult:
-    """Add a starter set (all of it, or just `part_ids`). One undoable change."""
+          today: Optional[date] = None, own_undo: bool = True) -> StarterResult:
+    """Add a starter set (all of it, or just `part_ids`). One undoable change: its own (own_undo), or, from an action
+    (core/starter_actions.py), part of the action's, so the action's Undo puts it back."""
+    from contextlib import nullcontext
+
     from core.child_accounts import is_child
     from core.person_settings import person_id
     from core.undo_log import recording
@@ -307,7 +310,7 @@ def apply(context, starter_id: str, part_ids: Optional[Iterable[str]] = None,
     wanted = set(part_ids) if part_ids is not None else {p.part_id for p in starter.parts}
     child = getattr(context, "config", None) is not None and is_child(context)
     result = StarterResult()
-    with recording(f"starter_{starter_id}", person_id(context)) as change:
+    with (recording(f"starter_{starter_id}", person_id(context)) if own_undo else nullcontext()) as change:
         for part in starter.parts:
             if part.part_id not in wanted:
                 continue
@@ -323,7 +326,7 @@ def apply(context, starter_id: str, part_ids: Optional[Iterable[str]] = None,
                 else:
                     _add_workout(context, item, result)
     undo = getattr(context, "undo", None)
-    if undo is not None:
+    if undo is not None and change is not None:
         undo.add(change)
     if result.added:
         from core import life_events

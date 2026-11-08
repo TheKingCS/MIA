@@ -17,6 +17,11 @@ Three kinds of plan, found together by `find()`:
   `plans/` folder (PDFs, images, CAD and SketchUp files), listed by
   file name and the folders they sit in (`plans/woodworking/...`).
 
+`detail()` is one plan for the Library page: at a size of the person's own
+(`size_fields`, `read_sizes`), with its shopping list. Keeping it, starting
+a project from it and letting a kept one go are actions
+(core/plan_actions.py).
+
 `shopping_list()` checks a plan's materials against the workshop's
 materials (core/material_manager.py): what's on hand, what to buy, and
 what it costs where the price is known. `SOURCES` lists where free plans
@@ -390,20 +395,79 @@ def screen(context, query: str = "") -> dict:
                       for p in plans]}
 
 
-def detail(context, plan_id: str) -> Optional[dict]:
+# A size's words on the plan page, by calculator argument: (label, unit). One not here shows its own name.
+SIZE_LABELS = {"length_ft": ("Length", "ft"), "width_ft": ("Width", "ft"), "height_ft": ("Height", "ft"),
+               "height_in": ("Height", "in"), "span_ft": ("Joist span", "ft"), "thickness_in": ("Thickness", "in"),
+               "gates": ("Gates", ""), "hens": ("Hens", ""), "depth_in": ("Depth", "in"), "width_in": ("Width", "in"),
+               "shelves": ("Shelves", ""), "bays": ("Bays", ""), "rise_in": ("Rise", "in"), "depth_ft": ("Depth", "ft"),
+               "wall_height_ft": ("Wall height", "ft")}
+
+
+def size_fields(plan: dict, sizes: Optional[dict] = None) -> list[dict]:
+    """Pure logic. The sizes a plan can be worked out at (its calculator's arguments, a built-in or kept-at-a-size
+    plan only), each {name, label, unit, value}: the size asked for, else the plan's own."""
+    if not plan.get("calc"):
+        return []
+    sizes = sizes or {}
+    return [{"name": k, "label": SIZE_LABELS.get(k, (k.replace("_", " ").capitalize(), ""))[0],
+             "unit": SIZE_LABELS.get(k, ("", ""))[1], "value": sizes.get(k, v)} for k, v in plan.get("args", {}).items()]
+
+
+def read_sizes(plan: dict, given: dict) -> dict:
+    """The sizes given for a plan's calculator, as numbers (only its own arguments; a blank one keeps the plan's).
+    ValueError for one that isn't a positive number."""
+    out = {}
+    for name in plan.get("args", {}):
+        raw = given.get(name)
+        if raw in (None, ""):
+            continue
+        try:
+            value = float(raw)
+        except (TypeError, ValueError):
+            raise ValueError(f"{SIZE_LABELS.get(name, (name,))[0]} has to be a number.") from None
+        if value <= 0:
+            raise ValueError(f"{SIZE_LABELS.get(name, (name,))[0]} has to be more than zero.")
+        out[name] = int(value) if value.is_integer() else value
+    return out
+
+
+def _priced(shopping: dict) -> dict:
+    """A shopping list with its costs in the person's currency (core.region.money): each priced row's `cost_text` and
+    the total's `known_cost_text`."""
+    from core.region import money
+
+    for row in shopping["rows"]:
+        if "cost" in row:
+            row["cost_text"] = money(row["cost"])
+    shopping["known_cost_text"] = money(shopping["known_cost"]) if shopping["known_cost"] else ""
+    return shopping
+
+
+def detail(context, plan_id: str, sizes: Optional[dict] = None) -> Optional[dict]:
     """One plan for the Library page: its materials, cuts (lengths as a person reads them), tools, steps, notes and
-    source; a file plan says it's a file. None when there's no such plan."""
+    source, worked out at the sizes given when it has a calculator (`size_fields` says which, `problem` why a size
+    wasn't used); what to buy against the workshop's stock (`shopping_list`); whether it's kept (so it can be let go).
+    A file plan says it's a file. None when there's no such plan."""
     library = getattr(context, "plans", None)
     plan = library.get(plan_id) if library is not None else None
     if plan is None:
         return None
-    materials = plan.get("materials") or {}
+    materials, problem, used = plan.get("materials") or {}, "", {}
+    if sizes and plan.get("calc"):
+        try:
+            used = read_sizes(plan, sizes)
+            worked = library.worked_out(plan, **used) if used else None
+            materials = worked.as_dict() if worked is not None else materials
+        except (ValueError, TypeError) as error:
+            problem, used = str(error) or "Those sizes don't work for this plan.", {}
     cuts = [{**c, "length": build_calcs.inches(c["length_in"])} for c in materials.get("cuts", [])]
     return {"id": plan["id"], "title": plan["title"], "kind": plan.get("kind", "other"),
             "summary": plan.get("summary", ""), "where": _where(plan), "file": plan["id"].startswith("file:"),
             "materials_title": materials.get("title", ""), "items": materials.get("items", []), "cuts": cuts,
             "notes": materials.get("notes", []), "tools": plan.get("tools", []), "steps": plan.get("steps", []),
-            "source": plan.get("source", {})}
+            "source": plan.get("source", {}), "sizes": size_fields(plan, used), "sized": bool(used), "problem": problem,
+            "shopping": _priced(shopping_list(context, materials)) if materials.get("items") else None,
+            "kept": plan["id"] in library.plans}
 
 
 def file_path(context, plan_id: str) -> Optional[Path]:

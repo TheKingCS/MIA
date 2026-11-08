@@ -83,7 +83,8 @@
       el("div", {}, el("div", { class: "row-title" }, row.title),
         el("div", { class: "row-sub" }, [row.trigger === "calendar" ? (row.interval_days ? "every " + row.interval_days + " days" : "one time")
           : row.trigger + (row.meter_interval ? " · every " + row.meter_interval + " " + (row.unit || "") : ""),
-        row.last_completed ? "last done " + row.last_completed : null, row.predicted].filter(Boolean).join(" · "))),
+        row.last_completed ? "last done " + row.last_completed : null, row.predicted].filter(Boolean).join(" · "),
+        row.series ? el("a", { class: "pw-hist", href: "lab.html#" + encodeURIComponent(row.series) }, " · Chart ›") : null)),
       el("div", { class: "row-meta" }, chip(row),
         el("div", { class: "row-buttons" },
           row.action ? btn("Done", "btn-green", () => done(row)) : null,

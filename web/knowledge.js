@@ -25,25 +25,64 @@
         }, []).map((p) => el("p", {}, p.join(" ")))));
   }
 
+  // A pack's row: its title and size, and Delete (the PC owner's; the file is gone for good, so its name is typed to
+  // confirm, as on the desktop: /api/knowledge/pack/delete, not an action).
+  function packRow(p) {
+    return el("div", { class: "sync-row" },
+      el("div", {}, el("p", { class: "council-text" }, p.title), el("p", { class: "dim" }, p.articles.toLocaleString() + " articles" + (p.description ? " · " + p.description : ""))),
+      el("button", { type: "button", class: "btn btn-ghost btn-small", onclick: async () => {
+        const v = await MIAShell.form("Delete " + p.title + "?", [{ name: "confirm", label: "It's deleted for good. Type its name to confirm: " + p.title, type: "text", required: true }], {});
+        if (!v) return;
+        try { MIAShell.say((await MIA.deletePack(p.id, v.confirm)).message); draw(); } catch (e) { MIAShell.say(e.message); }
+      } }, "Delete"));
+  }
+
   // The plans shelf: plans, blueprints and material lists (core/plan_library.py).
-  async function openPlan(p) {
+  // A plan's page (core/plan_library.detail): at your size when it has a calculator, its materials, cuts, tools and
+  // steps, what to buy against the workshop's stock, and Keep This Size / Start A Project / Let It Go (plan.*).
+  let planSizes = null;
+  async function openPlan(p, sizes) {
     if (p.file) {
       const blob = await MIA.download("/api/knowledge/plan/file?id=" + encodeURIComponent(p.id));
       window.open(URL.createObjectURL(blob), "_blank");
       return;
     }
-    const d = await MIA.knowledgePlan(p.id);
+    planSizes = sizes || null;
+    const d = await MIA.knowledgePlan(p.id, planSizes);
     const list = (title, rows) => rows.length ? [el("h3", {}, title), el("ul", {}, rows.map((r) => el("li", {}, r)))] : [];
+    const n = (q) => (Number.isInteger(q) ? String(q) : String(Math.round(q * 100) / 100));
+    const params = Object.assign({ plan_id: d.id }, planSizes || {});
+    const sizeForm = d.sizes.length ? el("form", { class: "plan-sizes", onsubmit: (ev) => {
+      ev.preventDefault();
+      const asked = {};
+      d.sizes.forEach((f) => { const v = ev.target.elements[f.name].value.trim(); if (v) asked[f.name] = v; });
+      openPlan(p, asked);
+    } },
+      ...d.sizes.map((f) => el("label", { class: "plan-size" }, el("span", {}, f.label + (f.unit ? " (" + f.unit + ")" : "")),
+        el("input", { name: f.name, type: "number", inputmode: "decimal", min: "0", step: "any", value: String(f.value) }))),
+      el("button", { type: "submit", class: "btn btn-amber btn-small" }, "Work It Out")) : null;
+    const shop = d.shopping;
+    const shopping = shop ? [el("h3", {}, "To Buy" + (shop.known_cost_text ? " · about " + shop.known_cost_text + " where priced" : "")),
+      el("div", { class: "sync-rows" }, shop.rows.map((r) => el("div", { class: "sync-row plan-buy" + (r.buy > 0 ? "" : " done") },
+        el("span", {}, n(r.need) + " " + (r.unit ? r.unit + " " : "") + r.item),
+        el("span", { class: "dim" }, r.buy > 0 ? "buy " + n(r.buy) + (r.have ? " · have " + n(r.have) : "") + (r.cost_text ? " · " + r.cost_text : "") : "on hand"))))] : [];
     $("panel").replaceChildren(
-      el("section", { class: "glass money-section" },
+      el("section", { class: "glass money-section plan-page" },
         el("div", { class: "row-buttons" }, el("button", { type: "button", class: "btn btn-ghost btn-small", onclick: () => draw() }, "← Back")),
         el("h2", {}, d.title), el("p", { class: "dim" }, d.where + (d.summary ? " · " + d.summary : "")),
-        ...list(d.materials_title || "Materials", d.items.map((i) => (Number.isInteger(i.qty) ? i.qty : i.qty.toString()) + " " + (i.unit ? i.unit + " " : "") + i.name + (i.note ? " (" + i.note + ")" : ""))),
+        sizeForm, d.problem ? el("p", { class: "plan-problem" }, d.problem) : null,
+        ...list(d.materials_title || "Materials", d.items.map((i) => n(i.qty) + " " + (i.unit ? i.unit + " " : "") + i.name + (i.note ? " (" + i.note + ")" : ""))),
         ...list("Cuts", d.cuts.map((c) => c.qty + " × " + c.part + " at " + c.length + (c.stock ? " from " + c.stock : ""))),
+        ...shopping,
         ...list("Tools", d.tools),
         ...(d.steps.length ? [el("h3", {}, "Steps"), el("ol", {}, d.steps.map((s) => el("li", {}, s)))] : []),
-        ...d.notes.map((n) => el("p", { class: "dim" }, n)),
-        el("p", { class: "dim" }, "Ask MIA for another size, or what to buy: \"what would a 10 by 12 one need?\"")));
+        ...d.notes.map((x) => el("p", { class: "dim" }, x)),
+        el("div", { class: "row-buttons" },
+          d.sizes.length || !d.kept ? el("button", { type: "button", class: "btn btn-ghost", onclick: () => MIAShell.act({ kind: "plan.keep", params }) },
+            d.sized ? "Keep This Size" : "Keep It") : null,
+          el("button", { type: "button", class: "btn btn-ghost", onclick: () => MIAShell.act({ kind: "plan.project", params }) }, "Start A Project"),
+          d.kept ? el("button", { type: "button", class: "btn btn-ghost", onclick: () => MIAShell.act({ kind: "plan.delete", params: { plan_id: d.id } }) }, "Let It Go") : null),
+        el("p", { class: "dim" }, "Or say \"what would a 10 by 12 one need?\" or \"what do I still need to buy for it?\"")));
   }
 
   function plansSection(shelf) {
@@ -75,8 +114,8 @@
     if (tab === "plans") { $("panel").replaceChildren(plansSection(shelf) || el("p", { class: "empty" }, "The plans shelf isn't on this MIA.")); return; }
     if (tab === "packs") {
       $("panel").replaceChildren(el("section", { class: "glass money-section" }, el("h2", {}, "Packs"),
-        data.packs.length ? el("ul", {}, data.packs.map((p) => el("li", {}, p.title + " · " + p.articles.toLocaleString() + " articles")))
-          : el("p", {}, "Copy .zim files (Wikipedia, iFixit, medical and survival guides from kiwix.org) into " + (data.root || "the library folder") + ".")));
+        data.packs.length ? el("div", { class: "sync-rows" }, data.packs.map(packRow)) : null,
+        el("p", { class: "dim" }, "To add a pack, copy its .zim file (Wikipedia, iFixit, medical and survival guides from kiwix.org) into " + (data.root || "the library folder") + " on the PC; it shows here next time.")));
       return;
     }
     const input = el("input", { type: "search", class: "input kn-search", placeholder: "Search the library", value: query, "aria-label": "Search the library" });

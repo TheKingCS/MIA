@@ -512,3 +512,14 @@ class ReferenceLibraryManager:
                     snippet=snippet_text,
                 ))
         return snippets[:limit]
+
+
+def delete_confirmed(library, pack_id: str, confirm: str) -> tuple[bool, str]:
+    """Deletes a pack only when `confirm` is its title (spaces and case aside), as the desktop asks before deleting
+    for good; (passed, what happened). The web's Delete (server/app.py) calls this for the PC's owner."""
+    pack = library.get_pack(pack_id) if library is not None else None
+    if pack is None:
+        return False, "That pack isn't in the library."
+    if " ".join((confirm or "").split()).lower() != " ".join(pack.title.split()).lower():
+        return False, f"Type the pack's name exactly to delete it: {pack.title}"
+    return library.delete_pack(pack.pack_id)

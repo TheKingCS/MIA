@@ -6,8 +6,9 @@ The Library's plans shelf (core/plan_library.py) and the material lists
 behind it (core/build_calcs.py): boards packed into stock lengths, each
 calculator's counts checked by hand, plans found by name, kept and read
 from files, a shopping list against the workshop's stock, the tools, the
-homestead, garden and woodworking projects, and cut lists of a person's
-own parts.
+homestead, garden and woodworking projects, cut lists of a person's
+own parts, and a plan's page (your size, what to buy, plan.keep /
+plan.project / plan.delete, forget_plan by voice).
 """
 
 from __future__ import annotations
@@ -203,3 +204,40 @@ def test_the_new_projects_by_chat(world):
                 keep="true")
     assert "Cut list for potting bench" in said and world.plans.best("potting bench")
     assert structure_for("woodshed") == "lean_to" and structure_for("a bookcase") == "bookshelf"
+
+
+def test_a_plans_page_works_out_your_size_and_what_to_buy_and_its_actions_undo(world):
+    from core.actions import ActionCenter, ActionError
+    from core.plan_library import detail, read_sizes
+
+    world.actions = ActionCenter()
+    world.materials.add_material(name="2x6 x 8 ft", unit="board", unit_cost=7.5, quantity_on_hand=2)
+    page = detail(world, "builtin:raised-bed")
+    assert [(f["name"], f["label"], f["unit"], f["value"]) for f in page["sizes"]] == [
+        ("length_ft", "Length", "ft", 8), ("width_ft", "Width", "ft", 4), ("height_in", "Height", "in", 11)]
+    assert not page["sized"] and not page["kept"] and page["shopping"]["rows"][0]["have"] == 2.0
+    first = page["shopping"]["rows"][0]
+    assert first["cost_text"].endswith(f"{first['buy'] * 7.5:,.2f}") and page["shopping"]["known_cost_text"]
+    bigger = detail(world, "builtin:raised-bed", {"length_ft": "10", "width_ft": ""})
+    assert bigger["sized"] and bigger["materials_title"].startswith("10 x 4 ft") and bigger["sizes"][0]["value"] == 10
+    bad = detail(world, "builtin:raised-bed", {"length_ft": "-3"})
+    assert bad["problem"] == "Length has to be more than zero." and bad["materials_title"].startswith("8 x 4")
+    with pytest.raises(ValueError, match="number"):
+        read_sizes({"args": {"length_ft": 8}}, {"length_ft": "ten"})
+
+    def act(kind, **params):
+        proposal = world.actions.propose(world, kind, params)
+        return proposal, world.actions.approve(world, proposal.proposal_id)
+
+    proposal, kept = act("plan.keep", plan_id="builtin:raised-bed", length_ft="10")
+    assert proposal.summary == "Keep 10 x 4 ft raised bed, 11 in tall on the plans shelf"
+    mine = next(p for p in world.plans.plans.values())
+    assert mine["calc"] == "raised_bed" and mine["args"]["length_ft"] == 10 and mine["steps"]
+    assert detail(world, mine["id"])["kept"] and detail(world, mine["id"])["sizes"][0]["value"] == 10
+    proposal, started = act("plan.project", plan_id=mine["id"])
+    assert started.result == "Started the project \"10 x 4 ft raised bed, 11 in tall\"."
+    with pytest.raises(ActionError, match="Only plans you kept"):
+        world.actions.propose(world, "plan.delete", {"plan_id": "builtin:shed-slab"})
+    assert tool(world, "forget_plan", name="10 x 4 raised bed") == "Let \"10 x 4 ft raised bed, 11 in tall\" go."
+    assert not world.plans.plans
+    assert tool(world, "forget_plan", name="raised bed").startswith("I don't have a kept plan")

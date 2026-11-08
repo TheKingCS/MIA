@@ -17,7 +17,7 @@
         },
         {
           "name": "ohms",
-          "label": "Ohms (Ω)",
+          "label": "Ohms (\u03a9)",
           "type": "number",
           "required": false,
           "options": [],
@@ -100,13 +100,13 @@
           "Miles (mi)"
         ],
         "Area": [
-          "Square Meters (m²)",
-          "Square Feet (ft²)",
-          "Square Yards (yd²)",
+          "Square Meters (m\u00b2)",
+          "Square Feet (ft\u00b2)",
+          "Square Yards (yd\u00b2)",
           "Acres",
           "Hectares",
-          "Square Kilometers (km²)",
-          "Square Miles (mi²)"
+          "Square Kilometers (km\u00b2)",
+          "Square Miles (mi\u00b2)"
         ],
         "Volume": [
           "Liters (L)",
@@ -126,8 +126,8 @@
           "Ounces (oz)"
         ],
         "Temperature": [
-          "Celsius (°C)",
-          "Fahrenheit (°F)",
+          "Celsius (\u00b0C)",
+          "Fahrenheit (\u00b0F)",
           "Kelvin (K)"
         ],
         "Speed": [
@@ -175,7 +175,7 @@
           "Terabytes (TB)"
         ],
         "Angle": [
-          "Degrees (°)",
+          "Degrees (\u00b0)",
           "Radians (rad)",
           "Gradians (grad)"
         ],
@@ -196,7 +196,7 @@
       "id": "board_feet",
       "name": "Board Feet",
       "category": "Woodworking",
-      "about": "Nominal thickness × width in inches × length in feet ÷ 12, times how many.",
+      "about": "Nominal thickness \u00d7 width in inches \u00d7 length in feet \u00f7 12, times how many.",
       "fields": [
         {
           "name": "thickness_in",
@@ -341,13 +341,6 @@
       "name": "Calendar",
       "note": "Everything with a date.",
       "where": "calendar.html"
-    },
-    {
-      "id": "inventory",
-      "name": "Inventory",
-      "note": "34 items. On the PC, or ask MIA.",
-      "where": "pc",
-      "ask": "What's in my inventory?"
     }
   ],
   "demo_answers": {
@@ -365,7 +358,7 @@
         ],
         [
           "Resistance",
-          "220 Ω"
+          "220 \u03a9"
         ],
         [
           "Power",
@@ -410,6 +403,136 @@
         ]
       ],
       "note": "Includes 10% extra. Over about a cubic yard, ready-mix delivery is usually easier than bags."
+    }
+  },
+  "inventory": {
+    "items": [
+      {
+        "id": "i2",
+        "name": "Headlamps",
+        "quantity": 2,
+        "category": "Camping",
+        "location": "Hall closet",
+        "notes": "",
+        "values": {
+          "name": "Headlamps",
+          "quantity": 2,
+          "category": "Camping",
+          "location": "Hall closet",
+          "notes": ""
+        }
+      },
+      {
+        "id": "i0",
+        "name": "Tarps",
+        "quantity": 3,
+        "category": "Camping",
+        "location": "Garage shelf",
+        "notes": "",
+        "values": {
+          "name": "Tarps",
+          "quantity": 3,
+          "category": "Camping",
+          "location": "Garage shelf",
+          "notes": ""
+        }
+      },
+      {
+        "id": "i1",
+        "name": "Extension cords",
+        "quantity": 4,
+        "category": "Electrical",
+        "location": "Basement",
+        "notes": "",
+        "values": {
+          "name": "Extension cords",
+          "quantity": 4,
+          "category": "Electrical",
+          "location": "Basement",
+          "notes": ""
+        }
+      },
+      {
+        "id": "i4",
+        "name": "Spare fuses",
+        "quantity": 0,
+        "category": "Electrical",
+        "location": "Basement",
+        "notes": "",
+        "values": {
+          "name": "Spare fuses",
+          "quantity": 0,
+          "category": "Electrical",
+          "location": "Basement",
+          "notes": ""
+        }
+      },
+      {
+        "id": "i3",
+        "name": "Zip ties",
+        "quantity": 1,
+        "category": "Hardware",
+        "location": "Workbench drawer",
+        "notes": "",
+        "values": {
+          "name": "Zip ties",
+          "quantity": 1,
+          "category": "Hardware",
+          "location": "Workbench drawer",
+          "notes": ""
+        }
+      }
+    ],
+    "kinds": [
+      "Camping",
+      "Electrical",
+      "Hardware"
+    ],
+    "form": {
+      "noun": "item",
+      "id_param": "item_id",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "quantity",
+          "label": "How many",
+          "type": "int",
+          "required": false,
+          "options": [],
+          "default": 0
+        },
+        {
+          "name": "category",
+          "label": "Kind",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "location",
+          "label": "Where it's kept",
+          "type": "text",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "notes",
+          "label": "Notes",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
     }
   }
 }

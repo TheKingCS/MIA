@@ -4,7 +4,9 @@ core.classroom_actions
 
 The Classroom (core/classroom_manager.py, the person's own study) through
 the action contract (core/actions.py), for its web screen: a subject, a
-course and a lesson added, a lesson marked done (its skill XP credited once,
+course and a lesson added, a lesson's notes written (lesson.notes, as "add
+to my notes for..." does by voice), the skill a lesson trains and its XP
+(lesson.skill), a lesson marked done (its skill XP credited once,
 as on the desktop) or not done, and any of them taken out. The stores write
 through atomic_write_text, so "undo that" takes each back. Children study
 too: all child-safe.
@@ -77,6 +79,51 @@ def _lesson_done(context, params) -> str:
     return f"{lesson.name}: done." if done else f"{lesson.name}: not done yet."
 
 
+def _lesson_notes(context, params) -> str:
+    """lesson.notes: a lesson's notes replaced with the text given (the screen edits the whole note; empty clears it)."""
+    lesson = _lesson(context, params)
+    text = str(params.get("notes") or "").strip()
+    _need(context, "classroom").update_lesson(lesson.lesson_id, notes=text)
+    return f"Saved your notes for {lesson.name}." if text else f"Cleared your notes for {lesson.name}."
+
+
+def _skill_choice(context, params):
+    """(the lesson, the skill it will train or None, the XP) from the params; ActionError for a skill that isn't one,
+    or XP outside 1 to 100 (the desktop's lesson dialog has the same range)."""
+    lesson = _lesson(context, params)
+    skill_id = str(params.get("skill_id") or "").strip()
+    if not skill_id:
+        return lesson, None, 0
+    skills = getattr(context, "skills", None)
+    skill = skills.get_skill(skill_id) if skills is not None else None
+    if skill is None:
+        raise ActionError("That skill isn't one of yours.")
+    try:
+        xp = int(str(params.get("xp") or "10").strip())
+    except ValueError:
+        raise ActionError("XP has to be a whole number.") from None
+    if not 1 <= xp <= 100:
+        raise ActionError("XP: pick from 1 to 100.")
+    return lesson, skill, xp
+
+
+def _describe_lesson_skill(context, params) -> str:
+    """The approval sentence for lesson.skill."""
+    lesson, skill, xp = _skill_choice(context, params)
+    return f"{lesson.name} trains {skill.name}, {xp} XP when it's done" if skill else f"{lesson.name} trains no skill"
+
+
+def _lesson_skill(context, params) -> str:
+    """lesson.skill: the one skill a lesson trains and its XP (credited once, when the lesson is first done), or
+    none. A lesson already credited keeps what it gave."""
+    from core.gamification import SkillWeight
+
+    lesson, skill, xp = _skill_choice(context, params)
+    rewards = [SkillWeight(skill.skill_id, xp)] if skill else []
+    _need(context, "classroom").update_lesson(lesson.lesson_id, skill_rewards=rewards)
+    return f"{lesson.name} trains {skill.name} now." if skill else f"{lesson.name} trains no skill now."
+
+
 def _delete(kind: str, finder, remover):
     """Make the execute function for subject.delete, course.delete or lesson.delete: find the record with `finder`
     and remove it with the manager's `remover` method (deleting a subject or course takes what's under it too).
@@ -105,6 +152,10 @@ CLASSROOM_ACTIONS = {a.kind: a for a in (
                lambda c, p: f"Mark {_lesson(c, p).name} " + ("not done" if str(p.get("done", "yes")).lower() in
                                                              ("no", "false", "0") else "done"),
                _lesson_done, child_ok=True),
+    ActionType("lesson.notes", "Save the notes", {"lesson_id": "the lesson", "notes": "what you learned"},
+               lambda c, p: f"Save your notes for {_lesson(c, p).name}", _lesson_notes, child_ok=True),
+    ActionType("lesson.skill", "Trains", {"lesson_id": "the lesson", "skill_id": "a skill (blank for none)",
+                                          "xp": "1 to 100"}, _describe_lesson_skill, _lesson_skill, child_ok=True),
     ActionType("lesson.delete", "Take it out", {"lesson_id": "the lesson"},
                lambda c, p: f"Take the lesson {_lesson(c, p).name} out",
                _delete("lesson", _lesson, "delete_lesson"), child_ok=True),

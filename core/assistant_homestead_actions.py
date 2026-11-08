@@ -6,7 +6,8 @@ Assistant tools for Finance #2, homestead builds and tools
 (core/homestead_costs.py): "I spent $240 on lumber for the greenhouse",
 "I bought a DeWalt drill for $199 for the greenhouse", "How much have I
 spent on the greenhouse?", "What has the mower cost me?", "Set the
-greenhouse budget to $5,000".
+greenhouse budget to $5,000". Also "what was on the Lowe's receipt?"
+(get_receipt: a filed receipt's lines, as Money shows them).
 
 A build named for the first time is created as a Project on the spot
 and the reply says so, the same "find it or make it, then read it back"
@@ -207,6 +208,28 @@ def _action_list_build_purchases(context: AppContext, arguments: dict) -> str:
             + "; ".join(biggest) + more + ".")
 
 
+def _action_get_receipt(context: AppContext, arguments: dict) -> str:
+    """Tool get_receipt: what was on a filed receipt, the newest from the store named (the same lines the Money
+    screen shows under the expense: core/web_money.receipt_lines)."""
+    from core.business_tagging import merchant_key
+    from core.web_money import receipt_lines
+
+    budget = getattr(context, "budget", None)
+    if budget is None:
+        return "Money isn't on this MIA."
+    store = merchant_key(str(arguments.get("store") or ""))
+    with_lines = [e for e in budget.all_expenses() if e.items]
+    if store:
+        with_lines = [e for e in with_lines if store in (merchant_key(e.payee), merchant_key(e.description))]
+    if not with_lines:
+        return (f"I don't have a receipt from {arguments.get('store')} with its items." if store
+                else "None of your expenses has a receipt's items yet. Filed receipts from the Inbox bring them.")
+    e = max(with_lines, key=lambda x: (x.date or "", x.created_at or ""))
+    lines = receipt_lines(e.items)
+    return (f"{e.payee or e.description} on {e.date}, {money(e.amount, ',.2f')}: " + "; ".join(lines[:10])
+            + (f", and {len(lines) - 10} more" if len(lines) > 10 else "") + ".")
+
+
 def _action_get_tool_costs(context: AppContext, arguments: dict) -> str:
     """Assistant tool `get_tool_costs`: what one tool has cost to own (price plus running costs), or the
     total and the biggest. Returns the sentence to say back.
@@ -337,7 +360,7 @@ def _action_get_business_use(context: AppContext, arguments: dict) -> str:
 
 
 def register_homestead_actions(registry: AssistantActionRegistry) -> None:
-    """Registers the build, tool and business-use tools with the Assistant's registry."""
+    """Registers the build, tool and business-use tools, and get_receipt, with the Assistant's registry."""
     registry.register(AssistantAction(
         name="log_business_use", domain="business_use",
         description=(
@@ -413,6 +436,14 @@ def register_homestead_actions(registry: AssistantActionRegistry) -> None:
         handler=_action_get_build_costs,
         trigger_phrases=("spent on the", "have i spent on", "build costs", "cost of the build", "over budget on", "under budget on",
                          "how much has the"),
+    ))
+    registry.register(AssistantAction(
+        name="get_receipt", domain="budget",
+        description="What was on a filed receipt: the items bought, from the newest receipt from the store named.",
+        parameters={"type": "object", "properties": {"store": {**_S, "description": "The store, e.g. 'Lowe's'."}},
+                    "required": []},
+        handler=_action_get_receipt,
+        trigger_phrases=("on the receipt", "on my receipt", "what was on the", "what did i buy at"),
     ))
     registry.register(AssistantAction(
         name="list_build_purchases", domain="homestead_costs",

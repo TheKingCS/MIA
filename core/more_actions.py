@@ -111,6 +111,27 @@ RECORDS["pet"] = Record("pet", "pet", "pet_id", "get_pet", "add_pet", "update_pe
                             Field("notes", "Notes", "textarea"),
                         ))
 
+# The Toolbox's inventory (core/inventory_manager.py): what's kept around the house, how many, and where.
+RECORDS["inventory"] = Record("inventory", "item", "item_id", "get_item", "add_item", "update_item", "delete_item",
+                              store="inventory", fields=(
+                                  Field("name", "Name", "text", True),
+                                  Field("quantity", "How many", "int", default=0, say="count"),
+                                  Field("category", "Kind", "text", say="kind"),
+                                  Field("location", "Where it's kept", "text", say="kept in"),
+                                  Field("notes", "Notes", "textarea"),
+                              ))
+
+# A project (core/project_manager.py): a build or job of the person's own, on the Projects page (core/web_projects.py);
+# its budget is project.budget and its tasks task.* there.
+RECORDS["project"] = Record("project", "project", "project_id", "get_project", "add_project", "update_project",
+                            "delete_project", store="projects", fields=(
+                                Field("name", "Name", "text", True),
+                                Field("status", "Status", "choice", options=("Planning", "Active", "On Hold", "Complete"),
+                                      default="Planning"),
+                                Field("due_date", "Due", "date", say="due"),
+                                Field("description", "What it is", "textarea", say="description"),
+                            ))
+
 # A trip belongs to an expedition (chosen on the page).
 TRIP = Record("trip", "trip", "trip_id", "get_trip", "add_trip", "update_trip", "delete_trip", store="trips", fields=(
     Field("name", "Name", "text", True),
@@ -138,12 +159,18 @@ SHOP_EXPENSE = Record("shop_expense", "shop cost", "entry_id", "get_expense", "a
 
 
 def forms() -> dict:
-    """Every form these screens open (JSON-ready)."""
+    """Every form these screens open (JSON-ready), a product's listing among them."""
     out = {key: record_form(r) for key, r in RECORDS.items()}
     out["trip"] = record_form(TRIP)
     out["sale"] = record_form(SALE)
     out["shop_expense"] = record_form(SHOP_EXPENSE)
     out["journal"] = {"noun": "entry", "id_param": "entry_id", "fields": [field_dict(f) for f in JOURNAL_FIELDS]}
+    out["listing"] = {"noun": "listing", "id_param": "product_id", "fields": [
+        field_dict(Field("platform", "Where (Etsy, web store, local...)", "text", True)),
+        field_dict(Field("price", "Price there", "money", default=0.0)),
+        field_dict(Field("status", "Status", "choice", options=("Active", "Inactive", "Sold Out"), default="Active")),
+        field_dict(Field("url", "Link (optional)", "text")),
+    ]}
     out["product_sale"] = {"noun": "sale", "id_param": "product_id", "fields": [
         field_dict(Field("quantity", "How many", "amount", True, default=1)),
         field_dict(Field("amount", "Total paid", "money", True)),
@@ -221,16 +248,33 @@ def _entry(context, params):
 
 
 def _journal_add_describe(context, params) -> str:
-    """The sentence the approval card shows for adding a journal entry (Propose); raises ActionError when it can't be done."""
+    """The sentence the approval card shows for adding a journal entry, naming the trip's log when it's one (Propose);
+    raises ActionError when it can't be done."""
     v = _journal_values(params, False)
-    return f"Add the journal entry \"{v['title']}\"" + (f" (tagged {', '.join(v['tags'])})" if v["tags"] else "")
+    trip = _journal_trip(context, params)
+    return (f"Add the journal entry \"{v['title']}\"" + (f" to the {trip.name} log" if trip else "")
+            + (f" (tagged {', '.join(v['tags'])})" if v["tags"] else ""))
+
+
+def _journal_trip(context, params):
+    """The trip a journal entry is a log of (`trip_id`, from a trip on the Expeditions page), None for a plain note;
+    ActionError when the trip named isn't there."""
+    trip_id = str(params.get("trip_id") or "").strip()
+    if not trip_id:
+        return None
+    trip = getattr(_need(context, "trips"), "get_trip")(trip_id)
+    if trip is None:
+        raise ActionError("That trip isn't here any more.")
+    return trip
 
 
 def _journal_add(context, params) -> str:
-    """Does adding the journal entry once it's approved, and says what happened."""
+    """Does adding the journal entry once it's approved (a trip's log when `trip_id` names one, with its weather in
+    conditions), and says what happened."""
     v = _journal_values(params, False)
-    _need(context, "journal").add_entry(**v)
-    return f"Saved \"{v['title']}\" in your journal."
+    trip = _journal_trip(context, params)
+    _need(context, "journal").add_entry(**v, trip_id=trip.trip_id if trip else None)
+    return f"Saved \"{v['title']}\" in your journal" + (f", on {trip.name}." if trip else ".")
 
 
 def _journal_changes(context, params):
@@ -272,13 +316,15 @@ def _journal_delete(context, params) -> str:
 # ------------------------------------------------------------------ stock up / down
 
 
-def _adjuster(key: str, store: str, getter: str, adjust: str, attr: str, unit_attr: str = "", whole: bool = False):
-    """Builds the describe/execute pair for an `X.adjust` kind (component, material, product): add or take a delta from
+def _adjuster(key: str, store: str, getter: str, adjust: str, attr: str, unit_attr: str = "", whole: bool = False,
+              id_param: str = ""):
+    """Builds the describe/execute pair for an `X.adjust` kind (component, material, product, inventory): add or take a delta from
     the item's count, showing the before and after. whole=True insists on whole numbers (parts); a zero change is
-    refused. One builder so the three adjust kinds behave the same.
+    refused. One builder so the adjust kinds behave the same. `id_param` names the item's parameter (its record's,
+    "item_id" for the inventory; "<key>_id" by default).
     """
     def item(context, params):
-        found = getattr(_need(context, store), getter)(str(params.get(f"{key}_id") or ""))
+        found = getattr(_need(context, store), getter)(str(params.get(id_param or f"{key}_id") or ""))
         if found is None:
             raise ActionError(f"That {key} isn't there anymore.")
         return found
@@ -299,7 +345,7 @@ def _adjuster(key: str, store: str, getter: str, adjust: str, attr: str, unit_at
 
     def execute(context, params) -> str:
         it, d = item(context, params), delta(params)
-        after = _call(getattr(getattr(context, store), adjust), getattr(it, f"{key}_id"), d)
+        after = _call(getattr(getattr(context, store), adjust), getattr(it, id_param or f"{key}_id"), d)
         return f"{it.name}: {_qty(getattr(after, attr))} now."
 
     return describe, execute
@@ -372,6 +418,71 @@ def _money_record_add(record: Record, method: str):
         _call(getattr(_need(context, "ledger"), method), **values)
         return f"Added the {record.noun}."
     return execute
+
+
+def _listing_product(context, params):
+    """The product a listing change is for; ActionError when it's gone."""
+    product = _need(context, "products").get_product(str(params.get("product_id") or ""))
+    if product is None:
+        raise ActionError("That product isn't there anymore.")
+    return product
+
+
+def _listing_values(params) -> tuple[str, float, str, str]:
+    """(platform, price, status, link) for a new listing, checked: a platform is needed, the price is 0 or more, the
+    status one of the product store's."""
+    from core.product_manager import LISTING_STATUSES
+
+    platform = " ".join(str(params.get("platform") or "").split())
+    if not platform:
+        raise ActionError("Where is it listed? (Etsy, a web store, local...)")
+    price = _number({"price": params.get("price") or 0}, "price", "Price")
+    if price < 0:
+        raise ActionError("Price can't be negative.")
+    status = str(params.get("status") or "Active").strip().title()
+    if status not in LISTING_STATUSES:
+        raise ActionError("Status: " + ", ".join(LISTING_STATUSES) + ".")
+    return platform, price, status, str(params.get("url") or "").strip()
+
+
+def _listing_add_describe(context, params) -> str:
+    """The approval sentence for listing.add: "List Walnut bowl on Etsy at $40.00"."""
+    from core.region import money
+
+    product = _listing_product(context, params)
+    platform, price, status, _ = _listing_values(params)
+    return f"List {product.name} on {platform}" + (f" at {money(price)}" if price else "") + \
+        (f" ({status.lower()})" if status != "Active" else "")
+
+
+def _listing_add(context, params) -> str:
+    """Does listing.add."""
+    product = _listing_product(context, params)
+    platform, price, status, url = _listing_values(params)
+    context.products.add_listing(product.product_id, platform=platform, price=price, status=status, url=url)
+    return f"{product.name} is listed on {platform}."
+
+
+def _listing_of(context, params):
+    """(the product, the listing the params name); ActionError when either is gone."""
+    product = _listing_product(context, params)
+    listing = next((li for li in product.listings if li.listing_id == str(params.get("listing_id") or "")), None)
+    if listing is None:
+        raise ActionError("That listing isn't there anymore.")
+    return product, listing
+
+
+def _listing_remove_describe(context, params) -> str:
+    """The approval sentence for listing.remove: "Take Walnut bowl off Etsy"."""
+    product, listing = _listing_of(context, params)
+    return f"Take {product.name} off {listing.platform}"
+
+
+def _listing_remove(context, params) -> str:
+    """Does listing.remove: the listing comes off the product (the product stays)."""
+    product, listing = _listing_of(context, params)
+    context.products.remove_listing(product.product_id, listing.listing_id)
+    return f"Took {product.name} off {listing.platform}."
 
 
 def _sell_describe(context, params) -> str:
@@ -786,7 +897,8 @@ def _say(text: str):
 
 def _register() -> None:
     """Adds every action kind this module defines to ACTION_TYPES: the record kinds from the shared table
-    (core/record_actions.py), the three adjust kinds, and the hand-written ones above. Runs once, when
+    (core/record_actions.py), the adjust kinds (parts, materials, products, the inventory), and the hand-written ones
+    above (listings among them). Runs once, when
     this module is imported (core/actions.py imports it).
     """
     kinds = []
@@ -796,14 +908,17 @@ def _register() -> None:
     for key, store, getter, adjust, attr, unit, whole in (
             ("component", "components", "get_component", "adjust_quantity", "quantity", "", True),
             ("material", "materials", "get_material", "adjust_quantity", "quantity_on_hand", "unit", False),
-            ("product", "products", "get_product", "adjust_stock", "quantity_in_stock", "", False)):
-        describe, execute = _adjuster(key, store, getter, adjust, attr, unit, whole)
-        kinds.append(ActionType(f"{key}.adjust", "Adjust", {f"{key}_id": f"the {key}", "delta": "+ or - how many"},
+            ("product", "products", "get_product", "adjust_stock", "quantity_in_stock", "", False),
+            ("inventory", "inventory", "get_item", "adjust_quantity", "quantity", "", True)):
+        id_param = RECORDS[key].id_param if key in RECORDS else f"{key}_id"
+        describe, execute = _adjuster(key, store, getter, adjust, attr, unit, whole, id_param)
+        kinds.append(ActionType(f"{key}.adjust", "Adjust", {id_param: f"the {key}", "delta": "+ or - how many"},
                                 describe, execute))
     sale_delete = _ledger_delete(SALE, "get_revenue", "delete_revenue")
     cost_delete = _ledger_delete(SHOP_EXPENSE, "get_expense", "delete_expense")
     kinds += [
-        ActionType("journal.add", "Add", {f.name: f.label for f in JOURNAL_FIELDS}, _journal_add_describe, _journal_add),
+        ActionType("journal.add", "Add", {**{f.name: f.label for f in JOURNAL_FIELDS}, "trip_id": "a trip (optional)"},
+                   _journal_add_describe, _journal_add),
         ActionType("journal.edit", "Edit", {"entry_id": "the entry", **{f.name: f.label for f in JOURNAL_FIELDS}},
                    _journal_edit_describe, _journal_edit),
         ActionType("journal.delete", "Delete", {"entry_id": "the entry"}, _journal_delete_describe, _journal_delete),
@@ -814,6 +929,11 @@ def _register() -> None:
         ActionType("sale.add", "Add Sale", {f.name: f.label for f in SALE.fields}, _money_record_describe(SALE),
                    _money_record_add(SALE, "add_revenue")),
         ActionType("sale.delete", "Delete", {"entry_id": "the sale"}, *sale_delete),
+        ActionType("listing.add", "Add Listing", {"product_id": "the product", "platform": "where it's listed",
+                                                  "price": "its price there", "status": "Active, Inactive or Sold Out",
+                                                  "url": "a link (optional)"}, _listing_add_describe, _listing_add),
+        ActionType("listing.remove", "Remove", {"product_id": "the product", "listing_id": "the listing"},
+                   _listing_remove_describe, _listing_remove),
         ActionType("product.sell", "Sell", {"product_id": "the product", "quantity": "how many", "amount": "total paid",
                                             "date": "optional"}, _sell_describe, _sell),
         ActionType("shop_expense.add", "Add Cost", {f.name: f.label for f in SHOP_EXPENSE.fields},

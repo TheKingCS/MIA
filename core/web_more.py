@@ -90,7 +90,7 @@ def journal_page(context, today: Optional[date] = None) -> dict:
 
 def workshop_page(context, today: Optional[date] = None) -> dict:
     """The data the Workshop screen shows, assembled here (the web only draws it); {"available": False} when none of its stores is here. Parts, materials (low ones first), products and
-    their listings, jobs (not recipe builds) with their costs, the shop's money and totals, counts, the picks and
+    their listings (each with its id, price, status and link, to take off), jobs (not recipe builds) with their costs, the shop's money and totals, counts, the picks and
     forms, and the recipes, builds, receipts, best earner and goods (with what to sell first) from web_craft.
     """
     from core.region import money
@@ -115,7 +115,8 @@ def workshop_page(context, today: Optional[date] = None) -> dict:
         materials.sort(key=lambda m: (not m["low"], m["name"].lower()))
     products = [{"id": p.product_id, "name": p.name, "price": money(p.base_price) if p.base_price else "",
                  "stock": p.quantity_in_stock, "description": p.description,
-                 "listings": [{"platform": li.platform, "price": money(li.price), "status": li.status} for li in p.listings],
+                 "listings": [{"id": li.listing_id, "platform": li.platform, "price": money(li.price) if li.price else "",
+                               "status": li.status, "url": li.url} for li in p.listings],
                  "values": {f: getattr(p, f) for f in ("name", "base_price", "quantity_in_stock", "description", "notes")}}
                 for p in sorted(stores["products"].all_products(), key=lambda p: p.name.lower())] if stores["products"] else []
     from core.web_craft import craft_section, goods_section
@@ -163,7 +164,8 @@ def workshop_page(context, today: Optional[date] = None) -> dict:
         "picks": {"materials": [{"id": m["id"], "name": m["name"]} for m in materials],
                   "products": [{"id": p["id"], "name": p["name"]} for p in products]},
         "forms": {**{k: v for k, v in _forms().items() if k in ("component", "material", "product", "job", "sale",
-                                                                "shop_expense", "product_sale")}, **craft["forms"]},
+                                                                "shop_expense", "product_sale", "listing")},
+                  **craft["forms"]},
         "recipes": craft["recipes"], "builds": craft["builds"], "receipts": craft["receipts"],
         "best_earner": craft.get("best_earner"),
         **goods,
@@ -175,14 +177,17 @@ def workshop_page(context, today: Optional[date] = None) -> dict:
 
 def expeditions_page(context, today: Optional[date] = None) -> dict:
     """The data the Expeditions screen shows, assembled here (the web only draws it); {"available": False} when expeditions or trips aren't here. Each expedition with when it is
-    (now, upcoming, past), days away, its media and its trips (gear packed, distance, photos, journal notes), the
+    (now, upcoming, past), days away, its media and its trips (gear packed, distance, photos, journal notes, the route
+    and checkpoints: core/trip_route.route_card), the
     packing and distance across them and what has to happen first (`_trip_heads_up`); current ones first, then past
-    ones newest first; counts and forms.
+    ones newest first; counts, forms (with the journal's, for a trip's log and its weather) and the saved waypoints a stop is picked from.
     """
     today = today or date.today()
     expeditions, trips = getattr(context, "expeditions", None), getattr(context, "trips", None)
     if expeditions is None or trips is None:
         return {"available": False}
+    from core.trip_route import route_card, waypoint_choices
+
     journal = getattr(context, "journal", None)
     iso = today.isoformat()
 
@@ -196,7 +201,10 @@ def expeditions_page(context, today: Optional[date] = None) -> dict:
                 "start": t.start_date, "end": t.end_date, "notes": t.notes,
                 "gear": [{"index": i, "label": g.label, "packed": g.packed} for i, g in enumerate(t.gear)],
                 "packed": sum(1 for g in t.gear if g.packed), "distance_km": round(distance, 1) if distance else None,
-                "photos": len(t.photo_filenames), "journal": [{"id": e.entry_id, "title": e.title} for e in notes],
+                "photos": len(t.photo_filenames),
+                "journal": [{"id": e.entry_id, "title": e.title, "conditions": e.conditions,
+                             "when": (e.created_at or "")[:10]} for e in notes],
+                "route": route_card(context, t),
                 "values": {"name": t.name, "activity_type": t.activity_type, "start_date": t.start_date,
                            "end_date": t.end_date, "notes": t.notes}}
 
@@ -237,7 +245,8 @@ def expeditions_page(context, today: Optional[date] = None) -> dict:
         "counts": {"upcoming": sum(1 for c in cards if c["when"] == "upcoming"),
                    "now": sum(1 for c in cards if c["when"] == "now"),
                    "trips": sum(len(c["trips"]) for c in cards)},
-        "forms": {k: v for k, v in _forms().items() if k in ("expedition", "trip")},
+        "forms": {k: v for k, v in _forms().items() if k in ("expedition", "trip", "journal")},
+        "waypoints": waypoint_choices(context),
     }
 
 

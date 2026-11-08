@@ -12,7 +12,9 @@ methods that add, edit and delete it. From it come the action kinds
 (`bill.add`, `bill.edit`, `bill.delete`, ...), the sentence the person
 approves ("Change Electric: amount $120.00 → $130.00"), and the forms the
 web shows (`form_spec()`), so they can't drift apart. Plus `debt.pay`
-and monthly budget targets.
+and monthly budget targets, and `expense.business`: which of your businesses
+a charge was for, or that it was personal (core/business_tagging.py; by
+voice, tag_charge).
 
 The engine keeps every rule: amounts can't be negative, dates are real
 dates, categories come from the budget's own lists. None of these are
@@ -138,12 +140,46 @@ def _delete_target(context, params) -> str:
     return f"The {category} budget is removed."
 
 
+def _business_choice(context, params):
+    """The expense and the business `expense.business` names: (expense, entity id or PERSONAL, its name in words).
+    ActionError when either isn't there or no business is set up."""
+    from core.business_tagging import PERSONAL
+
+    budget = _need(context, "budget")
+    expense = get(context, RECORDS["expense"], params)
+    names = {e.entity_id: e.name for e in budget.all_business_entities()}
+    if not names:
+        raise ActionError("You haven't set up a business yet.")
+    choice = str(params.get("entity_id") or "").strip() or PERSONAL
+    if choice != PERSONAL and choice not in names:
+        raise ActionError("That business isn't one of yours.")
+    return expense, choice, "personal" if choice == PERSONAL else names[choice]
+
+
+def _describe_business(context, params) -> str:
+    """The approval sentence for `expense.business`: "Put the Shell charge ($42.10, 2026-11-03) under Lawn Care"."""
+    from core.region import money
+
+    expense, choice, where = _business_choice(context, params)
+    what = f"the {expense.payee or expense.description or expense.category} charge ({money(expense.amount)}, {expense.date})"
+    return f"Mark {what} as personal" if where == "personal" else f"Put {what} under {where}"
+
+
+def _set_business(context, params) -> str:
+    """Does `expense.business`: the person's choice, which MIA also learns for that store (business_tagging.apply_choice)."""
+    from core.business_tagging import apply_choice
+
+    expense, choice, where = _business_choice(context, params)
+    apply_choice(context, expense.entry_id, choice)
+    return f"{expense.payee or expense.description or 'That charge'}: {where}. I'll remember that store."
+
+
 # ------------------------------------------------------------------ the kinds
 
 
 def _kinds() -> list[ActionType]:
-    """Every money action kind: the record kinds for each record (bills, debts...), paying a debt, and setting or
-    removing a monthly budget.
+    """Every money action kind: the record kinds for each record (bills, debts...), paying a debt, setting or
+    removing a monthly budget, and sorting a charge to a business.
     """
     kinds = []
     for record in RECORDS.values():
@@ -155,6 +191,8 @@ def _kinds() -> list[ActionType]:
                    _describe_target, _set_target),
         ActionType("budget_target.delete", "Remove", {"category": "the category"},
                    _describe_target_delete, _delete_target),
+        ActionType("expense.business", "Sort it", {"entry_id": "the expense", "entity_id": "the business, or personal"},
+                   _describe_business, _set_business),
     ]
     return kinds
 

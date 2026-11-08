@@ -2,8 +2,10 @@
  * expeditions.js — the Expeditions screen (claude, 2026-10-16; Zac: the app
  * only opened a chat). Renders MIA.expeditions() (core/web_more.py):
  * expeditions happening now, coming up and past; one opens to its trips,
- * each with Start / Finish, its packing list (tap to pack) and its notes.
- * Every change is an action (expedition.*, trip.*, gear.*). Formatting only.
+ * each with Start / Finish, its packing list (tap to pack), its notes, and its
+ * route: stops from saved waypoints, "Arrived" at the next one, and the legs
+ * walked (core/trip_route.py). Every change is an action (expedition.*,
+ * trip.*, gear.*). Formatting only.
  */
 (function () {
   "use strict";
@@ -104,6 +106,40 @@
         : el("p", { class: "empty" }, "Nothing yet. Add photos, videos, maps, tickets or anything else for this trip."));
   }
 
+  // A trip's route (core/trip_route.route_card): its stops in order, ticked once reached, the next one to arrive at
+  // (trip.arrived logs it now), and each leg walked. Stops come from saved waypoints (trip.route_add / route_remove).
+  async function addStop(t) {
+    const v = await form("Add A Stop To " + t.name, [{ name: "waypoint_id", label: "Waypoint", type: "pick", options: ["waypoints"], required: true }],
+      {}, { waypoints: page.waypoints });
+    if (v) act({ kind: "trip.route_add", params: { trip_id: t.id, waypoint_id: v.waypoint_id } });
+  }
+  function route(t) {
+    const r = t.route;
+    if (!r) return null;
+    const title = "Route" + (r.planned_km ? " · " + r.planned_km + " km planned" : "") + (r.walked_km ? " · " + r.walked_km + " km so far" : "");
+    return el("div", { class: "trip-route" },
+      el("h4", {}, title),
+      r.stops.length ? el("ol", { class: "route-stops" }, r.stops.map((s) => el("li", { class: s.reached ? "done" : "" },
+        el("span", { class: "route-dot", "aria-hidden": "true" }, s.reached ? "✓" : ""),
+        el("span", {}, s.name + (s.reached ? "" : r.next && r.next.id === s.id ? " · next" : "")),
+        el("button", { type: "button", class: "btn btn-ghost btn-small", "aria-label": "Take " + s.name + " off the route",
+          onclick: () => act({ kind: "trip.route_remove", params: { trip_id: t.id, waypoint_id: s.id } }) }, "✕"))))
+        : el("p", { class: "dim" }, page.waypoints.length ? "No stops yet. Add saved waypoints in the order you'll reach them."
+          : "Save waypoints in Navigation, then add them here as stops."),
+      r.legs.length ? el("ul", { class: "route-legs" }, r.legs.map((l) => el("li", {},
+        el("span", {}, l.from + " → " + l.to), el("span", { class: "dim" }, [l.km + " km", l.took, l.pace].filter(Boolean).join(" · "))))) : null,
+      buttons(
+        t.status === "active" && r.next ? btn("Arrived At " + r.next.name, "btn-green", () => act({ kind: "trip.arrived", params: { trip_id: t.id, waypoint_id: r.next.id } })) : null,
+        page.waypoints.length ? btn("Add A Stop", "btn-ghost", () => addStop(t)) : null));
+  }
+
+  // A trip's log (a journal entry on the trip, journal.add with trip_id), its weather in conditions; by voice,
+  // "log on the paddle: windy, 12 degrees".
+  async function logTrip(t) {
+    const v = await form("Log " + t.name, page.forms.journal.fields.filter((f) => f.name !== "tags"), {});
+    if (v) act({ kind: "journal.add", params: Object.assign({ trip_id: t.id }, v) });
+  }
+
   function trip(t) {
     const [label, cls] = STATUS[t.status] || [t.status, ""];
     const input = el("input", { type: "text", placeholder: "Add to the packing list…", "aria-label": "Add to the packing list for " + t.name });
@@ -118,6 +154,7 @@
           el("p", { class: "dim" }, [t.activity, span(t.start, t.end), t.distance_km ? t.distance_km + " km" : null].filter(Boolean).join(" · "))),
         el("span", { class: "chip " + cls }, label)),
       t.notes ? el("p", { class: "trip-notes" }, t.notes) : null,
+      route(t),
       el("h4", {}, "Packing List" + (t.gear.length ? " " + t.packed + "/" + t.gear.length : "")),
       t.gear.length ? el("ul", { class: "gear-list" }, t.gear.map((g) => el("li", { class: g.packed ? "done" : "" },
         el("button", { type: "button", class: "tick" + (g.packed ? " on" : ""), "aria-pressed": String(g.packed),
@@ -128,10 +165,14 @@
           onclick: () => act({ kind: "gear.remove", params: { trip_id: t.id, index: g.index } }) }, "✕"))))
         : el("p", { class: "dim" }, "Nothing on the list yet."),
       el("form", { class: "gear-add", onsubmit: addGear }, input, el("button", { type: "submit", class: "btn btn-ghost btn-small" }, "Add")),
-      t.journal.length ? el("p", { class: "dim" }, "Journal: ", ...t.journal.map((j, i) => [i ? ", " : "", el("a", { href: "journal.html" }, j.title)]).flat()) : null,
+      el("h4", {}, "Trip Log"),
+      t.journal.length ? el("ul", { class: "trip-log" }, t.journal.map((j) => el("li", {},
+        el("a", { href: "journal.html" }, j.title), j.conditions ? el("span", { class: "dim" }, " · " + j.conditions) : null)))
+        : el("p", { class: "dim" }, "Nothing logged yet. Note how it went and the weather."),
       buttons(
         t.status === "planned" ? btn("Start Trip", "btn-green", () => act({ kind: "trip.status", params: { trip_id: t.id, status: "active" } })) : null,
         t.status === "active" ? btn("Finish Trip", "btn-green", () => act({ kind: "trip.status", params: { trip_id: t.id, status: "completed" } })) : null,
+        btn("Log It", "btn-ghost", () => logTrip(t)),
         btn("Edit", "btn-ghost", () => editTrip(t)),
         btn("Delete", "btn-ghost", () => act({ kind: "trip.delete", params: { trip_id: t.id } }))));
   }

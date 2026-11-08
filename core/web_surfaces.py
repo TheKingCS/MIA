@@ -16,7 +16,8 @@ the upcoming list and the at-a-glance cards.
   greeting and date, the status strip (`home_strip`), the one thing MIA
   noticed across apps (`_top_finding`, from core/findings.py), Today's
   Focus and Upcoming with each row's kind (`due_kind`), quick actions and
-  at-a-glance cards. Served as `/api/dashboard`; `web/index.html` shows it.
+  at-a-glance cards (Life State's, net worth on Money's, then Observations
+  and the Inbox: `glance_counts`). Served as `/api/dashboard`; `web/index.html` shows it.
 - `apps_page(context)`: every app, grouped, with what MIA can do in each.
   Served as `/api/apps`.
 
@@ -198,7 +199,7 @@ APPS: tuple[App, ...] = (
     App("module_browser", "Apps", "🧩", "Everything MIA can do.", "apps.html",
         "View, enable/disable, install, and rescan modules.", KNOW, ()),
     App("settings", "Settings", "⚙", "Make MIA yours.", None,
-        "Configure MIA — theme, user info, module options.", KNOW, ("accessibility", "apps", "starters", "humor"),
+        "Configure MIA — theme, user info, module options.", KNOW, ("accessibility", "apps", "starters", "humor", "backup"),
         "Make the text bigger."),
 )
 APPS_BY_ID = {a.module_id: a for a in APPS}
@@ -380,7 +381,7 @@ def plural(n: int, word: str, many: str = "") -> str:
 
 
 def _glance(state: dict) -> list[dict]:
-    """Pure logic. The at-a-glance cards, from Life State v2."""
+    """Pure logic. The at-a-glance cards, from Life State v2 (Money with its net worth when it's known)."""
     from core.region import money
 
     cards = []
@@ -401,6 +402,9 @@ def _glance(state: dict) -> list[dict]:
             parts.append(f"{first['name']} {money(first['amount'])} {when}")
         if plan.get("gap") is not None:
             parts.append(f"{money(plan['gap'])} left each month after bills")
+        worth = (finances.get("net_worth") or {}).get("total")
+        if worth is not None:
+            parts.append(f"net worth {money(worth)}")
         if parts:
             late = any((b.get("days") or 0) < 0 for b in bills)
             card("budget", "Money", " · ".join(parts), "attention" if late else "calm")
@@ -444,10 +448,54 @@ def _glance(state: dict) -> list[dict]:
     return cards
 
 
+def glance_counts(observations: dict, waiting: list) -> list[dict]:
+    """Pure logic. The glance cards that come from outside Life State: Observations (what MIA noticed: the findings
+    across apps and the open insights, Needs You in amber, never red) and the Inbox (captures waiting to be filed,
+    the oldest named). No card for either when there's nothing; each card is shaped as `_glance`'s are."""
+    cards = []
+
+    def card(app_id, title, line, tone):
+        app = APPS_BY_ID[app_id]
+        cards.append({"app": app_id, "icon": app.icon, "title": title, "line": line, "tone": tone, "page": app.page})
+
+    found = observations.get("findings") or []
+    insights = [i for g in observations.get("insights") or [] for i in g.get("items") or []]
+    if found or insights:
+        needs = sum(1 for f in found if f.get("kind") == "Needs You")
+        first = (found or insights)[0]
+        line = plural(len(found) + len(insights), "thing") + " noticed"
+        line += (f" · {needs} need{'s' if needs == 1 else ''} you" if needs else "") + f" · {first['title']}"
+        card("observations", "Observations", line, "attention" if needs else "calm")
+    if waiting:
+        oldest = waiting[0]
+        card("inbox", "Inbox", plural(len(waiting), "capture") + " to file · " + oldest, "attention")
+    return cards
+
+
+def _more_glance(context, today: date) -> list[dict]:
+    """Home's Observations and Inbox glance cards (`glance_counts`), read from their stores; a store that fails to
+    read gives no card, never an error."""
+    from core.observations_web import screen
+
+    try:
+        observations = screen(context, today)
+    except Exception:
+        log.exception("Home: observations failed")
+        observations = {}
+    inbox = getattr(context, "inbox", None)
+    try:
+        waiting = [i.subject or i.vendor or (i.files[0] if i.files else "a capture") for i in inbox.pending()] \
+            if inbox is not None else []
+    except Exception:
+        log.exception("Home: inbox failed")
+        waiting = []
+    return glance_counts(observations, waiting)
+
+
 def dashboard(context, now: Optional[datetime] = None) -> dict:
     """Home's data: the greeting, the date, what needs doing today (from the life state's due items, each with its
-    kind), what's coming, the status strip, the one thing MIA noticed across apps, quick actions, the glance, recent
-    wins (only real wins, never spending), and something to remember.
+    kind), what's coming, the status strip, the one thing MIA noticed across apps, quick actions, the glance (Life
+    State's cards, then Observations and the Inbox), recent wins (only real wins, never spending), and something to remember.
     """
     from core.context_assembler import assemble_life_state_v2
 
@@ -476,7 +524,7 @@ def dashboard(context, now: Optional[datetime] = None) -> dict:
         "finding": _top_finding(context, today),
         "saying": SAYINGS[today.toordinal() % len(SAYINGS)],
         "quick_actions": list(QUICK_ACTIONS),
-        "glance": _glance(state),
+        "glance": _glance(state) + _more_glance(context, today),
         # "latest" is every event; only these are wins (no "Spent $40" on Home).
         "wins": wins,
         "child": bool((state.get("person") or {}).get("child")),

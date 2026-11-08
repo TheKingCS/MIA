@@ -3,7 +3,8 @@ The Journal, Workshop, Expeditions (with what has to happen before a trip), Musi
 2026-10-16: on the phone they "are empty right now and just bring up a
 chat with MIA"): core/web_more.py builds each page, core/more_actions.py
 makes every change through Propose → Approve, and core/my_files.py keeps
-the Files screen inside the person's own folder.
+the Files screen inside the person's own folder. A product's listings are
+added and taken off on the page and by voice.
 """
 
 import os
@@ -337,3 +338,25 @@ def test_upkeep_due_before_a_trip_shows_on_its_expedition(monkeypatch):
         Finding("upkeep_before_trip:t1:2026-11-21", "Upkeep before your trip", "Ridge loop starts Saturday, and Oil change on the Truck is due before then.", "x"),
         Finding("bill_before_pay:2026-11-05", "Bills before payday", "Rent first.", "y")])
     assert _trip_heads_up(None, TODAY) == {"t1": "Ridge loop starts Saturday, and Oil change on the Truck is due before then."}
+
+
+def test_a_product_is_listed_and_taken_off_on_the_page_and_by_voice(world):
+    from core.assistant_domain_actions import _action_list_product, _action_unlist_product
+
+    do(world, "product.add", name="Walnut bowl", base_price="40", quantity_in_stock="3")
+    bowl = workshop_page(world, TODAY)["products"][0]
+    assert [f["name"] for f in workshop_page(world, TODAY)["forms"]["listing"]["fields"]] == ["platform", "price", "status", "url"]
+    said, done = do(world, "listing.add", product_id=bowl["id"], platform="Etsy", price="45", url="https://example.com/b")
+    assert said == "List Walnut bowl on Etsy at $45.00" and done == "Walnut bowl is listed on Etsy."
+    [etsy] = workshop_page(world, TODAY)["products"][0]["listings"]
+    assert (etsy["platform"], etsy["price"], etsy["status"], etsy["url"]) == ("Etsy", "$45.00", "Active", "https://example.com/b")
+    with pytest.raises(ActionError, match="Status"):
+        world.actions.propose(world, "listing.add", {"product_id": bowl["id"], "platform": "Local", "status": "Gone"})
+    assert _action_list_product(world, {"name": "walnut bowl", "platform": "Local market", "price": 35}) == \
+        "Walnut bowl is listed on Local market."
+    assert _action_unlist_product(world, {"name": "walnut bowl", "platform": "the moon"}) == \
+        "Walnut bowl isn't listed there. It's on Etsy, Local market."
+    assert _action_unlist_product(world, {"name": "walnut bowl", "platform": "etsy"}) == "Took Walnut bowl off Etsy."
+    said, _ = do(world, "listing.remove", product_id=bowl["id"],
+                 listing_id=workshop_page(world, TODAY)["products"][0]["listings"][0]["id"])
+    assert said == "Take Walnut bowl off Local market" and workshop_page(world, TODAY)["products"][0]["listings"] == []

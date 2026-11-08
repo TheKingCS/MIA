@@ -290,6 +290,24 @@ class PasswordChange(BaseModel):
     new: str
 
 
+class VoiceChoice(BaseModel):
+    """MIA's voice from Settings: the voice, the AI voice effect and the volume (percent), each only when changed."""
+    voice_id: Optional[str] = None
+    effect: Optional[bool] = None
+    volume: Optional[int] = None
+
+
+class PackDelete(BaseModel):
+    """Deleting a Knowledge pack: its id, and its title typed to confirm (it's gone for good)."""
+    id: str
+    confirm: str = ""
+
+
+class BackupMake(BaseModel):
+    """A backup made from the web: its passphrase, when it should be encrypted (never kept)."""
+    passphrase: str = ""
+
+
 class PasswordCheck(BaseModel):
     """A password to check against the person's own (before something sensitive)."""
     password: str
@@ -909,6 +927,56 @@ def create_app(context: AppContext) -> FastAPI:
         if not _is_first_account(context, profile_id):
             raise HTTPException(status.HTTP_403_FORBIDDEN, f"{what} is the PC owner's.")
 
+    # MIA's voice (core/web_voice.py), device-wide, so the PC owner's: the voices installed, and changing one.
+    @app.get("/api/settings/voice")
+    def voice_settings(profile_id: str = Depends(require_profile_id)) -> dict:
+        """The voices on this computer and the one speaking now."""
+        from core.web_voice import voice_page
+
+        _owner_only(profile_id, "MIA's voice")
+        return voice_page(context)
+
+    @app.post("/api/settings/voice")
+    def voice_choose(body: VoiceChoice, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Changes the voice, its effect or its volume (not an action: the voice engine is swapped in memory)."""
+        from core.web_voice import choose
+
+        _owner_only(profile_id, "MIA's voice")
+        with app.state.turn_lock:
+            done = choose(context, body.voice_id, body.effect, body.volume)
+        if "error" in done:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, done["error"])
+        return done
+
+    # Backups (core/web_backups.py), for the PC's owner: the newest ones, and Back Up Now (not an action: a passphrase
+    # never sits in a proposal or the undo log). Restoring stays on the PC.
+    @app.get("/api/backups")
+    def backups_screen(profile_id: str = Depends(require_profile_id)) -> dict:
+        """Where backups go and the newest ones."""
+        from core.web_backups import status as backup_status
+
+        _owner_only(profile_id, "Backups")
+        return backup_status(context)
+
+    @app.post("/api/backups")
+    async def backup_now(body: BackupMake, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Makes one backup into the backups folder, encrypted when a passphrase is given."""
+        from core.web_backups import make
+
+        _owner_only(profile_id, "Backups")
+        if body.passphrase and len(body.passphrase) < 8:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Pick a passphrase of at least 8 characters, or none.")
+
+        def run():
+            with app.state.turn_lock:
+                return make(context, body.passphrase)
+
+        done = await run_in_threadpool(run)
+        if "error" in done:
+            raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, done["error"])
+        log.info("Backup made from the web: %s", done["made"])
+        return done
+
     @app.get("/api/diagnostics")
     def diagnostics_screen(profile_id: str = Depends(require_profile_id)) -> dict:
         """The PC's check-ups (core/diagnostics.py), for its owner: they read its drives and network adapters."""
@@ -952,6 +1020,24 @@ def create_app(context: AppContext) -> FastAPI:
 
     # Screens for the Operating Journal (DEC-0097), games played (DEC-0098) and Good News Radio (DEC-0096): read
     # here, assembled in core; every change goes through /api/actions like any screen's (DEC-0017).
+    # Projects (core/web_projects.py): builds and jobs of the person's own with their money and tasks.
+    @app.get("/api/projects")
+    def projects_screen(profile_id: str = Depends(require_profile_id)) -> dict:
+        """The projects for this person's Projects page."""
+        from core.web_projects import projects_page
+
+        with app.state.turn_lock:
+            return projects_page(view_for(context, profile_id))
+
+    # My Why (core/web_why.py): the person's chains of reasons with the facts behind each; changes are why.* actions.
+    @app.get("/api/why")
+    def why_screen(profile_id: str = Depends(require_profile_id)) -> dict:
+        """The why chains for this person's page (reading never records a checkpoint)."""
+        from core.web_why import why_page
+
+        with app.state.turn_lock:
+            return why_page(view_for(context, profile_id))
+
     @app.get("/api/operating-journal")
     def operating_journal_screen(profile_id: str = Depends(require_profile_id)) -> dict:
         from core.operating_journal import screen
@@ -971,6 +1057,20 @@ def create_app(context: AppContext) -> FastAPI:
                      for p in library.list_packs()]
             hits = library.search_titles(q.strip()[:200]) if q.strip() else []
         return {"available": True, "packs": packs, "hits": hits, "root": str(library.root_path)}
+
+    @app.post("/api/knowledge/pack/delete")
+    def knowledge_pack_delete(body: PackDelete, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Deletes a pack's file for good, for the PC's owner, once its title is typed to confirm (as the desktop asks).
+        Not an action: undo can't bring a deleted pack back."""
+        from core.reference_library_manager import delete_confirmed
+
+        _owner_only(profile_id, "Deleting a pack")
+        with app.state.turn_lock:
+            passed, message = delete_confirmed(getattr(context, "reference_library", None), body.id, body.confirm)
+        if not passed:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, message)
+        log.info("Knowledge pack deleted from the web: %s", body.id)
+        return {"deleted": body.id, "message": message}
 
     # MIA's browser (core/web_browser.py, DEC-0117): what it's on, the steps waiting for the person, the taught tasks,
     # and a waiting step's screenshot (only from her own shots folder).
@@ -1069,11 +1169,13 @@ def create_app(context: AppContext) -> FastAPI:
             return screen(view_for(context, profile_id), q.strip()[:200])
 
     @app.get("/api/knowledge/plan")
-    def knowledge_plan(id: str, profile_id: str = Depends(require_profile_id)) -> dict:
+    def knowledge_plan(id: str, sizes: str = "", profile_id: str = Depends(require_profile_id)) -> dict:
+        """One plan, worked out at the sizes asked ("length_ft=10,width_ft=12"; core/plan_library.detail)."""
         from core.plan_library import detail
 
+        asked = dict(part.split("=", 1) for part in sizes.split(",")[:12] if "=" in part)
         with app.state.turn_lock:
-            found = detail(view_for(context, profile_id), id)
+            found = detail(view_for(context, profile_id), id, asked)
         if found is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "That plan isn't on the shelf.")
         return found
@@ -1166,6 +1268,42 @@ def create_app(context: AppContext) -> FastAPI:
 
         with app.state.turn_lock:
             return screen(view_for(context, profile_id))
+
+    # The Classroom's textbooks (core/web_textbooks.py): where the books talk about something, and adding a book (a PDF
+    # or text file sent as a raw body with X-Filename, read and indexed by TextbookManager.add_book).
+    @app.get("/api/classroom/textbooks/search")
+    def textbook_search(q: str = "", book: str = "", profile_id: str = Depends(require_profile_id)) -> dict:
+        """Passages from the person's textbooks that match the words."""
+        from core.web_textbooks import search
+
+        with app.state.turn_lock:
+            return search(view_for(context, profile_id), q[:200], book)
+
+    @app.post("/api/classroom/textbook")
+    async def textbook_upload(request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Adds a textbook from an uploaded PDF or text file; says why when it can't be read."""
+        view = view_for(context, profile_id)
+        library = getattr(view, "textbooks", None)
+        if library is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Textbooks aren't on this MIA.")
+        data = await request.body()
+        if not data:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "No file received.")
+        if len(data) > 200 * 1024 * 1024:
+            raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "That book is over 200 MB.")
+        name = Path(unquote(request.headers.get("x-filename", "book.pdf"))).name.strip() or "book.pdf"
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / name
+            source.write_bytes(data)
+            def add():
+                with app.state.turn_lock:
+                    return library.add_book(source)
+
+            try:
+                book = await run_in_threadpool(add)
+            except ValueError as problem:
+                raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
+        return {"id": book.book_id, "title": book.title, "reading": book.reading}
 
     @app.get("/api/life-notes")
     def life_notes_screen(profile_id: str = Depends(require_profile_id)) -> dict:

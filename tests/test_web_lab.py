@@ -1,6 +1,7 @@
 """The Lab on the web (DEC-0125, the design canvas's Lab, DEC-0113: core/web_lab.py, core/lab_reading_actions.py and
 core/assistant_lab_actions.py): the Data Logger's series as chips, one in full with plain numbers and a chart placed
-by core, readings logged and deleted as actions, other apps' series read only, and delete by voice."""
+by core, readings logged and deleted as actions, other apps' series read only (an upkeep task's sensor readings named by
+its asset and task, linked from its row), and delete by voice."""
 
 from __future__ import annotations
 
@@ -105,3 +106,33 @@ def test_the_last_reading_is_deleted_by_voice(home):
     assert tool(home, {"series": "tank ph"}) == "Deleted the reading from Tank pH."
     assert [r.value for r in home.data_logger.readings_for("Tank pH")] == [7.1]
     assert tool(home, {"series": "Shop temp"}) == "There are no readings in 'Shop temp'."
+
+
+def test_an_upkeep_tasks_sensor_readings_are_garages_named_by_asset_and_task():
+    from types import SimpleNamespace
+
+    from core.web_lab import _name, owner_of
+
+    assert owner_of("maintenance_t1")[1] == "Garage" and owner_of("maintenance_asset_x_Hours")[0] == "maintenance_asset_"
+    book = SimpleNamespace(get_task=lambda i: SimpleNamespace(asset_id="a1", title="Filter pressure") if i == "t1" else None,
+                           get_asset=lambda i: SimpleNamespace(name="Furnace") if i == "a1" else None)
+    context = SimpleNamespace(maintenance=book)
+    assert _name(context, "maintenance_t1") == "Furnace · Filter pressure"
+    assert _name(context, "maintenance_gone") == "Removed · Reading"
+
+
+def test_a_sensor_tasks_row_links_to_its_chart_once_there_are_two_readings(home, tmp_path):
+    from datetime import date
+
+    from core.maintenance_manager import MaintenanceManager
+    from core.web_equipment import _task_row
+
+    home.maintenance = MaintenanceManager(home, data_dir=tmp_path / "upkeep")
+    furnace = home.maintenance.add_asset("Furnace", "Appliance")
+    task = home.maintenance.add_task(furnace.asset_id, "Filter pressure", trigger_type="sensor", meter_unit="inH2O",
+                                     threshold_value=0.8, threshold_direction="above")
+    assert _task_row(home, task, furnace, date.today())["series"] is None
+    home.maintenance.log_reading(task.task_id, 0.4)
+    home.maintenance.log_reading(task.task_id, 0.6)
+    assert _task_row(home, task, furnace, date.today())["series"] == task.series_id
+    assert any(r["name"] == "Furnace · Filter pressure" for r in lab_page(home)["other_series"])

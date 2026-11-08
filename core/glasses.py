@@ -59,6 +59,10 @@ GLASSES_KINDS = frozenset({
     "training.finish",
     # cook mode (DEC-0113): the step, a named timer the step offers, "I made this"; stopping without logging is by voice
     "cooking.next", "cooking.back", "cooking.timer", "cooking.timer_cancel", "cooking.made",
+    # a trip underway (core/trip_route.py): "Arrived" at the next stop, logged now
+    "trip.arrived",
+    # the course to continue in the Classroom: a lesson ticked done (its skill XP credited once)
+    "lesson.done",
 })
 
 # Apps the glasses don't show as cards: the orb *is* Home and Talk; the
@@ -937,6 +941,138 @@ def calendar_status(context, today: date) -> dict:
     return {"line": " · ".join(b for b in bits if b), "tone": "attention" if late else "calm"}
 
 
+def _trail(context, today):
+    """Panel: the trip underway's route (core/trip_route.route_card): the next stop first, offering Arrived
+    (trip.arrived, logged now), then the stops after it, the last leg walked and the distance so far. One trip at a
+    time; with none underway it says how to start one."""
+    from core.trip_route import route_card
+
+    trips = getattr(context, "trips", None)
+    underway = [t for t in trips.all_trips() if t.status == "active"] if trips is not None else []
+    if not underway:
+        return _panel("On The Trail", [], "No trip underway. Start one in Expeditions.")
+    trip = underway[0]
+    card = route_card(context, trip)
+    lines = []
+    if card["next"]:
+        lines.append(_line(card["next"]["name"], "next stop", "", {"kind": "trip.arrived", "label": "Arrived",
+                                                                  "params": {"trip_id": trip.trip_id,
+                                                                             "waypoint_id": card["next"]["id"]}}))
+    if card["legs"]:
+        leg = card["legs"][-1]
+        lines.append(_line(f"{leg['from']} to {leg['to']}", " · ".join(x for x in (f"{leg['km']} km", leg["took"], leg["pace"]) if x), "ok"))
+    if card["walked_km"]:
+        lines.append(_line("So far", f"{card['walked_km']} km" + (f" of {card['planned_km']}" if card["planned_km"] else "")))
+    nxt = next((i for i, s in enumerate(card["stops"]) if card["next"] and s["id"] == card["next"]["id"] and not s["reached"]), None)
+    later = card["stops"][nxt + 1:] if nxt is not None else []
+    lines += [_line(s["name"], "later") for s in later]
+    empty = "Every stop is reached." if card["stops"] else f"{trip.name} has no route. Add stops in Expeditions."
+    return _panel("On The Trail · " + trip.name, lines, empty)
+
+
+def _classroom_continue(context, today):
+    """Panel: the course to continue (core/classroom_manager.continue_course): the lessons left in it, each with Done
+    (lesson.done), and how far along the course is."""
+    from core.classroom_manager import screen
+
+    page = screen(context)
+    course = page.get("continue")
+    if not page.get("available"):
+        return _panel("Continue", [], "The Classroom isn't available here.")
+    if course is None:
+        return _panel("Continue", [], "Nothing left to learn right now. Add a course in the Classroom.")
+    left = next((c["lessons"] for s in page["subjects"] for c in s["courses"] if c["id"] == course["course_id"]), [])
+    lines = [_line(l["name"], f"+{l['xp']} XP" if l["xp"] else "", "",
+                   {"kind": "lesson.done", "label": "Done", "params": {"lesson_id": l["id"], "done": "yes"}})
+             for l in left if not l["done"]]
+    return _panel(f"{course['course']} · {course['done']} of {course['total']}", lines, "Every lesson is done.")
+
+
+def _noticed(context, today):
+    """Panel: what MIA noticed (core/observations_web.py), Needs You first in amber, each with its next step; a
+    readout (settling one happens where it lives)."""
+    from core.observations_web import screen
+
+    page = screen(context, today)
+    found = sorted(page.get("findings") or [], key=lambda f: f.get("kind") != "Needs You")
+    lines = [_line(f["title"], f.get("next") or "", "attention" if f.get("kind") == "Needs You" else "") for f in found]
+    lines += [_line(i["title"], i.get("next") or g["source"]) for g in page.get("insights") or [] for i in g["items"]]
+    return _panel("What MIA Noticed", lines, "Nothing noticed lately. All quiet.")
+
+
+def _lab_latest(context, today):
+    """Panel: each series' latest reading in the Lab (its own and other apps'), newest first; a readout."""
+    from core.web_lab import lab_page
+
+    page = lab_page(context)
+    if not page.get("available"):
+        return _panel("Latest Readings", [], "The Lab isn't available here.")
+    rows = sorted((page.get("series") or []) + (page.get("other_series") or []), key=lambda r: r.get("at") or "", reverse=True)
+    return _panel("Latest Readings", [_line(r["name"], f"{r['latest']} · {r['when']}") for r in rows],
+                  "No readings yet. Log one in the Lab.")
+
+
+def _power_levels(context, today):
+    """Panel: the battery, then each energy source's meters (amber when low), from core/web_power.py; a readout."""
+    from core.web_power import power_page
+
+    page = power_page(context)
+    lines = []
+    battery = page.get("battery") or {}
+    if battery.get("available"):
+        left = battery.get("minutes_left")
+        detail = f"{battery['percent']}%" + (" · plugged in" if battery.get("plugged_in") else
+                                             f" · {left // 60} h {left % 60} min left" if left else "")
+        lines.append(_line("Battery", detail, "attention" if (battery.get("meter") or {}).get("tone") == "attention" else ""))
+    for source in page.get("sources") or []:
+        for m in source.get("meters") or []:
+            lines.append(_line(f"{source['name']} · {m['name']}", f"{m['text']} · {m['when']}",
+                               "attention" if (m.get("meter") or {}).get("tone") == "attention" else ""))
+    return _panel("Power", lines, "No battery or energy sources here yet.")
+
+
+def _journal_latest(context, today):
+    """Panel: the newest journal notes (the plain journal, never the private one), each with its day and tags."""
+    journal = getattr(context, "journal", None)
+    entries = journal.all_entries() if journal is not None else []
+    return _panel("Latest Notes", [_line(e.title, " · ".join(x for x in ((e.updated_at or e.created_at or "")[:10],
+                                                                       ", ".join(e.tags[:2])) if x)) for e in entries],
+                  "No notes yet. Say \"make a note\" and what to keep.")
+
+
+def _memories_glance(context, today):
+    """Panel: on this day in an earlier year first, then the latest trips, each with its distance and days."""
+    from core.memories_web import screen
+
+    page = screen(context, today)
+    lines = [_line("On this day: " + r["name"], f"{r['start'][:4]} · {r['km']} km" if r["km"] else r["start"][:4], "ok")
+             for r in page["on_this_day"]]
+    lines += [_line(r["name"], " · ".join(x for x in (f"{r['km']} km" if r["km"] else "",
+                                                     f"{r['days']} days" if r["days"] else "") if x)) for r in page["recaps"]]
+    return _panel("Memories", lines, "No trips remembered yet.")
+
+
+def _project_tasks(context, today):
+    """Panel: the open tasks of the projects underway (core/web_projects.py), soonest due first, each with Done
+    (task.done) and its project and due day; up to five, the rest counted."""
+    projects, tasks = getattr(context, "projects", None), getattr(context, "tasks", None)
+    if projects is None or tasks is None:
+        return _panel("Project Tasks", [], "Projects aren't available here.")
+    lines = []
+    for p in projects.all_projects():
+        if p.status == "Complete":
+            continue
+        for t in tasks.tasks_for_project(p.project_id):
+            if t.done:
+                continue
+            late = bool(t.due_date) and t.due_date < today.isoformat()
+            lines.append((t.due_date or "9999", _line(t.title, p.name + (f" · by {t.due_date[5:]}" if t.due_date else ""),
+                                                     "attention" if late else "",
+                                                     {"kind": "task.done", "label": "Done", "params": {"task_id": t.task_id}})))
+    lines.sort(key=lambda pair: pair[0])
+    return _panel("Project Tasks", [line for _, line in lines], "No open tasks. Add some on the Projects page.")
+
+
 def _household_chores(context, today):
     """Panel: the active household routines with this period's progress, each undone one offering Done
     (routine.log), those still to do first (a menu item's readout; lines with an allowed action can be approved from the glasses).
@@ -1037,6 +1173,14 @@ PANELS: dict[str, tuple[tuple[str, str, Panel], ...]] = {
     "household": (("chores", "Chores Due", _household_chores),),
     "relationships": (("birthdays", "Next Birthdays", _people_birthdays),),
     "inbox": (("waiting", "Waiting To File", _inbox_waiting),),
+    "expeditions": (("trail", "On The Trail", _trail),),
+    "workshop": (("tasks", "Project Tasks", _project_tasks),),
+    "classroom": (("continue", "Continue", _classroom_continue),),
+    "observations": (("noticed", "What MIA Noticed", _noticed),),
+    "lab": (("latest", "Latest Readings", _lab_latest),),
+    "power": (("levels", "Levels", _power_levels),),
+    "notes": (("latest", "Latest Notes", _journal_latest),),
+    "memories": (("trips", "Memories", _memories_glance),),
 }
 
 # Questions an app's menu hands MIA, as if said aloud (she answers with
@@ -1051,7 +1195,7 @@ ASKS: dict[str, tuple[str, ...]] = {
     "notes": ("What were my last notes?",),
     "classroom": ("How is my learning progress?",),
     "inbox": ("What is waiting in my inbox?",),
-    "expeditions": ("What's my next trip?", "What gear do I need for my next trip?"),
+    "expeditions": ("What's left on my route?", "What's my next trip?", "What gear do I need for my next trip?"),
     "memories": ("What was my last trip like?",),
     "maps": ("Which trail maps do I have?",),
     "navigation": ("How far is my nearest waypoint?", "When is sunset today?"),

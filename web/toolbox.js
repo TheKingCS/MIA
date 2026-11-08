@@ -110,6 +110,45 @@
       btn("Set an Alarm", "btn-ghost", addAlarm));
   }
 
+  // ------------------------------------------------------------ the inventory
+  // What's kept around the house (core/web_toolbox.inventory): find, + / −, Edit, Delete, Add, each an inventory.*
+  // action, as "add 3 tarps to the inventory" does by voice.
+  let find = "";
+  async function editItem(i) {
+    const inv = page.inventory;
+    const v = await form(i ? "Edit " + i.name : "Add To The Inventory", inv.form.fields, i ? i.values : {});
+    if (v) act(i ? { kind: "inventory.edit", params: Object.assign({ item_id: i.id }, v) } : { kind: "inventory.add", params: v });
+  }
+  function itemRow(i) {
+    const step = (d) => act({ kind: "inventory.adjust", params: { item_id: i.id, delta: d } }, { quick: true });
+    return el("div", { class: "tb-item" },
+      el("div", { class: "tb-item-what" }, el("span", { class: "tb-row-name" }, i.name),
+        el("span", { class: "dim" }, [i.category, i.location].filter(Boolean).join(" · "))),
+      el("div", { class: "tb-item-count" },
+        el("button", { type: "button", class: "btn btn-ghost btn-small", "aria-label": "One less " + i.name, disabled: i.quantity ? null : true, onclick: () => step(-1) }, "−"),
+        el("span", { class: "tb-qty", "aria-label": i.quantity + " " + i.name }, String(i.quantity)),
+        el("button", { type: "button", class: "btn btn-ghost btn-small", "aria-label": "One more " + i.name, onclick: () => step(1) }, "+")),
+      el("div", { class: "row-buttons" }, btn("Edit", "btn-ghost btn-small", () => editItem(i)),
+        btn("Delete", "btn-ghost btn-small", () => act({ kind: "inventory.delete", params: { item_id: i.id } }))));
+  }
+  function inventory() {
+    const inv = page.inventory;
+    if (!inv) return null;
+    const box = el("input", { type: "search", class: "money-find", placeholder: "Find something…", "aria-label": "Find in the inventory",
+      oninput: (e) => { find = e.target.value; const list = $("tb-items"); if (list) list.replaceChildren(...inventoryRows()); } });
+    box.value = find;
+    function inventoryRows() {
+      const w = find.trim().toLowerCase();
+      const shown = inv.items.filter((i) => !w || [i.name, i.category, i.location, i.notes].join(" ").toLowerCase().includes(w));
+      return shown.length ? shown.map(itemRow) : [el("p", { class: "dim" }, inv.items.length ? "Nothing matches." : "Nothing in the inventory yet.")];
+    }
+    return el("section", { class: "glass tb-list" }, el("p", { class: "pw-label" }, "Inventory" + (inv.items.length ? " · " + inv.items.length : "")),
+      inv.items.length > 4 ? box : null,
+      el("div", { id: "tb-items", class: "tb-items" }, ...inventoryRows()),
+      el("p", { class: "dim" }, "Or say \"add 3 tarps to the inventory\" or \"how many tarps do I have?\""),
+      btn("Add An Item", "btn-ghost", () => editItem(null)));
+  }
+
   // ------------------------------------------------------------ the other tools
   const watch = { start: 0, total: 0, laps: [], tick: 0 };
   const fmt = (ms) => { const s = ms / 1000; const m = Math.floor(s / 60); return String(m).padStart(2, "0") + ":" + (s % 60).toFixed(1).padStart(4, "0"); };
@@ -144,7 +183,7 @@
     $("tb-sub").textContent = page.alarms_on ? page.alarms_on + (page.alarms_on === 1 ? " alarm on." : " alarms on.") : "Calculators and quick tools.";
     $("panel").replaceChildren(el("div", { class: "tb-grid" },
       el("div", { class: "tb-col" }, el("section", { class: "glass tb-calc", id: "tb-calc" }), calcList()),
-      el("div", { class: "tb-col" }, alarms(), tools())));
+      el("div", { class: "tb-col" }, alarms(), inventory(), tools())));
     drawCalc();
   }
 

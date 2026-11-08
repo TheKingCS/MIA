@@ -11,9 +11,12 @@ no phone screen). Three parts:
   never does the math, and its answer reads like the voice tool's.
 - **Alarms**: each alarm with its time, repeat and whether it's on; setting,
   switching and deleting one are actions (core/toolbox_actions.py).
+- **Inventory**: what's kept around the house (core/inventory_manager.py),
+  each item with how many and where, kinds first; adding, editing, + / −
+  and deleting are the inventory.* actions (core/more_actions.py), as the
+  voice tools add, adjust and delete them.
 - **Tools**: the Toolbox's other tools and where each one is on the web
-  (the calendar has its own page; the stopwatch runs on the page itself;
-  inventory stays on the PC).
+  (the calendar has its own page; the stopwatch runs on the page itself).
 """
 
 from __future__ import annotations
@@ -139,25 +142,39 @@ def _alarms(context) -> list:
 
 
 def _tools(context) -> list:
-    """The Toolbox's other tools and where each is on the web: a page, this page, or the PC."""
-    inventory = getattr(context, "inventory", None)
-    try:
-        items = len(inventory.all_items()) if inventory is not None else 0
-    except Exception:
-        items = 0
+    """The Toolbox's other tools and where each is on the web: a page, or this page."""
     return [
         {"id": "stopwatch", "name": "Stopwatch", "note": "Start, lap and reset, right here.", "where": "here"},
         {"id": "calendar", "name": "Calendar", "note": "Everything with a date.", "where": "calendar.html"},
-        {"id": "inventory", "name": "Inventory", "note": (f"{items} items. " if items else "") + "On the PC, or ask MIA.",
-         "where": "pc", "ask": "What's in my inventory?"},
     ]
 
 
+def inventory(context) -> Optional[dict]:
+    """The inventory for the screen: each item (id, name, how many, kind, where, notes, its form values), by kind then
+    name, the kinds, and the form; None when the inventory isn't on this MIA."""
+    from core.more_actions import forms
+
+    store = getattr(context, "inventory", None)
+    if store is None:
+        return None
+    try:
+        items = store.all_items()
+    except Exception:
+        log.exception("Toolbox: inventory read failed")
+        items = []
+    rows = [{"id": i.item_id, "name": i.name, "quantity": i.quantity, "category": i.category, "location": i.location,
+             "notes": i.notes, "values": {"name": i.name, "quantity": i.quantity, "category": i.category,
+                                          "location": i.location, "notes": i.notes}}
+            for i in sorted(items, key=lambda i: ((i.category or "~").lower(), i.name.lower()))]
+    return {"items": rows, "kinds": sorted({r["category"] for r in rows if r["category"]}, key=str.lower),
+            "form": forms()["inventory"]}
+
+
 def toolbox_page(context) -> dict:
-    """The Toolbox screen's data: the calculators, the alarms and their form, and the other tools."""
+    """The Toolbox screen's data: the calculators, the alarms and their form, the inventory, and the other tools."""
     from core.toolbox_actions import ALARM_FIELDS
 
     alarms = _alarms(context)
     return {"available": True, "calculators": calculators(), "alarms": alarms,
             "alarms_on": sum(1 for a in alarms if a["on"]), "can_alarm": getattr(context, "alarms", None) is not None,
-            "forms": {"alarm": {"fields": ALARM_FIELDS}}, "tools": _tools(context)}
+            "forms": {"alarm": {"fields": ALARM_FIELDS}}, "tools": _tools(context), "inventory": inventory(context)}

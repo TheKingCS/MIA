@@ -1548,3 +1548,109 @@ body.mod-maps .hero { display: none; }
 .dx-log-text { overflow-wrap: anywhere; }
 .dx-log-row .dim { font-size: 12px; font-family: var(--font-mono); }
 .dx-dot.bad { background: var(--bad); }
+
+/* Classroom: a lesson's notes under its name (lesson.notes, 2026-11-07). */
+.cl-notes { margin: 6px 0 0; white-space: pre-wrap; color: var(--text-dim); font-size: 14px; line-height: 1.45; }
+
+/* Money: sorting a charge to a business (expense.business, 2026-11-07). The guess is the amber choice. */
+.biz-row { align-items: flex-start; flex-wrap: wrap; gap: 10px; }
+.biz-choices { flex-wrap: wrap; }
+
+/* Expeditions: a trip's route and the legs walked (core/trip_route.py, 2026-11-07). */
+.route-stops, .route-legs { list-style: none; margin: 8px 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.route-stops li { display: grid; grid-template-columns: 28px 1fr auto; align-items: center; gap: 10px; min-height: 44px; }
+.route-dot { width: 22px; height: 22px; border-radius: 50%; border: 1px solid rgba(var(--rgb-accent), .5); display: grid; place-items: center; font-size: 12px; color: var(--accent); }
+.route-stops li.done .route-dot { background: rgba(var(--rgb-accent), .18); }
+.route-stops li.done > span:nth-child(2) { color: var(--text-dim); }
+.route-legs li { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 14px; }
+
+/* Knowledge: a plan's sizes and what to buy (core/plan_library.detail, 2026-11-07). */
+.plan-sizes { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin: 12px 0; }
+.plan-size { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--text-dim); }
+.plan-size input { width: 96px; min-height: 44px; }
+.plan-buy { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.plan-buy.done > span:first-child { color: var(--text-dim); }
+.plan-problem { color: var(--attention); }
+.plan-page h3 { text-transform: none; }  /* "8 x 4 ft raised bed" stays as worked out */
+
+/* Toolbox: the inventory (core/web_toolbox.inventory, 2026-11-07). */
+.tb-items { display: flex; flex-direction: column; gap: 8px; }
+.tb-item { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(var(--rgb-accent), .1); }
+.tb-item-what { display: flex; flex-direction: column; min-width: 0; }
+.tb-item-count { display: flex; align-items: center; gap: 6px; }
+.tb-item-count .btn { min-width: 44px; min-height: 44px; }
+.tb-qty { font-family: var(--font-mono); min-width: 2.5ch; text-align: center; }
+.tb-item .row-buttons { grid-column: 1 / -1; }
+
+/* Money: a filed receipt's lines under its expense (core/web_money.receipt_lines, 2026-11-07). */
+.receipt-lines { margin-top: 6px; font-size: 14px; color: var(--text-dim); }
+.receipt-lines summary { cursor: pointer; min-height: 32px; display: flex; align-items: center; }
+.receipt-lines ul { margin: 4px 0 0; padding-left: 18px; }
+
+/* Expeditions: a trip's log with its weather (journal entries on the trip, 2026-11-07). */
+.trip-log { list-style: none; margin: 6px 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+
+/* Memories: where a trip went (core/memories_web.route_map, 2026-11-07). Placed by core; drawn in the accent. */
+.mm-map { width: 100%; height: auto; max-height: 220px; margin: 10px 0 4px; border-radius: 10px;
+  background: rgba(var(--rgb-accent), .05); border: 1px solid rgba(var(--rgb-accent), .14); }
+.mm-route { fill: none; stroke: var(--accent); stroke-width: .9; stroke-linejoin: round; stroke-linecap: round; }
+.mm-stop { fill: var(--bg, #0a1014); stroke: var(--accent); stroke-width: .6; }
+.mm-start { fill: var(--accent); }
+.mm-label { fill: var(--text-dim); font-size: 4px; font-family: var(--font-sans, inherit); }
+
+/* My Why (core/web_why.py, 2026-11-07): a chain from what you do up to what it's for, one link above the next. */
+.why-chain { padding: 18px; margin-bottom: 16px; }
+.why-links { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; }
+.why-link { position: relative; padding: 4px 0 14px 22px; border-left: 2px solid rgba(var(--rgb-accent), .35); margin-left: 6px; }
+.why-link:last-child { border-left-color: transparent; padding-bottom: 0; }
+.why-link::before { content: ""; position: absolute; left: -7px; top: 6px; width: 12px; height: 12px; border-radius: 50%;
+  background: var(--bg); border: 2px solid var(--accent); }
+.why-link.done::before { background: var(--ok, var(--accent)); border-color: var(--ok, var(--accent)); }
+.why-name { display: flex; gap: 10px; align-items: center; font-weight: 600; font-size: 17px; }
+.why-reason { margin: 4px 0; font-style: italic; color: var(--text); }
+.why-facts { margin: 6px 0; padding-left: 18px; color: var(--text-dim); font-size: 14px; }
+.why-wins li { color: var(--text); }
+
+/* Workshop: where a product is listed (listing.add / listing.remove, 2026-11-07). */
+.ws-listings { list-style: none; margin: -4px 0 10px; padding: 0 0 0 14px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+.ws-listings li { display: flex; align-items: center; gap: 10px; }
+.ws-listings li .btn { margin-left: auto; min-width: 44px; }
+
+/* Projects (core/web_projects.py, 2026-11-07): a card per project that opens to its money and tasks. */
+.pj-card { padding: 0; margin-bottom: 12px; overflow: hidden; }
+.pj-card > :not(.pj-head) { margin-left: 18px; margin-right: 18px; }
+.pj-card > :last-child { margin-bottom: 16px; }
+.pj-head { width: 100%; display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto auto; gap: 2px 10px; text-align: left;
+  background: none; border: 0; color: inherit; padding: 16px 18px; cursor: pointer; min-height: 44px; }
+.pj-head .chip { grid-row: 1 / span 2; grid-column: 2; align-self: center; }
+.pj-name { font-weight: 600; font-size: 17px; }
+.pj-card.finished .pj-name { color: var(--text-dim); }
+.pj-figures { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 8px 0; }
+.pj-figures strong { display: block; font-family: var(--font-mono); font-size: 17px; }
+.pj-over { color: var(--attention); }
+.meter-attention .meter-fill { background: var(--attention); }
+
+/* Classroom: textbooks, and what they say (core/web_textbooks.py, 2026-11-07). */
+.cl-books { margin-top: 18px; }
+.tb-search { display: flex; gap: 8px; align-items: center; margin: 8px 0; }
+.tb-search input { flex: 1; }
+.tb-hits { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+.tb-hit { padding: 10px 12px; border-radius: 10px; background: rgba(var(--rgb-accent), .05); border: 1px solid rgba(var(--rgb-accent), .14); }
+.tb-hit p { margin: 4px 0 0; line-height: 1.5; }
+
+/* Settings: starter sets (core/starter_actions.py, 2026-11-07). */
+.st-set { border-top: 1px solid rgba(var(--rgb-accent), .1); padding: 10px 0; }
+.st-set summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.st-parts { display: flex; flex-direction: column; gap: 6px; margin: 6px 0 10px; }
+.st-part { display: flex; gap: 10px; align-items: center; min-height: 36px; }
+
+/* Settings: backups (core/web_backups.py, 2026-11-07). */
+.bk-list { list-style: none; margin: 6px 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+.bk-list li { display: flex; justify-content: space-between; gap: 10px; }
+.bk-make { flex-wrap: wrap; align-items: center; }
+.bk-make input { flex: 1; min-width: 180px; min-height: 44px; }
+
+/* Settings: MIA's voice (core/web_voice.py, 2026-11-07). */
+.vc-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; flex-wrap: wrap; }
+.vc-row select { min-height: 44px; flex: 1; max-width: 60%; }
+.vc-row input[type=range] { flex: 1; }

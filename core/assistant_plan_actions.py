@@ -18,6 +18,7 @@ them.
 - `cut_list`: the person's own parts, said plainly (`parse_parts()`),
   worked out into boards and sheets.
 - `plan_shopping_list`: a plan's materials against the workshop's stock.
+- `forget_plan`: lets a kept plan go (the plan page's `plan.delete`).
 - `plan_sources`, `keep_plan`, `start_plan_project`.
 
 Tools travel in three domains: `plans` for asking, `plan_buying` only on
@@ -406,9 +407,27 @@ def _action_start_project(context, arguments: dict) -> str:
     return f"Started the project \"{project.name}\" with the plan's materials and steps."
 
 
+def _action_forget_plan(context, arguments: dict) -> str:
+    """Tool forget_plan: lets a kept plan go by its name (the `plan.delete` action, so "undo that" brings it back);
+    built-in plans and files stay."""
+    from core.actions import ACTION_TYPES, ActionError
+
+    library = _library(context)
+    words = str(arguments.get("name") or "")
+    kept = [p for p in library.find(words, limit=60) if p["id"] in library.plans] if library is not None else []
+    if not kept:
+        return "I don't have a kept plan by that name. Built-in plans and files stay on the shelf."
+    params = {"plan_id": kept[0]["id"]}
+    try:
+        ACTION_TYPES["plan.delete"].describe(context, params)
+        return ACTION_TYPES["plan.delete"].execute(context, params)
+    except ActionError as problem:
+        return str(problem)
+
+
 def register_plan_actions(registry: AssistantActionRegistry) -> None:
-    """Registers the plans shelf's tools: asking in domain plans, the shopping list in plan_buying, and keeping a plan
-    or starting a project in plan_saving (each domain brought only by its own words)."""
+    """Registers the plans shelf's tools: asking in domain plans, the shopping list in plan_buying, and keeping a plan,
+    starting a project or letting a kept plan go in plan_saving (each domain brought only by its own words)."""
     sizes = {"size": {"type": "string", "description": "The size as they said it, e.g. '10 by 12' or '4x8x2' (feet)."},
              "length_ft": {"type": "number", "description": "Length in feet."},
              "width_ft": {"type": "number", "description": "Width in feet (a deck or floor: the joist span)."},
@@ -465,13 +484,17 @@ def register_plan_actions(registry: AssistantActionRegistry) -> None:
          ("save this plan", "keep this plan", "add a plan", "save a plan")),
         ("start_plan_project", "Start a project from a plan, with its materials and steps.", {**name, **sizes},
          ["name"], _action_start_project, ("start the project", "make it a project", "start a project from")),
+        ("forget_plan", "Let a plan the household kept go from the plans shelf (built-in plans and files stay).",
+         name, ["name"], _action_forget_plan, ("delete the plan", "remove the plan", "forget the plan",
+                                               "let the plan go")),
     )
     # The shopping list travels apart: only buying words bring it, so "what do I need to build" reaches material_list.
     registry.register_domain_keywords(BUYING, ("shopping list", "still need", "left to buy", "need to buy"))
     # So do the tools that save something: a question about building never starts a project by itself.
     registry.register_domain_keywords(SAVING, ("as a project", "a project from", "start the project", "save this plan", "keep this plan", "add a plan",
-                                               "save a plan", "save the plan", "keep the plan"))
-    homes = {"plan_shopping_list": BUYING, "keep_plan": SAVING, "start_plan_project": SAVING}
+                                               "save a plan", "save the plan", "keep the plan", "delete the plan",
+                                               "remove the plan", "forget the plan"))
+    homes = {"plan_shopping_list": BUYING, "keep_plan": SAVING, "start_plan_project": SAVING, "forget_plan": SAVING}
     for tool_name, description, props, required, handler, phrases in tools:
         registry.register(AssistantAction(
             name=tool_name, domain=homes.get(tool_name, DOMAIN), description=description,

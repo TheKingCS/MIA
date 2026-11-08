@@ -161,6 +161,32 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       Field Kit (`core/web_field_kit.py`: Devices, Network (hash kind, subnet) and Scripts tabs, read only; eject,
       run and port scan stay on the PC). Voice gained calculate_board_feet, calculate_concrete, switch_alarm and
       delete_lab_reading. Every app now has a web page except Diagnostics (an owner page) and Settings.
+      Later the same night (parity gaps closed, each with its tool and screen control, DEC-0125): Classroom lesson
+      notes (`lesson.notes`; get_lesson_notes), Money's business tags (`expense.business`: each charge's business,
+      "Which business?" for bank charges waiting, MIA's guess in amber), a trip's route and checkpoints
+      (`core/trip_route.py`: stops from saved waypoints, Arrived, legs with distance, time and pace, out and back
+      allowed; add_route_stop, log_arrival, get_trip_route; the glasses' On The Trail panel), the glance (the
+      glasses' app tiles) gained net worth and Observations and Inbox tiles, a plan's page in Knowledge (your size, what to buy, `plan.keep` /
+      `plan.project` / `plan.delete`; forget_plan), and the Toolbox's inventory (`inventory.*`). The canvas has a
+      **Built** page: full-length screenshots of every built screen, row by row like the Phone page (retake them
+      with the demo server and `builtshots.js`-style Playwright full-page shots when screens change).
+      Still later: two new pages, **My Why** (`web/why.html`, from Profile: the why chain with reasons and facts,
+      `why.link/unlink/achieve`) and **Projects** (`web/projects.html`, from the Workshop: builds with budget, spent,
+      reason and tasks, `project.*`, `task.add/reopen/delete`); Classroom textbooks (Look Up inside them, Add a book,
+      Make a course, Remove; remove_textbook) and a lesson's skill (`lesson.skill`, set_lesson_skill); Workshop
+      listings (`listing.add/remove`; list_product, unlist_product); a receipt's items under its expense
+      (get_receipt); a trip's log with its weather from the trip; Memories draws each trip's route map (placed in
+      core); the Lab names an upkeep task's sensor readings and the asset page links to the chart; Settings offers
+      starter sets (`starter.add`, one Undo). The Built page was retaken with a "New Tonight" row.
+      Then: Settings has Backups (owner only, Back Up Now with an optional passphrase: `/api/backups`, never an
+      action; get_backup_status) and MIA's Voice (owner only: the voice, AI effect, volume; `/api/settings/voice`;
+      list_mia_voices, set_mia_voice); Knowledge can delete a pack (owner, name typed); the glasses gained panels for
+      Workshop (Project Tasks, Done), Classroom (Continue, Done), and readouts for Observations, the Lab, Power, the
+      Journal and Memories. The Built page's shots predate these Settings sections.
+      Left on WEB_PARITY on purpose: voice/phone access/backup/updates in Settings (device config: an undo can't put
+      back a running voice engine), Knowledge pack install/delete (deleting is for good), Modules device-wide,
+      the Lab's live sensors (none connected), Skills' drawn lines, Maps' other scripts, Home's spoken briefing
+      (Zac: no quick buttons; "what's on today?" answers by voice), the private journal (passphrase on the PC), links.
 - [x] Glasses (the canvas's GlassesHome and GlassesTraining): Home shows her state (Ready, Listening, Thinking,
       Needs You), the one line that matters now (`core/glasses.priority`, amber orb from `priority_tone`), the latest
       card for ten minutes, and a dot per card; gold once when something is earned. The live workout panel leads with

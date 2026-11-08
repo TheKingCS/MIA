@@ -1,0 +1,199 @@
+{
+  "available": true,
+  "projects": [
+    {
+      "id": "p1",
+      "name": "Greenhouse",
+      "status": "Active",
+      "due": "2026-12-15",
+      "description": "8 x 12 hoop house on the south side, with a gravel floor.",
+      "why": "Grow our own food",
+      "budget": 2500.0,
+      "budget_text": "$2,500.00",
+      "spent_text": "$1,840.00",
+      "left_text": "$660.00",
+      "over": false,
+      "percent": 73.6,
+      "by_category": [
+        {
+          "kind": "Supplies",
+          "text": "$1,210.00"
+        },
+        {
+          "kind": "Tools",
+          "text": "$480.00"
+        }
+      ],
+      "tools": [
+        "Pipe bender"
+      ],
+      "tasks": [
+        {
+          "id": "t3",
+          "title": "Frame the door",
+          "done": false,
+          "due": "2026-11-14",
+          "notes": ""
+        },
+        {
+          "id": "t4",
+          "title": "Pull the poly",
+          "done": false,
+          "due": "",
+          "notes": ""
+        },
+        {
+          "id": "t1",
+          "title": "Level the ground",
+          "done": true,
+          "due": "",
+          "notes": ""
+        },
+        {
+          "id": "t2",
+          "title": "Set the hoops",
+          "done": true,
+          "due": "",
+          "notes": ""
+        }
+      ],
+      "tasks_done": 2,
+      "tasks_total": 4,
+      "values": {
+        "name": "Greenhouse",
+        "status": "Active",
+        "due_date": "2026-12-15",
+        "description": "8 x 12 hoop house on the south side, with a gravel floor."
+      }
+    },
+    {
+      "id": "p2",
+      "name": "Fix the back fence",
+      "status": "Planning",
+      "due": "",
+      "description": "",
+      "why": "",
+      "budget": 0,
+      "budget_text": "",
+      "spent_text": "",
+      "left_text": "",
+      "over": false,
+      "percent": null,
+      "by_category": [],
+      "tools": [],
+      "tasks": [
+        {
+          "id": "t5",
+          "title": "Count the broken pickets",
+          "done": false,
+          "due": "",
+          "notes": ""
+        }
+      ],
+      "tasks_done": 0,
+      "tasks_total": 1,
+      "values": {
+        "name": "Fix the back fence",
+        "status": "Planning",
+        "due_date": "",
+        "description": ""
+      }
+    },
+    {
+      "id": "p3",
+      "name": "Chicken run",
+      "status": "Complete",
+      "due": "",
+      "description": "",
+      "why": "",
+      "budget": 400.0,
+      "budget_text": "$400.00",
+      "spent_text": "$362.50",
+      "left_text": "$37.50",
+      "over": false,
+      "percent": 90.6,
+      "by_category": [],
+      "tools": [],
+      "tasks": [],
+      "tasks_done": 0,
+      "tasks_total": 0,
+      "values": {
+        "name": "Chicken run",
+        "status": "Complete",
+        "due_date": "",
+        "description": ""
+      }
+    }
+  ],
+  "counts": {
+    "underway": 2,
+    "open_tasks": 3
+  },
+  "forms": {
+    "project": {
+      "noun": "project",
+      "id_param": "project_id",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "status",
+          "label": "Status",
+          "type": "choice",
+          "required": false,
+          "options": [
+            "Planning",
+            "Active",
+            "On Hold",
+            "Complete"
+          ],
+          "default": "Planning"
+        },
+        {
+          "name": "due_date",
+          "label": "Due",
+          "type": "date",
+          "required": false,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "description",
+          "label": "What it is",
+          "type": "textarea",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    },
+    "task": {
+      "noun": "task",
+      "id_param": "task_id",
+      "fields": [
+        {
+          "name": "title",
+          "label": "What needs doing",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        },
+        {
+          "name": "due_date",
+          "label": "By when (optional)",
+          "type": "date",
+          "required": false,
+          "options": [],
+          "default": null
+        }
+      ]
+    }
+  }
+}

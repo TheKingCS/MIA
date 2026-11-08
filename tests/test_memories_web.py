@@ -1,4 +1,4 @@
-"""Memories' web screen (core/memories_web.py): a recap per expedition, and on this day."""
+"""Memories' web screen (core/memories_web.py): a recap per expedition, on this day, and a recap's route map."""
 
 from types import SimpleNamespace
 
@@ -22,3 +22,29 @@ def test_recaps_and_on_this_day():
     assert [p["kind"] for p in shown["places"]] == ["Camp", "Water"] and shown["highlights"] == ["Saw a moose"]
     assert data["on_this_day"][0]["name"] == "Elk Creek"
     assert screen(SimpleNamespace(memories=None)) == {"recaps": [], "on_this_day": []}
+
+
+def test_a_recaps_route_map_follows_the_checkpoints_north_up(tmp_path):
+    from core.memories_web import MAP_W, project, route_map
+    from core.trip_manager import TripManager
+    from core.waypoint_manager import WaypointManager
+
+    xy, h = project([(45.0, -93.0), (45.01, -93.0)])
+    assert xy[0][1] > xy[1][1] and xy[0][0] == xy[1][0] == MAP_W / 2  # north is up; a north-south line is centred
+    assert project([(45.0, -93.0)]) == ([(MAP_W / 2, MAP_W / 2)], MAP_W) and project([]) == ([], MAP_W)
+    east, h = project([(0.0, 0.0), (0.0, 1.0)])
+    assert east[0][0] < east[1][0] and h == 30.0  # east is right; a flat line still gets a little height
+    ctx = SimpleNamespace(config=SimpleNamespace(get=lambda key, default=None: default))
+    ctx.waypoints = WaypointManager(ctx, data_dir=tmp_path)
+    ctx.trips = TripManager(ctx, data_dir=tmp_path)
+    a, b, c = (ctx.waypoints.add_waypoint(n, 45.0 + i / 100, -93.0 + i / 100) for i, n in enumerate(("Trailhead", "Falls", "Camp")))
+    trip = ctx.trips.add_trip("e1", "Day one")
+    assert route_map(ctx, "e1") is None
+    for w in (a, c):
+        ctx.trips.add_waypoint_to_route(trip.trip_id, w.waypoint_id)
+    assert [p["name"] for p in route_map(ctx, "e1")["points"]] == ["Trailhead", "Camp"]  # planned, none logged
+    for w in (a, b, c):
+        ctx.trips.record_split(trip.trip_id, w.waypoint_id)
+    drawn = route_map(ctx, "e1")
+    assert [p["name"] for p in drawn["points"]] == ["Trailhead", "Falls", "Camp"] and drawn["w"] == MAP_W
+    assert all(0 <= p["x"] <= MAP_W and 0 <= p["y"] <= drawn["h"] for p in drawn["points"])

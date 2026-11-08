@@ -207,7 +207,7 @@ def profile_page(context) -> dict:
 
 
 def settings_page(context) -> dict:
-    """The Settings screen: the person's own settings, grouped."""
+    """The Settings screen: the person's own settings, grouped, and the starter sets they can add."""
     from core.child_accounts import is_child
 
     child = bool(is_child(context))
@@ -224,8 +224,10 @@ def settings_page(context) -> dict:
     breaks = []
     if gate is not None and hasattr(gate, "paused"):
         breaks = [{"topic": p["topic"], "label": p["label"], "until": str(p["until"])[:10]} for p in gate.paused()]
+    from core.starter_actions import starters
+
     return {"groups": [{"title": title, "settings": items} for title, items in groups.items()],
-            "breaks": breaks, "child": child,
+            "breaks": breaks, "child": child, "starters": starters(context),
             "model_test": getattr(context, "local_models", None) is not None and not child,
             # DEC-0022: the home computer's bigger model, on the phone (core/home_link.py).
             "home_link": _home_link(context) if getattr(context, "local_models", None) is not None and not child else None}

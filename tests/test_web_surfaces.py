@@ -4,7 +4,7 @@ core/web_surfaces.py so web/ holds no logic. The sidebar is the
 person's own (child-safe, tucked-away apps hidden), Home is the
 concept's dashboard: greeting, Today's Focus with each item's action and
 kind, Upcoming, the status strip, glance cards (DEC-0113 for the last two
-additions).
+additions; net worth, Observations and the Inbox among them since 2026-11-07).
 """
 
 from datetime import date, datetime, timedelta
@@ -243,3 +243,21 @@ def test_home_strip_counts_only_what_the_engine_has():
     assert [(t["label"], t["value"]) for t in strip] == [("Needs You", 2), ("Coming Up", 1), ("Done Today", 1)]
     assert strip[0]["tone"] == "attention"
     assert home_strip([], [], [], today)[0]["tone"] == "ok"
+
+
+def test_the_glance_adds_net_worth_and_what_mia_noticed_and_captures_waiting():
+    from core.web_surfaces import _glance, glance_counts
+
+    money = _glance({"finances": {"available": True, "net_worth": {"total": 125000.0, "sources": []}}})
+    assert money[0]["app"] == "budget" and money[0]["line"].endswith("net worth $125,000.00")
+    assert glance_counts({}, []) == []
+    cards = glance_counts({"findings": [{"title": "Pay Electric before payday", "kind": "Needs You"},
+                                        {"title": "Oil change before the trip", "kind": "Noticed"}],
+                           "insights": [{"source": "Upkeep", "items": [{"title": "Mower blades"}]}]},
+                          ["Hardware store receipt", "Manual.pdf"])
+    seen, inbox = cards
+    assert (seen["app"], seen["tone"]) == ("observations", "attention")
+    assert seen["line"] == "3 things noticed · 1 needs you · Pay Electric before payday"
+    assert (inbox["app"], inbox["line"]) == ("inbox", "2 captures to file · Hardware store receipt")
+    quiet = glance_counts({"insights": [{"source": "Patterns", "items": [{"title": "You cook more on Sundays"}]}]}, [])
+    assert quiet[0]["tone"] == "calm" and quiet[0]["line"] == "1 thing noticed · You cook more on Sundays"

@@ -1,6 +1,6 @@
 """The Toolbox on the web (DEC-0125, the design canvas's Toolbox, DEC-0113: core/web_toolbox.py, core/toolbox_calcs.py,
 core/toolbox_actions.py and core/assistant_toolbox_actions.py): every calculator worked out in core, alarms set,
-switched and deleted as actions, and the same answers by voice."""
+switched and deleted as actions, the inventory kept as actions, and the same answers by voice."""
 
 from __future__ import annotations
 
@@ -92,3 +92,26 @@ def test_alarms_are_set_switched_and_deleted_as_actions_and_by_voice(home):
     assert registry._actions["calculate_concrete"].handler(home, {"length_ft": 10, "width_ft": 10}).startswith("1.36 cu yd")
     run(home, "alarm.delete", alarm_id=alarm["id"])
     assert toolbox_page(home)["alarms"] == []
+
+
+def test_the_inventory_is_on_the_page_and_changed_as_actions_like_by_voice(home, tmp_path):
+    from core.inventory_manager import InventoryManager
+
+    assert toolbox_page(home)["inventory"] is None
+    home.inventory = InventoryManager(home, data_dir=tmp_path / "data")
+    said, done = run(home, "inventory.add", name="Tarps", quantity="3", category="Camping", location="Garage shelf")
+    assert "Tarps" in said and done
+    run(home, "inventory.add", name="Extension cords", quantity="2", category="Electrical")
+    inv = toolbox_page(home)["inventory"]
+    assert [i["name"] for i in inv["items"]] == ["Tarps", "Extension cords"] and inv["kinds"] == ["Camping", "Electrical"]
+    assert [f["name"] for f in inv["form"]["fields"]] == ["name", "quantity", "category", "location", "notes"]
+    tarps = inv["items"][0]
+    run(home, "inventory.adjust", item_id=tarps["id"], delta="-1")
+    assert home.inventory.get_item(tarps["id"]).quantity == 2
+    run(home, "inventory.edit", item_id=tarps["id"], **{**tarps["values"], "location": "Truck box"})
+    assert home.inventory.get_item(tarps["id"]).location == "Truck box"
+    with pytest.raises(ActionError):
+        run(home, "inventory.adjust", item_id=tarps["id"], delta="0.5")
+    run(home, "inventory.delete", item_id=tarps["id"])
+    assert [i["name"] for i in toolbox_page(home)["inventory"]["items"]] == ["Extension cords"]
+    assert all(t["id"] != "inventory" for t in toolbox_page(home)["tools"])

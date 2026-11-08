@@ -1,5 +1,6 @@
 """The Classroom's web screen (core/classroom_manager.screen, with the course to continue: DEC-0113) and its actions
-(core/classroom_actions.py)."""
+(core/classroom_actions.py), and a lesson's notes both ways: lesson.notes on the screen, add_lesson_notes and
+get_lesson_notes by voice; the skill a lesson trains (lesson.skill, set_lesson_skill); the glasses' Continue panel."""
 
 from types import SimpleNamespace
 
@@ -48,7 +49,8 @@ def test_what_it_refuses(person):
         person.actions.propose(person, "subject.add", {"name": "  "}, proposed_by="person")
     with pytest.raises(ActionError):
         person.actions.propose(person, "course.add", {"subject_id": "nope", "name": "X"}, proposed_by="person")
-    assert screen(SimpleNamespace(classroom=None)) == {"available": False, "subjects": [], "continue": None}
+    assert screen(SimpleNamespace(classroom=None)) == {"available": False, "subjects": [], "continue": None,
+                                                       "skills": [], "textbooks": {"available": False, "books": []}}
 
 
 def test_continue_is_the_course_you_last_finished_a_lesson_in():
@@ -65,3 +67,69 @@ def test_continue_is_the_course_you_last_finished_a_lesson_in():
     assert (got["course"], got["subject"], got["done"], got["total"]) == ("Basic circuits", "Electronics", 2, 4)
     assert [l["name"] for l in got["lessons"]] == ["Meters", "Series", "Schematics"]  # the last done, then what's next
     assert continue_course([{"name": "Math", "courses": [finished]}]) is None  # nothing left
+
+
+def test_a_lessons_notes_are_shown_saved_from_the_screen_and_read_back_by_voice(person):
+    from core.assistant_life_actions import _action_add_lesson_notes, _action_get_lesson_notes
+
+    act(person, "subject.add", name="Welding")
+    act(person, "course.add", subject_id=screen(person)["subjects"][0]["id"], name="MIG basics")
+    act(person, "lesson.add", course_id=screen(person)["subjects"][0]["courses"][0]["id"], name="Bead on plate")
+    lesson = screen(person)["subjects"][0]["courses"][0]["lessons"][0]
+    assert lesson["notes"] == ""
+    assert act(person, "lesson.notes", lesson_id=lesson["id"], notes="Push angle 10 degrees") == \
+        "Saved your notes for Bead on plate."
+    assert _action_add_lesson_notes(person, {"lesson": "bead on plate", "notes": "Listen for the sizzle"}) == \
+        "Added to your Bead on plate notes."
+    shown = screen(person)["subjects"][0]["courses"][0]["lessons"][0]["notes"]
+    assert shown.splitlines() == ["Push angle 10 degrees", "Listen for the sizzle"]
+    assert _action_get_lesson_notes(person, {"lesson": "bead"}) == \
+        "Your notes for Bead on plate: Push angle 10 degrees / Listen for the sizzle"
+    assert act(person, "lesson.notes", lesson_id=lesson["id"], notes="  ") == "Cleared your notes for Bead on plate."
+    assert _action_get_lesson_notes(person, {"lesson": "bead"}) == "There are no notes on Bead on plate yet."
+
+
+def test_the_skill_a_lesson_trains_is_set_on_the_screen_and_by_voice(person):
+    from types import SimpleNamespace
+
+    from core.assistant_life_actions import _action_set_lesson_skill
+
+    welding = SimpleNamespace(skill_id="welding", name="Welding")
+    person.skills = SimpleNamespace(all_skills=lambda: [welding],
+                                    get_skill=lambda i: welding if i == "welding" else None)
+    act(person, "subject.add", name="Trade skills")
+    act(person, "course.add", subject_id=screen(person)["subjects"][0]["id"], name="MIG basics")
+    act(person, "lesson.add", course_id=screen(person)["subjects"][0]["courses"][0]["id"], name="Bead on plate")
+    page = screen(person)
+    lesson = page["subjects"][0]["courses"][0]["lessons"][0]
+    assert page["skills"] == [{"id": "welding", "name": "Welding"}] and lesson["skill"] is None
+    assert act(person, "lesson.skill", lesson_id=lesson["id"], skill_id="welding", xp="20") == \
+        "Bead on plate trains Welding now."
+    shown = screen(person)["subjects"][0]["courses"][0]["lessons"][0]
+    assert shown["skill"] == {"id": "welding", "name": "Welding", "xp": 20} and shown["xp"] == 20
+    with pytest.raises(ActionError, match="1 to 100"):
+        person.actions.propose(person, "lesson.skill", {"lesson_id": lesson["id"], "skill_id": "welding", "xp": "500"},
+                               proposed_by="person")
+    assert _action_set_lesson_skill(person, {"lesson": "bead", "skill": "none"}) == "Bead on plate trains no skill now."
+    assert _action_set_lesson_skill(person, {"lesson": "bead", "skill": "welding", "xp": 15}) == \
+        "Bead on plate trains Welding now."
+    assert screen(person)["subjects"][0]["courses"][0]["lessons"][0]["skill"]["xp"] == 15
+
+
+def test_the_glasses_continue_the_course_one_lesson_at_a_time(person, monkeypatch):
+    import core.classroom_manager as cm
+    from core.glasses import GLASSES_KINDS, _classroom_continue
+
+    monkeypatch.setattr(cm, "grant_xp", lambda *a, **k: None)
+    assert _classroom_continue(person, None)["empty"].startswith("Nothing left to learn")
+    act(person, "subject.add", name="Welding")
+    act(person, "course.add", subject_id=screen(person)["subjects"][0]["id"], name="MIG basics")
+    course = screen(person)["subjects"][0]["courses"][0]
+    for name in ("Safety", "Bead on plate"):
+        act(person, "lesson.add", course_id=course["id"], name=name)
+    panel = _classroom_continue(person, None)
+    assert panel["title"] == "MIG basics · 0 of 2" and [l["text"] for l in panel["lines"]] == ["Safety", "Bead on plate"]
+    first = panel["lines"][0]["action"]
+    assert first["kind"] == "lesson.done" and "lesson.done" in GLASSES_KINDS
+    act(person, "lesson.done", **first["params"])
+    assert [l["text"] for l in _classroom_continue(person, None)["lines"]] == ["Bead on plate"]

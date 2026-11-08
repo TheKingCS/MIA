@@ -236,7 +236,9 @@
     memories: () => demo ? (() => {
       const elk = { id: "e1", name: "Elk Creek", where: "the high country", start: "2025-11-06", end: "2025-11-08", days: 3, km: 18.4,
         photos: 42, activities: [{ kind: "hike", trips: 2, km: 18.4, kmh: 3.1 }], places: [{ kind: "Camp", count: 3 }, { kind: "Water", count: 2 }],
-        highlights: ["Saw a moose at dawn"] };
+        highlights: ["Saw a moose at dawn"],
+        map: { w: 100, h: 62.4, points: [{ x: 8, y: 54.4, name: "Trailhead" }, { x: 31.5, y: 40.2, name: "Elk meadow" },
+          { x: 55, y: 28.9, name: "Lower falls" }, { x: 92, y: 8, name: "Ridge camp" }] } };
       return Promise.resolve({ recaps: [elk], on_this_day: [elk] });
     })() : call("GET", "/api/memories"),
     observations: () => demo ? Promise.resolve({
@@ -262,12 +264,16 @@
       { id: "s1", name: "Welding", category: "Trade skills", done: 2, total: 4, courses: [
         { id: "c1", name: "MIG basics", done: 2, total: 3, lessons: [
           { id: "l1", name: "Safety and setup", done: true, done_at: "2026-10-20", xp: 30 },
-          { id: "l2", name: "Bead on plate", done: true, done_at: "2026-10-27", xp: 30 },
+          { id: "l2", name: "Bead on plate", done: true, done_at: "2026-10-27", xp: 30, notes: "Push angle 10 to 15 degrees.\nListen for the bacon sizzle.",
+            skill: { id: "welding", name: "Welding", xp: 30 } },
           { id: "l3", name: "Butt joints", done: false, done_at: "", xp: 30 }] },
         { id: "c2", name: "Stick welding", done: 0, total: 1, lessons: [{ id: "l4", name: "Striking an arc", done: false, done_at: "", xp: 30 }] }] }],
       continue: { subject: "Welding", course_id: "c1", course: "MIG basics", done: 2, total: 3, lessons: [
         { id: "l2", name: "Bead on plate", done: true, done_at: "2026-10-27", xp: 30 },
-        { id: "l3", name: "Butt joints", done: false, done_at: "", xp: 30 }] } })
+        { id: "l3", name: "Butt joints", done: false, done_at: "", xp: 30 }] },
+      skills: [{ id: "welding", name: "Welding" }, { id: "metalwork", name: "Metalwork" }],
+      textbooks: { available: true, books: [{ id: "b1", title: "Welding Fundamentals", pages: 312, added: "2026-10-12", reading: false, error: "",
+        course: "", chapters: [{ title: "Chapter 1: Safety", page: 9 }, { title: "Chapter 6: Gas Metal Arc Welding", page: 101 }] }] } })
       : call("GET", "/api/classroom"),
     knowledge: (q = "") => demo ? Promise.resolve({ available: true, root: "reference_library", packs: [
       { id: "wikipedia_en_medicine", title: "Wikipedia: Medicine", description: "Medical articles, offline", articles: 52000 }],
@@ -294,12 +300,17 @@
       plans: [{ id: "builtin:gable-shed", title: "Gable shed", kind: "structure", summary: "A floor, four walls and a gable roof; any size.", where: "Built in, any size", file: false },
         { id: "builtin:raised-bed", title: "Raised garden bed", kind: "garden", summary: "Two boards tall with corner posts; any size.", where: "Built in, any size", file: false }] })
       : call("GET", "/api/knowledge/plans?q=" + encodeURIComponent(q)),
-    knowledgePlan: (id) => demo ? Promise.resolve({ id, title: "Raised garden bed", kind: "garden", summary: "Two boards tall with corner posts.",
+    knowledgePlan: (id, sizes) => demo ? Promise.resolve({ id, title: "Raised garden bed", kind: "garden", summary: "Two boards tall with corner posts.",
       where: "Built in, any size", file: false, materials_title: "8 x 4 ft raised bed, 11 in tall",
       items: [{ name: "2x6 x 8 ft", qty: 6, unit: "", note: "" }, { name: "soil and compost mix", qty: 1.09, unit: "cu yd", note: "29.3 cu ft" }],
       cuts: [{ part: "side", qty: 4, length: "8 ft", stock: "2x6 x 8 ft" }], notes: [], tools: ["saw", "drill/driver"],
-      steps: ["Cut the sides, ends and corner posts.", "Screw it together and fill it."], source: { name: "MIA (worked out in code)" } })
-      : call("GET", "/api/knowledge/plan?id=" + encodeURIComponent(id)),
+      steps: ["Cut the sides, ends and corner posts.", "Screw it together and fill it."], source: { name: "MIA (worked out in code)" },
+      sizes: [{ name: "length_ft", label: "Length", unit: "ft", value: 8 }, { name: "width_ft", label: "Width", unit: "ft", value: 4 },
+        { name: "height_in", label: "Height", unit: "in", value: 11 }], sized: false, problem: "", kept: false,
+      shopping: { rows: [{ item: "2x6 x 8 ft", unit: "", need: 6, have: 2, buy: 4, cost: 31.92, cost_text: "$31.92" },
+        { item: "soil and compost mix", unit: "cu yd", need: 1.09, have: 0, buy: 1.09 }], to_buy: [], known_cost: 31.92, known_cost_text: "$31.92", priced: 1 } })
+      : call("GET", "/api/knowledge/plan?id=" + encodeURIComponent(id) +
+        (sizes ? "&sizes=" + encodeURIComponent(Object.entries(sizes).map(([k, v]) => k + "=" + v).join(",")) : "")),
     diagnostics: () => demo ? Promise.resolve({ error: "", checks: [
       { id: "pc_ready", title: "Is the PC ready for MIA?", ok: true, passed: 5, failed: [], unknown: [] },
       { id: "network", title: "The network", ok: false, passed: 2, failed: ["The wired connection is running at 100 Mb/s, under a gigabit."], unknown: [] },
@@ -339,6 +350,20 @@
     // The Toolbox (core/web_toolbox.py, DEC-0125): calculators, alarms, tools; a calculator is worked out in core.
     // The demo can't calculate, so it answers with the example's own result.
     toolbox: () => read("/api/toolbox", "toolbox"),
+    why: () => read("/api/why", "why"),
+    projects: () => read("/api/projects", "projects"),
+    backups: () => demo ? Promise.resolve({ folder: "C:\\Users\\you\\MIA Backups", count: 3, last: "12 days ago", days: 12,
+      backups: [{ name: "mia_backup_2026-10-26_2130.miabackup", size: "48.2 MB", when: "Oct 26, 2026 21:30", locked: true }] })
+      : call("GET", "/api/backups"),
+    voiceChoice: () => demo ? Promise.resolve({ available: true, current: "kokoro:af_heart", effect: true, volume: 100, voices: [
+      { id: "kokoro:af_heart", name: "Heart (American)", engine: "kokoro" }, { id: "kokoro:bf_emma", name: "Emma (British)", engine: "kokoro" },
+      { id: "en_US-amy-medium", name: "Amy", engine: "piper" }] }) : call("GET", "/api/settings/voice"),
+    chooseVoice: (change) => demo ? demoOnly() : call("POST", "/api/settings/voice", change),
+    deletePack: (id, confirm) => demo ? demoOnly() : call("POST", "/api/knowledge/pack/delete", { id, confirm }),
+    backupNow: (passphrase) => demo ? demoOnly() : call("POST", "/api/backups", { passphrase: passphrase || "" }),
+    textbookSearch: (q, book) => demo ? Promise.resolve({ query: q, hits: q ? [{ book_id: "b1", book: "Welding Fundamentals", page: 112,
+      chapter: "Chapter 6: Gas Metal Arc Welding", text: "Hold the gun at a 10 to 15 degree push angle. Too steep an angle traps gas and leaves porosity in the bead…" }] : [] })
+      : call("GET", "/api/classroom/textbooks/search?q=" + encodeURIComponent(q) + (book ? "&book=" + encodeURIComponent(book) : "")),
     toolboxCalc: (id, values) => demo
       ? read("", "toolbox").then((t) => Object.assign({ demo: true }, (t.demo_answers || {})[id] || { error: "The demo can't calculate." }))
       : call("GET", "/api/toolbox/calc?" + new URLSearchParams(Object.assign({ id }, values)).toString()),
