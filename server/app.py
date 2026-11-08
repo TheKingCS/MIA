@@ -929,12 +929,14 @@ def create_app(context: AppContext) -> FastAPI:
             out.writeframes(samples.tobytes())
         return Response(buffer.getvalue(), media_type="audio/wav", headers={"Cache-Control": "no-store"})
 
-    # Start Here (core/web_guide.py): what MIA does and how, and what's new. The same for everyone; read only.
+    # Start Here (core/web_guide.py): what MIA does and how, what's new, and which of this person's apps are still
+    # empty (counted on their own view). Read only.
     @app.get("/api/guide")
     def guide_page(profile_id: str = Depends(require_profile_id)) -> dict:
         from core.web_guide import guide
 
-        return guide()
+        with app.state.turn_lock:
+            return guide(view_for(context, profile_id))
 
     # The live view: frames and the person's own input skip the turn lock, so it stays smooth while MIA thinks (her
     # browser has its own lock).

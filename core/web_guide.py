@@ -11,6 +11,12 @@ and the page to open; and what's new, newest first.
 STATIC content: written here, checked by tests (every page it opens exists
 in web/, every app it names is in the app list), and kept true as things
 change: when a feature changes how it's used, change its entry here too.
+
+**Still empty** (2026-11-07, Zac: fill every app with his life so MIA is as
+helpful as she can be, soon): `to_fill(context)`, the apps that hold nothing
+yet for the signed-in person, each with the first thing to say (a sentence a
+test checks reaches that app's add tool) or the page to open. Counted live
+from the stores; nothing about what's in them is shown.
 """
 
 from __future__ import annotations
@@ -93,6 +99,55 @@ NEW = (
 )
 
 
+def _none(context, store: str, method: str) -> bool:
+    """Whether a store holds nothing (its list method returns empty); False when the store isn't here, so an app
+    that can't be filled on this MIA isn't offered."""
+    found = getattr(context, store, None)
+    if found is None:
+        return False
+    try:
+        return not getattr(found, method)()
+    except Exception:
+        return False
+
+
+# The apps worth filling first, in order: (app, title, empty?, what to say, page). Said sentences reach the app's
+# add tool (tests/test_web_guide.py).
+FILL = (
+    ("budget", "Your bills", lambda c: _none(c, "budget", "all_bills") and _none(c, "budget", "all_income_sources"),
+     ["Add my electric bill, $120, due on the 3rd"], "money.html"),
+    ("garage", "Your vehicles and equipment", lambda c: _none(c, "maintenance", "all_assets"),
+     ["Add a vehicle: my 2019 pickup with 4,800 miles"], "garage.html"),
+    ("calendar", "Your calendar", lambda c: _none(c, "calendar", "all_events"),
+     ["Add the dentist on Tuesday at 3 to my calendar"], "calendar.html"),
+    ("kitchen", "Your recipes", lambda c: _none(c, "kitchen", "all_recipes"), ["Add a recipe for turkey chili"],
+     "kitchen.html"),
+    ("relationships", "The people in your life", lambda c: _none(c, "relationships", "all_people"),
+     ["Remember my sister Jordan's birthday is March 4"], "people.html"),
+    ("workout", "Your workouts", lambda c: _none(c, "workout", "all_sessions"), ["I worked out for 45 minutes"],
+     "workout.html"),
+    ("flock", "Your chickens", lambda c: getattr(getattr(c, "flock", None), "flocks", None) == [], [], "flock.html"),
+    ("real_estate", "Your rentals", lambda c: _none(c, "real_estate", "all_properties"),
+     ["Add my rental on Oak Street, rent $1,150"], "real-estate.html"),
+    ("insurance", "Your insurance", lambda c: getattr(getattr(c, "insurance", None), "policies", None) == [], [],
+     "insurance.html"),
+    ("power", "Your energy sources", lambda c: _none(c, "energy", "all_energy_sources"), [], "power.html"),
+    ("expeditions", "Your trips", lambda c: _none(c, "trips", "all_trips") and _none(c, "expeditions", "all_expeditions"),
+     ["Plan a trip to Ridge Loop on the 21st"], "expeditions.html"),
+)
+
+
+def to_fill(context) -> list[dict]:
+    """The apps that hold nothing yet for this person, in FILL's order: each with its title, what to say and its
+    page."""
+    if context is None:
+        return []
+    return [{"app": app, "title": title, "say": list(say), "page": page}
+            for app, title, empty, say, page in FILL if empty(context)]
+
+
 def guide(context=None) -> dict:
-    """The Start Here page's data: the topics (each with how, what to say and its page) and what's new."""
-    return {"topics": [dict(t, say=list(t["say"])) for t in TOPICS], "new": [dict(n) for n in NEW]}
+    """The Start Here page's data: the topics (each with how, what to say and its page), what's new, and the apps
+    still empty for this person (to_fill)."""
+    return {"topics": [dict(t, say=list(t["say"])) for t in TOPICS], "new": [dict(n) for n in NEW],
+            "to_fill": to_fill(context)}
