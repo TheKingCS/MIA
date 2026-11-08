@@ -1657,7 +1657,9 @@ body.mod-maps .hero { display: none; }
 
 /* Skills: the tree with its prerequisite lines (core/web_progress.skill_tree, 2026-11-07). Scrolls sideways when wide. */
 .sk-tree-wrap { overflow-x: auto; padding: 8px 0; }
-.sk-tree { display: block; max-width: none; }
+.sk-tree-wrap.more { -webkit-mask-image: linear-gradient(to right, #000 82%, transparent); mask-image: linear-gradient(to right, #000 82%, transparent); }
+.sk-tree-hint { font-size: 13px; margin: 4px 0 0; }
+.sk-tree { display: block; width: 100%; height: auto; }
 .sk-edge { fill: none; stroke: rgba(var(--rgb-accent), .25); stroke-width: 1.5; stroke-dasharray: 4 4; }
 .sk-edge.met { stroke: var(--accent); stroke-dasharray: none; }
 .sk-node rect { fill: var(--bg); stroke: rgba(var(--rgb-accent), .3); }
