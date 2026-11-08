@@ -6,8 +6,9 @@ MIA's most private files sealed at rest (DEC-0126, core/at_rest.py): a sealed na
 envelope and read back, any other file stays plain; a plain file still reads (each store moves at its next save); a
 file that won't open is copied aside before the error, so a store starting empty can't lose it (and every sealed
 store starts empty rather than stopping MIA; every file naming a sealed file reads it with open_text); a changed file is
-refused; a recovery key brings a key back; sync and export carry the real content; and, on Windows, the key is
-protected by DPAPI and only opens for this Windows user.
+refused; a recovery key brings a key back; sync and export carry the real content; the Fix-It Log is written whole,
+sealed, and never part of an undoable change; and, on Windows, the key is protected by DPAPI and only opens for this
+Windows user.
 """
 
 import json
@@ -220,6 +221,8 @@ SEALED_STORES = [
     ("core.training_session", "TrainingStore", "training_session.json"),
     ("core.cooking_session", "CookingStore", "cooking_session.json"),
     ("core.saga", "SagaMoments", "saga_moments.json"),
+    ("core.failure_log", "FailureLog", "failures.jsonl"),
+    ("core.failure_log", "FailureLog", "failure_state.json"),
 ]
 
 
@@ -261,3 +264,48 @@ def test_every_file_that_names_a_sealed_file_reads_it_with_open_text():
             if ("read_text" in text or "json.load(" in text) and "open_text" not in text:
                 missing.append(rel)
     assert not missing, missing
+
+
+def test_the_fix_it_log_is_written_sealed_whole_and_reads_back(tmp_path):
+    """Each stumble rewrites failures.jsonl whole, sealed: no trace of what was said on disk, every line read back,
+    a plain log from before is read and sealed by the next one, and past the limit the newest three fifths stay."""
+    from unittest.mock import MagicMock
+
+    from core import failure_log
+
+    (tmp_path / "failures.jsonl").write_text('{"event_id": "old", "at": "2026-11-01T00:00:00+00:00", '
+                                             '"kind": "slow"}\n', encoding="utf-8")
+    book = failure_log.FailureLog(MagicMock(), data_dir=tmp_path)
+    book.record("report", prompt="the gate code is wrong in my notes")
+    disk = (tmp_path / "failures.jsonl").read_text(encoding="utf-8")
+    assert at_rest.is_sealed(disk) and "gate" not in disk
+    assert [e["kind"] for e in book.events()] == ["slow", "report"]
+    book.learn("feed the hens", "log_flock")
+    assert at_rest.is_sealed((tmp_path / "failure_state.json").read_text(encoding="utf-8"))
+    assert failure_log.FailureLog(MagicMock(), data_dir=tmp_path).phrases[0]["said"] == "feed the hens"
+    keep = failure_log._MAX_LINES
+    try:
+        failure_log._MAX_LINES = 5
+        for _ in range(4):
+            book.record("slow")
+        assert len(book.events()) == 3  # six lines went over five: the newest three fifths of five
+    finally:
+        failure_log._MAX_LINES = keep
+
+
+def test_a_stumble_written_during_a_change_is_never_part_of_it(tmp_path):
+    """A tool that errors while an Assistant change is recorded writes to the Fix-It Log; "undo that" must not take
+    the stumble back, and a change that touched nothing else isn't kept at all."""
+    from unittest.mock import MagicMock
+
+    from core import failure_log, undo_log
+
+    book = failure_log.FailureLog(MagicMock(), data_dir=tmp_path)
+    other = tmp_path / "notes.json"
+    with undo_log.recording("a tool that broke", "p1") as change:
+        book.record("tool_error", tool="log_shift", error="boom")
+    assert change.files == {}
+    with undo_log.recording("a tool that wrote, then broke", "p1") as change:
+        atomic_write_text(other, "{}")
+        book.record("tool_error", tool="log_shift", error="boom")
+    assert list(change.files) == [other]

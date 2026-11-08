@@ -1997,6 +1997,12 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   lines, so sealing them needs a per-line sealed format, and the phone and the PC merge these logs line by line under
   different keys (DPAPI on the PC). That's a design change to the history every view reads, so it waits for its own
   careful pass; `memory_corrections.jsonl` holds only a category and an age, and is the least urgent.)
+  **The Fix-It Log sealed (claude, engine, 2026-11-08 afternoon):** a per-line format wasn't needed: sync already
+  carries each file's opened content (`open_bytes`) and writes the merge back through `atomic_write_text`, so each
+  device seals with its own key. `failures.jsonl` (what was said, redacted) is now rewritten whole, sealed, on each
+  stumble (lines still only added, the newest three fifths kept past 5,000), and `failure_state.json` with it. Those
+  writes happen inside `undo_log.outside_undo()`, so "undo that" never takes a stumble back. `life_events.jsonl` stays
+  plain for now (written on nearly every change and read by every view: a whole rewrite each time needs measuring).
 - Related: DEC-0035 (the password vault), DEC-0125
 
 ### DEC-0127: MIA becomes a product, sold by subscription, local-first

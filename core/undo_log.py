@@ -16,7 +16,9 @@ works for every tool without each one writing its own undo.
 Kept in memory only, the last `KEEP` changes per person: undo is for
 "oops, just now", not history. A change made on someone's phone is
 theirs to undo. Undo can't reach outside MIA's files: a sent email (only
-ever by pressing Send) stays sent.
+ever by pressing Send) stays sent. A log of what happened written during a
+change (the Fix-It Log's stumbles) is written inside `outside_undo()`, so
+undo never takes it back.
 """
 
 from __future__ import annotations
@@ -58,6 +60,18 @@ def recording(label: str, profile_id: Optional[str]):
     _local.change = change
     try:
         yield change
+    finally:
+        _local.change = previous
+
+
+@contextmanager
+def outside_undo():
+    """Writes inside this block are never part of the change being recorded: a log of what happened (the Fix-It
+    Log's stumbles), which "undo that" must never take back, nor count as a change when nothing else changed."""
+    previous = getattr(_local, "change", None)
+    _local.change = None
+    try:
+        yield
     finally:
         _local.change = previous
 

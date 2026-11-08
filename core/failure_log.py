@@ -9,7 +9,8 @@ that information to fix her ... nearly self developing in a way that
 doesnt break her."
 
 **What's recorded** (each person's own, `failures.jsonl` in their
-folder, append-only so the phone's and the PC's merge line by line):
+folder, lines only ever added so the phone's and the PC's merge line by
+line; written whole and sealed on disk, DEC-0126):
 - what the person says: "no, I meant…", "that's wrong", "MIA, report a
   problem: …", a 👎 on a reply;
 - what MIA can see herself: a tool that errored, the model down or
@@ -43,7 +44,9 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
 
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
+from core.undo_log import outside_undo
 from core.logger import get_logger
 
 log = get_logger(__name__)
@@ -153,31 +156,35 @@ def _stamp(text: str) -> Optional[datetime]:
 
 
 class FailureLog:
-    """The person's Fix-It Log: every stumble as one line in failures.jsonl (append-only, so the phone's and the PC's
-    merge line by line), plus failure_state.json (each issue's status, and the phrases they taught her), written
-    through atomic_write_text so a taught phrase can be undone.
+    """The person's Fix-It Log: every stumble as one line in failures.jsonl (lines only ever added, so the phone's and
+    the PC's merge line by line), plus failure_state.json (each issue's status, and the phrases they taught her), both
+    written whole through atomic_write_text, sealed on disk (DEC-0126), so a taught phrase can be undone.
     """
     def __init__(self, context, data_dir: Optional[Path] = None) -> None:
-        """Points at the person's two files (data/ by default) and loads the state."""
+        """Points at the person's two files (data/ by default), loads the state, and checks the log opens (sealed on
+        disk, DEC-0126: one that won't is copied aside now, at sign-in, like every sealed store)."""
         self.context = context
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._file = self.data_dir / _FILE
         self._state_file = self.data_dir / _STATE
         self._load()
+        if self._file.exists():
+            self._lines()
 
     # ---------------------------------------------------------------- state: issue status, learned phrases
 
     def _load(self) -> None:
-        """Reads each issue's status and the taught phrases; an unreadable file is logged and starts empty."""
+        """Reads each issue's status and the taught phrases (sealed on disk, DEC-0126); an unreadable file is logged and
+        starts empty."""
         self.status: dict[str, dict] = {}
         self.phrases: list[dict] = []
         if not self._state_file.exists():
             return
-        try:
-            raw = json.loads(self._state_file.read_text(encoding="utf-8"))
+        try:  # sealed on disk (DEC-0126): one that won't open is copied aside, and the state starts empty
+            raw = json.loads(open_text(self._state_file))
             self.status = {str(k): dict(v) for k, v in (raw.get("status") or {}).items()}
             self.phrases = [dict(p) for p in raw.get("phrases") or []]
-        except (json.JSONDecodeError, OSError, TypeError, AttributeError):
+        except (ValueError, OSError, TypeError, AttributeError):
             log.exception("failure_state.json unreadable — starting empty.")
 
     def reload(self) -> None:
@@ -227,7 +234,8 @@ class FailureLog:
     def record(self, kind: str, **fields) -> Optional[dict]:
         """Writes one stumble: its kind (one of KINDS), what was said and replied (redacted), the tool, mode, error, page,
         model, surface, tools and seconds, and the issue it belongs to. Returns None (logged) when it can't be written;
-        a fixed issue that happens again is opened again.
+        a fixed issue that happens again is opened again. The file is rewritten whole, sealed (DEC-0126), keeping the
+        newest three fifths past _MAX_LINES.
         """
         if kind not in KINDS:
             raise ValueError(f"Unknown kind '{kind}'.")
@@ -246,11 +254,13 @@ class FailureLog:
         event["key"] = issue_key(kind, event.get("tool", ""), event.get("page", ""), event.get("error", ""))
         try:
             self.data_dir.mkdir(parents=True, exist_ok=True)
-            with _lock:
-                with open(self._file, "a", encoding="utf-8") as handle:
-                    handle.write(json.dumps(event, ensure_ascii=False) + "\n")
-                self._trim()
-        except OSError:
+            with _lock:  # the whole file, sealed (DEC-0126): a line appended to a sealed file would break it
+                lines = self._lines() + [json.dumps(event, ensure_ascii=False)]
+                if len(lines) > _MAX_LINES:
+                    lines = lines[-(_MAX_LINES * 3 // 5):]
+                with outside_undo():  # a stumble is history: "undo that" never takes it back
+                    atomic_write_text(self._file, "\n".join(lines) + "\n")
+        except (OSError, ValueError):
             log.exception("Couldn't write the failure log.")
             return None
         # A fixed issue that happens again is open again.
@@ -259,19 +269,22 @@ class FailureLog:
             self._save()
         return event
 
-    def _trim(self) -> None:
-        """Keeps the log from growing without end: past _MAX_LINES, only the newest three fifths are kept."""
-        lines = self._file.read_text(encoding="utf-8").splitlines()
-        if len(lines) > _MAX_LINES:
-            self._file.write_text("\n".join(lines[-(_MAX_LINES * 3 // 5):]) + "\n", encoding="utf-8")
+    def _lines(self) -> list[str]:
+        """The log's lines, sealed or plain on disk; none for a missing file, and none (the file copied aside, logged)
+        for one that won't open, so a key that's gone never stops MIA writing the next one."""
+        try:
+            return [line for line in open_text(self._file).splitlines() if line.strip()]
+        except FileNotFoundError:
+            return []
+        except (OSError, ValueError):
+            log.exception("failures.jsonl unreadable — starting a new log.")
+            return []
 
     def events(self, days: Optional[int] = None) -> list[dict]:
-        """Every stumble, or those in the last `days` days."""
-        if not self._file.exists():
-            return []
+        """Every stumble, or those in the last `days` days (from the sealed log; none when it won't open)."""
         since = datetime.now(timezone.utc) - timedelta(days=days) if days else None
         out = []
-        for line in self._file.read_text(encoding="utf-8").splitlines():
+        for line in self._lines():
             try:
                 e = json.loads(line)
             except ValueError:
