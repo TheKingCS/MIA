@@ -158,6 +158,23 @@
     return box;
   }
 
+  // Starter sets (core/starter_actions.py): the usual chores, upkeep and routines for a kind of life, each part ticked
+  // or left out; starter.add adds them as one change that Undo takes back. By voice: "add the homestead starter set".
+  function starterSets() {
+    if (!page.starters || !page.starters.length) return "";
+    return section("Starter Sets", el("p", { class: "dim" }, "Fill MIA in with the usual for a kind of life. Leave out any part you don't need; nothing already here is added twice."),
+      ...page.starters.map((s) => {
+        const boxes = s.parts.map((p) => el("label", { class: "st-part" }, el("input", { type: "checkbox", value: p.id, checked: true }), el("span", {}, p.label)));
+        return el("details", { class: "st-set" }, el("summary", {}, el("strong", {}, s.name), el("span", { class: "dim" }, " · " + s.description)),
+          el("div", { class: "st-parts" }, boxes),
+          el("button", { type: "button", class: "btn btn-ghost btn-small", onclick: () => {
+            const parts = boxes.map((b) => b.firstChild).filter((b) => b.checked).map((b) => b.value);
+            if (!parts.length) { MIAShell.say("Tick at least one part."); return; }
+            act({ kind: "starter.add", params: { starter_id: s.id, parts: parts.join(",") } });
+          } }, "Add " + s.name));
+      }));
+  }
+
   function draw() {
     $("panel").replaceChildren(
       ...page.groups.map((g) => group(g.title, ...g.settings.map(setting), g.title === "Sound" ? soundCheck() : null)),
@@ -167,6 +184,7 @@
         el("p", { class: "dim" }, "Download a small AI model, run it on this phone, and see how fast and how right it is. Talk uses it once it's running."),
         el("div", { class: "acct-actions" }, el("a", { class: "btn btn-ghost", href: "model-test.html" }, "Model test"))) : "",
       glassesSection(),
+      starterSets(),
       section("My Places", el("p", { class: "dim" }, "Places where arriving opens something: your workout at the gym, your grocery list at the store."),
         el("div", { class: "acct-actions" }, el("a", { class: "btn btn-ghost", href: "places.html" }, "My Places"))),
       section("Notifications", el("p", { class: "dim" }, "Everything MIA has told you, and why she sent the ones she sent on her own."),

@@ -197,6 +197,7 @@
   "tests/test_skills_module.py": 2,
   "tests/test_smart_suggestions.py": 2,
   "tests/test_sound.py": 1,
+  "tests/test_starter_actions.py": 1,
   "tests/test_starter_templates.py": 2,
   "tests/test_state_export.py": 2,
   "tests/test_stopwatch_format.py": 3,

@@ -1637,3 +1637,9 @@ body.mod-maps .hero { display: none; }
 .tb-hits { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
 .tb-hit { padding: 10px 12px; border-radius: 10px; background: rgba(var(--rgb-accent), .05); border: 1px solid rgba(var(--rgb-accent), .14); }
 .tb-hit p { margin: 4px 0 0; line-height: 1.5; }
+
+/* Settings: starter sets (core/starter_actions.py, 2026-11-07). */
+.st-set { border-top: 1px solid rgba(var(--rgb-accent), .1); padding: 10px 0; }
+.st-set summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.st-parts { display: flex; flex-direction: column; gap: 6px; margin: 6px 0 10px; }
+.st-part { display: flex; gap: 10px; align-items: center; min-height: 36px; }

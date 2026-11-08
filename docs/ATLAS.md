@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1148 files, 256,604 lines; 1148 files describe themselves; 13,993 of 14,673 classes and functions are documented.
+1150 files, 256,725 lines; 1150 files describe themselves; 13,998 of 14,679 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-422 files, 120,107 lines; 6,370 of 6,459 classes and functions documented
+423 files, 120,174 lines; 6,374 of 6,463 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -345,6 +345,7 @@
 - `core/skill_patterns.py`: Pattern Insight slices 2, 3, and 4 — scoped directly with the user, not assumed (see core/mission_patterns.py's own docstring for slice 1, repeated Mission abandonment, and mia_system_vision's "Phase 6" framing this whole thread continues). Same observe -> insight -> recommend loop; all three slices
 - `core/smart_suggestions.py`: Pure decision logic for a proactive "Smart Suggestions" daily check — docs/VISION.md's principle 3 ("Proactive, not just reactive") names three concrete examples: "recovery after intense workouts, a grocery trip when supplies run low, a birthday gift reminder before the date."
 - `core/specialists.py`: MIA's specialists (DEC-0109; Zac, 2026-11-07: "she should be able to specialize agents for each area of skill she is developing, like one that is catered towards construction knowledge, one towards radio technologies, one towards military strategy, one towards homesteading skills, one towards resear
+- `core/starter_actions.py`: Starter sets on the web's Settings (DEC-0125: offered on the desktop's setup and Settings, and by voice, but not on the web). `starters(context)` lists each set with its parts for the page; `starter.add` adds a set, or just the parts ticked, as one action whose Undo takes it all back (core/starter_t
 - `core/starter_templates.py`: Starter sets (2026-10-01): a new MIA is empty, and an empty app is hard to start with. A starter set fills in the usual things for a kind of life, so there's something to check off on day one:
 - `core/startup_briefing.py`: Pure logic for the "Good evening, Zac. Welcome back." launch greeting — docs/VISION.md's 2026-07-15 companion-philosophy update, "Startup Dashboard Briefing."
 - `core/startup_sounds.py`: The startup sounds' names and which one is chosen (Zac, 2026-11-07: "sample some sounds and I will pick a good start up sound, and make it a togglable setting"). Kept apart from core/boot_sound.py, which makes the sounds with numpy, so Settings can list them anywhere MIA runs (the phone too).
@@ -702,7 +703,7 @@
 
 ## tests/: the test suite: what each part must do
 
-380 files, 68,194 lines; 5,378 of 5,969 classes and functions documented
+381 files, 68,230 lines; 5,379 of 5,971 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1006,6 +1007,7 @@
 - `tests/test_sound.py`: Sound (DEC-0028 #11): the engine says which win it was and MIA's line for it; the person's settings say whether to play and speak. *(1 undocumented)*
 - `tests/test_source_hygiene.py`: No control characters in the source (2026-11-06): a `\b` in a regex that became a real backspace on its way through a shell still compiles, and then silently never matches.
 - `tests/test_specialists.py`: MIA's specialists (core/specialists.py, DEC-0109): their charters name real skills, tracks and loops; a workbook keeps only sourced notes; a person confirms or withdraws; study hall takes them in turn; and the answer always says where a note came from and whether it's confirmed.
+- `tests/test_starter_actions.py`: Starter sets from the web's Settings (core/starter_actions.py, DEC-0125): each set with its parts on the page, and starter.add adding a set, or the parts ticked, as one action whose Undo takes it all back. *(1 undocumented)*
 - `tests/test_starter_templates.py`: Starter sets (core/starter_templates.py), 2026-10-01: the usual chores, routines, upkeep schedules and a workout for a kind of life, added in one undoable step, never twice. *(2 undocumented)*
 - `tests/test_startup_briefing.py`: Unit tests for core.startup_briefing's pure functions — see gui/home_dashboard.py for how these feed the launch-greeting banner.
 - `tests/test_state_export.py`: The state export (Engine Phase 1 step 4, 2026-10-05): Life State v2 as JSON from `python -m tools.export_state` and `/api/state`, matching the published schema docs/schema/life_state.schema.json. *(2 undocumented)*
@@ -1087,7 +1089,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-82 files, 14,852 lines
+82 files, 14,870 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
