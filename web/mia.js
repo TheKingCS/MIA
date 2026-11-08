@@ -233,7 +233,8 @@
     worlds: (campaign) => read("/api/worlds" + (campaign ? "?campaign=" + encodeURIComponent(campaign) : ""), "worlds"),  // Living Worlds (DEC-0134)
     // After a reply in Talk, now and then: the same answer a second way to pick from ({} when none; never in the demo).
     compareAnswer: (reply, isPrivate) => demo ? Promise.resolve({}) : call("POST", "/api/talk/compare", { reply, private: !!isPrivate }),
-    paint: (description, use, apply) => demo ? demoOnly() : call("POST", "/api/art/paint", { description, use: use || "backdrop", apply: !!apply }),
+    paint: (description, use, apply, area) => demo ? demoOnly() : call("POST", "/api/art/paint", { description, use: use || "backdrop", apply: !!apply, area: area || "" }),
+    portals: () => read("/api/portals", "portals"),  // Portal Pictures: your paintings in the Nexus portals (DEC-0140)
     // The ID wallet (core/id_wallet.py): numbers travel only in these calls, never in an action.
     wallet: () => read("/api/wallet", "wallet"),
     walletCard: (id) => demo ? read("", "wallet").then((d) => ({ ...d.cards.find((c) => c.id === id), number: "D1234-5678-9012" })) : call("GET", "/api/wallet/" + encodeURIComponent(id)),

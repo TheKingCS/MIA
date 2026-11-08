@@ -185,6 +185,7 @@
         j.status === "failed" ? j.error : "Painting " + j.description + "… " + j.seconds + "s"))) : null,
       el("div", { class: "st-arts" }, tile("", "No backdrop", null), ...items.filter((i) => i.use === "backdrop").map((i) => tile(i.id, i.description, i.image))),
       picks.backdrop ? slider("backdrop_strength", "Strength", 0.1, 1, 0.05) : null,
+      el("p", { class: "st-designed" }, "Pictures for the Nexus portals are in ", el("a", { href: "portals.html" }, "Portal Pictures ›")),
     ];
   }
 

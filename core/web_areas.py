@@ -71,6 +71,7 @@ CONNECT = Page("connect", "Connect Apps", "settings", "Your accounts, linked.", 
 ABOUT = Page("about", "About MIA", "assistant", "What she is, what she's for, what she knows.", "about.html")
 ANSWERS = Page("answers", "How MIA Answers", "assistant", "How long, laid out how, the tone: your way.", "answers.html")
 STUDIO = Page("studio", "Theme Studio", "settings", "Make MIA look like you: themes, colours, light.", "studio.html")
+PORTALS = Page("portals", "Portal Pictures", "apps", "Put your own paintings in the Nexus portals.", "portals.html")
 PROFILE = Page("profile", "Profile", "character", "You, and how MIA knows you.", "profile.html")
 YOURDATA = Page("yourdata", "Your Data", "files", "What MIA keeps, and taking it out.", "yourdata.html")
 CHANGES = Page("changes", "Recent Changes", "issues", "What changed, with Undo.", "changes.html")
@@ -100,7 +101,7 @@ AREAS: tuple[Area, ...] = (
          ("security", WALLET, "passwords", SIGNINS, "field_kit"), hue="#c0c8d4"),
     Area("browser", "Browser", "search", "She browses. You approve.", ("browser",), hue="#bfefff"),
     Area("system", "Settings and Diagnostics", "settings", "Make MIA yours, and see how she's doing.",
-         ("settings", STUDIO, ANSWERS, ABOUT, "diagnostics", "issues", CONNECT, PROFILE, YOURDATA, CHANGES, "module_browser"), hue="#dfe9f2"),
+         ("settings", STUDIO, PORTALS, ANSWERS, ABOUT, "diagnostics", "issues", CONNECT, PROFILE, YOURDATA, CHANGES, "module_browser"), hue="#dfe9f2"),
     Area("finances", "Finances", "budget", "Money in, money out, and the way out.",
          ("budget", "freedom", "dungeon", "insurance", "real_estate", "compliance", "inbox"), hue="#3f7bff"),
     Area("business", "Business", "business", "Customers, products and the paperwork.",

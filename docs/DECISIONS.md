@@ -2289,7 +2289,11 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
      Theme Studio: paint, pick one of yours, set its strength.
   5. **One worker thread per painting**, scoped to `core/art_studio.py` (CLAUDE.md): it only talks to the engine and
      writes a staging file; finished paintings are taken in on the main thread (`settle`, when the shell is read).
-- Next uses (not built): portal pictures painted by MIA (`use: "portal"` is ready in core), a generated place's
+- Portal pictures built 2026-11-08 (overnight, claude): **Portal Pictures** (`web/portals.html`,
+  `core/portal_pictures.py`): each area's Nexus portal shows the person's own painting if they put one there (a personal
+  setting, `nexus.portal_pictures`; the action `portal.picture`, undoable), else Muse's; "paint a misty forest for the
+  Plants portal" paints one and it goes in that portal when done; `set_portal_picture` by voice.
+- Next uses (not built): a generated place's
   backdrop (DEC-0132), sound and more asset kinds.
 - Related: DEC-0136, DEC-0130, DEC-0053, DEC-0132, DEC-0002
 

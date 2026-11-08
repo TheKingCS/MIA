@@ -334,11 +334,12 @@ class PasswordChange(BaseModel):
 
 
 class ArtRequest(BaseModel):
-    """Something for MIA to paint (core/art_studio.start): the description, what it's for, and whether to put it up as
-    the background when it's done."""
+    """Something for MIA to paint (core/art_studio.start): the description, what it's for, whether to put it up when
+    it's done, and for a portal picture the area whose portal it goes in."""
     description: str = Field(..., max_length=400)
     use: str = "backdrop"
     apply: bool = False
+    area: str = Field("", max_length=40)  # a portal picture: the area whose portal it goes in when done
 
 
 class CompareRequest(BaseModel):
@@ -479,7 +480,7 @@ SECURITY_HEADERS = {
 
 
 def create_app(context: AppContext) -> FastAPI:
-    """MIA's web server (FastAPI) for the phone, the glasses and the desktop's web view: sign-in sessions by bearer token (or a linked phone's device key), the access switch that turns away forwarded requests when phone access is off, every /api route (each runs on the signed-in person's own view, view_for), and the web front end served fresh at /web/. Your Data (/api/your-data, export and delete) and the sealed-files recovery key sit beside the security log here; the Theme Studio reads /api/themes and asks /api/themes/design (DEC-0136); MIA paints through /api/art (DEC-0140)."""
+    """MIA's web server (FastAPI) for the phone, the glasses and the desktop's web view: sign-in sessions by bearer token (or a linked phone's device key), the access switch that turns away forwarded requests when phone access is off, every /api route (each runs on the signed-in person's own view, view_for), and the web front end served fresh at /web/. Your Data (/api/your-data, export and delete) and the sealed-files recovery key sit beside the security log here; the Theme Studio reads /api/themes and asks /api/themes/design (DEC-0136); MIA paints through /api/art (DEC-0140), and Portal Pictures is /api/portals."""
     app = FastAPI(title="MIA Mobile API")
     app.state.context = context
     app.state.sessions: dict[str, str] = {}  # token -> profile_id
@@ -2522,9 +2523,18 @@ def create_app(context: AppContext) -> FastAPI:
 
         with app.state.turn_lock:
             try:
-                return start(view_for(context, profile_id), body.description, body.use, body.apply)
+                return start(view_for(context, profile_id), body.description, body.use, body.apply, area=body.area)
             except ValueError as problem:
                 raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
+
+    @app.get("/api/portals")
+    def web_portals(profile_id: str = Depends(require_profile_id)) -> dict:
+        """Portal Pictures (core/portal_pictures.screen, DEC-0140): what each area's portal in the Nexus shows, the
+        person's paintings to put there, and the portal paintings still going; choosing is portal.picture."""
+        from core.portal_pictures import screen
+
+        with app.state.turn_lock:
+            return screen(view_for(context, profile_id))
 
     @app.get("/api/art/{art_id}/image")
     def web_art_image(art_id: str, profile_id: str = Depends(require_profile_id)):

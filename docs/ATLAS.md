@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1288 files, 278,701 lines; 1288 files describe themselves; 15,483 of 15,824 classes and functions are documented.
+1291 files, 279,126 lines; 1291 files describe themselves; 15,499 of 15,840 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-480 files, 131,812 lines; 7,080 of 7,166 classes and functions documented
+481 files, 132,036 lines; 7,090 of 7,176 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -26,7 +26,7 @@
 - `core/assistant_accessibility_actions.py`: "Make the text bigger", "turn on high contrast", "read this screen to me" (core/accessibility.py, 2026-10-01), and "switch to the cards look" (core/display_style.py, DEC-0135), "make it cyberpunk" (core/themes.py, DEC-0136). Each changes only the speaker's own look.
 - `core/assistant_actions.py`: The Assistant's tool-use/action-execution registry — docs/ROADMAP.md milestone 5.5. Lets the LLM actually DO things in MIA (open a module, add an alarm, a note, an inventory item), not just answer questions, via Ollama's structured tool-calling API (core/llm_manager.py's `chat_with_tools()`).
 - `core/assistant_answer_style_actions.py`: How MIA answers, by voice (DEC-0138, DEC-0125's both-ways rule; the screen is web/answers.html): "keep your answers short", "use bullet points", "be more direct", "lead with the answer", "how do I like answers?", "forget how I like answers", "stop asking which I prefer". The person's words are mappe
-- `core/assistant_art_actions.py`: MIA paints by voice (DEC-0140, core/art_studio.py): "paint me a fantasy castle village for my background", "use the castle one as my background", "take the background down", "delete the castle picture". Painting runs on the PC's own graphics card and takes a minute or so; a background asked for this
+- `core/assistant_art_actions.py`: MIA paints by voice (DEC-0140, core/art_studio.py): "paint me a fantasy castle village for my background", "use the castle one as my background", "take the background down", "delete the castle picture", "paint a misty forest for the Plants portal", "put the castle painting in the Garage portal" (cor
 - `core/assistant_asset_part_actions.py`: Parts per asset by voice (DEC-0125; the screen is the asset page's Parts tab, core/asset_parts.py): "the mower uses the 10W-30 oil", "what parts does the truck take?", "the truck doesn't use that filter anymore". Names are matched to real records in code; the add and remove are the same actions the 
 - `core/assistant_backup_actions.py`: Backups by voice (DEC-0125), read only: "when did I last back up?" says how long since the last backup in the backups folder and where they go (core/web_backups.py). Making one is on Settings (a passphrase is typed, never said aloud); restoring is on the PC.
 - `core/assistant_browser_actions.py`: MIA's browser by voice and chat (DEC-0117): open a page or search, read it, click, type, go back, close; learn a task the person shows her, do it again, list what she's learned. Every step goes through core/browser.py, which sorts it with core/browser_safety.py: a step that commits is held as the ac
@@ -323,6 +323,7 @@
 - `core/plan_library.py`: The Library's plans shelf (Zac, 2026-11-07: "references for all kinds of stuff like woodworking plans, structure blueprints, material lists"). Three kinds of plan, found together by `find()`:
 - `core/play_actions.py`: Recreation (core/recreation.py, DEC-0098) through the action contract (core/actions.py): `play.log` (a game or sport played) and `play.delete`. The log writes through atomic_write_text, so "undo that" takes it back. Children play too: both are child-safe.
 - `core/port_scanner.py`: Pure-Python TCP connect-scan port scanner — docs/ROADMAP.md milestone 11.5, Field Kit's Security/Network Toolkit. Deliberately doesn't wrap `nmap`: `nmap` isn't installed in this dev sandbox and can't be added without sudo (the same "no sudo" wall as every other missing system package this project h
+- `core/portal_pictures.py`: The picture inside each area's portal in the Nexus, chosen by the person (DEC-0140's "portal pictures painted by MIA", DEC-0130's Nexus).
 - `core/power_actions.py`: Power's changes on the web (DEC-0113 canvas, DEC-0125 parity: Power had no phone screen). Energy sources (solar, a generator, propane, a battery bank) are added, renamed and removed through the shared record kinds (`energy_source.add` / `.edit` / `.delete`, core/record_actions.py), and a reading is 
 - `core/power_manager.py`: Power monitoring — docs/ROADMAP.md milestone 7.2. Defines a small backend-agnostic interface (`PowerBackend`, same shape as core/llm_manager.py's `LLMBackend` and core/voice_manager.py's `STTBackend`/`TTSBackend`), with one concrete implementation, `PsutilBatteryBackend`, using psutil's cross-platfo
 - `core/practices.py`: MIA's best practices, a series that keeps growing (DEC-0108; Zac, 2026-11-07: "MIA should have some kind of understanding of best practices for AI building, development of any kind, honestly everything she does she should have an evolving best practices series of documentation").
@@ -491,7 +492,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 3,940 lines; 46 of 46 classes and functions documented
+2 files, 3,950 lines; 46 of 46 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -765,7 +766,7 @@
 
 ## tests/: the test suite: what each part must do
 
-439 files, 73,544 lines; 6,117 of 6,372 classes and functions documented
+440 files, 73,625 lines; 6,123 of 6,378 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1042,6 +1043,7 @@
 - `tests/test_plan_import.py`: "Paste a plan" (core/plan_import.py, 2026-10-14): a whole plan and its recipes as text, the way a chat writes it, into MIA in one undoable action. Placeholder values only (DEC-0002). *(1 undocumented)*
 - `tests/test_plan_library.py`: The Library's plans shelf (core/plan_library.py) and the material lists behind it (core/build_calcs.py): boards packed into stock lengths, each calculator's counts checked by hand, plans found by name, kept and read from files, a shopping list against the workshop's stock, the tools, the homestead, 
 - `tests/test_port_scanner.py`: Unit tests for core.port_scanner. Uses a real local TCP server bound to an ephemeral port (socket.bind(("127.0.0.1", 0))) rather than mocking sockets or reaching out to a real remote host — deterministic (no network/internet dependency) while still exercising the real connect_ex() path, not a hand-c
+- `tests/test_portal_pictures.py`: Portal Pictures (core/portal_pictures.py, DEC-0140 / DEC-0130): the person puts one of their own paintings in an area's portal in the Nexus, or has MIA paint one for it, and can put it back to the original; each person's Nexus is their own. Uses the stand-in ComfyUI from tests/test_art_studio.py.
 - `tests/test_power_manager.py`: Unit tests for core.power_manager. should_warn_low_battery() is tested directly with constructed PowerStatus objects (pure, deterministic — no psutil or real battery involved). PsutilBatteryBackend/PowerManager are tested against monkeypatched psutil.sensors_battery(), same approach as test_system_h
 - `tests/test_power_module.py`: Unit tests for modules.power.module's pure formatting functions — no Qt event loop needed. Same shape as tests/test_system_health.py's format_system_health test.
 - `tests/test_power_web.py`: Power by voice (DEC-0125): a reading said out loud ("log the propane at 60 percent") is logged through the Power screen's own action, `energy.reading` (core/power_actions.py), so it's undoable. The screen itself is tested in tests/test_web_power.py.
@@ -1209,7 +1211,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-100 files, 18,279 lines
+101 files, 18,389 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), and what she knows about you, linking to where it's kept. Read onl
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she
@@ -1283,6 +1285,7 @@
 - `web/places.js`: places.js — My Places (claude, 2026-10-17, DEC-0028 #13). Renders MIA.places() (core/places.py): each place, what arriving there does, Add Place (where you are now, or typed in), Remove, and the switch that lets this device notice when you arrive (Settings → Location quests). Formatting only; the wa
 - `web/plan.js`: plan.js — My plan (claude, 2026-10-14, DEC-0020, Muse's H-0028): one screen, reached from both Kitchen and Workout. Goals, the training week (which days, and what each training day is), skills to practice, meals and preferences, milestones. Renders MIA.fitness() (plan, plan_text); every save is a fi
 - `web/play.js`: play.js — games and sports (claude, 2026-11-07, DEC-0098). Renders MIA.play() (core/recreation.py): the training load by week as bars and the latest games, as the design canvas has them (DEC-0113). Logging and taking one out go through actions (play.log, play.delete). Formatting only; the look is mu
+- `web/portals.js`: portals.js — Portal Pictures (claude, 2026-11-08, DEC-0140 / DEC-0130). Renders MIA.portals() (core/portal_pictures.py): each area's portal in the Nexus with the picture it shows (your painting, the original, or none yet), and three ways to change it: Paint One (MIA paints it on the PC's graphics ca
 - `web/power.js`: power.js — Power (claude, 2026-11-07, DEC-0125; the design canvas's Power, DEC-0113). Renders MIA.power() (core/web_power.py): Energy Sources (each with its latest reading per meter, a meter for a percent, when it was logged, Log Reading) and Battery (this device's). Adding a source, logging a readi
 - `web/profile.js`: profile.js — the Profile screen (claude, 2026-10-07; Zac: the gear's Profile). Renders MIA.profile() (core/web_account.py) as the design canvas has it (DEC-0113): your name, email, country, what MIA helps with, the password and the recovery code; no household (DEC-0119). Name, email, country and int
 - `web/projects.js`: projects.js — Projects (claude, 2026-11-07; DEC-0125: projects and their tasks were voice-only). Renders MIA.projects() (core/web_projects.py): underway first, each with its status, due date, budget, spent and left (a meter, amber when over), what the money went on, tools bought, the reason it serve
