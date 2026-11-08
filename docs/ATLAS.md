@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1128 files, 253,267 lines; 1128 files describe themselves; 13,842 of 14,514 classes and functions are documented.
+1131 files, 253,512 lines; 1131 files describe themselves; 13,854 of 14,526 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-412 files, 118,062 lines; 6,249 of 6,338 classes and functions documented
+413 files, 118,194 lines; 6,257 of 6,346 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -385,6 +385,7 @@
 - `core/web_account.py`: The web's Profile and Settings screens (2026-10-07, Zac: the gear's Profile and Settings). Profile is who you are: name, email, country, what MIA helps with, household, password and recovery code. Settings is how MIA behaves for you: the person's own settings from the PC app's Settings (core/person_
 - `core/web_browser.py`: The Browser screen's data (DEC-0117, 2026-11-07): MIA's own browser as the person sees it on the web, so held steps and taught tasks aren't only reachable by talking to her.
 - `core/web_business.py`: The Orders & Quotes screen (DEC-0030 phase C): orders (what's owed, the build's progress, and where each is on the stage rail with the step that moves it on: `order_stage`, DEC-0113), quotes (with what the price is made of), customers, and the portfolio of finished builds. Put together here from cor
+- `core/web_changes.py`: Recent changes (2026-11-07; the design review's missing "Recent changes Undo history" screen): what MIA changed for the signed-in person lately, newest first, from the undo log (core/undo_log.py: the last 20, kept in memory since MIA started), each said in words with when and whether MIA or the pers
 - `core/web_compliance.py`: The Compliance screen (DEC-0040): every obligation, sorted the way deadlines are read: **Overdue**, **Next 30 days**, **Later**, **To check** (unverified, or undated), and **Done**. Each says when it's really due (moved off a weekend or holiday, an extension to file kept apart from the money's date)
 - `core/web_craft.py`: The Workshop's Recipes and Builds tabs (DEC-0030 phase B): put together here from core/craft_recipes.py, Materials, Jobs, Products and the Ledger, so the web only formats. Part of `workshop_page()`. The Goods tab (DEC-0036: homestead goods on hand, batch by batch, the market day and labels) is `good
 - `core/web_dungeon.py`: The Dungeon screen (DEC-0046, core/work_dungeon.py), put together here so the web only formats, and the same numbers MIA says in Talk and in Game Master mode: today's run, this week's loot (earned, projected, the boss bonus) and its runs (cleared out of all, for the canvas's week meter), the month a
@@ -423,7 +424,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 2,876 lines; 34 of 34 classes and functions documented
+2 files, 2,892 lines; 34 of 34 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -692,7 +693,7 @@
 
 ## tests/: the test suite: what each part must do
 
-374 files, 67,484 lines; 5,348 of 5,931 classes and functions documented
+375 files, 67,541 lines; 5,352 of 5,935 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1033,6 +1034,7 @@
 - `tests/test_waypoint_actions.py`: Waypoints from the web (core/waypoint_actions.py): added from a tap on the map, taken out from Navigation. *(3 undocumented)*
 - `tests/test_waypoint_manager.py`: Unit tests for core.waypoint_manager. haversine_distance_km() initial_bearing_degrees() are checked against real, well-known distances/bearings (New York <-> Los Angeles, London <-> Paris) rather than only synthetic values, so a sign error or unit mistake can't accidentally cancel out and still pass *(4 undocumented)*
 - `tests/test_waypoint_map_canvas.py`: Unit tests for gui.widgets.waypoint_map_canvas's project_waypoints() — pure math, no Qt/QWidget instantiation needed. See that module's own docstring for why this is a schematic layout, not a real map projection.
+- `tests/test_web_changes.py`: Recent Changes (core/web_changes.py): the person's changes newest first in words, who made them, Undo only on the newest, and undoing it puts the file back the way it was, the same as "undo that".
 - `tests/test_web_equipment.py`: DEC-0017 (2026-10-06): Garage, Property, Greenhouse and Maintenance on the web, and one page per asset (Zac's mower concept): the data (core/web_equipment.py) and every change as an action kind (core/equipment_actions.py, maintenance.done with a meter value); and the design canvas's Garage card and  *(5 undocumented)*
 - `tests/test_web_field_kit.py`: The Field Kit on the web (DEC-0125, the design canvas's Field Kit, DEC-0113: core/web_field_kit.py): what's plugged into the computer, a hash's kind and a subnet worked out in core, and the script library to read and copy; doing things to the computer stays on the PC.
 - `tests/test_web_fitness.py`: The fitness screens' data (core/web_fitness.py, DEC-0020): today, the weight line, missions and "is it working?" in one plain sentence, the meal-plan week, and the endpoints. Placeholder values. *(3 undocumented)*
@@ -1071,7 +1073,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-78 files, 14,344 lines
+79 files, 14,384 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
@@ -1081,6 +1083,7 @@
 - `web/browser.js`: browser.js — MIA's own browser (claude, 2026-11-07, DEC-0117). Renders MIA.browser() (core/web_browser.py): the page she's on, each step waiting for your OK (its screenshot, Go ahead / Cancel on the step's own proposal), the task she's learning, and the tasks you taught her (how practised, the last 
 - `web/business.js`: business.js — Orders & Quotes (claude, 2026-10-17, DEC-0030 phase C). Renders MIA.business() (core/web_business.py) in tabs: Orders (what's owed, Payment, Start Build, Ready / Delivered), Quotes (what the price is made of, Sent / Accepted / Declined), Customers, and the Portfolio of finished builds 
 - `web/calendar.js`: calendar.js — the Calendar screen (claude, 2026-10-16). Renders MIA.calendar(month) (core/calendar_view.py) as the design canvas's one page (DEC-0113): Past Due and Due Today with their actions, Due Soon as short lines, and the month with its dots beside them. Each item says what it is and offers it
+- `web/changes.js`: changes.js — Recent Changes (claude, 2026-11-07). Renders MIA.changes() (core/web_changes.py): what MIA changed for the person lately, newest first (what, when, MIA or you), with Undo on the newest only, the same as saying "undo that" (an older one would undo on top of what came after). Formatting o
 - `web/character.js`: character.js — the Character screen (claude, 2026-10-06, DEC-0017/0018, H-0013). Renders MIA.character() (core/web_progress.py): the person's level and prestige, lifetime stats, everything they've unlocked (highest rarity first) and the tally by rarity, prestige emblems, top skills and latest missio
 - `web/checkin.js`: checkin.js — the Sunday check-in (claude, 2026-10-27, DEC-0047 rule 5). Renders MIA.checkin() (core/weekly_checkin.py): last week (the story, the loop's honest score, loot, what MIA noticed, quests finished) and the week ahead, day by day (runs with projected loot, rhythms, calendar events), quests 
 - `web/chronicle.js`: chronicle.js — The Chronicle (claude, 2026-10-17, DEC-0028). Renders MIA.chronicle() (core/chronicle.py): this week's chapter, the weeks before it, and the yearly editions. Laid out as the design canvas's Chronicle (DEC-0113): the newest chapter as prose, earlier ones to open. Read only; formatting 

@@ -187,6 +187,8 @@ every push). Anything that needs the PC waits.
 
 ## Recent changes (newest first)
 
+- 2026-11-07 (late) · claude · **Recent Changes page** (web/changes.html, Settings → What MIA Changed): what MIA changed for you lately, newest first, by you or by MIA, with Undo on the newest (the same as "undo that"). Closes one of the design review's missing screens.
+
 - 2026-11-07 (late) · claude · **Fill In Your Life on Start Here.** The apps still empty for the signed-in person (bills, vehicles, calendar, recipes, people, workouts, chickens, rentals, insurance, energy, trips), each with the first thing to say (each reaches that app's add tool, tested) or its page; counted live, nothing shown about what's in them. For Zac's fill-in session. The audit doc's "Where it stands" is current (voice 49/50, phone 50, glasses 46).
 
 - 2026-11-07 (night) · claude · **Full use both ways, nearly whole (DEC-0125).** Humor on the Settings screen; Power on the web (merged with the canvas session's, which built it at the same time) and readings logged by voice; the Security cameras by voice (list_cameras, save_camera_picture) and Security's area is the cameras; "look at this" opens Look with the camera; asks on the glasses for 17 more apps; "Say: …" under every screen's title (a tap puts it in Talk); `get_vault_status` ("Are my photos backed up?"). Two new tests (every glasses ask and every app ask reaches its own tools) found old asks reaching no tool or the wrong app, fixed with keywords (K-0080). 15/15 new questions passed on the PC's model. Parity: 1 open gap (Look on the glasses), 4 decided "none".

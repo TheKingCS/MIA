@@ -760,3 +760,10 @@ def test_power_on_the_web_lists_sources_and_adds_one_through_an_action(client, c
     assert page["available"] and page["sources"] == [] and "energy_source" in page["forms"]
     assert _do(client, auth, "energy_source.add", {"name": "Propane tank", "source_type": "Propane"}).json()["status"] == "executed"
     assert [s["name"] for s in client.get("/api/power", headers=auth).json()["sources"]] == ["Propane tank"]
+
+
+def test_recent_changes_list_and_undo_through_the_web(client, context):
+    """Recent Changes (core/web_changes.py): the page reads, and Undo with nothing to undo says so."""
+    auth = _signed_in(client, context)
+    assert client.get("/api/changes", headers=auth).json()["available"]
+    assert client.post("/api/changes/undo", headers=auth).json()["message"] == "There's nothing to undo."
