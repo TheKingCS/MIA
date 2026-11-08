@@ -24,13 +24,24 @@
     if (values) MIAShell.act({ kind: "lesson.notes", params: { lesson_id: l.id, notes: values.notes || "" } }, { quick: true });
   }
 
+  // The skill a lesson trains and its XP (lesson.skill; credited once, when it's first done).
+  async function trains(l) {
+    const v = await MIAShell.form("What " + l.name + " Trains", [
+      { name: "skill_id", label: "Skill", type: "pick", options: ["skills"] },
+      { name: "xp", label: "XP when it's done (1 to 100)", type: "int", default: 10 }],
+      { skill_id: l.skill ? l.skill.id : "", xp: l.skill ? l.skill.xp : 10 }, { skills: last.skills });
+    if (v) MIAShell.act({ kind: "lesson.skill", params: { lesson_id: l.id, skill_id: v.skill_id || "", xp: v.xp || 10 } });
+  }
+
   function lesson(l) {
     return el("div", { class: "sync-row council-msg" },
       el("div", {}, el("p", { class: "council-text" }, (l.done ? "✓ " : "") + l.name),
         l.done ? el("p", { class: "dim" }, "Done " + l.done_at) : null,
+        l.skill ? el("p", { class: "dim" }, "Trains " + l.skill.name + " · " + l.skill.xp + " XP") : null,
         l.notes ? el("p", { class: "cl-notes" }, l.notes) : null),
       el("div", { class: "row-buttons" },
         button(l.notes ? "Notes" : "Add notes", () => notes(l)),
+        last && last.skills.length ? button("Skill", () => trains(l)) : null,
         button(l.done ? "Not done" : "Done", () => MIAShell.act({ kind: "lesson.done", params: { lesson_id: l.id, done: l.done ? "no" : "yes" } },
           { quick: true }), l.done ? "btn-ghost" : "btn-amber"),
         button("Take out", () => MIAShell.act({ kind: "lesson.delete", params: { lesson_id: l.id } }))));

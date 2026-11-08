@@ -1,6 +1,6 @@
 """The Classroom's web screen (core/classroom_manager.screen, with the course to continue: DEC-0113) and its actions
 (core/classroom_actions.py), and a lesson's notes both ways: lesson.notes on the screen, add_lesson_notes and
-get_lesson_notes by voice."""
+get_lesson_notes by voice; the skill a lesson trains (lesson.skill, set_lesson_skill)."""
 
 from types import SimpleNamespace
 
@@ -49,7 +49,8 @@ def test_what_it_refuses(person):
         person.actions.propose(person, "subject.add", {"name": "  "}, proposed_by="person")
     with pytest.raises(ActionError):
         person.actions.propose(person, "course.add", {"subject_id": "nope", "name": "X"}, proposed_by="person")
-    assert screen(SimpleNamespace(classroom=None)) == {"available": False, "subjects": [], "continue": None}
+    assert screen(SimpleNamespace(classroom=None)) == {"available": False, "subjects": [], "continue": None,
+                                                       "skills": []}
 
 
 def test_continue_is_the_course_you_last_finished_a_lesson_in():
@@ -86,3 +87,30 @@ def test_a_lessons_notes_are_shown_saved_from_the_screen_and_read_back_by_voice(
         "Your notes for Bead on plate: Push angle 10 degrees / Listen for the sizzle"
     assert act(person, "lesson.notes", lesson_id=lesson["id"], notes="  ") == "Cleared your notes for Bead on plate."
     assert _action_get_lesson_notes(person, {"lesson": "bead"}) == "There are no notes on Bead on plate yet."
+
+
+def test_the_skill_a_lesson_trains_is_set_on_the_screen_and_by_voice(person):
+    from types import SimpleNamespace
+
+    from core.assistant_life_actions import _action_set_lesson_skill
+
+    welding = SimpleNamespace(skill_id="welding", name="Welding")
+    person.skills = SimpleNamespace(all_skills=lambda: [welding],
+                                    get_skill=lambda i: welding if i == "welding" else None)
+    act(person, "subject.add", name="Trade skills")
+    act(person, "course.add", subject_id=screen(person)["subjects"][0]["id"], name="MIG basics")
+    act(person, "lesson.add", course_id=screen(person)["subjects"][0]["courses"][0]["id"], name="Bead on plate")
+    page = screen(person)
+    lesson = page["subjects"][0]["courses"][0]["lessons"][0]
+    assert page["skills"] == [{"id": "welding", "name": "Welding"}] and lesson["skill"] is None
+    assert act(person, "lesson.skill", lesson_id=lesson["id"], skill_id="welding", xp="20") == \
+        "Bead on plate trains Welding now."
+    shown = screen(person)["subjects"][0]["courses"][0]["lessons"][0]
+    assert shown["skill"] == {"id": "welding", "name": "Welding", "xp": 20} and shown["xp"] == 20
+    with pytest.raises(ActionError, match="1 to 100"):
+        person.actions.propose(person, "lesson.skill", {"lesson_id": lesson["id"], "skill_id": "welding", "xp": "500"},
+                               proposed_by="person")
+    assert _action_set_lesson_skill(person, {"lesson": "bead", "skill": "none"}) == "Bead on plate trains no skill now."
+    assert _action_set_lesson_skill(person, {"lesson": "bead", "skill": "welding", "xp": 15}) == \
+        "Bead on plate trains Welding now."
+    assert screen(person)["subjects"][0]["courses"][0]["lessons"][0]["skill"]["xp"] == 15

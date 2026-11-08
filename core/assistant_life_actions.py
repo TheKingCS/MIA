@@ -507,6 +507,33 @@ def _action_add_lesson_notes(context: AppContext, arguments: dict) -> str:
     return f"Added to your {lesson.name} notes."
 
 
+def _action_set_lesson_skill(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `set_lesson_skill`: the skill a lesson trains and its XP, through the Classroom screen's
+    `lesson.skill` action ("bead on plate trains welding, 20 XP"). Returns the sentence to say back; an unclear name
+    is asked about, nothing changes."""
+    from core.actions import ACTION_TYPES, ActionError
+
+    lesson, error = resolve_by_name(_all_lessons(context), str(arguments.get("lesson", "")), lambda l: l.name, "lesson")
+    if error:
+        return error
+    skills = getattr(context, "skills", None)
+    words = str(arguments.get("skill", "") or "").strip()
+    skill_id = ""
+    if words and words.lower() not in ("none", "nothing", "no skill"):
+        if skills is None:
+            return "Skills aren't on this MIA."
+        skill, error = resolve_by_name(skills.all_skills(), words, lambda k: k.name, "skill")
+        if error:
+            return error
+        skill_id = skill.skill_id
+    params = {"lesson_id": lesson.lesson_id, "skill_id": skill_id, "xp": arguments.get("xp") or 10}
+    try:
+        ACTION_TYPES["lesson.skill"].describe(context, params)
+        return ACTION_TYPES["lesson.skill"].execute(context, params)
+    except ActionError as problem:
+        return str(problem)
+
+
 def _action_get_lesson_notes(context: AppContext, arguments: dict) -> str:
     """Assistant tool `get_lesson_notes`: reads back a lesson's notes (what the Classroom screen shows under it).
     Returns the sentence to say back; an unclear or ambiguous name is asked about."""
@@ -701,6 +728,15 @@ def register_life_actions(registry: AssistantActionRegistry) -> None:
         parameters=_obj({"lesson": _s("The lesson."), "notes": _s("What to add.")}, ["lesson", "notes"]),
         handler=_action_add_lesson_notes,
         trigger_phrases=("add to my notes for", "lesson notes", "i learned that"),
+    ))
+    registry.register(AssistantAction(
+        name="set_lesson_skill", domain="classroom",
+        description="Set the skill a Classroom lesson trains and the XP it gives when done (or no skill).",
+        parameters=_obj({"lesson": _s("The lesson."), "skill": _s("The skill, or 'none'."),
+                         "xp": {"type": "integer", "description": "XP when it's done, 1 to 100 (10 if not said)."}},
+                        ["lesson", "skill"]),
+        handler=_action_set_lesson_skill,
+        trigger_phrases=("lesson trains", "trains my", "xp for the lesson", "lesson gives"),
     ))
     registry.register(AssistantAction(
         name="get_lesson_notes", domain="classroom", description="Read back the notes on a Classroom lesson.",

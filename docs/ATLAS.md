@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1140 files, 255,277 lines; 1140 files describe themselves; 13,938 of 14,613 classes and functions are documented.
+1140 files, 255,406 lines; 1140 files describe themselves; 13,944 of 14,619 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-419 files, 119,360 lines; 6,322 of 6,411 classes and functions documented
+419 files, 119,450 lines; 6,327 of 6,416 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -92,7 +92,7 @@
 - `core/child_accounts.py`: Child accounts (2026-10-01): a young person in a household gets their own MIA, set up and looked after by a parent (their guardian).
 - `core/chronicle.py`: The Chronicle (DEC-0028, the game layer's eighth idea): the story of your week, and of your year, told from what really happened.
 - `core/chronicle_issue.py`: MIA: The Chronicles*, the weekly issue (build plan step 17, DEC-0085 and DEC-0086; the Story Bible is `docs/chronicles/`, the archive `core/saga.py`).
-- `core/classroom_actions.py`: The Classroom (core/classroom_manager.py, the person's own study) through the action contract (core/actions.py), for its web screen: a subject, a course and a lesson added, a lesson's notes written (lesson.notes, as "add to my notes for..." does by voice), a lesson marked done (its skill XP credited
+- `core/classroom_actions.py`: The Classroom (core/classroom_manager.py, the person's own study) through the action contract (core/actions.py), for its web screen: a subject, a course and a lesson added, a lesson's notes written (lesson.notes, as "add to my notes for..." does by voice), the skill a lesson trains and its XP (lesso
 - `core/classroom_manager.py`: Classroom (2026-09-11) — the user's own self-education content model: Subjects (K-12-level academic subjects and trades) contain Courses, Courses contain Lessons. v1 is deliberately just this content/lesson structure — no Skills/Missions/Discovery wiring yet, see this module's own ROADMAP entry for 
 - `core/code_atlas.py`: Documentation for everything MIA is made of (DEC-0104, Zac 2026-11-06: "every line of code ... should have documentation that explains what it is and what it does and how it does it, so that if MIA ever needed to redo this entire process herself, she could. And this should be an ongoing thing").
 - `core/communication_gate.py`: "Know when to speak", slice C of docs/COGNITIVE_EXTENSION_PROPOSAL.md: the one path every proactive (unprompted) message from MIA goes through, so a context-aware assistant never turns into a nag.
@@ -699,7 +699,7 @@
 
 ## tests/: the test suite: what each part must do
 
-377 files, 67,936 lines; 5,371 of 5,957 classes and functions documented
+377 files, 67,964 lines; 5,372 of 5,958 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -755,7 +755,7 @@
 - `tests/test_child_accounts.py`: Child accounts (core/child_accounts.py), 2026-10-01: a parent looks after a child's MIA; grown-up apps and tools say "ask a parent", the Assistant is told it's talking with a child, and the safety floor also asks the child to tell an adult. *(3 undocumented)*
 - `tests/test_chronicle.py`: The Chronicle (DEC-0028): each week (and year) told as a story from what really happened. Never made up, never a failure.
 - `tests/test_chronicle_issue.py`: The Chronicles' weekly issue (build plan step 17, core/chronicle_issue.py): told from approved series events, oldest first; captions in code with the event named; lines from the model in the characters' voices; the Story Bible's five rules checked in code; Zac's approval marks the events as told and *(3 undocumented)*
-- `tests/test_classroom_actions.py`: The Classroom's web screen (core/classroom_manager.screen, with the course to continue: DEC-0113) and its actions (core/classroom_actions.py), and a lesson's notes both ways: lesson.notes on the screen, add_lesson_notes and get_lesson_notes by voice. *(3 undocumented)*
+- `tests/test_classroom_actions.py`: The Classroom's web screen (core/classroom_manager.screen, with the course to continue: DEC-0113) and its actions (core/classroom_actions.py), and a lesson's notes both ways: lesson.notes on the screen, add_lesson_notes and get_lesson_notes by voice; the skill a lesson trains (lesson.skill, set_less *(3 undocumented)*
 - `tests/test_classroom_manager.py`: Unit tests for core.classroom_manager. Isolates _DATA_DIR/the three per-level file constants into a tmp_path scratch area, same pattern as tests/test_workout_manager.py. *(2 undocumented)*
 - `tests/test_classroom_module.py`: Unit tests for modules.classroom.module's pure functions, same style as tests/test_pathway_tool.py (no Qt event loop, no fixtures). *(1 undocumented)*
 - `tests/test_communication_gate.py`: Slice C, "Know when to speak" (core/communication_gate.py): every rule with a fake clock, the persisted gate with delivery and deferral, the daily checks routed through it, and a scripted day.
@@ -1081,7 +1081,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-80 files, 14,584 lines
+80 files, 14,595 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game

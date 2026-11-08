@@ -437,6 +437,16 @@ class ClassroomManager:
         return done, total
 
 
+def _skill_of(context, lesson) -> dict | None:
+    """The skill a lesson trains, for its screen: {id, name, xp}, or None (a skill no longer defined shows its id)."""
+    if not lesson.skill_rewards:
+        return None
+    weight = lesson.skill_rewards[0]
+    skills = getattr(context, "skills", None)
+    found = skills.get_skill(weight.skill_id) if skills is not None else None
+    return {"id": weight.skill_id, "name": found.name if found else weight.skill_id, "xp": int(weight.xp or 0)}
+
+
 def continue_course(subjects: list) -> dict | None:
     """Pure logic. The course to pick up (the design canvas's Classroom "Continue", DEC-0113): of the courses with
     lessons left, the one you last finished a lesson in (the first unfinished one when nothing's done yet), with its
@@ -460,8 +470,8 @@ def continue_course(subjects: list) -> dict | None:
 
 
 def screen(context) -> dict:
-    """The Classroom's web screen (web/classroom.html): each subject, its courses and their lessons (with the skill XP
-    each is worth and their notes), how far along each is, and the course to continue (`continue_course`)."""
+    """The Classroom's web screen (web/classroom.html): each subject, its courses and their lessons (with the skill
+    each trains and its XP, and their notes), the skills a lesson can train, how far along each is, and the course to continue (`continue_course`)."""
     room = getattr(context, "classroom", None)
     subjects = []
     for s in (room.all_subjects() if room is not None else []):
@@ -472,8 +482,12 @@ def screen(context) -> dict:
                             "total": len(lessons),
                             "lessons": [{"id": l.lesson_id, "name": l.name, "done": l.completed,
                                          "done_at": (l.completed_at or "")[:10], "notes": l.notes,
+                                         "skill": _skill_of(context, l),
                                          "xp": sum(int(w.xp or 0) for w in l.skill_rewards)} for l in lessons]})
         done, total = room.subject_completion(s.subject_id)
         subjects.append({"id": s.subject_id, "name": s.name, "category": s.category, "done": done, "total": total,
                          "courses": courses})
-    return {"available": room is not None, "subjects": subjects, "continue": continue_course(subjects)}
+    skills = getattr(context, "skills", None)
+    choices = [{"id": k.skill_id, "name": k.name} for k in skills.all_skills()] if skills is not None else []
+    return {"available": room is not None, "subjects": subjects, "continue": continue_course(subjects),
+            "skills": sorted(choices, key=lambda k: k["name"].lower())}
