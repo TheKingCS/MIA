@@ -159,6 +159,26 @@
     ];
   }
 
+  // Business tags (core/business_tagging.py): which of your businesses a charge was for, or personal, through
+  // expense.business; MIA learns each store from the choice. By voice: "the Shell charge was for lawn care".
+  const biz = () => (page.business && page.business.choices.length ? page.business : null);
+  const sortTo = (e, id) => act({ kind: "expense.business", params: { entry_id: e.id, entity_id: id } });
+  async function pickBusiness(e) {
+    const v = await form("Which business was it for?", [{ name: "entity_id", label: "Business", type: "pick", options: ["choices"], required: true }],
+      { entity_id: e.business_id || "personal" }, { choices: biz().choices });
+    if (v) sortTo(e, v.entity_id);
+  }
+  function review() {
+    const b = biz();
+    if (!b || !b.review.length) return null;
+    const more = b.waiting > b.review.length ? " (" + b.waiting + " in all)" : "";
+    return section("Which business?" + more, null, null, b.review.map((e) => el("div", { class: "row money-row biz-row" },
+      el("div", {}, el("div", { class: "row-title" }, e.payee + " · " + fmt(e.amount)),
+        el("div", { class: "row-sub" }, day(e.date) + (e.guess ? " · probably " + e.guess.name + ": " + e.guess.why : ""))),
+      el("div", { class: "row-buttons biz-choices" }, b.choices.map((c) =>
+        btn(c.name, e.guess && e.guess.id === c.id ? "btn-amber" : "btn-ghost", () => sortTo(e, c.id)))))), "");
+  }
+
   function expenses() {
     const words = expenseFilter.trim().toLowerCase();
     const rows = page.expenses.filter((e) => !words ||
@@ -170,11 +190,11 @@
       () => add("expense", "Log an expense", { date: page.as_of }),
       rows.map((e) => row(e.description || e.payee || e.category,
         [day(e.date), e.category, e.payee && e.description ? e.payee : null, e.from_bank ? "from the bank" : null,
-          e.from_bill ? "a bill" : null].filter(Boolean).join(" · "),
-        fmt(e.amount), "", buttons(editBtn("expense", e), delBtn("expense", e)))),
+          e.from_bill ? "a bill" : null, e.business ? e.business + (e.auto ? " (sorted by MIA)" : "") : null].filter(Boolean).join(" · "),
+        fmt(e.amount), "", buttons(biz() ? btn("Business", "btn-ghost", () => pickBusiness(e)) : null, editBtn("expense", e), delBtn("expense", e)))),
       words ? "Nothing matches." : "No expenses logged yet.");
     sec.insertBefore(finder, sec.children[1]);
-    return [sec];
+    return [review(), sec].filter(Boolean);
   }
 
   function debts() {

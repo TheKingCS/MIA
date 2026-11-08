@@ -1551,3 +1551,7 @@ body.mod-maps .hero { display: none; }
 
 /* Classroom: a lesson's notes under its name (lesson.notes, 2026-11-07). */
 .cl-notes { margin: 6px 0 0; white-space: pre-wrap; color: var(--text-dim); font-size: 14px; line-height: 1.45; }
+
+/* Money: sorting a charge to a business (expense.business, 2026-11-07). The guess is the amber choice. */
+.biz-row { align-items: flex-start; flex-wrap: wrap; gap: 10px; }
+.biz-choices { flex-wrap: wrap; }

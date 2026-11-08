@@ -2,7 +2,8 @@
 DEC-0017 (2026-10-06): Money on the web does everything the PC app's
 Budget screen does. The page's data (core/web_money.py) and every change
 as an action kind (core/money_actions.py): add, edit, delete bills,
-income sources, income, expenses and debts; pay a debt; set budgets.
+income sources, income, expenses and debts; pay a debt; set budgets;
+sort a bank charge to a business (expense.business).
 Each one proposed, approved, recorded and undoable; none for a child.
 """
 
@@ -164,3 +165,28 @@ def test_either_module_can_be_imported_first():
     for first in ("core.money_actions", "core.actions", "core.record_actions", "core.equipment_actions"):
         code = f"import {first}; from core.actions import ACTION_TYPES; assert 'bill.add' in ACTION_TYPES"
         assert subprocess.run([sys.executable, "-c", code], cwd=root).returncode == 0, first
+
+
+def test_sorting_a_bank_charge_to_a_business_from_the_screen(world):
+    assert money_page(world, TODAY)["business"] == {"choices": [], "review": [], "auto": 0}
+    lawn = world.budget.add_business_entity("Lawn Care")
+    for days in (3, 2, 1):
+        world.budget.add_expense(40.0, "Fuel", "SHELL OIL 57444", (TODAY - timedelta(days=days)).isoformat(),
+                                 payee="Shell", plaid_transaction_id=f"t{days}")
+    page = money_page(world, TODAY)["business"]
+    assert [c["name"] for c in page["choices"]] == ["Lawn Care", "Personal"]
+    assert page["waiting"] == 3 and page["review"][0]["guess"] is None
+    newest = page["review"][0]["id"]
+    proposal, done = run(world, "expense.business", entry_id=newest, entity_id=lawn.entity_id)
+    assert proposal.summary.startswith("Put the Shell charge") and proposal.summary.endswith("under Lawn Care")
+    assert done.result == "Shell: Lawn Care. I'll remember that store."
+    page = money_page(world, TODAY)
+    assert next(e for e in page["expenses"] if e["id"] == newest)["business"] == "Lawn Care"
+    assert page["business"]["waiting"] == 2
+    assert page["business"]["review"][0]["guess"]["name"] == "Lawn Care"  # MIA learned the store
+    world.actions.undo(world, done.proposal_id)
+    assert money_page(world, TODAY)["business"]["waiting"] == 3
+    run(world, "expense.business", entry_id=newest, entity_id="personal")
+    assert next(e for e in money_page(world, TODAY)["expenses"] if e["id"] == newest)["business"] == ""
+    with pytest.raises(ActionError, match="isn't one of yours"):
+        world.actions.propose(world, "expense.business", {"entry_id": newest, "entity_id": "nope"})

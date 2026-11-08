@@ -601,7 +601,10 @@
         "notes": ""
       },
       "payee": "",
-      "from_bill": false
+      "from_bill": false,
+      "business": "Rentals LLC",
+      "business_id": "ent1",
+      "auto": false
     },
     {
       "id": "beaef58486",
@@ -619,7 +622,10 @@
         "notes": ""
       },
       "payee": "",
-      "from_bill": true
+      "from_bill": true,
+      "business": "",
+      "business_id": "",
+      "auto": false
     }
   ],
   "recent_days": 90,
@@ -741,5 +747,43 @@
         "total": 232000.0
       }
     ]
+  },
+  "business": {
+    "choices": [
+      {
+        "id": "ent1",
+        "name": "Rentals LLC"
+      },
+      {
+        "id": "ent2",
+        "name": "Lawn Care"
+      },
+      {
+        "id": "personal",
+        "name": "Personal"
+      }
+    ],
+    "review": [
+      {
+        "id": "x1",
+        "date": "2026-10-05",
+        "amount": 42.1,
+        "payee": "Shell",
+        "guess": {
+          "id": "ent2",
+          "name": "Lawn Care",
+          "why": "you've put Shell charges under Lawn Care 3 times"
+        }
+      },
+      {
+        "id": "x2",
+        "date": "2026-10-04",
+        "amount": 18.5,
+        "payee": "Walmart",
+        "guess": null
+      }
+    ],
+    "waiting": 2,
+    "auto": 1
   }
 }
