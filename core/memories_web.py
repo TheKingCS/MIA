@@ -79,7 +79,8 @@ def _recap(r, context=None) -> dict:
 
 
 def screen(context, today: Optional[date] = None) -> dict:
-    """Every expedition's recap, newest first, and the ones that started on this day in an earlier year."""
+    """Every expedition's recap (with its route map), newest first, and the ones that started on this day in an earlier
+    year."""
     book = getattr(context, "memories", None)
     if book is None:
         return {"recaps": [], "on_this_day": []}
