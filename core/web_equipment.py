@@ -23,8 +23,8 @@ core/equipment_actions.py and `maintenance.done`.
   fetches an asset's photo (`/api/garage/asset/<id>/photo`).
 - **An asset's page:** its photo, details, quick stats (meters), current tasks,
   related missions, documents, cost of ownership (with this year's
-  upkeep and the latest spending), and its history from the life events
-  log. Parts aren't tracked per asset yet (PLANNED).
+  upkeep and the latest spending), its history from the life events
+  log, and the parts it uses with what's on hand (core/asset_parts.py).
 """
 
 from __future__ import annotations
@@ -336,7 +336,7 @@ def _upkeep_this_year(context, asset, today: date, recent: int = 5) -> dict:
 def asset_page(context, asset_id: str, today: Optional[date] = None) -> Optional[dict]:
     """One asset's page: its photo, details, notes, tasks and what needs attention, its condition, quick stats and
     meter readings, the missions about it, its documents, what it has cost (with a budget: this year's upkeep and the
-    latest spending too), and its history (undone changes left out); None when it's gone.
+    latest spending too), its history (undone changes left out) and its parts with what's on hand; None when it's gone.
     """
     from core import life_events
     from core.equipment_actions import RECORDS, form_spec
@@ -399,5 +399,7 @@ def asset_page(context, asset_id: str, today: Optional[date] = None) -> Optional
     taken_back = life_events.reversed_ids(life_events.events_for(context, types=["undone"]))
     page["history"] = [{"at": e.at, "summary": e.summary, "type": e.type} for e in events
                        if e.event_id not in taken_back][:50]
-    page["parts"] = {"status": "PLANNED", "items": []}
+    from core.asset_parts import choices, parts_for
+
+    page["parts"] = {"status": "REAL", "items": parts_for(context, asset.asset_id), "choices": choices(context)}
     return page

@@ -568,8 +568,46 @@
         }
     ],
     "parts": {
-        "status": "PLANNED",
-        "items": []
+        "status": "REAL",
+        "items": [
+            {
+                "ref": "inventory_item:demo-filter",
+                "name": "Air filter",
+                "kind": "inventory_item",
+                "have": 0,
+                "unit": "",
+                "state": "out",
+                "where": ""
+            },
+            {
+                "ref": "material:demo-oil",
+                "name": "10W-30 oil",
+                "kind": "material",
+                "have": 0.5,
+                "unit": "qt",
+                "state": "low",
+                "where": "Garage shelf"
+            },
+            {
+                "ref": "inventory_item:demo-blade",
+                "name": "Mower blade",
+                "kind": "inventory_item",
+                "have": 2,
+                "unit": "",
+                "state": "ok",
+                "where": "Shed"
+            }
+        ],
+        "choices": [
+            {
+                "id": "material:demo-oil",
+                "name": "10W-30 oil (Material)"
+            },
+            {
+                "id": "inventory_item:demo-blade",
+                "name": "Mower blade (Inventory)"
+            }
+        ]
     },
     "condition": {
         "percent": 64,

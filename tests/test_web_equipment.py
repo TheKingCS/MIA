@@ -87,7 +87,7 @@ def test_the_asset_page(world):
     assert stats == {"Engine hours": "12.8 engine hours", "Fuel": "72 %"}
     assert [m["name"] for m in page["missions"]] == ["Mow the lawn"] and page["missions"][0]["reward_xp"] == 75
     assert page["history"][0]["summary"] == "Check oil: Mower"
-    assert page["attention"] == [] and page["parts"]["status"] == "PLANNED"
+    assert page["attention"] == [] and page["parts"]["status"] == "REAL" and page["parts"]["items"] == []
     assert asset_page(world, "nope", TODAY) is None
 
 

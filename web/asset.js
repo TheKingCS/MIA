@@ -115,6 +115,21 @@
     return el("label", { class: "btn btn-amber", for: "doc-file" }, "Add a document", input);
   }
 
+  function partRow(p) {
+    const state = p.state === "out" ? el("span", { class: "chip chip-soon" }, "Out") : p.state === "low" ? el("span", { class: "chip chip-soon" }, "Low") : null;
+    return el("div", { class: "row money-row" },
+      el("div", {}, el("div", { class: "row-title" }, p.name),
+        el("div", { class: "row-sub" }, [p.have + (p.unit ? " " + p.unit : "") + " on hand", p.where].filter(Boolean).join(" · "))),
+      el("div", { class: "row-meta" }, state, el("div", { class: "row-buttons" },
+        btn("Remove", "btn-ghost", () => act({ kind: "asset.part_remove", params: { asset_id: page.id, part: p.ref } })))));
+  }
+  async function addPart() {
+    if (!page.parts.choices.length) { say("Add it to your inventory or the Workshop's materials first."); return; }
+    const v = await form("A part " + page.name + " uses", [{ name: "part", label: "Part, material or item", type: "pick", options: ["parts"], required: true }],
+      {}, { parts: page.parts.choices });
+    if (v && v.part) act({ kind: "asset.part_add", params: { asset_id: page.id, part: v.part } });
+  }
+
   // ------------------------------------------------------------ tabs
   const VIEWS = {
     // A greenhouse tank or bed (Zac, 2026-10-17): what grows here, its water, its harvests (grow.js).
@@ -150,7 +165,12 @@
       el("div", { class: "row money-row" }, el("div", {}, el("div", { class: "row-title" }, h.summary),
         el("div", { class: "row-sub" }, new Date(h.at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }))))))
       : el("p", { class: "dim" }, "What happens to it will show up here."))],
-    parts: () => [card("Parts", el("p", { class: "dim" }, "Parts aren't tracked per asset yet. Coming: filters, blades and belts it takes, with what you have on the shelf."))],
+    // The parts it uses (core/asset_parts.py): from your inventory, materials and parts bins, with what's on hand;
+    // out or low in amber (needs you). Add A Part / Remove are asset.part_add / asset.part_remove (by voice too).
+    parts: () => [card("Parts", btn("Add a part", "btn-amber", addPart),
+      page.parts.items.length ? el("div", { class: "rows" }, page.parts.items.map(partRow))
+        : el("p", { class: "dim" }, page.parts.choices.length ? "The filters, blades, belts and fluids it takes. Add them from your inventory, materials or parts."
+          : "Add the filters, blades and fluids to your inventory (Toolbox) or the Workshop's materials first, then list them here."))],
   };
   // Needs You (the canvas): the first thing waiting as one focus card with a big Done (asking the meter reading
   // when the task is on a meter), and anything else waiting as rows under it.
