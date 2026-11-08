@@ -2,7 +2,7 @@
 tools.import_life_data
 ========================
 
-Import Zac's private life-data pack (data/_import/muse_assets.json, built by Muse from his memory, Gmail and
+Import the owner's private life-data pack (data/_import/muse_assets.json, built from their memory, email and
 manufacturer schedules) into MIA's Garage — the maintenance assets and their service schedules — through the real
 MaintenanceManager so every write is undoable (core/undo_log.py).
 
@@ -11,9 +11,9 @@ Run it only while MIA is NOT running (its live MaintenanceManager would overwrit
     python -m tools.import_life_data            # import into data/ (the real Garage)
     python -m tools.import_life_data --dry-run  # say what it would do, write nothing
 
-It is **idempotent**: assets are matched by name (Baelien is the Honda Ridgeline) and updated in place, never
+It is **idempotent**: assets are matched by name (and any aliases the pack supplies) and updated in place, never
 duplicated; a maintenance task is added only when one of that title doesn't already exist for the asset. It never
-fabricates a current reading or a service date — hours and odometers stay unknown until Zac logs a real one, which is
+fabricates a current reading or a service date — hours and odometers stay unknown until the owner logs a real one, which is
 exactly why the compound triggers (DEC-0131, hours/miles OR calendar) matter: the annual/7-year side still reminds
 him with no reading at all. Provenance (source, confidence, what's still unknown) is written into each asset's notes.
 
@@ -34,10 +34,6 @@ YEAR = 365
 
 # muse module -> MaintenanceAsset category
 _CATEGORY = {"garage": "Vehicle", "home_appliances": "Appliance", "devices": "Electronics"}
-# assets whose real category isn't "Vehicle" even though they're in the garage module
-_CATEGORY_BY_ID = {"z315e": "Lawn equipment", "generator": "Power equipment", "pc": "Electronics"}
-# name -> existing asset name it should update instead of creating (aliases)
-_ALIASES = {"honda ridgeline": "baelien"}
 
 
 def _amount(text: str, unit_words: tuple[str, ...]) -> Optional[int]:
@@ -76,7 +72,7 @@ def trigger_for(basis: str, interval: str) -> dict:
             return {"trigger_type": "mileage", "meter_unit": "mi", "meter_interval": miles,
                     "notes": "Follow the dashboard Maintenance Minder; this mileage is the typical fallback."}
         return {"trigger_type": "calendar", "interval_days": YEAR,
-                "notes": "Honda Maintenance Minder item — follow the dash; yearly as a fallback."}
+                "notes": "Manufacturer maintenance-minder item — follow the dashboard; yearly as a fallback."}
     if basis in ("time", "time_or_mileage"):
         days = (years * YEAR) if years else (30 if monthly else (YEAR if annually else None))
         kw = {"trigger_type": "calendar", "interval_days": days}
@@ -114,15 +110,17 @@ def _asset_notes(a: dict) -> str:
 def import_life_data(manager, pack: Path = PACK, dry_run: bool = False, owner_profile_id: Optional[str] = None) -> dict:
     """Upsert the pack's assets and their maintenance into `manager`. Returns a summary of what changed."""
     data = json.loads(Path(pack).read_text(encoding="utf-8"))
+    # Aliases (a pack asset's name -> an existing record's name) come from the pack, so no real names live in this file.
+    aliases = {_norm(k): _norm(v) for k, v in (data.get("aliases") or {}).items()}
     by_name = {_norm(a.name): a for a in manager.all_assets()}
     summary = {"assets_added": [], "assets_updated": [], "tasks_added": [], "skipped_tasks": 0}
 
     for a in data.get("assets", []):
-        target_name = _ALIASES.get(_norm(a["name"]), _norm(a["name"]))
-        # Match an existing record by the alias target (Baelien) OR by the pack's own name — so a re-run finds the
-        # asset this import itself created last time and updates it, never a duplicate.
+        target_name = aliases.get(_norm(a["name"]), _norm(a["name"]))
+        # Match an existing record by the alias target OR by the pack's own name — so a re-run finds the asset this
+        # import itself created last time and updates it, never a duplicate.
         existing = by_name.get(target_name) or by_name.get(_norm(a["name"]))
-        category = _CATEGORY_BY_ID.get(a["id"], _CATEGORY.get(a.get("module", ""), "Other"))
+        category = a.get("category") or _CATEGORY.get(a.get("module", ""), "Other")
         fields = {
             "manufacturer": a.get("make", "") or "",
             "model": a.get("model", "") or "",
@@ -134,7 +132,7 @@ def import_life_data(manager, pack: Path = PACK, dry_run: bool = False, owner_pr
         purchase_date = (a.get("purchased") or {}).get("date") or a.get("purchased_date") or a.get("delivered")
         if purchase_date:
             fields["purchase_date"] = purchase_date
-        owner = owner_profile_id if a.get("owner") == "Zac" else None
+        owner = owner_profile_id if a.get("owner") == "self" else None
 
         if existing is not None:
             if not dry_run:
@@ -157,7 +155,7 @@ def import_life_data(manager, pack: Path = PACK, dry_run: bool = False, owner_pr
                 continue
             kw = trigger_for(m.get("basis", ""), m.get("interval", ""))
             note = " · ".join(x for x in (m.get("interval"), m.get("note"), kw.pop("notes", None)) if x)
-            # the Ridgeline timing belt is the standout risk — flag it high and say to verify, never fabricate a baseline
+            # a timing belt is the standout risk on an old vehicle — flag it high and say to verify, never fabricate a baseline
             priority = "high" if "timing belt" in _norm(title) else "normal"
             if not dry_run and asset_id:
                 manager.add_task(asset_id, title, notes=note, priority=priority, **kw)
