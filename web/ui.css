@@ -1741,3 +1741,15 @@ body.mod-maps .hero { display: none; }
 a.comms-row { color: inherit; text-decoration: none; }
 a.comms-row:hover .row-title { color: var(--accent); }
 .comms-note { font-size: 13px; color: var(--text-dim); }
+
+/* The Dashboard's life cards (DEC-0129, core/web_surfaces.life_cards), 2026-11-08. */
+.home-life { display: grid; gap: 12px; margin: 16px 0; }
+.life-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.life-card { display: grid; gap: 4px; padding: 14px; color: inherit; text-decoration: none; }
+.life-card strong { font-size: 16px; }
+.life-card:hover, .life-pictures:hover { border-color: rgba(var(--rgb-accent), .5); }
+.life-pictures { display: grid; gap: 8px; padding: 14px; color: inherit; text-decoration: none; }
+.life-thumbs { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+.life-thumbs img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; background: rgba(var(--rgb-accent), .06); }
+@media (max-width: 520px) { .life-thumbs { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.life-card .dim { color: var(--text-dim); font-size: 14px; }

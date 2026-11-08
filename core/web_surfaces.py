@@ -509,7 +509,8 @@ def _more_glance(context, today: date) -> list[dict]:
 def dashboard(context, now: Optional[datetime] = None) -> dict:
     """Home's data: the greeting, the date, what needs doing today (from the life state's due items, each with its
     kind), what's coming, the status strip, the one thing MIA noticed across apps, quick actions, the glance (Life
-    State's cards, then Observations and the Inbox), recent wins (only real wins, never spending), and something to remember.
+    State's cards, then Observations and the Inbox), recent wins (only real wins, never spending), something to remember,
+    and the life cards (life_cards: music, good news, recent pictures, the trip).
     """
     from core.context_assembler import assemble_life_state_v2
 
@@ -543,7 +544,90 @@ def dashboard(context, now: Optional[datetime] = None) -> dict:
         "wins": wins,
         "child": bool((state.get("person") or {}).get("child")),
         "remember": _remember(context, today),
+        # DEC-0129 (Zac, 2026-11-08): what's playing, today's good news, recent pictures, the current or next trip.
+        "life": life_cards(context, today),
     }
+
+
+PICTURES = 6  # recent pictures on the Dashboard
+
+
+def span_text(start: str, end: str) -> str:
+    """Pure logic. A trip's dates in words: "Nov 14", "Nov 14 – 16", "Nov 30 – Dec 2" ("" when there's no start)."""
+    try:
+        a = date.fromisoformat((start or "")[:10])
+    except ValueError:
+        return ""
+    try:
+        b = date.fromisoformat((end or "")[:10])
+    except ValueError:
+        b = a
+    first = f"{a:%b} {a.day}"
+    if b <= a:
+        return first
+    return f"{first} – {b.day}" if (a.year, a.month) == (b.year, b.month) else f"{first} – {b:%b} {b.day}"
+
+
+def pick_trip(trips: list, today: date) -> Optional[dict]:
+    """Pure logic. The trip for the Dashboard: one under way, else the next planned (soonest), else one that ended in
+    the last two weeks; None when there's none. {id, name, status, when, words}."""
+    def card(t, words: str) -> dict:
+        return {"id": t.trip_id, "name": t.name, "status": t.status, "when": span_text(t.start_date, t.end_date),
+                "words": words}
+
+    active = [t for t in trips if t.status == "active"]
+    if active:
+        return card(active[0], "Under way")
+    ahead = sorted((t for t in trips if t.status == "planned" and t.start_date and t.start_date >= today.isoformat()),
+                   key=lambda t: t.start_date)
+    if ahead:
+        days = (date.fromisoformat(ahead[0].start_date) - today).days
+        return card(ahead[0], "Today" if days == 0 else "Tomorrow" if days == 1 else f"In {days} days")
+    done = sorted((t for t in trips if t.status == "completed" and (t.end_date or t.start_date)),
+                  key=lambda t: t.end_date or t.start_date, reverse=True)
+    if done:
+        ended = date.fromisoformat((done[0].end_date or done[0].start_date)[:10])
+        if (today - ended).days <= 14:
+            return card(done[0], "Just back")
+    return None
+
+
+def life_cards(context, today: date) -> dict:
+    """The Dashboard's life cards (DEC-0129): {music: what's playing or None, news: today's first good-news story or
+    None, pictures: the newest photos kept at home, trip: pick_trip}. Each source is optional; a failure leaves its
+    card out."""
+    out = {"music": None, "news": None, "pictures": [], "trip": None}
+    try:
+        music = getattr(context, "music", None)
+        now = music.now_playing() if music is not None else None
+        if now is not None:
+            out["music"] = {"title": now.title, "artist": now.artist, "playing": bool(now.is_playing)}
+    except Exception:
+        log.exception("Dashboard: music failed")
+    try:
+        from core.good_news import screen as news_screen
+
+        news = news_screen(context)
+        if news.get("on") and news.get("stories"):
+            first = news["stories"][0]
+            out["news"] = {"title": first["title"], "tag": first.get("tag", ""), "count": len(news["stories"])}
+    except Exception:
+        log.exception("Dashboard: good news failed")
+    try:
+        vault = getattr(context, "memory_vault", None)
+        if vault is not None:
+            photos = sorted((i for i in vault.items.values() if i.get("kind") == "photo" and i.get("on_pc")),
+                            key=lambda i: i.get("taken_at") or "", reverse=True)[:PICTURES]
+            out["pictures"] = [{"sha": i["sha"], "url": f"/api/vault/photo/{i['sha']}", "when": (i.get("taken_at") or "")[:10]}
+                               for i in photos]
+    except Exception:
+        log.exception("Dashboard: pictures failed")
+    try:
+        trips = getattr(context, "trips", None)
+        out["trip"] = pick_trip(trips.all_trips(), today) if trips is not None else None
+    except Exception:
+        log.exception("Dashboard: trip failed")
+    return out
 
 
 from core.life_events import WINS as _WINS  # noqa: E402

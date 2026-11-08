@@ -46,6 +46,32 @@
 
   // MIA's column on a wide screen: the last thing said, things to ask, a talk box that opens the chat.
   const ASK = ["What should I focus on today?", "What's due this week?", "How are my finances?"];
+  // The life cards (DEC-0129, core/web_surfaces.life_cards): what's playing, today's good news, the current or next
+  // trip, and the newest pictures kept at home. Each opens its app; a card with nothing to show isn't drawn.
+  function life(l) {
+    const box = $("life");
+    if (!l) { box.hidden = true; return; }
+    const card = (href, label, title, sub) => el("a", { class: "glass life-card", href },
+      el("span", { class: "pw-label" }, label), el("strong", {}, title), sub ? el("span", { class: "dim" }, sub) : null);
+    const cards = [
+      l.music ? card("music.html", l.music.playing ? "Now Playing" : "Paused", l.music.title, l.music.artist) : null,
+      l.news ? card("news.html", "Good News", l.news.title, l.news.count > 1 ? l.news.count + " stories today" : l.news.tag) : null,
+      l.trip ? card("expeditions.html", "Trip · " + l.trip.words, l.trip.name, l.trip.when) : null,
+    ].filter(Boolean);
+    let strip = null;
+    if (l.pictures && l.pictures.length) {
+      strip = el("a", { class: "glass life-pictures", href: "vault.html", "aria-label": "Recent pictures, open the Memory Vault" },
+        el("span", { class: "pw-label" }, "Recent Pictures"),
+        el("div", { class: "life-thumbs" }, l.pictures.map((p) => {
+          const img = el("img", { alt: "", loading: "lazy" });
+          MIA.image(p.url).then((u) => { if (u) img.src = u; else img.remove(); });
+          return img;
+        })));
+    }
+    box.hidden = !cards.length && !strip;
+    box.replaceChildren(cards.length ? el("div", { class: "life-cards" }, cards) : null, strip);
+  }
+
   async function miaColumn() {
     const log = $("home-mia-log");
     if (!log) return;
@@ -73,6 +99,7 @@
     $("focus").replaceChildren(...home.focus.slice(0, 6).map(focusRow));
     $("focus-empty").hidden = home.focus.length > 0;
     // MIA Remembers (DEC-0029): what you told her, as it's about to matter.
+    life(home.life);
     const remember = home.remember || [];
     $("remember").hidden = !remember.length;
     $("remember-list").replaceChildren(...remember.map((r) => el("li", {},

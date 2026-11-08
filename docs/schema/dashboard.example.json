@@ -352,5 +352,56 @@
     "app": "budget",
     "app_name": "Money",
     "page": "money.html"
+  },
+  "life": {
+    "music": {
+      "title": "Harvest Moon",
+      "artist": "Neil Young",
+      "playing": true
+    },
+    "news": {
+      "title": "A town rebuilt its library with volunteer labor",
+      "tag": "Confirmed",
+      "count": 4
+    },
+    "pictures": [
+      {
+        "sha": "demo0",
+        "url": "img/dashboard.jpg",
+        "when": "2026-11-06"
+      },
+      {
+        "sha": "demo1",
+        "url": "img/dashboard.jpg",
+        "when": "2026-11-06"
+      },
+      {
+        "sha": "demo2",
+        "url": "img/dashboard.jpg",
+        "when": "2026-11-06"
+      },
+      {
+        "sha": "demo3",
+        "url": "img/dashboard.jpg",
+        "when": "2026-11-06"
+      },
+      {
+        "sha": "demo4",
+        "url": "img/dashboard.jpg",
+        "when": "2026-11-06"
+      },
+      {
+        "sha": "demo5",
+        "url": "img/dashboard.jpg",
+        "when": "2026-11-06"
+      }
+    ],
+    "trip": {
+      "id": "t1",
+      "name": "Ozark Trail, Section 2",
+      "status": "planned",
+      "when": "Nov 14 \u2013 16",
+      "words": "In 6 days"
+    }
   }
 }

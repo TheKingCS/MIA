@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1209 files, 264,130 lines; 1209 files describe themselves; 14,403 of 15,090 classes and functions are documented.
+1210 files, 264,287 lines; 1210 files describe themselves; 14,410 of 15,097 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-446 files, 123,941 lines; 6,609 of 6,695 classes and functions documented
+446 files, 124,025 lines; 6,612 of 6,698 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -728,7 +728,7 @@
 
 ## tests/: the test suite: what each part must do
 
-409 files, 70,317 lines; 5,535 of 6,136 classes and functions documented
+410 files, 70,363 lines; 5,539 of 6,140 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1115,6 +1115,7 @@
 - `tests/test_web_scripts.py`: The web pages' own scripts (2026-11-07): every script a page loads is there, and the shared modules pages depend on still define what they promise. A security change once replaced the Grow Lab module (grow.js) with a one-line redirect, which sent every asset page to the Greenhouse; this catches that
 - `tests/test_web_search.py`: Search for the web's Ctrl+K (core/web_search.py): how names are ranked, and that results come from the person's own records with the page each opens.
 - `tests/test_web_surfaces.py`: DEC-0017 (2026-10-06): the web shell and Home dashboard, assembled in core/web_surfaces.py so web/ holds no logic. The sidebar is the person's own (child-safe, tucked-away apps hidden), Home is the concept's dashboard: greeting, Today's Focus with each item's action and kind, Upcoming, the status st *(4 undocumented)*
+- `tests/test_web_surfaces_life.py`: The Dashboard's life cards (DEC-0129, core/web_surfaces.life_cards): which trip it shows and how its dates read, and each card from its own source, a missing source leaving its card out.
 - `tests/test_web_textbooks.py`: The Classroom's textbooks on the web (core/web_textbooks.py, DEC-0125): each book with its chapters on the Classroom page, a search inside them, a course made from one and a book removed, as actions the voice tools agree with. *(2 undocumented)*
 - `tests/test_web_toolbox.py`: The Toolbox on the web (DEC-0125, the design canvas's Toolbox, DEC-0113: core/web_toolbox.py, core/toolbox_calcs.py, core/toolbox_actions.py and core/assistant_toolbox_actions.py): every calculator worked out in core, alarms set, switched and deleted as actions, the inventory kept as actions, and th *(1 undocumented)*
 - `tests/test_web_voice.py`: MIA's voice from Settings and by voice (core/web_voice.py, core/assistant_voice_choice_actions.py): the voices installed, switching one, the AI voice effect and the volume; only the PC's owner changes them. *(6 undocumented)*
@@ -1142,7 +1143,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-88 files, 15,643 lines
+88 files, 15,670 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
