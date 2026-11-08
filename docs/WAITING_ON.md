@@ -26,10 +26,11 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 - [ ] **Encrypt this PC's drive.** It isn't encrypted (Windows 11 Home, checked 2026-11-08). Settings → Privacy &
       security → Device encryption, if it's there; if not, Windows 11 Pro's BitLocker or VeraCrypt (free). The
       biggest single protection for everything MIA keeps.
-- [ ] **Save MIA's recovery key** (DEC-0126, built 2026-11-08). After restarting MIA once: open a terminal in the
-      MIA folder and run `.venv\Scripts\python -m tools.data_key recovery`, then put the key it prints in your
-      password manager (not a file on this PC). Without it, a Windows reinstall or a new PC can't open your
-      conversations, memories and notes. Then `python -m tools.data_key seal` seals the existing files now.
+- [ ] **Save MIA's recovery key** (DEC-0126, built 2026-11-08). After restarting MIA once, on the PC: Settings →
+      Sign-ins → Your Files on This Computer → Show the Recovery Key (your password), and put it in your password
+      manager (not a file on this PC). Without it, a Windows reinstall or a new PC can't open your conversations,
+      memories, notes, people and finances. Optional: `.venv\Scripts\python -m tools.data_key seal` seals the
+      existing files now instead of at each one's next save.
 - [ ] **Later, DEC-0126's open part:** an extra MIA passphrase on top of DPAPI, or not?
 
 ### Try it
