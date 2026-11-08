@@ -21,10 +21,12 @@ core/equipment_actions.py and `maintenance.done`.
   carries its latest meter reading (`meter_reading`).
 - **Photos** (2026-11-07): `asset_photo_url` is where a card or page
   fetches an asset's photo (`/api/garage/asset/<id>/photo`).
+- **Trends** (2026-11-07): each reading tile on an asset's page carries
+  `trend`, the Lab's chart points and the series to open in the Lab.
 - **An asset's page:** its photo, details, quick stats (meters), current tasks,
   related missions, documents, cost of ownership (with this year's
-  upkeep and the latest spending), and its history from the life events
-  log. Parts aren't tracked per asset yet (PLANNED).
+  upkeep and the latest spending), its history from the life events
+  log, and the parts it uses with what's on hand (core/asset_parts.py).
 """
 
 from __future__ import annotations
@@ -256,6 +258,15 @@ def _asset_meter(context, asset) -> Optional[str]:
     return meter_reading(context, [t for t in maintenance.all_tasks() if t.asset_id == asset.asset_id])
 
 
+def trend(series_id: str, readings: list) -> dict:
+    """Pure logic. A reading tile's small chart (2026-11-07): {"chart": the Lab's points (core/web_lab.chart), "series":
+    the series to open in the Lab} once there are two readings; {} before that."""
+    from core.web_lab import chart
+
+    drawn = chart(readings)
+    return {"chart": drawn, "series": series_id} if drawn["points"] and series_id else {}
+
+
 def asset_photo_url(context, asset) -> str:
     """Where a screen fetches the asset's photo ("" for none); the link changes with the file, so a new photo is never
     shown stale."""
@@ -335,8 +346,8 @@ def _upkeep_this_year(context, asset, today: date, recent: int = 5) -> dict:
 
 def asset_page(context, asset_id: str, today: Optional[date] = None) -> Optional[dict]:
     """One asset's page: its photo, details, notes, tasks and what needs attention, its condition, quick stats and
-    meter readings, the missions about it, its documents, what it has cost (with a budget: this year's upkeep and the
-    latest spending too), and its history (undone changes left out); None when it's gone.
+    meter readings (each with its trend), the missions about it, its documents, what it has cost (with a budget: this year's upkeep and the
+    latest spending too), its history (undone changes left out) and its parts with what's on hand; None when it's gone.
     """
     from core import life_events
     from core.equipment_actions import RECORDS, form_spec
@@ -360,13 +371,21 @@ def asset_page(context, asset_id: str, today: Optional[date] = None) -> Optional
             "attention": [r for r in rows if r["needs_attention"]], "condition": condition(rows),
             "forms": form_spec(), "as_of": today.isoformat()}
 
-    stats = [{"title": r["title"], "text": r["text"], "task_id": r["id"]} for r in rows if r["quick_stat"]]
+    logger = getattr(context, "data_logger", None)
+    stats = []
+    for r in rows:
+        if r["quick_stat"]:
+            task = maintenance.get_task(r["id"])
+            series = getattr(task, "series_id", "") or ""
+            readings = sorted(logger.readings_for(series), key=lambda x: x.timestamp) if logger is not None and series else []
+            stats.append({"title": r["title"], "text": r["text"], "task_id": r["id"], **trend(series, readings)})
     try:
         for meter in maintenance.asset_meter_names(asset_id):
             readings = sorted(maintenance.asset_readings(asset_id, meter), key=lambda r: r.timestamp)
             if readings:
                 last = readings[-1]
-                stats.append({"title": meter, "text": f"{last.value:g} {last.unit or ''}".strip(), "meter": meter})
+                stats.append({"title": meter, "text": f"{last.value:g} {last.unit or ''}".strip(), "meter": meter,
+                              **trend(maintenance._asset_series_id(asset_id, meter), readings)})
     except AttributeError:
         pass
     page["quick_stats"] = stats
@@ -399,5 +418,7 @@ def asset_page(context, asset_id: str, today: Optional[date] = None) -> Optional
     taken_back = life_events.reversed_ids(life_events.events_for(context, types=["undone"]))
     page["history"] = [{"at": e.at, "summary": e.summary, "type": e.type} for e in events
                        if e.event_id not in taken_back][:50]
-    page["parts"] = {"status": "PLANNED", "items": []}
+    from core.asset_parts import choices, parts_for
+
+    page["parts"] = {"status": "REAL", "items": parts_for(context, asset.asset_id), "choices": choices(context)}
     return page

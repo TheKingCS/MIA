@@ -102,6 +102,7 @@ from core.assistant_backup_actions import register_backup_actions
 from core.assistant_voice_choice_actions import register_voice_choice_actions
 from core.assistant_subscription_actions import register_subscription_actions
 from core.assistant_proposal_actions import register_proposal_actions
+from core.assistant_asset_part_actions import register_asset_part_actions
 from core.assistant_goods_actions import register_goods_actions
 from core.assistant_dungeon_actions import register_checkin_actions, register_dungeon_actions, register_loop_actions
 from core.failure_actions import register_failure_actions
@@ -1592,6 +1593,7 @@ class MIAApplication:
         register_voice_choice_actions(self.context.assistant_actions)  # MIA's own voice, effect and volume (DEC-0125)
         register_subscription_actions(self.context.assistant_actions)  # "still using it?" on subscriptions (DEC-0054)
         register_proposal_actions(self.context.assistant_actions)  # mission ideas and field recordings (DEC-0125)
+        register_asset_part_actions(self.context.assistant_actions)  # the parts an asset uses
         register_notification_actions(self.context.assistant_actions)  # read out and mark notifications read (DEC-0125)
         register_dungeon_actions(self.context.assistant_actions)  # the Dungeon: shifts, loot, quests (DEC-0046)
         register_loop_actions(self.context.assistant_actions)  # the loop: when things happen (DEC-0047)

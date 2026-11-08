@@ -123,7 +123,7 @@
         editing === "recovery" ? recovery() : null),
       el("div", { class: "pf-end" },
         el("a", { class: "btn btn-ghost", href: "settings.html" }, "Settings"),
-        el("button", { type: "button", class: "btn btn-danger", onclick: async () => { await MIA.signOut(); location.href = "index.html"; } }, "Sign Out")),
+        el("button", { type: "button", class: "btn btn-ghost", onclick: async () => { await MIA.signOut(); location.href = "index.html"; } }, "Sign Out")),
     ].filter(Boolean));
   }
 

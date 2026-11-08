@@ -198,6 +198,9 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       Assets have photos (page and Garage card). **Fixed:** the security change (d795fb4) had overwritten the Grow Lab
       module `web/grow.js` with grow.html's redirect, so every asset page and the Greenhouse's Growing tab broke; the
       module is back and the redirect is `grow-redirect.js`. tests/test_web_scripts.py now catches that kind of overwrite.
+      Properties have photos too. Parts per asset (core/asset_parts.py: stated links asset REQUIRES part, out/low
+      first, page and voice) and a trend line on each of an asset's reading tiles (web_equipment.trend). Sign Out is
+      no longer red (the standard keeps red for errors, overdue and destructive actions; a red Delete is right).
       **Maps' other scripts need Zac or a session with network:** place names in Cyrillic, Greek, Arabic and so on
       need more glyph ranges in `web/vendor/fonts/` (web/vendor/README.md says where from); the cloud shell here
       can't download them.
@@ -973,7 +976,7 @@ working screen on the frame, for Muse to restyle:
 1. ~~Money~~ **done 2026-10-06** (`web/money.html`; bank connect/sync
    stays on the PC: it needs the vault passphrase).
 2. ~~Garage + Maintenance~~ **done 2026-10-06** (plus Property,
-   Greenhouse and the asset page; still to do: sensor graphs, parts per asset).
+   Greenhouse and the asset page; sensor graphs on its reading tiles and parts per asset done 2026-11-07).
 3. ~~Missions, Skills, Character~~ **done 2026-10-06** (closes H-0013;
    still to do: character art; the tree's lines were drawn 2026-11-07).
 4. ~~Kitchen, Workout, Real Estate~~ **done 2026-10-06** (Zac asked for

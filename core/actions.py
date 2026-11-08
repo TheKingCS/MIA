@@ -372,6 +372,7 @@ import core.web_textbooks  # noqa: E402,F401  (Classroom textbooks: a course fro
 import core.starter_actions  # noqa: E402,F401  (starter sets from Settings)
 import core.subscriptions  # noqa: E402,F401  (the "still using it?" mark on a subscription, DEC-0054)
 import core.web_proposals  # noqa: E402,F401  (mission ideas and field captures: accept or set aside, DEC-0125)
+import core.asset_parts  # noqa: E402,F401  (the parts an asset uses, as stated links)
 from core.offline_maps import _register as _register_map_areas  # noqa: E402  (vector map areas from the Maps page)
 
 _register_map_areas()
