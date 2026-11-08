@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Living Worlds — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="themes.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
+  <link rel="stylesheet" href="ui.css">
+</head>
+<body data-app="worlds" data-icon="character" class="mod-worlds" data-say="What worlds do I have?">
+  <!--
+    Living Worlds (DEC-0134 Phase 1): your fictional worlds, the campaigns in each, your character and who they are in
+    each world, and each campaign's quests. Fiction only: no real XP. MIA.worlds() (core/web_worlds.py). Built by
+    claude on the shared frame, 2026-11-08.
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <header class="hero">
+        <h1>Living Worlds</h1>
+        <p class="tagline" id="lw-sub"></p>
+      </header>
+      <div id="panel"></div>
+    </main>
+  </div>
+  <script src="mia.js?v=17"></script>
+  <script src="icons.js"></script>
+  <script src="sound.js"></script>
+  <script src="places-watch.js"></script>
+  <script src="shell.js"></script>
+  <script src="worlds.js"></script>
+</body>
+</html>

@@ -225,6 +225,7 @@
     art: () => read("/api/art", "art"),  // MIA's paintings (DEC-0140)
     directions: () => read("/api/directions", "directions"),  // My Directions (DEC-0141)
     answers: () => read("/api/answers", "answers"),  // How MIA Answers (DEC-0138)
+    worlds: (campaign) => read("/api/worlds" + (campaign ? "?campaign=" + encodeURIComponent(campaign) : ""), "worlds"),  // Living Worlds (DEC-0134)
     // After a reply in Talk, now and then: the same answer a second way to pick from ({} when none; never in the demo).
     compareAnswer: (reply, isPrivate) => demo ? Promise.resolve({}) : call("POST", "/api/talk/compare", { reply, private: !!isPrivate }),
     paint: (description, use, apply) => demo ? demoOnly() : call("POST", "/api/art/paint", { description, use: use || "backdrop", apply: !!apply }),

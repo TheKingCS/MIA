@@ -187,7 +187,7 @@ APPS: tuple[App, ...] = (
         "The promises, decisions, ideas and goals set aside you asked MIA to keep, from what you said (DEC-0054).",
         LIFE, ("life_notes",), "What did I promise?"),
     App("play", "Play", "🏓", "Games and sports, counted.", "play.html",
-        "Games and sports you play: who with, how long, how hard, and your training load (DEC-0098).", LIFE, ("play",),
+        "Games and sports you play: who with, how long, how hard, and your training load (DEC-0098).", LIFE, ("play", "worlds"),
         "Played pickleball for an hour, it was hard."),
     App("good_news", "Good News Radio", "📻", "What went right today.", "news.html",
         "Good news from credible sources, each story saying how it's known, read by four radio personalities "

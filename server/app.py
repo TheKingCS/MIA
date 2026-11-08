@@ -2508,6 +2508,15 @@ def create_app(context: AppContext) -> FastAPI:
         result = design(body.description)
         return {**result, "summary": summary(result)}
 
+    @app.get("/api/worlds")
+    def web_worlds(campaign: str = "", profile_id: str = Depends(require_profile_id)) -> dict:
+        """Living Worlds (core/web_worlds.screen, DEC-0134): the person's fictional worlds, campaigns, character and
+        quests, one campaign opened; changes are world.* actions."""
+        from core.web_worlds import screen
+
+        with app.state.turn_lock:
+            return screen(view_for(context, profile_id), campaign)
+
     @app.get("/api/answers")
     def web_answers(profile_id: str = Depends(require_profile_id)) -> dict:
         """How MIA Answers (core/answer_compare.screen, DEC-0138): what she's learned about how the person likes to be

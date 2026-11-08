@@ -240,6 +240,14 @@
   "action:style": {
    "status": "none",
    "why": "a pick or a choice of how to be answered is the person's own taste (DEC-0138); the style it teaches is the loop (response_style learns from every pick)"
+  },
+  "action:world": {
+   "status": "none",
+   "why": "worlds, campaigns and quests are the person's own fiction (DEC-0134, DEC-0137); nothing real to improve"
+  },
+  "store:living_worlds": {
+   "status": "none",
+   "why": "the person's own fiction (DEC-0134); fictional events never count as real life (DEC-0137)"
   }
  }
 }

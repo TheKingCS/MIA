@@ -1,0 +1,217 @@
+{
+ "available": true,
+ "worlds": [
+  {
+   "id": "u1",
+   "name": "Emberfall",
+   "genre": "fantasy frontier",
+   "premise": "A coast of salt towns where the old roads are waking up.",
+   "rules": "Grounded, a little strange; no gods walk here.",
+   "campaigns": [
+    {
+     "id": "c3",
+     "name": "The Salt Road",
+     "summary": "You arrive at Gullmarsh with a map that shouldn't exist.",
+     "status": "active",
+     "status_word": "In play",
+     "last_played": "2026-11-08",
+     "versions": [
+      "Wren of the Marsh"
+     ],
+     "open": 1,
+     "done": 1
+    }
+   ]
+  },
+  {
+   "id": "u2",
+   "name": "Vanta Reach",
+   "genre": "sci-fi",
+   "premise": "A mining belt at the edge of charted space.",
+   "rules": "",
+   "campaigns": [
+    {
+     "id": "c4",
+     "name": "Dead Signal",
+     "summary": "",
+     "status": "paused",
+     "status_word": "Paused",
+     "last_played": "2026-11-08",
+     "versions": [],
+     "open": 0,
+     "done": 0
+    }
+   ]
+  }
+ ],
+ "character": {
+  "id": "ch5",
+  "name": "Wren",
+  "note": "Curious, patient, good with their hands.",
+  "versions": [
+   {
+    "name": "Wren of the Marsh",
+    "world": "Emberfall"
+   }
+  ]
+ },
+ "campaign": {
+  "id": "c3",
+  "name": "The Salt Road",
+  "summary": "You arrive at Gullmarsh with a map that shouldn't exist.",
+  "status": "active",
+  "status_word": "In play",
+  "last_played": "2026-11-08",
+  "versions": [
+   "Wren of the Marsh"
+  ],
+  "open": 1,
+  "done": 1,
+  "universe": {
+   "id": "u1",
+   "name": "Emberfall",
+   "genre": "fantasy frontier"
+  },
+  "players": [
+   {
+    "id": "v6",
+    "name": "Wren of the Marsh",
+    "origin": "Gullmarsh",
+    "background": "A ferryman's kid who learned to read old maps.",
+    "attributes": [
+     {
+      "name": "Craft",
+      "value": 5
+     },
+     {
+      "name": "Grit",
+      "value": 3
+     },
+     {
+      "name": "Wits",
+      "value": 4
+     }
+    ],
+    "skills": [
+     "Mapreading",
+     "Knots"
+    ],
+    "inventory": [
+     "Brass compass",
+     "Salted rope"
+    ]
+   }
+  ],
+  "quests": [
+   {
+    "id": "q7",
+    "name": "Find the lost cartographer",
+    "objective": "Learn where the map came from.",
+    "status": "open",
+    "by": "MIA",
+    "done_at": ""
+   },
+   {
+    "id": "q8",
+    "name": "Mend the ferry",
+    "objective": "",
+    "status": "done",
+    "by": "You",
+    "done_at": "2026-11-08"
+   }
+  ]
+ },
+ "forms": {
+  "universe": {
+   "fields": [
+    {
+     "name": "name",
+     "label": "The world's name",
+     "type": "text",
+     "required": true
+    },
+    {
+     "name": "genre",
+     "label": "Genre (fantasy, sci-fi, frontier...)",
+     "type": "text"
+    },
+    {
+     "name": "premise",
+     "label": "The premise, in a sentence",
+     "type": "textarea"
+    },
+    {
+     "name": "rules",
+     "label": "Tone and house rules",
+     "type": "textarea"
+    }
+   ]
+  },
+  "campaign": {
+   "fields": [
+    {
+     "name": "name",
+     "label": "The campaign's name",
+     "type": "text",
+     "required": true
+    },
+    {
+     "name": "summary",
+     "label": "Where it starts",
+     "type": "textarea"
+    }
+   ]
+  },
+  "character": {
+   "fields": [
+    {
+     "name": "name",
+     "label": "Your character's name",
+     "type": "text",
+     "required": true
+    },
+    {
+     "name": "note",
+     "label": "Who they are, across every world",
+     "type": "textarea"
+    }
+   ]
+  },
+  "version": {
+   "fields": [
+    {
+     "name": "name",
+     "label": "What they're called in this world",
+     "type": "text",
+     "required": true
+    },
+    {
+     "name": "origin",
+     "label": "Where they come from here",
+     "type": "text"
+    },
+    {
+     "name": "background",
+     "label": "Their story so far",
+     "type": "textarea"
+    }
+   ]
+  },
+  "quest": {
+   "fields": [
+    {
+     "name": "name",
+     "label": "The quest",
+     "type": "text",
+     "required": true
+    },
+    {
+     "name": "objective",
+     "label": "What finishing it means",
+     "type": "textarea"
+    }
+   ]
+  }
+ },
+ "phase_note": "Playing a turn with MIA as your Dungeon Master is the next phase. It's built and waiting on the go-ahead; until then, keep your worlds, characters and quests here."
+}
