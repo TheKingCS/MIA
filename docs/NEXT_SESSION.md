@@ -7,6 +7,18 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 *Last updated: 2026-11-08 (late evening)*
 
+**New 2026-11-08 (latest): capability reminders — "did you know you could go do X right now?" (DEC-0143).** Zac asked
+for MIA to remind him, now and then, of what he's already capable of doing right now — a subtle, affirming redirect
+that meets him where he is and gets him on track, never a new task or a value to live up to. `core/capability_reminders.py`
+wraps a real, right-now ability in a warm, low-pressure frame; the daily check (`_check_capability_reminder`) gathers
+the ability from live state — a learning path he's a step from advancing (`core/paths.py`), a project he started and
+parked (`core/project_manager.py`). Empty in, empty out (never fires without a true thing behind it); paced every few
+days through the gate (topic "capability", auto-covered by `checks.dismissed`). Tested (`tests/test_capability_reminders.py`,
+5). Sample: *"Did you know you could put some time into Guitar right now? You're on stage 2, Chords — the next step is
+ready when you are."* Both this and the whimsy seeds are logged under **DEC-0143**. More sources to add later as his
+life fills in (a skill with the tools owned, a buildable project with materials on the shelf, an asset enabling a
+trip). It leans on `paths`/`projects` being populated, so it'll feel richer once he fills MIA.
+
 **New 2026-11-08 (late evening): whimsy seeds — MIA inspires the slow, made life.** Zac asked (twice, warmly) for MIA
 to inspire the whimsy and artsy in his life — slowness, drawing, making, forest creatures, dreaming — alongside his
 consumer→producer shift. `core/whimsy.py` turns his standing directions (DEC-0141) into a concrete little **seed** he

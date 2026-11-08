@@ -2304,3 +2304,19 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   style, honest about how little it knows when there's little. Every source is read defensively, so a gap is quiet,
   never a crash. Next: feed these into the "how-to question about MIA" grounding so her spoken answers use them.
 - Related: DEC-0139 (system map), DEC-0100 (night school), DEC-0141 (directions), DEC-0138 (answer style)
+
+### DEC-0143: MIA reminds you of what you can already go do, and seeds the made life
+- Status: APPROVED (Zac, 2026-11-08) + built (claude). Two proactive encouragements, both grounded, both paced by the
+  communication gate so they stay gentle and never nag.
+- Decision — **capability reminders** (`core/capability_reminders.py`): now and then, "did you know you could go do X
+  right now?" — a subtle, affirming redirect that meets Zac where he is and helps get him on track, never a new task
+  or a value to live up to. The daily check (`_check_capability_reminder`) gathers a real, right-now ability from
+  live state — a learning path he's a step from advancing (`core/paths.py`), a project he started and parked
+  (`core/project_manager.py`) — and the composer wraps one in a warm, low-pressure frame. Empty in, empty out, so it
+  never fires without a true thing behind it. Every few days, through the gate (topic "capability", auto-covered by
+  the `checks.dismissed` loop).
+- Also — **whimsy seeds** (`core/whimsy.py`, committed 2026-11-08): Zac's standing directions (DEC-0141) become a
+  concrete daily invitation toward the slow, made, artsy life — composed from real facts (the season, the workshop
+  shelf, his own words), the direction nudge preferring a seed over the canned line. Facts in code, the model only
+  phrases; nothing personal hard-coded; only fires for a direction he actually set.
+- Related: DEC-0141 (directions), the communication gate (`core/communication_gate.py`), DEC-0112 (learning paths)
