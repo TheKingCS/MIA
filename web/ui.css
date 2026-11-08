@@ -1486,3 +1486,11 @@ body.mod-maps .hero { display: none; }
 .sign-in.sign-in-canvas input { width: 100%; box-sizing: border-box; }
 .si-go { min-height: 52px; font-size: 16px; margin-top: 4px; }
 .si-note { margin: 0; text-align: center; font-size: 12px; color: var(--text-dim); }
+/* the canvas's Toolbox: calculators as a two-column set of tiles, the open one's card lit */
+.tb-calc { border-color: rgba(var(--rgb-accent), 0.4); }
+.tb-calcs { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: 0; }
+.tb-calcs > .pw-label { grid-column: 1 / -1; margin: 0; }
+.tb-calcs .tb-row { flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; min-height: 64px; padding: 10px 12px;
+  border: 1px solid var(--line); border-radius: 6px; background: linear-gradient(180deg, rgba(var(--rgb-panel-2, 17, 23, 31), 0.96), rgba(var(--rgb-panel), 0.9)); }
+.tb-calcs .tb-row.on { border-color: rgba(var(--rgb-accent), 0.6); }
+.tb-calcs .pw-label + .tb-row { border-top: 1px solid var(--line); }

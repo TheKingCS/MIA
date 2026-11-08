@@ -83,7 +83,7 @@
   }
 
   function calcList() {
-    return el("section", { class: "glass tb-list" }, el("p", { class: "pw-label" }, "Calculators"),
+    return el("section", { class: "tb-list tb-calcs" }, el("p", { class: "pw-label" }, "Calculators"),
       ...page.calculators.map((c) => el("button", { type: "button", class: "tb-row" + (c.id === open ? " on" : ""), "aria-pressed": String(c.id === open),
         onclick: () => choose(c.id) }, el("span", { class: "tb-row-name" }, c.name), el("span", { class: "dim" }, c.category))));
   }
