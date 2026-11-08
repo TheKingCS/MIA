@@ -76,8 +76,9 @@ def test_the_look_is_a_setting_on_the_settings_screen_too():
 
 
 def test_every_page_learns_the_persons_look_from_the_shell(ctx):
+    """The shell carries the person's style (and, since DEC-0136, their theme beside it)."""
     from core.web_surfaces import _display
 
-    assert _display(ctx) == {"style": "auto"}
+    assert _display(ctx)["style"] == "auto"
     person_settings.put(ctx, KEY, "cards")
-    assert _display(ctx) == {"style": "cards"}
+    assert _display(ctx)["style"] == "cards"

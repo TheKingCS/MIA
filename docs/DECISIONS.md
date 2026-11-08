@@ -2169,3 +2169,23 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   4. The Nexus stays one tap away in the cards look (the sidebar and the bottom bar), and the Dashboard stays one
      tap away in the spatial look (Today).
 - Related: DEC-0130, DEC-0113, DEC-0125, DEC-0017
+
+### DEC-0136: Themes on top of the two looks, as data
+- Status: ACCEPTED
+- Decided by: Zac, 2026-11-08 05:35 (handoff "MIA — Selectable Interface Experiences & Multi-Theme Architecture":
+  "One MIA. Multiple interface experiences. Unlimited visual possibilities.").
+- Decision:
+  1. Three layers: **MIA Core** (`core/`, the same for every look), **Experience** (DEC-0135: Spatial or Cards: where
+     MIA opens and how you move around) and **Theme** (colours, type, materials, light, motion). Any theme works with
+     either experience; no app is duplicated for a look.
+  2. **A theme is data** (`core/themes.py`): the design tokens it sets, its panels' material (`web/themes.css`) and the
+     3D room's light. Built-in and future custom or imported themes go through the same check: only allowed tokens,
+     nothing that can break out of CSS or fetch from the network.
+  3. **Meaning never changes with a theme:** amber (needs you), red (errors, destructive), green (ok), gold (rewards),
+     rarity colours and area hues aren't tokens a theme can set; high contrast overrides every theme.
+  4. Starter themes (Claude's first cuts, Muse refines): **Stark** (default, DEC-0023), **Y2K Cyber**, **Cyberpunk**,
+     **Glass**. Picked per person in Settings' Look section or by voice (`set_theme`); applied live, cached on the
+     device so pages open already themed.
+  5. The Theme Studio comes in steps (preview and tweak, make and share with import and export, MIA designs one from a
+     description, sound sets): `docs/design/EXPERIENCES_AND_THEMES.md` section 5.
+- Related: DEC-0135, DEC-0023, DEC-0130, DEC-0017, DEC-0014, DEC-0125

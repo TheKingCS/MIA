@@ -22,6 +22,7 @@ from typing import Any, Optional
 
 from core.logger import get_logger
 from core.display_style import DEFAULT_STYLE, STYLES
+from core.themes import DEFAULT_THEME, THEMES
 from core.personality import HUMOR_DEFAULT
 from core.startup_sounds import DEFAULT_STARTUP
 from core.startup_sounds import options as startup_options
@@ -64,6 +65,10 @@ SETTINGS: tuple[Setting, ...] = (
             "Spatial opens on the Nexus, each area a room. Cards opens on the Dashboard, each area's apps as cards. "
             "By device: spatial on the computer, cards on the phone. Or tell MIA: \"switch to the cards look\".",
             options=tuple((k, label) for k, (label, _line) in STYLES.items())),
+    # DEC-0136: the theme, in both looks; "make it cyberpunk" too.
+    Setting("display.theme", "Look", "Theme", "choice", DEFAULT_THEME,
+            "Colours, type, materials and light, in either look. Or tell MIA: \"switch to the Y2K theme\".",
+            options=tuple((t.id, t.name) for t in THEMES.values())),
     Setting("communication.daily_budget", "When MIA speaks up", "Messages per day, at most", "number", 5,
             "Her own messages (calendar, budget, check-ins, suggestions) are combined and limited per day. "
             "Urgent things, alarms you set and answers to you don't count.", low=1, high=20),

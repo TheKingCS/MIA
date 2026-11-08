@@ -22,6 +22,29 @@
 (function () {
   "use strict";
 
+  // ---------------------------------------------------------------- the theme (DEC-0136, core/themes.py)
+  // A theme is data: tokens set on the page (every stylesheet follows), a material (themes.css) and the room's light
+  // (web/nexus3d.js). It comes with the shell on every page; the last one is kept on this device so the next page
+  // opens already themed, before the shell arrives. Meaning colours aren't tokens a theme can set (core checks).
+  const THEME_CACHE = "mia.theme";
+  let themeApplied = [];
+  let themeNow = null;
+  function applyTheme(theme) {
+    if (!theme || !theme.id) return;
+    const root = document.documentElement;
+    themeApplied.forEach((k) => root.style.removeProperty(k));
+    themeApplied = [];
+    Object.entries(theme.tokens || {}).forEach(([k, v]) => {
+      if (k.startsWith("--")) { root.style.setProperty(k, v); themeApplied.push(k); }
+    });
+    root.dataset.theme = theme.id;
+    root.dataset.material = theme.material || "solid";
+    themeNow = theme;
+    try { localStorage.setItem(THEME_CACHE, JSON.stringify(theme)); } catch (e) { /* fine: it applies when the shell comes */ }
+  }
+  try { applyTheme(JSON.parse(localStorage.getItem(THEME_CACHE) || "null")); } catch (e) { /* no cached theme */ }
+  function theme() { return themeNow || { id: "stark", name: "Stark", tokens: {}, material: "solid", room: {} }; }
+
   const $ = (sel, root) => (root || document).querySelector(sel);
 
   function el(tag, attrs, ...children) {
@@ -302,6 +325,7 @@
 
   function renderNav(shell) {
     shellData = shell;
+    if (shell.display && shell.display.theme) applyTheme(shell.display.theme);
     document.body.classList.toggle("look-spatial", look() === "spatial");
     document.body.classList.toggle("look-cards", look() === "cards");
     if (window.MIASound) MIASound.configure(shell.sound);
@@ -828,7 +852,7 @@
         el("small", { class: "buff-left" }, b.lasts))));
   }
 
-  window.MIAShell = { look, start, act, say, el, refresh, frame, form, search: openSearch, levelCard, conditionBar, buffChips, showDraft, confirm: confirmBox, talk: toggleTalk,
+  window.MIAShell = { look, theme, start, act, say, el, refresh, frame, form, search: openSearch, levelCard, conditionBar, buffChips, showDraft, confirm: confirmBox, talk: toggleTalk,
     notRight, voiceRecorder, playReply };
 
   // <script src="shell.js" data-frame="garage">: frame an existing page as soon

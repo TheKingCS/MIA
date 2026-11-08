@@ -518,6 +518,7 @@ body { background: var(--bg); }
 body::before {
   content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
   background:
+    var(--theme-backdrop, linear-gradient(transparent, transparent)),  /* a theme's own backdrop (DEC-0136) */
     radial-gradient(1100px 520px at 50% -12%, rgba(var(--rgb-accent), 0.07), transparent 62%),
     linear-gradient(rgba(var(--rgb-line), 0.035) 1px, transparent 1px) 0 0 / 32px 32px,
     linear-gradient(90deg, rgba(var(--rgb-line), 0.035) 1px, transparent 1px) 0 0 / 32px 32px,

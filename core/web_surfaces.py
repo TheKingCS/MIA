@@ -390,14 +390,16 @@ def _places(context) -> list:
 
 
 def _display(context) -> dict:
-    """The person's display style (core/display_style.py): {"style": "auto" | "spatial" | "cards"}."""
+    """The person's look: {"style": "auto" | "spatial" | "cards" (core/display_style.py, DEC-0135), "theme": their
+    theme as cleaned data (core/themes.py, DEC-0136)}."""
     from core.display_style import style_of
+    from core.themes import DEFAULT_THEME, THEMES, as_data, clean_theme, for_shell
 
     try:
-        return {"style": style_of(context)}
+        return {"style": style_of(context), "theme": for_shell(context)}
     except Exception:
         log.exception("Shell: display style failed")
-        return {"style": "auto"}
+        return {"style": "auto", "theme": clean_theme(as_data(THEMES[DEFAULT_THEME]))}
 
 
 def _sound(context) -> dict:

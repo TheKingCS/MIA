@@ -21,6 +21,8 @@
  *     opt.labels      a box for the portals' name labels (page text, placed over the scene each frame)
  *     opt.shape       "oval" (portals, the default) or "bay" (an area's room: a wide door frame, as the Garage's bays)
  *     opt.fire        how much fire rises off the frames (1 the default; an area's room burns lower)
+ *     opt.theme       the theme's room light (core/themes.py: accent, back_top/back_bottom, palette, fire, bloom,
+ *                     mist, scan, grain); Stark's when absent
  *     opt.art(p)      a promise of the picture's url (default p.art); opt.needsGlow: a pedestal glows amber when
  *                     something in its item needs you; opt.arrive / opt.arriveHue: you came in through a portal
  *   The same room draws an area's own space (hub.js: the Garage's bays round her), so going through feels like one place.
@@ -214,10 +216,10 @@
 
   // The chamber behind: dark, its wall's seams lit faintly, and vapor drifting in the areas' colours.
   const FS_BACK = HEAD + NOISE + `
-    in vec2 vUv; out vec4 o; uniform float uT, uYaw; uniform vec3 uHues[6]; uniform vec3 uAccent;
+    in vec2 vUv; out vec4 o; uniform float uT, uYaw; uniform vec3 uHues[6]; uniform vec3 uAccent, uTop, uBottom;
     void main(){
       vec2 uv = vUv;
-      vec3 col = mix(vec3(0.0, 0.0, 0.004), vec3(0.008, 0.018, 0.035), smoothstep(0.1, 0.75, uv.y));
+      vec3 col = mix(uBottom, uTop, smoothstep(0.1, 0.75, uv.y));
       float x = uv.x * 16.0 + uYaw * 2.5;
       float seam = exp(-abs(fract(x) - 0.5) * 50.0) * smoothstep(0.38, 0.6, uv.y) * smoothstep(1.0, 0.7, uv.y);
       col += uAccent * seam * 0.06;
@@ -235,12 +237,12 @@
 
   // Low mist rolling across the front of the room.
   const FS_MIST = HEAD + NOISE + `
-    in vec2 vUv; out vec4 o; uniform float uT; uniform vec3 uHue, uAccent;
+    in vec2 vUv; out vec4 o; uniform float uT, uGain; uniform vec3 uHue, uAccent;
     void main(){
       float n = fbm(vUv * vec2(4.0, 3.0) + vec2(uT * 0.03, -uT * 0.015));
       float n2 = fbm(vUv * vec2(7.0, 4.0) - vec2(uT * 0.05, 0.0));
       float low = smoothstep(0.42, 0.0, vUv.y);
-      vec3 col = mix(uAccent, uHue, 0.5 + 0.5 * sin(vUv.x * 3.0 + uT * 0.1)) * pow(n * n2 * 2.2, 2.0) * low * 0.35;
+      vec3 col = mix(uAccent, uHue, 0.5 + 0.5 * sin(vUv.x * 3.0 + uT * 0.1)) * pow(n * n2 * 2.2, 2.0) * low * 0.35 * uGain;
       o = vec4(col, 0.0);
     }`;
 
@@ -269,13 +271,14 @@
       c += (texture(uSrc, vUv + uDir * 1.385).rgb + texture(uSrc, vUv - uDir * 1.385).rgb) * 0.316;
       c += (texture(uSrc, vUv + uDir * 3.231).rgb + texture(uSrc, vUv - uDir * 3.231).rgb) * 0.070;
       o = vec4(c, 1.0); }`;
-  const FS_FINAL = HEAD + NOISE + `in vec2 vUv; out vec4 o; uniform sampler2D uScene, uB1, uB2; uniform float uT, uFlash; uniform vec3 uFlashHue;
+  const FS_FINAL = HEAD + NOISE + `in vec2 vUv; out vec4 o; uniform sampler2D uScene, uB1, uB2; uniform float uT, uFlash, uBloom, uScan, uGrain; uniform vec3 uFlashHue;
     vec3 aces(vec3 x){ return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0); }
     void main(){
-      vec3 c = texture(uScene, vUv).rgb + texture(uB1, vUv).rgb * 0.55 + texture(uB2, vUv).rgb * 0.8;
+      vec3 c = texture(uScene, vUv).rgb + (texture(uB1, vUv).rgb * 0.55 + texture(uB2, vUv).rgb * 0.8) * uBloom;
       c = aces(c * 0.95);
       vec2 v = vUv - 0.5; c *= 1.0 - dot(v, v) * 0.9;
-      c += (hash(vUv * 900.0 + uT) - 0.5) * 0.018;
+      c *= 1.0 - uScan * 0.22 * step(0.5, fract(gl_FragCoord.y * 0.5));  // a theme's scanlines
+      c += (hash(vUv * 900.0 + uT) - 0.5) * (0.018 + 0.06 * uGrain);
       c = mix(c, uFlashHue, uFlash);
       o = vec4(c, 1.0);
     }`;
@@ -380,7 +383,7 @@
     // Each portal's art: the placeholder at once, its picture when it loads.
     const n = portals.length;
     const SHAPE = opt.shape === "bay" ? "bay" : "oval";
-    const FIRE = opt.fire == null ? 1 : opt.fire;
+    const FIRE = (opt.fire == null ? 1 : opt.fire) * (opt.theme && typeof opt.theme.fire === "number" ? opt.theme.fire : 1);
     const AMBER = rgb("#f2b33d");
     const textures = portals.map((p) => {
       const t = gl.createTexture();
@@ -405,7 +408,15 @@
     });
     const hues = portals.map((p) => rgb(p.hue));
     const hue2 = hues.map((h, i) => mix3(h, hues[(i + 1) % n], 0.55));
-    const accent = rgb("#35d4ff");
+    // The theme's light (DEC-0136, core/themes.py room): MIA's accent, the chamber's colours, a palette for the
+    // vapor and mist, and how strong the fire, bloom, mist, scanlines and grain are. Portal frames keep their area's
+    // hue whatever the theme (DEC-0130).
+    const look = opt.theme || {};
+    const accent = rgb(look.accent || "#35d4ff");
+    const palette = (look.palette || []).map(rgb);
+    const backTop = look.back_top ? rgb(look.back_top) : [0.008, 0.018, 0.035];
+    const backBottom = look.back_bottom ? rgb(look.back_bottom) : [0, 0, 0.004];
+    const level = (k, d) => (typeof look[k] === "number" ? look[k] : d);
 
     // Render targets: the scene at full size, bloom at half and a quarter.
     function target(w, h) {
@@ -523,8 +534,9 @@
       gl.useProgram(P.back.p);
       gl.uniform1f(P.back.u("uT"), t); gl.uniform1f(P.back.u("uYaw"), rot * STEP);
       const sixHues = [];
-      for (let k = 0; k < 6; k++) sixHues.push(...hues[(Math.round(rot) + k * 3 + n * 4) % n]);
+      for (let k = 0; k < 6; k++) sixHues.push(...(palette.length ? palette[k % palette.length] : hues[(Math.round(rot) + k * 3 + n * 4) % n]));
       gl.uniform3fv(P.back.u("uHues[0]"), sixHues); gl.uniform3fv(P.back.u("uAccent"), accent);
+      gl.uniform3fv(P.back.u("uTop"), backTop); gl.uniform3fv(P.back.u("uBottom"), backBottom);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
       gl.enable(gl.BLEND);
@@ -605,7 +617,11 @@
       // mist
       gl.useProgram(P.mist.p);
       gl.uniform1f(P.mist.u("uT"), t); gl.uniform3fv(P.mist.u("uAccent"), accent);
-      gl.uniform3fv(P.mist.u("uHue"), hues[((Math.round(rot) % n) + n) % n]);
+      const pk = t / 6, pf = pk - Math.floor(pk);  // the mist drifts from one palette colour to the next
+      gl.uniform3fv(P.mist.u("uHue"), palette.length
+        ? mix3(palette[Math.floor(pk) % palette.length], palette[(Math.floor(pk) + 1) % palette.length], pf)
+        : hues[((Math.round(rot) % n) + n) % n]);
+      gl.uniform1f(P.mist.u("uGain"), level("mist", 1));
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       gl.disable(gl.BLEND);
 
@@ -624,6 +640,7 @@
       pass(P.final, null, (u) => {
         tex(0, T.scene, u, "uScene"); tex(1, T.a1, u, "uB1"); tex(2, T.a2, u, "uB2");
         gl.uniform1f(u("uT"), t);
+        gl.uniform1f(u("uBloom"), level("bloom", 1)); gl.uniform1f(u("uScan"), level("scan", 0)); gl.uniform1f(u("uGrain"), level("grain", 0));
         const k = flying ? Math.max(0, Math.min(1, ((performance.now() - flying.t0) / 750 - 0.55) / 0.45))
           : Math.max(0, 1 - arrived() * 2);
         gl.uniform1f(u("uFlash"), k * 0.9); gl.uniform3fv(u("uFlashHue"), flying ? hues[flying.i] : opt.arriveHue ? rgb(opt.arriveHue) : accent);

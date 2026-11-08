@@ -47,6 +47,7 @@ PERSONAL_SETTINGS = (
     "budget.private",
     "display.text_size",
     "display.high_contrast",
+    "display.theme",  # DEC-0136: Stark, Y2K Cyber, Cyberpunk, Glass (core/themes.py)
     "display.style",  # DEC-0135: spatial, cards, or spatial on the computer and cards on the phone (core/display_style.py)
     "system.last_season_note",
     "party.leaderboard",

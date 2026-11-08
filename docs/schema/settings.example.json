@@ -25,6 +25,33 @@
               "label": "Cards"
             }
           ]
+        },
+        {
+          "key": "display.theme",
+          "label": "Theme",
+          "kind": "choice",
+          "help": "Colours, type, materials and light, in either look. Or tell MIA: \"switch to the Y2K theme\".",
+          "value": "stark",
+          "low": 0,
+          "high": 0,
+          "options": [
+            {
+              "value": "stark",
+              "label": "Stark"
+            },
+            {
+              "value": "y2k",
+              "label": "Y2K Cyber"
+            },
+            {
+              "value": "cyberpunk",
+              "label": "Cyberpunk"
+            },
+            {
+              "value": "glass",
+              "label": "Glass"
+            }
+          ]
         }
       ]
     },

@@ -76,7 +76,7 @@
       $("app").prepend(canvas, labels);
       $("app").append(box);
       scene = MIANexus3D.mount(canvas, page.portals, {
-        start, labels,
+        start, labels, theme: MIAShell.theme().room,
         onPick: (i) => (ring && i === ring.front ? goIn(i) : ring && ring.go(i)),
         onOrb: () => MIAShell.talk(true),
         onDrop: (i) => ring && ring.go(i),

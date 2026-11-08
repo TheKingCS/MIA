@@ -99,7 +99,7 @@
       icon: b.category === "Vehicle" ? "garage" : "maintenance", photo: b.photo }));
     let ring = null;
     const scene = MIARoom.mount(canvas, items, {
-      start: Math.min(front, items.length - 1), shape: "bay", fire: 0.35, labels, needsGlow: true, arrive: !!arriveHue, arriveHue,
+      start: Math.min(front, items.length - 1), shape: "bay", theme: MIAShell.theme().room, fire: 0.35, labels, needsGlow: true, arrive: !!arriveHue, arriveHue,
       art: (it) => (it.photo ? MIA.image(it.photo) : null),
       onPick: (i) => (ring && i === ring.front ? (location.href = env.bays[i].page) : ring && ring.go(i)),
       onOrb: () => MIAShell.talk(true),

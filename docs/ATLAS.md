@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1231 files, 268,384 lines; 1231 files describe themselves; 14,574 of 15,266 classes and functions are documented.
+1233 files, 268,751 lines; 1233 files describe themselves; 14,589 of 15,281 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-453 files, 125,558 lines; 6,709 of 6,795 classes and functions documented
+454 files, 125,779 lines; 6,716 of 6,802 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -21,7 +21,7 @@
 - `core/app_intro.py`: What MIA says when she introduces an app (slice 5 of docs/GLASSES_FIRST_BOOT_PLAN.md), in two halves:
 - `core/application.py`: MIAApplication: the orchestrator that boots the system.
 - `core/asset_parts.py`: Parts per asset (2026-11-07; the asset page's "parts aren't tracked per asset yet", PLANNED since 2026-10-06): the oil filters, blades, belts and fluids a vehicle, tool or appliance uses, from the household's own inventory, workshop materials and parts bins.
-- `core/assistant_accessibility_actions.py`: "Make the text bigger", "turn on high contrast", "read this screen to me" (core/accessibility.py, 2026-10-01), and "switch to the cards look" (core/display_style.py, DEC-0135). Each changes only the speaker's own look.
+- `core/assistant_accessibility_actions.py`: "Make the text bigger", "turn on high contrast", "read this screen to me" (core/accessibility.py, 2026-10-01), and "switch to the cards look" (core/display_style.py, DEC-0135), "make it cyberpunk" (core/themes.py, DEC-0136). Each changes only the speaker's own look.
 - `core/assistant_actions.py`: The Assistant's tool-use/action-execution registry — docs/ROADMAP.md milestone 5.5. Lets the LLM actually DO things in MIA (open a module, add an alarm, a note, an inventory item), not just answer questions, via Ollama's structured tool-calling API (core/llm_manager.py's `chat_with_tools()`).
 - `core/assistant_asset_part_actions.py`: Parts per asset by voice (DEC-0125; the screen is the asset page's Parts tab, core/asset_parts.py): "the mower uses the 10W-30 oil", "what parts does the truck take?", "the truck doesn't use that filter anymore". Names are matched to real records in code; the add and remove are the same actions the 
 - `core/assistant_backup_actions.py`: Backups by voice (DEC-0125), read only: "when did I last back up?" says how long since the last backup in the backups folder and where they go (core/web_backups.py). Making one is on Settings (a passphrase is typed, never said aloud); restoring is on the PC.
@@ -380,6 +380,7 @@
 - `core/textbook_manager.py`: The textbook tutor's library (2026-09-28): "a feature where MIA gets textbooks that can be added to her that she can reference to help educate the user on subjects of their choice... understand it and assist a user in understanding it."
 - `core/textbook_study.py`: The study and quiz conversation modes of the textbook tutor (2026-09-28): which book and chapter a conversation is on, and the passages MIA answers from each turn. The library itself is core/textbook_manager.py; the tone lines are in core/conversation_modes.py (STUDY, QUIZ).
 - `core/the_loop.py`: The Loop (DEC-0047, step 1; Zac 2026-10-27): the normal week, run as the same grind every week, and MIA learning *when* it happens so she knows when to start each part and remind you.
+- `core/themes.py`: MIA's themes (DEC-0136, Zac 2026-11-08: "One MIA. Multiple interface experiences. Unlimited visual possibilities."). A theme is data, not code: the design tokens it changes (colours, panels, type, shape, motion, an extra backdrop layer), the material its panels are made of, and the 3D room's light. 
 - `core/tile_fetch_worker.py`: Fetches individual missing basemap tiles off the GUI thread for gui/widgets/tile_map_view.py's live pan/zoom — same "network I/O never blocks a paint/input handler" reasoning as modules/field_kit/port_scan_worker.py's PortScanWorker, but shaped as a long-lived queue-processing thread rather than a o
 - `core/today.py`: "Today" (2026-10-01): one list of what needs you today, from every app, so nobody has to open eight screens to find out. Shown at the top of Home (gui/home_dashboard.py), on the phone (`/api/today`), and by the Assistant ("what's on today?").
 - `core/tool_loop.py`: The tool loop (DEC-0052 step 2b; docs/REASONING_PLAN.md section 3b; docs/TOOL_CALLING_RESEARCH.md R4). Before: a turn was one round; the model picked lookups, MIA said each result as it was, and nothing was combined or followed up. Now, when the model asks only to *look things up*:
@@ -737,7 +738,7 @@
 
 ## tests/: the test suite: what each part must do
 
-417 files, 71,065 lines; 5,589 of 6,195 classes and functions documented
+418 files, 71,170 lines; 5,597 of 6,203 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1075,6 +1076,7 @@
 - `tests/test_textbook_tutor.py`: Textbook tutor: document text extraction (core/document_text.py), the library and its index (core/textbook_manager.py), study and quiz turns (core/textbook_study.py), the tools, and the Classroom page. A small real PDF is generated per test with Qt's own PDF writer.
 - `tests/test_the_loop.py`: The Loop (DEC-0047): what recurs gets a rhythm by itself, MIA learns its days and times (yours always win), plans the week's runs, reminds you at the time, and a missed day shows honestly as the share cleared. *(1 undocumented)*
 - `tests/test_theme_manager.py`: Unit tests for gui.theme_manager. Pure string-lookup logic — no Qt event loop needed.
+- `tests/test_themes.py`: Themes (DEC-0136, core/themes.py): a theme is data checked against what a theme may change, so no theme can restyle a warning or inject anything; each person picks theirs in Settings or by voice, and every page gets it with the shell.
 - `tests/test_today.py`: Today (core/today.py), 2026-10-01: one list of what needs you today, across every app; on Home, on the phone, and from the Assistant. *(3 undocumented)*
 - `tests/test_tool_loop.py`: The tool loop (DEC-0052 step 2b, core/tool_loop.py): lookups go back to the model and it may look up more, a few rounds at most, never the same lookup twice; one answer at the end that never states a number the lookups didn't; a change is never run inside the loop.
 - `tests/test_trail_map_library.py`: Unit tests for core.trail_map_library. Isolates _DATA_DIR/_TRAIL_MAPS_FILE and root_path into a tmp_path, same pattern as test_reference_library_manager.py. urllib.request.urlopen() is monkeypatched for add_from_url() tests — no real network call in this committed suite (see core/map_tile_cache.py's
@@ -1159,7 +1161,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-93 files, 17,099 lines
+93 files, 17,140 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
