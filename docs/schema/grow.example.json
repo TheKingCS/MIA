@@ -583,6 +583,7 @@
  "next": {
   "environment": "simulated",
   "budget": 20,
+  "budget_from": "your build budget",
   "month": 3,
   "have": [],
   "next": {
@@ -655,6 +656,11 @@
     },
     {
      "check": "made_first",
+     "ok": false,
+     "line": "Turn and sieve the first finished compost could be made instead of buying seed-starting mix."
+    },
+    {
+     "check": "made_first",
      "ok": true,
      "line": "Made, not bought: seed-starting shelf rather than a bought wire shelf for seedlings ($40)."
     },
@@ -666,6 +672,20 @@
    ]
   },
   "options": [
+   {
+    "id": "cell_trays",
+    "name": "Plastic seed-cell trays",
+    "entry_cost": 15,
+    "cost": "$15",
+    "payoff_months": 7.5,
+    "unlocks": [
+     "Start a first batch of seedlings"
+    ],
+    "ready": true,
+    "why_not": "",
+    "needs_professional": false,
+    "note": "Reusable for years, but bought."
+   },
    {
     "id": "seed_cups",
     "name": "Toilet-paper-roll seed cups",
@@ -695,18 +715,16 @@
     "note": "Fine and clean; your own sieved compost can stand in once the bin has matured, months from now."
    },
    {
-    "id": "cell_trays",
-    "name": "Plastic seed-cell trays",
+    "id": "egg_sales",
+    "name": "Sell extra eggs",
     "entry_cost": 15,
     "cost": "$15",
-    "payoff_months": 7.5,
-    "unlocks": [
-     "Start a first batch of seedlings"
-    ],
-    "ready": true,
-    "why_not": "",
+    "payoff_months": 0.5,
+    "unlocks": [],
+    "ready": false,
+    "why_not": "needs eggs and sales outlet first",
     "needs_professional": false,
-    "note": "Reusable for years, but bought."
+    "note": "Once the flock lays more than you eat: cartons, a fair price, the same stand."
    },
    {
     "id": "compost_bin",
@@ -716,27 +734,13 @@
     "payoff_months": 2.5,
     "unlocks": [
      "Raised garden bed",
-     "Greenhouse"
+     "Greenhouse",
+     "Turn and sieve the first finished compost"
     ],
     "ready": false,
     "why_not": "about $30, more than the $20 you said you have",
     "needs_professional": false,
     "note": "Pallets are often free; turns scraps into the soil everything else needs."
-   },
-   {
-    "id": "rain_barrel",
-    "name": "Rain-barrel water collection",
-    "entry_cost": 40,
-    "cost": "$40",
-    "payoff_months": 5.0,
-    "unlocks": [
-     "Drip irrigation",
-     "Greenhouse"
-    ],
-    "ready": false,
-    "why_not": "about $40, more than the $20 you said you have",
-    "needs_professional": false,
-    "note": "A barrel, a diverter and a screen — the cheapest thing that unlocks the most."
    },
    {
     "id": "first_seedlings",
@@ -755,7 +759,6 @@
     "note": "A dozen or two of something easy (tomatoes, peppers, herbs): proof you grow them well first."
    }
   ],
-  "note": "Costs are rough starting figures, not quotes. Tell me your budget and I'll weigh it in.",
-  "budget_from": "your build budget"
+  "note": "Costs are rough starting figures, not quotes. Tell me your budget and I'll weigh it in."
  }
 }
