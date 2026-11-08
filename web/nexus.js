@@ -12,6 +12,8 @@
   const $ = (id) => document.getElementById(id);
   const icon = (name) => (window.MIAIcons && MIAIcons.svg(name)) || null;
   let ring = null;
+  let room = null;   // the 3D room now showing ({scene, nodes}), so a re-render replaces it instead of stacking another
+  let keysOn = false;
 
   function hud(page) {
     const link = (href, label, ico) => el("a", { href, "aria-label": label }, icon(ico), el("span", { class: "nav-label" }, label));
@@ -57,13 +59,15 @@
     const items = page.portals.map(portal);
     $("ring").replaceChildren(...items);
     const remembered = (() => { try { return sessionStorage.getItem("mia.nexus.front"); } catch (e) { return null; } })();
-    const start = Math.max(0, page.portals.findIndex((p) => p.id === remembered));
+    const start = ring ? ring.front % page.portals.length : Math.max(0, page.portals.findIndex((p) => p.id === remembered));
+    if (room) { room.scene.stop(); room.nodes.forEach((x) => x.remove()); room = null; }
 
     // The room (web/nexus3d.js) where the graphics card can draw it and motion is welcome; ?flat keeps the flat one.
     let scene = null;
     const box = el("aside", { class: "n3-card", "aria-hidden": "true" });
     const goIn = (i) => {
       const p = page.portals[i];
+      try { sessionStorage.setItem("mia.arrive", p.hue); } catch (e) { /* fine: you just arrive without the light */ }
       if (scene) scene.enter(i, p.page); else MIASpatial.enter(items[i], p.page, p.hue);
     };
     if (window.MIANexus3D && MIANexus3D.supported() && !/[?&]flat\b/.test(location.search)) {
@@ -77,7 +81,7 @@
         onOrb: () => MIAShell.talk(true),
         onDrop: (i) => ring && ring.go(i),
       });
-      if (scene) document.body.classList.add("nexus-3d");
+      if (scene) { document.body.classList.add("nexus-3d"); room = { scene, nodes: [canvas, labels, box] }; }
       else { canvas.remove(); labels.remove(); box.remove(); }
     }
     if (!scene) MIASpatial.vapor($("vapor"), page.portals.map((p) => p.hue));
@@ -97,7 +101,8 @@
     $("prev").onclick = () => ring.turn(-1);
     $("next").onclick = () => ring.turn(1);
     $("orb").onclick = () => MIAShell.talk(true);
-    if (scene) {  // in the room, the arrows turn it from anywhere on the page
+    if (scene && !keysOn) {  // in the room, the arrows turn it from anywhere on the page (once, whatever re-renders)
+      keysOn = true;
       document.addEventListener("keydown", (e) => {
         if (e.defaultPrevented || $("ring").contains(e.target) || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
         if (e.target.closest && e.target.closest("dialog, .talk, [role=dialog]")) return;

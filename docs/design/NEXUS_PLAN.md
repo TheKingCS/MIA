@@ -84,8 +84,11 @@ animated, flowing, seamless", everything orbiting MIA): the Nexus became a real-
 no library, offline): the orb with orbits on a ringed platform, the portals on an oval ring behind her with fire and
 smoke in their hues, a reflecting floor, motes, bloom; drag, swipe, arrows or click to turn, the chosen one's card, and
 a flight through the portal on Enter. The flat Nexus stays for reduced motion and machines without WebGL 2 (`?flat`).
-Portal pictures: Muse (H-0096). Next: the pictures, Zac's look on the real PC, then each area's own space in 3D
-(entering the Garage lands in a workshop, not a page), then the other environments one at a time.*
+Portal pictures: Muse (H-0096). 06:00: the Garage is a room too, on the same engine (`MIARoom`, `shape: "bay"`):
+its bays stand round her as wide door frames holding each vehicle's photo, a bay's floor glows amber when it's
+overdue, the chosen bay's card opens it, and Needs You, Parts Running Low and the bench are panels over the room;
+coming through the portal you arrive out of its light. Next: the pictures, Zac's look on the real PC, then the other
+areas' rooms one at a time.*
 
 | # | What | Done when |
 |---|---|---|

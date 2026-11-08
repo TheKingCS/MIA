@@ -3,7 +3,7 @@ tests.test_web_nexus
 ======================
 
 The Nexus (DEC-0130, core/web_nexus.py): what needs you in each portal, going to an area by voice, and the screen's
-data in sidebar order with each area's hue; a portal's picture only once it exists (H-0096).
+data in sidebar order with each area's hue; a portal's picture only once it exists (H-0096); the Nexus and an area's room share one 3D engine.
 """
 
 from types import SimpleNamespace
@@ -42,3 +42,16 @@ def test_a_portal_carries_its_picture_only_once_muses_art_is_there(monkeypatch, 
     (tmp_path / "garage.jpg").write_bytes(b"jpg")
     assert web_nexus.portal_art("garage") == "img/portals/garage.jpg"
     assert web_nexus.portal_art("home") == ""
+
+
+def test_the_nexus_and_an_areas_room_load_the_same_3d_engine():
+    """The Nexus and the Garage's room are drawn by one engine (web/nexus3d.js), with the flat versions kept for
+    reduced motion and machines without WebGL 2."""
+    from pathlib import Path
+
+    web = Path(__file__).resolve().parent.parent / "web"
+    for page in ("nexus.html", "hub.html"):
+        html = (web / page).read_text(encoding="utf-8")
+        assert html.index('src="spatial.js"') < html.index('src="nexus3d.js"'), page
+    engine = (web / "nexus3d.js").read_text(encoding="utf-8")
+    assert "window.MIARoom = window.MIANexus3D" in engine and "prefers-reduced-motion" in engine

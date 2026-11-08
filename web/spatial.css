@@ -223,3 +223,34 @@ body.env .hero h1 { text-shadow: 0 0 18px color-mix(in srgb, var(--hue) 70%, tra
   .n3-card-head h2 { font-size: 18px; }
   .n3-card-needs { margin: 6px 0 10px; }
 }
+
+/* ---------------------------------------------------------------- an area's room (hub.js garageRoom, the same engine)
+   The room fills the page; the head, the chosen bay's card, the side panels and the bench are clean panels over it.
+   A phone scrolls: the room stays put behind, the panels come up over it. */
+.room-3d #app { display: none; }
+.room-3d .n3-canvas { z-index: 0; }
+.room-ui { position: relative; z-index: 3; }
+.room-head { position: fixed; top: 14px; left: 24px; right: 24px; display: flex; align-items: center; gap: 16px; }
+.room-head > div { flex: 1; }
+.room-head h1 { margin: 0; font-size: 26px; letter-spacing: .02em;
+  text-shadow: 0 0 18px color-mix(in srgb, var(--hue) 70%, transparent); }
+.room-head .tagline { margin: 2px 0 0; color: var(--text-dim); font-size: 13px; }
+.room-side { position: fixed; right: 24px; top: 84px; width: min(320px, 26vw); max-height: calc(100vh - 210px); overflow: auto;
+  display: grid; gap: 12px; }
+.room-side .holo { background: rgba(3, 8, 14, .78); backdrop-filter: blur(8px); }
+.room-side .env-need { min-width: 0; }
+.room-side .rows { display: grid; gap: 8px; }
+.room-bench { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); display: flex; gap: 8px; }
+.room-bench .bench-tool { display: flex; align-items: center; gap: 8px; padding: 9px 14px; background: rgba(3, 8, 14, .78);
+  border: 1px solid color-mix(in srgb, var(--hue) 35%, transparent); backdrop-filter: blur(8px); white-space: nowrap; }
+.room-links { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.room-spacer { display: none; }
+@media (max-width: 760px) {
+  .room-ui { padding: 0 12px 96px; }
+  .room-head { position: sticky; top: 0; left: auto; right: auto; padding: 12px 0; background: linear-gradient(180deg, rgba(0, 0, 0, .7), transparent); }
+  .room-head h1 { font-size: 20px; }
+  .room-spacer { display: block; height: 58vh; }
+  .room-card { position: static; width: auto; margin-bottom: 12px; }
+  .room-side { position: static; width: auto; max-height: none; overflow: visible; }
+  .room-bench { position: static; transform: none; flex-wrap: wrap; margin-top: 12px; }
+}

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1229 files, 268,011 lines; 1229 files describe themselves; 14,562 of 15,254 classes and functions are documented.
+1229 files, 268,154 lines; 1229 files describe themselves; 14,563 of 15,255 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-452 files, 125,429 lines; 6,704 of 6,790 classes and functions documented
+452 files, 125,431 lines; 6,704 of 6,790 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -736,7 +736,7 @@
 
 ## tests/: the test suite: what each part must do
 
-416 files, 70,969 lines; 5,582 of 6,188 classes and functions documented
+416 files, 70,982 lines; 5,583 of 6,189 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1117,7 +1117,7 @@
 - `tests/test_web_lab.py`: The Lab on the web (DEC-0125, the design canvas's Lab, DEC-0113: core/web_lab.py, core/lab_reading_actions.py and core/assistant_lab_actions.py): the Data Logger's series as chips, one in full with plain numbers and a chart placed by core, readings logged and deleted as actions, other apps' series r *(1 undocumented)*
 - `tests/test_web_money.py`: DEC-0017 (2026-10-06): Money on the web does everything the PC app's Budget screen does. The page's data (core/web_money.py) and every change as an action kind (core/money_actions.py): add, edit, delete bills, income sources, income, expenses and debts; pay a debt; set budgets; sort a bank charge to *(5 undocumented)*
 - `tests/test_web_more.py`: The Journal, Workshop, Expeditions (with what has to happen before a trip), Music, Files and People screens (Zac, 2026-10-16: on the phone they "are empty right now and just bring up a chat with MIA"): core/web_more.py builds each page, core/more_actions.py makes every change through Propose → Appro
-- `tests/test_web_nexus.py`: The Nexus (DEC-0130, core/web_nexus.py): what needs you in each portal, going to an area by voice, and the screen's data in sidebar order with each area's hue; a portal's picture only once it exists (H-0096).
+- `tests/test_web_nexus.py`: The Nexus (DEC-0130, core/web_nexus.py): what needs you in each portal, going to an area by voice, and the screen's data in sidebar order with each area's hue; a portal's picture only once it exists (H-0096); the Nexus and an area's room share one 3D engine.
 - `tests/test_web_notifications.py`: Notifications on the web (core/web_notifications.py, DEC-0125): newest first, a tone for each level (amber for a warning, red only for an error), why MIA sent the ones she sent on her own, Mark All Read and Dismiss as actions, and the same by voice (core/assistant_notification_actions.py). *(1 undocumented)*
 - `tests/test_web_power.py`: Power on the web (DEC-0125, the design canvas's Power, DEC-0113: core/web_power.py and core/power_actions.py): energy sources with their latest reading per meter, a meter for a percent (amber when low), when it was logged, and every change as an action; the device's battery when it has one. *(1 undocumented)*
 - `tests/test_web_progress.py`: DEC-0017/0018 (2026-10-06), H-0013: Missions, Skills and Character on the web. The pages (core/web_progress.py) and every change as an action kind (core/mission_actions.py), each proposed, approved, recorded and undoable, with rewards going to the person who approved it.
@@ -1157,7 +1157,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-93 files, 16,951 lines
+93 files, 17,079 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
@@ -1193,7 +1193,7 @@
 - `web/health.js`: health.js — Health (DEC-0129, claude, 2026-11-08). Renders MIA.health() (core/health_actions.health_page): what's coming up, the week's sleep (tap a night's hours to log it), medications and supplements (Taken, reminders at their times, refills), visits, and records. Every change is an action, so un
 - `web/home.js`: home.js — MIA's Home (muse, 2026-10-05).
 - `web/household.js`: household.js — the household's routines (claude, 2026-11-06; the design canvas's Household, DEC-0113, 2026-11-07). Renders MIA.household() (core/household_routines.py): Done Today with its meter, then a card per routine (what it is, daily or this week, its streak in words) with Did It, or Done; what
-- `web/hub.js`: hub.js — an area's hub (DEC-0129, claude, 2026-11-08). Renders MIA.hub(area) (core/web_areas.hub): the area's apps and pages as tiles, each opening its own page, then the other areas to jump to. Which apps are in which area is decided in core; this only lays them out.
+- `web/hub.js`: hub.js — an area's hub (DEC-0129, claude, 2026-11-08). Renders MIA.hub(area) (core/web_areas.hub): the area's apps and pages as tiles, each opening its own page, then the other areas to jump to. Which apps are in which area is decided in core; this only lays them out. An area with its own space (cor
 - `web/icons.js`: icons.js — MIA's interface icons (claude, 2026-10-15, DEC-0023). One line-icon set for the frame (navigation, the bottom bar, header badges, app tiles): 24-unit grid, 1.6 stroke, round joins, drawn in currentColor so the theme colors them. Content keeps its own icons (a mission's or a skill's emoji 
 - `web/inbox.js`: inbox.js — the Inbox screen (claude, 2026-10-16; Zac: "build the inbox for sending stuff to MIA"). Send To MIA: a photo, a file or a note (and from any app, the phone's Share menu). Waiting: what MIA read in each one and where she proposes it goes; File It opens the proposal to check (what it's for,
 - `web/insurance.js`: insurance.js — the insurance check-up (claude, 2026-10-19, DEC-0034). Renders MIA.insurance() (core/insurance.py) in tabs: My Policies (each policy, what it costs a year, what's worth a look), Shop It (what an agent asks for, the quote request MIA drafts, the quotes side by side against what you hav
