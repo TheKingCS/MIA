@@ -1439,3 +1439,19 @@ body.mod-maps .hero { display: none; }
 .ci-debrief { width: 100%; min-height: 52px; font-size: 16px; margin-bottom: var(--gap); }
 .ci-more { margin-top: 6px; }
 .ci-more > summary { cursor: pointer; color: var(--text-dim); font-size: var(--text-sm); padding: 8px 0; }
+
+/* ---------------------------------------------------------------- The Chronicle (DEC-0113 canvas; web/chronicle.js) */
+.chron-lead { display: grid; gap: 12px; padding: 4px 2px 18px; }
+.chron-lead > .pw-label { margin: 0; color: var(--accent); }
+.chron-lead h2 { margin: 0; font-size: 26px; font-weight: 600; line-height: 1.2; color: var(--text); }
+.chron-lead > p { margin: 0; font-size: 17px; line-height: 1.6; }
+.chron-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.chron-tag { font-size: 12px; padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(var(--rgb-accent), 0.4); color: var(--text-dim); }
+.chron-lead .chron { margin: 0; }
+.chron-earlier { margin: 6px 0 8px; }
+.chron-row { margin-bottom: 8px; padding: 0 14px; }
+.chron-row > summary { display: flex; justify-content: space-between; align-items: center; gap: 10px; min-height: 52px; cursor: pointer; list-style: none; font-weight: 600; }
+.chron-row > summary::-webkit-details-marker { display: none; }
+.chron-row > summary .dim { font-family: var(--font-mono); font-size: 12px; font-weight: 400; }
+.chron-row .chron { border: 0; background: none; box-shadow: none; padding: 0 0 12px; }
+.chron-row .chron h2 { display: none; }
