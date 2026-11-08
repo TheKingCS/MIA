@@ -17,7 +17,8 @@ as individual PDFs on each state's own site, found by a person browsing
 it. Hardcoding a list of scraped URLs here would mean shipping links
 with no way to confirm they're still live. Same shape as
 `core/reference_library_manager.py`'s own design: this is a real,
-working *catalog engine* (add/list/delete, files stored outside `data/`
+working *catalog engine* (add from a link, a local file or bytes sent from the web; list; delete, which sets the PDF
+aside in removed/ so an undone delete finds it again; files stored outside `data/`
 in their own root, same reasoning content packs get their own root
 rather than living under `data/`) — the user (or a future scraping
 pass, done carefully and rate-limit-respectfully once specific target
@@ -58,6 +59,7 @@ _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 _DEFAULT_ROOT = _PROJECT_ROOT / "trail_maps"
 _DATA_DIR = _PROJECT_ROOT / "data"
 _TRAIL_MAPS_FILE = _DATA_DIR / "trail_maps.json"
+_REMOVED = "removed"  # where a deleted map's PDF is set aside, so undo can bring it back
 
 _REQUEST_TIMEOUT_SECONDS = 15
 _PDF_MAGIC_BYTES = b"%PDF"
@@ -201,6 +203,17 @@ class TrailMapLibrary:
 
         return self._catalog(trail_map_id, park_name, state, filename, source_url="", notes=notes)
 
+    def add_from_bytes(self, park_name: str, state: str, data: bytes, notes: str = "") -> TrailMap:
+        """Catalogs a PDF sent from the web (the Trail Maps page's Add a PDF). Raises NotAPdfError the same way
+        add_from_url() does."""
+        if not data.startswith(_PDF_MAGIC_BYTES):
+            raise NotAPdfError("That file doesn't look like a real PDF.")
+        trail_map_id = uuid.uuid4().hex[:10]
+        filename = f"{trail_map_id}.pdf"
+        self._root_path.mkdir(parents=True, exist_ok=True)
+        (self._root_path / filename).write_bytes(data)
+        return self._catalog(trail_map_id, park_name, state, filename, source_url="", notes=notes)
+
     def _catalog(
         self, trail_map_id: str, park_name: str, state: str, filename: str, source_url: str, notes: str
     ) -> TrailMap:
@@ -239,20 +252,25 @@ class TrailMapLibrary:
         return [t for t in self.all_trail_maps() if t.state.lower() == state.lower()]
 
     def file_path(self, trail_map_id: str) -> Optional[Path]:
-        """A map's PDF, or None when the entry or its file is gone."""
+        """A map's PDF (in the folder, or set aside in its removed/ folder after a delete that was undone), or None
+        when the entry or its file is gone."""
         trail_map = self.get_trail_map(trail_map_id)
         if trail_map is None:
             return None
-        path = self._root_path / trail_map.filename
-        return path if path.exists() else None
+        for path in (self._root_path / trail_map.filename, self._root_path / _REMOVED / trail_map.filename):
+            if path.exists():
+                return path
+        return None
 
     def delete_trail_map(self, trail_map_id: str) -> None:
-        """Deletes a map's PDF and its catalog entry."""
+        """Takes a map out of the catalog; its PDF is set aside in the folder's removed/ (not erased), so undoing the
+        catalog change brings the map back whole."""
         trail_map = self.get_trail_map(trail_map_id)
         if trail_map is None:
             return
         path = self._root_path / trail_map.filename
         if path.exists():
-            path.unlink()
+            (self._root_path / _REMOVED).mkdir(parents=True, exist_ok=True)
+            shutil.move(str(path), str(self._root_path / _REMOVED / trail_map.filename))
         self._trail_maps = [t for t in self._trail_maps if t.trail_map_id != trail_map_id]
         self._save()

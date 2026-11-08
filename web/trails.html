@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Trail Maps — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="themes.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
+  <link rel="stylesheet" href="ui.css">
+</head>
+<body data-app="maps" data-icon="maps" class="mod-trails" data-say="What trail maps do I have?">
+  <!--
+    Trail Maps (the Qt Maps module's Trail Maps tab on the web): the official park and trail map PDFs kept on this MIA,
+    by state, each opening in the browser's PDF viewer; add one from the device or a direct link; take one out (Undo
+    brings it back). MIA.trailMaps() (core/web_trails.py). Built by claude, 2026-11-08.
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <header class="hero">
+        <h1>Trail Maps</h1>
+        <p class="tagline" id="tm-sub"></p>
+      </header>
+      <div id="panel"></div>
+    </main>
+  </div>
+  <script src="mia.js?v=17"></script>
+  <script src="icons.js"></script>
+  <script src="sound.js"></script>
+  <script src="places-watch.js"></script>
+  <script src="shell.js"></script>
+  <script src="trails.js"></script>
+</body>
+</html>

@@ -1919,3 +1919,34 @@ a.comms-row:hover .row-title { color: var(--accent); }
 .ab-spec-title { margin: 0; font-size: 15px; }
 .ab-spec-line { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--text-dim); }
 .ab-say { font-size: var(--text-sm); }
+
+/* Trail Maps (web/trails.html): a row per PDF, grouped by state. */
+.tm-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: calc(var(--gap) + 4px); }
+.tm-group { display: grid; gap: 8px; margin-bottom: calc(var(--gap) + 4px); }
+.tm-group > .pw-label { margin: 0; }
+.tm-row { display: flex; align-items: center; gap: 14px; padding: 12px 14px; }
+.tm-row.gone { opacity: 0.65; }
+.tm-ico { flex: none; width: 42px; height: 52px; display: grid; place-items: center; font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+  color: rgb(var(--rgb-accent)); border: 1px solid rgba(var(--rgb-accent), 0.45); border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, rgba(var(--rgb-accent), 0.08), transparent 60%); }
+.tm-main { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.tm-main p { margin: 0; }
+.tm-park { font-weight: 600; font-size: 15px; }
+.tm-meta { font-size: 12px; }
+.tm-notes { font-size: 13px; }
+.tm-row .row-buttons { margin: 0; flex: none; }
+.tm-say { font-size: var(--text-sm); }
+@media (max-width: 560px) { .tm-row { flex-wrap: wrap; } .tm-row .row-buttons { width: 100%; } }
+
+/* The chat page's History (web/assistant.html): past conversations to read, pick back up or delete. */
+.chat-head-actions { margin: 0 0 0 auto; }
+.chat-history { display: grid; gap: 8px; padding: 12px 14px; margin-top: 10px; max-height: 60vh; overflow-y: auto; }
+.chat-history-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.chat-history-head .pw-label { margin: 0; }
+.chat-past { display: grid; gap: 2px; text-align: left; padding: 9px 12px; border-radius: var(--radius-sm); cursor: pointer;
+  border: 1px solid rgba(var(--rgb-line), 0.5); background: transparent; color: var(--text); font: inherit; }
+.chat-past.on { border-color: rgba(var(--rgb-accent), 0.7); }
+.chat-past-title { font-weight: 600; }
+.chat-past-meta { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat-past-log { display: flex; flex-direction: column; gap: 8px; }
+.chat-history .row-buttons { margin: 4px 0 0; }

@@ -1,0 +1,47 @@
+{
+ "available": true,
+ "count": 3,
+ "max_mb": 60,
+ "states": [
+  {
+   "state": "Kentucky",
+   "maps": [
+    {
+     "id": "t1",
+     "park": "Cumberland Falls",
+     "state": "Kentucky",
+     "notes": "Moonbow trail; the falls overlook loop.",
+     "added": "2026-10-12",
+     "from_link": true,
+     "here": true,
+     "size_kb": 2840
+    },
+    {
+     "id": "t2",
+     "park": "Mammoth Cave",
+     "state": "Kentucky",
+     "notes": "",
+     "added": "2026-10-20",
+     "from_link": false,
+     "here": true,
+     "size_kb": 5210
+    }
+   ]
+  },
+  {
+   "state": "Tennessee",
+   "maps": [
+    {
+     "id": "t3",
+     "park": "Fall Creek Falls",
+     "state": "Tennessee",
+     "notes": "Gorge overlook trail and the swinging bridge.",
+     "added": "2026-11-01",
+     "from_link": true,
+     "here": true,
+     "size_kb": 3105
+    }
+   ]
+  }
+ ]
+}

@@ -59,6 +59,7 @@ GUITAR = Page("guitar", "Guitar", "classroom", "A learning path, stage by stage.
 PETS = Page("pets", "Pets", "relationships", "Your animals, their care and vet visits.", "people.html?only=pets")
 PLACES = Page("places", "My Places", "maps", "Places you go, and quests there.", "places.html")
 WORLDS = Page("worlds", "Living Worlds", "character", "Your worlds, campaigns and character.", "worlds.html")
+TRAILS = Page("trails", "Trail Maps", "maps", "Official park and trail map PDFs, offline.", "trails.html")
 WORLD = Page("worldmap", "World Map", "memories", "Everywhere you've been.", "worldmap.html")
 CHECKIN = Page("checkin", "Sunday Check-In", "calendar", "The week, looked back on.", "checkin.html")
 PARTY = Page("party", "Party", "missions", "Raids and quests.", "party.html")
@@ -93,7 +94,7 @@ AREAS: tuple[Area, ...] = (
     Area("kitchen", "Kitchen", "kitchen", "Meals, recipes and the pantry.", ("kitchen",), hue="#e9d4a8"),
     Area("health", "Health and Fitness", "workout", "Training, food and how you feel.", (HEALTH, "workout", "kitchen"), hue="#ff8a3d"),
     Area("recreation", "Recreation", "expeditions", "Trips, maps, music and play.",
-         ("expeditions", "maps", "navigation", "memories", WORLD, PLACES, "music", "play", WORLDS), hue="#9b6bff"),
+         ("expeditions", "maps", TRAILS, "navigation", "memories", WORLD, PLACES, "music", "play", WORLDS), hue="#9b6bff"),
     Area("security", "Security", "security", "Cameras, passwords and sign-ins.",
          ("security", WALLET, "passwords", SIGNINS, "field_kit"), hue="#c0c8d4"),
     Area("browser", "Browser", "search", "She browses. You approve.", ("browser",), hue="#bfefff"),

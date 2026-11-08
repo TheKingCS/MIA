@@ -93,6 +93,60 @@
   }
   function note(text) { $("note").textContent = text; $("note").hidden = !text; }
 
+  // ------------------------------------------------------------ history (the Qt Assistant's History, on the web)
+  // Past conversations (MIA.conversations, core/web_conversations.py): newest first; one opens to read, with Pick It
+  // Back Up (Talk continues it) and Delete (conversation.delete, undoable). Only what was kept: never private turns.
+  const when = (iso) => iso ? new Date(iso).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "";
+  async function showHistory() {
+    const box = $("history");
+    let list;
+    try { list = await MIA.conversations(); } catch (e) { say(e.message); return; }
+    box.replaceChildren(
+      el("div", { class: "chat-history-head" }, el("p", { class: "pw-label" }, "Past Conversations" + (list.total ? " · " + list.total : "")),
+        el("button", { type: "button", class: "btn btn-quiet btn-small", onclick: () => toggleHistory(false) }, "Close")),
+      ...(list.conversations.length ? list.conversations.map((c) => el("button", { type: "button", class: "chat-past" + (c.current ? " on" : ""),
+        onclick: () => readOne(c.id) },
+        el("span", { class: "chat-past-title" }, c.title + (c.current ? " · now" : "")),
+        el("span", { class: "dim chat-past-meta" }, when(c.when) + " · " + c.count + " messages" + (c.first ? " · " + c.first : ""))))
+        : [el("p", { class: "dim" }, "Nothing kept yet. Conversations show here once you've talked.")]));
+  }
+  async function readOne(id) {
+    const box = $("history");
+    let c;
+    try { c = await MIA.conversation(id); } catch (e) { say(e.message); return; }
+    box.replaceChildren(
+      el("div", { class: "chat-history-head" },
+        el("button", { type: "button", class: "btn btn-quiet btn-small", onclick: showHistory }, "‹ All"),
+        el("p", { class: "pw-label" }, c.title)),
+      el("div", { class: "chat-past-log" }, ...c.messages.map((m) => el("div", { class: "chat-bubble " + (m.role === "user" ? "me" : "mia") }, el("p", {}, m.content)))),
+      el("div", { class: "row-buttons" },
+        el("button", { type: "button", class: "btn btn-small", onclick: async () => {
+          try {
+            await MIA.continueChat(id);
+            $("log").replaceChildren(...c.messages.slice(-12).map((m) => el("div", { class: "chat-bubble " + (m.role === "user" ? "me" : "mia") }, el("p", {}, m.content))));
+            toggleHistory(false);
+            say("Picked back up: " + c.title);
+          } catch (e) { say(e.message); }
+        } }, "Pick It Back Up"),
+        el("button", { type: "button", class: "btn btn-quiet btn-small", onclick: async () => {
+          if (await MIAShell.act({ kind: "conversation.delete", params: { conversation_id: id } })) showHistory();
+        } }, "Delete")));
+  }
+  function toggleHistory(open) {
+    const box = $("history");
+    box.hidden = !open;
+    $("history-btn").setAttribute("aria-expanded", String(open));
+    if (open) showHistory();
+  }
+  $("history-btn").addEventListener("click", () => toggleHistory($("history").hidden));
+  $("new-chat").addEventListener("click", async () => {
+    try {
+      await MIA.newChat();
+      $("log").replaceChildren();
+      bubble("mia", "New chat. What's on your mind?");
+    } catch (e) { say(e.message); }
+  });
+
   // ------------------------------------------------------------ start
   $("form").addEventListener("submit", (e) => { e.preventDefault(); const t = $("input").value; $("input").value = ""; send(t); });
   if (window.MIAIcons) MIAIcons.badge($("mic"), "mic"); else $("mic").textContent = "🎙";  // the line icon (DEC-0023)

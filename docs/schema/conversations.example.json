@@ -1,0 +1,30 @@
+{
+ "available": true,
+ "total": 3,
+ "conversations": [
+  {
+   "id": "c1",
+   "title": "Truck oil and the tires",
+   "when": "2026-11-08T08:14",
+   "count": 6,
+   "current": true,
+   "first": "What does the truck need this week?"
+  },
+  {
+   "id": "c2",
+   "title": "📱 Seed starting in the greenhouse",
+   "when": "2026-11-07T19:40",
+   "count": 12,
+   "current": false,
+   "first": "When should I start the tomatoes?"
+  },
+  {
+   "id": "c3",
+   "title": "Budget for the shed",
+   "when": "2026-11-05T21:02",
+   "count": 8,
+   "current": false,
+   "first": "How much would a 10 by 12 shed cost?"
+  }
+ ]
+}

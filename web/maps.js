@@ -92,9 +92,10 @@
             const half = [view.clientWidth / 2 / SIZE, view.clientHeight / 2 / SIZE];
             const [north, west] = toDeg(cx - half[0], cy - half[1], zoom), [south, east] = toDeg(cx + half[0], cy + half[1], zoom);
             keep({ west, south, east, north });
-          })]),
+          }),
+          fab("▤", "Trail maps (park PDFs)", () => { location.href = "trails.html"; })]),
       el("p", { class: "dim mp-note" }, "Tiles are kept on the PC once seen, so they work with no signal later. Tap the map to add a waypoint there, "
-        + "or tell MIA: \"add a waypoint called Spring at 18S UJ 23478 06483\". ⤓ keeps the area you see as an offline map."));
+        + "or tell MIA: \"add a waypoint called Spring at 18S UJ 23478 06483\". ⤓ keeps the area you see as an offline map; ▤ opens your park trail maps."));
     draw(view);
   }
 

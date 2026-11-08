@@ -47,6 +47,13 @@ a second way, outside the turn lock, and code checks no number changed; a
 reply in a private conversation is never compared (each turn says whether it
 may be: `comparable`).
 
+**Trail maps and past conversations** (2026-11-08): `/api/trail-maps` (a PDF
+sent as the raw body to `/upload`, or downloaded from a link the person gave
+by `/fetch`, `TrailLinkRequest`, outside the turn lock; core/web_trails.py),
+and `/api/talk/conversations` with `/api/talk/continue` (`ContinueRequest`):
+the person's own kept conversations, read, picked back up or deleted (an
+action); private turns were never kept, so never shown.
+
 **MIA's browser, live** (2026-11-07): `/api/browser/frame` (a picture of
 her browser now) and `/api/browser/input` (the person's click, typing, key
 or scroll, `BrowserInputRequest`) skip the turn lock so the live view stays
@@ -339,6 +346,19 @@ class CompareRequest(BaseModel):
     are never compared."""
     reply: str = Field(..., max_length=6000)
     private: bool = False
+
+
+class TrailLinkRequest(BaseModel):
+    """A trail map PDF to download from a direct link (core/web_trails.add_link): the park, its state, the link."""
+    park: str = Field(..., max_length=80)
+    state: str = Field(..., max_length=40)
+    url: str = Field(..., max_length=2000)
+    notes: str = Field("", max_length=300)
+
+
+class ContinueRequest(BaseModel):
+    """A past conversation for Talk to pick back up (core/web_conversations.pick_up)."""
+    conversation_id: str = Field(..., max_length=40)
 
 
 class ThemeMixRequest(BaseModel):
@@ -2516,6 +2536,49 @@ def create_app(context: AppContext) -> FastAPI:
         result = design(body.description)
         return {**result, "summary": summary(result)}
 
+    @app.get("/api/trail-maps")
+    def web_trail_maps(profile_id: str = Depends(require_profile_id)) -> dict:
+        """Trail Maps (core/web_trails.screen): the park and trail map PDFs on this MIA, by state."""
+        from core.web_trails import screen
+
+        with app.state.turn_lock:
+            return screen(view_for(context, profile_id))
+
+    @app.get("/api/trail-maps/{trail_map_id}/file")
+    def web_trail_map_file(trail_map_id: str, profile_id: str = Depends(require_profile_id)):
+        """One trail map's PDF, to open in the browser's own viewer."""
+        from fastapi.responses import FileResponse
+
+        lib = getattr(context, "trail_maps", None)
+        path = lib.file_path(trail_map_id) if lib is not None else None
+        if path is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "That trail map's PDF isn't here.")
+        return FileResponse(path, media_type="application/pdf")
+
+    @app.post("/api/trail-maps/upload")
+    async def web_trail_map_upload(request: Request, park: str = "", state: str = "", notes: str = "",
+                                   profile_id: str = Depends(require_profile_id)) -> dict:
+        """A trail map PDF sent from the device (raw body), catalogued; refused when it isn't a PDF or is too big."""
+        from core.web_trails import add_upload
+
+        data = await request.body()
+        with app.state.turn_lock:
+            try:
+                return add_upload(view_for(context, profile_id), unquote(park), unquote(state), data, unquote(notes))
+            except ValueError as problem:
+                raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
+
+    @app.post("/api/trail-maps/fetch")
+    def web_trail_map_fetch(body: TrailLinkRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        """A trail map PDF downloaded from a direct link the person gave (outside the turn lock: a slow site never
+        holds MIA up), then catalogued."""
+        from core.web_trails import add_link
+
+        try:
+            return add_link(view_for(context, profile_id), body.park, body.state, body.url, body.notes)
+        except ValueError as problem:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
+
     @app.get("/api/about")
     def web_about(profile_id: str = Depends(require_profile_id)) -> dict:
         """About MIA (core/web_about.screen, DEC-0142): what she is, her scale, her focus, her specialties and what she
@@ -3771,6 +3834,46 @@ def create_app(context: AppContext) -> FastAPI:
         app.state.voice_conversations.pop(profile_id, None)
         app.state.fresh_talk.add(profile_id)
         return {"reset": True}
+
+    @app.get("/api/talk/conversations")
+    def talk_conversations(profile_id: str = Depends(require_profile_id)) -> dict:
+        """The person's past conversations with MIA, newest first (core/web_conversations.history), and which one Talk
+        is in now."""
+        from core.web_conversations import history
+
+        with app.state.turn_lock:
+            view = view_for(context, profile_id)
+            current = app.state.voice_conversations.get(profile_id)
+            return history(view, current.conversation_id if current is not None else "")
+
+    @app.get("/api/talk/conversations/{conversation_id}")
+    def talk_conversation(conversation_id: str, profile_id: str = Depends(require_profile_id)) -> dict:
+        """One past conversation to read (only what was kept: never private or off-the-record messages)."""
+        from core.web_conversations import one
+
+        with app.state.turn_lock:
+            found = one(view_for(context, profile_id), conversation_id)
+        if found is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "That conversation isn't here.")
+        return found
+
+    @app.post("/api/talk/continue")
+    def talk_continue(body: ContinueRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Talk picks a past conversation back up: the next turn, here or on the phone, continues it."""
+        from core.web_conversations import pick_up
+
+        with app.state.turn_lock:
+            view = view_for(context, profile_id)
+            try:
+                picked = pick_up(view, body.conversation_id)
+            except ValueError as problem:
+                raise HTTPException(status.HTTP_404_NOT_FOUND, str(problem)) from None
+            manager = getattr(view, "conversations", None)
+            if manager is not None and manager is getattr(context, "conversations", None):
+                manager.set_active_conversation_id(picked.conversation_id)  # the desk's own active one, too
+            app.state.fresh_talk.discard(profile_id)
+            app.state.voice_conversations[profile_id] = picked
+        return {"conversation_id": picked.conversation_id, "title": picked.title}
 
     @app.get("/api/talk/thread")
     def talk_thread(limit: int = 20, earlier: bool = False, profile_id: str = Depends(require_profile_id)) -> dict:

@@ -1,0 +1,23 @@
+{
+ "id": "c2",
+ "title": "📱 Seed starting in the greenhouse",
+ "when": "2026-11-07T19:40",
+ "messages": [
+  {
+   "role": "user",
+   "content": "When should I start the tomatoes?"
+  },
+  {
+   "role": "assistant",
+   "content": "About six to eight weeks before your last frost. With the greenhouse heated, mid-February works."
+  },
+  {
+   "role": "user",
+   "content": "And peppers?"
+  },
+  {
+   "role": "assistant",
+   "content": "A couple of weeks earlier than the tomatoes: they're slow to germinate."
+  }
+ ]
+}
