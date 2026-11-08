@@ -10,7 +10,7 @@
       "time": "",
       "module_id": "maintenance",
       "record_id": "7a4464beaf",
-      "icon": "🔧",
+      "icon": "\ud83d\udd27",
       "action": {
         "kind": "maintenance.done",
         "label": "Done",
@@ -29,7 +29,7 @@
       "time": "",
       "module_id": "maintenance",
       "record_id": "58cb39bfd5",
-      "icon": "🔧",
+      "icon": "\ud83d\udd27",
       "action": {
         "kind": "maintenance.done",
         "label": "Done",
@@ -48,7 +48,7 @@
       "time": "",
       "module_id": "maintenance",
       "record_id": "6cbf096c22",
-      "icon": "🔧",
+      "icon": "\ud83d\udd27",
       "action": {
         "kind": "maintenance.done",
         "label": "Done",
@@ -67,7 +67,7 @@
       "time": "",
       "module_id": "maintenance",
       "record_id": "68e719deaa",
-      "icon": "🔧",
+      "icon": "\ud83d\udd27",
       "action": {
         "kind": "maintenance.done",
         "label": "Done",
@@ -86,7 +86,7 @@
       "time": "",
       "module_id": "maintenance",
       "record_id": "cd4ef5ed1b",
-      "icon": "🔧",
+      "icon": "\ud83d\udd27",
       "action": {
         "kind": "maintenance.done",
         "label": "Done",
@@ -105,7 +105,7 @@
       "time": "15:00",
       "module_id": "calendar",
       "record_id": "fc01b54f3c",
-      "icon": "📅",
+      "icon": "\ud83d\udcc5",
       "action": null,
       "page": "calendar.html",
       "kind": "Today",
@@ -118,7 +118,7 @@
       "time": "",
       "module_id": "calendar",
       "record_id": "03332a99b7",
-      "icon": "📅",
+      "icon": "\ud83d\udcc5",
       "action": null,
       "page": "calendar.html",
       "kind": "Today",
@@ -131,7 +131,7 @@
       "time": "",
       "module_id": "kitchen",
       "record_id": null,
-      "icon": "🥬",
+      "icon": "\ud83e\udd6c",
       "action": null,
       "page": "kitchen.html",
       "kind": "Today",
@@ -146,7 +146,7 @@
       "time": "",
       "module_id": "maintenance",
       "record_id": "d4364f8f41",
-      "icon": "🔧",
+      "icon": "\ud83d\udd27",
       "action": {
         "kind": "maintenance.done",
         "label": "Done",
@@ -164,35 +164,35 @@
     {
       "id": "quick_add",
       "label": "Quick Add",
-      "icon": "➕",
+      "icon": "\u2795",
       "talk": "Add ",
       "href": "assistant.html?draft=Add%20"
     },
     {
       "id": "voice",
       "label": "Voice",
-      "icon": "🎙",
+      "icon": "\ud83c\udf99",
       "talk": "",
       "href": "assistant.html?voice=1"
     },
     {
       "id": "calendar",
       "label": "Calendar",
-      "icon": "📅",
+      "icon": "\ud83d\udcc5",
       "talk": "What's on my calendar this week?",
       "href": "calendar.html"
     },
     {
       "id": "journal",
       "label": "Journal",
-      "icon": "📓",
+      "icon": "\ud83d\udcd3",
       "talk": "I want to journal.",
       "href": "assistant.html?draft=I%20want%20to%20journal."
     },
     {
       "id": "assistant",
       "label": "MIA Assistant",
-      "icon": "🗨",
+      "icon": "\ud83d\udde8",
       "talk": "",
       "href": "assistant.html"
     }
@@ -200,51 +200,67 @@
   "glance": [
     {
       "app": "budget",
-      "icon": "💰",
+      "icon": "\ud83d\udcb0",
       "title": "Money",
-      "line": "Insurance $340.00 in 4d · $2,290.00 left each month after bills",
+      "line": "Insurance $340.00 in 4d \u00b7 $2,290.00 left each month after bills \u00b7 net worth $251,400.00",
       "tone": "calm",
       "page": "money.html"
     },
     {
       "app": "garage",
-      "icon": "🚗",
+      "icon": "\ud83d\ude97",
       "title": "Equipment",
-      "line": "7 tracked · 5 overdue · next: Replace filter (Furnace)",
+      "line": "7 tracked \u00b7 5 overdue \u00b7 next: Replace filter (Furnace)",
       "tone": "attention",
       "page": "garage.html"
     },
     {
       "app": "real_estate",
-      "icon": "🏘",
+      "icon": "\ud83c\udfd8",
       "title": "Real Estate",
-      "line": "3 properties · $232,000.00 equity",
+      "line": "3 properties \u00b7 $232,000.00 equity",
       "tone": "calm",
       "page": "real-estate.html"
     },
     {
       "app": "kitchen",
-      "icon": "🍳",
+      "icon": "\ud83c\udf73",
       "title": "Kitchen",
-      "line": "9 recipes · 4 on the grocery list · chicken expires in 0d",
+      "line": "9 recipes \u00b7 4 on the grocery list \u00b7 chicken expires in 0d",
       "tone": "attention",
       "page": "kitchen.html"
     },
     {
       "app": "workout",
-      "icon": "🏋",
+      "icon": "\ud83c\udfcb",
       "title": "Workout",
-      "line": "4 sessions this week · last: Beginner full body (2026-10-15)",
+      "line": "4 sessions this week \u00b7 last: Beginner full body (2026-10-15)",
       "tone": "calm",
       "page": "workout.html"
     },
     {
       "app": "missions",
-      "icon": "🏆",
+      "icon": "\ud83c\udfc6",
       "title": "Missions",
       "line": "15 active",
       "tone": "calm",
       "page": "missions.html"
+    },
+    {
+      "app": "observations",
+      "icon": "\ud83d\udd0d",
+      "title": "Observations",
+      "line": "3 things noticed \u00b7 1 needs you \u00b7 Pay Insurance before payday",
+      "tone": "attention",
+      "page": "observations.html"
+    },
+    {
+      "app": "inbox",
+      "icon": "\ud83d\udce5",
+      "title": "Inbox",
+      "line": "2 captures to file \u00b7 Hardware store receipt",
+      "tone": "attention",
+      "page": "inbox.html"
     }
   ],
   "wins": [
@@ -291,7 +307,7 @@
   "remember": [
     {
       "key": "event:demo:2026-10-18",
-      "icon": "📅",
+      "icon": "\ud83d\udcc5",
       "title": "Tomorrow: Dinner with Sam",
       "lines": [
         "You told me: your friend Sam is vegetarian."
@@ -301,7 +317,7 @@
     },
     {
       "key": "birthday:demo:2026-10-24:7",
-      "icon": "🎂",
+      "icon": "\ud83c\udf82",
       "title": "Casey's birthday is in 7 days (turning 30)",
       "lines": [
         "Gift ideas you noted: Trail running socks."
