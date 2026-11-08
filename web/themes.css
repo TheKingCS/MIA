@@ -33,3 +33,21 @@
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.4), -6px 0 16px -8px rgba(var(--rgb-accent), 0.6);
 }
 :root[data-material="wire"]:not([data-contrast="high"]) :is(h1, h2, .pw-label) { letter-spacing: 0.04em; }
+
+/* A theme's backdrop (body::before, concept.css) and wall (body::after) sit behind the page on z-index -1; the body's
+   own solid background would paint over them, so a theme gives the body its own stacking layer. Stark is left exactly
+   as it was. */
+:root[data-theme]:not([data-theme="stark"]) body { isolation: isolate; }
+
+/* Y2K Cyber's graffiti wall (Zac, 2026-11-08: yes to "a loud graffiti texture", behind panels, never under text):
+   abstract spray tags, drips and sparkles on their own fixed layer over the backdrop. Panels sit on top of it; under
+   high contrast and reduced data it's gone. */
+:root[data-theme="y2k"]:not([data-contrast="high"]) body::after {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: url("img/themes/y2k-graffiti.svg") center / cover no-repeat;
+  opacity: 0.5; transform: translateZ(0);
+  /* loud at the edges and in the gaps, faded where the reading happens (the middle of the page) */
+  -webkit-mask-image: radial-gradient(ellipse 46% 52% at 56% 52%, transparent 35%, #000 100%);
+  mask-image: radial-gradient(ellipse 46% 52% at 56% 52%, transparent 35%, #000 100%);
+}
+@media (prefers-reduced-data: reduce) { :root[data-theme="y2k"] body::after { display: none; } }

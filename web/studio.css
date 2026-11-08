@@ -1,0 +1,43 @@
+/*
+ * studio.css — the Theme Studio's layout (DEC-0136, claude, 2026-11-08). Tokens only: as you tweak, this page is
+ * itself the preview, so everything here follows the theme being made.
+ */
+.st-start { margin-bottom: var(--gap); }
+.st-theme { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px; }
+.st-theme small { font-size: var(--label-size); letter-spacing: var(--label-track); text-transform: uppercase; color: var(--text-faint); }
+.st-swatch { width: 14px; height: 14px; border-radius: 50%; }
+.st-grid { display: grid; grid-template-columns: minmax(280px, 380px) minmax(0, 1fr); gap: var(--gap); align-items: start; }
+.st-controls { display: grid; gap: 10px; padding: 18px; position: sticky; top: 12px; }
+.st-controls .pw-label { margin: 8px 0 0; }
+.st-colours { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.st-colour { display: grid; justify-items: center; gap: 4px; font-size: var(--text-xs); color: var(--text-dim); cursor: pointer; }
+.st-colour input, .st-palette input { width: 44px; height: 44px; padding: 0; border: 1px solid var(--line-strong); border-radius: 50%;
+  background: none; cursor: pointer; }
+.st-colour input::-webkit-color-swatch-wrapper, .st-palette input::-webkit-color-swatch-wrapper { padding: 3px; }
+.st-colour input::-webkit-color-swatch, .st-palette input::-webkit-color-swatch { border: 0; border-radius: 50%; }
+.st-slider { display: grid; grid-template-columns: 92px 1fr 44px; align-items: center; gap: 10px; font-size: var(--text-sm); color: var(--text-dim); }
+.st-slider input { accent-color: var(--accent); width: 100%; }
+.st-slider output { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text); text-align: right; }
+.st-select { display: grid; grid-template-columns: 92px 1fr; align-items: center; gap: 10px; font-size: var(--text-sm); color: var(--text-dim); }
+.st-select select, .st-select input { min-height: 40px; padding: 0 10px; border-radius: var(--radius-sm); border: 1px solid var(--line-strong);
+  background: rgba(var(--rgb-panel-2), 0.9); color: var(--text); font: inherit; }
+.st-check { display: flex; align-items: center; gap: 8px; font-size: var(--text-sm); color: var(--text-dim); }
+.st-check input { accent-color: var(--accent); width: 18px; height: 18px; }
+.st-palette { display: flex; gap: 8px; margin-top: 6px; }
+.st-issue { margin: 0; padding: 8px 10px; border-radius: var(--radius-sm); font-size: var(--text-sm); color: var(--attention);
+  border: 1px solid rgba(var(--rgb-amber), 0.45); background: rgba(var(--rgb-amber), 0.08); }
+.st-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.st-actions .btn[disabled] { opacity: 0.45; cursor: not-allowed; }
+.st-delete { color: var(--bad); border-color: rgba(var(--rgb-bad), 0.5); }
+.st-preview { display: grid; gap: var(--gap); }
+.st-room { width: 100%; height: 300px; display: block; border-radius: var(--radius); border: 1px solid var(--line); background: #000; }
+.st-sample { display: grid; gap: 10px; padding: 18px; }
+.st-sample h3 { margin: 0; }
+.st-sample p { margin: 0; }
+.st-note { font-size: var(--text-xs); color: var(--text-faint); }
+@media (max-width: 900px) {
+  .st-grid { grid-template-columns: 1fr; }
+  .st-controls { position: static; }
+  .st-preview { order: -1; }
+  .st-room { height: 220px; }
+}

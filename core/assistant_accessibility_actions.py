@@ -10,6 +10,8 @@ DEC-0136). Each changes only the speaker's own look.
 
 from __future__ import annotations
 
+import re
+
 from core import person_settings
 from core.accessibility import TEXT_SIZES, look_for
 from core.assistant_actions import AssistantAction, AssistantActionRegistry
@@ -69,20 +71,89 @@ def _action_set_display_style(context, arguments: dict) -> str:
 
 
 def _action_set_theme(context, arguments: dict) -> str:
-    """Tool set_theme: this person's theme (DEC-0136, core/themes.py: Stark, Y2K Cyber, Cyberpunk, Glass), in both
-    looks; the screens are told."""
+    """Tool set_theme: this person's theme (DEC-0136, core/themes.py: Stark, Y2K Cyber, Cyberpunk, Glass, or one of
+    their own from the Theme Studio, matched by name first), in both looks; the screens are told."""
     from core.themes import KEY, THEMES, theme_of, wants_theme
 
+    from core.themes import all_themes
+
+    themes = all_themes(context)
     wanted = str(arguments.get("theme") or "").lower().strip()
-    theme_id = wanted if wanted in THEMES else wants_theme(wanted)
+    own = next((i for i, t in themes.items() if i not in THEMES and t["name"].lower() in wanted), None)  # theirs first
+    theme_id = wanted if wanted in themes else own or wants_theme(wanted)
     if theme_id is None:
-        return "Which theme? " + ", ".join(t.name for t in THEMES.values()) + "."
-    name = THEMES[theme_id].name
+        return "Which theme? " + ", ".join(t["name"] for t in themes.values()) + "."
+    name = themes[theme_id]["name"]
     if theme_id == theme_of(context):
         return f"You're already on the {name} theme."
     person_settings.put(context, KEY, theme_id)
     context.events.publish("display.changed")
     return f"Switched to the {name} theme."
+
+
+# Accents by name for "make the accent purple" (core/themes.accent_problem refuses ones that read as warnings).
+ACCENT_NAMES = {"cyan": "#35d4ff", "blue": "#3f7bff", "ice": "#96d6ff", "sky": "#6fc6ff", "violet": "#8a5cff",
+                "purple": "#9b6bff", "lavender": "#b9a8ff", "pink": "#ff5ce6", "magenta": "#ff2ea6", "rose": "#ff8ad8",
+                "white": "#e8f0ff", "silver": "#c0c8d4", "teal": "#2ad1c9",
+                "orange": "#ff8a00", "red": "#ef5350", "green": "#4fc48c", "yellow": "#f2d23d", "gold": "#f6c453"}
+
+
+def _action_tweak_theme(context, arguments: dict) -> str:
+    """Tool tweak_theme: a theme of the person's own, from the one in use (or a named base) with the changes they
+    asked for (accent by name or #rrggbb, material, corners, fire, bloom, mist, scanlines), saved (core/theme_actions
+    `theme.save`, so it's undoable) and used. Their own theme in use is updated rather than copied."""
+    from core.actions import ActionError
+    from core.theme_actions import _save
+    from core.themes import MATERIALS, THEMES, all_themes, choices_of, theme_of, wants_theme
+
+    themes = all_themes(context)
+    current = theme_of(context)
+    base_id = wants_theme(str(arguments.get("base") or "")) or current
+    base = themes[base_id]
+    picks = dict(choices_of(base))
+    accent = str(arguments.get("accent") or "").lower().strip()
+    if accent:
+        picks["accent"] = accent if re.fullmatch(r"#[0-9a-f]{6}", accent) else ACCENT_NAMES.get(accent.split()[-1], "")
+        if not picks["accent"]:
+            return "Which colour? " + ", ".join(sorted(k for k in ACCENT_NAMES if k not in ("orange", "red", "green", "yellow", "gold"))) + "."
+    if arguments.get("material") in MATERIALS:
+        picks["material"] = arguments["material"]
+    for key in ("radius", "fire", "bloom", "mist", "scan", "grain"):
+        if arguments.get(key) is not None:
+            picks[key] = arguments[key]
+    own = base_id == current and current not in THEMES
+    params = {"choices": picks, "base": base_id, "use": True,
+              "name": str(arguments.get("name") or "").strip() or (base["name"] if own else "My " + base["name"])}
+    if own:
+        params["id"] = current
+    else:
+        taken = {t["name"].lower() for t in themes.values()}
+        n = 2
+        while params["name"].lower() in taken:
+            params["name"] = f"My {base['name']} {n}"
+            n += 1
+    try:
+        return _save(context, params)
+    except ActionError as problem:
+        return str(problem)
+
+
+def _action_delete_theme(context, arguments: dict) -> str:
+    """Tool delete_theme: one of the person's own themes, by name (built-in ones stay)."""
+    from core.actions import ActionError
+    from core.theme_actions import _delete
+    from core.themes import custom_themes
+
+    wanted = str(arguments.get("theme") or "").lower().strip()
+    found = next((t for t in custom_themes(context) if t["name"].lower() == wanted or t["id"] == wanted), None)
+    found = found or next((t for t in custom_themes(context) if t["name"].lower() in wanted), None)
+    if found is None:
+        mine = [t["name"] for t in custom_themes(context)]
+        return ("Which of your themes? " + ", ".join(mine) + ".") if mine else "You haven't made any themes of your own."
+    try:
+        return _delete(context, {"id": found["id"]})
+    except ActionError as problem:
+        return str(problem)
 
 
 def _action_read_screen(context, arguments: dict) -> str:
@@ -92,8 +163,8 @@ def _action_read_screen(context, arguments: dict) -> str:
 
 
 def register_accessibility_actions(registry: AssistantActionRegistry) -> None:
-    """Registers the accessibility tools: set_text_size, set_high_contrast, set_display_style, set_theme and
-    read_screen."""
+    """Registers the accessibility tools: set_text_size, set_high_contrast, set_display_style, set_theme,
+    tweak_theme, delete_theme and read_screen."""
     registry.register(AssistantAction(
         name="set_text_size", domain="accessibility",
         description="Make the text on screen bigger or smaller for the user (normal, larger, largest, huge).",
@@ -136,6 +207,34 @@ def register_accessibility_actions(registry: AssistantActionRegistry) -> None:
         handler=_action_set_theme,
         trigger_phrases=("theme", "y2k", "myspace", "cyberpunk", "glass theme", "stark theme", "change the colors",
                          "change the colours", "new theme"),
+    ))
+    registry.register(AssistantAction(
+        name="tweak_theme", domain="accessibility",
+        description="Make the user's own version of a theme: change its accent colour (by name: cyan, blue, ice, sky, "
+                    "violet, purple, lavender, pink, magenta, rose, white, silver, teal; or #rrggbb), material (solid, "
+                    "glass, chrome, wire), corners, or the 3D room's fire, bloom, mist or scanlines; saved and used.",
+        parameters={"type": "object", "properties": {
+            "accent": {"type": "string", "description": "a colour name or #rrggbb."},
+            "material": {"type": "string", "description": "solid, glass, chrome or wire."},
+            "base": {"type": "string", "description": "optional: the theme to start from (default: the one in use)."},
+            "name": {"type": "string", "description": "optional: what to call it."},
+            "radius": {"type": "number", "description": "optional: corner roundness, 0 to 28."},
+            "fire": {"type": "number", "description": "optional: the room's fire, 0 to 2."},
+            "bloom": {"type": "number", "description": "optional: the room's glow, 0 to 2."},
+            "mist": {"type": "number", "description": "optional: the room's mist, 0 to 2.5."},
+            "scan": {"type": "number", "description": "optional: scanlines, 0 to 1."},
+        }, "required": []},
+        handler=_action_tweak_theme,
+        trigger_phrases=("accent color", "accent colour", "make it more", "theme but", "my own theme", "tweak the theme",
+                         "change the accent"),
+    ))
+    registry.register(AssistantAction(
+        name="delete_theme", domain="accessibility",
+        description="Delete one of the user's own themes by name (the built-in ones stay).",
+        parameters={"type": "object", "properties": {"theme": {"type": "string", "description": "the theme's name."}},
+                    "required": ["theme"]},
+        handler=_action_delete_theme,
+        trigger_phrases=("delete my theme", "delete the theme", "remove my theme"),
     ))
     registry.register(AssistantAction(
         name="read_screen", domain="accessibility",

@@ -8,7 +8,8 @@
       "hue": "#35d4ff",
       "line": "The house, the kitchen and what keeps it running.",
       "page": "hub.html?area=home",
-      "needs": 1
+      "needs": 1,
+      "art": "img/portals/home.jpg"
     },
     {
       "id": "garage",
@@ -17,7 +18,8 @@
       "hue": "#8fa7bf",
       "line": "Vehicles, tools and the work on them.",
       "page": "hub.html?area=garage",
-      "needs": 3
+      "needs": 3,
+      "art": "img/portals/garage.jpg"
     },
     {
       "id": "plants_animals",
@@ -26,7 +28,8 @@
       "hue": "#35d4ff",
       "line": "What grows and who you feed.",
       "page": "hub.html?area=plants_animals",
-      "needs": 0
+      "needs": 0,
+      "art": "img/portals/plants_animals.jpg"
     },
     {
       "id": "kitchen",
@@ -35,7 +38,8 @@
       "hue": "#e9d4a8",
       "line": "Meals, recipes and the pantry.",
       "page": "hub.html?area=kitchen",
-      "needs": 1
+      "needs": 1,
+      "art": "img/portals/kitchen.jpg"
     },
     {
       "id": "health",
@@ -44,7 +48,8 @@
       "hue": "#ff8a3d",
       "line": "Training, food and how you feel.",
       "page": "hub.html?area=health",
-      "needs": 2
+      "needs": 2,
+      "art": ""
     },
     {
       "id": "recreation",
@@ -53,7 +58,8 @@
       "hue": "#9b6bff",
       "line": "Trips, maps, music and play.",
       "page": "hub.html?area=recreation",
-      "needs": 0
+      "needs": 0,
+      "art": ""
     },
     {
       "id": "security",
@@ -62,7 +68,8 @@
       "hue": "#c0c8d4",
       "line": "Cameras, passwords and sign-ins.",
       "page": "hub.html?area=security",
-      "needs": 0
+      "needs": 0,
+      "art": ""
     },
     {
       "id": "browser",
@@ -71,7 +78,8 @@
       "hue": "#bfefff",
       "line": "She browses. You approve.",
       "page": "hub.html?area=browser",
-      "needs": 0
+      "needs": 0,
+      "art": ""
     },
     {
       "id": "system",
@@ -80,7 +88,8 @@
       "hue": "#dfe9f2",
       "line": "Make MIA yours, and see how she's doing.",
       "page": "hub.html?area=system",
-      "needs": 0
+      "needs": 0,
+      "art": ""
     },
     {
       "id": "finances",
@@ -89,7 +98,8 @@
       "hue": "#3f7bff",
       "line": "Money in, money out, and the way out.",
       "page": "hub.html?area=finances",
-      "needs": 1
+      "needs": 1,
+      "art": ""
     },
     {
       "id": "business",
@@ -98,7 +108,8 @@
       "hue": "#7f95ff",
       "line": "Customers, products and the paperwork.",
       "page": "hub.html?area=business",
-      "needs": 0
+      "needs": 0,
+      "art": ""
     },
     {
       "id": "personal",
@@ -107,7 +118,8 @@
       "hue": "#ff8ad8",
       "line": "Your days, your people, your words.",
       "page": "hub.html?area=personal",
-      "needs": 0
+      "needs": 0,
+      "art": ""
     },
     {
       "id": "learning",
@@ -116,7 +128,8 @@
       "hue": "#6a5cff",
       "line": "Study, the library and skills.",
       "page": "hub.html?area=learning",
-      "needs": 0
+      "needs": 0,
+      "art": ""
     },
     {
       "id": "missions",
@@ -125,7 +138,8 @@
       "hue": "#c86bff",
       "line": "Quests, levels and rewards.",
       "page": "hub.html?area=missions",
-      "needs": 0
+      "needs": 0,
+      "art": ""
     },
     {
       "id": "projects",
@@ -134,7 +148,8 @@
       "hue": "#b9a8ff",
       "line": "Things you're building.",
       "page": "hub.html?area=projects",
-      "needs": 0
+      "needs": 0,
+      "art": ""
     },
     {
       "id": "communications",
@@ -143,7 +158,8 @@
       "hue": "#6fc6ff",
       "line": "Email, MIA's messages and people.",
       "page": "hub.html?area=communications",
-      "needs": 0
+      "needs": 0,
+      "art": ""
     }
   ],
   "hud": {

@@ -220,6 +220,7 @@
     shell: () => read("/api/shell", "shell"),
     health: () => read("/api/health", "health"),
     nexus: () => read("/api/nexus", "nexus"),
+    themes: () => read("/api/themes", "themes"),  // the Theme Studio (DEC-0136)
     // The ID wallet (core/id_wallet.py): numbers travel only in these calls, never in an action.
     wallet: () => read("/api/wallet", "wallet"),
     walletCard: (id) => demo ? read("", "wallet").then((d) => ({ ...d.cards.find((c) => c.id === id), number: "D1234-5678-9012" })) : call("GET", "/api/wallet/" + encodeURIComponent(id)),

@@ -1,6 +1,8 @@
 """
 Themes (DEC-0136, core/themes.py): a theme is data checked against what a theme may change, so no theme can restyle
 a warning or inject anything; each person picks theirs in Settings or by voice, and every page gets it with the shell.
+The Theme Studio builds a theme from a few choices, refuses warning-coloured accents and unreadable text, and saves,
+uses and deletes a person's own themes.
 """
 
 import time
@@ -102,3 +104,88 @@ def test_every_page_with_the_design_tokens_also_loads_the_materials():
         html = page.read_text(encoding="utf-8")
         if 'href="tokens.css"' in html:
             assert html.index('href="tokens.css"') < html.index('href="themes.css"'), page.name
+
+
+def test_the_studio_builds_a_theme_from_a_few_choices_and_reads_one_back():
+    from core.themes import build_theme, choices_of
+
+    y2k = as_data(THEMES["y2k"])
+    picks = choices_of(y2k)
+    assert picks["accent"] == "#ff5ce6" and picks["font"] == "y2k" and picks["material"] == "chrome" and picks["radius"] == 14
+    picks.update(accent="#8a5cff", radius=40)
+    theme = build_theme(picks, y2k, "my_violet", "Violet")
+    assert theme["tokens"]["--accent"] == "#8a5cff" and theme["tokens"]["--rgb-accent"] == "138, 92, 255"
+    assert theme["tokens"]["--radius"] == "28px" and theme["choices"]["radius"] == 28
+    assert theme["tokens"]["--theme-backdrop"] == y2k["tokens"]["--theme-backdrop"]  # the base's backdrop stays
+    assert theme["room"]["accent"] == "#8a5cff" and theme["room"]["palette"] == y2k["room"]["palette"]
+    assert choices_of(theme)["accent"] == "#8a5cff"
+
+
+def test_an_accent_that_looks_like_a_warning_or_text_too_faint_to_read_is_refused():
+    from core.themes import STARK_CHOICES, accent_problem, build_theme, contrast
+
+    assert "amber" in accent_problem("#f2b33d") and "amber" in accent_problem("#ff9a00")
+    assert "red" in accent_problem("#e53935") and "green" in accent_problem("#4fc48c")
+    for fine in ("#35d4ff", "#ff5ce6", "#8a5cff", "#96d6ff", "#e8f0ff", "#c0c8d4"):
+        assert accent_problem(fine) is None, fine
+    assert contrast("#ffffff", "#000000") > 20
+    with pytest.raises(ValueError):
+        build_theme({**STARK_CHOICES, "accent": "#ff9a00"})
+    with pytest.raises(ValueError):
+        build_theme({**STARK_CHOICES, "text": "#20242a"})
+
+
+def test_saving_using_and_deleting_a_theme_of_your_own(ctx):
+    from core.actions import ActionError
+    from core.theme_actions import _delete, _describe_delete, _describe_save, _save
+    from core.themes import all_themes, choices_of, custom_themes
+
+    picks = {**choices_of(as_data(THEMES["glass"])), "accent": "#b9a8ff"}
+    params = {"name": "Lavender", "choices": picks, "base": "glass", "use": True}
+    assert _describe_save(ctx, params) == "Save the new theme Lavender and use it"
+    assert "in use" in _save(ctx, params)
+    mine = custom_themes(ctx)
+    assert [t["name"] for t in mine] == ["Lavender"] and theme_of(ctx) == mine[0]["id"] == "my_lavender"
+    assert for_shell(ctx)["tokens"]["--accent"] == "#b9a8ff" and for_shell(ctx)["material"] == "glass"
+    with pytest.raises(ActionError):
+        _describe_save(ctx, params)  # the same name again
+    assert _describe_save(ctx, {**params, "id": "my_lavender"}).startswith("Update your theme Lavender")
+    with pytest.raises(ActionError):
+        _describe_save(ctx, {**params, "id": "stark", "name": "Stark"})  # built-ins stay as they are
+    with pytest.raises(ActionError):
+        _describe_save(ctx, {**params, "name": "Orange", "choices": {**picks, "accent": "#ff8a00"}})
+    assert "goes back to Stark" in _describe_delete(ctx, {"id": "my_lavender"})
+    assert "Back to Stark" in _delete(ctx, {"id": "my_lavender"}) and theme_of(ctx) == "stark"
+    assert "my_lavender" not in all_themes(ctx)
+    with pytest.raises(ActionError):
+        _describe_delete(ctx, {"id": "y2k"})
+
+
+def test_your_own_themes_are_in_settings_and_answer_to_their_names(ctx):
+    from core.account_actions import _setting
+    from core.assistant_accessibility_actions import _action_delete_theme, _action_tweak_theme
+    from core.web_account import settings_page
+
+    assert "Purple" not in _action_tweak_theme(ctx, {"accent": "orange"}) and theme_of(ctx) == "stark"
+    assert "saved and in use" in _action_tweak_theme(ctx, {"accent": "purple", "material": "glass"})
+    assert theme_of(ctx) == "my_stark" and for_shell(ctx)["tokens"]["--accent"] == "#9b6bff"
+    assert "saved and in use" in _action_tweak_theme(ctx, {"accent": "pink"})  # theirs in use: updated, not copied
+    assert [t["name"] for t in __import__("core.themes", fromlist=["x"]).custom_themes(ctx)] == ["My Stark"]
+    groups = {g["title"]: g for g in settings_page(ctx)["groups"]}
+    theme_row = next(s for s in groups["Look"]["settings"] if s["key"] == KEY)
+    assert {"value": "my_stark", "label": "My Stark"} in theme_row["options"]
+    assert _setting(ctx, {"key": KEY, "value": "my_stark"})[1] == "my_stark"
+    assert _action_set_theme(ctx, {"theme": "y2k"}) == "Switched to the Y2K Cyber theme."
+    assert _action_set_theme(ctx, {"theme": "use my stark"}) == "Switched to the My Stark theme."
+    assert "Deleted My Stark" in _action_delete_theme(ctx, {"theme": "my stark"})
+    assert "haven't made" in _action_delete_theme(ctx, {"theme": "anything"})
+
+
+def test_the_studio_screen_lists_every_theme_with_what_it_needs(ctx):
+    from core.themes import studio
+
+    page = studio(ctx)
+    assert page["current"] == "stark" and [t["id"] for t in page["themes"]] == list(THEMES)
+    assert all(t["choices"]["accent"].startswith("#") and not t["own"] for t in page["themes"])
+    assert {f["id"] for f in page["fonts"]} >= {"system", "y2k", "technical"} and page["materials"] == list(MATERIALS)
+    assert len(page["sample"]) == 5 and page["min_contrast"] == 4.5
