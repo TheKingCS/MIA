@@ -3,6 +3,8 @@
  * Draws MIA.nexus() (core/web_nexus.nexus): a portal per area on MIASpatial.ring, each in its hue and glowing amber
  * with a count when something inside needs you; the HUD (Today, Browser, Settings, Search, MIA; you, your level and
  * XP); the vapor in the areas' hues. Going through a portal opens that area's hub. By voice: "take me to the garage".
+ * Where the graphics card allows and motion is welcome, the room (web/nexus3d.js) draws the portals instead, with the
+ * chosen one's card beside it; the links stay underneath for the keyboard and screen readers. ?flat keeps the flat one.
  */
 (function () {
   "use strict";
@@ -37,27 +39,71 @@
     return a;
   }
 
+  const needsText = (p) => p.needs ? p.needs + (p.needs === 1 ? " needs you" : " need you") : "Nothing needs you here";
+
+  // The chosen portal's card (the room only): its name, its line, what needs you, and Enter. Clean page text.
+  function card(box, p, go) {
+    const head = el("div", { class: "n3-card-head", style: "--hue:" + p.hue },
+      el("span", { class: "n3-card-ico", "aria-hidden": "true" }, icon(p.icon)), el("h2", {}, p.name));
+    box.style.setProperty("--hue", p.hue);
+    box.replaceChildren(head, el("p", { class: "n3-card-line" }, p.line),
+      el("p", { class: "n3-card-needs" + (p.needs ? " attn" : "") }, needsText(p)),
+      el("button", { type: "button", class: "btn n3-enter", onclick: go }, "Enter ", el("span", { "aria-hidden": "true" }, "›")));
+  }
+
   MIAShell.start(async () => {
     const page = await MIA.nexus();
     hud(page);
     const items = page.portals.map(portal);
     $("ring").replaceChildren(...items);
-    MIASpatial.vapor($("vapor"), page.portals.map((p) => p.hue));
     const remembered = (() => { try { return sessionStorage.getItem("mia.nexus.front"); } catch (e) { return null; } })();
     const start = Math.max(0, page.portals.findIndex((p) => p.id === remembered));
+
+    // The room (web/nexus3d.js) where the graphics card can draw it and motion is welcome; ?flat keeps the flat one.
+    let scene = null;
+    const box = el("aside", { class: "n3-card", "aria-hidden": "true" });
+    const goIn = (i) => {
+      const p = page.portals[i];
+      if (scene) scene.enter(i, p.page); else MIASpatial.enter(items[i], p.page, p.hue);
+    };
+    if (window.MIANexus3D && MIANexus3D.supported() && !/[?&]flat\b/.test(location.search)) {
+      const canvas = el("canvas", { class: "n3-canvas", "aria-hidden": "true" });
+      const labels = el("div", { class: "n3-labels", "aria-hidden": "true" });
+      $("app").prepend(canvas, labels);
+      $("app").append(box);
+      scene = MIANexus3D.mount(canvas, page.portals, {
+        start, labels,
+        onPick: (i) => (ring && i === ring.front ? goIn(i) : ring && ring.go(i)),
+        onOrb: () => MIAShell.talk(true),
+        onDrop: (i) => ring && ring.go(i),
+      });
+      if (scene) document.body.classList.add("nexus-3d");
+      else { canvas.remove(); labels.remove(); box.remove(); }
+    }
+    if (!scene) MIASpatial.vapor($("vapor"), page.portals.map((p) => p.hue));
+
     ring = MIASpatial.ring($("ring"), items, {
       start,
       radius: () => (innerWidth < 640 ? 420 : 760),
       onTurn: (i) => {
         const p = page.portals[i];
         $("here-name").textContent = p.name;
-        $("here-line").textContent = p.needs ? p.needs + " need" + (p.needs === 1 ? "s" : "") + " you · " + p.line : p.line;
+        $("here-line").textContent = p.needs ? needsText(p) + " · " + p.line : p.line;
+        if (scene) { scene.focus(i); card(box, p, () => goIn(i)); }
         try { sessionStorage.setItem("mia.nexus.front", p.id); } catch (e) { /* fine */ }
       },
-      onEnter: (node, i) => MIASpatial.enter(node, page.portals[i].page, page.portals[i].hue),
+      onEnter: (node, i) => goIn(i),
     });
     $("prev").onclick = () => ring.turn(-1);
     $("next").onclick = () => ring.turn(1);
     $("orb").onclick = () => MIAShell.talk(true);
+    if (scene) {  // in the room, the arrows turn it from anywhere on the page
+      document.addEventListener("keydown", (e) => {
+        if (e.defaultPrevented || $("ring").contains(e.target) || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+        if (e.target.closest && e.target.closest("dialog, .talk, [role=dialog]")) return;
+        if (e.key === "ArrowRight") { e.preventDefault(); ring.turn(1); }
+        if (e.key === "ArrowLeft") { e.preventDefault(); ring.turn(-1); }
+      });
+    }
   });
 })();
