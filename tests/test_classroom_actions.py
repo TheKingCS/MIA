@@ -13,6 +13,7 @@ from core.classroom_manager import ClassroomManager, screen
 
 @pytest.fixture
 def person(tmp_path, monkeypatch):
+    """A person with a classroom in a temporary folder and the action center."""
     monkeypatch.setattr(actions, "_who", lambda context: "p1")
     ctx = SimpleNamespace(config=None, undo=None, events=None, actions=ActionCenter())
     ctx.classroom = ClassroomManager(ctx, data_dir=tmp_path)
@@ -20,6 +21,7 @@ def person(tmp_path, monkeypatch):
 
 
 def act(ctx, kind, **params):
+    """Proposes and approves an action as the person; what it did."""
     done = ctx.actions.approve(ctx, ctx.actions.propose(ctx, kind, params, proposed_by="person").proposal_id)
     return done.result
 
@@ -45,6 +47,7 @@ def test_a_subject_its_course_and_lessons_ticked_off(person, monkeypatch):
 
 
 def test_what_it_refuses(person):
+    """A subject needs a name, a course a real subject, and a MIA without a classroom says so."""
     with pytest.raises(ActionError):
         person.actions.propose(person, "subject.add", {"name": "  "}, proposed_by="person")
     with pytest.raises(ActionError):

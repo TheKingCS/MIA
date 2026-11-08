@@ -12,6 +12,7 @@ from core.dev_store import DevStore
 
 @pytest.fixture
 def chat(tmp_path):
+    """The council's chat file and its store in a temporary folder."""
     return tmp_path / "council.jsonl", DevStore(tmp_path / "council")
 
 
@@ -36,6 +37,7 @@ def test_a_message_another_session_added_to_the_repo_joins_the_pc(chat):
 
 
 def test_mentions():
+    """Mentions name the members once each, @all names everyone, and no mention is none."""
     assert council.mentions("@codex and @Claude, also @codex @nobody") == ["codex", "claude"]
     assert council.mentions("@all what do you think?") == list(council.MEMBERS)
     assert council.mentions("just saying") == []
@@ -94,6 +96,7 @@ def test_a_usage_limit_is_a_rest_with_a_reset_time_and_an_error_isnt(tmp_path):
 
 
 def test_reset_times():
+    """A usage limit's reset is read from its message, in hours or a clock time."""
     now = datetime(2026, 11, 4, 20, 0, tzinfo=timezone.utc)
     assert dev_usage.reset_at("Limit reached, resets in 2 hours", now) == datetime(2026, 11, 4, 22, 0, tzinfo=timezone.utc)
     clock = dev_usage.reset_at("5-hour limit reached ∙ resets 3pm", now)

@@ -30,6 +30,7 @@ TODAY = date(2026, 9, 11)
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the maintenance, readings and insights files at a temporary folder."""
     data_dir = tmp_path / "data"
     monkeypatch.setattr(maintenance_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(maintenance_manager_module, "_MAINTENANCE_FILE", data_dir / "maintenance.json")
@@ -43,6 +44,7 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _make_context() -> AppContext:
+    """A context with the data logger, maintenance and insights."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     context.data_logger = DataLoggerManager(context)
     context.maintenance = MaintenanceManager(context)
@@ -51,6 +53,7 @@ def _make_context() -> AppContext:
 
 
 def _asset(context):
+    """A truck."""
     return context.maintenance.add_asset(name="Truck")
 
 

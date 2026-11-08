@@ -25,6 +25,7 @@ TODAY = date.today()
 
 @pytest.fixture
 def world(tmp_path, monkeypatch):
+    """A world with a late bill, an overdue oil check and eggs on the grocery list."""
     context = build_world(tmp_path, monkeypatch)
     context.actions = ActionCenter()
     context.budget.add_bill("Electric", 120.0, (TODAY - timedelta(days=1)).isoformat(), recurrence="monthly")
@@ -36,6 +37,7 @@ def world(tmp_path, monkeypatch):
 
 
 def _every_panel(context):
+    """Every glasses panel this world can draw, as (app, item, panel)."""
     for app, items in PANELS.items():
         for item, _label, _build in items:
             panel = glasses_panel(context, app, item, TODAY)
@@ -172,6 +174,7 @@ def test_a_child_gets_child_apps_only(world):
 
 
 def test_the_endpoints(world):
+    """The glasses' cards and panels are served to a signed-in person, and unknown ones aren't."""
     from fastapi.testclient import TestClient
 
     import server.app as server_app

@@ -77,8 +77,9 @@ def _missions(context) -> int:
 
 
 def nexus(context, today: Optional[date] = None) -> dict:
-    """The Nexus screen: portals in sidebar order with what needs you in each and its picture (once there), the HUD,
-    and the day in one line."""
+    """The Nexus screen: portals in sidebar order with what needs you in each and its picture (the person's own
+    painting if they put one there, core/portal_pictures, else Muse's once it's in), the HUD, and the day in one line."""
+    from core.portal_pictures import picture
     from core.web_areas import sidebar
     from core.web_surfaces import _level, _profile, date_text
 
@@ -87,7 +88,7 @@ def nexus(context, today: Optional[date] = None) -> dict:
     status = portal_status(items)
     visible = {a["id"] for a in sidebar(context)}
     portals = [{"id": a.id, "name": a.name, "icon": a.icon, "hue": a.hue, "line": a.tagline,
-                "page": f"hub.html?area={a.id}", "needs": status.get(a.id, 0), "art": portal_art(a.id)}
+                "page": f"hub.html?area={a.id}", "needs": status.get(a.id, 0), "art": picture(context, a.id)}
                for a in AREAS if a.id in visible]
     _pid, profile = _profile(context)
     due = sum(1 for i in items if i.get("when") in ("overdue", "today"))

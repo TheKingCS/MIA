@@ -9,6 +9,7 @@ from core import offline_maps as om
 
 
 def _fake_pmtiles(path, w=-105.05, s=39.97, e=-104.95, n=40.04):
+    """Writes a small file with a PMTiles header for the given bounds."""
     head = bytearray(127)
     head[:7], head[7] = b"PMTiles", 3
     head[100], head[101] = 0, 15
@@ -37,6 +38,7 @@ def test_a_map_files_header(tmp_path):
 
 
 def test_the_cut(tmp_path, monkeypatch):
+    """An area is cut from a build with its bounds and zoom; a backwards box or a bad name is refused."""
     monkeypatch.setattr(om, "TOOL", tmp_path / "pmtiles.exe")
     (tmp_path / "pmtiles.exe").write_bytes(b"")
     ran = []
@@ -57,6 +59,7 @@ def test_the_cut(tmp_path, monkeypatch):
 
 
 def test_the_newest_build():
+    """The newest map build is picked from the list."""
     builds = b'[{"key": "20261105.pmtiles"}, {"key": "20261106.pmtiles"}, {"key": "notes.txt"}]'
     assert om.latest_build(get=lambda url: builds) == "https://build.protomaps.com/20261106.pmtiles"
 

@@ -260,6 +260,10 @@
   "action:connection": {
    "status": "none",
    "why": "declining or allowing a connection is the person's own say (DEC-0146); connections.landed and connections.unlinked watch the connections themselves"
+  },
+  "action:portal": {
+   "status": "none",
+   "why": "which painting is in a portal is the person's own look (DEC-0140); paintings are watched with the art studio's"
   }
  }
 }

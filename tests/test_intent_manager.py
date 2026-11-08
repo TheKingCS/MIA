@@ -20,6 +20,7 @@ from core.intent_manager import IntentManager
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the intents file at a temporary folder."""
     data_dir = tmp_path / "data"
     intents_file = data_dir / "intents.json"
     monkeypatch.setattr(intent_manager_module, "_DATA_DIR", data_dir)
@@ -28,6 +29,7 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _make_manager() -> IntentManager:
+    """An intent manager on a fresh context."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     return IntentManager(context)
 
@@ -49,6 +51,7 @@ def test_add_intent_persists_across_a_fresh_load(isolated_paths):
 
 
 def test_add_intent_defaults(isolated_paths):
+    """A new goal is active and not the primary one."""
     manager = _make_manager()
     intent = manager.add_intent(name="X")
     assert intent.status == "Active"

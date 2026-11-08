@@ -14,6 +14,7 @@ BY_ID = {l.id: l for l in loops.LOOPS}
 
 
 def test_what_was_said():
+    """A game or sport said in passing is read with its time, effort, who with and day; other plays aren't."""
     assert recreation.parse("played pickleball for an hour with Sam and Jo, it was hard") == {
         "what": "pickleball", "minutes": 60, "effort": 7, "with": ["Sam", "Jo"], "date": date.today().isoformat()}
     hike = recreation.parse("went hiking for 2 hours yesterday, it was a 7 out of 10")
@@ -27,6 +28,7 @@ def test_what_was_said():
 
 @pytest.fixture
 def person(tmp_path, monkeypatch):
+    """A person with a recreation log and the action center."""
     from core import actions
 
     monkeypatch.setattr(actions, "_who", lambda context: "p1")
@@ -44,6 +46,7 @@ def test_a_game_is_a_load_and_a_life_event(person, tmp_path):
 
 
 def test_logging_by_voice(person):
+    """Saying a game logs it with its training load and asks how hard it was."""
     from core.quick_commands import _played
 
     said = _played(person, "played basketball for 45 minutes")

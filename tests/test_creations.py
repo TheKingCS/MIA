@@ -22,6 +22,7 @@ DESIGN = {"title": "Seed Bank", "icon": "greenhouse", "about": "Seeds saved for 
 
 @pytest.fixture
 def world(tmp_path, monkeypatch):
+    """A world with creations, the household's and the person's record sets, and the action center."""
     w = build_world(tmp_path, monkeypatch)
     w.creations = Creations(w, data_dir=w.my_dir)
     w.record_sets = RecordSets(w, data_dir=w.home_dir)
@@ -45,6 +46,7 @@ def model(*designs):
 
 
 def act(w, kind, params):
+    """Proposes and approves an action; the result."""
     proposal = w.actions.propose(w, kind, params)
     return w.actions.approve(w, proposal.proposal_id)
 
@@ -218,6 +220,7 @@ def test_the_whole_way_through_the_server(tmp_path, monkeypatch):
 
 
 def _history(w, kind, summary, payload):
+    """Records a life event in the household's folder."""
     from core import life_events
 
     class Here:  # the household's folder, as a store would be

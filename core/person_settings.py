@@ -52,6 +52,7 @@ PERSONAL_SETTINGS = (
     "style.compare",  # DEC-0138: whether MIA now and then offers an answer two ways (core/answer_compare.py)
     "style.last_offer",  # DEC-0138: the day she last offered two ways
     "style.pending",  # DEC-0138: the two-ways offer waiting for a pick
+    "nexus.portal_pictures",  # DEC-0140: their own paintings in the Nexus portals (core/portal_pictures.py)
     "system.last_season_note",
     "party.leaderboard",
     "sound.on",

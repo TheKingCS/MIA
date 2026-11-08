@@ -285,10 +285,11 @@ def _staging(context) -> Path:
 
 
 def start(context, description: str, use: str = "backdrop", apply: bool = False, engine: Optional[ComfyEngine] = None,
-          wait: bool = False) -> dict:
+          wait: bool = False, area: str = "") -> dict:
     """Starts a painting: checks the words and that the engine is running, then paints on a worker thread. Returns the
     job ({id, status: painting, description, use}); ValueError with a sentence when it can't start. `apply`: put it up
-    as the background when it's done (settle). `wait`: paint on this thread (tests)."""
+    as the background when it's done (settle); for a portal picture with `area`, put it in that area's portal instead
+    (core/portal_pictures). `wait`: paint on this thread (tests)."""
     reason = problem(description)
     if reason:
         raise ValueError(reason)
@@ -304,7 +305,7 @@ def start(context, description: str, use: str = "backdrop", apply: bool = False,
     prompt = prompt_for(description, use)
     seed = random.randint(1, 2**31 - 1)
     job = {"id": uuid.uuid4().hex[:12], "person": _person(context), "description": description, "use": use,
-           "apply": bool(apply), "status": "painting", "error": "", "art_id": "", "seed": seed, "prompt": prompt,
+           "apply": bool(apply), "area": str(area or "") if use == "portal" else "", "status": "painting", "error": "", "art_id": "", "seed": seed, "prompt": prompt,
            "engine": engine.url, "started": time.time(), "staged": "", "settled": False}
     staging = _staging(context)
 
@@ -354,14 +355,15 @@ def active(context) -> int:
 
 
 def public(job: dict) -> dict:
-    """Pure logic. A job as the page sees it."""
-    return {k: job[k] for k in ("id", "description", "use", "apply", "status", "error", "art_id")} | {
+    """Pure logic. A job as the page sees it (with the area, for a picture going in a portal)."""
+    return {k: job.get(k, "") for k in ("id", "description", "use", "apply", "area", "status", "error", "art_id")} | {
         "seconds": round(time.time() - job["started"])}
 
 
 def settle(context) -> list[dict]:
     """On the main thread: this person's finished paintings become pictures in their store; one asked for as the
-    background goes up as their theme's backdrop. Returns the jobs it settled."""
+    background goes up as their theme's backdrop, one asked for an area's portal goes in that portal. Returns the jobs
+    it settled."""
     store = getattr(context, "art", None)
     me = _person(context)
     with _LOCK:
@@ -374,7 +376,14 @@ def settle(context) -> list[dict]:
             item = store.add(Path(job["staged"]), job["description"], job["use"], job["prompt"], job["seed"], job["engine"])
             with _LOCK:
                 job.update(status="done", art_id=item["id"])
-            if job["apply"]:
+            if job["apply"] and job.get("area"):
+                try:
+                    from core.portal_pictures import put_up
+
+                    put_up(context, job["area"], item["id"])
+                except ValueError as problem_:
+                    log.warning("Art: couldn't put %s in the %s portal: %s", item["id"], job["area"], problem_)
+            elif job["apply"]:
                 try:
                     use_as_backdrop(context, item["id"])
                 except ValueError as problem_:
@@ -387,7 +396,8 @@ def settle(context) -> list[dict]:
 
 
 def _tell(context, job: dict, item: Optional[dict]) -> None:
-    """A note that the painting is ready (or why not): a reply to what the person asked, so it goes straight to
+    """A note that the painting is ready, and where it went (the background, a portal, or the Theme Studio), or why
+    not: a reply to what the person asked, so it goes straight to
     notifications rather than through the communication gate."""
     notifications = getattr(context, "notifications", None)
     if notifications is None:
@@ -396,8 +406,9 @@ def _tell(context, job: dict, item: Optional[dict]) -> None:
         if item is None:
             notifications.notify("Painting didn't finish", job["error"] or "The image engine stopped.")
         else:
-            notifications.notify("Painting ready", f"{job['description'][:60]}" + (" is up as your background." if job["apply"]
-                                 else " is in your art, in the Theme Studio."))
+            notifications.notify("Painting ready", f"{job['description'][:60]}" + (
+                " is in its portal in the Nexus." if job["apply"] and job.get("area")
+                else " is up as your background." if job["apply"] else " is in your art, in the Theme Studio."))
     except Exception:
         log.exception("Art: couldn't send the note")
 

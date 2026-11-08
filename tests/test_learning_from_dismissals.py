@@ -23,6 +23,7 @@ DAY1 = datetime(2026, 9, 21, 9, 0)
 
 @pytest.fixture
 def ctx(tmp_path, monkeypatch):
+    """A context with the config, notifications and the communication gate on temporary files."""
     monkeypatch.setattr(config_module, "_CONFIG_FILE", tmp_path / "config.json")
     monkeypatch.setattr(gate_module, "_DATA_DIR", tmp_path)
     monkeypatch.setattr(gate_module, "_LOG_FILE", tmp_path / "communication_log.json")
@@ -35,11 +36,13 @@ def ctx(tmp_path, monkeypatch):
 
 
 def budget_nudge(day):
+    """The budget check-in MIA would offer on a given day."""
     return Candidate(topic="budget_nudge", title="Budget check-in", message=f"Day {day}: groceries at 80%.",
                      urgency=TIMELY, fingerprint=f"budget-{day}")
 
 
 def send_and_dismiss(ctx, days, dismiss=True):
+    """Offers the nudge on each day and, unless told not to, dismisses it an hour later."""
     for day in days:
         now = DAY1 + timedelta(days=day)
         ctx.communication.clock = lambda now=now: now + timedelta(hours=1)  # dismissed an hour later

@@ -18,6 +18,7 @@ from core.push_subscription_manager import PushSubscriptionManager
 
 
 class _FakeConfig:
+    """A config that always gives the default."""
     def get(self, key: str, default=None):
         """The default."""
         return default
@@ -25,12 +26,14 @@ class _FakeConfig:
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the push subscriptions file at a temporary folder."""
     data_dir = tmp_path / "data"
     monkeypatch.setattr(push_subscription_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(push_subscription_manager_module, "_SUBSCRIPTIONS_FILE", data_dir / "push_subscriptions.json")
 
 
 def _make_context() -> AppContext:
+    """A context with push subscriptions."""
     context = AppContext(config=_FakeConfig(), events=EventBus())
     context.push_subscriptions = PushSubscriptionManager(context)
     return context

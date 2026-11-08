@@ -20,16 +20,19 @@ def qapp():
 
 
 def _press(pos):
+    """A left-button press at a point."""
     return QMouseEvent(QMouseEvent.Type.MouseButtonPress, QPointF(*pos), QPointF(*pos),
                        Qt.MouseButton.LeftButton, Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier)
 
 
 def _release(pos):
+    """A left-button release at a point."""
     return QMouseEvent(QMouseEvent.Type.MouseButtonRelease, QPointF(*pos), QPointF(*pos),
                        Qt.MouseButton.LeftButton, Qt.MouseButton.NoButton, Qt.KeyboardModifier.NoModifier)
 
 
 def _move(pos):
+    """A move at a point with the left button held."""
     return QMouseEvent(QMouseEvent.Type.MouseMove, QPointF(*pos), QPointF(*pos),
                        Qt.MouseButton.NoButton, Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier)
 

@@ -62,6 +62,7 @@ def test_formats_script_without_category():
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the expedition, trip, waypoint, journal, inventory, notification and sync files at a temporary folder."""
     data_dir = tmp_path / "data"
     monkeypatch.setattr(expedition_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(expedition_manager_module, "_EXPEDITIONS_FILE", data_dir / "expeditions.json")
@@ -80,6 +81,7 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _make_context(tmp_path, device_profile: str = "home") -> AppContext:
+    """A context set up as this device profile, with the field stores."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     context.config.set("system.device_profile", device_profile)
     context.config.set("trips.photo_root_path", str(tmp_path / "trip_photos"))
@@ -113,6 +115,7 @@ def _make_bundle(tmp_path) -> Path:
 
 
 def _make_device(mountpoint: Path, name: str = "sdb") -> BlockDevice:
+    """A removable USB drive mounted at a folder."""
     return BlockDevice(name=name, size="32G", mountpoint=str(mountpoint), fstype="ext4", model="Test Drive", tran="usb", removable=True)
 
 

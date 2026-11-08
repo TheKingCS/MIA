@@ -29,6 +29,7 @@ def test_what_a_line_can_be_checked_against():
 
 @pytest.fixture
 def person(tmp_path, monkeypatch):
+    """A person with an operating journal, the action center and a history the test fills."""
     from core import actions
     import core.life_events as le
 
@@ -42,6 +43,7 @@ def person(tmp_path, monkeypatch):
 
 
 def workouts(person, per_week):
+    """Adds workouts to the history: so many each week, newest week last."""
     monday = TODAY - timedelta(days=TODAY.weekday())
     for w, n in enumerate(per_week[::-1]):
         for i in range(n):
@@ -80,6 +82,7 @@ def test_self_rated_lines_and_the_loop(person):
 
 
 def test_talking_to_it(person):
+    """Lines are added and rated by talking, and other talk is left alone."""
     said = oj.reply(person, "add to my operating journal: cook at home 5 nights a week")
     assert "check it against your meals logged" in said and person.operating_journal.lines[0]["habit"]["target"] == 5
     oj.reply(person, "Add to my operating journal: be up before the sun")

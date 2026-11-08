@@ -23,6 +23,7 @@ from core.event_bus import EventBus
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the calendar's events file at a temporary folder."""
     data_dir = tmp_path / "data"
     events_file = data_dir / "calendar_events.json"
     monkeypatch.setattr(calendar_manager_module, "_DATA_DIR", data_dir)
@@ -31,6 +32,7 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _make_manager() -> CalendarManager:
+    """A calendar manager on a fresh context."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     return CalendarManager(context)
 
@@ -168,6 +170,7 @@ def test_date_recurs_on_biweekly_does_not_match_the_off_week():
 # ------------------------------------------------------------------
 
 def _event(event_date: str, recurrence=None) -> CalendarEvent:
+    """An event on a date, with an optional repeat."""
     return CalendarEvent(event_id="e1", title="Event", date=event_date, recurrence=recurrence)
 
 

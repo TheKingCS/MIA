@@ -22,6 +22,7 @@ from core.expedition_sync import export_expedition_data, find_export_bundles, im
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the sync's data and trip photos at a temporary folder."""
     data_dir = tmp_path / "data"
     data_dir.mkdir(parents=True)
     trip_photos_dir = tmp_path / "trip_photos"
@@ -32,6 +33,7 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _write_json(path: Path, records: list[dict]) -> None:
+    """Writes records as a JSON file."""
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(records), encoding="utf-8")
 
@@ -281,5 +283,6 @@ def test_import_still_merges_other_files_when_one_is_corrupted(isolated_paths, t
 
 
 def _write_json_raw(path: Path, content: str) -> None:
+    """Writes text as a file, for a damaged one."""
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content, encoding="utf-8")

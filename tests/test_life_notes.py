@@ -35,6 +35,7 @@ def test_and_what_it_leaves_alone(said):
 
 
 def _chat(**kw):
+    """An everyday conversation (not off the record, not the journal, not private), with any field overridden."""
     return SimpleNamespace(conversation_id="c1", off_record=False, journal=False, private_turn=False, mode="companion",
                            pending_note=None, **kw)
 
@@ -65,6 +66,7 @@ def test_never_in_a_private_or_personal_conversation(tmp_path):
 
 
 def test_done_and_forgotten(tmp_path):
+    """A note is kept once, marked done, and forgotten; an unknown kind is refused."""
     store = LifeNotes(data_dir=tmp_path)
     note = store.add("idea", "sell honey")
     assert store.add("idea", "Sell honey") is note  # the same open note once
@@ -194,6 +196,7 @@ def test_kept_or_forgotten_by_voice(tmp_path, monkeypatch):
 
 
 def test_the_kept_screen(tmp_path):
+    """Kept lists promises open first, each with who it's to and when."""
     store = LifeNotes(data_dir=tmp_path)
     old = store.add("commitment", "call the bank")
     store.mark_done(old["id"])

@@ -13,12 +13,14 @@ from core.dev_store import DevStore
 
 
 def loop(**kw):
+    """A loop with a reading of 3 of 10, with any field overridden."""
     base = dict(id="t.loop", area="test", what="things that went wrong", scope="device",
                 measure=lambda c: loops.Reading(3, 10, "3 of 10"), floor=1, files=("core/x.py",))
     return loops.Loop(**{**base, **kw})
 
 
 def test_judging_a_reading():
+    """A reading is judged below its floor, ok, thin, or slid against its usual."""
     low = loop(floor=1)
     assert loops.judge(low, loops.Reading(3, 10), [])["state"] == "below"
     assert loops.judge(low, loops.Reading(0, 10), [])["state"] == "ok"
@@ -33,6 +35,7 @@ def test_judging_a_reading():
 
 @pytest.fixture
 def place(tmp_path, monkeypatch):
+    """Points the loops' development data at a temporary folder; where tasks and the activity log go."""
     monkeypatch.setattr(loops, "DEV_DATA", tmp_path / "dev")
     monkeypatch.setattr(loops, "_has_repo", lambda: True)
     return tmp_path / "tasks", tmp_path / "activity.jsonl"

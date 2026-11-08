@@ -17,6 +17,7 @@ from core.undo_log import UndoLog, recording
 
 @pytest.fixture
 def ctx(tmp_path):
+    """A context with conversations and the journal in a temporary folder, and an undo log."""
     context = SimpleNamespace(events=EventBus(), llm=object(), undo=UndoLog(), profile_id="p1",
                               config=SimpleNamespace(get=lambda k, d=None: d))
     context.conversations = ConversationManager(context, data_dir=tmp_path)
@@ -25,6 +26,7 @@ def ctx(tmp_path):
 
 
 def _files_it(tmp_path):
+    """A turn runner that writes the grocery list as a store would, so the capture can be undone."""
     def run(context, conversation, text):
         with recording("add_grocery_item", "p1") as change:
             (tmp_path / "grocery.json").write_text(text)  # a store writing (simulated)
@@ -64,6 +66,7 @@ def test_without_the_model_or_when_it_fails(ctx):
 
 
 def test_the_box(ctx, tmp_path, monkeypatch):
+    """The quick-capture box sends what's typed, says what was done, and Undo takes it back."""
     from PySide6.QtWidgets import QApplication
 
     import gui.quick_capture_dialog as dialog_module

@@ -15,6 +15,7 @@ from tests.engine_world import build_world
 
 
 def test_parsing_and_checking():
+    """Material lines are read with amounts and prices, and a recipe is checked against the shelf with its shopping cost."""
     lines = parse_lines("4 board 2x4 8ft @ 3.98\n- 1/2 gal stain\nWood glue\n\n# note\n1 sheet Plywood 3/4 @54.98\n2x4 scrap")
     assert [(l.quantity, l.unit, l.name, l.unit_cost) for l in lines] == [
         (4, "board", "2x4 8ft", 3.98), (0.5, "gal", "stain", None), (1, "", "Wood glue", None),
@@ -33,6 +34,7 @@ def test_parsing_and_checking():
 
 @pytest.fixture
 def shop(tmp_path, monkeypatch):
+    """A world with materials, products, jobs, the ledger, craft recipes and the action center."""
     from core.craft_recipes import CraftRecipeBook
 
     world = build_world(tmp_path, monkeypatch)
@@ -47,6 +49,7 @@ def shop(tmp_path, monkeypatch):
 
 
 def do(world, kind, **params):
+    """Proposes and approves an action; the proposal."""
     p = world.actions.propose(world, kind, params)
     world.actions.approve(world, p.proposal_id)
     return p

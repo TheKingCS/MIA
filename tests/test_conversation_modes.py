@@ -27,6 +27,7 @@ MODE_CORPUS = [
 
 @pytest.mark.parametrize("text, mode", MODE_CORPUS)
 def test_mode_corpus(text, mode):
+    """Each phrase switches to its mode."""
     assert detect_mode_change(text).mode == mode
 
 
@@ -43,6 +44,7 @@ NO_CHANGE = [
 
 @pytest.mark.parametrize("text", NO_CHANGE)
 def test_no_change(text):
+    """These don't switch the mode."""
     assert detect_mode_change(text).is_empty
 
 
@@ -80,4 +82,5 @@ def test_done_journaling_ends_the_journal():
     ("Work was awful", False),
 ])
 def test_direct_command(text, expected):
+    """A direct command is told apart from talking it through."""
     assert looks_like_direct_command(text) is expected

@@ -14,6 +14,7 @@ from tests.engine_world import build_world
 
 @pytest.fixture
 def world(tmp_path, monkeypatch):
+    """A world with the reward shop and 700 credits."""
     context = build_world(tmp_path, monkeypatch)
     context.actions = ActionCenter()
     context.reward_shop = RewardShop(context, data_dir=tmp_path / "me")
@@ -23,6 +24,7 @@ def world(tmp_path, monkeypatch):
 
 
 def do(world, kind, **params):
+    """Proposes and approves an action, failing the test if it didn't run; the proposal and result."""
     proposal = world.actions.propose(world, kind, params)
     done = world.actions.approve(world, proposal.proposal_id)
     assert done.status == "executed", done.result
@@ -30,6 +32,7 @@ def do(world, kind, **params):
 
 
 def test_flag():
+    """"Again And Again" is a reward that repeats; "Just Once" isn't."""
     assert flag("Just Once") is False and flag("Again And Again") is True and flag(False) is False
 
 

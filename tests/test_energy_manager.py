@@ -24,6 +24,7 @@ from core.event_bus import EventBus
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the energy sources and readings files at a temporary folder."""
     data_dir = tmp_path / "data"
     monkeypatch.setattr(energy_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(energy_manager_module, "_ENERGY_SOURCES_FILE", data_dir / "energy_sources.json")
@@ -33,12 +34,14 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _make_context() -> AppContext:
+    """A context with a data logger."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     context.data_logger = DataLoggerManager(context)
     return context
 
 
 def _make_manager(context: AppContext) -> EnergyManager:
+    """An energy manager, put on the context as context.energy."""
     manager = EnergyManager(context)
     context.energy = manager
     return manager

@@ -31,11 +31,20 @@
       el("span", { class: "me-xp", role: "img", "aria-label": pct + "% of the way to level " + (h.level + 1) }, el("span", { style: "width:" + pct + "%" })));
   }
 
+  // A portal's picture: Muse's is a page path; one of your own paintings (core/portal_pictures) comes through your
+  // sign-in, so it's fetched (MIA.image) and shown when it arrives.
+  const artUrl = (p) => p.art && p.art.startsWith("/api/") ? MIA.image(p.art) : p.art;
+  function artOf(p) {
+    const node = el("span", { class: "portal-art", "aria-hidden": "true" });
+    Promise.resolve(artUrl(p)).then((url) => { if (url) node.style.backgroundImage = "url(\"" + url + "\")"; });
+    return node;
+  }
+
   function portal(p) {
     // The glass inside the frame holds the swirl: its own flat, clipped layer (3D space turns clipping off).
     // The flat Nexus (reduced motion, no WebGL 2) shows the area's picture too when Muse's is in (H-0096); else its icon.
     const frame = el("span", { class: "portal-frame" + (p.art ? " has-art" : "") },
-      p.art ? el("span", { class: "portal-art", "aria-hidden": "true", style: "background-image:url('" + p.art + "')" }) : null,
+      p.art ? artOf(p) : null,
       el("span", { class: "portal-glass", "aria-hidden": "true" }),
       p.art ? null : el("span", { class: "portal-ico", "aria-hidden": "true" }, icon(p.icon)));
     if (p.needs) frame.append(el("span", { class: "portal-needs" }, p.needs + " need" + (p.needs === 1 ? "s" : "") + " you"));
@@ -79,7 +88,7 @@
       $("app").prepend(canvas, labels);
       $("app").append(box);
       scene = MIANexus3D.mount(canvas, page.portals, {
-        start, labels, theme: MIAShell.roomLight(),
+        start, labels, theme: MIAShell.roomLight(), art: artUrl,
         onPick: (i) => (ring && i === ring.front ? goIn(i) : ring && ring.go(i)),
         onOrb: () => MIAShell.talk(true),
         onDrop: (i) => ring && ring.go(i),

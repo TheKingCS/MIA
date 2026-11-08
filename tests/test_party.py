@@ -12,12 +12,14 @@ from tests.engine_world import build_world
 
 @pytest.fixture
 def world(tmp_path, monkeypatch):
+    """A world with the action center."""
     context = build_world(tmp_path, monkeypatch)
     context.actions = ActionCenter()
     return context
 
 
 def do(world, kind, **params):
+    """Proposes and approves an action, failing the test if it didn't run; the proposal and result."""
     proposal = world.actions.propose(world, kind, params)
     done = world.actions.approve(world, proposal.proposal_id)
     assert done.status == "executed", done.result
@@ -25,6 +27,7 @@ def do(world, kind, **params):
 
 
 def test_share_out():
+    """Tasks are shared out round the party in turn, and nothing goes out with nobody to take it."""
     assert share_out(["a", "b", "c"], ["X", "Y"]) == [("a", "X"), ("b", "Y"), ("c", "X")]
     assert share_out(["a"], []) == []
 

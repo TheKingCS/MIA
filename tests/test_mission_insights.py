@@ -38,6 +38,7 @@ TODAY = date(2026, 9, 14)
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the missions, expeditions, trips, waypoints and insights files at a temporary folder."""
     data_dir = tmp_path / "data"
     monkeypatch.setattr(mission_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(mission_manager_module, "_MISSIONS_FILE", data_dir / "missions.json")
@@ -54,6 +55,7 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _make_context() -> AppContext:
+    """A context with waypoints, expeditions, trips, missions and insights."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     context.waypoints = WaypointManager(context)
     context.expeditions = ExpeditionManager(context)
@@ -64,6 +66,7 @@ def _make_context() -> AppContext:
 
 
 def _mission(**overrides) -> Mission:
+    """An active mission, with any field overridden."""
     defaults = dict(
         mission_id="m1", name="Master Angler", status="active",
         created_at="2026-09-01T10:00:00", updated_at="2026-09-01T10:00:00",
