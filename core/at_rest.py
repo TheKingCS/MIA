@@ -14,7 +14,8 @@ plain one is returned as it is, so each store reads both ways while it moves. A 
 **The history, a line at a time.** `life_events.jsonl` is appended and never rewritten, so it can't be one envelope:
 it's in `LINE_SEALED`, each line sealed as it's appended (`seal_line`) and opened line by line (`open_lines`), plain
 lines from before reading as they are and a line that won't open kept as it is, never the whole history lost. It's
-sealed because the history repeats what sealed stores keep ("Added a person: ...").
+sealed because the history repeats what sealed stores keep ("Added a person: ..."). Its older plain lines are sealed
+only when the person asks, once, with MIA closed (`seal_history`, `python -m tools.data_key seal --history`).
 
 **The data key.** 32 random bytes, kept in data/.keys/data_key.json protected by Windows DPAPI (`_protect`): tied to
 the Windows sign-in, so there's nothing to type when MIA starts, and the file is useless anywhere else. A sealed file
@@ -460,6 +461,29 @@ def restore(code: str) -> str:
         _keys, _current, _blocked = held, kid, ""
     _alert("data_key_restored")
     return kid
+
+
+def seal_history(folders: list[Path]) -> int:
+    """Seals the plain lines already in each folder's history (LINE_SEALED files), the one time the history is
+    rewritten (`python -m tools.data_key seal --history`, only with MIA closed: an event appended meanwhile could be
+    lost). Every line stays, in order; lines already sealed, and any that won't open here, are kept as they are.
+    Returns how many files were sealed."""
+    from core.atomic_write import atomic_write_text
+
+    if _current_key() is None:
+        return 0
+    done = 0
+    for folder in folders:
+        for name in sorted(LINE_SEALED):
+            path = Path(folder) / name
+            if not path.is_file():
+                continue
+            raw = path.read_text(encoding="utf-8")
+            if all(is_sealed(line.strip()) for line in raw.splitlines() if line.strip()):
+                continue
+            atomic_write_text(path, open_text(path))  # seal_text seals each plain line; sealed ones stay as they are
+            done += 1
+    return done
 
 
 def seal_now(folders: list[Path]) -> int:

@@ -332,3 +332,27 @@ def test_the_history_is_sealed_a_line_at_a_time_and_sync_carries_it_open(tmp_pat
     assert len(raw) == 2 and all(at_rest.is_sealed(x) for x in raw)
     assert at_rest.open_text(path) == '{"a": 1}\n{"b": 2}\n' and your_data.describe(path)["sealed"] is True
     assert "life_events.jsonl" in at_rest.status()["lines"] and at_rest.seal_line(tmp_path / "notes.jsonl", "x") == "x"
+
+
+def test_sealing_the_earlier_history_keeps_every_line_and_waits_for_mia_to_close(tmp_path, monkeypatch, capsys):
+    """seal_history seals a history's plain lines once, every line kept in order (sealed ones and one that won't open
+    as they were); a history already all sealed isn't touched; the command refuses while MIA is open."""
+    from tools import data_key
+
+    mine = tmp_path / "me"
+    mine.mkdir()
+    stranger = at_rest.PREFIX + "deadbeef:bm90IGEgcmVhbCBsaW5l"
+    path = mine / "life_events.jsonl"
+    path.write_text('{"n": 1}\n' + at_rest.seal_line(path, '{"n": 2}') + "\n" + stranger + "\n" + '{"n": 3}\n',
+                    encoding="utf-8")
+    before = at_rest.open_text(path)
+    assert at_rest.seal_history([tmp_path, mine]) == 1
+    raw = [x for x in path.read_text(encoding="utf-8").splitlines() if x]
+    assert len(raw) == 4 and all(at_rest.is_sealed(x) for x in raw) and raw[2] == stranger
+    assert at_rest.open_text(path) == before
+    assert at_rest.seal_history([mine]) == 0  # all sealed now
+    monkeypatch.setattr(data_key, "folders", lambda: [mine])
+    monkeypatch.setattr(data_key, "mia_open", lambda: True)
+    assert data_key.main(["seal", "--history"]) == 1 and "Close her first" in capsys.readouterr().out
+    monkeypatch.setattr(data_key, "mia_open", lambda: False)
+    assert data_key.main(["seal", "--history"]) == 0 and "0 histories" in capsys.readouterr().out

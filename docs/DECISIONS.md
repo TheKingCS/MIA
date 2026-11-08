@@ -2008,7 +2008,8 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   CLAUDE.md), read line by line (`open_lines`: a plain line from before still reads, one that won't open is kept as
   it is and skipped, never the history), and a sync merge written back is sealed line by line. Measured: opening all
   2,247 lines of the household's log takes about 5 ms. Lines written before today stay plain until the file is
-  rewritten once with MIA closed (Zac's call: WAITING_ON). New sealed stores' history lines name no details (K-0150).
+  rewritten once with MIA closed (Zac's call: WAITING_ON; built, `python -m tools.data_key seal --history`, refusing
+  while MIA is open). New sealed stores' history lines name no details (K-0150).
 - Related: DEC-0035 (the password vault), DEC-0125
 
 ### DEC-0127: MIA becomes a product, sold by subscription, local-first
