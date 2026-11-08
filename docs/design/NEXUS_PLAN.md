@@ -90,7 +90,10 @@ overdue, the chosen bay's card opens it, and Needs You, Parts Running Low and th
 coming through the portal you arrive out of its light. 05:30, DEC-0135: two looks, picked per
 person in Settings or by voice: Spatial (the Nexus first, areas as rooms) and Cards (the Dashboard first, hubs as
 cards); by device is the default, spatial on the computer and cards on the phone. Next: the pictures, Zac's look on
-the real PC, then the other areas' rooms one at a time.*
+the real PC, then the other areas' rooms one at a time. 2026-11-08 overnight, M4's passes: under reduced motion the flat
+Nexus and the Garage's flat bays show (no canvas, no running animations), and the flat portals now hold Muse's pictures
+too; the room lowers its resolution when frames run slow (judged over 1.5 s, down to half, back up when it can) with
+the bloom's reach kept the same on screen; the chosen portal's rim and fire are held back off its picture (H-0099).*
 
 | # | What | Done when |
 |---|---|---|

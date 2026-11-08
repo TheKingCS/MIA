@@ -254,3 +254,8 @@ body.env .hero h1 { text-shadow: 0 0 18px color-mix(in srgb, var(--hue) 70%, tra
   .room-side { position: static; width: auto; max-height: none; overflow: visible; }
   .room-bench { position: static; transform: none; flex-wrap: wrap; margin-top: 12px; }
 }
+
+/* The flat Nexus's portal pictures (reduced motion, no WebGL 2): the area's picture inside the frame, the glass over it. */
+.portal-art { position: absolute; inset: 0; border-radius: inherit; background-size: cover; background-position: center;
+  opacity: 0.85; filter: saturate(0.95); }
+.portal-frame.has-art .portal-glass { opacity: 0.45; }

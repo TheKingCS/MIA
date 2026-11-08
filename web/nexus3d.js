@@ -466,9 +466,21 @@
       return { tex, fb, w, h };
     }
     let T = null, W = 0, H = 0, cssW = 0, cssH = 0;
+    // Performance pass (NEXUS_PLAN M4): the room draws at fewer pixels on a machine that can't keep up (a phone, an
+    // older laptop), and climbs back when it can, measured over a second and a half of frames. Never below half resolution.
+    let quality = 1, spent = 0, counted = 0;
+    function pace(raw) {
+      if (raw > 1) return;  // a tab coming back from the background, not a slow frame
+      spent += raw; counted += 1;
+      if (spent < 1.5 && counted < 90) return;  // judge over a second and a half (or 90 frames)
+      const avg = spent / counted;
+      spent = 0; counted = 0;
+      if (avg > 0.028 && quality > 0.5) quality = Math.max(0.5, quality * 0.8);
+      else if (avg < 0.014 && quality < 1) quality = Math.min(1, quality * 1.15);
+    }
     function resize() {
       cssW = canvas.clientWidth || innerWidth; cssH = canvas.clientHeight || innerHeight;
-      const dpr = Math.min(window.devicePixelRatio || 1, cssW < 700 ? 1.5 : 1.75);
+      const dpr = Math.min(window.devicePixelRatio || 1, cssW < 700 ? 1.5 : 1.75) * quality;
       const w = Math.max(2, Math.round(cssW * dpr)), h = Math.max(2, Math.round(cssH * dpr));
       if (w === W && h === H && T) return;
       W = w; H = h; canvas.width = w; canvas.height = h;
@@ -544,6 +556,7 @@
 
     function frame(now) {
       raf = 0;
+      pace((now - last) / 1000);
       const dt = Math.min(0.05, (now - last) / 1000); last = now;
       const t = (now - t0) / 1000;
       resize();
@@ -669,11 +682,12 @@
         gl.useProgram(prog.p); setup(prog.u); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       };
       const tex = (unit, t2, u, name) => { gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, t2.tex); gl.uniform1i(u(name), unit); };
+      // the blur reaches the same distance on screen at any quality (its steps are in full-quality pixels)
       pass(P.bright, T.a1, (u) => tex(0, T.scene, u, "uSrc"));
-      pass(P.blur, T.b1, (u) => { tex(0, T.a1, u, "uSrc"); gl.uniform2f(u("uDir"), 1.5 / T.a1.w, 0); });
-      pass(P.blur, T.a1, (u) => { tex(0, T.b1, u, "uSrc"); gl.uniform2f(u("uDir"), 0, 1.5 / T.a1.h); });
-      pass(P.blur, T.b2, (u) => { tex(0, T.a1, u, "uSrc"); gl.uniform2f(u("uDir"), 2.5 / T.b2.w, 0); });
-      pass(P.blur, T.a2, (u) => { tex(0, T.b2, u, "uSrc"); gl.uniform2f(u("uDir"), 0, 2.5 / T.b2.h); });
+      pass(P.blur, T.b1, (u) => { tex(0, T.a1, u, "uSrc"); gl.uniform2f(u("uDir"), 1.5 * quality / T.a1.w, 0); });
+      pass(P.blur, T.a1, (u) => { tex(0, T.b1, u, "uSrc"); gl.uniform2f(u("uDir"), 0, 1.5 * quality / T.a1.h); });
+      pass(P.blur, T.b2, (u) => { tex(0, T.a1, u, "uSrc"); gl.uniform2f(u("uDir"), 2.5 * quality / T.b2.w, 0); });
+      pass(P.blur, T.a2, (u) => { tex(0, T.b2, u, "uSrc"); gl.uniform2f(u("uDir"), 0, 2.5 * quality / T.b2.h); });
       pass(P.final, null, (u) => {
         tex(0, T.scene, u, "uScene"); tex(1, T.a1, u, "uB1"); tex(2, T.a2, u, "uB2");
         gl.uniform1f(u("uT"), t);
