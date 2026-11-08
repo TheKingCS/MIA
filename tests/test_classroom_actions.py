@@ -1,6 +1,6 @@
 """The Classroom's web screen (core/classroom_manager.screen, with the course to continue: DEC-0113) and its actions
 (core/classroom_actions.py), and a lesson's notes both ways: lesson.notes on the screen, add_lesson_notes and
-get_lesson_notes by voice; the skill a lesson trains (lesson.skill, set_lesson_skill)."""
+get_lesson_notes by voice; the skill a lesson trains (lesson.skill, set_lesson_skill); the glasses' Continue panel."""
 
 from types import SimpleNamespace
 
@@ -114,3 +114,22 @@ def test_the_skill_a_lesson_trains_is_set_on_the_screen_and_by_voice(person):
     assert _action_set_lesson_skill(person, {"lesson": "bead", "skill": "welding", "xp": 15}) == \
         "Bead on plate trains Welding now."
     assert screen(person)["subjects"][0]["courses"][0]["lessons"][0]["skill"]["xp"] == 15
+
+
+def test_the_glasses_continue_the_course_one_lesson_at_a_time(person, monkeypatch):
+    import core.classroom_manager as cm
+    from core.glasses import GLASSES_KINDS, _classroom_continue
+
+    monkeypatch.setattr(cm, "grant_xp", lambda *a, **k: None)
+    assert _classroom_continue(person, None)["empty"].startswith("Nothing left to learn")
+    act(person, "subject.add", name="Welding")
+    act(person, "course.add", subject_id=screen(person)["subjects"][0]["id"], name="MIG basics")
+    course = screen(person)["subjects"][0]["courses"][0]
+    for name in ("Safety", "Bead on plate"):
+        act(person, "lesson.add", course_id=course["id"], name=name)
+    panel = _classroom_continue(person, None)
+    assert panel["title"] == "MIG basics · 0 of 2" and [l["text"] for l in panel["lines"]] == ["Safety", "Bead on plate"]
+    first = panel["lines"][0]["action"]
+    assert first["kind"] == "lesson.done" and "lesson.done" in GLASSES_KINDS
+    act(person, "lesson.done", **first["params"])
+    assert [l["text"] for l in _classroom_continue(person, None)["lines"]] == ["Bead on plate"]

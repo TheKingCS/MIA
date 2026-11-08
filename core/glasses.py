@@ -61,6 +61,8 @@ GLASSES_KINDS = frozenset({
     "cooking.next", "cooking.back", "cooking.timer", "cooking.timer_cancel", "cooking.made",
     # a trip underway (core/trip_route.py): "Arrived" at the next stop, logged now
     "trip.arrived",
+    # the course to continue in the Classroom: a lesson ticked done (its skill XP credited once)
+    "lesson.done",
 })
 
 # Apps the glasses don't show as cards: the orb *is* Home and Talk; the
@@ -968,6 +970,24 @@ def _trail(context, today):
     return _panel("On The Trail · " + trip.name, lines, empty)
 
 
+def _classroom_continue(context, today):
+    """Panel: the course to continue (core/classroom_manager.continue_course): the lessons left in it, each with Done
+    (lesson.done), and how far along the course is."""
+    from core.classroom_manager import screen
+
+    page = screen(context)
+    course = page.get("continue")
+    if not page.get("available"):
+        return _panel("Continue", [], "The Classroom isn't available here.")
+    if course is None:
+        return _panel("Continue", [], "Nothing left to learn right now. Add a course in the Classroom.")
+    left = next((c["lessons"] for s in page["subjects"] for c in s["courses"] if c["id"] == course["course_id"]), [])
+    lines = [_line(l["name"], f"+{l['xp']} XP" if l["xp"] else "", "",
+                   {"kind": "lesson.done", "label": "Done", "params": {"lesson_id": l["id"], "done": "yes"}})
+             for l in left if not l["done"]]
+    return _panel(f"{course['course']} · {course['done']} of {course['total']}", lines, "Every lesson is done.")
+
+
 def _project_tasks(context, today):
     """Panel: the open tasks of the projects underway (core/web_projects.py), soonest due first, each with Done
     (task.done) and its project and due day; up to five, the rest counted."""
@@ -1091,6 +1111,7 @@ PANELS: dict[str, tuple[tuple[str, str, Panel], ...]] = {
     "inbox": (("waiting", "Waiting To File", _inbox_waiting),),
     "expeditions": (("trail", "On The Trail", _trail),),
     "workshop": (("tasks", "Project Tasks", _project_tasks),),
+    "classroom": (("continue", "Continue", _classroom_continue),),
 }
 
 # Questions an app's menu hands MIA, as if said aloud (she answers with
