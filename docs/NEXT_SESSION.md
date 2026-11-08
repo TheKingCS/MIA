@@ -800,6 +800,9 @@ https://claude.ai/artifact/H8gYSX2rvneRMp5mgA4qFa: one connector framework on `c
 `core/record_import.py` (read-only, preview, approve, one Undo, keys in the encrypted vault); no-sign-in sources
 first (Airbnb calendar links and CSV, the TurboTax PDF, Sheets as CSV), then Hostaway and OwnerRez keys, then
 Google and QuickBooks OAuth. Waits on Zac's order and on disk encryption / DEC-0126 before tax data.
+**Claimed by the parity session (2026-11-08): the Connect Apps page** (web/connect.html, core/connectors.py): file
+imports on the web (calendar, contacts, bank CSV; only in the Qt Settings until now) and calendar links (Airbnb,
+VRBO, Hostaway) as check-ins and check-outs, previewed and approved.
 
 **Who builds what (2026-11-07 night, after Power and Recent Changes were each built twice at once):** screens
 (web pages, the canvas's look, the review's missing screens: Waiting For You, a plan's page, the Browser in the
