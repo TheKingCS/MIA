@@ -791,6 +791,7 @@ class MIAApplication:
             ("vault_captions", self._check_vault_captions),
             ("dependency_audit", self._check_dependency_audit),
             ("system_map", self._check_system_map),
+            ("direction_nudge", self._check_direction_nudge),
         ]
         # 2026-09-27, Cognitive Extension slice C: checks no longer notify
         # directly. Each one offers what it would say (_offer()), and the
@@ -1134,6 +1135,21 @@ class MIAApplication:
         for item in callbacks(self.context, now.date()):
             self._offer(topic="memory_callback", title=f"{item['icon']} {item['title']}", message=as_message(item),
                         urgency=AMBIENT, source="system", fingerprint=item["key"])
+
+    def _check_direction_nudge(self, now: datetime, today_iso: str) -> None:
+        """Now and then, a gentle nudge toward one of the person's standing directions (DEC-0141) — e.g. make or
+        restore before buying. Occasional (not more than every few days) and through the gate, so it never nags."""
+        import random
+
+        book = getattr(self.context, "direction", None)
+        if book is None or not hasattr(book, "due_for_nudge") or not book.due_for_nudge(today_iso):
+            return
+        message = book.a_nudge(random.random())
+        if not message:
+            return
+        self._offer(topic="produce", title="\U0001F331 A nudge", message=message, urgency=AMBIENT, source="system",
+                    fingerprint=f"produce:{today_iso}")
+        book.mark_nudged(today_iso)
 
     def _check_chronicle(self, now: datetime, today_iso: str) -> None:
         """Sundays: this week's chapter of the Chronicle is ready (DEC-0028)."""

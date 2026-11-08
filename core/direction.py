@@ -43,8 +43,14 @@ class Direction:
     title: str
     statement: str
     encourage: str = ""
+    nudges: list = None  # short proactive prompts MIA can raise now and then; None -> []
     active: bool = True
     created_at: str = ""
+
+    def __post_init__(self) -> None:
+        """Default the mutable nudges list without sharing it across instances."""
+        if self.nudges is None:
+            self.nudges = []
 
     def to_dict(self) -> dict:
         """As a plain dict for JSON."""
@@ -55,7 +61,8 @@ class Direction:
         """From a stored dict; `active` defaults to True."""
         return Direction(direction_id=d.get("direction_id", ""), title=d.get("title", ""),
                          statement=d.get("statement", ""), encourage=d.get("encourage", ""),
-                         active=bool(d.get("active", True)), created_at=d.get("created_at", ""))
+                         nudges=list(d.get("nudges") or []), active=bool(d.get("active", True)),
+                         created_at=d.get("created_at", ""))
 
 
 class DirectionBook:
@@ -67,6 +74,7 @@ class DirectionBook:
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._file = self.data_dir / _FILE if data_dir is not None else _DATA_DIR / _FILE
         self.directions: list[Direction] = []
+        self.last_nudge: str = ""  # ISO date MIA last nudged about a direction, so it stays occasional
         self._load()
 
     def _load(self) -> None:
@@ -79,17 +87,19 @@ class DirectionBook:
             log.exception("Couldn't read directions.json — starting empty.")
             return
         self.directions = [Direction.from_dict(d) for d in raw.get("directions", [])]
+        self.last_nudge = raw.get("last_nudge", "")
 
     def _save(self) -> None:
         """Writes the directions atomically (undoable), sealed at rest."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(self._file, json.dumps({"directions": [d.to_dict() for d in self.directions]},
-                                                 indent=1, ensure_ascii=False))
+        atomic_write_text(self._file, json.dumps(
+            {"directions": [d.to_dict() for d in self.directions], "last_nudge": self.last_nudge},
+            indent=1, ensure_ascii=False))
 
-    def add(self, title: str, statement: str, encourage: str = "") -> Direction:
-        """Set a new standing direction."""
+    def add(self, title: str, statement: str, encourage: str = "", nudges: Optional[list] = None) -> Direction:
+        """Set a new standing direction (with optional short nudge prompts MIA can raise now and then)."""
         d = Direction(direction_id=uuid.uuid4().hex[:10], title=title, statement=statement, encourage=encourage,
-                      active=True, created_at=datetime.now().isoformat(timespec="seconds"))
+                      nudges=list(nudges or []), active=True, created_at=datetime.now().isoformat(timespec="seconds"))
         self.directions.append(d)
         self._save()
         life_events.record(self, "direction_set", title, [f"direction:{d.direction_id}"])
@@ -111,6 +121,32 @@ class DirectionBook:
     def active(self) -> list[Direction]:
         """The directions currently in force."""
         return [d for d in self.directions if d.active]
+
+    def due_for_nudge(self, today: str, every_days: int = 3) -> bool:
+        """Whether it's time for an occasional proactive nudge: there's an active direction with nudges, and it's been
+        at least every_days since the last one (always true the first time)."""
+        from datetime import date
+
+        if not any(d.nudges for d in self.active()):
+            return False
+        if not self.last_nudge:
+            return True
+        try:
+            return (date.fromisoformat(today) - date.fromisoformat(self.last_nudge[:10])).days >= every_days
+        except ValueError:
+            return True
+
+    def a_nudge(self, roll: float) -> str:
+        """One nudge from the active directions' nudges, chosen by `roll` (0-1) so it varies; "" when there are none."""
+        pool = [n for d in self.active() for n in d.nudges]
+        if not pool:
+            return ""
+        return pool[int(roll * len(pool)) % len(pool)]
+
+    def mark_nudged(self, today: str) -> None:
+        """Remember MIA nudged today, so the next one waits."""
+        self.last_nudge = today
+        self._save()
 
     def context_block(self) -> str:
         """The lines MIA carries on every turn: the active directions and how to encourage them, framed so she leans

@@ -2290,6 +2290,6 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   (`build_user_context_block`), framed so MIA leans her suggestions that way when it genuinely fits — the make/restore/
   upcycle angle before buying, the from-scratch natural-food version — but never preachy and never at the cost of the
   quick answer they asked for. The directions live only in the person's own profile; none are hard-coded. Zac's first
-  direction (consumer → producer) is set in his profile. Built + tested; a proactive periodic nudge through the gate is
-  an easy follow-up.
+  direction (consumer → producer) is set in his profile. Built + tested. A proactive nudge is also built: `_check_direction_nudge` raises one of a direction's short
+  prompts through the communication gate at most every few days (topic `produce`), so she gently encourages without nagging.
 - Related: DEC-0054 (life notes), DEC-0067 (what she remembers), DEC-0137 (environment), DEC-0126 (sealing)

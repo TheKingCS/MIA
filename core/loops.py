@@ -330,6 +330,7 @@ CHECK_TOPICS = {
     "grow_alert": "grow_alert", "season": "season", "insurance_renewal": "insurance_renewal", "chronicle": "chronicle",
     "finding_": "findings", "obligation_deadline": "obligation_reminders", "promise_due": "promises",
     "dependency_audit": "dependency_audit",
+    "produce": "direction_nudge",
 }
 
 

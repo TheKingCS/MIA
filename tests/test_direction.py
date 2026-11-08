@@ -48,3 +48,22 @@ def test_an_inactive_direction_drops_out_of_the_context(book):
 
 def test_no_directions_means_an_empty_block(book):
     assert book.context_block() == ""
+
+
+def test_the_nudge_is_occasional_varied_and_remembered(tmp_path):
+    """A nudge fires at most every few days (DEC-0141), varies by the roll, and the last-nudged date persists."""
+    book = DirectionBook(data_dir=tmp_path)
+    book.add("Produce", "Make things.", nudges=["Make a thing", "Grow a thing"])
+    assert book.due_for_nudge("2026-01-10")  # never nudged -> due
+    assert book.a_nudge(0.1) in ("Make a thing", "Grow a thing")
+    assert book.a_nudge(0.9) in ("Make a thing", "Grow a thing")
+    book.mark_nudged("2026-01-10")
+    assert not book.due_for_nudge("2026-01-11")  # too soon
+    assert book.due_for_nudge("2026-01-14")  # a few days later -> due again
+    assert DirectionBook(data_dir=tmp_path).last_nudge == "2026-01-10"  # persists
+
+
+def test_a_direction_without_nudges_is_never_due(tmp_path):
+    book = DirectionBook(data_dir=tmp_path)
+    book.add("Just a value", "no nudges here")
+    assert not book.due_for_nudge("2026-01-10") and book.a_nudge(0.5) == ""

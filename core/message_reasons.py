@@ -47,6 +47,8 @@ REASONS: dict[str, tuple[str, str]] = {
     "self_report": ("my weekly report", "on Sundays I tell the PC's owner what got better in me and what I'm working on"),
     "dependency_audit": ("security updates", "once a week I check the packages I run on against a public list of known "
                                              "security problems, and tell you when one needs updating"),
+    "produce": ("your producer goal", "you asked me to encourage your shift from consumer to producer, so now and then "
+                                      "I nudge you toward making, restoring or growing something yourself"),
 }
 
 
