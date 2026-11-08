@@ -584,6 +584,12 @@ def build_system_message(context, is_action_request: bool, is_teaching_request: 
         styled = style_for(context)  # how the person likes to be answered, learned from A/B picks (DEC-0138)
         if styled:
             parts.append(styled)
+        if not deep:  # never on a turn about faith or meaning
+            from core.connections import connections_for
+
+            linked = connections_for(context)  # a tie to something started weeks ago, raised once if it fits
+            if linked:
+                parts.append(linked)
     parts.append(closing_instruction)
     return "\n\n".join(parts)
 

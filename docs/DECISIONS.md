@@ -2322,7 +2322,14 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0141 (directions), the communication gate (`core/communication_gate.py`), DEC-0112 (learning paths)
 
 ### DEC-0144: Development Intelligence & the Convergence — a thin strategic coordinator, not a rebuild
-- Status: PROPOSED (claude, 2026-11-08), awaiting Zac. Extends the approved DEC-0137. Nothing built.
+- Status: APPROVED (Zac, 2026-11-08: "build the first slice"; proving domain **homestead, then the rest**) +
+  **Phase 1 built**: `core/development_engine.py` — a development profile read from real state, a transparent score
+  with compounding value (what a project unlocks), and `next_step` (the highest-value doable move with its reasoning,
+  or a seasonal wait / savings target / prerequisite), all `simulated`, never committing; seeded with a homestead
+  catalog grounded in `plan_library`. The Zero-to-Something benchmark is `tests/test_development_engine.py` (11
+  tests). Development edges on `links.py` were left for Phase 2: candidates carry their own requires/provides/unlocks
+  graph, which was enough to prove prioritisation, so the stored graph waits until real projects are linked.
+  Next: "what should I do next on the homestead?" as a tool and a screen control (DEC-0125), then Phase 2.
 - From: ChatGPT's two handoffs, pasted by Zac 2026-11-08 — "Real-World Development Intelligence" (Homestead/Business
   Architect) and "The Convergence" (unified progression + living campaign). Both ask, in their own section 11, to
   inspect the architecture and propose before building, reusing MIA's mission/progression/memory/campaign systems.
@@ -2339,7 +2346,52 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Proposed first slice: `core/development_engine.py` (read-only advisor over existing state) + development edges on
   `links.py` + a Zero-to-Something **benchmark as a test** (the docs' §10/§12 acceptance test, executable). No new
   progression/mission/memory/campaign engine.
-- Open for Zac: (1) approve + start Phase 1 (read-only engine + benchmark); (2) which domain proves reuse first —
-  claude recommends **Zac's workshop/producer projects** over a generic homestead (DEC-0119; homestead is partly the
-  sibling `mia-homestead` repo); (3) timing vs. the device fabric (DEC-0128) and filling MIA with his life.
-- Related: DEC-0137, DEC-0134, DEC-0046, DEC-0112, DEC-0118, DEC-0109, DEC-0143
+- Decided: (1) Phase 1 approved and built; (2) homestead proves reuse first, then the other domains (Zac chose it
+  over claude's workshop recommendation, and merged the homestead repo in: DEC-0145). Still open: (3) timing of the
+  later phases vs. the device fabric (DEC-0128) and filling MIA with his life.
+- Related: DEC-0137, DEC-0134, DEC-0046, DEC-0112, DEC-0118, DEC-0109, DEC-0143, DEC-0145
+
+### DEC-0145: MIA Homestead becomes part of MIA (homestead/)
+- Status: APPROVED (Zac, 2026-11-08: "merge the homestead repo into the MIA repo honestly because that's just another
+  part of her"). **Merged locally, waiting on Zac's OK to push** (the safety check holds back publishing another
+  repository's history onto master without his explicit yes).
+- What: `github.com/TheKingCS/mia-homestead` (greenhouse/aquaponics control, simulation-first, no hardware yet) is
+  brought in with `git subtree add --prefix=homestead`, all 94 commits of its history kept. The merged tree is
+  byte-identical to GitHub's (same tree hash), and the PC's lab copy matched GitHub exactly, so nothing newer was
+  left behind.
+- How it fits: a self-contained subsystem. `homestead/` keeps its own `CLAUDE.md`, `requirements.txt` (PyYAML),
+  database and scenario suite, run from inside `homestead/`; its `core/` is its own package. MIA's `core/` never
+  imports it; the two talk through snapshots (`core/homestead_manager.py`), as before. A root `pytest.ini`
+  (`testpaths = tests`) keeps MIA's suite to `tests/` so the two `core` packages can't collide: collection is
+  unchanged (5,700 in the clean tree; the main tree's 9 more are the uncommitted email tests). MIA's atlas and
+  documentation scanners are scoped to MIA's own folders, so `homestead/` doesn't touch them.
+- Checked: in a separate venv its scenario suite runs 242 of 245; the 3 that fail are the rsync sync scenarios,
+  because rsync isn't on Windows (they pass on Linux and the Pi). The self-audit adds only "run main.py once first"
+  on a fresh database.
+- Where it is: branch `homestead-merge` in the worktree `C:\Users\zacrh\MIA-merge-homestead` (commits `2e1b500f`,
+  `fd71cb15`). On Zac's yes: `git merge homestead-merge` into master and push; then remove the worktree. Afterwards,
+  update `core/homestead_manager.py`'s docstring (it still names the separate repo) and regenerate the atlas.
+- Next: decide whether homestead's own pieces (its assistant, scenarios, the hardware drivers) become MIA modules
+  over time, or stay a subsystem MIA reads; the development engine's homestead catalog can then read its real
+  state.
+- Related: DEC-0144, DEC-0137, DEC-0015 (the Pi comes later)
+
+### DEC-0146: The magic is in the connections: MIA ties what you say to what you started
+- Status: APPROVED (Zac, 2026-11-08: "MIA needs some loop to identify ways her systems can interconnect and become
+  more seamless. The magic is in the connections.") + built (claude).
+- Decision (`core/connections.py`): before each everyday turn (after the danger check, never in a private or personal
+  conversation) MIA looks for a tie between what was said and something open that began at least a week ago: a
+  project, goal or mission, or an idea or goal set aside (`life_notes`). First through the link graph, from a thing
+  the words name (an asset, a material, a skill) to an open project on the far end; then by a distinctive shared word.
+  A thing named outright is the topic, not a connection, and finished things never come back. One per thing is kept
+  (`connections.json`, sealed), held back two hours so it lands in a later conversation, and carried into the
+  everyday conversation's system message only (never the "talk it out" path or a turn about faith or meaning),
+  framed "only if it fits naturally, one sentence, then let it go." Her next reply settles it: named → mentioned;
+  two weeks unmentioned → expired; not raised again for a month.
+- The loop Zac asked for, two of them (`core/loops.py`): `connections.landed`, the share she brings up rather than
+  lets expire (floor 0.3 from 5); and `connections.unlinked`, the system side: ties found only by shared words between
+  a named thing and an open project, counted by kind pair (material↔project...), never by name. Those are places her
+  link graph doesn't connect her systems yet; more than 3 in a month opens a task to teach it.
+- Not yet: researching a new possibility before raising it (Night School or her browser), and a way to say "don't
+  bring that up" (a voice tool and a screen control, DEC-0125).
+- Related: DEC-0054 (notes from conversation), DEC-0108 (interconnection audit), DEC-0094/0101 (loops), DEC-0126

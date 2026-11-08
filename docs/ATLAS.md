@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1266 files, 274,168 lines; 1266 files describe themselves; 14,904 of 15,604 classes and functions are documented.
+1268 files, 274,725 lines; 1268 files describe themselves; 14,946 of 15,646 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-470 files, 129,337 lines; 6,929 of 7,015 classes and functions documented
+471 files, 129,754 lines; 6,955 of 7,041 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -112,6 +112,7 @@
 - `core/communication_gate.py`: "Know when to speak", slice C of docs/COGNITIVE_EXTENSION_PROPOSAL.md: the one path every proactive (unprompted) message from MIA goes through, so a context-aware assistant never turns into a nag.
 - `core/component_manager.py`: Backs the Component DB (modules/workshop/module.py) — docs/ROADMAP.md milestone 8.3. Same persisted-JSON pattern as core/inventory_manager.py: data/components.json, a dataclass with to_dict/from_dict, a manager class wrapping load/save.
 - `core/config_manager.py`: Handles reading, writing, and defaulting MIA's configuration.
+- `core/connections.py`: The magic is in the connections (Zac, 2026-11-08). Something said in passing ("picked up chicken feed today") can matter to a project started three weeks ago, an idea set aside, a goal still open. MIA notices that tie, holds it, and brings it up naturally in a later conversation, once, then lets it 
 - `core/connectivity.py`: What MIA can do with and without the internet, and whether she has it right now — so if the connection drops she keeps acting sensibly instead of promising things she can't deliver.
 - `core/connectors.py`: Bringing data in from other apps (Zac, 2026-11-08: "make MIA able to connect to any app with relevant data and be able to import data upon user request and approval"; the audit and plan: https://claude.ai/artifact/H8gYSX2rvneRMp5mgA4qFa). Every source works the same way: the person asks, MIA reads i
 - `core/context_assembler.py`: The "Life State" layer — a real service answering "what's going on in this person's life right now," synthesized live from every domain manager already in AppContext. This exact shape was discussed and agreed on 2026-09-11 (see mia_system_vision's own dated entry: a context_assembler.py query layer 
@@ -756,7 +757,7 @@
 
 ## tests/: the test suite: what each part must do
 
-432 files, 72,413 lines; 5,692 of 6,306 classes and functions documented
+433 files, 72,553 lines; 5,708 of 6,322 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -823,6 +824,7 @@
 - `tests/test_communication_gate.py`: Slice C, "Know when to speak" (core/communication_gate.py): every rule with a fake clock, the persisted gate with delivery and deferral, the daily checks routed through it, and a scripted day.
 - `tests/test_component_manager.py`: Unit tests for core.component_manager. Isolates _DATA_DIR/_COMPONENTS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_inventory_manager.py's isolated_paths). *(3 undocumented)*
 - `tests/test_config_manager.py`: Unit tests for core.config_manager.ConfigManager. *(1 undocumented)*
+- `tests/test_connections.py`: The magic is in the connections (core/connections.py, Zac 2026-11-08): a remark that ties into something started weeks ago is noticed, held, raised once in a later conversation if it fits, then let go. These check the two ways a tie is found (the link graph, shared words), the guards (a week old at 
 - `tests/test_connectivity.py`: core.connectivity: the online/offline monitor (with an injected fake connect function and clock, so no real network and no real waiting), the system-prompt text, and the get_connectivity_status action.
 - `tests/test_connectors.py`: Bringing data in from other apps (core/connectors.py): a rental calendar keeps only the booked dates (never the guest's details), blocked days aren't stays, links reach only the public internet over https, a preview counts what's new and what's already here, and an approved import lands as one chang
 - `tests/test_context_assembler.py`: Unit/integration tests for core.context_assembler — the "Life State" synthesis layer. Isolates every underlying manager's own data files into a tmp_path scratch area, same monkeypatch pattern as test_skill_patterns.py's own isolated_paths, extended to cover the extra managers assemble_life_state() r *(4 undocumented)*

@@ -195,6 +195,7 @@ SEALED_STORES = [
     ("core.living_worlds", "LivingWorldsBook", "living_worlds.json"),
     ("core.response_style", "StyleBook", "response_styles.json"),
     ("core.direction", "DirectionBook", "directions.json"),
+    ("core.connections", "ConnectionBook", "connections.json"),
 ]
 
 
