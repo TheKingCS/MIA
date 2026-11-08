@@ -12,7 +12,9 @@ is on each dimension, which dimension to experiment on next, and a plain-words s
 layer to follow. Generating the two variants (the model rendering the same facts two ways) and showing the A/B choice
 are the surface's job; this decides *what* to compare and *what was learned*.
 
-A personal store (`response_styles.json`), sealed at rest (DEC-0126). Nothing here is fiction, so events are real.
+A personal store (`response_styles.json`), sealed at rest (DEC-0126). `style_for(context)` feeds the current
+instruction into the chat phrasing layer (empty until there's a pick, so the default turn is unchanged). Nothing here
+is fiction, so events are real.
 """
 
 from __future__ import annotations
@@ -164,3 +166,13 @@ class StyleBook:
         short…; lead with the answer…'. Only names a dimension once there's a pick for it, so it never over-claims."""
         parts = [DESCRIPTIONS[(dim, self.preferred(dim))] for dim in DIMENSIONS if self.tally(dim)]
         return "Answer: " + "; ".join(parts) + "." if parts else "Answer in your normal style."
+
+
+def style_for(context) -> str:
+    """The person's answer-style instruction for the phrasing layer (DEC-0138), or "" when there's no store or no
+    picks yet — so nothing is added to the prompt until MIA has actually learned a preference, and the default turn is
+    unchanged."""
+    book = getattr(context, "response_style", None)
+    if book is None or not getattr(book, "picks", None):
+        return ""
+    return book.style_instruction()

@@ -790,6 +790,7 @@ class MIAApplication:
             ("promises", self._check_promises),
             ("vault_captions", self._check_vault_captions),
             ("dependency_audit", self._check_dependency_audit),
+            ("system_map", self._check_system_map),
         ]
         # 2026-09-27, Cognitive Extension slice C: checks no longer notify
         # directly. Each one offers what it would say (_offer()), and the
@@ -879,6 +880,21 @@ class MIAApplication:
             title, message, fingerprint = said
             self._offer(topic="dependency_audit", title=title, message=message, urgency=TIMELY, source="system",
                         fingerprint=fingerprint)
+
+    def _check_system_map(self, now: datetime, today_iso: str) -> None:
+        """Keep docs/MIA_MAP.md current (DEC-0139): regenerate the one map of everything MIA is, once a day, so what
+        she's made of stays easy to see. Rewriting identical content is a no-op to git, so it only changes when MIA
+        actually changed."""
+        import time as _time
+
+        from core import system_map
+
+        try:
+            path = system_map.MAP_FILE
+            if not path.exists() or _time.time() - path.stat().st_mtime > 20 * 3600:
+                path.write_text(system_map.render(), encoding="utf-8")
+        except Exception:
+            log.exception("Couldn't regenerate the system map")
 
     def _check_good_news(self, now: datetime, today_iso: str) -> None:
         """Good News Radio (core/good_news.py, DEC-0096): when someone switched it on, today's episode is made

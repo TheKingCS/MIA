@@ -67,3 +67,16 @@ def test_a_bad_dimension_or_value_is_refused(book):
         book.record_pick("speed", "fast", "slow")
     with pytest.raises(ValueError):
         book.record_pick("length", "epic", "brief")
+
+
+def test_style_for_is_empty_until_there_are_picks_then_speaks(tmp_path):
+    """The phrasing hook adds nothing until MIA has learned a preference, so the default turn is unchanged (DEC-0138)."""
+    from types import SimpleNamespace
+
+    from core.response_style import StyleBook, style_for
+
+    book = StyleBook(data_dir=tmp_path)
+    assert style_for(SimpleNamespace()) == ""  # no store on the context
+    assert style_for(SimpleNamespace(response_style=book)) == ""  # store, but no picks yet
+    book.record_pick("length", "brief", "standard")
+    assert "short" in style_for(SimpleNamespace(response_style=book))
