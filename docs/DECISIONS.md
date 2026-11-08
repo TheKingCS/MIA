@@ -2196,7 +2196,14 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0135, DEC-0023, DEC-0130, DEC-0017, DEC-0014, DEC-0125
 
 ### DEC-0137: Living Systems Framework — generalize the existing foundation, don't rebuild it
-- Status: PROPOSED
+- Status: Approach APPROVED (Zac, 2026-11-08: generalize + isolate, don't build a new layer; prove reuse with
+  missions). **Phase A + B built 2026-11-08.** Phase A — the real-vs-fictional boundary (`core/environment.py`):
+  real|fictional|simulated with `require_real` raising `DomainLeak` at any real-authority sink, and an `environment`
+  tag on every life event (default real) so real-life views filter to real and a campaign's events never read as
+  real. Phase B — reuse proven: Living Worlds now has fictional **quests** (`assign_quest`/`complete_quest`) with the
+  same assign-and-track shape as a real `Mission` (assigned_by), but tagged fictional and XP-free; a test shows a
+  completed quest records only fictional events and earns no real XP. Next: filter the real-life surfaces
+  (presence/Life State) to environment==real, and the scenario engine (Phase C) when a concrete need appears.
 - Proposed by: claude, 2026-11-08, from ChatGPT's "MIA — Living Systems Framework" handoff (a universal
   context/state/simulation/progression/intelligence foundation unifying Living Worlds and the real-world domains).
 - Assessment (`docs/LIVING_SYSTEMS_ASSESSMENT.md`): MIA already implements ~80% of the proposed framework as working

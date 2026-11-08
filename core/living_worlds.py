@@ -11,7 +11,8 @@ Convergence and generative artwork are later phases.
 The model never writes here — only code does, the same rule the rest of MIA follows (`core/actions.py`,
 "model phrases, code decides"). A `CharacterVersion` is one alternate version of the player's central `Character` in a
 particular universe; a version's growth in one world never touches another's (the spec's §4.1). Relationships are by
-id for now; the cross-world link graph (`core/links.py`) and the Convergence arrive in Phase 4.
+id for now; the cross-world link graph (`core/links.py`) and the Convergence arrive in Phase 4. A campaign can carry
+fictional **quests** (DEC-0137) — the same assign-and-track shape as a real Mission, but tagged fictional and XP-free.
 
 One personal store (`living_worlds.json` in the person's own folder), written through `atomic_write_text` (undoable)
 and sealed at rest (DEC-0126). Every create records a `life_events` entry — the spec's event log (§11.2).
@@ -28,6 +29,7 @@ from typing import Optional
 
 from core import life_events
 from core.at_rest import open_text
+from core.environment import FICTIONAL
 from core.atomic_write import atomic_write_text
 from core.logger import get_logger
 
@@ -150,6 +152,34 @@ class CharacterVersion:
             created_at=d.get("created_at", ""))
 
 
+@dataclass
+class Quest:
+    """A fictional objective inside a campaign — the same shape as a real Mission (a name, an objective, a status and
+    who set it), but it lives in the campaign and earns no real XP (DEC-0137). `assigned_by`: "dm" (MIA, the Voice of
+    the Convergence) or "player"."""
+
+    quest_id: str
+    campaign_id: str
+    name: str
+    objective: str = ""
+    status: str = "open"  # open | done
+    assigned_by: str = "dm"  # dm | player
+    created_at: str = ""
+    completed_at: str = ""
+
+    def to_dict(self) -> dict:
+        """As a plain dict for JSON."""
+        return asdict(self)
+
+    @staticmethod
+    def from_dict(d: dict) -> "Quest":
+        """From a stored dict; status falls back to 'open', assigned_by to 'dm'."""
+        out = {k: d.get(k, "") for k in Quest.__dataclass_fields__}
+        out["status"] = d.get("status") or "open"
+        out["assigned_by"] = d.get("assigned_by") or "dm"
+        return Quest(**out)
+
+
 class LivingWorldsBook:
     """A person's Living Worlds (living_worlds.json in their own folder): universes, campaigns, characters and their
     per-universe versions, created and persisted here so a campaign survives any conversation."""
@@ -163,6 +193,7 @@ class LivingWorldsBook:
         self.campaigns: list[Campaign] = []
         self.characters: list[Character] = []
         self.versions: list[CharacterVersion] = []
+        self.quests: list[Quest] = []
         self._load()
 
     def _load(self) -> None:
@@ -179,6 +210,7 @@ class LivingWorldsBook:
         self.campaigns = [Campaign.from_dict(d) for d in raw.get("campaigns", [])]
         self.characters = [Character.from_dict(d) for d in raw.get("characters", [])]
         self.versions = [CharacterVersion.from_dict(d) for d in raw.get("versions", [])]
+        self.quests = [Quest.from_dict(d) for d in raw.get("quests", [])]
 
     def _save(self) -> None:
         """Writes everything atomically (so undo can restore it), sealed at rest."""
@@ -188,6 +220,7 @@ class LivingWorldsBook:
             "campaigns": [c.to_dict() for c in self.campaigns],
             "characters": [c.to_dict() for c in self.characters],
             "versions": [v.to_dict() for v in self.versions],
+            "quests": [q.to_dict() for q in self.quests],
         }, indent=1, ensure_ascii=False))
 
     # ------------------------------------------------------------------ create
@@ -197,7 +230,7 @@ class LivingWorldsBook:
         u = Universe(universe_id=_id(), name=name, genre=genre, premise=premise, rules=rules, created_at=_now())
         self.universes.append(u)
         self._save()
-        life_events.record(self, "universe_created", name, [f"universe:{u.universe_id}"])
+        life_events.record(self, "universe_created", name, [f"universe:{u.universe_id}"], environment=FICTIONAL)
         return u
 
     def create_campaign(self, universe_id: str, name: str, summary: str = "") -> Campaign:
@@ -208,7 +241,7 @@ class LivingWorldsBook:
                      status="active", created_at=_now(), last_played=_now())
         self.campaigns.append(c)
         self._save()
-        life_events.record(self, "campaign_created", name, [f"campaign:{c.campaign_id}", f"universe:{universe_id}"])
+        life_events.record(self, "campaign_created", name, [f"campaign:{c.campaign_id}", f"universe:{universe_id}"], environment=FICTIONAL)
         return c
 
     def create_character(self, name: str, note: str = "") -> Character:
@@ -216,7 +249,7 @@ class LivingWorldsBook:
         c = Character(character_id=_id(), name=name, note=note, created_at=_now())
         self.characters.append(c)
         self._save()
-        life_events.record(self, "character_created", name, [f"character:{c.character_id}"])
+        life_events.record(self, "character_created", name, [f"character:{c.character_id}"], environment=FICTIONAL)
         return c
 
     def create_version(self, character_id: str, universe_id: str, campaign_id: str, name: str, origin: str = "",
@@ -236,8 +269,41 @@ class LivingWorldsBook:
         self.versions.append(v)
         self._save()
         life_events.record(self, "character_version_created", name,
-                           [f"version:{v.version_id}", f"character:{character_id}", f"universe:{universe_id}"])
+                           [f"version:{v.version_id}", f"character:{character_id}", f"universe:{universe_id}"], environment=FICTIONAL)
         return v
+
+    def assign_quest(self, campaign_id: str, name: str, objective: str = "", assigned_by: str = "dm") -> Quest:
+        """Set a fictional quest in a campaign — the same act as MIA assigning a real mission, but fictional and
+        XP-free (ValueError if the campaign isn't this person's)."""
+        if self.get_campaign(campaign_id) is None:
+            raise ValueError(f"No campaign with id '{campaign_id}'.")
+        q = Quest(quest_id=_id(), campaign_id=campaign_id, name=name, objective=objective, status="open",
+                  assigned_by=assigned_by, created_at=_now())
+        self.quests.append(q)
+        self._save()
+        life_events.record(self, "quest_assigned", name, [f"quest:{q.quest_id}", f"campaign:{campaign_id}"],
+                           environment=FICTIONAL)
+        return q
+
+    def complete_quest(self, quest_id: str) -> Quest:
+        """Mark a quest done (ValueError for an unknown quest). Records a fictional event; grants no real XP."""
+        q = self.get_quest(quest_id)
+        if q is None:
+            raise ValueError(f"No quest with id '{quest_id}'.")
+        q.status = "done"
+        q.completed_at = _now()
+        self._save()
+        life_events.record(self, "quest_completed", q.name, [f"quest:{q.quest_id}", f"campaign:{q.campaign_id}"],
+                           environment=FICTIONAL)
+        return q
+
+    def get_quest(self, quest_id: str) -> Optional[Quest]:
+        """The quest with this id, or None."""
+        return next((q for q in self.quests if q.quest_id == quest_id), None)
+
+    def quests_in(self, campaign_id: str) -> list[Quest]:
+        """The quests set in one campaign."""
+        return [q for q in self.quests if q.campaign_id == campaign_id]
 
     # ------------------------------------------------------------------ read
 

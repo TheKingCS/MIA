@@ -49,6 +49,8 @@ import threading
 import uuid
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass, field
+
+from core.environment import REAL, normalize
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Iterable, Optional
@@ -112,7 +114,8 @@ _local = threading.local()
 @dataclass
 class LifeEvent:
     """One thing that happened, in the history: when, what kind, a summary in words, references to the things it's
-    about ("kind:id"), a payload of numbers, where it came from, and whose it is.
+    about ("kind:id"), a payload of numbers, where it came from, whose it is, and its environment — real (actual
+    life, the default), fictional (a Living Worlds campaign) or simulated (DEC-0137), so real-life views filter to real.
     """
     event_id: str
     at: str
@@ -122,6 +125,9 @@ class LifeEvent:
     payload: dict = field(default_factory=dict)
     source: str = "manual"
     profile_id: Optional[str] = None
+    # Real-vs-fictional boundary (DEC-0137): "real" (actual life), "fictional" (a Living Worlds campaign) or
+    # "simulated" (a what-if). Real-life views and the real XP ledger keep to environment == "real".
+    environment: str = REAL
 
     @staticmethod
     def from_dict(data: dict) -> "LifeEvent":
@@ -130,7 +136,7 @@ class LifeEvent:
             event_id=str(data.get("event_id", "")), at=str(data.get("at", "")), type=str(data.get("type", "")),
             summary=str(data.get("summary", "")), refs=list(data.get("refs") or []),
             payload=dict(data.get("payload") or {}), source=str(data.get("source", "manual")),
-            profile_id=data.get("profile_id"),
+            profile_id=data.get("profile_id"), environment=normalize(data.get("environment")),
         )
 
     @property
@@ -197,15 +203,17 @@ def folder_of(where) -> Path:
 
 
 def record(where, type: str, summary: str, refs: Iterable[str] = (), payload: Optional[dict] = None,
-           profile_id: Optional[str] = None, source: Optional[str] = None) -> Optional[LifeEvent]:
+           profile_id: Optional[str] = None, source: Optional[str] = None, environment: str = REAL) -> Optional[LifeEvent]:
     """Called by a store right after a meaningful change. Never raises:
-    a history that can't be written must not undo the change itself."""
+    a history that can't be written must not undo the change itself. `environment` tags the event real (default),
+    fictional or simulated (DEC-0137) so a fictional campaign's events never read as real life."""
     if where is None or getattr(_local, "quiet", 0):
         return None
     event = LifeEvent(
         event_id=uuid.uuid4().hex[:12], at=datetime.now().isoformat(timespec="seconds"), type=type,
         summary=summary, refs=[r for r in refs if r], payload=dict(payload or {}),
         source=source or getattr(_local, "source", None) or "manual", profile_id=profile_id or _who(where),
+        environment=normalize(environment),
     )
     try:
         folder = folder_of(where)

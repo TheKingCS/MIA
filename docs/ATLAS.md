@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1242 files, 269,881 lines; 1242 files describe themselves; 14,664 of 15,361 classes and functions are documented.
+1244 files, 270,070 lines; 1244 files describe themselves; 14,679 of 15,376 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-457 files, 126,446 lines; 6,769 of 6,855 classes and functions documented
+458 files, 126,570 lines; 6,780 of 6,866 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -158,6 +158,7 @@
 - `core/email_extract.py`: Turn an email into the real-world facts hiding in it — the engine behind DEC-0133 (MIA watches your email). A message (sender, subject, body, date, id) goes to `extract()`, which returns a list of `EmailFact`s: a purchase MIA could add to the Garage, a service she could log, a bill, a warranty expir
 - `core/email_inbox.py`: The read-only transport for DEC-0133: fetch the owner's recent messages over IMAP so `core.email_extract` can pull facts from them. Read-only in the strict sense — the mailbox is opened with `readonly=True` and only FETCH is ever issued, never STORE, COPY or EXPUNGE, so MIA can read the inbox but ca
 - `core/energy_manager.py`: Manual energy/utility source tracking — 2026-09-09, the last of four "Field Manual" brainstorm items the user picked this session. Original seed: "Solar, generator, propane are currently just Maintenance usage logs by convention — could be a real Power/Energy expansion once real monitoring hardware 
+- `core/environment.py`: The real-vs-fictional boundary (DEC-0137): *shared intelligence, not shared authority.* MIA reuses the same primitives — entities, events, goals, progression — across real domains (missions, the garage, the homestead) and fictional ones (Living Worlds). This module is the one guarantee that keeps th
 - `core/equipment_actions.py`: Every change the Garage, Property, Greenhouse and Maintenance screens can make (2026-10-06, DEC-0017), as action kinds on the contract in core/actions.py, from one table (core/record_actions.py): assets (add, edit, delete), maintenance tasks (add, edit, delete), and logging a reading, on a task's me
 - `core/estate_actions.py`: Every change the Real Estate screen makes (2026-10-06, DEC-0017/0018), as action kinds on the contract in core/actions.py: properties (add, edit, delete, with the concept's status, rent and location), recording rent received and an expense against a property (both land in Money, tagged to it), and "
 - `core/event_bus.py`: A minimal publish/subscribe event bus.
@@ -701,7 +702,7 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-37 files, 3,825 lines; 119 of 119 classes and functions documented
+37 files, 3,823 lines; 119 of 119 classes and functions documented
 
 - `tools/audit.py`: MIA's self-audit from the command line (DEC-0108; core/self_audit.py, core/practices.py).
 - `tools/bench_audit.py`: What MIA's routing does today with each Intelligence Benchmark question (tests/intelligence_bench.py, docs/INTELLIGENCE_BENCHMARK.md): a question plan (core/question_plans.py: lookups by code, one answer), answered by code (a direct lookup), offered which tools, or left to the model with no tools at
@@ -718,7 +719,7 @@
 - `tools/gaps.py`: The PC owner's capability gaps (core/capability_gaps.py, build plan step 9): what MIA was asked and couldn't do, grouped, with what each would take. The requests are the person's own words, so they're read here, on this PC, and never copied into the repo.
 - `tools/glasses_art.py`: MIA's orb as pictures for the real glasses (DEC-0061).
 - `tools/good_news.py`: Good News Radio on this PC (DEC-0096, core/good_news.py).
-- `tools/import_life_data.py`: Import Zac's private life-data pack (data/_import/muse_assets.json, built by Muse from his memory, Gmail and manufacturer schedules) into MIA's Garage — the maintenance assets and their service schedules — through the real MaintenanceManager so every write is undoable (core/undo_log.py).
+- `tools/import_life_data.py`: Import the owner's private life-data pack (data/_import/muse_assets.json, built from their memory, email and manufacturer schedules) into MIA's Garage — the maintenance assets and their service schedules — through the real MaintenanceManager so every write is undoable (core/undo_log.py).
 - `tools/import_properties.py`: Import Zac's properties (data/_import/muse_assets.json) into MIA's Real Estate through the real RealEstateManager, so every write is undoable. Companion to tools/import_life_data.py; run only while MIA is stopped.
 - `tools/intelligence_check.py`: Zac's Intelligence Benchmark, asked for real: every question in tests/intelligence_bench.py through the same steps a turn takes (a question plan, a lookup answered by code, or the model with the tool loop), on this computer's model and the person's real records. Read-only: lookups run, but a change 
 - `tools/lab.py`: MIA's development lab from the command line (DEC-0058, core/dev_lab.py).
@@ -743,7 +744,7 @@
 
 ## tests/: the test suite: what each part must do
 
-422 files, 71,444 lines; 5,614 of 6,225 classes and functions documented
+423 files, 71,511 lines; 5,618 of 6,229 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -855,6 +856,7 @@
 - `tests/test_email_extract.py`: Pulling real-world facts out of email (core/email_extract.py, DEC-0133): an order confirmation becomes a purchase, an auto-care receipt a service, a utility email a bill with its due date, a protection-plan notice a warranty reminder — each secret-free. A card or account number in a message never su *(1 undocumented)*
 - `tests/test_email_inbox.py`: Parsing raw messages into the shape the extractor wants (core/email_inbox.py, DEC-0133): the decoded sender and subject, and the text/plain body in preference to HTML. Pure — no IMAP server (fetch_recent is the thin live wrapper around this). *(1 undocumented)*
 - `tests/test_energy_manager.py`: Unit tests for core.energy_manager. Isolates _DATA_DIR _ENERGY_SOURCES_FILE (and core.data_logger_manager's own data file, since readings are real DataLogger entries this manager passes through), same monkeypatch pattern as tests/test_data_logger_manager .py's isolated_paths. *(3 undocumented)*
+- `tests/test_environment.py`: The real-vs-fictional boundary (core/environment.py + life_events, DEC-0137): `require_real` guards a real-authority sink (fictional/simulated raises DomainLeak); unknown/None normalises to real so nothing is fiction by accident; and a life event carries its environment, so a real-life view can filt
 - `tests/test_event_bus.py`: Unit tests for core.event_bus.EventBus.
 - `tests/test_event_catalog.py`: The event catalogue (build plan step 7, core/event_catalog.py): docs/EVENTS.md is the code's own record of what each file publishes and hears on the event bus, and no listener waits on an event nothing sends. *(1 undocumented)*
 - `tests/test_expedition_manager.py`: Unit tests for core.expedition_manager. Isolates _DATA_DIR _EXPEDITIONS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_journal_manager.py's isolated_paths). *(2 undocumented)*
@@ -901,7 +903,7 @@
 - `tests/test_household_module.py`: Unit tests for modules.household.module's pure functions, same style as tests/test_greenhouse_module.py (no Qt event loop, no fixtures). *(2 undocumented)*
 - `tests/test_household_routines.py`: The Household's web screen (core/household_routines.py, the design canvas's Household): the household's routines, each with its current occurrence, how far along, and its streak in words; paused ones apart; and routines added, paused and resumed as actions (core/routine_actions.py) and by voice (cor
 - `tests/test_id_wallet.py`: The ID wallet (core/id_wallet.py): cards kept with their numbers and photos sealed at rest, numbers masked in lists and never in what MIA says or in an action, expiry reminders on Today, and "show my license" opening the card.
-- `tests/test_import_life_data.py`: Importing Zac's private life-data pack into the Garage (tools/import_life_data.py): a compound hours/miles-OR-time line becomes one meter task with a calendar fallback (DEC-0131); the Ridgeline timing belt is flagged high and never given a fabricated baseline; the import is idempotent (an existing a *(2 undocumented)*
+- `tests/test_import_life_data.py`: Importing a life-data pack into the Garage (tools/import_life_data.py): a compound hours/miles-OR-time line becomes one meter task with a calendar fallback (DEC-0131); a timing belt is flagged high and never given a fabricated baseline; the import is idempotent (an existing asset is updated via a pa *(2 undocumented)*
 - `tests/test_import_properties.py`: Importing properties into Real Estate (tools/import_properties.py): each is upserted by a generic name key (so an existing "Oak Rd" is matched by "Oak Dr", never duplicated), role maps to type/status, rent and provenance are carried, and a shared or unknown loan balance is never fabricated into a pe *(2 undocumented)*
 - `tests/test_imports.py`: Imports from other apps (core/imports.py), 2026-10-01: calendars (.ics), contacts (.vcf) and bank statements (.csv). *(1 undocumented)*
 - `tests/test_inbox.py`: Document inbox: classification (core/inbox_classify.py), intake and filing (core/inbox_manager.py), email checking (core/inbox_mail.py), the voice tools, the phone upload endpoint and the Inbox screen.
