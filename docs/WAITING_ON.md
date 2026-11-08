@@ -14,6 +14,10 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       (undoable, kept in your profile, never committed). Best first: Plaid for Money, then Garage, Calendar,
       Workout, Kitchen, Chickens, Freedom, People. Say "let's fill in MIA" to start.
 
+### Connecting your apps (2026-11-08, https://claude.ai/artifact/H8gYSX2rvneRMp5mgA4qFa)
+- [ ] **Which apps first** (Google Sheets, QuickBooks, TurboTax, OwnerRez, Hostaway, Airbnb...), one-time imports or
+      some on a schedule, and which is the source of truth for rental income. Read the audit doc's plan.
+
 ### Security (2026-11-08, docs/SECURITY.md)
 - [ ] **Encrypt this PC's drive.** It isn't encrypted (Windows 11 Home, checked 2026-11-08). Settings → Privacy &
       security → Device encryption, if it's there; if not, Windows 11 Pro's BitLocker or VeraCrypt (free). The
