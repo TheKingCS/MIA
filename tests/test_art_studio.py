@@ -165,3 +165,22 @@ def test_a_theme_file_never_carries_a_picture_from_someone_elses_folder():
 
     theme = build_theme({**STARK_CHOICES, "backdrop": "abcdef123456"}, None, "my_x", "X")
     assert theme["backdrop"]["art"] == "abcdef123456" and export(theme)["choices"]["backdrop"] == ""
+
+
+def test_a_painting_added_or_removed_is_a_line_in_her_history(tmp_path):
+    """The person's own history (life events in their folder) says a painting was made and put away, never what the
+    painting's words were."""
+    import json
+
+    from core.art_studio import ArtStore as Store
+
+    store = Store(None, data_dir=tmp_path)
+    staged = tmp_path / "staged.png"
+    staged.write_bytes(b"png")
+    item = store.add(staged, "my grandmother's porch", "backdrop", {"positive": "a porch", "width": 8, "height": 8}, 1,
+                     "comfyui")
+    store.remove(item["id"])
+    lines = [json.loads(x) for x in (tmp_path / "life_events.jsonl").read_text(encoding="utf-8").splitlines() if x]
+    assert [(e["type"], e["summary"]) for e in lines] == [("art_added", "Added a painting MIA made"),
+                                                         ("art_removed", "Removed a painting")]
+    assert "porch" not in json.dumps(lines)

@@ -376,3 +376,18 @@ def test_each_design_is_noted_for_the_maker_loop(world, tmp_path):
     assert "bees" not in str(log) and "goats" not in str(log)  # never the request
     reading = {l.id: l for l in loops.LOOPS}["creations.maker"].measure(world)
     assert (reading.value, reading.n) == (0.67, 3) and "1 never passed" in reading.detail
+
+
+def test_what_mia_made_reaches_the_persons_history_when_published_and_put_away(tmp_path):
+    """Publishing and retiring a creation are lines in the person's own history; drafting isn't (the lab drafts
+    often)."""
+    store = Creations(None, data_dir=tmp_path)
+    made = store.draft({"kind": "screen", "title": "Egg log", "record_set": "S-1"}, [])
+    assert not (tmp_path / "life_events.jsonl").exists()
+    store.mark_published(made["id"], 1, "S-1")
+    store.retire(made["id"])
+    lines = [json.loads(x) for x in (tmp_path / "life_events.jsonl").read_text(encoding="utf-8").splitlines() if x]
+    assert [(e["type"], e["summary"]) for e in lines] == [
+        ("creation_published", "Published something MIA made: Egg log"),
+        ("creation_retired", "Put away something MIA made: Egg log")]
+    assert lines[0]["payload"] == {"id": made["id"], "version": 1}

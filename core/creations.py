@@ -29,6 +29,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+from core import life_events
 from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.logger import get_logger
@@ -118,12 +119,15 @@ class Creations:
         return found["versions"][-1]
 
     def mark_published(self, creation_id: str, version: int, set_id: str) -> dict:
-        """Records a version as published (with the record set it shows), its title taken from that version."""
+        """Records a version as published (with the record set it shows), its title taken from that version, and says
+        so in the person's history (a life event: what MIA made for them reaches the Chronicle)."""
         found = self.get(creation_id)
         found.update(status=PUBLISHED, version=version, set_id=set_id or found["set_id"],
                      title=found["versions"][version - 1]["spec"].get("title", found["title"]))
         found["published_versions"].append(version)
         self._save()
+        life_events.record(self, "creation_published", f"Published something MIA made: {found['title'] or found['id']}",
+                           payload={"id": found["id"], "version": version})
         return found
 
     def roll_back(self, creation_id: str) -> dict:
@@ -181,8 +185,10 @@ class Creations:
         self._save()
 
     def retire(self, creation_id: str) -> dict:
-        """Takes a creation out of the sidebar; it's kept."""
+        """Takes a creation out of the sidebar; it's kept, and the history says so."""
         found = self.get(creation_id)
         found["status"] = RETIRED
         self._save()
+        life_events.record(self, "creation_retired", f"Put away something MIA made: {found['title'] or found['id']}",
+                           payload={"id": found["id"]})
         return found

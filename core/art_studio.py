@@ -45,6 +45,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+from core import life_events
 from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.logger import get_logger
@@ -134,8 +135,10 @@ class ArtStore:
         path = self.folder / f"{art_id}.png"
         return path if path.is_file() else None
 
+    @life_events.on_change("art_added", "a painting MIA made", named=False)
     def add(self, staged: Path, description: str, use: str, prompt: dict, seed: int, engine: str) -> dict:
-        """Moves a painted image in from its staging file and records it; the oldest go past MAX_ITEMS."""
+        """Moves a painted image in from its staging file and records it (and a line in the person's history); the
+        oldest go past MAX_ITEMS."""
         self.folder.mkdir(parents=True, exist_ok=True)
         art_id = uuid.uuid4().hex[:12]
         staged.replace(self.folder / f"{art_id}.png")
@@ -147,8 +150,10 @@ class ArtStore:
         self._save()
         return item
 
+    @life_events.on_change("art_removed", "a painting", named=False)
     def remove(self, art_id: str) -> dict:
-        """Takes a picture out of the list; its file is kept aside (art/removed/) so "undo" can bring it back."""
+        """Takes a picture out of the list (a line in the history); its file is kept aside (art/removed/) so "undo" can
+        bring it back."""
         item = self.get(art_id)
         if item is None:
             raise ValueError("That picture isn't one of yours.")
