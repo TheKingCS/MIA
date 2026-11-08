@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1292 files, 279,903 lines; 1292 files describe themselves; 15,773 of 15,867 classes and functions are documented.
+1292 files, 279,904 lines; 1292 files describe themselves; 15,773 of 15,867 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -766,7 +766,7 @@
 
 ## tests/: the test suite: what each part must do
 
-441 files, 74,105 lines; 6,388 of 6,396 classes and functions documented
+441 files, 74,106 lines; 6,388 of 6,396 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1155,7 +1155,7 @@
 - `tests/test_web_backups.py`: Backups from the web's Settings (core/web_backups.py) and by voice (core/assistant_backup_actions.py): the PC owner's backups folder, the newest backups, Back Up Now with or without a passphrase, and the status said aloud.
 - `tests/test_web_changes.py`: Recent Changes on the web (core/web_changes.py, DEC-0125): what MIA can put back, newest first, in the history's own words; the fortnight's history by day with undone ones marked; and Undo as the action undo.last, which never leaves a change of its own behind.
 - `tests/test_web_comms.py`: Communications (DEC-0129, core/web_comms.py): people to catch up with (longest first, only those you can write to), and the message limit and breaks as undoable actions on the real communication gate.
-- `tests/test_web_connections.py`: Connections on the web and by voice (DEC-0146): "don't bring that up" settles a connection as declined and keeps its thing quiet past the cooldown, until it's allowed again.
+- `tests/test_web_connections.py`: Connections on the web and by voice (DEC-0146): what each ties into and what she found about it first, and "don't bring that up", which settles a connection as declined and keeps its thing quiet past the cooldown, until it's allowed again.
 - `tests/test_web_conversations.py`: Past conversations on the web: listed newest first with what's in them, one read, one picked back up, one deleted through its action.
 - `tests/test_web_directions.py`: My Directions (DEC-0141/0143): the screen, its direction.* actions and the voice tools that run the same actions.
 - `tests/test_web_environments.py`: An area's own space (DEC-0130 M3, core/web_environments.py): the Garage environment's bays come from the Garage's own assets (never the house's), most overdue first; the parts running low are gathered across them, each once with what uses it; the hub carries the Garage's own space, and every other a
