@@ -219,6 +219,7 @@
     state: () => read("/api/state", "life_state"),
     shell: () => read("/api/shell", "shell"),
     health: () => read("/api/health", "health"),
+    nexus: () => read("/api/nexus", "nexus"),
     communications: () => read("/api/communications", "communications"),
     hub: (area) => demo ? read("", "hub").then((d) => ({ ...d, ...(d.by_area[area] || d.by_area.home) })) : call("GET", "/api/hub/" + encodeURIComponent(area)),
     dashboard: () => read("/api/dashboard", "dashboard"),

@@ -1,0 +1,158 @@
+{
+  "date": "Sunday, November 8",
+  "portals": [
+    {
+      "id": "home",
+      "name": "Home",
+      "icon": "household",
+      "hue": "#35d4ff",
+      "line": "The house, the kitchen and what keeps it running.",
+      "page": "hub.html?area=home",
+      "needs": 1
+    },
+    {
+      "id": "garage",
+      "name": "Garage",
+      "icon": "garage",
+      "hue": "#e8792f",
+      "line": "Vehicles, tools and the work on them.",
+      "page": "hub.html?area=garage",
+      "needs": 3
+    },
+    {
+      "id": "plants_animals",
+      "name": "Plants and Animals",
+      "icon": "greenhouse",
+      "hue": "#2fd27e",
+      "line": "What grows and who you feed.",
+      "page": "hub.html?area=plants_animals",
+      "needs": 0
+    },
+    {
+      "id": "kitchen",
+      "name": "Kitchen",
+      "icon": "kitchen",
+      "hue": "#ffd5a8",
+      "line": "Meals, recipes and the pantry.",
+      "page": "hub.html?area=kitchen",
+      "needs": 1
+    },
+    {
+      "id": "health",
+      "name": "Health and Fitness",
+      "icon": "workout",
+      "hue": "#ff4f8b",
+      "line": "Training, food and how you feel.",
+      "page": "hub.html?area=health",
+      "needs": 2
+    },
+    {
+      "id": "recreation",
+      "name": "Recreation",
+      "icon": "expeditions",
+      "hue": "#9b6bff",
+      "line": "Trips, maps, music and play.",
+      "page": "hub.html?area=recreation",
+      "needs": 0
+    },
+    {
+      "id": "security",
+      "name": "Security",
+      "icon": "security",
+      "hue": "#5be0c8",
+      "line": "Cameras, passwords and sign-ins.",
+      "page": "hub.html?area=security",
+      "needs": 0
+    },
+    {
+      "id": "browser",
+      "name": "Browser",
+      "icon": "search",
+      "hue": "#bfefff",
+      "line": "She browses. You approve.",
+      "page": "hub.html?area=browser",
+      "needs": 0
+    },
+    {
+      "id": "system",
+      "name": "Settings and Diagnostics",
+      "icon": "settings",
+      "hue": "#dfe9f2",
+      "line": "Make MIA yours, and see how she's doing.",
+      "page": "hub.html?area=system",
+      "needs": 0
+    },
+    {
+      "id": "finances",
+      "name": "Finances",
+      "icon": "budget",
+      "hue": "#3f7bff",
+      "line": "Money in, money out, and the way out.",
+      "page": "hub.html?area=finances",
+      "needs": 1
+    },
+    {
+      "id": "business",
+      "name": "Business",
+      "icon": "business",
+      "hue": "#e8d29a",
+      "line": "Customers, products and the paperwork.",
+      "page": "hub.html?area=business",
+      "needs": 0
+    },
+    {
+      "id": "personal",
+      "name": "Personal",
+      "icon": "notes",
+      "hue": "#ff8ad8",
+      "line": "Your days, your people, your words.",
+      "page": "hub.html?area=personal",
+      "needs": 0
+    },
+    {
+      "id": "learning",
+      "name": "Learning",
+      "icon": "classroom",
+      "hue": "#6a5cff",
+      "line": "Study, the library and skills.",
+      "page": "hub.html?area=learning",
+      "needs": 0
+    },
+    {
+      "id": "missions",
+      "name": "Missions",
+      "icon": "missions",
+      "hue": "#b8f04a",
+      "line": "Quests, levels and rewards.",
+      "page": "hub.html?area=missions",
+      "needs": 0
+    },
+    {
+      "id": "projects",
+      "name": "Projects",
+      "icon": "workshop",
+      "hue": "#9dffd9",
+      "line": "Things you're building.",
+      "page": "hub.html?area=projects",
+      "needs": 0
+    },
+    {
+      "id": "communications",
+      "name": "Communications",
+      "icon": "inbox",
+      "hue": "#8fb3ff",
+      "line": "Email, MIA's messages and people.",
+      "page": "hub.html?area=communications",
+      "needs": 0
+    }
+  ],
+  "hud": {
+    "name": "Zac",
+    "level": 7,
+    "total_xp": 3250,
+    "xp_into_level": 420,
+    "xp_for_level": 900,
+    "missions": 3
+  },
+  "day": "8 things need you today"
+}

@@ -2030,3 +2030,23 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - How: `core/web_areas.py` holds the areas (one place to change), `shell()["areas"]` feeds the sidebar and the Apps
   page, `/api/hub/<area>` the hubs. Every app keeps its own page; only how they're found changed.
 - Related: DEC-0113 (the canvas), DEC-0125 (parity), DEC-0126 (sealed data), DEC-0119
+
+
+### DEC-0130: The Nexus — MIA's spatial home, and area colors
+- Status: ACCEPTED
+- Decided by: Zac, 2026-11-08 00:41–00:45 (his handoff "MIA — Spatial Interface & Nexus Design Architecture", a
+  reference image, and his answers to the four questions in `docs/design/NEXUS_PLAN.md`).
+- Decision:
+  1. **The Nexus opens first**: a dark chamber with tall portals in an arc, one per area, around MIA's orb on a glowing
+     platform, smoky RGB vapor drifting on black, the HUD along the top (Browser, Settings, MIA, Search; portrait,
+     level, XP, missions). The Dashboard's day is one step in.
+  2. **Portals:** DEC-0129's fifteen areas **plus Kitchen** (its own portal as well as inside Home and Health).
+  3. **Area colors amend DEC-0023:** each area has a hue for its portal's frame, its light and its environment's
+     ambient glow only. Buttons, selection and focus stay cyan; amber and red keep their meanings (needs you, errors
+     and destructive) and are never an area's hue.
+  4. **Style:** the 90s/2000s underground and liquid-morphing feel lives in motion (portals forming, environments
+     flowing in) and the Nexus's backdrop (vapor, texture); panels and text stay Stark-clean and legible.
+  5. Built as shared components (`web/spatial.css`, `web/spatial.js`), 2.5D first, every device at its own depth,
+     reduced motion respected. Muse refines the art direction.
+- Plan and milestones: `docs/design/NEXUS_PLAN.md`.
+- Related: DEC-0023 (amended: area hues), DEC-0014, DEC-0017, DEC-0129

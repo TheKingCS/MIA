@@ -205,6 +205,12 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       uncommitted work on that PC (core/plaid_manager.py, core/budget_manager.py: transfers kept and marked instead
       of dropped, DEC-0042): the Plaid test still expects them dropped, and docs/ATLAS.md is stale. That session
       updates the test and rebuilds the atlas when it commits. Nothing committed tonight failed.
+      **2026-11-08 night, with Zac:** DEC-0129 (areas and hubs: sidebar, Apps page, hub.html, Communications,
+      Dashboard life cards, Pets page, Home Upkeep, Look in the chat, Health with sleep/visits/meds/records) and
+      DEC-0130 (the Nexus: docs/design/NEXUS_PLAN.md; M1-M2 built, M3 Garage environment next). Still to build:
+      **the ID wallet** in Security (IDs, passports, insurance cards, registrations: photos, numbers sealed, expiry
+      reminders, show full screen; a copy is a backup, not the legal ID except a state's official mobile ID or
+      e-proof of insurance), Zac asked 00:25.
       **Maps' other scripts need Zac or a session with network:** place names in Cyrillic, Greek, Arabic and so on
       need more glyph ranges in `web/vendor/fonts/` (web/vendor/README.md says where from); the cloud shell here
       can't download them.
