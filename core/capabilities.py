@@ -95,9 +95,9 @@ LIMITS = {
     "files": "",
     "music": "",
     "assistant": "",
-    "diagnostics": "No web screen yet.",
+    "diagnostics": "Looks only: it reads the PC's health and never changes anything; for the PC's owner.",
     "module_browser": "",
-    "settings": "No web screen yet: the desktop has it.",
+    "settings": "Phone access and offline updates change on the PC only, on purpose.",
 }
 
 

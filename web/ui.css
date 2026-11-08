@@ -2069,3 +2069,17 @@ a.comms-row:hover .row-title { color: var(--accent); }
 .gn-check.ok .gn-check-mark { color: rgb(var(--rgb-accent)); }
 .gn-check.attn { color: var(--attention); }
 .gn-check.info { color: var(--text-dim); }
+
+/* About MIA, how her apps are doing here (web/about.js, DEC-0057). */
+.ab-apps { display: grid; gap: 10px; padding: 16px 18px; margin-bottom: var(--gap); }
+.ab-apps .pw-label { margin: 0; }
+.ab-counts { display: flex; flex-wrap: wrap; gap: 8px; }
+.ab-count { font-size: 13px; padding: 4px 10px; border-radius: var(--radius-pill); border: 1px solid var(--line-strong); color: var(--text-dim); }
+.ab-count b { color: var(--text); }
+.ab-count.implemented { border-color: rgba(var(--rgb-accent), 0.45); }
+.ab-count.malfunctioning { border-color: var(--bad); }
+.ab-app-notes { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: 13.5px; }
+.ab-app { display: flex; gap: 10px; align-items: baseline; }
+.ab-app-word { flex: none; min-width: 8.5em; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-dim); }
+.ab-app.malfunctioning .ab-app-word { color: var(--bad); }
+@media (max-width: 520px) { .ab-app { flex-direction: column; gap: 2px; } .ab-app-word { min-width: 0; } }

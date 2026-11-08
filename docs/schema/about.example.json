@@ -87,5 +87,82 @@
   ],
   "memories": 14,
   "style_picks": 7
+ },
+ "apps": {
+  "counts": [
+   {
+    "status": "implemented",
+    "word": "Working",
+    "n": 43
+   },
+   {
+    "status": "partial",
+    "word": "Partly",
+    "n": 7
+   },
+   {
+    "status": "planned",
+    "word": "Planned",
+    "n": 1
+   }
+  ],
+  "notes": [
+   {
+    "name": "Greenhouse",
+    "status": "partial",
+    "word": "Partly",
+    "why": "No sensors yet: readings are entered by hand.",
+    "evidence": "verified"
+   },
+   {
+    "name": "Look",
+    "status": "partial",
+    "word": "Partly",
+    "why": "not on the glasses yet",
+    "evidence": "verified"
+   },
+   {
+    "name": "Passwords",
+    "status": "partial",
+    "word": "Partly",
+    "why": "MIA's assistant never sees a password; no autofill in other apps yet.",
+    "evidence": "verified"
+   },
+   {
+    "name": "Power",
+    "status": "partial",
+    "word": "Partly",
+    "why": "Readings are entered by hand; no sensors are connected yet.",
+    "evidence": "verified"
+   },
+   {
+    "name": "Real Estate",
+    "status": "partial",
+    "word": "Partly",
+    "why": "Selling a property isn't tracked yet.",
+    "evidence": "verified"
+   },
+   {
+    "name": "The Dungeon",
+    "status": "partial",
+    "word": "Partly",
+    "why": "Loot is pay before taxes, worked out from your hours; what reaches the bank comes from the bank sync. Shift differentials and tips aren't counted yet.",
+    "evidence": "verified"
+   },
+   {
+    "name": "The Lab",
+    "status": "partial",
+    "word": "Partly",
+    "why": "Readings are entered by hand; no sensors are connected yet.",
+    "evidence": "verified"
+   },
+   {
+    "name": "Look on the glasses",
+    "status": "planned",
+    "word": "Planned",
+    "why": "the glasses' own camera: 'what am I looking at' through them (the phone's camera works by voice since 2026-11-07)",
+    "evidence": "verified"
+   }
+  ]
  }
 }

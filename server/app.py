@@ -2609,13 +2609,14 @@ def create_app(context: AppContext) -> FastAPI:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
 
     @app.get("/api/about")
-    def web_about(profile_id: str = Depends(require_profile_id)) -> dict:
-        """About MIA (core/web_about.screen, DEC-0142): what she is, her scale, her focus, her specialties and what she
-        knows about the person, every line from the facts; read only."""
+    def web_about(here: str = "pc", profile_id: str = Depends(require_profile_id)) -> dict:
+        """About MIA (core/web_about.screen, DEC-0142): what she is, her scale, her focus, her specialties, how her apps
+        are doing on the asking device (`here`: pc, phone or glasses; DEC-0057) and what she knows about the person,
+        every line from the facts; read only."""
         from core.web_about import screen
 
         with app.state.turn_lock:
-            return screen(view_for(context, profile_id))
+            return screen(view_for(context, profile_id), here)
 
     @app.get("/api/worlds")
     def web_worlds(campaign: str = "", profile_id: str = Depends(require_profile_id)) -> dict:
