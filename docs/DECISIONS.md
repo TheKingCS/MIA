@@ -1972,7 +1972,12 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   (intents), the communication log, the freedom-fund log, recreation, learning paths and browser routines. A
   structural test now fails if any file naming a sealed file reads it without `open_text`, so no reader is left
   behind when a name joins SEALED. Next: the budget's files (after the Plaid work in budget_manager.py), any
-  remaining personal stores, the phone's Keystore.
+  remaining personal stores, the phone's Keystore. **2026-11-08 (claude, engine): the most private remaining stores sealed** —
+  email drafts, places, the work dungeon (pay and hours), notifications, workouts (exercises, templates, sessions) and
+  fitness now read through `open_text` and are written sealed; an unreadable one starts empty with a copy kept aside
+  (the at-rest tests hold each). Existing plain files still read and seal on their next write. Left on purpose: the
+  private journal and the password vault (their own encryption), and the append-only `.jsonl` logs. Still to do:
+  the saga's files, the game stores (rewards, bosses, questlines, world map), classroom, ratings and the rest.
 - Related: DEC-0035 (the password vault), DEC-0125
 
 ### DEC-0127: MIA becomes a product, sold by subscription, local-first

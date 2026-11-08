@@ -79,6 +79,13 @@ SEALED = frozenset({
     "response_styles.json",  # how they like MIA to answer (DEC-0138)
     "directions.json",  # the standing values they steer by (DEC-0141)
     "connections.json",  # what they said and what it ties into (core/connections.py)
+    # 2026-11-08 (DEC-0126, "any remaining personal stores"): the most private of the rest
+    "email_drafts.json",  # emails MIA drafted for them
+    "places.json",  # the places they keep
+    "work_dungeon.json",  # their job, its pay and hours
+    "notifications.json",  # what MIA told them
+    "workout_exercises.json", "workout_templates.json", "workout_sessions.json",  # their training
+    "fitness.json",  # their fitness plan and records
 })
 # Every store reading a SEALED file uses open_text and catches ValueError (UnreadableFile is one) with OSError, so a
 # file that won't open is copied aside and the store starts empty instead of MIA failing to start. Not yet: the

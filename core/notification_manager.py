@@ -32,6 +32,7 @@ from typing import Optional
 
 from core.app_context import AppContext
 from core.logger import get_logger
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 
 log = get_logger(__name__)
@@ -100,15 +101,15 @@ class NotificationManager:
 
     def _load(self) -> None:
         """Reads the notifications; a damaged file starts empty and says so with a notification of its own (it can't use
-        notify_data_corruption: the context doesn't have this manager yet).
+        notify_data_corruption: the context doesn't have this manager yet). Sealed at rest (DEC-0126): a sealed file is opened, one that won't open is copied aside and starts empty.
         """
         if not self._notifications_file.exists():
             self._notifications = []
             return
         try:
-            raw = json.loads(self._notifications_file.read_text(encoding="utf-8"))
+            raw = json.loads(open_text(self._notifications_file))
             self._notifications = [Notification.from_dict(d) for d in raw]
-        except (json.JSONDecodeError, OSError):
+        except (ValueError, OSError):  # ValueError: bad JSON or a sealed file that won't open
             log.exception("Failed to load notifications.json — starting with an empty list.")
             self._notifications = []
             # Self-reference, not core.data_recovery.notify_data_corruption()

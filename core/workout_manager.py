@@ -43,6 +43,7 @@ from core.app_context import AppContext
 from core.gamification import SkillWeight, grant_xp
 from core import life_events
 from core.logger import get_logger
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
 
@@ -229,14 +230,14 @@ class WorkoutManager:
 
     def _load_file(self, path: Path, cls) -> list:
         """One file's records; missing is empty, a damaged file is logged, reported (notify_data_corruption) and starts
-        empty.
+        empty. Sealed at rest (DEC-0126): a sealed file is opened, one that won't open is copied aside and starts empty.
         """
         if not path.exists():
             return []
         try:
-            raw = json.loads(path.read_text(encoding="utf-8"))
+            raw = json.loads(open_text(path))
             return [cls.from_dict(d) for d in raw]
-        except (json.JSONDecodeError, OSError):
+        except (ValueError, OSError):  # ValueError: bad JSON or a sealed file that won't open
             log.exception("Failed to load %s — starting with an empty list.", path.name)
             notify_data_corruption(self.context, path.name)
             return []

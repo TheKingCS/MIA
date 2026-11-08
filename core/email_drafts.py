@@ -26,6 +26,7 @@ from pathlib import Path
 from typing import Optional
 from urllib.parse import quote
 
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.logger import get_logger
 
@@ -93,14 +94,14 @@ class EmailDrafts:
     """
     def __init__(self, context, data_dir: Optional[Path] = None) -> None:
         # Whose data: a person's own folder (core/personal_data.py), or data/ by default.
-        """Points at the person's file (data/ by default) and loads it; an unreadable file is logged and starts empty."""
+        """Points at the person's file (data/ by default) and loads it; an unreadable file is logged and starts empty. Sealed at rest (DEC-0126): a sealed file is opened, one that won't open is copied aside and starts empty."""
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._drafts_file = self.data_dir / "email_drafts.json" if data_dir is not None else _DRAFTS_FILE
         self.context = context
         self._drafts: list[EmailDraft] = []
         if self._drafts_file.exists():
             try:
-                self._drafts = [EmailDraft.from_dict(d) for d in json.loads(self._drafts_file.read_text(encoding="utf-8"))]
+                self._drafts = [EmailDraft.from_dict(d) for d in json.loads(open_text(self._drafts_file))]
             except (OSError, ValueError, KeyError, TypeError):
                 log.exception("email_drafts.json unreadable, starting empty.")
 

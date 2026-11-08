@@ -40,6 +40,7 @@ from pathlib import Path
 from typing import Optional
 
 from core import life_events
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.logger import get_logger
 
@@ -205,10 +206,10 @@ class FitnessManager:
     def _load(self) -> None:
         """Reads the file into its parts: the plan (merged over a blank one so new fields appear), weigh-ins, food, skill
         practice, training days and steps done, habits, the meal plan and prep sessions. A damaged file is logged and
-        starts fresh. Undo calls this to reload.
+        starts fresh. Undo calls this to reload. Sealed at rest (DEC-0126): a sealed file is opened, one that won't open is copied aside and starts empty.
         """
         try:
-            raw = json.loads(self.path.read_text(encoding="utf-8")) if self.path.exists() else {}
+            raw = json.loads(open_text(self.path)) if self.path.exists() else {}
         except (OSError, ValueError):
             log.exception("Couldn't read %s; starting fresh.", self.path)
             raw = {}
