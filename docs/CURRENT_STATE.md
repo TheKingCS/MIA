@@ -28,7 +28,8 @@ against money and hours (an unknown budget never makes an $800 build look cheap)
 it sells: toilet-roll cups and a scrap shelf before seedling sales, a coop before hens, a canning setup and a first batch
 before preserves, the state's cottage-food rules checked only once there's something to sell, a level, drained site
 before a greenhouse; a payoff months away is worth less than one now, so summer says preserve, winter says build the
-seed shelf. Its budget comes from your own Building Materials and Tools targets. **MIA inspects herself**: her
+seed shelf. What you already have is never suggested again, and with only jars or eggs to sell it says to check the
+rules before building a stand. Its budget comes from your own Building Materials and Tools targets. **MIA inspects herself**: her
 repository against her docs every week, with findings as tasks (T-0020; 0 today). **One shared development history**
 (T-0021): every decision, all 1,677 commits, the Fix-It Log's issues and the lab's experiments, searchable beside the
 council chat and in every agent's briefing. **Disagreements resolved, never dropped** (T-0022): agents can object to a
