@@ -18,7 +18,8 @@ answers in plain lines, with what couldn't be read said as such (never as a
 pass).
 
 `PROCEDURES` are the built-in ones; MIA can make more as specs (ACAF), held
-to the same check.
+to the same check. `hardware()` turns the same inspection's facts into the
+screen's hardware list (This PC), saying only what was read.
 """
 
 from __future__ import annotations

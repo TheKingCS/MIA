@@ -1,5 +1,5 @@
 """Diagnostic procedures (ACAF step 4, T-0040, core/diagnostics.py): check-ups written as specs over what inspection's
-PASSIVE methods read; checked before they run, so they can only read and compare; what couldn't be read said as such."""
+PASSIVE methods read; checked before they run, so they can only read and compare; what couldn't be read said as such; and the hardware list, only what was read."""
 
 from types import SimpleNamespace
 
