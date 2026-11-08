@@ -111,6 +111,16 @@ RECORDS["pet"] = Record("pet", "pet", "pet_id", "get_pet", "add_pet", "update_pe
                             Field("notes", "Notes", "textarea"),
                         ))
 
+# The Toolbox's inventory (core/inventory_manager.py): what's kept around the house, how many, and where.
+RECORDS["inventory"] = Record("inventory", "item", "item_id", "get_item", "add_item", "update_item", "delete_item",
+                              store="inventory", fields=(
+                                  Field("name", "Name", "text", True),
+                                  Field("quantity", "How many", "int", default=0, say="count"),
+                                  Field("category", "Kind", "text", say="kind"),
+                                  Field("location", "Where it's kept", "text", say="kept in"),
+                                  Field("notes", "Notes", "textarea"),
+                              ))
+
 # A trip belongs to an expedition (chosen on the page).
 TRIP = Record("trip", "trip", "trip_id", "get_trip", "add_trip", "update_trip", "delete_trip", store="trips", fields=(
     Field("name", "Name", "text", True),
@@ -272,13 +282,15 @@ def _journal_delete(context, params) -> str:
 # ------------------------------------------------------------------ stock up / down
 
 
-def _adjuster(key: str, store: str, getter: str, adjust: str, attr: str, unit_attr: str = "", whole: bool = False):
-    """Builds the describe/execute pair for an `X.adjust` kind (component, material, product): add or take a delta from
+def _adjuster(key: str, store: str, getter: str, adjust: str, attr: str, unit_attr: str = "", whole: bool = False,
+              id_param: str = ""):
+    """Builds the describe/execute pair for an `X.adjust` kind (component, material, product, inventory): add or take a delta from
     the item's count, showing the before and after. whole=True insists on whole numbers (parts); a zero change is
-    refused. One builder so the three adjust kinds behave the same.
+    refused. One builder so the adjust kinds behave the same. `id_param` names the item's parameter (its record's,
+    "item_id" for the inventory; "<key>_id" by default).
     """
     def item(context, params):
-        found = getattr(_need(context, store), getter)(str(params.get(f"{key}_id") or ""))
+        found = getattr(_need(context, store), getter)(str(params.get(id_param or f"{key}_id") or ""))
         if found is None:
             raise ActionError(f"That {key} isn't there anymore.")
         return found
@@ -299,7 +311,7 @@ def _adjuster(key: str, store: str, getter: str, adjust: str, attr: str, unit_at
 
     def execute(context, params) -> str:
         it, d = item(context, params), delta(params)
-        after = _call(getattr(getattr(context, store), adjust), getattr(it, f"{key}_id"), d)
+        after = _call(getattr(getattr(context, store), adjust), getattr(it, id_param or f"{key}_id"), d)
         return f"{it.name}: {_qty(getattr(after, attr))} now."
 
     return describe, execute
@@ -786,7 +798,8 @@ def _say(text: str):
 
 def _register() -> None:
     """Adds every action kind this module defines to ACTION_TYPES: the record kinds from the shared table
-    (core/record_actions.py), the three adjust kinds, and the hand-written ones above. Runs once, when
+    (core/record_actions.py), the adjust kinds (parts, materials, products, the inventory), and the hand-written ones
+    above. Runs once, when
     this module is imported (core/actions.py imports it).
     """
     kinds = []
@@ -796,9 +809,11 @@ def _register() -> None:
     for key, store, getter, adjust, attr, unit, whole in (
             ("component", "components", "get_component", "adjust_quantity", "quantity", "", True),
             ("material", "materials", "get_material", "adjust_quantity", "quantity_on_hand", "unit", False),
-            ("product", "products", "get_product", "adjust_stock", "quantity_in_stock", "", False)):
-        describe, execute = _adjuster(key, store, getter, adjust, attr, unit, whole)
-        kinds.append(ActionType(f"{key}.adjust", "Adjust", {f"{key}_id": f"the {key}", "delta": "+ or - how many"},
+            ("product", "products", "get_product", "adjust_stock", "quantity_in_stock", "", False),
+            ("inventory", "inventory", "get_item", "adjust_quantity", "quantity", "", True)):
+        id_param = RECORDS[key].id_param if key in RECORDS else f"{key}_id"
+        describe, execute = _adjuster(key, store, getter, adjust, attr, unit, whole, id_param)
+        kinds.append(ActionType(f"{key}.adjust", "Adjust", {id_param: f"the {key}", "delta": "+ or - how many"},
                                 describe, execute))
     sale_delete = _ledger_delete(SALE, "get_revenue", "delete_revenue")
     cost_delete = _ledger_delete(SHOP_EXPENSE, "get_expense", "delete_expense")

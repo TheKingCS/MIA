@@ -76,7 +76,7 @@ LIMITS = {
     "maps": "Vector areas are the ones cut onto the PC (names in Latin script); topo tiles are US-only.",
     "navigation": "Waypoints are added by voice or on the map; sun times are for the day, not live.",
     "knowledge": "Only packs copied onto this computer; articles read as plain text, without pictures.",
-    "toolbox": "Inventory is on the PC; alarms ring on the PC.",
+    "toolbox": "Alarms ring on the PC.",
     "lab": "Readings are entered by hand; no sensors are connected yet.",
     "field_kit": "Ejecting drives, running scripts and the port scan are on the PC.",
     "passwords": "MIA's assistant never sees a password; no autofill in other apps yet.",

@@ -1572,3 +1572,12 @@ body.mod-maps .hero { display: none; }
 .plan-buy.done > span:first-child { color: var(--text-dim); }
 .plan-problem { color: var(--attention); }
 .plan-page h3 { text-transform: none; }  /* "8 x 4 ft raised bed" stays as worked out */
+
+/* Toolbox: the inventory (core/web_toolbox.inventory, 2026-11-07). */
+.tb-items { display: flex; flex-direction: column; gap: 8px; }
+.tb-item { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(var(--rgb-accent), .1); }
+.tb-item-what { display: flex; flex-direction: column; min-width: 0; }
+.tb-item-count { display: flex; align-items: center; gap: 6px; }
+.tb-item-count .btn { min-width: 44px; min-height: 44px; }
+.tb-qty { font-family: var(--font-mono); min-width: 2.5ch; text-align: center; }
+.tb-item .row-buttons { grid-column: 1 / -1; }
