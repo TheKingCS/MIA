@@ -43,6 +43,7 @@ from typing import Optional
 
 from core.app_context import AppContext
 from core.logger import get_logger
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
 
@@ -193,12 +194,13 @@ class ConversationManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        """Reads the conversations; a damaged file is logged, reported (notify_data_corruption) and starts empty."""
+        """Reads the conversations; a damaged file is logged, reported (notify_data_corruption) and starts empty. The file is sealed on disk (DEC-0126); open_text reads it sealed or plain, and one that won't open is
+        copied aside first."""
         if not self._conversations_file.exists():
             self._conversations = []
             return
         try:
-            raw = json.loads(self._conversations_file.read_text(encoding="utf-8"))
+            raw = json.loads(open_text(self._conversations_file))
             self._conversations = [Conversation.from_dict(d) for d in raw]
         except (json.JSONDecodeError, OSError):
             log.exception("Failed to load conversations.json — starting with an empty list.")

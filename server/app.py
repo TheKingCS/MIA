@@ -2604,8 +2604,10 @@ def create_app(context: AppContext) -> FastAPI:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
         if not path.is_file():
             raise HTTPException(status.HTTP_404_NOT_FOUND, "That file isn't here.")
+        from core.at_rest import open_bytes
+
         with app.state.turn_lock:
-            data = path.read_bytes()
+            data = open_bytes(path)  # a sealed file goes as its content (DEC-0126); the phone seals its own copy
         return Response(data, media_type="application/octet-stream", headers={"Cache-Control": "no-store"})
 
     @app.post("/api/sync/file")
@@ -2614,6 +2616,7 @@ def create_app(context: AppContext) -> FastAPI:
         import base64
         import binascii
 
+        from core.at_rest import open_bytes
         from core.sync import digest, path_for, write_file
 
         try:
@@ -2623,7 +2626,7 @@ def create_app(context: AppContext) -> FastAPI:
         except (ValueError, binascii.Error, UnicodeDecodeError) as problem:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem) or "That file can't be read.") from None
         with app.state.turn_lock:
-            current = path.read_bytes() if path.is_file() else None
+            current = open_bytes(path) if path.is_file() else None
             if digest(current) != body.expect:
                 raise HTTPException(status.HTTP_409_CONFLICT, "It changed here since; sync again.")
             write_file(context, path, data)

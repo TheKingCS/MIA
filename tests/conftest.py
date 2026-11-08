@@ -131,6 +131,13 @@ import core.security_log as security_log_module  # noqa: E402
 
 security_log_module._DATA_DIR = _TEST_RUNTIME_DIR
 
+# 2026-11-08: sealed files (core/at_rest.py, DEC-0126): every test seals with a fixed test key, never DPAPI or the
+# real data/.keys, so the whole suite writes and reads the most private stores sealed, as MIA does.
+import core.at_rest as at_rest_module  # noqa: E402
+
+at_rest_module.KEY_DIR = _TEST_RUNTIME_DIR / ".keys"
+at_rest_module.use_key(bytes(range(32)))
+
 # 2026-11-06: tests that run MIA's daily checks (test_communication_gate)
 # ran the PC's improvement loops for real: readings into data/dev/ and a
 # task opened in work/tasks/ (T-0049). The development platform's records

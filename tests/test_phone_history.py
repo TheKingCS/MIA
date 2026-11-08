@@ -15,6 +15,7 @@ from fastapi.testclient import TestClient
 import core.conversation_manager as conversation_module
 import server.app as server_app_module
 from core.assistant_actions import AssistantAction, AssistantActionRegistry
+from core.at_rest import open_text
 from core.conversation_manager import ConversationManager
 from core.event_bus import EventBus
 from core.main_thread import publish
@@ -151,6 +152,8 @@ def phone(context, tmp_path, monkeypatch):  # noqa: F811  (context is the import
 
 
 def test_phone_turns_are_saved_for_the_desktop_history(phone):
+    """Two phone turns make one conversation the desktop's history shows, saved (sealed, DEC-0126) with all four
+    messages."""
     updates = []
     phone.context.events.subscribe("conversation.updated", lambda **kw: updates.append(kw["conversation_id"]))
     first = phone.client.post("/api/voice/text", json={"text": "What's on my schedule today?"}).json()
@@ -158,7 +161,7 @@ def test_phone_turns_are_saved_for_the_desktop_history(phone):
     [conversation] = phone.conversations.all_conversations()
     assert conversation.title == "\U0001F4F1 What's on my schedule today?"
     assert [m.role for m in conversation.messages] == ["user", "assistant", "user", "assistant"]
-    saved = json.loads(phone.file.read_text())
+    saved = json.loads(open_text(phone.file))  # sealed on disk (DEC-0126)
     assert saved[0]["title"].startswith("\U0001F4F1") and len(saved[0]["messages"]) == 4
     # Screens heard about it on the GUI thread, not the server's.
     assert updates == [] and len(phone.handed) >= 2
@@ -180,7 +183,7 @@ def test_off_the_record_on_the_phone_stays_off_the_record(phone):
     phone.client.post("/api/voice/text", json={"text": "Off the record, work was rough"})
     [conversation] = phone.conversations.all_conversations()
     assert conversation.title == "Off the record"
-    saved = json.loads(phone.file.read_text())
+    saved = json.loads(open_text(phone.file))  # sealed on disk (DEC-0126)
     assert all("rough" not in m["content"] for c in saved for m in c["messages"])
 
 

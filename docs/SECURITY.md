@@ -52,7 +52,9 @@ most likely first:
 1. **Encrypt the drive (Zac, now).** Settings → Privacy & security → Device encryption, if offered on this PC;
    otherwise Windows 11 Pro's BitLocker (an upgrade) or VeraCrypt (free). The biggest single step, and it covers
    everything at once. ⏸
-2. **MIA encrypts her own data at rest (DEC-0126, proposed).** Every store's file encrypted with AES-256-GCM under
+2. **MIA encrypts her own data at rest (DEC-0126, approved; stage 1 done 2026-11-08).** `core/at_rest.py` seals
+   conversations, memories, notes and life notes now; `python -m tools.data_key` shows the state, `recovery` the key
+   to keep in a password manager. The plan: every store's file encrypted with AES-256-GCM under
    one data key; the data key protected by Windows DPAPI (tied to the person's Windows sign-in, so nothing to type
    at start) on the PC and by the Android Keystore on the phone, with an optional MIA passphrase for "beyond".
    Done in the one place every store already writes through (`core/atomic_write.py`) plus a matching read, store by

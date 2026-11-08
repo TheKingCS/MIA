@@ -54,6 +54,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+from core.at_rest import open_bytes, open_text
 from core.backup_manager import BackupError, safe_extract_zip
 from core.logger import get_logger
 from core.atomic_write import atomic_write_text
@@ -146,7 +147,7 @@ def export_expedition_data(destination_path: Path) -> ExportResult:
 
 
 def _build_zip_bytes() -> bytes:
-    """The expedition bundle as zip bytes, in memory: a manifest (app, bundle kind, version, when), each expedition data file that exists (as data/...), and the trip photos (as trip_photos/...)."""
+    """The expedition bundle as zip bytes, in memory: a manifest (app, bundle kind, version, when), each expedition data file that exists (as data/..., a sealed one as its content), and the trip photos (as trip_photos/...)."""
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
         manifest = {
@@ -159,8 +160,8 @@ def _build_zip_bytes() -> bytes:
 
         for filename, _id_field in _DATA_FILES:
             file_path = _DATA_DIR / filename
-            if file_path.exists():
-                zf.write(file_path, arcname=f"data/{filename}")
+            if file_path.exists():  # its content, opened if sealed (DEC-0126): the other device has its own key
+                zf.writestr(f"data/{filename}", open_bytes(file_path))
 
         if _TRIP_PHOTOS_DIR.exists():
             for file_path in _TRIP_PHOTOS_DIR.rglob("*"):
@@ -232,6 +233,8 @@ def import_expedition_data(source_path: Path) -> ImportResult:
 def _merge_json_records(staged_file: Path, live_file: Path, id_field: str) -> tuple[int, Optional[str]]:
     """Appends records from staged_file whose id_field isn't already
     present in live_file. Returns (count added, error message or None).
+    Both are read with at_rest.open_text (journal_entries.json is sealed,
+    DEC-0126); a live file that won't open is skipped, never replaced.
 
     2026-09-14 stabilization pass — a real, more serious variant of the
     "corrupted data file" problem every other manager's own _load()
@@ -251,12 +254,12 @@ def _merge_json_records(staged_file: Path, live_file: Path, id_field: str) -> tu
     if not staged_file.exists():
         return 0, None
 
-    staged_records = json.loads(staged_file.read_text(encoding="utf-8"))
+    staged_records = json.loads(open_text(staged_file))
 
     if live_file.exists():
         try:
-            live_records = json.loads(live_file.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError) as exc:
+            live_records = json.loads(open_text(live_file))  # journal_entries.json is sealed (DEC-0126)
+        except (ValueError, OSError) as exc:
             return 0, (
                 f"'{live_file.name}' is corrupted and could not be read — skipped merging into it "
                 f"to avoid losing its existing data ({exc}). Nothing from this export was merged into it."
