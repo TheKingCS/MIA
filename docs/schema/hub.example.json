@@ -136,7 +136,9 @@
           "page": "power.html",
           "ask": "How's the battery?"
         }
-      ]
+      ],
+      "hue": "#35d4ff",
+      "environment": null
     },
     "garage": {
       "id": "garage",
@@ -168,7 +170,158 @@
           "page": "look.html",
           "ask": "What is this?"
         }
-      ]
+      ],
+      "hue": "#e8792f",
+      "environment": {
+        "kind": "garage",
+        "available": true,
+        "bays": [
+          {
+            "id": "31ee84683a",
+            "name": "Mower",
+            "category": "Power Equipment",
+            "make_model": "Make Z-100",
+            "photo": "",
+            "meter": "13 engine hours",
+            "overdue": 2,
+            "next": {
+              "title": "Check oil",
+              "text": "overdue 14d",
+              "urgency": "overdue"
+            },
+            "page": "asset.html?id=31ee84683a"
+          },
+          {
+            "id": "d7ea2a25b1",
+            "name": "Pickup truck",
+            "category": "Vehicle",
+            "make_model": "Make Model T",
+            "photo": "",
+            "meter": null,
+            "overdue": 1,
+            "next": {
+              "title": "Tire rotation",
+              "text": "overdue 9d",
+              "urgency": "overdue"
+            },
+            "page": "asset.html?id=d7ea2a25b1"
+          },
+          {
+            "id": "8c260faa4f",
+            "name": "Generator",
+            "category": "Power Equipment",
+            "make_model": "Make G5000",
+            "photo": "",
+            "meter": null,
+            "overdue": 0,
+            "next": {
+              "title": "Test run",
+              "text": "due in 3d",
+              "urgency": "due_soon"
+            },
+            "page": "asset.html?id=8c260faa4f"
+          },
+          {
+            "id": "6fd206ec1b",
+            "name": "Truck",
+            "category": "Vehicle",
+            "make_model": "",
+            "photo": "",
+            "meter": null,
+            "overdue": 0,
+            "next": {
+              "title": "Oil change",
+              "text": "due in 4d",
+              "urgency": "on_track"
+            },
+            "page": "asset.html?id=6fd206ec1b"
+          }
+        ],
+        "needs": [
+          {
+            "title": "Check oil",
+            "asset": "Mower",
+            "text": "overdue 14d",
+            "page": "asset.html?id=31ee84683a"
+          },
+          {
+            "title": "Sharpen blades",
+            "asset": "Mower",
+            "text": "overdue 11d",
+            "page": "asset.html?id=31ee84683a"
+          },
+          {
+            "title": "Tire rotation",
+            "asset": "Pickup truck",
+            "text": "overdue 9d",
+            "page": "asset.html?id=d7ea2a25b1"
+          }
+        ],
+        "parts": [
+          {
+            "ref": "inventory_item:f",
+            "name": "Air filter",
+            "kind": "inventory_item",
+            "have": 0,
+            "unit": "",
+            "state": "out",
+            "where": "",
+            "used_by": [
+              "Mower"
+            ]
+          },
+          {
+            "ref": "material:o",
+            "name": "10W-30 oil",
+            "kind": "material",
+            "have": 0.5,
+            "unit": "qt",
+            "state": "low",
+            "where": "Garage shelf",
+            "used_by": [
+              "Mower",
+              "Pickup Truck"
+            ]
+          }
+        ],
+        "bench": [
+          {
+            "id": "toolbox",
+            "name": "Toolbox",
+            "icon": "toolbox",
+            "page": "toolbox.html",
+            "line": "Quick tools and timers"
+          },
+          {
+            "id": "inventory",
+            "name": "Parts and Inventory",
+            "icon": "toolbox",
+            "page": "toolbox.html#inventory",
+            "line": "What's on the shelves"
+          },
+          {
+            "id": "sight",
+            "name": "Look",
+            "icon": "sight",
+            "page": "look.html",
+            "line": "Show MIA a part or a problem"
+          },
+          {
+            "id": "workshop",
+            "name": "Workshop",
+            "icon": "workshop",
+            "page": "workshop.html",
+            "line": "Jobs, materials, products"
+          },
+          {
+            "id": "projects",
+            "name": "Projects",
+            "icon": "workshop",
+            "page": "projects.html",
+            "line": "Builds and their tasks"
+          }
+        ]
+      }
     },
     "plants_animals": {
       "id": "plants_animals",
@@ -199,7 +352,9 @@
           "tagline": "Your animals, their care and vet visits.",
           "page": "people.html?only=pets"
         }
-      ]
+      ],
+      "hue": "#2fd27e",
+      "environment": null
     },
     "health": {
       "id": "health",
@@ -223,7 +378,9 @@
           "page": "kitchen.html",
           "ask": "What can I make with what's in the pantry?"
         }
-      ]
+      ],
+      "hue": "#ff4f8b",
+      "environment": null
     },
     "recreation": {
       "id": "recreation",
@@ -293,7 +450,9 @@
           "page": "play.html",
           "ask": "Played pickleball for an hour, it was hard."
         }
-      ]
+      ],
+      "hue": "#9b6bff",
+      "environment": null
     },
     "security": {
       "id": "security",
@@ -332,7 +491,9 @@
           "page": "field-kit.html",
           "ask": "What devices are connected?"
         }
-      ]
+      ],
+      "hue": "#5be0c8",
+      "environment": null
     },
     "browser": {
       "id": "browser",
@@ -348,7 +509,9 @@
           "page": "browser.html",
           "ask": "Open the county website."
         }
-      ]
+      ],
+      "hue": "#bfefff",
+      "environment": null
     },
     "system": {
       "id": "system",
@@ -400,7 +563,9 @@
           "page": "apps.html",
           "ask": ""
         }
-      ]
+      ],
+      "hue": "#dfe9f2",
+      "environment": null
     },
     "finances": {
       "id": "finances",
@@ -464,7 +629,9 @@
           "page": "inbox.html",
           "ask": "What's waiting in my inbox?"
         }
-      ]
+      ],
+      "hue": "#3f7bff",
+      "environment": null
     },
     "business": {
       "id": "business",
@@ -518,7 +685,9 @@
           "tagline": "What you've made, to share.",
           "page": "showoff.html"
         }
-      ]
+      ],
+      "hue": "#e8d29a",
+      "environment": null
     },
     "personal": {
       "id": "personal",
@@ -612,7 +781,9 @@
           "page": "news.html",
           "ask": "What's the good news?"
         }
-      ]
+      ],
+      "hue": "#ff8ad8",
+      "environment": null
     },
     "learning": {
       "id": "learning",
@@ -651,7 +822,9 @@
           "page": "skills.html",
           "ask": "Which skills am I growing?"
         }
-      ]
+      ],
+      "hue": "#6a5cff",
+      "environment": null
     },
     "missions": {
       "id": "missions",
@@ -705,7 +878,9 @@
           "tagline": "Your story, told back.",
           "page": "chronicle.html"
         }
-      ]
+      ],
+      "hue": "#b8f04a",
+      "environment": null
     },
     "projects": {
       "id": "projects",
@@ -736,7 +911,9 @@
           "page": "lab.html",
           "ask": "Start a temperature experiment."
         }
-      ]
+      ],
+      "hue": "#9dffd9",
+      "environment": null
     },
     "communications": {
       "id": "communications",
@@ -774,7 +951,11 @@
           "page": "inbox.html",
           "ask": "What's waiting in my inbox?"
         }
-      ]
+      ],
+      "hue": "#8fb3ff",
+      "environment": null
     }
-  }
+  },
+  "hue": "#35d4ff",
+  "environment": null
 }

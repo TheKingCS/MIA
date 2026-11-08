@@ -75,8 +75,10 @@ Follows its section 10: inspect, map, find what's reused, plan milestones, then 
 
 *Status 2026-11-08 01:30: M0 done (DEC-0130: 15 areas plus Kitchen, hues on portals and glow only, the Nexus first,
 the liquid style in motion and backdrop). M1 and M2 built: `web/spatial.css`, `web/spatial.js` (vapor, ring, enter),
-`web/nexus.html` with `core/web_nexus.py`, the Nexus opening first, "take me to the garage" by voice. Next: M3
-(Garage as a spatial environment), then the glasses' flat ring (M4), and panels materializing across the frame.*
+`web/nexus.html` with `core/web_nexus.py`, the Nexus opening first, "take me to the garage" by voice. M3 built
+02:15: the Garage environment (`core/web_environments.py`; hub.html draws it): bays with depth, needs-you, parts
+running low across assets, the bench, lit in copper. Next: Zac's review of M3, then the glasses' flat ring (M4), then
+the other environments one at a time.*
 
 | # | What | Done when |
 |---|---|---|

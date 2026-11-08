@@ -152,9 +152,14 @@ def sidebar(context) -> list[dict]:
 
 
 def hub(context, area_id: str) -> Optional[dict]:
-    """One area's hub screen: {id, name, icon, tagline, apps}; None for an area that doesn't exist."""
+    """One area's hub screen: {id, name, icon, tagline, hue, apps, areas, environment: its own space or None}; None for
+    an area that doesn't exist."""
     area = AREAS_BY_ID.get(area_id)
     if area is None:
         return None
-    return {"id": area.id, "name": area.name, "icon": area.icon, "tagline": area.tagline,
-            "apps": _entries(context, area), "areas": [{"id": a.id, "name": a.name} for a in AREAS]}
+    from core.web_environments import environment
+
+    return {"id": area.id, "name": area.name, "icon": area.icon, "tagline": area.tagline, "hue": area.hue,
+            "apps": _entries(context, area), "areas": [{"id": a.id, "name": a.name} for a in AREAS],
+            # DEC-0130 M3: the area's own space (core/web_environments.py), None while it still uses its tiles
+            "environment": environment(context, area.id)}
