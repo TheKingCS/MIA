@@ -136,6 +136,7 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       Edit and Delete under ⋯).
       Kept (a label per kind, a card per note with when, Done and Forget).
       Memories (On This Day card; a card per trip with Time / Distance / Pace, a journal line, places and photos).
+      Security (a two-column wall of camera pictures, each with its state dot and name on the picture).
       Household (Done Today with its meter, a card per routine with its streak in words and Did It, paused ones
       apart; Add a Routine / Pause / Resume as `routine.add/pause/resume`, and by voice).
       Power has its web page (`core/web_power.py`, `/api/power`, `web/power.html`; energy sources and the battery),

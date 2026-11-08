@@ -6,6 +6,7 @@
  * Save Picture), Pictures (what you saved), and Set Up (add a camera:
  * name, where, brand, its address, its login). The password goes to
  * MIA.saveCamera only, never through an action, and is never shown again.
+ * The camera wall is laid out as the design canvas's Security (DEC-0113).
  * Formatting only.
  */
 (function () {
@@ -48,7 +49,7 @@
           img.src = next;
           if (url) URL.revokeObjectURL(url);
           url = next;
-          status.textContent = "● Live";
+          status.textContent = "Live";  // its dot is drawn by the stylesheet
           status.className = "cam-status ok";
           answering.set(cam.id, true);
         } catch (e) {
@@ -69,10 +70,10 @@
   function camTile(cam) {
     const img = el("img", { alt: cam.name, class: "cam-img" });
     const status = el("span", { class: "cam-status" }, page.demo ? "Demo" : "Connecting…");
-    const tile = el("button", { type: "button", class: "glass cam-tile", "aria-label": "Open " + cam.name, onclick: () => openFull(cam) },
-      el("div", { class: "cam-frame" }, img, status),
-      el("div", { class: "cam-caption" }, el("strong", {}, cam.name),
-        el("span", { class: "dim" }, [cam.location !== cam.name ? cam.location : null, cam.on_pc ? "via PC" : null].filter(Boolean).join(" · "))));
+    // The canvas (DEC-0113): the picture fills the tile; its state top left, its name bottom left.
+    const tile = el("button", { type: "button", class: "cam-tile cam-tile-full", "aria-label": cam.name + ", open full view", onclick: () => openFull(cam) },
+      el("div", { class: "cam-frame" }, img, status,
+        el("span", { class: "cam-name" }, cam.name + (cam.on_pc ? " · via PC" : ""))));
     if (!page.demo) live(cam, img, status, GRID_MS);
     return tile;
   }
@@ -142,8 +143,9 @@
   // ------------------------------------------------------------ views
   const VIEWS = {
     cameras: () => [homeNote(), page.cameras.length
-      ? section("Cameras", btn("Add Camera", "btn-ghost btn-small", () => editCamera(null)),
-          el("div", { class: "cam-grid" }, page.cameras.map(camTile)))
+      ? el("div", { class: "cam-wall" }, el("div", { class: "cam-grid cam-grid-2" }, page.cameras.map(camTile)),
+          el("p", { class: "dim cam-hint" }, "Pictures refresh every few seconds while on screen. Camera logins are stored once and never shown again."),
+          el("div", { class: "row-buttons" }, btn("Add Camera", "btn-ghost", () => editCamera(null))))
       : section("Cameras", null, el("p", { class: "empty" }, "No cameras yet. MIA shows cameras that stream on your home network: see which ones work in Set Up → Which Cameras Work."),
           el("div", { class: "row-buttons" }, btn("Add A Camera", "btn-amber", () => editCamera(null))))].filter(Boolean),
     pictures: () => section("Saved Pictures", null, page.pictures.length

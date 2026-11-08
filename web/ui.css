@@ -1401,3 +1401,21 @@ body.mod-maps .hero { display: none; }
 .mm-v { font-family: var(--font-mono); margin-top: 2px; }
 .mm-quote { margin: 0; font-size: var(--text-sm); color: var(--text-dim); font-style: italic; }
 .mm-foot { margin: 0; font-size: 12px; }
+
+/* ---------------------------------------------------------------- Security cameras (DEC-0113 canvas; web/security.js) */
+.cam-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 900px) { .cam-grid-2 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.cam-tile-full { padding: 0; border: 0; background: none; }
+.cam-tile-full .cam-frame { aspect-ratio: 4 / 3; border-radius: 6px; border: 1px solid var(--line-strong);
+  background: linear-gradient(160deg, #141c26, #0a0e13); }
+.cam-tile-full:hover .cam-frame, .cam-tile-full:focus-visible .cam-frame { border-color: rgba(var(--rgb-accent), 0.6); }
+.cam-tile-full .cam-status { left: 8px; top: 8px; display: inline-flex; align-items: center; gap: 6px; background: none; padding: 0;
+  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text); text-shadow: 0 1px 2px #000; }
+.cam-tile-full .cam-status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--text-dim); flex: none; }
+.cam-tile-full .cam-status.ok::before { background: var(--ok); }
+.cam-tile-full .cam-status.bad::before { background: var(--attention); }
+.cam-tile-full .cam-status.bad { color: var(--text); }
+.cam-name { position: absolute; left: 8px; bottom: 8px; right: 8px; font-size: 13px; color: var(--text); text-shadow: 0 1px 2px #000;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cam-tile-full .cam-img[src=""], .cam-tile-full .cam-img:not([src]) { visibility: hidden; }
+.cam-wall .cam-hint { margin: 10px 0; font-size: 12px; }
