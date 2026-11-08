@@ -2208,6 +2208,10 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   7. Zac, 06:31 ("all of the above"): Theme Studio steps 3 and 4 built: export and import as `mia-theme/1` files
      (`theme.import` through the same checks), and MIA designing a theme from a description, read in code
      (`core/theme_design.py`; `design_theme` by voice).
+  8. Built 2026-11-08 overnight (the rest of section 5 and the devices line, under 7's "all of the above"): **Mix
+     Two** (one theme with chosen parts of another, `core/themes.combine`, checked before saving; `mix_themes`),
+     **sound sets** (a theme's chimes, one of five, every theme starting on classic so it's opt-in), and **the glasses
+     take a theme's accent** lifted to read on the lens (`glasses_accent`).
 - Related: DEC-0135, DEC-0023, DEC-0130, DEC-0017, DEC-0014, DEC-0125
 
 ### DEC-0137: Living Systems Framework — generalize the existing foundation, don't rebuild it
