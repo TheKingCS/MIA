@@ -755,6 +755,7 @@
     "note": "A dozen or two of something easy (tomatoes, peppers, herbs): proof you grow them well first."
    }
   ],
-  "note": "Costs are rough starting figures, not quotes. Tell me your budget and I'll weigh it in."
+  "note": "Costs are rough starting figures, not quotes. Tell me your budget and I'll weigh it in.",
+  "budget_from": "your build budget"
  }
 }
