@@ -1563,3 +1563,12 @@ body.mod-maps .hero { display: none; }
 .route-stops li.done .route-dot { background: rgba(var(--rgb-accent), .18); }
 .route-stops li.done > span:nth-child(2) { color: var(--text-dim); }
 .route-legs li { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 14px; }
+
+/* Knowledge: a plan's sizes and what to buy (core/plan_library.detail, 2026-11-07). */
+.plan-sizes { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin: 12px 0; }
+.plan-size { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--text-dim); }
+.plan-size input { width: 96px; min-height: 44px; }
+.plan-buy { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.plan-buy.done > span:first-child { color: var(--text-dim); }
+.plan-problem { color: var(--attention); }
+.plan-page h3 { text-transform: none; }  /* "8 x 4 ft raised bed" stays as worked out */

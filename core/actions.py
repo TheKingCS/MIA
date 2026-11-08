@@ -365,6 +365,7 @@ import core.life_note_actions  # noqa: E402,F401  (promises, decisions, ideas, g
 import core.classroom_actions  # noqa: E402,F401  (the Classroom's web screen)
 import core.waypoint_actions  # noqa: E402,F401  (waypoints from the web's Maps and Navigation)
 import core.trip_route  # noqa: E402,F401  (a trip's route and checkpoints, from Expeditions and by voice)
+import core.plan_actions  # noqa: E402,F401  (a plan's page: keep a size, start a project, let a kept plan go)
 from core.offline_maps import _register as _register_map_areas  # noqa: E402  (vector map areas from the Maps page)
 
 _register_map_areas()

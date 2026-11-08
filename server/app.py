@@ -995,11 +995,13 @@ def create_app(context: AppContext) -> FastAPI:
             return screen(view_for(context, profile_id), q.strip()[:200])
 
     @app.get("/api/knowledge/plan")
-    def knowledge_plan(id: str, profile_id: str = Depends(require_profile_id)) -> dict:
+    def knowledge_plan(id: str, sizes: str = "", profile_id: str = Depends(require_profile_id)) -> dict:
+        """One plan, worked out at the sizes asked ("length_ft=10,width_ft=12"; core/plan_library.detail)."""
         from core.plan_library import detail
 
+        asked = dict(part.split("=", 1) for part in sizes.split(",")[:12] if "=" in part)
         with app.state.turn_lock:
-            found = detail(view_for(context, profile_id), id)
+            found = detail(view_for(context, profile_id), id, asked)
         if found is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "That plan isn't on the shelf.")
         return found

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1139 files, 254,751 lines; 1139 files describe themselves; 13,915 of 14,590 classes and functions are documented.
+1140 files, 255,026 lines; 1140 files describe themselves; 13,929 of 14,604 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-418 files, 119,044 lines; 6,305 of 6,394 classes and functions documented
+419 files, 119,247 lines; 6,318 of 6,407 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -287,6 +287,7 @@
 - `core/places.py`: Location quests (DEC-0028, the game layer's thirteenth idea; Zac, 2026-10-17): arrive at the gym and your workout opens; walk into the store and your grocery list is up.
 - `core/plaid_manager.py`: Bank/brokerage connectivity via Plaid — the one credible third-party path found after real research (2026-09-08): Robinhood has no public stocks API (crypto-only officially; everything else is unofficial and ToS-violating), Chime's own API is a B2B "Partner API," not self service for an individual.  *(21 undocumented)*
 - `core/plain_words.py`: Markdown out of what MIA says (2026-10-30). Models write **bold**, headings and `code`, which the desktop's chat bubbles show as asterisks and hashes and the voice reads as noise. Pure logic.
+- `core/plan_actions.py`: The plan page's changes (the screens review's missing "plan's page", its material list, cut list and shopping list; DEC-0118, DEC-0125), as action kinds so the Library page and voice agree and "undo that" takes each back (the plans and projects stores write through atomic_write_text):
 - `core/plan_import.py`: "Paste a plan" (2026-10-14, Zac: "work with Muse to fill out my workouts, goals, meals, nutrition"). A whole fitness plan and its recipes as one block of plain text, the kind Muse (or anyone) writes in a chat and the person pastes into My plan on their phone. The person's details go from that chat s
 - `core/plan_library.py`: The Library's plans shelf (Zac, 2026-11-07: "references for all kinds of stuff like woodworking plans, structure blueprints, material lists"). Three kinds of plan, found together by `find()`:
 - `core/play_actions.py`: Recreation (core/recreation.py, DEC-0098) through the action contract (core/actions.py): `play.log` (a game or sport played) and `play.delete`. The log writes through atomic_write_text, so "undo that" takes it back. Children play too: both are child-safe.
@@ -429,7 +430,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 2,892 lines; 34 of 34 classes and functions documented
+2 files, 2,894 lines; 34 of 34 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -698,7 +699,7 @@
 
 ## tests/: the test suite: what each part must do
 
-377 files, 67,813 lines; 5,365 of 5,951 classes and functions documented
+377 files, 67,851 lines; 5,366 of 5,952 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1080,7 +1081,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-80 files, 14,499 lines
+80 files, 14,531 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game

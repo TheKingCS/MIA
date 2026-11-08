@@ -294,12 +294,17 @@
       plans: [{ id: "builtin:gable-shed", title: "Gable shed", kind: "structure", summary: "A floor, four walls and a gable roof; any size.", where: "Built in, any size", file: false },
         { id: "builtin:raised-bed", title: "Raised garden bed", kind: "garden", summary: "Two boards tall with corner posts; any size.", where: "Built in, any size", file: false }] })
       : call("GET", "/api/knowledge/plans?q=" + encodeURIComponent(q)),
-    knowledgePlan: (id) => demo ? Promise.resolve({ id, title: "Raised garden bed", kind: "garden", summary: "Two boards tall with corner posts.",
+    knowledgePlan: (id, sizes) => demo ? Promise.resolve({ id, title: "Raised garden bed", kind: "garden", summary: "Two boards tall with corner posts.",
       where: "Built in, any size", file: false, materials_title: "8 x 4 ft raised bed, 11 in tall",
       items: [{ name: "2x6 x 8 ft", qty: 6, unit: "", note: "" }, { name: "soil and compost mix", qty: 1.09, unit: "cu yd", note: "29.3 cu ft" }],
       cuts: [{ part: "side", qty: 4, length: "8 ft", stock: "2x6 x 8 ft" }], notes: [], tools: ["saw", "drill/driver"],
-      steps: ["Cut the sides, ends and corner posts.", "Screw it together and fill it."], source: { name: "MIA (worked out in code)" } })
-      : call("GET", "/api/knowledge/plan?id=" + encodeURIComponent(id)),
+      steps: ["Cut the sides, ends and corner posts.", "Screw it together and fill it."], source: { name: "MIA (worked out in code)" },
+      sizes: [{ name: "length_ft", label: "Length", unit: "ft", value: 8 }, { name: "width_ft", label: "Width", unit: "ft", value: 4 },
+        { name: "height_in", label: "Height", unit: "in", value: 11 }], sized: false, problem: "", kept: false,
+      shopping: { rows: [{ item: "2x6 x 8 ft", unit: "", need: 6, have: 2, buy: 4, cost: 31.92, cost_text: "$31.92" },
+        { item: "soil and compost mix", unit: "cu yd", need: 1.09, have: 0, buy: 1.09 }], to_buy: [], known_cost: 31.92, known_cost_text: "$31.92", priced: 1 } })
+      : call("GET", "/api/knowledge/plan?id=" + encodeURIComponent(id) +
+        (sizes ? "&sizes=" + encodeURIComponent(Object.entries(sizes).map(([k, v]) => k + "=" + v).join(",")) : "")),
     diagnostics: () => demo ? Promise.resolve({ error: "", checks: [
       { id: "pc_ready", title: "Is the PC ready for MIA?", ok: true, passed: 5, failed: [], unknown: [] },
       { id: "network", title: "The network", ok: false, passed: 2, failed: ["The wired connection is running at 100 Mb/s, under a gigabit."], unknown: [] },
