@@ -1031,6 +1031,27 @@ def _power_levels(context, today):
     return _panel("Power", lines, "No battery or energy sources here yet.")
 
 
+def _journal_latest(context, today):
+    """Panel: the newest journal notes (the plain journal, never the private one), each with its day and tags."""
+    journal = getattr(context, "journal", None)
+    entries = journal.all_entries() if journal is not None else []
+    return _panel("Latest Notes", [_line(e.title, " · ".join(x for x in ((e.updated_at or e.created_at or "")[:10],
+                                                                       ", ".join(e.tags[:2])) if x)) for e in entries],
+                  "No notes yet. Say \"make a note\" and what to keep.")
+
+
+def _memories_glance(context, today):
+    """Panel: on this day in an earlier year first, then the latest trips, each with its distance and days."""
+    from core.memories_web import screen
+
+    page = screen(context, today)
+    lines = [_line("On this day: " + r["name"], f"{r['start'][:4]} · {r['km']} km" if r["km"] else r["start"][:4], "ok")
+             for r in page["on_this_day"]]
+    lines += [_line(r["name"], " · ".join(x for x in (f"{r['km']} km" if r["km"] else "",
+                                                     f"{r['days']} days" if r["days"] else "") if x)) for r in page["recaps"]]
+    return _panel("Memories", lines, "No trips remembered yet.")
+
+
 def _project_tasks(context, today):
     """Panel: the open tasks of the projects underway (core/web_projects.py), soonest due first, each with Done
     (task.done) and its project and due day; up to five, the rest counted."""
@@ -1158,6 +1179,8 @@ PANELS: dict[str, tuple[tuple[str, str, Panel], ...]] = {
     "observations": (("noticed", "What MIA Noticed", _noticed),),
     "lab": (("latest", "Latest Readings", _lab_latest),),
     "power": (("levels", "Levels", _power_levels),),
+    "notes": (("latest", "Latest Notes", _journal_latest),),
+    "memories": (("trips", "Memories", _memories_glance),),
 }
 
 # Questions an app's menu hands MIA, as if said aloud (she answers with
