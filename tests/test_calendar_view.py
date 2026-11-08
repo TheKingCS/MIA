@@ -19,6 +19,7 @@ TODAY = date.today()
 
 @pytest.fixture
 def world(tmp_path, monkeypatch):
+    """A world with an electric bill two days late and a mower's oil check overdue."""
     context = build_world(tmp_path, monkeypatch)
     context.actions = ActionCenter()
     context.budget.add_bill("Electric", 120.0, (TODAY - timedelta(days=2)).isoformat(), recurrence="monthly")
@@ -29,6 +30,7 @@ def world(tmp_path, monkeypatch):
 
 
 def test_day_labels():
+    """Days read as Today, Tomorrow or the weekday and date."""
     assert day_label(TODAY, TODAY) == "Today" and day_label(TODAY + timedelta(days=1), TODAY) == "Tomorrow"
     assert day_label(date(2026, 10, 18), date(2026, 10, 16)) == "Sun, Oct 18"
 
@@ -75,6 +77,7 @@ def test_a_child_calendar_has_no_money(world):
 
 
 def test_the_glasses_calendar(world):
+    """The glasses' Calendar card has its three panels; upkeep past due has its action, money stays a readout."""
     from core.glasses import glasses_apps, glasses_panel
 
     card = next(a for a in glasses_apps(world, TODAY)["apps"] if a["id"] == "calendar")

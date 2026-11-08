@@ -25,6 +25,7 @@ from core.safety_floor import safety_reply
 
 @pytest.fixture
 def qapp():
+    """The one Qt application the dialog tests need."""
     from PySide6.QtWidgets import QApplication
 
     return QApplication.instance() or QApplication([])
@@ -32,6 +33,7 @@ def qapp():
 
 @pytest.fixture
 def family(tmp_path, monkeypatch):
+    """A parent and a child account on temporary files, the child made a child of the parent."""
     monkeypatch.setattr(config_module, "_CONFIG_FILE", tmp_path / "config.json")
     monkeypatch.setattr(profile_module, "_DATA_PROFILES_DIR", tmp_path / "profiles")
     context = AppContext(config=ConfigManager(), events=EventBus())
@@ -44,6 +46,7 @@ def family(tmp_path, monkeypatch):
 
 
 def _as(context, profile):
+    """Signs this person in on the context."""
     context.profiles.set_active_profile(profile.profile_id)
     return context
 

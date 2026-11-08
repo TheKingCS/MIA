@@ -33,6 +33,7 @@ _MODULES = [budget_module, data_logger_module, maintenance_module, project_modul
 
 @pytest.fixture
 def ctx(tmp_path, monkeypatch):
+    """A context whose money, logger, maintenance and projects files point at a temporary folder, with the desktop's tools."""
     for module in _MODULES:
         original = module._DATA_DIR
         for attr, value in list(vars(module).items()):
@@ -161,6 +162,7 @@ def test_record_tool_purchase_new_and_existing(ctx):
 
 
 def test_cost_questions(ctx):
+    """Build and tool costs are logged and told back by voice."""
     assert "haven't logged any build costs" in say(ctx, "get_build_costs")
     say(ctx, "log_build_expense", amount=240, build="greenhouse")
     say(ctx, "log_build_expense", amount=60, build="coop")
@@ -183,6 +185,7 @@ def test_completing_maintenance_with_a_cost_logs_it_to_the_item(ctx):
 
 
 def test_budget_tab_rows():
+    """The Budget's build and tool rows read their spent, left and per-hour figures."""
     from core.homestead_costs import BuildCost, ToolCost
     from modules.budget.module import format_build_row, format_tool_row
 

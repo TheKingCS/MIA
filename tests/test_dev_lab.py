@@ -12,12 +12,14 @@ import core.dev_lab as lab
 
 
 def git(cwd, *args):
+    """Runs git in a folder as a test identity."""
     subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@t", *args], cwd=str(cwd), check=True,
                    capture_output=True)
 
 
 @pytest.fixture
 def repo(tmp_path, monkeypatch):
+    """A small git repository standing in for MIA, with the lab pointed at it."""
     root = tmp_path / "MIA"
     root.mkdir()
     git(root, "init", "-q", "-b", "master")
@@ -94,6 +96,7 @@ def test_nothing_written_and_rejecting(repo):
 
 
 def test_the_rules():
+    """Protected paths are caught, a suite's result is read from its output, and only new failures count."""
     assert lab.touches_protected(["core/thing.py", "core/dev_lab.py", "deploy/x.sh", "docs/DECISIONS.md"]) == \
         ["core/dev_lab.py", "deploy/x.sh", "docs/DECISIONS.md"]
     out = "FAILED tests/test_a.py::one - assert 1\nFAILED tests/test_b.py::two\n== 2 failed, 9 passed in 3.1s =="

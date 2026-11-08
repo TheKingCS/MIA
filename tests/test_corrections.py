@@ -15,10 +15,12 @@ BY_ID = {l.id: l for l in loops.LOOPS}
 
 
 def person(tmp_path):
+    """A person whose failures log is in a temporary folder."""
     return SimpleNamespace(failures=SimpleNamespace(data_dir=tmp_path), traces=None)
 
 
 def test_areas_and_ids():
+    """An action or tool is put in its area, and record ids are found in its parameters."""
     assert corrections.area_of("bill.add") == "money" and corrections.area_of("action_recipe.edit") == "kitchen"
     assert corrections.area_of("add_expense") == "money" and corrections.area_of("log_workout") == "workouts"
     assert corrections.area_of("zzz.add") == "other"
@@ -62,6 +64,7 @@ def test_the_loops_count_by_area(tmp_path):
 
 @pytest.fixture
 def center(tmp_path, monkeypatch):
+    """An action center with pretend recipe actions that only note they ran."""
     made = []
     for kind, verb in (("recipe.add", "add"), ("recipe.edit", "edit")):
         monkeypatch.setitem(actions.ACTION_TYPES, kind, ActionType(

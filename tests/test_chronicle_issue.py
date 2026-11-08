@@ -12,6 +12,7 @@ from core import saga
 
 
 def event(root: Path, eid: str, at: str, **kw):
+    """Saves one approved real event to the saga archive, with any field overridden."""
     e = {"id": eid, "at": at, "title": f"Event {eid}", "summary": "Claude Code and Codex shipped Night School for Zac.",
          "category": "milestone", "timeline": "real", "status": "built", "privacy": "series", "approved": "yes",
          "issue": None, "involved": ["claude", "codex", "zac"], "sources": ["dec:DEC-0100"], **kw}
@@ -21,6 +22,7 @@ def event(root: Path, eid: str, at: str, **kw):
 
 @pytest.fixture
 def archive(tmp_path):
+    """A saga archive with two shareable events, a private one and an imagined one."""
     root = tmp_path / "saga"
     event(root, "E-0002", "2026-11-06T10:00:00")
     event(root, "E-0001", "2026-11-05T10:00:00")
@@ -80,6 +82,7 @@ def test_a_line_with_a_real_name_keeps_it_a_draft(archive):
 
 
 def test_zacs_yes(archive, tmp_path):
+    """An issue drafted without a model carries its captions; approving it marks its events and lists it."""
     bible = tmp_path / "bible"
     bible.mkdir()
     (bible / "issues.md").write_text("| # | Title | Week | Status | Events |\n|---|---|---|---|---|\n| — | *none yet* | | | |\n",

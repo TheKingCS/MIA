@@ -22,6 +22,7 @@ from core.profile_manager import ProfileManager
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the components, usage log and profiles at a temporary folder."""
     data_dir = tmp_path / "data"
     components_file = data_dir / "components.json"
     monkeypatch.setattr(component_manager_module, "_DATA_DIR", data_dir)
@@ -32,11 +33,13 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _make_manager() -> ComponentManager:
+    """A component manager on a fresh context."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     return ComponentManager(context)
 
 
 def _make_manager_with_profile(name: str) -> tuple[ComponentManager, AppContext]:
+    """A component manager with one person signed in."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     context.profiles = ProfileManager(context)
     context.profiles.create_profile(name=name)
