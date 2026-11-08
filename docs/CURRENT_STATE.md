@@ -2,7 +2,7 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-11-08 (overnight, the design side), by claude.*
+session. Last updated: 2026-11-08 (evening: the engine side, after the design side), by claude.*
 
 **2026-11-08 overnight (Claude, design session, Zac asleep): screens for everything decided.** The engine session's
 new pieces each got their screen, actions and voice tools: **My Directions** (your values in your words, today's seed,
@@ -20,6 +20,26 @@ documented except the budget and Plaid files (waiting on the PC's Plaid work); a
 desktop and phone. In the afternoon each engine piece got its screen as it landed: What's Next's whole path and
 checks, About MIA's app health, Diagnostics' repository check, the development board's disagreements and evolution
 timeline, and **Look It Up Online** (searches through your own SearXNG once it's running). See `docs/NEXT_SESSION.md`.
+
+**2026-11-08, 09:42 to evening (Claude, engine session, Zac asleep: "work on everything decided"): smarter next
+steps, and MIA watching her own development.** Core logic only; the design session built the screens as each piece
+landed. **What's Next got deep** (DEC-0144): the homestead advisor looks down each goal's whole path, weighs value
+against money and hours (an unknown budget never makes an $800 build look cheap), checks readiness, and builds before
+it sells: toilet-roll cups and a scrap shelf before seedling sales, a coop before hens, a canning setup and a first batch
+before preserves, the state's cottage-food rules checked only once there's something to sell, a level, drained site
+before a greenhouse; a payoff months away is worth less than one now, so summer says preserve, winter says build the
+seed shelf. Its budget comes from your own Building Materials and Tools targets. **MIA inspects herself**: her
+repository against her docs every week, with findings as tasks (T-0020; 0 today). **One shared development history**
+(T-0021): every decision, all 1,677 commits, the Fix-It Log's issues and the lab's experiments, searchable beside the
+council chat and in every agent's briefing. **Disagreements resolved, never dropped** (T-0022): agents can object to a
+decision or a design, the author answers, and a disagreement still standing after that goes to you. **The Development
+Evolution Timeline** (T-0023), month by month since July: 131 decisions, 488 core parts, 225 screens, 37 tools.
+**Method traces** (T-0025): the lab keeps which tools each coder used and on what, never what it wrote. **Looking things
+up online** (T-0017, DEC-0053): only search words leave the PC, only through your own SearXNG, which is your step at
+the PC (`docs/ONLINE_LOOKUP.md`). Also: the Woodworking Studio proposal (DEC-0147, your choices in WAITING_ON),
+Ollama woken and retried when it doesn't answer, Living Worlds keeping the story so far, what she knows about herself
+in her how-to answers, more stores sealed at rest, including the Fix-It Log. Suite: 5,864 pass; the one failure is the
+Plaid work in progress on the PC. See `docs/NEXT_SESSION.md`.
 
 **2026-11-08 (Claude, cloud session, with Zac): MIA knows herself, plays, holds your directions, and inspires the
 made life.** A run of engine-side builds, all on master: **self-knowledge (DEC-0142)** — she describes herself from
@@ -222,6 +242,18 @@ every push). Anything that needs the PC waits.
 - The glasses client: on Q-0003 (platform and access).
 
 ## Recent changes (newest first)
+
+- 2026-11-08 · claude (engine) · **MIA watching her own development (DEC-0071, T-0020 to T-0025).** `core/inspection.py`
+  gains a `repository` subject (docs naming missing files, decisions recorded as built with missing code, requirements
+  not installed), the weekly self-audit's third audit; `core/dev_history.py` keeps decisions, commits (with added
+  files), Fix-It issues and lab experiments in `data/dev/history`, searched by `council.index()` and handed to every
+  agent's briefing; `core/disagreements.py` (object / answer / Zac settles, `tools.work object|answer|settle|
+  disagreements`); `core/dev_evolution.py` (the month-by-month timeline); the lab's coder traces (`data/lab/traces`).
+  `/api/dev` carries `disagreements` and `evolution`. Plus `core/online_lookup.py` (DEC-0053) and the Fix-It Log sealed
+  at rest (DEC-0126). Knowledge K-0142 to K-0149.
+- 2026-11-08 · claude (engine) · **Deep next steps (DEC-0144).** `core/development_engine.py`: `path_to`, `_worth`,
+  `readiness`, made-before-bought, effort-share compounding, seasonal-wait discount, the seed, flock, compost,
+  preserving and greenhouse-site chains, the budget from your own targets. K-0139 to K-0141.
 
 - 2026-11-08 · claude · **Two-step sign-in (docs/SECURITY.md step 4).** `core/two_step.py`: TOTP codes (RFC 6238, checked against its published values) from any authenticator app, asked after the password on every sign-in from another device and for linking a phone; turned on in Settings → Sign-ins and Security only once a code from the app is entered; a used code never works twice; wrong codes count toward the wait; the recovery code turns it off. The sign-in form shows a code box when asked. Alerts and log entries when it's turned on or off.
 
