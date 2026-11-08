@@ -57,6 +57,7 @@ from pathlib import Path
 from typing import Callable, Optional
 
 from core import life_events
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.logger import get_logger
 
@@ -235,9 +236,9 @@ class PathBook:
         self._load()
 
     def _load(self) -> None:
-        """Reads it; missing or unreadable is nothing started."""
+        """Reads it; missing or unreadable is nothing started. Sealed on disk (DEC-0126): open_text reads it sealed or plain, and one that won't open is copied aside and counts as damaged."""
         try:
-            data = json.loads(self._file.read_text(encoding="utf-8"))
+            data = json.loads(open_text(self._file))
         except (OSError, ValueError):
             data = {}
         self.paths: dict[str, dict] = dict(data.get("paths") or {})

@@ -11,6 +11,7 @@ from types import SimpleNamespace
 import pytest
 
 import core.communication_gate as gate_module
+from core.at_rest import open_text
 import core.config_manager as config_module
 import core.conversation_manager as conversation_module
 from core.app_context import AppContext
@@ -147,7 +148,7 @@ def ctx(tmp_path, monkeypatch):
 def test_offer_batch_delivers_one_message_and_logs_each(ctx):
     ctx.communication.offer_batch([c("calendar", TIMELY), c("tip")], MORNING)
     assert len(ctx.notifications.sent) == 1 and ctx.notifications.sent[0][0] == "MIA has 2 things for you"
-    log = json.loads((ctx.tmp / "communication_log.json").read_text())["log"]
+    log = json.loads(open_text(ctx.tmp / "communication_log.json"))["log"]  # the log is sealed on disk (DEC-0126); open_text reads it
     assert [e["action"] for e in log] == [ACT, ACT] and log[0]["digest_id"] == log[1]["digest_id"] != ""
 
 

@@ -1967,8 +1967,12 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   The private journal and the password vault were already encrypted with their own passphrases.
 - Built, stage 2 (2026-11-08): people and pets, financial snapshots, insurance, GPS tracks and the operating journal;
   every sealed store tested to start empty (copy kept) rather than stop MIA when its file won't open, which caught
-  three stage-1 stores that would have. Next: the budget's files (after the Plaid work in budget_manager.py), the rest
-  of PERSONAL_STORES, the phone's Keystore.
+  three stage-1 stores that would have.
+- Built, stage 3 (2026-11-08): turn traces, health (DEC-0129), and the rest of the private personal stores — reasons
+  (intents), the communication log, the freedom-fund log, recreation, learning paths and browser routines. A
+  structural test now fails if any file naming a sealed file reads it without `open_text`, so no reader is left
+  behind when a name joins SEALED. Next: the budget's files (after the Plaid work in budget_manager.py), any
+  remaining personal stores, the phone's Keystore.
 - Related: DEC-0035 (the password vault), DEC-0125
 
 ### DEC-0127: MIA becomes a product, sold by subscription, local-first

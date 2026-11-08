@@ -52,6 +52,7 @@ from datetime import date, timedelta
 from pathlib import Path
 from typing import Optional
 
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.logger import get_logger
 
@@ -406,11 +407,11 @@ class FreedomLog:
         self._load()
 
     def _load(self) -> None:
-        """Reads the balances; an unreadable file is logged and starts empty."""
+        """Reads the balances; an unreadable file is logged and starts empty. Sealed on disk (DEC-0126): open_text reads it sealed or plain, and one that won't open is copied aside and counts as damaged."""
         self.balances: dict[str, float] = {}
         if self._file.exists():
             try:
-                raw = json.loads(self._file.read_text(encoding="utf-8"))
+                raw = json.loads(open_text(self._file))
                 self.balances = {str(k): float(v) for k, v in (raw.get("balances") or {}).items()}
             except (json.JSONDecodeError, OSError, TypeError, ValueError, AttributeError):
                 log.exception("freedom_log.json unreadable — starting empty.")

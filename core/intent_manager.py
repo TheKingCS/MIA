@@ -39,6 +39,7 @@ from typing import Optional
 
 from core.app_context import AppContext
 from core.logger import get_logger
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
 
@@ -117,14 +118,14 @@ class IntentManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        """Reads the goals; a damaged file is logged, reported and starts empty."""
+        """Reads the goals; a damaged file is logged, reported and starts empty. Sealed on disk (DEC-0126): open_text reads it sealed or plain, and one that won't open is copied aside and counts as damaged."""
         if not self._intents_file.exists():
             self._intents = []
             return
         try:
-            raw = json.loads(self._intents_file.read_text(encoding="utf-8"))
+            raw = json.loads(open_text(self._intents_file))
             self._intents = [Intent.from_dict(d) for d in raw]
-        except (json.JSONDecodeError, OSError):
+        except (ValueError, OSError):  # ValueError: bad JSON, or a sealed file that won't open (copied aside)
             log.exception("Failed to load intents.json — starting with an empty list.")
             notify_data_corruption(self.context, "intents.json")
             self._intents = []

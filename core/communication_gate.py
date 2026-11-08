@@ -58,6 +58,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.logger import get_logger
 
@@ -288,16 +289,16 @@ class CommunicationGate:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        """Reads the log, what's waiting and the breaks; an unreadable file is logged and starts fresh."""
+        """Reads the log, what's waiting and the breaks; an unreadable file is logged and starts fresh. Sealed on disk (DEC-0126): open_text reads it sealed or plain, and one that won't open is copied aside and counts as damaged."""
         if not self._log_file.exists():
             return
         try:
-            data = json.loads(self._log_file.read_text(encoding="utf-8"))
+            data = json.loads(open_text(self._log_file))
             self._log = list(data.get("log", []))
             self._pending = list(data.get("pending", []))
             self._resumed = dict(data.get("resumed", {}))
             self._muted = dict(data.get("muted", {}))
-        except (json.JSONDecodeError, OSError, AttributeError):
+        except (ValueError, OSError, AttributeError):  # ValueError: bad JSON, or a sealed file that won't open
             log.exception("communication_log.json unreadable — starting fresh.")
 
     def _save(self, now: datetime) -> None:

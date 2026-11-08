@@ -185,6 +185,12 @@ SEALED_STORES = [
     ("core.operating_journal", "OperatingJournal", "operating_journal.json"),
     ("core.turn_trace", "TurnTraces", "turn_traces.jsonl"),
     ("core.health_manager", "HealthStore", "health.json"),
+    ("core.intent_manager", "IntentManager", "intents.json"),
+    ("core.communication_gate", "CommunicationGate", "communication_log.json"),
+    ("core.freedom", "FreedomLog", "freedom_log.json"),
+    ("core.recreation", "RecreationLog", "recreation.json"),
+    ("core.paths", "PathBook", "paths.json"),
+    ("core.browser_routines", "BrowserRoutines", "browser_routines.json"),
 ]
 
 

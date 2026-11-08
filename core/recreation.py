@@ -39,6 +39,7 @@ from pathlib import Path
 from typing import Optional
 
 from core import life_events
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 
 FILE_NAME = "recreation.json"
@@ -141,9 +142,9 @@ class RecreationLog:
         self._load()
 
     def _load(self) -> None:
-        """Reads what was played; a missing or unreadable file gives nothing."""
+        """Reads what was played; a missing or unreadable file gives nothing. Sealed on disk (DEC-0126): open_text reads it sealed or plain, and one that won't open is copied aside and counts as damaged."""
         try:
-            self.entries = json.loads(self._file.read_text(encoding="utf-8")).get("played", [])
+            self.entries = json.loads(open_text(self._file)).get("played", [])
         except (OSError, ValueError):
             self.entries = []
 
