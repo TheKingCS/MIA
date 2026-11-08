@@ -22,6 +22,9 @@ How (facts in code, the model only phrases):
    meaning, and framed as "only if it fits naturally, one sentence, then let it go."
 4. The next turn, `settle` reads her last reply: named it, so it's mentioned; two weeks unmentioned, it expires.
    Either way it's done, and the same thing isn't raised again for a month.
+5. "Don't bring that up" (`decline`, the action `connection.decline` from the Connections page and the voice tool,
+   web/connections.html, core/web_connections.py): the connection is settled as declined and its thing joins a quiet
+   list `_recent` respects, so it's never raised again until the person allows it (`allow`).
 
 Two loops watch it (`core/loops.py`): `connections.landed`, the share she actually brings up (are they chosen and
 framed well?), and `connections.unlinked`, the system side Zac asked for: ties found only by shared words, between
@@ -219,6 +222,7 @@ class ConnectionBook:
         self.data_dir = Path(data_dir) if data_dir is not None else _DATA_DIR
         self._file = self.data_dir / _FILE
         self.items: list[dict] = []
+        self.quiet: list[str] = []
         self._load()
 
     def _load(self) -> None:
@@ -231,12 +235,15 @@ class ConnectionBook:
             log.exception("Couldn't read connections.json, starting empty.")
             return
         self.items = list(raw.get("connections", []))
+        self.quiet = list(raw.get("quiet", []))  # refs the person asked never to be raised ("don't bring that up")
 
     def _save(self) -> None:
-        """Writes the connections atomically (undoable), sealed at rest, keeping the newest `_KEEP`."""
+        """Writes the connections and the quiet list atomically (undoable), sealed at rest, keeping the newest
+        `_KEEP` connections."""
         self.items = self.items[-_KEEP:]
         self.data_dir.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(self._file, json.dumps({"connections": self.items}, indent=1, ensure_ascii=False))
+        atomic_write_text(self._file, json.dumps({"connections": self.items, "quiet": self.quiet}, indent=1,
+                                                 ensure_ascii=False))
 
     def open_ones(self) -> list:
         """The connections still waiting to be brought up, oldest first."""
@@ -245,6 +252,8 @@ class ConnectionBook:
     def _recent(self, ref: str, now: datetime) -> bool:
         """Whether this thing is already held, or was settled inside the cooldown, so it isn't raised twice."""
         cutoff = (now - timedelta(days=COOLDOWN_DAYS)).isoformat(timespec="seconds")
+        if ref in self.quiet:
+            return True  # they asked her not to bring it up
         return any(c["ref"] == ref and (c["state"] == "open" or c.get("settled_at", "") >= cutoff) for c in self.items)
 
     def consider(self, found: list, said: str, now: Optional[datetime] = None) -> Optional[dict]:
@@ -285,6 +294,29 @@ class ConnectionBook:
             self._save()
         return changed
 
+    def get(self, connection_id: str) -> Optional[dict]:
+        """The connection with this id, or None."""
+        return next((c for c in self.items if c.get("id") == connection_id), None)
+
+    def decline(self, connection_id: str, now: Optional[datetime] = None) -> dict:
+        """"Don't bring that up" (DEC-0146): the connection is settled as declined and its thing joins the quiet list,
+        so it's never raised again until allowed. ValueError for an unknown one."""
+        c = self.get(connection_id)
+        if c is None:
+            raise ValueError("No connection with that id.")
+        now = now or datetime.now()
+        if c.get("state") == "open":
+            c["state"], c["settled_at"] = "declined", now.isoformat(timespec="seconds")
+        if c["ref"] not in self.quiet:
+            self.quiet.append(c["ref"])
+        self._save()
+        return c
+
+    def allow(self, ref: str) -> None:
+        """Takes a thing off the quiet list, so MIA may tie things to it again (after the usual cooldown)."""
+        self.quiet = [r for r in self.quiet if r != ref]
+        self._save()
+
     def due(self, now: Optional[datetime] = None) -> Optional[dict]:
         """The newest open connection that has waited HOLD_HOURS, so it lands in a later conversation; None if none."""
         now = now or datetime.now()
@@ -311,13 +343,15 @@ class ConnectionBook:
                 f"“{c['name']}”, started {_age(c['since'], now.date())} ago{still}{how}.")
 
     def stats(self, since: str) -> dict:
-        """Counts for the loops since an ISO time: noticed, mentioned, expired, and `unlinked`, the ties found only by
-        shared words between a named thing and a target, counted by (kind, kind) and never by name."""
+        """Counts for the loops since an ISO time: noticed, mentioned, expired, declined ("don't bring that up"), and
+        `unlinked`, the ties found only by shared words between a named thing and a target, counted by (kind, kind)
+        and never by name."""
         recent = [c for c in self.items if c.get("noticed_at", "") >= since]
         settled = [c for c in self.items if c.get("settled_at", "") >= since]
         unlinked = Counter((c["through_kind"], c["kind"]) for c in recent if c["via"] == "words" and c["through_kind"])
         return {"noticed": len(recent), "mentioned": sum(c["state"] == "mentioned" for c in settled),
-                "expired": sum(c["state"] == "expired" for c in settled), "unlinked": unlinked}
+                "expired": sum(c["state"] == "expired" for c in settled),
+                "declined": sum(c["state"] == "declined" for c in settled), "unlinked": unlinked}
 
 
 def _last_reply(conversation) -> str:

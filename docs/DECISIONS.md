@@ -2395,6 +2395,8 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   lets expire (floor 0.3 from 5); and `connections.unlinked`, the system side: ties found only by shared words between
   a named thing and an open project, counted by kind pair (material↔project...), never by name. Those are places her
   link graph doesn't connect her systems yet; more than 3 in a month opens a task to teach it.
-- Not yet: researching a new possibility before raising it (Night School or her browser), and a way to say "don't
-  bring that up" (a voice tool and a screen control, DEC-0125).
+- Not yet: researching a new possibility before raising it (Night School or her browser). **"Don't bring that up"
+  built 2026-11-08 (claude, design session):** `ConnectionBook.decline`/`allow` and a quiet list `_recent` respects;
+  the Connections page in Personal (web/connections.html, core/web_connections.py: `connection.decline`,
+  `connection.allow`) and the voice tools dont_bring_that_up and list_connections.
 - Related: DEC-0054 (notes from conversation), DEC-0108 (interconnection audit), DEC-0094/0101 (loops), DEC-0126

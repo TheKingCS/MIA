@@ -143,7 +143,7 @@ def test_a_child_can_only_take_child_actions(world):
     # Children also keep their own Journal and Music playlists (2026-10-16).
     # ...and their own Reward Shop and boss fights (DEC-0028), their own Operating Journal (DEC-0097) and their games (DEC-0098).
     # ...and their own look: themes they make in the Theme Studio, and pictures MIA painted for them (DEC-0136, DEC-0140).
-    assert {k for k in child_ok if not k.startswith(kitchen_and_workout + ("firstboot.", "journal.", "operating.", "play.", "playlist.", "shop", "boss.", "person.", "pet.", "memory.", "batch.", "grow.", "quest.", "map.", "raid.", "party.", "place.", "life_note.", "subject.", "course.", "lesson.", "waypoint.", "starter.", "textbook.", "mission_idea.", "theme.", "art.", "direction.", "style.", "world.", "conversation."))} == {"task.done", "routine.log", "app.visibility",
+    assert {k for k in child_ok if not k.startswith(kitchen_and_workout + ("firstboot.", "journal.", "operating.", "play.", "playlist.", "shop", "boss.", "person.", "pet.", "memory.", "batch.", "grow.", "quest.", "map.", "raid.", "party.", "place.", "life_note.", "subject.", "course.", "lesson.", "waypoint.", "starter.", "textbook.", "mission_idea.", "theme.", "art.", "direction.", "style.", "world.", "conversation.", "connection."))} == {"task.done", "routine.log", "app.visibility",
                                                                                  "app.favorite", "profile.edit",
                                                                                  "setting.set", "communication.resume",
                                                                                  "loop.checkin_done",  # their own weekly debrief (DEC-0047)

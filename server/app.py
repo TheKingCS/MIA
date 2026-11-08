@@ -2536,6 +2536,15 @@ def create_app(context: AppContext) -> FastAPI:
         result = design(body.description)
         return {**result, "summary": summary(result)}
 
+    @app.get("/api/connections")
+    def web_connections(profile_id: str = Depends(require_profile_id)) -> dict:
+        """Connections (core/web_connections.screen, DEC-0146): the ties MIA is holding, the recent ones, and what she's
+        been asked never to raise; changes are connection.* actions."""
+        from core.web_connections import screen
+
+        with app.state.turn_lock:
+            return screen(view_for(context, profile_id))
+
     @app.get("/api/trail-maps")
     def web_trail_maps(profile_id: str = Depends(require_profile_id)) -> dict:
         """Trail Maps (core/web_trails.screen): the park and trail map PDFs on this MIA, by state."""

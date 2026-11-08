@@ -382,6 +382,7 @@ import core.answer_compare  # noqa: E402,F401  (how MIA answers: pick, set, forg
 import core.web_worlds  # noqa: E402,F401  (Living Worlds: worlds, campaigns, the character, quests, DEC-0134)
 import core.web_trails  # noqa: E402,F401  (Trail Maps: taking one out, its PDF set aside for Undo)
 import core.web_conversations  # noqa: E402,F401  (past conversations: deleting one, undoable)
+import core.web_connections  # noqa: E402,F401  (connections: don't bring that up, allow again, DEC-0146)
 import core.art_studio  # noqa: E402  (pictures MIA painted: deleting one, DEC-0140)
 core.art_studio._register()
 from core.offline_maps import _register as _register_map_areas  # noqa: E402  (vector map areas from the Maps page)

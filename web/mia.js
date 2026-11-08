@@ -228,6 +228,7 @@
     answers: () => read("/api/answers", "answers"),  // How MIA Answers (DEC-0138)
     about: () => read("/api/about", "about"),  // About MIA (DEC-0142)
     trailMaps: () => read("/api/trail-maps", "trail_maps"),  // Trail Maps (core/web_trails.py)
+    connections: () => read("/api/connections", "connections"),  // Connections (DEC-0146)
     trailMapFetch: (park, state, url, notes) => demo ? demoOnly() : call("POST", "/api/trail-maps/fetch", { park, state, url, notes: notes || "" }),
     worlds: (campaign) => read("/api/worlds" + (campaign ? "?campaign=" + encodeURIComponent(campaign) : ""), "worlds"),  // Living Worlds (DEC-0134)
     // After a reply in Talk, now and then: the same answer a second way to pick from ({} when none; never in the demo).

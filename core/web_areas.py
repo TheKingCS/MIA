@@ -54,6 +54,7 @@ class Area:
 
 PROJECTS = Page("projects", "Projects", "workshop", "Plans, budgets and the tasks in them.", "projects.html")
 WHY = Page("why", "My Why", "character", "What it's all for.", "why.html")
+CONNECTIONS = Page("connections", "Connections", "notes", "What MIA tied together, and what not to raise.", "connections.html")
 DIRECTIONS = Page("directions", "My Directions", "character", "What you're steering by.", "directions.html")
 GUITAR = Page("guitar", "Guitar", "classroom", "A learning path, stage by stage.", "guitar.html")
 PETS = Page("pets", "Pets", "relationships", "Your animals, their care and vet visits.", "people.html?only=pets")
@@ -105,7 +106,7 @@ AREAS: tuple[Area, ...] = (
     Area("business", "Business", "business", "Customers, products and the paperwork.",
          ("business", "workshop", "real_estate", "compliance", LABELS, SHOWOFF), hue="#7f95ff"),
     Area("personal", "Personal", "notes", "Your days, your people, your words.",
-         ("calendar", "notes", "life_notes", "operating_journal", "vault", "relationships", WHY, DIRECTIONS, "observations",
+         ("calendar", "notes", "life_notes", "operating_journal", "vault", "relationships", WHY, DIRECTIONS, CONNECTIONS, "observations",
           CHECKIN, "files", "good_news"), hue="#ff8ad8"),
     Area("learning", "Learning", "classroom", "Study, the library and skills.",
          ("classroom", "knowledge", GUITAR, "skills"), hue="#6a5cff"),

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1284 files, 277,676 lines; 1284 files describe themselves; 15,097 of 15,795 classes and functions are documented.
+1288 files, 278,015 lines; 1288 files describe themselves; 15,117 of 15,815 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-478 files, 131,498 lines; 7,063 of 7,149 classes and functions documented
+480 files, 131,719 lines; 7,078 of 7,164 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -33,6 +33,7 @@
 - `core/assistant_camera_actions.py`: The cameras by voice (DEC-0125, 2026-11-07): the Security screen (core/security_cams.py, DEC-0033) had no tool, so "are the cameras working?" reached the network utilities that share its area. Two tools, in their own area `cameras`:
 - `core/assistant_chat.py`: The pure, non-Qt logic for one Assistant chat turn — moved here from `modules/assistant/module.py` (2026-07-14 aesthetic pass part 4, docs/ROADMAP.md) once the sidebar chat in `gui/character_panel.py` needed the exact same request-building and tool-call-safety logic as the full-screen Assistant modu
 - `core/assistant_comm_actions.py`: Assistant tools for the communication gate (core/communication_gate.py, Cognitive Extension slice C): asking what MIA chose not to say, and changing how often she speaks up on her own.
+- `core/assistant_connection_actions.py`: Connections by voice (DEC-0146, DEC-0125's both-ways rule; the screen is web/connections.html): "don't bring that up" after MIA ties something you said to a project from weeks ago (it runs `connection.decline` on the connection she just raised, or the newest one waiting), and "what connections have 
 - `core/assistant_cooking_actions.py`: Cook mode by voice (DEC-0113 cook mode, DEC-0125: full use both ways). With flour on your hands: "start cooking the chili", "next step", "go back", "what step am I on", "go to step 4", "set a rice timer for 18 minutes", "stop the rice timer", "I made it", "stop cooking". Each tool runs the same acti
 - `core/assistant_correction_actions.py`: Fixing and planning by voice what the screens already let you change (DEC-0125: every action has a voice twin; 2026-11-08). Measuring the screens' 332 action kinds against her tools showed everyday ones with no voice twin: taking something off the grocery list, clearing what's checked off, a pantry 
 - `core/assistant_direction_actions.py`: My Directions by voice (DEC-0141/0143, DEC-0125's both-ways rule; the screen is web/directions.html): "what are my directions?", "add a direction: grow my own food, cook from scratch", "pause the whimsy direction", "bring it back", "let go of that direction", and "give me something to make today" (t
@@ -437,6 +438,7 @@
 - `core/web_changes.py`: Recent Changes on the web (the screens review's missing "Recent changes Undo history", docs/design/CORE_SCREENS_REVIEW.md section 3; DEC-0125: "undo that" and "what did you just change?" were voice-only). Two parts:
 - `core/web_comms.py`: Communications (DEC-0129, Zac 2026-11-08): one screen for what was spread over four: the email drafts MIA wrote (she only drafts; an email goes when the person presses Send, core/mail_send.py), the mailbox MIA reads for receipts (core/inbox_mail.py), what MIA said on her own today and what she held 
 - `core/web_compliance.py`: The Compliance screen (DEC-0040): every obligation, sorted the way deadlines are read: **Overdue**, **Next 30 days**, **Later**, **To check** (unverified, or undated), and **Done**. Each says when it's really due (moved off a weekend or holiday, an extension to file kept apart from the money's date)
+- `core/web_connections.py`: Connections (web/connections.html, DEC-0146): the ties MIA noticed between something said in passing and something started weeks ago (core/connections.py), so the person can see what she's holding and say "don't bring that up". Shown: the ones waiting to be raised (what was said, when, what it ties 
 - `core/web_conversations.py`: Past conversations on the web (the chat page, web/assistant.html; parity with the Qt Assistant's History): the person's conversations with MIA, newest first, each with its title, when it was last added to and how many messages; one opened to read; picking one back up so Talk continues it; and taking
 - `core/web_craft.py`: The Workshop's Recipes and Builds tabs (DEC-0030 phase B): put together here from core/craft_recipes.py, Materials, Jobs, Products and the Ledger, so the web only formats. Part of `workshop_page()`. The Goods tab (DEC-0036: homestead goods on hand, batch by batch, the market day and labels) is `good
 - `core/web_directions.py`: My Directions (web/directions.html, DEC-0141/0143): the standing directions the person is steering their life by, the values MIA holds in mind on every turn and gently encourages (core/direction.py). The screen shows each direction in the person's own words with how MIA encourages it and the short n
@@ -489,7 +491,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 3,921 lines; 46 of 46 classes and functions documented
+2 files, 3,930 lines; 46 of 46 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -763,7 +765,7 @@
 
 ## tests/: the test suite: what each part must do
 
-438 files, 73,018 lines; 5,748 of 6,360 classes and functions documented
+439 files, 73,079 lines; 5,753 of 6,365 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1150,6 +1152,7 @@
 - `tests/test_web_backups.py`: Backups from the web's Settings (core/web_backups.py) and by voice (core/assistant_backup_actions.py): the PC owner's backups folder, the newest backups, Back Up Now with or without a passphrase, and the status said aloud.
 - `tests/test_web_changes.py`: Recent Changes on the web (core/web_changes.py, DEC-0125): what MIA can put back, newest first, in the history's own words; the fortnight's history by day with undone ones marked; and Undo as the action undo.last, which never leaves a change of its own behind.
 - `tests/test_web_comms.py`: Communications (DEC-0129, core/web_comms.py): people to catch up with (longest first, only those you can write to), and the message limit and breaks as undoable actions on the real communication gate.
+- `tests/test_web_connections.py`: Connections on the web and by voice (DEC-0146): "don't bring that up" settles a connection as declined and keeps its thing quiet past the cooldown, until it's allowed again.
 - `tests/test_web_conversations.py`: Past conversations on the web: listed newest first with what's in them, one read, one picked back up, one deleted through its action.
 - `tests/test_web_directions.py`: My Directions (DEC-0141/0143): the screen, its direction.* actions and the voice tools that run the same actions.
 - `tests/test_web_environments.py`: An area's own space (DEC-0130 M3, core/web_environments.py): the Garage environment's bays come from the Garage's own assets (never the house's), most overdue first; the parts running low are gathered across them, each once with what uses it; the hub carries the environment for the Garage and none f
@@ -1206,7 +1209,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-99 files, 18,113 lines
+100 files, 18,161 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), and what she knows about you, linking to where it's kept. Read onl
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she
@@ -1226,6 +1229,7 @@
 - `web/communications.js`: communications.js — Communications (DEC-0129, claude, 2026-11-08). Renders MIA.communications() (core/web_comms.comms_page): email drafts (opened in the frame's draft view: Send only when you press it), the mailbox, what MIA said on her own today and held back, her daily limit (comms.limit), the kin
 - `web/compliance.js`: compliance.js — the Compliance screen (claude, 2026-10-21, DEC-0040). Renders MIA.compliance() (core/web_compliance.py): Overdue, Next 30 Days, Later, To Check and Done. Every change proposes an action (core/obligation_actions.py): add, edit, verify (the only way an obligation becomes verified), whe
 - `web/connect.js`: connect.js — Connect Apps (claude, 2026-11-08). Renders MIA.connect() (core/connectors.py): each source MIA can import from. A file (calendar, contacts, bank statement) or a rental's calendar link is previewed first (MIA.connectPreview: what's new, what's already here, what couldn't be read), and on
+- `web/connections.js`: connections.js — Connections (claude, 2026-11-08, DEC-0146). Renders MIA.connections() (core/web_connections.py): the ties MIA is holding (what you said, when, the project, goal or idea from weeks ago it ties into, and how), what became of the recent ones, and the things she's been asked never to ti
 - `web/cook.js`: cook.js — cook mode (claude, 2026-11-07, DEC-0113: the design canvas's Kitchen · Cook Mode). The recipe being cooked takes the whole screen, on the Kitchen page and on a recipe's page alike: one step in large type, what this step uses, the step's own timer to start, every timer running (they keep go
 - `web/council.js`: council.js — the council from the phone (claude, 2026-11-06, build plan step 16). Renders MIA.council() (core/council.py through server/app.py): the latest messages, who's here and ready, and a box to write to them. Only the PC's owner gets an answer; anyone else sees why. Formatting only.
 - `web/dev.js`: dev.js: the development board (claude, 2026-11-03, DEC-0068/0070). Zac: "a window that makes it all easy to view and understand the workflow and what is going on, what is building, who is building it." Renders MIA.dev() (core/work_dashboard.py) as the flow, Up Next to Done, each card opening to its 

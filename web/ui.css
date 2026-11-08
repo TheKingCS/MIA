@@ -1950,3 +1950,23 @@ a.comms-row:hover .row-title { color: var(--accent); }
 .chat-past-meta { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chat-past-log { display: flex; flex-direction: column; gap: 8px; }
 .chat-history .row-buttons { margin: 4px 0 0; }
+
+/* Connections (DEC-0146, web/connections.html): what was said, a line, what it ties into. */
+.cn-list { display: grid; gap: 10px; margin-bottom: var(--gap); }
+.cn-gap { margin-top: calc(var(--gap) + 4px); }
+.cn-tie { display: grid; gap: 4px; padding: 14px 16px; }
+.cn-tie.settled { opacity: 0.75; }
+.cn-tie p { margin: 0; }
+.cn-said { font-size: 15px; font-style: italic; }
+.cn-link { display: flex; align-items: center; gap: 0; height: 14px; padding-left: 10px; }
+.cn-line { width: 2px; height: 14px; background: linear-gradient(rgba(var(--rgb-accent), 0.2), rgba(var(--rgb-accent), 0.8)); }
+.cn-node { width: 7px; height: 7px; margin-left: -4.5px; margin-top: 14px; border-radius: 50%; background: rgb(var(--rgb-accent));
+  box-shadow: 0 0 8px rgba(var(--rgb-accent), 0.8); }
+.cn-target { font-size: 15px; }
+.cn-how { font-size: 12px; }
+.cn-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 4px; }
+.cn-state { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); }
+.cn-state.open { color: rgb(var(--rgb-accent)); }
+.cn-quiet { display: grid; gap: 6px; padding: 10px 14px; margin-bottom: var(--gap); }
+.cn-quiet-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.cn-say { font-size: var(--text-sm); }

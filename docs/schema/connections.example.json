@@ -1,0 +1,52 @@
+{
+ "available": true,
+ "waiting": [
+  {
+   "id": "k1",
+   "ref": "project:p1",
+   "said": "picked up a roll of hardware cloth today",
+   "noticed": "2026-11-08",
+   "name": "Chicken run",
+   "kind": "project",
+   "status": "planning",
+   "since": "2026-10-14",
+   "how": "through the hardware cloth",
+   "state": "open",
+   "state_word": "Waiting"
+  }
+ ],
+ "recent": [
+  {
+   "id": "k2",
+   "ref": "intent:i1",
+   "said": "the walnut scrap is piling up in the shop",
+   "noticed": "2026-11-02",
+   "name": "Make a cutting board for the market",
+   "kind": "idea you set aside",
+   "status": "",
+   "since": "2026-10-03",
+   "how": "both about walnut",
+   "state": "mentioned",
+   "state_word": "Brought up"
+  },
+  {
+   "id": "k3",
+   "ref": "mission:m4",
+   "said": "ran the mower all afternoon",
+   "noticed": "2026-10-28",
+   "name": "Learn small-engine repair",
+   "kind": "goal",
+   "status": "active",
+   "since": "2026-09-20",
+   "how": "through the mower",
+   "state": "declined",
+   "state_word": "Not to be raised"
+  }
+ ],
+ "quiet": [
+  {
+   "ref": "mission:m4",
+   "name": "Learn small-engine repair"
+  }
+ ]
+}
