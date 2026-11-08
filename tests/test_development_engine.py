@@ -12,7 +12,7 @@ the payoff (selling starts only through cups, a shelf, a first batch and a stand
 waiting while cheap foundations remain, the checks with each step, and the catalog rules that hold it. And the budget
 read from their own build targets when they don't give one. The flock and the compost by the same rules (a coop and
 a feed bin before hens, eggs before selling them; slow compost only when nothing quicker), a step's share of the work
-it unlocks, and what a flock in the records says exists; what's on hand is never recommended again. The year: preserving in summer, spring prepared in winter,
+it unlocks, and what a flock in the records says exists; what's on hand is never recommended again; a food stand waits for the rules. The year: preserving in summer, spring prepared in winter,
 food sold only after the cottage-food rules, a payoff months away worth less than one now. The rest are
 unit tests on
 the scoring, the dependency gate, compounding value and the defensive profile reader.
@@ -360,3 +360,21 @@ def test_what_is_already_on_hand_is_never_recommended_again():
     summer = de.next_step(de.DevelopmentProfile(month=7, hours_per_week=6, budget=200.0, have=have), catalog)
     assert winter["recommend"]["id"] != "compost_bin" and summer["recommend"]["id"] == "canning_setup"
     assert all(s["id"] not in met for s in winter["path"] + summer["path"])
+
+
+def test_a_stand_for_food_waits_for_the_cottage_food_rules_but_one_for_seedlings_does_not():
+    """With only jars or eggs to sell, the rules are checked before a stand is built (a stand for food the state won't
+    allow is money for nothing), and the path says it's on the way to the sale; with seedlings, the stand comes first."""
+    catalog = de.homestead_catalog()
+    base = {"beds", "compost", "soil", "water"}
+    for goods, sale in (({"canning", "preserves", "something_to_sell"}, "preserve_sales"),
+                        ({"coop", "feed_storage", "eggs", "something_to_sell"}, "egg_sales")):
+        step = de.next_step(de.DevelopmentProfile(month=1, hours_per_week=6, budget=300.0,
+                                                  have=frozenset(base | goods)), catalog)
+        assert [s["id"] for s in step["path"]] == ["cottage_food_check", "sales_stand", sale]
+    plants = de.next_step(de.DevelopmentProfile(month=4, hours_per_week=6, budget=300.0, have=frozenset(
+        base | {"seed_cups", "seed_mix", "seedling_space", "grown_seedlings", "something_to_sell"})), catalog)
+    assert [s["id"] for s in plants["path"]] == ["sales_stand", "plant_sales"]
+    stand = next(c for c in catalog if c.id == "sales_stand")
+    assert de.FOOD_SALE_TAG in de.needs(stand, {"eggs"}) and de.FOOD_SALE_TAG not in de.needs(stand, {"eggs",
+                                                                                                    "grown_seedlings"})

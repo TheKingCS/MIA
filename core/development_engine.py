@@ -26,7 +26,8 @@ the model improvising dollars.
    look). So selling starts is reached through toilet-roll cups, a shelf, a first batch and a stand, never jumped to;
    and an $800 build waits while cheap foundations remain. When no path can start now: a seasonal wait, a savings
    target, or the prerequisite to clear first. What's already on hand is never recommended again (`met`: a project
-   whose every provided tag is had counts as done, so compost going means no compost bin).
+   whose every provided tag is had counts as done, so compost going means no compost bin), and a stand for selling
+   food waits for the state's cottage-food rules (`needs`), one for seedlings doesn't.
 
 The homestead catalog here (`homestead_catalog`) is the first proving domain; the same engine takes any domain's
 candidate list (workshop, business…), which is the cross-domain reuse DEC-0137 approved. Everything is pure and
@@ -52,6 +53,10 @@ PROOF_TAGS = frozenset({"grown_seedlings", "eggs", "preserves", "something_to_se
 # Selling food made at home needs the state's cottage-food rules checked first (what may be sold, labels, permits):
 # every food sale requires this tag, and a test holds it.
 FOOD_SALE_TAG = "food_sale_ok"
+# And a place to sell waits for that check when everything there is to sell is food: a stand built for jars or eggs the
+# state won't allow is money spent for nothing, while seedlings (not food) need no such check (`needs`).
+FOOD_GOODS = frozenset({"eggs", "preserves"})
+OTHER_GOODS = frozenset({"grown_seedlings"})
 STEP_PENALTY = 2.0  # each extra step on a path is a little less certain
 # Needs that mean one particular thing, so a finished step that needed one says it exists: a laying flock means a coop
 # and a feed bin. "Water" isn't one: a greenhouse watered by a hose doesn't mean a rain barrel.
@@ -122,6 +127,16 @@ def _have_after(profile: DevelopmentProfile, catalog: Sequence[Candidate], done:
     return have
 
 
+def needs(candidate: Candidate, have) -> frozenset:
+    """Pure logic. What a candidate needs first, given what's on hand: its own requirements, and for a place to sell
+    (OUTLET_TAGS) when everything there is to sell is food, the cottage-food rules checked (FOOD_SALE_TAG) before it's
+    built."""
+    have = set(have)
+    food_only = bool(have & FOOD_GOODS) and not have & OTHER_GOODS
+    extra = {FOOD_SALE_TAG} if candidate.provides & OUTLET_TAGS and food_only else set()
+    return frozenset(candidate.requires) | extra
+
+
 def met(profile: DevelopmentProfile, catalog: Sequence[Candidate], done=frozenset()) -> frozenset:
     """Pure logic. What's done, plus every project whose whole purpose is already on hand: each tag it provides is had
     (a compost pile going means no compost bin to build; seed cups on hand mean neither the toilet-roll cups nor the
@@ -132,8 +147,10 @@ def met(profile: DevelopmentProfile, catalog: Sequence[Candidate], done=frozense
 
 
 def available(candidate: Candidate, profile: DevelopmentProfile, catalog: Sequence[Candidate], done=frozenset()) -> tuple:
-    """Whether a candidate's prerequisites are met, and which tags are missing if not (its dependency gate)."""
-    missing = set(candidate.requires) - _have_after(profile, catalog, frozenset(done))
+    """Whether a candidate's prerequisites are met (`needs`: its own, and the food rules before a stand for food), and
+    which tags are missing if not (its dependency gate)."""
+    have = _have_after(profile, catalog, frozenset(done))
+    missing = set(needs(candidate, have)) - have
     return (not missing), sorted(missing)
 
 
@@ -249,7 +266,8 @@ def path_to(goal: Candidate, profile: DevelopmentProfile, catalog: Sequence[Cand
     straight to selling plant starts without any kind of building the infrastructure to manage that wouldn't be a good
     idea"). For each thing it still needs, the candidate that provides it: made or upcycled first (his producer
     direction, DEC-0141), then cheapest, then least work, and never a slow one (months to be ready) when something
-    quicker meets the need, with that candidate's own needs before it. None when
+    quicker meets the need, with that candidate's own needs (`needs`, so the food rules before a food stand) before
+    it. None when
     something on the way has no way to get it. Pure logic."""
     done = frozenset(done)
     have = _have_after(profile, catalog, done)
@@ -266,7 +284,7 @@ def path_to(goal: Candidate, profile: DevelopmentProfile, catalog: Sequence[Cand
     def visit(c: Candidate, seen: frozenset) -> bool:
         """Adds `c` after everything it needs; on a dead end, puts the path back as it was."""
         kept_steps, kept_have = list(steps), set(have)
-        for tag in sorted(c.requires):
+        for tag in sorted(needs(c, have)):  # what's on hand so far decides (the food rules before a food stand)
             if not provide(tag, seen):
                 steps[:] = kept_steps
                 have.clear()

@@ -2418,7 +2418,10 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   after the state's cottage-food rules are checked, and that check only once there's something to sell; a greenhouse
   waits for a level, drained site. A path's value is discounted by the months until its seasonal steps can happen, so
   summer says preserve the harvest, winter says build the seed shelf, and September with jars on hand says check the
-  rules and sell them rather than starting toward spring seedlings.
+  rules and sell them rather than starting toward spring seedlings. **And (same afternoon, walking the year again by
+  hand):** what's already on hand is never recommended again (`met`: compost going means no compost bin), and a stand
+  for selling food waits for the cottage-food rules (`needs`: a stand for jars the state won't allow is money for
+  nothing), while one for seedlings doesn't.
 - From: ChatGPT's two handoffs, pasted by Zac 2026-11-08 — "Real-World Development Intelligence" (Homestead/Business
   Architect) and "The Convergence" (unified progression + living campaign). Both ask, in their own section 11, to
   inspect the architecture and propose before building, reusing MIA's mission/progression/memory/campaign systems.
