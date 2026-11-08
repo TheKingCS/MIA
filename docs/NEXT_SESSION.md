@@ -132,6 +132,8 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       its stage meter from `core/web_grow.growth_stage`, which goes by days planted and harvests, never a guessed date).
       Character (the portrait card with level, prestige and the XP meter; Stats as the six attributes with meters;
       Collection by rarity; Top Skills; buffs, the Chronicle and the rest below).
+      Reward Shop (Earned / Spent / Left tiles; Ready to Buy with Buy; Saving Toward with a meter and credits to go;
+      Edit and Delete under ⋯).
       Household (Done Today with its meter, a card per routine with its streak in words and Did It, paused ones
       apart; Add a Routine / Pause / Resume as `routine.add/pause/resume`, and by voice).
       Power has its web page (`core/web_power.py`, `/api/power`, `web/power.html`; energy sources and the battery),

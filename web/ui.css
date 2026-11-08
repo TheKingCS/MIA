@@ -1350,3 +1350,27 @@ body.mod-maps .hero { display: none; }
 .ch-more summary::-webkit-details-marker { display: none; }
 .ch-more summary h2 { display: inline; }
 @media (min-width: 900px) { .ch-stats { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+
+/* ---------------------------------------------------------------- Reward Shop (DEC-0113 canvas; web/shop.js) */
+.sh-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: var(--gap); }
+.sh-tile { display: grid; gap: 4px; padding: 10px 12px; }
+.sh-tile .pw-label { margin: 0; }
+.sh-tile strong { font-family: var(--font-mono); font-size: 20px; font-weight: 500; }
+.sh-tile.left { border-color: rgba(var(--rgb-accent), 0.4); }
+.sh-tile.left .pw-label { color: var(--accent); }
+.sh-label { margin: 6px 0 8px; }
+.sh-ready { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; align-items: center; padding: 10px 8px 10px 14px; margin-bottom: 8px; }
+.sh-main { display: grid; gap: 2px; min-width: 0; }
+.sh-name { font-weight: 600; }
+.sh-cost { font-family: var(--font-mono); font-size: 13px; color: var(--text-dim); }
+.sh-buy { min-height: 44px; padding: 0 18px; }
+.sh-saving { display: grid; gap: 8px; padding: 12px 14px; margin-bottom: 8px; }
+.sh-top { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center; }
+.sh-saving > .dim { font-size: 12px; }
+.sh-add { width: 100%; min-height: 48px; margin: 4px 0 var(--gap); }
+.row-more { position: relative; }
+.row-more summary { list-style: none; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; color: var(--text-dim); font-size: 20px; cursor: pointer; }
+.row-more summary::-webkit-details-marker { display: none; }
+.row-more[open] summary { color: var(--text); }
+.row-more-menu { position: absolute; right: 0; top: 42px; z-index: 5; display: grid; gap: 6px; padding: 6px; border-radius: var(--radius-sm);
+  background: rgb(var(--rgb-panel)); border: 1px solid var(--line-strong); }
