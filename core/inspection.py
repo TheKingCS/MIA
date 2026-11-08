@@ -151,7 +151,7 @@ def _gib(n: float) -> float:
 
 def _os(context):
     """Method `os` (passive): the operating system's name, version, release and machine, the computer's name, the
-    Python version and when it booted. Returns (evidence, gaps).
+    Python version and when it booted (a gap, with why, when psutil can't say). Returns (evidence, gaps).
     """
     ev = [_ev("os.name", platform.system(), "os", "the operating system"),
           _ev("os.version", platform.version(), "os", "the operating system"),
@@ -164,8 +164,8 @@ def _os(context):
 
         booted = datetime.fromtimestamp(psutil.boot_time())
         ev.append(_ev("os.booted", booted.isoformat(timespec="minutes"), "os", "psutil", recheck_hours=1))
-    except Exception:
-        pass
+    except Exception as problem:  # psutil missing or the OS not saying: unknown, and said why
+        return ev, [Gap("When it booted", f"psutil couldn't say ({type(problem).__name__})", "os")]
     return ev, []
 
 

@@ -275,7 +275,9 @@ def specialty_list(context=None) -> list[tuple[str, str]]:
     """What MIA is trained for and built to do (Zac, 2026-11-08: she should know "all the cool things about her
     programming"), each a (title, line) read from the code that makes it true, never a brochure (DEC-0041). A
     specialty whose code or data isn't there is left out, so she never claims what she can't do; the person's own
-    numbers (batches growing, experiments running) join when they exist."""
+    numbers (batches growing, experiments running) join when they exist. Long on purpose (the weekly audit asks): one
+    short, guarded block per specialty, read top to bottom like the list it makes; split, the checks would sit far
+    from the words they guard."""
     from pathlib import Path
 
     root = Path(__file__).resolve().parent.parent

@@ -57,43 +57,58 @@ def _bench(record: dict) -> Optional[dict]:
             "from_code": round(sum(r["rank"] == 0 for r in rows) / len(rows), 3), "at": record.get("at", "")}
 
 
+_COUNTED = {("failure", "fixed"): "bugs_fixed", ("experiment", "merged"): "merged",
+            ("experiment", "reverted"): "undone"}  # a record of this kind in this status counts here
+
+
+def _add_parts(row: dict, added: list, seen: set) -> None:
+    """Counts the code files a commit added that the history hasn't seen added before, by where they live (a file
+    added, removed and added again is one new part), naming the first twelve of the month."""
+    for f in added:
+        top = f.split("/", 1)[0]
+        if f in seen or top not in CAPABILITY_DIRS or "/" not in f or not f.endswith((".py", ".js", ".html")):
+            seen.add(f)
+            continue
+        seen.add(f)
+        row[CAPABILITY_DIRS[top]] += 1
+        if len(row["new_parts"]) < 12:
+            row["new_parts"].append(f)
+
+
+def _tally(rows: dict, month: str, r: dict, seen_files: set, found_bugs: set) -> None:
+    """Counts one commit, Fix-It issue or experiment in its month: a commit and the parts it added, an issue the
+    first time it's seen open, a fix, a merge, an undo. Anything else counts nowhere (and makes no month)."""
+    kind, status = r.get("kind"), r.get("status")
+    if kind == "commit":
+        _row(rows, month)["commits"] += 1
+        _add_parts(_row(rows, month), r.get("added") or [], seen_files)
+        return
+    if kind == "failure" and status == "open":
+        if r["ref"] not in found_bugs:
+            found_bugs.add(r["ref"])
+            _row(rows, month)["bugs_found"] += 1
+        return
+    if (kind, status) in _COUNTED:
+        _row(rows, month)[_COUNTED[(kind, status)]] += 1
+
+
 def build(history: list[dict], activity: list[dict], bench: list[dict]) -> dict:
     """Pure logic. The timeline from the records: {months: [oldest first], milestones: [{at, ref, title}], totals}."""
-    rows: dict[str, dict] = {}
-    seen_files: set[str] = set()  # a file added, removed and added again is one new part
-    approved: dict[str, dict] = {}
-    found_bugs: set[str] = set()
     from core.dev_history import when
 
+    rows: dict[str, dict] = {}
+    seen_files: set[str] = set()
+    approved: dict[str, dict] = {}
+    found_bugs: set[str] = set()
     for r in history:
-        kind, month = r.get("kind"), _month(when(r))
-        if kind == "decision" and r.get("status") in ("APPROVED", "IMPLEMENTED") and r.get("ref") not in approved:
-            approved[r["ref"]] = r
-            if month:
-                _row(rows, month)["decisions"] += 1
-        elif kind == "commit" and month:
-            row = _row(rows, month)
-            row["commits"] += 1
-            for f in r.get("added") or []:
-                if f in seen_files:
-                    continue
-                seen_files.add(f)
-                top = f.split("/", 1)[0]
-                if top in CAPABILITY_DIRS and f.endswith((".py", ".js", ".html")) and "/" in f:
-                    row[CAPABILITY_DIRS[top]] += 1
-                    if len(row["new_parts"]) < 12:
-                        row["new_parts"].append(f)
-        elif kind == "failure" and month:
-            if r.get("status") == "open" and r["ref"] not in found_bugs:
-                found_bugs.add(r["ref"])
-                _row(rows, month)["bugs_found"] += 1
-            elif r.get("status") == "fixed":
-                _row(rows, month)["bugs_fixed"] += 1
-        elif kind == "experiment" and month:
-            if r.get("status") == "merged":
-                _row(rows, month)["merged"] += 1
-            elif r.get("status") == "reverted":
-                _row(rows, month)["undone"] += 1
+        month = _month(when(r))
+        if r.get("kind") == "decision":
+            if r.get("status") in ("APPROVED", "IMPLEMENTED") and r.get("ref") not in approved:
+                approved[r["ref"]] = r
+                if month:
+                    _row(rows, month)["decisions"] += 1
+        elif month:
+            _tally(rows, month, r, seen_files, found_bugs)
     for e in activity:
         month = _month(e.get("at"))
         if e.get("action") == "done" and month:

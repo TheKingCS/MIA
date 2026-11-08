@@ -421,7 +421,8 @@ def next_step(profile: DevelopmentProfile, catalog: Sequence[Candidate], done=fr
 
 
 def homestead_catalog() -> list:
-    """The first proving domain (Zac, 2026-11-08): realistic, low-to-higher-cost homestead projects whose dependencies
+    """(Long on purpose, the weekly audit asks: it is the catalog's data, one Candidate per project in chain order, so
+    a chain reads in one place; the tests hold its rules.) The first proving domain (Zac, 2026-11-08): realistic, low-to-higher-cost homestead projects whose dependencies
     and unlocks exercise compounding value — compost and water are cheap and foundational (they unlock the beds and
     the greenhouse); the greenhouse is dear but scalable. Selling seedling starts sits at the end of a real chain:
     seed cups (toilet-paper rolls, made, before bought trays), a seed-starting shelf (scrap, before a bought one), seed
