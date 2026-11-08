@@ -260,10 +260,12 @@ class CameraRequest(BaseModel):
 
 
 class HomeLinkRequest(BaseModel):
-    """Linking a phone to the home computer (core/home_link.py): its address, who is linking and their password."""
+    """Linking a phone to the home computer (core/home_link.py): its address, who is linking, their password, and the
+    authenticator's code when two-step sign-in is on there."""
     url: str
     who: str
     password: str
+    code: str = ""  # the authenticator's code, when two-step sign-in is on there
 
 
 class ModelChatRequest(BaseModel):
@@ -273,9 +275,27 @@ class ModelChatRequest(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    """Signing in to MIA: the profile and its password."""
+    """Signing in to MIA: the profile and its password, and the authenticator's code when two-step sign-in is on."""
     profile_id: str
     password: str = ""
+    code: str = ""
+
+
+class AccountDataRequest(BaseModel):
+    """Exporting or deleting an account: the password; for export, whether the household's files go too; for delete,
+    whether the archived folder is erased for good."""
+    password: str = ""
+    include_household: bool = False
+    erase: bool = False
+
+
+class TwoStepRequest(BaseModel):
+    """Setting up or turning off two-step sign-in: the password, and a code from the authenticator app."""
+    password: str = ""
+    code: str = ""
+
+
+TWO_STEP_ASK = "Enter the 6-digit code from your authenticator app."
 
 
 class ModelStep(BaseModel):
@@ -384,7 +404,7 @@ SECURITY_HEADERS = {
 
 
 def create_app(context: AppContext) -> FastAPI:
-    """MIA's web server (FastAPI) for the phone, the glasses and the desktop's web view: sign-in sessions by bearer token (or a linked phone's device key), the access switch that turns away forwarded requests when phone access is off, every /api route (each runs on the signed-in person's own view, view_for), and the web front end served fresh at /web/."""
+    """MIA's web server (FastAPI) for the phone, the glasses and the desktop's web view: sign-in sessions by bearer token (or a linked phone's device key), the access switch that turns away forwarded requests when phone access is off, every /api route (each runs on the signed-in person's own view, view_for), and the web front end served fresh at /web/. Your Data (/api/your-data, export and delete) and the sealed-files recovery key sit beside the security log here."""
     app = FastAPI(title="MIA Mobile API")
     app.state.context = context
     app.state.sessions: dict[str, str] = {}  # token -> profile_id
@@ -401,6 +421,10 @@ def create_app(context: AppContext) -> FastAPI:
     app.state.guard = SignInGuard()
     app.state.session_started: dict[str, float] = {}  # sessions signed in from another device, by token
     app.state.warned: set = set()  # accounts already told about repeated wrong passwords (core/security_log.py)
+    from core.two_step import StepMemory
+
+    app.state.steps = StepMemory()  # codes already used, never accepted twice (core/two_step.py)
+    app.state.two_step_pending: dict[str, str] = {}  # a secret being set up, until its first code is entered
 
     @app.middleware("http")
     async def phone_access_switch(request: Request, call_next):
@@ -460,6 +484,26 @@ def create_app(context: AppContext) -> FastAPI:
         app.state.last_seen[token] = now
         app.state.session_started[token] = now
         return token
+
+    def _two_step_secret(profile_id: str) -> str:
+        """The account's two-step secret, "" when it's off (or this MIA's accounts don't have two-step)."""
+        read = getattr(context.profiles, "two_step_secret", None)
+        return read(profile_id) if read is not None else ""
+
+    def _second_step(request: Request, who: str, profile_id: str, code: str) -> None:
+        """After a right password: when the account has two-step sign-in on, the authenticator's code. No code asks for
+        one (401 with X-MIA-Two-Step: required, not counted as a wrong try); a wrong or used code counts like a wrong
+        password."""
+        secret = _two_step_secret(profile_id)
+        if not secret:
+            return
+        if not (code or "").strip():
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, TWO_STEP_ASK, headers={"X-MIA-Two-Step": "required"})
+        if not app.state.steps.accept(profile_id, secret, code):
+            app.state.guard.failed(_guard_keys(request, who))
+            _security("sign_in_failed", profile_id, request, "wrong code")
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "That code isn't right. Try the newest one.",
+                                headers={"X-MIA-Two-Step": "required"})
 
     def _signed_in(profile_id: str, request: Request) -> None:
         """Logs a sign-in, and tells the account's owner when it came from a device it hasn't used before."""
@@ -601,6 +645,7 @@ def create_app(context: AppContext) -> FastAPI:
         if not _checked(request, body.profile_id, lambda: profile is not None and
                         context.profiles.verify_password(profile.profile_id, body.password)):
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Incorrect profile or password.")
+        _second_step(request, body.profile_id, profile.profile_id, body.code)
         if not profile.has_password:
             raise HTTPException(
                 status.HTTP_403_FORBIDDEN,
@@ -625,6 +670,7 @@ def create_app(context: AppContext) -> FastAPI:
         if not _checked(request, body.profile_id, lambda: profile is not None and profile.has_password and
                         context.profiles.verify_password(profile.profile_id, body.password)):
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Incorrect profile or password.")
+        _second_step(request, body.profile_id, profile.profile_id, body.code)
         key = secrets.token_urlsafe(32)
         devices = dict(context.config.get("home_link.devices", {}) or {})
         devices[hashlib.sha256(key.encode()).hexdigest()] = {
@@ -660,7 +706,7 @@ def create_app(context: AppContext) -> FastAPI:
         if is_child(view_for(context, profile_id)):
             raise HTTPException(status.HTTP_403_FORBIDDEN, "Ask a parent to link the home computer.")
         try:
-            done = connect(context, body.url, body.who, body.password)
+            done = connect(context, body.url, body.who, body.password, body.code)
         except HomeLinkError as problem:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
         model = f" Talk will use {done['model']} there." if done["model"] else ""
@@ -2349,15 +2395,141 @@ def create_app(context: AppContext) -> FastAPI:
 
     # The Sign-ins page (core/security_log.py, docs/SECURITY.md step 3): this account's security events, how many
     # devices are signed in, and "sign out everywhere".
+    # Two-step sign-in (core/two_step.py): start (the password; a new secret, shown once, not on yet), confirm (a code
+    # from the app turns it on), off (the password and a current code).
+    @app.post("/api/account/two-step/start")
+    def two_step_start(body: TwoStepRequest, request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
+        from core import two_step
+
+        if not _checked(request, profile_id, lambda: context.profiles.verify_password(profile_id, body.password)):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "That password isn't right.")
+        secret = two_step.new_secret()
+        app.state.two_step_pending[profile_id] = secret
+        profile = context.profiles.get_profile(profile_id)
+        account = (getattr(profile, "email", "") or getattr(profile, "name", "") or "you") if profile else "you"
+        return {"key": two_step.grouped(secret), "link": two_step.otpauth_uri(secret, account)}
+
+    @app.post("/api/account/two-step/confirm")
+    def two_step_confirm(body: TwoStepRequest, request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.security_log import alert
+
+        secret = app.state.two_step_pending.get(profile_id, "")
+        if not secret:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Start setting it up first.")
+        if not app.state.steps.accept(profile_id, secret, body.code):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "That code isn't right. Check the key in the app, then try the newest code.")
+        with app.state.turn_lock:
+            context.profiles.set_two_step(profile_id, secret)
+        app.state.two_step_pending.pop(profile_id, None)
+        _security("two_step_on", profile_id, request)
+        alert(context, profile_id, "Two-step sign-in is on",
+              "Signing in from another device now asks for the code from your authenticator app. Lost the phone with "
+              "the app? Your recovery code still gets you in.")
+        return {"on": True}
+
+    @app.post("/api/account/two-step/off")
+    def two_step_off(body: TwoStepRequest, request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.security_log import alert
+
+        secret = _two_step_secret(profile_id)
+        if not secret:
+            return {"on": False}
+        if not _checked(request, profile_id, lambda: context.profiles.verify_password(profile_id, body.password)):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "That password isn't right.")
+        if not app.state.steps.accept(profile_id, secret, body.code):
+            app.state.guard.failed(_guard_keys(request, profile_id))
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "That code isn't right. Try the newest one.")
+        with app.state.turn_lock:
+            context.profiles.set_two_step(profile_id, None)
+        _security("two_step_off", profile_id, request)
+        alert(context, profile_id, "Two-step sign-in is off",
+              f"Two-step sign-in was turned off from {_device(request)}. If this wasn't you, change your password and turn it back on.")
+        return {"on": False}
+
     @app.get("/api/security/log")
-    def security_screen(profile_id: str = Depends(require_profile_id),
+    def security_screen(request: Request, profile_id: str = Depends(require_profile_id),
                         credentials: Optional[HTTPAuthorizationCredentials] = Depends(_bearer_scheme)) -> dict:
         book = getattr(context, "security_log", None)
         this = credentials.credentials if credentials is not None else ""
         others = sum(1 for t, pid in app.state.sessions.items() if pid == profile_id and t != this
                      and t in app.state.session_started)
+        from core import at_rest
+
+        sealed = at_rest.status()
         return {"available": book is not None, "events": book.for_person(profile_id) if book is not None else [],
-                "other_sessions": others}
+                "other_sessions": others, "two_step": bool(_two_step_secret(profile_id)),
+                "at_rest": {"sealing": sealed["sealing"], "protection": sealed["protection"], "why_not": sealed["why_not"],
+                            "files": len(sealed["files"])}, "on_this_pc": _on_this_pc(request)}
+
+    def _on_this_pc(request: Request) -> bool:
+        """Whether a request was made on this PC itself: from its own address, not forwarded (Tailscale) from another
+        device."""
+        host = request.client.host if request.client else ""
+        return not request.headers.get("x-forwarded-for") and host in ("127.0.0.1", "::1", "localhost")
+
+    @app.post("/api/security/recovery-key")
+    def recovery_key(body: TwoStepRequest, request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
+        """The recovery key for MIA's sealed files (DEC-0126, core/at_rest.py), to keep in a password manager: asked
+        for with the password, only on this PC itself, and written to the security log."""
+        from core import at_rest
+
+        if not _on_this_pc(request):
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "The recovery key is only shown on the computer itself.")
+        if not _checked(request, profile_id, lambda: context.profiles.verify_password(profile_id, body.password)):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "That password isn't right.")
+        try:
+            key = at_rest.recovery_key()
+        except ValueError as problem:
+            raise HTTPException(status.HTTP_409_CONFLICT, f"There's no recovery key: {problem}.") from None
+        _security("data_key_shown", profile_id, request)
+        return {"key": key}
+
+    # Your Data (core/your_data.py, docs/SECURITY.md step 8): what MIA keeps about you and what she read to answer you;
+    # export and delete (core/account_data.py), each behind the password.
+    @app.get("/api/your-data")
+    def your_data_screen(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.your_data import page
+
+        with app.state.turn_lock:
+            return page(view_for(context, profile_id), profile_id)
+
+    @app.post("/api/account/export")
+    def account_export(body: AccountDataRequest, request: Request, profile_id: str = Depends(require_profile_id)):
+        """Everything of yours as one .zip (sealed files as their readable content), after the password."""
+        import tempfile
+
+        from fastapi.responses import Response
+
+        from core.account_data import export_account
+
+        if not _checked(request, profile_id, lambda: context.profiles.verify_password(profile_id, body.password)):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "That password isn't right.")
+        with tempfile.TemporaryDirectory(prefix="mia_export_") as folder:
+            with app.state.turn_lock:
+                path = export_account(context, profile_id, Path(folder) / "MIA-data.zip",
+                                      include_household=body.include_household)
+            data = path.read_bytes()
+        _security("data_exported", profile_id, request, "with the household's files" if body.include_household else "")
+        return Response(data, media_type="application/zip", headers={
+            "Cache-Control": "no-store", "Content-Disposition": 'attachment; filename="MIA-data.zip"'})
+
+    @app.post("/api/account/delete")
+    def account_delete(body: AccountDataRequest, request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Deletes the account (archived, or erased for good) after the password; every session of it ends. Refused
+        for the device's only account."""
+        from core.account_data import delete_account
+
+        if not _checked(request, profile_id, lambda: context.profiles.verify_password(profile_id, body.password)):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "That password isn't right.")
+        if len(context.profiles.list_profiles()) <= 1:
+            raise HTTPException(status.HTTP_409_CONFLICT, "This is the only account on this MIA, so it can't be deleted.")
+        with app.state.turn_lock:
+            done = delete_account(context, profile_id, body.password, erase=body.erase)
+        if not done:
+            raise HTTPException(status.HTTP_409_CONFLICT, "The account couldn't be deleted.")
+        for token in [t for t, pid in list(app.state.sessions.items()) if pid == profile_id]:
+            _end_session(token)
+        return {"deleted": True, "erased": body.erase}
 
     @app.post("/api/security/sign-out-everywhere")
     def sign_out_everywhere(request: Request, profile_id: str = Depends(require_profile_id),
@@ -2515,8 +2687,10 @@ def create_app(context: AppContext) -> FastAPI:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
         if not path.is_file():
             raise HTTPException(status.HTTP_404_NOT_FOUND, "That file isn't here.")
+        from core.at_rest import open_bytes
+
         with app.state.turn_lock:
-            data = path.read_bytes()
+            data = open_bytes(path)  # a sealed file goes as its content (DEC-0126); the phone seals its own copy
         return Response(data, media_type="application/octet-stream", headers={"Cache-Control": "no-store"})
 
     @app.post("/api/sync/file")
@@ -2525,6 +2699,7 @@ def create_app(context: AppContext) -> FastAPI:
         import base64
         import binascii
 
+        from core.at_rest import open_bytes
         from core.sync import digest, path_for, write_file
 
         try:
@@ -2534,7 +2709,7 @@ def create_app(context: AppContext) -> FastAPI:
         except (ValueError, binascii.Error, UnicodeDecodeError) as problem:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem) or "That file can't be read.") from None
         with app.state.turn_lock:
-            current = path.read_bytes() if path.is_file() else None
+            current = open_bytes(path) if path.is_file() else None
             if digest(current) != body.expect:
                 raise HTTPException(status.HTTP_409_CONFLICT, "It changed here since; sync again.")
             write_file(context, path, data)

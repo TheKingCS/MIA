@@ -26,6 +26,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.logger import get_logger
 
@@ -51,13 +52,13 @@ class TurnTraces:
 
     def _load(self) -> None:
         """Reads the traces, one JSON line each; a missing file gives none, an unreadable one is logged, and a bad
-        line is skipped.
+        line is skipped. The file is sealed on disk (DEC-0126): one that won't open is copied aside and starts none.
         """
         try:
-            lines = self._file.read_text(encoding="utf-8").splitlines()
+            lines = open_text(self._file).splitlines()
         except FileNotFoundError:
             lines = []
-        except OSError:
+        except (OSError, ValueError):
             log.exception("Couldn't read the turn traces; starting a new list")
             lines = []
         self.traces = []

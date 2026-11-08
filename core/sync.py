@@ -58,6 +58,7 @@ import time
 from pathlib import Path
 from typing import Any, Callable, Optional
 
+from core.at_rest import open_bytes
 from core.logger import get_logger
 
 log = get_logger(__name__)
@@ -306,14 +307,15 @@ def folders(context, profile_id: str) -> dict[str, Path]:
 
 
 def manifest(context, profile_id: str) -> dict:
-    """{scope: {name: [hash, mtime]}} of the syncable files, and the game numbers."""
+    """{scope: {name: [hash, mtime]}} of the syncable files, and the game numbers. A sealed file (DEC-0126) is hashed
+    by its content (at_rest.open_bytes), so the phone and the PC compare the same thing."""
     out = {}
     for scope, folder in folders(context, profile_id).items():
         files = {}
         if folder.is_dir():
             for path in sorted(folder.iterdir()):
                 if path.is_file() and syncable(path.name):
-                    data = path.read_bytes()
+                    data = open_bytes(path)
                     files[path.name] = [digest(data), path.stat().st_mtime]
         out[scope] = files
     out["game"] = game_numbers(context, profile_id)
@@ -601,7 +603,9 @@ def owner(context) -> Optional[str]:
 def sync_now(context, call=None, lock=None) -> dict:
     """One sync with the linked home computer. `call` is home_link.home_call
     (tests pass their own). Returns what happened: {pushed, pulled, merged,
-    files, at}. Raises HomeLinkError when the computer can't be reached."""
+    files, at}. Raises HomeLinkError when the computer can't be reached.
+    Local files are compared and sent by their content (a sealed one is
+    opened, DEC-0126); each side seals its own copy when it writes."""
     from core.home_link import home_call
 
     call = call or home_call
@@ -637,7 +641,7 @@ def sync_now(context, call=None, lock=None) -> dict:
         for name in sorted(n for n in names if syncable(n)):
             done["files"] += 1
             path = folder / name
-            local = path.read_bytes() if path.is_file() else None
+            local = open_bytes(path) if path.is_file() else None
             base = state.base(scope, name)
             rhash, rtime = (theirs.get(name) or ["", 0])[:2]
             lhash, bhash = digest(local), digest(base)

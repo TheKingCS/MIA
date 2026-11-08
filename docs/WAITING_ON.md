@@ -14,6 +14,14 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       (undoable, kept in your profile, never committed). Best first: Plaid for Money, then Garage, Calendar,
       Workout, Kitchen, Chickens, Freedom, People. Say "let's fill in MIA" to start.
 
+### MIA across your technology (2026-11-08, docs/DEVICE_FABRIC_PROPOSAL.md)
+- [ ] **DEC-0128:** approve MIA's device fabric — recognize, talk to, secure, and install herself onto your tech
+      (Field Kit grown from USB/serial to the whole network). The read-only defensive half (network discovery +
+      identify + security audit + a screen) can start on approval with no further decision. Then decide: inventory
+      scope, how far into active testing and against which of your devices, Smart Home via Home Assistant or direct
+      adapters, and whether the device inventory is sealed at rest (Claude proposes yes). Say "start the device
+      fabric" to begin the defensive half.
+
 ### Selling MIA (2026-11-08, https://claude.ai/artifact/CXMdLtnXhy4XzUMAW4aLLR)
 - [ ] **DEC-0127:** approve MIA becoming a product (reverses DEC-0119), then the price, launch platforms, bank
       linking, Tailscale or a relay, the payment provider, and a trademark search on "MIA". The plan's last section.
@@ -26,8 +34,12 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 - [ ] **Encrypt this PC's drive.** It isn't encrypted (Windows 11 Home, checked 2026-11-08). Settings → Privacy &
       security → Device encryption, if it's there; if not, Windows 11 Pro's BitLocker or VeraCrypt (free). The
       biggest single protection for everything MIA keeps.
-- [ ] **Decide DEC-0126:** MIA encrypts her own data at rest (keys protected by Windows' own DPAPI, nothing to type
-      at start); with or without an extra MIA passphrase?
+- [ ] **Save MIA's recovery key** (DEC-0126, built 2026-11-08). After restarting MIA once, on the PC: Settings →
+      Sign-ins → Your Files on This Computer → Show the Recovery Key (your password), and put it in your password
+      manager (not a file on this PC). Without it, a Windows reinstall or a new PC can't open your conversations,
+      memories, notes, people and finances. Optional: `.venv\Scripts\python -m tools.data_key seal` seals the
+      existing files now instead of at each one's next save.
+- [ ] **Later, DEC-0126's open part:** an extra MIA passphrase on top of DPAPI, or not?
 
 ### Try it
 - [ ] **Talk to MIA on the PC (2026-11-07):** restart MIA, open Talk (the orb, bottom right), press the mic, say

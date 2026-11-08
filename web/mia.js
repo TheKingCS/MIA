@@ -158,13 +158,18 @@
 
   // The phone (and any browser): sign in with the person's email (or
   // name) and password, the same as the phone app (POST /api/login).
-  async function signIn(who, password) {
+  // Two-step sign-in (core/two_step.py): a 401 marked X-MIA-Two-Step asks for the authenticator's code (err.twoStep).
+  async function signIn(who, password, code) {
     const response = await fetch("/api/login", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ profile_id: who, password: password }),
+      body: JSON.stringify({ profile_id: who, password: password, code: code || "" }),
     });
     const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new MiaError(response.status, data.detail || "Couldn't sign in.");
+    if (!response.ok) {
+      const err = new MiaError(response.status, data.detail || "Couldn't sign in.");
+      err.twoStep = !!response.headers.get("X-MIA-Two-Step");
+      throw err;
+    }
     token = data.token;
     try { sessionStorage.setItem("mia.token", token); } catch (e) { /* this tab only */ }
     window.MIA.signedIn = true;
@@ -335,12 +340,36 @@
       { id: "o3", text: "No phone at dinner.", section: "rules", how: "yours to rate, 1 to 5, each week", self_rated: true, score: { pct: 80, text: "4 / 5 last week" } }] })
       : call("GET", "/api/operating-journal"),
     // Sign-ins and Security (core/security_log.py): this account's sign-ins and changes, and sign out everywhere.
-    securityLog: () => demo ? Promise.resolve({ available: true, other_sessions: 1, events: [
+    securityLog: () => demo ? Promise.resolve({ available: true, other_sessions: 1, two_step: false, on_this_pc: true,
+      at_rest: { sealing: true, protection: "dpapi", why_not: "", files: 10 }, events: [
       { at: "2026-11-08T08:12:00", kind: "sign_in", what: "Signed in", device: "Android phone · 100.64.0.7", detail: "" },
       { at: "2026-11-07T22:40:00", kind: "sign_in_failed", what: "Wrong password", device: "Edge on Windows · 100.64.0.9", detail: "" },
       { at: "2026-11-07T19:03:00", kind: "sign_in", what: "Signed in", device: "Edge on Windows · 100.64.0.9", detail: "a new device" }] })
       : call("GET", "/api/security/log"),
     signOutEverywhere: () => demo ? demoOnly() : call("POST", "/api/security/sign-out-everywhere"),
+    // Your Data (core/your_data.py): what MIA keeps about you and what she read to answer you.
+    yourData: () => demo ? Promise.resolve({ sealing: true, mine: [
+      { file: "conversations.json", what: "Conversations with MIA", records: 42, bytes: 81234, sealed: true },
+      { file: "user_memories.json", what: "What MIA remembers about you", records: 17, bytes: 6120, sealed: true },
+      { file: "workouts.json", what: "Workouts", records: 9, bytes: 2210, sealed: false }],
+      home: [{ file: "kitchen.json", what: "Kitchen", records: 64, bytes: 15800, sealed: false }],
+      answers: [{ at: "2026-11-08T14:02:00+00:00", asked: "What's on my calendar tomorrow?", route: "tools", tools: ["get_calendar"], memories: 1 },
+        { at: "2026-11-08T13:40:00+00:00", asked: "How much did I spend on food this week?", route: "plan", tools: ["get_budget"], memories: 0 }] })
+      : call("GET", "/api/your-data"),
+    // Everything of yours as a .zip (a Blob), after the password; and deleting the account. Not actions: a password
+    // never sits in a proposal.
+    exportData: async (password, includeHousehold) => {
+      if (demo) return demoOnly();
+      if (!token) throw new MiaError(401, "Not signed in.");
+      const response = await fetch("/api/account/export", { method: "POST",
+        headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" },
+        body: JSON.stringify({ password: password, include_household: !!includeHousehold }) });
+      if (!response.ok) throw new MiaError(response.status, (await response.json().catch(() => ({}))).detail || response.statusText);
+      return response.blob();
+    },
+    deleteAccount: (password, erase) => demo ? demoOnly() : call("POST", "/api/account/delete", { password: password, erase: !!erase }),
+    // Sealed files (core/at_rest.py, DEC-0126): the recovery key, with the password, on the PC itself only.
+    recoveryKey: (password) => demo ? demoOnly() : call("POST", "/api/security/recovery-key", { password }),
     // Connect Apps (core/connectors.py): the sources to import from, and an import's preview before it's approved.
     connect: () => demo ? Promise.resolve({ connectors: [
       { id: "file", name: "A file from another app", how: "Choose the file you downloaded", lands: "Calendar, People & Pets, or Money",
@@ -565,7 +594,11 @@
     // One MIA everywhere (DEC-0029): the conversation Talk continues, and a fresh one.
     thread: (limit) => demo ? Promise.resolve({ messages: limit ? DEMO_THREAD : [] })
       : call("GET", "/api/talk/thread" + (limit ? "?limit=" + limit : "")),
-    homeConnect: (url, who, password) => demo ? demoOnly() : call("POST", "/api/home_pc/connect", { url, who, password }),
+    homeConnect: (url, who, password, code) => demo ? demoOnly() : call("POST", "/api/home_pc/connect", { url, who, password, code: code || "" }),
+    // Two-step sign-in (core/two_step.py): start (password: a key and a link), confirm (a code turns it on), off.
+    twoStepStart: (password) => demo ? demoOnly() : call("POST", "/api/account/two-step/start", { password }),
+    twoStepConfirm: (code) => demo ? demoOnly() : call("POST", "/api/account/two-step/confirm", { code }),
+    twoStepOff: (password, code) => demo ? demoOnly() : call("POST", "/api/account/two-step/off", { password, code }),
     homeDisconnect: () => demo ? demoOnly() : call("POST", "/api/home_pc/disconnect"),
     syncNow: () => demo ? demoOnly() : call("POST", "/api/sync/now"),
     newChat: () => demo ? Promise.resolve({ reset: true }) : call("POST", "/api/voice/reset"),

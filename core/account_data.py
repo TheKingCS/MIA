@@ -49,6 +49,18 @@ def _store_paths(store) -> list[Path]:
     return [v for k, v in vars(store).items() if isinstance(v, Path) and k != "data_dir" and v.exists()]
 
 
+def _add(archive, path: Path, name: str) -> None:
+    """One file into the export: a sealed one (DEC-0126) as its readable content, any other as it is."""
+    from core.at_rest import is_sealed, open_bytes
+
+    with open(path, "rb") as f:
+        head = f.read(len("MIA-SEALED-1:"))
+    if is_sealed(head):
+        archive.writestr(name, open_bytes(path))
+    else:
+        archive.write(path, name)
+
+
 def household_files(context, profile_id: str) -> dict[Path, str]:
     """The household's shared files: path -> name inside the export."""
     personal = getattr(context, "personal_data", None)
@@ -70,7 +82,7 @@ def household_files(context, profile_id: str) -> dict[Path, str]:
 
 
 def export_account(context, profile_id: str, destination: Path, include_household: bool = False) -> Path:
-    """Write the .zip and return its path."""
+    """Write the .zip and return its path. Sealed files (DEC-0126) go in as their readable content (`_add`)."""
     profiles = context.profiles
     profile = profiles.get_profile(profile_id)
     if profile is None:
@@ -95,10 +107,10 @@ def export_account(context, profile_id: str, destination: Path, include_househol
         if folder.exists():
             for path in sorted(folder.rglob("*")):
                 if path.is_file() and path.name not in _NEVER_EXPORT:
-                    archive.write(path, f"personal/{path.relative_to(folder).as_posix()}")
+                    _add(archive, path, f"personal/{path.relative_to(folder).as_posix()}")
         if include_household:
             for path, name in household_files(context, profile_id).items():
-                archive.write(path, f"household/{name}")
+                _add(archive, path, f"household/{name}")
     log.info("Exported account %s to %s", profile_id, destination)
     return destination
 

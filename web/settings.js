@@ -92,9 +92,10 @@
       const v = await MIAShell.form("Link The Home Computer", [
         { name: "url", label: "The computer's address (e.g. 192.168.1.20:8765 or its Tailscale name)", type: "text", required: true, options: [], default: h.url || null },
         { name: "who", label: "Your name or email on MIA there", type: "text", required: true, options: [], default: h.who || null },
-        { name: "password", label: "Your password there", type: "password", required: true, options: [], default: null }], {});
+        { name: "password", label: "Your password there", type: "password", required: true, options: [], default: null },
+        { name: "code", label: "Code from your authenticator app (only if two-step sign-in is on there)", type: "text", required: false, options: [], default: null }], {});
       if (!v) return;
-      try { MIAShell.say((await MIA.homeConnect(v.url, v.who, v.password)).message); page = await MIA.settings(); draw(); }
+      try { MIAShell.say((await MIA.homeConnect(v.url, v.who, v.password, v.code)).message); page = await MIA.settings(); draw(); }
       catch (e) { MIAShell.say(e.message); }
     };
     const disconnect = async () => {
@@ -237,6 +238,8 @@
         el("div", { class: "acct-actions" }, el("a", { class: "btn btn-ghost", href: "changes.html" }, "Recent Changes"))),
       section("Sign-ins and Security", el("p", { class: "dim" }, "Every sign-in to your account and from which device, wrong passwords, and a way to sign out everywhere."),
         el("div", { class: "acct-actions" }, el("a", { class: "btn btn-ghost", href: "signins.html" }, "Sign-ins and Security"))),
+      section("Your Data", el("p", { class: "dim" }, "Everything MIA keeps about you, what she read to answer you, and taking it all with you or deleting your account."),
+        el("div", { class: "acct-actions" }, el("a", { class: "btn btn-ghost", href: "yourdata.html" }, "Your Data"))),
       section("Connect Apps", el("p", { class: "dim" }, "Bring in data from your other apps: a calendar, contacts, a bank statement, a rental's calendar link. You see it before anything changes."),
         el("div", { class: "acct-actions" }, el("a", { class: "btn btn-ghost", href: "connect.html" }, "Connect Apps"))),
       section("Apps", el("p", { class: "dim" }, "Choose which apps you see, and your favorites."),

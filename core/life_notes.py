@@ -41,6 +41,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 
 FILE_NAME = "life_notes.json"
@@ -198,9 +199,10 @@ class LifeNotes:
         self._load()
 
     def _load(self) -> None:
-        """Read the notes and the offer counts from disk; a missing or damaged file starts both empty."""
+        """Read the notes and the offer counts from disk; a missing or damaged file starts both empty. The file is sealed on disk (DEC-0126); open_text reads it sealed or plain, and one that won't open is
+        copied aside first."""
         try:
-            data = json.loads(self._file.read_text(encoding="utf-8"))
+            data = json.loads(open_text(self._file))
             self.notes, self.offers = list(data.get("notes") or []), list(data.get("offers") or [])
         except (OSError, ValueError, AttributeError):
             self.notes, self.offers = [], []

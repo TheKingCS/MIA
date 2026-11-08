@@ -655,13 +655,41 @@ class ProfileManager:
     def reset_password_with_code(self, identifier: str, code: str, new_password: str) -> Optional[str]:
         """Forgot your password: the recovery code sets a new one. Returns a
         fresh recovery code (the used one stops working), or None when the
-        account or code is wrong. The private journal's passphrase is
-        separate and can't be recovered this way, by design."""
+        account or code is wrong. Two-step sign-in is turned off too (a lost
+        phone with the authenticator may be why). The private journal's
+        passphrase is separate and can't be recovered this way, by design."""
         profile = self.find_for_sign_in(identifier)
         if profile is None or not new_password or not self.check_recovery_code(profile.profile_id, code):
             return None
         self.set_password(profile.profile_id, new_password)
+        self.set_two_step(profile.profile_id, None)  # the lost phone may be why: two-step is set up again after
         return self.issue_recovery_code(profile.profile_id)
+
+    # ------------------------------------------------------------------
+    # Two-step sign-in (core/two_step.py)
+    # ------------------------------------------------------------------
+
+    def two_step_secret(self, profile_id: str) -> str:
+        """The account's authenticator secret when two-step sign-in is on, else ""."""
+        raw = self.context.config.get(f"profiles.{profile_id}") or {}
+        return raw.get("two_step_secret", "") if raw.get("two_step_on") else ""
+
+    def set_two_step(self, profile_id: str, secret: Optional[str]) -> bool:
+        """Turns two-step sign-in on with this secret, or off (None); False for an unknown profile."""
+        config = self.context.config
+        raw = config.get(f"profiles.{profile_id}")
+        if raw is None:
+            return False
+        record = dict(raw)
+        if secret:
+            record["two_step_secret"], record["two_step_on"] = secret, True
+        else:
+            record.pop("two_step_secret", None)
+            record.pop("two_step_on", None)
+        config.set(f"profiles.{profile_id}", record)
+        config.save()
+        log.info("Two-step sign-in %s for profile '%s'", "on" if secret else "off", profile_id)
+        return True
 
     # ------------------------------------------------------------------
     # Passwords

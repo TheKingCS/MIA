@@ -10,6 +10,7 @@ import json
 import pytest
 
 import core.config_manager as config_module
+from core.at_rest import open_text
 import core.conversation_manager as conversation_module
 import core.private_journal as pj
 import core.user_memory_manager as memory_module
@@ -86,8 +87,8 @@ def turn(ctx, text):
 
 
 def saved_conversation_text(ctx) -> str:
-    """What reached conversations.json."""
-    return (ctx.tmp / "conversations.json").read_text()
+    """What reached conversations.json, opened (it is sealed on disk)."""
+    return open_text(ctx.tmp / "conversations.json")  # sealed on disk (DEC-0126)
 
 
 # ------------------------------------------------------------------ modes

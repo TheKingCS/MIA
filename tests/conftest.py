@@ -131,6 +131,13 @@ import core.security_log as security_log_module  # noqa: E402
 
 security_log_module._DATA_DIR = _TEST_RUNTIME_DIR
 
+# 2026-11-08: sealed files (core/at_rest.py, DEC-0126): every test seals with a fixed test key, never DPAPI or the
+# real data/.keys, so the whole suite writes and reads the most private stores sealed, as MIA does.
+import core.at_rest as at_rest_module  # noqa: E402
+
+at_rest_module.KEY_DIR = _TEST_RUNTIME_DIR / ".keys"
+at_rest_module.use_key(bytes(range(32)))
+
 # 2026-11-06: tests that run MIA's daily checks (test_communication_gate)
 # ran the PC's improvement loops for real: readings into data/dev/ and a
 # task opened in work/tasks/ (T-0049). The development platform's records
@@ -142,12 +149,13 @@ import core.council as council_module  # noqa: E402
 import core.council_voices as council_voices_module  # noqa: E402
 import core.dev_store as dev_store_module  # noqa: E402
 import core.dev_usage as dev_usage_module  # noqa: E402
+import core.dependency_audit as dependency_audit_module  # noqa: E402
 import core.loops as loops_module  # noqa: E402
 import core.night_school as night_school_module  # noqa: E402
 
 _TEST_DEV_DIR = Path(tempfile.mkdtemp(prefix="mia_test_dev_"))
 for _module in (dev_store_module, benchmarks_module, council_module, council_voices_module, dev_usage_module, loops_module,
-                night_school_module):
+                night_school_module, dependency_audit_module):
     _module.DEV_DATA = _TEST_DEV_DIR
 council_voices_module.SAMPLES = _TEST_DEV_DIR / "voices"
 import core.phone_link as phone_link_module  # noqa: E402

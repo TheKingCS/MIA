@@ -45,6 +45,8 @@ REASONS: dict[str, tuple[str, str]] = {
     "promise_due": ("your promises", "you told me about a promise with a day and said to keep it; I mention it the "
                                      "day before and on the day"),
     "self_report": ("my weekly report", "on Sundays I tell the PC's owner what got better in me and what I'm working on"),
+    "dependency_audit": ("security updates", "once a week I check the packages I run on against a public list of known "
+                                             "security problems, and tell you when one needs updating"),
 }
 
 

@@ -41,6 +41,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 
 FILE_NAME = "operating_journal.json"
@@ -107,9 +108,10 @@ class OperatingJournal:
         self._load()
 
     def _load(self) -> None:
-        """Reads the lines and ratings; a missing or unreadable file gives none."""
+        """Reads the lines and ratings; a missing or unreadable file gives none. The file is sealed on disk (DEC-0126): open_text reads it
+        sealed or plain, and one that won't open is copied aside and counts as damaged."""
         try:
-            data = json.loads(self._file.read_text(encoding="utf-8"))
+            data = json.loads(open_text(self._file))
         except (OSError, ValueError):
             data = {}
         self.lines = list(data.get("lines", []))

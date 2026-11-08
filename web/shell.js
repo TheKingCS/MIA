@@ -565,6 +565,9 @@
           el("input", { id: "who", type: "email", autocomplete: "username", placeholder: "you@example.com", required: true })),
         el("label", { class: "si-field", for: "password" }, el("span", {}, "Password"),
           el("input", { id: "password", type: "password", autocomplete: "current-password", required: true })),
+        // Two-step sign-in (core/two_step.py): shown when the account asks for the authenticator's code.
+        el("label", { class: "si-field", for: "two-step-code", id: "two-step-row", hidden: true }, el("span", {}, "Code from your authenticator app"),
+          el("input", { id: "two-step-code", type: "text", inputmode: "numeric", autocomplete: "one-time-code", maxlength: "6", pattern: "[0-9]*" })),
         el("button", { class: "btn btn-green si-go", type: "submit" }, "Sign In"),
         el("p", { class: "si-note" }, "Forgot it? Your recovery code resets it on the PC."));
       document.body.prepend(form);
@@ -572,8 +575,11 @@
     form.hidden = false;
     form.onsubmit = async (e) => {
       e.preventDefault();
-      try { await MIA.signIn($("#who").value.trim(), $("#password").value); form.hidden = true; then(); }
-      catch (err) { say(err.message); }
+      try { await MIA.signIn($("#who").value.trim(), $("#password").value, $("#two-step-code").value.trim()); form.hidden = true; then(); }
+      catch (err) {
+        if (err.twoStep) { $("#two-step-row").hidden = false; $("#two-step-code").focus(); }
+        say(err.message);
+      }
     };
   }
 

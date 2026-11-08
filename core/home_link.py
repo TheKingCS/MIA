@@ -142,12 +142,15 @@ class Reach:
         self._up, self._checked = False, self._clock()
 
 
-def connect(context, url: str, who: str, password: str) -> dict:
-    """Sign in to MIA on the computer, check its model, remember the link."""
+def connect(context, url: str, who: str, password: str, code: str = "") -> dict:
+    """Sign in to MIA on the computer (with the authenticator's code when two-step sign-in is on there), check its
+    model, remember the link."""
     url = clean_url(url)
     try:
-        login = _request(f"{url}/api/model/link", {"profile_id": who, "password": password}, 8)
+        login = _request(f"{url}/api/model/link", {"profile_id": who, "password": password, "code": code}, 8)
     except urllib.error.HTTPError as exc:
+        if exc.code == 401 and exc.headers.get("X-MIA-Two-Step"):
+            raise HomeLinkError("Two-step sign-in is on: enter the 6-digit code from your authenticator app too.") from exc
         raise HomeLinkError("The computer didn't accept that name and password." if exc.code in (401, 403, 404)
                             else f"The computer said {exc.code}.") from exc
     except (urllib.error.URLError, OSError, ValueError) as exc:

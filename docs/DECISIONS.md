@@ -1947,7 +1947,8 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0017, DEC-0062, DEC-0124
 
 ### DEC-0126: MIA encrypts her own data at rest
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-08: "lets knock these out", on the list this headed), with DPAPI and no passphrase
+  for now; the optional passphrase stays open
 - Proposed by: claude, 2026-11-08, from Zac's ask ("fortify our security measures to industry standards and beyond so
   that users can safely trust this AI and the app having access to their most private data") and the check that this
   PC's drive isn't encrypted (Windows 11 Home, BitLocker protection 0)
@@ -1959,6 +1960,15 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   encryption (Device encryption, BitLocker with Windows Pro, or VeraCrypt).
 - Open: whether to add the optional passphrase (asked at each start, or only for the most private stores); the
   order of stores.
+- Built, stage 1 (2026-11-08, `core/at_rest.py`): conversations, memories, notes and life notes sealed with
+  AES-256-GCM in `atomic_write_text`, read both ways by `at_rest.open_text`; the key protected by DPAPI in
+  data/.keys/; a recovery key (`python -m tools.data_key recovery`) for another Windows account or PC; a file that
+  won't open is copied aside before its store can start empty; sync and the account export carry the real content.
+  The private journal and the password vault were already encrypted with their own passphrases.
+- Built, stage 2 (2026-11-08): people and pets, financial snapshots, insurance, GPS tracks and the operating journal;
+  every sealed store tested to start empty (copy kept) rather than stop MIA when its file won't open, which caught
+  three stage-1 stores that would have. Next: the budget's files (after the Plaid work in budget_manager.py), the rest
+  of PERSONAL_STORES, the phone's Keystore.
 - Related: DEC-0035 (the password vault), DEC-0125
 
 ### DEC-0127: MIA becomes a product, sold by subscription, local-first
@@ -1976,3 +1986,24 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   away from home; the payment provider; a trademark search on the name.
 - Related: DEC-0115, DEC-0119 (reversed if approved), DEC-0126, docs/SECURITY.md
 
+
+### DEC-0128: MIA across your technology — Field Kit grows up
+- Status: PROPOSED
+- Proposed by: claude, 2026-11-08, from Zac's ask (MIA should "intuitively be able to communicate with other
+  technologies… recognize them… install herself, and operate on my device," with real "cyber security" and the
+  ability to "access and manipulate / merge with other technologies"), sharpened by the Echo Show turning out to be
+  unconvertible — the lesson being that reliable interop comes from protocols and credentials you hold, not exploits.
+- Proposal (`docs/DEVICE_FABRIC_PROPOSAL.md`): grow the existing Connected Device Framework (USB/serial, built) to
+  the whole network. Four layers on `context.devices`: **perceive** (mDNS/SSDP/ARP/BLE discovery → a device
+  inventory store), **identify** (make/model + capability profile + known CVEs, reusing the dependency-audit vuln
+  pattern), **speak** (per-protocol adapters: Cast, DLNA, Home Assistant/MQTT, SSH to Zac's own hosts), **extend**
+  (install MIA onto the Pi via the existing kiosk service, cast her panel to a screen, flash+provision behind the
+  built flashing safety rails). Security role split: **defensive** home-network audit always on through the comms
+  gate; **offensive/authorized testing** only against an owner-authorized target list, every intrusive action a
+  person-approved `fabric.commit` (modelled on `browser.commit`), logged — no third-party targets, mass scanning,
+  DoS or evasion (out of scope, not gated). First build is the read-only defensive half (discovery + identify +
+  audit + a Field Kit screen), which needs no gate decision.
+- Open: inventory scope (household vs device-level); how far into active testing and against which devices; Smart
+  Home via Home Assistant or direct adapters; whether the inventory is sealed at rest (DEC-0126) — proposed yes.
+- Related: DEC-0117 (the browser gate this copies), DEC-0126, DEC-0094/0101 (loops); ROADMAP 11 (Field Kit), 13
+  (Smart Home); `core/dependency_audit.py`, `core/device_framework.py`, `core/port_scanner.py`

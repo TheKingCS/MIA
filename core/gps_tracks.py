@@ -26,6 +26,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.waypoint_manager import haversine_distance_km
 
@@ -146,9 +147,10 @@ class GpsTracks:
         self._load()
 
     def _load(self) -> None:
-        """Reads the tracks; a missing or unreadable file gives none."""
+        """Reads the tracks; a missing or unreadable file gives none. The file is sealed on disk (DEC-0126): open_text reads it
+        sealed or plain, and one that won't open is copied aside and counts as damaged."""
         try:
-            self.tracks = json.loads(self._file.read_text(encoding="utf-8")).get("tracks", [])
+            self.tracks = json.loads(open_text(self._file)).get("tracks", [])
         except (OSError, ValueError):
             self.tracks = []
 

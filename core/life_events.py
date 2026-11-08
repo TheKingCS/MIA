@@ -250,13 +250,17 @@ def on_change(type: str, noun: str, ref: str = "", named: bool = True):
     """Decorates a store method so each call that succeeds records a life event of `type` ("event_added"): "Added
     an event: Dentist", with a `ref:id` reference when `ref` is given. `named=False` leaves the name out of the
     line, for what's personal (a memory's words). Recording never gets in the way: the method's result is returned
-    whatever happens, and a method that raises records nothing."""
+    whatever happens, and a method that raises records nothing. A method that answers False changed nothing (a
+    regular check that found nothing to do: textbooks' finish_reading, every 30 seconds, had recorded "Finished a
+    book" each time, 2026-11-08), so it records nothing either."""
     verb = next((v for suffix, v in _VERBS if type.endswith(suffix)), "Changed")
 
     def wrap(method):
         @functools.wraps(method)
         def inner(self, *args, **kwargs):
             result = method(self, *args, **kwargs)
+            if result is False:  # "nothing changed": nothing happened worth a line in the history
+                return result
             try:
                 rid, name = _about(result, args)
                 summary = f"{verb} {noun}" + (f": {name}" if named and name else "")

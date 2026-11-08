@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1191 files, 261,599 lines; 1191 files describe themselves; 14,270 of 14,957 classes and functions are documented.
+1203 files, 263,635 lines; 1203 files describe themselves; 14,379 of 15,066 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-440 files, 122,822 lines; 6,537 of 6,623 classes and functions documented
+444 files, 123,711 lines; 6,597 of 6,683 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -68,6 +68,7 @@
 - `core/assistant_voice_choice_actions.py`: MIA's own voice, by voice (DEC-0125; the same change as Settings' Voice, core/web_voice.py): "which voices do you have?", "switch to the British voice", "turn your voice effect off", "speak louder". Device-wide, so only the PC's owner changes it; anyone can ask which voices there are.
 - `core/assistant_waypoint_actions.py`: Waypoints by voice, for what Navigation's page added (DEC-0125: full use both ways). "Rename the spring waypoint to Upper Spring", "mark the old gate as a hazard", "note on the spring: dry in August": the same `waypoint.edit` action kind as the page's Edit (core/waypoint_actions.py), so "undo that" 
 - `core/assistant_why_actions.py`: Assistant tools for the owner's chain of reasons, slice B ("Remember Why") of docs/COGNITIVE_EXTENSION_PROPOSAL.md. The chain lives on Intents (core/intent_manager.py: `serves_intent_id`, `reason`); the evidence is computed by core/why_graph.py.
+- `core/at_rest.py`: MIA encrypts her own data at rest (DEC-0126, docs/SECURITY.md step 2): the most private stores' files are sealed with AES-256-GCM under one data key, so a drive read on another computer (a stolen PC, a pulled disk, a backup copied off) shows nothing but noise.
 - `core/atomic_write.py`: One shared helper for crash-safe file writes. Every core/*_manager.py persists its state as JSON via a direct `path.write_text(...)` call — which is NOT atomic: a crash, power loss, or disk-full condition mid write can leave that file truncated or corrupted, permanently losing everything in it. A re
 - `core/avatar_manager.py`: Companion-avatar camera source for the Home Dashboard's Companion Avatar widget (gui/home_dashboard.py, gui/widgets/avatar_camera_widget.py). Built for VMagicMirror (https://malaybaku.github.io/VMagicMirror/), a separately-running, Windows-only Unity/VRM avatar app the user has been running alongsid
 - `core/backup_manager.py`: Export/import MIA's config + data directory as a single backup file, per docs/ROADMAP.md milestone 2.7. Optionally passphrase-encrypted via core/secrets_manager.py.
@@ -135,6 +136,7 @@
 - `core/data_logger_manager.py`: The Data Logger + Charts shared service — docs/ROADMAP.md milestone 8.1, the "Data Logger + Charts" row of the shared core services table (used by Multimeter logging, soil moisture, power usage, Lab experiments/calibration, sensor testing, vehicle diagnostics).
 - `core/data_recovery.py`: One shared helper for the visible half of data-corruption recovery. Every core/*_manager.py's own `_load()` already falls back to an empty state on a malformed JSON file (correct — the app must never fail to boot or fail to open a screen over one bad file) and logs the failure. But a log line nobody
 - `core/debt_math.py`: Pure logic (DEC-0052, the "debts" question plan): when each debt is paid off at the current payments, the interest it costs, and what an extra amount a month changes. MIA never asks the model to do this arithmetic.
+- `core/dependency_audit.py`: The weekly check for known vulnerabilities in the packages MIA runs on (docs/SECURITY.md step 5). The check itself is tools/dependency_audit.py (it asks OSV over the internet, a few seconds' work); this is the part MIA's daily checks use: whether a check is `due` (none in the last CHECK_DAYS), `laun
 - `core/dev_checks.py`: The development checks that need a real run (build plan step 2, DEC-0094): the measures behind the loops `dev.suite`, `dev.suite_time`, `dev.reverts`, `dev.vulnerable` and `dev.outdated` in core/loops.py.
 - `core/dev_knowledge.py`: The Development Knowledge Vault (DEC-0073; `docs/DEVELOPMENTAL_INDEPENDENCE_REVIEW.md` section 4.1): what the team learned building MIA, kept so MIA and every agent can use it, and so MIA can one day do the work without them.
 - `core/dev_lab.py`: MIA's development lab (DEC-0058; the ROADMAP's self-modification stages 2 and 3; docs/INSPECTION_AND_SELF_PLAN.md section 6). MIA proposes an improvement; the change is written and tested in an isolated copy; it reaches the running MIA only when Zac approves.
@@ -385,6 +387,7 @@
 - `core/trip_route.py`: A trip's route and checkpoints on every device (DEC-0125; docs/WEB_PARITY.md Expeditions "not yet: route, splits"). The desktop's trip dialog plans a route from saved waypoints and logs "arrived here" at each one (core/trip_manager.py: `waypoint_ids`, `record_split`, `leg_summaries`); the web and vo
 - `core/tts_worker.py`: Runs `VoiceManager.synthesize()` + `.play()` off the GUI thread — docs/ROADMAP.md milestone 5.3. Same reasoning as `core/chat_worker.py`: `play()`'s `sd.wait()` blocks for the full duration of the spoken reply, which scales with reply length and would freeze the GUI thread for that whole time otherw
 - `core/turn_trace.py`: One line per Assistant turn: how MIA got to what she said (DEC-0067, choice 4: native traces before Langfuse; phase 2 of docs/PERSONALITY_AND_ECOSYSTEM_AUDIT.md). The route that answered (a fixed reply, a plain-word command, a question plan, the model), what was asked and said, the tools offered and
+- `core/two_step.py`: Two-step sign-in (docs/SECURITY.md step 4; Zac, 2026-11-08: "fortify our security measures to industry standards and beyond"): signing in from another device asks, after the password, for the 6-digit code an authenticator app shows (Google Authenticator, Microsoft Authenticator, Authy, a password ma
 - `core/undo_log.py`: "Undo that" (2026-10-01, accounts stage 5): when MIA changes something for you (adds an expense, checks off a chore, logs a reading) and got it wrong, you can take it back.
 - `core/unit_conversion.py`: The unit converter's tables and math (moved from modules/toolbox/calculators/unit_converter.py so the web Toolbox and the convert_units voice tool can use them without Qt; the module re-exports them). Thirteen categories (length, area, volume, weight, temperature, speed, pressure, energy, power, tim
 - `core/units.py`: Kitchen and shop units, and converting between them (DEC-0036). A recipe can say "500 g flour" while the flour is kept in pounds, or "1 cup honey" while the honey is kept in cups: an amount converts when both units measure the same thing (weight to weight, volume to volume, a count to a count). Weig
@@ -448,10 +451,11 @@
 - `core/workout_manager.py`: MIA's Workout Module — an exercise library, named workout templates, logged sessions (sets/reps/weight, real elapsed time from a live session's own stopwatch), personal records, and per-exercise progress.
 - `core/workshop_machine.py`: WorkshopMachine: the interface every controllable workshop-hardware device (laser engraver, CNC, 3D printer, ...) implements, plus WorkshopMachineRegistry holding whichever machines are actually registered. This reconciles a real architecture question from MIA Home's expanded-scope handoff doc (`doc
 - `core/world_map.py`: The world map with fog of war (DEC-0028, the game layer's sixth idea; Zac, 2026-10-17): the places you've actually been clear the fog, photos are pinned where they were taken, and new ground earns achievements.
+- `core/your_data.py`: Your Data (docs/SECURITY.md step 8, "beyond"): exactly what MIA keeps about a person, and what she read to answer them, for the web page Settings → Your Data (web/yourdata.html) beside export and delete (core/account_data.py).
 
 ## server/: the web and phone API over the engine
 
-2 files, 3,350 lines; 37 of 37 classes and functions documented
+2 files, 3,525 lines; 39 of 39 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -683,7 +687,7 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-32 files, 3,267 lines; 99 of 99 classes and functions documented
+34 files, 3,449 lines; 108 of 108 classes and functions documented
 
 - `tools/audit.py`: MIA's self-audit from the command line (DEC-0108; core/self_audit.py, core/practices.py).
 - `tools/bench_audit.py`: What MIA's routing does today with each Intelligence Benchmark question (tests/intelligence_bench.py, docs/INTELLIGENCE_BENCHMARK.md): a question plan (core/question_plans.py: lookups by code, one answer), answered by code (a direct lookup), offered which tools, or left to the model with no tools at
@@ -691,6 +695,8 @@
 - `tools/chronicle_panels.py`: Draws an issue's panels with the local image model (T-0036: SD-Turbo as ONNX on the GPU through DirectML). It runs in the image model's own environment, kept apart from MIA's (`C:\Users\zacrh\DevTools\imagegen\.venv`), so it imports nothing from MIA:
 - `tools/cloud_tests.py`: Runs the test suite in a place without the PC's libraries (a cloud session: no PySide6, pyserial, mutagen, libzim...). Each library on STUBBED that can't be imported is replaced by an empty stand-in before pytest starts, so tests that only import a Qt module on the way (the parity checks, the voice 
 - `tools/conversation_check.py`: The golden conversation corpus, asked for real (DEC-0067; P5 of docs/PERSONALITY_AND_ECOSYSTEM_AUDIT.md): greetings, jokes, frustration, disagreement and the rest, through the same steps a turn takes, on this computer's model, for each device she answers on. Read-only like tools/intelligence_check.p
+- `tools/data_key.py`: MIA's data key for sealed files (DEC-0126, core/at_rest.py), from the command line on the PC:
+- `tools/dependency_audit.py`: Known vulnerabilities in the packages MIA runs on (docs/SECURITY.md step 5). Lists every Python package installed where MIA runs (name and version) and asks OSV (https://osv.dev, the open vulnerability database Google runs; the same data pip-audit uses) which have published advisories, then says eac
 - `tools/dev_window.py`: The development board in its own window (Zac, 2026-11-03: "I want this in a window that makes it all easy to view and understand the workflow and what is going on, what is building, who is building it"). The same board as `web/dev.html` inside MIA (core/work_dashboard.py), without MIA running or a s
 - `tools/docs.py`: Working down the documentation backlog (DEC-0104, core/code_atlas.py): see what a file still lacks, write the docstrings (by reading the code: what it does, and how when that isn't plain), and put them in place.
 - `tools/dump_assistant_capabilities.py`: Regenerates `docs/ASSISTANT_CAPABILITIES.md`'s tool-registry table directly from the real, live `AssistantActionRegistry` (`core/application.py`'s `_register_assistant_actions()`) — never hand-typed, so this can't silently drift the way a hand-maintained list would (this project has hit that exact s
@@ -720,7 +726,7 @@
 
 ## tests/: the test suite: what each part must do
 
-402 files, 69,596 lines; 5,485 of 6,086 classes and functions documented
+407 files, 70,205 lines; 5,523 of 6,124 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -751,6 +757,7 @@
 - `tests/test_assistant_energy_actions.py`: Energy by voice (core/assistant_energy_actions.py, T-0053): each source with its latest reading per meter, one named source, and the empty cases.
 - `tests/test_assistant_life_actions.py`: Workout, people & pets, household routine, and Classroom Assistant tools (core/assistant_life_actions.py) run through the real registry against real managers on temp data, plus their pure parsers.
 - `tests/test_assistant_routing.py`: Enforces tests/assistant_routing_corpus.py against the real desktop action registry: every realistic request reaches its tool, how-to questions reach the help docs, and small talk stays tool-free. Plus unit tests for the pieces that make that work (record-name lookup, quantity parsing, keyword/recor *(4 undocumented)*
+- `tests/test_at_rest.py`: MIA's most private files sealed at rest (DEC-0126, core/at_rest.py): a sealed name is written as an AES-256-GCM envelope and read back, any other file stays plain; a plain file still reads (each store moves at its next save); a file that won't open is copied aside before the error, so a store starti
 - `tests/test_atomic_write.py`: Unit tests for core.atomic_write.atomic_write_text — the crash-safety guarantee is the whole point of this module, so these tests exercise the failure path directly (a real exception mid-write), not just the happy path.
 - `tests/test_avatar_manager.py`: Unit tests for core.avatar_manager. list_devices()/is_available() are tested against a monkeypatched QMediaDevices.videoInputs() (same "mock the OS-level query, test our own mapping/decision logic" reasoning as test_power_manager.py mocking psutil and test_volume_manager.py mocking subprocess.run) —
 - `tests/test_backup_manager.py`: Unit tests for core.backup_manager. Isolates _CONFIG_FILE/_DATA_DIR into a tmp_path scratch area (same monkeypatch pattern as test_config_manager.py) so these tests never touch the real config/config.json or data/ directory. *(4 undocumented)*
@@ -809,6 +816,7 @@
 - `tests/test_data_logger_manager.py`: Unit tests for core.data_logger_manager. Isolates _DATA_DIR/_READINGS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_inventory_manager.py's isolated_paths). *(2 undocumented)*
 - `tests/test_data_recovery.py`: Unit tests for core.data_recovery.notify_data_corruption. *(4 undocumented)*
 - `tests/test_debt_math.py`: The payoff arithmetic behind "when will my debts be paid off?" and "what if I put an extra $200 toward it?" (core/debt_math.py). *(1 undocumented)*
+- `tests/test_dependency_audit.py`: Known vulnerabilities in MIA's packages (docs/SECURITY.md step 5): OSV's answer is read into one finding per package and advisory with the fixing version (tools/dependency_audit.py); the weekly check is due after a week; findings are said once, plainly, and none means nothing is said (core/dependenc
 - `tests/test_dev_checks.py`: The development checks that need a real run (core/dev_checks.py, build plan step 2): the committed code's suite against the known failures, reverts per merge, and the dependency audit; the loops that read them are heavy, so the app's own check never runs them. *(1 undocumented)*
 - `tests/test_dev_knowledge.py`: The Development Knowledge Vault (DEC-0073, core/dev_knowledge.py): what the team learned, each entry tied to where it came from, MIA's own notes kept as derived until someone confirms them, and given to agents before they work.
 - `tests/test_dev_lab.py`: MIA's development lab (DEC-0058, core/dev_lab.py): a proposal is written in an isolated worktree, checked against rules the lab can't touch and against the suite at the start, and reaches the running copy only on approval, reverting itself if it breaks something there. *(3 undocumented)*
@@ -898,7 +906,7 @@
 - `tests/test_ledger_manager.py`: Unit tests for core.ledger_manager. Isolates _DATA_DIR/_REVENUE_FILE _EXPENSES_FILE into a tmp_path scratch area, same monkeypatch pattern as test_component_manager.py's isolated_paths. record_sale() also needs core.product_manager isolated in the same tmp_path, same "combined-manager fixture" patte *(2 undocumented)*
 - `tests/test_leveling.py`: Profile levels and prestige (core/leveling.py): the XP each level needs, progress within a level and a prestige cycle, when someone may prestige, and each prestige tier's colour.
 - `tests/test_life_areas.py`: The life state's `areas` section (core/life_areas.py): each area reads its store live, says PLANNED without one, never breaks the life state when one fails, keeps a child out of the money areas, and every area names a store MIA really has.
-- `tests/test_life_events.py`: Life events (core/life_events.py), Engine Phase 1 step 1, 2026-10-05: the append-only history beside the stores. What happened, who did it and how, in the folder the data lives in. *(4 undocumented)*
+- `tests/test_life_events.py`: Life events (core/life_events.py), Engine Phase 1 step 1, 2026-10-05: the append-only history beside the stores. What happened, who did it and how, in the folder the data lives in. A decorated method that answers False changed nothing and records nothing. *(4 undocumented)*
 - `tests/test_life_notes.py`: DEC-0054 (T-0018): what someone says they'll do, decide, want to try and set aside, spotted in code, kept only on their yes, and answered by the recall plan. *(3 undocumented)*
 - `tests/test_life_state_v2.py`: Life State v2 (core/context_assembler.py), Engine Phase 1 step 3, 2026-10-05: the whole picture as data, computed from the stores, the life-event history and the links. No hand-written prose in the path. *(2 undocumented)*
 - `tests/test_links.py`: How things relate (core/links.py), Engine Phase 1 step 2, 2026-10-05: stated links between real records, links the stores already imply, and what waits on what. *(2 undocumented)*
@@ -946,6 +954,7 @@
 - `tests/test_net_worth_history.py`: Tests for core/net_worth_history.py: one net worth point a day, the change this month, and the Overview's line.
 - `tests/test_night_school.py`: Night School (DEC-0100, core/night_school.py): she chooses what to study, her teacher sets exercises with a test that fails first, code grades her, the teacher's lesson comes back the next time, practice never merges, and her picks are scored against her teacher's before she's trusted to choose.
 - `tests/test_no_control_characters.py`: No stray control characters in MIA's code or docs. A shell heredoc turns a regex's \b into a backspace byte, and the pattern then silently matches nothing (it happened in 2026-11 twice: the turn traces' patterns, and the check that keeps passwords out of what MIA remembers by voice).
+- `tests/test_no_secrets_in_logs.py`: No secret reaches a log (docs/SECURITY.md step 6). Two checks:
 - `tests/test_notes_module.py`: Unit test for modules.notes.module.format_entry_row — pure formatting logic, no Qt event loop needed (importing the module only defines widget classes; nothing here instantiates one).
 - `tests/test_notification_manager.py`: Unit tests for core.notification_manager — previously untested (a real, pre-existing gap, not something this file tries to backfill in full). Added now specifically to cover notify()'s new "notifications.enabled" gate (2026-07-15 "ForMIA" design handoff's Quick Bus widget) — the first real, non-cosm *(3 undocumented)*
 - `tests/test_obligations.py`: Tax and compliance obligations (DEC-0040): deadlines moved off weekends and holidays, an extension to file never moving the money's date, reminders once each, unverified never shown as confirmed, repeats, and the one next step each Compliance row offers (DEC-0113). *(2 undocumented)*
@@ -1059,6 +1068,7 @@
 - `tests/test_trip_map_view.py`: Unit tests for gui.trip_map_view's pure functions (project_to_scene_xy, compute_bounds), same style as tests/test_navigation_module.py — no Qt event loop, no QGraphicsScene/View instantiated.
 - `tests/test_trip_route.py`: A trip's route and checkpoints on the web and by voice (core/trip_route.py, core/assistant_trip_route_actions.py): stops from saved waypoints, "arrived" logged now, the legs walked, an out-and-back route, undo, the glasses' On The Trail panel, and a trip's log with its weather. *(2 undocumented)*
 - `tests/test_turn_trace.py`: Turn traces (DEC-0067, core/turn_trace.py): one line per turn, how it was answered and how long it took; never a private turn, never a password. *(1 undocumented)*
+- `tests/test_two_step.py`: Two-step sign-in (core/two_step.py, docs/SECURITY.md step 4): the codes are RFC 6238's, a clock a step off still works, a used code never works twice, and the authenticator link carries the secret and MIA's name.
 - `tests/test_unit_converter.py`: Unit tests for the unit converter's convert() (core/unit_conversion.py; modules.toolbox.calculators.unit_converter re-exports it).
 - `tests/test_update_manager.py`: Unit tests for core.update_manager. Isolates _PROJECT_ROOT into a tmp_path scratch area (same monkeypatch pattern as test_backup_manager.py) so these tests never touch the real project files. Git-commit tests `git init` a throwaway repo in tmp_path — never the real project repo — with a local (not g *(2 undocumented)*
 - `tests/test_usage_loops.py`: Build plan step 3, the remaining usage loops (core/loops.py): numbers she didn't look up, memories corrected soon after she kept them, the gate's daily limit and the kinds it put on a break, published screens a later change broke, and data files found corrupt. Each record keeps kinds and counts, nev *(1 undocumented)*
@@ -1122,12 +1132,13 @@
 - `tests/test_workshop_machine.py`: Unit tests for core.workshop_machine — same shape as tests/test_calculator_engine.py, since WorkshopMachineRegistry is deliberately modeled on CalculatorEngine's registry pattern (see that module's docstring for why). LaserEngraverMachine's own tests confirm it behaves as a real, honest stub — repor
 - `tests/test_workshop_module.py`: Unit tests for modules.workshop.module's pure formatting logic — no Qt event loop needed. Same shape as tests/test_notes_module.py's format_entry_row test. format_component_row() covers Components (the original tab); format_material_row()/format_job_row() format_product_row()/format_revenue_row()/fo *(3 undocumented)*
 - `tests/test_world_map.py`: The world map with fog of war (DEC-0028): finished trips, arrivals, photos with GPS and "I'm Here" clear tiles; waypoints nobody has reached stay in the fog; new ground earns achievements and XP, and the closest one not earned is shown next. *(3 undocumented)*
+- `tests/test_your_data.py`: Your Data (core/your_data.py, docs/SECURITY.md step 8): every file in the person's folder listed with what it is, how many records and whether it's sealed (DEC-0126), never the temporary or set-aside copies; records counted for lists, objects of lists and JSON lines; her latest answers with the tool
 - `tests/test_your_data_and_undo.py`: Accounts stage 5 (2026-10-01): export and delete your account (core/account_data.py), "undo that" (core/undo_log.py), "why did you tell me that?" / "stop telling me about ..." (core/message_reasons.py), and the setup checker (core/system_check.py). *(3 undocumented)*
 - `tests/test_zim_url.py`: Unit tests for modules.knowledge.zim_url's pure QUrl <-> (pack_id, entry_path) conversion. QUrl needs no QApplication/event loop to construct or parse, so — unlike modules.knowledge.zim_text_browser's QTextBrowser subclass — this is safe to cover with plain pytest rather than deferring to tests/run_
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-85 files, 15,328 lines
+86 files, 15,509 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
@@ -1202,7 +1213,7 @@
 - `web/shell.js`: shell.js — the frame every MIA web screen shares (claude, 2026-10-06, DEC-0017).
 - `web/shop.js`: shop.js — the Reward Shop (claude, 2026-10-17, DEC-0028). Renders MIA.shop() (core/game_layer.py): credits earned / spent / left, the rewards you set (ready to buy first, then how far off the rest are), ideas to start with, and what you've bought. Buy proposes shop.buy; undo gives the credits back. 
 - `web/showoff.js`: showoff.js — show-off mode (claude, 2026-10-17, DEC-0031). Renders MIA.showoff() (core/show_off.py) as a narrated tour, one card at a time: Back / Next / Stop, arrow keys, and MIA reading each card aloud when Voice is on (the browser's own speech; nothing leaves the device). The data was filtered in
-- `web/signins.js`: signins.js — Sign-ins and Security (claude, 2026-11-08). Renders MIA.securityLog() (core/security_log.py): this account's events newest first (what happened, from which device, when; a new device and wrong passwords marked), how many other devices are signed in, and Sign Out Everywhere (MIA.signOutE
+- `web/signins.js`: signins.js — Sign-ins and Security (claude, 2026-11-08). Renders MIA.securityLog() (core/security_log.py): this account's events newest first (what happened, from which device, when; a new device and wrong passwords marked), how many other devices are signed in, Sign Out Everywhere (MIA.signOutEvery
 - `web/skills.js`: skills.js — the Skills screen (claude, 2026-10-06, DEC-0017/0018, H-0013). Renders MIA.skills() (core/web_progress.py): the skill tree by category (your interests first), each skill's level, XP and capability, what a locked one needs, the next honest step, each skill's pathways (Start), challenge ch
 - `web/sound.js`: sound.js — MIA's sounds (claude, 2026-10-17, DEC-0028 #11). Short tones made in the browser (Web Audio: no sound files to download, works offline): a chime for an objective, a quest-complete arpeggio for a mission, a fanfare for a level. MIA's voice line (from the engine's reward.say, core/actions.v
 - `web/start.js`: start.js — Start Here (claude, 2026-11-07). Renders MIA.guide() (core/web_guide.py): what she does, grouped by what you want to get done; each with how it works, "Try saying" buttons that open Talk with the words typed in (press Enter to send), and the page to open; the apps still empty, to fill in;
@@ -1214,6 +1225,7 @@
 - `web/workout.js`: workout.js — the Workout screen (claude, 2026-10-06, DEC-0017/0018). Renders MIA.workout() (core/web_screens.py): log a session right on the page (an exercise, reps, sets, weight, how long, notes), the latest entry, today's daily mission and streak, exercises, history, progress and Personal Bests (l
 - `web/workshop.js`: workshop.js — the Workshop screen (claude, 2026-10-16; Zac: the app only opened a chat). Renders MIA.workshop() (core/web_more.py) in tabs: Recipes and Builds (crafting recipes, DEC-0030: what a recipe needs and what's short, the shopping list, Bought It, Start Build, steps, Finish, photos, Sold It 
 - `web/worldmap.js`: worldmap.js — the World Map with fog of war (claude, 2026-10-17, DEC-0028). Renders MIA.worldmap() (core/world_map.py): the cleared tiles over the fog on a canvas, pins (photos where they were taken, places you reached, "?" for waypoints nobody has reached yet), how much ground that is, and the achi
+- `web/yourdata.js`: yourdata.js — Your Data (claude, 2026-11-08; docs/SECURITY.md step 8). Renders MIA.yourData() (core/your_data.py): the person's own files and their household's shared ones, each with what it is, how many records, its size and whether it's sealed on disk (DEC-0126); her latest answers with the tools 
 
 ## android-phone/: the Android app that carries MIA's engine and the glasses' link
 

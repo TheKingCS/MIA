@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Your Data — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
+  <link rel="stylesheet" href="ui.css">
+</head>
+<body data-app="settings" data-icon="security" class="mod-yourdata">
+  <!--
+    Your Data: everything MIA keeps about you, file by file (what it is, how many, sealed or not), what she read to
+    answer your recent questions, and export / delete your account behind your password. MIA.yourData()
+    (core/your_data.py), MIA.exportData, MIA.deleteAccount (core/account_data.py). Formatting only (claude, 2026-11-08).
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <header class="hero">
+        <h1><span aria-hidden="true"></span> Your Data</h1>
+        <p class="tagline">Everything MIA keeps about you, and what she read to answer you.</p>
+      </header>
+      <div id="panel"></div>
+    </main>
+  </div>
+  <script src="mia.js?v=17"></script>
+  <script src="icons.js"></script>
+  <script src="sound.js"></script>
+  <script src="places-watch.js"></script>
+  <script src="shell.js"></script>
+  <script src="yourdata.js"></script>
+</body>
+</html>

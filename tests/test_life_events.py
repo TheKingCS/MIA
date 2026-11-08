@@ -1,7 +1,8 @@
 """
 Life events (core/life_events.py), Engine Phase 1 step 1, 2026-10-05:
 the append-only history beside the stores. What happened, who did it
-and how, in the folder the data lives in.
+and how, in the folder the data lives in. A decorated method that
+answers False changed nothing and records nothing.
 """
 
 import json
@@ -176,3 +177,31 @@ def test_personal_data_gives_each_household_and_person_their_own_log(tmp_path, m
     from core.personal_data import HOUSEHOLD_ATTRIBUTES, PERSONAL_ATTRIBUTES
 
     assert "life_events" in HOUSEHOLD_ATTRIBUTES and "personal_life_events" in PERSONAL_ATTRIBUTES
+
+
+def test_a_change_method_that_answers_false_records_nothing(tmp_path):
+    """A regular check that found nothing to do (it returns False) adds no line; one that changed something does
+    (textbooks' finish_reading had added "Finished a book" every 30 seconds)."""
+    from types import SimpleNamespace
+
+    from core import life_events
+
+    class Shelf:
+        """A store whose check reports whether it changed anything."""
+
+        def __init__(self):
+            """Its context carries a history in the temp folder."""
+            self.data_dir = tmp_path  # its history goes beside it, never in the real data/
+            self.context = SimpleNamespace(life_events=life_events.LifeEventLog(None, data_dir=tmp_path))
+
+        @life_events.on_change("book_finished", "a book", "textbook")
+        def check(self, changed):
+            """Answers whether a book finished."""
+            return changed
+
+    shelf = Shelf()
+    shelf.check(False)
+    shelf.check(False)
+    assert shelf.context.life_events.all_events() == []
+    shelf.check(True)
+    assert [e.type for e in shelf.context.life_events.all_events()] == ["book_finished"]

@@ -25,6 +25,11 @@ Deliberately a single small function, not a class or a context
 manager — every call site here is "serialize the whole state, write
 the whole file," never a streaming/partial write, so there's nothing
 more to abstract.
+
+It is also where MIA's most private files are sealed (DEC-0126,
+core/at_rest.py): `seal_text` encrypts a file whose name is in
+at_rest.SEALED and leaves every other file's text as it is. Such a
+file is read back with `at_rest.open_text`.
 """
 
 from __future__ import annotations
@@ -39,12 +44,16 @@ def atomic_write_text(path: Path, text: str, encoding: str = "utf-8") -> None:
     Write `text` to `path` crash-safely — same call shape as
     `Path.write_text()` (just with `path` as an explicit first
     argument instead of the receiver), so it's a drop-in replacement
-    at every call site. `path`'s parent directory must already exist
+    at every call site. A file named in core.at_rest.SEALED is written
+    sealed (DEC-0126). `path`'s parent directory must already exist
     (same requirement every existing call site already satisfies via
     its own `_DATA_DIR.mkdir(parents=True, exist_ok=True)` before
     calling this).
     """
     path = Path(path)
+    from core.at_rest import seal_text
+
+    text = seal_text(path, text)
     # "Undo that" (core/undo_log.py): keep the old contents while an
     # Assistant change is being recorded.
     from core.undo_log import before_write

@@ -783,6 +783,7 @@ class MIAApplication:
             ("chronicle_issue", self._check_chronicle_issue),
             ("promises", self._check_promises),
             ("vault_captions", self._check_vault_captions),
+            ("dependency_audit", self._check_dependency_audit),
         ]
         # 2026-09-27, Cognitive Extension slice C: checks no longer notify
         # directly. Each one offers what it would say (_offer()), and the
@@ -858,6 +859,20 @@ class MIAApplication:
 
         if vault_captions.due(now):
             vault_captions.launch()
+
+    def _check_dependency_audit(self, now: datetime, today_iso: str) -> None:
+        """Known vulnerabilities in the packages MIA runs on (core/dependency_audit.py, docs/SECURITY.md step 5):
+        weekly, in a process of its own; the last check's findings are offered through the gate, once per set."""
+        from core import dependency_audit
+
+        if dependency_audit.due(now):
+            dependency_audit.launch()
+            return
+        said = dependency_audit.offer(dependency_audit.last_result())
+        if said is not None:
+            title, message, fingerprint = said
+            self._offer(topic="dependency_audit", title=title, message=message, urgency=TIMELY, source="system",
+                        fingerprint=fingerprint)
 
     def _check_good_news(self, now: datetime, today_iso: str) -> None:
         """Good News Radio (core/good_news.py, DEC-0096): when someone switched it on, today's episode is made

@@ -33,6 +33,7 @@ most likely first:
 | Secrets never by voice | Passwords, PINs, codes and card numbers are never spoken, heard, shown on the glasses or remembered by voice (DEC-0125) | `core/assistant_more_twins_actions.py` |
 | MIA can't act unasked | Email is only drafted (Send is a person's press); bank data is read-only; her browser holds anything that commits for a person's OK and never types into a password field; unprompted messages pass a gate; every change is undoable | `core/email_drafts.py`, `core/browser_safety.py`, `core/communication_gate.py`, `core/undo_log.py` |
 | Reach | Files only inside the person's own MIA folder; cameras only on the home network; each person's data in their own folder, shared only by joining a household with approval | `core/my_files.py`, `core/security_cams.py`, `core/personal_data.py` |
+| Two-step sign-in | An authenticator app's code after the password, from any device but the PC; codes never reused | `core/two_step.py` |
 | Security log | Every sign-in with its device, wrong passwords, account changes; alerts on a new device and repeated wrong passwords; Sign Out Everywhere | `core/security_log.py` |
 | Code hygiene | A test keeps control characters out of code (a mangled `\b` once silently disabled a check) | `tests/test_no_control_characters.py` |
 
@@ -51,7 +52,10 @@ most likely first:
 1. **Encrypt the drive (Zac, now).** Settings → Privacy & security → Device encryption, if offered on this PC;
    otherwise Windows 11 Pro's BitLocker (an upgrade) or VeraCrypt (free). The biggest single step, and it covers
    everything at once. ⏸
-2. **MIA encrypts her own data at rest (DEC-0126, proposed).** Every store's file encrypted with AES-256-GCM under
+2. **MIA encrypts her own data at rest (DEC-0126, approved; stage 1 done 2026-11-08).** `core/at_rest.py` seals
+   conversations, memories, notes, life notes, people and pets, finances, insurance, GPS tracks and the operating
+   journal now (the budget's files next, after the Plaid work); `python -m tools.data_key` shows the state, `recovery` the key
+   to keep in a password manager. The plan: every store's file encrypted with AES-256-GCM under
    one data key; the data key protected by Windows DPAPI (tied to the person's Windows sign-in, so nothing to type
    at start) on the PC and by the Android Keystore on the phone, with an optional MIA passphrase for "beyond".
    Done in the one place every store already writes through (`core/atomic_write.py`) plus a matching read, store by
@@ -62,13 +66,24 @@ most likely first:
    changes and phone links, append-only and outside the undo log; an alert on a sign-in from a new device, on
    repeated wrong passwords, a password change and a linked phone; Sign Out Everywhere. Still to add: exports and
    imports in the log.
-4. **Two-step sign-in for remote access** (a code from an authenticator app) for any sign-in that isn't the PC itself.
-5. **Dependency checks**: `pip-audit` and the Android build's dependency report on a schedule, findings to the Fix-It
-   Log.
-6. **Logs kept clean by test**: a test that fails if a password, token or card number pattern could reach a log line.
+4. ~~**Two-step sign-in for remote access.**~~ **Done 2026-11-08** (`core/two_step.py`, Settings → Sign-ins and
+   Security): TOTP (RFC 6238) codes from any authenticator app, asked after the password for every sign-in that
+   isn't the PC itself (and for linking a phone); on only once a code is confirmed; a used code never works twice;
+   wrong codes count toward the wait; the recovery code still gets you in and turns it off. Still to add: a QR code
+   for setup (no QR library yet; the key and an otpauth link work today).
+5. ~~**Dependency checks.**~~ **Done 2026-11-08** for Python (`tools/dependency_audit.py`, `core/dependency_audit.py`):
+   every installed package and version is checked against OSV (the database pip-audit uses) once a week in a process
+   of its own; findings come through the communication gate with the version that fixes each one. Only package names
+   and versions leave the PC. Run it any time: `python -m tools.dependency_audit`. Still to do: the Android build's
+   dependency report.
+6. ~~**Logs kept clean by test.**~~ **Done 2026-11-08** (`tests/test_no_secrets_in_logs.py`): every logging call in
+   MIA is read as code and fails the suite if it passes a value named like a secret; and a run through sign-in, a wrong
+   password, two-step setup, a new recovery code and a password change checks that none of those secrets appears in
+   any log line (`tests/test_server_app.py`).
 7. **Modules signed or reviewed** before they install; until then, only modules written here.
-8. **"Beyond"**: a Privacy page showing exactly what MIA holds about you and what she read to answer each question
-   (from What I Used and the traces), export and delete-everything that are real and tested, and a yearly review of
-   this file against the latest OWASP ASVS.
+8. **"Beyond"** (Your Data page done 2026-11-08, `core/your_data.py`, `web/yourdata.html`, Settings → Your Data):
+   every file MIA keeps about you shown with what it is, how many records and whether it's sealed, plus what she read
+   to answer your recent questions (from the traces); export and delete-your-account on the web behind your password,
+   real and tested (`core/account_data.py`). Still to do: a yearly review of this file against the latest OWASP ASVS.
 
 ⏸ marks a step waiting on Zac.

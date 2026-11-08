@@ -829,6 +829,9 @@ VRBO, Hostaway) as check-ins and check-outs, previewed and approved.
 **Claimed by the parity session (2026-11-08): the Sign-ins page** (web/signins.html, core/security_log.py,
 Settings → Sign-ins and Security): the security log, new-device and wrong-password alerts, sign out everywhere
 (docs/SECURITY.md step 3).
+**Claimed by the parity session (2026-11-08): the Your Data page** (web/yourdata.html, core/your_data.py,
+Settings → Your Data): what MIA keeps about you, store by store (how many, sealed or not), what she read for your
+recent answers, and export / delete account on the web (only in the Qt Settings until now; docs/SECURITY.md step 8).
 
 **Who builds what (2026-11-07 night, after Power and Recent Changes were each built twice at once):** screens
 (web pages, the canvas's look, the review's missing screens: Waiting For You, a plan's page, the Browser in the
@@ -1110,6 +1113,32 @@ it, and went with Claude's recommendations. The plan, in order:
 
 ## 3. Ideas parked for later (need their own planning pass)
 
+- **MIA on Zac's Amazon Echo** (Zac, 2026-11-08: "connect to my amazon echo later over wifi or something and wipe it
+  and put MIA on it"). Device identified 2026-11-08: a **1st-gen Echo Show** (the 7" screen model, 2017; "Snow" is
+  the white colour), Fire OS 5.5.6.9, serial G000 MW04 7422 0PPK. Findings:
+  - **Model confirmed by Zac 2026-11-08: the 7" rectangular wedge = the original 2017 Echo Show, Intel Atom
+    x5-Z8350.** This is the dead-end chip. The only Echo unlock that exists (amonet, a MediaTek bootrom exploit) does
+    not touch Intel, and no root or custom ROM has ever been published for this model — the XDA request thread is
+    only speculation. Its locked, signed Intel bootloader means there's no exploit to run even if bricking is fine.
+  - **Wiping it / custom ROM is not realistic for this model.** The sideload exploits that exist (XDA "Checkers"/
+    "Crown", amonet) are for the MediaTek 2019 Echo Show 5/8, Echo Spot and Echo Dot 2nd gen — not this one.
+  - **Stock sideload is blocked too.** The 1st-gen Echo Show has a hidden developer menu (tap the serial in Device
+    Options), but community reports say it has no ADB option and no "unknown sources" toggle, so you can't even
+    install an APK the normal way.
+  - **Its browser is too old for MIA's web UI.** Fire OS 5 ships Amazon Silk on an Android 5.1 engine; MIA's front
+    end (modern JS/CSS) won't render on it, so a browser-kiosk pointed at the PC won't work here.
+  - **What does work, ranked:** (1) pair it as a **Bluetooth speaker** for MIA on the PC/phone so she speaks through
+    it (simple, reversible, no risk; its far-field mic likely won't come back to MIA, only the speaker); (2) retire
+    it and give MIA her own voice on the **Raspberry Pi** with a mic array — the clean local-first path (DEC-0015
+    step 4). An Alexa skill is out: it sends speech to Amazon's cloud, against local-first.
+  - **Three honest paths, Zac to pick (2026-11-08):** (A) use it as-is — pair it as a Bluetooth speaker so MIA speaks
+    through it (works today, output only, its far-field mic won't come back to MIA); (B) gut it — since Zac is fine
+    bricking it, harvest the 7" panel + speaker + shell and drive them with a Raspberry Pi running MIA's web UI (the
+    Echo becomes MIA's body; the salvaged LCD's driver board is the hard part); (C) buy the right chassis — a used
+    MediaTek Echo Show 5 or 8 (2019) for ~$30, then amonet → LineageOS → MIA kiosk is the reliable "wall MIA screen".
+  - **MIA-side work that helps B and C (and a cheap tablet):** a kiosk/panel view of the web UI — full-screen, big
+    clock, due items, Talk — that runs on whatever screen wins. Worth building regardless of the Echo's fate.
+
 
 
 - **The ideas list: `docs/future/IDEAS.md`** (Zac, 2026-10-18): future
@@ -1119,6 +1148,9 @@ it, and went with Claude's recommendations. The plan, in order:
 
 
 ## 4. Known loose ends
+
+- **DEC-0126 next stages (Claude):** seal money and people next (add the file names to `at_rest.SEALED`, make their `_load` use `open_text`, grep for other readers of the names first: K-0105), then the rest of PERSONAL_STORES; the phone's Android Keystore; a Settings line showing sealing on/off and the recovery key behind the password. The optional passphrase waits on Zac.
+- **1,382 "Finished a book" life events (2026-11-08)** in data/life_events.jsonl from the decorator bug (fixed in 9bb99d47). History is never rewritten, so they stay unless Zac says to clear them.
 
 - **On Zac's PC (2026-10-20):** `pytest` used to save into the real
   `config\config.json`: one run left 49 test profiles (Alex, Faith) and

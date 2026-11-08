@@ -10,6 +10,10 @@ sandbox with no real browser/phone). pywebpush.webpush is mocked in
 the push-test cases, same as tests/test_web_push.py. Also the inbox's
 email endpoints (they answer plainly without a mailbox, and need a
 signed-in person), and a startup sound to hear before choosing it.
+No secret used in sign-in, two-step or a password change reaches a log
+line (docs/SECURITY.md step 6). The recovery key for sealed files is shown
+only on the PC itself, with the password, and logged (DEC-0126). Your Data
+lists the person's files and exports or deletes the account behind the password.
 
 Builds a real AppContext via core.core_runtime.build_core_context(),
 same fixture pattern as tests/test_core_runtime.py — proving
@@ -855,3 +859,101 @@ def test_sign_out_everywhere_ends_every_other_session_and_shows_on_the_log(clien
     assert client.get("/api/settings", headers=laptop).status_code == 401
     events = client.get("/api/security/log", headers=phone).json()["events"]
     assert events[0]["kind"] == "signed_out_everywhere" and events[0]["what"] == "Signed out everywhere"
+
+
+def test_two_step_sign_in_turns_on_with_a_code_then_asks_for_one_at_sign_in(client, context, monkeypatch):
+    """Start (password) gives a key; a code from it turns it on; signing in then asks for a code (401 marked
+    X-MIA-Two-Step), takes a right one, refuses it used again; turning it off needs a current code."""
+    from core import two_step
+
+    who = _profile_id(context)
+    auth = _signed_in(client, context)
+    started = client.post("/api/account/two-step/start", headers=auth, json={"password": "hunter2"}).json()
+    secret = started["key"].replace(" ", "")
+    assert started["link"].startswith("otpauth://totp/")
+    clock = {"now": time.time()}  # the real time: a clock far ahead would end this session (unused too long)
+    monkeypatch.setattr(two_step.time, "time", lambda: clock["now"])
+    code = lambda: two_step.code_at(secret, two_step.step_of(clock["now"]))  # noqa: E731
+    assert client.post("/api/account/two-step/confirm", headers=auth, json={"code": "000000"}).status_code == 400
+    assert client.post("/api/account/two-step/confirm", headers=auth, json={"code": code()}).json() == {"on": True}
+    asked = client.post("/api/login", json={"profile_id": who, "password": "hunter2"})
+    assert asked.status_code == 401 and asked.headers.get("X-MIA-Two-Step") == "required"
+    clock["now"] += 30
+    good = client.post("/api/login", json={"profile_id": who, "password": "hunter2", "code": code()})
+    assert good.status_code == 200
+    assert client.post("/api/login", json={"profile_id": who, "password": "hunter2", "code": code()}).status_code == 401
+    clock["now"] += 30
+    phone = {"Authorization": f"Bearer {good.json()['token']}"}
+    assert client.post("/api/account/two-step/off", headers=phone, json={"password": "hunter2", "code": code()}).json() == {"on": False}
+    assert client.post("/api/login", json={"profile_id": who, "password": "hunter2"}).status_code == 200
+
+
+def test_signing_in_and_changing_secrets_logs_none_of_them(client, context):
+    """No secret reaches a log (docs/SECURITY.md step 6): passwords right and wrong, the two-step key, the recovery
+    code and the session token stay out of every log line."""
+    import logging
+
+    from tests.test_no_secrets_in_logs import Keep
+
+    keep, root = Keep(), logging.getLogger()
+    old_level = root.level
+    root.addHandler(keep)
+    root.setLevel(logging.DEBUG)
+    try:
+        who = _profile_id(context)
+        client.post("/api/login", json={"profile_id": who, "password": "Wr0ng-Guess-Pass"})
+        token = client.post("/api/login", json={"profile_id": who, "password": "hunter2"}).json()["token"]
+        auth = {"Authorization": f"Bearer {token}"}
+        key = client.post("/api/account/two-step/start", headers=auth, json={"password": "hunter2"}).json()["key"]
+        code = client.post("/api/account/recovery-code", headers=auth, json={"password": "hunter2"}).json()["recovery_code"]
+        client.post("/api/account/password", headers=auth, json={"current": "hunter2", "new": "N3w-Secret-Pass"})
+    finally:
+        root.removeHandler(keep)
+        root.setLevel(old_level)
+    everything = "\n".join(keep.lines)
+    assert keep.lines, "nothing was logged at all: the check saw nothing"
+    for secret in ("hunter2", "Wr0ng-Guess-Pass", "N3w-Secret-Pass", token, key.replace(" ", ""), code):
+        assert secret not in everything, "a secret reached the log"
+
+
+def test_the_recovery_key_is_shown_only_on_this_pc_with_the_password_and_is_logged(context):
+    """From another device (or forwarded through Tailscale): refused. On the PC: a wrong password refused, the right
+    one gives the key (DEC-0126), and the security log says it was shown; the page reports sealing on."""
+    from core import at_rest
+
+    away = TestClient(server_app_module.create_app(context))
+    auth = _signed_in(away, context)
+    assert away.post("/api/security/recovery-key", headers=auth, json={"password": "hunter2"}).status_code == 403
+    here = TestClient(server_app_module.create_app(context), client=("127.0.0.1", 50000))
+    auth = _signed_in(here, context)
+    forwarded = dict(auth, **{"X-Forwarded-For": "100.64.0.7"})
+    assert here.post("/api/security/recovery-key", headers=forwarded, json={"password": "hunter2"}).status_code == 403
+    assert here.post("/api/security/recovery-key", headers=auth, json={"password": "nope"}).status_code == 400
+    shown = here.post("/api/security/recovery-key", headers=auth, json={"password": "hunter2"}).json()
+    assert shown == {"key": at_rest.recovery_key()}
+    page = here.get("/api/security/log", headers=auth).json()
+    assert page["on_this_pc"] and page["at_rest"]["sealing"] and page["events"][0]["kind"] == "data_key_shown"
+    assert not away.get("/api/security/log", headers=_signed_in(away, context)).json()["on_this_pc"]
+
+
+def test_your_data_lists_the_person_s_files_and_exports_and_deletes_behind_the_password(client, context):
+    """The page lists their files; export needs the password and gives a .zip (logged); delete is refused for the only
+    account, then, with a second account there, deletes this one and ends its sessions."""
+    import io
+    import zipfile
+
+    auth = _signed_in(client, context)
+    page = client.get("/api/your-data", headers=auth).json()
+    assert {"mine", "home", "answers", "sealing"} <= set(page)
+    assert client.post("/api/account/export", headers=auth, json={"password": "nope"}).status_code == 400
+    got = client.post("/api/account/export", headers=auth, json={"password": "hunter2"})
+    assert got.status_code == 200 and got.headers["content-type"] == "application/zip"
+    assert "profile.json" in zipfile.ZipFile(io.BytesIO(got.content)).namelist()
+    assert client.get("/api/security/log", headers=auth).json()["events"][0]["kind"] == "data_exported"
+    assert client.post("/api/account/delete", headers=auth, json={"password": "hunter2"}).status_code == 409
+    context.profiles.create_profile("Bo", password="pw1234", make_active=False, email="bo@example.com")
+    assert client.post("/api/account/delete", headers=auth, json={"password": "nope"}).status_code == 400
+    assert client.post("/api/account/delete", headers=auth, json={"password": "hunter2"}).json() == {
+        "deleted": True, "erased": False}
+    assert client.get("/api/your-data", headers=auth).status_code == 401
+    assert [p.name for p in context.profiles.list_profiles()] == ["Bo"]
