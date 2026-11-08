@@ -71,3 +71,13 @@ Styling rule — **the Public Square rule** (set by Zac, 2026-11-08, replacing m
 - Claude's feasibility handoff returns pipeline, generation-route, room-input and sync findings, plus a smallest-first-scene recommendation.
 - Chat's vision reply on MIA's role inside a generated place is on file before any Tier 2 design work.
 - No build starts before Zac approves DEC-0132.
+
+## Investigation addendum (muse, 2026-11-08, at Zac's request): Unity Spark
+
+Zac asked muse to investigate **Unity Spark** for this proposal. Findings, for claude's feasibility read:
+
+- **What it is:** an AI-assisted, browser-based game creator announced by Unity and Google on 2026-10-07, living inside Google's new Playground hub. Prompt → playable foundation → refine in a web editor ("Prompt it. Perfect it. Publish it"); AI agents and human editors work on the same project at once. It builds by *composing artist-made Unity Asset Store assets* (the catalog is enrolled by default, opt-out) rather than generating assets from scratch.
+- **Status:** not available. Closed beta planned late 2026, waitlist open; Playground itself is live but US-only, 18+. Demo games are playable on the Spark site; the flagship demo drew public mockery, and developer/artist backlash over the default catalog enrollment is on record.
+- **Why it is NOT the engine for DEC-0132:** (1) no VR/MR story at all — browser games for Playground, no Quest, no room scans, no passthrough; MIA's dive surface is the headset and her raw material is Zac's actual room. (2) No ownership: at launch a Spark project cannot be downloaded, exported to desktop Unity, or sold; places would live in Google's hub under Google's terms — the inverse of local-first and of DEC-0002's spirit. (3) Cloud-gated by definition (Google's platform, token-credit pricing not finalized), where DEC-0132 makes local GPU the default and cloud opt-in per service.
+- **What it teaches anyway:** (a) Direction validation — Unity + Google entering prompt-to-world in Oct 2026 makes Tier 1's premise industry table stakes, on the record, a month after Zac called it. (b) **Composition beats generation for coherence**: Spark's credible results come from AI assembling a quality asset catalog, not raw text-to-3D — direct support for weighting this proposal's composition route (templates + asset libraries she assembles, later including his own scanned objects) in the feasibility read. (c) Watch items: export or VR support ever appearing; Playground allowing sales (a possible future distribution toy for Lens Arcade experiments, never a dependency).
+- **Verdict:** watch list, not a building block. Tier 1's stack question (Unity desktop / WebXR / other, PC-built, local-first) stands as asked above.
