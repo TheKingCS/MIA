@@ -86,7 +86,10 @@
   function card(p) {
     const attention = p.tasks.filter((t) => t.needs_attention);
     const badge = p.badge || { text: p.status || p.type, tone: "" };
+    const pic = p.photo ? el("img", { class: "asset-thumb", alt: "", loading: "lazy" }) : null;
+    if (pic) MIA.image(p.photo).then((url) => { if (url) pic.src = url; else pic.remove(); });
     return el("article", { class: "glass asset-card property-card" + (attention.length || badge.tone === "attention" ? " attention" : "") },
+      pic,
       el("div", { class: "asset-head" },
         el("div", { class: "prop-name" }, el("h3", {}, p.name),
           el("span", { class: "dim" }, [p.location, p.type].filter(Boolean).join(" · "))),
@@ -107,7 +110,21 @@
         p.asset_id ? el("a", { class: "btn btn-ghost", href: "asset.html?id=" + encodeURIComponent(p.asset_id) }, "Upkeep")
           : btn("Track upkeep", "btn-ghost", () => act({ kind: "property.track_upkeep", params: { property_id: p.id } })),
         btn("Edit", "btn-ghost", () => edit(p)),
+        btn(p.photo ? "Change Photo" : "Add Photo", "btn-ghost", () => pickPhoto(p)),
         btn("Delete", "btn-ghost", () => act({ kind: "property.delete", params: { property_id: p.id } }))));
+  }
+
+  // A property's photo (2026-11-07, Q-0014): from the camera or the files, kept in the household's folder.
+  function pickPhoto(p) {
+    const input = el("input", { type: "file", accept: "image/jpeg,image/png,image/webp", hidden: true, onchange: async () => {
+      const file = input.files[0];
+      input.remove();
+      if (!file) return;
+      try { MIAShell.say("Saving the photo…"); MIAShell.say((await MIA.upload("/api/real-estate/property/" + encodeURIComponent(p.id) + "/photo", file)).message); MIAShell.refresh(); }
+      catch (e) { MIAShell.say(e.message); }
+    } });
+    document.body.append(input);
+    input.click();
   }
 
   const views = {

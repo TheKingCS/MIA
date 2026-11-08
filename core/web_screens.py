@@ -7,7 +7,7 @@ everything the PC app's screens show, assembled here so `web/` holds no
 logic. Served as `/api/kitchen` (and one recipe, `/api/kitchen/recipe/{id}`,
 its amounts scaled to `?servings=` by scale_factor and scaled_amount),
 `/api/workout` (with `weeks`, workouts and volume a week: weekly_training)
-and `/api/real-estate`;
+and `/api/real-estate` (a property's photo: `property_photo_url`);
 changes are the action kinds in core/kitchen_actions.py,
 core/workout_actions.py and core/estate_actions.py.
 
@@ -380,10 +380,17 @@ def property_badge(status: str, rent: float, income_month: float) -> dict:
     return {"text": status or "", "tone": tone}
 
 
+def property_photo_url(real_estate, prop) -> str:
+    """Where a screen fetches the property's photo ("" for none); the link changes with the file, so a new photo is
+    never shown stale."""
+    path = real_estate.property_photo_path(prop.property_id) if real_estate is not None else None
+    return f"/api/real-estate/property/{prop.property_id}/photo?v={path.name}" if path else ""
+
+
 def estate_page(context, today: Optional[date] = None) -> dict:
     """The data the Real Estate screen shows, assembled here (the web only draws it): each property with its value, loan and payment, this month's income and
     expenses and the year's net operating income (with a budget), its upkeep tasks, the missions linked to it, and
-    the word on its card (`property_badge`: Rent Due, Rented...), and for a rental or investment its straight-line
+    the word on its card (`property_badge`: Rent Due, Rented...), its photo (`property_photo_url`), and for a rental or investment its straight-line
     depreciation a year and so far (an estimate, not a tax figure).
     """
     from core import links as links_module
@@ -431,7 +438,7 @@ def estate_page(context, today: Optional[date] = None) -> dict:
             "payment": _r(payment), "cash_flow": _r(p.monthly_rent - payment) if p.monthly_rent else None,
             "income_month": _r(income_month), "expenses_month": _r(expenses_month), "noi_year": _r(noi_year),
             "asset_id": asset.asset_id if asset is not None else None, "tasks": tasks, "missions": related,
-            "notes": p.notes, "values": _values(RECORDS["property"], p),
+            "notes": p.notes, "values": _values(RECORDS["property"], p), "photo": property_photo_url(real_estate, p),
             "badge": property_badge(p.status, p.monthly_rent, income_month),
             # straight-line, rentals and investments only (core/real_estate_manager.py): an estimate, not a tax figure
             "depreciation": {"year": _r(annual_depreciation(p)), "so_far": _r(accumulated_depreciation(p, today))}

@@ -1891,6 +1891,41 @@ def create_app(context: AppContext) -> FastAPI:
                 raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
         return {"message": f"{asset.name} has a photo now."}
 
+    # A property's photo (2026-11-07, Q-0014): on its Real Estate card.
+    @app.get("/api/real-estate/property/{property_id}/photo")
+    def property_photo(property_id: str, profile_id: str = Depends(require_profile_id)):
+        """The property's photo file (404 when it has none)."""
+        from fastapi.responses import FileResponse
+
+        estate = getattr(view_for(context, profile_id), "real_estate", None)
+        path = estate.property_photo_path(property_id) if estate is not None else None
+        if path is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "No photo for that.")
+        return FileResponse(path, headers={"Cache-Control": "private, max-age=86400"})
+
+    @app.post("/api/real-estate/property/{property_id}/photo")
+    async def property_photo_upload(property_id: str, request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Sets the property's photo from the picture sent (JPG, PNG or WebP, up to 10 MB)."""
+        estate = getattr(view_for(context, profile_id), "real_estate", None)
+        prop = estate.get_property(property_id) if estate is not None else None
+        if prop is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "There's no property like that.")
+        data = await request.body()
+        if not data:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "No picture received.")
+        if len(data) > 10 * 1024 * 1024:
+            raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "That picture is over 10 MB.")
+        name = Path(unquote(request.headers.get("x-filename", "photo.jpg"))).name.strip() or "photo.jpg"
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / name
+            source.write_bytes(data)
+            try:
+                with app.state.turn_lock:
+                    estate.set_property_photo(property_id, source)
+            except ValueError as problem:
+                raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
+        return {"message": f"{prop.name} has a photo now."}
+
     # Journal, Workshop, Expeditions, Music and Files (core/web_more.py,
     # Zac, 2026-10-16: on the phone they only opened a chat).
     @app.get("/api/journal")

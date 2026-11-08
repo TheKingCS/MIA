@@ -67,7 +67,8 @@ PROPERTY_STATUSES = ["Rented", "Vacant", "For Sale", "For Rent", "Owner Occupied
 class Property:
     """A property the household owns: its type and status, purchase date and price, a current value they update by hand,
     the mortgage (balance, original loan, rate, term, start), land value and when it was placed in service (for
-    depreciation), the business entity that owns it, its maintenance asset, where it is, what it rents for, notes.
+    depreciation), the business entity that owns it, its maintenance asset, where it is, what it rents for, notes,
+    its photo.
     """
     property_id: str
     name: str  # "123 Main St", "Lake Cabin"
@@ -100,9 +101,10 @@ class Property:
     location: str = ""  # "Town, State": never needed, never shown unless entered
     status: str = ""  # one of PROPERTY_STATUSES, or ""
     monthly_rent: float = 0.0  # what it rents for (expected), per month
+    photo: str = ""  # 2026-11-07 (Q-0014): a bare filename under the household's property_photos/ ("" = none)
 
     def to_dict(self) -> dict:
-        """The property as saved in properties.json."""
+        """The property as saved in properties.json (its photo too, by file name)."""
         return {
             "property_id": self.property_id, "name": self.name, "property_type": self.property_type,
             "purchase_date": self.purchase_date, "purchase_price": self.purchase_price,
@@ -114,11 +116,12 @@ class Property:
             "loan_term_months": self.loan_term_months, "loan_start_date": self.loan_start_date,
             "notes": self.notes, "created_at": self.created_at,
             "location": self.location, "status": self.status, "monthly_rent": self.monthly_rent,
+            "photo": self.photo,
         }
 
     @staticmethod
     def from_dict(data: dict) -> "Property":
-        """A property from its saved dict; missing fields take their defaults."""
+        """A property from its saved dict; missing fields (a photo, on older files) take their defaults."""
         return Property(
             property_id=data.get("property_id", uuid.uuid4().hex[:10]),
             name=data.get("name", ""),
@@ -140,6 +143,7 @@ class Property:
             location=data.get("location", "") or "",
             status=data.get("status", "") or "",
             monthly_rent=float(data.get("monthly_rent", 0.0) or 0.0),
+            photo=data.get("photo", "") or "",
         )
 
 
@@ -333,7 +337,7 @@ def _in_range(entry_date: str, start_date: Optional[str], end_date: Optional[str
 class RealEstateManager:
     """The household's properties (properties.json, written through atomic_write_text). Rent and property costs live in
     the Budget, tagged to the property, so they're never kept twice; every figure (NOI, cap rate...) is worked out
-    when asked.
+    when asked. Each property's photo is in the household's property_photos/ folder (2026-11-07).
     """
     def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
         # Whose data: a household's own folder (core/personal_data.py), or data/ by default.
@@ -455,6 +459,35 @@ class RealEstateManager:
         own linked Tasks)."""
         self._properties = [p for p in self._properties if p.property_id != property_id]
         self._save()
+
+    PHOTO_TYPES = (".jpg", ".jpeg", ".png", ".webp")
+
+    def property_photo_path(self, property_id: str) -> Optional[Path]:
+        """The property's photo in the household's property_photos/ folder, or None when it has none or the file is gone
+        (only the stored name's last part is used, so it can't point outside the folder)."""
+        prop = self.get_property(property_id)
+        if prop is None or not prop.photo:
+            return None
+        path = self.data_dir / "property_photos" / Path(prop.photo).name
+        return path if path.is_file() else None
+
+    def set_property_photo(self, property_id: str, source: Path) -> str:
+        """Copies a picture in as the property's photo, named by its id and the time (the earlier file is kept);
+        ValueError for an unknown property or a file that isn't a JPG, PNG or WebP."""
+        import shutil
+
+        prop = self.get_property(property_id)
+        if prop is None:
+            raise ValueError(f"No property with id '{property_id}'.")
+        ext = Path(source).suffix.lower()
+        if ext not in self.PHOTO_TYPES:
+            raise ValueError("A photo has to be a JPG, PNG or WebP picture.")
+        folder = self.data_dir / "property_photos"
+        folder.mkdir(parents=True, exist_ok=True)
+        name = f"{prop.property_id}-{datetime.now():%Y%m%d%H%M%S}{ext}"
+        shutil.copyfile(source, folder / name)
+        self.update_property(property_id, photo=name)
+        return name
 
     def get_property(self, property_id: str) -> Optional[Property]:
         """The property with this id, or None."""

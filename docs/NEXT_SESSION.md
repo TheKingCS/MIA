@@ -979,8 +979,7 @@ working screen on the frame, for Muse to restyle:
 4. ~~Kitchen, Workout, Real Estate~~ **done 2026-10-06** (Zac asked for
    them next; still to do: recipe ratings and photos, rest timer and
    guided sessions, depreciation and selling a property).
-5. Photo fields for assets, recipes and properties (Q-0014, Muse said yes; recipes 2026-10-16, assets 2026-11-07,
-   properties still to do),
+5. Photo fields for assets, recipes and properties (Q-0014, Muse said yes; recipes 2026-10-16, assets and properties 2026-11-07: done),
    stored in each person's data folder, never `web/img/` (that's the public repo).
 6. Calendar, Notes, Inbox, full Assistant chat; then the rest of the 59 rows.
 Ctrl+K search on the web: built 2026-11-07 (core/web_search.py).
