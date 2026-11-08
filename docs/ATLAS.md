@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1288 files, 278,190 lines; 1288 files describe themselves; 15,238 of 15,815 classes and functions are documented.
+1288 files, 278,309 lines; 1288 files describe themselves; 15,240 of 15,817 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-480 files, 131,719 lines; 7,078 of 7,164 classes and functions documented
+480 files, 131,745 lines; 7,079 of 7,165 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -765,7 +765,7 @@
 
 ## tests/: the test suite: what each part must do
 
-439 files, 73,200 lines; 5,874 of 6,365 classes and functions documented
+439 files, 73,219 lines; 5,875 of 6,366 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1155,7 +1155,7 @@
 - `tests/test_web_connections.py`: Connections on the web and by voice (DEC-0146): "don't bring that up" settles a connection as declined and keeps its thing quiet past the cooldown, until it's allowed again.
 - `tests/test_web_conversations.py`: Past conversations on the web: listed newest first with what's in them, one read, one picked back up, one deleted through its action.
 - `tests/test_web_directions.py`: My Directions (DEC-0141/0143): the screen, its direction.* actions and the voice tools that run the same actions.
-- `tests/test_web_environments.py`: An area's own space (DEC-0130 M3, core/web_environments.py): the Garage environment's bays come from the Garage's own assets (never the house's), most overdue first; the parts running low are gathered across them, each once with what uses it; the hub carries the environment for the Garage and none f
+- `tests/test_web_environments.py`: An area's own space (DEC-0130 M3, core/web_environments.py): the Garage environment's bays come from the Garage's own assets (never the house's), most overdue first; the parts running low are gathered across them, each once with what uses it; the hub carries the Garage's own space, and every other a
 - `tests/test_web_equipment.py`: DEC-0017 (2026-10-06): Garage, Property, Greenhouse and Maintenance on the web, and one page per asset (Zac's mower concept): the data (core/web_equipment.py) and every change as an action kind (core/equipment_actions.py, maintenance.done with a meter value); and the design canvas's Garage card and 
 - `tests/test_web_field_kit.py`: The Field Kit on the web (DEC-0125, the design canvas's Field Kit, DEC-0113: core/web_field_kit.py): what's plugged into the computer, a hash's kind and a subnet worked out in core, and the script library to read and copy; doing things to the computer stays on the PC.
 - `tests/test_web_fitness.py`: The fitness screens' data (core/web_fitness.py, DEC-0020): today, the weight line, missions and "is it working?" in one plain sentence, the meal-plan week, and the endpoints. Placeholder values. *(3 undocumented)*
@@ -1209,7 +1209,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-100 files, 18,205 lines
+100 files, 18,279 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), and what she knows about you, linking to where it's kept. Read onl
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she

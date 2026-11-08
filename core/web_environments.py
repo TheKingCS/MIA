@@ -12,7 +12,9 @@ the others keep their tiles until their turn. Garage is first.
   next; from core/web_equipment.equipment_page), what needs you, the parts
   running low or out across every asset (core/asset_parts.py), and the
   bench's tools (Toolbox, Look, Workshop, Projects, the parts inventory).
-- `ENVIRONMENTS`: area id -> its builder.
+- `room(context, area_id, today)`: every other area, as a room of its apps
+  round MIA's orb (doors with what waits in each, and what needs you).
+- `ENVIRONMENTS`: area id -> its own builder; the rest get `room`.
 
 Where the graphics card allows, the page draws the Garage as a 3D room on the
 Nexus's engine (web/hub.js garageRoom, web/nexus3d.js): the bays round MIA's
@@ -78,16 +80,40 @@ def garage(context, today: Optional[date] = None) -> dict:
             "parts": low_parts(context, [b["id"] for b in bays]), "bench": list(BENCH)}
 
 
+def room(context, area_id: str, today: Optional[date] = None) -> Optional[dict]:
+    """Any other area as a room (DEC-0130 M5's first pass, 2026-11-08): its apps and pages stand round MIA's orb as
+    doors, each with how many of today's overdue or due items wait in it, and the area's list of what needs you (today's
+    overdue and due items whose app is in the area, at most six). The page draws it only in the Spatial look where the
+    graphics card allows; the Cards look and every other device keep the area's tiles. None for an unknown area."""
+    from core.web_areas import AREAS_BY_ID, _entries
+
+    area = AREAS_BY_ID.get(area_id)
+    if area is None:
+        return None
+    from core.web_nexus import _today
+
+    today = today or date.today()
+    items = [i for i in _today(context, today) if i.get("when") in ("overdue", "today")]
+    doors = []
+    for entry in _entries(context, area):
+        mine = [i for i in items if i.get("module_id") == entry["id"]]
+        doors.append({**entry, "needs": len(mine)})
+    ids = {d["id"] for d in doors}
+    needs = [{"title": i.get("title", ""), "text": i.get("detail") or ("overdue" if i["when"] == "overdue" else "today"),
+              "app": i.get("module_id", ""), "page": next((d["page"] for d in doors if d["id"] == i.get("module_id")), "")}
+             for i in items if i.get("module_id") in ids][:6]
+    return {"kind": "room", "available": bool(doors), "doors": doors, "needs": needs}
+
+
 ENVIRONMENTS = {"garage": garage}
 
 
 def environment(context, area_id: str, today: Optional[date] = None) -> Optional[dict]:
-    """An area's environment, or None for one that still uses its tiles (or when building it fails: the tiles show)."""
+    """An area's environment: its own (the Garage's workshop), else the room of its apps (`room`); None when building it
+    fails, so the hub's tiles show."""
     build = ENVIRONMENTS.get(area_id)
-    if build is None:
-        return None
     try:
-        return build(context, today)
+        return build(context, today) if build is not None else room(context, area_id, today)
     except Exception:
         log.exception("Environment %s failed; the hub's tiles show instead", area_id)
         return None
