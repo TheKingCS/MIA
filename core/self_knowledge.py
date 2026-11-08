@@ -8,13 +8,30 @@ What MIA can honestly say about herself — grounded in real data, never guessed
 improvising — the same "facts in code, the model only phrases" rule the rest of MIA follows, and the fix for the
 self-description drift the capabilities doc warns about.
 
-Each function returns a plain, first-person line or two MIA can speak or build on. Everything is read defensively, so a
+Each function returns a plain, first-person line or two MIA can speak or build on. `grounding_block()` puts them
+into the system message of a how-to question about herself (`about_herself()`, core/assistant_chat.py), so her
+spoken answers about herself come from these facts too. Everything is read defensively, so a
 missing source is simply left out rather than crashing the answer.
 """
 
 from __future__ import annotations
 
+import re
+import time
 from typing import Optional
+
+_ABOUT_ME_TTL = 600  # seconds: her scale doesn't change mid-conversation, and reading it takes about half a second
+_about_me_cache: dict = {"at": 0.0, "text": ""}
+
+# A question about MIA herself, not about using one of her apps: how she works, learns, remembers, is built, what
+# she's working on. "How do you add a bill?" is a how-to about an app, so it's left out.
+_ABOUT_HER = re.compile(
+    r"\b(?:how (?:do|does|did|can|will) (?:you|mia) (?:work|learn|think|remember|improve|grow|know|decide|get better)"
+    r"|what (?:are|is) (?:you|mia) (?:working on|learning|studying|focused on|made of|built (?:on|from|with))"
+    r"|how (?:are|is) (?:you|mia) (?:built|made|trained|learning|improving)"
+    r"|(?:your|mia's) (?:memory|brain|model|training|focus|night school|loops|code|architecture|own code)"
+    r"|(?:do|can|does) (?:you|mia) (?:learn|remember|think|improve|grow|train|get smarter))\b",
+    re.IGNORECASE)
 
 
 def _safe(fn, default=""):
@@ -82,3 +99,31 @@ def what_i_know_about_you(context) -> str:
 def self_summary(context) -> str:
     """The three together: what she is, what she's working on, and what she knows about the person."""
     return "\n\n".join([about_me(), my_focus(), what_i_know_about_you(context)])
+
+
+def about_herself(prompt: str) -> bool:
+    """Pure logic. Whether a question is about MIA herself (how she works, learns, remembers, is built, what she's
+    working on), as opposed to how to use one of her apps."""
+    return bool(_ABOUT_HER.search(prompt or ""))
+
+
+def _about_me_kept() -> str:
+    """`about_me()` kept for _ABOUT_ME_TTL, for answers inside a turn (reading it takes about half a second); a
+    failure isn't kept, so the next question tries again. The About page reads `about_me()` live."""
+    if _about_me_cache["text"] and time.monotonic() - _about_me_cache["at"] < _ABOUT_ME_TTL:
+        return _about_me_cache["text"]
+    text = _safe(about_me)
+    if text:
+        _about_me_cache.update(at=time.monotonic(), text=text)
+    return text
+
+
+def grounding_block(context) -> str:
+    """Her own facts for a how-to question about herself (DEC-0142), so the answer comes from the records rather than
+    the model improvising about itself: what she is, what she's working on, and what she knows about the person. ""
+    when nothing can be read."""
+    facts = [x for x in (_about_me_kept(), _safe(my_focus), _safe(lambda: what_i_know_about_you(context))) if x]
+    if not facts:
+        return ""
+    return ("What's true about you, from your own records. Answer about yourself from these, never from a guess:\n"
+            + "\n".join(f"- {x}" for x in facts))

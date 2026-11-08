@@ -550,7 +550,9 @@ def build_system_message(context, is_action_request: bool, is_teaching_request: 
     guidance line (`core.personality.deep_line`), and a light one, now
     and then by chance, a nudge toward one line of wit (`humor_for`), and
     once it's been learned, the person's preferred answer style
-    (`core.response_style.style_for`, DEC-0138 — empty until they've picked).
+    (`core.response_style.style_for`, DEC-0138 — empty until they've picked), and, on an
+    everyday turn, a connection she's holding (DEC-0146). A how-to question about MIA herself also
+    carries her own facts (`core.self_knowledge.grounding_block`, DEC-0142).
     """
     if is_action_request:
         return _IDENTITY_LINE
@@ -590,6 +592,13 @@ def build_system_message(context, is_action_request: bool, is_teaching_request: 
             linked = connections_for(context)  # a tie to something started weeks ago, raised once if it fits
             if linked:
                 parts.append(linked)
+    if is_help_question:  # a how-to question about MIA herself gets her own facts (DEC-0142)
+        from core.self_knowledge import about_herself, grounding_block
+
+        if about_herself(prompt):
+            facts = grounding_block(context)
+            if facts:
+                parts.append(facts)
     parts.append(closing_instruction)
     return "\n\n".join(parts)
 

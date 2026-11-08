@@ -655,3 +655,17 @@ def test_a_question_with_no_matching_material_is_sent_as_itself():
     assert messages[-1] == {"role": "user", "content": "What should I make for dinner?"}
     messages, _ = build_chat_request(context, _empty_conversation(), "How do I make MIA fly a drone?")
     assert messages[-1]["content"].startswith("No reference material matched")  # a how-to keeps its honest note
+
+
+def test_a_how_to_question_about_mia_herself_carries_her_own_facts(monkeypatch):
+    """DEC-0142: "how do you learn?" is answered from her records (core/self_knowledge.py); a how-to about an app
+    isn't given them."""
+    from core import self_knowledge
+    from core.assistant_chat import build_system_message
+
+    monkeypatch.setattr(self_knowledge, "grounding_block", lambda context: "What's true about you: FACTS")
+    context = _FakeContext(assistant_actions=_FakeAssistantActions(keywords=[], tools=[]), device_help=None)
+    about = build_system_message(context, is_action_request=False, prompt="How do you learn?", is_help_question=True)
+    assert "What's true about you: FACTS" in about
+    app = build_system_message(context, is_action_request=False, prompt="How do I add a bill?", is_help_question=True)
+    assert "FACTS" not in app

@@ -4,7 +4,8 @@ tests.test_self_knowledge
 
 What MIA can honestly say about herself (core/self_knowledge.py): grounded in real data, never guessed. `about_me`
 reports her real scale from the system map; `my_focus` reflects her Night School directive; `what_i_know_about_you`
-is honest about how much she knows; and a missing source is a quiet gap, not a crash.
+is honest about how much she knows; a missing source is a quiet gap, not a crash; and a question about her (not
+about one of her apps) gets these facts, her scale read once and kept a while for answers.
 """
 
 from types import SimpleNamespace
@@ -49,3 +50,33 @@ def test_a_missing_source_is_a_quiet_gap_not_a_crash():
     broken = SimpleNamespace(direction=SimpleNamespace(active=lambda: (_ for _ in ()).throw(RuntimeError("boom"))))
     assert self_knowledge.what_i_know_about_you(broken)  # no raise, returns the honest default
     assert self_knowledge.self_summary(SimpleNamespace())  # the whole summary still assembles
+
+
+def test_a_question_about_her_is_told_apart_from_a_how_to_about_an_app():
+    for q in ("How do you learn?", "What are you working on?", "How does MIA remember things?",
+              "Tell me about your night school", "Can you learn from me?"):
+        assert self_knowledge.about_herself(q), q
+    for q in ("How do I add a bill?", "How do you add a bill?", "What should I make for dinner?", ""):
+        assert not self_knowledge.about_herself(q), q
+
+
+def test_her_facts_for_a_question_about_herself_are_from_the_records(monkeypatch):
+    from core import night_school
+
+    monkeypatch.setattr(night_school, "settings", lambda *a, **k: {"directive": "Become a top-tier AI."})
+    block = self_knowledge.grounding_block(SimpleNamespace())
+    assert block.startswith("What's true about you, from your own records.")
+    assert "I'm MIA" in block and "Become a top-tier AI." in block and "still getting to know you" in block
+
+
+def test_her_scale_is_read_once_and_kept_a_while(monkeypatch):
+    from core import system_map
+
+    calls = []
+    real = system_map.assemble
+    monkeypatch.setattr(system_map, "assemble", lambda *a, **k: calls.append(1) or real(*a, **k))
+    monkeypatch.setitem(self_knowledge._about_me_cache, "text", "")
+    first = self_knowledge._about_me_kept()
+    assert self_knowledge._about_me_kept() == first and len(calls) == 1
+    self_knowledge.about_me()  # the About page's own read stays live
+    assert len(calls) == 2

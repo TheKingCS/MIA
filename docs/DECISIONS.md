@@ -2349,6 +2349,10 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   `what_i_know_about_you(context)` is grounded in the person's own stored directions, memories and learned answer
   style, honest about how little it knows when there's little. Every source is read defensively, so a gap is quiet,
   never a crash. Next: feed these into the "how-to question about MIA" grounding so her spoken answers use them.
+  **Done 2026-11-08 (claude, engine):** a how-to question about MIA herself (`about_herself`: how she works, learns,
+  remembers, is built, what she's working on; not a how-to about one of her apps) gets `grounding_block()` in its
+  system message: her scale, her focus and what she knows about the person, "answer about yourself from these, never
+  from a guess". The scale is kept ten minutes for answers (half a second to read); the About page reads it live.
 - Related: DEC-0139 (system map), DEC-0100 (night school), DEC-0141 (directions), DEC-0138 (answer style)
 
 ### DEC-0143: MIA reminds you of what you can already go do, and seeds the made life

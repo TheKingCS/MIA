@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1297 files, 281,093 lines; 1297 files describe themselves; 15,835 of 15,929 classes and functions are documented.
+1297 files, 281,192 lines; 1297 files describe themselves; 15,842 of 15,936 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-483 files, 133,050 lines; 7,132 of 7,218 classes and functions documented
+483 files, 133,104 lines; 7,135 of 7,221 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -769,7 +769,7 @@
 
 ## tests/: the test suite: what each part must do
 
-443 files, 74,425 lines; 6,416 of 6,424 classes and functions documented
+443 files, 74,470 lines; 6,420 of 6,428 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1094,7 +1094,7 @@
 - `tests/test_security_cams.py`: Security (DEC-0033): cameras on the home network only, logins kept apart and never shown, frames from a picture address or an RTSP stream, saved pictures, grown-ups only.
 - `tests/test_security_log.py`: The security log (core/security_log.py, docs/SECURITY.md step 3): devices said in words, events kept per account newest first, never a password; a sign-in from a new device and repeated wrong passwords alert the account's owner; and "sign out everywhere" ends every other session.
 - `tests/test_self_audit.py`: MIA's weekly self-audit (core/self_audit.py) and her best-practices series (core/practices.py), DEC-0108: what the code audit finds, what the interconnection audit finds and leaves out by design, the weekly run's report and tasks, and the series written from the principles and the vault.
-- `tests/test_self_knowledge.py`: What MIA can honestly say about herself (core/self_knowledge.py): grounded in real data, never guessed. `about_me` reports her real scale from the system map; `my_focus` reflects her Night School directive; `what_i_know_about_you` is honest about how much she knows; and a missing source is a quiet g
+- `tests/test_self_knowledge.py`: What MIA can honestly say about herself (core/self_knowledge.py): grounded in real data, never guessed. `about_me` reports her real scale from the system map; `my_focus` reflects her Night School directive; `what_i_know_about_you` is honest about how much she knows; a missing source is a quiet gap, 
 - `tests/test_self_report.py`: MIA's weekly self-report and the standing mission (build plan step 6): what got better and what's slipping, from the loops' own history; Sundays, to the PC's owner only, through the gate; the "Keep MIA healthy" mission works the loops' tasks.
 - `tests/test_server_app.py`: Unit tests for server.app — exercised via FastAPI's TestClient, a real in-process HTTP client that needs no running server, no real network, and no HTTPS (see the Mobile Phase 1 plan's verification section for why this is a legitimate, complete way to verify this code from a sandbox with no real bro
 - `tests/test_show_off.py`: Show-off mode (DEC-0031): a tour of MIA on the real profile that never shows money, the journal, memories, health or other people.
