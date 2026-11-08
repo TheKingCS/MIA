@@ -68,7 +68,7 @@ APPS: tuple[App, ...] = (
         "MIA herself: her presence, today's one thing, and a chat with her.", LIFE, (), "How are you, MIA?"),
     App("dashboard", "Dashboard", "📊", "Your life. In sync.", "dashboard.html",
         "Recent activity, active missions, memories, and upcoming items at a glance.", LIFE,
-        ("today", "alarms", "projects", "life_events", "links", "why"), "What's on today?"),
+        ("today", "alarms", "projects", "life_events", "links", "why", "directions"), "What's on today?"),
     App("dungeon", "The Dungeon", "🏰", "Clear the run. Bank the loot.", "dungeon.html",
         "Work as a dungeon you loot every day: runs, hard mode, overtime bosses, projected and banked loot (DEC-0046).",
         MONEY, ("dungeon", "loop"), "How much loot this week?"),

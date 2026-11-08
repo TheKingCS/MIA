@@ -70,8 +70,6 @@
   "tests/test_discovery_manager.py": 4,
   "tests/test_discovery_tool.py": 1,
   "tests/test_dungeon_master.py": 1,
-  "tests/test_email_extract.py": 1,
-  "tests/test_email_inbox.py": 1,
   "tests/test_energy_manager.py": 3,
   "tests/test_event_catalog.py": 1,
   "tests/test_expedition_manager.py": 2,

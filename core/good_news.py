@@ -375,10 +375,13 @@ def episode(day: Optional[date] = None) -> Optional[dict]:
 
 
 def make(day: Optional[date] = None, fetch: Callable[[str], str] = _fetch, flagged: tuple = ()) -> dict:
-    """Today's stories, fetched, judged, checked against each other and kept, with every personality's script."""
+    """The day's stories, fetched, judged, checked against each other and kept, with every personality's script.
+    Fresh means published within KEEP_DAYS before the end of that day (not before now), so an episode made for a
+    given day keeps the same stories whenever it's made."""
     day = day or date.today()
     items, failed = fetch_all(fetch)
-    since = (datetime.now(timezone.utc) - timedelta(days=KEEP_DAYS)).isoformat()
+    day_end = datetime(day.year, day.month, day.day, tzinfo=timezone.utc) + timedelta(days=1)
+    since = (day_end - timedelta(days=KEEP_DAYS + 1)).isoformat()
     fresh = [i for i in items if not i["published"] or i["published"] >= since]
     stories = pick(gather(fresh), flagged=flagged)
     record = {"day": day.isoformat(), "made": datetime.now().isoformat(timespec="seconds"), "items": len(items),

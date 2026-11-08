@@ -12,7 +12,8 @@ something, she offers the make/restore/upcycle angle; when it's food, the from-s
 overrides the quick answer the person actually asked for, and it's never preachy.
 
 A personal store (`directions.json`), sealed at rest (DEC-0126). The directions themselves live only in the person's
-own profile — no one's values are hard-coded here. Setting one is the person's own act (`add`), undoable.
+own profile — no one's values are hard-coded here. Setting, changing, pausing and letting one go are the person's
+own acts (`add`, `edit`, `set_active`, `remove`; the `direction.*` actions in core/web_directions.py), undoable.
 """
 
 from __future__ import annotations
@@ -112,6 +113,38 @@ class DirectionBook:
             raise ValueError(f"No direction with id '{direction_id}'.")
         d.active = active
         self._save()
+        return d
+
+    def edit(self, direction_id: str, title: Optional[str] = None, statement: Optional[str] = None,
+             encourage: Optional[str] = None, nudges: Optional[list] = None) -> Direction:
+        """Change a direction's words (only the fields given; ValueError for an unknown one or an empty title or
+        statement). The person's own act, from My Directions or by voice."""
+        d = self.get(direction_id)
+        if d is None:
+            raise ValueError(f"No direction with id '{direction_id}'.")
+        if title is not None:
+            if not title.strip():
+                raise ValueError("A direction needs a name.")
+            d.title = title.strip()
+        if statement is not None:
+            if not statement.strip():
+                raise ValueError("Say the direction in your own words.")
+            d.statement = statement.strip()
+        if encourage is not None:
+            d.encourage = encourage.strip()
+        if nudges is not None:
+            d.nudges = [str(n).strip() for n in nudges if str(n).strip()]
+        self._save()
+        return d
+
+    def remove(self, direction_id: str) -> Direction:
+        """Let a direction go for good (ValueError for an unknown one); undo restores the file."""
+        d = self.get(direction_id)
+        if d is None:
+            raise ValueError(f"No direction with id '{direction_id}'.")
+        self.directions = [x for x in self.directions if x.direction_id != direction_id]
+        self._save()
+        life_events.record(self, "direction_dropped", d.title, [f"direction:{d.direction_id}"])
         return d
 
     def get(self, direction_id: str) -> Optional[Direction]:

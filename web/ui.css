@@ -1781,3 +1781,27 @@ a.comms-row:hover .row-title { color: var(--accent); }
 .wallet-pics { display: grid; gap: 10px; }
 .wallet-pics img { width: 100%; border-radius: 10px; background: #fff; }
 .wallet-show-num { font-family: var(--font-mono); font-size: clamp(22px, 7vw, 34px); letter-spacing: .1em; margin: 6px 0; user-select: all; }
+
+/* My Directions (DEC-0141/0143, web/directions.html): the seed and within-reach cards, then a card per direction. */
+.dir-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: var(--gap); margin-bottom: calc(var(--gap) + 4px); }
+.dir-card { display: grid; gap: 6px; padding: 14px 16px; border-left: 2px solid rgba(var(--rgb-accent), 0.55); }
+.dir-card > .pw-label { margin: 0; }
+.dir-card-line { margin: 0; font-size: 16px; line-height: 1.45; }
+.dir-card-foot { margin: 0; font-size: 12px; }
+.dir-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: calc(var(--gap) + 4px); }
+.dir-list { display: grid; gap: 10px; }
+.dir-list > .pw-label { margin: 0; }
+.dir-item { display: grid; gap: 8px; padding: 14px 16px; }
+.dir-item.paused { opacity: 0.72; }
+.dir-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.dir-title { margin: 0; font-size: 17px; }
+.dir-state { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); }
+.dir-state.on { color: rgb(var(--rgb-accent)); }
+.dir-words { margin: 0; font-size: 15px; line-height: 1.5; }
+.dir-how { margin: 0; font-size: 14px; }
+.dir-nudges { display: flex; flex-wrap: wrap; gap: 6px; }
+.dir-nudge { font-size: 12px; padding: 3px 9px; border-radius: 999px; border: 1px solid rgba(var(--rgb-accent), 0.3); color: var(--text-dim); }
+.dir-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.dir-foot .dim { font-size: 12px; }
+.dir-foot .row-buttons { margin: 0; }
+.dir-say { font-size: var(--text-sm); margin-top: calc(var(--gap) + 4px); }
