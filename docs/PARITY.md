@@ -31,7 +31,7 @@ Of 50 apps: by voice 49, on the PC 50, on the phone 50, on the glasses 46.
 | Character | yes | yes | yes | yes |
 | Reward Shop | yes | yes | yes | yes |
 | Observations | yes | yes | yes | yes |
-| People & Pets | yes | yes | yes | yes |
+| People | yes | yes | yes | yes |
 | Journal | yes | yes | yes | yes |
 | Classroom | yes | yes | yes | yes |
 | Inbox | yes | yes | yes | yes |

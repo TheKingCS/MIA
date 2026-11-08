@@ -247,28 +247,32 @@
     const link = (a) => el("a", { class: "nav", href: a.page, "aria-current": a.id === here ? "page" : null },
       el("span", { class: "ico", "aria-hidden": "true" }, icon(a.id, a.icon)), el("span", { class: "label" }, a.name));
     const byId = Object.fromEntries(shell.apps.map((a) => [a.id, a]));
-    const top = ["web_home", "module_browser"].map((id) => byId[id]).filter(Boolean);
-    const pinned = (shell.favorites || []).map((id) => byId[id]).filter((a) => a && !top.includes(a));
-    const rest = shell.apps.filter((a) => !top.includes(a));
-    const out = top.map(link);
-    // Start Here (2026-11-07, master's grouped sidebar) right under Home and Apps.
-    out.splice(1, 0, el("a", { class: "nav side-start", href: "start.html", "aria-current": here === "start" ? "page" : null },
+    const out = [];
+    // The Dashboard first, then Start Here and Apps (DEC-0129).
+    if (byId.web_home) out.push(link({ ...byId.web_home, name: "Dashboard" }));
+    out.push(el("a", { class: "nav side-start", href: "start.html", "aria-current": here === "start" ? "page" : null },
       el("span", { class: "ico", "aria-hidden": "true" }, "?"), el("span", { class: "label" }, "Start Here")));
+    const pinned = (shell.favorites || []).map((id) => byId[id]).filter((a) => a && a.id !== "web_home");
     if (pinned.length) out.push(el("div", { class: "side-section" }, el("span", { class: "side-head" }, "Pinned"), ...pinned.map(link)));
-    const groups = shell.groups && shell.groups.length ? shell.groups : [...new Set(rest.map((a) => a.group || ""))];
-    groups.forEach((g) => {
-      const apps = rest.filter((a) => (a.group || "") === g);
-      if (!apps.length) return;
-      // Open when this page is in it, or when you left it open (remembered per group, as master's sidebar does).
-      const key = "mia.side." + (g || "More");
-      let open = apps.some((a) => a.id === here);
-      try { open = open || localStorage.getItem(key) === "1"; } catch (e) { /* no storage */ }
-      const box = el("details", { class: "side-group", open: open || null },
-        el("summary", {}, el("span", {}, g || "More"), el("span", { class: "side-count" }, String(apps.length))),
-        ...apps.map(link));
-      box.addEventListener("toggle", () => { try { localStorage.setItem(key, box.open ? "1" : "0"); } catch (e) { /* fine */ } });
-      out.push(box);
-    });
+    // The areas (core/web_areas.py): each opens its hub; the one this page belongs to also lists its apps under it.
+    const params = new URLSearchParams(location.search);
+    const hubHere = location.pathname.endsWith("hub.html") ? params.get("area") : null;
+    const page = location.pathname.split("/").pop() + location.search;
+    const areas = shell.areas || [];
+    const mine = hubHere || (areas.find((a) => a.members.some((m) => m.id === here || m.page === page)) || {}).id;
+    if (areas.length) {
+      out.push(el("span", { class: "side-head side-areas-head" }, "Areas"));
+      areas.forEach((area) => {
+        const open = area.id === mine;
+        out.push(el("a", { class: "nav side-area" + (open ? " open" : ""), href: area.page, "aria-current": hubHere === area.id ? "page" : null,
+          "aria-expanded": String(open) },
+          el("span", { class: "ico", "aria-hidden": "true" }, icon(area.icon, "•")), el("span", { class: "label" }, area.name)));
+        if (open) out.push(el("div", { class: "side-area-apps" }, area.members.map((m) => el("a", { class: "nav nav-sub", href: m.page,
+          "aria-current": m.id === here || m.page === page ? "page" : null }, el("span", { class: "label" }, m.name)))));
+      });
+    } else {
+      out.push(...shell.apps.filter((a) => a.id !== "web_home").map(link));  // older engine: no areas
+    }
     // What MIA made, the owner's pages and Make Something keep their place at the end (no groups: just those).
     return out.concat(appLinks({ ...shell, apps: [], groups: null }, "nav"));
   }
@@ -426,6 +430,29 @@
         mic.setAttribute("aria-label", "Done speaking");
       } });
     mic.append(icon("mic", "🎙"));
+    // Look, from the chat (DEC-0129: "you access Look through the same screen as having a chat"): a photo from the
+    // camera or the files, asked about with what's typed (or "What is this?"), answered by the PC's vision model
+    // (core/sight.py, /api/sight). The photo shows in this chat only; it isn't kept.
+    const look = el("button", { type: "button", class: "btn btn-ghost chat-mic talk-look", "aria-label": "Look: show MIA a photo",
+      title: "Show MIA something (a photo, from the camera or your files)", onclick: () => {
+        const pick = el("input", { type: "file", hidden: true, accept: "image/*", capture: "environment" });
+        pick.addEventListener("change", async () => {
+          const file = pick.files && pick.files[0];
+          pick.remove();
+          if (!file) return;
+          const question = input.value.trim() || "What is this?";
+          input.value = "";
+          const url = URL.createObjectURL(file);
+          log.append(el("div", { class: "bubble me talk-photo" }, el("img", { src: url, alt: "Your photo" }), el("span", {}, question)));
+          await answer(question, async () => {
+            const got = await MIA.upload("/api/sight", file, { "X-Question": encodeURIComponent(question) });
+            return { reply_text: got.said || "I couldn't make that out." };
+          });
+        });
+        document.body.append(pick);
+        pick.click();
+      } });
+    look.append(icon("sight", "👁"));
     const panel = el("aside", { class: "talk-panel glass glow", id: "talk-panel", hidden: true, "aria-label": "Talk to MIA" },
       el("div", { class: "talk-head" }, el("span", { class: "mia-line" }, el("span", { class: "mia-dot" }), "MIA"),
         el("span", { class: "row-buttons" },
@@ -441,7 +468,7 @@
         input.value = "";
         log.append(el("p", { class: "bubble me" }, text));
         await answer(text, () => MIA.talk(text));
-      } }, input, mic, el("button", { class: "btn btn-amber", type: "submit" }, "Send")));
+      } }, input, look, mic, el("button", { class: "btn btn-amber", type: "submit" }, "Send")));
     const orb = el("button", { type: "button", id: "mia-orb", class: "mia-orb-button", "aria-label": "Talk to MIA",
       onclick: () => toggleTalk() }, el("span", { class: "mia-orb-core", "aria-hidden": "true" }));
     document.body.append(panel, orb);

@@ -1,0 +1,100 @@
+{
+  "drafts": {
+    "available": true,
+    "items": [
+      {
+        "draft_id": "d1",
+        "to": [
+          "plumber@example.com"
+        ],
+        "subject": "Tuesday's visit",
+        "body": "Hi, can we move Tuesday's visit to 2pm? Thanks.",
+        "status": "draft",
+        "created_at": "2026-11-07T20:12:00",
+        "mailto": "mailto:plumber@example.com",
+        "text": "Hi, can we move Tuesday's visit to 2pm? Thanks."
+      }
+    ]
+  },
+  "mailbox": {
+    "available": true,
+    "configured": true,
+    "unlocked": true,
+    "address": "me@example.com",
+    "host": "imap.example.com",
+    "everyday": true,
+    "last": null
+  },
+  "messages": {
+    "available": true,
+    "said_today": 3,
+    "limit": 5,
+    "held": [
+      {
+        "title": "Feed is low",
+        "message": "About 4 days of layer feed left.",
+        "reason": "",
+        "waiting": true
+      },
+      {
+        "title": "Weather tomorrow",
+        "message": "Rain after 3pm.",
+        "reason": "a newer one said the same",
+        "waiting": false
+      }
+    ],
+    "paused": [
+      {
+        "topic": "news_digest",
+        "label": "news digests",
+        "until": "Dec 07"
+      }
+    ]
+  },
+  "notifications": {
+    "available": true,
+    "unread": 2,
+    "items": [
+      {
+        "id": "n1",
+        "title": "Oil change due",
+        "message": "The truck is due in 4 days.",
+        "tone": "attention",
+        "source": "maintenance",
+        "when": "2 hours ago",
+        "read": false,
+        "why": ""
+      },
+      {
+        "id": "n2",
+        "title": "Eggs logged",
+        "message": "7 today.",
+        "tone": "info",
+        "source": "flock",
+        "when": "this morning",
+        "read": true,
+        "why": ""
+      }
+    ]
+  },
+  "people": [
+    {
+      "id": "p1",
+      "name": "Sam",
+      "email": "sam@example.com",
+      "since": null
+    },
+    {
+      "id": "p2",
+      "name": "Jordan",
+      "email": "jordan@example.com",
+      "since": 41
+    },
+    {
+      "id": "p3",
+      "name": "Alex",
+      "email": "alex@example.com",
+      "since": 9
+    }
+  ]
+}

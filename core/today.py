@@ -253,8 +253,21 @@ def _waiting(context, today: date):
                         waiting[0].subject or "", "", "", waiting[0].draft_id, "✉")
 
 
+def _health(context, today: date):
+    """Today's health (DEC-0129): a visit or a refill coming due within three days, or past due. The person's own list:
+    the shared alarms only ever say "Medication time"."""
+    store = getattr(context, "health", None)
+    if store is None:
+        return
+    for d in store.due(today):
+        when = OVERDUE if d["days"] < 0 else TODAY if d["days"] == 0 else SOON
+        detail = _late(-d["days"]) if d["days"] < 0 else "today" if d["days"] == 0 else _days(d["days"])
+        yield TodayItem(when, d["title"], detail, "", "health", d["id"], "\U0001FA7A" if d["what"] == "visit" else "\U0001F48A")
+
+
 _SOURCES = (("calendar", _calendar), ("alarms", _alarms), ("bills", _bills), ("maintenance", _maintenance),
-            ("tasks", _tasks), ("birthdays", _birthdays), ("pantry", _pantry), ("waiting", _waiting))
+            ("tasks", _tasks), ("birthdays", _birthdays), ("pantry", _pantry), ("waiting", _waiting),
+            ("health", _health))
 
 
 def today_items(context, today: Optional[date] = None) -> list[TodayItem]:

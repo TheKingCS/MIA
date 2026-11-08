@@ -1,0 +1,780 @@
+{
+  "id": "home",
+  "name": "Home",
+  "icon": "household",
+  "tagline": "The house, the kitchen and what keeps it running.",
+  "apps": [
+    {
+      "id": "household",
+      "name": "Household",
+      "icon": "🧺",
+      "tagline": "A home that runs itself.",
+      "page": "household.html",
+      "ask": "I did the dishes."
+    },
+    {
+      "id": "kitchen",
+      "name": "Kitchen",
+      "icon": "🍳",
+      "tagline": "Good food. Good mood.",
+      "page": "kitchen.html",
+      "ask": "What can I make with what's in the pantry?"
+    },
+    {
+      "id": "upkeep_home",
+      "name": "Home Upkeep",
+      "icon": "maintenance",
+      "tagline": "The house and its appliances, cared for.",
+      "page": "real-estate.html#home"
+    },
+    {
+      "id": "power",
+      "name": "Power",
+      "icon": "🔋",
+      "tagline": "Energy, tracked.",
+      "page": "power.html",
+      "ask": "How's the battery?"
+    }
+  ],
+  "areas": [
+    {
+      "id": "home",
+      "name": "Home"
+    },
+    {
+      "id": "garage",
+      "name": "Garage"
+    },
+    {
+      "id": "plants_animals",
+      "name": "Plants and Animals"
+    },
+    {
+      "id": "health",
+      "name": "Health and Fitness"
+    },
+    {
+      "id": "recreation",
+      "name": "Recreation"
+    },
+    {
+      "id": "security",
+      "name": "Security"
+    },
+    {
+      "id": "browser",
+      "name": "Browser"
+    },
+    {
+      "id": "system",
+      "name": "Settings and Diagnostics"
+    },
+    {
+      "id": "finances",
+      "name": "Finances"
+    },
+    {
+      "id": "business",
+      "name": "Business"
+    },
+    {
+      "id": "personal",
+      "name": "Personal"
+    },
+    {
+      "id": "learning",
+      "name": "Learning"
+    },
+    {
+      "id": "missions",
+      "name": "Missions"
+    },
+    {
+      "id": "projects",
+      "name": "Projects"
+    },
+    {
+      "id": "communications",
+      "name": "Communications"
+    }
+  ],
+  "by_area": {
+    "home": {
+      "id": "home",
+      "name": "Home",
+      "icon": "household",
+      "tagline": "The house, the kitchen and what keeps it running.",
+      "apps": [
+        {
+          "id": "household",
+          "name": "Household",
+          "icon": "🧺",
+          "tagline": "A home that runs itself.",
+          "page": "household.html",
+          "ask": "I did the dishes."
+        },
+        {
+          "id": "kitchen",
+          "name": "Kitchen",
+          "icon": "🍳",
+          "tagline": "Good food. Good mood.",
+          "page": "kitchen.html",
+          "ask": "What can I make with what's in the pantry?"
+        },
+        {
+          "id": "upkeep_home",
+          "name": "Home Upkeep",
+          "icon": "maintenance",
+          "tagline": "The house and its appliances, cared for.",
+          "page": "real-estate.html#home"
+        },
+        {
+          "id": "power",
+          "name": "Power",
+          "icon": "🔋",
+          "tagline": "Energy, tracked.",
+          "page": "power.html",
+          "ask": "How's the battery?"
+        }
+      ]
+    },
+    "garage": {
+      "id": "garage",
+      "name": "Garage",
+      "icon": "garage",
+      "tagline": "Vehicles, tools and the work on them.",
+      "apps": [
+        {
+          "id": "garage",
+          "name": "Garage",
+          "icon": "🚗",
+          "tagline": "Keep it running. Keep it ready.",
+          "page": "garage.html",
+          "ask": "What upkeep is due on my vehicles?"
+        },
+        {
+          "id": "toolbox",
+          "name": "Toolbox",
+          "icon": "🧰",
+          "tagline": "Quick tools.",
+          "page": "toolbox.html",
+          "ask": "Convert 5 gallons to liters."
+        },
+        {
+          "id": "sight",
+          "name": "Look",
+          "icon": "👁",
+          "tagline": "Show MIA something.",
+          "page": "look.html",
+          "ask": "What is this?"
+        }
+      ]
+    },
+    "plants_animals": {
+      "id": "plants_animals",
+      "name": "Plants and Animals",
+      "icon": "greenhouse",
+      "tagline": "What grows and who you feed.",
+      "apps": [
+        {
+          "id": "greenhouse",
+          "name": "Greenhouse",
+          "icon": "🌱",
+          "tagline": "Grow food. Grow freedom.",
+          "page": "greenhouse.html",
+          "ask": "What needs doing in the greenhouse?"
+        },
+        {
+          "id": "flock",
+          "name": "Chickens",
+          "icon": "🐔",
+          "tagline": "Eggs, every day.",
+          "page": "flock.html",
+          "ask": "How many eggs this week?"
+        },
+        {
+          "id": "pets",
+          "name": "Pets",
+          "icon": "relationships",
+          "tagline": "Your animals, their care and vet visits.",
+          "page": "people.html?only=pets"
+        }
+      ]
+    },
+    "health": {
+      "id": "health",
+      "name": "Health and Fitness",
+      "icon": "workout",
+      "tagline": "Training, food and how you feel.",
+      "apps": [
+        {
+          "id": "workout",
+          "name": "Workout",
+          "icon": "🏋",
+          "tagline": "Stronger body. Clearer mind.",
+          "page": "workout.html",
+          "ask": "Log a 30 minute workout."
+        },
+        {
+          "id": "kitchen",
+          "name": "Kitchen",
+          "icon": "🍳",
+          "tagline": "Good food. Good mood.",
+          "page": "kitchen.html",
+          "ask": "What can I make with what's in the pantry?"
+        }
+      ]
+    },
+    "recreation": {
+      "id": "recreation",
+      "name": "Recreation",
+      "icon": "expeditions",
+      "tagline": "Trips, maps, music and play.",
+      "apps": [
+        {
+          "id": "expeditions",
+          "name": "Expeditions",
+          "icon": "🏕",
+          "tagline": "Plan the trip.",
+          "page": "expeditions.html",
+          "ask": "Plan a weekend camping trip."
+        },
+        {
+          "id": "maps",
+          "name": "Maps",
+          "icon": "🗺",
+          "tagline": "Know the ground.",
+          "page": "maps.html",
+          "ask": "Which trail maps do I have?"
+        },
+        {
+          "id": "navigation",
+          "name": "Navigation",
+          "icon": "🧭",
+          "tagline": "Find the way.",
+          "page": "navigation.html",
+          "ask": "How far is camp from the trailhead?"
+        },
+        {
+          "id": "memories",
+          "name": "Memories",
+          "icon": "📸",
+          "tagline": "Remember the trip.",
+          "page": "memories.html",
+          "ask": "Show me my last trip."
+        },
+        {
+          "id": "worldmap",
+          "name": "World Map",
+          "icon": "memories",
+          "tagline": "Everywhere you've been.",
+          "page": "worldmap.html"
+        },
+        {
+          "id": "places",
+          "name": "My Places",
+          "icon": "maps",
+          "tagline": "Places you go, and quests there.",
+          "page": "places.html"
+        },
+        {
+          "id": "music",
+          "name": "Music",
+          "icon": "🎵",
+          "tagline": "Your music.",
+          "page": "music.html",
+          "ask": "Play something relaxing."
+        },
+        {
+          "id": "play",
+          "name": "Play",
+          "icon": "🏓",
+          "tagline": "Games and sports, counted.",
+          "page": "play.html",
+          "ask": "Played pickleball for an hour, it was hard."
+        }
+      ]
+    },
+    "security": {
+      "id": "security",
+      "name": "Security",
+      "icon": "security",
+      "tagline": "Cameras, passwords and sign-ins.",
+      "apps": [
+        {
+          "id": "security",
+          "name": "Security",
+          "icon": "🛡️",
+          "tagline": "Your cameras, at home.",
+          "page": "security.html",
+          "ask": "Are the cameras working?"
+        },
+        {
+          "id": "passwords",
+          "name": "Passwords",
+          "icon": "🔐",
+          "tagline": "Every login, locked.",
+          "page": "passwords.html",
+          "ask": ""
+        },
+        {
+          "id": "signins",
+          "name": "Sign-Ins",
+          "icon": "passwords",
+          "tagline": "Who signed in, from where.",
+          "page": "signins.html"
+        },
+        {
+          "id": "field_kit",
+          "name": "Field Kit",
+          "icon": "🛠",
+          "tagline": "Devices and scripts.",
+          "page": "field-kit.html",
+          "ask": "What devices are connected?"
+        }
+      ]
+    },
+    "browser": {
+      "id": "browser",
+      "name": "Browser",
+      "icon": "search",
+      "tagline": "She browses. You approve.",
+      "apps": [
+        {
+          "id": "browser",
+          "name": "Browser",
+          "icon": "🌐",
+          "tagline": "She browses. You approve.",
+          "page": "browser.html",
+          "ask": "Open the county website."
+        }
+      ]
+    },
+    "system": {
+      "id": "system",
+      "name": "Settings and Diagnostics",
+      "icon": "settings",
+      "tagline": "Make MIA yours, and see how she's doing.",
+      "apps": [
+        {
+          "id": "issues",
+          "name": "Fix-It Log",
+          "icon": "🛠",
+          "tagline": "Where MIA stumbled, so it gets fixed.",
+          "page": "issues.html",
+          "ask": "What's been going wrong?"
+        },
+        {
+          "id": "connect",
+          "name": "Connect Apps",
+          "icon": "settings",
+          "tagline": "Your accounts, linked.",
+          "page": "connect.html"
+        },
+        {
+          "id": "profile",
+          "name": "Profile",
+          "icon": "character",
+          "tagline": "You, and how MIA knows you.",
+          "page": "profile.html"
+        },
+        {
+          "id": "yourdata",
+          "name": "Your Data",
+          "icon": "files",
+          "tagline": "What MIA keeps, and taking it out.",
+          "page": "yourdata.html"
+        },
+        {
+          "id": "changes",
+          "name": "Recent Changes",
+          "icon": "issues",
+          "tagline": "What changed, with Undo.",
+          "page": "changes.html"
+        },
+        {
+          "id": "module_browser",
+          "name": "Apps",
+          "icon": "🧩",
+          "tagline": "Everything MIA can do.",
+          "page": "apps.html",
+          "ask": ""
+        }
+      ]
+    },
+    "finances": {
+      "id": "finances",
+      "name": "Finances",
+      "icon": "budget",
+      "tagline": "Money in, money out, and the way out.",
+      "apps": [
+        {
+          "id": "budget",
+          "name": "Money",
+          "icon": "💰",
+          "tagline": "Know where it goes.",
+          "page": "money.html",
+          "ask": "Which debt should I pay first?"
+        },
+        {
+          "id": "freedom",
+          "name": "Freedom",
+          "icon": "🌄",
+          "tagline": "Your way out, in numbers.",
+          "page": "freedom.html",
+          "ask": "When can I work from home?"
+        },
+        {
+          "id": "dungeon",
+          "name": "The Dungeon",
+          "icon": "🏰",
+          "tagline": "Clear the run. Bank the loot.",
+          "page": "dungeon.html",
+          "ask": "How much loot this week?"
+        },
+        {
+          "id": "insurance",
+          "name": "Insurance",
+          "icon": "☂️",
+          "tagline": "Covered, for less.",
+          "page": "insurance.html",
+          "ask": "When does my car insurance renew?"
+        },
+        {
+          "id": "real_estate",
+          "name": "Real Estate",
+          "icon": "🏘",
+          "tagline": "Cash flow. Equity. Freedom.",
+          "page": "real-estate.html",
+          "ask": "How are my rentals doing this month?"
+        },
+        {
+          "id": "compliance",
+          "name": "Compliance",
+          "icon": "📋",
+          "tagline": "Every deadline, on time.",
+          "page": "compliance.html",
+          "ask": "What's due for taxes?"
+        },
+        {
+          "id": "inbox",
+          "name": "Inbox",
+          "icon": "📥",
+          "tagline": "Paperwork, handled.",
+          "page": "inbox.html",
+          "ask": "What's waiting in my inbox?"
+        }
+      ]
+    },
+    "business": {
+      "id": "business",
+      "name": "Business",
+      "icon": "business",
+      "tagline": "Customers, products and the paperwork.",
+      "apps": [
+        {
+          "id": "business",
+          "name": "Orders & Quotes",
+          "icon": "🧾",
+          "tagline": "Customers, quotes and orders.",
+          "page": "business.html",
+          "ask": "How much profit did I make this month?"
+        },
+        {
+          "id": "workshop",
+          "name": "Workshop",
+          "icon": "🔩",
+          "tagline": "Parts, jobs and products.",
+          "page": "workshop.html",
+          "ask": "How much plywood do I have?"
+        },
+        {
+          "id": "real_estate",
+          "name": "Real Estate",
+          "icon": "🏘",
+          "tagline": "Cash flow. Equity. Freedom.",
+          "page": "real-estate.html",
+          "ask": "How are my rentals doing this month?"
+        },
+        {
+          "id": "compliance",
+          "name": "Compliance",
+          "icon": "📋",
+          "tagline": "Every deadline, on time.",
+          "page": "compliance.html",
+          "ask": "What's due for taxes?"
+        },
+        {
+          "id": "labels",
+          "name": "Labels",
+          "icon": "workshop",
+          "tagline": "Print labels for what you make.",
+          "page": "label.html"
+        },
+        {
+          "id": "showoff",
+          "name": "Show Off",
+          "icon": "workshop",
+          "tagline": "What you've made, to share.",
+          "page": "showoff.html"
+        }
+      ]
+    },
+    "personal": {
+      "id": "personal",
+      "name": "Personal",
+      "icon": "notes",
+      "tagline": "Your days, your people, your words.",
+      "apps": [
+        {
+          "id": "calendar",
+          "name": "Calendar",
+          "icon": "📅",
+          "tagline": "Everything with a date.",
+          "page": "calendar.html",
+          "ask": "What's on my calendar this week?"
+        },
+        {
+          "id": "notes",
+          "name": "Journal",
+          "icon": "📓",
+          "tagline": "Write it down.",
+          "page": "journal.html",
+          "ask": "Make a note: call the plumber Friday."
+        },
+        {
+          "id": "life_notes",
+          "name": "Kept",
+          "icon": "📌",
+          "tagline": "What you said you'd do.",
+          "page": "kept.html",
+          "ask": "What did I promise?"
+        },
+        {
+          "id": "operating_journal",
+          "name": "Operating Journal",
+          "icon": "🧭",
+          "tagline": "How you mean to live, and how you do.",
+          "page": "operating.html",
+          "ask": "Am I living how I said I want to?"
+        },
+        {
+          "id": "vault",
+          "name": "Memory Vault",
+          "icon": "🗄",
+          "tagline": "Your photos, kept safe.",
+          "page": "vault.html",
+          "ask": "Are my photos backed up?"
+        },
+        {
+          "id": "relationships",
+          "name": "People",
+          "icon": "👥",
+          "tagline": "The ones who matter.",
+          "page": "people.html",
+          "ask": "When is the next birthday?"
+        },
+        {
+          "id": "why",
+          "name": "My Why",
+          "icon": "character",
+          "tagline": "What it's all for.",
+          "page": "why.html"
+        },
+        {
+          "id": "observations",
+          "name": "Observations",
+          "icon": "🔍",
+          "tagline": "What MIA noticed.",
+          "page": "observations.html",
+          "ask": "What have you noticed lately?"
+        },
+        {
+          "id": "checkin",
+          "name": "Sunday Check-In",
+          "icon": "calendar",
+          "tagline": "The week, looked back on.",
+          "page": "checkin.html"
+        },
+        {
+          "id": "files",
+          "name": "Files",
+          "icon": "🗂",
+          "tagline": "Your files.",
+          "page": "files.html",
+          "ask": "What's in my MIA folder?"
+        },
+        {
+          "id": "good_news",
+          "name": "Good News Radio",
+          "icon": "📻",
+          "tagline": "What went right today.",
+          "page": "news.html",
+          "ask": "What's the good news?"
+        }
+      ]
+    },
+    "learning": {
+      "id": "learning",
+      "name": "Learning",
+      "icon": "classroom",
+      "tagline": "Study, the library and skills.",
+      "apps": [
+        {
+          "id": "classroom",
+          "name": "Classroom",
+          "icon": "🎓",
+          "tagline": "Keep learning.",
+          "page": "classroom.html",
+          "ask": "How is my learning progress?"
+        },
+        {
+          "id": "knowledge",
+          "name": "Knowledge",
+          "icon": "📚",
+          "tagline": "The offline library.",
+          "page": "knowledge.html",
+          "ask": "How do I purify water?"
+        },
+        {
+          "id": "guitar",
+          "name": "Guitar",
+          "icon": "classroom",
+          "tagline": "A learning path, stage by stage.",
+          "page": "guitar.html"
+        },
+        {
+          "id": "skills",
+          "name": "Skills",
+          "icon": "⚔",
+          "tagline": "Do the thing. Earn the level. Unlock the next thing.",
+          "page": "skills.html",
+          "ask": "Which skills am I growing?"
+        }
+      ]
+    },
+    "missions": {
+      "id": "missions",
+      "name": "Missions",
+      "icon": "missions",
+      "tagline": "Quests, levels and rewards.",
+      "apps": [
+        {
+          "id": "missions",
+          "name": "Missions",
+          "icon": "🏆",
+          "tagline": "Explore. Complete. Level up.",
+          "page": "missions.html",
+          "ask": "Add a mission to build a chicken coop."
+        },
+        {
+          "id": "skills",
+          "name": "Skills",
+          "icon": "⚔",
+          "tagline": "Do the thing. Earn the level. Unlock the next thing.",
+          "page": "skills.html",
+          "ask": "Which skills am I growing?"
+        },
+        {
+          "id": "character",
+          "name": "Character",
+          "icon": "👤",
+          "tagline": "Your story so far.",
+          "page": "character.html",
+          "ask": "What level am I?"
+        },
+        {
+          "id": "reward_shop",
+          "name": "Reward Shop",
+          "icon": "🎁",
+          "tagline": "Spend what you earn.",
+          "page": "shop.html",
+          "ask": "What can I buy with my credits?"
+        },
+        {
+          "id": "party",
+          "name": "Party",
+          "icon": "missions",
+          "tagline": "Raids and quests.",
+          "page": "party.html"
+        },
+        {
+          "id": "chronicle",
+          "name": "The Chronicle",
+          "icon": "character",
+          "tagline": "Your story, told back.",
+          "page": "chronicle.html"
+        }
+      ]
+    },
+    "projects": {
+      "id": "projects",
+      "name": "Projects",
+      "icon": "workshop",
+      "tagline": "Things you're building.",
+      "apps": [
+        {
+          "id": "projects",
+          "name": "Projects",
+          "icon": "workshop",
+          "tagline": "Plans, budgets and the tasks in them.",
+          "page": "projects.html"
+        },
+        {
+          "id": "workshop",
+          "name": "Workshop",
+          "icon": "🔩",
+          "tagline": "Parts, jobs and products.",
+          "page": "workshop.html",
+          "ask": "How much plywood do I have?"
+        },
+        {
+          "id": "lab",
+          "name": "The Lab",
+          "icon": "🧪",
+          "tagline": "Experiments and sensors.",
+          "page": "lab.html",
+          "ask": "Start a temperature experiment."
+        }
+      ]
+    },
+    "communications": {
+      "id": "communications",
+      "name": "Communications",
+      "icon": "inbox",
+      "tagline": "Email, MIA's messages and people.",
+      "apps": [
+        {
+          "id": "communications",
+          "name": "Communications",
+          "icon": "inbox",
+          "tagline": "Email, MIA's messages and people to reach.",
+          "page": "communications.html"
+        },
+        {
+          "id": "assistant",
+          "name": "MIA Assistant",
+          "icon": "🗨",
+          "tagline": "Always here. Always with you.",
+          "page": "assistant.html",
+          "ask": "Undo that."
+        },
+        {
+          "id": "notifications",
+          "name": "Notifications",
+          "icon": "inbox",
+          "tagline": "What MIA told you.",
+          "page": "notifications.html"
+        },
+        {
+          "id": "inbox",
+          "name": "Inbox",
+          "icon": "📥",
+          "tagline": "Paperwork, handled.",
+          "page": "inbox.html",
+          "ask": "What's waiting in my inbox?"
+        }
+      ]
+    }
+  }
+}

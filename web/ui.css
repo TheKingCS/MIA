@@ -1720,3 +1720,48 @@ body.mod-maps .hero { display: none; }
 .stat-spark { width: 100%; height: 32px; }
 .stat-spark polyline { fill: none; stroke: var(--accent); stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
 .stat-range { font-size: 12px; color: var(--text-faint); }
+
+/* The sidebar's areas and their hubs (DEC-0129, core/web_areas.py), 2026-11-08. */
+.side-areas-head { display: block; margin: 12px 0 4px; }
+.side-area.open { color: var(--text); }
+.side-area-apps { display: grid; margin: 0 0 6px 30px; border-left: 1px solid rgba(var(--rgb-accent), .2); }
+.nav.nav-sub { padding: 6px 10px; font-size: 13px; min-height: 0; }
+.hub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.hub-tile { display: grid; grid-template-columns: 40px 1fr; gap: 4px 12px; align-items: start; padding: 14px; color: inherit; text-decoration: none; min-height: 72px; }
+.hub-tile:hover, .hub-tile:focus-visible { border-color: rgba(var(--rgb-accent), .5); }
+.hub-tile .hub-ico { grid-row: span 2; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 4px;
+  border: 1px solid rgba(var(--rgb-accent), .4); background: rgba(var(--rgb-accent), .08); color: var(--accent); }
+.hub-tile .hub-name { font-weight: 600; }
+.hub-tile .hub-line { font-size: 13px; color: var(--text-dim); }
+.hub-areas { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 18px; }
+.hub-areas .btn { text-transform: none; }
+.apps-area-link { display: inline-block; text-decoration: none; }
+.apps-area-link:hover { color: var(--accent); }
+/* Communications (DEC-0129). */
+a.comms-row { color: inherit; text-decoration: none; }
+a.comms-row:hover .row-title { color: var(--accent); }
+.comms-note { font-size: 13px; color: var(--text-dim); }
+
+/* The Dashboard's life cards (DEC-0129, core/web_surfaces.life_cards), 2026-11-08. */
+.home-life { display: grid; gap: 12px; margin: 16px 0; }
+.life-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.life-card { display: grid; gap: 4px; padding: 14px; color: inherit; text-decoration: none; }
+.life-card strong { font-size: 16px; }
+.life-card:hover, .life-pictures:hover { border-color: rgba(var(--rgb-accent), .5); }
+.life-pictures { display: grid; gap: 8px; padding: 14px; color: inherit; text-decoration: none; }
+.life-thumbs { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+.life-thumbs img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; background: rgba(var(--rgb-accent), .06); }
+@media (max-width: 520px) { .life-thumbs { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.life-card .dim { color: var(--text-dim); font-size: 14px; }
+/* Look from the chat (DEC-0129). */
+.talk-photo { display: grid; gap: 6px; }
+.talk-photo img { max-width: 220px; max-height: 220px; border-radius: 8px; object-fit: cover; }
+/* Health (DEC-0129), 2026-11-08: the week's sleep as seven tappable bars. */
+.sleep-week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; align-items: end; height: 140px; margin-top: 10px; }
+.sleep-night { display: grid; grid-template-rows: 1fr auto auto; justify-items: center; gap: 4px; height: 100%; padding: 0; border: 0; background: none; color: inherit; cursor: pointer; }
+.sleep-night .sleep-bar { align-self: end; width: 70%; border-radius: 4px 4px 0 0; background: var(--accent); }
+.sleep-night .sleep-bar.empty { background: rgba(var(--rgb-accent), .15); }
+.sleep-night .sleep-h { font-family: var(--font-mono); font-size: 12px; }
+.sleep-night .sleep-d { font-size: 11px; color: var(--text-faint); }
+.row.muted .row-title { color: var(--text-dim); }
+.health-note { font-size: 13px; margin-top: 8px; }

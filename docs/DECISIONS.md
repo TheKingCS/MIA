@@ -2007,3 +2007,26 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   Home via Home Assistant or direct adapters; whether the inventory is sealed at rest (DEC-0126) — proposed yes.
 - Related: DEC-0117 (the browser gate this copies), DEC-0126, DEC-0094/0101 (loops); ROADMAP 11 (Field Kit), 13
   (Smart Home); `core/dependency_audit.py`, `core/device_framework.py`, `core/port_scanner.py`
+
+
+### DEC-0129: Areas and hubs — how MIA's apps are organized
+- Status: ACCEPTED
+- Decided by: Zac, 2026-11-08 00:14–00:25 (in conversation with claude), replacing the audit's seven-area proposal
+  (Claude Doc 56xyaTxEQThT1vrYh484Ay).
+- Decision: the sidebar is the **Dashboard**, then fifteen areas: Home, Garage, Plants and Animals, Health and
+  Fitness, Recreation (Zac's rename of Adventures; Music goes here too), Security, Browser, Settings and
+  Diagnostics, Finances, Business, Personal, Learning, Missions, Projects, Communications. Each area has its own
+  **hub** screen (`hub.html?area=<id>`). An app can belong to more than one area and appears in each hub:
+  Calendar (Personal, and on the Dashboard), Skills (Missions and Learning), Real Estate and Compliance (Finances and
+  Business), Workshop (Business and Projects), Kitchen with its meal plans (Home and Health and Fitness, 00:27).
+- Placements Zac named: Toolbox and Look in Garage (Look is also a button in the chat with MIA), Files in Personal,
+  Good News Radio in Personal and as a Dashboard card, Music in Recreation. Pets move out of People into Plants and
+  Animals; Maintenance shows the house's upkeep in Home (Home Upkeep: Real Estate's Home & Appliances tab, where buildings and appliances have lived since 2026-10-16) and the vehicles' in Garage (the Garage app is their upkeep).
+- The Dashboard gains now playing, today's good news, recent pictures and the current or next trip. Communications
+  becomes one screen (email drafts and mailbox, MIA's messages and her held-back ones, the message limit, people).
+- Health and Fitness gains sleep, doctor and dentist visits, medications and supplements, and health records (Zac,
+  00:25), kept in the person's own profile, sealed at rest (DEC-0126), never on a shared screen.
+- Also raised (00:25): an ID wallet in Security for IDs, passports, insurance cards and registrations.
+- How: `core/web_areas.py` holds the areas (one place to change), `shell()["areas"]` feeds the sidebar and the Apps
+  page, `/api/hub/<area>` the hubs. Every app keeps its own page; only how they're found changed.
+- Related: DEC-0113 (the canvas), DEC-0125 (parity), DEC-0126 (sealed data), DEC-0119

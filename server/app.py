@@ -2316,6 +2316,33 @@ def create_app(context: AppContext) -> FastAPI:
 
         return _screen(profile_id, "missions", missions_page)
 
+    @app.get("/api/health")
+    def web_health(profile_id: str = Depends(require_profile_id)) -> dict:
+        """The Health page (core/health_actions.health_page, DEC-0129): the person's own, sealed at rest."""
+        from core.health_actions import health_page
+
+        with app.state.turn_lock:
+            return health_page(view_for(context, profile_id))
+
+    @app.get("/api/communications")
+    def web_communications(profile_id: str = Depends(require_profile_id)) -> dict:
+        """The Communications screen (core/web_comms.comms_page, DEC-0129)."""
+        from core.web_comms import comms_page
+
+        with app.state.turn_lock:
+            return comms_page(view_for(context, profile_id))
+
+    @app.get("/api/hub/{area_id}")
+    def web_hub(area_id: str, profile_id: str = Depends(require_profile_id)) -> dict:
+        """One area's hub screen (core/web_areas.hub, DEC-0129)."""
+        from core.web_areas import hub
+
+        with app.state.turn_lock:
+            found = hub(view_for(context, profile_id), area_id)
+        if found is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "There's no area like that.")
+        return found
+
     @app.get("/api/search")
     def web_search(q: str = "", profile_id: str = Depends(require_profile_id)) -> dict:
         """Search across the person's records, for the frame's Ctrl+K (core/web_search.py)."""

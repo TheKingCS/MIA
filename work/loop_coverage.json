@@ -45,6 +45,26 @@
    "status": "none",
    "why": "where a product is listed, entered by hand on the Workshop page or said (DEC-0125): the person's record, not MIA's choice; nothing of hers to improve"
   },
+  "action:sleep": {
+   "status": "none",
+   "why": "the person's own log of a night (DEC-0129); MIA reads it, never grades it"
+  },
+  "action:visit": {
+   "status": "none",
+   "why": "visits as the person records them (DEC-0129); MIA never judges care"
+  },
+  "action:med": {
+   "status": "none",
+   "why": "the person's medications as written on the label (DEC-0129); MIA never suggests a dose, so nothing to learn here"
+  },
+  "action:record": {
+   "status": "none",
+   "why": "health records kept as given (DEC-0129); never interpreted"
+  },
+  "action:comms": {
+   "status": "none",
+   "why": "the person's own settings for how often MIA speaks up (DEC-0129); the communication gate already learns from dismissals and logs every decision"
+  },
   "action:mission_idea": {
    "status": "none",
    "why": "the person's yes or no on an idea MIA made (DEC-0125); the mission it becomes has the missions loop, and a set-aside idea is kept as history"
@@ -100,6 +120,10 @@
   "check:self_report": {
    "status": "none",
    "why": "it reports the loops: what it says is only as good as they are, and they are watched"
+  },
+  "store:health": {
+   "status": "none",
+   "why": "the person's own health records as they give them (DEC-0129); MIA never grades or interprets them, so there's no work of hers to improve"
   },
   "store:business_use": {
    "status": "todo",
