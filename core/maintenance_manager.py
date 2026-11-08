@@ -7,7 +7,9 @@ upkeep tracking for anything the user owns that needs it: vehicles,
 power equipment (mower, e-bike), appliances, the property itself, and
 tools. Same persisted-JSON pattern as core.journal_manager.JournalManager/
 core.calendar_manager.CalendarManager: data/maintenance.json, dataclasses
-with to_dict/from_dict, a manager class wrapping load/save.
+with to_dict/from_dict, a manager class wrapping load/save. An asset can
+have a photo (2026-11-07): `asset_photo_path` / `set_asset_photo`, kept in
+the household's asset_photos/ folder.
 
 No recurrence engine exists anywhere else in this app to reuse —
 core.calendar_manager.CalendarEvent is a one-shot dated event with no
