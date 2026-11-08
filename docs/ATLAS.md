@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1229 files, 268,154 lines; 1229 files describe themselves; 14,563 of 15,255 classes and functions are documented.
+1231 files, 268,384 lines; 1231 files describe themselves; 14,574 of 15,266 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-452 files, 125,431 lines; 6,704 of 6,790 classes and functions documented
+453 files, 125,558 lines; 6,709 of 6,795 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -21,7 +21,7 @@
 - `core/app_intro.py`: What MIA says when she introduces an app (slice 5 of docs/GLASSES_FIRST_BOOT_PLAN.md), in two halves:
 - `core/application.py`: MIAApplication: the orchestrator that boots the system.
 - `core/asset_parts.py`: Parts per asset (2026-11-07; the asset page's "parts aren't tracked per asset yet", PLANNED since 2026-10-06): the oil filters, blades, belts and fluids a vehicle, tool or appliance uses, from the household's own inventory, workshop materials and parts bins.
-- `core/assistant_accessibility_actions.py`: "Make the text bigger", "turn on high contrast", "read this screen to me" (core/accessibility.py, 2026-10-01). Each changes only the speaker's own look.
+- `core/assistant_accessibility_actions.py`: "Make the text bigger", "turn on high contrast", "read this screen to me" (core/accessibility.py, 2026-10-01), and "switch to the cards look" (core/display_style.py, DEC-0135). Each changes only the speaker's own look.
 - `core/assistant_actions.py`: The Assistant's tool-use/action-execution registry — docs/ROADMAP.md milestone 5.5. Lets the LLM actually DO things in MIA (open a module, add an alarm, a note, an inventory item), not just answer questions, via Ollama's structured tool-calling API (core/llm_manager.py's `chat_with_tools()`).
 - `core/assistant_asset_part_actions.py`: Parts per asset by voice (DEC-0125; the screen is the asset page's Parts tab, core/asset_parts.py): "the mower uses the 10W-30 oil", "what parts does the truck take?", "the truck doesn't use that filter anymore". Names are matched to real records in code; the add and remove are the same actions the 
 - `core/assistant_backup_actions.py`: Backups by voice (DEC-0125), read only: "when did I last back up?" says how long since the last backup in the backups folder and where they go (core/web_backups.py). Making one is on Settings (a passphrase is typed, never said aloud); restoring is on the PC.
@@ -150,6 +150,7 @@
 - `core/device_profile.py`: MIA runs as one codebase across two editions — docs/ROADMAP.md milestone 13.1: **Core** (the Pi 5 + AI HAT+ 2, resource-constrained, a field data-gathering tool) and **Home** (a desktop workstation, more storage/resources), distinguished only by `config.system.device_profile`.
 - `core/diagnostics.py`: Diagnostic procedures (ACAF step 4, T-0040; `docs/ACAF_REVIEW.md` section 6): a check-up written as a spec, not code, over what inspection's PASSIVE methods already read (core/inspection.py: the OS, CPU and memory, the drives, the network, the firewall, the AI runtime, MIA's own health). Nothing her
 - `core/discovery_manager.py`: Discovery — the AI-generated counterpart to Mission Pathways (core/pathway_manager.py, hand-authored) and the first real piece of the "Personal Capability & Progression Engine" the user described after Pathways shipped. Deliberately the smallest possible closed loop, not the full vision (cross-tree 
+- `core/display_style.py`: Which look MIA's screens use (DEC-0135, Zac 2026-11-08: "selectable themes that change which variant of display you get: the spatial portal design or the organized cards design"). Each person's own choice (person_settings `display.style`), changed in Settings or by voice ("switch to the cards look")
 - `core/doc_freshness.py`: Documentation that keeps up with the code (DEC-0110; Zac, 2026-11-07: "when anything is changed it needs to be reflected in that file's documentation as well"). DEC-0104 makes sure every definition *has* a docstring; this checks that a docstring is still *true* after its code changes.
 - `core/document_text.py`: Text out of the documents the owner gives MIA: shared by the textbook tutor (core/textbook_manager.py) and the document inbox (core/inbox_manager.py). 2026-09-28.
 - `core/dungeon_actions.py`: The Dungeon's actions (DEC-0046, core/work_dungeon.py) on the action contract: proposed in plain words with the loot they bring, approved, run, undoable.
@@ -736,7 +737,7 @@
 
 ## tests/: the test suite: what each part must do
 
-416 files, 70,982 lines; 5,583 of 6,189 classes and functions documented
+417 files, 71,065 lines; 5,589 of 6,195 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -841,6 +842,7 @@
 - `tests/test_diagnostics_log_viewer.py`: Unit tests for the pure tail/filter helpers backing the Diagnostics module's log viewer (modules.diagnostics.module.tail_lines filter_lines). The QWidget-building side of get_widget() needs a live Qt event loop and is exercised manually instead — see docs/testing/2.6_system_logs_viewer.md. *(1 undocumented)*
 - `tests/test_discovery_manager.py`: Unit tests for core.discovery_manager. Isolates _DATA_DIR/file constants for discovery_manager, skill_manager, mission_manager, project_manager, and intent_manager into a shared tmp_path scratch area, same monkeypatch pattern as tests/test_pathway_manager.py. *(4 undocumented)*
 - `tests/test_discovery_tool.py`: Unit tests for modules.toolbox.tools.discovery_tool's pure format_proposal_card_text(), same style as tests/test_pathway_tool.py (no Qt event loop, no fixtures). *(1 undocumented)*
+- `tests/test_display_style.py`: Display styles (DEC-0135, core/display_style.py): each person picks the spatial look (the Nexus and rooms), the cards look (the Dashboard and cards), or spatial on the computer and cards on the phone; in Settings, by voice, and handed to every page through the shell.
 - `tests/test_doc_freshness.py`: Documentation that keeps up with the code (core/doc_freshness.py, DEC-0110): a definition whose code changed while its docstring didn't is found, changed parameters most of all; a docstring edit, moved code or an added decorator is not; a file's opening is asked about only when public definitions co
 - `tests/test_documentation.py`: Documentation for everything MIA is made of (DEC-0104, core/code_atlas.py): every file says what it is; new code arrives documented; nothing already documented slips back; docs/ATLAS.md is current.
 - `tests/test_email_drafts.py`: Email drafts (core/email_drafts.py, core/mail_send.py, core/assistant_email_actions.py), 2026-10-01: MIA writes, the person sends (only by pressing Send), copies, or opens their mail app.
@@ -1157,7 +1159,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-93 files, 17,079 lines
+93 files, 17,099 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game

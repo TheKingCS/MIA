@@ -2152,3 +2152,20 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   (custom vs SRD-like); local vs hosted image generation; how much autonomous sim compute is acceptable locally;
   multiplayer scope vs DEC-0119 (Zac-alone).
 - Related: DEC-0028, DEC-0084, DEC-0112, DEC-0091, DEC-0126, DEC-0130
+
+### DEC-0135: Two looks, picked per person: Spatial and Cards
+- Status: ACCEPTED
+- Decided by: Zac, 2026-11-08 05:29 ("we are building a cool new look for MIA but I also liked the previous designs
+  ... and loved how that looked in the phone app. Maybe we can have selectable themes that change which variant of
+  display you get? The spatial portal design or the organized cards design").
+- Decision:
+  1. **Spatial** opens on the Nexus (DEC-0130) and draws each area with its own room as a 3D room
+     (`web/nexus3d.js`); **Cards** opens on the Dashboard and shows each area's hub as organized cards (the
+     DEC-0113 canvas design). Every screen and feature is the same in both; only how you arrive and move around
+     differs.
+  2. **By device** is the default (Claude's pick, Zac's to change): spatial on the computer, cards on the phone.
+  3. Each person's own setting (`display.style`, `core/display_style.py`): in Settings ("Look") and by voice
+     ("switch to the cards look", `set_display_style`), per DEC-0125. The glasses keep their own flat look.
+  4. The Nexus stays one tap away in the cards look (the sidebar and the bottom bar), and the Dashboard stays one
+     tap away in the spatial look (Today).
+- Related: DEC-0130, DEC-0113, DEC-0125, DEC-0017

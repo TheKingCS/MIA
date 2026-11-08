@@ -91,6 +91,7 @@
   function nexusFirst() {
     const q = new URLSearchParams(location.search);
     if (q.has("today")) return false;
+    if (MIAShell.look && MIAShell.look() !== "spatial") return false;  // the cards look opens here (DEC-0135)
     let seen = null;
     try { seen = sessionStorage.getItem("mia.nexus.opened"); sessionStorage.setItem("mia.nexus.opened", "1"); } catch (e) { return false; }
     if (seen) return false;

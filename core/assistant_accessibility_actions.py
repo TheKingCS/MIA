@@ -3,7 +3,8 @@ core.assistant_accessibility_actions
 =======================================
 
 "Make the text bigger", "turn on high contrast", "read this screen to me"
-(core/accessibility.py, 2026-10-01). Each changes only the speaker's own
+(core/accessibility.py, 2026-10-01), and "switch to the cards look"
+(core/display_style.py, DEC-0135). Each changes only the speaker's own
 look.
 """
 
@@ -47,6 +48,26 @@ def _action_set_high_contrast(context, arguments: dict) -> str:
     return "High contrast is on." if on else "High contrast is off."
 
 
+def _action_set_display_style(context, arguments: dict) -> str:
+    """Tool set_display_style: this person's look (DEC-0135): spatial (the Nexus and rooms), cards (the Dashboard
+    and cards), or auto (spatial on the computer, cards on the phone); the screens are told."""
+    from core.display_style import KEY, STYLES, style_of, wants_style
+
+    wanted = str(arguments.get("style") or "").lower().strip()
+    style = wanted if wanted in STYLES else wants_style(wanted)
+    if style is None:
+        return ("Which look? Spatial (the Nexus and its rooms), cards (the Dashboard and cards), or spatial on the "
+                "computer and cards on the phone.")
+    label = STYLES[style][0]
+    if style == style_of(context):
+        return "You're already on " + ("spatial on the computer, cards on the phone." if style == "auto" else f"the {label.lower()} look.")
+    person_settings.put(context, KEY, style)
+    context.events.publish("display.changed")
+    return {"spatial": "Switched to the spatial look: MIA opens on the Nexus.",
+            "cards": "Switched to the cards look: MIA opens on the Dashboard.",
+            "auto": "Done: spatial on the computer, cards on the phone."}[style]
+
+
 def _action_read_screen(context, arguments: dict) -> str:
     """Tool read_screen: asks the open screen to be read aloud."""
     context.events.publish("accessibility.read_screen")
@@ -54,7 +75,7 @@ def _action_read_screen(context, arguments: dict) -> str:
 
 
 def register_accessibility_actions(registry: AssistantActionRegistry) -> None:
-    """Registers the accessibility tools: set_text_size, set_high_contrast and read_screen."""
+    """Registers the accessibility tools: set_text_size, set_high_contrast, set_display_style and read_screen."""
     registry.register(AssistantAction(
         name="set_text_size", domain="accessibility",
         description="Make the text on screen bigger or smaller for the user (normal, larger, largest, huge).",
@@ -74,6 +95,18 @@ def register_accessibility_actions(registry: AssistantActionRegistry) -> None:
         }, "required": ["on"]},
         handler=_action_set_high_contrast,
         trigger_phrases=("high contrast", "more contrast", "easier to see"),
+    ))
+    registry.register(AssistantAction(
+        name="set_display_style", domain="accessibility",
+        description="Switch MIA's look for the user: 'spatial' (the Nexus, portals and rooms), 'cards' (the Dashboard "
+                    "and organized cards), or 'auto' (spatial on the computer, cards on the phone).",
+        parameters={"type": "object", "properties": {
+            "style": {"type": "string", "description": "spatial, cards or auto."},
+        }, "required": ["style"]},
+        handler=_action_set_display_style,
+        trigger_phrases=("cards look", "card look", "spatial look", "portal look", "the old look", "classic look",
+                         "switch the look", "change the look", "display style", "switch to cards", "switch to spatial",
+                         "nexus look", "the new look"),
     ))
     registry.register(AssistantAction(
         name="read_screen", domain="accessibility",

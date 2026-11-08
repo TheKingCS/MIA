@@ -87,8 +87,10 @@ a flight through the portal on Enter. The flat Nexus stays for reduced motion an
 Portal pictures: Muse (H-0096). 06:00: the Garage is a room too, on the same engine (`MIARoom`, `shape: "bay"`):
 its bays stand round her as wide door frames holding each vehicle's photo, a bay's floor glows amber when it's
 overdue, the chosen bay's card opens it, and Needs You, Parts Running Low and the bench are panels over the room;
-coming through the portal you arrive out of its light. Next: the pictures, Zac's look on the real PC, then the other
-areas' rooms one at a time.*
+coming through the portal you arrive out of its light. 05:30, DEC-0135: two looks, picked per
+person in Settings or by voice: Spatial (the Nexus first, areas as rooms) and Cards (the Dashboard first, hubs as
+cards); by device is the default, spatial on the computer and cards on the phone. Next: the pictures, Zac's look on
+the real PC, then the other areas' rooms one at a time.*
 
 | # | What | Done when |
 |---|---|---|

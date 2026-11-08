@@ -86,6 +86,7 @@
     const front = room && room.ring ? room.ring.front : 0;
     if (room) { room.scene.stop(); room.nodes.forEach((x) => x.remove()); room = null; document.body.classList.remove("room-3d"); }
     if (!(window.MIARoom && MIARoom.supported()) || /[?&]flat\b/.test(location.search) || !env.available || !env.bays.length) return false;
+    if (MIAShell.look && MIAShell.look() !== "spatial") return false;  // the cards look keeps the Garage's cards (DEC-0135)
     const links = env.bays.map((b) => el("a", { href: b.page, role: "listitem",
       "aria-label": b.name + (b.overdue ? ", " + b.overdue + " overdue" : "") + (b.next ? ", next: " + b.next.title + " " + b.next.text : "") }, b.name));
     const list = el("div", { class: "room-links", role: "list", "aria-label": "Bays, turn with the arrow keys" }, ...links);
