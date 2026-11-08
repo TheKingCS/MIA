@@ -56,6 +56,13 @@ def _action_about_yourself(context, arguments: dict) -> str:
     return introduction(context)
 
 
+def _action_specialties(context, arguments: dict) -> str:
+    """Tool get_specialties: what MIA is trained for and built to do, read from her own code."""
+    from core.capabilities import specialties
+
+    return specialties(context)
+
+
 def _action_can_you(context, arguments: dict) -> str:
     """Tool get_capability: whether MIA can do a named thing, and how."""
     from core.capabilities import can_i
@@ -107,7 +114,7 @@ def _action_lab_proposals(context, arguments: dict) -> str:
 
 def register_capability_actions(registry: AssistantActionRegistry) -> None:
     """Registers the tools about MIA herself: get_lab_proposals, get_inspection, what_can_you_do,
-    get_introduction, get_capability and get_mia_docs.
+    get_introduction, get_specialties (what she's trained for), get_capability and get_mia_docs.
     """
     registry.register(AssistantAction(
         name="get_lab_proposals", domain="system",
@@ -151,6 +158,19 @@ def register_capability_actions(registry: AssistantActionRegistry) -> None:
         handler=_action_about_yourself,
         trigger_phrases=("about yourself", "who are you", "introduce yourself", "describe yourself", "who is mia",
                          "what is mia?", "what is mia exactly", "what are you exactly", "what exactly are you"),
+        subjects=("you", "mia"),
+    ))
+    registry.register(AssistantAction(
+        name="get_specialties", domain="system",
+        description=("What MIA is trained for and built to do: her specialties (aquaponics greenhouse scientist, her "
+                     "specialists, Night School, teaching, building plans, homestead planning, experimenting, game "
+                     "master, her own models, her browser, painting), read from her own code, never from memory."),
+        parameters={"type": "object", "properties": {}, "required": []},
+        handler=_action_specialties,
+        trigger_phrases=("your specialties", "your specialty", "what are you trained", "what were you trained",
+                         "what have you been trained", "what are you an expert", "your expertise",
+                         "what do you specialize", "what are you specialized", "cool things you can do",
+                         "what are you programmed", "what's your training"),
         subjects=("you", "mia"),
     ))
     registry.register(AssistantAction(
