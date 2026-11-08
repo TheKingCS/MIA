@@ -14,6 +14,14 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
       (undoable, kept in your profile, never committed). Best first: Plaid for Money, then Garage, Calendar,
       Workout, Kitchen, Chickens, Freedom, People. Say "let's fill in MIA" to start.
 
+### MIA across your technology (2026-11-08, docs/DEVICE_FABRIC_PROPOSAL.md)
+- [ ] **DEC-0128:** approve MIA's device fabric — recognize, talk to, secure, and install herself onto your tech
+      (Field Kit grown from USB/serial to the whole network). The read-only defensive half (network discovery +
+      identify + security audit + a screen) can start on approval with no further decision. Then decide: inventory
+      scope, how far into active testing and against which of your devices, Smart Home via Home Assistant or direct
+      adapters, and whether the device inventory is sealed at rest (Claude proposes yes). Say "start the device
+      fabric" to begin the defensive half.
+
 ### Selling MIA (2026-11-08, https://claude.ai/artifact/CXMdLtnXhy4XzUMAW4aLLR)
 - [ ] **DEC-0127:** approve MIA becoming a product (reverses DEC-0119), then the price, launch platforms, bank
       linking, Tailscale or a relay, the payment provider, and a trademark search on "MIA". The plan's last section.

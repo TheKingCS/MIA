@@ -1986,3 +1986,24 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   away from home; the payment provider; a trademark search on the name.
 - Related: DEC-0115, DEC-0119 (reversed if approved), DEC-0126, docs/SECURITY.md
 
+
+### DEC-0128: MIA across your technology — Field Kit grows up
+- Status: PROPOSED
+- Proposed by: claude, 2026-11-08, from Zac's ask (MIA should "intuitively be able to communicate with other
+  technologies… recognize them… install herself, and operate on my device," with real "cyber security" and the
+  ability to "access and manipulate / merge with other technologies"), sharpened by the Echo Show turning out to be
+  unconvertible — the lesson being that reliable interop comes from protocols and credentials you hold, not exploits.
+- Proposal (`docs/DEVICE_FABRIC_PROPOSAL.md`): grow the existing Connected Device Framework (USB/serial, built) to
+  the whole network. Four layers on `context.devices`: **perceive** (mDNS/SSDP/ARP/BLE discovery → a device
+  inventory store), **identify** (make/model + capability profile + known CVEs, reusing the dependency-audit vuln
+  pattern), **speak** (per-protocol adapters: Cast, DLNA, Home Assistant/MQTT, SSH to Zac's own hosts), **extend**
+  (install MIA onto the Pi via the existing kiosk service, cast her panel to a screen, flash+provision behind the
+  built flashing safety rails). Security role split: **defensive** home-network audit always on through the comms
+  gate; **offensive/authorized testing** only against an owner-authorized target list, every intrusive action a
+  person-approved `fabric.commit` (modelled on `browser.commit`), logged — no third-party targets, mass scanning,
+  DoS or evasion (out of scope, not gated). First build is the read-only defensive half (discovery + identify +
+  audit + a Field Kit screen), which needs no gate decision.
+- Open: inventory scope (household vs device-level); how far into active testing and against which devices; Smart
+  Home via Home Assistant or direct adapters; whether the inventory is sealed at rest (DEC-0126) — proposed yes.
+- Related: DEC-0117 (the browser gate this copies), DEC-0126, DEC-0094/0101 (loops); ROADMAP 11 (Field Kit), 13
+  (Smart Home); `core/dependency_audit.py`, `core/device_framework.py`, `core/port_scanner.py`
