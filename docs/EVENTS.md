@@ -16,7 +16,7 @@ change the code, then regenerate. `tests/test_event_catalog.py` fails when it's 
 | `dashboard.widgets_changed` | `core/dashboard_widgets.py` | `gui/home_dashboard.py` |
 | `device.attached` | `core/device_framework.py` | — |
 | `device.detached` | `core/device_framework.py` | — |
-| `display.changed` | `core/assistant_accessibility_actions.py`, `modules/settings/module.py` | `modules/web_home/module.py` |
+| `display.changed` | `core/assistant_accessibility_actions.py`, `core/theme_actions.py`, `modules/settings/module.py` | `modules/web_home/module.py` |
 | `email.draft_ready` | `core/assistant_email_actions.py` | `gui/main_window.py` |
 | `files.browse_path_requested` | `modules/field_kit/module.py` | `gui/main_window.py` |
 | `home.shown` | `gui/main_window.py` | `gui/character_panel.py` |

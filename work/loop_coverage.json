@@ -9,6 +9,10 @@
    "status": "none",
    "why": "which apps show and which are favourites is their own choice; MIA judges nothing in it"
   },
+  "action:art": {
+   "status": "none",
+   "why": "deleting a picture MIA painted is the person's own choice (DEC-0140); nothing of MIA's to improve"
+  },
   "action:browser": {
    "status": "none",
    "why": "each held browser step is the person's own yes; one that fails counts in actions.failed, and taught tasks are watched by browser.runs"
@@ -85,6 +89,10 @@
    "status": "none",
    "why": "a course made from a book, or a book removed, by the person on the Classroom page or by voice (DEC-0125); the tutor's answers have their own loops"
   },
+  "action:theme": {
+   "status": "none",
+   "why": "a theme the person made or removed is their own taste (DEC-0136); nothing of MIA's to improve"
+  },
   "action:undo": {
    "status": "none",
    "why": "undo.last puts back the newest change, as \"undo that\" does; undoing MIA's own change already counts as a correction (core/corrections.py)"
@@ -92,6 +100,10 @@
   "action:visit": {
    "status": "none",
    "why": "visits as the person records them (DEC-0129); MIA never judges care"
+  },
+  "action:wallet": {
+   "status": "none",
+   "why": "taking a card out of the wallet is the person's own choice; nothing of MIA's to improve"
   },
   "action:why": {
    "status": "none",
@@ -121,25 +133,13 @@
    "status": "none",
    "why": "it reports the loops: what it says is only as good as they are, and they are watched"
   },
-  "store:id_wallet": {
+  "check:system_map": {
    "status": "none",
-   "why": "the person's own cards as they give them; MIA reminds before expiry and never reads or uses the numbers"
-  },
-  "action:art": {
-   "status": "none",
-   "why": "deleting a picture MIA painted is the person's own choice (DEC-0140); nothing of MIA's to improve"
+   "why": "The daily system-map regen is itself the loop that keeps MIA_MAP.md current; it reads state and rewrites the doc, nothing to watch over it."
   },
   "store:art": {
    "status": "none",
    "why": "the pictures MIA painted on request and what from (DEC-0140); what she paints is the person's taste, and a failed painting is told at once"
-  },
-  "action:theme": {
-   "status": "none",
-   "why": "a theme the person made or removed is their own taste (DEC-0136); nothing of MIA's to improve"
-  },
-  "action:wallet": {
-   "status": "none",
-   "why": "taking a card out of the wallet is the person's own choice; nothing of MIA's to improve"
   },
   "store:business_use": {
    "status": "proposed",
@@ -148,6 +148,10 @@
   "store:data_logger": {
    "status": "none",
    "why": "readings from meters and sensors: measurements, not her choices (grow_alert speaks when one is out of range)"
+  },
+  "store:direction": {
+   "status": "none",
+   "why": "Its active-encouragement loop is check:direction_nudge (DEC-0141), which paces the gentle nudges through the gate; the store itself just holds the standing directions a person set."
   },
   "store:energy": {
    "status": "none",
@@ -168,6 +172,10 @@
   "store:homestead": {
    "status": "none",
    "why": "only its setup writes it so far; a loop comes with the first app or action that does"
+  },
+  "store:id_wallet": {
+   "status": "none",
+   "why": "the person's own cards as they give them; MIA reminds before expiry and never reads or uses the numbers"
   },
   "store:intents": {
    "status": "none",
@@ -212,6 +220,10 @@
   "store:private_journal": {
    "status": "none",
    "why": "private: never measured"
+  },
+  "store:response_style": {
+   "status": "none",
+   "why": "This store IS a self-improvement loop by construction (DEC-0138): it runs A/B style experiments, records which the person preferred, and adapts phrasing. Nothing outside it needs to watch it."
   },
   "store:scripts": {
    "status": "none",
