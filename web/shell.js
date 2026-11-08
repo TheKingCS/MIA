@@ -652,13 +652,15 @@
     else signInForm(go);
   }
 
-  // Every screen's voice twin (DEC-0125): "Say: …" under the title, the app's own ask; a tap puts it in Talk.
+  // Every screen's voice twin (DEC-0125): "Say: …" under the title, the page's own phrase (<body data-say>, for a page
+  // inside an app, like Projects in the Workshop) or else the app's ask; a tap puts it in Talk.
   function sayLine(shell) {
     const hero = $(".hero");
     const here = (shell.apps || []).find((a) => a.id === document.body.dataset.app);
-    if (!hero || !here || !here.ask || $(".say-line", hero)) return;
+    const ask = document.body.dataset.say || (here && here.ask);
+    if (!hero || !ask || $(".say-line", hero)) return;
     hero.append(el("button", { type: "button", class: "say-line", title: "Try it in Talk",
-      onclick: () => toggleTalk(true, here.ask) }, el("span", { class: "say-label" }, "Say"), "“" + here.ask + "”"));
+      onclick: () => toggleTalk(true, ask) }, el("span", { class: "say-label" }, "Say"), "“" + ask + "”"));
   }
 
   /** The frame alone (sidebar + MIA) for a page that runs its own render and sign-in. */

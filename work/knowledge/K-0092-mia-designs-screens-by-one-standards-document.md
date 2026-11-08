@@ -1,5 +1,5 @@
 ---
-id: K-0065
+id: K-0092
 kind: decision
 title: MIA designs screens by one standards document
 status: confirmed

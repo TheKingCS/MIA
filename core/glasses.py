@@ -1052,6 +1052,37 @@ def _memories_glance(context, today):
     return _panel("Memories", lines, "No trips remembered yet.")
 
 
+def _field_devices(context, today):
+    """Panel: what's plugged in now (core/web_field_kit.py): storage with its size and where it's mounted, then boards
+    on serial ports; a readout (ejecting stays on the PC)."""
+    from core.web_field_kit import _devices
+
+    found = _devices(context)
+    if not found["available"]:
+        return _panel("Plugged In", [], "This MIA can't look at its devices.")
+    lines = [_line(d["name"], " · ".join(x for x in (d["size"], d["mounted"] or "not mounted", d["via"]) if x))
+             for d in found["storage"]]
+    lines += [_line(d["name"], " · ".join(x for x in (d["port"], d["board"]) if x)) for d in found["serial"]]
+    return _panel("Plugged In", lines, "Nothing plugged in.")
+
+
+def _waypoint_list(context, today):
+    """Panel: the saved waypoints by name, with their kind and notes' first words; a readout (distances need a
+    position: ask "how far is" one)."""
+    book = getattr(context, "waypoints", None)
+    points = book.all_waypoints() if book is not None else []
+    return _panel("Waypoints", [_line(w.name, " · ".join(x for x in (w.category, (w.notes or "")[:40]) if x))
+                                for w in points], "No waypoints saved yet.")
+
+
+def _trail_maps(context, today):
+    """Panel: the trail maps on this MIA, by park and state; a readout (they open on the phone or PC)."""
+    library = getattr(context, "trail_maps", None)
+    maps = library.all_trail_maps() if library is not None else []
+    return _panel("Trail Maps", [_line(m.park_name, m.state) for m in sorted(maps, key=lambda m: m.park_name.lower())],
+                  "No trail maps saved yet.")
+
+
 def _project_tasks(context, today):
     """Panel: the open tasks of the projects underway (core/web_projects.py), soonest due first, each with Done
     (task.done) and its project and due day; up to five, the rest counted."""
@@ -1180,6 +1211,9 @@ PANELS: dict[str, tuple[tuple[str, str, Panel], ...]] = {
     "lab": (("latest", "Latest Readings", _lab_latest),),
     "power": (("levels", "Levels", _power_levels),),
     "notes": (("latest", "Latest Notes", _journal_latest),),
+    "field_kit": (("devices", "Plugged In", _field_devices),),
+    "navigation": (("waypoints", "Waypoints", _waypoint_list),),
+    "maps": (("trail_maps", "Trail Maps", _trail_maps),),
     "memories": (("trips", "Memories", _memories_glance),),
 }
 

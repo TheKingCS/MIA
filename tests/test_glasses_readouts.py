@@ -1,6 +1,7 @@
 """The glasses' readout panels for apps that had only questions (core/glasses.py): What MIA Noticed (Needs You
 first, in amber), the Lab's latest readings (newest first) and Power's levels (the battery, then each meter, amber
-when low). The latest notes and Memories too. Readouts carry no action."""
+when low). The latest notes, Memories, what's plugged in, the
+waypoints and the trail maps too. Readouts carry no action."""
 
 from __future__ import annotations
 
@@ -47,3 +48,29 @@ def test_the_latest_notes_and_memories(monkeypatch):
     monkeypatch.setattr(memories_web, "screen", lambda c, t=None: {"on_this_day": [trip], "recaps": [trip]})
     lines = _memories_glance(None, None)["lines"]
     assert lines[0]["text"] == "On this day: Elk Creek" and lines[1]["detail"] == "18.4 km · 3 days"
+
+
+def test_whats_plugged_in_and_the_waypoints(monkeypatch):
+    from types import SimpleNamespace
+
+    import core.web_field_kit as web_field_kit
+    from core.glasses import _field_devices, _waypoint_list
+
+    monkeypatch.setattr(web_field_kit, "_devices", lambda c: {"available": True,
+        "storage": [{"name": "SanDisk", "size": "32G", "mounted": "/media/usb", "via": "USB"}],
+        "serial": [{"name": "Arduino Uno", "port": "/dev/ttyACM0", "board": "Uno"}]})
+    assert [(l["text"], l["detail"]) for l in _field_devices(None, None)["lines"]] == [
+        ("SanDisk", "32G · /media/usb · USB"), ("Arduino Uno", "/dev/ttyACM0 · Uno")]
+    spring = SimpleNamespace(name="Upper spring", category="Water", notes="Dry in August")
+    book = SimpleNamespace(all_waypoints=lambda: [spring])
+    assert _waypoint_list(SimpleNamespace(waypoints=book), None)["lines"][0]["detail"] == "Water · Dry in August"
+
+
+def test_the_trail_maps_by_park():
+    from types import SimpleNamespace
+
+    from core.glasses import _trail_maps
+
+    maps = [SimpleNamespace(park_name="Zion", state="UT"), SimpleNamespace(park_name="Acadia", state="ME")]
+    lines = _trail_maps(SimpleNamespace(trail_maps=SimpleNamespace(all_trail_maps=lambda: maps)), None)["lines"]
+    assert [(l["text"], l["detail"]) for l in lines] == [("Acadia", "ME"), ("Zion", "UT")]
