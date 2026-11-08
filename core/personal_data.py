@@ -99,6 +99,7 @@ from core.training_session import TrainingStore
 from core.cooking_session import CookingStore
 from core.failure_log import FailureLog
 from core.answer_ratings import AnswerRatings
+from core.connections import ConnectionBook
 from core.direction import DirectionBook
 from core.response_style import StyleBook
 from core.operating_journal import OperatingJournal
@@ -174,6 +175,7 @@ PERSONAL_STORES: tuple[tuple[str, type], ...] = (
     ("ratings", AnswerRatings),  # 👍 and 👎 on her answers (DEC-0067)
     ("response_style", StyleBook),  # how they like MIA to answer, learned from A/B picks (DEC-0138)
     ("direction", DirectionBook),  # the standing values MIA holds and encourages (DEC-0141)
+    ("connections", ConnectionBook),  # remarks that tie into things started weeks ago, raised once (2026-11-08)
     ("operating_journal", OperatingJournal),  # how they mean to operate, and how they do (DEC-0097)
     ("recreation", RecreationLog),  # games and sports played (DEC-0098)
     ("paths", PathBook),  # learning paths: guitar and anything else they learn, practice and checks (DEC-0112)

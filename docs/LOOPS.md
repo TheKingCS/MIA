@@ -2,7 +2,7 @@
 
 *Generated from `core/loops.py` by `python -m core.loop_catalog`; never edit by hand (a test keeps it current). The design and the reasons: `docs/IMPROVEMENT_LOOPS.md`; what each process is watched by: `python -m tools.night_school coverage`.*
 
-90 loops in 8 areas.
+92 loops in 8 areas.
 
 ## Answers
 
@@ -66,6 +66,7 @@
 
 | Loop | Watches | Scope | Floor | When it slips | Covers |
 |---|---|---|---|---|---|
+| `connections.unlinked` | ties found only by shared words, between kinds her link graph doesn't connect yet, in 30 days | person | ≤ 3 | opens a task | `store:connections` |
 | `dev.audit_code` | places the weekly code audit found to improve | device | trend | shown, never acted on | `dev:self_audit` |
 | `dev.chronicles` | Chronicles candidates waiting | device | trend | shown, never acted on | `dev:chronicles`, `check:chronicle`, `store:saga_moments` |
 | `dev.coder` | MIA's coder: shadow attempts passed | device | trend | shown, never acted on | `dev:shadow` |
@@ -127,6 +128,7 @@
 | Loop | Watches | Scope | Floor | When it slips | Covers |
 |---|---|---|---|---|---|
 | `checks.dismissed` | the daily check whose messages are dismissed most, in 30 days | person | ≤ 0.6 (from 10) | opens a task | `check:budget_nudge`, `check:calendar_digest`, `check:capability_reminder`, `check:checkin`, `check:chronicle`, `check:dependency_audit` and 19 more |
+| `connections.landed` | connections she noticed that she brought up, not let expire, in 30 days | person | ≥ 0.3 (from 5) | opens a task | `store:connections` |
 | `gate.dismissed` | unprompted messages dismissed, in 7 days | person | ≤ 0.5 (from 5) | opens a task | `flow:gate`, `store:communication`, `store:notifications` |
 | `gate.expired` | messages held back that expired before they went out | person | trend (from 3) | shown, never acted on | `flow:gate` |
 | `gate.saturation` | days the daily limit of unprompted messages was hit, in 7 | person | ≤ 2 | opens a task | `flow:gate` |

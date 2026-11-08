@@ -115,7 +115,10 @@ def pre_turn(context: AppContext, conversation: Conversation, prompt: str) -> Pr
     plain yes is handled here first, in code: to the offer MIA just made,
     or to the browser step she just asked about (DEC-0117). Her browser
     hears the message first (not a private journal turn): the only words
-    it may type or search for on its own (DEC-0122)."""
+    it may type or search for on its own (DEC-0122). Past the danger
+    check, the words are looked at for connections to things started
+    weeks ago (core/connections.py), kept to come up naturally later;
+    that never changes this turn."""
     result = PreTurn()
     conversation.private_turn = _looks_like_journal_read(prompt)
     # Her browser may type or search for only what the person said (DEC-0117, tightened 2026-11-07).
@@ -199,6 +202,15 @@ def pre_turn(context: AppContext, conversation: Conversation, prompt: str) -> Pr
 
             escalate(context, person_id(context))
         return result
+
+    # Connections (core/connections.py, 2026-11-08): a remark that ties into something started weeks ago is kept,
+    # to come up naturally later. Past the danger check, so a crisis never feeds it; it never changes this turn.
+    from core.connections import notice
+
+    try:
+        notice(context, conversation, prompt)
+    except Exception:
+        log.exception("Couldn't look for connections")
 
     # "Keep it" after MIA offered to keep a promise, decision, idea or goal set aside (DEC-0054).
     from core.life_notes import answer_offer

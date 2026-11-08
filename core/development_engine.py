@@ -59,7 +59,7 @@ class Candidate:
 
     id: str
     name: str
-    domain: str = "homestead"
+    sector: str = "homestead"  # which development area it belongs to (not a tool domain): homestead, business...
     entry_cost: float = 0.0  # dollars to start
     recurring_cost: float = 0.0  # dollars per month to run
     labour_hours: float = 0.0  # rough hours to complete
@@ -243,7 +243,7 @@ def homestead_catalog() -> list:
                   scalable=True, risk=0.35, needs_professional=True,
                   note="Year-round growing and a path to selling plants; the big step, so it waits."),
         Candidate("plant_sales", "Sell seedlings and produce", entry_cost=40, benefit=60, labour_hours=6,
-                  requires=frozenset({"beds"}), scalable=True, risk=0.4, domain="business",
+                  requires=frozenset({"beds"}), scalable=True, risk=0.4, sector="business",
                   note="Where the homestead starts paying back — the bridge to a small business."),
     ]
 

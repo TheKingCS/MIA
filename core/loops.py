@@ -341,6 +341,34 @@ def _check_of(topic: str) -> str:
                                             topic.startswith(t)), "")
 
 
+def _connections_landed(context) -> Optional[Reading]:
+    """Measure: of the connections MIA noticed (core/connections.py) that settled in 30 days, the share she brought up
+    rather than let expire. Low means they're chosen or framed badly. None before the first settles."""
+    book = getattr(context, "connections", None)
+    if book is None or not hasattr(book, "stats"):
+        return None
+    s = book.stats(_since(30))
+    settled = s["mentioned"] + s["expired"]
+    if not settled:
+        return None
+    return Reading(round(s["mentioned"] / settled, 2), settled, f"{s['mentioned']} brought up, {s['expired']} expired")
+
+
+def _connections_unlinked(context) -> Optional[Reading]:
+    """Measure: in 30 days, the ties MIA found only by shared words between a thing that was named and an open
+    project, goal or idea — kinds her link graph doesn't connect yet, so each is a place her systems could
+    interconnect. Counted by kind pair, never by name. None before anything is noticed."""
+    book = getattr(context, "connections", None)
+    if book is None or not hasattr(book, "stats"):
+        return None
+    s = book.stats(_since(30))
+    if not s["noticed"]:
+        return None
+    pairs = s["unlinked"]
+    detail = ", ".join(f"{a}↔{b} {n}" for (a, b), n in pairs.most_common(3)) or "none"
+    return Reading(float(sum(pairs.values())), s["noticed"], detail)
+
+
 def _checks_dismissed(context) -> Optional[Reading]:
     """Which daily check's messages are dismissed most, over 30 days: the one to make worth reading."""
     gate = getattr(context, "communication", None)
@@ -1189,6 +1217,13 @@ LOOPS: tuple[Loop, ...] = (
          floor=0, files=("gui/main_window.py", "web/shell.js"), covers=_apps()),
     Loop("notes.offers", "proactivity", "offers to keep what they said they'd do, decided or set aside, turned down",
          "person", _notes_offers, floor=0.6, min_n=10, files=("core/life_notes.py",), covers=("store:life_notes",)),
+    # The magic is in the connections (Zac, 2026-11-08): does she bring them up, and where don't her systems connect?
+    Loop("connections.landed", "proactivity", "connections she noticed that she brought up, not let expire, in 30 days",
+         "person", _connections_landed, better="higher", floor=0.3, min_n=5, files=("core/connections.py",),
+         covers=("store:connections",)),
+    Loop("connections.unlinked", "development", "ties found only by shared words, between kinds her link graph doesn't "
+         "connect yet, in 30 days", "person", _connections_unlinked, floor=3, min_n=1,
+         files=("core/links.py", "core/connections.py"), covers=("store:connections",)),
     Loop("checks.dismissed", "proactivity", "the daily check whose messages are dismissed most, in 30 days", "person",
          _checks_dismissed, floor=0.6, min_n=10, files=("core/application.py",),
          covers=tuple(sorted({f"check:{c}" for c in CHECK_TOPICS.values()})) + ("store:insights",)),

@@ -156,6 +156,12 @@ def _records(context, kind: Kind) -> list:
         return []
 
 
+def records(context, kind: str) -> list:
+    """Every record of a kind by its name ("project", "material"...): [] for an unknown kind or a missing store. The
+    public way for another module (core/connections.py) to walk the things links can point at."""
+    return _records(context, KINDS[kind]) if kind in KINDS else []
+
+
 def ref_of(kind: str, record) -> str:
     """A record's reference, "kind:id" (how links point at things, never by copying them)."""
     return f"{kind}:{getattr(record, KINDS[kind].id_attr)}"
