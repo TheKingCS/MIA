@@ -11,10 +11,12 @@ TODAY = date(2026, 10, 17)
 
 
 def ago(n: int) -> str:
+    """The day n days before TODAY, as an ISO date."""
     return (TODAY - timedelta(days=n)).isoformat()
 
 
 def test_nth_latest():
+    """The nth latest day within the week, or None when there aren't that many in it; a future day never counts."""
     days = [TODAY - timedelta(days=n) for n in (0, 2, 5, 9)]
     assert nth_latest(days, 3, TODAY, 7) == TODAY - timedelta(days=5)
     assert nth_latest(days, 4, TODAY, 7) is None  # the fourth is outside the week

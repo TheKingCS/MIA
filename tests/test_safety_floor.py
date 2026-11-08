@@ -47,11 +47,13 @@ MUST_NOT_TRIGGER = [
 
 @pytest.mark.parametrize("text", MUST_TRIGGER)
 def test_triggers(text):
+    """Each of these is recognised as danger."""
     assert detect_danger(text)
 
 
 @pytest.mark.parametrize("text", MUST_NOT_TRIGGER)
 def test_does_not_trigger(text):
+    """None of these is taken as danger."""
     assert not detect_danger(text)
 
 

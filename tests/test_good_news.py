@@ -71,6 +71,7 @@ def test_the_script_says_how_its_known_and_never_makes_any_up():
 
 @pytest.fixture
 def person(tmp_path, monkeypatch):
+    """A stand-in person whose settings live in a dict, and the news folder in a temporary one."""
     import core.person_settings as ps
 
     store = {}

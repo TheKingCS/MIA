@@ -18,6 +18,7 @@ from core.living_worlds import LivingWorldsBook
 
 @pytest.fixture
 def game(tmp_path):
+    """A campaign ready to play: a high-fantasy universe, its campaign, and Kael's version in it; returns the book, the campaign, the version and the folder."""
     book = LivingWorldsBook(data_dir=tmp_path)
     u = book.create_universe("Aethelgard", genre="high fantasy")
     c = book.create_campaign(u.universe_id, "The Shattered Crown")

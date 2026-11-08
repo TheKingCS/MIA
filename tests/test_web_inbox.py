@@ -16,12 +16,14 @@ from tests.test_inbox import RECEIPT_TEXT, make_ctx, qapp  # noqa: F401  (qapp i
 
 @pytest.fixture
 def ctx(tmp_path, monkeypatch, qapp):  # noqa: F811
+    """The inbox's test context with an action center."""
     context = make_ctx(tmp_path, monkeypatch)
     context.actions = ActionCenter()
     return context
 
 
 def do(ctx, kind, **params):
+    """Proposes an action and approves it, checking it ran; returns its summary and result."""
     proposal = ctx.actions.propose(ctx, kind, params)
     done = ctx.actions.approve(ctx, proposal.proposal_id)
     assert done.status == "executed", done.result
@@ -29,6 +31,7 @@ def do(ctx, kind, **params):
 
 
 def test_indexes():
+    """Ticked indexes are read from text or a list, skipping what isn't a number."""
     assert _indexes("0, 2,x") == [0, 2] and _indexes([1]) == [1] and _indexes(None) == []
 
 

@@ -14,6 +14,7 @@ BY_ID = {l.id: l for l in loops.LOOPS}
 
 
 def ago(**kw) -> str:
+    """The moment that long ago, as an ISO time to the second."""
     return (datetime.now() - timedelta(**kw)).isoformat(timespec="seconds")
 
 

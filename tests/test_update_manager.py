@@ -35,6 +35,7 @@ def _write_update_zip(path: Path, files: dict, manifest: dict | None = None) -> 
 
 @pytest.fixture
 def isolated_project(tmp_path, monkeypatch):
+    """An empty project folder that the update manager treats as MIA's."""
     project_root = tmp_path / "project"
     project_root.mkdir()
     monkeypatch.setattr(update_manager_module, "_PROJECT_ROOT", project_root)
@@ -43,6 +44,7 @@ def isolated_project(tmp_path, monkeypatch):
 
 @pytest.fixture
 def isolated_git_project(isolated_project):
+    """The project folder as a git repository with one commit."""
     project_root = isolated_project
     subprocess.run(["git", "init", "-q"], cwd=project_root, check=True)
     subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=project_root, check=True)

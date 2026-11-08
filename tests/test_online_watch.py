@@ -15,6 +15,7 @@ from core.online_watch import CAME_BACK, WENT_OFFLINE, OnlineReminders, OnlineWa
 
 @pytest.fixture(autouse=True)
 def isolated(tmp_path, monkeypatch):
+    """Points online reminders at a temporary folder."""
     monkeypatch.setattr(online_module, "_DATA_DIR", tmp_path)
     monkeypatch.setattr(online_module, "_REMINDERS_FILE", tmp_path / "online_reminders.json")
 

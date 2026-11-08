@@ -27,6 +27,7 @@ from core.journal_manager import JournalManager
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points journal entries at a temporary folder; returns the folder and the file."""
     data_dir = tmp_path / "data"
     entries_file = data_dir / "journal_entries.json"
     monkeypatch.setattr(journal_manager_module, "_DATA_DIR", data_dir)
@@ -35,6 +36,7 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _make_manager() -> JournalManager:
+    """A journal manager on a fresh config and event bus."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     return JournalManager(context)
 

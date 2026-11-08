@@ -63,6 +63,7 @@ def test_whitespace_only_returns_empty_list():
 
 
 def test_strips_surrounding_whitespace():
+    """Spaces around a hash don't change what it's identified as."""
     digest = hashlib.sha256(b"hello").hexdigest()
     assert identify_hash(f"  {digest}  ") == ["SHA-256"]
 

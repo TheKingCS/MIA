@@ -14,6 +14,7 @@ from modules.toolbox.tools.pathway_tool import format_pathway_row, format_pathwa
 
 
 def _pathway(steps=2):
+    """A carpentry pathway with the given number of steps."""
     return Pathway(
         pathway_id="p1", skill_id="carpentry", name="Test Pathway",
         steps=[PathwayStep(name=f"Step {i}") for i in range(steps)],

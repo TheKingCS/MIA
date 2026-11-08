@@ -26,6 +26,7 @@ from core.skill_manager import SkillManager
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points skill definitions, progress and the XP log at a temporary folder; returns it."""
     data_dir = tmp_path / "data"
     monkeypatch.setattr(skill_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(skill_manager_module, "_SKILL_DEFINITIONS_FILE", data_dir / "skill_definitions.json")
@@ -35,6 +36,7 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _write_definitions(data_dir, skills: list[dict]) -> None:
+    """Writes the given skill definitions."""
     data_dir.mkdir(parents=True, exist_ok=True)
     (data_dir / "skill_definitions.json").write_text(json.dumps({"skills": skills}))
 

@@ -26,6 +26,7 @@ from core.event_bus import EventBus
 
 @pytest.fixture
 def bare_app(tmp_path, monkeypatch):
+    """A MIAApplication with only a config and event bus (no Qt, no modules), for its daily checks."""
     import core.config_manager as config_manager_module
 
     monkeypatch.setattr(config_manager_module, "_CONFIG_FILE", tmp_path / "config.json")

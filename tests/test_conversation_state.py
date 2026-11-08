@@ -22,6 +22,7 @@ def test_what_reads_as_a_follow_up():
 
 @pytest.fixture
 def life(shop, monkeypatch):  # noqa: F811
+    """The test household with the desktop's tools, and the meaning search turned off so only the conversation decides."""
     from tests.assistant_registry import build_desktop_registry
 
     shop.assistant_actions = build_desktop_registry()
@@ -86,6 +87,7 @@ def test_the_model_is_told_what_came_earlier(life):
 
 
 def test_what_it_means(life):
+    """"It" means the thing the conversation was about (the truck), and its tools come along; a question that names its own subject, small talk, or two things at once leans on nothing."""
     from core.assistant_chat import build_chat_request
 
     truck = life.maintenance.add_asset("Pickup Truck", "Vehicle")

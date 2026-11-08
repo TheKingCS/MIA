@@ -26,6 +26,7 @@ from core.skill_manager import SkillManager
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points projects, the config and the skill files at a temporary folder; returns the folder and the projects file."""
     data_dir = tmp_path / "data"
     projects_file = data_dir / "projects.json"
     monkeypatch.setattr(project_manager_module, "_DATA_DIR", data_dir)
@@ -43,6 +44,7 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _make_manager() -> ProjectManager:
+    """A project manager on a fresh config and event bus."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     return ProjectManager(context)
 

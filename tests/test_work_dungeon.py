@@ -11,6 +11,7 @@ from tests.test_crafting import do, shop  # noqa: F401  (the fixture)
 
 @pytest.fixture
 def work(shop):  # noqa: F811
+    """The test household with the dungeon in the person's folder."""
     from core.work_dungeon import DungeonBook
 
     shop.dungeon = DungeonBook(shop, data_dir=shop.my_dir)
@@ -18,6 +19,7 @@ def work(shop):  # noqa: F811
 
 
 def _monday_weeks_ago(weeks: int) -> date:
+    """The Monday of the week that many weeks back."""
     t = date.today()
     return t - timedelta(days=t.weekday() + 7 * weeks)
 

@@ -14,6 +14,7 @@ SUNDAY_EVENING = datetime(2026, 9, 27, 19, 0)  # a Sunday
 
 
 def entry(day, themes=(), mood=""):
+    """A private journal entry on that day of September 2026 with its themes and mood."""
     return PrivateJournalEntry(entry_id=str(day), themes=list(themes), mood=mood,
                                created_at=datetime(2026, 9, day, 20, 0).isoformat(timespec="seconds"))
 
@@ -32,6 +33,7 @@ def test_the_notice_never_carries_journal_content():
 
 
 def test_the_reflection():
+    """The weekly reflection counts the week's entries, names what came up most, and how the mood moved; older entries are left out, and an empty week says so."""
     entries = [entry(26, ["the greenhouse", "work"], "hopeful"), entry(23, ["work", "money"], "drained"),
                entry(21, ["work"], "tired"), entry(2, ["old stuff"], "sad")]  # the last one is from weeks ago
     text = weekly_reflection(entries, SUNDAY_EVENING)

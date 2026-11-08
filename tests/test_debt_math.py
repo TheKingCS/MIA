@@ -10,6 +10,7 @@ TODAY = date(2026, 10, 30)
 
 
 def debt(name, balance, rate, minimum, **kw):
+    """A debt with its name, balance, interest rate and minimum payment (and anything else given)."""
     return SimpleNamespace(name=name, balance=balance, interest_rate=rate, minimum_payment=minimum, **kw)
 
 

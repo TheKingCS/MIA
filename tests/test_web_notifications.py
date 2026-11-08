@@ -20,6 +20,7 @@ from core.web_notifications import notifications_page, tone_of
 
 @pytest.fixture
 def home(tmp_path):
+    """A context with notifications in a temporary folder."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     context.notifications = NotificationManager(context, data_dir=tmp_path)
     return context

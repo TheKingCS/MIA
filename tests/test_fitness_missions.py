@@ -31,6 +31,7 @@ PLAN = {
 
 @pytest.fixture
 def world(tmp_path, monkeypatch):
+    """The test household with an action center and the fitness plan set."""
     context = build_world(tmp_path, monkeypatch)
     context.actions = ActionCenter()
     context.fitness.update_plan(PLAN)
@@ -38,6 +39,7 @@ def world(tmp_path, monkeypatch):
 
 
 def by_kind(world, today=MON):
+    """The fitness missions made for the day, by their kind."""
     return {fx._kind(m): m for m in fx.ensure(world, today)}
 
 

@@ -24,12 +24,14 @@ from modules.kitchen.module import (
 
 
 def _recipe(**overrides) -> Recipe:
+    """A recipe (Weeknight Chili) changed by any overrides given."""
     defaults = dict(recipe_id="r1", name="Weeknight Chili", category="Dinner", servings=6)
     defaults.update(overrides)
     return Recipe(**defaults)
 
 
 def _pantry_item(**overrides) -> PantryItem:
+    """A pantry item (ground beef) changed by any overrides given."""
     defaults = dict(item_id="p1", name="Ground Beef", quantity=2.0, unit="lbs", category="Meat", expiration_date="")
     defaults.update(overrides)
     return PantryItem(**defaults)

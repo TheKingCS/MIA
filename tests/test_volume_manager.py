@@ -26,6 +26,7 @@ from core.volume_manager import (
 
 
 def _make_manager() -> VolumeManager:
+    """A volume manager with no config or event bus."""
     context = AppContext(config=None, events=None)
     return VolumeManager(context)
 
@@ -51,6 +52,7 @@ _SAMPLE_STEREO_MUTED_OUTPUT = """Simple mixer control 'Master',0
 
 
 def test_parses_mono_output():
+    """amixer's mono output reads as its percent and not muted."""
     status = parse_amixer_output(_SAMPLE_MONO_OUTPUT)
     assert status == VolumeStatus(percent=50, muted=False)
 
@@ -100,6 +102,7 @@ def test_backend_read_raises_on_nonzero_exit(monkeypatch):
 
 
 def test_backend_read_succeeds(monkeypatch):
+    """The amixer backend reads the volume from amixer's output."""
     monkeypatch.setattr(
         volume_manager_module.subprocess,
         "run",

@@ -9,6 +9,7 @@ from core.observations_web import screen
 
 
 def test_what_she_noticed(monkeypatch):
+    """Observations shows each finding with its next step, and insights grouped by where they came from, each with its recommendation, since when, its kind and where to open it."""
     monkeypatch.setattr(findings_module, "findings", lambda context, today=None: [
         Finding("k1", "A bill before payday", "Rent is due Friday; pay comes Monday.", "So it isn't late.",
                 next_step="Move it to Monday.", app="money")])
@@ -29,6 +30,7 @@ def test_what_she_noticed(monkeypatch):
 
 
 def test_nothing_yet(monkeypatch):
+    """With nothing noticed, Observations is empty."""
     monkeypatch.setattr(findings_module, "findings", lambda context, today=None: [])
     assert screen(SimpleNamespace(insights=None)) == {"findings": [], "insights": []}
 

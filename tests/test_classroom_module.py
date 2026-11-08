@@ -36,6 +36,7 @@ def test_format_subject_row_without_category():
 
 
 def test_format_course_row():
+    """A course's row reads its name and how many lessons are complete."""
     course = Course(course_id="c1", subject_id="s1", name="Intro")
     assert format_course_row(course, 3, 3) == "Intro — 3 of 3 complete"
 

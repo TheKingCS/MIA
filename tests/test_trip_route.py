@@ -17,6 +17,7 @@ from core.waypoint_manager import WaypointManager
 
 @pytest.fixture
 def trail(tmp_path, monkeypatch):
+    """A stand-in person with waypoints (a boat ramp and an island) and a trip, and an action center."""
     monkeypatch.setattr(actions, "_who", lambda context: "p1")
     ctx = SimpleNamespace(config=SimpleNamespace(get=lambda key, default=None: default), undo=None, events=None,
                           actions=ActionCenter())
@@ -29,6 +30,7 @@ def trail(tmp_path, monkeypatch):
 
 
 def act(ctx, kind, **params):
+    """Proposes an action as the person and approves it; returns both."""
     proposal = ctx.actions.propose(ctx, kind, params, proposed_by="person")
     return proposal, ctx.actions.approve(ctx, proposal.proposal_id)
 

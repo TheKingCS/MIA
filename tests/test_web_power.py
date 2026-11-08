@@ -24,6 +24,7 @@ NOW = datetime(2026, 11, 7, 18, 0, 0)
 
 @pytest.fixture
 def home(tmp_path, monkeypatch):
+    """A context with the data logger and energy sources on temporary files."""
     data_dir = tmp_path / "data"
     monkeypatch.setattr(energy_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(energy_manager_module, "_ENERGY_SOURCES_FILE", data_dir / "energy_sources.json")

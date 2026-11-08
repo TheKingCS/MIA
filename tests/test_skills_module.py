@@ -28,6 +28,7 @@ from modules.skills.module import (
 
 
 def test_format_skill_subtitle():
+    """A skill's subtitle reads its level and XP toward the next."""
     assert format_skill_subtitle(3, 12, 60) == "Lv. 3 · 12/60 XP"
 
 
@@ -46,6 +47,7 @@ def test_format_skill_status_line():
 
 
 def test_format_tier_chip():
+    """A tier shows as T and its number."""
     assert format_tier_chip(3) == "T3"
 
 

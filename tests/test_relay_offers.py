@@ -11,6 +11,7 @@ RELAY = (Path(__file__).parent.parent / "android-phone/app/src/main/java/com/mia
 
 
 def offered() -> set[str]:
+    """The action kinds the phone's relay offers, read from its OFFER_KINDS."""
     block = re.search(r"OFFER_KINDS = setOf\((.*?)\)", RELAY, re.S).group(1)
     return set(re.findall(r'"([a-z_.]+)"', block))
 

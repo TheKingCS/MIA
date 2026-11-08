@@ -13,6 +13,7 @@ from core.web_surfaces import APPS
 
 @pytest.fixture(scope="module")
 def ctx():
+    """A context holding only the desktop's full tool registry."""
     from tests.assistant_registry import build_desktop_registry
 
     return SimpleNamespace(assistant_actions=build_desktop_registry())

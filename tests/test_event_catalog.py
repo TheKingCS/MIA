@@ -17,6 +17,7 @@ def test_no_one_listens_for_an_event_nothing_sends():
 
 
 def test_reading_the_code(tmp_path):
+    """The catalogue finds who publishes and who subscribes to each event in the code, and the orphans: events nobody hears and ones nobody sends."""
     (tmp_path / "core").mkdir()
     (tmp_path / "core" / "a.py").write_text('context.events.publish("thing.done", x=1)\n'
                                             'publish(context, "records.changed", action="y")\n', encoding="utf-8")

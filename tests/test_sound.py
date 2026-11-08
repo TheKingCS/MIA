@@ -22,6 +22,7 @@ def test_a_reward_carries_its_line():
 
 
 def test_settings_and_shell(tmp_path, monkeypatch):
+    """Sound is on and the voice off by default, and the shell carries the person's own setting."""
     from core.web_surfaces import shell
     from tests.engine_world import build_world
 

@@ -19,6 +19,7 @@ MON = date(2026, 10, 12)
 
 @pytest.fixture
 def world(tmp_path, monkeypatch):
+    """The test household with an action center and a fitness plan: targets, a three-day push rotation and a handstand skill."""
     context = build_world(tmp_path, monkeypatch)
     context.actions = ActionCenter()
     context.fitness.update_plan({
@@ -74,6 +75,7 @@ def test_is_it_working_in_one_sentence(world):
 
 
 def build_child_free_world(world):
+    """The world with no weigh-ins, food or training logged."""
     world.fitness._data.update(weigh_ins=[], food=[], training_done=[])
     return world
 
@@ -85,6 +87,7 @@ def test_children_see_no_weight(world):
 
 
 def test_the_week_page(world):
+    """The week page shows the meals planned, the shopping they need (scaled to the serving) and the recipes used."""
     recipe = world.kitchen.add_recipe("Chili", category="Lunch", servings=4)
     world.kitchen.add_ingredient(recipe.recipe_id, "ground beef", 1, "lb")
     world.fitness.plan_meal(MON.isoformat(), "lunch", recipe.recipe_id)

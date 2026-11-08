@@ -16,6 +16,7 @@ from tests.engine_world import build_world
 
 @pytest.fixture
 def world(tmp_path, monkeypatch):
+    """The test household, with nothing waiting to be said on the glasses."""
     w = build_world(tmp_path, monkeypatch)
     gf._voice.clear()
     return w

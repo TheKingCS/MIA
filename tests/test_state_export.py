@@ -21,6 +21,7 @@ TODAY = date.today()
 
 @pytest.fixture
 def world(tmp_path, monkeypatch):
+    """The test household with a little of everything for the Life State: a lot, a goal and its project and task (linked), pay, a paid and an upcoming bill, a debt, a groceries target over budget, a workout and a finished mission."""
     context = build_world(tmp_path, monkeypatch)
     lot = context.real_estate.add_property("Vacant lot", property_type="Land", current_value=50000.0)
     goal = context.intents.add_intent("Grow our own food", primary=True)
@@ -82,6 +83,7 @@ def test_the_checker_catches_drift(world):
 
 
 def test_the_export_command(tmp_path, monkeypatch):
+    """The export command writes a person's Life State that passes the schema, and fails for someone who isn't there."""
     import core.config_manager as config_module
     import core.profile_manager as profile_module
     from core.app_context import AppContext

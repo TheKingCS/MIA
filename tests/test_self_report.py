@@ -21,6 +21,7 @@ def test_what_got_better_and_what_slipped():
 
 
 def profiles(*made):
+    """Stand-in profiles with the given ids and creation times."""
     return SimpleNamespace(list_profiles=lambda: [SimpleNamespace(profile_id=p, created_at=c) for p, c in made])
 
 

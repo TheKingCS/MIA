@@ -22,6 +22,7 @@ GPX = """<?xml version="1.0"?>
 
 
 def test_reading_a_walk():
+    """A GPX walk's name and its stats: distance, climb and descent without GPS jitter, total and moving hours, the start's grid reference and the date; a broken file is refused."""
     name, points = gt.parse_gpx(GPX)
     s = gt.stats(points)
     assert name == "Ridge loop" and s["points"] == 5

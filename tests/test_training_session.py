@@ -15,6 +15,7 @@ DAY = {"name": "Push", "exercises": [{"name": "Push-ups", "sets": 2, "reps": 15}
 
 
 def at(seconds: float) -> datetime:
+    """The moment `seconds` after the session's start."""
     return T0 + timedelta(seconds=seconds)
 
 
@@ -47,6 +48,7 @@ def test_pause_freezes_the_clock_and_the_rest():
 
 
 def test_skip_and_correct():
+    """"Make that 11" corrects the last set, and skipping moves to the next exercise keeping what was done."""
     s = ts.start(DAY, T0)
     ts.log_set(s, at(30), reps=10)
     ts.correct(s, reps=11)  # "make that 11"

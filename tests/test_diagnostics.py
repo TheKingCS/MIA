@@ -10,6 +10,7 @@ from core.inspection import Evidence
 
 
 def fake_inspect(facts):
+    """An inspector that reports the given facts as evidence."""
     return lambda context, subject: SimpleNamespace(evidence=[Evidence(k, v, "m", "s") for k, v in facts.items()])
 
 

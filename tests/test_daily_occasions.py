@@ -54,6 +54,7 @@ def test_is_birthday_today_invalid_format():
 
 @dataclass
 class _FakeEvent:
+    """A calendar event with only a date, a title and how it repeats."""
     date: str
     title: str = "Event"
     recurrence: Optional[str] = None

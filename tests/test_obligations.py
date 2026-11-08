@@ -55,6 +55,7 @@ def test_where_it_stands_and_reminders_once_each():
 
 
 def test_repeats_and_starters():
+    """A quarterly obligation's next period moves its due date a quarter on, a one-off has none, and the starter list follows the state (Kentucky's own form, another state's income tax)."""
     q = Obligation("q", "Estimate", recurrence="quarterly", due_date="2026-11-30", pay_date="")
     assert next_period(q) == {"due_date": "2027-02-28", "pay_date": ""}
     assert next_period(Obligation("n", "Once")) is None
@@ -68,6 +69,7 @@ def test_repeats_and_starters():
 
 @pytest.fixture
 def book(shop):  # noqa: F811
+    """The test household with an obligations book in the household folder."""
     from core.obligations import ObligationBook
 
     shop.obligations = ObligationBook(shop, data_dir=shop.home_dir)

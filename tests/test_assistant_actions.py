@@ -13,6 +13,7 @@ from core.assistant_actions import AssistantAction, AssistantActionRegistry
 
 
 def _make_action(name="test_action", handler=None) -> AssistantAction:
+    """A tool with no parameters, whose handler says "done" unless one is given."""
     return AssistantAction(
         name=name,
         description="A test action.",
@@ -115,6 +116,7 @@ def test_gating_keywords_empty_when_no_trigger_phrases():
 # ----------------------------------------------------------------------
 
 def _register_domain_fixture(registry: AssistantActionRegistry) -> None:
+    """Registers five small tools across three domains (alarms, security, system) for the domain-routing tests."""
     registry.register(AssistantAction(
         name="add_alarm", description="Create a new alarm.",
         parameters={"type": "object", "properties": {}, "required": []},

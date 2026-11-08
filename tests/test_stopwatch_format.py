@@ -22,10 +22,12 @@ def test_sub_second_truncates_to_tenths():
 
 
 def test_seconds_and_tenths():
+    """Under a minute reads seconds and tenths."""
     assert format_elapsed(5_300) == "00:05.3"
 
 
 def test_minutes_seconds_tenths():
+    """Over a minute reads minutes, seconds and tenths."""
     assert format_elapsed(65_000) == "01:05.0"
 
 
@@ -43,5 +45,6 @@ def test_hours_minutes_seconds_tenths():
 
 
 def test_negative_raises():
+    """A negative time is refused."""
     with pytest.raises(ValueError):
         format_elapsed(-1)

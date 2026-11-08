@@ -35,6 +35,7 @@ _MODULES = [budget_module, conversation_module, data_logger_module, kitchen_modu
 
 @pytest.fixture
 def ctx(tmp_path, monkeypatch):
+    """A context with budget, data logger, maintenance, kitchen and conversations on temporary files, the desktop's tools, a mower and a truck with their tasks, a bill, a debt and eggs on the grocery list."""
     for module in _MODULES:
         original = module._DATA_DIR
         for attr, value in list(vars(module).items()):
@@ -59,6 +60,7 @@ def ctx(tmp_path, monkeypatch):
 
 
 def offer(ctx, text):
+    """The question MIA would offer after hearing the text, or None."""
     found = detect_offer(text, ctx)
     return found.question if found else None
 

@@ -14,6 +14,7 @@ from tests.test_crafting import do, shop  # noqa: F401  (the fixture)
 
 @pytest.fixture
 def farm(shop):  # noqa: F811
+    """The test household with a business book, a flock and the grow lab in the household folder."""
     from core.business_book import BusinessBook
     from core.flock import FlockBook
     from core.grow_lab import GrowLab

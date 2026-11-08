@@ -8,6 +8,7 @@ from tests.engine_world import build_world
 
 
 def test_score():
+    """A stat's score from its two inputs: 1 at nothing, 20 at the top, and in between by step."""
     assert score(0, 0) == 1 and score(50, 50) == 20 and score(3.4, 2.6) == 1 + 3 + 3
 
 

@@ -27,6 +27,7 @@ from core.relationships_manager import (
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points people and pets at a temporary folder; returns it."""
     data_dir = tmp_path / "data"
     monkeypatch.setattr(relationships_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(relationships_manager_module, "_PEOPLE_FILE", data_dir / "relationships_people.json")
@@ -40,6 +41,7 @@ def _make_context() -> AppContext:
 
 
 def _make_manager(context: AppContext) -> RelationshipsManager:
+    """A relationships manager, set on the context."""
     manager = RelationshipsManager(context)
     context.relationships = manager
     return manager

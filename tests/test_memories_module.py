@@ -18,6 +18,7 @@ from modules.memories.module import (
 
 
 def _make_recap(**expedition_kwargs) -> ExpeditionRecap:
+    """An expedition recap with no length, for an expedition changed by any fields given."""
     defaults = {"expedition_id": "exp1", "name": "Field Season"}
     defaults.update(expedition_kwargs)
     return ExpeditionRecap(expedition=Expedition(**defaults), duration_days=None)

@@ -27,6 +27,7 @@ fdc_id	name	category	kcal	protein_g	fat_g	carbs_g	fiber_g	sugar_g	sodium_mg	port
 
 @pytest.fixture
 def foods(tmp_path):
+    """The small food table written to a temporary file and loaded."""
     table = tmp_path / "foods.tsv"
     table.write_text(ROWS)
     return food_table.load(table)
@@ -50,6 +51,7 @@ def test_nothing_is_guessed_for_an_unknown_food(foods):
 
 
 def test_amounts_become_grams(foods):
+    """An amount becomes grams by the food's own measure (its cup, a medium or large egg, a tablespoon of oil), by weight units as they are, by water's cup when the food has none, and not at all for a handful."""
     rice, egg, oil, beef = (food_table.by_id(i, foods) for i in ("169756", "171287", "171413", "170393"))
     assert food_table.grams(rice, 2, "cups") == 370  # the food's own cup, not water's
     assert food_table.grams(oil, 1, "Tbsp.") == 13.5

@@ -12,6 +12,7 @@ DAY = date(2026, 11, 3)
 
 
 def _tasks():
+    """Two tasks, the second depending on the first."""
     a = w.Task(id="T-0001", title="Build the map", files=["core/links.py"], body="What it is.")
     b = w.Task(id="T-0002", title="Use the map", depends=["T-0001"], files=["core/capabilities.py"])
     return {a.id: a, b.id: b}
@@ -53,6 +54,7 @@ def test_two_claims_on_the_same_files_cant_run_at_once():
 
 
 def test_done_needs_evidence():
+    """A task is finished only with evidence, which goes in its body."""
     tasks = _tasks()
     with pytest.raises(w.TaskError, match="evidence"):
         w.finish(tasks, "T-0001", "claude", "  ")
@@ -75,6 +77,7 @@ def test_new_ids_count_up_and_dependencies_must_exist():
 
 
 def test_saving_and_loading(tmp_path):
+    """Tasks saved to a folder load back with their dependencies."""
     tasks = _tasks()
     for task in tasks.values():
         w.save(task, tmp_path, DAY)

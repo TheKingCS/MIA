@@ -41,6 +41,7 @@ def test_format_expedition_row_no_location():
 
 
 def test_format_trip_row():
+    """A trip's row reads its name, its start date and its status."""
     trip = Trip(
         trip_id="t1",
         expedition_id="exp1",

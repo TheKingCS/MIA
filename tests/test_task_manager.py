@@ -20,6 +20,7 @@ from core.task_manager import TaskManager
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points tasks at a temporary folder; returns the folder and the file."""
     data_dir = tmp_path / "data"
     tasks_file = data_dir / "tasks.json"
     monkeypatch.setattr(task_manager_module, "_DATA_DIR", data_dir)
@@ -28,6 +29,7 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _make_manager() -> TaskManager:
+    """A task manager on a fresh config and event bus."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     return TaskManager(context)
 

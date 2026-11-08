@@ -18,6 +18,7 @@ TUE = MON + timedelta(days=1)
 
 @pytest.fixture
 def world(tmp_path, monkeypatch):
+    """The test household with an action center, four recipes (one with peanuts) and a fitness plan with protein and calorie targets, a packed lunch, Sunday prep and a peanut allergy."""
     context = build_world(tmp_path, monkeypatch)
     context.actions = ActionCenter()
     k = context.kitchen
@@ -38,6 +39,7 @@ def world(tmp_path, monkeypatch):
 
 
 def act(world, kind, **params):
+    """Proposes an action and approves it; returns both."""
     proposal = world.actions.propose(world, kind, params)
     return proposal, world.actions.approve(world, proposal.proposal_id)
 

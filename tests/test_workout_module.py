@@ -22,10 +22,12 @@ from modules.workout.module import (
 
 
 def test_format_elapsed_zero():
+    """No time reads 00:00."""
     assert format_elapsed(0) == "00:00"
 
 
 def test_format_elapsed_seconds():
+    """Five seconds reads 00:05."""
     assert format_elapsed(5_000) == "00:05"
 
 

@@ -11,6 +11,7 @@ from tests.test_creations import DESIGN, _history, act, model, world  # noqa: F4
 
 
 def seed_bank(w):
+    """Makes and publishes a seed-bank creation with three varieties saved."""
     creation_maker.make(w, "keep track of the seeds I save please", ask=model(DESIGN))
     act(w, "creation.publish", {"creation_id": "C-0001"})
     for v, n in (("Hopi Blue", 60), ("Glass Gem", 120), ("Moon and Stars", 25)):
@@ -77,6 +78,7 @@ def test_it_runs_when_its_trigger_comes_round_and_not_twice(world):
 
 
 def test_triggers_and_words():
+    """A weekly or monthly workflow is due once per period, and is described in words, with what it may do."""
     week = {"trigger": {"every": "week", "weekday": 0}}
     assert wf.due(week, "", datetime(2026, 11, 9)) and not wf.due(week, "2026-11-09T08:00", datetime(2026, 11, 9, 20))
     month = {"trigger": {"every": "month", "day": 1}}

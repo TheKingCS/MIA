@@ -23,6 +23,7 @@ from core.script_runner import cleanup_script_file, start_script_process, termin
 
 
 def _run_to_completion(interpreter: str, content: str) -> tuple[int, str]:
+    """Runs a script to the end and cleans up its file; returns its exit code and output."""
     process, script_path = start_script_process(interpreter, content)
     output = process.stdout.read()
     process.wait()

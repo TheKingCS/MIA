@@ -20,6 +20,7 @@ from core.usage_tracker import UsageTracker
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points module usage at a temporary folder; returns the folder and the file."""
     data_dir = tmp_path / "data"
     usage_file = data_dir / "module_usage.json"
     monkeypatch.setattr(usage_tracker_module, "_DATA_DIR", data_dir)
@@ -28,6 +29,7 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _make_tracker() -> tuple[UsageTracker, AppContext]:
+    """A usage tracker and its context."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     tracker = UsageTracker(context)
     return tracker, context
@@ -77,6 +79,7 @@ def test_unsuggested_never_opened_excludes_already_suggested(isolated_paths):
 
 
 def test_has_been_suggested(isolated_paths):
+    """An app is suggested once it's been marked as suggested."""
     tracker, _ = _make_tracker()
     assert tracker.has_been_suggested("notes") is False
     tracker.mark_suggested("notes")

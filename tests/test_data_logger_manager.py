@@ -20,6 +20,7 @@ from core.event_bus import EventBus
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points the data logger's readings at a temporary folder; returns the folder and the file."""
     data_dir = tmp_path / "data"
     readings_file = data_dir / "data_logger_readings.json"
     monkeypatch.setattr(data_logger_manager_module, "_DATA_DIR", data_dir)
@@ -28,6 +29,7 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _make_manager() -> DataLoggerManager:
+    """A data logger on a fresh config and event bus."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     return DataLoggerManager(context)
 

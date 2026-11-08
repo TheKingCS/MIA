@@ -21,6 +21,7 @@ def test_events_are_appended_and_never_rewritten(tmp_path):
 
 
 def test_history_is_searchable(tmp_path):
+    """The work history is found by words, by who, and by task."""
     log = tmp_path / "activity.jsonl"
     a.record("claude", "note", "T-0001", "the relay review", log, AT)
     a.record("chatgpt", "note", "T-0002", "the dashboard layout", log, AT)

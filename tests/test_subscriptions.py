@@ -17,6 +17,7 @@ from tests.engine_world import build_world
 
 
 def bill(**kw):
+    """A monthly utility bill, changed by any fields given."""
     base = dict(name="Electric", category="Utilities", recurrence="monthly", notes="", still_using_on="")
     return SimpleNamespace(**{**base, **kw})
 
@@ -32,6 +33,7 @@ def test_which_bills_are_subscriptions():
 
 @pytest.fixture
 def world(tmp_path, monkeypatch):
+    """The test household with an action center."""
     context = build_world(tmp_path, monkeypatch)
     context.actions = ActionCenter()
     return context

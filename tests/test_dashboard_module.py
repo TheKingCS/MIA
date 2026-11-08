@@ -26,6 +26,7 @@ from modules.dashboard.module import (
 
 
 def test_format_activity_line():
+    """An activity entry reads its time, then what happened."""
     entry = ActivityLogEntry(entry_id="a1", event_type="module_opened", summary="Opened Notes", timestamp="2026-08-14T09:00:00")
     assert format_activity_line(entry) == "2026-08-14T09:00:00  —  Opened Notes"
 

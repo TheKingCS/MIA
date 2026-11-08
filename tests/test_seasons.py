@@ -12,10 +12,12 @@ TODAY = date(2026, 11, 20)
 
 
 def ev(kind, day, summary="", **payload):
+    """A life event of that kind on that day."""
     return LifeEvent(f"{kind}-{day}-{summary}", f"{day}T10:00:00", kind, summary or kind, payload=payload)
 
 
 def test_the_periods():
+    """A season's period and the one it's compared with (this month so far against the same days last month, a leap day's year), and which period a question asks about."""
     assert seasons.periods("month", TODAY) == ((date(2026, 11, 1), TODAY), (date(2026, 10, 1), date(2026, 10, 20)),
                                                "November so far")
     assert seasons.periods("last month", TODAY)[0] == (date(2026, 10, 1), date(2026, 10, 31))

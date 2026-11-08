@@ -10,6 +10,7 @@ from tests.engine_world import build_world
 
 
 def _world(tmp_path, monkeypatch):
+    """The test household with the owner's account added (not signed in)."""
     w = build_world(tmp_path, monkeypatch)
     w.profiles.create_profile("Owner", password="a-good-password", make_active=False)
     return w

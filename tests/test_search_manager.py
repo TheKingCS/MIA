@@ -17,11 +17,13 @@ from core.search_manager import SearchManager, SearchResult
 
 
 def _make_manager() -> SearchManager:
+    """A search manager on a fresh config and event bus."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     return SearchManager(context)
 
 
 def _result(title="Result", source="test") -> SearchResult:
+    """A search result that opens Notes."""
     return SearchResult(title=title, description="", source=source, action_type="open_module", action_target="notes")
 
 

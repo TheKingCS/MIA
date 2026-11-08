@@ -12,6 +12,7 @@ from tests.test_crafting import do, shop  # noqa: F401  (the fixture)
 
 @pytest.fixture
 def life(shop):  # noqa: F811
+    """The test household with a business book, a flock and obligations in the household folder."""
     from core.business_book import BusinessBook
     from core.flock import FlockBook
     from core.obligations import ObligationBook

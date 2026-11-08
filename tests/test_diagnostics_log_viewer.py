@@ -16,6 +16,7 @@ from modules.diagnostics.module import filter_lines, tail_lines
 
 def _make_line(level: str, message: str, name: str = "mia.core") -> str:
     # Mirrors core.logger's formatter: "%(asctime)s [%(levelname)-8s] %(name)s: %(message)s"
+    """A log line in core.logger's format."""
     return f"2026-07-11 09:00:00 [{level:<8}] {name}: {message}"
 
 

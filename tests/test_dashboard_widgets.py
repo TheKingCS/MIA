@@ -36,6 +36,7 @@ class _FakeConfig:
 
 
 def _make_registry(overrides: dict | None = None) -> tuple[DashboardWidgetRegistry, EventBus]:
+    """A widget registry with three widgets (Power, Mission, Volume) over a config with the given overrides, and its event bus."""
     events = EventBus()
     context = AppContext(config=_FakeConfig(overrides or {}), events=events)
     registry = DashboardWidgetRegistry(context)

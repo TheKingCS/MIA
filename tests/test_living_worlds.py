@@ -17,6 +17,7 @@ from core.living_worlds import CAMPAIGN_STATUSES, LivingWorldsBook
 
 @pytest.fixture
 def book(tmp_path):
+    """An empty Living Worlds book in a temporary folder."""
     return LivingWorldsBook(data_dir=tmp_path)
 
 

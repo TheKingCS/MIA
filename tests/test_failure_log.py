@@ -11,6 +11,7 @@ from tests.test_crafting import do, shop  # noqa: F401  (the fixture)
 
 @pytest.fixture
 def mia(shop):  # noqa: F811
+    """The test household with a failure log in the person's folder and one empty conversation."""
     from core.conversation_manager import Conversation
     from core.failure_log import FailureLog
 
@@ -20,6 +21,7 @@ def mia(shop):  # noqa: F811
 
 
 def _say(conversation, role, text, seconds_ago=5):
+    """Adds a message to the conversation, said by `role` the given seconds ago."""
     from core.conversation_manager import ConversationMessage
 
     at = (datetime.now(timezone.utc) - timedelta(seconds=seconds_ago)).isoformat()

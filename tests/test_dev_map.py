@@ -8,6 +8,7 @@ from core import dev_map
 
 
 def _repo(tmp_path):
+    """A tiny repo to map: a core file that's fine, one that imports gui (and application.py, which may), a module importing another module, and a CLAUDE.md naming a file that's gone."""
     (tmp_path / "core").mkdir()
     (tmp_path / "core" / "fine.py").write_text("from core import logger\n", encoding="utf-8")
     (tmp_path / "core" / "bad.py").write_text("import json\nfrom gui.main_window import MainWindow\n", encoding="utf-8")

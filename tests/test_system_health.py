@@ -21,6 +21,7 @@ from core.system_health import SystemHealthSnapshot, format_system_health, read_
 
 
 def _snapshot(**overrides) -> SystemHealthSnapshot:
+    """A system health reading, changed by any fields given."""
     defaults = dict(
         cpu_percent=12.3,
         memory_percent=45.6,
@@ -106,6 +107,7 @@ def test_read_cpu_temperature_returns_none_when_not_implemented(monkeypatch):
 
 
 def test_read_uptime_seconds(monkeypatch):
+    """Uptime is now less boot time."""
     monkeypatch.setattr(system_health.psutil, "boot_time", lambda: 1000.0)
     monkeypatch.setattr(system_health.time, "time", lambda: 4600.0)
     assert read_uptime_seconds() == 3600.0

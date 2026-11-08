@@ -46,6 +46,7 @@ def test_callbacks_bring_back_what_you_said(tmp_path, monkeypatch):
 
 
 def test_second_person():
+    """A memory written about "the user" is said back to them as "you" and "your"."""
     from core.memory_callbacks import second_person
 
     assert second_person("The user's sister Jordan loves climbing.") == "your sister Jordan loves climbing."

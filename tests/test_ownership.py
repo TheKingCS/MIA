@@ -24,6 +24,7 @@ from core.today import today_items
 
 @pytest.fixture
 def home(tmp_path, monkeypatch):
+    """Two people (the first signed in) with households and a maintenance store; returns the context and both people."""
     monkeypatch.setattr(config_module, "_CONFIG_FILE", tmp_path / "config.json")
     monkeypatch.setattr(profile_module, "_DATA_PROFILES_DIR", tmp_path / "profiles")
     context = AppContext(config=ConfigManager(), events=EventBus())
@@ -37,6 +38,7 @@ def home(tmp_path, monkeypatch):
 
 
 def test_choices_and_words(home):
+    """Who owns a thing: the choices (shared, then each person), words that name an owner (mine, a name, a first name, the whole household) or don't, and how ownership is said back."""
     context, zac, faith = home
     assert owner_choices(context) == [(SHARED_LABEL, None), ("Zac Doe", zac.profile_id), ("Faith", faith.profile_id)]
     assert resolve_owner(context, "mine") == (True, zac.profile_id)

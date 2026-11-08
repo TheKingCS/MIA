@@ -27,6 +27,7 @@ from core.skill_manager import SkillManager
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points Classroom's subjects, courses and lessons, the config and the skill files at a temporary folder; returns the data folder."""
     data_dir = tmp_path / "data"
     monkeypatch.setattr(classroom_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(classroom_manager_module, "_SUBJECTS_FILE", data_dir / "classroom_subjects.json")
@@ -258,6 +259,7 @@ def test_subject_completion_with_no_courses_is_zero_of_zero(isolated_paths):
 # ------------------------------------------------------------------
 
 def _write_skill_definitions(data_dir) -> None:
+    """Writes one skill definition (Electrical) for the skill-crediting tests."""
     data_dir.mkdir(parents=True, exist_ok=True)
     (data_dir / "skill_definitions.json").write_text(
         json.dumps({"skills": [{"skill_id": "electrical", "name": "Electrical", "category": "Trade Skills"}]})

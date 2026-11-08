@@ -13,6 +13,7 @@ from tests.engine_world import build_world
 
 @pytest.fixture
 def world(tmp_path, monkeypatch):
+    """The test household with an action center."""
     context = build_world(tmp_path, monkeypatch)
     context.actions = ActionCenter()
     return context

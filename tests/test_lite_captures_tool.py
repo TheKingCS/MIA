@@ -14,6 +14,7 @@ from modules.toolbox.tools.lite_captures_tool import format_capture_card_text
 
 
 def _proposal(**overrides) -> CaptureProposal:
+    """A field-note capture proposal, changed by any overrides given."""
     defaults = dict(
         proposal_id="cap1",
         journal_title="Field Note — Sep 14, 2026 2:32 PM",

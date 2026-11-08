@@ -35,6 +35,7 @@ def test_generates_correct_sample_count():
 
 
 def test_generates_int16_samples():
+    """The startup sound is made as 16-bit samples."""
     samples = generate_boot_sound_samples(duration_seconds=1.0, sample_rate=22050)
     assert samples.dtype == np.int16
 

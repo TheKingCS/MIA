@@ -36,5 +36,6 @@ def test_omits_unit_and_note_when_absent():
 
 
 def test_handles_missing_timestamp():
+    """A reading without a time still shows its value."""
     reading = Reading(reading_id="abc123", series_id="x", value=1.5)
     assert format_reading_row(reading) == "   1.5"

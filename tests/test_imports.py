@@ -139,6 +139,7 @@ def test_kind_and_category_guesses(tmp_path):
 
 @pytest.fixture
 def ctx(tmp_path, monkeypatch):
+    """A context for imports: one person, the undo log, and the calendar, relationships and budget stores on temporary files."""
     for module, attrs in ((calendar_module, ("_EVENTS_FILE",)), (rel_module, ("_PEOPLE_FILE", "_PETS_FILE")),
                           (budget_module, ("_BILLS_FILE", "_INCOME_FILE", "_EXPENSES_FILE", "_INCOME_SOURCES_FILE",
                                            "_BUDGET_TARGETS_FILE", "_BUSINESS_ENTITIES_FILE", "_DEBTS_FILE"))):

@@ -20,6 +20,7 @@ from core.insight_manager import InsightManager
 
 @pytest.fixture
 def isolated_paths(tmp_path, monkeypatch):
+    """Points insights and recommendations at a temporary folder; returns it."""
     data_dir = tmp_path / "data"
     monkeypatch.setattr(insight_manager_module, "_DATA_DIR", data_dir)
     monkeypatch.setattr(insight_manager_module, "_INSIGHTS_FILE", data_dir / "insights.json")
@@ -28,6 +29,7 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def _make_manager() -> InsightManager:
+    """An insight manager on a fresh config and event bus."""
     context = AppContext(config=ConfigManager(), events=EventBus())
     return InsightManager(context)
 

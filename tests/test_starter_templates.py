@@ -34,6 +34,7 @@ TODAY = date(2026, 10, 1)
 
 @pytest.fixture
 def ctx(tmp_path, monkeypatch):
+    """A context for starter sets: one person, the undo log, and missions, the calendar, recurring missions, maintenance and workouts on temporary files."""
     data = tmp_path / "data"
     monkeypatch.setattr(config_module, "_CONFIG_FILE", tmp_path / "config.json")
     monkeypatch.setattr(profile_module, "_DATA_PROFILES_DIR", tmp_path / "profiles")
@@ -156,6 +157,7 @@ def test_the_assistant_lists_and_adds_with_parts_left_out(ctx):
 
 @pytest.fixture
 def qapp():
+    """The one Qt application the screen tests share."""
     from PySide6.QtWidgets import QApplication
 
     return QApplication.instance() or QApplication([])
