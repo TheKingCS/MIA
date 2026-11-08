@@ -4,6 +4,14 @@
 check them against what MIA does"). The canvas: https://claude.ai/artifact/21C1QCV2TjdSPCizVrxdoc (66 screens: 3 PC,
 61 phone, 2 glasses). Each point says what the screen shows, what MIA really does, and the change.*
 
+## Since this review (2026-11-07, night)
+
+The canvas session built most screens in the canvas's look (DEC-0113 approved). Done since: Kitchen Cook Mode
+(steps, timers, by voice), Power, Toolbox, The Lab and Field Kit on the phone, Settings' humor as a five-step
+choice, the Security cameras by voice, glasses asks for nearly every app, and "Say: …" under every screen's title
+(section 4). Still true below: section 1's six design changes (none of them was built as drawn), and section 3's
+missing screens (Browser, Start Here, Waiting For You, a plan's page, Recent changes).
+
 ## 1. Shown, but MIA doesn't work that way (change the design)
 
 | Screen | Shows | What MIA does | Change |
@@ -18,9 +26,8 @@ check them against what MIA does"). The canvas: https://claude.ai/artifact/21C1Q
 
 ## 2. Designed, not built yet (MIA needs building, or the design waits)
 
-- **Kitchen Cook Mode** (PC/tablet): one step at a time, kitchen timers, "next step" by voice. Recipes today have one
-  block of instructions and there are no kitchen timers. A good build: steps from the instructions, timers, voice.
-- **Power, Toolbox, The Lab, Field Kit on the phone**: designed; their web pages are next in the parity queue.
+- ~~**Kitchen Cook Mode**~~: built by the canvas session (steps, timers, by voice).
+- ~~**Power, Toolbox, The Lab, Field Kit on the phone**~~: built 2026-11-07.
 - **The orb's seven states and the per-app atmosphere colors**: proposals (MIA_DESIGN_SYSTEM.md, DEC-0113) waiting
   on Zac. The Cook Mode and Workout screens already use the atmosphere colors.
 
@@ -50,6 +57,5 @@ Talk's answer figures (Fact, Calculation, Estimate, Missing) and Propose, Approv
 
 ## 6. Found in MIA while checking (Claude's to fix)
 
-- **The PC can't be talked to in web mode.** Hold-to-talk lives in the character panel, which DEC-0124's web mode
-  hides, and the web Talk has no mic. Breaks DEC-0125 on the PC. First in the build queue.
-- **Humor has no control on a screen**: only by voice (set_humor). Add it to Settings.
+- ~~**The PC can't be talked to in web mode.**~~ Fixed: Talk has a mic on every page.
+- ~~**Humor has no control on a screen**~~: Fixed: Settings, "How funny MIA is".
