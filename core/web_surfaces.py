@@ -10,14 +10,18 @@ the upcoming list and the at-a-glance cards.
 
 - `shell(context)`: the sidebar (the person's apps, each with its life
   area, child-safe and respecting the apps they've tucked away; their
-  favorites for the Pinned list; the life areas in order), their level and
-  XP, today's date. Served as `/api/shell`.
+  favorites for the Pinned list; the areas with their hubs, DEC-0129,
+  core/web_areas.py), their level and XP, today's date. Served as
+  `/api/shell`.
 - `dashboard(context)`: Home's data (the canvas's Home, DEC-0113): the
   greeting and date, the status strip (`home_strip`), the one thing MIA
   noticed across apps (`_top_finding`, from core/findings.py), Today's
   Focus and Upcoming with each row's kind (`due_kind`), quick actions and
   at-a-glance cards (Life State's, net worth on Money's, then Observations
-  and the Inbox: `glance_counts`). Served as `/api/dashboard`; `web/index.html` shows it.
+  and the Inbox: `glance_counts`), and the life cards (DEC-0129,
+  `life_cards`: what's playing, today's good news, recent pictures, the
+  trip from `pick_trip` with its dates from `span_text`). Served as
+  `/api/dashboard`; `web/index.html` shows it.
 - `apps_page(context)`: every app, grouped, with what MIA can do in each.
   Served as `/api/apps`.
 
