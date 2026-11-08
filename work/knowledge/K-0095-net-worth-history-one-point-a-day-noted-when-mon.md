@@ -1,5 +1,5 @@
 ---
-id: K-0068
+id: K-0095
 kind: implementation
 title: Net worth history: one point a day, noted when Money is read
 status: confirmed

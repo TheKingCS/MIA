@@ -1,5 +1,5 @@
 ---
-id: K-0069
+id: K-0096
 kind: implementation
 title: Garage due words and the asset page figures
 status: confirmed
