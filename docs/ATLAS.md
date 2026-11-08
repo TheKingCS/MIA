@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1297 files, 281,608 lines; 1297 files describe themselves; 15,867 of 15,961 classes and functions are documented.
+1297 files, 281,797 lines; 1297 files describe themselves; 15,874 of 15,968 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-483 files, 133,313 lines; 7,142 of 7,228 classes and functions documented
+483 files, 133,443 lines; 7,145 of 7,231 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -769,7 +769,7 @@
 
 ## tests/: the test suite: what each part must do
 
-443 files, 74,657 lines; 6,438 of 6,446 classes and functions documented
+443 files, 74,716 lines; 6,442 of 6,450 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -942,7 +942,7 @@
 - `tests/test_inbox.py`: Document inbox: classification (core/inbox_classify.py), intake and filing (core/inbox_manager.py), email checking (core/inbox_mail.py), the voice tools, the phone upload endpoint and the Inbox screen.
 - `tests/test_inbox_goes_to.py`: Inbox (DEC-0113): each item says in one line where filing it would put it (core/web_inbox.goes_to). Pure logic, so it runs without Qt.
 - `tests/test_insight_manager.py`: Unit tests for core.insight_manager. Isolates _DATA_DIR/_INSIGHTS_FILE _RECOMMENDATIONS_FILE into a tmp_path scratch area, same monkeypatch pattern as every other manager test file.
-- `tests/test_inspection.py`: Universal Inspection (DEC-0056, core/inspection.py): every finding with its source, time and confidence; agreement confirms, disagreement is kept; what couldn't be determined says why; only passive methods run unasked.
+- `tests/test_inspection.py`: Universal Inspection (DEC-0056, core/inspection.py): every finding with its source, time and confidence; agreement confirms, disagreement is kept; what couldn't be determined says why; only passive methods run unasked; the repository subject finds where her docs disagree with her repository.
 - `tests/test_installer.py`: MIA's installer (2026-10-01): install.sh (Linux, Raspberry Pi), install.ps1 / install.bat (Windows), and the shared finishing step deploy/finish_install.py.
 - `tests/test_insurance.py`: The insurance check-up (core/insurance.py, DEC-0034): policies, what's worth a look, a policy's PDF read into the form, quotes side by side (a cheaper quote that covers less says so), the drafted quote request, and switching (a mission, then the policy becomes the quote and the saving is recorded). 
 - `tests/test_intelligence_bench.py`: The Intelligence Benchmark (docs/INTELLIGENCE_BENCHMARK.md): the question list and the document stay in step, and the routing audit runs.
@@ -1093,7 +1093,7 @@
 - `tests/test_secrets_manager.py`: Unit tests for core.secrets_manager.encrypt_bytes / decrypt_bytes.
 - `tests/test_security_cams.py`: Security (DEC-0033): cameras on the home network only, logins kept apart and never shown, frames from a picture address or an RTSP stream, saved pictures, grown-ups only.
 - `tests/test_security_log.py`: The security log (core/security_log.py, docs/SECURITY.md step 3): devices said in words, events kept per account newest first, never a password; a sign-in from a new device and repeated wrong passwords alert the account's owner; and "sign out everywhere" ends every other session.
-- `tests/test_self_audit.py`: MIA's weekly self-audit (core/self_audit.py) and her best-practices series (core/practices.py), DEC-0108: what the code audit finds, what the interconnection audit finds and leaves out by design, the weekly run's report and tasks, and the series written from the principles and the vault.
+- `tests/test_self_audit.py`: MIA's weekly self-audit (core/self_audit.py) and her best-practices series (core/practices.py), DEC-0108: what the code audit finds, what the interconnection audit finds and leaves out by design, the docs audit's task, the weekly run's report and tasks, and the series written from the principles and
 - `tests/test_self_knowledge.py`: What MIA can honestly say about herself (core/self_knowledge.py): grounded in real data, never guessed. `about_me` reports her real scale from the system map; `my_focus` reflects her Night School directive; `what_i_know_about_you` is honest about how much she knows; a missing source is a quiet gap, 
 - `tests/test_self_report.py`: MIA's weekly self-report and the standing mission (build plan step 6): what got better and what's slipping, from the loops' own history; Sundays, to the PC's owner only, through the gate; the "Keep MIA healthy" mission works the loops' tasks.
 - `tests/test_server_app.py`: Unit tests for server.app — exercised via FastAPI's TestClient, a real in-process HTTP client that needs no running server, no real network, and no HTTPS (see the Mobile Phase 1 plan's verification section for why this is a legitimate, complete way to verify this code from a sandbox with no real bro

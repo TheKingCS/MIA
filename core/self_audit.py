@@ -8,7 +8,7 @@ up whatever she is doing, make it more efficient, more well designed" and "a
 regular audit for seeing how any of her existing infrastructure can be more
 effectively interconnected").
 
-Two audits, both read from the code itself (no model, nothing guessed), so
+Three audits, all read from the repository itself (no model, nothing guessed), so
 the same code always gives the same findings:
 
 1. **The code audit** (`code_findings()`): what could be clearer, leaner or
@@ -22,6 +22,10 @@ the same code always gives the same findings:
    the Assistant read it, is it in the life state (her picture of a life),
    does a web page show it? And the events one part publishes that nothing
    hears, or that something listens for and nothing sends.
+3. **The docs audit** (`core.inspection.repository_findings()`, T-0020,
+   DEC-0071 point 1): where her docs disagree with the repository: a
+   reference doc naming a file that isn't there, a decision recorded as
+   built naming a missing file, a requirement not installed.
 
 **What's done with them** (`weekly()`, from Night School once a week): the
 report is kept (`data/dev/audit`), the best-practices series is regenerated
@@ -365,18 +369,20 @@ def _top_open(found: list[dict], tasks_dir=None) -> Optional[dict]:
 
 def weekly(root: Path = ROOT, store: Optional[DevStore] = None, tasks_dir=None, open_tasks: bool = True,
            log=None, practices_out: Optional[Path] = None) -> dict:
-    """Both audits, kept as a report; the best-practices series regenerated (into practices_out, else docs/practices);
+    """All three audits (code, interconnection, docs), kept as a report; the best-practices series regenerated (into practices_out, else docs/practices);
     and up to one task for each audit's top finding nobody has looked at yet, noted in the activity log (`log`, else
     the usual one). Returns the report."""
-    from core import practices, work_activity
+    from core import inspection, practices, work_activity
 
     code = code_findings(root)
     rows = store_connections(root)
     connections = connection_findings(root, rows)
+    docs = inspection.repository_findings(root)
     report = {"at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
               "code": {"findings": len(code), "by_kind": _count(code), "top": code[:25]},
               "connections": {"findings": len(connections), "share": connected_share(rows), "by_kind": _count(connections),
                               "top": connections[:25]},
+              "docs": {"findings": len(docs), "by_kind": _count(docs), "top": docs[:25]},
               "tasks": []}
     if open_tasks:
         top = _top_open(code, tasks_dir)
@@ -398,12 +404,21 @@ def weekly(root: Path = ROOT, store: Optional[DevStore] = None, tasks_dir=None, 
                         "core/self_audit.py with why, and close this.", tasks_dir)
             if tid:
                 report["tasks"].append(tid)
+        top = _top_open(docs, tasks_dir)
+        if top:
+            tid = _open(top, f"Docs: {top['detail']}", "Software Engineer", [top["file"]],
+                        f"Found by the weekly docs audit (core/inspection.py repository_findings, T-0020): "
+                        f"`{top['file']}` line {top['line']}: {top['detail']}.\n\nFix whichever is wrong: the doc "
+                        "(the file moved, or was never built) or the repository (it should be there).", tasks_dir)
+            if tid:
+                report["tasks"].append(tid)
     try:
         report["practices"] = practices.write(practices_out) if practices_out else practices.write()
     except OSError as problem:
         report["practices"] = f"not written: {problem}"
     (store or _store()).append(report)
-    line = f"{len(code)} code findings, {len(connections)} connections to make, {len(report['tasks'])} tasks opened"
+    line = (f"{len(code)} code findings, {len(connections)} connections to make, {len(docs)} docs to fix, "
+            f"{len(report['tasks'])} tasks opened")
     try:
         work_activity.record(WHO, "audit", "", line, log) if log else work_activity.record(WHO, "audit", "", line)
     except OSError:

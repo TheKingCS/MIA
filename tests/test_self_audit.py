@@ -4,7 +4,7 @@ tests.test_self_audit
 
 MIA's weekly self-audit (core/self_audit.py) and her best-practices series
 (core/practices.py), DEC-0108: what the code audit finds, what the
-interconnection audit finds and leaves out by design, the weekly run's
+interconnection audit finds and leaves out by design, the docs audit's task, the weekly run's
 report and tasks, and the series written from the principles and the vault.
 """
 
@@ -116,3 +116,17 @@ def test_the_practices_gather_what_was_learned(tmp_path):
     assert "[Building AI](ai_building.md)" in front and "1 lesson learned" in front
     assert said == f"{len(practices.AREAS)} areas, 1 lessons placed"
     assert len({a.id for a in practices.AREAS}) == len(practices.AREAS) and all(a.principles for a in practices.AREAS)
+
+
+def test_the_weekly_audit_opens_a_task_for_a_doc_that_disagrees_with_the_repository(tmp_path, monkeypatch):
+    """The docs audit is the third: its top finding becomes one task, naming the doc to fix."""
+    from core import work_tasks
+
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "GUIDE.md").write_text("See `core/gone.py`.\n", encoding="utf-8")
+    monkeypatch.setattr(sa, "store_connections", lambda root: [])
+    report = sa.weekly(tmp_path, store=DevStore(tmp_path / "audit"), tasks_dir=tmp_path / "tasks",
+                       log=tmp_path / "activity.jsonl", practices_out=tmp_path / "practices")
+    assert report["docs"]["findings"] == 1 and len(report["tasks"]) == 1
+    task = work_tasks.load(tmp_path / "tasks")[report["tasks"][0]]
+    assert task.source == "audit:doc:docs/GUIDE.md:core/gone.py" and task.files == ["docs/GUIDE.md"]

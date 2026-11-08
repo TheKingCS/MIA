@@ -1,6 +1,7 @@
 """Universal Inspection (DEC-0056, core/inspection.py): every finding with
 its source, time and confidence; agreement confirms, disagreement is kept;
-what couldn't be determined says why; only passive methods run unasked."""
+what couldn't be determined says why; only passive methods run unasked;
+the repository subject finds where her docs disagree with her repository."""
 
 from datetime import datetime, timedelta
 from types import SimpleNamespace
@@ -92,3 +93,47 @@ def test_active_scans_stay_on_your_own_network():
     assert own_network("127.0.0.1") and own_network("192.168.1.1") and own_network("10.0.0.5")
     assert own_network("100.80.159.25")  # a Tailscale device
     assert not own_network("8.8.8.8") and not own_network("not a host at all")
+
+
+def _repo(root):
+    """A tiny repository whose docs disagree with it in one of each way, and agree in the ways that aren't drift."""
+    (root / "core").mkdir()
+    (root / "core" / "talk.py").write_text('"""Talk."""\n', encoding="utf-8")
+    (root / "docs").mkdir()
+    (root / "CLAUDE.md").write_text("See `core/talk.py` and `core/talk.pre_turn` and `core/gone.py`.\n", encoding="utf-8")
+    (root / "docs" / "GUIDE.md").write_text("Run `tools/missing_tool.py`; never `work/STOP`.\n", encoding="utf-8")
+    (root / "docs" / "NEW_PROPOSAL.md").write_text("Will build `core/someday.py`.\n", encoding="utf-8")
+    (root / "docs" / "DECISIONS.md").write_text(
+        "# Decisions\n\n### DEC-0001 Built\n- Status: APPROVED\nBuilt: `core/talk.py` and `core/lost.py`.\n\n"
+        "### DEC-0002 Not yet\n- Status: APPROVED\nNothing built yet: `core/later.py`.\n\n"
+        "### DEC-0003 Proposed\n- Status: PROPOSED\nBuilt `core/maybe.py`.\n", encoding="utf-8")
+    (root / "requirements.txt").write_text("pytest>=7\nno-such-package-mia-test==1.0  # nope\n", encoding="utf-8")
+
+
+def test_the_repository_subject_finds_where_her_docs_disagree_with_it(tmp_path):
+    """A missing named file, a decision recorded as built naming a missing file, and a requirement not installed are
+    found; a dotted reference to a real module, a proposal's future file, an on-demand file, a decision not yet built
+    and a proposed decision aren't."""
+    _repo(tmp_path)
+    found = ins.repository_findings(tmp_path)
+    got = {(f["kind"], f["name"]) for f in found}
+    assert got == {("doc_path_missing", "core/gone.py"), ("doc_path_missing", "tools/missing_tool.py"),
+                   ("built_file_missing", "DEC-0001"), ("requirement_missing", "no-such-package-mia-test")}
+    assert all({"id", "kind", "name", "detail", "file", "line"} <= set(f) for f in found)
+    assert next(f for f in found if f["name"] == "tools/missing_tool.py")["file"] == "docs/GUIDE.md"
+
+
+def test_the_repository_report_says_how_many_places_disagree(tmp_path, monkeypatch):
+    """Inspecting the repository gives a count, the places as problems, and a summary in words."""
+    _repo(tmp_path)
+    monkeypatch.setattr(ins, "ROOT", tmp_path)
+    monkeypatch.setattr(ins, "_DIR", tmp_path / "inspections")
+    r = ins.inspect(SimpleNamespace(), "repository")
+    assert next(e.value for e in r.evidence if e.fact == "repository.findings") == 4
+    assert "4 places where my docs and my repository disagree." in ins.summary(r)
+    assert any("core/gone.py" in p for p in r.problems)
+    (tmp_path / "requirements.txt").unlink()
+    for name in ("core/gone.py", "tools/missing_tool.py", "core/lost.py"):
+        (tmp_path / name).parent.mkdir(exist_ok=True)
+        (tmp_path / name).write_text("", encoding="utf-8")
+    assert "My docs and my repository agree." in ins.summary(ins.inspect(SimpleNamespace(), "repository"))

@@ -20,7 +20,10 @@ couldn't determine and why, and writes a report.
   nothing here touches passwords, keys, tokens or personal files.
 - **Subjects** today: `this_computer` (the computer MIA runs on) and
   `mia` (MIA herself: her code, decisions, capabilities and health, the
-  self-knowledge side, DEC-0057). Cameras, the network beyond this
+  self-knowledge side, DEC-0057), and `repository` (her own repository:
+  where her docs disagree with it, `repository_findings()`, T-0020,
+  DEC-0071 point 1; the weekly self-audit turns the top one into a task).
+  Cameras, the network beyond this
   computer, other devices and research come in later phases, and are
   never claimed before they exist.
 - **Correlation**: two methods agreeing on a fact raise it to CONFIRMED;
@@ -37,6 +40,7 @@ from __future__ import annotations
 import json
 import os
 import platform
+import re
 import subprocess
 import sys
 import time
@@ -55,7 +59,7 @@ KEEP = 20  # past reports kept per subject
 
 CONFIRMED, HIGH, PROBABLE, POSSIBLE, UNKNOWN = "CONFIRMED", "HIGH", "PROBABLE", "POSSIBLE", "UNKNOWN"
 PASSIVE, AUTHORIZED, ACTIVE, DISRUPTIVE = "passive", "authorized", "active", "disruptive"
-SUBJECTS = {"this_computer": "this computer", "mia": "MIA herself"}
+SUBJECTS = {"this_computer": "this computer", "mia": "MIA herself", "repository": "her own repository"}
 
 
 @dataclass
@@ -442,6 +446,105 @@ def _mia_health(context):
     return ev, gaps
 
 
+# ---------------------------------------------------------------- her repository (T-0020, DEC-0071 point 1)
+
+# Docs that are history or generated (they rightly name files since moved), and docs that look ahead (a proposal or a
+# plan names files still to be built): neither is drift. Files made only on demand (a stop request) aren't either.
+_HISTORY_DOCS = frozenset({"DECISIONS.md", "NEXT_SESSION.md", "CURRENT_STATE.md", "WAITING_ON.md", "QUESTIONS.md",
+                           "ATLAS.md", "LOOPS.md", "EVENTS.md", "PARITY.md", "MIA_MAP.md"})
+_FORWARD_DOC = re.compile(r"(PROPOSAL|PLAN|REVIEW|AUDIT|ASSESSMENT|VISION|ROADMAP|HANDOFF)", re.I)
+_ON_DEMAND = frozenset({"work/STOP"})
+_DOC_PATH = re.compile(r"`((?:core|server|tools|tests|web|modules|gui|docs|work|deploy|android-phone|homestead)"
+                       r"/[A-Za-z0-9_./-]+)`")
+_BUILT_PATH = re.compile(r"`((?:core|server|tools|tests|web|modules|gui|deploy)/[A-Za-z0-9_./-]+"
+                         r"\.(?:py|js|html|css|json|kt))`")
+
+
+def _named_path_exists(root: Path, rel: str) -> bool:
+    """Whether a path a doc names is there: as written, or as a module named by a dotted reference
+    (`core/talk_it_out.pre_turn` is core/talk_it_out.py), or a folder."""
+    if (root / rel).exists():
+        return True
+    head, _, tail = rel.rpartition("/")
+    stem = tail.split(".")[0]
+    return (root / head / f"{stem}.py").exists() or (root / head / stem).is_dir()
+
+
+def repository_findings(root: Path = ROOT) -> list[dict]:
+    """Where her docs disagree with the repository, read from the repository itself (never an agent's say-so): a
+    reference doc naming a file that isn't there, a decision recorded as built naming a file that isn't there, a
+    requirement not installed in this Python. Each is {id, kind, name, detail, file, line}, the weekly audit's shape
+    (core/self_audit.py), so the top one nobody has looked at becomes a task."""
+    import importlib.metadata
+
+    out: list[dict] = []
+    docs = [root / "CLAUDE.md"] + [p for p in sorted((root / "docs").glob("*.md"))
+                                   if p.name not in _HISTORY_DOCS and not _FORWARD_DOC.search(p.stem)]
+    for doc in docs:
+        try:
+            text = doc.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        rel_doc = doc.relative_to(root).as_posix()
+        for m in _DOC_PATH.finditer(text):
+            rel = m.group(1).rstrip(".,:;)")
+            if any(ch in rel for ch in "*<>{}") or "..." in rel or rel.endswith("/") or rel in _ON_DEMAND:
+                continue
+            if not _named_path_exists(root, rel):
+                out.append({"id": f"doc:{rel_doc}:{rel}", "kind": "doc_path_missing", "name": rel,
+                            "detail": f"{rel_doc} names `{rel}`, which isn't in the repository", "file": rel_doc,
+                            "line": text[:m.start()].count("\n") + 1})
+    try:
+        decisions = (root / "docs" / "DECISIONS.md").read_text(encoding="utf-8")
+    except OSError:
+        decisions = ""
+    for sec in re.split(r"\n(?=### DEC-\d{4})", decisions):
+        head = re.match(r"### (DEC-\d{4})", sec)
+        status = re.search(r"- Status: ([^\n]*)", sec)
+        if not head or not status or not status.group(1).upper().startswith("APPROVED"):
+            continue
+        if not re.search(r"\b[Bb]uilt\b", sec) or re.search(r"[Nn]othing (?:is )?built", sec):
+            continue
+        for rel in sorted(set(_BUILT_PATH.findall(sec))):
+            if not (root / rel).exists():
+                out.append({"id": f"dec:{head.group(1)}:{rel}", "kind": "built_file_missing", "name": head.group(1),
+                            "detail": f"{head.group(1)} is recorded as built and names `{rel}`, which isn't here",
+                            "file": "docs/DECISIONS.md", "line": decisions[:decisions.find(sec)].count("\n") + 1})
+    try:
+        lines = (root / "requirements.txt").read_text(encoding="utf-8").splitlines()
+    except OSError:
+        lines = []
+    for n, line in enumerate(lines, start=1):
+        spec = line.split("#", 1)[0].split(";", 1)[0].strip()
+        name = re.split(r"[<>=!~\[ ]", spec, maxsplit=1)[0] if spec else ""
+        if not name or spec.startswith("-"):
+            continue
+        try:
+            importlib.metadata.version(name)
+        except importlib.metadata.PackageNotFoundError:
+            out.append({"id": f"req:{name.lower()}", "kind": "requirement_missing", "name": name,
+                        "detail": f"requirements.txt lists {name}, which isn't installed in this Python",
+                        "file": "requirements.txt", "line": n})
+    return out
+
+
+def _repository(context):
+    """Method `repository` (passive, about her own repository): where her docs disagree with it
+    (`repository_findings`). Returns (evidence, gaps)."""
+    if not (ROOT / "docs").is_dir():
+        return [], [Gap("Her repository", "the docs folder isn't here (not a development install)", "repository")]
+    found = repository_findings(ROOT)
+    by_kind = {}
+    for f in found:
+        by_kind.setdefault(f["kind"], []).append(f["detail"])
+    return [_ev("repository.findings", len(found), "repository", "the repository"),
+            _ev("repository.doc_paths_missing", by_kind.get("doc_path_missing", []), "repository", "the docs"),
+            _ev("repository.built_files_missing", by_kind.get("built_file_missing", []), "repository",
+                "docs/DECISIONS.md"),
+            _ev("repository.requirements_missing", by_kind.get("requirement_missing", []), "repository",
+                "requirements.txt")], []
+
+
 def _windows_only(context) -> bool:
     """Whether a Windows-only method can run here."""
     return platform.system() == "Windows"
@@ -463,6 +566,8 @@ METHODS: tuple[Method, ...] = (
     Method("mia_capabilities", ("mia",), "what she can do: apps, tools, desktop-only apps", "the capability map", PASSIVE,
            _mia_capabilities),
     Method("mia_health", ("mia",), "open issues, internet", "the Fix-It Log, connectivity", PASSIVE, _mia_health),
+    Method("repository", ("repository",), "where her docs disagree with her repository", "the repository", PASSIVE,
+           _repository),
 )
 
 
@@ -495,7 +600,8 @@ def correlate(evidence: list[Evidence]) -> tuple[list[Evidence], list[dict]]:
 
 
 def problems(evidence: list[Evidence]) -> list[str]:
-    """Pure logic. What's worth the person's attention, from the evidence."""
+    """Pure logic. What's worth the person's attention, from the evidence (up to five of each kind of place where
+    the docs disagree with the repository among them)."""
     out = []
     for e in evidence:
         if e.fact.endswith(".use_percent") and e.fact.startswith("disk.") and isinstance(e.value, (int, float)) and e.value >= 90:
@@ -504,6 +610,9 @@ def problems(evidence: list[Evidence]) -> list[str]:
             out.append(f"Memory is {e.value:g}% used.")
         if e.fact == "security.firewall" and e.value != "on for every profile":
             out.append(f"The firewall isn't on everywhere ({e.value}).")
+        if e.fact in ("repository.doc_paths_missing", "repository.built_files_missing",
+                      "repository.requirements_missing") and e.value:
+            out.extend(str(x)[:200] + "." for x in e.value[:5])
         if e.fact == "decisions.waiting" and e.value:
             out.append(f"{len(e.value)} decision{'s' if len(e.value) != 1 else ''} wait on the owner: {', '.join(e.value)}.")
     return out
@@ -593,7 +702,8 @@ _NAMES = {"os.name": "Operating system", "os.release": "Release", "os.version": 
 
 
 def summary(report) -> str:
-    """A few plain sentences: what it is, what stands out, what's unknown."""
+    """A few plain sentences: what it is (this computer, MIA herself, or her repository: whether her docs and it
+    agree), what stands out, what's unknown."""
     r = asdict(report) if isinstance(report, Report) else report
     facts = {e["fact"]: e["value"] for e in r["evidence"]}
     if r["subject"] == "this_computer":
@@ -607,6 +717,11 @@ def summary(report) -> str:
             parts.append("Graphics: " + ", ".join(str(g) for g in gpus) + ".")
         if facts.get("ai.model"):
             parts.append(f"My AI model here is {facts['ai.model']}.")
+    elif r["subject"] == "repository":
+        found = facts.get("repository.findings")
+        parts = ([] if found is None else
+                 ["My docs and my repository agree." if not found else
+                  f"{found} place{'s' if found != 1 else ''} where my docs and my repository disagree."])
     else:
         parts = [f"I have {facts.get('capabilities.apps')} apps and {facts.get('capabilities.tools')} tools here, "
                  f"{facts.get('code.core_modules')} core files and {facts.get('code.test_files')} test files; "
