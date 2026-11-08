@@ -20,7 +20,8 @@ pass).
 `PROCEDURES` are the built-in ones; MIA can make more as specs (ACAF), held
 to the same check. `hardware()` turns the same inspection's facts into the
 screen's hardware list (This PC), saying only what was read; and
-`recent_problems()` reads the newest warnings and errors from MIA's own log.
+`recent_problems()` reads the newest warnings and errors from MIA's own log
+("any errors in your log?" reads them out: `log_words`).
 """
 
 from __future__ import annotations
@@ -227,9 +228,26 @@ _ASK = (("network", ("network", "internet connection", "wifi", "wi-fi", "connect
                       "is my pc", "is the pc")))
 
 
+_LOG_ASK = ("errors in your log", "errors in the log", "problems in your log", "problems in the log", "check your log",
+            "check the log", "any errors lately", "anything in your log")
+
+
+def log_words(problems: list[dict]) -> str:
+    """Pure logic. The log's newest problems said aloud: how many, and the newest three."""
+    if not problems:
+        return "No warnings or errors in my log lately."
+    errors = sum(1 for p in problems if p["level"] == "error")
+    head = (f"{len(problems)} recent problem{'s' if len(problems) != 1 else ''} in my log"
+            + (f", {errors} of them errors" if errors else ", all warnings") + ". Newest first: ")
+    return head + "; ".join(f"{p['text']} ({p['where']}, {p['when'][11:16]})" for p in problems[:3]) + "."
+
+
 def reply(context, text: str) -> Optional[str]:
-    """"check my PC", "check the network", "is there room for a big download?": the check-up, in plain lines."""
+    """"check my PC", "check the network", "is there room for a big download?": the check-up, in plain lines; "any
+    errors in your log?": the log's newest problems (log_words)."""
     low = " ".join(str(text or "").lower().split())
+    if any(w in low for w in _LOG_ASK):
+        return log_words(recent_problems())
     if not any(w in low for w in ("check", "diagnos", "room for", "is my pc", "is the pc")):
         return None
     for key, words in _ASK:

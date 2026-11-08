@@ -1,5 +1,5 @@
 """Diagnostic procedures (ACAF step 4, T-0040, core/diagnostics.py): check-ups written as specs over what inspection's
-PASSIVE methods read; checked before they run, so they can only read and compare; what couldn't be read said as such; the hardware list, only what was read; the log's newest problems."""
+PASSIVE methods read; checked before they run, so they can only read and compare; what couldn't be read said as such; the hardware list, only what was read; the log's newest problems, on the page and read out."""
 
 from types import SimpleNamespace
 
@@ -90,3 +90,12 @@ def test_the_logs_newest_problems_come_first_and_info_is_left_out(tmp_path):
     assert [(p["level"], p["where"]) for p in problems] == [("error", "server.app"), ("warning", "core.kitchen_manager")]
     assert problems[0] == {"when": "2026-11-07 18:02:00", "level": "error", "where": "server.app", "text": "the phone couldn't sync"}
     assert d.recent_problems(tmp_path / "none.log") == []
+
+
+def test_the_log_is_read_out_when_asked():
+    assert d.log_words([]) == "No warnings or errors in my log lately."
+    said = d.log_words([{"when": "2026-11-07 18:02:00", "level": "error", "where": "server.app", "text": "the phone couldn't sync"},
+                        {"when": "2026-11-07 18:01:00", "level": "warning", "where": "core.kitchen", "text": "no steps"}])
+    assert said == ("2 recent problems in my log, 1 of them errors. Newest first: the phone couldn't sync (server.app, 18:02); "
+                    "no steps (core.kitchen, 18:01).")
+    assert "in my log" in d.reply(None, "any errors in your log?")
