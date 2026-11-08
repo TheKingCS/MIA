@@ -1387,3 +1387,17 @@ body.mod-maps .hero { display: none; }
 .kp-how { font-size: var(--text-sm); }
 .btn-quiet { background: transparent; border-color: transparent; color: var(--text-dim); }
 .btn-quiet:hover { color: var(--text); }
+
+/* ---------------------------------------------------------------- Memories (DEC-0113 canvas; web/memories.js) */
+.mm-today { display: grid; gap: 6px; padding: 14px; margin-bottom: var(--gap); border-color: rgba(var(--rgb-accent), 0.4); }
+.mm-today .pw-label { margin: 0; color: var(--accent); }
+.mm-today .dim { font-size: 13px; }
+.mm-card { display: grid; gap: 10px; padding: 14px; margin-bottom: var(--gap); }
+.mm-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.mm-top .pw-label { margin: 0; }
+.mm-name { font-weight: 600; font-size: 17px; }
+.mm-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.mm-stats .pw-label { margin: 0; }
+.mm-v { font-family: var(--font-mono); margin-top: 2px; }
+.mm-quote { margin: 0; font-size: var(--text-sm); color: var(--text-dim); font-style: italic; }
+.mm-foot { margin: 0; font-size: 12px; }
