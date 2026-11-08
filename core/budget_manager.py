@@ -249,6 +249,9 @@ class ExpenseEntry:
 
 @dataclass
 class Bill:
+    """A bill the household pays: its name, amount, category, when it's due and how often, when it was last paid,
+    whether it's tax relevant, the business it belongs to, notes, and for a subscription the day the person last said
+    they still use it (`still_using_on`, core/subscriptions.py)."""
     bill_id: str
     name: str
     amount: float
@@ -260,17 +263,22 @@ class Bill:
     entity_id: str = ""  # set when this belongs to a BusinessEntity (LLC/sole prop/etc.)
     notes: str = ""
     created_at: str = ""
+    # DEC-0054's "still using it?" mark (2026-11-07): the day the person last said they still use this subscription
+    # (core/subscriptions.py); "" when never asked.
+    still_using_on: str = ""
 
     def to_dict(self) -> dict:
+        """The bill as saved in bills.json."""
         return {
             "bill_id": self.bill_id, "name": self.name, "amount": self.amount, "category": self.category,
             "due_date": self.due_date, "recurrence": self.recurrence, "last_paid_date": self.last_paid_date,
             "tax_relevant": self.tax_relevant, "entity_id": self.entity_id,
-            "notes": self.notes, "created_at": self.created_at,
+            "notes": self.notes, "created_at": self.created_at, "still_using_on": self.still_using_on,
         }
 
     @staticmethod
     def from_dict(data: dict) -> "Bill":
+        """A bill from bills.json; a missing field takes its default, so older files load."""
         return Bill(
             bill_id=data.get("bill_id", uuid.uuid4().hex[:10]),
             name=data.get("name", ""),
@@ -283,6 +291,7 @@ class Bill:
             entity_id=data.get("entity_id", ""),
             notes=data.get("notes", ""),
             created_at=data.get("created_at", ""),
+            still_using_on=data.get("still_using_on", "") or "",
         )
 
 

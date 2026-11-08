@@ -72,11 +72,12 @@ def _r(value) -> float:
 
 
 def money_page(context, today: Optional[date] = None, strategy: str = "hybrid") -> dict:
-    """The Money screen's data: the same finances summary Life State serves, this month's spending by category (largest first), bills, income, debts ranked by the chosen payoff strategy, and the rest of the budget's records, each with its form values and its one-tap action (Mark paid...), and net worth with its change this month and its line (`_net_worth_line`, which keeps today's point); each expense says its business and its receipt's lines (`receipt_lines`), and `business` holds the charges waiting to be sorted (`_business`). Not available without a budget."""
+    """The Money screen's data: the same finances summary Life State serves, this month's spending by category (largest first), bills, income, debts ranked by the chosen payoff strategy, and the rest of the budget's records, each with its form values and its one-tap action (Mark paid...), and net worth with its change this month and its line (`_net_worth_line`, which keeps today's point); each bill whether it's a subscription and when it was last said to be in use, each expense its business and its receipt's lines (`receipt_lines`), and `business` holds the charges waiting to be sorted (`_business`). Not available without a budget."""
     from core.budget_manager import (DEBT_PAYOFF_STRATEGIES, days_until_bill_due, days_until_income_due,
                                      days_until_promo_expires, next_bill_due_date, next_income_due_date, rank_debts)
     from core.context_assembler import _finances
     from core.money_actions import RECORDS, form_spec
+    from core.subscriptions import is_subscription
 
     today = today or date.today()
     budget = getattr(context, "budget", None)
@@ -101,6 +102,7 @@ def money_page(context, today: Optional[date] = None, strategy: str = "hybrid") 
                       "recurrence": bill.recurrence, "next_due": due.isoformat() if due else None, "days": days,
                       "when": due_words(days), "last_paid": bill.last_paid_date, "notes": bill.notes,
                       "values": _values(RECORDS["bill"], bill),
+                      "subscription": is_subscription(bill), "still_using_on": bill.still_using_on,
                       "action": {"kind": "bill.pay", "label": "Mark paid", "params": {"bill_id": bill.bill_id}}
                       if days is not None else None})
     page["bills"] = sorted(bills, key=lambda b: (b["days"] is None, b["days"] if b["days"] is not None else 0))

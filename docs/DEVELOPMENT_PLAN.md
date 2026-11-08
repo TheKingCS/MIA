@@ -21,6 +21,8 @@ glasses 29. 27 gaps, each decided in `work/parity.json`.
 4. **Send the design review back to Claude Design**: the six screens that show what MIA can't do (Pay From
    Savings, the coop plan in Budgets, Settings' toggles, Party and the household lines, square miles on the World
    Map, Inbox without email).
+   ✅ 2026-11-07: orange review notes on the canvas beside those screens (PC Home; Phone Home and Talk, Party,
+   Inbox, Settings with Profile and Sign In). The World Map note was left off: the built page uses cleared area too.
 
 ## Stage 2: the glasses (Claude Design, then Claude)
 

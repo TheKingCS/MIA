@@ -183,6 +183,13 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       list_mia_voices, set_mia_voice); Knowledge can delete a pack (owner, name typed); the glasses gained panels for
       Workshop (Project Tasks, Done), Classroom (Continue, Done), and readouts for Observations, the Lab, Power, the
       Journal and Memories. The Built page's shots predate these Settings sections.
+      Later: glasses readouts for Field Kit, Navigation and Maps too (every app with a glasses card has a panel);
+      a page can name its own "Say" phrase (`<body data-say>`); the "still using it?" mark on subscriptions
+      (DEC-0054, core/subscriptions.py: Still Using on Money's bills, by voice, a quiet finding; T-0018 done); the
+      design review went onto the canvas as orange notes (DEVELOPMENT_PLAN step 4). Knowledge ids collided across
+      the parallel sessions (seven pairs): renumbered, and tests/test_knowledge_ids.py now catches it.
+      **Git in the cloud clone:** it had no post-commit hook, so nothing was pushed for a while; it has one now
+      (pushes the branch and master). A merge doesn't run it: push by hand after merging origin/master.
       Left on WEB_PARITY on purpose: voice/phone access/backup/updates in Settings (device config: an undo can't put
       back a running voice engine), Knowledge pack install/delete (deleting is for good), Modules device-wide,
       the Lab's live sensors (none connected), Skills' drawn lines, Maps' other scripts, Home's spoken briefing
