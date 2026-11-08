@@ -1058,6 +1058,18 @@ def create_app(context: AppContext) -> FastAPI:
             hits = library.search_titles(q.strip()[:200]) if q.strip() else []
         return {"available": True, "packs": packs, "hits": hits, "root": str(library.root_path)}
 
+    @app.get("/api/knowledge/picture")
+    def knowledge_picture(pack: str, path: str, profile_id: str = Depends(require_profile_id)):
+        """A picture from an article in a pack (only images: ReferenceLibraryManager.picture)."""
+        from fastapi.responses import Response
+
+        library = getattr(context, "reference_library", None)
+        with app.state.turn_lock:
+            found = library.picture(pack, path) if library is not None else None
+        if found is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "That picture isn't in the library.")
+        return Response(found[0], media_type=found[1], headers={"Cache-Control": "private, max-age=86400"})
+
     @app.post("/api/knowledge/pack/delete")
     def knowledge_pack_delete(body: PackDelete, profile_id: str = Depends(require_profile_id)) -> dict:
         """Deletes a pack's file for good, for the PC's owner, once its title is typed to confirm (as the desktop asks).
@@ -1816,6 +1828,19 @@ def create_app(context: AppContext) -> FastAPI:
 
         return _screen(profile_id, "notes", journal_page)
 
+    @app.post("/api/journal/captures/check")
+    async def web_check_captures(profile_id: str = Depends(require_profile_id)) -> dict:
+        """Looks for new MIA Lite recordings and transcribes them (core/web_proposals.check_captures)."""
+        from core.web_proposals import check_captures
+
+        view = view_for(context, profile_id)
+
+        def run() -> dict:
+            """Checks under the turn lock, off the event loop (transcribing takes a while)."""
+            with app.state.turn_lock:
+                return check_captures(view)
+        return await run_in_threadpool(run)
+
     @app.get("/api/workshop")
     def web_workshop(profile_id: str = Depends(require_profile_id)) -> dict:
         from core.web_more import workshop_page
@@ -2081,6 +2106,19 @@ def create_app(context: AppContext) -> FastAPI:
         from core.web_progress import missions_page
 
         return _screen(profile_id, "missions", missions_page)
+
+    @app.post("/api/missions/idea")
+    async def web_mission_idea(profile_id: str = Depends(require_profile_id)) -> dict:
+        """Asks the model for a mission idea (core/web_proposals.suggest); it waits for the person's yes or no."""
+        from core.web_proposals import suggest
+
+        view = view_for(context, profile_id)
+
+        def run() -> dict:
+            """Suggests under the turn lock, off the event loop (the model can take a while)."""
+            with app.state.turn_lock:
+                return suggest(view)
+        return await run_in_threadpool(run)
 
     @app.get("/api/skills")
     def web_skills(profile_id: str = Depends(require_profile_id)) -> dict:

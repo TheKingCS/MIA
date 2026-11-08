@@ -101,6 +101,7 @@ from core.assistant_trip_route_actions import register_trip_route_actions
 from core.assistant_backup_actions import register_backup_actions
 from core.assistant_voice_choice_actions import register_voice_choice_actions
 from core.assistant_subscription_actions import register_subscription_actions
+from core.assistant_proposal_actions import register_proposal_actions
 from core.assistant_goods_actions import register_goods_actions
 from core.assistant_dungeon_actions import register_checkin_actions, register_dungeon_actions, register_loop_actions
 from core.failure_actions import register_failure_actions
@@ -289,7 +290,7 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     Household's pause_household_routine (core/assistant_household_actions.py), change_waypoint
     (core/assistant_waypoint_actions.py), a trip's route and checkpoints (core/assistant_trip_route_actions.py), the backup status
     (core/assistant_backup_actions.py), MIA's own voice (core/assistant_voice_choice_actions.py), "still using it?" on subscriptions
-    (core/assistant_subscription_actions.py) and the notification tools (core/assistant_notification_actions.py)."""
+    (core/assistant_subscription_actions.py), mission ideas and field recordings (core/assistant_proposal_actions.py) and the notification tools (core/assistant_notification_actions.py)."""
     registry = context.assistant_actions
     registry.register(connectivity_action())
     register_journal_actions(registry)
@@ -306,6 +307,7 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     register_backup_actions(registry)  # when MIA was last backed up (DEC-0125)
     register_voice_choice_actions(registry)  # MIA's own voice, effect and volume (DEC-0125)
     register_subscription_actions(registry)  # "still using it?" on subscriptions (DEC-0054)
+    register_proposal_actions(registry)  # mission ideas and field recordings (DEC-0125)
     register_notification_actions(registry)  # read out and mark notifications read (DEC-0125)
     register_dungeon_actions(registry)  # the Dungeon: shifts, loot, quests (DEC-0046)
     register_loop_actions(registry)  # the loop: when things happen (DEC-0047)

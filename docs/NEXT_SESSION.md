@@ -188,11 +188,18 @@ Build order and where it stands (tick as each lands; screenshots in demo mode: s
       (DEC-0054, core/subscriptions.py: Still Using on Money's bills, by voice, a quiet finding; T-0018 done); the
       design review went onto the canvas as orange notes (DEVELOPMENT_PLAN step 4). Knowledge ids collided across
       the parallel sessions (seven pairs): renumbered, and tests/test_knowledge_ids.py now catches it.
+      Last: Skills' "Show the tree" (drawn prerequisite lines, laid out in core/web_progress.skill_tree); pictures in
+      Knowledge articles (`article_images`, `/api/knowledge/picture` serves images only); the Qt Toolbox's last two
+      tools on the web: MIA's Idea on Missions (Discovery: Suggest One, Accept, Set Aside) and From the Field on the
+      Journal (MIA Lite recordings: Keep It, Leave It Out, Check For New), with voice tools (core/web_proposals.py).
+      **Maps' other scripts need Zac or a session with network:** place names in Cyrillic, Greek, Arabic and so on
+      need more glyph ranges in `web/vendor/fonts/` (web/vendor/README.md says where from); the cloud shell here
+      can't download them.
       **Git in the cloud clone:** it had no post-commit hook, so nothing was pushed for a while; it has one now
       (pushes the branch and master). A merge doesn't run it: push by hand after merging origin/master.
       Left on WEB_PARITY on purpose: voice/phone access/backup/updates in Settings (device config: an undo can't put
       back a running voice engine), Knowledge pack install/delete (deleting is for good), Modules device-wide,
-      the Lab's live sensors (none connected), Skills' drawn lines, Maps' other scripts, Home's spoken briefing
+      the Lab's live sensors (none connected), Maps' other scripts (glyphs to download), Home's spoken briefing
       (Zac: no quick buttons; "what's on today?" answers by voice), the private journal (passphrase on the PC), links.
 - [x] Glasses (the canvas's GlassesHome and GlassesTraining): Home shows her state (Ready, Listening, Thinking,
       Needs You), the one line that matters now (`core/glasses.priority`, amber orb from `priority_tone`), the latest
@@ -959,7 +966,7 @@ working screen on the frame, for Muse to restyle:
 2. ~~Garage + Maintenance~~ **done 2026-10-06** (plus Property,
    Greenhouse and the asset page; still to do: sensor graphs, parts per asset).
 3. ~~Missions, Skills, Character~~ **done 2026-10-06** (closes H-0013;
-   still to do: drawn prerequisite lines in the skill tree, character art).
+   still to do: character art; the tree's lines were drawn 2026-11-07).
 4. ~~Kitchen, Workout, Real Estate~~ **done 2026-10-06** (Zac asked for
    them next; still to do: recipe ratings and photos, rest timer and
    guided sessions, depreciation and selling a property).

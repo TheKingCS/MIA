@@ -371,6 +371,7 @@ import core.web_projects  # noqa: E402,F401  (Projects: a budget, and tasks adde
 import core.web_textbooks  # noqa: E402,F401  (Classroom textbooks: a course from one, removing one)
 import core.starter_actions  # noqa: E402,F401  (starter sets from Settings)
 import core.subscriptions  # noqa: E402,F401  (the "still using it?" mark on a subscription, DEC-0054)
+import core.web_proposals  # noqa: E402,F401  (mission ideas and field captures: accept or set aside, DEC-0125)
 from core.offline_maps import _register as _register_map_areas  # noqa: E402  (vector map areas from the Maps page)
 
 _register_map_areas()

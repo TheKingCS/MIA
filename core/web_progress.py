@@ -13,6 +13,8 @@ progress from MissionManager (trip and task objectives count themselves),
 challenge chains and hidden achievements from core.rewards_manager.
 Rarity (Common to Legendary) is only ever the rewards' own; missions
 carry their difficulty, never an invented rarity (H-0013 item 4).
+Each Skills category's tree (the desktop's, with its prerequisite lines)
+is laid out here too (`skill_tree`); the page only draws it.
 Reading a page never changes anything (no unlock scans here).
 """
 
@@ -71,7 +73,8 @@ def _rarity(index: int) -> dict:
 def missions_page(context, today: Optional[date] = None) -> dict:
     """The data the Missions screen shows, assembled here (the web only draws it): today's fitness missions made first, then each mission's card
     (objectives and who each is for, progress, skill rewards, the asset, task or recipes it's tied to, its streak),
-    the skills to pick from, the forms, and the person's level.
+    the skills to pick from, the forms, the person's level, and MIA's mission idea waiting for a yes or no
+    (core/web_proposals.py).
     """
     from core.mission_actions import ABANDON_LABELS, RECORDS, form_spec, is_mine
 
@@ -82,8 +85,10 @@ def missions_page(context, today: Optional[date] = None) -> dict:
     missions = getattr(context, "missions", None)
     profile = _profile(context)
     pid = profile.profile_id if profile is not None else None
+    from core.web_proposals import mission_idea
+
     page = {"available": missions is not None, "forms": form_spec(), "as_of": today.isoformat(),
-            "me": level_block(profile)}
+            "me": level_block(profile), "idea": mission_idea(context)}
     if missions is None:
         return page
     skills = getattr(context, "skills", None)
@@ -184,9 +189,42 @@ def _pathway_steps(context, pid) -> dict:
 # ------------------------------------------------------------------ Skills
 
 
+TREE_COL, TREE_ROW, TREE_BOX_W, TREE_BOX_H = 190, 64, 160, 44
+
+
+def skill_tree(rows: list[dict], category: str) -> dict:
+    """Pure logic. One category's skills as a tree to draw (the desktop's skill tree, with its prerequisite lines):
+    a column per tier, the skills of a tier stacked in it, and a first column for prerequisites from other categories
+    (marked `outside`); each box's x, y, name, whether it's unlocked or has XP; and a line from each prerequisite to
+    the skill that needs it (`met` once the prerequisite has any XP, which is what unlocking asks). Sized to fit:
+    {w, h, nodes, edges}; empty for a category with no prerequisite links."""
+    by_id = {r["id"]: r for r in rows}
+    mine = [r for r in rows if r["category"] == category]
+    links = [(req, r["id"]) for r in mine for req in r.get("requires", []) if req in by_id]
+    if not links:
+        return {"w": 0, "h": 0, "nodes": [], "edges": []}
+    outside = sorted({req for req, _ in links if by_id[req]["category"] != category}, key=lambda i: by_id[i]["name"])
+    tiers = sorted({r["tier"] for r in mine})
+    columns = ([outside] if outside else []) + [sorted((r["id"] for r in mine if r["tier"] == t),
+                                                       key=lambda i: by_id[i]["name"].lower()) for t in tiers]
+    nodes, at = [], {}
+    for c, ids in enumerate(columns):
+        for n, sid in enumerate(ids):
+            r = by_id[sid]
+            at[sid] = (c * TREE_COL, n * TREE_ROW)
+            nodes.append({"id": sid, "name": r["name"], "x": c * TREE_COL, "y": n * TREE_ROW,
+                          "unlocked": bool(r["unlocked"]), "started": r["total_xp"] > 0, "outside": sid in outside})
+    edges = [{"from": req, "to": sid, "x1": at[req][0] + TREE_BOX_W, "y1": at[req][1] + TREE_BOX_H / 2,
+              "x2": at[sid][0], "y2": at[sid][1] + TREE_BOX_H / 2, "met": by_id[req]["total_xp"] > 0}
+             for req, sid in links]
+    return {"w": (len(columns) - 1) * TREE_COL + TREE_BOX_W, "h": (max(len(c) for c in columns) - 1) * TREE_ROW + TREE_BOX_H,
+            "box_w": TREE_BOX_W, "box_h": TREE_BOX_H, "nodes": nodes, "edges": edges}
+
+
 def skills_page(context, today: Optional[date] = None) -> dict:
     """The data the Skills screen shows, assembled here (the web only draws it): each skill's level, status (locked, learning, demonstrated), what it
-    needs, the XP this week and its pathways; the one honest next step; counts; rewards; and recent achievements.
+    needs (and its prerequisites' ids), the XP this week and its pathways; each category's tree (`skill_tree`); the one
+    honest next step; counts; rewards; and recent achievements.
     """
     from core.skill_leveling import compute_skill_level_progress, next_honest_step
 
@@ -227,6 +265,7 @@ def skills_page(context, today: Optional[date] = None) -> dict:
             "status": skills.capability_status(pid, d.skill_id) if pid else ("learning" if unlocked else "locked"),
             "unlocked": unlocked, "focus": d.skill_id == focus,
             "needs": [by_id[r].name if r in by_id else r for r in d.prerequisite_skill_ids],
+            "requires": list(d.prerequisite_skill_ids),
             "this_week": skills.xp_earned_between(pid, d.skill_id, week_ago, today + timedelta(days=1)) if pid else 0,
             "pathways": pathway_rows(d.skill_id),
         })
@@ -243,7 +282,7 @@ def skills_page(context, today: Optional[date] = None) -> dict:
     def trend(c):
         return "growing" if c in growing else "declining" if c in declining else "not started" if c in untouched else None
 
-    page["categories"] = [{"name": c, "interest": c in interests, "trend": trend(c)} for c in
+    page["categories"] = [{"name": c, "interest": c in interests, "trend": trend(c), "tree": skill_tree(rows, c)} for c in
                           [c for c in categories if c in interests] + [c for c in categories if c not in interests]]
     page["skills"] = sorted(rows, key=lambda r: (r["category"], r["tier"], r["name"]))
     page["focus"] = next(({"id": r["id"], "name": r["name"], "icon": r["icon"],

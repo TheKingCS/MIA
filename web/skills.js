@@ -108,6 +108,32 @@
     return t ? el("span", { class: "chip " + (t === "growing" ? "chip-ok" : "chip-soon") }, said[t]) : null;
   }
 
+  // The skill tree (core/web_progress.skill_tree): a column per tier, prerequisites from other categories first, and a
+  // line from each prerequisite to the skill it opens, lit once it has XP (which is all unlocking asks). Placed in core.
+  const NS = "http://www.w3.org/2000/svg";
+  const svg = (tag, attrs) => { const n = document.createElementNS(NS, tag); Object.entries(attrs).forEach(([k, v]) => n.setAttribute(k, String(v))); return n; };
+  let showTree = false;
+  function tree(t) {
+    if (!t || !t.nodes.length) return null;
+    const pad = 6;
+    const pic = svg("svg", { viewBox: -pad + " " + -pad + " " + (t.w + 2 * pad) + " " + (t.h + 2 * pad), class: "sk-tree", role: "img",
+      width: t.w + 2 * pad, height: t.h + 2 * pad,
+      "aria-label": "Skill tree: " + t.edges.map((e) => t.nodes.find((n) => n.id === e.from).name + " opens " + t.nodes.find((n) => n.id === e.to).name).join("; ") });
+    t.edges.forEach((e) => {
+      const mid = (e.x1 + e.x2) / 2;
+      pic.append(svg("path", { d: `M${e.x1},${e.y1} C${mid},${e.y1} ${mid},${e.y2} ${e.x2},${e.y2}`, class: "sk-edge" + (e.met ? " met" : "") }));
+    });
+    t.nodes.forEach((n) => {
+      const g = svg("g", { class: "sk-node" + (n.unlocked ? " open" : " locked") + (n.started ? " started" : "") + (n.outside ? " outside" : "") });
+      g.append(svg("rect", { x: n.x, y: n.y, width: t.box_w, height: t.box_h, rx: 8 }));
+      const label = svg("text", { x: n.x + 10, y: n.y + t.box_h / 2 + 5 });
+      label.textContent = (n.unlocked ? "" : "🔒 ") + (n.name.length > 18 ? n.name.slice(0, 17) + "…" : n.name);
+      g.append(label);
+      pic.append(g);
+    });
+    return el("div", { class: "sk-tree-wrap" }, pic);
+  }
+
   function draw() {
     const c = page.counts;
     $("strip").replaceChildren(
@@ -121,9 +147,14 @@
         onclick: () => { category = x.name; history.replaceState(null, "", "#" + encodeURIComponent(x.name)); draw(); } },
       (x.interest ? "★ " : "") + x.name + (x.trend === "growing" ? " ↑" : x.trend === "declining" ? " ↓" : ""))));
     const skills = page.skills.filter((s) => s.category === category);
+    const cat = page.categories.find((x) => x.name === category);
+    const hasTree = !!(cat && cat.tree && cat.tree.nodes.length);
     $("panel").replaceChildren(capability(),
       el("div", { class: "skills-layout" },
-        section(category || "Skills", trendNote(), el("div", { class: "skill-grid" }, skills.map(skillCard))),
+        section(category || "Skills", trendNote(),
+          hasTree ? el("button", { type: "button", class: "btn btn-ghost btn-small", "aria-pressed": String(showTree),
+            onclick: () => { showTree = !showTree; draw(); } }, showTree ? "Show the cards" : "Show the tree") : null,
+          hasTree && showTree ? tree(cat.tree) : el("div", { class: "skill-grid" }, skills.map(skillCard))),
         sideColumn()),
       rewardsCard() || "");
     MIAShell.levelCard($("level"), page.me);

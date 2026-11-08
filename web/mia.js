@@ -359,6 +359,8 @@
       { id: "kokoro:af_heart", name: "Heart (American)", engine: "kokoro" }, { id: "kokoro:bf_emma", name: "Emma (British)", engine: "kokoro" },
       { id: "en_US-amy-medium", name: "Amy", engine: "piper" }] }) : call("GET", "/api/settings/voice"),
     chooseVoice: (change) => demo ? demoOnly() : call("POST", "/api/settings/voice", change),
+    suggestMission: () => demo ? demoOnly() : call("POST", "/api/missions/idea", {}),
+    checkCaptures: () => demo ? demoOnly() : call("POST", "/api/journal/captures/check", {}),
     deletePack: (id, confirm) => demo ? demoOnly() : call("POST", "/api/knowledge/pack/delete", { id, confirm }),
     backupNow: (passphrase) => demo ? demoOnly() : call("POST", "/api/backups", { passphrase: passphrase || "" }),
     textbookSearch: (q, book) => demo ? Promise.resolve({ query: q, hits: q ? [{ book_id: "b1", book: "Welding Fundamentals", page: 112,
