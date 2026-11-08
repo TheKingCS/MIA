@@ -236,7 +236,9 @@
     memories: () => demo ? (() => {
       const elk = { id: "e1", name: "Elk Creek", where: "the high country", start: "2025-11-06", end: "2025-11-08", days: 3, km: 18.4,
         photos: 42, activities: [{ kind: "hike", trips: 2, km: 18.4, kmh: 3.1 }], places: [{ kind: "Camp", count: 3 }, { kind: "Water", count: 2 }],
-        highlights: ["Saw a moose at dawn"] };
+        highlights: ["Saw a moose at dawn"],
+        map: { w: 100, h: 62.4, points: [{ x: 8, y: 54.4, name: "Trailhead" }, { x: 31.5, y: 40.2, name: "Elk meadow" },
+          { x: 55, y: 28.9, name: "Lower falls" }, { x: 92, y: 8, name: "Ridge camp" }] } };
       return Promise.resolve({ recaps: [elk], on_this_day: [elk] });
     })() : call("GET", "/api/memories"),
     observations: () => demo ? Promise.resolve({

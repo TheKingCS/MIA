@@ -1589,3 +1589,11 @@ body.mod-maps .hero { display: none; }
 
 /* Expeditions: a trip's log with its weather (journal entries on the trip, 2026-11-07). */
 .trip-log { list-style: none; margin: 6px 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+
+/* Memories: where a trip went (core/memories_web.route_map, 2026-11-07). Placed by core; drawn in the accent. */
+.mm-map { width: 100%; height: auto; max-height: 220px; margin: 10px 0 4px; border-radius: 10px;
+  background: rgba(var(--rgb-accent), .05); border: 1px solid rgba(var(--rgb-accent), .14); }
+.mm-route { fill: none; stroke: var(--accent); stroke-width: .9; stroke-linejoin: round; stroke-linecap: round; }
+.mm-stop { fill: var(--bg, #0a1014); stroke: var(--accent); stroke-width: .6; }
+.mm-start { fill: var(--accent); }
+.mm-label { fill: var(--text-dim); font-size: 4px; font-family: var(--font-sans, inherit); }

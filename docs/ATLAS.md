@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1140 files, 255,406 lines; 1140 files describe themselves; 13,944 of 14,619 classes and functions are documented.
+1140 files, 255,511 lines; 1140 files describe themselves; 13,947 of 14,622 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-419 files, 119,450 lines; 6,327 of 6,416 classes and functions documented
+419 files, 119,497 lines; 6,329 of 6,418 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -699,7 +699,7 @@
 
 ## tests/: the test suite: what each part must do
 
-377 files, 67,964 lines; 5,372 of 5,958 classes and functions documented
+377 files, 67,990 lines; 5,373 of 5,959 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -895,7 +895,7 @@
 - `tests/test_material_manager.py`: Unit tests for core.material_manager. Isolates _DATA_DIR/_MATERIALS_FILE into a tmp_path scratch area, same monkeypatch pattern as test_component_manager.py's isolated_paths. materials_needing_restock() is also tested directly as a pure function (no filesystem I/O), same reasoning as every other pur *(3 undocumented)*
 - `tests/test_meal_plan.py`: Meal plans, prep and the shopping list (core/meal_plan.py, DEC-0020), with their actions (meal.*) and missions. Placeholder recipes and values. *(2 undocumented)*
 - `tests/test_memories_module.py`: Unit tests for modules.memories.module's pure functions, same style as tests/test_expeditions_module.py (no Qt event loop, no fixtures). *(1 undocumented)*
-- `tests/test_memories_web.py`: Memories' web screen (core/memories_web.py): a recap per expedition, and on this day.
+- `tests/test_memories_web.py`: Memories' web screen (core/memories_web.py): a recap per expedition, on this day, and a recap's route map.
 - `tests/test_memory_callbacks.py`: Remembering at the right moment (DEC-0029, ALICE pick 3): a birthday, a plan or due upkeep brings back what you told MIA, only when there's something remembered to add. *(1 undocumented)*
 - `tests/test_memory_manager.py`: Unit tests for core.memory_manager.MemoryManager — docs/ROADMAP.md milestone v0.17, Memories. Isolates every underlying manager's data dir into a tmp_path scratch area, same monkeypatch pattern as test_trip_manager.py's isolated_paths, since MemoryManager aggregates across Expedition/Trip/Waypoint/J *(2 undocumented)*
 - `tests/test_memory_vault.py`: The memory vault (core/memory_vault.py): the phone's camera roll read by fingerprint, sent to the home computer in pieces that resume, checked there, and only ever offered for removal once the computer confirms it holds each file.
@@ -1081,7 +1081,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-80 files, 14,595 lines
+80 files, 14,627 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
@@ -1126,7 +1126,7 @@
 - `web/look.js`: look.js — Look: show MIA something (claude, 2026-11-07, build plan step 15). A photo (the camera, or one you have) and a question ("what is this?", "read this label", "inspect this part"), answered on MIA's PC by her local vision model (core/sight.py, POST /api/sight). The photo isn't kept. She neve
 - `web/made.js`: made.js: every screen MIA makes (claude, 2026-11-04, DEC-0088 to DEC-0091). Draws a creation's blocks as core assembled them (core/creation_spec.py): stats, chart, table, list, cards, meter, timeline, form, note. Only MIA's own classes and tokens, no styling of its own, so whatever she makes looks l
 - `web/maps.js`: maps.js — Maps (claude, 2026-11-06). Two kinds of map. Vector areas (core/offline_maps.py, cut from OpenStreetMap into data/maps/, anywhere in the world, sharp at every zoom) are drawn by MapLibre from web/vendor/, read in byte ranges with this tab's sign-in; the topo map below needs no library. Ren
-- `web/memories.js`: memories.js — Memories (claude, 2026-11-06). Renders MIA.memories() (core/memories_web.py): "On this day", then a recap per expedition, newest first: how long, distance and pace by activity, the places visited, the journal's highlights, the photo count (the photos are on the Expeditions page). Read 
+- `web/memories.js`: memories.js — Memories (claude, 2026-11-06). Renders MIA.memories() (core/memories_web.py): "On this day", then a recap per expedition, newest first: how long, distance and pace by activity, the places visited, the journal's highlights, the photo count (the photos are on the Expeditions page), and w
 - `web/mia.js`: mia.js — the engine client every MIA surface shares (Phase 2, DEC-0012).
 - `web/missions.js`: missions.js — the Missions screen (claude, 2026-10-06, DEC-0017/0018, H-0013). Renders MIA.missions() (core/web_progress.py): active missions (ready to complete first), daily missions with streaks, and completed ones; each opens to its objectives (+1, add, remove), rewards and the skills it teaches,
 - `web/model-test.js`: model-test.js — the model test (claude, 2026-10-07, DEC-0019, docs/PHONE_MODEL_TEST.md). Renders MIA.modelTest() (core/local_model.py): each small model with Download / Start / Delete, the running model, a test run's progress, and each model's last results: how often it picked MIA's right tool, and 
