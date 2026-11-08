@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1224 files, 266,675 lines; 1224 files describe themselves; 14,532 of 15,219 classes and functions are documented.
+1226 files, 266,948 lines; 1226 files describe themselves; 14,550 of 15,240 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-452 files, 125,426 lines; 6,702 of 6,788 classes and functions documented
+452 files, 125,460 lines; 6,705 of 6,791 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -470,7 +470,7 @@
 
 ## gui/: the desktop's Qt shell and dialogs
 
-122 files, 21,806 lines; 1,085 of 1,085 classes and functions documented
+123 files, 21,950 lines; 1,095 of 1,095 classes and functions documented
 
 - `gui/__init__.py`: Presentation layer only. Everything in this package talks to the rest of the system through core.app_context.AppContext and modules.module_base. ModuleBase — never by importing module internals or reaching into core services directly beyond what AppContext exposes.
 - `gui/account_dialogs.py`: Accounts and households on the desktop (2026-10-01, docs/ROADMAP.md "People and ownership"; core/profile_manager.py, core/household_manager.py):
@@ -544,6 +544,7 @@
 - `gui/notification_center.py`: The full notification list, opened from the bell button in the main window header. Shows every notification (read and unread), newest first, color-coded by level, with per-item dismiss and a "Clear All" action.
 - `gui/notification_toast.py`: A brief, non-blocking pop-up shown when a new notification arrives while the app is open. Implemented as a child widget of MainWindow (positioned in its top-right corner) rather than a separate top-level window, since a child widget avoids cross-platform window-manager positioning quirks — it just n
 - `gui/onboarding_dialog.py`: "Getting to know you" (2026-10-01, accounts stage 2): right after a new account is made, MIA asks a few questions, one at a time, as a conversation: what she should help with most, how often to speak up, and anything else she should know. Then she says what she'll put first on the Apps screen (core/
+- `gui/orb_presence.py`: MIA on the desktop as just herself: her presence orb and rings floating in the middle of the screen, with no window, title bar or border around them (Zac, 2026-11-08: "boot up with just the icon appearing in the middle of the screen in an animation state. No window or borders, just the orb and the r
 - `gui/password_dialog.py`: A small reusable dialog for prompting a profile's password — used both when selecting a password-protected profile and when deleting one.
 - `gui/pick_item_quantity_dialog.py`: One reusable dialog for three actions that all share the same real shape — "pick an existing item, enter a quantity (and optionally an amount)": modules/workshop/module.py's Jobs tab "Consume Material" and "Produce Product" actions (core/job_manager.py's consume_material() produce_product()), and it
 - `gui/plaid_connect_progress_dialog.py`: Shown while waiting for the user to finish connecting a bank in their system browser (Plaid's Hosted Link, opened via webbrowser.open() — see core/plaid_manager.py's module docstring for why there's no embedded Link widget). Polls core.plaid_manager.PlaidManager.check_public_token_once() on a QTimer
@@ -734,7 +735,7 @@
 
 ## tests/: the test suite: what each part must do
 
-414 files, 70,742 lines; 5,570 of 6,171 classes and functions documented
+415 files, 70,837 lines; 5,575 of 6,179 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -976,6 +977,7 @@
 - `tests/test_onboarding.py`: Unit tests for core.onboarding's pure functions — see gui/home_dashboard.py's _inject_first_run_welcome() for how this feeds a brand-new user's very first conversation. Same shape as tests/test_startup_briefing.py.
 - `tests/test_online_watch.py`: Offline awareness follow-ups (core/online_watch.py): noticing a settled change of connection, telling the owner through the communication gate, and "remind me when I'm back online". *(1 undocumented)*
 - `tests/test_operating_journal.py`: The Operating Journal (DEC-0097, core/operating_journal.py): lines in the person's words, each read by code for what the records can check; self-rated otherwise; how they did as plain numbers by week (and each line's meter), never a judgment; talked to with "add to my operating journal" and "rate .. *(3 undocumented)*
+- `tests/test_orb_presence.py`: MIA's floating desktop orb (gui/orb_presence.py, Zac 2026-11-08): a frameless, transparent, always-on-top window that reuses the presence orb with no label, bobs where it stands, and wakes her (emits `activated`) on Enter or a plain click but not a drag. *(3 undocumented)*
 - `tests/test_ownership.py`: Whose is it (core/ownership.py), 2026-10-01: owner marks on vehicles, tools and appliances; Today shows your things and shared ones. *(2 undocumented)*
 - `tests/test_parity.py`: Full use both ways on every device (DEC-0125, core/parity.py): every app can be used by voice, on the PC, on the phone and on the glasses, or the gap is decided in work/parity.json; parity can only grow, and docs/PARITY.md is current. Each app's ask (its screen's "Say: …") reaches that app's own too
 - `tests/test_party.py`: Party and guild (DEC-0028): household raids share their jobs out and their reward; the leaderboard only shows people who joined, counting wins. *(3 undocumented)*

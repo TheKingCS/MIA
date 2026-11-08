@@ -524,6 +524,11 @@ class MIAApplication:
         self.splash: SplashScreen | None = None
         self._boot_sound_worker: BootSoundWorker | None = None
         self.main_window: MainWindow | None = None
+        # MIA's floating desktop orb (gui/orb_presence.py, Zac 2026-11-08), when gui.boot_orb is on: boot opens on
+        # just her orb, and clicking it wakes the main window. _orb_dismissed stays True for the rest of the session
+        # once woken, so a later Switch User doesn't drop back to the orb.
+        self._orb = None
+        self._orb_dismissed = False
         self.setup_wizard: SetupWizard | None = None
         self.profile_select: ProfileSelectScreen | None = None
         self.lock_screen: LockScreen | None = None
@@ -5840,10 +5845,39 @@ class MIAApplication:
 
     def _show_main_window(self) -> None:
         """Closes the splash and shows the main window (through _display(), so kiosk fullscreen holds), wiring its Switch
-        User button.
+        User button. When gui.boot_orb is on, opens on MIA's floating orb first and waits for a click.
         """
+        if self._should_show_orb():
+            self._show_orb()
+            return
         if self.splash is not None:
             self.splash.close()
         self.main_window = MainWindow(self.context, self.module_manager)
         self.main_window.switch_profile_requested.connect(self._on_switch_profile_requested)
         self._display(self.main_window)
+
+    def _should_show_orb(self) -> bool:
+        """Whether to open on MIA's floating orb first (Zac, 2026-11-08): opt-in via gui.boot_orb, never in kiosk mode
+        (the Pi wants a full screen, not a desktop presence), and only until she's been woken this session."""
+        return (bool(self.config.get("gui.boot_orb", False))
+                and not self.config.get("system.kiosk_mode", False)
+                and not self._orb_dismissed)
+
+    def _show_orb(self) -> None:
+        """Show just her orb and rings floating in the middle of the screen; a click wakes her into the main window."""
+        from gui.orb_presence import OrbPresence
+
+        if self.splash is not None:
+            self.splash.close()
+        self._orb = OrbPresence()
+        self._orb.activated.connect(self._wake_from_orb)
+        self._orb.show_centered()
+        log.info("Opened on MIA's floating orb (gui.boot_orb); waiting for a click to wake the main window.")
+
+    def _wake_from_orb(self) -> None:
+        """The orb was clicked (or Enter/Space): close it and open her main window for the rest of the session."""
+        self._orb_dismissed = True
+        if self._orb is not None:
+            self._orb.close()
+            self._orb = None
+        self._show_main_window()

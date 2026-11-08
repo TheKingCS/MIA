@@ -21,6 +21,10 @@
    "status": "none",
    "why": "the person keeps or leaves out a recording (DEC-0125); a kept one is a journal entry, which has its own loop"
   },
+  "action:comms": {
+   "status": "none",
+   "why": "the person's own settings for how often MIA speaks up (DEC-0129); the communication gate already learns from dismissals and logs every decision"
+  },
   "action:connect": {
    "status": "none",
    "why": "each import is the person's own ask, previewed and approved; a refused or failed one counts in actions.failed, and every import is undoable"
@@ -45,25 +49,9 @@
    "status": "none",
    "why": "where a product is listed, entered by hand on the Workshop page or said (DEC-0125): the person's record, not MIA's choice; nothing of hers to improve"
   },
-  "action:sleep": {
-   "status": "none",
-   "why": "the person's own log of a night (DEC-0129); MIA reads it, never grades it"
-  },
-  "action:visit": {
-   "status": "none",
-   "why": "visits as the person records them (DEC-0129); MIA never judges care"
-  },
   "action:med": {
    "status": "none",
    "why": "the person's medications as written on the label (DEC-0129); MIA never suggests a dose, so nothing to learn here"
-  },
-  "action:record": {
-   "status": "none",
-   "why": "health records kept as given (DEC-0129); never interpreted"
-  },
-  "action:comms": {
-   "status": "none",
-   "why": "the person's own settings for how often MIA speaks up (DEC-0129); the communication gate already learns from dismissals and logs every decision"
   },
   "action:mission_idea": {
    "status": "none",
@@ -77,9 +65,17 @@
    "status": "none",
    "why": "their own settings: nothing MIA chose, so nothing of hers to correct"
   },
+  "action:record": {
+   "status": "none",
+   "why": "health records kept as given (DEC-0129); never interpreted"
+  },
   "action:setting": {
    "status": "none",
    "why": "their own settings: nothing MIA chose, so nothing of hers to correct"
+  },
+  "action:sleep": {
+   "status": "none",
+   "why": "the person's own log of a night (DEC-0129); MIA reads it, never grades it"
   },
   "action:starter": {
    "status": "none",
@@ -92,6 +88,10 @@
   "action:undo": {
    "status": "none",
    "why": "undo.last puts back the newest change, as \"undo that\" does; undoing MIA's own change already counts as a correction (core/corrections.py)"
+  },
+  "action:visit": {
+   "status": "none",
+   "why": "visits as the person records them (DEC-0129); MIA never judges care"
   },
   "action:why": {
    "status": "none",
@@ -129,13 +129,9 @@
    "status": "none",
    "why": "taking a card out of the wallet is the person's own choice; nothing of MIA's to improve"
   },
-  "store:health": {
-   "status": "none",
-   "why": "the person's own health records as they give them (DEC-0129); MIA never grades or interprets them, so there's no work of hers to improve"
-  },
   "store:business_use": {
-   "status": "todo",
-   "why": "her business-use shares on expenses, corrected: needs those tools counted in core/corrections.py"
+   "status": "proposed",
+   "task": "T-0055"
   },
   "store:data_logger": {
    "status": "none",
@@ -146,12 +142,16 @@
    "why": "readings from meters and sensors: measurements, not her choices (grow_alert speaks when one is out of range)"
   },
   "store:finance": {
-   "status": "todo",
-   "why": "after the Plaid work lands (Zac): imported transactions recategorized, a bank link failing"
+   "status": "proposed",
+   "task": "T-0055"
   },
   "store:gps_tracks": {
    "status": "none",
    "why": "where a person went, from their own GPX files: no MIA behaviour in it to improve yet; its numbers are worked out in code and tested"
+  },
+  "store:health": {
+   "status": "none",
+   "why": "the person's own health records as they give them (DEC-0129); MIA never grades or interprets them, so there's no work of hers to improve"
   },
   "store:homestead": {
    "status": "none",
@@ -190,8 +190,8 @@
    "why": "the history beside the stores, never rewritten; what lands in it is judged by the loops of the stores that write it"
   },
   "store:plaid": {
-   "status": "todo",
-   "why": "after the Plaid work lands (Zac): imported transactions recategorized, a bank link failing"
+   "status": "proposed",
+   "task": "T-0055"
   },
   "store:plans": {
    "status": "none",

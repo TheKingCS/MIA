@@ -146,6 +146,7 @@
   "tests/test_ohms_law.py": 3,
   "tests/test_online_watch.py": 1,
   "tests/test_operating_journal.py": 3,
+  "tests/test_orb_presence.py": 3,
   "tests/test_ownership.py": 2,
   "tests/test_party.py": 3,
   "tests/test_passing_mentions.py": 2,

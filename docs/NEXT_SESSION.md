@@ -17,6 +17,14 @@ model). Also offered and not yet built: **panel mode** — a full-screen kiosk v
 Talk) for a wall display, the Pi, or a cheap tablet. Everything from this session (security steps 2/5/6/8, Your Data,
 the Echo verdict) is committed and pushed.
 
+**New 2026-11-08: MIA's floating desktop orb (Zac's ask).** `gui/orb_presence.py` — a frameless, transparent,
+always-on-top window that reuses the existing `PresenceWidget` orb (no new look invented), floating centred with a
+gentle bob; drag to move, click (or Enter) wakes the main window. Opt-in boot via **`gui.boot_orb`** (default off):
+when on, the PC opens on just the orb and rings, no window/border. Wired in `core/application.py._show_main_window`
+(guarded, kiosk-exempt), tested (`tests/test_orb_presence.py`). This is the *desktop* orb (Qt); it's distinct from
+the design session's *web* Nexus orb (DEC-0130) — I reused their `PresenceWidget` visual, didn't make a new one. To
+turn it on: set `gui.boot_orb` true in config and restart MIA.
+
 *Earlier: 2026-11-07 (afternoon)*
 
 **New 2026-11-07 (latest): Start Here, a grouped sidebar, the live browser, and the audit.** Start Here
