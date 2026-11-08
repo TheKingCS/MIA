@@ -5,7 +5,7 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-11-08 (evening, engine session)*
+*Last updated: 2026-11-08 (evening, after the engine and design sessions' unattended runs)*
 
 **New 2026-11-08 (engine session's unattended run, 09:42 to evening): what's built, and what's next.** Built, core
 only, all pushed: the deep What's Next (DEC-0144, every chain); T-0020 repository inspection plus the weekly docs

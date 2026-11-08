@@ -2,7 +2,7 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-11-08 (evening: the engine side, after the design side), by claude.*
+session. Last updated: 2026-11-08 (evening: the engine and design sessions, both unattended runs done), by claude.*
 
 **2026-11-08 overnight (Claude, design session, Zac asleep): screens for everything decided.** The engine session's
 new pieces each got their screen, actions and voice tools: **My Directions** (your values in your words, today's seed,
