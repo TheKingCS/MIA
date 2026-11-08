@@ -2293,3 +2293,14 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   direction (consumer → producer) is set in his profile. Built + tested. A proactive nudge is also built: `_check_direction_nudge` raises one of a direction's short
   prompts through the communication gate at most every few days (topic `produce`), so she gently encourages without nagging.
 - Related: DEC-0054 (life notes), DEC-0067 (what she remembers), DEC-0137 (environment), DEC-0126 (sealing)
+
+### DEC-0142: MIA describes herself from facts, not guesses
+- Status: APPROVED + built (claude, 2026-11-08, on the Night School self-knowledge directive).
+- Decision (`core/self_knowledge.py`): when asked "what are you / what can you do / what are you working on / what do
+  you know about me", MIA answers from real data, never the model improvising (the self-description drift the
+  capabilities doc warns of). `about_me()` reports her real scale from the system map (DEC-0139) — files, ~tools,
+  loops, decisions, how much is sealed; `my_focus()` reflects her Night School directive (DEC-0100); and
+  `what_i_know_about_you(context)` is grounded in the person's own stored directions, memories and learned answer
+  style, honest about how little it knows when there's little. Every source is read defensively, so a gap is quiet,
+  never a crash. Next: feed these into the "how-to question about MIA" grounding so her spoken answers use them.
+- Related: DEC-0139 (system map), DEC-0100 (night school), DEC-0141 (directions), DEC-0138 (answer style)
