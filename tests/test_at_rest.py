@@ -183,6 +183,7 @@ SEALED_STORES = [
     ("core.insurance", "InsuranceBook", "insurance.json"),
     ("core.gps_tracks", "GpsTracks", "gps_tracks.json"),
     ("core.operating_journal", "OperatingJournal", "operating_journal.json"),
+    ("core.turn_trace", "TurnTraces", "turn_traces.jsonl"),
 ]
 
 

@@ -12,7 +12,8 @@ email endpoints (they answer plainly without a mailbox, and need a
 signed-in person), and a startup sound to hear before choosing it.
 No secret used in sign-in, two-step or a password change reaches a log
 line (docs/SECURITY.md step 6). The recovery key for sealed files is shown
-only on the PC itself, with the password, and logged (DEC-0126).
+only on the PC itself, with the password, and logged (DEC-0126). Your Data
+lists the person's files and exports or deletes the account behind the password.
 
 Builds a real AppContext via core.core_runtime.build_core_context(),
 same fixture pattern as tests/test_core_runtime.py — proving
@@ -933,3 +934,26 @@ def test_the_recovery_key_is_shown_only_on_this_pc_with_the_password_and_is_logg
     page = here.get("/api/security/log", headers=auth).json()
     assert page["on_this_pc"] and page["at_rest"]["sealing"] and page["events"][0]["kind"] == "data_key_shown"
     assert not away.get("/api/security/log", headers=_signed_in(away, context)).json()["on_this_pc"]
+
+
+def test_your_data_lists_the_person_s_files_and_exports_and_deletes_behind_the_password(client, context):
+    """The page lists their files; export needs the password and gives a .zip (logged); delete is refused for the only
+    account, then, with a second account there, deletes this one and ends its sessions."""
+    import io
+    import zipfile
+
+    auth = _signed_in(client, context)
+    page = client.get("/api/your-data", headers=auth).json()
+    assert {"mine", "home", "answers", "sealing"} <= set(page)
+    assert client.post("/api/account/export", headers=auth, json={"password": "nope"}).status_code == 400
+    got = client.post("/api/account/export", headers=auth, json={"password": "hunter2"})
+    assert got.status_code == 200 and got.headers["content-type"] == "application/zip"
+    assert "profile.json" in zipfile.ZipFile(io.BytesIO(got.content)).namelist()
+    assert client.get("/api/security/log", headers=auth).json()["events"][0]["kind"] == "data_exported"
+    assert client.post("/api/account/delete", headers=auth, json={"password": "hunter2"}).status_code == 409
+    context.profiles.create_profile("Bo", password="pw1234", make_active=False, email="bo@example.com")
+    assert client.post("/api/account/delete", headers=auth, json={"password": "nope"}).status_code == 400
+    assert client.post("/api/account/delete", headers=auth, json={"password": "hunter2"}).json() == {
+        "deleted": True, "erased": False}
+    assert client.get("/api/your-data", headers=auth).status_code == 401
+    assert [p.name for p in context.profiles.list_profiles()] == ["Bo"]

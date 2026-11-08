@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1200 files, 263,268 lines; 1200 files describe themselves; 14,367 of 15,054 classes and functions are documented.
+1203 files, 263,635 lines; 1203 files describe themselves; 14,379 of 15,066 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-443 files, 123,568 lines; 6,590 of 6,676 classes and functions documented
+444 files, 123,711 lines; 6,597 of 6,683 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -451,10 +451,11 @@
 - `core/workout_manager.py`: MIA's Workout Module — an exercise library, named workout templates, logged sessions (sets/reps/weight, real elapsed time from a live session's own stopwatch), personal records, and per-exercise progress.
 - `core/workshop_machine.py`: WorkshopMachine: the interface every controllable workshop-hardware device (laser engraver, CNC, 3D printer, ...) implements, plus WorkshopMachineRegistry holding whichever machines are actually registered. This reconciles a real architecture question from MIA Home's expanded-scope handoff doc (`doc
 - `core/world_map.py`: The world map with fog of war (DEC-0028, the game layer's sixth idea; Zac, 2026-10-17): the places you've actually been clear the fog, photos are pinned where they were taken, and new ground earns achievements.
+- `core/your_data.py`: Your Data (docs/SECURITY.md step 8, "beyond"): exactly what MIA keeps about a person, and what she read to answer them, for the web page Settings → Your Data (web/yourdata.html) beside export and delete (core/account_data.py).
 
 ## server/: the web and phone API over the engine
 
-2 files, 3,470 lines; 38 of 38 classes and functions documented
+2 files, 3,525 lines; 39 of 39 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -725,7 +726,7 @@
 
 ## tests/: the test suite: what each part must do
 
-406 files, 70,133 lines; 5,519 of 6,120 classes and functions documented
+407 files, 70,205 lines; 5,523 of 6,124 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven *(2 undocumented)*
@@ -1131,12 +1132,13 @@
 - `tests/test_workshop_machine.py`: Unit tests for core.workshop_machine — same shape as tests/test_calculator_engine.py, since WorkshopMachineRegistry is deliberately modeled on CalculatorEngine's registry pattern (see that module's docstring for why). LaserEngraverMachine's own tests confirm it behaves as a real, honest stub — repor
 - `tests/test_workshop_module.py`: Unit tests for modules.workshop.module's pure formatting logic — no Qt event loop needed. Same shape as tests/test_notes_module.py's format_entry_row test. format_component_row() covers Components (the original tab); format_material_row()/format_job_row() format_product_row()/format_revenue_row()/fo *(3 undocumented)*
 - `tests/test_world_map.py`: The world map with fog of war (DEC-0028): finished trips, arrivals, photos with GPS and "I'm Here" clear tiles; waypoints nobody has reached stay in the fog; new ground earns achievements and XP, and the closest one not earned is shown next. *(3 undocumented)*
+- `tests/test_your_data.py`: Your Data (core/your_data.py, docs/SECURITY.md step 8): every file in the person's folder listed with what it is, how many records and whether it's sealed (DEC-0126), never the temporary or set-aside copies; records counted for lists, objects of lists and JSON lines; her latest answers with the tool
 - `tests/test_your_data_and_undo.py`: Accounts stage 5 (2026-10-01): export and delete your account (core/account_data.py), "undo that" (core/undo_log.py), "why did you tell me that?" / "stop telling me about ..." (core/message_reasons.py), and the setup checker (core/system_check.py). *(3 undocumented)*
 - `tests/test_zim_url.py`: Unit tests for modules.knowledge.zim_url's pure QUrl <-> (pack_id, entry_path) conversion. QUrl needs no QApplication/event loop to construct or parse, so — unlike modules.knowledge.zim_text_browser's QTextBrowser subclass — this is safe to cover with plain pytest rather than deferring to tests/run_
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-85 files, 15,412 lines
+86 files, 15,509 lines
 
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game
@@ -1223,6 +1225,7 @@
 - `web/workout.js`: workout.js — the Workout screen (claude, 2026-10-06, DEC-0017/0018). Renders MIA.workout() (core/web_screens.py): log a session right on the page (an exercise, reps, sets, weight, how long, notes), the latest entry, today's daily mission and streak, exercises, history, progress and Personal Bests (l
 - `web/workshop.js`: workshop.js — the Workshop screen (claude, 2026-10-16; Zac: the app only opened a chat). Renders MIA.workshop() (core/web_more.py) in tabs: Recipes and Builds (crafting recipes, DEC-0030: what a recipe needs and what's short, the shopping list, Bought It, Start Build, steps, Finish, photos, Sold It 
 - `web/worldmap.js`: worldmap.js — the World Map with fog of war (claude, 2026-10-17, DEC-0028). Renders MIA.worldmap() (core/world_map.py): the cleared tiles over the fog on a canvas, pins (photos where they were taken, places you reached, "?" for waypoints nobody has reached yet), how much ground that is, and the achi
+- `web/yourdata.js`: yourdata.js — Your Data (claude, 2026-11-08; docs/SECURITY.md step 8). Renders MIA.yourData() (core/your_data.py): the person's own files and their household's shared ones, each with what it is, how many records, its size and whether it's sealed on disk (DEC-0126); her latest answers with the tools 
 
 ## android-phone/: the Android app that carries MIA's engine and the glasses' link
 

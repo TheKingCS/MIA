@@ -347,6 +347,27 @@
       { at: "2026-11-07T19:03:00", kind: "sign_in", what: "Signed in", device: "Edge on Windows · 100.64.0.9", detail: "a new device" }] })
       : call("GET", "/api/security/log"),
     signOutEverywhere: () => demo ? demoOnly() : call("POST", "/api/security/sign-out-everywhere"),
+    // Your Data (core/your_data.py): what MIA keeps about you and what she read to answer you.
+    yourData: () => demo ? Promise.resolve({ sealing: true, mine: [
+      { file: "conversations.json", what: "Conversations with MIA", records: 42, bytes: 81234, sealed: true },
+      { file: "user_memories.json", what: "What MIA remembers about you", records: 17, bytes: 6120, sealed: true },
+      { file: "workouts.json", what: "Workouts", records: 9, bytes: 2210, sealed: false }],
+      home: [{ file: "kitchen.json", what: "Kitchen", records: 64, bytes: 15800, sealed: false }],
+      answers: [{ at: "2026-11-08T14:02:00+00:00", asked: "What's on my calendar tomorrow?", route: "tools", tools: ["get_calendar"], memories: 1 },
+        { at: "2026-11-08T13:40:00+00:00", asked: "How much did I spend on food this week?", route: "plan", tools: ["get_budget"], memories: 0 }] })
+      : call("GET", "/api/your-data"),
+    // Everything of yours as a .zip (a Blob), after the password; and deleting the account. Not actions: a password
+    // never sits in a proposal.
+    exportData: async (password, includeHousehold) => {
+      if (demo) return demoOnly();
+      if (!token) throw new MiaError(401, "Not signed in.");
+      const response = await fetch("/api/account/export", { method: "POST",
+        headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" },
+        body: JSON.stringify({ password: password, include_household: !!includeHousehold }) });
+      if (!response.ok) throw new MiaError(response.status, (await response.json().catch(() => ({}))).detail || response.statusText);
+      return response.blob();
+    },
+    deleteAccount: (password, erase) => demo ? demoOnly() : call("POST", "/api/account/delete", { password: password, erase: !!erase }),
     // Sealed files (core/at_rest.py, DEC-0126): the recovery key, with the password, on the PC itself only.
     recoveryKey: (password) => demo ? demoOnly() : call("POST", "/api/security/recovery-key", { password }),
     // Connect Apps (core/connectors.py): the sources to import from, and an import's preview before it's approved.

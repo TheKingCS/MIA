@@ -81,8 +81,9 @@ most likely first:
    password, two-step setup, a new recovery code and a password change checks that none of those secrets appears in
    any log line (`tests/test_server_app.py`).
 7. **Modules signed or reviewed** before they install; until then, only modules written here.
-8. **"Beyond"**: a Privacy page showing exactly what MIA holds about you and what she read to answer each question
-   (from What I Used and the traces), export and delete-everything that are real and tested, and a yearly review of
-   this file against the latest OWASP ASVS.
+8. **"Beyond"** (Your Data page done 2026-11-08, `core/your_data.py`, `web/yourdata.html`, Settings → Your Data):
+   every file MIA keeps about you shown with what it is, how many records and whether it's sealed, plus what she read
+   to answer your recent questions (from the traces); export and delete-your-account on the web behind your password,
+   real and tested (`core/account_data.py`). Still to do: a yearly review of this file against the latest OWASP ASVS.
 
 ⏸ marks a step waiting on Zac.

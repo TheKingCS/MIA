@@ -281,6 +281,14 @@ class LoginRequest(BaseModel):
     code: str = ""
 
 
+class AccountDataRequest(BaseModel):
+    """Exporting or deleting an account: the password; for export, whether the household's files go too; for delete,
+    whether the archived folder is erased for good."""
+    password: str = ""
+    include_household: bool = False
+    erase: bool = False
+
+
 class TwoStepRequest(BaseModel):
     """Setting up or turning off two-step sign-in: the password, and a code from the authenticator app."""
     password: str = ""
@@ -396,7 +404,7 @@ SECURITY_HEADERS = {
 
 
 def create_app(context: AppContext) -> FastAPI:
-    """MIA's web server (FastAPI) for the phone, the glasses and the desktop's web view: sign-in sessions by bearer token (or a linked phone's device key), the access switch that turns away forwarded requests when phone access is off, every /api route (each runs on the signed-in person's own view, view_for), and the web front end served fresh at /web/."""
+    """MIA's web server (FastAPI) for the phone, the glasses and the desktop's web view: sign-in sessions by bearer token (or a linked phone's device key), the access switch that turns away forwarded requests when phone access is off, every /api route (each runs on the signed-in person's own view, view_for), and the web front end served fresh at /web/. Your Data (/api/your-data, export and delete) and the sealed-files recovery key sit beside the security log here."""
     app = FastAPI(title="MIA Mobile API")
     app.state.context = context
     app.state.sessions: dict[str, str] = {}  # token -> profile_id
@@ -2475,6 +2483,53 @@ def create_app(context: AppContext) -> FastAPI:
             raise HTTPException(status.HTTP_409_CONFLICT, f"There's no recovery key: {problem}.") from None
         _security("data_key_shown", profile_id, request)
         return {"key": key}
+
+    # Your Data (core/your_data.py, docs/SECURITY.md step 8): what MIA keeps about you and what she read to answer you;
+    # export and delete (core/account_data.py), each behind the password.
+    @app.get("/api/your-data")
+    def your_data_screen(profile_id: str = Depends(require_profile_id)) -> dict:
+        from core.your_data import page
+
+        with app.state.turn_lock:
+            return page(view_for(context, profile_id), profile_id)
+
+    @app.post("/api/account/export")
+    def account_export(body: AccountDataRequest, request: Request, profile_id: str = Depends(require_profile_id)):
+        """Everything of yours as one .zip (sealed files as their readable content), after the password."""
+        import tempfile
+
+        from fastapi.responses import Response
+
+        from core.account_data import export_account
+
+        if not _checked(request, profile_id, lambda: context.profiles.verify_password(profile_id, body.password)):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "That password isn't right.")
+        with tempfile.TemporaryDirectory(prefix="mia_export_") as folder:
+            with app.state.turn_lock:
+                path = export_account(context, profile_id, Path(folder) / "MIA-data.zip",
+                                      include_household=body.include_household)
+            data = path.read_bytes()
+        _security("data_exported", profile_id, request, "with the household's files" if body.include_household else "")
+        return Response(data, media_type="application/zip", headers={
+            "Cache-Control": "no-store", "Content-Disposition": 'attachment; filename="MIA-data.zip"'})
+
+    @app.post("/api/account/delete")
+    def account_delete(body: AccountDataRequest, request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Deletes the account (archived, or erased for good) after the password; every session of it ends. Refused
+        for the device's only account."""
+        from core.account_data import delete_account
+
+        if not _checked(request, profile_id, lambda: context.profiles.verify_password(profile_id, body.password)):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "That password isn't right.")
+        if len(context.profiles.list_profiles()) <= 1:
+            raise HTTPException(status.HTTP_409_CONFLICT, "This is the only account on this MIA, so it can't be deleted.")
+        with app.state.turn_lock:
+            done = delete_account(context, profile_id, body.password, erase=body.erase)
+        if not done:
+            raise HTTPException(status.HTTP_409_CONFLICT, "The account couldn't be deleted.")
+        for token in [t for t, pid in list(app.state.sessions.items()) if pid == profile_id]:
+            _end_session(token)
+        return {"deleted": True, "erased": body.erase}
 
     @app.post("/api/security/sign-out-everywhere")
     def sign_out_everywhere(request: Request, profile_id: str = Depends(require_profile_id),
