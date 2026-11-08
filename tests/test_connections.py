@@ -5,7 +5,8 @@ tests.test_connections
 The magic is in the connections (core/connections.py, Zac 2026-11-08): a remark that ties into something started
 weeks ago is noticed, held, raised once in a later conversation if it fits, then let go. These check the two ways a
 tie is found (the link graph, shared words), the guards (a week old at least, never the thing named outright, never a
-private turn), the store's life (held back, mentioned, expired, not raised twice, sealed), and the two loops.
+private turn), the store's life (held back, mentioned, expired, not raised twice, sealed), the two loops, and the
+research she does before raising one (a real plan for it, a sourced note said unconfirmed when it is, the shelf).
 """
 
 from datetime import datetime, timedelta
@@ -137,3 +138,50 @@ def test_the_loops_read_landed_share_and_unlinked_kind_pairs(book, monkeypatch):
     assert landed.value == 0.5 and landed.n == 2
     gaps = loops._connections_unlinked(ctx)
     assert gaps.value == 1 and "material↔project" in gaps.detail and "Cedar" not in gaps.detail
+
+
+# --- research before raising one (DEC-0146) ------------------------------
+
+def _shelf(*titles):
+    """A plans shelf whose find() returns plans with these titles."""
+    return SimpleNamespace(find=lambda name, limit=3: [{"title": t, "summary": "Any size."} for t in titles])
+
+
+def test_a_plan_is_found_only_when_it_really_is_a_plan_for_it():
+    strong = cx.research(SimpleNamespace(plans=_shelf("Chicken coop and run")), {"name": "Chicken coop"})
+    assert strong == [{"line": "there's a plan for it on the plans shelf, Chicken coop and run (Any size)",
+                       "source": "the plans shelf"}]
+    assert cx.research(SimpleNamespace(plans=_shelf("Raised garden bed")), {"name": "Garden irrigation"}) == []
+
+
+def test_a_specialists_note_is_quoted_with_its_source_and_said_unconfirmed_when_it_is(monkeypatch):
+    from core import specialists
+
+    note = {"title": "Coop space", "body": "Allow four square feet a hen. More on vents.", "sources": ["Storey's Guide"],
+            "status": "derived"}
+    monkeypatch.setattr(specialists, "search", lambda q, limit=1: [(1.2, "homesteading", note)])
+    found = cx.research(SimpleNamespace(), {"name": "Chicken coop"})
+    assert found == [{"line": "your homesteading specialist's notes say: Allow four square feet a hen. (not yet confirmed)",
+                      "source": "Storey's Guide"}]
+    monkeypatch.setattr(specialists, "search", lambda q, limit=1: [(0.2, "homesteading", note)])  # a weak match
+    assert cx.research(SimpleNamespace(), {"name": "Chicken coop"}) == []
+
+
+def test_what_is_on_the_shelf_joins_and_two_findings_at_most(monkeypatch):
+    from core import specialists
+
+    monkeypatch.setattr(specialists, "search", lambda q, limit=1: [])
+    ctx = SimpleNamespace(plans=_shelf("Chicken coop and run"),
+                          materials=SimpleNamespace(all_materials=lambda: [SimpleNamespace(name="Chicken wire"),
+                                                                            SimpleNamespace(name="Cedar")]))
+    found = cx.research(ctx, {"name": "Chicken coop"})
+    assert len(found) == 2 and found[1] == {"line": "you've got Chicken wire on the shelf", "source": "the workshop"}
+
+
+def test_what_she_found_comes_up_with_the_connection(book):
+    research = lambda f: [{"line": "there's a plan for it on the plans shelf, Chicken coop and run", "source": "the plans shelf"}]
+    book.consider(_found(), "the chicken feed is in", NOW, research=research)
+    block = book.context_block(NOW + timedelta(hours=3))
+    assert "What you found in your own sources, if it helps: there's a plan for it" in block and "(the plans shelf)" in block
+    broken = ConnectionBook(data_dir=book.data_dir / "b")
+    assert broken.consider(_found(), "chicken feed", NOW, research=lambda f: 1 / 0)  # research failing never loses it

@@ -16,7 +16,8 @@ How (facts in code, the model only phrases):
    shares a distinctive word with what was said. Only things at least a week old count (yesterday's project is still
    top of mind), and a thing named outright is the topic, not a connection.
 2. It keeps one connection per thing (`connections.json`, sealed at rest, DEC-0126): what was said, when, what it ties
-   to and how.
+   to and how, and what MIA found about it first in her own offline sources (`research`: a plan on the shelf, a
+   specialist's sourced note, what's in the workshop), so she brings something new with it.
 3. `connections_for(context)` puts the newest one into the everyday conversation's system message, held back a couple
    of hours so it lands in a later conversation. Never in the personal "talk it out" path or a turn about faith or
    meaning, and framed as "only if it fits naturally, one sentence, then let it go."
@@ -256,9 +257,9 @@ class ConnectionBook:
             return True  # they asked her not to bring it up
         return any(c["ref"] == ref and (c["state"] == "open" or c.get("settled_at", "") >= cutoff) for c in self.items)
 
-    def consider(self, found: list, said: str, now: Optional[datetime] = None) -> Optional[dict]:
-        """Keep the best new connection from `find` (one per turn, at most MAX_OPEN held), or None when there's
-        nothing new to keep."""
+    def consider(self, found: list, said: str, now: Optional[datetime] = None, research=None) -> Optional[dict]:
+        """Keep the best new connection from `find` (one per turn, at most MAX_OPEN held), with what `research(f)`
+        turned up about it when given, or None when there's nothing new to keep."""
         now = now or datetime.now()
         if len(self.open_ones()) >= MAX_OPEN:
             return None
@@ -270,6 +271,11 @@ class ConnectionBook:
                     "via": f["via"], "through": f.get("through", "")[:60], "through_kind": f.get("through_kind", ""),
                     "shared": list(f.get("shared", [])), "said": _snippet(said),
                     "noticed_at": now.isoformat(timespec="seconds"), "state": "open", "settled_at": ""}
+            if research is not None:
+                try:
+                    item["found"] = list(research(f))[:2]
+                except Exception:  # noqa: BLE001 - a connection is still worth keeping without its research
+                    log.exception("Couldn't research a connection.")
             self.items.append(item)
             self._save()
             return item
@@ -326,7 +332,7 @@ class ConnectionBook:
 
     def context_block(self, now: Optional[datetime] = None) -> str:
         """The one connection to carry into this conversation, framed so it's raised only if it fits, once, in her
-        own words; "" when nothing is due."""
+        own words, with what she found about it in her own sources; "" when nothing is due."""
         now = now or datetime.now()
         c = self.due(now)
         if c is None:
@@ -340,7 +346,9 @@ class ConnectionBook:
                 "naturally in this conversation: one sentence, in your own words, as something you remembered, then "
                 "let it go. Never force it, and skip it if they're busy with something else.\n"
                 f"On {when} they said “{c['said']}”. That ties into their {_LABELS.get(c['kind'], c['kind'])} "
-                f"“{c['name']}”, started {_age(c['since'], now.date())} ago{still}{how}.")
+                f"“{c['name']}”, started {_age(c['since'], now.date())} ago{still}{how}."
+                + ("\nWhat you found in your own sources, if it helps: "
+                   + "; ".join(f"{x['line']} ({x['source']})" for x in c["found"]) + "." if c.get("found") else ""))
 
     def stats(self, since: str) -> dict:
         """Counts for the loops since an ISO time: noticed, mentioned, expired, declined ("don't bring that up"), and
@@ -354,6 +362,53 @@ class ConnectionBook:
                 "declined": sum(c["state"] == "declined" for c in settled), "unlinked": unlinked}
 
 
+def research(context, target: dict) -> list:
+    """What MIA can find about a thing in her own offline sources before she raises it (DEC-0146, "researches a new
+    possibility"): a plan on the plans shelf whose title shares two of its words (all of a one-word name), the best sourced note in her specialists'
+    workbooks (said as not yet confirmed when it isn't), and what's on the workshop shelf that it names. At most two,
+    each {"line", "source"}; [] when nothing fits. Never the network and never invented: each line says where it came
+    from, and a source that won't read is skipped."""
+    words = _words(target.get("name", ""))
+    if not words:
+        return []
+    out = []
+    library = getattr(context, "plans", None)
+    if library is not None and hasattr(library, "find"):
+        try:
+            # "A plan for it" is a strong claim: the title shares two of its words, or all of a one-word name.
+            plan = next((p for p in library.find(target["name"], limit=3)
+                         if len(_words(p.get("title", "")) & words) >= min(2, len(words))), None)
+            if plan is not None:
+                summary = str(plan.get("summary") or "").strip().rstrip(".")
+                out.append({"line": f"there's a plan for it on the plans shelf, {plan['title']}"
+                                    + (f" ({summary})" if summary else ""), "source": "the plans shelf"})
+        except Exception:  # noqa: BLE001 - a shelf that won't read just adds nothing
+            log.exception("Couldn't search the plans shelf for a connection.")
+    try:
+        from core import specialists
+
+        hits = specialists.search(target["name"], limit=1)
+        if hits and hits[0][0] >= 0.5:
+            _score, sid, note = hits[0]
+            first = re.split(r"(?<=[.!?])\s", str(note.get("body", "")).strip(), maxsplit=1)[0][:220]
+            sources = note.get("sources") or []
+            if first and sources:
+                unconfirmed = "" if note.get("status") == "confirmed" else " (not yet confirmed)"
+                out.append({"line": f"your {specialists.BY_ID[sid].name.lower()} specialist's notes say: {first}"
+                                    f"{unconfirmed}", "source": str(sources[0])[:120]})
+    except Exception:  # noqa: BLE001 - see above
+        log.exception("Couldn't search the specialists' notes for a connection.")
+    stock = getattr(context, "materials", None)
+    if stock is not None and hasattr(stock, "all_materials"):
+        try:
+            on_shelf = [m.name for m in stock.all_materials() if _words(m.name) & words]
+            if on_shelf:
+                out.append({"line": f"you've got {', '.join(on_shelf[:2])} on the shelf", "source": "the workshop"})
+        except Exception:  # noqa: BLE001 - see above
+            log.exception("Couldn't read the workshop for a connection.")
+    return out[:2]
+
+
 def _last_reply(conversation) -> str:
     """Her last reply in the conversation, or "" before she's said anything."""
     for message in reversed(getattr(conversation, "messages", None) or []):
@@ -363,9 +418,9 @@ def _last_reply(conversation) -> str:
 
 
 def notice(context, conversation, prompt: str, now: Optional[datetime] = None) -> Optional[dict]:
-    """Before a turn: settle what her last reply brought up, then keep any new connection this remark makes. Never in
-    a private or personal conversation (the same rule notes from conversation keep, DEC-0054); None when nothing new
-    was kept."""
+    """Before a turn: settle what her last reply brought up, then keep any new connection this remark makes, with
+    what `research` finds about it. Never in a private or personal conversation (the same rule notes from conversation
+    keep, DEC-0054); None when nothing new was kept."""
     from core.life_notes import _private
 
     book = getattr(context, "connections", None)
@@ -373,7 +428,7 @@ def notice(context, conversation, prompt: str, now: Optional[datetime] = None) -
         return None
     now = now or datetime.now()
     book.settle(_last_reply(conversation), now)
-    return book.consider(find(context, prompt, now.date()), prompt, now)
+    return book.consider(find(context, prompt, now.date()), prompt, now, research=lambda f: research(context, f))
 
 
 def connections_for(context, now: Optional[datetime] = None) -> str:
