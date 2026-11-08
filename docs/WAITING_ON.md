@@ -8,6 +8,15 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 
 ## Zac
 
+### Woodworking Studio and iOS (2026-11-08, from the engine session)
+- [ ] **DEC-0147, the Woodworking Studio** (docs/WOODWORKING_STUDIO_PROPOSAL.md): approve the first version (actual lumber
+      sizes, a design made of parts, cut list / materials / cost from the parts, 2D drawings, structural labels, a Studio
+      page); woodworking-only or one shared Make space for the workshop, kitchen, garden and flock; 2D views first or
+      wait for 3D; a print-ready page or a PDF.
+- [ ] **iOS: which path?** (1) installable on your iPhone now (no Mac, no Apple account); (2) a macOS GitHub Actions
+      job that runs MIA in the iOS Simulator and gives Claude screenshots (macOS minutes cost 10x); (3) a native app,
+      which needs a Mac and an Apple Developer account ($99/yr). Claude recommends starting with (1).
+
 ### Restart MIA to activate this session's work (2026-11-08)
 - [ ] **Restart MIA once.** It turns on everything from the 2026-11-08 engine session and the encryption at rest
       (DEC-0126): your three **standing directions** (consumer→producer, the café/workshop/tavern aesthetic, whimsy &
