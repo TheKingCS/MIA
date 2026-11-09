@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1321 files, 287,704 lines; 1321 files describe themselves; 16,159 of 16,253 classes and functions are documented.
+1324 files, 288,017 lines; 1324 files describe themselves; 16,176 of 16,270 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-495 files, 137,524 lines; 7,326 of 7,412 classes and functions documented
+496 files, 137,669 lines; 7,335 of 7,421 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -480,6 +480,7 @@
 - `core/web_surfaces.py`: What the web front end's shell and Home show (2026-10-06, DEC-0017: the web becomes all of MIA, function first, in the concept's look). Assembled here, in code, so `web/` holds no logic (DEC-0013): which apps a person sees, their level and XP, the greeting, Today's Focus, the upcoming list and the a
 - `core/web_textbooks.py`: The Classroom's textbooks on the web (DEC-0125: the textbook tutor's library was on the desktop and by voice only). Three parts:
 - `core/web_toolbox.py`: The Toolbox's web screen (DEC-0113 canvas Toolbox, DEC-0125: the Toolbox had no phone screen). Three parts:
+- `core/web_tracks.py`: Tracks on the web (web/tracks.html; core/gps_tracks.py, DEC-0099; claude, 2026-11-09: GPX tracks had no screen, only `python -m tools.tracks` and "how far was my last hike?"). Every walk, ride or drive the person has added, newest first: its name and date, distance, climb and descent, time taken and
 - `core/web_trades.py`: Trade Master on the web (web/trades.html, DEC-0149; the engine's core/trades.py, core/trade_session.py and core/trade_actions.py). Three things on one screen:
 - `core/web_trails.py`: Trail Maps on the web (web/trails.html, DEC-0017 parity with the Qt Maps module's Trail Maps tab): the official park and trail map PDFs kept on this MIA (core/trail_map_library.py), by state, each opening in the browser's own PDF viewer. Added by sending a PDF from the device (`/api/trail-maps/uploa
 - `core/web_voice.py`: MIA's voice from the web's Settings and by voice (DEC-0125: the voice, the AI voice effect and the volume were on the desktop's Settings only). Device-wide, like the model: one voice for this computer, so only its owner changes it.
@@ -506,7 +507,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 3,982 lines; 47 of 47 classes and functions documented
+2 files, 3,990 lines; 47 of 47 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -781,7 +782,7 @@
 
 ## tests/: the test suite: what each part must do
 
-453 files, 76,190 lines; 6,543 of 6,551 classes and functions documented
+454 files, 76,271 lines; 6,551 of 6,559 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1210,6 +1211,7 @@
 - `tests/test_web_surfaces_life.py`: The Dashboard's life cards (DEC-0129, core/web_surfaces.life_cards): which trip it shows and how its dates read, and each card from its own source, a missing source leaving its card out.
 - `tests/test_web_textbooks.py`: The Classroom's textbooks on the web (core/web_textbooks.py, DEC-0125): each book with its chapters on the Classroom page, a search inside them, a course made from one and a book removed, as actions the voice tools agree with.
 - `tests/test_web_toolbox.py`: The Toolbox on the web (DEC-0125, the design canvas's Toolbox, DEC-0113: core/web_toolbox.py, core/toolbox_calcs.py, core/toolbox_actions.py and core/assistant_toolbox_actions.py): every calculator worked out in core, alarms set, switched and deleted as actions, the inventory kept as actions, and th
+- `tests/test_web_tracks.py`: tests/test_web_tracks.py — Tracks on the web (core/web_tracks.py, DEC-0099): every track newest first with its numbers and its shape, the totals, a GPX file kept by `track.add` (a bad one refused before approval) and `track.delete`.
 - `tests/test_web_trades.py`: tests/test_web_trades.py — Trade Master on the web (core/web_trades.py, DEC-0149): the library groups every job and diagnosis by trade, a job or diagnosis opens in full, and the walkthrough shows the step in focus with its hold, the phases, and what a stopped or finished session says.
 - `tests/test_web_trails.py`: Trail Maps on the web: the screen by state, adding a PDF (and refusing what isn't one), and taking one out so Undo can bring it back whole.
 - `tests/test_web_voice.py`: MIA's voice from Settings and by voice (core/web_voice.py, core/assistant_voice_choice_actions.py): the voices installed, switching one, the AI voice effect and the volume; only the PC's owner changes them.
@@ -1239,7 +1241,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-103 files, 18,762 lines
+104 files, 18,841 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she
@@ -1333,6 +1335,7 @@
 - `web/studio.js`: studio.js — the Theme Studio (DEC-0136, claude, 2026-11-08). Draws MIA.themes() (core/themes.studio): pick a theme to start from, tweak its colours, corners, font, material and the 3D room's light, and see it at once on this whole page (MIAShell.previewTheme, not kept) and in a little room (web/nexu
 - `web/sync.js`: sync.js — User Sync on the phone (claude, 2026-11-02). Renders MIA.userSync() (core/user_sync.py): the question, a box to type the answer, the chips to approve, and the phone's permissions, asked through window.MIAPhonePermissions (Permissions.kt) and reported back. The steps and words are all the e
 - `web/toolbox.js`: toolbox.js — the Toolbox (claude, 2026-11-07, DEC-0125; the design canvas's Toolbox, DEC-0113). Renders MIA.toolbox() (core/web_toolbox.py): the open calculator (its boxes, and the answer core works out as you type, MIA.toolboxCalc), the list of calculators, alarms (set, on/off, delete: core/toolbox
+- `web/tracks.js`: tracks.js — Tracks (claude, 2026-11-09, DEC-0099). Renders MIA.tracks() (core/web_tracks.py): the totals (last 30 days and all time), then each walk, ride or drive newest first with its shape (an SVG path worked out in core from its own points), distance, climb and descent, time taken and moving, an
 - `web/trades.js`: trades.js — Trade Master (claude, 2026-11-09, DEC-0149). Renders MIA.trades(item) (core/web_trades.py): the walkthrough, when a job or diagnosis is going: the step in focus large (or the check), why, what to watch for, the hold point (checked or not), where it is in the job, and Next / Checked / Bac
 - `web/trails.js`: trails.js — Trail Maps (claude, 2026-11-08; the Qt Maps module's Trail Maps tab on the web). Renders MIA.trailMaps() (core/web_trails.py): the park and trail map PDFs on this MIA by state. Open fetches the PDF with this tab's sign-in and shows it in the browser's own viewer. Add a PDF sends one from
 - `web/vault.js`: vault.js — Memory Vault (claude, 2026-10-18, DEC-0030 phase E). Renders MIA.vault() (core/memory_vault.py) in tabs: Photos (one month at a time, by day, with what happened that day and the trip it was on; each tile says whether it's safe on the home computer), Free Up Space (photos the PC holds, exa

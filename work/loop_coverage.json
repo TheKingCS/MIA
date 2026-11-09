@@ -65,6 +65,10 @@
    "status": "none",
    "why": "reading and dismissing notifications by hand; a dismissal already teaches the communication gate (its gate.* loops)"
   },
+  "action:track": {
+   "status": "none",
+   "why": "keeping a GPX file someone chose and deleting one; the numbers are worked out in code from the file (core/gps_tracks.stats), so there's nothing to learn"
+  },
   "action:online": {
    "status": "none",
    "why": "reminders kept by hand for when the internet is back and delivered all at once when it is; nothing there to get better at"

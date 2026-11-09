@@ -2162,3 +2162,20 @@ a.comms-row:hover .row-title { color: var(--accent); }
 .nt-online .pw-label, .nt-online p { margin: 0; }
 .nt-online-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
 .nt-online-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; align-items: center; }
+
+/* Tracks (web/tracks.js, DEC-0099): each track's own shape beside its numbers. */
+.tr-card { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 16px; padding: 14px 16px; margin-top: var(--gap); align-items: start; }
+.tr-shape { width: 112px; height: 112px; border-radius: var(--radius-sm, 8px); background: rgba(var(--rgb-accent), 0.05); border: 1px solid var(--line); }
+.tr-shape path { fill: none; stroke: rgb(var(--rgb-accent)); stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.tr-shape circle { fill: var(--text); }
+.tr-body { display: grid; gap: 8px; min-width: 0; }
+.tr-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.tr-top h2 { margin: 0; font-size: 17px; }
+.tr-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+.tr-stat { display: grid; gap: 2px; }
+.tr-stat .pw-label { margin: 0; }
+.tr-stat b { font-family: var(--font-mono); font-size: 15px; }
+.tr-grid { margin: 0; font-size: 12.5px; font-family: var(--font-mono); }
+.tr-say { margin-top: var(--gap); font-size: 13px; }
+@media (max-width: 520px) { .tr-card { grid-template-columns: 76px minmax(0, 1fr); gap: 12px; } .tr-shape { width: 76px; height: 76px; }
+  .tr-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
