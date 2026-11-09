@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
+import com.meta.wearable.dat.camera.Camera
 import com.meta.wearable.dat.camera.addCamera
 import com.meta.wearable.dat.camera.types.PhotoData
 import com.meta.wearable.dat.camera.types.StreamConfiguration
@@ -77,26 +78,28 @@ object GlassesCamera {
             if (started == null) return@runBlocking Result(null, "The glasses didn't answer in time.")
             var bytes: ByteArray? = null
             var why = "The glasses' camera didn't start."
+            var camera: Camera? = null
             opened.addCamera(StreamConfiguration(videoQuality = VideoQuality.LOW, frameRate = 7, compressVideo = true)).fold(
-                onSuccess = { camera ->
-                    try {
-                        val stream = camera.stream
-                        stream.start().onFailure { error, _ -> Log.w(TAG, "stream: ${error.description}") }
-                        val streaming = withTimeoutOrNull(STREAM_MS) { stream.state.first { it == StreamState.STREAMING } }
-                        if (streaming != null) {
-                            withTimeoutOrNull(PHOTO_MS) {
-                                stream.capturePhoto().fold(
-                                    onSuccess = { data -> bytes = jpegOf(data) },
-                                    onFailure = { error, _ -> why = "The photo didn't come through (${error.description})." },
-                                )
-                            } ?: run { why = "The photo took too long to come through." }
-                        }
-                    } finally {
-                        camera.close()
-                    }
-                },
+                onSuccess = { added -> camera = added },
                 onFailure = { error, _ -> Log.w(TAG, "camera: ${error.description}") },
             )
+            camera?.let { cam ->
+                try {
+                    val stream = cam.stream
+                    stream.start().onFailure { error, _ -> Log.w(TAG, "stream: ${error.description}") }
+                    val streaming = withTimeoutOrNull(STREAM_MS) { stream.state.first { it == StreamState.STREAMING } }
+                    if (streaming != null) {
+                        val result = withTimeoutOrNull(PHOTO_MS) { stream.capturePhoto() }
+                        if (result == null) why = "The photo took too long to come through."
+                        else result.fold(
+                            onSuccess = { data -> bytes = jpegOf(data) },
+                            onFailure = { error, _ -> why = "The photo didn't come through (${error.description})." },
+                        )
+                    }
+                } finally {
+                    cam.close()
+                }
+            }
             Result(bytes, if (bytes == null) why else "")
         } finally {
             opened.stop()
