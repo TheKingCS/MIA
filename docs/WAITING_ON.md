@@ -8,6 +8,31 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 
 ## Zac
 
+### Start here (2026-11-08 evening: the short list, in order; everything else is below)
+1. [ ] **Restart MIA** (close both copies, start it once): turns on everything built 2026-11-07/08, including the
+       encryption at rest. Then **save the recovery key** (Settings, or `python -m tools.data_key recovery`) in your
+       password manager.
+2. [ ] **Say yes or no to the homestead push** (DEC-0145): `mia-homestead` is merged as `homestead/` on the branch
+       `homestead-merge` (worktree `C:\Users\zacrh\MIA-merge-homestead`), held back because it puts another repo's
+       history on master. On your yes, Claude merges and pushes it.
+3. [ ] **Decide four proposals:** DEC-0148 Natural Momentum (`docs/NATURAL_MOMENTUM_PROPOSAL.md`, four questions,
+       one about Faith), DEC-0147 the Woodworking Studio (four questions), the iOS path (three options, below), and
+       T-0051 the phone's old security packages (three options, below).
+4. [ ] **Your history's older lines** (DEC-0126): seal them (close MIA, then
+       `.venv\Scripts\python -m tools.data_key seal --history`) or say leave them plain.
+5. [ ] **Start SearXNG** for online lookups (`docs/ONLINE_LOOKUP.md`: Docker Desktop and one command).
+6. [ ] **Commit the DEC-0133 email files and finish Plaid** on the PC (both are your uncommitted work: details below).
+7. [ ] **Encrypt the PC's drive** (Windows 11 Home has Device Encryption: details under Security).
+
+### Natural Momentum (2026-11-08, from the engine session)
+- [ ] **DEC-0148** (`docs/NATURAL_MOMENTUM_PROPOSAL.md`): most of it already exists (The Loop, routines, sleep, the
+      Operating Journal, capability reminders, the gate). The new parts: momentum windows, chains, a flow guard and
+      tomorrow's prep, all from what's already logged. Decide: (1) the first slice; (2) Faith: DEC-0119 says MIA is
+      for you alone, so delegating to her would change that (recommended: the shared grocery list and a message
+      MIA drafts that you send, no account for her); (3) how MIA learns what you did (recommended: what's logged,
+      plus "I did X" by voice; not a daily "what did you get done?"); (4) holding her non-urgent messages while
+      you're clearly getting things done (recommended: yes).
+
 ### Woodworking Studio and iOS (2026-11-08, from the engine session)
 - [ ] **DEC-0147, the Woodworking Studio** (docs/WOODWORKING_STUDIO_PROPOSAL.md): approve the first version (actual lumber
       sizes, a design made of parts, cut list / materials / cost from the parts, 2D drawings, structural labels, a Studio
