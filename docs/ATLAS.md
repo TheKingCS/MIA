@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1329 files, 289,559 lines; 1329 files describe themselves; 16,253 of 16,347 classes and functions are documented.
+1333 files, 289,933 lines; 1333 files describe themselves; 16,261 of 16,355 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-498 files, 138,648 lines; 7,387 of 7,473 classes and functions documented
+499 files, 138,712 lines; 7,390 of 7,476 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -315,6 +315,7 @@
 - `core/parity.py`: Full use both ways, on every device (DEC-0125, Zac 2026-11-07: "MIA should be absolutely 100% voice capable but I also want 100% capable for use on the phone too. Full use when I feel like talking and full use when I don't on all devices"). This measures it, app by app:
 - `core/party.py`: Party and guild (DEC-0028, the game layer's tenth idea; Zac, 2026-10-17): the household plays together.
 - `core/passing_mentions.py`: "Propose, you confirm" (2026-09-28): when the owner mentions in passing something MIA keeps a record of, she answers as usual and then offers to record it, and does so only on a yes:
+- `core/password_autofill.py`: Filling a login into another app or a website on the phone (DEC-0035's next step: "an Android autofill service"; claude, 2026-11-09). The Android side (android-phone/.../MiaAutofillService.kt, AutofillActivity.kt) finds the username and password boxes and asks here which of the person's logins fit; 
 - `core/password_strength.py`: Password strength estimation — docs/ROADMAP.md milestone 11.5, Field Kit's Security/Network Toolkit. A simple Shannon-entropy-over-character pool-size estimate plus a handful of pattern warnings, not a full zxcvbn-style dictionary/pattern-cracking-time model — "don't over-engineer" for a field tool'
 - `core/password_vault.py`: Passwords (Zac, 2026-10-20, DEC-0035): every login a person has, kept in a vault only their own master password opens.
 - `core/paths.py`: Learning paths: how MIA turns a desire into a skill (DEC-0112; Zac, 2026-11-07, after the guitar path: "That whole principle ... should be a principle she uses repeatedly when understanding a desire or interest, planning steps for implementing or improvement, tracking progress, monitoring statistics
@@ -509,7 +510,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,049 lines; 49 of 49 classes and functions documented
+2 files, 4,058 lines; 49 of 49 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -784,7 +785,7 @@
 
 ## tests/: the test suite: what each part must do
 
-456 files, 76,611 lines; 6,574 of 6,582 classes and functions documented
+457 files, 76,661 lines; 6,579 of 6,587 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1053,6 +1054,7 @@
 - `tests/test_parity.py`: Full use both ways on every device (DEC-0125, core/parity.py): every app can be used by voice, on the PC, on the phone and on the glasses, or the gap is decided in work/parity.json; parity can only grow, and docs/PARITY.md is current. Each app's ask (its screen's "Say: …") reaches that app's own too
 - `tests/test_party.py`: Party and guild (DEC-0028): household raids share their jobs out and their reward; the leaderboard only shows people who joined, counting wins.
 - `tests/test_passing_mentions.py`: "Propose, you confirm" (core/passing_mentions.py): offers to record what the owner mentions in passing, made after MIA's reply and carried out only on a yes; wired through core/talk_it_out.py for every chat surface.
+- `tests/test_password_autofill.py`: tests/test_password_autofill.py — filling a login on the phone (core/password_autofill.py, DEC-0035's next step): sites matched by host (a subdomain fits), apps by their package naming the site, best first, never a password, and only with the vault unlocked.
 - `tests/test_password_strength.py`: Unit tests for core.password_strength — pure computation, no dependency, no mocks needed.
 - `tests/test_password_vault.py`: Passwords (core/password_vault.py, DEC-0035): a vault only the master password (or the recovery code) opens; nothing readable on disk; it locks itself; guessing gets slower; a browser export comes in; the phone and the PC sync it still encrypted, only when they hold the same vault; and a password ne
 - `tests/test_paths.py`: MIA's learning paths (core/paths.py, DEC-0112): the same loop for any desire. A program for an interest with none is drafted (grounded, checked in code, kept as a draft until started); several paths run side by side, each with its own homework mission that completes from the log; statistics; a path'
@@ -1245,7 +1247,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-105 files, 19,005 lines
+105 files, 19,009 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she
@@ -1355,8 +1357,9 @@
 
 ## android-phone/: the Android app that carries MIA's engine and the glasses' link
 
-15 files, 2,762 lines
+17 files, 3,009 lines
 
+- `android-phone/app/src/main/java/com/mia/phone/AutofillActivity.kt`: "Fill from MIA" (MiaAutofillService): the person's own choice of which login goes into the boxes. Asks MIA's engine on the phone (127.0.0.1, the signed-in person's session) for the logins that fit the site or app, titles and usernames only; with the vault locked it asks for the master password first
 - `android-phone/app/src/main/java/com/mia/phone/Engine.kt`: MIA's engine and server inside this app (mia_phone.py), started once per app process. Its own object, not MainActivity's, so the listening service (ListenService) can start MIA by itself when the glasses are tapped and the app isn't open: Android may have closed the screen, or the whole app, since M
 - `android-phone/app/src/main/java/com/mia/phone/Gallery.kt`: The memory vault's door to the camera roll (DEC-0030 E, core/memory_vault.py), for MIA's own screens as window.MIAAndroid. MIA's engine reads the photos itself once Android allows it; this only asks for that permission, and, when the person chooses to free space, hands the exact files to Android's o
 - `android-phone/app/src/main/java/com/mia/phone/GlassesService.kt`: Keeps MIA awake while the glasses are connected (MetaGlasses.kt). The glasses only ever talk to the phone, so a phone that froze MIA's engine would leave them on a screen that can't answer. Ends with the session.
@@ -1364,6 +1367,7 @@
 - `android-phone/app/src/main/java/com/mia/phone/ListenTile.kt`: The Quick Settings tile "Talk to MIA". With MIA ready (ListenService running) she listens right away, even on the lock screen; otherwise it opens MIA listening (Voice.kt), which starts the service.
 - `android-phone/app/src/main/java/com/mia/phone/MainActivity.kt`: MIA on the phone (DEC-0019, the Phase 1 spike): starts MIA's own engine and server inside this app (mia_phone.py) and shows her web screens from it, so no computer is needed. Timings go to logcat as MIA_SPIKE.
 - `android-phone/app/src/main/java/com/mia/phone/MetaGlasses.kt`: MIA on the glasses through Meta's Device Access Toolkit (DEC-0059). The engine decides what's shown (core/glasses.py, the same /api/glasses data every surface uses); this only draws it with the toolkit's display views and sends the taps back. First slice: her status, the person's apps, each app's me
+- `android-phone/app/src/main/java/com/mia/phone/MiaAutofillService.kt`: MIA as the phone's autofill service (DEC-0035's next step): when an app or a website shows a sign-in, Android asks here. MIA finds the username and password boxes and offers one line, "Fill from MIA", locked behind AutofillActivity: nothing is read from the vault until the person taps it, unlocks wi
 - `android-phone/app/src/main/java/com/mia/phone/Music.kt`: Music from MIA's library, played on the phone, so it comes out wherever the phone's sound goes, the glasses included. The glasses choose what plays (Relay.kt); only library tracks can play, by id, from this phone's engine. While she listens the music pauses, and it comes back when she's done.
 - `android-phone/app/src/main/java/com/mia/phone/Permissions.kt`: User Sync's phone step (core/user_sync.py, docs/GLASSES_FIRST_BOOT_PLAN.md): window.MIAPhonePermissions. Only the phone can ask Android, so `status()` says what's allowed, the screen sends that to the engine, and the glasses show it. Only what MIA already uses; each is also asked again where it's ne
 - `android-phone/app/src/main/java/com/mia/phone/PhoneVoice.kt`: The workout's count, spoken by the phone itself (DEC-0055, Active Training: "MIA counts the pace"). The Workout screen calls `window.MIAPhoneVoice.say("7")` on each beat; speaking it here, not on the computer, keeps the count on time (no round trip), and it comes out wherever the phone's sound goes,

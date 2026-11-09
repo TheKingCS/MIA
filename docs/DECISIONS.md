@@ -630,6 +630,12 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   autofill in other apps yet (an Android autofill service is the next
   step). Forgetting both the master password and the recovery code
   loses the vault: by design, nobody can get in.
+  **Autofill built (claude, 2026-11-09):** the phone app is an Android
+  autofill service (`MiaAutofillService.kt`, `AutofillActivity.kt`): a
+  sign-in anywhere offers "Fill from MIA"; the vault is unlocked with the
+  master password if it isn't open, the person picks a login (sites by
+  host, apps by package, `core/password_autofill.py`, titles only), and
+  only that password is read, once, into the box. Nothing saved from it.
 - Related: core/password_vault.py, web/passwords.*, server/app.py
   (`/api/passwords/*`), core/sync.py (`password_vault.json`)
 

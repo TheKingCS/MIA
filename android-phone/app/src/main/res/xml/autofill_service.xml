@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- MIA's autofill service (MiaAutofillService.kt): its settings are MIA's own Passwords page, in the app. -->
+<autofill-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:settingsActivity="com.mia.phone.MainActivity" />

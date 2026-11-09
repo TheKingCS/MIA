@@ -502,8 +502,9 @@ SECURITY_HEADERS = {
 
 
 def create_app(context: AppContext) -> FastAPI:
-    """MIA's web server (FastAPI) for the phone, the glasses and the desktop's web view: sign-in sessions by bearer token (or a linked phone's device key), the access switch that turns away forwarded requests when phone access is off, every /api route (each runs on the signed-in person's own view, view_for), and the web front end served fresh at /web/. Your Data (/api/your-data, export and delete) and the sealed-files recovery key sit beside the security log here; the Theme Studio reads /api/themes and asks /api/themes/design (DEC-0136); MIA paints through /api/art (DEC-0140), Portal Pictures is /api/portals, Look It Up Online is /api/lookup (DEC-0053), Trade Master is /api/trades (DEC-0149), Tracks is /api/tracks (DEC-0099), and sensors send their readings to
-    /api/sensors/reading with their own key (core/sensors.py)."""
+    """MIA's web server (FastAPI) for the phone, the glasses and the desktop's web view: sign-in sessions by bearer token (or a linked phone's device key), the access switch that turns away forwarded requests when phone access is off, every /api route (each runs on the signed-in person's own view, view_for), and the web front end served fresh at /web/. Your Data (/api/your-data, export and delete) and the sealed-files recovery key sit beside the security log here; the Theme Studio reads /api/themes and asks /api/themes/design (DEC-0136); MIA paints through /api/art (DEC-0140), Portal Pictures is /api/portals, Look It Up Online is /api/lookup (DEC-0053), Trade Master is /api/trades (DEC-0149), Tracks is /api/tracks (DEC-0099), sensors send their readings to
+    /api/sensors/reading with their own key (core/sensors.py), and the phone's autofill asks /api/passwords/autofill
+    which logins fit a sign-in (core/password_autofill.py)."""
     app = FastAPI(title="MIA Mobile API")
     app.state.context = context
     app.state.sessions: dict[str, str] = {}  # token -> profile_id
@@ -3336,6 +3337,14 @@ def create_app(context: AppContext) -> FastAPI:
     @app.delete("/api/passwords/login/{entry_id}")
     def passwords_delete(entry_id: str, profile_id: str = Depends(require_profile_id)):
         return _vault_call(profile_id, lambda v: (v.delete(entry_id), {"message": "Deleted."})[1])
+
+    @app.get("/api/passwords/autofill")
+    def passwords_autofill(domain: str = "", package: str = "", profile_id: str = Depends(require_profile_id)):
+        """The logins that fit the boxes the phone's autofill found (core/password_autofill.matches): titles and
+        usernames only; 423 while the vault is locked. The password is read only when the person picks one (reveal)."""
+        from core.password_autofill import matches
+
+        return _vault_call(profile_id, lambda v: {"matches": matches(v, domain[:200], package[:200])})
 
     @app.post("/api/passwords/login/{entry_id}/reveal")
     def passwords_reveal(entry_id: str, profile_id: str = Depends(require_profile_id)):

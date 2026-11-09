@@ -128,6 +128,25 @@
             android:exported="false"
             android:foregroundServiceType="connectedDevice" />
 
+        <!-- MIA as the phone's autofill service (DEC-0035): a sign-in in any app or site offers "Fill from MIA",
+             and nothing is read from the vault until the person picks a login (AutofillActivity). Turned on in
+             Android's Settings: Passwords and autofill, Autofill service. -->
+        <service
+            android:name=".MiaAutofillService"
+            android:exported="true"
+            android:label="MIA"
+            android:permission="android.permission.BIND_AUTOFILL_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.autofill.AutofillService" />
+            </intent-filter>
+            <meta-data android:name="android.autofill" android:resource="@xml/autofill_service" />
+        </service>
+        <activity
+            android:name=".AutofillActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:theme="@android:style/Theme.DeviceDefault.Dialog" />
+
         <!-- Arriving at a watched place (Places.kt), and setting the alerts again after a restart. -->
         <receiver android:name=".PlaceReceiver" android:exported="false" />
         <receiver android:name=".BootReceiver" android:exported="true">

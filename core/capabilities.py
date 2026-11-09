@@ -91,7 +91,7 @@ LIMITS = {
     "toolbox": "Alarms ring on the PC.",
     "lab": "Readings come by hand or from sensors you add (the Sensors page).",
     "field_kit": "Ejecting drives, running scripts and the port scan are on the PC.",
-    "passwords": "MIA's assistant never sees a password; no autofill in other apps yet.",
+    "passwords": "MIA's assistant never sees a password; on the phone, other apps and sites fill from it only when you pick a login.",
     "files": "",
     "music": "",
     "assistant": "",
