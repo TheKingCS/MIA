@@ -37,7 +37,8 @@ and a second gesture approves it (H-0008, H-0012).
 
 **What the glasses may change** is `GLASSES_KINDS`: quick, everyday,
 non-destructive things (ate it, a step done, a mission claimed, a chore
-or upkeep done, a grocery item checked, a promise kept). Nothing that deletes, nothing
+or upkeep done, a grocery item checked, a promise kept, a job's step
+along or its hold checked). Nothing that deletes, nothing
 that needs a typed number, and no money (H-0041: money stays readouts on
 the glasses in v1). A line whose action isn't in the list is shown as a
 readout only.
@@ -70,6 +71,9 @@ GLASSES_KINDS = frozenset({
     "lesson.done",
     # Kept's open promises (core/glasses_cards.py, 2026-11-08): "Done", undoable
     "life_note.done",
+    # Trade Master's walkthrough (DEC-0149, core/glasses_cards._trade_job): the step along, a hold checked, a
+    # diagnosis's yes or no, and Stop; the holds are enforced in core/trade_session.py, never on the card
+    "trade.next", "trade.check", "trade.back", "trade.answer", "trade.stop",
 })
 
 # Apps the glasses don't show as cards: the orb *is* Home and Talk; the
@@ -1271,7 +1275,7 @@ from core.glasses_cards import STATUS_FROM as _MORE_STATUS  # noqa: E402
 from core.glasses_cards import status as _more_status  # noqa: E402
 
 PANELS.update(_MORE_PANELS)
-from core.glasses_cards import EXTRA as _MORE_ITEMS  # noqa: E402  (What's Next, Your Campaign, My Directions, Connections)
+from core.glasses_cards import EXTRA as _MORE_ITEMS  # noqa: E402  (What's Next, Your Campaign, My Directions, Connections, The Job)
 
 for _app, _items in _MORE_ITEMS.items():
     PANELS[_app] = PANELS.get(_app, ()) + _items

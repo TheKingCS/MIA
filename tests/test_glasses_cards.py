@@ -2,7 +2,8 @@
 The glasses cards for the apps that only had an ask (core/glasses_cards.py, 2026-11-08): every one builds a panel
 without a store and in a real household, shows the page assembler's facts in at most five short lines, flags what
 needs the person in amber and only what's broken in red, and lets the glasses change nothing but an open promise.
-Also the items added to cards that had panels (What's Next, Your Campaign, My Directions, Connections), the card
+Also the items added to cards that had panels (What's Next, Your Campaign, My Directions, Connections, and the
+Workshop's The Job, moving a Trade Master job along with its holds kept), the card
 faces and their tiles, and long sentences split into a head and a detail.
 """
 
@@ -179,3 +180,45 @@ def test_the_new_card_faces_carry_tiles_from_their_pages(monkeypatch):
 def test_a_card_with_nothing_set_up_has_no_tiles():
     for app in gc.TILES:
         assert glasses._tiles(SimpleNamespace(config=None), app, TODAY) == []
+
+
+def test_the_workshop_card_walks_a_job_with_next_checked_back_and_stop():
+    from datetime import datetime
+    from types import SimpleNamespace
+
+    from core import trade_session as js, trades
+    from core.glasses_cards import _trade_job
+
+    trades._loaded()
+    job = trades.JOBS["chicken_coop"]
+    s = js.start(job, datetime(2026, 11, 9, 9))
+    s.at = next(i for i, (_p, _j, st) in enumerate(job.steps()) if st.hold)
+    ctx = SimpleNamespace(trade_session=SimpleNamespace(live=lambda: s))
+    p = _trade_job(ctx, date(2026, 11, 9))
+    kinds = [(ln.get("action") or {}).get("kind") for ln in p["lines"]]
+    assert "trade.check" in kinds and "trade.stop" in kinds and kinds[0] is None  # Next waits on the hold
+    js.confirm(s)
+    kinds = [(ln.get("action") or {}).get("kind") for ln in _trade_job(ctx, date(2026, 11, 9))["lines"]]
+    assert kinds[0] == "trade.next" and "trade.check" not in kinds
+
+
+def test_the_workshop_card_asks_a_diagnosis_yes_or_no():
+    from datetime import datetime
+    from types import SimpleNamespace
+
+    from core import trade_session as js, trades
+    from core.glasses_cards import _trade_job
+
+    trades._loaded()
+    s = js.start(trades.DIAGNOSES["toilet_running"], datetime(2026, 11, 9, 9))
+    p = _trade_job(SimpleNamespace(trade_session=SimpleNamespace(live=lambda: s)), date(2026, 11, 9))
+    assert [(ln.get("action") or {}).get("params", {}).get("answer") for ln in p["lines"][1:3]] == ["yes", "no"]
+
+
+def test_the_workshop_card_says_when_no_job_is_going():
+    from types import SimpleNamespace
+
+    from core.glasses_cards import _trade_job
+
+    p = _trade_job(SimpleNamespace(trade_session=SimpleNamespace(live=lambda: None)), date(2026, 11, 9))
+    assert p["lines"] == [] and "walk me through" in p["empty"]

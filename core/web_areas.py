@@ -71,6 +71,7 @@ CONNECT = Page("connect", "Connect Apps", "settings", "Your accounts, linked.", 
 ABOUT = Page("about", "About MIA", "assistant", "What she is, what she's for, what she knows.", "about.html")
 ANSWERS = Page("answers", "How MIA Answers", "assistant", "How long, laid out how, the tone: your way.", "answers.html")
 STUDIO = Page("studio", "Theme Studio", "settings", "Make MIA look like you: themes, colours, light.", "studio.html")
+TRADES = Page("trades", "Trade Master", "workshop", "Any job or diagnosis, walked through step by step.", "trades.html")
 LOOKUP = Page("lookup", "Look It Up Online", "search", "Search the web through your own search engine.", "lookup.html")
 PORTALS = Page("portals", "Portal Pictures", "apps", "Put your own paintings in the Nexus portals.", "portals.html")
 PROFILE = Page("profile", "Profile", "character", "You, and how MIA knows you.", "profile.html")
@@ -89,7 +90,7 @@ SHOWOFF = Page("showoff", "Show Off", "workshop", "What you've made, to share.",
 
 AREAS: tuple[Area, ...] = (
     Area("home", "Home", "household", "The house, the kitchen and what keeps it running.",
-         ("household", "kitchen", HOME_UPKEEP, "power"), hue="#35d4ff"),
+         ("household", "kitchen", HOME_UPKEEP, TRADES, "power"), hue="#35d4ff"),
     Area("garage", "Garage", "garage", "Vehicles, tools and the work on them.",
          ("garage", "toolbox", "sight"), hue="#8fa7bf"),
     Area("plants_animals", "Plants and Animals", "greenhouse", "What grows and who you feed.",

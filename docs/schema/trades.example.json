@@ -1,0 +1,335 @@
+{
+ "available": true,
+ "library": [
+  {
+   "trade": "carpentry",
+   "name": "Carpentry and framing",
+   "items": [
+    {
+     "id": "hoop_house",
+     "name": "Hoop-house greenhouse (high tunnel)",
+     "kind": "build",
+     "kind_word": "Build",
+     "scope": "A ground-post hoop house: steel bows on driven ground posts, wood baseboards and hip boards, framed end walls with a door and vents, and greenhouse film. The site prep (level, drained) is in. Heating, electrical and irrigation are separate jobs.",
+     "steps": 18,
+     "status_word": "Drafted from its sources"
+    },
+    {
+     "id": "chicken_coop",
+     "name": "Chicken coop and run",
+     "kind": "build",
+     "kind_word": "Build",
+     "scope": "A shed-roof coop on a framed floor, with a people door and a pop door, a roost, nest boxes and vents, and a run wrapped in 1/2 in hardware cloth. Sizes and quantities come from the coop plan (4 sq ft a hen inside, 10 in the run). Power and water lines are separate jobs.",
+     "steps": 13,
+     "status_word": "Drafted from its sources"
+    },
+    {
+     "id": "workshop",
+     "name": "Workshop on a concrete slab",
+     "kind": "build",
+     "kind_word": "Build",
+     "scope": "A gable-roofed workshop framed on a concrete slab: the permit, layout, the slab (forms, base, reinforcement, pour, cure), stud walls with a header over the door, rafters, sheathing, underlayment and shingles, and siding. The slab's quantities come from the slab plan and the walls' and roof's from the gable-shed plan. Wiring is its own job.",
+     "steps": 14,
+     "status_word": "Drafted from its sources"
+    },
+    {
+     "id": "cold_room",
+     "name": "Cold room for the harvest (an insulated walk-in cooler)",
+     "kind": "build",
+     "kind_word": "Build",
+     "scope": "A walk-in cold room framed inside a dry building (the workshop, a barn): insulated walls, ceiling and floor, a sealed vapor retarder on the warm side, a tight insulated door, and a window air conditioner run cold by a controller (CoolBot or similar). Its dedicated circuit is its own job and may need a permit and an electrician.",
+     "steps": 12,
+     "status_word": "Drafted from its sources"
+    }
+   ]
+  },
+  {
+   "trade": "plumbing",
+   "name": "Plumbing",
+   "items": [
+    {
+     "id": "toilet_running",
+     "name": "A toilet that keeps running",
+     "kind": "diagnosis",
+     "kind_word": "Diagnosis",
+     "scope": "Nothing here is dangerous, but shut the water off at the valve behind the toilet before taking anything apart, and lift the tank lid carefully: it's heavy and breaks easily.",
+     "steps": 6,
+     "status_word": "Drafted from its sources"
+    },
+    {
+     "id": "no_hot_water",
+     "name": "No hot water",
+     "kind": "diagnosis",
+     "kind_word": "Diagnosis",
+     "scope": "If you smell gas, stop: leave and call the gas utility from outside. Switch an electric heater off at its breaker before opening any panel on it. Hot water and the relief valve can scald: keep clear of the valve's pipe.",
+     "steps": 6,
+     "status_word": "Drafted from its sources"
+    }
+   ]
+  },
+  {
+   "trade": "electrical",
+   "name": "Electrical",
+   "items": [
+    {
+     "id": "breaker_tripping",
+     "name": "A breaker that keeps tripping",
+     "kind": "diagnosis",
+     "kind_word": "Diagnosis",
+     "scope": "Never take the panel cover off, and reset a breaker no more than once or twice: a breaker that trips again is protecting the wiring. A hot, buzzing or scorched breaker, or a burning smell, means leave it off and call a licensed electrician now.",
+     "steps": 6,
+     "status_word": "Drafted from its sources"
+    }
+   ]
+  },
+  {
+   "trade": "hvac",
+   "name": "HVAC",
+   "items": [
+    {
+     "id": "ac_not_cooling",
+     "name": "Air conditioning that runs but doesn't cool",
+     "kind": "diagnosis",
+     "kind_word": "Diagnosis",
+     "scope": "Switch the outdoor unit off at its disconnect (and the breaker) before touching it: its capacitor holds a charge even then, so leave the electrical parts to a technician. Never open the refrigerant lines; that work needs a certified technician.",
+     "steps": 6,
+     "status_word": "Drafted from its sources"
+    }
+   ]
+  },
+  {
+   "trade": "appliances",
+   "name": "Appliances",
+   "items": [
+    {
+     "id": "dryer_no_heat",
+     "name": "A dryer that runs but doesn't heat",
+     "kind": "diagnosis",
+     "kind_word": "Diagnosis",
+     "scope": "Unplug the dryer (or switch off its breaker) before opening it: an electric dryer runs on 240 volts. A gas dryer follows the gas rule: a smell of gas means stop and leave. Lint is a fire risk, so clean it out as you go.",
+     "steps": 5,
+     "status_word": "Drafted from its sources"
+    }
+   ]
+  },
+  {
+   "trade": "exterior",
+   "name": "Roofing, siding and windows",
+   "items": [
+    {
+     "id": "roof_leak",
+     "name": "A roof leak",
+     "kind": "diagnosis",
+     "kind_word": "Diagnosis",
+     "scope": "Look from the attic and the ground first, and stay off a wet, icy or steep roof: roof work needs fall protection and a second person. Keep water away from light fixtures and wiring below the leak.",
+     "steps": 6,
+     "status_word": "Drafted from its sources"
+    }
+   ]
+  }
+ ],
+ "opened": {
+  "id": "chicken_coop",
+  "name": "Chicken coop and run",
+  "kind": "build",
+  "kind_word": "Build",
+  "trade": "Carpentry and framing",
+  "status_word": "Drafted from its sources",
+  "scope": "A shed-roof coop on a framed floor, with a people door and a pop door, a roost, nest boxes and vents, and a run wrapped in 1/2 in hardware cloth. Sizes and quantities come from the coop plan (4 sq ft a hen inside, 10 in the run). Power and water lines are separate jobs.",
+  "permit": "A coop is usually a small accessory building; many places exempt one under 200 sq ft, but zoning may limit hens, setbacks and roosters. Codes, snow and wind loads, and permit rules vary by place: check with your local building department before you start.",
+  "hazards": [
+   "saw and nail-gun injuries",
+   "cut wire edges",
+   "lifting walls and the roof"
+  ],
+  "ppe": [
+   "safety glasses",
+   "work gloves (for hardware cloth)",
+   "hearing protection"
+  ],
+  "tools": [
+   "circular saw",
+   "drill/driver",
+   "speed square and framing square",
+   "level (4 ft)",
+   "tape measure",
+   "tin snips",
+   "staple gun or fence stapler",
+   "shovel (for the apron)"
+  ],
+  "materials": [
+   "2x4 framing lumber (treated for the floor frame)",
+   "3/4 in plywood floor",
+   "T1-11 or plywood siding",
+   "metal roof panels and screws with washers",
+   "1/2 in hardware cloth (never chicken wire)",
+   "hinges and two-step latches",
+   "concrete blocks or treated skids",
+   "vent covers with hardware cloth"
+  ],
+  "phases": [
+   {
+    "name": "Plan, site and permit",
+    "steps": [
+     {
+      "do": "Size it for the flock with the coop plan (4 sq ft a hen inside, 10 in the run), and check how many hens your zoning allows.",
+      "hold": false
+     },
+     {
+      "do": "Choose high, well-drained ground with afternoon shade and the door away from the prevailing winter wind; leave room to walk all round it to clean.",
+      "hold": true
+     },
+     {
+      "do": "Call 811 before setting blocks or digging the run apron.",
+      "hold": true
+     }
+    ]
+   },
+   {
+    "name": "Foundation and floor",
+    "steps": [
+     {
+      "do": "Set level concrete blocks (or treated skids on gravel) at the corners and midspans.",
+      "hold": true
+     },
+     {
+      "do": "Build the floor frame from treated 2x4s (joists at 16 in), check its diagonals, then glue and screw the plywood floor.",
+      "hold": true
+     }
+    ]
+   },
+   {
+    "name": "Walls, roof and openings",
+    "steps": [
+     {
+      "do": "Frame the walls flat on the floor (studs at 24 in), with the people door, the pop door and window openings framed with headers, then stand and brace them.",
+      "hold": true
+     },
+     {
+      "do": "Set the rafters at 24 in with a 12 in overhang, then the metal roof panels, screwed through the ribs into purlins or rafters.",
+      "hold": true
+     },
+     {
+      "do": "Side it, and cut vents high on both sides (about 1 sq ft for every 10 birds), covered with hardware cloth.",
+      "hold": false
+     }
+    ]
+   },
+   {
+    "name": "Predator-proofing and the run",
+    "steps": [
+     {
+      "do": "Frame the run and wrap it in 1/2 in hardware cloth, fastened every few inches with washers or battens.",
+      "hold": false
+     },
+     {
+      "do": "Bury an apron: hardware cloth 12 in down, or laid 2 ft out flat and pinned, all round the run.",
+      "hold": true
+     },
+     {
+      "do": "Fit two-step latches on every door and the pop door.",
+      "hold": true
+     }
+    ]
+   },
+   {
+    "name": "Fit out and final inspection",
+    "steps": [
+     {
+      "do": "Install the roost (wide face up, 10 in a hen, higher than the nest boxes) and the nest boxes (one per 4 hens, about 12 in cubes, dark and low).",
+      "hold": false
+     },
+     {
+      "do": "Walk the coop at dusk with a light: any gap bigger than 1/2 in, any loose wire, any latch that gives.",
+      "hold": true
+     }
+    ]
+   }
+  ],
+  "steps": 13,
+  "rules": [
+   {
+    "id": "utilities",
+    "when": "digging before the utility lines are located",
+    "instead": "Stop. Call 811 (in the US) and wait for the marks before you dig."
+   },
+   {
+    "id": "fall",
+    "when": "work at height without fall protection, or alone on a roof",
+    "instead": "Stop. Get a harness and anchor (or scaffold with rails), and never work up high alone."
+   },
+   {
+    "id": "injury",
+    "when": "someone is hurt",
+    "instead": "Stop everything. First aid, and call 911 for anything serious."
+   }
+  ],
+  "sources": [
+   "Gail Damerow, Storey's Guide to Raising Chickens, 4th ed. (Storey, 2017)",
+   "Gail Damerow, Building Chicken Coops (Storey Country Wisdom Bulletin)",
+   "MIA's coop plan and calculator (core/build_calcs.chicken_coop, core/plan_library.py)"
+  ],
+  "plan": "chicken-coop"
+ },
+ "live": {
+  "item_id": "chicken_coop",
+  "title": "Chicken coop and run",
+  "kind": "job",
+  "status": "working",
+  "say": "Foundation and floor, step 5 of 13: Build the floor frame from treated 2x4s (joists at 16 in), check its diagonals, then glue and screw the plywood floor. Before you go on: The floor's diagonals match within 1/4 in. Say “checked” when it is.",
+  "why": "A square floor is the base every wall is built true on.",
+  "watch": "Crown every joist up.",
+  "hold": "The floor's diagonals match within 1/4 in.",
+  "checked": false,
+  "progress": {
+   "step": 5,
+   "of": 13,
+   "phase": "Foundation and floor",
+   "phase_index": 1
+  },
+  "phases": [
+   {
+    "name": "Plan, site and permit",
+    "state": "done"
+   },
+   {
+    "name": "Foundation and floor",
+    "state": "now"
+   },
+   {
+    "name": "Walls, roof and openings",
+    "state": "next"
+   },
+   {
+    "name": "Predator-proofing and the run",
+    "state": "next"
+   },
+   {
+    "name": "Fit out and final inspection",
+    "state": "next"
+   }
+  ],
+  "result": "",
+  "stopped": "",
+  "mission_id": "",
+  "rules": [
+   {
+    "id": "utilities",
+    "when": "digging before the utility lines are located",
+    "instead": "Stop. Call 811 (in the US) and wait for the marks before you dig."
+   },
+   {
+    "id": "fall",
+    "when": "work at height without fall protection, or alone on a roof",
+    "instead": "Stop. Get a harness and anchor (or scaffold with rails), and never work up high alone."
+   },
+   {
+    "id": "injury",
+    "when": "someone is hurt",
+    "instead": "Stop everything. First aid, and call 911 for anything serious."
+   }
+  ],
+  "step_text": "Build the floor frame from treated 2x4s (joists at 16 in), check its diagonals, then glue and screw the plywood floor."
+ },
+ "standard": "Every job meets MIA's standard (a planning phase first, an inspection last, 12 or more steps each with why, hold points, the stop rules its steps call for, two or more sources), and stays drafted until a person confirms it."
+}

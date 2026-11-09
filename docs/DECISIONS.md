@@ -2578,6 +2578,8 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   step by step, the model's context grounded in the job and step), `core/carpentry.py` (the apprentice program, three
   stages), six trade specialists, and two loops: `trades.depth` (opens a task for the next wanted job weekly) and
   `trades.finished`.
+  **Screen built (claude, design, 2026-11-09):** `web/trades.html` (`core/web_trades.py`, `/api/trades`) and the
+  glasses' Workshop card panel "The Job" (`core/glasses_cards._trade_job`).
 - From: Zac, 2026-11-08 ("just like Homesteading is Construction ... walk me through step by step of any home
   construction, repair, or diagnosis jobs with industry standard professional steps so nothing is missed ... She
   should become a Trade master and be able to teach an entry level Apprentice": carpentry, plumbing, HVAC,

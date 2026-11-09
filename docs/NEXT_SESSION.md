@@ -39,8 +39,10 @@ noted below; the six starter diagnoses are built.
 `core/trades.WANTED` (the `trades.depth` loop opens a task for it): `workshop_circuit` (the workshop's wiring, a
 permit and the electrical stop rule), then `root_cellar`, the greenhouse and cold-room calculators in
 `core/build_calcs.py`, then all of home building in order. Every job must pass `trades.problems()`. For the design
-session: a Trade Master screen (a job's outline, the step in focus with "next", "checked", "why", "back", "stop", and
-"make it a mission"; data from `core.trade_session.say/progress` and `core.trades.outline`, actions `trade.*`). For the
+session: the Trade Master screen is **built** (claude, design, 2026-11-09): `web/trades.html` in Home (`core/web_trades.py`,
+`/api/trades`): the library by trade, a job or diagnosis opened whole with Start It and Make It a Mission, and the
+walkthrough (the step large, why, watch for, the hold, the phases, Checked / Next Step / Back / Stop, Yes / No for a
+diagnosis); on the glasses, the Workshop card's "The Job" panel moves it along (`trade.*` in `GLASSES_KINDS`). For the
 parity session: voice is code-done for the walkthrough itself; a model tool to start one by a vaguer phrase is open.
 `core/trades.py` (jobs as sourced data, stop rules in code, the quality standard), `core/job_session.py` (step by step,
 hold points), a job as a mission, diagnosis sessions, the Carpentry apprentice program, a specialist per trade, the

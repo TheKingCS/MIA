@@ -234,9 +234,10 @@
     // After a reply in Talk, now and then: the same answer a second way to pick from ({} when none; never in the demo).
     compareAnswer: (reply, isPrivate) => demo ? Promise.resolve({}) : call("POST", "/api/talk/compare", { reply, private: !!isPrivate }),
     paint: (description, use, apply, area) => demo ? demoOnly() : call("POST", "/api/art/paint", { description, use: use || "backdrop", apply: !!apply, area: area || "" }),
-    portals: () => read("/api/portals", "portals"),
+    portals: () => read("/api/portals", "portals"),  // Portal Pictures: your paintings in the Nexus portals (DEC-0140)
     lookup: () => read("/api/lookup", "lookup"),  // Look It Up Online (DEC-0053)
-    lookupSearch: (words) => demo ? read("/api/lookup", "lookup_results") : call("POST", "/api/lookup", { words }),  // Portal Pictures: your paintings in the Nexus portals (DEC-0140)
+    trades: (item) => read("/api/trades" + (item ? "?item=" + encodeURIComponent(item) : ""), "trades"),  // Trade Master (DEC-0149)
+    lookupSearch: (words) => demo ? read("/api/lookup", "lookup_results") : call("POST", "/api/lookup", { words }),
     // The ID wallet (core/id_wallet.py): numbers travel only in these calls, never in an action.
     wallet: () => read("/api/wallet", "wallet"),
     walletCard: (id) => demo ? read("", "wallet").then((d) => ({ ...d.cards.find((c) => c.id === id), number: "D1234-5678-9012" })) : call("GET", "/api/wallet/" + encodeURIComponent(id)),

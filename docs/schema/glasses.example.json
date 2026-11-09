@@ -614,6 +614,16 @@
    "pinned": false,
    "menu": [
     {
+     "id": "tasks",
+     "label": "Project Tasks",
+     "type": "panel"
+    },
+    {
+     "id": "job",
+     "label": "The Job",
+     "type": "panel"
+    },
+    {
      "id": "ask0",
      "label": "What jobs are open",
      "type": "ask",
@@ -1924,7 +1934,12 @@
   "mission.complete",
   "objective.tick",
   "routine.log",
-  "task.done"
+  "task.done",
+  "trade.answer",
+  "trade.back",
+  "trade.check",
+  "trade.next",
+  "trade.stop"
  ],
  "areas": [
   {

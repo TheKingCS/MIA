@@ -9,7 +9,8 @@ a title, at most five short lines (text, detail, tone) and what to say when it's
 panels, so MIA still answers anything the card doesn't show.
 
 What these cards may change is still core/glasses.GLASSES_KINDS: here only "Done" on an open promise
-(`life_note.done`, undoable). Everything else is a readout: no money moves, no camera settings, no browser steps (a
+(`life_note.done`, undoable), and moving a Trade Master job along (`trade.next`, `trade.check`,
+`trade.back`, `trade.answer`, `trade.stop`: the hold points are enforced in core/trade_session.py). Everything else is a readout: no money moves, no camera settings, no browser steps (a
 browser commit is approved by a person on a bigger screen, DEC-0117), no compliance marked filed.
 
 How: `PANELS` maps an app id to its menu entries (item id, label, builder), merged into core/glasses.PANELS at import;
@@ -521,12 +522,51 @@ def _connections(context, today: date):
     return _panel("Connections", lines, "No connections waiting.")
 
 
+def _trade_job(context, today: date):
+    """Panel (the Workshop card): the job or diagnosis being walked through (Trade Master, core/web_trades.walkthrough,
+    DEC-0149): the step in focus with Next (a long one's rest on the next line), its hold point with Checked,
+    Back, Stop, then why; a diagnosis's question
+    with Yes and No. The holds are enforced in core/trade_session.py, so Next on an unchecked hold says what to check."""
+    from core.web_trades import walkthrough
+
+    try:
+        w = walkthrough(context)
+    except Exception:
+        log.exception("Glasses: the job panel failed")
+        return _panel("The Job", [], "The job couldn't be read just now.")
+    if not w or w.get("status") != "working":
+        return _panel("The Job", [], "No job going. Say \u201cwalk me through\u2026\u201d a build or a repair.")
+    act = lambda kind, label, **params: {"kind": kind, "label": label, "params": params}  # noqa: E731
+    if w["kind"] == "diagnosis":
+        head, rest = _split(w.get("ask") or w.get("say", ""))
+        return _panel(w["title"], [_line(head, rest or "diagnosis"),
+                                   _line("Yes", "", "", act("trade.answer", "Yes", answer="yes")),
+                                   _line("No", "", "", act("trade.answer", "No", answer="no")),
+                                   _line("Stop", "", "", act("trade.stop", "Stop"))], "")
+    pr = w.get("progress") or {}
+    where = f"{pr.get('phase', '')} · step {pr.get('step')} of {pr.get('of')}" if pr else ""
+    open_hold = w.get("hold") and not w.get("checked")
+    head, rest = _split(w.get("step_text", ""), 64)
+    lines = [_line(head, where, "", None if open_hold else act("trade.next", "Next"))]
+    if rest:  # the rest of a long step on its own line, so the whole step can be read
+        lines.append(_line(rest[:1].upper() + rest[1:], "then"))
+    if w.get("hold"):
+        lines.append(_line(w["hold"], "checked" if w.get("checked") else "check before you go on",
+                           "" if w.get("checked") else "attention",
+                           act("trade.check", "Checked") if open_hold else None))
+    lines += [_line("Back", "one step", "", act("trade.back", "Back")), _line("Stop", "", "", act("trade.stop", "Stop"))]
+    if w.get("why"):  # last: when five lines are full, "why" is still a word away
+        lines.append(_line(w["why"], "why"))
+    return _panel(w["title"], lines, "")
+
+
 # More menu items on cards that already had panels: added after theirs (the menu still holds five at most).
 EXTRA = {
     "greenhouse": (("next", "What's Next", _whats_next),),
     "play": (("campaign", "Your Campaign", _campaign),),
     "operating_journal": (("directions", "My Directions", _directions),),
     "observations": (("connections", "Connections", _connections),),
+    "workshop": (("job", "The Job", _trade_job),),
 }
 
 

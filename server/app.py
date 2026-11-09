@@ -485,7 +485,7 @@ SECURITY_HEADERS = {
 
 
 def create_app(context: AppContext) -> FastAPI:
-    """MIA's web server (FastAPI) for the phone, the glasses and the desktop's web view: sign-in sessions by bearer token (or a linked phone's device key), the access switch that turns away forwarded requests when phone access is off, every /api route (each runs on the signed-in person's own view, view_for), and the web front end served fresh at /web/. Your Data (/api/your-data, export and delete) and the sealed-files recovery key sit beside the security log here; the Theme Studio reads /api/themes and asks /api/themes/design (DEC-0136); MIA paints through /api/art (DEC-0140), Portal Pictures is /api/portals, and Look It Up Online is /api/lookup (DEC-0053)."""
+    """MIA's web server (FastAPI) for the phone, the glasses and the desktop's web view: sign-in sessions by bearer token (or a linked phone's device key), the access switch that turns away forwarded requests when phone access is off, every /api route (each runs on the signed-in person's own view, view_for), and the web front end served fresh at /web/. Your Data (/api/your-data, export and delete) and the sealed-files recovery key sit beside the security log here; the Theme Studio reads /api/themes and asks /api/themes/design (DEC-0136); MIA paints through /api/art (DEC-0140), Portal Pictures is /api/portals, Look It Up Online is /api/lookup (DEC-0053), and Trade Master is /api/trades (DEC-0149)."""
     app = FastAPI(title="MIA Mobile API")
     app.state.context = context
     app.state.sessions: dict[str, str] = {}  # token -> profile_id
@@ -2560,6 +2560,15 @@ def create_app(context: AppContext) -> FastAPI:
 
         result = design(body.description)
         return {**result, "summary": summary(result)}
+
+    @app.get("/api/trades")
+    def web_trades(item: str = "", profile_id: str = Depends(require_profile_id)) -> dict:
+        """Trade Master (core/web_trades.screen, DEC-0149): the jobs and diagnoses by trade, one opened (`item`, else
+        the one being worked), and the walkthrough; every press is a trade.* action."""
+        from core.web_trades import screen
+
+        with app.state.turn_lock:
+            return screen(view_for(context, profile_id), item)
 
     @app.get("/api/lookup")
     def web_lookup(profile_id: str = Depends(require_profile_id)) -> dict:

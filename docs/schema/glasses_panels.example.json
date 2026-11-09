@@ -2497,5 +2497,55 @@
     ],
     "more": 0,
     "empty": "No connections waiting."
+  },
+  "workshop/job": {
+    "app": "workshop",
+    "item": "job",
+    "label": "The Job",
+    "title": "Chicken coop and run",
+    "lines": [
+      {
+        "text": "Build the floor frame from treated 2x4s (joists at 16 in)",
+        "detail": "Foundation and floor · step 5 of 13",
+        "tone": ""
+      },
+      {
+        "text": "Check its diagonals, then glue and screw the plywood floor.",
+        "detail": "then",
+        "tone": ""
+      },
+      {
+        "text": "The floor's diagonals match within 1/4 in.",
+        "detail": "check before you go on",
+        "tone": "attention",
+        "action": {
+          "kind": "trade.check",
+          "label": "Checked",
+          "params": {}
+        }
+      },
+      {
+        "text": "Back",
+        "detail": "one step",
+        "tone": "",
+        "action": {
+          "kind": "trade.back",
+          "label": "Back",
+          "params": {}
+        }
+      },
+      {
+        "text": "Stop",
+        "detail": "",
+        "tone": "",
+        "action": {
+          "kind": "trade.stop",
+          "label": "Stop",
+          "params": {}
+        }
+      }
+    ],
+    "more": 1,
+    "empty": ""
   }
 }
