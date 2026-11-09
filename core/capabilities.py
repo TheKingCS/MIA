@@ -64,7 +64,7 @@ LIMITS = {
     "kitchen": "",
     "household": "Routines are added by asking MIA; the web page ticks them off.",
     "workout": "",
-    "real_estate": "Selling a property isn't tracked yet.",
+    "real_estate": "Sale figures (the cash after the mortgage, the gain) are estimates in plain arithmetic, never a tax figure.",
     "missions": "",
     "skills": "",
     "budget": "Connecting and syncing banks needs the desktop on the home computer (the vault passphrase).",

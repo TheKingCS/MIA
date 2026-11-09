@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1326 files, 288,431 lines; 1326 files describe themselves; 16,198 of 16,292 classes and functions are documented.
+1326 files, 288,709 lines; 1326 files describe themselves; 16,211 of 16,305 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-497 files, 137,958 lines; 7,349 of 7,435 classes and functions documented
+497 files, 138,176 lines; 7,361 of 7,447 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -176,7 +176,7 @@
 - `core/energy_manager.py`: Manual energy/utility source tracking — 2026-09-09, the last of four "Field Manual" brainstorm items the user picked this session. Original seed: "Solar, generator, propane are currently just Maintenance usage logs by convention — could be a real Power/Energy expansion once real monitoring hardware 
 - `core/environment.py`: The real-vs-fictional boundary (DEC-0137): *shared intelligence, not shared authority.* MIA reuses the same primitives — entities, events, goals, progression — across real domains (missions, the garage, the homestead) and fictional ones (Living Worlds). This module is the one guarantee that keeps th
 - `core/equipment_actions.py`: Every change the Garage, Property, Greenhouse and Maintenance screens can make (2026-10-06, DEC-0017), as action kinds on the contract in core/actions.py, from one table (core/record_actions.py): assets (add, edit, delete), maintenance tasks (add, edit, delete), and logging a reading, on a task's me
-- `core/estate_actions.py`: Every change the Real Estate screen makes (2026-10-06, DEC-0017/0018), as action kinds on the contract in core/actions.py: properties (add, edit, delete, with the concept's status, rent and location), recording rent received and an expense against a property (both land in Money, tagged to it), and "
+- `core/estate_actions.py`: Every change the Real Estate screen makes (2026-10-06, DEC-0017/0018), as action kinds on the contract in core/actions.py: properties (add, edit, delete, with the concept's status, rent and location), recording rent received and an expense against a property (both land in Money, tagged to it), "trac
 - `core/event_bus.py`: A minimal publish/subscribe event bus.
 - `core/event_catalog.py`: The event catalogue (build plan step 7, the module contract's first piece; Part 1's gap: "no catalogue of the events modules emit and consume"). Read from the code itself, never written by hand: every event a file publishes on the event bus (core/event_bus.py: `events.publish("x", ...)`, or core's `
 - `core/expedition_manager.py`: Top-level container for an Expedition Mode outing — docs/ROADMAP.md milestone 12.1. A single Expedition (e.g. a long weekend spent in one area) can hold multiple core.trip_manager.Trip records — one per activity/leg (e.g. Saturday's hike-in, Sunday's fishing trip, both under one Expedition). Same pe
@@ -783,7 +783,7 @@
 
 ## tests/: the test suite: what each part must do
 
-455 files, 76,385 lines; 6,559 of 6,567 classes and functions documented
+455 files, 76,412 lines; 6,560 of 6,568 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1243,7 +1243,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-104 files, 18,852 lines
+104 files, 18,885 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she

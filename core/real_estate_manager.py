@@ -25,6 +25,12 @@ for core.finance_manager.py's read-only ingestion, same as the Kraken
 agent) — the user chose a native module instead once maintenance-
 history linking mattered, not an oversight.
 
+**Selling** (2026-11-09): `list_for_sale` (asking price, when) and
+`record_sale` (when, for what, selling costs); `sale_numbers` works out
+what a sale comes to (the cash after the mortgage, the gain on the price
+paid less depreciation taken: an estimate, never a tax figure); a sold
+property keeps its record but `equity()` is 0, so it leaves net worth.
+
 current_value is a manually-updated estimate, same v1 discipline as
 every other manager here before a real live-valuation feed exists (no
 Zillow/Redfin API integration). cap_rate()/net_operating_income() are
@@ -60,7 +66,8 @@ _PROPERTIES_FILE = _DATA_DIR / "properties.json"
 PROPERTY_TYPES = ["Primary Residence", "Rental", "Investment", "Land", "Other"]
 # 2026-10-06 (DEC-0018, the Real Estate concept): where a property stands.
 # "" = not set.
-PROPERTY_STATUSES = ["Rented", "Vacant", "For Sale", "For Rent", "Owner Occupied", "Under Renovation"]
+PROPERTY_STATUSES = ["Rented", "Vacant", "For Sale", "For Rent", "Owner Occupied", "Under Renovation",
+                     "Under Contract", "Sold"]  # 2026-11-09: selling a property (list_for_sale, record_sale)
 
 
 @dataclass
@@ -68,7 +75,7 @@ class Property:
     """A property the household owns: its type and status, purchase date and price, a current value they update by hand,
     the mortgage (balance, original loan, rate, term, start), land value and when it was placed in service (for
     depreciation), the business entity that owns it, its maintenance asset, where it is, what it rents for, notes,
-    its photo.
+    its photo, and selling it (asking price and when listed; sale date, price and selling costs once sold).
     """
     property_id: str
     name: str  # "123 Main St", "Lake Cabin"
@@ -102,9 +109,16 @@ class Property:
     status: str = ""  # one of PROPERTY_STATUSES, or ""
     monthly_rent: float = 0.0  # what it rents for (expected), per month
     photo: str = ""  # 2026-11-07 (Q-0014): a bare filename under the household's property_photos/ ("" = none)
+    # 2026-11-09: selling it. Listed (asking price, when), then sold (when, for what, what selling cost: commission,
+    # closing costs). A sold property keeps its record and history but counts for nothing in equity or net worth.
+    asking_price: float = 0.0
+    listed_date: str = ""
+    sale_date: str = ""
+    sale_price: float = 0.0
+    selling_costs: float = 0.0
 
     def to_dict(self) -> dict:
-        """The property as saved in properties.json (its photo too, by file name)."""
+        """The property as saved in properties.json (its photo too, by file name, and its listing and sale)."""
         return {
             "property_id": self.property_id, "name": self.name, "property_type": self.property_type,
             "purchase_date": self.purchase_date, "purchase_price": self.purchase_price,
@@ -116,12 +130,14 @@ class Property:
             "loan_term_months": self.loan_term_months, "loan_start_date": self.loan_start_date,
             "notes": self.notes, "created_at": self.created_at,
             "location": self.location, "status": self.status, "monthly_rent": self.monthly_rent,
-            "photo": self.photo,
+            "photo": self.photo, "asking_price": self.asking_price, "listed_date": self.listed_date,
+            "sale_date": self.sale_date, "sale_price": self.sale_price, "selling_costs": self.selling_costs,
         }
 
     @staticmethod
     def from_dict(data: dict) -> "Property":
-        """A property from its saved dict; missing fields (a photo, on older files) take their defaults."""
+        """A property from its saved dict; missing fields (a photo, a listing or sale, on older files) take their
+        defaults."""
         return Property(
             property_id=data.get("property_id", uuid.uuid4().hex[:10]),
             name=data.get("name", ""),
@@ -144,12 +160,48 @@ class Property:
             status=data.get("status", "") or "",
             monthly_rent=float(data.get("monthly_rent", 0.0) or 0.0),
             photo=data.get("photo", "") or "",
+            asking_price=float(data.get("asking_price", 0.0) or 0.0),
+            listed_date=data.get("listed_date", "") or "",
+            sale_date=data.get("sale_date", "") or "",
+            sale_price=float(data.get("sale_price", 0.0) or 0.0),
+            selling_costs=float(data.get("selling_costs", 0.0) or 0.0),
         )
 
 
+def is_sold(property_: Property) -> bool:
+    """Pure logic. Whether the property has been sold (a sale date recorded, or its status says so)."""
+    return bool(property_.sale_date) or property_.status == "Sold"
+
+
 def equity(property_: Property) -> float:
-    """Pure logic — testable without Qt."""
+    """Pure logic — testable without Qt. What it's worth less what's owed on it; nothing once it's sold (the money
+    from the sale is in Money, not in the property)."""
+    if is_sold(property_):
+        return 0.0
     return property_.current_value - property_.mortgage_balance
+
+
+def sale_numbers(property_: Property, price: float, costs: float, on: Optional[date] = None) -> dict:
+    """Pure logic. What selling at `price` with `costs` comes to on a day (today when not given): the net (price less
+    costs), the mortgage paid off at closing (the amortized balance that day when the loan's terms are known, else the
+    balance entered), the cash left, the adjusted basis (price paid less depreciation taken), the gain or loss on it,
+    the depreciation in that gain, and how long it was held (a year or more is long-term). An estimate in plain
+    arithmetic, never a tax figure: improvements and the exact rules are a tax professional's."""
+    on = on or date.today()
+    net = round(max(0.0, float(price or 0)) - max(0.0, float(costs or 0)), 2)
+    owed = remaining_balance_as_of(property_, on) if has_loan_terms(property_) else None
+    payoff = round(owed if owed is not None else property_.mortgage_balance, 2)
+    taken = round(accumulated_depreciation(property_, on), 2)
+    basis = round(property_.purchase_price - taken, 2)
+    try:
+        bought = date.fromisoformat(property_.purchase_date) if property_.purchase_date else None
+    except ValueError:
+        bought = None
+    months = (on.year - bought.year) * 12 + on.month - bought.month - (on.day < bought.day) if bought else None
+    return {"price": round(float(price or 0), 2), "costs": round(float(costs or 0), 2), "net": net, "payoff": payoff,
+            "cash": round(net - payoff, 2), "basis": basis, "gain": round(net - basis, 2) if property_.purchase_price else None,
+            "depreciation": taken, "months_held": months,
+            "long_term": months is not None and months >= 12}
 
 
 # US IRS Publication 946's straight-line MACRS period for residential
@@ -444,6 +496,39 @@ class RealEstateManager:
                 setattr(prop, numeric_field, 0.0)
         if prop.loan_term_months < 0:
             prop.loan_term_months = 0
+        self._save()
+        return prop
+
+    def list_for_sale(self, property_id: str, asking_price: float, listed_date: str = "") -> Property:
+        """Puts a property up for sale: its asking price, when it was listed (today when blank), status For Sale.
+        ValueError when it's gone, already sold, or the price isn't more than nothing."""
+        prop = self.get_property(property_id)
+        if prop is None:
+            raise ValueError(f"No property with id '{property_id}'.")
+        if is_sold(prop):
+            raise ValueError(f"{prop.name} is already sold.")
+        if float(asking_price or 0) <= 0:
+            raise ValueError("An asking price is more than nothing.")
+        prop.asking_price, prop.listed_date = round(float(asking_price), 2), listed_date or date.today().isoformat()
+        prop.status = "For Sale"
+        self._save()
+        return prop
+
+    @life_events.on_change("property_sold", "a property", "property")
+    def record_sale(self, property_id: str, sale_price: float, sale_date: str = "", selling_costs: float = 0.0) -> Property:
+        """Records a property sold: when, for what, what selling cost. Its status becomes Sold and nothing is owed on
+        it any more (the loan was paid off at closing); its record and history stay. ValueError when it's gone, already
+        sold, or the price isn't more than nothing."""
+        prop = self.get_property(property_id)
+        if prop is None:
+            raise ValueError(f"No property with id '{property_id}'.")
+        if is_sold(prop):
+            raise ValueError(f"{prop.name} is already sold.")
+        if float(sale_price or 0) <= 0:
+            raise ValueError("A sale price is more than nothing.")
+        prop.sale_price, prop.selling_costs = round(float(sale_price), 2), round(max(0.0, float(selling_costs or 0)), 2)
+        prop.sale_date = sale_date or date.today().isoformat()
+        prop.status, prop.mortgage_balance = "Sold", 0.0
         self._save()
         return prop
 

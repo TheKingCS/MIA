@@ -3,7 +3,8 @@ DEC-0017/0018 (2026-10-06): Kitchen, Workout and Real Estate on the web.
 The pages (core/web_screens.py) and every change as an action kind
 (core/kitchen_actions.py, core/workout_actions.py, core/estate_actions.py),
 each proposed, approved, recorded and undoable; a recipe's amounts scaled to
-the servings asked for; workouts and volume week by week.
+the servings asked for; workouts and volume week by week; a property listed
+for sale, then sold and left out of the totals.
 """
 
 from datetime import date, timedelta
@@ -201,6 +202,32 @@ def test_a_mortgage_gives_a_payment_and_cash_flow(world):
         loan_term_months="360")
     [card] = estate_page(world, TODAY)["properties"]
     assert card["payment"] == 1199.1 and card["cash_flow"] == 300.9
+
+
+def test_a_property_is_listed_then_sold_and_leaves_the_totals(world):
+    """Listing says what selling at the asking price comes to; recording the sale moves it to Sold, out of equity and
+    the totals, with what it came to; a sold property can't be sold again, and the sale can be undone."""
+    run(world, "property.add", name="Oak Duplex", property_type="Rental", monthly_rent="1800", current_value="300000",
+        mortgage_balance="150000", purchase_price="200000", land_value="40000", purchase_date="2020-06-01")
+    run(world, "property.add", name="Home", property_type="Primary Residence", current_value="250000")
+    oak = next(p for p in world.real_estate.all_properties() if p.name == "Oak Duplex")
+    proposal, _ = run(world, "property.list_sale", property_id=oak.property_id, price="320000", date=TODAY.isoformat())
+    assert proposal.summary.startswith("List Oak Duplex for sale at $320,000.00: about $170,000.00 in hand")
+    card = next(p for p in estate_page(world, TODAY)["properties"] if p["name"] == "Oak Duplex")
+    assert card["status"] == "For Sale" and card["sale"]["asking"] == 320000 and card["sale"]["days_listed"] == 0
+    proposal, sold = run(world, "property.sell", property_id=oak.property_id, price="318000", selling_costs="18000",
+                         date=TODAY.isoformat())
+    assert "about $150,000.00 in hand" in proposal.summary and "a gain of about" in proposal.summary
+    page = estate_page(world, TODAY)
+    assert [p["name"] for p in page["properties"]] == ["Home"] and [p["name"] for p in page["sold"]] == ["Oak Duplex"]
+    gone = page["sold"][0]
+    assert gone["equity"] == 0 and gone["sale"]["sold"] and gone["sale"]["cash"] == 300000 and gone["sale"]["long_term"]
+    assert gone["sale"]["gain"] == round(300000 - (200000 - gone["sale"]["depreciation"]), 2)
+    assert page["totals"]["count"] == 1 and page["totals"]["equity"] == 250000 and page["totals"]["sold"] == 1
+    with pytest.raises(ActionError, match="already sold"):
+        world.actions.propose(world, "property.sell", {"property_id": oak.property_id, "price": "1"})
+    world.actions.undo(world, sold.proposal_id)
+    assert world.real_estate.get_property(oak.property_id).status == "For Sale"
 
 
 def test_the_latest_workout_is_the_last_one_logged_that_day(world):

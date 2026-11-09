@@ -245,7 +245,7 @@ def record(where, type: str, summary: str, refs: Iterable[str] = (), payload: Op
 
 _VERBS = (("_added", "Added"), ("_created", "Added"), ("_updated", "Changed"), ("_removed", "Removed"),
           ("_deleted", "Removed"), ("_finished", "Finished"), ("_done", "Done:"), ("_logged", "Logged"),
-          ("_filed", "Filed"), ("_started", "Started"))
+          ("_filed", "Filed"), ("_started", "Started"), ("_sold", "Sold"))
 
 
 def _about(result, args) -> tuple[str, str]:
