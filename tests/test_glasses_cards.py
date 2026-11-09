@@ -3,7 +3,7 @@ The glasses cards for the apps that only had an ask (core/glasses_cards.py, 2026
 without a store and in a real household, shows the page assembler's facts in at most five short lines, flags what
 needs the person in amber and only what's broken in red, and lets the glasses change nothing but an open promise.
 Also the items added to cards that had panels (What's Next, Your Campaign, My Directions, Connections), the card
-faces, and long sentences split into a head and a detail.
+faces and their tiles, and long sentences split into a head and a detail.
 """
 
 import json
