@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MIA Homestead — Operations Dashboard</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --bg: #0A0E13;
+    --panel: rgba(16, 22, 29, 0.9);
+    --panel-solid: #10161D;
+    --grid: #1C2733;
+    --line: #2A3B4A;
+    --text: #C4D3DC;
+    --text-dim: #5C7180;
+    --text-faint: #3A4B58;
+    --ok: #4FD1C5;
+    --warning: #E8A33D;
+    --critical: #E85D5D;
+    --accent: #4FD1C5;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body { background: var(--bg); color: var(--text); }
+
+  body {
+    font-family: 'IBM Plex Mono', ui-monospace, 'SF Mono', Consolas, monospace;
+    padding: 28px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.4;
+  }
+
+  a { color: var(--ok); }
+  a:hover { color: #7BE0D6; }
+
+  code {
+    color: var(--ok);
+    background: var(--panel-solid);
+    padding: 2px 6px;
+    border-radius: 2px;
+    font-size: 0.95em;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 22px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    margin-top: 4px;
+    color: var(--text);
+  }
+  h1 span { color: var(--accent); }
+
+  .chips { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+  .chip {
+    font-size: 11px;
+    padding: 5px 10px;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    color: var(--text);
+    background: rgba(16, 22, 29, 0.6);
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+  }
+  .chip.critical { border-color: rgba(232, 93, 93, 0.5); color: var(--critical); }
+  .chip.ok { border-color: rgba(79, 209, 197, 0.4); color: var(--ok); }
+
+  .status-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-right: 8px;
+    flex-shrink: 0;
+  }
+  .status-ok { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+  .status-warning { background: var(--warning); box-shadow: 0 0 8px var(--warning); }
+  .status-critical { background: var(--critical); box-shadow: 0 0 8px var(--critical); }
+
+  /* Grid, with a JS-computed column count (see evenColumns() below) —
+     not CSS-only auto-fit, and not the flex+center fallback tried
+     first. auto-fit's greedy fill left a lone tile stranded alone on
+     a second row (9 readings -> 8 then 1); centering that leftover
+     tile was a worse look than just not having a ragged row at all
+     (found live 2026-09-03, both times). evenColumns() picks the
+     column count so a cell's tiles split into balanced rows (9 tiles
+     -> 5+4, not 8+1) for whatever sensor count a real cell actually
+     has, without hardcoding a number that would only be right for
+     one specific cell's mix. */
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+    gap: 12px;
+  }
+
+  .stat-tile {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    padding: 12px 14px;
+  }
+  .stat-tile.warning { border-color: rgba(232, 163, 61, 0.45); }
+  .stat-tile.critical { border-color: rgba(232, 93, 93, 0.5); }
+  .stat-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); }
+  .stat-tile.warning .stat-label { color: var(--warning); }
+  .stat-tile.critical .stat-label { color: var(--critical); }
+  .stat-value { font-size: 22px; font-weight: 600; margin-top: 4px; line-height: 1.1; }
+  .stat-tile.warning .stat-value { color: var(--warning); }
+  .stat-tile.critical .stat-value { color: var(--critical); }
+  .stat-value .unit { font-size: 12px; color: var(--text-dim); font-weight: 400; }
+  .stat-delta { font-size: 11px; color: var(--text-dim); margin-top: 3px; }
+  .sparkline-wrap { margin-top: 8px; height: 28px; }
+
+  /* Sections — the top-level category grouping. A section-header reads
+     as a real heading (bigger, brighter, full-width rule beneath it),
+     deliberately more prominent than .panel-title below, which is a
+     sub-heading for one panel inside a section, not a category of its
+     own. This distinction (category vs. panel) is the actual fix for
+     "everything looks the same weight." */
+  .section { margin-bottom: 28px; }
+  .section:last-of-type { margin-bottom: 0; }
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text);
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 8px;
+    margin-bottom: 14px;
+  }
+  .section-header .count {
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: normal;
+    text-transform: none;
+    color: var(--text-dim);
+  }
+  .section-header.attention { border-bottom-color: rgba(232, 163, 61, 0.4); color: var(--warning); }
+  .section-header.attention.critical { border-bottom-color: rgba(232, 93, 93, 0.5); color: var(--critical); }
+  .section-header.attention .count { color: inherit; opacity: 0.85; }
+
+  /* Hero tiles — the "status at a glance" row, deliberately larger than
+     the per-sensor stat-tiles below it so the 4 highest-level questions
+     (anything broken? battery? growing anything? anything to buy?) read
+     as more important than any single sensor reading, not equal to it. */
+  .hero-tiles { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+  .hero-tile { padding: 16px 18px; }
+  .hero-tile .stat-value { font-size: 26px; }
+
+  .cell-group { margin-bottom: 16px; }
+  .cell-group:last-child { margin-bottom: 0; }
+  .cell-group-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+  .cell-group-label .status-dot { margin-right: 6px; }
+
+  .grid-main {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+    align-items: start;
+  }
+  .col { display: flex; flex-direction: column; gap: 16px; }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    padding: 16px 18px;
+  }
+  .panel-title {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--grid);
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .panel-title .count { text-transform: none; letter-spacing: normal; font-size: 11px; }
+
+  .empty-state {
+    font-size: 12px;
+    color: var(--text-dim);
+    padding: 10px 0;
+    line-height: 1.6;
+  }
+
+  .row-item { padding: 9px 0; border-bottom: 1px solid var(--grid); font-size: 12px; }
+  .row-item:last-child { border-bottom: none; }
+  .row-item .line1 { font-weight: 600; }
+  .row-item .line2 { color: var(--text-dim); margin-top: 3px; font-size: 11px; }
+  .row-item .flex { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .row-item .flex-top { display: flex; align-items: flex-start; gap: 0; }
+
+  .badge {
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .badge-critical { color: var(--critical); background: rgba(232, 93, 93, 0.12); border: 1px solid rgba(232, 93, 93, 0.4); }
+  .badge-high { color: var(--warning); background: rgba(232, 163, 61, 0.12); border: 1px solid rgba(232, 163, 61, 0.4); }
+  .badge-medium { color: var(--text); background: rgba(196, 211, 220, 0.08); border: 1px solid var(--line); }
+  .badge-low { color: var(--text-dim); background: rgba(92, 113, 128, 0.12); border: 1px solid var(--line); }
+  .badge-running { color: var(--ok); background: rgba(79, 209, 197, 0.12); border: 1px solid rgba(79, 209, 197, 0.4); }
+  .badge-pending { color: var(--text-dim); background: rgba(92, 113, 128, 0.12); border: 1px solid var(--line); }
+  .repeat-count { color: var(--text-dim); font-weight: 400; }
+
+  .hero-stat { margin-bottom: 16px; }
+  .hero-stat .stat-value { font-size: 28px; }
+  .hero-stat .stat-delta.up { color: var(--ok); }
+  .hero-stat .stat-delta.down { color: var(--warning); }
+
+  .subhead {
+    border-top: 1px solid var(--grid);
+    padding-top: 12px;
+    border-bottom: none;
+    margin-bottom: 8px;
+  }
+
+  .yield-row { margin-bottom: 14px; }
+  .yield-row:last-of-type { margin-bottom: 0; }
+  .yield-row .flex { font-size: 12px; }
+  .yield-track { position: relative; height: 10px; background: var(--grid); border-radius: 2px; margin-top: 8px; }
+  .yield-fill { position: absolute; top: 0; left: 0; height: 100%; border-radius: 2px; }
+  .yield-fill.ok { background: var(--ok); }
+  .yield-fill.warning { background: var(--warning); }
+  .yield-target { position: absolute; top: -3px; width: 2px; height: 16px; background: var(--text); }
+  .yield-legend { font-size: 10px; color: var(--text-dim); margin-top: 10px; }
+
+  .revenue-line {
+    border-top: 1px solid var(--grid);
+    margin-top: 16px;
+    padding-top: 12px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+  }
+  .revenue-line .label { color: var(--text-dim); }
+  .revenue-line .value { font-weight: 600; }
+
+  .battery-row { display: flex; justify-content: space-between; align-items: baseline; }
+  .battery-row .label { font-size: 11px; color: var(--text-dim); }
+  .battery-row .value { font-size: 16px; font-weight: 600; }
+  .battery-track { margin-top: 6px; margin-bottom: 12px; }
+  .fault { color: var(--critical); font-weight: 600; }
+
+  .footer {
+    margin-top: 24px;
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    max-width: 680px;
+  }
+
+  #load-error {
+    max-width: 560px;
+    margin: 80px auto;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 13px;
+    line-height: 1.7;
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<div id="mh-nav-mount"></div>
+<script src="nav.js"></script>
+
+<div id="app" style="display:none;">
+
+  <div class="header">
+    <div>
+      <div class="eyebrow">MIA HOMESTEAD // OPERATIONS</div>
+      <h1><span>&gt;</span> Greenhouse Dashboard</h1>
+    </div>
+    <div class="chips" id="header-chips"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><span>Status at a Glance</span></div>
+    <div class="tiles hero-tiles" id="glance-tiles"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><span>Water Quality</span></div>
+    <div id="water-quality-body"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><span>Power &amp; Yield</span></div>
+    <div class="grid-main">
+      <div class="panel">
+        <div class="panel-title"><span>Power &amp; Battery</span></div>
+        <div id="power-body"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title"><span>Yield &amp; Harvest</span></div>
+        <div id="yield-body"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header" id="attention-header"><span>Needs Attention</span><span class="count" id="attention-count"></span></div>
+    <div class="grid-main">
+      <div class="col">
+        <div class="panel">
+          <div class="panel-title"><span>Open Alerts</span><span class="count" id="alerts-count"></span></div>
+          <div id="alerts-list"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title"><span>Active Experiments</span></div>
+          <div id="experiments-list"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title"><span>Inventory — Reorder Needed</span></div>
+        <div id="inventory-list"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title"><span>Maintenance — Open</span></div>
+        <div id="maintenance-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Live data from <code>viewer/dashboard_state.json</code>, regenerated by
+    <code>viewer/export_dashboard_state.py</code> (auto-run every control
+    cycle once wired into <code>main.py</code>, same as
+    <code>viewer/digital_twin.html</code>'s state export). Generated at
+    <span id="generated-at"></span>.
+  </div>
+
+</div>
+
+<div id="load-error">
+  Could not load <code>dashboard_state.json</code>.<br><br>
+  This page needs to be served over HTTP (browsers block local file fetches)
+  and the state file needs to exist.<br><br>
+  From the <code>mia-homestead</code> directory, run:<br><br>
+  <code>python3 viewer/export_dashboard_state.py --db mia_homestead.db</code><br>
+  <code>python3 -m http.server 8000</code><br><br>
+  Then open <code>http://localhost:8000/viewer/dashboard.html</code>
+</div>
+
+<script>
+const SENSOR_LABELS = {
+  ph: "Water pH", ec: "EC", temp_water: "Water Temp", temp_air: "Air Temp",
+  humidity: "Humidity", level: "Water Level", do: "Dissolved O2",
+  flow: "Flow", light: "Light", co2: "CO2",
+};
+
+const PRIORITY_BADGE = { critical: "badge-critical", high: "badge-high", medium: "badge-medium", low: "badge-low" };
+const EXPERIMENT_BADGE = { running: "badge-running", approved: "badge-running", proposed: "badge-pending" };
+const EXPERIMENT_LABEL = { running: "Running", approved: "Approved", proposed: "Awaiting approval" };
+
+function el(tag, attrs, children) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === "class") e.className = v;
+    else if (k === "html") e.innerHTML = v;
+    else e.setAttribute(k, v);
+  }
+  for (const c of children || []) {
+    if (c == null) continue;
+    e.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+  }
+  return e;
+}
+
+// Picks a column count so a tile row splits as evenly as possible —
+// 9 tiles at a width that naturally fits 8/row becomes 5+4, not 8+1.
+// Re-applied on resize (see the listener near the bottom of this file)
+// since "how many naturally fit" depends on the container's real
+// current width, not just the tile count.
+const TILE_TRACKED = []; // { el, count, minWidth } for every .tiles container, so resize can redo all of them
+function applyEvenColumns(container, count, minWidth = 148, gap = 12) {
+  if (count === 0) return;
+  const width = container.clientWidth || container.parentElement?.clientWidth || 0;
+  const naturalMaxCols = Math.max(1, Math.floor((width + gap) / (minWidth + gap)));
+  const cols = Math.min(count, naturalMaxCols);
+  const rows = Math.ceil(count / cols);
+  const evenCols = Math.ceil(count / rows);
+  container.style.gridTemplateColumns = `repeat(${evenCols}, 1fr)`;
+}
+function trackEvenColumns(container, count, minWidth = 148) {
+  TILE_TRACKED.push({ el: container, count, minWidth });
+  applyEvenColumns(container, count, minWidth);
+}
+window.addEventListener("resize", () => {
+  for (const t of TILE_TRACKED) applyEvenColumns(t.el, t.count, t.minWidth);
+});
+
+function timeAgo(ts) {
+  if (!ts) return "unknown";
+  const then = new Date(ts.replace(" ", "T") + "Z").getTime();
+  const diffMin = Math.round((Date.now() - then) / 60000);
+  if (diffMin < 1) return "just now";
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHr = Math.round(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h ago`;
+  return `${Math.round(diffHr / 24)}d ago`;
+}
+
+function sparkline(points, color) {
+  if (!points || points.length < 2) {
+    return el("div", { style: "font-size:10px; color:var(--text-dim);" }, ["not enough history yet"]);
+  }
+  const min = Math.min(...points), max = Math.max(...points);
+  const range = max - min || 1;
+  const w = 100, h = 28, pad = 3;
+  const coords = points.map((v, i) => {
+    const x = (i / (points.length - 1)) * w;
+    const y = h - pad - ((v - min) / range) * (h - pad * 2);
+    return [x, y];
+  });
+  const pointsAttr = coords.map(([x, y]) => `${x},${y}`).join(" ");
+  const [lx, ly] = coords[coords.length - 1];
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+  svg.setAttribute("width", "100%");
+  svg.setAttribute("height", h);
+  svg.setAttribute("preserveAspectRatio", "none");
+  const poly = document.createElementNS(svg.namespaceURI, "polyline");
+  poly.setAttribute("points", pointsAttr);
+  poly.setAttribute("fill", "none");
+  poly.setAttribute("stroke", color);
+  poly.setAttribute("stroke-width", "2");
+  poly.setAttribute("stroke-linecap", "round");
+  poly.setAttribute("stroke-linejoin", "round");
+  svg.appendChild(poly);
+  const dot = document.createElementNS(svg.namespaceURI, "circle");
+  dot.setAttribute("cx", lx); dot.setAttribute("cy", ly); dot.setAttribute("r", "2.5");
+  dot.setAttribute("fill", color);
+  svg.appendChild(dot);
+  return svg;
+}
+
+function renderHeader(data) {
+  const cellNames = data.cells.map(c => c.name).join(", ") || "No cells configured";
+  const chips = document.getElementById("header-chips");
+  chips.appendChild(el("div", { class: "chip" }, [cellNames]));
+  chips.appendChild(el("div", { class: "chip" }, [`Last sync ${timeAgo(data.generated_at)}`]));
+
+  const critical = data.alerts.filter(a => a.severity === "critical").length;
+  const warning = data.alerts.filter(a => a.severity === "warning").length;
+  if (critical || warning) {
+    const parts = [];
+    if (critical) parts.push(`${critical} critical`);
+    if (warning) parts.push(`${warning} warning`);
+    chips.appendChild(el("div", { class: "chip critical" }, [
+      el("span", { class: "status-dot status-critical" }, []),
+      parts.join(" · "),
+    ]));
+  } else {
+    chips.appendChild(el("div", { class: "chip ok" }, [
+      el("span", { class: "status-dot status-ok" }, []),
+      "All clear",
+    ]));
+  }
+  document.getElementById("generated-at").textContent = data.generated_at || "unknown";
+}
+
+function sensorTile(r) {
+  const stale = r.is_stale;
+  const color = stale ? "#E8A33D" : "#4FD1C5";
+  const label = SENSOR_LABELS[r.type] || r.type;
+  return el("div", { class: "stat-tile" + (stale ? " warning" : "") }, [
+    el("div", { class: "stat-label" }, [label]),
+    el("div", { class: "stat-value" }, [
+      String(Math.round(r.value * 100) / 100),
+      " ",
+      el("span", { class: "unit" }, [r.unit || ""]),
+    ]),
+    el("div", { class: "stat-delta" }, [stale ? "Stale reading" : timeAgo(r.timestamp)]),
+    el("div", { class: "sparkline-wrap" }, [sparkline(r.trend, color)]),
+  ]);
+}
+
+function renderWaterQuality(data) {
+  // One labeled group per cell rather than one flat row of tiles --
+  // with two+ cells, a flat row read as one undifferentiated wall of
+  // near-identical tiles with no way to tell which cell was which
+  // (the earlier fix prefixed every tile's own label instead; grouping
+  // is the more legible fix, since the cell only needs to be said once).
+  const wrap = document.getElementById("water-quality-body");
+  const anyReadings = data.cells.some(c => c.readings.length > 0);
+  if (!anyReadings) {
+    wrap.appendChild(el("div", { class: "empty-state" }, ["No sensor readings yet — run the simulator or connect real hardware."]));
+    return;
+  }
+  for (const cell of data.cells) {
+    if (cell.readings.length === 0) continue;
+    const worstStale = cell.readings.some(r => r.is_stale);
+    const cellTiles = el("div", { class: "tiles" }, cell.readings.map(sensorTile));
+    wrap.appendChild(el("div", { class: "cell-group" }, [
+      el("div", { class: "cell-group-label" }, [
+        el("span", { class: "status-dot " + (worstStale ? "status-warning" : "status-ok") }, []),
+        cell.name,
+      ]),
+      cellTiles,
+    ]));
+    trackEvenColumns(cellTiles, cell.readings.length);
+  }
+}
+
+function renderGlanceTiles(data) {
+  // The 4 highest-level questions a person actually wants answered in
+  // two seconds: is anything broken, is there power, is anything
+  // growing, is there anything to buy. Everything else on the page is
+  // detail in service of one of these.
+  const wrap = document.getElementById("glance-tiles");
+
+  const critical = data.alerts.filter(a => a.severity === "critical").length;
+  const warning = data.alerts.filter(a => a.severity === "warning").length;
+  let statusClass = "ok", statusText = "All Clear";
+  if (critical) { statusClass = "critical"; statusText = `${critical} Critical`; }
+  else if (warning) { statusClass = "warning"; statusText = `${warning} Warning${warning > 1 ? "s" : ""}`; }
+  wrap.appendChild(el("div", { class: "stat-tile hero-tile" + (statusClass !== "ok" ? " " + statusClass : "") }, [
+    el("div", { class: "stat-label" }, ["System Status"]),
+    el("div", { class: "stat-value" }, [statusText]),
+    el("div", { class: "stat-delta" }, [critical || warning ? "see Needs Attention below" : "no open alerts"]),
+  ]));
+
+  const battery = data.power.find(p => p.source === "battery" && p.battery_soc_percent != null);
+  wrap.appendChild(el("div", { class: "stat-tile hero-tile" + (battery && battery.battery_soc_percent < 30 ? " warning" : "") }, [
+    el("div", { class: "stat-label" }, ["Battery"]),
+    el("div", { class: "stat-value" }, battery ? [`${battery.battery_soc_percent}`, el("span", { class: "unit" }, ["%"])] : ["—"]),
+    el("div", { class: "stat-delta" }, [battery ? "" : "no power data yet"]),
+  ]));
+
+  wrap.appendChild(el("div", { class: "stat-tile hero-tile" }, [
+    el("div", { class: "stat-label" }, ["Harvested This Week"]),
+    el("div", { class: "stat-value" }, [`${Math.round(data.yield.this_week_total * 10) / 10}`, el("span", { class: "unit" }, [" kg"])]),
+    el("div", { class: "stat-delta" }, [""]),
+  ]));
+
+  const pendingCount = data.pending_orders.filter(o => o.status === "proposed").length;
+  const pendingTotal = data.low_stock
+    .filter(item => data.pending_orders.some(o => o.item_id === item.id && o.status === "proposed"))
+    .reduce((sum, item) => sum + (item.unit_cost || 0), 0);
+  wrap.appendChild(el("div", { class: "stat-tile hero-tile" + (pendingCount ? " warning" : "") }, [
+    el("div", { class: "stat-label" }, ["Awaiting Approval"]),
+    el("div", { class: "stat-value" }, [pendingCount ? `${pendingCount}` : "0"]),
+    el("div", { class: "stat-delta" }, [pendingCount ? `~$${pendingTotal.toFixed(2)} total` : "nothing pending"]),
+  ]));
+
+  trackEvenColumns(wrap, wrap.children.length, 180);
+}
+
+function renderAlerts(data) {
+  const list = document.getElementById("alerts-list");
+  document.getElementById("alerts-count").textContent = `${data.alerts.length} open`;
+  if (data.alerts.length === 0) {
+    list.appendChild(el("div", { class: "empty-state" }, ["No open alerts."]));
+    return;
+  }
+  for (const a of data.alerts) {
+    const dotClass = "status-" + a.severity;
+    const repeat = a.repeat_count > 1 ? ` (×${a.repeat_count})` : "";
+    list.appendChild(el("div", { class: "row-item" }, [
+      el("div", { class: "flex-top" }, [
+        el("span", { class: "status-dot " + dotClass, style: "margin-top:4px;" }, []),
+        el("div", {}, [
+          el("div", { class: "line1" }, [a.message + repeat]),
+          el("div", { class: "line2" }, [`${a.source} · ${timeAgo(a.last_seen || a.timestamp)} · ${a.acknowledged ? "acknowledged" : "unacknowledged"}`]),
+        ]),
+      ]),
+    ]));
+  }
+}
+
+function renderExperiments(data) {
+  const list = document.getElementById("experiments-list");
+  if (data.experiments.length === 0) {
+    list.appendChild(el("div", { class: "empty-state" }, ["No active experiments."]));
+    return;
+  }
+  for (const e of data.experiments) {
+    const delta = `${e.variable_changed}: ${e.baseline_value} → ${e.test_value}`;
+    list.appendChild(el("div", { class: "row-item" }, [
+      el("div", { class: "flex" }, [
+        el("span", { class: "line1" }, [e.hypothesis]),
+        el("span", { class: "badge " + (EXPERIMENT_BADGE[e.status] || "badge-pending") }, [EXPERIMENT_LABEL[e.status] || e.status]),
+      ]),
+      el("div", { class: "line2" }, [delta]),
+    ]));
+  }
+}
+
+function renderYield(data) {
+  const body = document.getElementById("yield-body");
+  const y = data.yield;
+  const delta = y.this_week_total - y.prior_week_total;
+  const deltaClass = delta >= 0 ? "up" : "down";
+  const deltaText = y.prior_week_total > 0
+    ? `${delta >= 0 ? "+" : ""}${Math.round(delta * 10) / 10} kg vs last week`
+    : "no prior week data yet";
+
+  body.appendChild(el("div", { class: "hero-stat" }, [
+    el("div", { class: "stat-label" }, ["Harvested this week"]),
+    el("div", { class: "stat-value" }, [`${Math.round(y.this_week_total * 10) / 10} `, el("span", { class: "unit" }, ["kg"])]),
+    el("div", { class: "stat-delta " + deltaClass }, [deltaText]),
+  ]));
+
+  if (data.plantings.length > 0) {
+    body.appendChild(el("div", { class: "panel-title subhead" }, [el("span", {}, ["Expected vs Actual"])]));
+    for (const p of data.plantings) {
+      if (!p.expected_amount) continue;
+      const pct = Math.min(100, (p.actual_amount_so_far / p.expected_amount) * 100);
+      const fillClass = p.actual_amount_so_far >= p.expected_amount ? "ok" : "warning";
+      body.appendChild(el("div", { class: "yield-row" }, [
+        el("div", { class: "flex" }, [
+          el("span", {}, [p.species || p.grow_bed_name]),
+          el("span", { style: "color:var(--text-dim);" }, [
+            `${p.actual_amount_so_far} ${p.expected_unit || ""} `,
+            el("span", { style: "color:var(--text-faint);" }, [`/ target ${p.expected_amount} ${p.expected_unit || ""}`]),
+          ]),
+        ]),
+        el("div", { class: "yield-track" }, [
+          el("div", { class: "yield-fill " + fillClass, style: `width:${pct}%;` }, []),
+          el("div", { class: "yield-target", style: "left:100%;" }, []),
+        ]),
+      ]));
+    }
+    body.appendChild(el("div", { class: "yield-legend" }, ["actual so far   | target"]));
+  }
+
+  body.appendChild(el("div", { class: "revenue-line" }, [
+    el("span", { class: "label" }, ["Revenue MTD"]),
+    el("span", { class: "value" }, [`$${data.revenue_mtd.toFixed(2)}`]),
+  ]));
+}
+
+function renderPower(data) {
+  const body = document.getElementById("power-body");
+  if (!data.power || data.power.length === 0) {
+    body.appendChild(el("div", { class: "empty-state" }, [
+      "No power telemetry yet — no driver is wired up to power_telemetry ",
+      "(see README \"not yet built\" #6, battery sizing). This panel will ",
+      "populate automatically once one exists.",
+    ]));
+    return;
+  }
+  const bySource = {};
+  for (const row of data.power) {
+    if (!bySource[row.source]) bySource[row.source] = row;
+  }
+  const battery = bySource["battery"];
+  if (battery && battery.battery_soc_percent != null) {
+    body.appendChild(el("div", { class: "battery-row" }, [
+      el("span", { class: "label" }, ["Battery"]),
+      el("span", { class: "value" }, [`${battery.battery_soc_percent}%`]),
+    ]));
+    const fillClass = battery.battery_soc_percent < 30 ? "warning" : "ok";
+    body.appendChild(el("div", { class: "yield-track battery-track" }, [
+      el("div", { class: "yield-fill " + fillClass, style: `width:${battery.battery_soc_percent}%;` }, []),
+    ]));
+  }
+  for (const [source, row] of Object.entries(bySource)) {
+    if (source === "battery") continue;
+    body.appendChild(el("div", { class: "row-item" }, [
+      el("div", { class: "flex" }, [
+        el("span", { style: "color:var(--text-dim);" }, [source]),
+        el("span", {}, [`${row.watts != null ? row.watts + "W" : "—"}`]),
+      ]),
+    ]));
+  }
+}
+
+function renderInventory(data) {
+  const list = document.getElementById("inventory-list");
+  if (data.low_stock.length === 0) {
+    list.appendChild(el("div", { class: "empty-state" }, ["Nothing below reorder threshold."]));
+    return;
+  }
+  const orderByItem = {};
+  for (const o of data.pending_orders) orderByItem[o.item_id] = o.status;
+  for (const item of data.low_stock) {
+    const orderStatus = orderByItem[item.id];
+    const badgeText = orderStatus === "ordered" ? "Ordered" : orderStatus === "proposed" ? "Awaiting approval" : "Not yet queued";
+    const sourcingParts = [];
+    if (item.supplier) sourcingParts.push(item.supplier);
+    if (item.unit_cost != null) sourcingParts.push(`~$${Number(item.unit_cost).toFixed(2)}/${item.unit}`);
+    const rowChildren = [
+      el("div", { class: "flex" }, [
+        el("span", {}, [item.name]),
+        el("span", { class: "badge badge-pending" }, [badgeText]),
+      ]),
+      el("div", { class: "line2" }, [`${item.quantity_on_hand} ${item.unit} on hand · threshold ${item.reorder_threshold} ${item.unit}`]),
+    ];
+    if (sourcingParts.length || item.supplier_url) {
+      const sourcingLine = el("div", { class: "line2" }, []);
+      if (sourcingParts.length) sourcingLine.appendChild(document.createTextNode(sourcingParts.join("  ·  ")));
+      if (item.supplier_url) {
+        if (sourcingParts.length) sourcingLine.appendChild(document.createTextNode("  ·  "));
+        sourcingLine.appendChild(el("a", { href: item.supplier_url, target: "_blank", rel: "noopener noreferrer" }, ["source link"]));
+      }
+      rowChildren.push(sourcingLine);
+    }
+    list.appendChild(el("div", { class: "row-item" }, rowChildren));
+  }
+}
+
+function renderMaintenance(data) {
+  const list = document.getElementById("maintenance-list");
+  if (data.maintenance.length === 0) {
+    list.appendChild(el("div", { class: "empty-state" }, ["No open maintenance tasks."]));
+    return;
+  }
+  for (const t of data.maintenance) {
+    list.appendChild(el("div", { class: "row-item" }, [
+      el("div", { class: "flex" }, [
+        el("span", {}, [t.title]),
+        el("span", { class: "badge " + (PRIORITY_BADGE[t.priority] || "badge-medium") }, [t.priority]),
+      ]),
+      el("div", { class: "line2" }, [t.due_date ? `Due ${t.due_date}` : "No due date set"]),
+    ]));
+  }
+}
+
+function renderAttentionHeader(data) {
+  // The section header itself carries the same urgency signal the old
+  // per-panel badges only showed once you were already looking at that
+  // one panel -- amber/red here means "something in this whole zone
+  // needs you" before reading any of the panels inside it.
+  const header = document.getElementById("attention-header");
+  const count = document.getElementById("attention-count");
+  const critical = data.alerts.filter(a => a.severity === "critical").length;
+  const warning = data.alerts.filter(a => a.severity === "warning").length;
+  const pending = data.pending_orders.filter(o => o.status === "proposed").length;
+  const maint = data.maintenance.length;
+  const total = data.alerts.length + pending + maint;
+  count.textContent = total ? `${total} item${total > 1 ? "s" : ""}` : "all clear";
+  header.classList.remove("attention", "critical");
+  if (critical) header.classList.add("attention", "critical");
+  else if (total) header.classList.add("attention");
+}
+
+fetch("dashboard_state.json")
+  .then(r => { if (!r.ok) throw new Error("not found"); return r.json(); })
+  .then(data => {
+    document.getElementById("app").style.display = "block";
+    renderHeader(data);
+    renderGlanceTiles(data);
+    renderWaterQuality(data);
+    renderAttentionHeader(data);
+    renderAlerts(data);
+    renderExperiments(data);
+    renderYield(data);
+    renderPower(data);
+    renderInventory(data);
+    renderMaintenance(data);
+  })
+  .catch(() => {
+    document.getElementById("load-error").style.display = "block";
+  });
+</script>
+
+</body>
+</html>

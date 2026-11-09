@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MIA Homestead — Activity Journal</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --bg: #0A0E13;
+    --panel: rgba(16, 22, 29, 0.9);
+    --panel-solid: #10161D;
+    --grid: #1C2733;
+    --line: #2A3B4A;
+    --text: #C4D3DC;
+    --text-dim: #5C7180;
+    --text-faint: #3A4B58;
+    --ok: #4FD1C5;
+    --warning: #E8A33D;
+    --critical: #E85D5D;
+    --accent: #4FD1C5;
+
+    /* Journal category colors — a fixed hue per category so the feed
+       reads by shape/color without re-reading every label, same idea
+       as the dashboard's severity dots but one color per DOMAIN here
+       rather than per severity. */
+    --cat-system: #5C9EE8;
+    --cat-dosing: #4FD1C5;
+    --cat-alert: #E85D5D;
+    --cat-experiment: #B57EDC;
+    --cat-maintenance: #E8A33D;
+    --cat-yield: #6FCF6F;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--text); }
+  body {
+    font-family: 'IBM Plex Mono', ui-monospace, 'SF Mono', Consolas, monospace;
+    padding: 28px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.4;
+  }
+
+  code {
+    color: var(--ok);
+    background: var(--panel-solid);
+    padding: 2px 6px;
+    border-radius: 2px;
+    font-size: 0.95em;
+  }
+
+  .header { margin-bottom: 22px; }
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    margin-top: 4px;
+    color: var(--text);
+  }
+  h1 span { color: var(--accent); }
+
+  .status-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-right: 8px;
+    flex-shrink: 0;
+  }
+  .status-ok { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+  .status-warning { background: var(--warning); box-shadow: 0 0 8px var(--warning); }
+  .status-critical { background: var(--critical); box-shadow: 0 0 8px var(--critical); }
+  .status-off { background: var(--text-dim); }
+
+  .section { margin-bottom: 28px; }
+  .section:last-of-type { margin-bottom: 0; }
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text);
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 8px;
+    margin-bottom: 14px;
+  }
+  .section-header .count {
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: normal;
+    text-transform: none;
+    color: var(--text-dim);
+  }
+
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+  }
+  .stat-tile {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    padding: 14px 16px;
+  }
+  .stat-tile.critical { border-color: rgba(232, 93, 93, 0.5); }
+  .stat-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); }
+  .stat-value { font-size: 20px; font-weight: 600; margin-top: 4px; line-height: 1.2; }
+  .stat-value.critical { color: var(--critical); }
+  .stat-delta { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    padding: 16px 18px;
+  }
+
+  .empty-state { font-size: 12px; color: var(--text-dim); padding: 10px 0; line-height: 1.6; }
+
+  /* What's Next — a simple ordered list, soonest first. */
+  .next-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--grid);
+    font-size: 12px;
+  }
+  .next-item:last-child { border-bottom: none; }
+  .next-item .what { }
+  .next-item .when { color: var(--text-dim); white-space: nowrap; }
+  .kind-badge {
+    font-size: 9px;
+    padding: 1px 6px;
+    border-radius: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-right: 8px;
+    border: 1px solid var(--line);
+    color: var(--text-dim);
+  }
+
+  /* Journal feed — a real vertical timeline, not a flat list. Each
+     entry gets a category-colored dot on a connecting rail, so the
+     eye reads the RHYTHM of activity (color clusters, gaps, bursts)
+     before reading a single word — this is the "more visual data"
+     the plain reused row-item pattern from the dashboard doesn't give. */
+  .feed { position: relative; padding-left: 22px; }
+  .feed::before {
+    content: "";
+    position: absolute;
+    left: 4px; top: 6px; bottom: 6px;
+    width: 1px;
+    background: var(--grid);
+  }
+  .feed-entry { position: relative; padding: 0 0 20px 14px; }
+  .feed-entry:last-child { padding-bottom: 0; }
+  .feed-dot {
+    position: absolute;
+    left: -22px; top: 3px;
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    border: 2px solid var(--bg);
+    box-shadow: 0 0 0 1px var(--line);
+  }
+  .feed-time {
+    font-size: 10px;
+    color: var(--text-faint);
+    letter-spacing: 0.04em;
+  }
+  .feed-title { font-size: 13px; font-weight: 600; margin-top: 2px; }
+  .feed-detail { font-size: 12px; color: var(--text-dim); margin-top: 3px; line-height: 1.5; }
+  .feed-meta { font-size: 10px; color: var(--text-faint); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 10px; color: var(--text-dim); margin-top: 14px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  .footer {
+    margin-top: 24px;
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    max-width: 680px;
+  }
+
+  #load-error {
+    max-width: 560px;
+    margin: 80px auto;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 13px;
+    line-height: 1.7;
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<div id="mh-nav-mount"></div>
+<script src="nav.js"></script>
+
+<div id="app" style="display:none;">
+
+  <div class="header">
+    <div class="eyebrow">MIA HOMESTEAD // ACTIVITY JOURNAL</div>
+    <h1><span>&gt;</span> What It's Doing, and Why</h1>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><span>Right Now</span></div>
+    <div class="tiles" id="status-tiles"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><span>What's Next</span><span class="count" id="next-count"></span></div>
+    <div class="panel" id="next-panel"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><span>Journal</span><span class="count" id="journal-count"></span></div>
+    <div class="panel">
+      <div class="feed" id="journal-feed"></div>
+      <div class="legend" id="journal-legend"></div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Aggregated read-only from dosing, alert, experiment, maintenance and yield
+    records that already carry a real rationale — see
+    <code>core/activity_journal.py</code>. Live data from
+    <code>viewer/journal_state.json</code>, regenerated every control cycle by
+    <code>viewer/export_journal_state.py</code>. Generated at
+    <span id="generated-at"></span>.
+  </div>
+
+</div>
+
+<div id="load-error">
+  Could not load <code>journal_state.json</code>.<br><br>
+  This page needs to be served over HTTP (browsers block local file fetches)
+  and the state file needs to exist.<br><br>
+  From the <code>mia-homestead</code> directory, run:<br><br>
+  <code>python3 viewer/export_journal_state.py --db mia_homestead.db</code><br>
+  <code>python3 -m http.server 8000</code><br><br>
+  Then open <code>http://localhost:8000/viewer/journal.html</code>
+</div>
+
+<script>
+const CATEGORY_COLOR = {
+  system: "var(--cat-system)",
+  dosing: "var(--cat-dosing)",
+  alert: "var(--cat-alert)",
+  experiment: "var(--cat-experiment)",
+  maintenance: "var(--cat-maintenance)",
+  yield: "var(--cat-yield)",
+};
+const CATEGORY_LABEL = {
+  system: "System", dosing: "Dosing", alert: "Alert",
+  experiment: "Experiment", maintenance: "Maintenance", yield: "Yield",
+};
+const KIND_LABEL = { maintenance: "Maintenance", experiment: "Experiment", deploy: "Deploy", report: "Report" };
+
+function el(tag, attrs, children) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === "class") e.className = v;
+    else if (k === "style") e.setAttribute("style", v);
+    else e.setAttribute(k, v);
+  }
+  for (const c of children || []) {
+    if (c == null) continue;
+    e.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+  }
+  return e;
+}
+
+function timeAgo(ts) {
+  if (!ts) return "unknown";
+  const then = new Date(ts.replace(" ", "T") + "Z").getTime();
+  const diffMin = Math.round((Date.now() - then) / 60000);
+  if (diffMin < 1) return "just now";
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHr = Math.round(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h ago`;
+  return `${Math.round(diffHr / 24)}d ago`;
+}
+
+function timeUntil(ts) {
+  if (!ts) return "unknown";
+  const then = new Date(ts.replace(" ", "T") + (ts.includes("Z") ? "" : "Z")).getTime();
+  const diffMin = Math.round((then - Date.now()) / 60000);
+  if (diffMin < 0) return "overdue";
+  if (diffMin < 60) return `in ${diffMin}m`;
+  const diffHr = Math.round(diffMin / 60);
+  if (diffHr < 24) return `in ${diffHr}h`;
+  return `in ${Math.round(diffHr / 24)}d`;
+}
+
+function renderStatus(status) {
+  const wrap = document.getElementById("status-tiles");
+
+  wrap.appendChild(el("div", { class: "stat-tile" + (status.control_loop_alive ? "" : " critical") }, [
+    el("div", { class: "stat-label" }, ["Control Loop"]),
+    el("div", { class: "stat-value" + (status.control_loop_alive ? "" : " critical") }, [
+      el("span", { class: "status-dot " + (status.control_loop_alive ? "status-ok" : "status-off") }, []),
+      status.control_loop_alive ? "Running" : "Not Running",
+    ]),
+    el("div", { class: "stat-delta" }, [
+      status.last_heartbeat ? `last heartbeat ${timeAgo(status.last_heartbeat)}` : "no heartbeat recorded yet",
+    ]),
+  ]));
+
+  wrap.appendChild(el("div", { class: "stat-tile" }, [
+    el("div", { class: "stat-label" }, ["Monitoring"]),
+    el("div", { class: "stat-value" }, [status.monitored_cells.length ? `${status.monitored_cells.length} cell(s)` : "—"]),
+    el("div", { class: "stat-delta" }, [status.monitored_cells.join(", ") || "no cells configured"]),
+  ]));
+
+  const action = status.most_recent_action;
+  wrap.appendChild(el("div", { class: "stat-tile" }, [
+    el("div", { class: "stat-label" }, ["Most Recent Action"]),
+    el("div", { class: "stat-value", style: "font-size:14px;" }, [
+      action ? (action.kind === "dose" ? `Dosed ${action.dose_type}` : action.action.replace(/_/g, " ")) : "none yet",
+    ]),
+    el("div", { class: "stat-delta" }, [action ? timeAgo(action.timestamp) : ""]),
+  ]));
+}
+
+function renderNext(upcoming) {
+  document.getElementById("next-count").textContent = upcoming.length ? `${upcoming.length} scheduled` : "";
+  const panel = document.getElementById("next-panel");
+  if (upcoming.length === 0) {
+    panel.appendChild(el("div", { class: "empty-state" }, [
+      "Nothing currently scheduled — no maintenance due, no experiment running, no active watch.",
+    ]));
+    return;
+  }
+  for (const u of upcoming) {
+    panel.appendChild(el("div", { class: "next-item" }, [
+      el("span", { class: "what" }, [
+        el("span", { class: "kind-badge" }, [KIND_LABEL[u.kind] || u.kind]),
+        u.what,
+      ]),
+      el("span", { class: "when" }, [timeUntil(u.when)]),
+    ]));
+  }
+}
+
+function renderJournal(journal) {
+  document.getElementById("journal-count").textContent = `${journal.length} entries`;
+  const feed = document.getElementById("journal-feed");
+  if (journal.length === 0) {
+    feed.appendChild(el("div", { class: "empty-state" }, ["No activity recorded in this window yet."]));
+    return;
+  }
+  for (const entry of journal) {
+    const color = CATEGORY_COLOR[entry.category] || "var(--text-dim)";
+    feed.appendChild(el("div", { class: "feed-entry" }, [
+      el("span", { class: "feed-dot", style: `background:${color};` }, []),
+      el("div", { class: "feed-time" }, [entry.timestamp]),
+      el("div", { class: "feed-title" }, [entry.title]),
+      entry.detail ? el("div", { class: "feed-detail" }, [entry.detail]) : null,
+      el("div", { class: "feed-meta" }, [`${CATEGORY_LABEL[entry.category] || entry.category} · ${entry.source}`]),
+    ]));
+  }
+
+  const legend = document.getElementById("journal-legend");
+  const usedCategories = [...new Set(journal.map(e => e.category))];
+  for (const cat of usedCategories) {
+    legend.appendChild(el("div", { class: "legend-item" }, [
+      el("span", { class: "legend-dot", style: `background:${CATEGORY_COLOR[cat] || "var(--text-dim)"};` }, []),
+      CATEGORY_LABEL[cat] || cat,
+    ]));
+  }
+}
+
+fetch("journal_state.json")
+  .then(r => { if (!r.ok) throw new Error("not found"); return r.json(); })
+  .then(data => {
+    document.getElementById("app").style.display = "block";
+    renderStatus(data.current_status);
+    renderNext(data.upcoming);
+    renderJournal(data.journal);
+    document.getElementById("generated-at").textContent = data.generated_at || "unknown";
+  })
+  .catch(() => {
+    document.getElementById("load-error").style.display = "block";
+  });
+</script>
+
+</body>
+</html>

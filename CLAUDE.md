@@ -75,6 +75,18 @@ beyond the `ModuleBase` contract. This is deliberate and enforced by
 convention, not tooling — preserve it when adding code. Full reasoning in
 `docs/ARCHITECTURE.md`.
 
+### homestead/ — MIA Homestead, part of her (DEC-0145, 2026-11-08)
+
+The greenhouse/aquaponics control system, simulation-first, merged in from
+its sibling repo with full history. It is self-contained: its own
+`homestead/CLAUDE.md` (read it before touching anything there), its own
+`requirements.txt`, database and scenario suite, run from inside
+`homestead/` (its `core/` is its own package, not MIA's). MIA's `core/`
+never imports it; the two talk through snapshots
+(`core/homestead_manager.py`). `pytest.ini` keeps MIA's suite to `tests/`
+so the two `core` packages never collide. Its rsync sync scenarios need
+rsync, so on Windows they fail (3 of 245); on Linux and the Pi they pass.
+
 ### AppContext — the one shared object
 
 `core/app_context.py` is a dataclass bundling shared services

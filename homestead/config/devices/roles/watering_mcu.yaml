@@ -1,0 +1,32 @@
+# MIA Homestead — Device Role: Watering MCU
+# This file IS the setup instructions. Edit this, not code, when the
+# physical setup changes (a new port, a different mounting spot, etc).
+
+role: watering_mcu
+display_name: "Watering Controller"
+description: >
+  Controls the irrigation valve/pump for a grow bed. Runs scheduled and
+  moisture-triggered watering pulses.
+
+port_label: "PORT 3 — WATERING"
+mount_location: "Mount on the bracket above Cell A's grow bed, near the irrigation manifold."
+default_cell_id: 1
+
+controls:
+  - actuator_type: valve
+    actuator_name: irrigation_valve
+    safe_default_state: "off"
+    relay_channel: 1
+    wiring_rationale: >
+      Single valve on this MCU — channel 1, standard default position.
+
+setup_instructions: |
+  1. Find the MCU labeled "WATERING" in the parts bin (yellow label).
+  2. Plug it into PORT 3 on the Pi expansion hub.
+  3. Mount it on the bracket above Cell A's grow bed, near the
+     irrigation manifold.
+  4. Power it on — MIA Homestead detects it automatically within a
+     few seconds.
+  5. Once detected, the system confirms pairing on its own — no
+     action needed from you. If it doesn't pair within a minute,
+     double-check the connection and try again.

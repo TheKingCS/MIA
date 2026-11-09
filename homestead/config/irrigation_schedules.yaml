@@ -1,0 +1,17 @@
+# MIA Homestead — Irrigation Schedules
+# Which grow beds get SCHEDULED flood/drain irrigation, and how often.
+# Only needed for a flood/drain media bed — a DWC/NFT bed's continuous
+# circulation (the always-on circulation_pump) already handles water
+# delivery and never needs this. Real physical knowledge, not inferred
+# from grow_beds.media_type — edit this file, not code, for a physical
+# change (same precedent as config/plumbing.yaml).
+#
+# An empty schedules list is valid — a build with no flood/drain beds
+# needs nothing here.
+
+schedules:
+  - grow_bed_name: "Bed A1"
+    cell_id: 1
+    actuator_name: irrigation_valve
+    interval_minutes: 120   # flood every 2 hours — standard ebb/flow starting point, not calibrated against a real bed yet
+    pulse_seconds: 300      # 5 minutes open — starting point, tune once real flow rate is known

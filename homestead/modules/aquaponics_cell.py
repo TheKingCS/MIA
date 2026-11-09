@@ -1,0 +1,777 @@
+"""
+MIA Homestead — Aquaponics Cell Module
+v0.1
+
+Concrete implementation of MiaHomesteadModule for a single aquaponics
+cell (fish tank + grow bed + shared biofilter). Handles pH and EC
+correction dosing within the hard limits enforced by the base contract.
+
+Placeholder target ranges are passed in via config/modules.yaml — tune
+these once fish/plant species are finalized. Tilapia + leafy greens is
+a forgiving starting combo (pH 6.6-7.2, EC 800-1500 uS/cm is a
+reasonable general range, not species-specific gospel).
+"""
+
+import logging
+from datetime import datetime, timedelta
+
+from contracts.mia_homestead_contract import (
+    ActuatorCommand,
+    MiaHomesteadModule,
+    SensorReading,
+    TriggerSource,
+)
+
+logger = logging.getLogger("mia_homestead.aquaponics_cell")
+
+# Dissolved oxygen thresholds (mg/L) — standard warmwater aquaculture
+# reference points, not species-tuned. DO crashes are the leading real
+# cause of catastrophic fish loss (docs/HARDWARE_BOM_FULL_TIERS.md,
+# Fork 3 finding, 2026-08-31) — this is alert-only, not a dosing
+# correction: there's no actuator to raise DO beyond the aerator that's
+# already always running (safe_default_state 'on'), so the only
+# meaningful automated response is telling a human fast. DO is real,
+# optional hardware (not every real cell has a probe) — see
+# _has_sensor_type() below for how that's kept from becoming permanent
+# noise on a cell that was never meant to have one.
+DO_WARNING_THRESHOLD_MGL = 5.0
+DO_CRITICAL_THRESHOLD_MGL = 3.0
+DO_SPREAD_TOLERANCE_MGL = 1.5  # wider than pH's 0.5 — DO probes drift more with agitation/temp
+
+# Water-temp range check tolerance — tighter than climate_control.py's
+# air-temp tolerance (5.0°F) since water temp changes far more slowly/
+# is less noisy than air. Real gap found live 2026-08-31 (see
+# read_sensors()'s docstring below): temp_water was sensed and bought
+# hardware (see describe_hardware_requirements) with literally nothing
+# checking it against any target — this closes that, using the actual
+# stocked species' real documented range, not a fixed constant like DO.
+#
+# Drives a real actuator ('water_heater' — distinct actuators.type from
+# climate_control.py's air 'heater', to avoid its cell_id+type lookup
+# ever ambiguously matching two different physical heaters on the same
+# cell) for the LOW-temp case only. Never attempts to cool: no chiller
+# is built (a real, separate, genuinely deferred piece of equipment —
+# noticeably pricier and less commonly needed for a first build than a
+# heater), so an above-max reading still only alerts, same as before.
+# water_heater is opt-in, like DO — a cell without one still alerts on
+# a low reading (nothing else can correct it), it just doesn't actuate.
+TEMP_WATER_SPREAD_TOLERANCE_F = 3.0
+
+
+class AquaponicsCell(MiaHomesteadModule):
+
+    def __init__(
+        self,
+        module_id: str,
+        cell_id: int,
+        db_conn,
+        ph_target_min: float,
+        ph_target_max: float,
+        ec_target_min: float,
+        ec_target_max: float,
+        notifier=None,
+        force_read_fn=None,
+        recovery_log_fn=None,
+    ):
+        super().__init__(module_id, cell_id, db_conn, notifier=notifier,
+                          force_read_fn=force_read_fn, recovery_log_fn=recovery_log_fn)
+        self.ph_target_min = ph_target_min
+        self.ph_target_max = ph_target_max
+        self.ec_target_min = ec_target_min
+        self.ec_target_max = ec_target_max
+        # Rolling readings buffer used to require N-consistent-readings
+        # before triggering a dose (see SAFETY_SPEC.md).
+        self._ph_history: list[float] = []
+        self._ec_history: list[float] = []
+        self._do_history: list[float] = []
+        self._temp_water_history: list[float] = []
+        self._last_water_heater_action: str | None = None
+
+    def read_sensors(self) -> list[SensorReading]:
+        """
+        Pulls the most recent reading per active sensor for this cell
+        from the sensor_readings table. Actual hardware polling happens
+        in a separate driver layer that writes into sensor_readings —
+        this module only reads what's already been logged, keeping
+        control logic decoupled from hardware I/O.
+
+        Filtered to the types this module actually reasons about (ph,
+        ec, do) plus temp_water (see below) — NOT every sensor on the
+        cell. Real bug found live 2026-08-31: an earlier, unfiltered
+        version of this query pulled every sensor type on the cell
+        (temp_air, humidity, light, co2, flow, level too, once those
+        got added), which meant THIS module's own staleness/retry
+        ladder independently alerted on sensor types it never acts on
+        at all — duplicate, misattributed alerts for conditions
+        climate_control.py/leak_detector.py/circulation_monitor.py
+        already own and alert on correctly. temp_water is the one
+        exception kept in scope: it now has a real owner (see
+        _evaluate_temp_water() below), so filtering it out entirely
+        would drop real, valuable monitoring, not just quiet a duplicate.
+        """
+        rows = self.db.execute(
+            """
+            SELECT sr.sensor_id, s.type, sr.value, sr.timestamp,
+                   sr.is_stale, sr.is_out_of_range
+            FROM sensor_readings sr
+            JOIN sensors s ON s.id = sr.sensor_id
+            WHERE s.cell_id = ? AND s.active = 1 AND s.type IN ('ph', 'ec', 'do', 'temp_water')
+            AND sr.id IN (
+                SELECT MAX(id) FROM sensor_readings GROUP BY sensor_id
+            )
+            """,
+            (self.cell_id,),
+        ).fetchall()
+
+        readings = []
+        self._type_by_sensor = {}
+        for sensor_id, sensor_type, value, ts, is_stale, is_oor in rows:
+            readings.append(
+                SensorReading(
+                    sensor_id=sensor_id,
+                    value=value,
+                    timestamp=datetime.fromisoformat(ts),
+                    is_stale=bool(is_stale),
+                    is_out_of_range=bool(is_oor),
+                )
+            )
+            self._type_by_sensor[sensor_id] = sensor_type
+        return readings
+
+    def _current_targets(self) -> dict:
+        """Live targets — checks target_overrides first (an active
+        experiment or an approved evidence-based change), falls back to
+        the config-file defaults this module was constructed with. This
+        is what makes experiments possible without restarting the
+        process: nothing here changes unless a row in target_overrides
+        says so, and that row only exists because a human (or an
+        approved experiment) put it there."""
+        targets = {
+            "ph_target_min": self.ph_target_min, "ph_target_max": self.ph_target_max,
+            "ec_target_min": self.ec_target_min, "ec_target_max": self.ec_target_max,
+        }
+        rows = self.db.execute(
+            "SELECT param_name, value FROM target_overrides WHERE cell_id = ? AND active = 1",
+            (self.cell_id,),
+        ).fetchall()
+        for param_name, value in rows:
+            if param_name in targets:
+                targets[param_name] = value
+        return targets
+
+    def evaluate(self, readings: list[SensorReading]) -> list[ActuatorCommand]:
+        self._targets = self._current_targets()  # refresh every cycle, not just at construction
+        commands = []
+        ph_reading = self._latest_of_type(readings, "ph")
+        ec_reading = self._latest_of_type(readings, "ec")
+        # (see _latest_of_type below — now correctly filters by real sensor type)
+
+        if ph_reading is None:
+            # If a pH sensor exists and has reported before but is mid-retry
+            # (see contracts.MiaHomesteadModule's recovery ladder), stay
+            # quiet — the ladder's own alert will fire if it genuinely
+            # exhausts. Only raise immediately for a sensor that's never
+            # produced a reading at all (nothing to retry against).
+            if not self._is_type_mid_retry("ph"):
+                self._raise_alert(
+                    "warning",
+                    f"{self.module_id}: no pH reading available at all "
+                    f"(sensor missing or producing zero data) — pH dosing held",
+                )
+        else:
+            commands += self._evaluate_ph(ph_reading)
+
+        if ec_reading is None:
+            if not self._is_type_mid_retry("ec"):
+                self._raise_alert(
+                    "warning",
+                    f"{self.module_id}: no EC reading available at all "
+                    f"(sensor missing or producing zero data) — nutrient dosing held",
+                )
+        else:
+            commands += self._evaluate_ec(ec_reading)
+
+        # DO is genuinely optional hardware (unlike pH/EC, which every
+        # tier's real BOM assumes) — only evaluate/alert on it at all if
+        # a DO sensor is actually registered for this cell, so a cell
+        # that was never meant to have one stays silent instead of
+        # alerting forever on hardware that was never bought.
+        if self._has_sensor_type("do"):
+            do_reading = self._latest_of_type(readings, "do")
+            if do_reading is None:
+                if not self._is_type_mid_retry("do"):
+                    self._raise_alert(
+                        "warning",
+                        f"{self.module_id}: no DO reading available at all "
+                        f"(sensor missing or producing zero data) — dissolved oxygen monitoring degraded",
+                    )
+            else:
+                self._evaluate_do(do_reading)
+
+        # temp_water: staleness alerting already happens unconditionally
+        # via the base retry ladder (read_sensors() includes it in its
+        # filter regardless of stocking status) — this only adds a
+        # SPECIES-RANGE check on top of an already-valid reading, and
+        # only when there's a real stocked species to check it against.
+        temp_water_reading = self._latest_of_type(readings, "temp_water")
+        if temp_water_reading is not None:
+            commands += self._evaluate_temp_water(temp_water_reading)
+
+        return commands
+
+    def _evaluate_ph(self, reading: SensorReading) -> list[ActuatorCommand]:
+        self._ph_history.append(reading.value)
+        self._ph_history = self._ph_history[-self.MIN_CONSISTENT_READINGS_FOR_DOSE:]
+
+        if len(self._ph_history) < self.MIN_CONSISTENT_READINGS_FOR_DOSE:
+            return []  # not enough history yet to trust a correction
+
+        avg = sum(self._ph_history) / len(self._ph_history)
+        spread = max(self._ph_history) - min(self._ph_history)
+        if spread > 0.5:
+            # Readings disagree with each other too much — don't trust
+            # any single average, flag and skip this cycle.
+            self._raise_alert(
+                "warning",
+                f"{self.module_id}: pH readings inconsistent "
+                f"(spread {spread:.2f}) — skipping correction this cycle",
+            )
+            return []
+
+        if avg < self._targets["ph_target_min"]:
+            cmd = self._dose_command("ph_up", reading.value,
+                    f"pH {avg:.2f} below target range {self._targets['ph_target_min']}-"
+                    f"{self._targets['ph_target_max']}, correcting upward")
+            return [cmd] if cmd else []
+        if avg > self._targets["ph_target_max"]:
+            cmd = self._dose_command("ph_down", reading.value,
+                    f"pH {avg:.2f} above target range {self._targets['ph_target_min']}-"
+                    f"{self._targets['ph_target_max']}, correcting downward")
+            return [cmd] if cmd else []
+        return []
+
+    def _evaluate_ec(self, reading: SensorReading) -> list[ActuatorCommand]:
+        self._ec_history.append(reading.value)
+        self._ec_history = self._ec_history[-self.MIN_CONSISTENT_READINGS_FOR_DOSE:]
+
+        if len(self._ec_history) < self.MIN_CONSISTENT_READINGS_FOR_DOSE:
+            return []
+
+        avg = sum(self._ec_history) / len(self._ec_history)
+        if avg < self._targets["ec_target_min"]:
+            cmd = self._dose_command("nutrient_concentrate", reading.value,
+                    f"EC {avg:.0f} below target range {self._targets['ec_target_min']}-"
+                    f"{self._targets['ec_target_max']}, correcting upward")
+            return [cmd] if cmd else []
+        # No auto-correction for EC too high — diluting requires a water
+        # change action, which should stay a human-approved/manual step
+        # in v0.1 rather than an automated dump of fresh water.
+        return []
+
+    def _evaluate_do(self, reading: SensorReading) -> None:
+        """Alert-only — no actuator command exists to raise DO beyond
+        the aerator, which is already always running regardless of what
+        this decides (safe_default_state 'on', never touched by control
+        logic). The value here is early/confident warning, same
+        "consistent readings before acting" discipline as pH/EC."""
+        self._do_history.append(reading.value)
+        self._do_history = self._do_history[-self.MIN_CONSISTENT_READINGS_FOR_DOSE:]
+
+        if len(self._do_history) < self.MIN_CONSISTENT_READINGS_FOR_DOSE:
+            return
+
+        avg = sum(self._do_history) / len(self._do_history)
+        spread = max(self._do_history) - min(self._do_history)
+        if spread > DO_SPREAD_TOLERANCE_MGL:
+            self._raise_alert(
+                "warning",
+                f"{self.module_id}: DO readings inconsistent (spread {spread:.2f} mg/L) "
+                f"— not confident enough to assess oxygen risk this cycle",
+            )
+            return
+
+        if avg < DO_CRITICAL_THRESHOLD_MGL:
+            self._raise_alert(
+                "critical",
+                f"{self.module_id}: dissolved oxygen critically low ({avg:.2f} mg/L, "
+                f"below {DO_CRITICAL_THRESHOLD_MGL} mg/L) — fish suffocation risk, "
+                f"confirm aeration is actually running",
+            )
+        elif avg < DO_WARNING_THRESHOLD_MGL:
+            self._raise_alert(
+                "warning",
+                f"{self.module_id}: dissolved oxygen low ({avg:.2f} mg/L, "
+                f"below {DO_WARNING_THRESHOLD_MGL} mg/L) — worth checking aeration",
+            )
+
+    def _has_sensor_type(self, type_name: str) -> bool:
+        row = self.db.execute(
+            "SELECT 1 FROM sensors WHERE cell_id = ? AND type = ? AND active = 1 LIMIT 1",
+            (self.cell_id, type_name),
+        ).fetchone()
+        return row is not None
+
+    def _evaluate_temp_water(self, reading: SensorReading) -> list[ActuatorCommand]:
+        """Requires a real stocked species with a real documented range
+        — never invents a target, so an empty tank or an unrecognized
+        species name stays silent rather than guessing. Drives a real
+        water_heater actuator for the low-temp case, if one is
+        configured (opt-in, like DO); a cell without one still alerts,
+        since nothing else can correct the condition. Never attempts to
+        cool an above-max reading — always alerts instead, since no
+        chiller exists to correct it regardless of whether a heater is
+        configured (heating further would make an already-hot tank
+        worse, so the heater is explicitly turned off in that case)."""
+        temp_min, temp_max = self._current_species_temp_water_range()
+        if temp_min is None or temp_max is None:
+            return []
+
+        self._temp_water_history.append(reading.value)
+        self._temp_water_history = self._temp_water_history[-self.MIN_CONSISTENT_READINGS_FOR_DOSE:]
+        if len(self._temp_water_history) < self.MIN_CONSISTENT_READINGS_FOR_DOSE:
+            return []
+
+        avg = sum(self._temp_water_history) / len(self._temp_water_history)
+        spread = max(self._temp_water_history) - min(self._temp_water_history)
+        if spread > TEMP_WATER_SPREAD_TOLERANCE_F:
+            self._raise_alert(
+                "warning",
+                f"{self.module_id}: water temp readings inconsistent (spread {spread:.1f}°F) "
+                f"— holding water heater at current state this cycle",
+            )
+            return []
+
+        heater_configured = self._actuator_id_for_type("water_heater") != -1
+
+        if avg > temp_max:
+            self._raise_alert(
+                "warning",
+                f"{self.module_id}: water temp {avg:.1f}°F above the stocked species' "
+                f"documented max ({temp_max:.0f}°F) — thermal stress risk, no automated "
+                f"cooling exists (no chiller is built)",
+            )
+            return self._set_water_heater("off") if heater_configured else []
+
+        if avg < temp_min:
+            if not heater_configured:
+                self._raise_alert(
+                    "warning",
+                    f"{self.module_id}: water temp {avg:.1f}°F below the stocked species' "
+                    f"documented min ({temp_min:.0f}°F) — thermal stress risk, no automated "
+                    f"correction exists (no water heater is configured)",
+                )
+                return []
+            return self._set_water_heater("on")
+
+        return self._set_water_heater("off") if heater_configured else []
+
+    def _set_water_heater(self, action: str) -> list[ActuatorCommand]:
+        if self._last_water_heater_action == action:
+            return []  # no change — avoids spamming actuator_events every cycle
+        actuator_id = self._actuator_id_for_type("water_heater")
+        if actuator_id == -1:
+            return []
+        self._last_water_heater_action = action
+        logger.info("%s: setting water_heater -> %s", self.module_id, action)
+        return [ActuatorCommand(
+            actuator_id=actuator_id,
+            action=action,
+            duration_seconds=None,
+            triggered_by=TriggerSource.AUTO_CONTROL,
+        )]
+
+    def _actuator_id_for_type(self, actuator_type: str) -> int:
+        cur = self.db.execute(
+            "SELECT id FROM actuators WHERE cell_id = ? AND type = ? LIMIT 1",
+            (self.cell_id, actuator_type),
+        )
+        row = cur.fetchone()
+        return row[0] if row else -1
+
+    def _current_species_temp_water_range(self) -> tuple[float | None, float | None]:
+        """The real stocked species' documented water-temp range, if a
+        tank is stocked on this cell and its species is in
+        species_profiles. tanks.species is free text, not a species_id
+        foreign key (a real schema quirk, not something to work around
+        by inventing one) — so this does a LIKE match, same shape as
+        core/species_registry.py's own find_by_name(). Returns (None,
+        None) for an unstocked tank or an unrecognized species name —
+        never guesses a target from nothing."""
+        row = self.db.execute(
+            "SELECT species FROM tanks WHERE cell_id = ? AND species IS NOT NULL LIMIT 1",
+            (self.cell_id,),
+        ).fetchone()
+        if not row or not row[0]:
+            return None, None
+        profile = self.db.execute(
+            "SELECT temp_water_min, temp_water_max FROM species_profiles WHERE common_name LIKE ? LIMIT 1",
+            (f"%{row[0]}%",),
+        ).fetchone()
+        if not profile or profile[0] is None or profile[1] is None:
+            return None, None
+        return profile[0], profile[1]
+
+    def _dose_command(self, dose_type: str, current_value: float, rationale: str) -> ActuatorCommand | None:
+        """Returns None (no dose, nothing logged) if no real pump is
+        configured for this dose_type on this cell, or if dosing_limits'
+        min_interval_minutes hasn't elapsed since the last dose of this
+        type — see _within_dosing_interval()'s own docstring for why
+        the interval check has to happen HERE, before logging, not in
+        the base class's _validate_command() hook where it was
+        originally meant to live.
+
+        Actuator existence checked FIRST, before anything else. Real
+        bug found live 2026-09-02, via the rendered Journal view: this
+        used to skip straight to logging regardless — pilot_cell fired
+        668 fictional "ph_down" dosing_events in one hour alone, every
+        single cycle, commanding actuator_id=-1 (docs/PILOT_VS_SCALE.md's
+        own trimmed pilot scope deliberately has no ph-down pump, "pH-up
+        only to start" — nothing here ever checked for that before
+        proposing a correction in that direction). Same "opt-in
+        hardware, alert instead of faking it" discipline as
+        _evaluate_temp_water()'s water_heater check and _evaluate_ec()'s
+        "no auto-correction for EC too high" below — a cell that
+        physically can't correct in some direction should say so, not
+        pretend to. This is also why the missing-actuator case never
+        reaches _within_dosing_interval()'s own "no configured limit"
+        fallback below — every real actuator in this system has a real
+        configured limit (confirmed live), so that fallback is now only
+        ever a genuine configuration error, not a normal opt-out-of-
+        hardware case."""
+        actuator_id = self._actuator_id_for(dose_type)
+        if actuator_id == -1:
+            # Message text is DELIBERATELY constant — no rationale/reading
+            # value here. Caught live 2026-09-02, immediately after
+            # writing this same check: embedding `rationale` (a live pH/EC
+            # value, different almost every cycle) would have defeated
+            # raise_alert()'s (source, message) dedup exactly like the
+            # already-documented "dose blocked" regression earlier this
+            # session — 5 distinct rows for this one still-ongoing
+            # condition had already accumulated in the few minutes before
+            # this was caught. occurrence_count/last_seen on one row
+            # already show how long and how often this has been true.
+            self._raise_alert(
+                "warning",
+                f"{self.module_id}: {dose_type} correction needed but no {dose_type} pump "
+                f"is configured for this cell — dosing held, needs a human",
+            )
+            return None
+
+        if not self._within_dosing_interval(dose_type):
+            return None
+
+        logger.info(
+            "%s: proposing dose %s (current reading %.2f) — %s",
+            self.module_id, dose_type, current_value, rationale,
+        )
+        # Log the dosing decision itself, with WHY — this is the
+        # concrete answer to "how much of a nutrient and why," not just
+        # a log line. amount_ml is left null: the Pi doesn't know the
+        # exact volume until real flow-metering hardware exists, only
+        # the MCU's pulse duration does — see dosing_events schema note.
+        self.db.execute(
+            "INSERT INTO dosing_events (cell_id, dose_type, reading_before, rationale, triggered_by) "
+            "VALUES (?, ?, ?, ?, 'auto_control')",
+            (self.cell_id, dose_type, current_value, rationale),
+        )
+        self.db.commit()
+        return ActuatorCommand(
+            actuator_id=actuator_id,
+            action="pulse",
+            duration_seconds=None,  # duration resolved by dosing_limits
+            triggered_by=TriggerSource.AUTO_CONTROL,
+        )
+
+    def _within_dosing_interval(self, dose_type: str) -> bool:
+        """Enforces dosing_limits.min_interval_minutes — the Pi-side
+        half of SAFETY_SPEC.md's two-tier dosing safety (the Safety MCU
+        firmware is the other, hardware-level half). Real, safety-
+        relevant gap found live 2026-09-01: contracts.MiaHomesteadModule.
+        _validate_command() — the originally-intended enforcement point
+        — was a literal stub that always returned the command unchanged.
+        The live system had fired 18,415 dosing_events, the vast
+        majority firing every single control-loop cycle (every ~5 REAL
+        seconds) with zero interval enforcement — exactly the
+        "oscillation/overcorrection loop" SAFETY_SPEC.md's dosing rules
+        explicitly exist to prevent, not hypothetical.
+
+        Checked here, before _dose_command() logs anything, rather than
+        in _validate_command() after the fact — _validate_command()
+        runs AFTER a dosing_events row already exists (this module logs
+        the row itself, as the concrete "what was dosed and why"
+        record), so blocking there would still leave a misleading
+        dosing_events row implying a dose happened when the actuator
+        command never actually went out. Blocking here means a refused
+        dose logs nothing at all — genuinely didn't happen.
+
+        Only min_interval_minutes is enforced — max_per_dose_ml and
+        max_per_day_ml stay honestly UNENFORCED: dosing_events.amount_ml
+        is null (the Pi doesn't know real per-pulse volume without real
+        flow-metering hardware — see that column's own schema comment),
+        so faking a volume just to check it against a limit would be
+        fabricating a number, not honoring one. A real, separate,
+        smaller gap than this one — noted, not solved here."""
+        limit_row = self.db.execute(
+            "SELECT min_interval_minutes FROM dosing_limits WHERE cell_id = ? AND dose_type = ?",
+            (self.cell_id, dose_type),
+        ).fetchone()
+        if limit_row is None:
+            # Real gap found live 2026-09-02, hardened as defense in
+            # depth: this used to return True ("nothing to enforce
+            # yet") — backwards for a safety gate. Confirmed live that
+            # every real actuator in this system already has a real
+            # configured dosing_limits row, so this branch is no longer
+            # a normal "hardware not built yet" case (that's now caught
+            # earlier, in _dose_command()'s own actuator-existence
+            # check, before this method is even called) — it's only
+            # reachable for a genuine configuration error: a real pump
+            # exists with no limit defined for it. SAFETY_SPEC.md is
+            # explicit that limits are "defined per chemical, per
+            # cell," not optional — fail closed, not open, and say why.
+            self._raise_alert(
+                "warning",
+                f"{self.module_id}: {dose_type} dose blocked — no dosing_limits configured "
+                f"for this cell/dose_type (SAFETY_SPEC.md requires one before dosing)",
+            )
+            return False
+        min_interval_minutes = limit_row[0]
+
+        last = self.db.execute(
+            "SELECT timestamp FROM dosing_events WHERE cell_id = ? AND dose_type = ? "
+            "ORDER BY id DESC LIMIT 1",
+            (self.cell_id, dose_type),
+        ).fetchone()
+        if last is None:
+            return True  # never dosed before — nothing to compare against
+
+        elapsed_minutes = (datetime.utcnow() - datetime.fromisoformat(last[0])).total_seconds() / 60
+        if elapsed_minutes < min_interval_minutes:
+            # Message text is DELIBERATELY constant — no elapsed_minutes
+            # here. Real regression of an already-documented failure
+            # mode, caught live 2026-09-02: this used to embed
+            # elapsed_minutes (changes every single cycle), which
+            # defeated raise_alert()'s (source, message) dedup — exactly
+            # the "runaway alert row growth" bug _attempt_recovery()'s
+            # own comment above already warns about, reintroduced here.
+            # 150+ distinct alert rows for this one still-ongoing
+            # condition had accumulated live before this fix.
+            # occurrence_count/last_seen on one row already show how
+            # long and how often this has been happening.
+            self._raise_alert(
+                "warning",
+                f"{self.module_id}: {dose_type} dose blocked — waiting for the minimum "
+                f"interval ({min_interval_minutes} min) since the last dose "
+                f"(SAFETY_SPEC.md: prevents an oscillation/overcorrection loop)",
+            )
+            return False
+        return True
+
+    def _actuator_id_for(self, dose_type: str) -> int:
+        cur = self.db.execute(
+            "SELECT id FROM actuators WHERE cell_id = ? AND type = 'dosing_pump' "
+            "AND name LIKE ? LIMIT 1",
+            (self.cell_id, f"%{dose_type}%"),
+        )
+        row = cur.fetchone()
+        return row[0] if row else -1
+
+    def _latest_of_type(self, readings: list[SensorReading], type_name: str):
+        matches = [
+            r for r in readings
+            if self._type_by_sensor.get(r.sensor_id) == type_name
+        ]
+        if not matches:
+            return None
+        return max(matches, key=lambda r: r.timestamp)
+
+    def _safety_fallback_commands(self) -> list[ActuatorCommand]:
+        """All sensors stale/invalid: freeze dosing, keep circulation
+        and aeration running via their independent safety-MCU defaults
+        (those actuators aren't touched here at all — they stay on
+        because their safe_default_state is 'on', enforced at the MCU,
+        not by this module deciding anything). Water heater, if
+        configured, IS explicitly forced off here — a submersible
+        heater stuck on is a real fire/fish-boil hazard, same category
+        as climate_control.py's air heater defaulting off."""
+        commands = super()._safety_fallback_commands()
+        self._last_water_heater_action = None
+        heater_id = self._actuator_id_for_type("water_heater")
+        if heater_id != -1:
+            commands.append(ActuatorCommand(
+                actuator_id=heater_id, action="off", triggered_by=TriggerSource.SAFETY_FALLBACK,
+            ))
+        return commands
+
+    def describe_capabilities(self):
+        from contracts.capability import Capability
+        return Capability(
+            module_id=self.module_id,
+            display_name="Aquaponics Cell Control",
+            purpose=(
+                "Monitors pH and EC in one aquaponics cell and issues dosing "
+                "corrections to keep both within target range, using multiple "
+                "consistent readings before acting and hard dosing limits "
+                "enforced downstream by the safety MCU. Also monitors dissolved "
+                "oxygen (DO), alert-only, if a DO sensor is configured for this cell, "
+                "and water temp against the actually-stocked species' documented range — "
+                "driving a real water heater for a low reading if one is configured, "
+                "alert-only for a high reading (no chiller is built)."
+            ),
+            data_produced=[
+                "pH reading history", "EC reading history", "DO reading history (if configured)",
+                "water temp reading history", "dosing event log (what was dosed, when, why)",
+            ],
+            actions_possible=[
+                "pulse the pH-up dosing pump",
+                "pulse the pH-down dosing pump",
+                "pulse the nutrient concentrate dosing pump",
+                "before alerting on a stale/missing sensor reading: retry via a forced "
+                "immediate reread, then a healthy redundant sensor of the same type if one "
+                "exists, over up to MAX_CONSECUTIVE_FAILURES_BEFORE_ALERT consecutive cycles",
+                "raise a warning/critical alert on low dissolved oxygen — no automated "
+                "correction exists beyond the aerator, which is already always running",
+                "turn a real water heater on/off when water temp falls below the stocked "
+                "species' documented range, if one is configured for this cell",
+                "raise a warning when water temp is above the stocked species' documented "
+                "max — never attempts to cool (no chiller is built)",
+            ],
+            limits_and_safety=(
+                f"Targets: pH {self.ph_target_min}-{self.ph_target_max}, "
+                f"EC {self.ec_target_min}-{self.ec_target_max}. Requires "
+                f"{self.MIN_CONSISTENT_READINGS_FOR_DOSE} consistent readings "
+                "before dosing. Never auto-dilutes high EC (requires manual "
+                "water change). Freezes dosing entirely if sensors are stale "
+                "or missing, rather than guessing — the recovery ladder "
+                "(contracts.MiaHomesteadModule) only changes how fast a GOOD "
+                "reading gets produced before this logic runs; it never loosens "
+                "what counts as safe to dose on, and dosing stays frozen for the "
+                "entire retry window exactly as if no retry existed at all. "
+                f"DO: warns below {DO_WARNING_THRESHOLD_MGL} mg/L, critical below "
+                f"{DO_CRITICAL_THRESHOLD_MGL} mg/L — but ONLY if a DO sensor is actually "
+                "registered for this cell; DO is optional hardware and a cell without "
+                "one stays completely silent rather than alerting on hardware that was "
+                "never installed. Water temp check requires BOTH a real stocked tank "
+                "(tanks.species set) AND that species existing in species_profiles — an "
+                "empty tank or an unrecognized species name stays silent, never guesses "
+                "a target range. Water heater ('water_heater' actuator type, distinct from "
+                "climate_control.py's air 'heater') is opt-in — a cell without one still "
+                "alerts on a low reading (nothing else can correct it), it just doesn't "
+                "actuate. Never attempts to cool a high reading regardless of hardware — "
+                "no chiller is built, and forcing the heater off in that case prevents it "
+                "from making an already-hot tank worse. On total sensor loss, the water "
+                "heater is explicitly forced off (stuck-on fire/fish-boil hazard)."
+            ),
+            example_questions=[
+                "How's the pH in Cell A?", "Has it been dosing much lately?",
+                "Why didn't it correct the EC this morning?", "What's the dissolved oxygen at?",
+                "Is the water temperature okay for the fish?",
+            ],
+            verification_evidence=[
+                "scenarios.py::scenario_ph_crash_response — confirmed dosing triggers after "
+                "3 consistent readings, closed-loop physics shows pH recovering from the correction",
+                "scenarios.py::scenario_inconsistent_readings — confirmed dosing withheld when "
+                "readings disagree beyond tolerance",
+                "scenarios.py::scenario_stale_sensor_freeze — confirmed dosing freezes when a "
+                "sensor is missing/stale",
+                "Live manual test 2026-08-26: confirmed target_overrides changes the live control "
+                "target with zero restart (cell._current_targets() picked up an experiment change "
+                "immediately)",
+                "scenarios.py::scenario_sensor_recovery_ladder_recovers — confirmed a forced "
+                "immediate reread recovers a stale-but-still-alive sensor with zero alert raised",
+                "scenarios.py::scenario_sensor_recovery_exhausted_escalates — confirmed no alert "
+                "fires during the retry window, the same alert fires once retries genuinely "
+                "exhaust, and dosing stays frozen throughout (0 doses issued) either way",
+                "Honest gap: the redundant-sensor-substitution step is implemented but genuinely "
+                "untested — confirmed against the real dev DB that no cell currently configures "
+                "two sensors of the same type (SELECT cell_id, type, count(*) FROM sensors GROUP "
+                "BY cell_id, type HAVING count(*) > 1 returns zero rows), so this path has never "
+                "actually executed against real data.",
+                "scenarios.py::scenario_do_no_sensor_silent — confirmed a cell with no DO sensor "
+                "configured raises zero DO-related alerts, ever (optional hardware, not noise)",
+                "scenarios.py::scenario_do_critical_alert — confirmed a critically low DO reading "
+                "(2.0 mg/L) raises a real critical alert citing the actual reading, once a DO "
+                "sensor is configured",
+                "scenarios.py::scenario_do_healthy_no_alert — confirmed a healthy DO reading "
+                "(7.0 mg/L) raises nothing",
+                "scenarios.py::scenario_temp_water_species_range — confirmed a water temp "
+                "reading outside the real stocked species' documented range raises a real "
+                "warning citing the actual reading and range",
+                "scenarios.py::scenario_temp_water_no_species_silent — confirmed an unstocked "
+                "tank raises zero species-range alerts, ever (never guesses a target)",
+                "scenarios.py::scenario_temp_water_in_range_no_alert — confirmed a healthy "
+                "water temp reading raises nothing",
+                "scenarios.py::scenario_temp_water_heater_engages — confirmed a configured "
+                "water heater turns on for a low reading, with NO alert (being handled), and "
+                "settles with no repeat commands once corrected",
+                "scenarios.py::scenario_temp_water_no_cooling_above_max — confirmed a "
+                "high reading raises a real 'no chiller' warning and forces a configured "
+                "heater off, never on",
+                "scenarios.py::scenario_temp_water_heater_safety_fallback — confirmed total "
+                "sensor loss forces a configured water heater off",
+            ],
+        )
+
+    def describe_hardware_requirements(self) -> list:
+        from contracts.capability import HardwareRequirement
+        return [
+            HardwareRequirement(
+                item="Atlas Scientific pH kit (KIT-101P or equivalent — circuit + probe)",
+                category="sensor", quantity=1,
+                purpose="pH monitoring for dosing decisions", est_unit_cost=175.0,
+                notes="Do not substitute cheap pH probes — drift within weeks feeds bad data into dosing logic. "
+                      "Priced as full starter kit; circuit alone is ~$46-51 if you already have a compatible probe. "
+                      "See docs/HARDWARE_BOM_CURRENT.md.",
+            ),
+            HardwareRequirement(
+                item="Atlas Scientific EC kit (EC-KIT-1.0 or equivalent — circuit + probe)",
+                category="sensor", quantity=1,
+                purpose="EC monitoring for nutrient dosing decisions", est_unit_cost=230.0,
+                notes="Circuit alone is ~$68-86 if you already have a compatible probe. See docs/HARDWARE_BOM_CURRENT.md.",
+            ),
+            HardwareRequirement(
+                item="Peristaltic dosing pump", category="actuator",
+                quantity=3, purpose="pH-up, pH-down, and nutrient concentrate dosing",
+                est_unit_cost=12.0,
+                notes="One per chemical — never share a pump line between chemicals. "
+                      "~$10-15 for a basic 12V DC unit (INTLLAB/Kamoer NKP class). See docs/HARDWARE_BOM_CURRENT.md.",
+            ),
+            HardwareRequirement(
+                item="DS18B20 waterproof temp probe", category="sensor",
+                quantity=1, purpose="water temperature monitoring, checked against the stocked "
+                "species' documented range once one is stocked", est_unit_cost=8.0,
+            ),
+            HardwareRequirement(
+                item="Submersible aquarium heater, relay-controlled", category="actuator",
+                quantity=1, purpose="corrects water temp below the stocked species' documented "
+                "minimum", est_unit_cost=25.0,
+                notes="Estimate, not independently live-fetched this session — typical current "
+                      "market price for a relay-switchable submersible heater at this scale. "
+                      "Optional — a cell without one still alerts on a low reading, it just "
+                      "doesn't actuate. No chiller is priced or built — cooling stays a real, "
+                      "deferred gap (a chiller is notably pricier and less commonly needed for "
+                      "a first build than a heater).",
+            ),
+            HardwareRequirement(
+                item="Atlas Scientific Dissolved Oxygen kit (circuit + probe)", category="sensor",
+                quantity=1, purpose="dissolved oxygen monitoring — DO crashes are the leading real "
+                "cause of catastrophic fish loss", est_unit_cost=354.99,
+                notes="Confirmed live-fetch 2026-08-31, atlas-scientific.com. Optional at small "
+                      "scale (low stocking density, continuous aeration substitutes adequately) — "
+                      "recommended at full-scale real stocking density. See "
+                      "docs/HARDWARE_BOM_FULL_TIERS.md. A cell with no DO sensor installed stays "
+                      "completely silent about it, by design — see limits_and_safety above.",
+            ),
+            HardwareRequirement(
+                item="Submersible aquarium air pump + airstone", category="actuator",
+                quantity=1, purpose="aeration — the highest-priority load per SAFETY_SPEC.md's "
+                "power-loss ordering; fish suffocate faster than anything else fails",
+                est_unit_cost=10.0,
+                notes="Safe default is always ON — never wired through a dosing-style pulse relay.",
+            ),
+            HardwareRequirement(
+                item="Submersible circulation pump", category="actuator",
+                quantity=1, purpose="moves water to the grow bed and biofilter — second priority "
+                "after aeration per SAFETY_SPEC.md",
+                est_unit_cost=15.0,
+            ),
+        ]

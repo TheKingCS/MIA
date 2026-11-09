@@ -1,0 +1,18 @@
+# MIA Homestead — MIA Home Sync
+#
+# Where core/mia_home_sync.py pushes viewer/home_snapshot.json so MIA
+# Home's watched-folder ingestion (core/homestead_manager.py in
+# ~/Projects/MIA) picks it up automatically. Uses rsync, which accepts
+# either form below with the same command — switching from dev to a
+# real deployment is just changing this one value.
+#
+# Leave destination null and sync simply doesn't run — honestly
+# skipped, never guessed, same precedent as config/location.yaml's
+# weather-check gate.
+#
+# destination: "/home/creator/Projects/MIA/homestead_snapshots/"                        # local path — both projects on one machine (this environment, today)
+# destination: "creator@home-desktop:/home/creator/Projects/MIA/homestead_snapshots/"    # remote host — real deployment, once Homestead's Pi and Home's desktop are physically separate (needs an SSH key provisioned between the two)
+
+destination: "/home/creator/Projects/MIA/homestead_snapshots/"
+
+interval_minutes: 5
