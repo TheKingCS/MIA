@@ -34,7 +34,7 @@ if [ -z "$token" ]; then
   echo "setup: $(echo "$setup" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('name'), bool(d.get('recovery_code')))")" | tee -a "$OUT/timings.txt"
   token=$(echo "$setup" | python3 -c "import json,sys; print(json.load(sys.stdin)['token'])") || exit 1
 fi
-for path in /web/index.html /api/shell /api/dashboard /api/missions /api/skills /api/money; do
+for path in /web/index.html /api/shell /api/dashboard /api/missions /api/skills /api/money /api/trades /api/tracks /api/sensors; do
   code=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $token" "http://127.0.0.1:8765$path")
   echo "$code $path" | tee -a "$OUT/timings.txt"
   [ "$code" = "200" ] || exit 1
@@ -47,6 +47,30 @@ sleep 8
 adb exec-out screencap -p > "$OUT/screen.png"
 adb shell dumpsys meminfo com.mia.phone | grep -i "TOTAL PSS\|TOTAL:" | head -3 | tee -a "$OUT/timings.txt"
 ls -la "$APK" | awk '{print "apk_bytes " $5}' | tee -a "$OUT/timings.txt"
+
+# ---- Passwords autofill (DEC-0035, MiaAutofillService.kt) -------------------
+# Android knows MIA as an autofill service and takes it as the phone's; the engine lists a fitting login by title
+# only (never its password), refuses a look-alike site, and says "locked" (423) once the vault is locked.
+adb shell cmd package query-services -a android.service.autofill.AutofillService | grep -q "MiaAutofillService" \
+  || { echo "autofill: MIA isn't registered as an autofill service"; exit 1; }
+adb shell settings put secure autofill_service com.mia.phone/.MiaAutofillService
+picked=$(adb shell settings get secure autofill_service | tr -d '\r')
+echo "autofill service: $picked" | tee -a "$OUT/timings.txt"
+[ "$picked" = "com.mia.phone/.MiaAutofillService" ] || exit 1
+vault() { curl -s -o /tmp/vault.json -w "%{http_code}" -H "Authorization: Bearer $token" -H "Content-Type: application/json" "$@"; }
+vault -d '{"master":"correct horse battery staple 9"}' http://127.0.0.1:8765/api/passwords/setup > /dev/null
+vault -d '{"title":"Example","username":"me@example.com","password":"Pw-ci-only-123!","url":"https://www.example.com/login"}' \
+  http://127.0.0.1:8765/api/passwords/login > /dev/null
+code=$(vault "http://127.0.0.1:8765/api/passwords/autofill?domain=example.com&package=com.android.chrome")
+fits=$(python3 -c "import json; d=json.load(open('/tmp/vault.json')); m=d.get('matches', []); print(len(m), any('password' in x for x in m))")
+echo "autofill $code: $fits" | tee -a "$OUT/timings.txt"
+[ "$code" = "200" ] && [ "$fits" = "1 False" ] || exit 1
+vault "http://127.0.0.1:8765/api/passwords/autofill?domain=examp1e.com" > /dev/null
+[ "$(python3 -c "import json; print(len(json.load(open('/tmp/vault.json')).get('matches', [])))")" = "0" ] || exit 1
+vault -X POST http://127.0.0.1:8765/api/passwords/lock > /dev/null
+code=$(vault "http://127.0.0.1:8765/api/passwords/autofill?domain=example.com")
+echo "autofill when locked: $code" | tee -a "$OUT/timings.txt"
+[ "$code" = "423" ] || exit 1
 
 # ---- MIA's own model (docs/PHONE_MODEL_TEST.md) ----------------------------
 api() { curl -s -H "Authorization: Bearer $token" -H "Content-Type: application/json" "$@"; }
