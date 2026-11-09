@@ -22,11 +22,11 @@ Glasses lines with no mark now split at a word. All 99 pages pass the demo sweep
 desktop and phone. K-0156 to K-0162. **Still partial, not built on purpose:** Greenhouse/Power/Lab sensor readings
 (the greenhouse node is DEC-0150, proposed, waiting on Zac's five answers), Passwords autofill in other apps
 (never, by design so far), the character portrait (Zac's call; the art studio paints no people).
-**On the PC:** `python -m tools.dump_assistant_capabilities` (four new tools; it needs PySide6). **Loose ends from a full cloud run
+**Loose ends from a full cloud run
 (2026-11-09):** besides the cloud's usual stand-in failures (FastAPI StopIteration, Qt mocks, libzim, astral, PDF
-readers), `core/inbox_manager.py` calls `budget.all_expenses(include_uncounted=True)` but this repo's
-`BudgetManager.all_expenses()` takes no arguments (12 inbox and receipt tests fail): likely the PC's uncommitted
-budget work, left alone; and `test_life_events`' and `test_living_worlds`' sealed-store tests pass alone but fail
+readers), `core/inbox_manager.py` called `budget.all_expenses(include_uncounted=True)`, which this repo's
+`BudgetManager` doesn't take (the PC's uncommitted budget work, left alone): the inbox now falls back to
+`all_expenses()` when the option isn't there, so the receipt tests pass; and `test_life_events`' and `test_living_worlds`' sealed-store tests pass alone but fail
 after some other test in a full run (a data key left behind by an earlier test).
 
 **New 2026-11-08 (engine session's unattended run, 09:42 to evening): what's built, and what's next.** Built, core

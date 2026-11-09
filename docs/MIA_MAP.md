@@ -6,7 +6,7 @@
 
 - **Architecture** — 752 Python files across 497 core, 93 modules, 123 gui, 2 server, 37 tools (strict one-way layering; see docs/ARCHITECTURE.md).
 - **Decisions** — 149 logged (docs/DECISIONS.md); the why behind every part.
-- **Capabilities** — ~180 Assistant tools (docs/ASSISTANT_CAPABILITIES.md).
+- **Capabilities** — ~378 Assistant tools (docs/ASSISTANT_CAPABILITIES.md).
 - **Improvement loops** — 94 active, 1 processes decided to need none (docs/LOOPS.md).
 - **Knowledge she's written** — 163 dev entries (work/knowledge/).
 - **Night-school learnings** — 0 nights studied.

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1326 files, 288,862 lines; 1326 files describe themselves; 16,217 of 16,311 classes and functions are documented.
+1326 files, 288,867 lines; 1326 files describe themselves; 16,217 of 16,311 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-497 files, 138,266 lines; 7,364 of 7,450 classes and functions documented
+497 files, 138,271 lines; 7,364 of 7,450 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
