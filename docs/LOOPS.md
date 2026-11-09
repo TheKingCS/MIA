@@ -2,7 +2,7 @@
 
 *Generated from `core/loops.py` by `python -m core.loop_catalog`; never edit by hand (a test keeps it current). The design and the reasons: `docs/IMPROVEMENT_LOOPS.md`; what each process is watched by: `python -m tools.night_school coverage`.*
 
-92 loops in 8 areas.
+94 loops in 8 areas.
 
 ## Answers
 
@@ -92,6 +92,7 @@
 | `night.lessons` | Night School lessons passed this week | device | trend (from 3) | shown, never acted on | `dev:night_school`, `check:night_school` |
 | `phone.vulnerable` | packages the phone app bundles with a known vulnerability | device | ≤ 0 | opens a task, weekly, heavy | `dev:dependencies`, `flow:phone` |
 | `specialists.confirmed` | her specialists' notes a person has confirmed | device | trend | shown, never acted on | `dev:specialists` |
+| `trades.depth` | Trade Master's wanted jobs written to the standard (DEC-0149) | device | ≥ 1 | opens a task, weekly | `dev:trades` |
 
 ## Devices
 
@@ -116,6 +117,7 @@
 | `missions.recurring` | daily recurring missions not done, in 30 days | person | ≤ 0.5 (from 10) | offers it to them | `check:recurring_mission` |
 | `paths.practice` | practice days this week on each learning path, of the plan's (DEC-0112) | person | trend | shown, never acted on | `store:paths` |
 | `recreation.load` | this week's play load against the four weeks before (past 1.5: easing off helps) | person | ≤ 1.5 | shown, never acted on | `store:recreation`, `action:play` |
+| `trades.finished` | jobs and diagnoses walked through to the end, of those started, in 90 days (DEC-0149) | person | ≥ 0.5 (from 3) | shown, never acted on | `store:trade_session`, `action:trade` |
 
 ## Models
 

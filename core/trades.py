@@ -25,7 +25,7 @@ once, sourced and reviewed, never made up by a model while someone is holding a 
 - **What's wanted next** (`WANTED`): Zac's order (the greenhouse, the coop, the workshop, cold storage, then all of
   home building), each id written or still to write; the loop opens a task for the next one.
 
-The content lives in core/trade_jobs.py; the step-by-step session in core/job_session.py.
+The content lives in core/trade_jobs.py; the step-by-step session in core/trade_session.py.
 """
 
 from __future__ import annotations

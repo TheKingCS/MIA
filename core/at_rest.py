@@ -112,6 +112,7 @@ SEALED = frozenset({
     # 2026-11-08: where MIA stumbled (what was said, redacted) and what they taught her; written whole, so sealable
     "failures.jsonl",
     "failure_state.json",
+    "trade_session.json",  # the job or diagnosis being walked through (DEC-0149)
 })
 # Sealed a line at a time (2026-11-08): an append-only history, where a whole-file envelope would mean rewriting it
 # (CLAUDE.md: never rewrite it). Each line is its own envelope as it's appended (seal_line); a file can hold plain lines

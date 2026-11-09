@@ -82,13 +82,23 @@ def _direct_lookup(context, prompt: str) -> Optional[str]:
 def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     """For the desktop's chat panels, which build their own model request
     (2026-10-30: they never got these): a plain-word command done by code
-    ("workout complete", "undo that"), what they did ("I put away the
+    ("workout complete", "undo that"), a job being walked through ("next",
+    "checked", core/trade_actions.py), what they did ("I put away the
     dishes", core/did_it.py), or a question one lookup answers, run by
     code, no model; None when a question plan will answer (it comes
     first, as in run_assistant_turn) or it's for the model. Never in a
     personal mode or the journal."""
     if _personal(conversation):
         return None
+    from core.trade_actions import reply as job_reply
+
+    try:  # a job in progress, or "walk me through ..." (DEC-0149), as in a turn
+        walked = job_reply(context, prompt)
+    except Exception:
+        log.exception("Couldn't follow the job")
+        walked = None
+    if walked is not None:
+        return walked
     from core.quick_commands import handle
 
     quick = handle(context, prompt)
@@ -162,7 +172,7 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     # own words asked for, and before the model, which the safety floor
     # never waits on.
     """One turn, in order: mode switches and the safety floor (before anything is stored or the model asked), then
-    show-off, "look at this" (opens Look with the camera), "take me to the garage" (an area's hub, DEC-0130), "show my license" (the ID wallet), plain-word commands, what they did (core/did_it.py), question plans and direct lookups (none in a personal conversation), then the
+    show-off, "look at this" (opens Look with the camera), "take me to the garage" (an area's hub, DEC-0130), "show my license" (the ID wallet), a job being walked through (core/trade_actions.py), plain-word commands, what they did (core/did_it.py), question plans and direct lookups (none in a personal conversation), then the
     model with the tools offered for what was said.
     """
     prepared = pre_turn(context, conversation, prompt)
@@ -202,6 +212,16 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
             said = f"Here's your {card[1]}."
             add_message(conversation, "assistant", said)
             return AssistantTurn(replies=[said], open=card[0], route="wallet")
+        from core.trade_actions import reply as job_reply
+
+        try:  # a job in progress ("next", "checked", "why?", a stop rule's words) or "walk me through ..." (DEC-0149)
+            walked = job_reply(context, prompt)
+        except Exception:
+            log.exception("Couldn't follow the job")
+            walked = None
+        if walked is not None:
+            add_message(conversation, "assistant", walked)
+            return AssistantTurn(replies=([prepared.notice] if prepared.notice else []) + [walked], route="code")
         from core.quick_commands import handle
 
         quick = handle(context, prompt)

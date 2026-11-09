@@ -97,6 +97,7 @@ from core.work_dungeon import DungeonBook
 from core.the_loop import LoopBook
 from core.training_session import TrainingStore
 from core.cooking_session import CookingStore
+from core.trade_session import TradeStore
 from core.failure_log import FailureLog
 from core.answer_ratings import AnswerRatings
 from core.connections import ConnectionBook
@@ -168,6 +169,7 @@ PERSONAL_STORES: tuple[tuple[str, type], ...] = (
     ("loop", LoopBook),
     ("training", TrainingStore),  # the live workout session (DEC-0055)
     ("cooking", CookingStore),  # the recipe being cooked in cook mode (DEC-0113)
+    ("trade_session", TradeStore),  # the job or diagnosis being walked through (Trade Master, DEC-0149)
     ("failures", FailureLog),
     ("traces", TurnTraces),  # how each turn was answered (DEC-0067)
     ("saga_moments", SagaMoments),  # moments kept for MIA: The Chronicles (DEC-0084)

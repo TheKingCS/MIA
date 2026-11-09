@@ -370,6 +370,33 @@ def _connections_unlinked(context) -> Optional[Reading]:
     return Reading(float(sum(pairs.values())), s["noticed"], detail)
 
 
+def _trades_depth(_context) -> Optional[Reading]:
+    """Measure: how much of Trade Master's wanted list (core/trades.WANTED, Zac's order: the four builds, then all of
+    home building) is written to the standard, the next one to write in the detail (DEC-0149: "a loop for constantly
+    adding more depth to the knowledge base")."""
+    from core import trades
+
+    d = trades.depth()
+    return Reading(round(d["written"] / d["wanted"], 3), d["wanted"],
+                   f"{d['written']} of {d['wanted']} written; next: {d['next'] or 'none'}"
+                   + (f"; short of the standard: {', '.join(d['failing'])}" if d["failing"] else ""))
+
+
+def _trades_finished(context) -> Optional[Reading]:
+    """Measure: of the jobs and diagnoses walked through in 90 days, the share finished rather than stopped (a stop
+    rule, or the person). None before any."""
+    from core.life_events import events_for
+
+    try:
+        found = events_for(context, since=_since(90)[:10], types=("trade_finished", "trade_stopped"))
+    except Exception:
+        return None
+    if not found:
+        return None
+    done = sum(1 for e in found if e.type == "trade_finished")
+    return Reading(round(done / len(found), 3), len(found), f"{done} of {len(found)} finished")
+
+
 def _checks_dismissed(context) -> Optional[Reading]:
     """Which daily check's messages are dismissed most, over 30 days: the one to make worth reading."""
     gate = getattr(context, "communication", None)
@@ -1225,6 +1252,12 @@ LOOPS: tuple[Loop, ...] = (
     Loop("connections.unlinked", "development", "ties found only by shared words, between kinds her link graph doesn't "
          "connect yet, in 30 days", "person", _connections_unlinked, floor=3, min_n=1,
          files=("core/links.py", "core/connections.py"), covers=("store:connections",)),
+    Loop("trades.depth", "development", "Trade Master's wanted jobs written to the standard (DEC-0149)", "device",
+         _trades_depth, better="higher", floor=1.0, min_n=1, every=7,
+         files=("core/trades.py", "core/trade_jobs.py"), covers=("dev:trades",)),
+    Loop("trades.finished", "life", "jobs and diagnoses walked through to the end, of those started, in 90 days "
+         "(DEC-0149)", "person", _trades_finished, better="higher", floor=0.5, min_n=3, acts="watch",
+         files=("core/trade_session.py", "core/trade_actions.py"), covers=("store:trade_session", "action:trade")),
     Loop("checks.dismissed", "proactivity", "the daily check whose messages are dismissed most, in 30 days", "person",
          _checks_dismissed, floor=0.6, min_n=10, files=("core/application.py",),
          covers=tuple(sorted({f"check:{c}" for c in CHECK_TOPICS.values()})) + ("store:insights",)),

@@ -223,6 +223,7 @@ SEALED_STORES = [
     ("core.saga", "SagaMoments", "saga_moments.json"),
     ("core.failure_log", "FailureLog", "failures.jsonl"),
     ("core.failure_log", "FailureLog", "failure_state.json"),
+    ("core.trade_session", "TradeStore", "trade_session.json"),
 ]
 
 

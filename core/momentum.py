@@ -36,7 +36,8 @@ from core.logger import get_logger
 log = get_logger(__name__)
 
 DONE_TYPES = frozenset({"did", "maintenance_done", "meal_logged", "mission_completed", "path_practice",
-                        "path_stage_done", "played", "project_completed", "task_done", "workout_logged"})
+                        "path_stage_done", "played", "project_completed", "task_done", "trade_finished",
+                        "workout_logged"})
 RUN_GAP = timedelta(minutes=45)  # each thing in a run within this of the last
 MIN_RUN = 3
 MIN_RUNS = 3  # runs seen before anything is said about them

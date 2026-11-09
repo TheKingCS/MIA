@@ -79,6 +79,7 @@ DEV = {
     "dev:night_school": "Night School: her lessons, her choices, her teacher",
     "dev:self_audit": "the weekly self-audit: her code, her connections, her best practices",
     "dev:specialists": "her specialists: their workbooks, their studying, their answers",
+    "dev:trades": "Trade Master's jobs and diagnoses: written to the standard, and what's next (DEC-0149)",
     "dev:loops": "the loops themselves and how far they reach",
     "dev:docs": "documentation for every file, class and function, enough for MIA to rebuild herself (DEC-0104)",
 }
