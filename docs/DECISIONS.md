@@ -2561,7 +2561,12 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0047, DEC-0097, DEC-0119, DEC-0141, DEC-0143, DEC-0044
 
 ### DEC-0149: Trade Master — professional job procedures, diagnoses and apprentice programs for every trade
-- Status: PROPOSED (claude, engine, 2026-11-08), awaiting Zac. Nothing built.
+- Status: APPROVED (Zac, 2026-11-08): (1) yes; (2) first the greenhouse, the coop, the workshop and cold storage,
+  "and then all home building with a loop for constantly adding more depth to the knowledge base"; (3) licensed work
+  walked through where a homeowner may legally do it under a permit, with the stop rules; (4) "MIA needs to be held to
+  a high standard to be able to provide thorough and complete instructions": a quality standard in code that every
+  job must meet (a test fails on one that doesn't), each job still marked drafted until a person confirms it; (5) one
+  specialist per trade.
 - From: Zac, 2026-11-08 ("just like Homesteading is Construction ... walk me through step by step of any home
   construction, repair, or diagnosis jobs with industry standard professional steps so nothing is missed ... She
   should become a Trade master and be able to teach an entry level Apprentice": carpentry, plumbing, HVAC,

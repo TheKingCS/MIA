@@ -30,6 +30,12 @@ T-0052 (create_app's length) only when no one else is in
 `server/app.py`; T-0017 stays open for its voice tool and Zac's SearXNG. **Zac:** start SearXNG (WAITING_ON), the
 history's older lines (seal them or not), the homestead push, DEC-0147's choices, the iOS path, restart MIA.
 
+**Claimed by the engine session (2026-11-08 evening), core only: DEC-0149 Trade Master (approved).**
+`core/trades.py` (jobs as sourced data, stop rules in code, the quality standard), `core/job_session.py` (step by step,
+hold points), a job as a mission, diagnosis sessions, the Carpentry apprentice program, a specialist per trade, the
+`trades.depth` loop, and the first builds: greenhouse, coop, workshop, cold storage. Screens are the design
+session's; voice tools beyond the session's own phrases are the parity session's.
+
 **Built by the engine session (2026-11-08 evening), core only: DEC-0148 Natural Momentum (approved).** For the
 design session: `core.momentum.findings(context)` (plain-word counts, [] until three runs) is ready for a small
 "how your good runs go" line, never a score. For the parity session: "I did X" is code-done already
